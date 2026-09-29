@@ -27,6 +27,7 @@ struct ArtworkCard: View {
             .padding(.horizontal, 4)
         }
         .contentShape(.rect)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(artwork.title)
         .accessibilityValue(ProgressCaption.spoken(artwork))
@@ -99,7 +100,11 @@ struct ProgressCaption: View {
         HStack(spacing: 6) {
             if artwork.isComplete {
                 Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint)
-                Text("Finished")
+                if artwork.activeSeconds >= 60 {
+                    Text(verbatim: "Finished · \(PaintingTime.spent(artwork.activeSeconds))")
+                } else {
+                    Text("Finished")
+                }
             } else if artwork.isStarted {
                 ProgressRing(fraction: artwork.fractionComplete, lineWidth: 2.4)
                     .frame(width: 14, height: 14)
