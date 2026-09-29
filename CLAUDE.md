@@ -58,7 +58,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
   `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,
   staging/trash folders). Writes are queued per artwork off the main actor; deletes are undoable.
-  `ArtworkPaintingView` hosts `PaintView` and autosaves (debounced, on background, on close).
+  `ArtworkPaintingView` hosts `PaintView` and autosaves (debounced, on background, on close). It is
+  pushed with a zoom transition whose swipe-down/pinch dismissal it turns off (they stole canvas
+  gestures; `PaintingNavigationTests` guards this).
 - Rendering without Metal: `Export/TemplateRasterizer` (CoreGraphics; vector geometry, falls back to
   the region map) backs thumbnails, share PNGs, create-flow previews and `PDFExporter`.
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`).
