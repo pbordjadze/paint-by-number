@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Visual + quantitative evaluation harness for the template pipeline.
 
-    tools/eval.py run IMAGE... --out DIR [--sheet-width 2400] [-- pbn generate options]
+    tools/eval.py run IMAGE... --out DIR [--sheet-width 2400] [--importance-dir DIR] [-- pbn generate options]
 
 For every image: converts to PPM, runs `pbn generate`, rasterizes the SVG outputs with
 resvg, and writes a contact sheet `DIR/<name>/sheet.png` (source | painted | template)
-plus `DIR/summary.json` and an overview grid `DIR/overview.png`.
+plus `DIR/summary.json` and an overview grid `DIR/overview.png`. With --importance-dir,
+`<name>.pgm` in that directory (if present) is passed to pbn as the importance map.
 
 Requires a static release build of pbn:  tools/swift.sh build -c release --static-swift-stdlib
 """
@@ -27,13 +28,16 @@ def svg_to_png(svg, png, width=None):
     subprocess.run(cmd, check=True, cwd=os.path.join(ROOT, "tools"))
 
 
-def process(image_path, out_root, pbn_args, sheet_width):
+def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
     name = os.path.splitext(os.path.basename(image_path))[0]
     out = os.path.join(out_root, name)
     os.makedirs(out, exist_ok=True)
     ppm = os.path.join(out, "input.ppm")
     Image.open(image_path).convert("RGB").save(ppm)
-    res = subprocess.run([PBN, "generate", ppm, out] + pbn_args, capture_output=True, text=True)
+    extra = []
+    if importance_dir and os.path.exists(os.path.join(importance_dir, name + ".pgm")):
+        extra = ["--importance", os.path.join(importance_dir, name + ".pgm")]
+    res = subprocess.run([PBN, "generate", ppm, out] + pbn_args + extra, capture_output=True, text=True)
     if res.returncode != 0:
         print(f"[{name}] FAILED\n{res.stderr}", file=sys.stderr)
         return name, None
@@ -95,6 +99,7 @@ def main():
         argv, pbn_args = argv[:i], argv[i + 1:]
     out_root = "out"
     sheet_width = 2400
+    importance_dir = None
     images = []
     it = iter(argv)
     for a in it:
@@ -102,11 +107,13 @@ def main():
             out_root = next(it)
         elif a == "--sheet-width":
             sheet_width = int(next(it))
+        elif a == "--importance-dir":
+            importance_dir = next(it)
         else:
             images.append(a)
     os.makedirs(out_root, exist_ok=True)
     with ThreadPoolExecutor(max_workers=2) as pool:
-        results = list(pool.map(lambda p: process(p, out_root, pbn_args, sheet_width), images))
+        results = list(pool.map(lambda p: process(p, out_root, pbn_args, sheet_width, importance_dir), images))
     summary = {name: stats for name, stats in results if stats}
     json.dump(summary, open(os.path.join(out_root, "summary.json"), "w"), indent=2)
 

@@ -18,6 +18,10 @@ struct SegmentationParameters: Sendable {
     /// Exponent applied to palette histogram bin weights (< 1 lets small, distinct colors
     /// compete with large flat areas).
     var histogramGamma: Float
+    /// Independent palette searches; the best one wins.
+    var paletteRestarts: Int
+    /// Extra palette weight for colors that stand out from their surroundings.
+    var paletteSaliency: Float
     /// Palette colors closer than this (OKLab) are merged.
     var minPaletteDistance: Float
 
@@ -34,6 +38,8 @@ struct SegmentationParameters: Sendable {
     var openingSize: Int
     /// Strength of importance on the area threshold: area × 2^(strength × (0.5 − importance)).
     var importanceStrength: Float
+    /// Domain stretch in important areas (1 + this × importance), i.e. gentler smoothing.
+    var importanceSharpening: Float
     /// Merge target preference for long shared borders (OKLab-distance equivalent).
     var mergeShareWeight: Float
     /// Region-level k-means passes when refitting the palette.
@@ -47,7 +53,7 @@ struct SegmentationParameters: Sendable {
 
         colorCount = s.colorCount
         seed = s.seed
-        chromaScale = Tune.f("CHROMA", 1.3)
+        chromaScale = Tune.f("CHROMA", 1.6)
 
         smoothSpatial = side * Tune.f("SS", 0.008) * lerp(1.4, 0.7, d) * lerp(0.7, 1.3, sm)
         smoothRange = Tune.f("SR", 0.06) * lerp(0.7, 1.4, sm)
@@ -55,6 +61,8 @@ struct SegmentationParameters: Sendable {
 
         histogramGamma = Tune.f("GAMMA", 0.6)
         minPaletteDistance = Tune.f("MINPAL", 0.04)
+        paletteSaliency = Tune.f("SAL", 1)
+        paletteRestarts = Int(Tune.f("RESTARTS", 3))
 
         potts = Tune.f("POTTS", 0.0012) * lerp(0.5, 1.6, sm)
         pottsEdgeSigma = Tune.f("PSIG", 0.05)
@@ -65,8 +73,9 @@ struct SegmentationParameters: Sendable {
         minArea = max(area * fraction, 12)
         minRadius = lerp(Tune.f("R0", 4), Tune.f("R1", 2), d)
         openingSize = d > 0.7 ? 2 : 3
-        importanceStrength = Tune.f("IMPS", 2)
+        importanceStrength = Tune.f("IMPS", 3)
         mergeShareWeight = Tune.f("SHARE", 0.04)
+        importanceSharpening = Tune.f("ISHARP", 1)
         refineIterations = Int(Tune.f("REFINE", 3))
     }
 

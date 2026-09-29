@@ -12,12 +12,15 @@ enum DomainTransformFilter {
     ///   - guide: Image whose edges stop the smoothing (usually `input` or a denoised copy).
     ///   - sigmaSpatial: Spatial standard deviation in pixels.
     ///   - sigmaRange: Range standard deviation in OKLab units.
+    ///   - stiffness: Optional per-pixel factor (≥ 1) stretching the domain there, which
+    ///     shrinks the effective spatial sigma (used to keep detail in important areas).
     static func filter(
         _ input: Grid<SIMD4<Float>>,
         guide: Grid<SIMD4<Float>>,
         sigmaSpatial: Float,
         sigmaRange: Float,
         iterations: Int,
+        stiffness: [Float]? = nil,
         cancel: CancellationCheck
     ) throws -> Grid<SIMD4<Float>> {
         let w = input.width, h = input.height, n = w * h
@@ -47,6 +50,17 @@ enum DomainTransformFilter {
                                 for x in 0..<w {
                                     let d = gp.value[row + x] - gp.value[row + x - w]
                                     vp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
+                                }
+                            }
+                        }
+                    }
+                    if let stiffness {
+                        stiffness.withUnsafeBufferPointer { sb in
+                            let sp = UncheckedSendable(sb.baseAddress!)
+                            Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
+                                for i in range {
+                                    hp.value[i] *= sp.value[i]
+                                    vp.value[i] *= sp.value[i]
                                 }
                             }
                         }

@@ -13,6 +13,7 @@ enum PaletteRefiner {
         classes: inout [UInt32],
         width w: Int, height h: Int,
         lab: [SIMD4<Float>],
+        importance: [Float],
         palette initial: [SIMD3<Float>],
         minDistance: Float,
         chromaScale: Float,
@@ -22,12 +23,23 @@ enum PaletteRefiner {
         let cc = ConnectedComponents.label(Grid(width: w, height: h, storage: classes))
         let n = cc.count
         guard n > 0 else { return [] }
+        // Per region: color sum and pixel count, and the importance-weighted equivalents
+        // (paints are refitted toward what they cover in important areas, so a face does
+        // not take on the hue of hair that happens to share its paint).
         var sums = [SIMD4<Double>](repeating: .zero, count: n)
+        var weighted = [SIMD4<Double>](repeating: .zero, count: n)
+        var weightedChroma = [Double](repeating: 0, count: n)
         cc.labels.storage.withUnsafeBufferPointer { lb in
             lab.withUnsafeBufferPointer { cb in
-                for i in 0..<lb.count {
-                    let c = cb[i]
-                    sums[Int(lb[i])] += SIMD4(Double(c.x), Double(c.y), Double(c.z), 1)
+                importance.withUnsafeBufferPointer { ib in
+                    for i in 0..<lb.count {
+                        let c = SIMD4(Double(cb[i].x), Double(cb[i].y), Double(cb[i].z), 1)
+                        let r = Int(lb[i])
+                        let weight = Double(PaletteBuilder.paletteWeight(importance: ib[i]))
+                        sums[r] += c
+                        weighted[r] += c * weight
+                        weightedChroma[r] += (c.y * c.y + c.z * c.z).squareRoot() * weight
+                    }
                 }
             }
         }
@@ -40,12 +52,25 @@ enum PaletteRefiner {
         let separation = PaletteBuilder.Separation(minDistance: minDistance * 1.01, metric: unscale)
 
         // Paint j := mean of the pixels it covers, then nudge apart any that became too
-        // similar to tell apart.
+        // similar to tell apart. Averaging pixels of slightly different hues shortens the
+        // chroma vector, and flat paint already reads duller than textured photo, so the
+        // paint keeps the pixels' average chroma (bounded) along the mean hue.
         func refit() {
             var acc = [SIMD4<Double>](repeating: .zero, count: k)
-            for r in 0..<n { acc[cls[r]] += sums[r] }
+            var chroma = [Double](repeating: 0, count: k)
+            for r in 0..<n {
+                acc[cls[r]] += weighted[r]
+                chroma[cls[r]] += weightedChroma[r]
+            }
             for j in 0..<k where acc[j].w > 0 {
-                palette[j] = SIMD3(Float(acc[j].x / acc[j].w), Float(acc[j].y / acc[j].w), Float(acc[j].z / acc[j].w))
+                var c = SIMD3(Float(acc[j].x / acc[j].w), Float(acc[j].y / acc[j].w), Float(acc[j].z / acc[j].w))
+                let meanChroma = (c.y * c.y + c.z * c.z).squareRoot()
+                if meanChroma > 0.02 * chromaScale {
+                    let boost = min(Float(chroma[j] / acc[j].w) / meanChroma, 1.2)
+                    c.y *= boost
+                    c.z *= boost
+                }
+                palette[j] = c
             }
             let active = (0..<k).filter { used[$0] }
             var colors = active.map { palette[$0] }

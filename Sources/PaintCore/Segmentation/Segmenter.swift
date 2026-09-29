@@ -29,19 +29,20 @@ public enum Segmenter {
         let p = SegmentationParameters(settings: settings, width: w, height: h)
 
         let lab = clock.measure("segment.oklab") { WorkingImage.okLab(image, chromaScale: p.chromaScale) }
-        let weights = clock.measure("segment.importance") {
-            WorkingImage.importance(importance, width: w, height: h)
-        }
+        let weights = clock.measure("segment.importance") { ImportanceMap.make(importance, lab: lab) }
+        DebugDump.scalar(weights, width: w, height: h, name: "importance")
         try cancel.throwIfCancelled()
         progress(0.05)
 
         let smooth = try clock.measure("segment.smooth") {
             try DomainTransformFilter.filter(
                 lab, guide: lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
-                iterations: p.smoothIterations, cancel: cancel)
+                iterations: p.smoothIterations, stiffness: weights.map { 1 + p.importanceSharpening * $0 },
+                cancel: cancel)
         }
         try cancel.throwIfCancelled()
         progress(0.25)
+        DebugDump.lab(smooth, name: "smooth", chromaScale: p.chromaScale)
 
         let palette = try clock.measure("segment.palette") {
             try PaletteBuilder.build(colors: smooth, importance: weights, parameters: p, cancel: cancel)
@@ -59,6 +60,7 @@ public enum Segmenter {
         }
         try cancel.throwIfCancelled()
         progress(0.5)
+        DebugDump.classes(classes, width: w, height: h, palette: palette, name: "assigned", chromaScale: p.chromaScale)
 
         _ = try clock.measure("segment.regions") {
             try RegionSimplifier.simplify(
@@ -70,7 +72,7 @@ public enum Segmenter {
 
         let finalPalette = clock.measure("segment.refine") {
             PaletteRefiner.refine(
-                classes: &classes, width: w, height: h, lab: lab.storage, palette: palette,
+                classes: &classes, width: w, height: h, lab: lab.storage, importance: weights, palette: palette,
                 minDistance: p.minPaletteDistance, chromaScale: p.chromaScale, iterations: p.refineIterations)
         }
         let components = clock.measure("segment.finalize") {

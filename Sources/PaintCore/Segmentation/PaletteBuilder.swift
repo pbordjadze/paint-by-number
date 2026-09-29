@@ -19,14 +19,34 @@ enum PaletteBuilder {
         parameters p: SegmentationParameters,
         cancel: CancellationCheck
     ) throws -> [SIMD3<Float>] {
-        let samples = histogram(colors: colors, importance: importance, gamma: p.histogramGamma)
+        let samples = histogram(
+            colors: colors, importance: importance, gamma: p.histogramGamma, chromaScale: p.chromaScale,
+            saliency: p.paletteSaliency)
         guard !samples.colors.isEmpty else { return [] }
         let k = min(p.colorCount, samples.colors.count)
         // Separation is judged in true OKLab, not the chroma-stretched working space.
         let separation = Separation(
             minDistance: p.minPaletteDistance * 1.1,
             metric: SIMD3(1, 1 / p.chromaScale, 1 / p.chromaScale))
+        // A few seeded restarts; keep the palette with the lowest (penalized) error.
         var rng = SplitMix64(seed: p.seed)
+        var best: [SIMD3<Float>] = []
+        var bestCost = Float.infinity
+        for _ in 0..<p.paletteRestarts {
+            let centers = try search(samples, k: k, separation: separation, rng: &rng, cancel: cancel)
+            let cost = totalCost(samples, centers: centers)
+            if cost < bestCost {
+                bestCost = cost
+                best = centers
+            }
+        }
+        return best
+    }
+
+    /// k-means++ seeding, constrained Lloyd, then refill and swap-based local search.
+    static func search(
+        _ samples: Samples, k: Int, separation: Separation, rng: inout SplitMix64, cancel: CancellationCheck
+    ) throws -> [SIMD3<Float>] {
         var centers = seedPlusPlus(samples, k: k, rng: &rng)
         centers = lloyd(samples, centers: centers, iterations: 30, separation: separation)
         try cancel.throwIfCancelled()
@@ -51,7 +71,15 @@ enum PaletteBuilder {
 
     // MARK: - Local search
 
-    /// Weighted squared distance of every sample to its nearest and second-nearest center.
+    /// Error measure of the local search: squared distance, growing faster once the error
+    /// is clearly visible, so a small but distinct color (an iris, a flower) outweighs
+    /// splitting a large, already well-matched area into yet another shade.
+    @inline(__always)
+    static func penalty(_ d2: Float) -> Float {
+        d2 * (1 + d2 * (1 / (0.05 * 0.05)))
+    }
+
+    /// Penalized error of every sample to its nearest and second-nearest center.
     static func nearestTwo(_ s: Samples, centers: [SIMD3<Float>]) -> (d1: [Float], d2: [Float], index: [Int32]) {
         let m = s.colors.count
         var d1 = [Float](repeating: .infinity, count: m)
@@ -64,7 +92,7 @@ enum PaletteBuilder {
                 let d = distanceSquared(c, center)
                 if d < a { b = a; a = d; ai = j } else if d < b { b = d }
             }
-            d1[i] = a; d2[i] = b; index[i] = Int32(ai)
+            d1[i] = penalty(a); d2[i] = penalty(b); index[i] = Int32(ai)
         }
         return (d1, d2, index)
     }
@@ -91,7 +119,7 @@ enum PaletteBuilder {
                 let c = s.colors[candidates[ci]]
                 var gain: Float = 0
                 for i in 0..<m {
-                    let d = distanceSquared(s.colors[i], c)
+                    let d = penalty(distanceSquared(s.colors[i], c))
                     if d < d1[i] { gain += s.weights[i] * (d1[i] - d) }
                 }
                 return gain
@@ -139,7 +167,7 @@ enum PaletteBuilder {
         for i in 0..<s.colors.count {
             var best = Float.infinity
             for c in centers { best = min(best, distanceSquared(s.colors[i], c)) }
-            cost += s.weights[i] * best
+            cost += s.weights[i] * penalty(best)
         }
         return cost
     }
@@ -147,40 +175,51 @@ enum PaletteBuilder {
     // MARK: - Histogram
 
     /// Bins a regular subsample of the image into a 64³ OKLab grid. Each bin keeps its
-    /// weighted mean color; its weight is (Σ pixel weights)^gamma.
-    static func histogram(colors: Grid<SIMD4<Float>>, importance: [Float], gamma: Float) -> Samples {
+    /// weighted mean color; its weight is (Σ sample weights)^gamma.
+    ///
+    /// Sample weights combine importance with a center–surround term: colors that stand out
+    /// from their neighbourhood (an iris against skin and sclera, a flower against leaves)
+    /// count more, since they carry the picture's details.
+    static func histogram(
+        colors: Grid<SIMD4<Float>>, importance: [Float], gamma: Float, chromaScale: Float, saliency: Float
+    ) -> Samples {
         let w = colors.width, h = colors.height, n = w * h
         guard n > 0 else { return Samples(colors: [], weights: []) }
         let step = max(1, Int((Double(n) / 120_000).squareRoot().rounded(.up)))
+        let gx = (w - step / 2 + step - 1) / step, gy = (h - step / 2 + step - 1) / step
+        var grid = [SIMD4<Float>](repeating: .zero, count: gx * gy)
+        var gridImportance = [Float](repeating: 0, count: gx * gy)
+        for j in 0..<gy {
+            for i in 0..<gx {
+                let src = (j * step + step / 2) * w + i * step + step / 2
+                grid[j * gx + i] = colors.storage[src]
+                gridImportance[j * gx + i] = importance[src]
+            }
+        }
+        let radius = max(1, Int(Float(n).squareRoot() / 80 / Float(step)))
+        let surround = ImportanceMap.boxBlur(grid, width: gx, height: gy, radius: radius, passes: 2)
+
         let levels = 64
+        let abScale = Float(levels) / (0.8 * chromaScale)
         var index = [Int32](repeating: -1, count: levels * levels * levels)
         var sums: [SIMD4<Float>] = []  // xyz = weighted color sum, w = weight sum
         sums.reserveCapacity(8192)
-        colors.storage.withUnsafeBufferPointer { c in
-            importance.withUnsafeBufferPointer { imp in
-                var y = step / 2
-                while y < h {
-                    var x = step / 2
-                    while x < w {
-                        let i = y * w + x
-                        let lab = c[i]
-                        let lq = min(max(Int(lab.x * Float(levels)), 0), levels - 1)
-                        let aq = min(max(Int((lab.y + 0.4) * Float(levels) / 0.8), 0), levels - 1)
-                        let bq = min(max(Int((lab.z + 0.4) * Float(levels) / 0.8), 0), levels - 1)
-                        let key = (lq * levels + aq) * levels + bq
-                        var slot = Int(index[key])
-                        if slot < 0 {
-                            slot = sums.count
-                            index[key] = Int32(slot)
-                            sums.append(.zero)
-                        }
-                        let weight = 0.25 + imp[i]
-                        sums[slot] += SIMD4(lab.x * weight, lab.y * weight, lab.z * weight, weight)
-                        x += step
-                    }
-                    y += step
-                }
+        for g in 0..<grid.count {
+            let lab = grid[g]
+            let lq = min(max(Int(lab.x * Float(levels)), 0), levels - 1)
+            let aq = min(max(Int((lab.y + 0.4 * chromaScale) * abScale), 0), levels - 1)
+            let bq = min(max(Int((lab.z + 0.4 * chromaScale) * abScale), 0), levels - 1)
+            let key = (lq * levels + aq) * levels + bq
+            var slot = Int(index[key])
+            if slot < 0 {
+                slot = sums.count
+                index[key] = Int32(slot)
+                sums.append(.zero)
             }
+            let e = lab - surround[g]
+            let contrast = min((e * e).sum().squareRoot() / 0.05, 2)
+            let weight = paletteWeight(importance: gridImportance[g]) * (1 + saliency * contrast)
+            sums[slot] += SIMD4(lab.x * weight, lab.y * weight, lab.z * weight, weight)
         }
         var out = Samples(colors: [], weights: [])
         out.colors.reserveCapacity(sums.count)
@@ -190,6 +229,13 @@ enum PaletteBuilder {
             out.weights.append(pow(s.w, gamma))
         }
         return out
+    }
+
+    /// How much a pixel counts toward the palette: important pixels (faces, subject)
+    /// claim a clearly larger share of the paints than background.
+    @inline(__always)
+    static func paletteWeight(importance: Float) -> Float {
+        0.1 + importance * importance
     }
 
     // MARK: - k-means
