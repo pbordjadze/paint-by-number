@@ -49,11 +49,9 @@ public enum Segmenter {
                     importance: weights, strength: p.textureFlattening, exponent: p.structureExponent, cancel: cancel)
                 : nil
             try cancel.throwIfCancelled()
-            let stiffness = Grid(width: w, height: h, storage: weights).map { 1 + p.importanceSharpening * $0 }.storage
-            try cancel.throwIfCancelled()
             return try DomainTransformFilter.filter(
-                lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
-                iterations: p.smoothIterations, edgeScale: edgeScale, stiffness: stiffness, cancel: cancel)
+                lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange, iterations: p.smoothIterations,
+                edgeScale: edgeScale, stiffness: (weights, p.importanceSharpening), cancel: cancel)
         }
         try cancel.throwIfCancelled()
         progress(0.25)
