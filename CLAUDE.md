@@ -9,7 +9,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   (builds on Linux too). `Sources/pbn` — headless CLI. `Tests/PaintCoreTests` — Swift Testing.
   - `Foundation/` grids, color science (OKLab, Display P3), EDT, connected components, resampling
   - `Model/` `Template` (the product of the pipeline) + binary coding, `GenerationSettings`, `Segmentation`
-  - `Segmentation/` photo → region label map + palette (`Segmenter.segment`)
+  - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
+    its doc comment, all tunables in `SegmentationParameters`)
   - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
   - `Export/` SVG (and later PDF helpers)
   - `TemplateGenerator.swift` entry point composing the stages, with `StageClock` timings
@@ -26,7 +27,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `python3 tools/eval.py run <images...> --out <dir> [-- --colors 24 --detail 0.5]` — runs the
   pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
   `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, timings).
-  Look at the PNGs with the Read tool.
+  Look at the PNGs with the Read tool. The sheet's second row shows the raw region raster, a 2×
+  `boundaries.png` (1-px region outlines, best for judging segmentation shapes) and the palette;
+  `--importance-dir DIR` passes `DIR/<name>.pgm` as the importance map (Vision stand-in).
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
   corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
 - `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
