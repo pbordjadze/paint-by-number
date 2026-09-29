@@ -1,0 +1,157 @@
+import AVFoundation
+import Foundation
+
+/// Soft, musical feedback sounds, synthesized at launch (no audio assets).
+///
+/// Every palette color owns a note of a pentatonic scale, so painting plays gentle
+/// kalimba-like melodies that can never clash. Uses the ambient session category: it mixes
+/// with the user's music and respects the silent switch.
+final class SoundPlayer {
+    private let engine = AVAudioEngine()
+    private let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+    private var voices: [AVAudioPlayerNode] = []
+    private var nextVoice = 0
+    private var notes: [AVAudioPCMBuffer] = []
+    private var thud: AVAudioPCMBuffer?
+    private var isSetUp = false
+    private var lastNote: ContinuousClock.Instant?
+    private let clock = ContinuousClock()
+
+    /// C major pentatonic over two octaves from C4.
+    private static let scale: [Double] = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66]
+
+    func prepare() { _ = setUpIfNeeded() }
+
+    /// The note for a palette color. `velocity` 0…1.
+    func paint(color: Int, velocity: Float) {
+        let now = clock.now
+        if let last = lastNote, now - last < .milliseconds(40) { return }
+        lastNote = now
+        guard setUpIfNeeded() else { return }
+        play(notes[color % notes.count], volume: 0.18 + 0.22 * min(max(velocity, 0), 1))
+    }
+
+    func reject() {
+        guard setUpIfNeeded(), let thud else { return }
+        play(thud, volume: 0.35)
+    }
+
+    /// A little rising arpeggio starting at the color's note.
+    func colorComplete(color: Int) {
+        guard setUpIfNeeded() else { return }
+        for (k, step) in [0, 2, 4].enumerated() {
+            play(notes[(color + step) % notes.count], volume: 0.3, delay: 0.12 + 0.085 * Double(k))
+        }
+    }
+
+    func celebrate() {
+        guard setUpIfNeeded() else { return }
+        for i in 0..<notes.count {
+            play(notes[i], volume: 0.22 + 0.01 * Float(i), delay: 0.07 * Double(i))
+        }
+        for i in [5, 7, 9, 11] {
+            play(notes[i], volume: 0.28, delay: 0.07 * Double(notes.count) + 0.12)
+        }
+    }
+
+    // MARK: Engine
+
+    private func setUpIfNeeded() -> Bool {
+        if isSetUp {
+            if !engine.isRunning { try? engine.start() }
+            return engine.isRunning
+        }
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
+            for _ in 0..<10 {
+                let voice = AVAudioPlayerNode()
+                engine.attach(voice)
+                engine.connect(voice, to: engine.mainMixerNode, format: format)
+                voices.append(voice)
+            }
+            engine.mainMixerNode.outputVolume = 0.8
+            engine.prepare()
+            try engine.start()
+            for voice in voices { voice.play() }
+            notes = Self.scale.map { buffer(ToneSynth.kalimba(frequency: $0, sampleRate: format.sampleRate)) }
+            thud = buffer(ToneSynth.thud(sampleRate: format.sampleRate))
+            isSetUp = true
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private func play(_ buffer: AVAudioPCMBuffer, volume: Float, delay: TimeInterval = 0) {
+        let voice = voices[nextVoice]
+        nextVoice = (nextVoice + 1) % voices.count
+        voice.volume = volume
+        if delay > 0, let nodeTime = voice.lastRenderTime, let playerTime = voice.playerTime(forNodeTime: nodeTime) {
+            let start = AVAudioTime(
+                sampleTime: playerTime.sampleTime + AVAudioFramePosition(delay * format.sampleRate),
+                atRate: format.sampleRate)
+            voice.scheduleBuffer(buffer, at: start, options: [], completionHandler: nil)
+        } else {
+            voice.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
+        }
+        if !voice.isPlaying { voice.play() }
+    }
+
+    private func buffer(_ samples: [Float]) -> AVAudioPCMBuffer {
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(samples.count))!
+        buffer.frameLength = AVAudioFrameCount(samples.count)
+        samples.withUnsafeBufferPointer { src in
+            buffer.floatChannelData![0].update(from: src.baseAddress!, count: samples.count)
+        }
+        return buffer
+    }
+}
+
+/// Tiny additive synthesizer for the feedback sounds.
+nonisolated enum ToneSynth {
+    /// Plucked-tine tone: fundamental with a bright, fast-decaying inharmonic partial and a
+    /// soft "wet" noise onset (the brush touching the canvas).
+    static func kalimba(frequency f: Double, sampleRate sr: Double) -> [Float] {
+        let n = Int(sr * 0.9)
+        var out = [Float](repeating: 0, count: n)
+        var noise = SplitMixNoise(seed: UInt64(f * 1000))
+        var lowpassed: Double = 0
+        for i in 0..<n {
+            let t = Double(i) / sr
+            let attack = min(1, t / 0.003)
+            let body = sin(2 * .pi * f * t) * exp(-t * 5.5)
+            let octave = 0.18 * sin(2 * .pi * 2 * f * t) * exp(-t * 9)
+            let tine = 0.22 * sin(2 * .pi * 5.4 * f * t) * exp(-t * 28)
+            lowpassed += 0.25 * (noise.next() - lowpassed)
+            let brush = 0.10 * lowpassed * exp(-t * 45)
+            out[i] = Float(attack * (body + octave + tine) + brush) * 0.55
+        }
+        return out
+    }
+
+    /// Muted wooden "thock" for a wrong-color tap.
+    static func thud(sampleRate sr: Double) -> [Float] {
+        let n = Int(sr * 0.18)
+        var out = [Float](repeating: 0, count: n)
+        for i in 0..<n {
+            let t = Double(i) / sr
+            let pitch = 180 * (1 - 0.25 * min(1, t / 0.08))
+            let attack = min(1, t / 0.002)
+            out[i] = Float(attack * sin(2 * .pi * pitch * t) * exp(-t * 32)) * 0.6
+        }
+        return out
+    }
+
+    struct SplitMixNoise {
+        var state: UInt64
+        init(seed: UInt64) { state = seed &+ 0x9E37_79B9_7F4A_7C15 }
+        mutating func next() -> Double {
+            state &+= 0x9E37_79B9_7F4A_7C15
+            var z = state
+            z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+            z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+            z ^= z >> 31
+            return Double(z >> 11) / Double(1 << 53) * 2 - 1
+        }
+    }
+}
