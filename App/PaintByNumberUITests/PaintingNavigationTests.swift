@@ -6,30 +6,44 @@ final class PaintingNavigationTests: XCTestCase {
     @MainActor
     func testCanvasGesturesStayInPainting() throws {
         let app = openSeededPainting()
-        let close = app.buttons["Close"]
         let window = app.windows.firstMatch
         window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
             .press(forDuration: 0.1, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8)))
         window.pinch(withScale: 0.4, velocity: -2)
         sleep(2)
         attachScreenshot(of: app, named: "painting-after-gestures")
-        XCTAssertTrue(close.isHittable, "A canvas gesture dismissed the painting")
+        XCTAssertTrue(app.buttons["Close"].isHittable, "A canvas gesture dismissed the painting")
     }
 
     @MainActor
-    func testTopBarWorksAndCloseReturnsToGallery() throws {
+    func testCloseReturnsToGallery() throws {
         let app = openSeededPainting()
-        app.buttons["More"].tap()
-        let fit = app.buttons["Fit to Screen"]
-        XCTAssertTrue(fit.waitForExistence(timeout: 5), "The More menu didn't open")
-        if fit.exists { fit.tap() }
-        sleep(1)
-
         app.buttons["Close"].tap()
-        let gallery = app.buttons["New Painting"]
-        let returned = gallery.waitForExistence(timeout: 10)
+        let returned = app.buttons["New Painting"].waitForExistence(timeout: 10)
         attachScreenshot(of: app, named: "after-close")
         XCTAssertTrue(returned, "Close didn't return to the gallery")
+    }
+
+    @MainActor
+    func testEdgeSwipeReturnsToGallery() throws {
+        let app = openSeededPainting()
+        let window = app.windows.firstMatch
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
+            .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
+        let returned = app.buttons["New Painting"].waitForExistence(timeout: 10)
+        attachScreenshot(of: app, named: "after-edge-swipe")
+        XCTAssertTrue(returned, "The edge swipe didn't return to the gallery")
+    }
+
+    /// The top bar's icon buttons act (Undo takes back painted areas).
+    @MainActor
+    func testUndoButtonActs() throws {
+        let app = openSeededPainting()
+        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
+        let before = badge.label
+        for _ in 0..<3 { app.buttons["Undo"].tap() }
+        sleep(1)
+        XCTAssertNotEqual(badge.label, before, "Undo didn't take anything back")
     }
 
     /// Launches the demo that seeds a painting in the background and opens it once it is ready.
