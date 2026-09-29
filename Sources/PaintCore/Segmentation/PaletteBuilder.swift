@@ -30,13 +30,23 @@ enum PaletteBuilder {
         let separation = Separation(
             minDistance: p.minPaletteDistance * 1.1,
             metric: SIMD3(1, 1 / p.chromaScale, 1 / p.chromaScale))
-        // A few seeded restarts; keep the palette with the lowest (penalized) error.
+        // A few seeded restarts; keep the palette with the lowest (penalized) error. Only the
+        // seeding draws random numbers, so seeds are drawn in order and the searches run
+        // concurrently.
         var rng = SplitMix64(seed: p.seed)
+        let seeds = (0..<p.paletteRestarts).map { _ in seedPlusPlus(samples, k: k, rng: &rng) }
+        let results = Parallel.mapBands(seeds.count) { range in
+            range.map { r in
+                Result { () throws -> (centers: [SIMD3<Float>], cost: Float) in
+                    let centers = try search(samples, seeds: seeds[r], k: k, separation: separation, cancel: cancel)
+                    return (centers, totalCost(samples, centers: centers))
+                }
+            }
+        }.joined()
         var best: [SIMD3<Float>] = []
         var bestCost = Float.infinity
-        for _ in 0..<p.paletteRestarts {
-            let centers = try search(samples, k: k, separation: separation, rng: &rng, cancel: cancel)
-            let cost = totalCost(samples, centers: centers)
+        for result in results {
+            let (centers, cost) = try result.get()
             if cost < bestCost {
                 bestCost = cost
                 best = centers
@@ -45,12 +55,11 @@ enum PaletteBuilder {
         return best
     }
 
-    /// k-means++ seeding, constrained Lloyd, then refill and swap-based local search.
+    /// Constrained Lloyd from k-means++ seeds, then refill and swap-based local search.
     static func search(
-        _ samples: Samples, k: Int, separation: Separation, rng: inout SplitMix64, cancel: CancellationCheck
+        _ samples: Samples, seeds: [SIMD3<Float>], k: Int, separation: Separation, cancel: CancellationCheck
     ) throws -> [SIMD3<Float>] {
-        var centers = seedPlusPlus(samples, k: k, rng: &rng)
-        centers = lloyd(samples, centers: centers, iterations: 30, separation: separation)
+        var centers = lloyd(samples, centers: seeds, iterations: 30, separation: separation)
         try cancel.throwIfCancelled()
 
         // Refill if separation left gaps, then escape k-means' local minima by swapping the
@@ -202,25 +211,46 @@ enum PaletteBuilder {
 
         let levels = 64
         let abScale = Float(levels) / (0.8 * chromaScale)
+        // Bin and weight of every sample (in parallel), then accumulate in sample order.
+        var keys = [Int32](repeating: 0, count: grid.count)
+        var contributions = [SIMD4<Float>](repeating: .zero, count: grid.count)
+        grid.withUnsafeBufferPointer { gb in
+            surround.withUnsafeBufferPointer { sb in
+                gridImportance.withUnsafeBufferPointer { ib in
+                    keys.withUnsafeMutableBufferPointer { kb in
+                        contributions.withUnsafeMutableBufferPointer { cb in
+                            let kp = UncheckedSendable(kb.baseAddress!), cp = UncheckedSendable(cb.baseAddress!)
+                            let g = UncheckedSendable(gb), su = UncheckedSendable(sb), im = UncheckedSendable(ib)
+                            Parallel.forEachBand(gb.count, minimumBandSize: 8192) { range in
+                                for i in range {
+                                    let lab = g.value[i]
+                                    let lq = min(max(Int(lab.x * Float(levels)), 0), levels - 1)
+                                    let aq = min(max(Int((lab.y + 0.4 * chromaScale) * abScale), 0), levels - 1)
+                                    let bq = min(max(Int((lab.z + 0.4 * chromaScale) * abScale), 0), levels - 1)
+                                    kp.value[i] = Int32((lq * levels + aq) * levels + bq)
+                                    let e = lab - su.value[i]
+                                    let contrast = min((e * e).sum().squareRoot() / 0.05, 2)
+                                    let weight = paletteWeight(importance: im.value[i]) * (1 + saliency * contrast)
+                                    cp.value[i] = SIMD4(lab.x * weight, lab.y * weight, lab.z * weight, weight)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         var index = [Int32](repeating: -1, count: levels * levels * levels)
         var sums: [SIMD4<Float>] = []  // xyz = weighted color sum, w = weight sum
         sums.reserveCapacity(8192)
         for g in 0..<grid.count {
-            let lab = grid[g]
-            let lq = min(max(Int(lab.x * Float(levels)), 0), levels - 1)
-            let aq = min(max(Int((lab.y + 0.4 * chromaScale) * abScale), 0), levels - 1)
-            let bq = min(max(Int((lab.z + 0.4 * chromaScale) * abScale), 0), levels - 1)
-            let key = (lq * levels + aq) * levels + bq
+            let key = Int(keys[g])
             var slot = Int(index[key])
             if slot < 0 {
                 slot = sums.count
                 index[key] = Int32(slot)
                 sums.append(.zero)
             }
-            let e = lab - surround[g]
-            let contrast = min((e * e).sum().squareRoot() / 0.05, 2)
-            let weight = paletteWeight(importance: gridImportance[g]) * (1 + saliency * contrast)
-            sums[slot] += SIMD4(lab.x * weight, lab.y * weight, lab.z * weight, weight)
+            sums[slot] += contributions[g]
         }
         var out = Samples(colors: [], weights: [])
         out.colors.reserveCapacity(sums.count)

@@ -58,10 +58,10 @@ public enum Segmenter {
         progress(0.35)
 
         var classes = try clock.measure("segment.assign") { () throws -> [UInt32] in
-            var labels = LabelRegularizer.assignNearest(smooth, palette: palette)
-            try LabelRegularizer.regularize(
+            var labels = clock.measure("segment.assign.nearest") { LabelRegularizer.assignNearest(smooth, palette: palette) }
+            try clock.measure("segment.assign.icm") { try LabelRegularizer.regularize(
                 &labels, colors: smooth, palette: palette, strength: p.potts, edgeSigma: p.pottsEdgeSigma,
-                iterations: p.icmIterations, cancel: cancel)
+                iterations: p.icmIterations, cancel: cancel) }
             return labels
         }
         try cancel.throwIfCancelled()
