@@ -29,6 +29,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   Look at the PNGs with the Read tool.
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
   corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
+- `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
+  distinct color) — ideal for judging curve quality on synthetic shapes. `pbn check <t.pbnt>`
+  runs `Template.validate()` (planarity, ring orientation, mesh coverage/watertightness, labels).
+- Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
+  documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
 
 ## iOS app (App/)
 

@@ -7,6 +7,8 @@
 /// serialized quickly.
 public struct Template: Sendable, Equatable {
     public static let formatVersion: UInt32 = 1
+    /// Grid all boundary coordinates are snapped to, canvas units.
+    public static let coordinateQuantum: Float = 1.0 / 256
 
     /// Canvas size in units.
     public var width: Int
@@ -19,10 +21,13 @@ public struct Template: Sendable, Equatable {
     /// Paintable regions. A region is one connected area of a single palette color.
     public var regions: [Region]
 
-    /// Shared polyline vertices for all boundary edges.
+    /// Shared polyline vertices for all boundary edges. Coordinates are exact multiples of
+    /// `coordinateQuantum`, so geometric predicates on them can be evaluated exactly.
     public var points: [SIMD2<Float>]
     /// Boundary edges: maximal polylines separating exactly two regions (or a region and
     /// the canvas border). Shared by both neighbours, so fills never crack or overlap.
+    /// Together they form a planar subdivision of the canvas: edges meet only at their
+    /// end points (junctions) and never cross or touch elsewhere.
     public var edges: [BoundaryEdge]
     /// Edge references forming region rings, grouped per ring.
     public var ringEdges: [EdgeRef]
@@ -71,11 +76,12 @@ public struct PaletteColor: Sendable, Hashable, Codable {
 public struct Region: Sendable, Hashable {
     /// Palette index.
     public var colorIndex: UInt32
-    /// Area in square canvas units.
+    /// Area of the (smoothed) polygon in square canvas units.
     public var area: Float
-    /// Bounding box in canvas units.
+    /// Integer bounding box of the (smoothed) polygon in canvas units.
     public var bounds: PixelBounds
-    /// Radius of the largest inscribed disc (≈ how big a number fits).
+    /// Radius of the largest inscribed disc of the polygon (≈ how big a number fits); the
+    /// primary label sits at its centre.
     public var inscribedRadius: Float
     /// Span into `Template.rings` (first ring is the outer boundary; others are holes).
     public var ringStart: UInt32
@@ -101,17 +107,33 @@ public struct Region: Sendable, Hashable {
 }
 
 /// A polyline separating two regions.
+///
+/// **Orientation.** For a step from point `p` to the next point `q`, `left` is the region
+/// on the side where `cross(q − p, x − p) > 0`, with `cross(a, b) = a.x·b.y − a.y·b.x`
+/// evaluated on raw canvas coordinates (x right, y down). Equivalently: `left` is the
+/// region whose rings traverse the edge forwards, and every ring has positive signed
+/// (shoelace) area `½ Σ (xᵢ·yᵢ₊₁ − xᵢ₊₁·yᵢ)` when it is an outer ring and negative when it is
+/// a hole. On screen (y down) outer rings therefore run **clockwise** and `left` is on the
+/// walker's *right-hand* side; in a y-up frame they run counter-clockwise with `left` on
+/// the left. Example: an edge along the top canvas border running from (0, 0) to (w, 0)
+/// has the region below it (+y) as `left` and `right == outside`.
+///
+/// Edges are stored with `left < right` (so canvas-border edges always have
+/// `right == outside`). Junctions — lattice corners where three or more regions (counting
+/// the outside) meet, or where two regions touch diagonally — are the end points of edges
+/// and stay exactly on their integer lattice positions. An edge without any junction (the
+/// boundary between a region and the single region enclosing it, or the canvas border of
+/// a region touching no other region there) is *closed*: its last point repeats its first.
+/// An edge may also start and end at the same junction; then too the first point repeats.
 public struct BoundaryEdge: Sendable, Hashable {
     /// Sentinel neighbour meaning "outside the canvas".
     public static let outside: UInt32 = .max
 
-    /// Region on the left when walking the points in order (y down), i.e. the region
-    /// whose outer ring traverses this edge forwards when rings are counter-clockwise
-    /// in a y-up frame.
+    /// Region whose rings traverse this edge forwards (see the orientation note above).
     public var left: UInt32
-    /// Region on the right, or `outside`.
+    /// Region whose rings traverse this edge backwards, or `outside`.
     public var right: UInt32
-    /// Span into `Template.points`. Closed loops repeat their first point at the end.
+    /// Span into `Template.points` (at least 2 points).
     public var pointStart: UInt32
     public var pointCount: UInt32
 
@@ -131,6 +153,11 @@ public struct EdgeRef: Sendable, Hashable {
     }
 }
 
+/// A closed boundary of a region, as a cycle of directed edges. The region is on the
+/// `left` of every traversed edge, so outer rings have positive and holes negative signed
+/// area (see `BoundaryEdge`). Consecutive edge references share their end points; a ring
+/// is a simple polygon except that it may touch itself (or another ring of the region) at
+/// a junction where the region meets itself diagonally.
 public struct Ring: Sendable, Hashable {
     /// Span into `Template.ringEdges`.
     public var edgeStart: UInt32
@@ -142,7 +169,9 @@ public struct Ring: Sendable, Hashable {
     }
 }
 
-/// Where to draw a region's number.
+/// Where to draw a region's number. A region's first label sits at the pole of
+/// inaccessibility of its polygon (the most spacious point); large regions get further
+/// labels spread across them so a number stays in view when zoomed in.
 public struct Label: Sendable, Hashable {
     public var position: SIMD2<Float>
     /// Radius of free space around `position`; the glyph run is sized to fit inside.
@@ -159,7 +188,9 @@ public struct FillMesh: Sendable, Equatable {
     public var vertices: [SIMD2<Float>]
     /// Owning region of each vertex (vertices are never shared between regions).
     public var vertexRegion: [UInt32]
-    /// Triangle list indices into `vertices`.
+    /// Triangle list indices into `vertices`. Triangles have positive signed area, like
+    /// outer rings (clockwise on screen, y down). Each region's triangles exactly cover its
+    /// polygon, using the same boundary coordinates as its neighbours'.
     public var indices: [UInt32]
 
     public init(vertices: [SIMD2<Float>] = [], vertexRegion: [UInt32] = [], indices: [UInt32] = []) {
