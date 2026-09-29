@@ -14,12 +14,12 @@ enum RegionSimplifier {
         classes: inout [UInt32],
         width w: Int, height h: Int,
         colors: Grid<SIMD4<Float>>,
-        importance: [Float],
+        areaScale: [Float],
         palette: [SIMD3<Float>],
         parameters p: SegmentationParameters,
         cancel: CancellationCheck
     ) throws -> Components {
-        let maxCleanupRounds = 5
+        var cleanupRounds = 5
         var cc = components(classes, w, h)
         if Tune.debug { debugLog("initial regions \(cc.count)") }
         var round = 0
@@ -27,20 +27,28 @@ enum RegionSimplifier {
             try cancel.throwIfCancelled()
             // The first round only has specks to deal with; inscribed radii matter once the
             // map is reasonably clean, and they are expensive to measure.
-            let radius = round > 0 ? maxInscribedRadius(cc) : nil
+            let t0 = ContinuousClock.now
+            let wide = round > 0 ? hasInscribedDisc(cc, radius: p.minRadius) : nil
+            let t1 = ContinuousClock.now
             let merged = mergeRound(
-                cc, radius: radius, classes: &classes, colors: colors.storage, importance: importance,
+                cc, wide: wide, classes: &classes, colors: colors.storage, areaScale: areaScale,
                 palette: palette, parameters: p)
+            let t2 = ContinuousClock.now
             if merged > 0 { cc = components(classes, w, h) }
+            let t3 = ContinuousClock.now
             var peeled = 0
-            if round < maxCleanupRounds {
+            if round < cleanupRounds {
                 peeled = ThinPartRemoval.apply(
                     classes: &classes, width: w, height: h,
-                    colors: colors.storage, palette: palette, size: p.openingSize, maxPasses: 8)
+                    colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 4)
                 if peeled > 0 { cc = components(classes, w, h) }
             }
-            if Tune.debug { debugLog("round \(round): merged \(merged) peeled \(peeled) regions \(cc.count)") }
-            if merged == 0 && peeled == 0 && radius != nil { return cc }
+            let t4 = ContinuousClock.now
+            if Tune.debug { debugLog("round \(round): merged \(merged) peeled \(peeled) regions \(cc.count)  edt \(t1 - t0) merge \(t2 - t1) cc \(t3 - t2) peel+cc \(t4 - t3)") }
+            if merged == 0 && peeled == 0 && wide != nil { return cc }
+            // Late peels only nudge single pixels at junctions; stop cleaning once that is all
+            // that happens and let the remaining rounds settle sizes.
+            if round >= 2 && peeled < w * h / 2000 { cleanupRounds = min(cleanupRounds, round + 1) }
             round += 1
         }
     }
@@ -49,19 +57,72 @@ enum RegionSimplifier {
         ConnectedComponents.label(Grid(width: w, height: h, storage: classes))
     }
 
-    /// Largest `interiorDistance` of each region.
-    static func maxInscribedRadius(_ cc: Components) -> [Float] {
-        let d = DistanceTransform.interiorDistance(labels: cc.labels)
-        var r = [Float](repeating: 0, count: cc.count)
-        cc.labels.storage.withUnsafeBufferPointer { lb in
-            d.storage.withUnsafeBufferPointer { db in
-                for i in 0..<lb.count {
-                    let l = Int(lb[i])
-                    if db[i] > r[l] { r[l] = db[i] }
+    /// Whether each region's largest inscribed disc reaches `radius`, in the exact sense of
+    /// `DistanceTransform.interiorDistance` (max over the region ≥ radius).
+    ///
+    /// interiorDistance(p) = |p − nearest boundary pixel| + ½, so it reaches `radius` iff no
+    /// boundary pixel (one with a differently labelled 4-neighbour, or on the image edge)
+    /// lies within √((radius − ½)²) of p. That is a small local test, much cheaper than a
+    /// full distance transform every round.
+    static func hasInscribedDisc(_ cc: Components, radius: Float) -> [Bool] {
+        let labels = cc.labels.storage
+        let w = cc.labels.width, h = cc.labels.height, n = w * h
+        var result = [Bool](repeating: false, count: cc.count)
+        let reach = max(radius - 0.5, 0)
+        let limit = reach * reach
+        let r = Int(reach.rounded(.up))
+        var offsets: [Int] = []
+        for dy in -r...r {
+            for dx in -r...r where Float(dx * dx + dy * dy) < limit { offsets.append(dy * w + dx) }
+        }
+        guard w > 2 * r, h > 2 * r else {
+            if limit <= 0 { for i in 0..<cc.count { result[i] = true } }
+            return result
+        }
+        var interior = [UInt8](repeating: 0, count: n)
+        var ok = [UInt8](repeating: 0, count: n)
+        labels.withUnsafeBufferPointer { lb in
+            interior.withUnsafeMutableBufferPointer { ib in
+                ok.withUnsafeMutableBufferPointer { ob in
+                    offsets.withUnsafeBufferPointer { offb in
+                        let l = UncheckedSendable(lb.baseAddress!)
+                        let ip = UncheckedSendable(ib.baseAddress!)
+                        let op = UncheckedSendable(ob.baseAddress!)
+                        let off = UncheckedSendable(offb.baseAddress!)
+                        let m = offb.count
+                        Parallel.forEachBand(h, minimumBandSize: 16) { rows in
+                            for y in rows where y > 0 && y < h - 1 {
+                                for x in 1..<(w - 1) {
+                                    let i = y * w + x
+                                    let v = l.value[i]
+                                    if l.value[i - 1] == v && l.value[i + 1] == v && l.value[i - w] == v && l.value[i + w] == v {
+                                        ip.value[i] = 1
+                                    }
+                                }
+                            }
+                        }
+                        Parallel.forEachBand(h - 2 * r, minimumBandSize: 16) { rows in
+                            for yy in rows {
+                                let y = yy + r
+                                for x in r..<(w - r) {
+                                    let i = y * w + x
+                                    if ip.value[i] == 0 { continue }
+                                    var all = true
+                                    var k = 0
+                                    while k < m {
+                                        if ip.value[i + off.value[k]] == 0 { all = false; break }
+                                        k += 1
+                                    }
+                                    if all { op.value[i] = 1 }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
-        return r
+        for i in 0..<n where ok[i] != 0 { result[Int(labels[i])] = true }
+        return result
     }
 
     // MARK: - Merging
@@ -76,10 +137,10 @@ enum RegionSimplifier {
     /// number of merges.
     static func mergeRound(
         _ cc: Components,
-        radius: [Float]?,
+        wide: [Bool]?,
         classes: inout [UInt32],
         colors: [SIMD4<Float>],
-        importance: [Float],
+        areaScale: [Float],
         palette: [SIMD3<Float>],
         parameters p: SegmentationParameters
     ) -> Int {
@@ -88,10 +149,10 @@ enum RegionSimplifier {
         let w = cc.labels.width, h = cc.labels.height
         let labels = cc.labels.storage
 
-        var sums = [SIMD4<Double>](repeating: .zero, count: n)  // OKLab sum, importance sum
+        var sums = [SIMD4<Double>](repeating: .zero, count: n)  // OKLab sum, area-scale sum
         labels.withUnsafeBufferPointer { lb in
             colors.withUnsafeBufferPointer { cb in
-                importance.withUnsafeBufferPointer { ib in
+                areaScale.withUnsafeBufferPointer { ib in
                     for i in 0..<lb.count {
                         let c = cb[i]
                         sums[Int(lb[i])] += SIMD4(Double(c.x), Double(c.y), Double(c.z), Double(ib[i]))
@@ -105,7 +166,7 @@ enum RegionSimplifier {
         var parent = (0..<n).map { Int32($0) }
         var stamp = [Int32](repeating: 0, count: n)
         var thin = [Bool](repeating: false, count: n)
-        if let radius { for r in 0..<n { thin[r] = radius[r] < p.minRadius } }
+        if let wide { for r in 0..<n { thin[r] = !wide[r] } }
 
         func find(_ x: Int) -> Int {
             var r = x
@@ -118,9 +179,9 @@ enum RegionSimplifier {
             }
             return r
         }
+        // Area relative to the region's own minimum (base × its mean area scale).
         func relativeArea(_ r: Int) -> Float {
-            let imp = Float(sums[r].w / Double(area[r]))
-            return Float(area[r]) / p.minArea(importance: imp)
+            Float(Double(area[r]) * Double(area[r]) / (Double(p.minArea) * sums[r].w))
         }
 
         var heap = MinHeap()

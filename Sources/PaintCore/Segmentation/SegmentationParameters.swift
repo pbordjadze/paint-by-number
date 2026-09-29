@@ -34,12 +34,14 @@ struct SegmentationParameters: Sendable {
     var minArea: Float
     /// Minimum largest-inscribed-disc radius (as measured by `interiorDistance`).
     var minRadius: Float
-    /// Side of the square structuring element every region pixel must be covered by.
-    var openingSize: Int
+    /// Every region pixel must lie in a disc (dx² + dy² ≤ this) inside its region.
+    var openingRadiusSquared: Int
     /// Strength of importance on the area threshold: area × 2^(strength × (0.5 − importance)).
     var importanceStrength: Float
     /// Domain stretch in important areas (1 + this × importance), i.e. gentler smoothing.
     var importanceSharpening: Float
+    /// Minimum-area growth in textured, unimportant areas (see `areaScale`).
+    var textureStrength: Float
     /// Merge target preference for long shared borders (OKLab-distance equivalent).
     var mergeShareWeight: Float
     /// Region-level k-means passes when refitting the palette.
@@ -69,20 +71,23 @@ struct SegmentationParameters: Sendable {
         icmIterations = Int(Tune.f("ICM", 3))
 
         // Log-interpolated fraction of the canvas: detail 0 → 1/1500, 1 → 1/20000.
-        let fraction = exp(lerp(log(1 / Tune.f("AMIN0", 1500)), log(1 / Tune.f("AMIN1", 20000)), d))
+        let fraction = exp(lerp(log(1 / Tune.f("AMIN0", 3000)), log(1 / Tune.f("AMIN1", 60000)), d))
         minArea = max(area * fraction, 12)
-        minRadius = lerp(Tune.f("R0", 4), Tune.f("R1", 2), d)
-        openingSize = d > 0.7 ? 2 : 3
+        minRadius = lerp(Tune.f("R0", 3.5), Tune.f("R1", 2), min(1, 2 * d))
+        openingRadiusSquared = Int(Tune.f("OPEN", d < 0.25 ? 4 : 1))
         importanceStrength = Tune.f("IMPS", 3)
         mergeShareWeight = Tune.f("SHARE", 0.04)
+        textureStrength = Tune.f("TEX", 4)
         importanceSharpening = Tune.f("ISHARP", 1)
         refineIterations = Int(Tune.f("REFINE", 3))
     }
 
-    /// Minimum area for a region whose mean importance is `importance`.
+    /// Per-pixel multiplier of `minArea`: important areas keep smaller regions; busy
+    /// texture (dense label changes, `texture` 0...1) outside important areas needs larger
+    /// ones, so knit, foliage or gravel become a few paintable shapes rather than crumbs.
     @inline(__always)
-    func minArea(importance: Float) -> Float {
-        minArea * exp2(importanceStrength * (0.5 - importance))
+    func areaScale(importance: Float, texture: Float) -> Float {
+        exp2(importanceStrength * (0.5 - importance)) * (1 + textureStrength * (1 - importance) * texture)
     }
 }
 

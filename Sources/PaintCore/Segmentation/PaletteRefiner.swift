@@ -14,6 +14,7 @@ enum PaletteRefiner {
         width w: Int, height h: Int,
         lab: [SIMD4<Float>],
         importance: [Float],
+        labelling: [UInt32],
         palette initial: [SIMD3<Float>],
         minDistance: Float,
         chromaScale: Float,
@@ -26,22 +27,46 @@ enum PaletteRefiner {
         // Per region: color sum and pixel count, and the importance-weighted equivalents
         // (paints are refitted toward what they cover in important areas, so a face does
         // not take on the hue of hair that happens to share its paint).
-        var sums = [SIMD4<Double>](repeating: .zero, count: n)
-        var weighted = [SIMD4<Double>](repeating: .zero, count: n)
-        var weightedChroma = [Double](repeating: 0, count: n)
+        //
+        // Colors come from a region's core: the pixels that were labelled with its paint
+        // before simplification. Specks it absorbed (the black stripes on a macaw's white
+        // cheek) would otherwise drag it toward a muddy average and a wrong paint.
+        var all = [SIMD4<Double>](repeating: .zero, count: n)
+        var core = [SIMD4<Double>](repeating: .zero, count: n)
+        var coreWeighted = [SIMD4<Double>](repeating: .zero, count: n)
+        var coreChroma = [Double](repeating: 0, count: n)
+        var allWeighted = [SIMD4<Double>](repeating: .zero, count: n)
+        var allChroma = [Double](repeating: 0, count: n)
         cc.labels.storage.withUnsafeBufferPointer { lb in
             lab.withUnsafeBufferPointer { cb in
                 importance.withUnsafeBufferPointer { ib in
-                    for i in 0..<lb.count {
-                        let c = SIMD4(Double(cb[i].x), Double(cb[i].y), Double(cb[i].z), 1)
-                        let r = Int(lb[i])
-                        let weight = Double(PaletteBuilder.paletteWeight(importance: ib[i]))
-                        sums[r] += c
-                        weighted[r] += c * weight
-                        weightedChroma[r] += (c.y * c.y + c.z * c.z).squareRoot() * weight
+                    labelling.withUnsafeBufferPointer { ob in
+                        for i in 0..<lb.count {
+                            let c = SIMD4(Double(cb[i].x), Double(cb[i].y), Double(cb[i].z), 1)
+                            let r = Int(lb[i])
+                            let weight = Double(PaletteBuilder.paletteWeight(importance: ib[i]))
+                            let chroma = (c.y * c.y + c.z * c.z).squareRoot() * weight
+                            all[r] += c
+                            allWeighted[r] += c * weight
+                            allChroma[r] += chroma
+                            if ob[i] == cc.classOf[r] {
+                                core[r] += c
+                                coreWeighted[r] += c * weight
+                                coreChroma[r] += chroma
+                            }
+                        }
                     }
                 }
             }
+        }
+        var sums = all
+        var weighted = allWeighted
+        var weightedChroma = allChroma
+        for r in 0..<n where core[r].w >= 0.25 * all[r].w && coreWeighted[r].w > 0 {
+            let scale = allWeighted[r].w / coreWeighted[r].w
+            sums[r] = core[r] * (all[r].w / core[r].w)
+            weighted[r] = coreWeighted[r] * scale
+            weightedChroma[r] = coreChroma[r] * scale
         }
         let means = sums.map { SIMD3(Float($0.x / $0.w), Float($0.y / $0.w), Float($0.z / $0.w)) }
         var cls = cc.classOf.map { Int($0) }

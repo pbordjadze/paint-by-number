@@ -62,9 +62,15 @@ public enum Segmenter {
         progress(0.5)
         DebugDump.classes(classes, width: w, height: h, palette: palette, name: "assigned", chromaScale: p.chromaScale)
 
+        let labelling = classes
+        let areaScale = clock.measure("segment.texture") { () -> [Float] in
+            let texture = TextureMap.boundaryDensity(labelling, width: w, height: h)
+            DebugDump.scalar(texture, width: w, height: h, name: "texture")
+            return zip(weights, texture).map { p.areaScale(importance: $0, texture: $1) }
+        }
         _ = try clock.measure("segment.regions") {
             try RegionSimplifier.simplify(
-                classes: &classes, width: w, height: h, colors: smooth, importance: weights,
+                classes: &classes, width: w, height: h, colors: smooth, areaScale: areaScale,
                 palette: palette, parameters: p, cancel: cancel)
         }
         try cancel.throwIfCancelled()
@@ -72,7 +78,7 @@ public enum Segmenter {
 
         let finalPalette = clock.measure("segment.refine") {
             PaletteRefiner.refine(
-                classes: &classes, width: w, height: h, lab: lab.storage, importance: weights, palette: palette,
+                classes: &classes, width: w, height: h, lab: lab.storage, importance: weights, labelling: labelling, palette: palette,
                 minDistance: p.minPaletteDistance, chromaScale: p.chromaScale, iterations: p.refineIterations)
         }
         let components = clock.measure("segment.finalize") {
