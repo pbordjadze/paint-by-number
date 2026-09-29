@@ -116,7 +116,7 @@ struct EdgeSmoother {
     func polylines(for list: [Int], shapes: [UInt8]) -> (points: [SIMD2<Float>], counts: [Int32]) {
         // Edge lengths vary wildly (a coastline next to specks), so small chunks are handed
         // out dynamically.
-        let bands = mapChunks(list.count, chunk: 48) { range -> ([SIMD2<Float>], [Int32]) in
+        let bands = mapChunks(list.count, chunk: 48, cost: { Int(graph.edgeStepCount[list[$0]]) }) { range -> ([SIMD2<Float>], [Int32]) in
             var worker = Worker(
                 fitter: CurveFitter(alphaMax: alphaMax, minCornerAngle: minCornerAngle, cornerRadius: cornerRadius, flattenTolerance: tolerance),
                 fairing: CurveFairing(halfWindow: fairingWindow, maxShift: fairingShift, tolerance: tolerance))

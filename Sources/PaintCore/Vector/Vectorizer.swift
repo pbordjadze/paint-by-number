@@ -137,6 +137,19 @@ struct RegionShapes {
     let edges: [BoundaryEdge]
     let topology: RingTopology
 
+    /// Number of outline points of region `r` (a proxy for the work its fill takes).
+    func pointCount(_ r: Int) -> Int {
+        var total = 0
+        let start = Int(topology.regionRingStart[r]), count = Int(topology.regionRingCount[r])
+        for k in start..<(start + count) {
+            let ring = topology.rings[k]
+            for q in Int(ring.edgeStart)..<Int(ring.edgeStart + ring.edgeCount) {
+                total += Int(edges[Int(topology.ringEdges[q].edge)].pointCount)
+            }
+        }
+        return total
+    }
+
     /// All rings of region `r` (outer first), each without its closing point.
     func polygon(_ r: Int, into poly: inout FlatPolygon) {
         poly.removeAll()
@@ -182,7 +195,7 @@ struct RegionFills {
             try cancel.throwIfCancelled()
             let last = min(regionCount, first + 1024)
             let offset = first
-            bands += mapChunks(last - first, chunk: 16) { chunk -> RegionFills in
+            bands += mapChunks(last - first, chunk: 16, cost: { shapes.pointCount(offset + $0) }) { chunk -> RegionFills in
                 let range = (chunk.lowerBound + offset)..<(chunk.upperBound + offset)
                 var band = RegionFills()
                 var poly = FlatPolygon()
@@ -382,17 +395,27 @@ struct RegionFills {
 private func simd_length_squared(_ v: SIMD2<Float>) -> Float { (v * v).sum() }
 
 /// Parallel map over `0..<count` in chunks of `chunk`, scheduled dynamically; results
-/// in chunk order.
-func mapChunks<T>(_ count: Int, chunk: Int, _ body: (Range<Int>) -> T) -> [T] {
+/// in chunk order. With `cost` (per item), the most expensive chunks start first so a
+/// huge item late in the list does not leave the other workers idle at the end.
+func mapChunks<T>(_ count: Int, chunk: Int, cost: ((Int) -> Int)? = nil, _ body: (Range<Int>) -> T) -> [T] {
     guard count > 0 else { return [] }
     let n = (count + chunk - 1) / chunk
+    var order = Array(0..<n)
+    if let cost {
+        let chunkCost = (0..<n).map { c in ((c * chunk)..<min(count, (c + 1) * chunk)).reduce(0) { $0 + cost($1) } }
+        order.sort { chunkCost[$0] != chunkCost[$1] ? chunkCost[$0] > chunkCost[$1] : $0 < $1 }
+    }
     var results = [T?](repeating: nil, count: n)
     results.withUnsafeMutableBufferPointer { buf in
-        let out = UncheckedSendable(buf.baseAddress!)
-        withoutActuallyEscaping(body) { body in
-            let work = UncheckedSendable(body)
-            DispatchQueue.concurrentPerform(iterations: n) { i in
-                out.value[i] = work.value((i * chunk)..<min(count, (i + 1) * chunk))
+        order.withUnsafeBufferPointer { ob in
+            let out = UncheckedSendable(buf.baseAddress!)
+            let sequence = UncheckedSendable(ob.baseAddress!)
+            withoutActuallyEscaping(body) { body in
+                let work = UncheckedSendable(body)
+                DispatchQueue.concurrentPerform(iterations: n) { k in
+                    let i = sequence.value[k]
+                    out.value[i] = work.value((i * chunk)..<min(count, (i + 1) * chunk))
+                }
             }
         }
     }
