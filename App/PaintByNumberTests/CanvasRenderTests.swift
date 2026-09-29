@@ -224,16 +224,17 @@ struct Pixels {
     private let data: [UInt8]
 
     init(_ image: CGImage) {
-        width = image.width
-        height = image.height
-        var buffer = [UInt8](repeating: 0, count: width * height * 4)
+        let w = image.width, h = image.height
+        var buffer = [UInt8](repeating: 0, count: w * h * 4)
         let space = CGColorSpace(name: CGColorSpace.displayP3)!
         buffer.withUnsafeMutableBytes { raw in
             let ctx = CGContext(
-                data: raw.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                data: raw.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
                 space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-            ctx.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
         }
+        width = w
+        height = h
         data = buffer
     }
 

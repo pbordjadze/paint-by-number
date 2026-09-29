@@ -313,6 +313,11 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     private func animateCamera(zoom: CGFloat, offset: CGPoint, duration: CFTimeInterval) {
+        if UIAccessibility.isReduceMotionEnabled {
+            cameraAnimation = nil
+            apply(zoom: zoom, offset: offset)
+            return
+        }
         cameraAnimation = CameraAnimation(
             fromZoom: scrollView.zoomScale, toZoom: zoom, fromOffset: scrollView.contentOffset, toOffset: offset,
             start: CACurrentMediaTime(), duration: duration)
