@@ -1,0 +1,396 @@
+import Foundation
+
+/// Turns a per-pixel palette labelling into paintable regions: every region is big enough
+/// to tap and to hold a number, and has no hair-thin parts.
+///
+/// Each round (1) merges regions that are too small (importance- and texture-scaled area)
+/// or too thin (largest inscribed disc) into their best neighbour, smallest first, then
+/// (2) peels pixels that no small disc inside their region covers (tendrils, necks, 1-px
+/// slivers, pixel corners; see `ThinPartRemoval`). The first round also smooths outlines
+/// (`BoundarySmoothing`). Rounds repeat until nothing changes, so the size and radius
+/// guarantees hold on the returned map.
+enum RegionSimplifier {
+
+    static func simplify(
+        classes: inout [UInt32],
+        width w: Int, height h: Int,
+        colors: Grid<SIMD4<Float>>,
+        areaScale: [Float],
+        palette: [SIMD3<Float>],
+        parameters p: SegmentationParameters,
+        cancel: CancellationCheck
+    ) throws -> Components {
+        // Pixel specks and hairlines dissolve far more cheaply at pixel level than as
+        // thousands of one-pixel regions in the merge queue.
+        _ = ThinPartRemoval.apply(
+            classes: &classes, width: w, height: h,
+            colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
+        var cc = components(classes, w, h)
+        // Pathologically fragmented input (sensor noise, dithering) would leave hundreds of
+        // thousands of regions for the merge queue; a few colour-blind majority passes turn
+        // speckle into blobs in linear time first.
+        if cc.count > w * h / 20 {
+            _ = BoundarySmoothing.apply(
+                classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
+                radius: 2, passes: 4, fidelity: 0)
+            _ = ThinPartRemoval.apply(
+                classes: &classes, width: w, height: h,
+                colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
+            cc = components(classes, w, h)
+        }
+        var cleanupRounds = 5
+        var round = 0
+        while true {
+            try cancel.throwIfCancelled()
+            // The first round only has specks to deal with; inscribed discs matter once the
+            // map is reasonably clean.
+            let wide = round > 0 ? hasInscribedDisc(cc, radius: p.minRadius) : nil
+            let merged = mergeRound(
+                cc, wide: wide, classes: &classes, colors: colors.storage, areaScale: areaScale,
+                palette: palette, parameters: p)
+            if merged > 0 { cc = components(classes, w, h) }
+            var smoothed = 0
+            if round == 0 && p.boundaryPasses > 0 {
+                smoothed = BoundarySmoothing.apply(
+                    classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
+                    radius: p.boundaryRadius, passes: p.boundaryPasses, fidelity: p.boundaryFidelity)
+                if smoothed > 0 { cc = components(classes, w, h) }
+            }
+            var peeled = 0
+            if round < cleanupRounds {
+                peeled = ThinPartRemoval.apply(
+                    classes: &classes, width: w, height: h,
+                    colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 4)
+                if peeled > 0 { cc = components(classes, w, h) }
+            }
+            if merged == 0 && peeled == 0 && smoothed == 0 && wide != nil { return cc }
+            // Late peels only nudge single pixels at junctions; stop cleaning once that is all
+            // that happens and let the remaining rounds settle sizes.
+            if round >= 1 && peeled < w * h / 1000 { cleanupRounds = min(cleanupRounds, round + 1) }
+            round += 1
+        }
+    }
+
+    static func components(_ classes: [UInt32], _ w: Int, _ h: Int) -> Components {
+        RunComponents.label(classes, width: w, height: h)
+    }
+
+    /// Whether each region's largest inscribed disc reaches `radius`, in the exact sense of
+    /// `DistanceTransform.interiorDistance` (max over the region ≥ radius).
+    ///
+    /// interiorDistance(p) = |p − nearest boundary pixel| + ½, so it reaches `radius` iff no
+    /// boundary pixel (one with a differently labelled 4-neighbour, or on the image edge)
+    /// lies within √((radius − ½)²) of p. That is a small local test, much cheaper than a
+    /// full distance transform every round.
+    static func hasInscribedDisc(_ cc: Components, radius: Float) -> [Bool] {
+        let labels = cc.labels.storage
+        let w = cc.labels.width, h = cc.labels.height, n = w * h
+        var result = [Bool](repeating: false, count: cc.count)
+        let reach = max(radius - 0.5, 0)
+        let limit = reach * reach
+        let r = Int(reach.rounded(.up))
+        var offsets: [Int] = []
+        for dy in -r...r {
+            for dx in -r...r where Float(dx * dx + dy * dy) < limit { offsets.append(dy * w + dx) }
+        }
+        guard w > 2 * r, h > 2 * r else {
+            if limit <= 0 { for i in 0..<cc.count { result[i] = true } }
+            return result
+        }
+        var interior = [UInt8](repeating: 0, count: n)
+        var ok = [UInt8](repeating: 0, count: n)
+        labels.withUnsafeBufferPointer { lb in
+            interior.withUnsafeMutableBufferPointer { ib in
+                ok.withUnsafeMutableBufferPointer { ob in
+                    offsets.withUnsafeBufferPointer { offb in
+                        let l = UncheckedSendable(lb.baseAddress!)
+                        let ip = UncheckedSendable(ib.baseAddress!)
+                        let op = UncheckedSendable(ob.baseAddress!)
+                        let off = UncheckedSendable(offb.baseAddress!)
+                        let m = offb.count
+                        Parallel.forEachBand(h, minimumBandSize: 16) { rows in
+                            for y in rows where y > 0 && y < h - 1 {
+                                for x in 1..<(w - 1) {
+                                    let i = y * w + x
+                                    let v = l.value[i]
+                                    if l.value[i - 1] == v && l.value[i + 1] == v && l.value[i - w] == v && l.value[i + w] == v {
+                                        ip.value[i] = 1
+                                    }
+                                }
+                            }
+                        }
+                        Parallel.forEachBand(h - 2 * r, minimumBandSize: 16) { rows in
+                            for yy in rows {
+                                let y = yy + r
+                                for x in r..<(w - r) {
+                                    let i = y * w + x
+                                    if ip.value[i] == 0 { continue }
+                                    var all = true
+                                    var k = 0
+                                    while k < m {
+                                        if ip.value[i + off.value[k]] == 0 { all = false; break }
+                                        k += 1
+                                    }
+                                    if all { op.value[i] = 1 }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for i in 0..<n where ok[i] != 0 { result[Int(labels[i])] = true }
+        return result
+    }
+
+    // MARK: - Merging
+
+    struct Link {
+        var region: Int32
+        var length: Int32
+    }
+
+    /// Merges every undersized or too-thin region into its best neighbour, smallest (relative
+    /// to its own threshold) first. Writes the merged classes back per pixel and returns the
+    /// number of merges.
+    static func mergeRound(
+        _ cc: Components,
+        wide: [Bool]?,
+        classes: inout [UInt32],
+        colors: [SIMD4<Float>],
+        areaScale: [Float],
+        palette: [SIMD3<Float>],
+        parameters p: SegmentationParameters
+    ) -> Int {
+        let n = cc.count
+        guard n > 1 else { return 0 }
+        let w = cc.labels.width, h = cc.labels.height
+        let labels = cc.labels.storage
+
+        var sums = [SIMD4<Double>](repeating: .zero, count: n)  // OKLab sum, area-scale sum
+        labels.withUnsafeBufferPointer { lb in
+            colors.withUnsafeBufferPointer { cb in
+                areaScale.withUnsafeBufferPointer { ib in
+                    for i in 0..<lb.count {
+                        let c = cb[i]
+                        sums[Int(lb[i])] += SIMD4(Double(c.x), Double(c.y), Double(c.z), Double(ib[i]))
+                    }
+                }
+            }
+        }
+        var area = cc.area
+        var cls = cc.classOf
+        var adjacency = adjacencyLists(labels, width: w, height: h, count: n)
+        var parent = (0..<n).map { Int32($0) }
+        var stamp = [Int32](repeating: 0, count: n)
+        var thin = [Bool](repeating: false, count: n)
+        if let wide { for r in 0..<n { thin[r] = !wide[r] } }
+
+        func find(_ x: Int) -> Int {
+            var r = x
+            while Int(parent[r]) != r { r = Int(parent[r]) }
+            var c = x
+            while Int(parent[c]) != r {
+                let next = Int(parent[c])
+                parent[c] = Int32(r)
+                c = next
+            }
+            return r
+        }
+        // Area relative to the region's own minimum (base × its mean area scale).
+        func relativeArea(_ r: Int) -> Float {
+            Float(Double(area[r]) * Double(area[r]) / (Double(p.minArea) * sums[r].w))
+        }
+
+        var heap = MinHeap()
+        for r in 0..<n {
+            let key = relativeArea(r)
+            if key < 1 || thin[r] { heap.push(key, Int32(r), 0) }
+        }
+
+        var merges = 0
+        while let item = heap.pop() {
+            let r = Int(item.region)
+            if Int(parent[r]) != r || stamp[r] != item.stamp { continue }
+            let key = relativeArea(r)
+            guard key < 1 || thin[r] else { continue }
+
+            // Compact the neighbour list: resolve merged ids, drop self links, sum lengths.
+            var links = adjacency[r]
+            for k in links.indices { links[k].region = Int32(find(Int(links[k].region))) }
+            links.removeAll { Int($0.region) == r }
+            guard !links.isEmpty else { adjacency[r] = []; continue }
+            links.sort { $0.region < $1.region }
+            var compacted: [Link] = []
+            compacted.reserveCapacity(links.count)
+            var perimeter: Int32 = 0
+            for l in links {
+                perimeter += l.length
+                if let last = compacted.last, last.region == l.region {
+                    compacted[compacted.count - 1].length += l.length
+                } else {
+                    compacted.append(l)
+                }
+            }
+
+            // Best neighbour: closest paint to this region's mean color, favouring long
+            // shared borders so shapes stay compact.
+            let s = sums[r] / Double(area[r])
+            let mean = SIMD3(Float(s.x), Float(s.y), Float(s.z))
+            var target = -1
+            var bestCost = Float.infinity
+            for l in compacted {
+                let t = Int(l.region)
+                let dc = ColorScience.distance(mean, palette[Int(cls[t])])
+                let share = Float(l.length) / Float(perimeter)
+                let cost = dc + p.mergeShareWeight * (1 - share)
+                if cost < bestCost { bestCost = cost; target = t }
+            }
+
+            let root = area[target] >= area[r] ? target : r
+            let other = root == target ? r : target
+            parent[other] = Int32(root)
+            area[root] = area[r] + area[target]
+            sums[root] = sums[r] + sums[target]
+            cls[root] = cls[target]
+            thin[root] = false  // re-checked by the next round's inscribed-disc test
+            if root == target {
+                adjacency[root].append(contentsOf: compacted)
+            } else {
+                adjacency[root] = compacted + adjacency[other]
+            }
+            adjacency[other] = []
+            stamp[root] &+= 1
+            merges += 1
+            let newKey = relativeArea(root)
+            if newKey < 1 { heap.push(newKey, Int32(root), stamp[root]) }
+        }
+        guard merges > 0 else { return 0 }
+
+        var classOfRegion = [UInt32](repeating: 0, count: n)
+        for r in 0..<n { classOfRegion[r] = cls[find(r)] }
+        let count = labels.count
+        classes.withUnsafeMutableBufferPointer { out in
+            labels.withUnsafeBufferPointer { lb in
+                classOfRegion.withUnsafeBufferPointer { cr in
+                    let o = UncheckedSendable(out.baseAddress!)
+                    let l = UncheckedSendable(lb.baseAddress!)
+                    let c = UncheckedSendable(cr.baseAddress!)
+                    Parallel.forEachBand(count, minimumBandSize: 16_384) { range in
+                        for i in range { o.value[i] = c.value[Int(l.value[i])] }
+                    }
+                }
+            }
+        }
+        return merges
+    }
+
+    /// Neighbour lists with shared border lengths (4-neighbour pixel pairs).
+    static func adjacencyLists(_ labels: [UInt32], width w: Int, height h: Int, count n: Int) -> [[Link]] {
+        // Each entry packs (low id: 24 bits, high id: 24 bits, run length: 16 bits) so one
+        // direct integer sort groups all runs of a pair together.
+        precondition(n < 1 << 24, "too many regions")
+        var entries: [UInt64] = []
+        entries.reserveCapacity(labels.count / 8)
+        @inline(__always) func pack(_ a: UInt32, _ b: UInt32) -> UInt64 {
+            a < b ? UInt64(a) << 40 | UInt64(b) << 16 : UInt64(b) << 40 | UInt64(a) << 16
+        }
+        labels.withUnsafeBufferPointer { lb in
+            var lastH = -1, lastV = -1
+            for y in 0..<h {
+                let row = y * w
+                for x in 0..<w {
+                    let i = row + x
+                    let a = lb[i]
+                    if x + 1 < w {
+                        let b = lb[i + 1]
+                        if a != b {
+                            let key = pack(a, b)
+                            if lastH >= 0 && entries[lastH] & ~0xFFFF == key && entries[lastH] & 0xFFFF < 0xFFFF {
+                                entries[lastH] += 1
+                            } else {
+                                lastH = entries.count
+                                entries.append(key | 1)
+                            }
+                        }
+                    }
+                    if y + 1 < h {
+                        let b = lb[i + w]
+                        if a != b {
+                            let key = pack(a, b)
+                            if lastV >= 0 && entries[lastV] & ~0xFFFF == key && entries[lastV] & 0xFFFF < 0xFFFF {
+                                entries[lastV] += 1
+                            } else {
+                                lastV = entries.count
+                                entries.append(key | 1)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        entries.sort()
+        var adjacency = [[Link]](repeating: [], count: n)
+        var k = 0
+        while k < entries.count {
+            let key = entries[k] & ~0xFFFF
+            var total: Int32 = 0
+            while k < entries.count && entries[k] & ~0xFFFF == key {
+                total += Int32(entries[k] & 0xFFFF)
+                k += 1
+            }
+            let a = Int(key >> 40), b = Int((key >> 16) & 0xFF_FFFF)
+            adjacency[a].append(Link(region: Int32(b), length: total))
+            adjacency[b].append(Link(region: Int32(a), length: total))
+        }
+        return adjacency
+    }
+}
+
+/// Binary min-heap of (key, region, stamp) used for smallest-first merging. Ties break on
+/// region id so the merge order is fully deterministic.
+struct MinHeap {
+    struct Item {
+        var key: Float
+        var region: Int32
+        var stamp: Int32
+    }
+
+    private var items: [Item] = []
+
+    @inline(__always)
+    private static func less(_ a: Item, _ b: Item) -> Bool {
+        a.key < b.key || (a.key == b.key && a.region < b.region)
+    }
+
+    mutating func push(_ key: Float, _ region: Int32, _ stamp: Int32) {
+        items.append(Item(key: key, region: region, stamp: stamp))
+        var i = items.count - 1
+        while i > 0 {
+            let parent = (i - 1) / 2
+            if !Self.less(items[i], items[parent]) { break }
+            items.swapAt(i, parent)
+            i = parent
+        }
+    }
+
+    mutating func pop() -> Item? {
+        guard let first = items.first else { return nil }
+        let last = items.removeLast()
+        if !items.isEmpty {
+            items[0] = last
+            var i = 0
+            let n = items.count
+            while true {
+                let l = 2 * i + 1, r = l + 1
+                var m = i
+                if l < n && Self.less(items[l], items[m]) { m = l }
+                if r < n && Self.less(items[r], items[m]) { m = r }
+                if m == i { break }
+                items.swapAt(i, m)
+                i = m
+            }
+        }
+        return first
+    }
+}

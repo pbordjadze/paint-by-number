@@ -87,6 +87,33 @@ func paintedRaster(_ t: Template) -> RGBAImage {
     return RGBAImage(width: t.width, height: t.height, pixels: px, colorSpace: t.colorSpace)
 }
 
+/// Region-shape debug view at 2× scale: softened palette fills with 1-px dark lines wherever
+/// neighbouring canvas units belong to different regions.
+func boundaryRaster(_ t: Template) -> RGBAImage {
+    let w = t.width, h = t.height, ow = w * 2, oh = h * 2
+    var px = [UInt8](repeating: 255, count: ow * oh * 4)
+    let colors = t.palette.map { c -> SIMD3<UInt8> in
+        let soft = c.rgb * 0.7 + SIMD3(repeating: 0.3)
+        return SIMD3(UInt8((soft.x * 255).rounded()), UInt8((soft.y * 255).rounded()), UInt8((soft.z * 255).rounded()))
+    }
+    let map = t.regionMap
+    for y in 0..<oh {
+        let sy = y / 2
+        for x in 0..<ow {
+            let sx = x / 2
+            let r = map[sx, sy]
+            var line = false
+            if x & 1 == 1 && sx + 1 < w && map[sx + 1, sy] != r { line = true }
+            if y & 1 == 1 && sy + 1 < h && map[sx, sy + 1] != r { line = true }
+            if x & 1 == 1 && y & 1 == 1 && sx + 1 < w && sy + 1 < h && map[sx + 1, sy + 1] != r { line = true }
+            let c = line ? SIMD3<UInt8>(40, 40, 40) : colors[Int(t.regions[Int(r)].colorIndex)]
+            let o = (y * ow + x) * 4
+            px[o] = c.x; px[o + 1] = c.y; px[o + 2] = c.z
+        }
+    }
+    return RGBAImage(width: ow, height: oh, pixels: px, colorSpace: t.colorSpace)
+}
+
 struct Metrics: Codable {
     var width: Int
     var height: Int
@@ -100,10 +127,12 @@ struct Metrics: Codable {
     var medianRegionArea: Float
     var regionsUnderRadius2: Int
     var regionsUnderRadius3: Int
+    var minInscribedRadius: Float
     var minPaletteDistance: Float
     var timingsMs: [String: Double]
     var totalMs: Double
     var encodedBytes: Int
+    var palette: [String]
 }
 
 func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
@@ -133,9 +162,13 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
         medianRegionArea: areas.isEmpty ? 0 : areas[areas.count / 2],
         regionsUnderRadius2: t.regions.filter { $0.inscribedRadius < 2 }.count,
         regionsUnderRadius3: t.regions.filter { $0.inscribedRadius < 3 }.count,
+        minInscribedRadius: t.regions.map(\.inscribedRadius).min() ?? 0,
         minPaletteDistance: minPal.isFinite ? minPal : 0,
         timingsMs: timings, totalMs: out.totalSeconds * 1000,
-        encodedBytes: t.encoded().count)
+        encodedBytes: t.encoded().count,
+        palette: t.palette.map { c in
+            c.rgb.indices.map { String(format: "%02x", Int((min(max(c.rgb[$0], 0), 1) * 255).rounded())) }.joined()
+        })
 }
 
 func writeSVGs(_ t: Template, to outDir: URL) throws {
@@ -193,6 +226,7 @@ case "generate":
     try t.encoded().write(to: outDir.appendingPathComponent("template.pbnt"))
     try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("raster.ppm"))
     try Netpbm.encodePPM(working).write(to: outDir.appendingPathComponent("working.ppm"))
+    try Netpbm.encodePPM(boundaryRaster(t)).write(to: outDir.appendingPathComponent("boundaries.ppm"))
     try writeSVGs(t, to: outDir)
     print(String(data: try encoder.encode(m), encoding: .utf8)!)
 
