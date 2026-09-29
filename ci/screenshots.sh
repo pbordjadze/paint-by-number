@@ -19,6 +19,7 @@ xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi --wifi
   --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100 || true
 xcrun simctl install "$UDID" "$APP"; step installed
 appearance=light
+seen_reports=$(ls ~/Library/Logs/DiagnosticReports/PaintByNumber* 2>/dev/null | wc -l | tr -d ' ')
 for entry in "${SCENARIOS[@]}"; do
   scenario="${entry%@*}"; delay=8
   [[ "$entry" == *@* ]] && delay="${entry#*@}"
@@ -31,10 +32,13 @@ for entry in "${SCENARIOS[@]}"; do
   step "launch $scenario: $(xcrun simctl launch "$UDID" "$BUNDLE_ID" -demo "$scenario" 2>&1 | tr '\n' ' ')"
   sleep "$delay"
   xcrun simctl io "$UDID" screenshot --type=png "$OUT/${KIND}-${scenario}.png" 2>/dev/null
-  if xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | grep -q "UIKitApplication:$BUNDLE_ID"; then
-    step "captured $scenario"
+  # A crash leaves a new report in the host's DiagnosticReports (simulator apps are host processes).
+  reports=$(ls ~/Library/Logs/DiagnosticReports/PaintByNumber* 2>/dev/null | wc -l | tr -d ' ')
+  if [[ "$reports" -gt "${seen_reports:-0}" ]]; then
+    step "captured $scenario — CRASH: app crashed (see crashes/)"
   else
-    step "captured $scenario — WARNING: app not running (crashed or failed to launch; see crashes/)"
+    step "captured $scenario"
   fi
+  seen_reports=$reports
 done
 xcrun simctl spawn "$UDID" log show --last 15m --style compact --predicate 'process == "PaintByNumber"' > "$OUT/${KIND}-app.log" 2>/dev/null || true
