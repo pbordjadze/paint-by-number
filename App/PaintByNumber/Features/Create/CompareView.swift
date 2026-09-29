@@ -9,9 +9,7 @@ struct CompareView: View {
     let afterID: String
     let afterLabel: LocalizedStringKey
     let aspectRatio: CGFloat
-    /// Owned here rather than bound from outside: a `@Binding` read inside the
-    /// `GeometryReader` of a continuously updating view got re-wrapped on every update
-    /// until the main thread's stack overflowed.
+    /// Fraction of the width showing the photo; purely presentational, so owned here.
     @State private var split: CGFloat
 
     init(photo: CGImage?, after: CGImage?, afterID: String, afterLabel: LocalizedStringKey, aspectRatio: CGFloat, initialSplit: CGFloat = 0.5) {

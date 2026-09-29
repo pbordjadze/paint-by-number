@@ -33,16 +33,18 @@ struct TemplatePreviewView: View {
                     }
                     .scrollBounceBehavior(.basedOnSize)
                     .scrollIndicators(.hidden)
-                    .frame(width: size.width > 900 ? 360 : 320)
+                    .frame(width: panelWidth)
                 }
                 .padding(.horizontal, sidePadding)
                 .padding(.vertical, sidePadding - 12)
             } else {
                 VStack(spacing: 16) {
                     canvas
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, sidePadding)
                         .padding(.top, 4)
                     controls
+                        .frame(maxWidth: 560)
+                        .frame(maxWidth: .infinity)
                         .background {
                             UnevenRoundedRectangle(topLeadingRadius: 30, topTrailingRadius: 30, style: .continuous)
                                 .fill(Theme.surface)
@@ -65,9 +67,34 @@ struct TemplatePreviewView: View {
         }
     }
 
-    /// Canvas beside the controls on wide containers (iPad, iPhone in landscape).
-    private var isSideBySide: Bool { size.width >= 700 || size.width > size.height * 1.2 }
+    /// Canvas beside the controls when that shows the photo larger than stacking them: landscape
+    /// windows, and portrait photos on iPad. The controls' size is estimated rather than measured
+    /// because measuring it would feed back into the choice of layout.
+    private var isSideBySide: Bool {
+        guard size.width > 0, size.height > 0 else { return false }
+        let pickerHeight: CGFloat = 60
+        let stacked = Self.fittedArea(
+            width: size.width - 2 * sidePadding,
+            height: size.height - pickerHeight - 340, aspect: photoAspect)
+        let beside = Self.fittedArea(
+            width: size.width - 2 * sidePadding - panelWidth - 24,
+            height: size.height - pickerHeight - 2 * sidePadding, aspect: photoAspect)
+        return beside > stacked
+    }
+
     private var sidePadding: CGFloat { size.width > 900 ? 32 : 16 }
+    private var panelWidth: CGFloat { size.width > 900 ? 360 : 320 }
+
+    private var photoAspect: CGFloat {
+        guard let image = model.source?.image, image.height > 0 else { return 4 / 3 }
+        return CGFloat(image.width) / CGFloat(image.height)
+    }
+
+    private static func fittedArea(width: CGFloat, height: CGFloat, aspect: CGFloat) -> CGFloat {
+        guard width > 0, height > 0 else { return 0 }
+        let fittedWidth = min(width, height * aspect)
+        return fittedWidth * fittedWidth / aspect
+    }
 
     /// Updates a setting, ignoring unchanged values: a slider re-asserting its value would
     /// otherwise invalidate the model on every update.
@@ -87,23 +114,24 @@ struct TemplatePreviewView: View {
             .frame(maxWidth: 280)
             .disabled(model.preview == nil)
 
-            ZStack {
-                if let source = model.source {
-                    CompareView(
-                        photo: source.preview, after: afterImage, afterID: afterID,
-                        afterLabel: layer == .painting ? "Painting" : "Numbers",
-                        aspectRatio: CGFloat(source.image.width) / CGFloat(max(1, source.image.height)))
-                        .overlay(alignment: .bottom) {
-                            status.padding(14)
-                        }
-                } else if case .failed(let message) = model.phase {
-                    ContentUnavailableView("Couldn’t Open Photo", systemImage: "photo.badge.exclamationmark", description: Text(message))
-                } else {
-                    ProgressView().controlSize(.large)
-                }
+            // The picker stays with the image, the pair centred in the available space.
+            if let source = model.source {
+                CompareView(
+                    photo: source.preview, after: afterImage, afterID: afterID,
+                    afterLabel: layer == .painting ? "Painting" : "Numbers",
+                    aspectRatio: photoAspect)
+                    .overlay(alignment: .bottom) {
+                        status.padding(14)
+                    }
+            } else if case .failed(let message) = model.phase {
+                ContentUnavailableView("Couldn’t Open Photo", systemImage: "photo.badge.exclamationmark", description: Text(message))
+                    .frame(maxHeight: .infinity)
+            } else {
+                ProgressView().controlSize(.large)
+                    .frame(maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var afterImage: CGImage? {
