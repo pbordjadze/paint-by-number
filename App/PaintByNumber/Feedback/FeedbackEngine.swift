@@ -1,4 +1,5 @@
 import Foundation
+import PaintCore
 
 /// Turns painting events into haptics and sound. One shared instance; attach each
 /// `PaintingSession` when its screen appears.
