@@ -104,7 +104,8 @@ struct PaintingSessionTests {
         #expect(events() == [.undone(region: b)])
         #expect(canvas.unpainted == [[b]])
         #expect(canvas.painted.map(\.regions) == [[a], [b]])
-        #expect(canvas.painted.allSatisfy(\.animated))
+        let allAnimated = canvas.painted.allSatisfy { $0.animated }
+        #expect(allAnimated)
     }
 
     @Test func completingAColorAdvancesToTheNextOne() {
