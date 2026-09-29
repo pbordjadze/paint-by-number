@@ -46,7 +46,7 @@ nonisolated enum TemplateRasterizer {
         /// Outlines with numbers on paper, as the user will start painting it.
         static let template = Style(outlineWidth: 1, numbers: true, minimumNumberSize: 4.5)
         /// Printable template (PDF): hairlines and small numbers.
-        static let print = Style(
+        static let printable = Style(
             outlineWidth: 0.4, outlineColor: SIMD4(0.45, 0.47, 0.5, 1), numbers: true,
             numberColor: SIMD4(0.35, 0.37, 0.4, 1), minimumNumberSize: 2.6)
     }

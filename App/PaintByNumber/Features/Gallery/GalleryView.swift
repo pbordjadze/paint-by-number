@@ -6,7 +6,7 @@ struct GalleryView: View {
     var onCreate: () -> Void
 
     @Environment(Library.self) private var library
-    @AppStorage(PreferenceKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
+    @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
     @State private var width: CGFloat = 0
     @State private var renaming: Artwork?
     @State private var renameText = ""

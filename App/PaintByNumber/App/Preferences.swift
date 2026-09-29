@@ -2,7 +2,7 @@ import Foundation
 import PaintCore
 
 /// UserDefaults keys of user preferences (views bind them with `@AppStorage`).
-enum PreferenceKey {
+enum SettingsKey {
     static let haptics = FeedbackEngine.Keys.haptics
     static let sounds = FeedbackEngine.Keys.sounds
     static let autoAdvance = "autoAdvanceColors"
@@ -23,12 +23,12 @@ struct Preferences: Equatable {
     static let defaultColorCountValue = 24
 
     init(defaults: UserDefaults = .standard) {
-        haptics = defaults.object(forKey: PreferenceKey.haptics) as? Bool ?? true
-        sounds = defaults.object(forKey: PreferenceKey.sounds) as? Bool ?? true
-        autoAdvance = defaults.object(forKey: PreferenceKey.autoAdvance) as? Bool ?? true
-        let colors = defaults.object(forKey: PreferenceKey.defaultColorCount) as? Int ?? Self.defaultColorCountValue
+        haptics = defaults.object(forKey: SettingsKey.haptics) as? Bool ?? true
+        sounds = defaults.object(forKey: SettingsKey.sounds) as? Bool ?? true
+        autoAdvance = defaults.object(forKey: SettingsKey.autoAdvance) as? Bool ?? true
+        let colors = defaults.object(forKey: SettingsKey.defaultColorCount) as? Int ?? Self.defaultColorCountValue
         defaultColorCount = min(max(colors, GenerationSettings.colorCountRange.lowerBound), GenerationSettings.colorCountRange.upperBound)
-        paper = defaults.string(forKey: PreferenceKey.paperSize).flatMap(PDFExporter.Paper.init(rawValue:))
+        paper = defaults.string(forKey: SettingsKey.paperSize).flatMap(PDFExporter.Paper.init(rawValue:))
             ?? .default(for: Locale.current.region)
     }
 

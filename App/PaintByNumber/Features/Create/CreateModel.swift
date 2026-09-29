@@ -82,7 +82,7 @@ final class CreateModel {
     /// Working long side of drafts (the generator upsamples small inputs up to 1.5×).
     nonisolated static let draftLongSide = 640.0
 
-    @ObservationIgnored private var importance: Grid<Float>?
+    @ObservationIgnored private var importance: PaintCore.Grid<Float>?
     @ObservationIgnored private var draftImage: RGBAImage?
     @ObservationIgnored private var loadTask: Task<Void, Never>?
     @ObservationIgnored private var fullTask: Task<Void, Never>?
@@ -263,9 +263,10 @@ final class CreateModel {
             phase = .generating
             progress = 0
         }
-        let report: @Sendable (Float) -> Void = { [weak self] value in
+        // Called on pipeline threads; hops to the main actor.
+        let report: @Sendable (Float) -> Void = { value in
             Task { @MainActor in
-                guard let self, self.generation == id else { return }
+                guard self.generation == id else { return }
                 self.progress = Double(value)
             }
         }
@@ -293,7 +294,7 @@ final class CreateModel {
     }
 
     nonisolated struct Prepared: Sendable {
-        var importance: Grid<Float>?
+        var importance: PaintCore.Grid<Float>?
         var draft: RGBAImage
     }
 
@@ -329,7 +330,7 @@ final class CreateModel {
 
     @concurrent
     private static func render(
-        _ image: RGBAImage, importance: Grid<Float>?, settings: GenerationSettings, isDraft: Bool,
+        _ image: RGBAImage, importance: PaintCore.Grid<Float>?, settings: GenerationSettings, isDraft: Bool,
         progress: (@Sendable (Float) -> Void)?
     ) async throws -> Preview {
         let template = try TemplateGenerator(settings: settings)

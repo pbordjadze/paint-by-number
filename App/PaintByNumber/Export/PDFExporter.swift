@@ -47,7 +47,7 @@ nonisolated enum PDFExporter {
             let body = header(ctx, in: content, title: title, detail: stats)
             let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
             TemplateRasterizer.draw(
-                t, painted: nil, style: .print, in: ctx, rect: rect,
+                t, painted: nil, style: .printable, in: ctx, rect: rect,
                 rasterResolution: CGSize(width: t.width * 2, height: t.height * 2))
             ctx.setStrokeColor(gray(0.75))
             ctx.setLineWidth(0.5)

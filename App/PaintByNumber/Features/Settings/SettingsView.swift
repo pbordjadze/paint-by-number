@@ -3,18 +3,18 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(PreferenceKey.autoAdvance) private var autoAdvance = true
-    @AppStorage(PreferenceKey.haptics) private var haptics = true
-    @AppStorage(PreferenceKey.sounds) private var sounds = true
-    @AppStorage(PreferenceKey.defaultColorCount) private var defaultColorCount = Preferences.defaultColorCountValue
-    @AppStorage(PreferenceKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
+    @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
+    @AppStorage(SettingsKey.haptics) private var haptics = true
+    @AppStorage(SettingsKey.sounds) private var sounds = true
+    @AppStorage(SettingsKey.defaultColorCount) private var defaultColorCount = Preferences.defaultColorCountValue
+    @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
                     Toggle(isOn: $autoAdvance) {
-                        Label("Advance to Next Color", systemImage: "arrow.forward.circle")
+                        SwiftUI.Label("Advance to Next Color", systemImage: "arrow.forward.circle")
                     }
                 } header: {
                     Text("Painting")
@@ -24,10 +24,10 @@ struct SettingsView: View {
 
                 Section("Feedback") {
                     Toggle(isOn: $haptics) {
-                        Label("Haptics", systemImage: "hand.tap")
+                        SwiftUI.Label("Haptics", systemImage: "hand.tap")
                     }
                     Toggle(isOn: $sounds) {
-                        Label("Sounds", systemImage: "speaker.wave.2")
+                        SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
                     }
                 }
 
@@ -36,7 +36,7 @@ struct SettingsView: View {
                         LabeledContent {
                             Text(defaultColorCount, format: .number).monospacedDigit()
                         } label: {
-                            Label("Starting Colors", systemImage: "paintpalette")
+                            SwiftUI.Label("Starting Colors", systemImage: "paintpalette")
                         }
                     }
                     Picker(selection: $paper) {
@@ -44,7 +44,7 @@ struct SettingsView: View {
                             Text(paper.name).tag(paper)
                         }
                     } label: {
-                        Label("Printed Templates", systemImage: "printer")
+                        SwiftUI.Label("Printed Templates", systemImage: "printer")
                     }
                 } header: {
                     Text("New Paintings")

@@ -125,9 +125,9 @@ struct PreferencesTests {
         #expect(preferences.autoAdvance && preferences.haptics && preferences.sounds)
         #expect(preferences.defaultColorCount == 24)
 
-        defaults.set(false, forKey: PreferenceKey.autoAdvance)
-        defaults.set(99, forKey: PreferenceKey.defaultColorCount)
-        defaults.set("a4", forKey: PreferenceKey.paperSize)
+        defaults.set(false, forKey: SettingsKey.autoAdvance)
+        defaults.set(99, forKey: SettingsKey.defaultColorCount)
+        defaults.set("a4", forKey: SettingsKey.paperSize)
         defaults.set(false, forKey: "hapticsEnabled")
         preferences = Preferences(defaults: defaults)
         #expect(!preferences.autoAdvance)

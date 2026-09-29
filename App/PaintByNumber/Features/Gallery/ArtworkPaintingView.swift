@@ -9,7 +9,7 @@ struct ArtworkPaintingView: View {
 
     @Environment(Library.self) private var library
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage(PreferenceKey.autoAdvance) private var autoAdvance = true
+    @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @State private var autosaver: PaintingAutosaver?
     @State private var failed = false
 
@@ -24,7 +24,7 @@ struct ArtworkPaintingView: View {
                     .transition(.opacity)
             } else if failed {
                 ContentUnavailableView {
-                    Label("Can’t Open Painting", systemImage: "exclamationmark.triangle")
+                    SwiftUI.Label("Can’t Open Painting", systemImage: "exclamationmark.triangle")
                 } description: {
                     Text("Its file may be damaged.")
                 } actions: {
