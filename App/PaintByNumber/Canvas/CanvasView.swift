@@ -412,7 +412,8 @@ final class CanvasView: UIView, PaintingCanvas {
         let avail = bounds.inset(by: chromeInsets)
         let legible = 17 / labelSize
         let roomy = 0.45 * min(avail.width, avail.height) / extent
-        let z = clampZoom(max(scrollView.zoomScale, min(legible, roomy)))
+        // Always fly in a little so the eye follows to the spot, but never past a view-filling region.
+        let z = clampZoom(max(scrollView.zoomScale, min(roomy, max(legible, fitZoom * 2))))
         animateCamera(zoom: z, offset: offset(centering: center, zoom: z), duration: 0.55)
         pulseRegion = region
         pulseStart = now() + 0.4
