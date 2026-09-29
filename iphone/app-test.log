@@ -1,0 +1,13 @@
+----- tail -----
+Writing result bundle at path:
+	/Users/runner/work/paint-by-number/paint-by-number/build/Tests.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:22452A91-4697-4369-8812-53ADB77EB73B, OS:26.5, name:iPhone 17 Pro }
+{ platform:iOS Simulator, arch:x86_64, id:22452A91-4697-4369-8812-53ADB77EB73B, OS:26.5, name:iPhone 17 Pro }
+2026-09-29 20:49:34.100 xcodebuild[23396:69174] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-09-29 20:49:34.101 xcodebuild[23396:69174] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-09-29 20:49:39.521 xcodebuild[23396:69174] [MT] IDETestOperationsObserverDebug: 46.035 elapsed -- Testing started completed.
+2026-09-29 20:49:39.521 xcodebuild[23396:69174] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-29 20:49:39.521 xcodebuild[23396:69174] [MT] IDETestOperationsObserverDebug: 46.035 sec, +46.035 sec -- end
+Testing started
