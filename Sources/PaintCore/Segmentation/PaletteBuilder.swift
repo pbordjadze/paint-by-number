@@ -21,7 +21,7 @@ enum PaletteBuilder {
         parameters p: SegmentationParameters,
         cancel: CancellationCheck
     ) throws -> [SIMD3<Float>] {
-        let samples = histogram(
+        let samples = try histogram(
             colors: colors, importance: importance, gamma: p.histogramGamma, chromaScale: p.chromaScale,
             saliency: p.paletteSaliency)
         guard !samples.colors.isEmpty else { return [] }
@@ -192,7 +192,7 @@ enum PaletteBuilder {
     /// count more, since they carry the picture's details.
     static func histogram(
         colors: Grid<SIMD4<Float>>, importance: [Float], gamma: Float, chromaScale: Float, saliency: Float
-    ) -> Samples {
+    ) throws -> Samples {
         let w = colors.width, h = colors.height, n = w * h
         guard n > 0 else { return Samples(colors: [], weights: []) }
         let step = max(1, Int((Double(n) / 120_000).squareRoot().rounded(.up)))
@@ -207,7 +207,7 @@ enum PaletteBuilder {
             }
         }
         let radius = max(1, Int(Float(n).squareRoot() / 80 / Float(step)))
-        let surround = BoxBlur.apply(grid, width: gx, height: gy, radius: radius, passes: 2)
+        let surround = try BoxBlur.apply(grid, width: gx, height: gy, radius: radius, passes: 2)
 
         let levels = 64
         let abScale = Float(levels) / (0.8 * chromaScale)

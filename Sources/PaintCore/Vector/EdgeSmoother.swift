@@ -72,12 +72,18 @@ struct EdgeSmoother {
 
     /// Smooths all edges and repairs invalid geometry. `repairs` counts edges that needed a
     /// fallback shape (a quality metric: zero for clean segmentations).
-    func run() -> (geometry: EdgePolylines, repairs: Int) {
+    func run(cancel: CancellationCheck = .none) throws -> (geometry: EdgePolylines, repairs: Int) {
         var repairs = 0
         let edgeCount = graph.edgeCount
         var shapes = [UInt8](repeating: Shape.faired.rawValue, count: edgeCount)
-        let all = Array(0..<edgeCount)
-        let first = polylines(for: all, shapes: shapes)
+        // Waves of edges keep cancellation responsive.
+        var first: (points: [SIMD2<Float>], counts: [Int32]) = ([], [])
+        for start in stride(from: 0, to: edgeCount, by: 1024) {
+            try cancel.throwIfCancelled()
+            let wave = polylines(for: Array(start..<min(edgeCount, start + 1024)), shapes: shapes)
+            first.points += wave.points
+            first.counts += wave.counts
+        }
         var geo = EdgePolylines(points: first.points, start: [], count: first.counts)
         geo.start.reserveCapacity(edgeCount)
         var offset: Int32 = 0
@@ -87,6 +93,7 @@ struct EdgeSmoother {
         // the first round only pairs involving a changed edge can newly conflict.
         var dirty: [Bool]? = nil
         while true {
+            try cancel.throwIfCancelled()
             var bad = Set(GeometryValidator.invalidEdges(points: geo.points, edges: geo.boundaryEdges(graph), onlyInvolving: dirty))
             bad.formUnion(junctionOrderViolations(geo))
             let fix = bad.filter { graph.edgeRight[$0] != BoundaryEdge.outside && shapes[$0] < Shape.lattice.rawValue }.sorted()

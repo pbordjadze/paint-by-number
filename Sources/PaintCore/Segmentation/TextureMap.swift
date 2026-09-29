@@ -6,7 +6,7 @@ enum TextureMap {
 
     /// Density of label changes (right/down neighbour pairs) in a window of about 2% of the
     /// frame, mapped to 0...1 (1 ≈ a change between half of all neighbour pairs).
-    static func boundaryDensity(_ classes: [UInt32], width w: Int, height h: Int) -> [Float] {
+    static func boundaryDensity(_ classes: [UInt32], width w: Int, height h: Int, cancel: CancellationCheck = .none) throws -> [Float] {
         let n = w * h
         guard n > 0 else { return [] }
         var changes = [Float](repeating: 0, count: n)
@@ -29,7 +29,7 @@ enum TextureMap {
             }
         }
         let radius = max(2, Int(Float(n).squareRoot() / 100))
-        var density = BoxBlur.apply(changes, width: w, height: h, radius: radius, passes: 2)
+        var density = try BoxBlur.apply(changes, width: w, height: h, radius: radius, passes: 2, cancel: cancel)
         density.withUnsafeMutableBufferPointer { buf in
             let d = UncheckedSendable(buf.baseAddress!)
             Parallel.forEachBand(n, minimumBandSize: 16_384) { range in

@@ -8,17 +8,19 @@ import Foundation
 /// dissolve speckle, while w_pq (small across real color edges) keeps true contours.
 enum LabelRegularizer {
 
-    static func assignNearest(_ colors: Grid<SIMD4<Float>>, palette: [SIMD3<Float>]) -> [UInt32] {
+    static func assignNearest(
+        _ colors: Grid<SIMD4<Float>>, palette: [SIMD3<Float>], cancel: CancellationCheck = .none
+    ) throws -> [UInt32] {
         let n = colors.count
         var out = [UInt32](repeating: 0, count: n)
         guard !palette.isEmpty else { return out }
         let px = palette.map(\.x), py = palette.map(\.y), pz = palette.map(\.z)
-        colors.storage.withUnsafeBufferPointer { src in
-            out.withUnsafeMutableBufferPointer { dst in
+        try colors.storage.withUnsafeBufferPointer { src in
+            try out.withUnsafeMutableBufferPointer { dst in
                 let s = UncheckedSendable(src.baseAddress!)
                 let d = UncheckedSendable(dst.baseAddress!)
                 let k = palette.count
-                Parallel.forEachBand(n, minimumBandSize: 8192) { range in
+                try Parallel.forEachBand(n, minimumBandSize: 8192, wave: Parallel.wavePixels, cancel: cancel) { range in
                     // Eight pixels at a time against one paint; (dx² + dy²) + dz² is exactly the
                     // lane-sequential sum of a SIMD4 difference with a zero fourth lane.
                     var i = range.lowerBound

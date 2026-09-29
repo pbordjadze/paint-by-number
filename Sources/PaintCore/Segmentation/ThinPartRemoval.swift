@@ -27,8 +27,9 @@ enum ThinPartRemoval {
         colors: [SIMD4<Float>],
         palette: [SIMD3<Float>],
         radiusSquared: Int,
-        maxPasses: Int
-    ) -> Int {
+        maxPasses: Int,
+        cancel: CancellationCheck = .none
+    ) throws -> Int {
         let element = StructuringElement(radiusSquared: radiusSquared)
         guard element.radius > 0, w > 2 * element.radius, h > 2 * element.radius else { return 0 }
         let packed = palette.map { SIMD4($0, 0) }
@@ -52,6 +53,7 @@ enum ThinPartRemoval {
         record()
         var passes = 1
         while !changes.isEmpty && passes < maxPasses {
+            try cancel.throwIfCancelled()
             // Both ways find exactly the uncovered pixels; a full scan is cheaper for many changes.
             if changes.count * (2 * reach + 1) * (2 * reach + 1) > n / 16 {
                 candidates = uncoveredPixels(labels: classes, width: w, height: h, element: element)

@@ -33,19 +33,20 @@ public enum Segmenter {
         }
         let p = SegmentationParameters(settings: settings, width: w, height: h)
 
-        let lab = clock.measure("segment.oklab") { WorkingImage.okLab(image, chromaScale: p.chromaScale) }
+        let lab = try clock.measure("segment.oklab") { try WorkingImage.okLab(image, chromaScale: p.chromaScale, cancel: cancel) }
         try cancel.throwIfCancelled()
         let structure = try clock.measure("segment.structure") {
             try StructureMap(lab, radius: p.structureRadius, cancel: cancel)
         }
         try cancel.throwIfCancelled()
-        let weights = clock.measure("segment.importance") { ImportanceMap.make(importance, structure: structure) }
+        let weights = try clock.measure("segment.importance") { try ImportanceMap.make(importance, structure: structure, cancel: cancel) }
         try cancel.throwIfCancelled()
         progress(0.05)
 
         let smooth = try clock.measure("segment.smooth") { () throws -> Grid<SIMD4<Float>> in
             let edgeScale = p.textureFlattening > 0
-                ? structure.edgeScales(importance: weights, strength: p.textureFlattening, exponent: p.structureExponent)
+                ? try structure.edgeScales(
+                    importance: weights, strength: p.textureFlattening, exponent: p.structureExponent, cancel: cancel)
                 : nil
             return try DomainTransformFilter.filter(
                 lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
@@ -63,7 +64,10 @@ public enum Segmenter {
         progress(0.35)
 
         var classes = try clock.measure("segment.assign") { () throws -> [UInt32] in
-            var labels = clock.measure("segment.assign.nearest") { LabelRegularizer.assignNearest(smooth, palette: palette) }
+            var labels = try clock.measure("segment.assign.nearest") {
+                try LabelRegularizer.assignNearest(smooth, palette: palette, cancel: cancel)
+            }
+            try cancel.throwIfCancelled()
             try clock.measure("segment.assign.icm") { try LabelRegularizer.regularize(
                 &labels, colors: smooth, palette: palette, strength: p.potts, edgeSigma: p.pottsEdgeSigma,
                 iterations: p.icmIterations, cancel: cancel) }
@@ -73,8 +77,8 @@ public enum Segmenter {
         progress(0.5)
 
         let labelling = classes
-        let (texture, areaScale) = clock.measure("segment.texture") { () -> ([Float], [Float]) in
-            let texture = TextureMap.boundaryDensity(labelling, width: w, height: h)
+        let (texture, areaScale) = try clock.measure("segment.texture") { () throws -> ([Float], [Float]) in
+            let texture = try TextureMap.boundaryDensity(labelling, width: w, height: h, cancel: cancel)
             var scale = [Float](repeating: 0, count: w * h)
             weights.withUnsafeBufferPointer { ib in
                 texture.withUnsafeBufferPointer { tb in

@@ -8,11 +8,11 @@ import Foundation
 /// structure (coherent contours) where backgrounds are flat, blurred or merely textured.
 enum ImportanceMap {
 
-    static func make(_ map: Grid<Float>?, structure: StructureMap) -> [Float] {
+    static func make(_ map: Grid<Float>?, structure: StructureMap, cancel: CancellationCheck = .none) throws -> [Float] {
         if let map, map.width > 0, map.height > 0 {
             return resample(map, width: structure.width, height: structure.height)
         }
-        return fallback(structure: structure.coherentMagnitude(), width: structure.width, height: structure.height)
+        return try fallback(structure: structure.coherentMagnitude(), width: structure.width, height: structure.height, cancel: cancel)
     }
 
     /// Bilinear resampling to `width × height`, clamped to 0...1.
@@ -49,11 +49,11 @@ enum ImportanceMap {
     /// averaged over a few percent of the frame and normalized so the busiest contours
     /// approach 1. Texture does not count as structure, so a rushing river or a gravel path
     /// is not mistaken for the subject.
-    static func fallback(structure: [Float], width w: Int, height h: Int) -> [Float] {
+    static func fallback(structure: [Float], width w: Int, height h: Int, cancel: CancellationCheck = .none) throws -> [Float] {
         let n = w * h
         guard n > 0 else { return [] }
         let side = Float(n).squareRoot()
-        let density = BoxBlur.apply(structure, width: w, height: h, radius: max(2, Int(side / 30)), passes: 2)
+        let density = try BoxBlur.apply(structure, width: w, height: h, radius: max(2, Int(side / 30)), passes: 2, cancel: cancel)
 
         // Normalize by a high percentile so a few very sharp edges don't flatten the rest.
         var sample: [Float] = []

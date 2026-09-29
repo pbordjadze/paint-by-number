@@ -26,10 +26,11 @@ enum RegionSimplifier {
     ) throws -> (regions: RegionRuns, adjacency: RegionAdjacency) {
         // Pixel specks and hairlines dissolve far more cheaply at pixel level than as
         // thousands of one-pixel regions in the merge queue.
-        _ = clock.measure("segment.regions.thin") {
-            ThinPartRemoval.apply(
+        _ = try clock.measure("segment.regions.thin") {
+            try ThinPartRemoval.apply(
                 classes: &classes, width: w, height: h,
-                colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
+                colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3,
+                cancel: cancel)
         }
         try cancel.throwIfCancelled()
         var regions = clock.measure("segment.regions.label") { RegionRuns(classes: classes, width: w, height: h) }
@@ -40,9 +41,10 @@ enum RegionSimplifier {
             _ = BoundarySmoothing.apply(
                 classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
                 radius: 2, passes: 4, fidelity: 0)
-            _ = ThinPartRemoval.apply(
+            _ = try ThinPartRemoval.apply(
                 classes: &classes, width: w, height: h,
-                colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
+                colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3,
+                cancel: cancel)
             regions = RegionRuns(classes: classes, width: w, height: h)
         }
         var adjacency = clock.measure("segment.regions.adjacency") { RegionAdjacency(regions) }
@@ -75,10 +77,11 @@ enum RegionSimplifier {
             try cancel.throwIfCancelled()
             var peeled = 0
             if round < cleanupRounds {
-                peeled = clock.measure("segment.regions.thin") {
-                    ThinPartRemoval.apply(
+                peeled = try clock.measure("segment.regions.thin") {
+                    try ThinPartRemoval.apply(
                         classes: &classes, width: w, height: h,
-                        colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 4)
+                        colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 4,
+                        cancel: cancel)
                 }
             }
             if smoothed > 0 || peeled > 0 {

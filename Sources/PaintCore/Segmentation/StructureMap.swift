@@ -31,13 +31,13 @@ struct StructureMap {
                 d.w = (d * d).sum().squareRoot()
                 return d
             }
-            let horizontal = BoxBlur.blur(width: w, height: h, radius: radius, passes: 2) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
+            let horizontal = try BoxBlur.blur(width: w, height: h, radius: radius, passes: 2, cancel: cancel) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
                 let line = s.value + y * w
                 row[0] = .zero
                 for x in 1..<w { row[x] = step(line[x], line[x - 1]) }
             }
             try cancel.throwIfCancelled()
-            let vertical = BoxBlur.blur(width: w, height: h, radius: radius, passes: 2) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
+            let vertical = try BoxBlur.blur(width: w, height: h, radius: radius, passes: 2, cancel: cancel) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
                 let line = s.value + y * w
                 if y == 0 {
                     for x in 0..<w { row[x] = .zero }
@@ -78,21 +78,23 @@ struct StructureMap {
     ///   - importance: Areas with importance → 1 keep full edge-stopping (eyelashes, a
     ///     macaw's facial stripes are "texture" by this measure but must survive).
     ///   - strength: 0 disables texture flattening, 1 applies it fully.
-    func edgeScales(importance: [Float], strength: Float, exponent: Float) -> (horizontal: [Float], vertical: [Float]) {
+    func edgeScales(
+        importance: [Float], strength: Float, exponent: Float, cancel: CancellationCheck = .none
+    ) throws -> (horizontal: [Float], vertical: [Float]) {
         let n = width * height
         var sh = [Float](repeating: 1, count: n)
         var sv = [Float](repeating: 1, count: n)
-        horizontal.withUnsafeBufferPointer { xb in
-            vertical.withUnsafeBufferPointer { yb in
-                importance.withUnsafeBufferPointer { ib in
-                    sh.withUnsafeMutableBufferPointer { hb in
-                        sv.withUnsafeMutableBufferPointer { vb in
+        try horizontal.withUnsafeBufferPointer { xb in
+            try vertical.withUnsafeBufferPointer { yb in
+                try importance.withUnsafeBufferPointer { ib in
+                    try sh.withUnsafeMutableBufferPointer { hb in
+                        try sv.withUnsafeMutableBufferPointer { vb in
                             let xp = UncheckedSendable(xb.baseAddress!)
                             let yp = UncheckedSendable(yb.baseAddress!)
                             let ip = UncheckedSendable(ib.baseAddress!)
                             let hp = UncheckedSendable(hb.baseAddress!)
                             let vp = UncheckedSendable(vb.baseAddress!)
-                            Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
+                            try Parallel.forEachBand(n, minimumBandSize: 16_384, wave: Parallel.wavePixels, cancel: cancel) { range in
                                 for i in range {
                                     let keep = ip.value[i] * ip.value[i]
                                     hp.value[i] = Self.scale(xp.value[i], keep: keep, strength: strength, exponent: exponent)

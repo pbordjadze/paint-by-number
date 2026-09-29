@@ -38,6 +38,35 @@ public enum Parallel {
         }
     }
 
+    /// `forEachBand` in consecutive waves of at most `wave` indices with a cancellation check
+    /// between waves. Checks only see task cancellation on the calling thread, so long passes
+    /// are split this way to stay responsive (about every 20 ms of work).
+    @inlinable
+    public static func forEachBand(
+        _ count: Int,
+        minimumBandSize: Int = 1,
+        wave: Int,
+        cancel: CancellationCheck,
+        _ body: (Range<Int>) -> Void
+    ) throws {
+        var start = 0
+        while start < count {
+            let end = min(count, start + max(1, wave))
+            forEachBand(end - start, minimumBandSize: minimumBandSize) { range in
+                body((range.lowerBound + start)..<(range.upperBound + start))
+            }
+            start = end
+            if start < count { try cancel.throwIfCancelled() }
+        }
+    }
+
+    /// Pixels per cancellation wave: a few milliseconds of simple per-pixel work.
+    public static let wavePixels = 300_000
+
+    /// Rows per cancellation wave for images of the given width.
+    @inlinable
+    public static func waveRows(width: Int) -> Int { max(8, wavePixels / max(width, 1)) }
+
     /// Runs `body` over chunks of `chunk` consecutive indices covering `0..<count`, handed
     /// out dynamically, for work whose cost per index is very uneven.
     @inlinable

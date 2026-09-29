@@ -36,17 +36,18 @@ enum DomainTransformFilter {
         let eh = edgeScale?.horizontal ?? noScale, ev = edgeScale?.vertical ?? noScale
         let st = stiffness ?? noScale
         let scaled = edgeScale != nil, stiff = stiffness != nil
-        input.storage.withUnsafeBufferPointer { g in
-            dH.withUnsafeMutableBufferPointer { dh in
-                dV.withUnsafeMutableBufferPointer { dv in
-                    eh.withUnsafeBufferPointer { ehb in
-                        ev.withUnsafeBufferPointer { evb in
-                            st.withUnsafeBufferPointer { sb in
+        let waveRows = Parallel.waveRows(width: w)
+        try input.storage.withUnsafeBufferPointer { g in
+            try dH.withUnsafeMutableBufferPointer { dh in
+                try dV.withUnsafeMutableBufferPointer { dv in
+                    try eh.withUnsafeBufferPointer { ehb in
+                        try ev.withUnsafeBufferPointer { evb in
+                            try st.withUnsafeBufferPointer { sb in
                                 let gp = UncheckedSendable(g.baseAddress!)
                                 let hp = UncheckedSendable(dh.baseAddress!)
                                 let vp = UncheckedSendable(dv.baseAddress!)
                                 let ehp = UncheckedSendable(ehb), evp = UncheckedSendable(evb), sp = UncheckedSendable(sb)
-                                Parallel.forEachBand(h, minimumBandSize: 8) { rows in
+                                try Parallel.forEachBand(h, minimumBandSize: 8, wave: waveRows, cancel: cancel) { rows in
                                     for y in rows {
                                         let row = y * w
                                         var x = 1
@@ -92,12 +93,12 @@ enum DomainTransformFilter {
                 / (exp2(2 * count) - 1).squareRoot()
             let logA = -Float(2).squareRoot() / sigmaI
 
-            computeWeights(dH, logA: logA, into: &weights)
-            out.withUnsafeMutableBufferPointer { o in
-                weights.withUnsafeBufferPointer { wt in
+            try computeWeights(dH, logA: logA, into: &weights, cancel: cancel)
+            try out.withUnsafeMutableBufferPointer { o in
+                try weights.withUnsafeBufferPointer { wt in
                     let op = UncheckedSendable(o.baseAddress!)
                     let wp = UncheckedSendable(wt.baseAddress!)
-                    Parallel.forEachBand(h, minimumBandSize: 8) { rows in
+                    try Parallel.forEachBand(h, minimumBandSize: 8, wave: waveRows, cancel: cancel) { rows in
                         // Each row is a serial recursion; four rows side by side keep the
                         // pipeline busy.
                         var y = rows.lowerBound
@@ -142,26 +143,36 @@ enum DomainTransformFilter {
             }
 
             try cancel.throwIfCancelled()
-            computeWeights(dV, logA: logA, into: &weights)
-            out.withUnsafeMutableBufferPointer { o in
-                weights.withUnsafeBufferPointer { wt in
+            try computeWeights(dV, logA: logA, into: &weights, cancel: cancel)
+            try out.withUnsafeMutableBufferPointer { o in
+                try weights.withUnsafeBufferPointer { wt in
                     let op = UncheckedSendable(o.baseAddress!)
                     let wp = UncheckedSendable(wt.baseAddress!)
                     // Columns are independent; sweeping whole rows of a column band keeps
-                    // memory access sequential.
-                    Parallel.forEachBand(w, minimumBandSize: 32) { cols in
-                        var y = 1
-                        while y < h {
-                            let cur = op.value + y * w, prev = cur - w, wr = wp.value + y * w
-                            for x in cols { cur[x] += wr[x] * (prev[x] - cur[x]) }
-                            y += 1
+                    // memory access sequential. Rows go in waves for cancellation.
+                    var y0 = 1
+                    while y0 < h {
+                        let y1 = min(h, y0 + waveRows)
+                        Parallel.forEachBand(w, minimumBandSize: 32) { cols in
+                            for y in y0..<y1 {
+                                let cur = op.value + y * w, prev = cur - w, wr = wp.value + y * w
+                                for x in cols { cur[x] += wr[x] * (prev[x] - cur[x]) }
+                            }
                         }
-                        y = h - 2
-                        while y >= 0 {
-                            let cur = op.value + y * w, next = cur + w, wr = wp.value + (y + 1) * w
-                            for x in cols { cur[x] += wr[x] * (next[x] - cur[x]) }
-                            y -= 1
+                        y0 = y1
+                        try cancel.throwIfCancelled()
+                    }
+                    var y1 = h - 1
+                    while y1 > 0 {
+                        let y0 = max(0, y1 - waveRows)
+                        Parallel.forEachBand(w, minimumBandSize: 32) { cols in
+                            for y in stride(from: y1 - 1, through: y0, by: -1) {
+                                let cur = op.value + y * w, next = cur + w, wr = wp.value + (y + 1) * w
+                                for x in cols { cur[x] += wr[x] * (next[x] - cur[x]) }
+                            }
                         }
+                        y1 = y0
+                        if y1 > 0 { try cancel.throwIfCancelled() }
                     }
                 }
             }
@@ -169,13 +180,13 @@ enum DomainTransformFilter {
         return Grid(width: w, height: h, storage: out)
     }
 
-    private static func computeWeights(_ d: [Float], logA: Float, into weights: inout [Float]) {
+    private static func computeWeights(_ d: [Float], logA: Float, into weights: inout [Float], cancel: CancellationCheck) throws {
         let n = d.count
-        d.withUnsafeBufferPointer { src in
-            weights.withUnsafeMutableBufferPointer { dst in
+        try d.withUnsafeBufferPointer { src in
+            try weights.withUnsafeMutableBufferPointer { dst in
                 let s = UncheckedSendable(src.baseAddress!)
                 let o = UncheckedSendable(dst.baseAddress!)
-                Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
+                try Parallel.forEachBand(n, minimumBandSize: 16_384, wave: Parallel.wavePixels, cancel: cancel) { range in
                     for i in range { o.value[i] = exp(logA * s.value[i]) }
                 }
             }

@@ -117,14 +117,15 @@ struct LabelLattice {
 
 extension BoundaryGraph {
 
-    static func build(labels map: RegionMap) -> BoundaryGraph {
+    static func build(labels map: RegionMap, cancel: CancellationCheck = .none) throws -> BoundaryGraph {
         let w = map.width, h = map.height
         var g = BoundaryGraph(width: w, height: h)
         guard w > 0, h > 0 else { return g }
-        map.storage.withUnsafeBufferPointer { buf in
+        try map.storage.withUnsafeBufferPointer { buf in
             let lat = LabelLattice(labels: buf, width: w, height: h)
             g.findJunctions(lat)
-            g.trace(lat)
+            try cancel.throwIfCancelled()
+            try g.trace(lat, cancel: cancel)
         }
         return g
     }
@@ -145,7 +146,7 @@ extension BoundaryGraph {
         junctionSlots = [Int32](repeating: -1, count: junctions.count * 4)
     }
 
-    private mutating func trace(_ lat: LabelLattice) {
+    private mutating func trace(_ lat: LabelLattice, cancel: CancellationCheck) throws {
         let w = width, h = height
         var hVisited = [Bool](repeating: false, count: w * (h + 1))
         var vVisited = [Bool](repeating: false, count: (w + 1) * h)
@@ -185,6 +186,7 @@ extension BoundaryGraph {
 
         // Open chains, started from every junction in raster order.
         for j in 0..<junctions.count {
+            if j % 4096 == 4095 { try cancel.throwIfCancelled() }
             let sx = Int(junctions[j]) % (w + 1), sy = Int(junctions[j]) / (w + 1)
             let m = lat.mask(sx, sy)
             for d0 in 0..<UInt8(4) where m & (1 << d0) != 0 && !isVisited(sx, sy, d0) {
@@ -211,6 +213,7 @@ extension BoundaryGraph {
         // Junction-free cycles. Scanning horizontal segments in raster order finds each
         // cycle at the top-left corner of its topmost row, a canonical, deterministic start.
         for cy in 0...h {
+            if cy % 256 == 255 { try cancel.throwIfCancelled() }
             for cx in 0..<w where !hVisited[cy * w + cx] && lat.at(cx, cy - 1) != lat.at(cx, cy) {
                 chain.removeAll(keepingCapacity: true)
                 var x = cx, y = cy, d: UInt8 = 0

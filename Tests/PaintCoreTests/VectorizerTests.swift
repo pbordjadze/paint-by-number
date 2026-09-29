@@ -95,7 +95,7 @@ struct VectorizerTests {
             for p in rings[0] { lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p) }
             return (lo, hi)
         }
-        let depth = DistanceTransform.interiorDistance(labels: t.regionMap)
+        let depth = try! DistanceTransform.interiorDistance(labels: t.regionMap)
         var rng = SplitMix64(seed: seed)
         var failures = 0
         for _ in 0..<samples {
@@ -330,9 +330,9 @@ struct VectorizerTests {
             }
         }
         let s = Self.segmentation(width: w, height: h, classes: classes)
-        let graph = BoundaryGraph.build(labels: s.labels)
+        let graph = try BoundaryGraph.build(labels: s.labels)
         for smoothness in [Float(0), 0.5, 1] {
-            #expect(EdgeSmoother(graph: graph, smoothness: smoothness).run().repairs == 0)
+            #expect(try EdgeSmoother(graph: graph, smoothness: smoothness).run().repairs == 0)
             try Self.expectValid(try Self.vectorize(s, smoothness: smoothness), s)
         }
     }

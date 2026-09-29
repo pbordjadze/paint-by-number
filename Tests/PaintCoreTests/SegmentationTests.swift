@@ -73,7 +73,7 @@ struct SegmentationTests {
         }
         // Size guarantee: largest inscribed disc per region.
         if let minRadius, n > 1 {
-            let d = DistanceTransform.interiorDistance(labels: s.labels)
+            let d = try! DistanceTransform.interiorDistance(labels: s.labels)
             var best = [Float](repeating: 0, count: n)
             for i in 0..<d.count { best[Int(s.labels.storage[i])] = max(best[Int(s.labels.storage[i])], d.storage[i]) }
             #expect(best.allSatisfy { $0 >= minRadius })
@@ -246,7 +246,7 @@ struct SegmentationTests {
         }
         let regions = RegionRuns(classes: classes, width: w, height: h)
         let cc = regions.components()
-        let d = DistanceTransform.interiorDistance(labels: cc.labels)
+        let d = try! DistanceTransform.interiorDistance(labels: cc.labels)
         var best = [Float](repeating: 0, count: cc.count)
         for i in 0..<d.count { best[Int(cc.labels.storage[i])] = max(best[Int(cc.labels.storage[i])], d.storage[i]) }
         for radius in [Float(0.5), 1, 1.5, 2, 2.75, 3.5, 4.2] {
@@ -263,7 +263,7 @@ struct SegmentationTests {
         for y in 18..<24 { for x in 5..<35 { classes[y * w + x] = 2 } }
         let colors = [SIMD4<Float>](repeating: SIMD4(0.5, 0, 0, 0), count: w * h)
         let palette: [SIMD3<Float>] = [SIMD3(0.5, 0, 0), SIMD3(0.2, 0, 0), SIMD3(0.8, 0, 0)]
-        _ = ThinPartRemoval.apply(
+        _ = try! ThinPartRemoval.apply(
             classes: &classes, width: w, height: h, colors: colors, palette: palette, radiusSquared: 1, maxPasses: 4)
         #expect(!classes.contains(1))
         #expect(classes[20 * w + 20] == 2)

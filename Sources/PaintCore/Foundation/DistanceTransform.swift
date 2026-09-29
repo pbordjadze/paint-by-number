@@ -18,7 +18,7 @@ public enum DistanceTransform {
                 for i in range { p.value[i] = isFeature(i) ? 1 : 0 }
             }
         }
-        let f = squaredDistances(feature, width: width, height: height)
+        let f = try! squaredDistances(feature, width: width, height: height, cancel: .none)
         return Grid(width: width, height: height, storage: f.map { Float($0) })
     }
 
@@ -28,7 +28,7 @@ public enum DistanceTransform {
     /// This is the radius of the largest disc centred on the pixel that stays inside the
     /// region, which drives label placement ("pole of inaccessibility") and thin-region
     /// detection.
-    public static func interiorDistance(labels: RegionMap) -> Grid<Float> {
+    public static func interiorDistance(labels: RegionMap, cancel: CancellationCheck = .none) throws -> Grid<Float> {
         let w = labels.width, h = labels.height, n = w * h
         guard n > 0 else { return Grid(width: w, height: h, storage: []) }
         var isBoundary = [UInt8](repeating: 1, count: n)
@@ -48,7 +48,7 @@ public enum DistanceTransform {
                 }
             }
         }
-        let d = squaredDistances(isBoundary, width: w, height: h)
+        let d = try squaredDistances(isBoundary, width: w, height: h, cancel: cancel)
         var out = [Float](unsafeUninitializedCapacity: n) { _, count in count = n }
         d.withUnsafeBufferPointer { src in
             out.withUnsafeMutableBufferPointer { dst in
@@ -65,51 +65,71 @@ public enum DistanceTransform {
     // MARK: - Separable implementation
 
     /// Squared distances to the nearest nonzero `feature` pixel.
-    static func squaredDistances(_ feature: [UInt8], width: Int, height: Int) -> [Double] {
+    static func squaredDistances(_ feature: [UInt8], width: Int, height: Int, cancel: CancellationCheck) throws -> [Double] {
         let n = width * height
         guard width > 0, height > 0 else { return [] }
+        let waveRows = Parallel.waveRows(width: width)
         var f = [Double](unsafeUninitializedCapacity: n) { _, count in count = n }
-        feature.withUnsafeBufferPointer { fb in
-            f.withUnsafeMutableBufferPointer { buf in
-                let base = UncheckedSendable(buf.baseAddress!)
-                let feat = UncheckedSendable(fb.baseAddress!)
-                // Columns: on a binary image the lower envelope of parabolas is simply the
-                // squared distance to the nearest feature in the column, found by one sweep
-                // down and one up. Bands of whole columns walk rows, so memory stays sequential.
-                Parallel.forEachBand(width, minimumBandSize: 64) { cols in
-                    let c0 = cols.lowerBound, span = cols.count
-                    let none = Int32.max
-                    withUnsafeTemporaryAllocation(of: Int32.self, capacity: span) { runBuffer in
-                        let run = runBuffer.baseAddress!
-                        for k in 0..<span { run[k] = none }
-                        for y in 0..<height {
-                            let fr = feat.value + y * width + c0, out = base.value + y * width + c0
-                            for k in 0..<span {
-                                run[k] = fr[k] != 0 ? 0 : (run[k] == none ? none : run[k] + 1)
-                                out[k] = Double(run[k])
+        // Distance (in rows) to the nearest feature seen so far in each column.
+        let none = Int32.max
+        var run = [Int32](repeating: none, count: width)
+        try feature.withUnsafeBufferPointer { fb in
+            try f.withUnsafeMutableBufferPointer { buf in
+                try run.withUnsafeMutableBufferPointer { rb in
+                    let base = UncheckedSendable(buf.baseAddress!)
+                    let feat = UncheckedSendable(fb.baseAddress!)
+                    let runs = UncheckedSendable(rb.baseAddress!)
+                    // Columns: on a binary image the lower envelope of parabolas is simply the
+                    // squared distance to the nearest feature in the column, found by one sweep
+                    // down and one up (bands of whole columns walk rows, so memory stays
+                    // sequential; rows go in waves for cancellation).
+                    var y0 = 0
+                    while y0 < height {
+                        let y1 = min(height, y0 + waveRows)
+                        Parallel.forEachBand(width, minimumBandSize: 64) { cols in
+                            let c0 = cols.lowerBound, span = cols.count
+                            let run = runs.value + c0
+                            for y in y0..<y1 {
+                                let fr = feat.value + y * width + c0, out = base.value + y * width + c0
+                                for k in 0..<span {
+                                    run[k] = fr[k] != 0 ? 0 : (run[k] == none ? none : run[k] + 1)
+                                    out[k] = Double(run[k])
+                                }
                             }
                         }
-                        for k in 0..<span { run[k] = none }
-                        for y in stride(from: height - 1, through: 0, by: -1) {
-                            let fr = feat.value + y * width + c0, out = base.value + y * width + c0
-                            for k in 0..<span {
-                                run[k] = fr[k] != 0 ? 0 : (run[k] == none ? none : run[k] + 1)
-                                let d = min(out[k], Double(run[k]))
-                                out[k] = d == Double(none) ? .infinity : d * d
-                            }
-                        }
+                        y0 = y1
+                        try cancel.throwIfCancelled()
                     }
-                }
-                Parallel.forEachBand(height, minimumBandSize: 8) { rows in
-                    var line = [Double](repeating: 0, count: width)
-                    var out = [Double](repeating: 0, count: width)
-                    var v = [Int](repeating: 0, count: width)
-                    var z = [Double](repeating: 0, count: width + 1)
-                    for y in rows {
-                        let row = base.value + y * width
-                        for x in 0..<width { line[x] = row[x] }
-                        transform1D(line, count: width, out: &out, v: &v, z: &z)
-                        for x in 0..<width { row[x] = out[x] }
+                    for x in 0..<width { runs.value[x] = none }
+                    var y1 = height
+                    while y1 > 0 {
+                        let y0 = max(0, y1 - waveRows)
+                        Parallel.forEachBand(width, minimumBandSize: 64) { cols in
+                            let c0 = cols.lowerBound, span = cols.count
+                            let run = runs.value + c0
+                            for y in stride(from: y1 - 1, through: y0, by: -1) {
+                                let fr = feat.value + y * width + c0, out = base.value + y * width + c0
+                                for k in 0..<span {
+                                    run[k] = fr[k] != 0 ? 0 : (run[k] == none ? none : run[k] + 1)
+                                    let d = min(out[k], Double(run[k]))
+                                    out[k] = d == Double(none) ? .infinity : d * d
+                                }
+                            }
+                        }
+                        y1 = y0
+                        try cancel.throwIfCancelled()
+                    }
+                    try Parallel.forEachBand(height, minimumBandSize: 8, wave: waveRows, cancel: cancel) { rows in
+                        var line = [Double](repeating: 0, count: width)
+                        var out = [Double](repeating: 0, count: width)
+                        var v = [Int](repeating: 0, count: width)
+                        var z = [Double](repeating: 0, count: width + 1)
+                        for y in rows {
+                            let row = base.value + y * width
+                            for x in 0..<width { line[x] = row[x] }
+                            transform1D(line, count: width, out: &out, v: &v, z: &z)
+                            for x in 0..<width { row[x] = out[x] }
+                        }
                     }
                 }
             }

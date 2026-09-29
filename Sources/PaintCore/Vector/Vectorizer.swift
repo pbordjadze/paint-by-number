@@ -31,24 +31,24 @@ public enum Vectorizer {
                 regions: [], points: [], edges: [], ringEdges: [], rings: [], labels: [], mesh: FillMesh(), regionMap: map)
         }
 
-        let graph = clock.measure("vectorize.graph") { BoundaryGraph.build(labels: map) }
+        let graph = try clock.measure("vectorize.graph") { try BoundaryGraph.build(labels: map, cancel: cancel) }
         try cancel.throwIfCancelled()
         let topology = clock.measure("vectorize.rings") { graph.assembleRings(labels: map, regionCount: regionCount) }
         try cancel.throwIfCancelled()
 
-        let geometry = clock.measure("vectorize.smooth") {
-            EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run().geometry
+        let geometry = try clock.measure("vectorize.smooth") {
+            try EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run(cancel: cancel).geometry
         }
         let edges = geometry.boundaryEdges(graph)
         try cancel.throwIfCancelled()
 
-        let distance = clock.measure("vectorize.edt") { DistanceTransform.interiorDistance(labels: map) }
+        let distance = try clock.measure("vectorize.edt") { try DistanceTransform.interiorDistance(labels: map, cancel: cancel) }
         let raster = clock.measure("vectorize.raster") { RasterStats(labels: map, distance: distance, regionCount: regionCount) }
         try cancel.throwIfCancelled()
 
         let shapes = RegionShapes(points: geometry.points, edges: edges, topology: topology)
-        var fills = clock.measure("vectorize.fill") {
-            RegionFills.build(shapes, raster: raster, width: w, height: h)
+        var fills = try clock.measure("vectorize.fill") {
+            try RegionFills.build(shapes, raster: raster, width: w, height: h, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         clock.measure("vectorize.labels") {
@@ -170,77 +170,89 @@ struct RegionFills {
     var poleRadius: [Float] = []
     var extraLabels: [[Label]] = []
 
-    static func build(_ shapes: RegionShapes, raster: RasterStats, width: Int, height: Int) -> RegionFills {
+    static func build(
+        _ shapes: RegionShapes, raster: RasterStats, width: Int, height: Int, cancel: CancellationCheck = .none
+    ) throws -> RegionFills {
         let regionCount = shapes.topology.regionRingStart.count
         // Small chunks balance the load: a single huge region must not stall a whole band.
-        let bands = mapChunks(regionCount, chunk: 16) { range -> RegionFills in
-            var band = RegionFills()
-            var poly = FlatPolygon()
-            var earcut = Earcut()
-            var tri: [UInt32] = []
-            var sub: [SIMD2<Double>] = []
-            var holeStarts: [Int] = []
-            for r in range {
-                shapes.polygon(r, into: &poly)
-                let base = UInt32(band.vertices.count)
-                for p in poly.points {
-                    band.vertices.append(SIMD2<Float>(p))
-                    band.vertexRegion.append(UInt32(r))
-                }
-
-                // Signed ring areas: outer rings positive, holes negative.
-                var area2 = 0.0
-                for k in 0..<poly.ringCount { area2 += poly.area2(ring: k) }
-                band.area.append(Float(area2 / 2))
-
-                var lo = SIMD2<Double>(repeating: .infinity), hi = SIMD2<Double>(repeating: -.infinity)
-                for i in 0..<(poly.ringStarts.count > 1 ? poly.ringStarts[1] : 0) {
-                    lo = pointwiseMin(lo, poly.points[i]); hi = pointwiseMax(hi, poly.points[i])
-                }
-                band.bounds.append(lo.x <= hi.x
-                    ? PixelBounds(
-                        minX: Int32(max(0, lo.x.rounded(.down))), minY: Int32(max(0, lo.y.rounded(.down))),
-                        maxX: Int32(min(Double(width), hi.x.rounded(.up))), maxY: Int32(min(Double(height), hi.y.rounded(.up))))
-                    : .empty)
-
-                // Triangulate. A 4-connected region has exactly one outer ring; any further
-                // outer rings (malformed input) are triangulated with the holes they contain.
-                tri.removeAll(keepingCapacity: true)
-                let outers = (0..<poly.ringCount).filter { $0 == 0 || !shapes.topology.rings[Int(shapes.topology.regionRingStart[r]) + $0].isHole }
-                if outers.count == 1 {
-                    earcut.triangulate(poly.points, holeStarts: Array(poly.ringStarts[1..<poly.ringCount]), into: &tri)
-                } else {
-                    for o in outers {
-                        sub.removeAll(keepingCapacity: true)
-                        holeStarts.removeAll(keepingCapacity: true)
-                        var map: [UInt32] = []
-                        func add(ring k: Int) {
-                            for i in poly.ringStarts[k]..<poly.ringStarts[k + 1] {
-                                sub.append(poly.points[i]); map.append(UInt32(i))
-                            }
-                        }
-                        add(ring: o)
-                        for k in 0..<poly.ringCount where !outers.contains(k) {
-                            let p = poly.points[poly.ringStarts[k]]
-                            if RegionFills.ringContains(poly, ring: o, p) { holeStarts.append(sub.count); add(ring: k) }
-                        }
-                        var local: [UInt32] = []
-                        earcut.triangulate(sub, holeStarts: holeStarts, into: &local)
-                        for i in local { tri.append(map[Int(i)]) }
+        // Waves of regions keep cancellation responsive.
+        var bands: [RegionFills] = []
+        var first = 0
+        while first < regionCount {
+            try cancel.throwIfCancelled()
+            let last = min(regionCount, first + 1024)
+            let offset = first
+            bands += mapChunks(last - first, chunk: 16) { chunk -> RegionFills in
+                let range = (chunk.lowerBound + offset)..<(chunk.upperBound + offset)
+                var band = RegionFills()
+                var poly = FlatPolygon()
+                var earcut = Earcut()
+                var tri: [UInt32] = []
+                var sub: [SIMD2<Double>] = []
+                var holeStarts: [Int] = []
+                for r in range {
+                    shapes.polygon(r, into: &poly)
+                    let base = UInt32(band.vertices.count)
+                    for p in poly.points {
+                        band.vertices.append(SIMD2<Float>(p))
+                        band.vertexRegion.append(UInt32(r))
                     }
-                }
-                RegionFills.splitTJunctions(poly.points, &tri)
-                for i in tri { band.indices.append(i + base) }
-                band.indexCount.append(UInt32(tri.count))
 
-                let seedPixel = Int(raster.bestPixel[r])
-                let seed = SIMD2(Double(seedPixel % width) + 0.5, Double(seedPixel / width) + 0.5)
-                let label = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: seed)
-                band.pole.append(SIMD2<Float>(label.position))
-                band.poleRadius.append(Float(label.distance))
-                band.extraLabels.append([])
+                    // Signed ring areas: outer rings positive, holes negative.
+                    var area2 = 0.0
+                    for k in 0..<poly.ringCount { area2 += poly.area2(ring: k) }
+                    band.area.append(Float(area2 / 2))
+
+                    var lo = SIMD2<Double>(repeating: .infinity), hi = SIMD2<Double>(repeating: -.infinity)
+                    for i in 0..<(poly.ringStarts.count > 1 ? poly.ringStarts[1] : 0) {
+                        lo = pointwiseMin(lo, poly.points[i]); hi = pointwiseMax(hi, poly.points[i])
+                    }
+                    band.bounds.append(lo.x <= hi.x
+                        ? PixelBounds(
+                            minX: Int32(max(0, lo.x.rounded(.down))), minY: Int32(max(0, lo.y.rounded(.down))),
+                            maxX: Int32(min(Double(width), hi.x.rounded(.up))), maxY: Int32(min(Double(height), hi.y.rounded(.up))))
+                        : .empty)
+
+                    // Triangulate. A 4-connected region has exactly one outer ring; any further
+                    // outer rings (malformed input) are triangulated with the holes they contain.
+                    tri.removeAll(keepingCapacity: true)
+                    let outers = (0..<poly.ringCount).filter { $0 == 0 || !shapes.topology.rings[Int(shapes.topology.regionRingStart[r]) + $0].isHole }
+                    if outers.count == 1 {
+                        earcut.triangulate(poly.points, holeStarts: Array(poly.ringStarts[1..<poly.ringCount]), into: &tri)
+                    } else {
+                        for o in outers {
+                            sub.removeAll(keepingCapacity: true)
+                            holeStarts.removeAll(keepingCapacity: true)
+                            var map: [UInt32] = []
+                            func add(ring k: Int) {
+                                for i in poly.ringStarts[k]..<poly.ringStarts[k + 1] {
+                                    sub.append(poly.points[i]); map.append(UInt32(i))
+                                }
+                            }
+                            add(ring: o)
+                            for k in 0..<poly.ringCount where !outers.contains(k) {
+                                let p = poly.points[poly.ringStarts[k]]
+                                if RegionFills.ringContains(poly, ring: o, p) { holeStarts.append(sub.count); add(ring: k) }
+                            }
+                            var local: [UInt32] = []
+                            earcut.triangulate(sub, holeStarts: holeStarts, into: &local)
+                            for i in local { tri.append(map[Int(i)]) }
+                        }
+                    }
+                    RegionFills.splitTJunctions(poly.points, &tri)
+                    for i in tri { band.indices.append(i + base) }
+                    band.indexCount.append(UInt32(tri.count))
+
+                    let seedPixel = Int(raster.bestPixel[r])
+                    let seed = SIMD2(Double(seedPixel % width) + 0.5, Double(seedPixel / width) + 0.5)
+                    let label = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: seed)
+                    band.pole.append(SIMD2<Float>(label.position))
+                    band.poleRadius.append(Float(label.distance))
+                    band.extraLabels.append([])
+                }
+                return band
             }
-            return band
+            first = last
         }
         var out = RegionFills()
         for band in bands {
