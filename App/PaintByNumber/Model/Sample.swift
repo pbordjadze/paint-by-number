@@ -31,10 +31,11 @@ nonisolated enum ArtworkFactory {
     @concurrent
     static func draft(
         sample: Sample, settings: GenerationSettings = GenerationSettings(),
-        paintedFraction: Double? = nil, date: Date = .now
+        paintedFraction: Double? = nil, date: Date = .now,
+        photoMaxPixelSize: Int = ArtworkStore.sourceMaxPixelSize
     ) async throws -> ArtworkDraft {
         guard let url = sample.url else { throw FactoryError.missingSample }
-        let photo = try PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize)
+        let photo = try PhotoLoader.load(url: url, maxPixelSize: photoMaxPixelSize)
         let image = PhotoLoader.cgImage(from: photo)
         let importance = image.flatMap(SubjectImportance.map(for:))
         let template = try TemplateGenerator(settings: settings).generate(from: photo, importance: importance).template

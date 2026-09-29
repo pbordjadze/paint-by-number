@@ -33,10 +33,16 @@ struct SettingsView: View {
 
                 Section {
                     Stepper(value: $defaultColorCount, in: GenerationSettings.colorCountRange, step: 2) {
-                        LabeledContent {
-                            Text(defaultColorCount, format: .number).monospacedDigit()
-                        } label: {
-                            SwiftUI.Label("Starting Colors", systemImage: "paintpalette")
+                        SwiftUI.Label {
+                            HStack {
+                                Text("Starting Colors")
+                                Spacer()
+                                Text(defaultColorCount, format: .number)
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: "paintpalette")
                         }
                     }
                     Picker(selection: $paper) {
@@ -61,6 +67,6 @@ struct SettingsView: View {
             }
         }
         .presentationDetents([.large])
-        .tint(.accentColor)
+        .tint(Theme.accent)
     }
 }

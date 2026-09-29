@@ -13,6 +13,7 @@ struct PhotoSourceView: View {
     @State private var width: CGFloat = 0
 
     private var isWide: Bool { width >= 600 }
+    private var sampleColumns: Int { width >= 1100 ? 4 : isWide ? 3 : 2 }
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
     var body: some View {
@@ -31,7 +32,7 @@ struct PhotoSourceView: View {
                     .photosPickerStyle(.inline)
                     .photosPickerDisabledCapabilities(.selectionActions)
                     .photosPickerAccessoryVisibility(.hidden, edges: .all)
-                    .frame(height: isWide ? 360 : 300)
+                    .frame(height: isWide ? 380 : 300)
                     .background(Theme.surface)
                     .clipShape(.rect(cornerRadius: Theme.cardRadius, style: .continuous))
                     .overlay {
@@ -42,7 +43,7 @@ struct PhotoSourceView: View {
 
                 VStack(alignment: .leading, spacing: 12) {
                     SectionTitle("Samples")
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: isWide ? 3 : 2), spacing: 14) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: sampleColumns), spacing: 14) {
                         ForEach(Sample.all) { sample in
                             Button {
                                 model.load(sample: sample)
@@ -58,8 +59,6 @@ struct PhotoSourceView: View {
             .padding(.horizontal, isWide ? 32 : 20)
             .padding(.top, 4)
             .padding(.bottom, 40)
-            .frame(maxWidth: 900)
-            .frame(maxWidth: .infinity)
         }
         .background(Theme.paper)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }

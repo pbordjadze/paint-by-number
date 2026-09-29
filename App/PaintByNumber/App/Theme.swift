@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 /// Shared visual language: warm gallery paper, raised surfaces, SF Rounded for display text.
 enum Theme {
@@ -7,24 +6,7 @@ enum Theme {
     static let surface = Color("Surface")
     static let cardRadius: CGFloat = 22
     static let hairline = Color.primary.opacity(0.08)
-
-    /// Rounded large and inline navigation titles, app-wide.
-    static func configureNavigationBar() {
-        let appearance = UINavigationBar.appearance()
-        if let large = rounded(.largeTitle, weight: .bold) {
-            appearance.largeTitleTextAttributes = [.font: large]
-        }
-        if let inline = rounded(.headline, weight: .semibold) {
-            appearance.titleTextAttributes = [.font: inline]
-        }
-    }
-
-    private static func rounded(_ style: UIFont.TextStyle, weight: UIFont.Weight) -> UIFont? {
-        let base = UIFont.preferredFont(forTextStyle: style)
-        let weighted = UIFont.systemFont(ofSize: base.pointSize, weight: weight)
-        guard let descriptor = weighted.fontDescriptor.withDesign(.rounded) else { return nil }
-        return UIFont(descriptor: descriptor, size: base.pointSize)
-    }
+    static let accent = Color("AccentColor")
 }
 
 extension Font {

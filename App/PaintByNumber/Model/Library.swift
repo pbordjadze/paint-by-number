@@ -107,6 +107,8 @@ final class Library {
         var painted: Double?
         /// How long ago it was last painted; orders the gallery.
         var age: TimeInterval = 0
+        /// Demos use smaller photos so they are ready quickly even in Debug builds.
+        var photoMaxPixelSize = ArtworkStore.sourceMaxPixelSize
     }
 
     /// Generates artworks from bundled samples, one after another, showing placeholders
@@ -120,7 +122,9 @@ final class Library {
                 // Earlier items sort first when ages tie.
                 let date = now.addingTimeInterval(-item.age - Double(index))
                 do {
-                    let draft = try await ArtworkFactory.draft(sample: item.sample, paintedFraction: item.painted, date: date)
+                    let draft = try await ArtworkFactory.draft(
+                        sample: item.sample, paintedFraction: item.painted, date: date,
+                        photoMaxPixelSize: item.photoMaxPixelSize)
                     try await create(draft)
                 } catch {
                     Log.library.error("Seeding \(item.sample.id, privacy: .public) failed: \(String(describing: error), privacy: .public)")

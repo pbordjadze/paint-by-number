@@ -32,6 +32,9 @@ nonisolated enum TemplateRasterizer {
         var numberColor = SIMD4<Float>(0.38, 0.40, 0.43, 1)
         /// Numbers smaller than this (output pixels/points) are left out.
         var minimumNumberSize: CGFloat = 5
+        /// Largest number as a fraction of the canvas' long side; big regions carry several
+        /// labels of this size rather than one huge number.
+        var maximumNumberFraction: CGFloat = 1.0 / 64
         var paper = SIMD3<Float>(1, 1, 1)
 
         /// Gallery thumbnails: painted regions in color, the rest a faint sketch.
@@ -289,11 +292,12 @@ nonisolated enum TemplateRasterizer {
         ctx.setFillColor(cgColor(style.numberColor, space: t.colorSpace))
         // y-down user space: flip glyphs upright.
         ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
+        let maximumSize = style.maximumNumberFraction * CGFloat(max(t.width, t.height))
         for label in t.labels {
             let region = Int(label.region)
             guard region < painted.count, !painted[region] else { continue }
             let number = Int(t.regions[region].colorIndex) + 1
-            let size = CGFloat(SVGExport.fontSize(forRadius: label.radius, digits: number < 10 ? 1 : 2))
+            let size = min(CGFloat(SVGExport.fontSize(forRadius: label.radius, digits: number < 10 ? 1 : 2)), maximumSize)
             guard size * scale >= style.minimumNumberSize else { continue }
             let run = line(for: number)
             let s = size / referenceFontSize

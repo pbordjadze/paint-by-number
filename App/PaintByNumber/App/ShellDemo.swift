@@ -30,14 +30,12 @@ enum ShellDemo: Equatable {
         switch self {
         case .gallery:
             let hour: TimeInterval = 3600
-            library.seed([
-                .init(sample: Sample.all[0], painted: 0.42, age: 1 * hour),
-                .init(sample: Sample.all[2], painted: 0.68, age: 3 * hour),
-                .init(sample: Sample.all[3], painted: 0.12, age: 26 * hour),
-                .init(sample: Sample.all[4], painted: 0, age: 50 * hour),
-                .init(sample: Sample.all[1], painted: 1, age: 5 * hour),
-                .init(sample: Sample.all[5], painted: 1, age: 80 * hour),
-            ])
+            let items: [(Int, Double, TimeInterval)] = [
+                (0, 0.42, 1), (2, 0.68, 3), (3, 0.12, 26), (4, 0, 50), (1, 1, 5), (5, 1, 80),
+            ]
+            library.seed(items.map { sample, painted, hours in
+                Library.SeedItem(sample: Sample.all[sample], painted: painted, age: hours * hour, photoMaxPixelSize: 560)
+            })
         case .create, .createPreview, .galleryEmpty, .settings:
             break
         }

@@ -18,18 +18,19 @@ struct EmptyGalleryView: View {
                     .foregroundStyle(.secondary)
             }
             .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .containerRelativeFrame(.horizontal) { length, _ in min(length - 64, 400) }
 
             Button(action: onCreate) {
                 Label("New Painting", systemImage: "plus")
                     .font(.rounded(.headline, weight: .semibold))
+                    .fixedSize()
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
             }
             .buttonStyle(.glassProminent)
             .controlSize(.large)
         }
-        .frame(maxWidth: 420)
-        .padding(.horizontal, 32)
         .padding(.bottom, 40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

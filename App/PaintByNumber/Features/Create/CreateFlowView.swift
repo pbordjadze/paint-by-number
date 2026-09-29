@@ -9,26 +9,38 @@ struct CreateFlowView: View {
     @Environment(Library.self) private var library
     @State private var model = CreateModel()
     @State private var path: [Step] = []
-    @State private var didStartDemo = false
 
     enum Step: Hashable { case preview }
 
     var body: some View {
         NavigationStack(path: $path) {
+            root
+                .navigationDestination(for: Step.self) { _ in
+                    TemplatePreviewView(model: model, onStart: start)
+                }
+        }
+        .task {
+            // Demo: open straight on the preview (pushing while the cover is still being
+            // presented would stall the presentation).
+            if let sample = demo?.previewSample, model.source == nil { model.load(sample: sample) }
+        }
+        .onDisappear { model.cancelAll() }
+    }
+
+    @ViewBuilder
+    private var root: some View {
+        if demo?.previewSample != nil {
+            TemplatePreviewView(model: model, onStart: start)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close", systemImage: "xmark") { dismiss() }
+                    }
+                }
+        } else {
             PhotoSourceView(model: model, onClose: { dismiss() }) {
                 path = [.preview]
             }
-            .navigationDestination(for: Step.self) { _ in
-                TemplatePreviewView(model: model, onStart: start)
-            }
         }
-        .onAppear {
-            guard !didStartDemo, let sample = demo?.previewSample else { return }
-            didStartDemo = true
-            model.load(sample: sample)
-            path = [.preview]
-        }
-        .onDisappear { model.cancelAll() }
     }
 
     /// Saves the full-resolution template to the library and opens it for painting.

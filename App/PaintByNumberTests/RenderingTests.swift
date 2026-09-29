@@ -22,7 +22,9 @@ struct RasterizerTests {
     @Test(arguments: [true, false])
     func templateHasPaperOutlinesAndNumbers(vector: Bool) throws {
         let t = Fixtures.stripes(count: 3, stripeWidth: 40, height: 40, vector: vector)
-        let image = try #require(TemplateRasterizer.image(t, style: .template, maxPixelSize: 480))
+        var style = TemplateRasterizer.Style.template
+        style.maximumNumberFraction = 1
+        let image = try #require(TemplateRasterizer.image(t, style: style, maxPixelSize: 480))
         let pixels = PixelReader(image)
         #expect(pixels[8, 8] == SIMD3(255, 255, 255))
         // Stripe boundary at canvas x = 40 → 160 px.

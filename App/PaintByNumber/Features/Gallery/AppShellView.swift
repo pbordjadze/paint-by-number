@@ -9,6 +9,8 @@ struct AppShellView: View {
     @State private var isCreating = ShellDemo.current?.opensCreateFlow ?? false
     @State private var isShowingSettings = ShellDemo.current == .settings
     @State private var didRestore = false
+    /// A painting just created in the create flow, opened once the flow has closed.
+    @State private var pendingOpen: UUID?
     @SceneStorage("openArtwork") private var openArtwork = ""
 
     var body: some View {
@@ -22,10 +24,10 @@ struct AppShellView: View {
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
                 }
         }
-        .fullScreenCover(isPresented: $isCreating) {
+        .fullScreenCover(isPresented: $isCreating, onDismiss: openPending) {
             CreateFlowView(demo: ShellDemo.current) { artwork in
+                pendingOpen = artwork.id
                 isCreating = false
-                path = [artwork.id]
             }
             .environment(library)
             .navigationTransition(.zoom(sourceID: "create", in: zoom))
@@ -59,6 +61,12 @@ struct AppShellView: View {
         case (0, _): return finished == 1 ? "1 finished painting" : "\(finished) finished paintings"
         default: return "\(active) in progress · \(finished) finished"
         }
+    }
+
+    private func openPending() {
+        guard let id = pendingOpen else { return }
+        pendingOpen = nil
+        path = [id]
     }
 
     /// Reopens the painting that was open when the app was last suspended.

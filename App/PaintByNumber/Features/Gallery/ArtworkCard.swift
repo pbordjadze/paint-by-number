@@ -87,7 +87,7 @@ private struct FinishedBadge: View {
             .font(.system(size: 13, weight: .bold, design: .rounded))
             .foregroundStyle(.white)
             .frame(width: 30, height: 30)
-            .glassEffect(.regular.tint(.accentColor), in: .circle)
+            .glassEffect(.regular.tint(Theme.accent), in: .circle)
             .accessibilityHidden(true)
     }
 }
