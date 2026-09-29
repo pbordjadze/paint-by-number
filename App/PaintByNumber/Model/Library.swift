@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import Observation
+import os
 import PaintCore
 
 /// A template and its saved progress, loaded for painting.
@@ -149,11 +150,11 @@ final class Library {
         copy.title = copyTitle(for: original.title)
         copy.createdAt = .now
         copy.modifiedAt = .now
-        let store = self.store
+        let store = self.store, snapshot = copy
         _ = await writes[id]?.value
-        try await Background.run { try store.duplicate(id, as: copy) }
-        insert(copy)
-        return copy
+        try await Background.run { try store.duplicate(id, as: snapshot) }
+        insert(snapshot)
+        return snapshot
     }
 
     func restart(_ id: UUID) async {

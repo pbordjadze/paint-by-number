@@ -2,6 +2,7 @@ import CoreGraphics
 import CoreText
 import Foundation
 import PaintCore
+import simd
 
 /// Printable template: page 1 is the outline template with numbers (vector, crisp at any
 /// zoom), page 2 the numbered color key plus a small reference of the finished picture.

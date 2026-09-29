@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import Observation
+import os
 import PaintCore
 import PhotosUI
 import SwiftUI

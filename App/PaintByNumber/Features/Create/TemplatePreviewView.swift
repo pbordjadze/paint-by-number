@@ -1,3 +1,4 @@
+import PaintCore
 import SwiftUI
 
 /// Second step of the create flow: the generated template, compared with the photo,
