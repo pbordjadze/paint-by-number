@@ -35,77 +35,118 @@ enum BoundarySmoothing {
         }
         offsets = offsets.map { ($0.dx, $0.dy, $0.weight / total) }
         let packed = palette.map { SIMD4($0, 0) }
+        let n = w * h
         var changedTotal = 0
-        for _ in 0..<passes {
-            var next = classes
-            let changed: [Int] = classes.withUnsafeBufferPointer { cb in
-                next.withUnsafeMutableBufferPointer { nb in
-                    colors.withUnsafeBufferPointer { colb in
-                        packed.withUnsafeBufferPointer { pb in
-                            offsets.withUnsafeBufferPointer { ob in
+        // A pixel whose disc saw no change in the previous pass faces the same vote as then,
+        // so after the first pass only the surroundings of changed pixels are revisited.
+        var near: [UInt8] = []
+        let rowOf = RowDivider(width: w)
+        for pass in 0..<passes {
+            let moves: [[(Int, UInt32)]] = classes.withUnsafeBufferPointer { cb in
+                colors.withUnsafeBufferPointer { colb in
+                    packed.withUnsafeBufferPointer { pb in
+                        offsets.withUnsafeBufferPointer { ob in
+                            near.withUnsafeBufferPointer { nb in
                                 let c = UncheckedSendable(cb.baseAddress!)
-                                let o = UncheckedSendable(nb.baseAddress!)
                                 let col = UncheckedSendable(colb.baseAddress!)
                                 let pal = UncheckedSendable(pb.baseAddress!)
                                 let off = UncheckedSendable(ob.baseAddress!)
+                                let nearby = UncheckedSendable(nb)
                                 let m = ob.count
-                                return Parallel.mapBands(h, minimumBandSize: 8) { rows -> Int in
-                                    var count = 0
-                                    var labels = SIMD16<UInt32>(repeating: 0)
-                                    var votes = SIMD16<Float>(repeating: 0)
-                                    for y in rows {
-                                        for x in 0..<w {
-                                            let i = y * w + x
-                                            let own = c.value[i]
-                                            let boundary = (x > 0 && c.value[i - 1] != own) || (x + 1 < w && c.value[i + 1] != own)
-                                                || (y > 0 && c.value[i - w] != own) || (y + 1 < h && c.value[i + w] != own)
-                                            if !boundary { continue }
-                                            var k = 0
-                                            for j in 0..<m {
-                                                let xx = x + off.value[j].dx, yy = y + off.value[j].dy
-                                                if xx < 0 || yy < 0 || xx >= w || yy >= h { continue }
-                                                let l = c.value[yy * w + xx]
-                                                var slot = 0
-                                                while slot < k && labels[slot] != l { slot += 1 }
-                                                if slot == k {
-                                                    if k == 16 { continue }
-                                                    labels[k] = l
-                                                    votes[k] = 0
-                                                    k += 1
+                                return Parallel.mapBands(h, minimumBandSize: 8) { rows -> [(Int, UInt32)] in
+                                    var moved: [(Int, UInt32)] = []
+                                    var boundary = [UInt8](repeating: 0, count: w)
+                                    withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 16) { labelBuffer in
+                                        withUnsafeTemporaryAllocation(of: Float.self, capacity: 16) { voteBuffer in
+                                            boundary.withUnsafeMutableBufferPointer { bb in
+                                                let labels = labelBuffer.baseAddress!, votes = voteBuffer.baseAddress!
+                                                let b = bb.baseAddress!
+                                                for y in rows {
+                                                    let row = c.value + y * w
+                                                    Self.boundaryMask(row, w: w, up: y > 0, down: y + 1 < h, into: b)
+                                                    if pass > 0 {
+                                                        let flags = nearby.value.baseAddress! + y * w
+                                                        for x in 0..<w { b[x] &= flags[x] }
+                                                    }
+                                                    for x in 0..<w where b[x] != 0 {
+                                                        let i = y * w + x
+                                                        let own = row[x]
+                                                        var k = 0
+                                                        for j in 0..<m {
+                                                            let xx = x + off.value[j].dx, yy = y + off.value[j].dy
+                                                            if xx < 0 || yy < 0 || xx >= w || yy >= h { continue }
+                                                            let l = c.value[yy * w + xx]
+                                                            var slot = 0
+                                                            while slot < k && labels[slot] != l { slot += 1 }
+                                                            if slot == k {
+                                                                if k == 16 { continue }
+                                                                labels[k] = l
+                                                                votes[k] = 0
+                                                                k += 1
+                                                            }
+                                                            votes[slot] += off.value[j].weight
+                                                        }
+                                                        let color = col.value[i]
+                                                        @inline(__always) func score(_ l: UInt32, _ v: Float) -> Float {
+                                                            let e = color - pal.value[Int(l)]
+                                                            return v - fidelity * (e * e).sum()
+                                                        }
+                                                        var ownVotes: Float = 0
+                                                        for s in 0..<k where labels[s] == own { ownVotes = votes[s] }
+                                                        var best = own
+                                                        var bestScore = score(own, ownVotes) + 0.02
+                                                        for s in 0..<k where labels[s] != own {
+                                                            let sc = score(labels[s], votes[s])
+                                                            if sc > bestScore { bestScore = sc; best = labels[s] }
+                                                        }
+                                                        if best != own { moved.append((i, best)) }
+                                                    }
                                                 }
-                                                votes[slot] += off.value[j].weight
-                                            }
-                                            let color = col.value[i]
-                                            func score(_ l: UInt32, _ v: Float) -> Float {
-                                                let e = color - pal.value[Int(l)]
-                                                return v - fidelity * (e * e).sum()
-                                            }
-                                            var ownVotes: Float = 0
-                                            for s in 0..<k where labels[s] == own { ownVotes = votes[s] }
-                                            var best = own
-                                            var bestScore = score(own, ownVotes) + 0.02
-                                            for s in 0..<k where labels[s] != own {
-                                                let sc = score(labels[s], votes[s])
-                                                if sc > bestScore { bestScore = sc; best = labels[s] }
-                                            }
-                                            if best != own {
-                                                o.value[i] = best
-                                                count += 1
                                             }
                                         }
                                     }
-                                    return count
+                                    return moved
                                 }
                             }
                         }
                     }
                 }
             }
-            let sum = changed.reduce(0, +)
-            classes = next
-            changedTotal += sum
-            if sum == 0 { break }
+            let count = moves.reduce(0) { $0 + $1.count }
+            changedTotal += count
+            if count == 0 { break }
+            let last = pass + 1 == passes
+            if !last {
+                if near.isEmpty { near = [UInt8](repeating: 0, count: n) } else { near.withUnsafeMutableBufferPointer { $0.update(repeating: 0) } }
+            }
+            for band in moves {
+                for (i, v) in band {
+                    classes[i] = v
+                    guard !last else { continue }
+                    let y = rowOf.row(i), x = i - y * w
+                    for yy in max(0, y - radius)...min(h - 1, y + radius) {
+                        for xx in max(0, x - radius)...min(w - 1, x + radius) { near[yy * w + xx] = 1 }
+                    }
+                }
+            }
         }
         return changedTotal
+    }
+
+    /// 1 where the pixel has a 4-neighbour of another paint.
+    @inline(__always)
+    private static func boundaryMask(_ row: UnsafePointer<UInt32>, w: Int, up: Bool, down: Bool, into b: UnsafeMutablePointer<UInt8>) {
+        @inline(__always) func differs(_ u: UInt32, _ v: UInt32) -> UInt8 { u != v ? 1 : 0 }
+        b[0] = differs(row[1], row[0])
+        for x in 1..<(w - 1) { b[x] = differs(row[x - 1], row[x]) | differs(row[x + 1], row[x]) }
+        b[w - 1] = differs(row[w - 2], row[w - 1])
+        if up {
+            let above = row - w
+            for x in 0..<w { b[x] |= differs(above[x], row[x]) }
+        }
+        if down {
+            let below = row + w
+            for x in 0..<w { b[x] |= differs(below[x], row[x]) }
+        }
     }
 }

@@ -97,3 +97,24 @@ public struct RGBAImage: Sendable, Equatable {
         }
     }
 }
+
+/// Row of a linear pixel index without an integer division, which costs tens of cycles on
+/// many CPUs: exact multiply-shift division (Granlund & Montgomery) for indices below 2²⁶.
+struct RowDivider: Sendable {
+    let width: Int
+    private let magic: UInt64
+    private let shift: UInt64
+
+    init(width: Int) {
+        precondition(width > 0)
+        self.width = width
+        let log2Width = UInt64(Int.bitWidth - (width - 1).leadingZeroBitCount)  // ⌈log₂ width⌉
+        shift = 26 + log2Width
+        magic = ((1 << shift) + UInt64(width) - 1) / UInt64(width)
+    }
+
+    @inline(__always)
+    func row(_ i: Int) -> Int {
+        i < 1 << 26 ? Int((UInt64(i) &* magic) >> shift) : i / width
+    }
+}

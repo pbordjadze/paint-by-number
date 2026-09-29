@@ -38,6 +38,25 @@ public enum Parallel {
         }
     }
 
+    /// Runs `body` over chunks of `chunk` consecutive indices covering `0..<count`, handed
+    /// out dynamically, for work whose cost per index is very uneven.
+    @inlinable
+    public static func forEachChunk(_ count: Int, chunk: Int, _ body: (Range<Int>) -> Void) {
+        guard count > 0 else { return }
+        let size = max(1, chunk)
+        let chunks = (count + size - 1) / size
+        if chunks == 1 {
+            body(0..<count)
+            return
+        }
+        withoutActuallyEscaping(body) { body in
+            let work = UncheckedSendable(body)
+            DispatchQueue.concurrentPerform(iterations: chunks) { c in
+                work.value((c * size)..<min(count, (c + 1) * size))
+            }
+        }
+    }
+
     /// Parallel map over `0..<count` producing one result per band, in band order.
     @inlinable
     public static func mapBands<T>(

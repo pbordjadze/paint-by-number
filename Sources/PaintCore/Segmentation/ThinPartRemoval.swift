@@ -32,29 +32,29 @@ enum ThinPartRemoval {
         let element = StructuringElement(radiusSquared: radiusSquared)
         guard element.radius > 0, w > 2 * element.radius, h > 2 * element.radius else { return 0 }
         let packed = palette.map { SIMD4($0, 0) }
-        let full = coverage(labels: classes, width: w, height: h, element: element)
-        var candidates = uncovered(full)
+        var candidates = uncoveredPixels(labels: classes, width: w, height: h, element: element)
         guard !candidates.isEmpty else { return 0 }
 
         // Only pixels near a change can change coverage, so after the first full pass the
         // work is usually local to the (few) uncovered pixels and their surroundings.
         let n = w * h
-        let before = classes
-        var touched: [Int] = []
+        var touched: [(pixel: Int, before: UInt32)] = []
         var mark = [UInt8](repeating: 0, count: n)  // bit 0: touched, bit 1: queued
         let reach = max(2 * element.radius, 2)
+        let rows = RowDivider(width: w)
         var changes = process(candidates, classes: &classes, w: w, h: h, colors: colors, palette: packed, strong: true)
         func record() {
-            for (i, _) in changes where mark[i] & 1 == 0 {
+            for (i, old) in changes where mark[i] & 1 == 0 {
                 mark[i] |= 1
-                touched.append(i)
+                touched.append((i, old))
             }
         }
         record()
         var passes = 1
         while !changes.isEmpty && passes < maxPasses {
-            if changes.count * (2 * reach + 1) * (2 * reach + 1) > n / 4 {
-                candidates = uncovered(coverage(labels: classes, width: w, height: h, element: element))
+            // Both ways find exactly the uncovered pixels; a full scan is cheaper for many changes.
+            if changes.count * (2 * reach + 1) * (2 * reach + 1) > n / 16 {
+                candidates = uncoveredPixels(labels: classes, width: w, height: h, element: element)
             } else {
                 var next: [Int] = []
                 for i in candidates where mark[i] & 2 == 0 {
@@ -62,7 +62,7 @@ enum ThinPartRemoval {
                     next.append(i)
                 }
                 for (i, _) in changes {
-                    let x = i % w, y = i / w
+                    let y = rows.row(i), x = i - y * w
                     for yy in max(0, y - reach)...min(h - 1, y + reach) {
                         for xx in max(0, x - reach)...min(w - 1, x + reach) {
                             let j = yy * w + xx
@@ -75,8 +75,8 @@ enum ThinPartRemoval {
                 }
                 for i in next { mark[i] &= 1 }
                 next.sort()
-                candidates = classes.withUnsafeBufferPointer { cb in
-                    next.filter { !isCovered($0, w: w, h: h, labels: cb.baseAddress!, element: element) }
+                candidates = filter(next, classes: classes, w: w, h: h) { i, labels in
+                    !isCovered(i, rows: rows, h: h, labels: labels, element: element)
                 }
             }
             changes = process(candidates, classes: &classes, w: w, h: h, colors: colors, palette: packed, strong: false)
@@ -87,19 +87,79 @@ enum ThinPartRemoval {
         // Moves that left the pixel uncovered did not help (typically a corner where
         // several regions meet); undo them so repeated calls reach a fixed point. Undoing
         // one move can un-cover a neighbour's, hence the loop.
-        touched.sort()
+        touched.sort { $0.pixel < $1.pixel }
+        let pixels = touched.map(\.pixel)
+        let original = touched.map(\.before)
+        // Positions in `pixels` to examine: all at first, then only those near a revert
+        // (nothing else can have changed coverage).
+        var check: [Int]? = nil
         var net = 0
         for _ in 0..<4 {
-            let revert: [Int] = classes.withUnsafeBufferPointer { cb in
-                touched.filter {
-                    cb[$0] != before[$0] && !isCovered($0, w: w, h: h, labels: cb.baseAddress!, element: element)
+            let revert: [Int]
+            if check == nil && pixels.count > n / 64 {
+                // Many moves: one full coverage scan beats per-pixel checks.
+                let open = uncoveredPixels(labels: classes, width: w, height: h, element: element)
+                var list: [Int] = []
+                var q = 0
+                for k in pixels.indices {
+                    while q < open.count && open[q] < pixels[k] { q += 1 }
+                    if q < open.count && open[q] == pixels[k] && classes[pixels[k]] != original[k] { list.append(k) }
+                }
+                revert = list
+            } else {
+                let positions = check ?? Array(pixels.indices)
+                revert = classes.withUnsafeBufferPointer { cb in
+                    let l = UncheckedSendable(cb.baseAddress!)
+                    return Parallel.mapBands(positions.count, minimumBandSize: 1024) { range -> [Int] in
+                        var out: [Int] = []
+                        for q in range {
+                            let k = positions[q]
+                            if l.value[pixels[k]] != original[k]
+                                && !isCovered(pixels[k], rows: rows, h: h, labels: l.value, element: element) {
+                                out.append(k)
+                            }
+                        }
+                        return out
+                    }.flatMap { $0 }
                 }
             }
-            for i in revert { classes[i] = before[i] }
-            net = touched.reduce(0) { $0 + (classes[$1] != before[$1] ? 1 : 0) }
+            for k in revert { classes[pixels[k]] = original[k] }
+            net = 0
+            for k in pixels.indices where classes[pixels[k]] != original[k] { net += 1 }
             if revert.isEmpty { break }
+            for k in revert {
+                let i = pixels[k]
+                let y = rows.row(i), x = i - y * w
+                for yy in max(0, y - reach)...min(h - 1, y + reach) {
+                    for xx in max(0, x - reach)...min(w - 1, x + reach) { mark[yy * w + xx] |= 2 }
+                }
+            }
+            check = pixels.indices.filter { mark[pixels[$0]] & 2 != 0 }
+            for k in revert {
+                let i = pixels[k]
+                let y = rows.row(i), x = i - y * w
+                for yy in max(0, y - reach)...min(h - 1, y + reach) {
+                    for xx in max(0, x - reach)...min(w - 1, x + reach) { mark[yy * w + xx] &= 1 }
+                }
+            }
         }
         return net
+    }
+
+    /// `pixels` (ascending) that satisfy `keep`, evaluated in parallel on the current paint map.
+    private static func filter(
+        _ pixels: [Int], classes: [UInt32], w: Int, h: Int, _ keep: (Int, UnsafePointer<UInt32>) -> Bool
+    ) -> [Int] {
+        classes.withUnsafeBufferPointer { cb in
+            pixels.withUnsafeBufferPointer { pb in
+                let l = UncheckedSendable(cb.baseAddress!)
+                return Parallel.mapBands(pb.count, minimumBandSize: 1024) { range -> [Int] in
+                    var out: [Int] = []
+                    for k in range where keep(pb[k], l.value) { out.append(pb[k]) }
+                    return out
+                }.flatMap { $0 }
+            }
+        }
     }
 
     struct StructuringElement {
@@ -118,23 +178,11 @@ enum ThinPartRemoval {
         }
     }
 
-    /// Indices of uncovered pixels, ascending.
-    private static func uncovered(_ covered: [UInt8]) -> [Int] {
-        let n = covered.count
-        return covered.withUnsafeBufferPointer { cb in
-            let c = UncheckedSendable(cb.baseAddress!)
-            return Parallel.mapBands(n, minimumBandSize: 65_536) { range -> [Int] in
-                var out: [Int] = []
-                for i in range where c.value[i] == 0 { out.append(i) }
-                return out
-            }.flatMap { $0 }
-        }
-    }
-
-    /// Coverage of a single pixel (same definition as `coverage`).
+    /// Coverage of a single pixel (same definition as `uncoveredPixels`).
     @inline(__always)
-    static func isCovered(_ i: Int, w: Int, h: Int, labels: UnsafePointer<UInt32>, element: StructuringElement) -> Bool {
-        let x = i % w, y = i / w
+    static func isCovered(_ i: Int, rows: RowDivider, h: Int, labels: UnsafePointer<UInt32>, element: StructuringElement) -> Bool {
+        let w = rows.width
+        let y = rows.row(i), x = i - y * w
         let label = labels[i]
         @inline(__always) func uniformSquare(_ ax: Int, _ ay: Int) -> Bool {
             if ax < 0 || ay < 0 || ax + 1 >= w || ay + 1 >= h { return false }
@@ -168,8 +216,12 @@ enum ThinPartRemoval {
         palette packed: [SIMD4<Float>],
         strong: Bool
     ) -> [(Int, UInt32)] {
+        let rows = RowDivider(width: w)
         var phases: [[Int]] = [[], [], [], []]
-        for i in candidates { phases[(i % w) & 1 | ((i / w) & 1) << 1].append(i) }
+        for i in candidates {
+            let y = rows.row(i)
+            phases[(i - y * w) & 1 | (y & 1) << 1].append(i)
+        }
         var total: [(Int, UInt32)] = []
         for list in phases where !list.isEmpty {
             let bands: [[(Int, UInt32)]] = classes.withUnsafeMutableBufferPointer { cb in
@@ -182,14 +234,20 @@ enum ThinPartRemoval {
                             let l = UncheckedSendable(lb.baseAddress!)
                             return Parallel.mapBands(lb.count, minimumBandSize: 1024) { range -> [(Int, UInt32)] in
                                 var changed: [(Int, UInt32)] = []
-                                for k in range {
-                                    let i = l.value[k]
-                                    let best = dominantNeighbourClass(
-                                        i, x: i % w, y: i / w, w: w, h: h, classes: c.value,
-                                        color: col.value[i], palette: pal.value, includeOwn: !strong)
-                                    if best != c.value[i] {
-                                        changed.append((i, c.value[i]))
-                                        c.value[i] = best
+                                withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 8) { cand in
+                                    withUnsafeTemporaryAllocation(of: Float.self, capacity: 8) { wts in
+                                        for k in range {
+                                            let i = l.value[k]
+                                            let y = rows.row(i)
+                                            let best = dominantNeighbourClass(
+                                                i, x: i - y * w, y: y, w: w, h: h, classes: c.value,
+                                                color: col.value[i], palette: pal.value, includeOwn: !strong,
+                                                cand: cand.baseAddress!, wts: wts.baseAddress!)
+                                            if best != c.value[i] {
+                                                changed.append((i, c.value[i]))
+                                                c.value[i] = best
+                                            }
+                                        }
                                     }
                                 }
                                 return changed
@@ -203,88 +261,77 @@ enum ThinPartRemoval {
         return total
     }
 
-    /// Coverage by the disc and by a 2×2 square: the disc alone would accept 1-px bumps
-    /// (a bump pixel is the arm of a cross), the square alone keeps pixel-square corners.
-    /// Anchor bits: 1 = disc centred here is uniform, 2 = 2×2 block with this top-left
-    /// corner is uniform.
-    static func coverage(labels: [UInt32], width w: Int, height h: Int, element: StructuringElement) -> [UInt8] {
+    /// Pixels (ascending) not covered both by a uniform disc and by a uniform 2×2 square:
+    /// the disc alone would accept 1-px bumps (a bump pixel is the arm of a cross), the
+    /// square alone keeps pixel-square corners. Anchor bits: 1 = disc centred here is
+    /// uniform, 2 = 2×2 block with this top-left corner is uniform. Written as byte-wise row
+    /// operations so the compiler vectorizes them.
+    static func uncoveredPixels(labels: [UInt32], width w: Int, height h: Int, element: StructuringElement) -> [Int] {
         let n = w * h
         let r = element.radius
+        guard w > 2 * r, h > 2 * r, w > 1, h > 1 else { return Array(0..<n) }
+        let around = element.offsets.filter { $0 != (0, 0) }
         var anchor = [UInt8](repeating: 0, count: n)
-        var covered = [UInt8](repeating: 0, count: n)
-        guard w > 2 * r, h > 2 * r, w > 1, h > 1 else { return covered }
-        let offsets = element.offsets.map { $0.1 * w + $0.0 }
-        labels.withUnsafeBufferPointer { lb in
+        return labels.withUnsafeBufferPointer { lb in
             anchor.withUnsafeMutableBufferPointer { ab in
-                covered.withUnsafeMutableBufferPointer { cb in
-                    offsets.withUnsafeBufferPointer { ob in
-                        let l = UncheckedSendable(lb.baseAddress!)
-                        let a = UncheckedSendable(ab.baseAddress!)
-                        let c = UncheckedSendable(cb.baseAddress!)
-                        let o = UncheckedSendable(ob.baseAddress!)
-                        let m = ob.count
-                        Parallel.forEachBand(h, minimumBandSize: 16) { rows in
-                            for y in rows {
-                                let row = y * w
-                                let discRow = y >= r && y < h - r
-                                for x in 0..<w {
-                                    let i = row + x
-                                    let label = l.value[i]
-                                    var bits: UInt8 = 0
-                                    if x + 1 < w && y + 1 < h && l.value[i + 1] == label && l.value[i + w] == label
-                                        && l.value[i + w + 1] == label {
-                                        bits = 2
-                                    }
-                                    if discRow && x >= r && x < w - r {
-                                        var uniform = true
-                                        var k = 0
-                                        while k < m {
-                                            if l.value[i + o.value[k]] != label { uniform = false; break }
-                                            k += 1
-                                        }
-                                        if uniform { bits |= 1 }
-                                    }
-                                    a.value[i] = bits
+                let l = UncheckedSendable(lb.baseAddress!)
+                let a = UncheckedSendable(ab.baseAddress!)
+                @inline(__always) func same(_ u: UInt32, _ v: UInt32) -> UInt8 { u == v ? 1 : 0 }
+                Parallel.forEachBand(h, minimumBandSize: 16) { rows in
+                    var disc = [UInt8](repeating: 0, count: w)
+                    disc.withUnsafeMutableBufferPointer { db in
+                        let d = db.baseAddress!
+                        for y in rows {
+                            let row = l.value + y * w
+                            let out = a.value + y * w
+                            if y + 1 < h {
+                                let down = row + w
+                                for x in 0..<(w - 1) {
+                                    let v = row[x]
+                                    out[x] = (same(row[x + 1], v) & same(down[x], v) & same(down[x + 1], v)) << 1
                                 }
                             }
-                        }
-                        Parallel.forEachBand(h, minimumBandSize: 16) { rows in
-                            for y in rows {
-                                let row = y * w
-                                let interiorRow = y >= r && y < h - r
-                                for x in 0..<w {
-                                    let i = row + x
-                                    // 2×2: blocks whose top-left is at (x|x-1, y|y-1).
-                                    var square = a.value[i]
-                                    if x > 0 { square |= a.value[i - 1] }
-                                    if y > 0 {
-                                        square |= a.value[i - w]
-                                        if x > 0 { square |= a.value[i - w - 1] }
-                                    }
-                                    guard square & 2 != 0 else { continue }
-                                    var hit = false
-                                    if interiorRow && x >= r && x < w - r {
-                                        var k = 0
-                                        while k < m {
-                                            if a.value[i + o.value[k]] & 1 != 0 { hit = true; break }
-                                            k += 1
-                                        }
-                                    } else {
-                                        for (dx, dy) in element.offsets {
-                                            let xx = x + dx, yy = y + dy
-                                            if xx < 0 || yy < 0 || xx >= w || yy >= h { continue }
-                                            if a.value[yy * w + xx] & 1 != 0 { hit = true; break }
-                                        }
-                                    }
-                                    if hit { c.value[i] = 1 }
-                                }
+                            guard y >= r && y < h - r else { continue }
+                            for x in r..<(w - r) { d[x] = 1 }
+                            for (dx, dy) in around {
+                                let src = row + dy * w + dx
+                                for x in r..<(w - r) { d[x] &= same(src[x], row[x]) }
                             }
+                            for x in r..<(w - r) { out[x] |= d[x] }
                         }
                     }
                 }
+                return Parallel.mapBands(h, minimumBandSize: 16) { rows -> [Int] in
+                    var found: [Int] = []
+                    var square = [UInt8](repeating: 0, count: w)
+                    var hit = [UInt8](repeating: 0, count: w)
+                    square.withUnsafeMutableBufferPointer { sb in
+                        hit.withUnsafeMutableBufferPointer { hb in
+                            let sq = sb.baseAddress!, ht = hb.baseAddress!
+                            for y in rows {
+                                let row = a.value + y * w
+                                // 2×2 blocks whose top-left is at (x|x-1, y|y-1).
+                                if y > 0 {
+                                    let up = row - w
+                                    for x in 0..<w { sq[x] = row[x] | up[x] }
+                                } else {
+                                    for x in 0..<w { sq[x] = row[x] }
+                                }
+                                for x in 0..<w { ht[x] = 0 }
+                                for (dx, dy) in element.offsets where y + dy >= 0 && y + dy < h {
+                                    let src = a.value + (y + dy) * w + dx
+                                    for x in max(0, -dx)..<min(w, w - dx) { ht[x] |= src[x] }
+                                }
+                                ht[0] &= sq[0] >> 1
+                                for x in 1..<w { ht[x] &= (sq[x] | sq[x - 1]) >> 1 }
+                                for x in 0..<w where ht[x] & 1 == 0 { found.append(y * w + x) }
+                            }
+                        }
+                    }
+                    return found
+                }.flatMap { $0 }
             }
         }
-        return covered
     }
 
     /// The paint with the most weight among the 8 neighbours (edge neighbours 1, corners
@@ -295,19 +342,22 @@ enum ThinPartRemoval {
         _ i: Int, x: Int, y: Int, w: Int, h: Int,
         classes: UnsafeMutablePointer<UInt32>,
         color: SIMD4<Float>, palette: UnsafePointer<SIMD4<Float>>,
-        includeOwn: Bool
+        includeOwn: Bool,
+        cand: UnsafeMutablePointer<UInt32>, wts: UnsafeMutablePointer<Float>
     ) -> UInt32 {
         let own = classes[i]
         var ownWeight: Float = 0
-        var cand = SIMD8<UInt32>(repeating: 0)
-        var wts = SIMD8<Float>(repeating: 0)
         var count = 0
         @inline(__always) func add(_ j: Int, _ weight: Float) {
             let c = classes[j]
             if c == own { ownWeight += weight; return }
-            for m in 0..<count where cand[m] == c {
-                wts[m] += weight
-                return
+            var m = 0
+            while m < count {
+                if cand[m] == c {
+                    wts[m] += weight
+                    return
+                }
+                m += 1
             }
             cand[count] = c
             wts[count] = weight

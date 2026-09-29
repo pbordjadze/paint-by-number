@@ -171,6 +171,35 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
         })
 }
 
+/// Measures the longest stretch of pipeline work between two cancellation checks, i.e. the
+/// worst-case latency with which a stale preview stops.
+final class CancellationProbe: @unchecked Sendable {
+    private let lock = NSLock()
+    private let clock = ContinuousClock()
+    private var last: ContinuousClock.Instant
+    private var worst: Duration = .zero
+
+    init() { last = clock.now }
+
+    var check: CancellationCheck {
+        CancellationCheck { [self] in
+            let now = clock.now
+            lock.withLock {
+                worst = max(worst, now - last)
+                last = now
+            }
+            return false
+        }
+    }
+
+    /// Worst gap in seconds, including the stretch from the last check to now.
+    func finish() -> Double {
+        _ = check.isCancelled
+        let d = lock.withLock { worst }
+        return Double(d.components.seconds) + Double(d.components.attoseconds) * 1e-18
+    }
+}
+
 func writeSVGs(_ t: Template, to outDir: URL) throws {
     try SVGExport.render(t, options: .init(painted: true, outlines: false, numbers: false))
         .write(to: outDir.appendingPathComponent("painted.svg"), atomically: true, encoding: .utf8)
@@ -280,19 +309,22 @@ case "bench":
         var totals: [String: [Double]] = [:]
         var order: [String] = []
         var regionCount = 0
+        var worstGap = 0.0
         for _ in 0..<options.runs {
+            let probe = CancellationProbe()
             let out: TemplateGenerator.Output
-            do { out = try generator.generate(from: image, cancel: .none) } catch { fail("\(error)") }
+            do { out = try generator.generate(from: image, cancel: probe.check) } catch { fail("\(error)") }
             regionCount = out.template.regions.count
-            var perRun: [String: Double] = [:]
+            worstGap = max(worstGap, probe.finish())
+            var perRun: [String: Double] = ["total": out.totalSeconds * 1000]
             for t in out.timings {
-                if totals[t.name] == nil { order.append(t.name) }
+                if totals[t.name] == nil && perRun[t.name] == nil { order.append(t.name) }
                 perRun[t.name, default: 0] += t.seconds * 1000
             }
             for (k, v) in perRun { totals[k, default: []].append(v) }
         }
-        print("\(path) — \(regionCount) regions")
-        for name in order {
+        print("\(path) — \(regionCount) regions, longest stretch without a cancellation check \(String(format: "%.1f", worstGap * 1000)) ms")
+        for name in order + ["total"] {
             let v = totals[name]!.sorted()
             print(String(format: "  %-28@ median %8.1f ms   min %8.1f ms", name as NSString, v[v.count / 2], v[0]))
         }

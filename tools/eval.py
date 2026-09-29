@@ -9,6 +9,7 @@ plus `DIR/summary.json` and an overview grid `DIR/overview.png`. With --importan
 `<name>.pgm` in that directory (if present) is passed to pbn as the importance map.
 
 Requires a static release build of pbn:  tools/swift.sh build -c release --static-swift-stdlib
+(or set PBN=/path/to/pbn, e.g. a saved baseline binary for before/after comparisons)
 """
 import json
 import os
@@ -19,7 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PBN = os.path.join(ROOT, ".build", "release", "pbn")
+PBN = os.environ.get("PBN", os.path.join(ROOT, ".build", "release", "pbn"))
 SVG2PNG = os.path.join(ROOT, "tools", "svg2png.mjs")
 
 

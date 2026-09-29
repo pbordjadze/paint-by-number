@@ -244,12 +244,13 @@ struct SegmentationTests {
         for y in 0..<h {
             for x in 0..<w { classes[y * w + x] = coarse[(y / 5) * 12 + x / 5] }
         }
-        let cc = RunComponents.label(classes, width: w, height: h)
+        let regions = RegionRuns(classes: classes, width: w, height: h)
+        let cc = regions.components()
         let d = DistanceTransform.interiorDistance(labels: cc.labels)
         var best = [Float](repeating: 0, count: cc.count)
         for i in 0..<d.count { best[Int(cc.labels.storage[i])] = max(best[Int(cc.labels.storage[i])], d.storage[i]) }
-        for radius in [Float(1.5), 2, 2.75, 3.5] {
-            let wide = RegionSimplifier.hasInscribedDisc(cc, radius: radius)
+        for radius in [Float(0.5), 1, 1.5, 2, 2.75, 3.5, 4.2] {
+            let wide = RegionSimplifier.hasInscribedDisc(regions, classes: classes, radius: radius)
             for r in 0..<cc.count { #expect(wide[r] == (best[r] >= radius)) }
         }
     }

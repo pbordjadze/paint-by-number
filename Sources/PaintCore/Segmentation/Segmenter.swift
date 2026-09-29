@@ -70,14 +70,14 @@ public enum Segmenter {
         let labelling = classes
         let texture = clock.measure("segment.texture") { TextureMap.boundaryDensity(labelling, width: w, height: h) }
         let areaScale = zip(weights, texture).map { p.areaScale(importance: $0, texture: $1) }
-        let simplified = try clock.measure("segment.regions") {
+        var (regions, adjacency) = try clock.measure("segment.regions") {
             try RegionSimplifier.simplify(
                 classes: &classes, width: w, height: h, colors: smooth, areaScale: areaScale,
-                palette: palette, parameters: p, cancel: cancel)
+                palette: palette, parameters: p, cancel: cancel, clock: clock)
         }
         clock.measure("segment.consolidate") {
             _ = TextureConsolidation.apply(
-                classes: &classes, components: simplified, texture: texture, importance: weights,
+                classes: &classes, regions: &regions, adjacency: &adjacency, texture: texture, importance: weights,
                 palette: palette, metric: SIMD3(1, 1 / p.chromaScale, 1 / p.chromaScale),
                 tolerance: p.consolidationTolerance)
         }

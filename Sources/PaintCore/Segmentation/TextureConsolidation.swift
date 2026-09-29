@@ -10,29 +10,24 @@ import Foundation
 /// regions is never smaller or thinner than its parts, so all region guarantees hold.
 enum TextureConsolidation {
 
-    /// Returns the number of merges; `classes` is rewritten per pixel.
+    /// Returns the number of merges; `classes`, `regions` and `adjacency` are updated.
     static func apply(
         classes: inout [UInt32],
-        components cc: Components,
+        regions: inout RegionRuns,
+        adjacency: inout RegionAdjacency,
         texture: [Float],
         importance: [Float],
         palette: [SIMD3<Float>],
         metric: SIMD3<Float>,
         tolerance: Float
     ) -> Int {
-        let n = cc.count
+        let n = regions.count
         guard n > 1, tolerance > 0 else { return 0 }
-        let w = cc.labels.width, h = cc.labels.height
-        let labels = cc.labels.storage
-        var textureSum = [Double](repeating: 0, count: n)
-        var importanceSum = [Double](repeating: 0, count: n)
-        for i in 0..<labels.count {
-            let r = Int(labels[i])
-            textureSum[r] += Double(texture[i])
-            importanceSum[r] += Double(importance[i])
-        }
-        var area = cc.area
-        let cls = cc.classOf
+        let sums = regions.sums(texture, importance)
+        var textureSum = sums.map(\.x)
+        var importanceSum = sums.map(\.y)
+        var area = regions.area
+        let cls = regions.classOf
         var parent = Array(0..<n)
         func find(_ x: Int) -> Int {
             var r = x
@@ -47,17 +42,15 @@ enum TextureConsolidation {
         }
 
         var edges: [(a: Int32, b: Int32, key: Float)] = []
-        let adjacency = RegionSimplifier.adjacencyLists(labels, width: w, height: h, count: n)
-        for a in 0..<n {
-            for link in adjacency[a] where Int(link.region) > a {
-                edges.append((Int32(a), link.region, difference(cls[a], cls[Int(link.region)])))
-            }
+        for key in adjacency.pairs {
+            let a = Int(key >> 32), b = Int(key & 0xFFFF_FFFF)
+            let d = difference(cls[a], cls[b])
+            if d <= tolerance { edges.append((Int32(a), Int32(b), d)) }
         }
         edges.sort { $0.key < $1.key || ($0.key == $1.key && ($0.a, $0.b) < ($1.a, $1.b)) }
 
         var merges = 0
         for e in edges {
-            if e.key > tolerance { break }
             let a = find(Int(e.a)), b = find(Int(e.b))
             if a == b { continue }
             let total = Double(area[a] + area[b])
@@ -73,21 +66,14 @@ enum TextureConsolidation {
             merges += 1
         }
         guard merges > 0 else { return 0 }
-        var regionClass = [UInt32](repeating: 0, count: n)
-        for r in 0..<n { regionClass[r] = cls[find(r)] }
-        let count = labels.count
-        classes.withUnsafeMutableBufferPointer { out in
-            labels.withUnsafeBufferPointer { lb in
-                regionClass.withUnsafeBufferPointer { cb in
-                    let o = UncheckedSendable(out.baseAddress!)
-                    let l = UncheckedSendable(lb.baseAddress!)
-                    let c = UncheckedSendable(cb.baseAddress!)
-                    Parallel.forEachBand(count, minimumBandSize: 16_384) { range in
-                        for i in range { o.value[i] = c.value[Int(l.value[i])] }
-                    }
-                }
-            }
+        var roots = [Int32](repeating: 0, count: n)
+        var paint = cls
+        for r in 0..<n {
+            let root = find(r)
+            roots[r] = Int32(root)
+            paint[r] = cls[root]
         }
+        regions.merge(roots: roots, paint: paint, adjacency: &adjacency, classes: &classes)
         return merges
     }
 }
