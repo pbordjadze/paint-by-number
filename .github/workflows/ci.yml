@@ -1,5 +1,8 @@
 name: CI
 
+# Every run publishes a report (STATUS.md, trimmed logs, compiler errors, screenshots) to
+# the branch `ci-shots/<branch>`, so results can be read with plain git (see ci/fetch.sh).
+
 on:
   push:
     branches-ignore: ['ci-shots/**']
@@ -31,11 +34,16 @@ jobs:
       - name: Test
         run: |
           set -o pipefail
-          swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tail -80
+          mkdir -p out
+          swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tee out/core-test.log | tail -60
       - name: Benchmark
         run: |
+          set -o pipefail
           swift build -c release --product pbn 2>&1 | tail -3
-          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3
+          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3 | tee out/bench.txt
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: core, path: out, if-no-files-found: ignore }
 
   app-test:
     name: App build + tests (Debug)
@@ -51,13 +59,22 @@ jobs:
       - name: Test
         run: |
           set -o pipefail
+          mkdir -p out
           xcodebuild test -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
             -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
             -resultBundlePath build/Tests.xcresult -quiet \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -150
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
       - name: Test summary
         if: always()
-        run: xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact 2>/dev/null | head -c 4000 || true
+        run: |
+          mkdir -p out/attachments
+          grep -E "error:" out/app-test.log | sort -u > out/app-test-errors.txt || true
+          xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact > out/test-summary.json 2>/dev/null || true
+          xcrun xcresulttool get test-results tests --path build/Tests.xcresult --compact > out/test-results.json 2>/dev/null || true
+          xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path out/attachments >/dev/null 2>&1 || true
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: app-test, path: out, if-no-files-found: ignore }
 
   app-screens:
     name: App build (Release) + screenshots
@@ -68,29 +85,49 @@ jobs:
       - name: Build
         run: |
           set -o pipefail
+          mkdir -p out
           xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -150
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
+      - name: Build errors
+        if: always()
+        run: grep -E "error:" out/app-build.log | sort -u > out/app-build-errors.txt || true
       - name: Screenshots
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
           APP=$(find build/dd/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
           LIST="${SCENARIOS:-$(cat ci/scenarios.txt 2>/dev/null || echo pipeline)}"
-          ci/screenshots.sh "$APP" shots $LIST
-      - name: Publish screenshots to ci-shots/${{ github.ref_name }}
+          ci/screenshots.sh "$APP" out/shots $LIST
+      - uses: actions/upload-artifact@v5
         if: always()
+        with: { name: app-screens, path: out, if-no-files-found: ignore }
+
+  report:
+    name: Publish report
+    needs: [core, app-test, app-screens]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v5
+        with: { path: report }
+      - name: Write status and push to ci-shots/${{ github.ref_name }}
         run: |
-          [ -d shots ] || exit 0
-          cd shots
+          mkdir -p report && cd report
+          for f in $(find . -name '*.log'); do
+            # Keep every diagnostic line plus the tail; full logs can be huge.
+            { grep -nE "error:|warning:|failed|FAIL|✘|Fatal|crash" "$f" | head -400; echo "----- tail -----"; tail -200 "$f"; } > "$f.trimmed"
+            mv "$f.trimmed" "$f"
+          done
+          {
+            echo "commit: ${GITHUB_SHA}"
+            echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "core: ${{ needs.core.result }}"
+            echo "app-test: ${{ needs.app-test.result }}"
+            echo "app-screens: ${{ needs.app-screens.result }}"
+          } > STATUS.md
           echo "${GITHUB_SHA}" > COMMIT
           git init -q && git checkout -q -b shots
           git add -A
-          git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "Screenshots for ${GITHUB_SHA}"
+          git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "CI report for ${GITHUB_SHA}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" "shots:refs/heads/ci-shots/${GITHUB_REF_NAME}"
-      - uses: actions/upload-artifact@v5
-        if: always()
-        with:
-          name: screenshots
-          path: shots
-          if-no-files-found: ignore
