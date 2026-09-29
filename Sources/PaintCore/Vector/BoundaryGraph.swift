@@ -399,8 +399,9 @@ extension BoundaryGraph {
         let arrive = reversed ? (firstStep(e) + 2) & 3 : lastStep(e)
         let cx = Int(p.x), cy = Int(p.y)
         guard let j = junctionIndex(x: cx, y: cy) else { return ref }
-        for turn: UInt8 in [1, 0, 3] {
-            let d = (arrive + turn) & 3
+        // Turn towards the region first, then straight on, then away.
+        for k: UInt8 in 0..<3 {
+            let d = (arrive + (k == 0 ? 1 : (k == 1 ? 0 : 3))) & 3
             if lat.left(cx, cy, d) == region && lat.right(cx, cy, d) != region {
                 let code = junctionSlots[j * 4 + Int(d)]
                 if code >= 0 { return UInt32(code) }

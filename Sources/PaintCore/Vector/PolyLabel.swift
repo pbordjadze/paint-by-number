@@ -129,7 +129,7 @@ enum PolyLabel {
     }
 
     /// Above this many vertices, search only near the seed (see `find`).
-    static let localSearchThreshold = 400
+    static let localSearchThreshold = 64
 
     /// Returns the pole and its distance to the outline. `seed` (a raster distance
     /// transform maximum) primes the search so most cells are pruned immediately. For large

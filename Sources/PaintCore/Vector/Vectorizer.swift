@@ -5,12 +5,13 @@ import Foundation
 ///
 /// 1. `BoundaryGraph` traces region boundaries on the pixel-corner lattice into edges
 ///    between junctions (exact, integer chain codes) and assembles each region's rings.
-/// 2. `EdgeSmoother` fits every edge once (`CurveFitter`), so both neighbouring regions use
-///    the very same curve and fills tile the canvas without gaps or overlaps; it repairs
-///    any fit that would cross or touch another edge.
-/// 3. Each region's rings are triangulated (`Earcut`) and labelled at the pole of
-///    inaccessibility of the smoothed polygon (`PolyLabel`), with extra labels spread
-///    over large regions.
+/// 2. `EdgeSmoother` fits every edge once (`CurveFitter`, potrace-style, then
+///    `CurveFairing`), so both neighbouring regions use the very same curve and fills tile
+///    the canvas without gaps or overlaps; `GeometryValidator` finds any curve that would
+///    cross or touch another edge and it falls back to cruder but provably valid shapes.
+/// 3. Each region's rings are triangulated (`Earcut`, kept conforming along shared
+///    boundaries) and labelled at the pole of inaccessibility of the smoothed polygon
+///    (`PolyLabel`), with extra labels spread over large regions.
 public enum Vectorizer {
     /// Precision of label placement, canvas units.
     static let labelPrecision = 0.25
