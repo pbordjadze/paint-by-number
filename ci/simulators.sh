@@ -18,8 +18,15 @@ def pick(patterns):
     raise SystemExit("no device type for %s in %s" % (patterns, names))
 phone = pick([r"iPhone 17 Pro", r"iPhone 1\d Pro", r"iPhone .*Pro"])
 pad = pick([r"iPad Pro 13-inch \(M5\)", r"iPad Pro 13-inch \(M\d\)", r"iPad Pro 13-inch.*", r"iPad Pro.*"])
+devices = json.loads(sim("list", "devices", "available", "-j"))["devices"].get(runtime["identifier"], [])
 for kind, t in (("iphone", phone), ("ipad", pad)):
     if kind not in wanted: continue
+    # Reuse a device the runner image already created (its data container exists, so the
+    # first boot is much faster than for a brand-new device).
+    existing = [d for d in devices if d["deviceTypeIdentifier"] == t["identifier"]]
+    if existing:
+        print(kind, existing[0]["udid"], t["name"].replace(" ", "_"), runtime["version"])
+        continue
     name = "PBN-" + kind
     udid = sim("create", name, t["identifier"], runtime["identifier"]).strip()
     print(kind, udid, t["name"].replace(" ", "_"), runtime["version"])
