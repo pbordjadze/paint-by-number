@@ -245,6 +245,12 @@ final class Library {
         }
     }
 
+    /// The photo an artwork was made from ("compare with photo"), decoded off the main actor.
+    func sourcePhoto(for id: UUID, maxPixelSize: Int? = nil) async -> CGImage? {
+        let store = self.store
+        return await Background.run { store.source(id, maxPixelSize: maxPixelSize) }
+    }
+
     /// Waits until every queued write has reached the disk.
     func flush() async {
         for task in Array(writes.values) { _ = await task.value }

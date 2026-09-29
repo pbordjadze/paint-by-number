@@ -1,3 +1,4 @@
+import CoreGraphics
 import os
 import PaintCore
 import SwiftUI
@@ -21,6 +22,9 @@ struct ArtworkPaintingView: View {
             Theme.paper.ignoresSafeArea()
             if let autosaver {
                 PaintView(session: autosaver.session, title: artwork?.title ?? "", onClose: close)
+                    .environment(\.sourcePhotoLoader, SourcePhotoLoader { [library, artworkID] maxPixelSize in
+                        await library.sourcePhoto(for: artworkID, maxPixelSize: maxPixelSize)
+                    })
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
                     .transition(.opacity)
             } else if failed {
@@ -126,5 +130,24 @@ final class PaintingAutosaver {
             let library = library, id = artworkID, template = session.template, progress = session.progress
             Task { await library.refreshThumbnail(id, template: template, progress: progress) }
         }
+    }
+}
+
+/// Loads the photo the open painting was made from, for the painting screen's "compare with
+/// photo" (read it with `@Environment(\.sourcePhotoLoader)`).
+nonisolated struct SourcePhotoLoader: Sendable {
+    let load: @Sendable (_ maxPixelSize: Int?) async -> CGImage?
+
+    func callAsFunction(maxPixelSize: Int? = nil) async -> CGImage? { await load(maxPixelSize) }
+}
+
+private nonisolated struct SourcePhotoLoaderKey: EnvironmentKey {
+    static let defaultValue: SourcePhotoLoader? = nil
+}
+
+extension EnvironmentValues {
+    var sourcePhotoLoader: SourcePhotoLoader? {
+        get { self[SourcePhotoLoaderKey.self] }
+        set { self[SourcePhotoLoaderKey.self] = newValue }
     }
 }
