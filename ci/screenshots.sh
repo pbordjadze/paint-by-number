@@ -38,5 +38,3 @@ for entry in "${SCENARIOS[@]}"; do
   fi
 done
 xcrun simctl spawn "$UDID" log show --last 15m --style compact --predicate 'process == "PaintByNumber"' > "$OUT/${KIND}-app.log" 2>/dev/null || true
-# Crash reports of the app (a simulator app's crashes land in the host's DiagnosticReports).
-find "$HOME/Library/Logs/DiagnosticReports" -name 'PaintByNumber*' -newer "$APP" -exec cp {} "$OUT/" \; 2>/dev/null || true
