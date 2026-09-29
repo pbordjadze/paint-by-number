@@ -18,42 +18,34 @@ struct StructureMap {
 
     /// - Parameter radius: Window radius (box, applied twice) in pixels.
     init(_ lab: Grid<SIMD4<Float>>, radius: Int) {
-        let w = lab.width, h = lab.height, n = w * h
-        var gx = [SIMD4<Float>](repeating: .zero, count: n)
-        var gy = [SIMD4<Float>](repeating: .zero, count: n)
-        lab.storage.withUnsafeBufferPointer { src in
-            gx.withUnsafeMutableBufferPointer { xb in
-                gy.withUnsafeMutableBufferPointer { yb in
-                    let s = UncheckedSendable(src.baseAddress!)
-                    let xp = UncheckedSendable(xb.baseAddress!)
-                    let yp = UncheckedSendable(yb.baseAddress!)
-                    Parallel.forEachBand(h, minimumBandSize: 16) { rows in
-                        for y in rows {
-                            let row = y * w
-                            for x in 0..<w {
-                                let i = row + x
-                                if x > 0 {
-                                    var d = s.value[i] - s.value[i - 1]
-                                    d.w = 0
-                                    d.w = (d * d).sum().squareRoot()
-                                    xp.value[i] = d
-                                }
-                                if y > 0 {
-                                    var d = s.value[i] - s.value[i - w]
-                                    d.w = 0
-                                    d.w = (d * d).sum().squareRoot()
-                                    yp.value[i] = d
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        precondition(radius > 0 && lab.count > 0)
+        let w = lab.width, h = lab.height
         width = w
         height = h
-        horizontal = BoxBlur.apply(gx, width: w, height: h, radius: radius, passes: 2)
-        vertical = BoxBlur.apply(gy, width: w, height: h, radius: radius, passes: 2)
+        // Steps are produced row by row inside the blur's first pass.
+        (horizontal, vertical) = lab.storage.withUnsafeBufferPointer { src in
+            let s = UncheckedSendable(src.baseAddress!)
+            @inline(__always) func step(_ a: SIMD4<Float>, _ b: SIMD4<Float>) -> SIMD4<Float> {
+                var d = a - b
+                d.w = 0
+                d.w = (d * d).sum().squareRoot()
+                return d
+            }
+            let horizontal = BoxBlur.blur(width: w, height: h, radius: radius, passes: 2) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
+                let line = s.value + y * w
+                row[0] = .zero
+                for x in 1..<w { row[x] = step(line[x], line[x - 1]) }
+            }
+            let vertical = BoxBlur.blur(width: w, height: h, radius: radius, passes: 2) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
+                let line = s.value + y * w
+                if y == 0 {
+                    for x in 0..<w { row[x] = .zero }
+                } else {
+                    for x in 0..<w { row[x] = step(line[x], line[x - w]) }
+                }
+            }
+            return (horizontal, vertical)
+        }
     }
 
     /// Magnitude of the coherent (non-cancelling) gradient: high on contours, low in flat

@@ -90,6 +90,29 @@ struct FoundationTests {
         for y in 0..<5 { for x in 0..<7 { #expect(small[x, y] == SIMD4(200, 100, 50, 255)) } }
     }
 
+    @Test func encodeTableMatchesTransferFunction() {
+        // Exhaustive over [0, 1.25] on Linux; here a dense sample plus every step position.
+        let table = ColorScience.EncodeTable.shared
+        @inline(__always) func direct(_ v: Float) -> UInt8 { Resample.quantize(ColorScience.encodeSRGB(v)) }
+        var bits = UInt32(0)
+        while bits <= Float(1.25).bitPattern {
+            let v = Float(bitPattern: bits)
+            #expect(table.quantized(v) == direct(v))
+            bits += 4099
+        }
+        for code in 1...255 {
+            // Smallest float with this code, by bisection on the direct function.
+            var lo = Float(0).bitPattern, hi = Float(1).bitPattern
+            while lo < hi {
+                let mid = lo + (hi - lo) / 2
+                if direct(Float(bitPattern: mid)) < UInt8(code) { lo = mid + 1 } else { hi = mid }
+            }
+            for v in [Float(bitPattern: lo).nextDown, Float(bitPattern: lo), Float(bitPattern: lo).nextUp] {
+                #expect(table.quantized(v) == direct(v))
+            }
+        }
+    }
+
     @Test func netpbmRoundTrip() throws {
         var img = RGBAImage(width: 3, height: 2, fill: SIMD4(1, 2, 3, 255))
         img[2, 1] = SIMD4(250, 128, 7, 255)

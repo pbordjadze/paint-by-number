@@ -29,53 +29,51 @@ enum DomainTransformFilter {
         let ratio = sigmaSpatial / sigmaRange
 
         // Domain-transform derivatives: 1 + σs/σr·|∇I| along each axis (index = pixel whose
-        // left/upper neighbour the step comes from).
+        // left/upper neighbour the step comes from), with the optional scales applied.
         var dH = [Float](repeating: 1, count: n)
         var dV = [Float](repeating: 1, count: n)
+        let noScale: [Float] = []
+        let eh = edgeScale?.horizontal ?? noScale, ev = edgeScale?.vertical ?? noScale
+        let st = stiffness ?? noScale
+        let scaled = edgeScale != nil, stiff = stiffness != nil
         input.storage.withUnsafeBufferPointer { g in
             dH.withUnsafeMutableBufferPointer { dh in
                 dV.withUnsafeMutableBufferPointer { dv in
-                    let gp = UncheckedSendable(g.baseAddress!)
-                    let hp = UncheckedSendable(dh.baseAddress!)
-                    let vp = UncheckedSendable(dv.baseAddress!)
-                    Parallel.forEachBand(h, minimumBandSize: 8) { rows in
-                        for y in rows {
-                            let row = y * w
-                            var x = 1
-                            while x < w {
-                                let d = gp.value[row + x] - gp.value[row + x - 1]
-                                hp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
-                                x += 1
-                            }
-                            if y > 0 {
-                                for x in 0..<w {
-                                    let d = gp.value[row + x] - gp.value[row + x - w]
-                                    vp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
-                                }
-                            }
-                        }
-                    }
-                    if let edgeScale {
-                        edgeScale.horizontal.withUnsafeBufferPointer { eh in
-                            edgeScale.vertical.withUnsafeBufferPointer { ev in
-                                let ehp = UncheckedSendable(eh.baseAddress!)
-                                let evp = UncheckedSendable(ev.baseAddress!)
-                                Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
-                                    for i in range {
-                                        hp.value[i] = 1 + (hp.value[i] - 1) * ehp.value[i]
-                                        vp.value[i] = 1 + (vp.value[i] - 1) * evp.value[i]
+                    eh.withUnsafeBufferPointer { ehb in
+                        ev.withUnsafeBufferPointer { evb in
+                            st.withUnsafeBufferPointer { sb in
+                                let gp = UncheckedSendable(g.baseAddress!)
+                                let hp = UncheckedSendable(dh.baseAddress!)
+                                let vp = UncheckedSendable(dv.baseAddress!)
+                                let ehp = UncheckedSendable(ehb), evp = UncheckedSendable(evb), sp = UncheckedSendable(sb)
+                                Parallel.forEachBand(h, minimumBandSize: 8) { rows in
+                                    for y in rows {
+                                        let row = y * w
+                                        var x = 1
+                                        while x < w {
+                                            let d = gp.value[row + x] - gp.value[row + x - 1]
+                                            hp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
+                                            x += 1
+                                        }
+                                        if y > 0 {
+                                            for x in 0..<w {
+                                                let d = gp.value[row + x] - gp.value[row + x - w]
+                                                vp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
+                                            }
+                                        }
+                                        if scaled {
+                                            for i in row..<(row + w) {
+                                                hp.value[i] = 1 + (hp.value[i] - 1) * ehp.value[i]
+                                                vp.value[i] = 1 + (vp.value[i] - 1) * evp.value[i]
+                                            }
+                                        }
+                                        if stiff {
+                                            for i in row..<(row + w) {
+                                                hp.value[i] *= sp.value[i]
+                                                vp.value[i] *= sp.value[i]
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                        }
-                    }
-                    if let stiffness {
-                        stiffness.withUnsafeBufferPointer { sb in
-                            let sp = UncheckedSendable(sb.baseAddress!)
-                            Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
-                                for i in range {
-                                    hp.value[i] *= sp.value[i]
-                                    vp.value[i] *= sp.value[i]
                                 }
                             }
                         }
@@ -100,7 +98,31 @@ enum DomainTransformFilter {
                     let op = UncheckedSendable(o.baseAddress!)
                     let wp = UncheckedSendable(wt.baseAddress!)
                     Parallel.forEachBand(h, minimumBandSize: 8) { rows in
-                        for y in rows {
+                        // Each row is a serial recursion; four rows side by side keep the
+                        // pipeline busy.
+                        var y = rows.lowerBound
+                        while y + 4 <= rows.upperBound {
+                            let r0 = op.value + y * w, r1 = r0 + w, r2 = r1 + w, r3 = r2 + w
+                            let w0 = wp.value + y * w, w1 = w0 + w, w2 = w1 + w, w3 = w2 + w
+                            var x = 1
+                            while x < w {
+                                r0[x] += w0[x] * (r0[x - 1] - r0[x])
+                                r1[x] += w1[x] * (r1[x - 1] - r1[x])
+                                r2[x] += w2[x] * (r2[x - 1] - r2[x])
+                                r3[x] += w3[x] * (r3[x - 1] - r3[x])
+                                x += 1
+                            }
+                            x = w - 2
+                            while x >= 0 {
+                                r0[x] += w0[x + 1] * (r0[x + 1] - r0[x])
+                                r1[x] += w1[x + 1] * (r1[x + 1] - r1[x])
+                                r2[x] += w2[x + 1] * (r2[x + 1] - r2[x])
+                                r3[x] += w3[x + 1] * (r3[x + 1] - r3[x])
+                                x -= 1
+                            }
+                            y += 4
+                        }
+                        while y < rows.upperBound {
                             let row = op.value + y * w
                             let wr = wp.value + y * w
                             var x = 1
@@ -113,6 +135,7 @@ enum DomainTransformFilter {
                                 row[x] += wr[x + 1] * (row[x + 1] - row[x])
                                 x -= 1
                             }
+                            y += 1
                         }
                     }
                 }
