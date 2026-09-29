@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: ['ci-shots/**']
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: 'Demo scenarios to screenshot (space separated, optional @seconds)'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  PROJECT: App/PaintByNumber.xcodeproj
+  SCHEME: PaintByNumber
+
+jobs:
+  core:
+    name: PaintCore tests + benchmark
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test
+        run: |
+          set -o pipefail
+          swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tail -80
+      - name: Benchmark
+        run: |
+          swift build -c release --product pbn 2>&1 | tail -3
+          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3
+
+  app-test:
+    name: App build + tests (Debug)
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pick simulator
+        id: sim
+        run: |
+          UDID=$(ci/simulators.sh | awk '$1=="iphone"{print $2}')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
+            -resultBundlePath build/Tests.xcresult -quiet \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -150
+      - name: Test summary
+        if: always()
+        run: xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact 2>/dev/null | head -c 4000 || true
+
+  app-screens:
+    name: App build (Release) + screenshots
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tail -150
+      - name: Screenshots
+        env:
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          APP=$(find build/dd/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
+          LIST="${SCENARIOS:-$(cat ci/scenarios.txt 2>/dev/null || echo pipeline)}"
+          ci/screenshots.sh "$APP" shots $LIST
+      - name: Publish screenshots to ci-shots/${{ github.ref_name }}
+        if: always()
+        run: |
+          [ -d shots ] || exit 0
+          cd shots
+          echo "${GITHUB_SHA}" > COMMIT
+          git init -q && git checkout -q -b shots
+          git add -A
+          git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "Screenshots for ${GITHUB_SHA}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" "shots:refs/heads/ci-shots/${GITHUB_REF_NAME}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: shots
+          if-no-files-found: ignore

@@ -1,5 +1,9 @@
 import Foundation
 import PaintCore
+#if canImport(ImageIO)
+import CoreGraphics
+import ImageIO
+#endif
 
 // Headless driver for the template pipeline: generate templates, render previews and
 // report timings/metrics. Images are exchanged as PPM so no codecs are needed.
@@ -38,7 +42,25 @@ func fail(_ message: String) -> Never {
 
 func loadImage(_ path: String) -> RGBAImage {
     guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
-    do { return try Netpbm.read(data) } catch { fail("cannot decode \(path): \(error)") }
+    if data.first == UInt8(ascii: "P") {
+        do { return try Netpbm.read(data) } catch { fail("cannot decode \(path): \(error)") }
+    }
+    #if canImport(ImageIO)
+    // On Apple platforms any ImageIO format works (JPEG, HEIC, PNG…), decoded to sRGB.
+    guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+          let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { fail("cannot decode \(path)") }
+    let w = image.width, h = image.height
+    var pixels = [UInt8](repeating: 0, count: w * h * 4)
+    pixels.withUnsafeMutableBytes { raw in
+        let ctx = CGContext(data: raw.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
+                            space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+    }
+    return RGBAImage(width: w, height: h, pixels: pixels)
+    #else
+    fail("\(path): only PPM/PGM input is supported on this platform")
+    #endif
 }
 
 func loadImportance(_ path: String?) -> Grid<Float>? {
