@@ -4,7 +4,7 @@ import SwiftUI
 struct PaintByNumberApp: App {
     var body: some Scene {
         WindowGroup {
-            PipelineCheckView()
+            RootView()
         }
     }
 }
