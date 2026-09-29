@@ -46,6 +46,17 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertNotEqual(badge.label, before, "Undo didn't take anything back")
     }
 
+    /// Palette swatches (plain buttons over the canvas, no interactive glass) select their color.
+    @MainActor
+    func testPaletteButtonSelects() throws {
+        let app = openSeededPainting()
+        let swatch = app.buttons["Color 14"]
+        XCTAssertFalse((swatch.value as? String ?? "").contains("Selected"))
+        swatch.tap()
+        sleep(1)
+        XCTAssertTrue((swatch.value as? String ?? "").contains("Selected"), "Tapping a swatch didn't select it")
+    }
+
     /// Launches the demo that seeds a painting in the background and opens it once it is ready.
     @MainActor
     private func openSeededPainting() -> XCUIApplication {
