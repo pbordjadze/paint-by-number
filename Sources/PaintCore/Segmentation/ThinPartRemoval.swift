@@ -262,7 +262,7 @@ enum ThinPartRemoval {
                                             let y = rows.row(i)
                                             let best = dominantNeighbourClass(
                                                 i, x: i - y * w, y: y, w: w, h: h, classes: c.value,
-                                                color: col.value[i], palette: pal.value, includeOwn: !strong,
+                                                color: col.value + i, palette: pal.value, includeOwn: !strong,
                                                 cand: cand.baseAddress!, wts: wts.baseAddress!)
                                             if best != c.value[i] {
                                                 changed.append((i, c.value[i]))
@@ -375,7 +375,7 @@ enum ThinPartRemoval {
     static func dominantNeighbourClass(
         _ i: Int, x: Int, y: Int, w: Int, h: Int,
         classes: UnsafeMutablePointer<UInt32>,
-        color: SIMD4<Float>, palette: UnsafePointer<SIMD4<Float>>,
+        color: UnsafePointer<SIMD4<Float>>, palette: UnsafePointer<SIMD4<Float>>,
         includeOwn: Bool,
         cand: UnsafeMutablePointer<UInt32>, wts: UnsafeMutablePointer<Float>
     ) -> UInt32 {
@@ -416,14 +416,26 @@ enum ThinPartRemoval {
             }
             return best
         }
+        // Colour distances only matter between near-tied candidates, so they (and the
+        // pixel's colour, often a cache miss) are computed on demand; `bestD` is NaN until
+        // the distance of the current best is needed.
+        @inline(__always) func distance(_ m: Int) -> Float {
+            let e = color.pointee - palette[Int(cand[m])]
+            return (e * e).sum()
+        }
         var best = 0
-        var bestD = Float.infinity
-        for m in 0..<count {
-            let e = color - palette[Int(cand[m])]
-            let d = (e * e).sum()
-            if wts[m] > wts[best] + 0.05 || (abs(wts[m] - wts[best]) <= 0.05 && d < bestD) {
+        var bestD = Float.nan
+        for m in 1..<max(count, 1) {
+            if wts[m] > wts[best] + 0.05 {
                 best = m
-                bestD = d
+                bestD = .nan
+            } else if abs(wts[m] - wts[best]) <= 0.05 {
+                if bestD.isNaN { bestD = distance(best) }
+                let d = distance(m)
+                if d < bestD {
+                    best = m
+                    bestD = d
+                }
             }
         }
         return cand[best]
