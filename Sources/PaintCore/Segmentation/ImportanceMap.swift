@@ -64,11 +64,11 @@ enum ImportanceMap {
         let reference = max(sample[min(sample.count - 1, Int(Float(sample.count) * 0.9))], 1e-4)
 
         var out = [Float](uninitializedCount: n)
-        density.withUnsafeBufferPointer { d in
-            out.withUnsafeMutableBufferPointer { o in
+        try density.withUnsafeBufferPointer { d in
+            try out.withUnsafeMutableBufferPointer { o in
                 let dp = UncheckedSendable(d.baseAddress!)
                 let op = UncheckedSendable(o.baseAddress!)
-                Parallel.forEachBand(h, minimumBandSize: 16) { rows in
+                try Parallel.forEachBand(h, minimumBandSize: 16, wave: Parallel.waveRows(width: w), cancel: cancel) { rows in
                     let falloff: Float = -1 / (2 * 0.3 * 0.3)
                     for y in rows {
                         let v: Float = (Float(y) + 0.5) / Float(h) - 0.45

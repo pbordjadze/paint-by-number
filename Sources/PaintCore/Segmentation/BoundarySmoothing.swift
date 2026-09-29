@@ -20,8 +20,9 @@ enum BoundarySmoothing {
         palette: [SIMD3<Float>],
         radius: Int,
         passes: Int,
-        fidelity: Float
-    ) -> Int {
+        fidelity: Float,
+        cancel: CancellationCheck = .none
+    ) throws -> Int {
         guard radius > 0, passes > 0, w > 2, h > 2 else { return 0 }
         var offsets: [(dx: Int, dy: Int, weight: Float)] = []
         var total: Float = 0
@@ -42,78 +43,90 @@ enum BoundarySmoothing {
         // so after the first pass only the surroundings of changed pixels are revisited.
         var near: [UInt8] = []
         let rowOf = RowDivider(width: w)
+        let waveRows = Parallel.waveRows(width: w)
         for pass in 0..<passes {
-            let moves: [[(Int, UInt32)]] = classes.withUnsafeBufferPointer { cb in
-                colors.withUnsafeBufferPointer { colb in
-                    packed.withUnsafeBufferPointer { pb in
-                        offsets.withUnsafeBufferPointer { ob in
-                            near.withUnsafeBufferPointer { nb in
+            if pass > 0 { try cancel.throwIfCancelled() }
+            let moves: [[(Int, UInt32)]] = try classes.withUnsafeBufferPointer { cb in
+                try colors.withUnsafeBufferPointer { colb in
+                    try packed.withUnsafeBufferPointer { pb in
+                        try offsets.withUnsafeBufferPointer { ob in
+                            try near.withUnsafeBufferPointer { nb in
                                 let c = UncheckedSendable(cb.baseAddress!)
                                 let col = UncheckedSendable(colb.baseAddress!)
                                 let pal = UncheckedSendable(pb.baseAddress!)
                                 let off = UncheckedSendable(ob.baseAddress!)
                                 let nearby = UncheckedSendable(nb)
                                 let m = ob.count
-                                return Parallel.mapBands(h, minimumBandSize: 8) { rows -> [(Int, UInt32)] in
-                                    var moved: [(Int, UInt32)] = []
-                                    var boundary = [UInt8](repeating: 0, count: w)
-                                    withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 16) { labelBuffer in
-                                        withUnsafeTemporaryAllocation(of: Float.self, capacity: 16) { voteBuffer in
-                                            boundary.withUnsafeMutableBufferPointer { bb in
-                                                let labels = labelBuffer.baseAddress!, votes = voteBuffer.baseAddress!
-                                                let b = bb.baseAddress!
-                                                for y in rows {
-                                                    let row = c.value + y * w
-                                                    Self.boundaryMask(row, w: w, up: y > 0, down: y + 1 < h, into: b)
-                                                    if pass > 0 {
-                                                        let flags = nearby.value.baseAddress! + y * w
-                                                        for x in 0..<w { b[x] &= flags[x] }
-                                                    }
-                                                    for x in 0..<w where b[x] != 0 {
-                                                        let i = y * w + x
-                                                        let own = row[x]
-                                                        var k = 0
-                                                        @inline(__always) func vote(_ l: UInt32, _ weight: Float) {
-                                                            var slot = 0
-                                                            while slot < k && labels[slot] != l { slot += 1 }
-                                                            if slot == k {
-                                                                if k == 16 { return }
-                                                                labels[k] = l
-                                                                votes[k] = 0
-                                                                k += 1
+                                // Rows go in waves for cancellation; moves apply after the whole pass.
+                                var all: [[(Int, UInt32)]] = []
+                                var y0 = 0
+                                while y0 < h {
+                                    let y1 = min(h, y0 + waveRows), base = y0
+                                    all += Parallel.mapBands(y1 - y0, minimumBandSize: 8) { band -> [(Int, UInt32)] in
+                                        let rows = (band.lowerBound + base)..<(band.upperBound + base)
+                                        var moved: [(Int, UInt32)] = []
+                                        var boundary = [UInt8](repeating: 0, count: w)
+                                        withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 16) { labelBuffer in
+                                            withUnsafeTemporaryAllocation(of: Float.self, capacity: 16) { voteBuffer in
+                                                boundary.withUnsafeMutableBufferPointer { bb in
+                                                    let labels = labelBuffer.baseAddress!, votes = voteBuffer.baseAddress!
+                                                    let b = bb.baseAddress!
+                                                    for y in rows {
+                                                        let row = c.value + y * w
+                                                        Self.boundaryMask(row, w: w, up: y > 0, down: y + 1 < h, into: b)
+                                                        if pass > 0 {
+                                                            let flags = nearby.value.baseAddress! + y * w
+                                                            for x in 0..<w { b[x] &= flags[x] }
+                                                        }
+                                                        for x in 0..<w where b[x] != 0 {
+                                                            let i = y * w + x
+                                                            let own = row[x]
+                                                            var k = 0
+                                                            @inline(__always) func vote(_ l: UInt32, _ weight: Float) {
+                                                                var slot = 0
+                                                                while slot < k && labels[slot] != l { slot += 1 }
+                                                                if slot == k {
+                                                                    if k == 16 { return }
+                                                                    labels[k] = l
+                                                                    votes[k] = 0
+                                                                    k += 1
+                                                                }
+                                                                votes[slot] += weight
                                                             }
-                                                            votes[slot] += weight
-                                                        }
-                                                        if x >= radius && y >= radius && x < w - radius && y < h - radius {
-                                                            for j in 0..<m { vote(c.value[i + steps[j]], off.value[j].weight) }
-                                                        } else {
-                                                            for j in 0..<m {
-                                                                let xx = x + off.value[j].dx, yy = y + off.value[j].dy
-                                                                if xx < 0 || yy < 0 || xx >= w || yy >= h { continue }
-                                                                vote(c.value[yy * w + xx], off.value[j].weight)
+                                                            if x >= radius && y >= radius && x < w - radius && y < h - radius {
+                                                                for j in 0..<m { vote(c.value[i + steps[j]], off.value[j].weight) }
+                                                            } else {
+                                                                for j in 0..<m {
+                                                                    let xx = x + off.value[j].dx, yy = y + off.value[j].dy
+                                                                    if xx < 0 || yy < 0 || xx >= w || yy >= h { continue }
+                                                                    vote(c.value[yy * w + xx], off.value[j].weight)
+                                                                }
                                                             }
+                                                            let color = col.value[i]
+                                                            @inline(__always) func score(_ l: UInt32, _ v: Float) -> Float {
+                                                                let e = color - pal.value[Int(l)]
+                                                                return v - fidelity * (e * e).sum()
+                                                            }
+                                                            var ownVotes: Float = 0
+                                                            for s in 0..<k where labels[s] == own { ownVotes = votes[s] }
+                                                            var best = own
+                                                            var bestScore = score(own, ownVotes) + 0.02
+                                                            for s in 0..<k where labels[s] != own {
+                                                                let sc = score(labels[s], votes[s])
+                                                                if sc > bestScore { bestScore = sc; best = labels[s] }
+                                                            }
+                                                            if best != own { moved.append((i, best)) }
                                                         }
-                                                        let color = col.value[i]
-                                                        @inline(__always) func score(_ l: UInt32, _ v: Float) -> Float {
-                                                            let e = color - pal.value[Int(l)]
-                                                            return v - fidelity * (e * e).sum()
-                                                        }
-                                                        var ownVotes: Float = 0
-                                                        for s in 0..<k where labels[s] == own { ownVotes = votes[s] }
-                                                        var best = own
-                                                        var bestScore = score(own, ownVotes) + 0.02
-                                                        for s in 0..<k where labels[s] != own {
-                                                            let sc = score(labels[s], votes[s])
-                                                            if sc > bestScore { bestScore = sc; best = labels[s] }
-                                                        }
-                                                        if best != own { moved.append((i, best)) }
                                                     }
                                                 }
                                             }
                                         }
+                                        return moved
                                     }
-                                    return moved
+                                    y0 = y1
+                                    if y0 < h { try cancel.throwIfCancelled() }
                                 }
+                                return all
                             }
                         }
                     }

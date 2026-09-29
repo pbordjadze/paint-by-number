@@ -34,18 +34,20 @@ enum RegionSimplifier {
         }
         try cancel.throwIfCancelled()
         var regions = clock.measure("segment.regions.label") { RegionRuns(classes: classes, width: w, height: h) }
+        try cancel.throwIfCancelled()
         // Pathologically fragmented input (sensor noise, dithering) would leave hundreds of
         // thousands of regions for the merge queue; a few colour-blind majority passes turn
         // speckle into blobs in linear time first.
         if regions.count > w * h / 20 {
-            _ = BoundarySmoothing.apply(
+            _ = try BoundarySmoothing.apply(
                 classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
-                radius: 2, passes: 4, fidelity: 0)
+                radius: 2, passes: 4, fidelity: 0, cancel: cancel)
             _ = try ThinPartRemoval.apply(
                 classes: &classes, width: w, height: h,
                 colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3,
                 cancel: cancel)
             regions = RegionRuns(classes: classes, width: w, height: h)
+            try cancel.throwIfCancelled()
         }
         var adjacency = clock.measure("segment.regions.adjacency") { RegionAdjacency(regions) }
         let maxAreaScale = areaScale.withUnsafeBufferPointer { b in
@@ -60,18 +62,20 @@ enum RegionSimplifier {
             let wide = round > 0
                 ? clock.measure("segment.regions.disc") { hasInscribedDisc(regions, classes: classes, radius: p.minRadius) }
                 : nil
-            let merged = clock.measure("segment.regions.merge") {
-                mergeRound(
+            if wide != nil { try cancel.throwIfCancelled() }
+            let merged = try clock.measure("segment.regions.merge") {
+                try mergeRound(
                     &regions, adjacency: &adjacency, wide: wide, classes: &classes, colors: colors.storage,
-                    areaScale: areaScale, maxAreaScale: maxAreaScale, palette: palette, parameters: p)
+                    areaScale: areaScale, maxAreaScale: maxAreaScale, palette: palette, parameters: p, cancel: cancel)
             }
             try cancel.throwIfCancelled()
             var smoothed = 0
             if round == 0 && p.boundaryPasses > 0 {
-                smoothed = clock.measure("segment.regions.smooth") {
-                    BoundarySmoothing.apply(
+                smoothed = try clock.measure("segment.regions.smooth") {
+                    try BoundarySmoothing.apply(
                         classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
-                        radius: p.boundaryRadius, passes: p.boundaryPasses, fidelity: p.boundaryFidelity)
+                        radius: p.boundaryRadius, passes: p.boundaryPasses, fidelity: p.boundaryFidelity,
+                        cancel: cancel)
                 }
             }
             try cancel.throwIfCancelled()
@@ -87,6 +91,7 @@ enum RegionSimplifier {
             if smoothed > 0 || peeled > 0 {
                 try cancel.throwIfCancelled()
                 regions = clock.measure("segment.regions.label") { RegionRuns(classes: classes, width: w, height: h) }
+                try cancel.throwIfCancelled()
                 adjacency = clock.measure("segment.regions.adjacency") { RegionAdjacency(regions) }
             }
             if merged == 0 && peeled == 0 && smoothed == 0 && wide != nil { return (regions, adjacency) }
@@ -216,8 +221,9 @@ enum RegionSimplifier {
         areaScale: [Float],
         maxAreaScale: Float,
         palette: [SIMD3<Float>],
-        parameters p: SegmentationParameters
-    ) -> Int {
+        parameters p: SegmentationParameters,
+        cancel: CancellationCheck = .none
+    ) throws -> Int {
         let n = regions.count
         guard n > 1 else { return 0 }
         var thin = [Bool](repeating: false, count: n)
@@ -269,6 +275,7 @@ enum RegionSimplifier {
             Float(Double(area[r]) * Double(area[r]) / (Double(p.minArea) * sums[r].w))
         }
 
+        try cancel.throwIfCancelled()
         var heap = MinHeap()
         for r in 0..<n where !big[r] {
             let key = relativeArea(r)
@@ -277,7 +284,10 @@ enum RegionSimplifier {
 
         var merges = 0
         var compacted: [Link] = []
+        var pops = 0
         while let item = heap.pop() {
+            pops &+= 1
+            if pops & 4095 == 0 { try cancel.throwIfCancelled() }
             let r = Int(item.region)
             if Int(parent[r]) != r || stamp[r] != item.stamp { continue }
             let key = relativeArea(r)
@@ -339,6 +349,7 @@ enum RegionSimplifier {
         }
         guard merges > 0 else { return 0 }
         for r in 0..<n { parent[r] = Int32(find(r)) }
+        try cancel.throwIfCancelled()
         regions.merge(roots: parent, paint: cls, adjacency: &adjacency, classes: &classes)
         return merges
     }

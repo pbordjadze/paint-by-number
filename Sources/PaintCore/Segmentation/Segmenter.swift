@@ -48,11 +48,12 @@ public enum Segmenter {
                 ? try structure.edgeScales(
                     importance: weights, strength: p.textureFlattening, exponent: p.structureExponent, cancel: cancel)
                 : nil
+            try cancel.throwIfCancelled()
+            let stiffness = Grid(width: w, height: h, storage: weights).map { 1 + p.importanceSharpening * $0 }.storage
+            try cancel.throwIfCancelled()
             return try DomainTransformFilter.filter(
                 lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
-                iterations: p.smoothIterations, edgeScale: edgeScale,
-                stiffness: Grid(width: w, height: h, storage: weights).map { 1 + p.importanceSharpening * $0 }.storage,
-                cancel: cancel)
+                iterations: p.smoothIterations, edgeScale: edgeScale, stiffness: stiffness, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         progress(0.25)
@@ -98,6 +99,7 @@ public enum Segmenter {
                 classes: &classes, width: w, height: h, colors: smooth, areaScale: areaScale,
                 palette: palette, parameters: p, cancel: cancel, clock: clock)
         }
+        try cancel.throwIfCancelled()
         clock.measure("segment.consolidate") {
             _ = TextureConsolidation.apply(
                 classes: &classes, regions: &regions, adjacency: &adjacency, texture: texture, importance: weights,

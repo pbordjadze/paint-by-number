@@ -35,6 +35,7 @@ enum ThinPartRemoval {
         let packed = palette.map { SIMD4($0, 0) }
         var candidates = uncoveredPixels(labels: classes, width: w, height: h, element: element)
         guard !candidates.isEmpty else { return 0 }
+        try cancel.throwIfCancelled()
 
         // Only pixels near a change can change coverage, so after the first full pass the
         // work is usually local to the (few) uncovered pixels and their surroundings.
@@ -43,7 +44,8 @@ enum ThinPartRemoval {
         var mark = [UInt8](repeating: 0, count: n)  // bit 0: touched, bit 1: queued
         let reach = max(2 * element.radius, 2)
         let rows = RowDivider(width: w)
-        var changes = process(candidates, classes: &classes, w: w, h: h, colors: colors, palette: packed, strong: true)
+        var changes = try process(
+            candidates, classes: &classes, w: w, h: h, colors: colors, palette: packed, strong: true, cancel: cancel)
         func record() {
             for (i, old) in changes where mark[i] & 1 == 0 {
                 mark[i] |= 1
@@ -81,7 +83,9 @@ enum ThinPartRemoval {
                     !isCovered(i, rows: rows, h: h, labels: labels, element: element)
                 }
             }
-            changes = process(candidates, classes: &classes, w: w, h: h, colors: colors, palette: packed, strong: false)
+            try cancel.throwIfCancelled()
+            changes = try process(
+                candidates, classes: &classes, w: w, h: h, colors: colors, palette: packed, strong: false, cancel: cancel)
             record()
             passes += 1
         }
@@ -97,6 +101,7 @@ enum ThinPartRemoval {
         var check: [Int]? = nil
         var net = 0
         for _ in 0..<4 {
+            try cancel.throwIfCancelled()
             let revert: [Int]
             if check == nil && pixels.count > n / 64 {
                 // Many moves: one full coverage scan beats per-pixel checks.
@@ -235,8 +240,9 @@ enum ThinPartRemoval {
         w: Int, h: Int,
         colors: [SIMD4<Float>],
         palette packed: [SIMD4<Float>],
-        strong: Bool
-    ) -> [(Int, UInt32)] {
+        strong: Bool,
+        cancel: CancellationCheck
+    ) throws -> [(Int, UInt32)] {
         let rows = RowDivider(width: w)
         var phases: [[Int]] = [[], [], [], []]
         for i in candidates {
@@ -244,7 +250,8 @@ enum ThinPartRemoval {
             phases[(i - y * w) & 1 | (y & 1) << 1].append(i)
         }
         var total: [(Int, UInt32)] = []
-        for list in phases where !list.isEmpty {
+        for (phase, list) in phases.enumerated() where !list.isEmpty {
+            if phase > 0 { try cancel.throwIfCancelled() }
             let bands: [[(Int, UInt32)]] = classes.withUnsafeMutableBufferPointer { cb in
                 colors.withUnsafeBufferPointer { colb in
                     packed.withUnsafeBufferPointer { pb in
