@@ -313,18 +313,21 @@ case "check":
 
 case "bench":
     guard !options.positional.isEmpty else { fail("usage: pbn bench <in.ppm>...") }
-    let generator = TemplateGenerator(settings: options.settings)
-    for path in options.positional {
-        let image = loadImage(path)
+    /// Runs the generator `runs` times; per-stage timings, region count and worst gap.
+    func measure(_ image: RGBAImage, _ settings: GenerationSettings, runs: Int)
+        -> (totals: [String: [Double]], order: [String], regions: Int, size: String, gap: (gap: Double, end: Double)) {
+        let generator = TemplateGenerator(settings: settings)
         var totals: [String: [Double]] = [:]
         var order: [String] = []
         var regionCount = 0
+        var size = ""
         var worstGap = (gap: 0.0, end: 0.0)
-        for _ in 0..<options.runs {
+        for _ in 0..<runs {
             let probe = CancellationProbe()
             let out: TemplateGenerator.Output
             do { out = try generator.generate(from: image, cancel: probe.check) } catch { fail("\(error)") }
             regionCount = out.template.regions.count
+            size = "\(out.template.width)×\(out.template.height)"
             let gap = probe.finish()
             if gap.gap > worstGap.gap { worstGap = gap }
             var perRun: [String: Double] = ["total": out.totalSeconds * 1000]
@@ -334,11 +337,31 @@ case "bench":
             }
             for (k, v) in perRun { totals[k, default: []].append(v) }
         }
-        print("\(path) — \(regionCount) regions, longest stretch without a cancellation check "
-            + String(format: "%.1f ms (ending %.0f ms into the run)", worstGap.gap, worstGap.end))
-        for name in order + ["total"] {
-            let v = totals[name]!.sorted()
-            print(String(format: "  %-28@ median %8.1f ms   min %8.1f ms", name as NSString, v[v.count / 2], v[0]))
+        return (totals, order, regionCount, size, worstGap)
+    }
+    func stat(_ values: [Double]) -> String {
+        let v = values.sorted()
+        return String(format: "median %8.1f ms   min %8.1f ms", v[v.count / 2], v[0])
+    }
+    for path in options.positional {
+        let image = loadImage(path)
+        let m = measure(image, options.settings, runs: options.runs)
+        print("\(path) — \(m.size), \(m.regions) regions, longest stretch without a cancellation check "
+            + String(format: "%.1f ms (ending %.0f ms into the run)", m.gap.gap, m.gap.end))
+        for name in m.order + ["total"] {
+            print(String(format: "  %-28@ ", name as NSString) + stat(m.totals[name]!))
+        }
+        // The app's other two regimes: a live preview at about 700 px, and full detail on a
+        // large photo (the source is enlarged so the working size reaches its 2100 px cap).
+        let long = max(image.width, image.height)
+        let preview = Resample.area(image, width: max(1, image.width * 467 / long), height: max(1, image.height * 467 / long))
+        var fine = options.settings
+        fine.detail = 1
+        let big = Resample.area(image, width: image.width * 1400 / long, height: image.height * 1400 / long)
+        for (label, input, settings) in [("preview", preview, options.settings), ("detail 1", big, fine)] {
+            let v = measure(input, settings, runs: options.runs)
+            print(String(format: "  %-28@ ", "\(label) \(v.size)" as NSString) + stat(v.totals["total"]!)
+                + String(format: "   worst gap %.1f ms", v.gap.gap))
         }
     }
 
