@@ -55,7 +55,7 @@ public enum DistanceTransform {
             }
         }
         let d = try squaredDistances(isBoundary, width: w, height: h, cancel: cancel)
-        var out = [Float](unsafeUninitializedCapacity: n) { _, count in count = n }
+        var out = [Float](uninitializedCount: n)
         d.withUnsafeBufferPointer { src in
             out.withUnsafeMutableBufferPointer { dst in
                 let s = UncheckedSendable(src.baseAddress!)
@@ -75,7 +75,7 @@ public enum DistanceTransform {
         let n = width * height
         guard width > 0, height > 0 else { return [] }
         let waveRows = Parallel.waveRows(width: width)
-        var f = [Double](unsafeUninitializedCapacity: n) { _, count in count = n }
+        var f = [Double](uninitializedCount: n)
         // Distance (in rows) to the nearest feature seen so far in each column.
         let none = Int32.max
         var run = [Int32](repeating: none, count: width)

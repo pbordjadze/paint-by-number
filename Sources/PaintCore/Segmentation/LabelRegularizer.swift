@@ -12,8 +12,8 @@ enum LabelRegularizer {
         _ colors: Grid<SIMD4<Float>>, palette: [SIMD3<Float>], cancel: CancellationCheck = .none
     ) throws -> [UInt32] {
         let n = colors.count
-        var out = [UInt32](repeating: 0, count: n)
-        guard !palette.isEmpty else { return out }
+        guard !palette.isEmpty else { return [UInt32](repeating: 0, count: n) }
+        var out = [UInt32](uninitializedCount: n)
         let px = palette.map(\.x), py = palette.map(\.y), pz = palette.map(\.z)
         try colors.storage.withUnsafeBufferPointer { src in
             try out.withUnsafeMutableBufferPointer { dst in

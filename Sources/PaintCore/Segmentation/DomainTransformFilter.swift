@@ -30,48 +30,57 @@ enum DomainTransformFilter {
 
         // Domain-transform derivatives: 1 + σs/σr·|∇I| along each axis (index = pixel whose
         // left/upper neighbour the step comes from), with the optional scales applied.
-        var dH = [Float](repeating: 1, count: n)
-        var dV = [Float](repeating: 1, count: n)
+        // Fresh buffers are written in waves below (no up-front fill), so the filter stays
+        // cancellable at large sizes.
+        var dH = [Float](uninitializedCount: n)
+        var dV = [Float](uninitializedCount: n)
+        var out = [SIMD4<Float>](uninitializedCount: n)
         let noScale: [Float] = []
         let eh = edgeScale?.horizontal ?? noScale, ev = edgeScale?.vertical ?? noScale
         let st = stiffness ?? noScale
         let scaled = edgeScale != nil, stiff = stiffness != nil
         let waveRows = Parallel.waveRows(width: w)
         try input.storage.withUnsafeBufferPointer { g in
-            try dH.withUnsafeMutableBufferPointer { dh in
-                try dV.withUnsafeMutableBufferPointer { dv in
-                    try eh.withUnsafeBufferPointer { ehb in
-                        try ev.withUnsafeBufferPointer { evb in
-                            try st.withUnsafeBufferPointer { sb in
-                                let gp = UncheckedSendable(g.baseAddress!)
-                                let hp = UncheckedSendable(dh.baseAddress!)
-                                let vp = UncheckedSendable(dv.baseAddress!)
-                                let ehp = UncheckedSendable(ehb), evp = UncheckedSendable(evb), sp = UncheckedSendable(sb)
-                                try Parallel.forEachBand(h, minimumBandSize: 8, wave: waveRows, cancel: cancel) { rows in
-                                    for y in rows {
-                                        let row = y * w
-                                        var x = 1
-                                        while x < w {
-                                            let d = gp.value[row + x] - gp.value[row + x - 1]
-                                            hp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
-                                            x += 1
-                                        }
-                                        if y > 0 {
-                                            for x in 0..<w {
-                                                let d = gp.value[row + x] - gp.value[row + x - w]
-                                                vp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
+            try out.withUnsafeMutableBufferPointer { ob in
+                let copy = UncheckedSendable(ob.baseAddress!)
+                try dH.withUnsafeMutableBufferPointer { dh in
+                    try dV.withUnsafeMutableBufferPointer { dv in
+                        try eh.withUnsafeBufferPointer { ehb in
+                            try ev.withUnsafeBufferPointer { evb in
+                                try st.withUnsafeBufferPointer { sb in
+                                    let gp = UncheckedSendable(g.baseAddress!)
+                                    let hp = UncheckedSendable(dh.baseAddress!)
+                                    let vp = UncheckedSendable(dv.baseAddress!)
+                                    let ehp = UncheckedSendable(ehb), evp = UncheckedSendable(evb), sp = UncheckedSendable(sb)
+                                    try Parallel.forEachBand(h, minimumBandSize: 8, wave: waveRows, cancel: cancel) { rows in
+                                        for y in rows {
+                                            let row = y * w
+                                            (copy.value + row).initialize(from: gp.value + row, count: w)
+                                            hp.value[row] = 1
+                                            if y == 0 { for x in 0..<w { vp.value[x] = 1 } }
+                                            var x = 1
+                                            while x < w {
+                                                let d = gp.value[row + x] - gp.value[row + x - 1]
+                                                hp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
+                                                x += 1
                                             }
-                                        }
-                                        if scaled {
-                                            for i in row..<(row + w) {
-                                                hp.value[i] = 1 + (hp.value[i] - 1) * ehp.value[i]
-                                                vp.value[i] = 1 + (vp.value[i] - 1) * evp.value[i]
+                                            if y > 0 {
+                                                for x in 0..<w {
+                                                    let d = gp.value[row + x] - gp.value[row + x - w]
+                                                    vp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
+                                                }
                                             }
-                                        }
-                                        if stiff {
-                                            for i in row..<(row + w) {
-                                                hp.value[i] *= sp.value[i]
-                                                vp.value[i] *= sp.value[i]
+                                            if scaled {
+                                                for i in row..<(row + w) {
+                                                    hp.value[i] = 1 + (hp.value[i] - 1) * ehp.value[i]
+                                                    vp.value[i] = 1 + (vp.value[i] - 1) * evp.value[i]
+                                                }
+                                            }
+                                            if stiff {
+                                                for i in row..<(row + w) {
+                                                    hp.value[i] *= sp.value[i]
+                                                    vp.value[i] *= sp.value[i]
+                                                }
                                             }
                                         }
                                     }
@@ -83,8 +92,7 @@ enum DomainTransformFilter {
             }
         }
 
-        var out = input.storage
-        var weights = [Float](repeating: 0, count: n)
+        var weights = [Float](uninitializedCount: n)
         let count = Float(iterations)
         for i in 0..<iterations {
             try cancel.throwIfCancelled()

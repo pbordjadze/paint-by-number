@@ -9,7 +9,7 @@ enum TextureMap {
     static func boundaryDensity(_ classes: [UInt32], width w: Int, height h: Int, cancel: CancellationCheck = .none) throws -> [Float] {
         let n = w * h
         guard n > 0 else { return [] }
-        var changes = [Float](repeating: 0, count: n)
+        var changes = [Float](uninitializedCount: n)
         classes.withUnsafeBufferPointer { cb in
             changes.withUnsafeMutableBufferPointer { ob in
                 let c = UncheckedSendable(cb.baseAddress!)

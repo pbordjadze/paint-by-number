@@ -57,7 +57,7 @@ struct StructureMap {
     /// Magnitude of the coherent (non-cancelling) gradient: high on contours, low in flat
     /// areas and in texture alike.
     func coherentMagnitude() -> [Float] {
-        var out = [Float](repeating: 0, count: width * height)
+        var out = [Float](uninitializedCount: width * height)
         horizontal.withUnsafeBufferPointer { hb in
             vertical.withUnsafeBufferPointer { vb in
                 out.withUnsafeMutableBufferPointer { ob in
@@ -87,8 +87,8 @@ struct StructureMap {
         importance: [Float], strength: Float, exponent: Float, cancel: CancellationCheck = .none
     ) throws -> (horizontal: [Float], vertical: [Float]) {
         let n = width * height
-        var sh = [Float](repeating: 1, count: n)
-        var sv = [Float](repeating: 1, count: n)
+        var sh = [Float](uninitializedCount: n)
+        var sv = [Float](uninitializedCount: n)
         try horizontal.withUnsafeBufferPointer { xb in
             try vertical.withUnsafeBufferPointer { yb in
                 try importance.withUnsafeBufferPointer { ib in

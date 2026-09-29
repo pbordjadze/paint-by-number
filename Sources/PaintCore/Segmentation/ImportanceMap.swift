@@ -17,7 +17,7 @@ enum ImportanceMap {
 
     /// Bilinear resampling to `width × height`, clamped to 0...1.
     static func resample(_ map: Grid<Float>, width: Int, height: Int) -> [Float] {
-        var out = [Float](repeating: 0, count: width * height)
+        var out = [Float](uninitializedCount: width * height)
         let mw = map.width, mh = map.height
         let sx = Float(mw) / Float(width), sy = Float(mh) / Float(height)
         map.storage.withUnsafeBufferPointer { src in
@@ -63,7 +63,7 @@ enum ImportanceMap {
         sample.sort()
         let reference = max(sample[min(sample.count - 1, Int(Float(sample.count) * 0.9))], 1e-4)
 
-        var out = [Float](repeating: 0, count: n)
+        var out = [Float](uninitializedCount: n)
         density.withUnsafeBufferPointer { d in
             out.withUnsafeMutableBufferPointer { o in
                 let dp = UncheckedSendable(d.baseAddress!)

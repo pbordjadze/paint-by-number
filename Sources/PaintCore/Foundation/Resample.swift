@@ -6,6 +6,12 @@ public enum Resample {
     /// fine high-contrast detail (foliage, hair) averages to the right brightness.
     /// Suitable for downscaling; upscaling degenerates to bilinear-ish nearest blending.
     public static func area(_ image: RGBAImage, width outW: Int, height outH: Int) -> RGBAImage {
+        // Without a cancellation check nothing can throw.
+        try! area(image, width: outW, height: outH, cancel: .none)
+    }
+
+    /// `area(_:width:height:)` in waves of rows with cancellation checks between them.
+    static func area(_ image: RGBAImage, width outW: Int, height outH: Int, cancel: CancellationCheck) throws -> RGBAImage {
         let inW = image.width, inH = image.height
         if inW == outW && inH == outH { return image }
         let lut = ColorScience.decodeLUT
@@ -13,14 +19,14 @@ public enum Resample {
         let yWeights = Weights(inCount: inH, outCount: outH)
 
         // Horizontal pass: inH rows × outW columns, linear premultiplied float RGBA.
-        var horizontal = [SIMD4<Float>](unsafeUninitializedCapacity: outW * inH) { _, count in count = outW * inH }
-        image.pixels.withUnsafeBufferPointer { src in
-            horizontal.withUnsafeMutableBufferPointer { dst in
-                lut.withUnsafeBufferPointer { l in
+        var horizontal = [SIMD4<Float>](uninitializedCount: outW * inH)
+        try image.pixels.withUnsafeBufferPointer { src in
+            try horizontal.withUnsafeMutableBufferPointer { dst in
+                try lut.withUnsafeBufferPointer { l in
                     let s = UncheckedSendable(src.baseAddress!)
                     let d = UncheckedSendable(dst.baseAddress!)
                     let lp = UncheckedSendable(l.baseAddress!)
-                    Parallel.forEachBand(inH, minimumBandSize: 8) { rows in
+                    try Parallel.forEachBand(inH, minimumBandSize: 8, wave: Parallel.waveRows(width: inW), cancel: cancel) { rows in
                         withUnsafeTemporaryAllocation(of: SIMD4<Float>.self, capacity: inW) { line in
                             let linear = line.baseAddress!
                             for y in rows {
@@ -47,12 +53,12 @@ public enum Resample {
         }
 
         let encode = ColorScience.EncodeTable.shared
-        var out = [UInt8](repeating: 0, count: outW * outH * 4)
-        horizontal.withUnsafeBufferPointer { src in
-            out.withUnsafeMutableBufferPointer { dst in
+        var out = [UInt8](uninitializedCount: outW * outH * 4)
+        try horizontal.withUnsafeBufferPointer { src in
+            try out.withUnsafeMutableBufferPointer { dst in
                 let s = UncheckedSendable(src.baseAddress!)
                 let d = UncheckedSendable(dst.baseAddress!)
-                Parallel.forEachBand(outH, minimumBandSize: 8) { rows in
+                try Parallel.forEachBand(outH, minimumBandSize: 8, wave: Parallel.waveRows(width: outW), cancel: cancel) { rows in
                     withUnsafeTemporaryAllocation(of: SIMD4<Float>.self, capacity: outW) { line in
                         let acc = line.baseAddress!
                         for oy in rows {

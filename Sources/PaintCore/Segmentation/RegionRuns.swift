@@ -175,7 +175,7 @@ struct RegionRuns: Sendable {
     /// Per-pixel region labels.
     func labelMap() -> RegionMap {
         let w = width, h = height
-        var labels = [UInt32](repeating: 0, count: w * h)
+        var labels = [UInt32](uninitializedCount: w * h)
         labels.withUnsafeMutableBufferPointer { lb in
             rowStart.withUnsafeBufferPointer { rsb in
                 start.withUnsafeBufferPointer { sb in

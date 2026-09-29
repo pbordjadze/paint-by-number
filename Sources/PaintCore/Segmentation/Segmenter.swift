@@ -79,7 +79,7 @@ public enum Segmenter {
         let labelling = classes
         let (texture, areaScale) = try clock.measure("segment.texture") { () throws -> ([Float], [Float]) in
             let texture = try TextureMap.boundaryDensity(labelling, width: w, height: h, cancel: cancel)
-            var scale = [Float](repeating: 0, count: w * h)
+            var scale = [Float](uninitializedCount: w * h)
             weights.withUnsafeBufferPointer { ib in
                 texture.withUnsafeBufferPointer { tb in
                     scale.withUnsafeMutableBufferPointer { sb in
@@ -113,6 +113,7 @@ public enum Segmenter {
                 labelling: labelling, palette: palette, minDistance: p.minPaletteDistance,
                 chromaScale: p.chromaScale, iterations: p.refineIterations)
         }
+        try cancel.throwIfCancelled()
         let labels = clock.measure("segment.finalize") { regions.labelMap() }
         progress(1)
         return Segmentation(

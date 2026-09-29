@@ -10,7 +10,7 @@ enum WorkingImage {
         let n = image.width * image.height
         let lut = ColorScience.decodeLUT
         let space = image.colorSpace
-        var out = [SIMD4<Float>](repeating: .zero, count: n)
+        var out = [SIMD4<Float>](uninitializedCount: n)
         try image.pixels.withUnsafeBufferPointer { src in
             try out.withUnsafeMutableBufferPointer { dst in
                 try lut.withUnsafeBufferPointer { lutBuf in

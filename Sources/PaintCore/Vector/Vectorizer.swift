@@ -54,6 +54,7 @@ public enum Vectorizer {
         clock.measure("vectorize.labels") {
             fills.addExtraLabels(shapes, raster: raster, distance: distance, map: map, width: w, height: h)
         }
+        try cancel.throwIfCancelled()
 
         var regions: [Region] = []
         regions.reserveCapacity(regionCount)
@@ -193,7 +194,7 @@ struct RegionFills {
         var first = 0
         while first < regionCount {
             try cancel.throwIfCancelled()
-            let last = min(regionCount, first + 1024)
+            let last = min(regionCount, first + 512)
             let offset = first
             bands += mapChunks(last - first, chunk: 16, cost: { shapes.pointCount(offset + $0) }) { chunk -> RegionFills in
                 let range = (chunk.lowerBound + offset)..<(chunk.upperBound + offset)
@@ -267,6 +268,7 @@ struct RegionFills {
             }
             first = last
         }
+        try cancel.throwIfCancelled()
         var out = RegionFills()
         for band in bands {
             let base = UInt32(out.vertices.count)

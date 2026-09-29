@@ -45,8 +45,8 @@ enum BoxBlur {
         let waveRows = Parallel.waveRows(width: w)
         // Reciprocal window sizes along a row (edge windows are clipped).
         let inverse = (0..<w).map { x in 1 / Float(min(x + r, w - 1) - max(x - r, 0) + 1) }
-        var a = [T](unsafeUninitializedCapacity: n) { _, count in count = n }
-        var b = scratch.count == n ? scratch : [T](unsafeUninitializedCapacity: n) { _, count in count = n }
+        var a = [T](uninitializedCount: n)
+        var b = scratch.count == n ? scratch : [T](uninitializedCount: n)
         scratch = []
         defer { scratch = b }
         // Running column sums, kept across the waves of a column pass.
@@ -122,7 +122,7 @@ enum BoxBlur {
     }
 }
 
-protocol Blurrable {
+protocol Blurrable: BitwiseCopyable {
     static var zero: Self { get }
     static func += (lhs: inout Self, rhs: Self)
     static func -= (lhs: inout Self, rhs: Self)

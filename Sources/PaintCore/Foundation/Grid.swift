@@ -118,3 +118,13 @@ struct RowDivider: Sendable {
         i < 1 << 26 ? Int((UInt64(i) &* magic) >> shift) : i / width
     }
 }
+
+extension Array where Element: BitwiseCopyable {
+    /// An array of `count` elements the caller overwrites before reading them: large
+    /// buffers skip the zero fill (and first touch their pages in the parallel pass that
+    /// writes them).
+    @inlinable
+    init(uninitializedCount count: Int) {
+        self.init(unsafeUninitializedCapacity: count) { _, initialized in initialized = count }
+    }
+}

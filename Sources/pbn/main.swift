@@ -315,13 +315,14 @@ case "bench":
     guard !options.positional.isEmpty else { fail("usage: pbn bench <in.ppm>...") }
     /// Runs the generator `runs` times; per-stage timings, region count and worst gap.
     func measure(_ image: RGBAImage, _ settings: GenerationSettings, runs: Int)
-        -> (totals: [String: [Double]], order: [String], regions: Int, size: String, gap: (gap: Double, end: Double)) {
+        -> (totals: [String: [Double]], order: [String], regions: Int, size: String, gap: (gap: Double, end: Double), stage: String) {
         let generator = TemplateGenerator(settings: settings)
         var totals: [String: [Double]] = [:]
         var order: [String] = []
         var regionCount = 0
         var size = ""
         var worstGap = (gap: 0.0, end: 0.0)
+        var worstStage = ""
         for _ in 0..<runs {
             let probe = CancellationProbe()
             let out: TemplateGenerator.Output
@@ -329,7 +330,13 @@ case "bench":
             regionCount = out.template.regions.count
             size = "\(out.template.width)×\(out.template.height)"
             let gap = probe.finish()
-            if gap.gap > worstGap.gap { worstGap = gap }
+            if gap.gap > worstGap.gap {
+                worstGap = gap
+                // The innermost stage running when the stretch ended.
+                let end = gap.end / 1000
+                worstStage = out.timings.filter { $0.start <= end && end <= $0.start + $0.seconds }
+                    .min { $0.seconds < $1.seconds }?.name ?? "between stages"
+            }
             var perRun: [String: Double] = ["total": out.totalSeconds * 1000]
             for t in out.timings {
                 if totals[t.name] == nil && perRun[t.name] == nil { order.append(t.name) }
@@ -337,7 +344,7 @@ case "bench":
             }
             for (k, v) in perRun { totals[k, default: []].append(v) }
         }
-        return (totals, order, regionCount, size, worstGap)
+        return (totals, order, regionCount, size, worstGap, worstStage)
     }
     func stat(_ values: [Double]) -> String {
         let v = values.sorted()
@@ -347,7 +354,7 @@ case "bench":
         let image = loadImage(path)
         let m = measure(image, options.settings, runs: options.runs)
         print("\(path) — \(m.size), \(m.regions) regions, longest stretch without a cancellation check "
-            + String(format: "%.1f ms (ending %.0f ms into the run)", m.gap.gap, m.gap.end))
+            + String(format: "%.1f ms (ending %.0f ms into the run, in ", m.gap.gap, m.gap.end) + m.stage + ")")
         for name in m.order + ["total"] {
             print(String(format: "  %-28@ ", name as NSString) + stat(m.totals[name]!))
         }
@@ -361,7 +368,7 @@ case "bench":
         for (label, input, settings) in [("preview", preview, options.settings), ("detail 1", big, fine)] {
             let v = measure(input, settings, runs: options.runs)
             print(String(format: "  %-28@ ", "\(label) \(v.size)" as NSString) + stat(v.totals["total"]!)
-                + String(format: "   worst gap %.1f ms", v.gap.gap))
+                + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage + ")")
         }
     }
 
