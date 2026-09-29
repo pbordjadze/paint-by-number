@@ -135,9 +135,25 @@ extension BoundaryGraph {
         let rows = height + 1
         let bands = Parallel.mapBands(rows, minimumBandSize: 32) { range -> [Int32] in
             var found: [Int32] = []
-            for cy in range {
-                for cx in 0...w where lat.mask(cx, cy).nonzeroBitCount >= 3 {
-                    found.append(Int32(cy * (w + 1) + cx))
+            var boundaries = [UInt8](repeating: 0, count: w + 1)
+            boundaries.withUnsafeMutableBufferPointer { cb in
+                let count = cb.baseAddress!
+                @inline(__always) func differs(_ a: UInt32, _ b: UInt32) -> UInt8 { a != b ? 1 : 0 }
+                for cy in range {
+                    guard cy > 0 && cy < height && w > 1 else {
+                        for cx in 0...w where lat.mask(cx, cy).nonzeroBitCount >= 3 { found.append(Int32(cy * (w + 1) + cx)) }
+                        continue
+                    }
+                    // Inner corners: the four lattice segments separate the pixels above and
+                    // below (at x and x − 1) and left and right (in both rows).
+                    let up = lat.labels.baseAddress! + (cy - 1) * w, down = up + w
+                    for cx in 1..<w {
+                        count[cx] = differs(up[cx], down[cx]) &+ differs(up[cx - 1], down[cx - 1])
+                            &+ differs(up[cx - 1], up[cx]) &+ differs(down[cx - 1], down[cx])
+                    }
+                    if lat.mask(0, cy).nonzeroBitCount >= 3 { found.append(Int32(cy * (w + 1))) }
+                    for cx in 1..<w where count[cx] >= 3 { found.append(Int32(cy * (w + 1) + cx)) }
+                    if lat.mask(w, cy).nonzeroBitCount >= 3 { found.append(Int32(cy * (w + 1) + w)) }
                 }
             }
             return found
