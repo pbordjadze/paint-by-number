@@ -80,10 +80,10 @@ static PaintSample samplePaint(RegionState s, float2 p, float now, float unitsPe
     float angle = atan2(d.y, d.x);
     // An organic, slightly lobed front that rounds out as it spreads.
     float wobble = 1.0 + (0.05 * sin(5.0 * angle + s.seed) + 0.035 * sin(9.0 * angle - 1.7 * s.seed)) * (1.0 - e);
-    float soft = max(s.radius * 0.16, 1.5 * unitsPerPixel);
+    float soft = max(s.radius * 0.1, 2.0 * unitsPerPixel);
     float front = e * (s.radius + soft) * 1.12 * wobble;
     o.coverage = 1.0 - smoothstep(front - soft, front, dist);
-    float x = (dist - (front - soft * 0.75)) / (soft * 0.45);
+    float x = (dist - (front - soft * 0.7)) / (soft * 0.5);
     o.rim = exp(-x * x) * o.coverage;
     o.wet = 1.0;
     return o;
@@ -98,7 +98,7 @@ static float paintedAmount(RegionState s, float now) {
 static float3 wetPaint(float3 paint, PaintSample ps) {
     float3 c = paint * (1.0 - 0.12 * ps.wet);   // wet paint reads a little deeper
     float3 sheen = min(paint * 1.3 + 0.07, float3(1.0));
-    return mix(c, sheen, ps.rim * 0.5);
+    return mix(c, sheen, ps.rim * 0.4);
 }
 
 /// Unpainted regions of the selected color: a light tint of the paint plus fine diagonal

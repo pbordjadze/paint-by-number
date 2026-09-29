@@ -33,6 +33,8 @@ struct CanvasRenderTests {
             if r.area > 300 { #expect(abs(area - r.area) / r.area < 0.06) }
         }
         #expect(abs(total - Float(t.width * t.height)) < 1)
+        let report = t.validate()
+        #expect(report.isValid, "\(report)")
         #expect(Set(t.regions.map(\.colorIndex)).count == t.palette.count)
     }
 

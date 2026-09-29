@@ -226,7 +226,6 @@ nonisolated private struct Builder {
 
         // Labels at the pole of inaccessibility (largest inscribed disc) of each region.
         let dist = DistanceTransform.interiorDistance(labels: regionMap)
-        var area = [Float](repeating: 0, count: regionCount)
         var bounds = [PixelBounds](repeating: .empty, count: regionCount)
         var best = [Float](repeating: -1, count: regionCount)
         var bestPos = [SIMD2<Float>](repeating: .zero, count: regionCount)
@@ -236,7 +235,6 @@ nonisolated private struct Builder {
                     for x in 0..<o.width {
                         let i = y * o.width + x
                         let r = Int(m[i])
-                        area[r] += 1
                         bounds[r].include(x: x, y: y)
                         if d[i] > best[r] {
                             best[r] = d[i]
@@ -258,8 +256,13 @@ nonisolated private struct Builder {
                 ringEdges.append(contentsOf: refs)
             }
             let hasLabel = best[r] > 0
+            // Exact polygon area (outer ring minus holes), like the production vectorizer.
+            let polygonArea = regionRings[r].reduce(Float(0)) { sum, ring in
+                let a = shoelace(polygon(ring.0))
+                return ring.1 ? sum - abs(a) : sum + abs(a)
+            }
             regions.append(Region(
-                colorIndex: regionColor[r], area: area[r], bounds: bounds[r], inscribedRadius: max(0, best[r]),
+                colorIndex: regionColor[r], area: polygonArea, bounds: bounds[r], inscribedRadius: max(0, best[r]),
                 ringStart: ringStart, ringCount: UInt32(regionRings[r].count),
                 labelStart: UInt32(labels.count), labelCount: hasLabel ? 1 : 0,
                 indexStart: indexSpans[r].0, indexCount: indexSpans[r].1))
@@ -367,6 +370,15 @@ nonisolated private struct Builder {
             if ref.reversed { out.append(contentsOf: pts.reversed().dropLast()) } else { out.append(contentsOf: pts.dropLast()) }
         }
         return out
+    }
+
+    private func shoelace(_ poly: [SIMD2<Float>]) -> Float {
+        var sum: Double = 0
+        for k in poly.indices {
+            let a = poly[k], b = poly[(k + 1) % poly.count]
+            sum += Double(a.x) * Double(b.y) - Double(b.x) * Double(a.y)
+        }
+        return Float(sum / 2)
     }
 
     private func distanceToRing(_ p: SIMD2<Float>, _ ring: [SIMD2<Float>]) -> Float {

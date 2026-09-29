@@ -155,6 +155,7 @@ struct PaintView: View {
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.primary)
                 .frame(width: Self.barHeight, height: Self.barHeight)
                 .glassEffect(.regular.interactive(), in: .circle)
         }
