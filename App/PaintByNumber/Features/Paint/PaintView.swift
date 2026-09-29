@@ -1,3 +1,4 @@
+import PaintCore
 import SwiftUI
 
 /// The painting screen: Metal canvas plus palette and controls.
