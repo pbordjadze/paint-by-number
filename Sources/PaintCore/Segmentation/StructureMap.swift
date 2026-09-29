@@ -31,13 +31,18 @@ struct StructureMap {
                 d.w = (d * d).sum().squareRoot()
                 return d
             }
-            let horizontal = try BoxBlur.blur(width: w, height: h, radius: radius, passes: 2, cancel: cancel) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
+            var scratch: [SIMD4<Float>] = []
+            let horizontal = try BoxBlur.blur(
+                width: w, height: h, radius: radius, passes: 2, cancel: cancel, scratch: &scratch
+            ) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
                 let line = s.value + y * w
                 row[0] = .zero
                 for x in 1..<w { row[x] = step(line[x], line[x - 1]) }
             }
             try cancel.throwIfCancelled()
-            let vertical = try BoxBlur.blur(width: w, height: h, radius: radius, passes: 2, cancel: cancel) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
+            let vertical = try BoxBlur.blur(
+                width: w, height: h, radius: radius, passes: 2, cancel: cancel, scratch: &scratch
+            ) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
                 let line = s.value + y * w
                 if y == 0 {
                     for x in 0..<w { row[x] = .zero }

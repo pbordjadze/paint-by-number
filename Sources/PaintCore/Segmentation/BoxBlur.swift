@@ -11,7 +11,8 @@ enum BoxBlur {
         guard w > 0, h > 0, r > 0, passes > 0 else { return input }
         return try input.withUnsafeBufferPointer { src in
             let s = UncheckedSendable(src.baseAddress!)
-            return try blur(width: w, height: h, radius: r, passes: passes, cancel: cancel) { y, row in
+            var scratch: [SIMD4<Float>] = []
+            return try blur(width: w, height: h, radius: r, passes: passes, cancel: cancel, scratch: &scratch) { y, row in
                 row.update(from: s.value + y * w, count: w)
             }
         }
@@ -23,17 +24,21 @@ enum BoxBlur {
         guard w > 0, h > 0, r > 0, passes > 0 else { return input }
         return try input.withUnsafeBufferPointer { src in
             let s = UncheckedSendable(src.baseAddress!)
-            return try blur(width: w, height: h, radius: r, passes: passes, cancel: cancel) { y, row in
+            var scratch: [Float] = []
+            return try blur(width: w, height: h, radius: r, passes: passes, cancel: cancel, scratch: &scratch) { y, row in
                 row.update(from: s.value + y * w, count: w)
             }
         }
     }
 
     /// Blurs an image whose rows `source(y, into:)` produces on demand (called concurrently
-    /// for different rows), so the unblurred image never has to be stored.
+    /// for different rows), so the unblurred image never has to be stored. `scratch` (any
+    /// contents) is used as the intermediate buffer when it has the image's size, and holds
+    /// that buffer afterwards, so consecutive blurs share it.
     @inline(__always)
     static func blur<T: Blurrable>(
         width w: Int, height h: Int, radius r: Int, passes: Int, cancel: CancellationCheck = .none,
+        scratch: inout [T],
         source: (Int, UnsafeMutablePointer<T>) -> Void
     ) throws -> [T] {
         let n = w * h
@@ -41,7 +46,9 @@ enum BoxBlur {
         // Reciprocal window sizes along a row (edge windows are clipped).
         let inverse = (0..<w).map { x in 1 / Float(min(x + r, w - 1) - max(x - r, 0) + 1) }
         var a = [T](unsafeUninitializedCapacity: n) { _, count in count = n }
-        var b = [T](unsafeUninitializedCapacity: n) { _, count in count = n }
+        var b = scratch.count == n ? scratch : [T](unsafeUninitializedCapacity: n) { _, count in count = n }
+        scratch = []
+        defer { scratch = b }
         // Running column sums, kept across the waves of a column pass.
         var sums = [T](repeating: .zero, count: w)
         try a.withUnsafeMutableBufferPointer { ab in
