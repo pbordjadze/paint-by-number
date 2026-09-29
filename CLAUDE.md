@@ -1,0 +1,43 @@
+# Paint by Numbers — engineering notes
+
+Native iOS/iPadOS 26 app that turns photos into paint-by-numbers templates on-device and
+makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell, Metal canvas.
+
+## Layout
+
+- `Package.swift`, `Sources/PaintCore` — portable, dependency-free template pipeline
+  (builds on Linux too). `Sources/pbn` — headless CLI. `Tests/PaintCoreTests` — Swift Testing.
+  - `Foundation/` grids, color science (OKLab, Display P3), EDT, connected components, resampling
+  - `Model/` `Template` (the product of the pipeline) + binary coding, `GenerationSettings`, `Segmentation`
+  - `Segmentation/` photo → region label map + palette (`Segmenter.segment`)
+  - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
+  - `Export/` SVG (and later PDF helpers)
+  - `TemplateGenerator.swift` entry point composing the stages, with `StageClock` timings
+- `App/` Xcode project (`PaintByNumber.xcodeproj`, synchronized folders — adding files needs no
+  project edits) with the SwiftUI app, Metal renderer and UI tests.
+- `tools/` evaluation tooling (`swift.sh`, `eval.py`, `svg2png.mjs`).
+- `.github/workflows/` macOS CI: builds the app, runs tests, captures simulator screenshots.
+
+## Building & testing on Linux (no Xcode here)
+
+- `tools/swift.sh build -c release --static-swift-stdlib` — builds `pbn` in the `swift:6.2-noble`
+  Docker image; the static binary at `.build/release/pbn` then runs directly on the host.
+- `tools/swift.sh test` — runs the package tests in Docker.
+- `python3 tools/eval.py run <images...> --out <dir> [-- --colors 24 --detail 0.5]` — runs the
+  pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
+  `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, timings).
+  Look at the PNGs with the Read tool.
+- Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
+  corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
+
+## Conventions
+
+- Swift 6 language mode, strict concurrency. Core types are `Sendable` value types.
+- Hot loops use `withUnsafe(Mutable)BufferPointer` + `Parallel.forEachBand`; wrap raw pointers in
+  `UncheckedSendable` to share them with workers writing disjoint ranges.
+- Color math happens in OKLab (`ColorScience`). Distances there ≈ ΔE; 0.02 ≈ just noticeable.
+- Canvas units = pixels of the working image; origin top-left, +y down.
+- Keep `PaintCore` free of Apple-only frameworks (guard any Accelerate/Metal use with
+  `#if canImport(...)` and keep a portable path).
+- Deterministic output for identical inputs + settings (seeded `SplitMix64`).
+- Comments explain *why*, sparingly. No dead code, no TODO litter.
