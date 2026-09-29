@@ -11,14 +11,14 @@ public enum DistanceTransform {
         isFeature: (Int) -> Bool
     ) -> Grid<Float> {
         let n = width * height
-        var f = [Double](repeating: 0, count: n)
-        f.withUnsafeMutableBufferPointer { buf in
+        var feature = [UInt8](repeating: 0, count: n)
+        feature.withUnsafeMutableBufferPointer { buf in
             let p = UncheckedSendable(buf.baseAddress!)
             Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
-                for i in range { p.value[i] = isFeature(i) ? 0 : .infinity }
+                for i in range { p.value[i] = isFeature(i) ? 1 : 0 }
             }
         }
-        transform2D(&f, width: width, height: height)
+        let f = squaredDistances(feature, width: width, height: height)
         return Grid(width: width, height: height, storage: f.map { Float($0) })
     }
 
@@ -29,71 +29,92 @@ public enum DistanceTransform {
     /// region, which drives label placement ("pole of inaccessibility") and thin-region
     /// detection.
     public static func interiorDistance(labels: RegionMap) -> Grid<Float> {
-        let w = labels.width, h = labels.height
-        let isBoundary: [Bool] = labels.storage.withUnsafeBufferPointer { l in
-            var out = [Bool](repeating: false, count: w * h)
-            out.withUnsafeMutableBufferPointer { o in
+        let w = labels.width, h = labels.height, n = w * h
+        guard n > 0 else { return Grid(width: w, height: h, storage: []) }
+        var isBoundary = [UInt8](repeating: 1, count: n)
+        labels.storage.withUnsafeBufferPointer { l in
+            isBoundary.withUnsafeMutableBufferPointer { o in
                 let lp = UncheckedSendable(l.baseAddress!)
                 let op = UncheckedSendable(o.baseAddress!)
                 Parallel.forEachBand(h, minimumBandSize: 16) { rows in
-                    for y in rows {
-                        let row = y * w
-                        for x in 0..<w {
-                            let i = row + x
-                            let v = lp.value[i]
-                            var b = x == 0 || y == 0 || x == w - 1 || y == h - 1
-                            if !b {
-                                b = lp.value[i - 1] != v || lp.value[i + 1] != v
-                                    || lp.value[i - w] != v || lp.value[i + w] != v
-                            }
-                            op.value[i] = b
+                    for y in rows where y > 0 && y < h - 1 {
+                        let row = lp.value + y * w, up = row - w, down = row + w
+                        let out = op.value + y * w
+                        for x in 1..<max(w - 1, 1) {
+                            let v = row[x]
+                            out[x] = (row[x - 1] != v || row[x + 1] != v || up[x] != v || down[x] != v) ? 1 : 0
                         }
                     }
                 }
             }
-            return out
         }
-        var d = squaredEDT(width: w, height: h) { isBoundary[$0] }
-        d.storage.withUnsafeMutableBufferPointer { buf in
-            let p = UncheckedSendable(buf.baseAddress!)
-            Parallel.forEachBand(w * h, minimumBandSize: 16_384) { range in
-                for i in range { p.value[i] = p.value[i].squareRoot() + 0.5 }
+        let d = squaredDistances(isBoundary, width: w, height: h)
+        var out = [Float](unsafeUninitializedCapacity: n) { _, count in count = n }
+        d.withUnsafeBufferPointer { src in
+            out.withUnsafeMutableBufferPointer { dst in
+                let s = UncheckedSendable(src.baseAddress!)
+                let o = UncheckedSendable(dst.baseAddress!)
+                Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
+                    for i in range { o.value[i] = Float(s.value[i]).squareRoot() + 0.5 }
+                }
             }
         }
-        return d
+        return Grid(width: w, height: h, storage: out)
     }
 
     // MARK: - Separable implementation
 
-    static func transform2D(_ f: inout [Double], width: Int, height: Int) {
-        guard width > 0, height > 0 else { return }
-        // Columns first (strided), then rows (contiguous).
-        f.withUnsafeMutableBufferPointer { buf in
-            let base = UncheckedSendable(buf.baseAddress!)
-            Parallel.forEachBand(width, minimumBandSize: 8) { cols in
-                var line = [Double](repeating: 0, count: height)
-                var out = [Double](repeating: 0, count: height)
-                var v = [Int](repeating: 0, count: height)
-                var z = [Double](repeating: 0, count: height + 1)
-                for x in cols {
-                    for y in 0..<height { line[y] = base.value[y * width + x] }
-                    transform1D(line, count: height, out: &out, v: &v, z: &z)
-                    for y in 0..<height { base.value[y * width + x] = out[y] }
+    /// Squared distances to the nearest nonzero `feature` pixel.
+    static func squaredDistances(_ feature: [UInt8], width: Int, height: Int) -> [Double] {
+        let n = width * height
+        guard width > 0, height > 0 else { return [] }
+        var f = [Double](unsafeUninitializedCapacity: n) { _, count in count = n }
+        feature.withUnsafeBufferPointer { fb in
+            f.withUnsafeMutableBufferPointer { buf in
+                let base = UncheckedSendable(buf.baseAddress!)
+                let feat = UncheckedSendable(fb.baseAddress!)
+                // Columns: on a binary image the lower envelope of parabolas is simply the
+                // squared distance to the nearest feature in the column, found by one sweep
+                // down and one up. Bands of whole columns walk rows, so memory stays sequential.
+                Parallel.forEachBand(width, minimumBandSize: 64) { cols in
+                    let c0 = cols.lowerBound, span = cols.count
+                    let none = Int32.max
+                    withUnsafeTemporaryAllocation(of: Int32.self, capacity: span) { runBuffer in
+                        let run = runBuffer.baseAddress!
+                        for k in 0..<span { run[k] = none }
+                        for y in 0..<height {
+                            let fr = feat.value + y * width + c0, out = base.value + y * width + c0
+                            for k in 0..<span {
+                                run[k] = fr[k] != 0 ? 0 : (run[k] == none ? none : run[k] + 1)
+                                out[k] = Double(run[k])
+                            }
+                        }
+                        for k in 0..<span { run[k] = none }
+                        for y in stride(from: height - 1, through: 0, by: -1) {
+                            let fr = feat.value + y * width + c0, out = base.value + y * width + c0
+                            for k in 0..<span {
+                                run[k] = fr[k] != 0 ? 0 : (run[k] == none ? none : run[k] + 1)
+                                let d = min(out[k], Double(run[k]))
+                                out[k] = d == Double(none) ? .infinity : d * d
+                            }
+                        }
+                    }
                 }
-            }
-            Parallel.forEachBand(height, minimumBandSize: 8) { rows in
-                var line = [Double](repeating: 0, count: width)
-                var out = [Double](repeating: 0, count: width)
-                var v = [Int](repeating: 0, count: width)
-                var z = [Double](repeating: 0, count: width + 1)
-                for y in rows {
-                    let row = base.value + y * width
-                    for x in 0..<width { line[x] = row[x] }
-                    transform1D(line, count: width, out: &out, v: &v, z: &z)
-                    for x in 0..<width { row[x] = out[x] }
+                Parallel.forEachBand(height, minimumBandSize: 8) { rows in
+                    var line = [Double](repeating: 0, count: width)
+                    var out = [Double](repeating: 0, count: width)
+                    var v = [Int](repeating: 0, count: width)
+                    var z = [Double](repeating: 0, count: width + 1)
+                    for y in rows {
+                        let row = base.value + y * width
+                        for x in 0..<width { line[x] = row[x] }
+                        transform1D(line, count: width, out: &out, v: &v, z: &z)
+                        for x in 0..<width { row[x] = out[x] }
+                    }
                 }
             }
         }
+        return f
     }
 
     /// 1D squared distance transform of sampled function `f` (lower envelope of parabolas).
