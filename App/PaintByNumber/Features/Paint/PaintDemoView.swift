@@ -11,6 +11,7 @@ import simd
 /// - `paint-complete`: finished painting (line art dissolved)
 /// - `paint-dark`: `paint-progress` for dark appearance
 /// - `paint-fill`: fills frozen mid-animation to inspect the paint front
+/// - `paint-hint`: the hint flies the camera to a region of the selected color
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -94,6 +95,8 @@ private final class Demo {
         case "paint-fill":
             paint(fraction: 0.2)
             fillDurationScale = 160
+        case "paint-hint":
+            paint(fraction: 0.4)
         default:
             break
         }
@@ -101,6 +104,11 @@ private final class Demo {
 
     /// Scenario actions that need the canvas on screen.
     func run() async {
+        if scenario == "paint-hint" {
+            try? await Task.sleep(for: .seconds(1.5))
+            session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
+            return
+        }
         guard scenario == "paint-fill" else { return }
         try? await Task.sleep(for: .seconds(1.5))
         let t = session.template

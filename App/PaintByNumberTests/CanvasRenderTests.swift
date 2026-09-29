@@ -1,6 +1,7 @@
 import CoreGraphics
 import CoreVideo
 import Foundation
+import Metal
 import PaintCore
 import Testing
 @testable import PaintByNumber
@@ -163,6 +164,62 @@ struct CanvasRenderTests {
             """
         Attachment.record(Data(report.utf8), named: "large-timings.txt")
         #expect(upload < .milliseconds(250))
+    }
+
+    /// A template from the real pipeline, drawn at iPhone 17 Pro resolution with every pass on
+    /// (MSAA fills with highlight, outline coverage + composite, numbers). Timings are attached.
+    @Test func realTemplateFrameCost() throws {
+        let url = try #require(Bundle.main.url(forResource: "parrots", withExtension: "jpg"))
+        let photo = try PhotoLoader.load(url: url, maxPixelSize: 2048)
+        let clock = ContinuousClock()
+        var t0 = clock.now
+        let t = try TemplateGenerator().generate(from: photo).template
+        let generate = clock.now - t0
+        let context = try #require(RenderContext.shared)
+        t0 = clock.now
+        let scene = try #require(CanvasScene(template: t, context: context))
+        let upload = clock.now - t0
+
+        let w = 1206, h = 2622
+        var states = t.regions.indices.map { RegionState.settled(painted: $0 % 2 == 0, origin: .zero, seed: 0) }
+        // A handful of fills mid-animation, like drag painting.
+        for r in stride(from: 1, to: min(t.regions.count, 400), by: 40) {
+            states[r] = RegionState(origin: t.labels(ofRegion: r).first?.position ?? .zero, start: -0.2, duration: 0.5,
+                                    radius: 40, painted: 1, seed: 1)
+        }
+        let stateBuffer = try #require(context.device.makeBuffer(
+            bytes: states, length: MemoryLayout<RegionState>.stride * states.count, options: .storageModeShared))
+        var u = CanvasSnapshot.uniforms(scene: scene, width: w, height: h, options: .preview)
+        u.transform.w = 3
+        u.outline = SIMD4(1.5, 3.2, 1, 1)
+        u.labels = SIMD4(19.5, 25.5, 66, 48)
+        u.numbers = SIMD4(0.5, 0.9, 0.05, 0)
+        u.selected = SIMD4(scene.paletteLinear[1], 1)
+        u.ids.x = 1
+        let color = try #require(context.makeColorTarget(width: w, height: h))
+        let outlines = try #require(context.makeOutlineTarget(width: w, height: h))
+        let targets = RenderContext.Targets(
+            color: color, multisample: context.makeMultisampleTarget(width: w, height: h), outlines: outlines)
+        var gpu: Double = 0
+        let frames = 30
+        t0 = clock.now
+        for frame in 0...frames {
+            let commands = try #require(context.queue.makeCommandBuffer())
+            context.encode(commands, scene: scene, states: stateBuffer, uniforms: u, targets: targets,
+                           content: RenderContext.Content(outlines: true, numbers: true))
+            commands.commit()
+            commands.waitUntilCompleted()
+            if frame == 0 { t0 = clock.now } else { gpu += commands.gpuEndTime - commands.gpuStartTime }
+        }
+        let wall = (clock.now - t0) / frames
+        let report = """
+            parrots: \(t.regions.count) regions, \(t.mesh.indices.count / 3) triangles, \(scene.segmentCount) outline segments, \
+            \(scene.glyphCount) digit quads
+            generate \(generate), scene upload \(upload)
+            frame 1206×2622 MSAA×\(context.sampleCount): wall \(wall), GPU \(String(format: "%.2f", gpu / Double(frames) * 1000)) ms (simulator)
+            """
+        Attachment.record(Data(report.utf8), named: "real-template-timings.txt")
+        #expect(upload < .milliseconds(300))
     }
 
     @Test func timelapseFramesReplayTheStrokeLog() throws {
