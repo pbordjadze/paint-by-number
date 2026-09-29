@@ -45,7 +45,7 @@ enum RegionSimplifier {
                 colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
             regions = RegionRuns(classes: classes, width: w, height: h)
         }
-        var adjacency = clock.measure("segment.regions.label") { RegionAdjacency(regions) }
+        var adjacency = clock.measure("segment.regions.adjacency") { RegionAdjacency(regions) }
         let maxAreaScale = areaScale.withUnsafeBufferPointer { b in
             Parallel.mapBands(b.count, minimumBandSize: 65_536) { range in b[range].max() ?? 0 }.max() ?? 0
         }
@@ -83,10 +83,8 @@ enum RegionSimplifier {
             }
             if smoothed > 0 || peeled > 0 {
                 try cancel.throwIfCancelled()
-                clock.measure("segment.regions.label") {
-                    regions = RegionRuns(classes: classes, width: w, height: h)
-                    adjacency = RegionAdjacency(regions)
-                }
+                regions = clock.measure("segment.regions.label") { RegionRuns(classes: classes, width: w, height: h) }
+                adjacency = clock.measure("segment.regions.adjacency") { RegionAdjacency(regions) }
             }
             if merged == 0 && peeled == 0 && smoothed == 0 && wide != nil { return (regions, adjacency) }
             // Late peels only nudge single pixels at junctions; stop cleaning once that is all

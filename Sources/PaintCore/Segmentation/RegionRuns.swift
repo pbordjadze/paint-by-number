@@ -87,60 +87,83 @@ struct RegionRuns: Sendable {
             }
         }
 
-        // 2. Union runs overlapping a run of the same paint in the row above.
-        var parent = [Int32](repeating: 0, count: runs)
-        for i in 0..<runs { parent[i] = Int32(i) }
+        // 2. Union runs overlapping a run of the same paint in the row above; the root of
+        // every component is its smallest run index, i.e. its first run in raster order.
+        // Bands of rows are unioned in parallel (each touches only its own runs), then the
+        // band seams serially.
+        var parent = (0..<runs).map { Int32($0) }
+        let bandRows = max(16, (h + Parallel.bandCount - 1) / Parallel.bandCount)
+        let seams = Array(stride(from: bandRows, to: h, by: bandRows))
         parent.withUnsafeMutableBufferPointer { pb in
             start.withUnsafeBufferPointer { sb in
                 end.withUnsafeBufferPointer { eb in
                     runClass.withUnsafeBufferPointer { kb in
-                        let p = pb.baseAddress!
-                        @inline(__always) func find(_ x: Int32) -> Int32 {
-                            var r = x
-                            while p[Int(r)] != r { r = p[Int(r)] }
-                            var c = x
-                            while p[Int(c)] != r {
-                                let next = p[Int(c)]
-                                p[Int(c)] = r
-                                c = next
-                            }
-                            return r
-                        }
-                        for y in 1..<max(h, 1) {
-                            var a = rowStart[y - 1], b = rowStart[y]
-                            let aEnd = rowStart[y], bEnd = rowStart[y + 1]
-                            while a < aEnd && b < bEnd {
-                                if kb[a] == kb[b] && sb[a] < eb[b] && sb[b] < eb[a] {
-                                    let ra = find(Int32(a)), rb = find(Int32(b))
-                                    if ra != rb {
-                                        if ra < rb { p[Int(rb)] = ra } else { p[Int(ra)] = rb }
-                                    }
+                        rowStart.withUnsafeBufferPointer { rsb in
+                            let p = UncheckedSendable(pb.baseAddress!)
+                            let s = UncheckedSendable(sb), e = UncheckedSendable(eb)
+                            let k = UncheckedSendable(kb), rs = UncheckedSendable(rsb)
+                            @inline(__always) func find(_ x: Int32) -> Int32 {
+                                var r = x
+                                while p.value[Int(r)] != r { r = p.value[Int(r)] }
+                                var c = x
+                                while p.value[Int(c)] != r {
+                                    let next = p.value[Int(c)]
+                                    p.value[Int(c)] = r
+                                    c = next
                                 }
-                                if eb[a] < eb[b] { a += 1 } else if eb[b] < eb[a] { b += 1 } else { a += 1; b += 1 }
+                                return r
                             }
+                            @inline(__always) func unionRows(_ y: Int) {
+                                var a = rs.value[y - 1], b = rs.value[y]
+                                let aEnd = rs.value[y], bEnd = rs.value[y + 1]
+                                while a < aEnd && b < bEnd {
+                                    if k.value[a] == k.value[b] && s.value[a] < e.value[b] && s.value[b] < e.value[a] {
+                                        let ra = find(Int32(a)), rb = find(Int32(b))
+                                        if ra != rb {
+                                            if ra < rb { p.value[Int(rb)] = ra } else { p.value[Int(ra)] = rb }
+                                        }
+                                    }
+                                    if e.value[a] < e.value[b] { a += 1 } else if e.value[b] < e.value[a] { b += 1 } else { a += 1; b += 1 }
+                                }
+                            }
+                            Parallel.forEachChunk(h, chunk: bandRows) { rows in
+                                for y in rows where y > rows.lowerBound { unionRows(y) }
+                            }
+                            for y in seams { unionRows(y) }
                         }
                     }
                 }
             }
         }
 
-        // 3. Number regions by first run in raster order; gather statistics. Roots always
-        // precede their runs, so one forward pass resolves every run.
+        // 3. Number regions by first run in raster order (roots, in run order); gather
+        // statistics.
+        var root = [Int32](repeating: 0, count: runs)
+        parent.withUnsafeBufferPointer { pb in
+            root.withUnsafeMutableBufferPointer { rb in
+                let p = UncheckedSendable(pb.baseAddress!), out = UncheckedSendable(rb.baseAddress!)
+                Parallel.forEachBand(runs, minimumBandSize: 8192) { range in
+                    for r in range {
+                        var x = p.value[r]
+                        while p.value[Int(x)] != x { x = p.value[Int(x)] }
+                        out.value[r] = x
+                    }
+                }
+            }
+        }
+        var id = [UInt32](repeating: 0, count: runs)
+        for r in 0..<runs where Int(root[r]) == r {
+            id[r] = UInt32(classOf.count)
+            classOf.append(runClass[r])
+        }
+        let n = classOf.count
         label = [UInt32](repeating: 0, count: runs)
-        var id = [Int32](repeating: -1, count: runs)
+        area = [Int](repeating: 0, count: n)
+        bounds = [PixelBounds](repeating: .empty, count: n)
         for y in 0..<h {
             for r in rowStart[y]..<rowStart[y + 1] {
-                var root = Int(parent[r])
-                while Int(parent[root]) != root { root = Int(parent[root]) }
-                var l = id[root]
-                if l < 0 {
-                    l = Int32(classOf.count)
-                    id[root] = l
-                    classOf.append(runClass[r])
-                    area.append(0)
-                    bounds.append(.empty)
-                }
-                label[r] = UInt32(l)
+                let l = id[Int(root[r])]
+                label[r] = l
                 let li = Int(l)
                 area[li] += Int(end[r] - start[r])
                 bounds[li].include(x: Int(start[r]), y: y)

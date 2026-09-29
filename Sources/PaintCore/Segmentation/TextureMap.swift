@@ -29,7 +29,13 @@ enum TextureMap {
             }
         }
         let radius = max(2, Int(Float(n).squareRoot() / 100))
-        let density = BoxBlur.apply(changes, width: w, height: h, radius: radius, passes: 2)
-        return density.map { min($0 * 2, 1) }
+        var density = BoxBlur.apply(changes, width: w, height: h, radius: radius, passes: 2)
+        density.withUnsafeMutableBufferPointer { buf in
+            let d = UncheckedSendable(buf.baseAddress!)
+            Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
+                for i in range { d.value[i] = min(d.value[i] * 2, 1) }
+            }
+        }
+        return density
     }
 }

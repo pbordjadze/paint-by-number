@@ -166,6 +166,7 @@ enum ThinPartRemoval {
         let radius: Int
         /// Offsets (dx, dy) of the disc.
         let offsets: [(Int, Int)]
+        let spanningTree: [(dx: Int, dy: Int, down: Bool)]
 
         init(radiusSquared: Int) {
             let r = Int(Double(max(radiusSquared, 0)).squareRoot())
@@ -175,6 +176,24 @@ enum ThinPartRemoval {
                 for dx in -r...r where dx * dx + dy * dy <= radiusSquared { list.append((dx, dy)) }
             }
             offsets = list
+            // Breadth-first spanning tree from the centre over 4-adjacent offsets; each edge
+            // is an equality with the right (or lower) neighbour at the edge's left (upper) end.
+            var tree: [(dx: Int, dy: Int, down: Bool)] = []
+            var reached: Set<Int> = [0]
+            var queue = [(0, 0)]
+            var head = 0
+            @inline(__always) func key(_ dx: Int, _ dy: Int) -> Int { (dy + r) * (2 * r + 1) + dx + r }
+            while head < queue.count {
+                let (qx, qy) = queue[head]
+                head += 1
+                for (nx, ny) in [(qx - 1, qy), (qx + 1, qy), (qx, qy - 1), (qx, qy + 1)]
+                where nx * nx + ny * ny <= radiusSquared && !reached.contains(key(nx, ny)) {
+                    reached.insert(key(nx, ny))
+                    queue.append((nx, ny))
+                    tree.append(ny == qy ? (min(nx, qx), qy, false) : (qx, min(ny, qy), true))
+                }
+            }
+            spanningTree = tree
         }
     }
 
@@ -270,34 +289,46 @@ enum ThinPartRemoval {
         let n = w * h
         let r = element.radius
         guard w > 2 * r, h > 2 * r, w > 1, h > 1 else { return Array(0..<n) }
-        let around = element.offsets.filter { $0 != (0, 0) }
+        // Equalities with the right and lower neighbour; a disc is uniform iff the edges of a
+        // spanning tree of its pixels all join equal pixels.
+        var equal = [UInt8](repeating: 0, count: 2 * n)  // right at i, down at n + i
         var anchor = [UInt8](repeating: 0, count: n)
+        let tree = element.spanningTree
         return labels.withUnsafeBufferPointer { lb in
             anchor.withUnsafeMutableBufferPointer { ab in
+                equal.withUnsafeMutableBufferPointer { eb in
                 let l = UncheckedSendable(lb.baseAddress!)
                 let a = UncheckedSendable(ab.baseAddress!)
+                let eq = UncheckedSendable(eb.baseAddress!)
                 @inline(__always) func same(_ u: UInt32, _ v: UInt32) -> UInt8 { u == v ? 1 : 0 }
                 Parallel.forEachBand(h, minimumBandSize: 16) { rows in
-                    var disc = [UInt8](repeating: 0, count: w)
-                    disc.withUnsafeMutableBufferPointer { db in
-                        let d = db.baseAddress!
-                        for y in rows {
-                            let row = l.value + y * w
-                            let out = a.value + y * w
-                            if y + 1 < h {
-                                let down = row + w
-                                for x in 0..<(w - 1) {
-                                    let v = row[x]
-                                    out[x] = (same(row[x + 1], v) & same(down[x], v) & same(down[x + 1], v)) << 1
-                                }
+                    for y in rows {
+                        let row = l.value + y * w
+                        let right = eq.value + y * w
+                        for x in 0..<(w - 1) { right[x] = same(row[x], row[x + 1]) }
+                        if y + 1 < h {
+                            let down = eq.value + n + y * w, below = row + w
+                            for x in 0..<w { down[x] = same(row[x], below[x]) }
+                        }
+                    }
+                }
+                Parallel.forEachBand(h, minimumBandSize: 16) { rows in
+                    for y in rows {
+                        let out = a.value + y * w
+                        if y + 1 < h {
+                            let right = eq.value + y * w, down = eq.value + n + y * w, nextRight = right + w
+                            for x in 0..<(w - 1) { out[x] = (right[x] & down[x] & nextRight[x]) << 1 }
+                        }
+                        guard y >= r && y < h - r else { continue }
+                        var first = true
+                        for edge in tree {
+                            let src = eq.value + (edge.down ? n : 0) + (y + edge.dy) * w + edge.dx
+                            if first {
+                                for x in r..<(w - r) { out[x] |= src[x] }
+                                first = false
+                            } else {
+                                for x in r..<(w - r) { out[x] &= src[x] | 2 }
                             }
-                            guard y >= r && y < h - r else { continue }
-                            for x in r..<(w - r) { d[x] = 1 }
-                            for (dx, dy) in around {
-                                let src = row + dy * w + dx
-                                for x in r..<(w - r) { d[x] &= same(src[x], row[x]) }
-                            }
-                            for x in r..<(w - r) { out[x] |= d[x] }
                         }
                     }
                 }
@@ -330,6 +361,7 @@ enum ThinPartRemoval {
                     }
                     return found
                 }.flatMap { $0 }
+                }
             }
         }
     }
