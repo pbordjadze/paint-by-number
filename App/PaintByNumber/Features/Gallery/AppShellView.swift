@@ -36,6 +36,8 @@ struct AppShellView: View {
                 .environment(library)
         }
         .onAppear(perform: restoreOpenArtwork)
+        // Metal setup off the main thread while the gallery shows, so the first painting opens instantly.
+        .task { RenderContext.prewarm() }
         .onChange(of: library.artworks.first?.id) { _, id in
             // Demo: open the painting as soon as it is ready.
             if ShellDemo.current == .galleryOpen, path.isEmpty, let id { path = [id] }

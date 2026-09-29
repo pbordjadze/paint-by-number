@@ -1,3 +1,4 @@
+import AVFoundation
 import CoreGraphics
 import Foundation
 import PaintCore
@@ -65,6 +66,25 @@ struct LibraryTests {
         let pixels = PixelReader(thumbnail)
         #expect(pixels[pixels.width / 6, pixels.height / 2] == SIMD3(255, 0, 0))
         #expect(makeLibrary().artwork(with: artwork.id)?.thumbnailVersion == 2)
+    }
+
+    @Test func exportsShareFiles() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(title: "Stripes: Blue/Red", painted: [2, 0, 1]))
+        #expect(artwork.isComplete)
+
+        let png = try await PaintingImageFile(store: library.store, artwork: artwork).export()
+        #expect(png.lastPathComponent == "Stripes- Blue-Red.png")
+        #expect(ImageCodec.image(at: png)?.width == ArtworkExporter.imagePixelSize)
+
+        let movie = try await TimelapseVideoFile(store: library.store, artwork: artwork).export(longSide: 320)
+        #expect(movie.pathExtension == "mp4")
+        let asset = AVURLAsset(url: movie)
+        let duration = try await asset.load(.duration)
+        #expect(duration.seconds > 2)
+        let track = try #require(try await asset.loadTracks(withMediaType: .video).first)
+        let size = try await track.load(.naturalSize)
+        #expect(size.width == 320 && size.height == 212)
     }
 
     @Test func renamesDuplicatesAndRestarts() async throws {

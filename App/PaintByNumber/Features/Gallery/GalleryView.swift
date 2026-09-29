@@ -135,6 +135,14 @@ struct GalleryView: View {
         ) {
             Label(artwork.isComplete ? "Share Painting" : "Share Progress", systemImage: "square.and.arrow.up")
         }
+        if artwork.isComplete {
+            ShareLink(
+                item: TimelapseVideoFile(store: library.store, artwork: artwork),
+                preview: SharePreview("\(artwork.title) Time-lapse", image: previewImage(artwork))
+            ) {
+                Label("Share Time-lapse", systemImage: "timelapse")
+            }
+        }
         ShareLink(
             item: PrintableTemplateFile(store: library.store, artwork: artwork, paper: paper),
             preview: SharePreview("\(artwork.title) Template", image: previewImage(artwork))

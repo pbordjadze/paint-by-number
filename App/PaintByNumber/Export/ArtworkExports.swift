@@ -40,13 +40,18 @@ nonisolated enum ArtworkExporter {
 
     /// Writes `data` to a uniquely placed temporary file named after the artwork.
     static func temporaryFile(_ data: Data, name: String, pathExtension: String) throws -> URL {
+        let url = try temporaryURL(name: name, pathExtension: pathExtension)
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
+    /// A fresh temporary location, in its own folder so the file keeps a readable name.
+    static func temporaryURL(name: String, pathExtension: String) throws -> URL {
         let dir = FileManager.default.temporaryDirectory
             .appending(path: "Exports", directoryHint: .isDirectory)
             .appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let url = dir.appending(path: "\(fileName(name)).\(pathExtension)")
-        try data.write(to: url, options: .atomic)
-        return url
+        return dir.appending(path: "\(fileName(name)).\(pathExtension)")
     }
 
     static func fileName(_ title: String) -> String {
@@ -100,5 +105,27 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     func export() async throws -> URL {
         let data = try ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper)
         return try ArtworkExporter.temporaryFile(data, name: "\(artwork.title) Template", pathExtension: "pdf")
+    }
+}
+
+/// "Share Time-lapse": the painting replayed fill by fill with the canvas shaders, as a short
+/// movie rendered when the share sheet asks for it.
+nonisolated struct TimelapseVideoFile: Transferable, Sendable {
+    let store: ArtworkStore
+    let artwork: Artwork
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .mpeg4Movie) { item in
+            SentTransferredFile(try await item.export())
+        }
+    }
+
+    @concurrent
+    func export(longSide: Int = 1080) async throws -> URL {
+        let template = try store.readTemplate(artwork.id)
+        let progress = store.readProgress(artwork.id, regionCount: template.regions.count)
+        let url = try ArtworkExporter.temporaryURL(name: "\(artwork.title) Time-lapse", pathExtension: "mp4")
+        try await TimelapseFrameRenderer.export(template: template, progress: progress, to: url, longSide: longSide)
+        return url
     }
 }
