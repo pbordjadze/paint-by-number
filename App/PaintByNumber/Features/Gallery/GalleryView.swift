@@ -43,6 +43,8 @@ struct GalleryView: View {
             }
         }
         .scrollDisabled(library.isEmpty)
+        // An empty scroll view collapses; keep the paper (and the empty state) full size.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .overlay {
             if library.isEmpty {
