@@ -30,13 +30,16 @@ struct AppShellView: View {
                 isCreating = false
             }
             .environment(library)
-            .navigationTransition(.zoom(sourceID: "create", in: zoom))
         }
         .sheet(isPresented: $isShowingSettings) {
             SettingsView()
                 .environment(library)
         }
         .onAppear(perform: restoreOpenArtwork)
+        .onChange(of: library.artworks.first?.id) { _, id in
+            // Demo: open the painting as soon as it is ready.
+            if ShellDemo.current == .galleryOpen, path.isEmpty, let id { path = [id] }
+        }
         .onChange(of: path) { _, path in openArtwork = path.last?.uuidString ?? "" }
     }
 
@@ -49,7 +52,6 @@ struct AppShellView: View {
             Button("New Painting", systemImage: "plus") { isCreating = true }
                 .buttonStyle(.glassProminent)
         }
-        .matchedTransitionSource(id: "create", in: zoom)
     }
 
     private var subtitle: String {

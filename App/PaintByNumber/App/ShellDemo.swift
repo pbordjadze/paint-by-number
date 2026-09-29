@@ -8,13 +8,15 @@ import Foundation
 /// - `create`, `create-dark`: the photo picker step of the create flow.
 /// - `create-preview`, `create-preview-dark`: a sample generated, comparison at half.
 /// - `settings`: the settings sheet over the gallery.
+/// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 enum ShellDemo: Equatable {
-    case gallery, galleryEmpty, create, createPreview, settings
+    case gallery, galleryEmpty, galleryOpen, create, createPreview, settings
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
         case "gallery", "gallery-dark": .gallery
         case "gallery-empty": .galleryEmpty
+        case "gallery-open": .galleryOpen
         case "create", "create-dark": .create
         case "create-preview", "create-preview-dark": .createPreview
         case "settings": .settings
@@ -36,6 +38,8 @@ enum ShellDemo: Equatable {
             library.seed(items.map { sample, painted, hours in
                 Library.SeedItem(sample: Sample.all[sample], painted: painted, age: hours * hour, photoMaxPixelSize: 560)
             })
+        case .galleryOpen:
+            library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createPreview, .galleryEmpty, .settings:
             break
         }
