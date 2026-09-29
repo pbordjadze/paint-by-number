@@ -27,6 +27,8 @@ struct CurveFitter {
     var alphaMax: Double
     /// …provided the polygon turns there by at least the angle with this cosine.
     var cornerCos: Double
+    /// Corners are rounded off with fillets of this size (0: sharp), canvas units.
+    var cornerRadius: Double
     /// Maximum distance between a Bézier and its flattened polyline, canvas units.
     var flattenTolerance: Double
 
@@ -48,9 +50,10 @@ struct CurveFitter {
     private var outCorner: [Bool] = [], outC0: [SIMD2<Double>] = [], outC1: [SIMD2<Double>] = []
     private var outVertex: [SIMD2<Double>] = [], outEnd: [SIMD2<Double>] = []
 
-    init(alphaMax: Double, minCornerAngle: Double, flattenTolerance: Double) {
+    init(alphaMax: Double, minCornerAngle: Double, cornerRadius: Double, flattenTolerance: Double) {
         self.alphaMax = alphaMax
         self.cornerCos = cos(minCornerAngle * Double.pi / 180)
+        self.cornerRadius = cornerRadius
         self.flattenTolerance = flattenTolerance
     }
 
@@ -709,7 +712,21 @@ struct CurveFitter {
         for s in 0..<outEnd.count {
             let end = outEnd[s]
             if outCorner[s] {
-                out.append(outVertex[s], pinned: true)
+                let v = outVertex[s]
+                let inLen = CurveFitter.dist(p0, v), outLen = CurveFitter.dist(v, end)
+                let d = min(cornerRadius, 0.9 * inLen, 0.9 * outLen)
+                if d > 0.05 {
+                    // Soften the corner with a fillet (a quadratic arc with its control
+                    // point on the corner), keeping both legs straight up to it.
+                    let a = v + (d / inLen) * (p0 - v), b = v + (d / outLen) * (end - v)
+                    let c0 = a + (2.0 / 3.0) * (v - a), c1 = b + (2.0 / 3.0) * (v - b)
+                    out.append(a, pinned: true)
+                    let steps = max(2, Int((0.75 * CurveFitter.dist(a - 2 * c0 + c1, .zero) / flattenTolerance).squareRoot().rounded(.up)))
+                    for k in 1..<steps { out.append(CurveFitter.bezier(Double(k) / Double(steps), a, c0, c1, b), pinned: false) }
+                    out.append(b, pinned: true)
+                } else {
+                    out.append(v, pinned: true)
+                }
                 out.append(end, pinned: false)
             } else {
                 let c0 = outC0[s], c1 = outC1[s]

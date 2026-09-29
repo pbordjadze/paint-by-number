@@ -1,5 +1,3 @@
-import Foundation
-
 /// Flat per-edge polylines (canonical edge orientation, closed edges repeat their first point).
 struct EdgePolylines: Sendable {
     var points: [SIMD2<Float>] = []
@@ -52,20 +50,24 @@ struct EdgeSmoother {
     let graph: BoundaryGraph
     let alphaMax: Double
     let minCornerAngle: Double
+    let cornerRadius: Double
     let tolerance: Double
     let fairingWindow: Double
     let fairingShift: Double
 
+    /// `smoothness` 0 keeps boundaries crisp and faithful (more corners, light fairing);
+    /// 0.5 uses potrace's default corner threshold; above that corners are kept but rounded
+    /// with growing fillets and curves are faired more strongly. (Raising the threshold
+    /// instead would bend long straight sides into the curves around their corners.)
     init(graph: BoundaryGraph, smoothness: Float) {
         self.graph = graph
         let s = Double(min(max(smoothness, 0), 1))
-        // potrace's default corner threshold (1.0) at the default smoothness of 0.5.
-        alphaMax = 0.6 + 0.8 * s
+        alphaMax = 0.6 + 0.8 * min(s, 0.5)
         minCornerAngle = 35 + 40 * s
+        cornerRadius = 6 * max(0, s - 0.5)
         tolerance = 0.05
-        let env = ProcessInfo.processInfo.environment
-        fairingWindow = env["PBN_W"].flatMap(Double.init) ?? (2 + 8 * s)
-        fairingShift = env["PBN_SHIFT"].flatMap(Double.init) ?? (0.3 + 0.4 * s)
+        fairingWindow = 2 + 8 * s
+        fairingShift = 0.3 + 0.4 * s
     }
 
     /// Smooths all edges and repairs invalid geometry. `repairs` counts edges that needed a
@@ -106,7 +108,7 @@ struct EdgeSmoother {
     func polylines(for list: [Int], shapes: [UInt8]) -> (points: [SIMD2<Float>], counts: [Int32]) {
         let bands = Parallel.mapBands(list.count, minimumBandSize: 32) { range -> ([SIMD2<Float>], [Int32]) in
             var worker = Worker(
-                fitter: CurveFitter(alphaMax: alphaMax, minCornerAngle: minCornerAngle, flattenTolerance: tolerance),
+                fitter: CurveFitter(alphaMax: alphaMax, minCornerAngle: minCornerAngle, cornerRadius: cornerRadius, flattenTolerance: tolerance),
                 fairing: CurveFairing(halfWindow: fairingWindow, maxShift: fairingShift, tolerance: tolerance))
             var pts: [SIMD2<Float>] = []
             var counts: [Int32] = []
