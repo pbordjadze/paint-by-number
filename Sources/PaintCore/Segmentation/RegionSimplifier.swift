@@ -3,11 +3,12 @@ import Foundation
 /// Turns a per-pixel palette labelling into paintable regions: every region is big enough
 /// to tap and to hold a number, and has no hair-thin parts.
 ///
-/// Each round (1) merges regions that are too small (importance-scaled area) or too thin
-/// (largest inscribed disc) into their best neighbour, smallest first, and (2) peels pixels
-/// that no k×k square inside their region covers (tendrils, necks, 1-px slivers along
-/// edges) and hands them to the neighbour whose color suits them best. Rounds repeat until
-/// neither step changes anything, so the guarantees hold on the returned map.
+/// Each round (1) merges regions that are too small (importance- and texture-scaled area)
+/// or too thin (largest inscribed disc) into their best neighbour, smallest first, then
+/// (2) peels pixels that no small disc inside their region covers (tendrils, necks, 1-px
+/// slivers, pixel corners; see `ThinPartRemoval`). The first round also smooths outlines
+/// (`BoundarySmoothing`). Rounds repeat until nothing changes, so the size and radius
+/// guarantees hold on the returned map.
 enum RegionSimplifier {
 
     static func simplify(
@@ -19,31 +20,25 @@ enum RegionSimplifier {
         parameters p: SegmentationParameters,
         cancel: CancellationCheck
     ) throws -> Components {
-        var cleanupRounds = 5
         // Pixel specks and hairlines dissolve far more cheaply at pixel level than as
         // thousands of one-pixel regions in the merge queue.
-        let tp = ContinuousClock.now
-        let pre = ThinPartRemoval.apply(
+        _ = ThinPartRemoval.apply(
             classes: &classes, width: w, height: h,
             colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
         var cc = components(classes, w, h)
-        if Tune.debug { debugLog("initial regions \(cc.count) prepeel \(pre) in \(ContinuousClock.now - tp)") }
+        var cleanupRounds = 5
         var round = 0
         while true {
             try cancel.throwIfCancelled()
-            // The first round only has specks to deal with; inscribed radii matter once the
-            // map is reasonably clean, and they are expensive to measure.
-            let t0 = ContinuousClock.now
+            // The first round only has specks to deal with; inscribed discs matter once the
+            // map is reasonably clean.
             let wide = round > 0 ? hasInscribedDisc(cc, radius: p.minRadius) : nil
-            let t1 = ContinuousClock.now
             let merged = mergeRound(
                 cc, wide: wide, classes: &classes, colors: colors.storage, areaScale: areaScale,
                 palette: palette, parameters: p)
-            let t2 = ContinuousClock.now
             if merged > 0 { cc = components(classes, w, h) }
-            let t3 = ContinuousClock.now
             var smoothed = 0
-            if round < 2 && p.boundaryPasses > 0 {
+            if round == 0 && p.boundaryPasses > 0 {
                 smoothed = BoundarySmoothing.apply(
                     classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
                     radius: p.boundaryRadius, passes: p.boundaryPasses, fidelity: p.boundaryFidelity)
@@ -56,8 +51,6 @@ enum RegionSimplifier {
                     colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 4)
                 if peeled > 0 { cc = components(classes, w, h) }
             }
-            let t4 = ContinuousClock.now
-            if Tune.debug { debugLog("round \(round): merged \(merged) peeled \(peeled) regions \(cc.count)  edt \(t1 - t0) merge \(t2 - t1) cc \(t3 - t2) peel+cc \(t4 - t3)") }
             if merged == 0 && peeled == 0 && smoothed == 0 && wide != nil { return cc }
             // Late peels only nudge single pixels at junctions; stop cleaning once that is all
             // that happens and let the remaining rounds settle sizes.
@@ -248,7 +241,7 @@ enum RegionSimplifier {
             area[root] = area[r] + area[target]
             sums[root] = sums[r] + sums[target]
             cls[root] = cls[target]
-            thin[root] = false  // verified by the next round's distance transform
+            thin[root] = false  // re-checked by the next round's inscribed-disc test
             if root == target {
                 adjacency[root].append(contentsOf: compacted)
             } else {

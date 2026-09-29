@@ -99,6 +99,15 @@ enum LabelRegularizer {
     ) {
         let i = y * w + x
         let current = labels[i]
+        // Interior pixels (all 8 neighbours agree) cannot change; most pixels are interior.
+        if x > 0 && y > 0 && x + 1 < w && y + 1 < h {
+            let up = i - w, down = i + w
+            if labels[up - 1] == current && labels[up] == current && labels[up + 1] == current
+                && labels[i - 1] == current && labels[i + 1] == current
+                && labels[down - 1] == current && labels[down] == current && labels[down + 1] == current {
+                return
+            }
+        }
         let c = colors[i]
         var count = 0
         var differs = false

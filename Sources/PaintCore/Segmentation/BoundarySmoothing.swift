@@ -51,8 +51,8 @@ enum BoundarySmoothing {
                                 let m = ob.count
                                 return Parallel.mapBands(h, minimumBandSize: 8) { rows -> Int in
                                     var count = 0
-                                    var labels = [UInt32](repeating: 0, count: 16)
-                                    var votes = [Float](repeating: 0, count: 16)
+                                    var labels = SIMD16<UInt32>(repeating: 0)
+                                    var votes = SIMD16<Float>(repeating: 0)
                                     for y in rows {
                                         for x in 0..<w {
                                             let i = y * w + x
@@ -68,7 +68,7 @@ enum BoundarySmoothing {
                                                 var slot = 0
                                                 while slot < k && labels[slot] != l { slot += 1 }
                                                 if slot == k {
-                                                    if k == labels.count { continue }
+                                                    if k == 16 { continue }
                                                     labels[k] = l
                                                     votes[k] = 0
                                                     k += 1

@@ -9,7 +9,6 @@ import Foundation
 enum DomainTransformFilter {
 
     /// - Parameters:
-    ///   - guide: Image whose edges stop the smoothing (usually `input` or a denoised copy).
     ///   - sigmaSpatial: Spatial standard deviation in pixels.
     ///   - sigmaRange: Range standard deviation in OKLab units.
     ///   - edgeScale: Optional per-pixel factors (0...1) on the horizontal and vertical
@@ -18,7 +17,6 @@ enum DomainTransformFilter {
     ///     shrinks the effective spatial sigma (used to keep detail in important areas).
     static func filter(
         _ input: Grid<SIMD4<Float>>,
-        guide: Grid<SIMD4<Float>>,
         sigmaSpatial: Float,
         sigmaRange: Float,
         iterations: Int,
@@ -34,7 +32,7 @@ enum DomainTransformFilter {
         // left/upper neighbour the step comes from).
         var dH = [Float](repeating: 1, count: n)
         var dV = [Float](repeating: 1, count: n)
-        guide.storage.withUnsafeBufferPointer { g in
+        input.storage.withUnsafeBufferPointer { g in
             dH.withUnsafeMutableBufferPointer { dh in
                 dV.withUnsafeMutableBufferPointer { dv in
                     let gp = UncheckedSendable(g.baseAddress!)

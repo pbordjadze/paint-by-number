@@ -2,15 +2,20 @@ import Foundation
 
 /// Photo → region label map + palette.
 ///
-/// Pipeline (all color math in OKLab):
-/// 1. Composite over white and convert to OKLab; resample the importance map.
-/// 2. Edge-preserving smoothing (domain transform) flattens texture into painterly patches.
-/// 3. Palette: weighted k-means++ over a compressed color histogram, with near-duplicates
-///    merged and the palette refilled with distinct colors.
+/// Pipeline (color math in OKLab with slightly stretched chroma):
+/// 1. Composite over white; tell structure from texture (relative total variation); take
+///    the importance map (Vision) or estimate one (center bias + coherent structure).
+/// 2. Structure-aware edge-preserving smoothing (domain transform): texture flattens into
+///    painterly patches, contours stay sharp, important areas keep more detail.
+/// 3. Palette: importance- and saliency-weighted histogram, k-means++ kept apart by the
+///    minimum paint distance, penalized swap search with restarts (small distinct colors
+///    such as an iris survive).
 /// 4. Pixel labelling: nearest paint, regularized by a contrast-sensitive Potts prior.
-/// 5. Regions: connected components, then merge undersized/thin regions and peel hair-thin
-///    parts until every region is tappable and can hold a number.
-/// 6. Refit paints to the pixels they cover, merge near-duplicates, order the palette.
+/// 5. Regions: merge undersized/thin regions (importance- and texture-scaled), smooth
+///    outlines, peel hair-thin parts, until every region is tappable and holds a number;
+///    then merge similar neighbours inside busy texture.
+/// 6. Refit paints to the regions they cover, recolor regions, keep paints distinct and
+///    order the palette like a kit.
 public enum Segmenter {
     public static func segment(
         _ image: RGBAImage,
@@ -31,7 +36,6 @@ public enum Segmenter {
         let lab = clock.measure("segment.oklab") { WorkingImage.okLab(image, chromaScale: p.chromaScale) }
         let structure = clock.measure("segment.structure") { StructureMap(lab, radius: p.structureRadius) }
         let weights = clock.measure("segment.importance") { ImportanceMap.make(importance, structure: structure) }
-        DebugDump.scalar(weights, width: w, height: h, name: "importance")
         try cancel.throwIfCancelled()
         progress(0.05)
 
@@ -40,18 +44,16 @@ public enum Segmenter {
                 ? structure.edgeScales(importance: weights, strength: p.textureFlattening, exponent: p.structureExponent)
                 : nil
             return try DomainTransformFilter.filter(
-                lab, guide: lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
+                lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
                 iterations: p.smoothIterations, edgeScale: edgeScale,
                 stiffness: weights.map { 1 + p.importanceSharpening * $0 }, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         progress(0.25)
-        DebugDump.lab(smooth, name: "smooth", chromaScale: p.chromaScale)
 
         let palette = try clock.measure("segment.palette") {
             try PaletteBuilder.build(colors: smooth, importance: weights, parameters: p, cancel: cancel)
         }
-        if Tune.debug { debugLog("palette built: \(palette.count)") }
         try cancel.throwIfCancelled()
         progress(0.35)
 
@@ -64,11 +66,9 @@ public enum Segmenter {
         }
         try cancel.throwIfCancelled()
         progress(0.5)
-        DebugDump.classes(classes, width: w, height: h, palette: palette, name: "assigned", chromaScale: p.chromaScale)
 
         let labelling = classes
         let texture = clock.measure("segment.texture") { TextureMap.boundaryDensity(labelling, width: w, height: h) }
-        DebugDump.scalar(texture, width: w, height: h, name: "texture")
         let areaScale = zip(weights, texture).map { p.areaScale(importance: $0, texture: $1) }
         let simplified = try clock.measure("segment.regions") {
             try RegionSimplifier.simplify(
@@ -86,8 +86,9 @@ public enum Segmenter {
 
         let finalPalette = clock.measure("segment.refine") {
             PaletteRefiner.refine(
-                classes: &classes, width: w, height: h, lab: lab.storage, importance: weights, labelling: labelling, palette: palette,
-                minDistance: p.minPaletteDistance, chromaScale: p.chromaScale, iterations: p.refineIterations)
+                classes: &classes, width: w, height: h, lab: lab.storage, importance: weights,
+                labelling: labelling, palette: palette, minDistance: p.minPaletteDistance,
+                chromaScale: p.chromaScale, iterations: p.refineIterations)
         }
         let components = clock.measure("segment.finalize") {
             RunComponents.label(classes, width: w, height: h)

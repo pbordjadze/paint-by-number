@@ -203,11 +203,6 @@ enum ThinPartRemoval {
         return total
     }
 
-    /// 1 where both a disc and a 2×2 block of equal labels contain the pixel, else 0.
-    static func coverage(labels: [UInt32], width w: Int, height h: Int, radiusSquared: Int) -> [UInt8] {
-        coverage(labels: labels, width: w, height: h, element: StructuringElement(radiusSquared: radiusSquared))
-    }
-
     /// Coverage by the disc and by a 2×2 square: the disc alone would accept 1-px bumps
     /// (a bump pixel is the arm of a cross), the square alone keeps pixel-square corners.
     /// Anchor bits: 1 = disc centred here is uniform, 2 = 2×2 block with this top-left

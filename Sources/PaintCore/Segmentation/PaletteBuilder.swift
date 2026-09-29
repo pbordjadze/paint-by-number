@@ -2,10 +2,12 @@ import Foundation
 
 /// Chooses the paint colors: weighted k-means++ in OKLab over a color histogram.
 ///
-/// Clustering histogram bins instead of pixels makes k-means cheap enough for several
-/// refinement passes, and compressing bin weights with a power < 1 stops large flat areas
-/// (sky, backdrop) from absorbing most clusters while small, distinctive colors (eyes, a
-/// red flower, lips) vanish.
+/// Clustering histogram bins instead of pixels makes k-means cheap enough for restarts and
+/// a swap-based local search. Three things keep small, distinctive colors (an iris, a red
+/// flower, lips) from vanishing into shades of a large backdrop: bin weights are compressed
+/// with a power < 1, samples that stand out from their surroundings weigh more, and the
+/// search penalizes large errors more than quadratically. Paints are kept at least the
+/// minimum distance apart throughout, so the palette keeps its size instead of collapsing.
 enum PaletteBuilder {
 
     struct Samples {
@@ -108,7 +110,8 @@ enum PaletteBuilder {
     ) -> (color: SIMD3<Float>, gain: Float)? {
         let m = s.colors.count
         var order = Array(0..<m)
-        order.sort { s.weights[$0] * d1[$0] > s.weights[$1] * d1[$1] || (s.weights[$0] * d1[$0] == s.weights[$1] * d1[$1] && $0 < $1) }
+        let contribution = (0..<m).map { s.weights[$0] * d1[$0] }
+        order.sort { contribution[$0] > contribution[$1] || (contribution[$0] == contribution[$1] && $0 < $1) }
         var candidates: [Int] = []
         for i in order where candidates.count < 48 {
             if centers.allSatisfy({ separation.isDistinct(s.colors[i], $0) }) { candidates.append(i) }
@@ -146,14 +149,12 @@ enum PaletteBuilder {
             for i in 0..<s.colors.count { loss[Int(index[i])] += s.weights[i] * (d2[i] - d1[i]) }
             var victim = 0
             for j in 1..<centers.count where loss[j] < loss[victim] { victim = j }
-            if Tune.debug { debugLog("swap: gain \(addition.gain) loss \(loss[victim]) cost \(cost) add \(addition.color) victim \(centers[victim])") }
             // Cheap estimate first; confirm with a real k-means run.
             guard addition.gain > loss[victim] * 1.05 else { break }
             var trial = centers
             trial[victim] = addition.color
             trial = lloyd(s, centers: trial, iterations: 15, separation: separation)
             let trialCost = totalCost(s, centers: trial)
-            if Tune.debug { debugLog("  trial cost \(trialCost)") }
             guard trialCost < cost * 0.995 else { break }
             centers = trial
             cost = trialCost
