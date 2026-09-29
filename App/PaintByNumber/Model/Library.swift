@@ -41,7 +41,8 @@ final class Library {
 
     /// The library used by the running app: the real one, or a throwaway one for demos.
     static func forLaunch() -> Library {
-        if DemoMode.isActive {
+        let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if DemoMode.isActive || isTestHost {
             let root = FileManager.default.temporaryDirectory.appending(path: "DemoLibrary", directoryHint: .isDirectory)
             try? FileManager.default.removeItem(at: root)
             let library = Library(store: ArtworkStore(root: root))
@@ -87,13 +88,14 @@ final class Library {
 
     /// First launch: prepares a couple of ready-to-paint samples in the background (shown
     /// as placeholders meanwhile), so the gallery is never empty on day one.
-    func seedIfNeeded(_ samples: [Sample] = Sample.starters, defaults: UserDefaults = .standard) {
-        guard !defaults.bool(forKey: Self.seededKey) else { return }
+    @discardableResult
+    func seedIfNeeded(_ samples: [Sample] = Sample.starters, defaults: UserDefaults = .standard) -> Task<Void, Never>? {
+        guard !defaults.bool(forKey: Self.seededKey) else { return nil }
         guard artworks.isEmpty else {
             defaults.set(true, forKey: Self.seededKey)
-            return
+            return nil
         }
-        seed(samples.map { SeedItem(sample: $0) }) {
+        return seed(samples.map { SeedItem(sample: $0) }) {
             defaults.set(true, forKey: Self.seededKey)
         }
     }
@@ -108,10 +110,11 @@ final class Library {
 
     /// Generates artworks from bundled samples, one after another, showing placeholders
     /// until each is ready.
-    func seed(_ items: [SeedItem], completion: (() -> Void)? = nil) {
+    @discardableResult
+    func seed(_ items: [SeedItem], completion: (() -> Void)? = nil) -> Task<Void, Never> {
         let now = Date.now
         placeholders = items.map { Placeholder(sample: $0.sample) }
-        Task {
+        return Task {
             for (index, item) in items.enumerated() {
                 // Earlier items sort first when ages tie.
                 let date = now.addingTimeInterval(-item.age - Double(index))
