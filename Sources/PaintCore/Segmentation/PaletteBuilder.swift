@@ -197,7 +197,7 @@ enum PaletteBuilder {
             }
         }
         let radius = max(1, Int(Float(n).squareRoot() / 80 / Float(step)))
-        let surround = ImportanceMap.boxBlur(grid, width: gx, height: gy, radius: radius, passes: 2)
+        let surround = BoxBlur.apply(grid, width: gx, height: gy, radius: radius, passes: 2)
 
         let levels = 64
         let abScale = Float(levels) / (0.8 * chromaScale)

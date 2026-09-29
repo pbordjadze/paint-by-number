@@ -29,16 +29,20 @@ public enum Segmenter {
         let p = SegmentationParameters(settings: settings, width: w, height: h)
 
         let lab = clock.measure("segment.oklab") { WorkingImage.okLab(image, chromaScale: p.chromaScale) }
-        let weights = clock.measure("segment.importance") { ImportanceMap.make(importance, lab: lab) }
+        let structure = clock.measure("segment.structure") { StructureMap(lab, radius: p.structureRadius) }
+        let weights = clock.measure("segment.importance") { ImportanceMap.make(importance, structure: structure) }
         DebugDump.scalar(weights, width: w, height: h, name: "importance")
         try cancel.throwIfCancelled()
         progress(0.05)
 
-        let smooth = try clock.measure("segment.smooth") {
-            try DomainTransformFilter.filter(
+        let smooth = try clock.measure("segment.smooth") { () throws -> Grid<SIMD4<Float>> in
+            let edgeScale = p.textureFlattening > 0
+                ? structure.edgeScales(importance: weights, strength: p.textureFlattening, exponent: p.structureExponent)
+                : nil
+            return try DomainTransformFilter.filter(
                 lab, guide: lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
-                iterations: p.smoothIterations, stiffness: weights.map { 1 + p.importanceSharpening * $0 },
-                cancel: cancel)
+                iterations: p.smoothIterations, edgeScale: edgeScale,
+                stiffness: weights.map { 1 + p.importanceSharpening * $0 }, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         progress(0.25)
@@ -63,15 +67,19 @@ public enum Segmenter {
         DebugDump.classes(classes, width: w, height: h, palette: palette, name: "assigned", chromaScale: p.chromaScale)
 
         let labelling = classes
-        let areaScale = clock.measure("segment.texture") { () -> [Float] in
-            let texture = TextureMap.boundaryDensity(labelling, width: w, height: h)
-            DebugDump.scalar(texture, width: w, height: h, name: "texture")
-            return zip(weights, texture).map { p.areaScale(importance: $0, texture: $1) }
-        }
-        _ = try clock.measure("segment.regions") {
+        let texture = clock.measure("segment.texture") { TextureMap.boundaryDensity(labelling, width: w, height: h) }
+        DebugDump.scalar(texture, width: w, height: h, name: "texture")
+        let areaScale = zip(weights, texture).map { p.areaScale(importance: $0, texture: $1) }
+        let simplified = try clock.measure("segment.regions") {
             try RegionSimplifier.simplify(
                 classes: &classes, width: w, height: h, colors: smooth, areaScale: areaScale,
                 palette: palette, parameters: p, cancel: cancel)
+        }
+        clock.measure("segment.consolidate") {
+            _ = TextureConsolidation.apply(
+                classes: &classes, components: simplified, texture: texture, importance: weights,
+                palette: palette, metric: SIMD3(1, 1 / p.chromaScale, 1 / p.chromaScale),
+                tolerance: p.consolidationTolerance)
         }
         try cancel.throwIfCancelled()
         progress(0.85)

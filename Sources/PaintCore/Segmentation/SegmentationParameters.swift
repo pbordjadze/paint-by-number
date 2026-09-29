@@ -14,6 +14,10 @@ struct SegmentationParameters: Sendable {
     var smoothSpatial: Float
     var smoothRange: Float
     var smoothIterations: Int
+    /// How much texture (as opposed to structure, see `StructureMap`) is smoothed across.
+    var textureFlattening: Float
+    var structureRadius: Int
+    var structureExponent: Float
 
     /// Exponent applied to palette histogram bin weights (< 1 lets small, distinct colors
     /// compete with large flat areas).
@@ -42,6 +46,9 @@ struct SegmentationParameters: Sendable {
     var importanceSharpening: Float
     /// Minimum-area growth in textured, unimportant areas (see `areaScale`).
     var textureStrength: Float
+    /// Paint difference (OKLab) up to which neighbours merge in fully textured, unimportant
+    /// areas (scaled down by texture density and importance).
+    var consolidationTolerance: Float
     /// Merge target preference for long shared borders (OKLab-distance equivalent).
     var mergeShareWeight: Float
     /// Region-level k-means passes when refitting the palette.
@@ -60,6 +67,9 @@ struct SegmentationParameters: Sendable {
         smoothSpatial = side * Tune.f("SS", 0.008) * lerp(1.4, 0.7, d) * lerp(0.7, 1.3, sm)
         smoothRange = Tune.f("SR", 0.06) * lerp(0.7, 1.4, sm)
         smoothIterations = 3
+        textureFlattening = Tune.f("FLAT", 1) * lerp(0.6, 1, sm)
+        structureExponent = Tune.f("RPOW", 3)
+        structureRadius = max(1, Int((side * Tune.f("SRAD", 0.0025)).rounded()))
 
         histogramGamma = Tune.f("GAMMA", 0.6)
         minPaletteDistance = Tune.f("MINPAL", 0.04)
@@ -78,6 +88,7 @@ struct SegmentationParameters: Sendable {
         importanceStrength = Tune.f("IMPS", 3)
         mergeShareWeight = Tune.f("SHARE", 0.04)
         textureStrength = Tune.f("TEX", 4)
+        consolidationTolerance = Tune.f("CONS", 0.1) * lerp(1.4, 0.7, d)
         importanceSharpening = Tune.f("ISHARP", 1)
         refineIterations = Int(Tune.f("REFINE", 3))
     }

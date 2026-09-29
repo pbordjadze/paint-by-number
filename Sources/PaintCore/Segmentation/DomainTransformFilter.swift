@@ -12,6 +12,8 @@ enum DomainTransformFilter {
     ///   - guide: Image whose edges stop the smoothing (usually `input` or a denoised copy).
     ///   - sigmaSpatial: Spatial standard deviation in pixels.
     ///   - sigmaRange: Range standard deviation in OKLab units.
+    ///   - edgeScale: Optional per-pixel factors (0...1) on the horizontal and vertical
+    ///     gradient terms; below 1 the filter smooths across that gradient more freely.
     ///   - stiffness: Optional per-pixel factor (≥ 1) stretching the domain there, which
     ///     shrinks the effective spatial sigma (used to keep detail in important areas).
     static func filter(
@@ -20,6 +22,7 @@ enum DomainTransformFilter {
         sigmaSpatial: Float,
         sigmaRange: Float,
         iterations: Int,
+        edgeScale: (horizontal: [Float], vertical: [Float])? = nil,
         stiffness: [Float]? = nil,
         cancel: CancellationCheck
     ) throws -> Grid<SIMD4<Float>> {
@@ -50,6 +53,20 @@ enum DomainTransformFilter {
                                 for x in 0..<w {
                                     let d = gp.value[row + x] - gp.value[row + x - w]
                                     vp.value[row + x] = 1 + ratio * (d * d).sum().squareRoot()
+                                }
+                            }
+                        }
+                    }
+                    if let edgeScale {
+                        edgeScale.horizontal.withUnsafeBufferPointer { eh in
+                            edgeScale.vertical.withUnsafeBufferPointer { ev in
+                                let ehp = UncheckedSendable(eh.baseAddress!)
+                                let evp = UncheckedSendable(ev.baseAddress!)
+                                Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
+                                    for i in range {
+                                        hp.value[i] = 1 + (hp.value[i] - 1) * ehp.value[i]
+                                        vp.value[i] = 1 + (vp.value[i] - 1) * evp.value[i]
+                                    }
                                 }
                             }
                         }
