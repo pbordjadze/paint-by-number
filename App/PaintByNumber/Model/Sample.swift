@@ -43,7 +43,7 @@ nonisolated enum ArtworkFactory {
         if let paintedFraction {
             var painted = self.progress(painting: paintedFraction, of: template)
             // Plausible painting time for a demo in progress.
-            painted.activeSeconds = Double(painted.paintedCount) * 1.3
+            painted.activeSeconds = Double(painted.paintedCount) * 3
             progress = painted
         }
         return ArtworkDraft(
