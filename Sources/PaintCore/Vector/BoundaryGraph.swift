@@ -164,78 +164,94 @@ extension BoundaryGraph {
 
     private mutating func trace(_ lat: LabelLattice, cancel: CancellationCheck) throws {
         let w = width, h = height
-        var hVisited = [Bool](repeating: false, count: w * (h + 1))
-        var vVisited = [Bool](repeating: false, count: (w + 1) * h)
-        var chain: [UInt8] = []
-        chain.reserveCapacity(1024)
 
-        @inline(__always) func visit(_ cx: Int, _ cy: Int, _ d: UInt8) -> Bool {
-            // Marks the segment and reports whether it was already visited.
-            switch d {
-            case 0:
-                let i = cy * w + cx
-                defer { hVisited[i] = true }
-                return hVisited[i]
-            case 2:
-                let i = cy * w + cx - 1
-                defer { hVisited[i] = true }
-                return hVisited[i]
-            case 1:
-                let i = cy * (w + 1) + cx
-                defer { vVisited[i] = true }
-                return vVisited[i]
-            default:
-                let i = (cy - 1) * (w + 1) + cx
-                defer { vVisited[i] = true }
-                return vVisited[i]
-            }
+        // Open chains. A serial trace from every junction in raster order (skipping visited
+        // segments) records each chain from whichever of its two ends comes first in
+        // (junction, direction) order. Tracing needs no state, so every end is traced in
+        // parallel and a chain is kept only from that first end.
+        struct Chain {
+            var start: SIMD2<Int32>, end: SIMD2<Int32>
+            var stepStart: Int, stepCount: Int
+            var area2: Int64
+            var left: UInt32, right: UInt32
         }
-
-        @inline(__always) func isVisited(_ cx: Int, _ cy: Int, _ d: UInt8) -> Bool {
-            switch d {
-            case 0: return hVisited[cy * w + cx]
-            case 2: return hVisited[cy * w + cx - 1]
-            case 1: return vVisited[cy * (w + 1) + cx]
-            default: return vVisited[(cy - 1) * (w + 1) + cx]
-            }
-        }
-
-        // Open chains, started from every junction in raster order.
-        for j in 0..<junctions.count {
-            if j % 4096 == 4095 { try cancel.throwIfCancelled() }
-            let sx = Int(junctions[j]) % (w + 1), sy = Int(junctions[j]) / (w + 1)
-            let m = lat.mask(sx, sy)
-            for d0 in 0..<UInt8(4) where m & (1 << d0) != 0 && !isVisited(sx, sy, d0) {
-                chain.removeAll(keepingCapacity: true)
-                var cx = sx, cy = sy, d = d0
-                var area2: Int64 = 0
-                while true {
-                    _ = visit(cx, cy, d)
-                    chain.append(d)
-                    let nx = cx + BoundaryGraph.dx[Int(d)], ny = cy + BoundaryGraph.dy[Int(d)]
-                    area2 += Int64(cx * ny - nx * cy)
-                    cx = nx; cy = ny
-                    let cm = lat.mask(cx, cy)
-                    if cm.nonzeroBitCount >= 3 { break }
-                    d = UInt8((cm & ~(1 << ((d + 2) & 3))).trailingZeroBitCount)
+        let graph = self
+        let bands = Parallel.mapBands(junctions.count, minimumBandSize: 256) { range -> (chains: [Chain], steps: [UInt8]) in
+            var chains: [Chain] = []
+            var steps: [UInt8] = []
+            for j in range {
+                let sx = Int(graph.junctions[j]) % (w + 1), sy = Int(graph.junctions[j]) / (w + 1)
+                let m = lat.mask(sx, sy)
+                for d0 in 0..<UInt8(4) where m & (1 << d0) != 0 {
+                    let first = steps.count
+                    var cx = sx, cy = sy, d = d0
+                    var area2: Int64 = 0
+                    while true {
+                        steps.append(d)
+                        let nx = cx + BoundaryGraph.dx[Int(d)], ny = cy + BoundaryGraph.dy[Int(d)]
+                        area2 += Int64(cx * ny - nx * cy)
+                        cx = nx; cy = ny
+                        let cm = lat.mask(cx, cy)
+                        if cm.nonzeroBitCount >= 3 { break }
+                        d = UInt8((cm & ~(1 << ((d + 2) & 3))).trailingZeroBitCount)
+                    }
+                    let endJunction = graph.junctionIndex(x: cx, y: cy)!
+                    let back = (d + 2) & 3
+                    if endJunction < j || (endJunction == j && back < d0) {
+                        steps.removeLast(steps.count - first)
+                        continue
+                    }
+                    chains.append(Chain(
+                        start: SIMD2(Int32(sx), Int32(sy)), end: SIMD2(Int32(cx), Int32(cy)),
+                        stepStart: first, stepCount: steps.count - first, area2: area2,
+                        left: lat.left(sx, sy, d0), right: lat.right(sx, sy, d0)))
                 }
-                let l = lat.left(sx, sy, d0), r = lat.right(sx, sy, d0)
-                appendEdge(
-                    chain: chain, start: SIMD2(Int32(sx), Int32(sy)), end: SIMD2(Int32(cx), Int32(cy)),
-                    left: l, right: r, area2: area2, closed: false)
+            }
+            return (chains, steps)
+        }
+        try cancel.throwIfCancelled()
+        // Horizontal segments covered by open chains; the rest form junction-free cycles.
+        var hVisited = [Bool](repeating: false, count: w * (h + 1))
+        for band in bands {
+            band.steps.withUnsafeBufferPointer { stepBuffer in
+                for c in band.chains {
+                    appendEdge(
+                        chain: UnsafeBufferPointer(rebasing: stepBuffer[c.stepStart..<(c.stepStart + c.stepCount)]),
+                        start: c.start, end: c.end, left: c.left, right: c.right, area2: c.area2, closed: false)
+                    var x = Int(c.start.x), y = Int(c.start.y)
+                    for k in c.stepStart..<(c.stepStart + c.stepCount) {
+                        let d = stepBuffer[k]
+                        if d == 0 { hVisited[y * w + x] = true } else if d == 2 { hVisited[y * w + x - 1] = true }
+                        x += BoundaryGraph.dx[Int(d)]
+                        y += BoundaryGraph.dy[Int(d)]
+                    }
+                }
             }
         }
 
         // Junction-free cycles. Scanning horizontal segments in raster order finds each
         // cycle at the top-left corner of its topmost row, a canonical, deterministic start.
+        var chain: [UInt8] = []
+        chain.reserveCapacity(1024)
+        var open = [UInt8](repeating: 0, count: w)
         for cy in 0...h {
             if cy % 256 == 255 { try cancel.throwIfCancelled() }
-            for cx in 0..<w where !hVisited[cy * w + cx] && lat.at(cx, cy - 1) != lat.at(cx, cy) {
+            // Unvisited horizontal boundary segments of this lattice row (byte-wise).
+            if cy == 0 || cy == h {
+                for cx in 0..<w { open[cx] = hVisited[cy * w + cx] ? 0 : 1 }
+            } else {
+                let up = lat.labels.baseAddress! + (cy - 1) * w, down = up + w
+                hVisited.withUnsafeBufferPointer { vb in
+                    let visited = vb.baseAddress! + cy * w
+                    for cx in 0..<w { open[cx] = (up[cx] != down[cx] ? 1 : 0) & (visited[cx] ? 0 : 1) }
+                }
+            }
+            for cx in 0..<w where open[cx] != 0 && !hVisited[cy * w + cx] {
                 chain.removeAll(keepingCapacity: true)
                 var x = cx, y = cy, d: UInt8 = 0
                 var area2: Int64 = 0
                 while true {
-                    _ = visit(x, y, d)
+                    if d == 0 { hVisited[y * w + x] = true } else if d == 2 { hVisited[y * w + x - 1] = true }
                     chain.append(d)
                     let nx = x + BoundaryGraph.dx[Int(d)], ny = y + BoundaryGraph.dy[Int(d)]
                     area2 += Int64(x * ny - nx * y)
@@ -245,9 +261,11 @@ extension BoundaryGraph {
                     d = UInt8((cm & ~(1 << ((d + 2) & 3))).trailingZeroBitCount)
                 }
                 let p = SIMD2(Int32(cx), Int32(cy))
-                appendEdge(
-                    chain: chain, start: p, end: p,
-                    left: lat.left(cx, cy, 0), right: lat.right(cx, cy, 0), area2: area2, closed: true)
+                chain.withUnsafeBufferPointer { steps in
+                    appendEdge(
+                        chain: steps, start: p, end: p,
+                        left: lat.left(cx, cy, 0), right: lat.right(cx, cy, 0), area2: area2, closed: true)
+                }
             }
         }
     }
@@ -255,7 +273,7 @@ extension BoundaryGraph {
     /// Appends a traced chain in canonical orientation (`left < right`) and registers its
     /// ends in the junction slots.
     private mutating func appendEdge(
-        chain: [UInt8], start: SIMD2<Int32>, end: SIMD2<Int32>,
+        chain: UnsafeBufferPointer<UInt8>, start: SIMD2<Int32>, end: SIMD2<Int32>,
         left: UInt32, right: UInt32, area2: Int64, closed: Bool
     ) {
         let e = Int32(edgeLeft.count)
