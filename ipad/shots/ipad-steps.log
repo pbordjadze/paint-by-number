@@ -1,0 +1,33 @@
+8:20:30:45 ipad: captured gallery-open — WARNING: app not running (crashed or failed to launch; see crashes/)
+12:20:33:22 ipad: captured create-preview — WARNING: app not running (crashed or failed to launch; see crashes/)
+24:20:35:24 ipad: captured paint-complete — WARNING: app not running (crashed or failed to launch; see crashes/)
+28:20:35:58 ipad: captured settings — WARNING: app not running (crashed or failed to launch; see crashes/)
+----- tail -----
+20:26:40 ipad: booted
+20:27:43 ipad: installed
+20:27:50 ipad: launch gallery: com.pbordjadze.paintbynumber: 13643 
+20:28:38 ipad: captured gallery
+20:28:45 ipad: launch gallery-dark: com.pbordjadze.paintbynumber: 14861 
+20:29:34 ipad: captured gallery-dark
+20:30:00 ipad: launch gallery-open: com.pbordjadze.paintbynumber: 17421 
+20:30:45 ipad: captured gallery-open — WARNING: app not running (crashed or failed to launch; see crashes/)
+20:30:47 ipad: launch create: com.pbordjadze.paintbynumber: 20515 
+20:31:09 ipad: captured create
+20:32:30 ipad: launch create-preview: com.pbordjadze.paintbynumber: 21834 
+20:33:22 ipad: captured create-preview — WARNING: app not running (crashed or failed to launch; see crashes/)
+20:33:27 ipad: launch paint: com.pbordjadze.paintbynumber: 23946 
+20:33:55 ipad: captured paint
+20:33:58 ipad: launch paint-progress: com.pbordjadze.paintbynumber: 24987 
+20:34:12 ipad: captured paint-progress
+20:34:15 ipad: launch paint-zoom: com.pbordjadze.paintbynumber: 25426 
+20:34:29 ipad: captured paint-zoom
+20:34:32 ipad: launch paint-fill: com.pbordjadze.paintbynumber: 26213 
+20:34:48 ipad: captured paint-fill
+20:34:51 ipad: launch paint-hint: com.pbordjadze.paintbynumber: 26915 
+20:35:06 ipad: captured paint-hint
+20:35:09 ipad: launch paint-complete: com.pbordjadze.paintbynumber: 28062 
+20:35:24 ipad: captured paint-complete — WARNING: app not running (crashed or failed to launch; see crashes/)
+20:35:31 ipad: launch paint-dark: com.pbordjadze.paintbynumber: 28891 
+20:35:45 ipad: captured paint-dark
+20:35:49 ipad: launch settings: com.pbordjadze.paintbynumber: 29649 
+20:35:58 ipad: captured settings — WARNING: app not running (crashed or failed to launch; see crashes/)

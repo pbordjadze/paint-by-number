@@ -1,0 +1,17 @@
+1:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+4:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+7:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+10:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+----- tail -----
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+                     ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+                     ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+                     ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+                     ^

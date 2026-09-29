@@ -1,0 +1,32 @@
+12:20:32:38 iphone: captured create-preview — WARNING: app not running (crashed or failed to launch; see crashes/)
+22:20:34:27 iphone: captured paint-hint — WARNING: app not running (crashed or failed to launch; see crashes/)
+28:20:35:14 iphone: captured settings — WARNING: app not running (crashed or failed to launch; see crashes/)
+----- tail -----
+20:27:14 iphone: booted
+20:27:35 iphone: installed
+20:28:34 iphone: launch gallery: com.pbordjadze.paintbynumber: 15197 
+20:29:34 iphone: captured gallery
+20:29:39 iphone: launch gallery-dark: com.pbordjadze.paintbynumber: 17419 
+20:30:30 iphone: captured gallery-dark
+20:30:34 iphone: launch gallery-open: com.pbordjadze.paintbynumber: 19976 
+20:31:17 iphone: captured gallery-open
+20:31:22 iphone: launch create: com.pbordjadze.paintbynumber: 21870 
+20:31:35 iphone: captured create
+20:31:38 iphone: launch create-preview: com.pbordjadze.paintbynumber: 22541 
+20:32:38 iphone: captured create-preview — WARNING: app not running (crashed or failed to launch; see crashes/)
+20:32:49 iphone: launch paint: com.pbordjadze.paintbynumber: 25106 
+20:33:13 iphone: captured paint
+20:33:18 iphone: launch paint-progress: com.pbordjadze.paintbynumber: 25740 
+20:33:34 iphone: captured paint-progress
+20:33:37 iphone: launch paint-zoom: com.pbordjadze.paintbynumber: 26211 
+20:33:51 iphone: captured paint-zoom
+20:33:54 iphone: launch paint-fill: com.pbordjadze.paintbynumber: 27154 
+20:34:09 iphone: captured paint-fill
+20:34:12 iphone: launch paint-hint: com.pbordjadze.paintbynumber: 27993 
+20:34:27 iphone: captured paint-hint — WARNING: app not running (crashed or failed to launch; see crashes/)
+20:34:30 iphone: launch paint-complete: com.pbordjadze.paintbynumber: 28762 
+20:34:44 iphone: captured paint-complete
+20:34:48 iphone: launch paint-dark: com.pbordjadze.paintbynumber: 29539 
+20:35:01 iphone: captured paint-dark
+20:35:05 iphone: launch settings: com.pbordjadze.paintbynumber: 30567 
+20:35:14 iphone: captured settings — WARNING: app not running (crashed or failed to launch; see crashes/)
