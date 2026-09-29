@@ -36,6 +36,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency: app types are
   MainActor by default; mark pure/background helpers `nonisolated` and CPU-heavy async work
   `@concurrent`. PaintCore is a separate module (nonisolated).
+- `MemberImportVisibility` is enabled: every file that touches members of a type from another
+  module must import that module itself (`import PaintCore`, `import simd`, …).
+- Closures handed to system APIs that call back on arbitrary threads (AVFoundation, Core Haptics,
+  Metal completion handlers, NotificationCenter with a queue) must not be MainActor-isolated —
+  form them in `nonisolated` code or they trap at runtime under Swift 6.
 - Liquid Glass design language (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)`,
   `.glassProminent`), SF Symbols, Dynamic Type, dark mode, VoiceOver labels.
 - Key model types: `PaintingSession` (@Observable; painting rules, tap tolerance, drag-paint, undo,
