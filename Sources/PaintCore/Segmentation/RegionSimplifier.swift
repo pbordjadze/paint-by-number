@@ -72,6 +72,7 @@ enum RegionSimplifier {
                         radius: p.boundaryRadius, passes: p.boundaryPasses, fidelity: p.boundaryFidelity)
                 }
             }
+            try cancel.throwIfCancelled()
             var peeled = 0
             if round < cleanupRounds {
                 peeled = clock.measure("segment.regions.thin") {

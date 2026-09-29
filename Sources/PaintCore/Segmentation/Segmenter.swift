@@ -34,7 +34,11 @@ public enum Segmenter {
         let p = SegmentationParameters(settings: settings, width: w, height: h)
 
         let lab = clock.measure("segment.oklab") { WorkingImage.okLab(image, chromaScale: p.chromaScale) }
-        let structure = clock.measure("segment.structure") { StructureMap(lab, radius: p.structureRadius) }
+        try cancel.throwIfCancelled()
+        let structure = try clock.measure("segment.structure") {
+            try StructureMap(lab, radius: p.structureRadius, cancel: cancel)
+        }
+        try cancel.throwIfCancelled()
         let weights = clock.measure("segment.importance") { ImportanceMap.make(importance, structure: structure) }
         try cancel.throwIfCancelled()
         progress(0.05)
@@ -46,7 +50,8 @@ public enum Segmenter {
             return try DomainTransformFilter.filter(
                 lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
                 iterations: p.smoothIterations, edgeScale: edgeScale,
-                stiffness: weights.map { 1 + p.importanceSharpening * $0 }, cancel: cancel)
+                stiffness: Grid(width: w, height: h, storage: weights).map { 1 + p.importanceSharpening * $0 }.storage,
+                cancel: cancel)
         }
         try cancel.throwIfCancelled()
         progress(0.25)
@@ -83,6 +88,7 @@ public enum Segmenter {
             }
             return (texture, scale)
         }
+        try cancel.throwIfCancelled()
         var (regions, adjacency) = try clock.measure("segment.regions") {
             try RegionSimplifier.simplify(
                 classes: &classes, width: w, height: h, colors: smooth, areaScale: areaScale,

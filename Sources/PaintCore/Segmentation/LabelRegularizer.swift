@@ -83,8 +83,8 @@ enum LabelRegularizer {
         var changedAt = [Int16](repeating: -1, count: w * h)
         var rowChangedAt = [Int16](repeating: -1, count: h)
         for sweep in 0..<iterations {
-            try cancel.throwIfCancelled()
             for phase in 0..<4 {
+                try cancel.throwIfCancelled()
                 let px = phase & 1, py = phase >> 1
                 let rowCount = (h - py + 1) / 2
                 let step = Int16(sweep * 4 + phase)

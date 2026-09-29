@@ -141,6 +141,7 @@ enum DomainTransformFilter {
                 }
             }
 
+            try cancel.throwIfCancelled()
             computeWeights(dV, logA: logA, into: &weights)
             out.withUnsafeMutableBufferPointer { o in
                 weights.withUnsafeBufferPointer { wt in

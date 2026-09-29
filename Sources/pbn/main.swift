@@ -176,27 +176,37 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
 final class CancellationProbe: @unchecked Sendable {
     private let lock = NSLock()
     private let clock = ContinuousClock()
+    private let start: ContinuousClock.Instant
     private var last: ContinuousClock.Instant
-    private var worst: Duration = .zero
+    private var worst: (gap: Duration, end: Duration) = (.zero, .zero)
 
-    init() { last = clock.now }
+    init() {
+        start = clock.now
+        last = start
+    }
 
+    /// Only checks on the calling thread count: on pool threads `Task.isCancelled` is false.
     var check: CancellationCheck {
         CancellationCheck { [self] in
+            guard Thread.isMainThread else { return false }
             let now = clock.now
             lock.withLock {
-                worst = max(worst, now - last)
+                if now - last > worst.gap { worst = (now - last, now - start) }
                 last = now
             }
             return false
         }
     }
 
-    /// Worst gap in seconds, including the stretch from the last check to now.
-    func finish() -> Double {
+    /// Worst gap and the time it ended (since the start), in milliseconds, including the
+    /// stretch from the last check to now.
+    func finish() -> (gap: Double, end: Double) {
         _ = check.isCancelled
-        let d = lock.withLock { worst }
-        return Double(d.components.seconds) + Double(d.components.attoseconds) * 1e-18
+        let w = lock.withLock { worst }
+        @inline(__always) func ms(_ d: Duration) -> Double {
+            Double(d.components.seconds) * 1000 + Double(d.components.attoseconds) * 1e-15
+        }
+        return (ms(w.gap), ms(w.end))
     }
 }
 
@@ -309,13 +319,14 @@ case "bench":
         var totals: [String: [Double]] = [:]
         var order: [String] = []
         var regionCount = 0
-        var worstGap = 0.0
+        var worstGap = (gap: 0.0, end: 0.0)
         for _ in 0..<options.runs {
             let probe = CancellationProbe()
             let out: TemplateGenerator.Output
             do { out = try generator.generate(from: image, cancel: probe.check) } catch { fail("\(error)") }
             regionCount = out.template.regions.count
-            worstGap = max(worstGap, probe.finish())
+            let gap = probe.finish()
+            if gap.gap > worstGap.gap { worstGap = gap }
             var perRun: [String: Double] = ["total": out.totalSeconds * 1000]
             for t in out.timings {
                 if totals[t.name] == nil && perRun[t.name] == nil { order.append(t.name) }
@@ -323,7 +334,8 @@ case "bench":
             }
             for (k, v) in perRun { totals[k, default: []].append(v) }
         }
-        print("\(path) — \(regionCount) regions, longest stretch without a cancellation check \(String(format: "%.1f", worstGap * 1000)) ms")
+        print("\(path) — \(regionCount) regions, longest stretch without a cancellation check "
+            + String(format: "%.1f ms (ending %.0f ms into the run)", worstGap.gap, worstGap.end))
         for name in order + ["total"] {
             let v = totals[name]!.sorted()
             print(String(format: "  %-28@ median %8.1f ms   min %8.1f ms", name as NSString, v[v.count / 2], v[0]))

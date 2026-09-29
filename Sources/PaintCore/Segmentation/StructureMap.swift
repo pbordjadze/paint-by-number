@@ -17,13 +17,13 @@ struct StructureMap {
     let vertical: [SIMD4<Float>]
 
     /// - Parameter radius: Window radius (box, applied twice) in pixels.
-    init(_ lab: Grid<SIMD4<Float>>, radius: Int) {
+    init(_ lab: Grid<SIMD4<Float>>, radius: Int, cancel: CancellationCheck = .none) throws {
         precondition(radius > 0 && lab.count > 0)
         let w = lab.width, h = lab.height
         width = w
         height = h
         // Steps are produced row by row inside the blur's first pass.
-        (horizontal, vertical) = lab.storage.withUnsafeBufferPointer { src in
+        (horizontal, vertical) = try lab.storage.withUnsafeBufferPointer { src in
             let s = UncheckedSendable(src.baseAddress!)
             @inline(__always) func step(_ a: SIMD4<Float>, _ b: SIMD4<Float>) -> SIMD4<Float> {
                 var d = a - b
@@ -36,6 +36,7 @@ struct StructureMap {
                 row[0] = .zero
                 for x in 1..<w { row[x] = step(line[x], line[x - 1]) }
             }
+            try cancel.throwIfCancelled()
             let vertical = BoxBlur.blur(width: w, height: h, radius: radius, passes: 2) { (y: Int, row: UnsafeMutablePointer<SIMD4<Float>>) in
                 let line = s.value + y * w
                 if y == 0 {
