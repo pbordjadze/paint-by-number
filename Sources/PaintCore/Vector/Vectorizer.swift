@@ -40,6 +40,9 @@ public enum Vectorizer {
             EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run(repairs: &repairs)
         }
         let edges = geometry.boundaryEdges(graph)
+        if ProcessInfo.processInfo.environment["PBN_DEBUG"] != nil {
+            FileHandle.standardError.write(Data("repairs \(repairs) of \(graph.edgeCount) edges\n".utf8))
+        }
         try cancel.throwIfCancelled()
 
         let distance = clock.measure("vectorize.edt") { DistanceTransform.interiorDistance(labels: map) }

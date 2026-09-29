@@ -1,3 +1,5 @@
+import Foundation
+
 /// Flat per-edge polylines (canonical edge orientation, closed edges repeat their first point).
 struct EdgePolylines: Sendable {
     var points: [SIMD2<Float>] = []
@@ -35,34 +37,42 @@ struct EdgePolylines: Sendable {
 /// Turns lattice chains into smooth shared boundary polylines and guarantees the result
 /// is a valid planar subdivision.
 ///
-/// Interior edges are curve-fitted (`CurveFitter`); border edges stay exactly on the
-/// canvas border. Coordinates are snapped to `Template.coordinateQuantum` so every later
-/// geometric predicate is exact. Fitted curves of very thin features may cross their
-/// neighbours; the repair loop detects any crossing, touching or change of edge order
-/// around a junction and falls back, for just the offending edges, to the midpoint
-/// polyline (stair corners cut at the lattice segment midpoints) and finally to the raw
-/// lattice chain. Those two are provably free of crossings among themselves, so the loop
-/// always terminates with valid geometry.
+/// Interior edges are curve-fitted (`CurveFitter`) and faired (`CurveFairing`); border
+/// edges stay exactly on the canvas border. Coordinates are snapped to
+/// `Template.coordinateQuantum` so every later geometric predicate is exact. Curves of
+/// very thin features may cross their neighbours; the repair loop detects any crossing,
+/// touching or change of edge order around a junction and steps just the offending edges
+/// down to the unfaired fit, then the midpoint polyline (stair corners cut at the lattice
+/// segment midpoints), then the raw lattice chain. The last two are provably free of
+/// crossings among themselves, so the loop always terminates with valid geometry.
 struct EdgeSmoother {
-    enum Shape: UInt8 { case fitted = 0, midpoints = 1, lattice = 2 }
+    /// Edge shapes in order of preference; the repair loop moves offending edges down.
+    enum Shape: UInt8 { case faired = 0, fitted = 1, midpoints = 2, lattice = 3 }
 
     let graph: BoundaryGraph
     let alphaMax: Double
+    let minCornerAngle: Double
     let tolerance: Double
+    let fairingWindow: Double
+    let fairingShift: Double
 
     init(graph: BoundaryGraph, smoothness: Float) {
         self.graph = graph
         let s = Double(min(max(smoothness, 0), 1))
         // potrace's default corner threshold (1.0) at the default smoothness of 0.5.
         alphaMax = 0.6 + 0.8 * s
-        tolerance = 0.06
+        minCornerAngle = 35 + 40 * s
+        tolerance = 0.05
+        let env = ProcessInfo.processInfo.environment
+        fairingWindow = env["PBN_W"].flatMap(Double.init) ?? (2 + 8 * s)
+        fairingShift = env["PBN_SHIFT"].flatMap(Double.init) ?? (0.3 + 0.4 * s)
     }
 
     /// Smooths all edges and repairs invalid geometry. `repairs` counts edges that needed a
     /// fallback shape (a quality metric).
     func run(repairs: inout Int) -> EdgePolylines {
         let edgeCount = graph.edgeCount
-        var shapes = [UInt8](repeating: Shape.fitted.rawValue, count: edgeCount)
+        var shapes = [UInt8](repeating: Shape.faired.rawValue, count: edgeCount)
         let all = Array(0..<edgeCount)
         let first = polylines(for: all, shapes: shapes)
         var geo = EdgePolylines(points: first.points, start: [], count: first.counts)
@@ -78,9 +88,9 @@ struct EdgeSmoother {
             if fix.isEmpty { break }
             round += 1
             for e in fix {
-                if shapes[e] == Shape.fitted.rawValue { repairs += 1 }
+                if shapes[e] == Shape.faired.rawValue { repairs += 1 }
                 // Escalate straight to the lattice if repairs keep failing (never expected).
-                shapes[e] = round > 3 ? Shape.lattice.rawValue : shapes[e] + 1
+                shapes[e] = round > 4 ? Shape.lattice.rawValue : shapes[e] + 1
             }
             let redo = polylines(for: fix, shapes: shapes)
             geo.replace(fix, points: redo.points, counts: redo.counts)
@@ -92,16 +102,16 @@ struct EdgeSmoother {
 
     func polylines(for list: [Int], shapes: [UInt8]) -> (points: [SIMD2<Float>], counts: [Int32]) {
         let bands = Parallel.mapBands(list.count, minimumBandSize: 32) { range -> ([SIMD2<Float>], [Int32]) in
-            var fitter = CurveFitter(alphaMax: alphaMax, flattenTolerance: tolerance)
-            var lattice: [SIMD2<Int32>] = []
-            var scratch: [SIMD2<Double>] = []
+            var worker = Worker(
+                fitter: CurveFitter(alphaMax: alphaMax, minCornerAngle: minCornerAngle, flattenTolerance: tolerance),
+                fairing: CurveFairing(halfWindow: fairingWindow, maxShift: fairingShift, tolerance: tolerance))
             var pts: [SIMD2<Float>] = []
             var counts: [Int32] = []
             counts.reserveCapacity(range.count)
             for k in range {
                 let e = list[k]
                 let before = pts.count
-                emit(e, shape: Shape(rawValue: shapes[e]) ?? .lattice, fitter: &fitter, lattice: &lattice, scratch: &scratch, into: &pts)
+                emit(e, shape: Shape(rawValue: shapes[e]) ?? .lattice, worker: &worker, into: &pts)
                 counts.append(Int32(pts.count - before))
             }
             return (pts, counts)
@@ -117,42 +127,48 @@ struct EdgeSmoother {
         return (points, counts)
     }
 
-    private func emit(
-        _ e: Int, shape: Shape, fitter: inout CurveFitter, lattice: inout [SIMD2<Int32>],
-        scratch: inout [SIMD2<Double>], into out: inout [SIMD2<Float>]
-    ) {
-        graph.latticePoints(e, into: &lattice)
+    /// Per-thread scratch state.
+    private struct Worker {
+        var fitter: CurveFitter
+        var fairing: CurveFairing
+        var lattice: [SIMD2<Int32>] = []
+        var dense = DenseCurve()
+        var scratch: [SIMD2<Double>] = []
+    }
+
+    private func emit(_ e: Int, shape requested: Shape, worker w: inout Worker, into out: inout [SIMD2<Float>]) {
+        graph.latticePoints(e, into: &w.lattice)
+        let lattice = w.lattice
         let closed = graph.edgeClosed[e]
-        scratch.removeAll(keepingCapacity: true)
-        var shape = shape
+        w.scratch.removeAll(keepingCapacity: true)
+        var shape = requested
         if graph.edgeRight[e] == BoundaryEdge.outside { shape = .lattice }
-        if shape == .fitted {
-            let ok = closed ? fitter.fitClosed(lattice, into: &scratch) : fitter.fitOpen(lattice, into: &scratch)
-            if !ok {
-                scratch.removeAll(keepingCapacity: true)
-                shape = .midpoints
-            }
+        if shape == .faired || shape == .fitted {
+            let ok = closed ? w.fitter.fitClosed(lattice, into: &w.dense) : w.fitter.fitOpen(lattice, into: &w.dense)
+            if !ok { shape = .midpoints }
         }
         switch shape {
+        case .faired:
+            w.fairing.fair(w.dense, closed: closed, into: &w.scratch)
         case .fitted:
-            break
+            w.scratch.append(contentsOf: w.dense.points)
         case .midpoints:
             let n = lattice.count - 1
             @inline(__always) func mid(_ k: Int) -> SIMD2<Double> {
                 SIMD2(Double(lattice[k].x + lattice[k + 1].x) * 0.5, Double(lattice[k].y + lattice[k + 1].y) * 0.5)
             }
             if closed {
-                for k in 0..<n { scratch.append(mid(k)) }
-                scratch.append(scratch[0])
+                for k in 0..<n { w.scratch.append(mid(k)) }
+                w.scratch.append(w.scratch[0])
             } else {
-                scratch.append(SIMD2(Double(lattice[0].x), Double(lattice[0].y)))
-                for k in 0..<n { scratch.append(mid(k)) }
-                scratch.append(SIMD2(Double(lattice[n].x), Double(lattice[n].y)))
+                w.scratch.append(SIMD2(Double(lattice[0].x), Double(lattice[0].y)))
+                for k in 0..<n { w.scratch.append(mid(k)) }
+                w.scratch.append(SIMD2(Double(lattice[n].x), Double(lattice[n].y)))
             }
         case .lattice:
-            for p in lattice { scratch.append(SIMD2(Double(p.x), Double(p.y))) }
+            for p in lattice { w.scratch.append(SIMD2(Double(p.x), Double(p.y))) }
         }
-        EdgeSmoother.appendQuantized(scratch, closed: closed, into: &out)
+        EdgeSmoother.appendQuantized(w.scratch, closed: closed, into: &out)
     }
 
     /// Snaps to the coordinate grid, drops repeated points and exactly collinear interior

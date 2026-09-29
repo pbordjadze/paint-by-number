@@ -10,7 +10,11 @@ import Foundation
 /// 3. move each polygon vertex to the point within its lattice square that best fits
 ///    the two adjacent segments' least-squares lines,
 /// 4. turn each vertex into either a sharp corner (when it sticks out far relative to its
-///    neighbours, `alphaMax`) or a cubic Bézier through the adjacent edge midpoints.
+///    neighbours, `alphaMax`) or a cubic Bézier through the adjacent edge midpoints,
+/// 5. join runs of Béziers into fewer, longer ones where that stays within tolerance,
+///    which evens out curvature,
+///
+/// and flatten the result into a polyline.
 ///
 /// Digitized straight lines of any slope come out perfectly straight, circles come out
 /// round and genuine corners stay crisp. Unlike potrace, open chains are supported: their
@@ -19,8 +23,10 @@ import Foundation
 ///
 /// Holds scratch buffers; create one per worker and reuse it across chains.
 struct CurveFitter {
-    /// Vertices whose `alpha` reaches this become corners (potrace default: 1).
+    /// Vertices whose `alpha` reaches this become corners (potrace default: 1)…
     var alphaMax: Double
+    /// …provided the polygon turns there by at least the angle with this cosine.
+    var cornerCos: Double
     /// Maximum distance between a Bézier and its flattened polyline, canvas units.
     var flattenTolerance: Double
 
@@ -32,9 +38,19 @@ struct CurveFitter {
     private var po: [Int] = []
     private var vx: [Double] = [], vy: [Double] = []
     private var quads: [Quad] = []
+    // Curve segments: segment j runs from the end of segment j − 1 to `segEnd[j]`, either
+    // as a corner (straight to `segVertex[j]`, then to the end) or as a cubic Bézier.
+    private var segCorner: [Bool] = [], segVertex: [SIMD2<Double>] = [], segAlpha: [Double] = []
+    private var segC0: [SIMD2<Double>] = [], segC1: [SIMD2<Double>] = [], segEnd: [SIMD2<Double>] = []
+    private var convexity: [Int] = [], areaPrefix: [Double] = []
+    private var optPrev: [Int] = [], optLen: [Int] = [], optPen: [Double] = []
+    private var optC0: [SIMD2<Double>] = [], optC1: [SIMD2<Double>] = []
+    private var outCorner: [Bool] = [], outC0: [SIMD2<Double>] = [], outC1: [SIMD2<Double>] = []
+    private var outVertex: [SIMD2<Double>] = [], outEnd: [SIMD2<Double>] = []
 
-    init(alphaMax: Double, flattenTolerance: Double) {
+    init(alphaMax: Double, minCornerAngle: Double, flattenTolerance: Double) {
         self.alphaMax = alphaMax
+        self.cornerCos = cos(minCornerAngle * Double.pi / 180)
         self.flattenTolerance = flattenTolerance
     }
 
@@ -61,9 +77,10 @@ struct CurveFitter {
     // MARK: - Entry points
 
     /// Fits an open chain of lattice points (`points.count >= 2`, unit steps). The output
-    /// starts and ends exactly at the chain's end points. Returns false when the fit
-    /// degenerates (the caller then uses a simpler fallback).
-    mutating func fitOpen(_ points: [SIMD2<Int32>], into out: inout [SIMD2<Double>]) -> Bool {
+    /// starts and ends exactly at the chain's end points, which are pinned. Returns false
+    /// when the fit degenerates (the caller then uses a simpler fallback).
+    mutating func fitOpen(_ points: [SIMD2<Int32>], into out: inout DenseCurve) -> Bool {
+        out.removeAll()
         let n = points.count - 1
         load(points, count: n + 1)
         let first = SIMD2(Double(points[0].x), Double(points[0].y))
@@ -72,23 +89,23 @@ struct CurveFitter {
         let m = bestPolygonOpen(n)
         if m == 1 {
             if first == last { return false }
-            out.append(first); out.append(last)
+            out.append(first, pinned: true); out.append(last, pinned: true)
             return true
         }
         if first == last && m < 3 { return false }
         adjustVerticesOpen(n, m)
-        // Curve: straight from the start to the first edge midpoint, one piece per interior
-        // vertex, straight from the last edge midpoint to the end.
-        out.append(first)
-        out.append(mid(0, 1))
-        for j in 1..<m { emitVertex(i: j - 1, j: j, k: j + 1, into: &out) }
-        out.append(last)
+        buildSegments(vertexCount: m + 1, open: true)
+        optimizeCurve(open: true)
+        out.append(first, pinned: true)
+        out.append(segEnd[0], pinned: false)
+        flattenOutput(from: segEnd[0], into: &out)
         return true
     }
 
     /// Fits a closed chain (`points` ends with a repeat of its first point, at least four
-    /// unit steps). The output repeats its first point at the end.
-    mutating func fitClosed(_ points: [SIMD2<Int32>], into out: inout [SIMD2<Double>]) -> Bool {
+    /// unit steps). The output repeats its first point at the end; corners are pinned.
+    mutating func fitClosed(_ points: [SIMD2<Int32>], into out: inout DenseCurve) -> Bool {
+        out.removeAll()
         let n = points.count - 1
         load(points, count: n)
         var m = 0
@@ -103,11 +120,12 @@ struct CurveFitter {
             m = turnPolygon(n)
             if m < 3 { return false }
         }
-        let start = out.count
-        out.append(mid(m - 1, 0))
-        for j in 0..<m { emitVertex(i: (j + m - 1) % m, j: j, k: (j + 1) % m, into: &out) }
-        out[out.count - 1] = out[start]
-        return true
+        buildSegments(vertexCount: m, open: false)
+        optimizeCurve(open: false)
+        out.append(segEnd[0], pinned: false)
+        flattenOutput(from: segEnd[0], into: &out)
+        out.points[out.points.count - 1] = out.points[0]
+        return out.points.count >= 4
     }
 
     // MARK: - Setup
@@ -465,37 +483,263 @@ struct CurveFitter {
     // MARK: - Stage 4: corners and Béziers
 
     @inline(__always) private func vertex(_ i: Int) -> SIMD2<Double> { SIMD2(vx[i], vy[i]) }
-    @inline(__always) private func mid(_ a: Int, _ b: Int) -> SIMD2<Double> { (vertex(a) + vertex(b)) * 0.5 }
 
-    /// Emits the curve piece around vertex j, from mid(i, j) (already emitted) to mid(j, k).
-    private func emitVertex(i: Int, j: Int, k: Int, into out: inout [SIMD2<Double>]) {
-        let vi = vertex(i), vj = vertex(j), vk = vertex(k)
-        let end = (vj + vk) * 0.5
-        let dxk = vk.x - vi.x, dyk = vk.y - vi.y
-        let denom = abs(dxk) + abs(dyk)
-        var alpha: Double
-        if denom != 0 {
-            let dd = abs((vj.x - vi.x) * dyk - dxk * (vj.y - vi.y)) / denom
-            alpha = dd > 1 ? (1 - 1 / dd) / 0.75 : 0
-        } else {
-            alpha = 4.0 / 3.0
+    /// One curve segment per polygon vertex (potrace `smooth`): a corner when the vertex
+    /// sticks out far from the chord of its neighbours, else a Bézier from the midpoint of
+    /// the incoming polygon edge to the midpoint of the outgoing one. The end vertices of
+    /// open chains are pinned corners.
+    private mutating func buildSegments(vertexCount m: Int, open: Bool) {
+        segCorner.removeAll(keepingCapacity: true); segVertex.removeAll(keepingCapacity: true)
+        segAlpha.removeAll(keepingCapacity: true); segC0.removeAll(keepingCapacity: true)
+        segC1.removeAll(keepingCapacity: true); segEnd.removeAll(keepingCapacity: true)
+        func append(_ corner: Bool, _ v: SIMD2<Double>, _ alpha: Double, _ c0: SIMD2<Double>, _ c1: SIMD2<Double>, _ end: SIMD2<Double>) {
+            segCorner.append(corner); segVertex.append(v); segAlpha.append(alpha)
+            segC0.append(c0); segC1.append(c1); segEnd.append(end)
         }
-        if alpha >= alphaMax {
-            out.append(vj)
-            out.append(end)
+        for j in 0..<m {
+            let vj = vertex(j)
+            if open && (j == 0 || j == m - 1) {
+                append(true, vj, 4.0 / 3.0, vj, vj, j == 0 ? (vj + vertex(1)) * 0.5 : vj)
+                continue
+            }
+            let vi = vertex((j + m - 1) % m), vk = vertex((j + 1) % m)
+            let end = (vj + vk) * 0.5
+            let dk = vk - vi
+            let denom = abs(dk.x) + abs(dk.y)
+            var alpha = 4.0 / 3.0
+            if denom != 0 {
+                let dd = abs((vj.x - vi.x) * dk.y - dk.x * (vj.y - vi.y)) / denom
+                alpha = dd > 1 ? (1 - 1 / dd) / 0.75 : 0
+            }
+            // potrace's alpha alone flags a vertex once it sticks out ~4 px from the chord of
+            // its neighbours, which also happens along smooth arcs of any radius (their
+            // polygon edges grow with the radius); a corner must also turn sharply.
+            let din = vj - vi, dout = vk - vj
+            let turnCos = (din * dout).sum() / max(1e-12, ((din * din).sum() * (dout * dout).sum()).squareRoot())
+            if alpha >= alphaMax && turnCos <= cornerCos {
+                append(true, vj, alpha, vj, vj, end)
+            } else {
+                alpha = min(max(alpha, 0.55), 1)
+                append(false, vj, alpha, vi + (0.5 + 0.5 * alpha) * (vj - vi), vk + (0.5 + 0.5 * alpha) * (vj - vk), end)
+            }
+        }
+    }
+
+    private static let optTolerance = 0.2
+    private static let cos179 = cos(179.0 * Double.pi / 180)
+
+    @inline(__always) private static func dpara(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>) -> Double {
+        (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y)
+    }
+    @inline(__always) private static func cprod(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>, _ p3: SIMD2<Double>) -> Double {
+        (p1.x - p0.x) * (p3.y - p2.y) - (p3.x - p2.x) * (p1.y - p0.y)
+    }
+    @inline(__always) private static func iprod(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>) -> Double {
+        (p1.x - p0.x) * (p2.x - p0.x) + (p1.y - p0.y) * (p2.y - p0.y)
+    }
+    @inline(__always) private static func iprod1(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>, _ p3: SIMD2<Double>) -> Double {
+        (p1.x - p0.x) * (p3.x - p2.x) + (p1.y - p0.y) * (p3.y - p2.y)
+    }
+    @inline(__always) private static func dist(_ a: SIMD2<Double>, _ b: SIMD2<Double>) -> Double {
+        let d = a - b
+        return (d * d).sum().squareRoot()
+    }
+    @inline(__always) private static func bezier(_ t: Double, _ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>, _ p3: SIMD2<Double>) -> SIMD2<Double> {
+        let s = 1 - t
+        return (s * s * s) * p0 + (3 * s * s * t) * p1 + (3 * s * t * t) * p2 + (t * t * t) * p3
+    }
+
+    /// Parameter in [0, 1] where the convex Bézier is tangent to q0→q1, or −1.
+    private static func tangent(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>, _ p3: SIMD2<Double>, _ q0: SIMD2<Double>, _ q1: SIMD2<Double>) -> Double {
+        let aa = cprod(p0, p1, q0, q1), bb = cprod(p1, p2, q0, q1), cc = cprod(p2, p3, q0, q1)
+        let a = aa - 2 * bb + cc, b = -2 * aa + 2 * bb, c = aa
+        let d = b * b - 4 * a * c
+        if a == 0 || d < 0 { return -1 }
+        let s = d.squareRoot()
+        let r1 = (-b + s) / (2 * a), r2 = (-b - s) / (2 * a)
+        if r1 >= 0 && r1 <= 1 { return r1 }
+        if r2 >= 0 && r2 <= 1 { return r2 }
+        return -1
+    }
+
+    /// Whether segments i+1 … j (indices modulo the segment count for closed curves) can be
+    /// replaced by one Bézier from the end of segment i to the end of segment j — same
+    /// convexity, no corner, less than 179° of total turn, within `optTolerance` of the
+    /// polygon edges and keeping the enclosed area (potrace `opti_penalty`).
+    private func optiPenalty(_ i: Int, _ j: Int, open: Bool) -> (pen: Double, c0: SIMD2<Double>, c1: SIMD2<Double>)? {
+        let m = segEnd.count
+        if i == j { return nil }
+        @inline(__always) func md(_ a: Int) -> Int { open ? a : a % m }
+        let v = segVertex
+        let i1 = md(i + 1)
+        let conv = convexity[i1]
+        if conv == 0 { return nil }
+        let d = CurveFitter.dist(v[i], v[i1])
+        var k = i1
+        while k != j {
+            let k1 = md(k + 1)
+            if convexity[k1] != conv { return nil }
+            let k2 = md(k + 2)
+            let turn = CurveFitter.cprod(v[i], v[i1], v[k1], v[k2])
+            if (turn > 0 ? 1 : (turn < 0 ? -1 : 0)) != conv { return nil }
+            if CurveFitter.iprod1(v[i], v[i1], v[k1], v[k2]) < d * CurveFitter.dist(v[k1], v[k2]) * CurveFitter.cos179 { return nil }
+            k = k1
+        }
+
+        let p0 = segEnd[i], p1 = v[i1], p2 = v[j], p3 = segEnd[j]
+        var area = areaPrefix[j] - areaPrefix[i] - CurveFitter.dpara(v[0], segEnd[i], segEnd[j]) / 2
+        if i >= j { area += areaPrefix[m] }
+        let a1 = CurveFitter.dpara(p0, p1, p2), a2 = CurveFitter.dpara(p0, p1, p3), a3 = CurveFitter.dpara(p0, p2, p3)
+        let a4 = a1 + a3 - a2
+        if a2 == a1 { return nil }
+        let t = a3 / (a3 - a4), s = a2 / (a2 - a1)
+        let triangle = a2 * t / 2
+        if triangle == 0 { return nil }
+        let alpha = 2 - (4 - area / triangle / 0.3).squareRoot()
+        guard alpha.isFinite else { return nil }
+        let c0 = p0 + (t * alpha) * (p1 - p0), c1 = p3 + (s * alpha) * (p2 - p3)
+
+        var pen = 0.0
+        k = i1
+        while k != j {
+            let k1 = md(k + 1)
+            let tt = CurveFitter.tangent(p0, c0, c1, p3, v[k], v[k1])
+            if tt < -0.5 { return nil }
+            let pt = CurveFitter.bezier(tt, p0, c0, c1, p3)
+            let dd = CurveFitter.dist(v[k], v[k1])
+            if dd == 0 { return nil }
+            let d1 = CurveFitter.dpara(v[k], v[k1], pt) / dd
+            if abs(d1) > CurveFitter.optTolerance { return nil }
+            if CurveFitter.iprod(v[k], v[k1], pt) < 0 || CurveFitter.iprod(v[k1], v[k], pt) < 0 { return nil }
+            pen += d1 * d1
+            k = k1
+        }
+        k = i
+        while k != j {
+            let k1 = md(k + 1)
+            let tt = CurveFitter.tangent(p0, c0, c1, p3, segEnd[k], segEnd[k1])
+            if tt < -0.5 { return nil }
+            let pt = CurveFitter.bezier(tt, p0, c0, c1, p3)
+            let dd = CurveFitter.dist(segEnd[k], segEnd[k1])
+            if dd == 0 { return nil }
+            var d1 = CurveFitter.dpara(segEnd[k], segEnd[k1], pt) / dd
+            var d2 = CurveFitter.dpara(segEnd[k], segEnd[k1], v[k1]) / dd * 0.75 * segAlpha[k1]
+            if d2 < 0 { d1 = -d1; d2 = -d2 }
+            if d1 < d2 - CurveFitter.optTolerance { return nil }
+            if d1 < d2 { pen += (d1 - d2) * (d1 - d2) }
+            k = k1
+        }
+        return (pen, c0, c1)
+    }
+
+    /// Joins runs of Bézier segments into fewer, longer ones (potrace `opticurve`): the
+    /// fewest segments, then the least penalty. This evens out curvature — circles become
+    /// round instead of rounded polygons. Results land in `out*`, covering segments 1…
+    /// (segment 0 stays as is: the start stub of open chains, the start point of loops).
+    private mutating func optimizeCurve(open: Bool) {
+        let m = segEnd.count
+        convexity.removeAll(keepingCapacity: true)
+        for i in 0..<m {
+            if segCorner[i] {
+                convexity.append(0)
+            } else {
+                let turn = CurveFitter.dpara(segVertex[(i + m - 1) % m], segVertex[i], segVertex[(i + 1) % m])
+                convexity.append(turn > 0 ? 1 : (turn < 0 ? -1 : 0))
+            }
+        }
+        areaPrefix.removeAll(keepingCapacity: true)
+        areaPrefix.append(0)
+        var area = 0.0
+        let p0 = segVertex[0]
+        for i in 0..<(open ? m - 1 : m) {
+            let i1 = (i + 1) % m
+            if !segCorner[i1] {
+                let alpha = segAlpha[i1]
+                area += 0.3 * alpha * (4 - alpha) * CurveFitter.dpara(segEnd[i], segVertex[i1], segEnd[i1]) / 2
+                area += CurveFitter.dpara(p0, segEnd[i], segEnd[i1]) / 2
+            }
+            areaPrefix.append(area)
+        }
+
+        let last = open ? m - 1 : m
+        if optPrev.count < last + 1 {
+            optPrev = [Int](repeating: 0, count: last + 1)
+            optLen = [Int](repeating: 0, count: last + 1)
+            optPen = [Double](repeating: 0, count: last + 1)
+            optC0 = [SIMD2<Double>](repeating: .zero, count: last + 1)
+            optC1 = [SIMD2<Double>](repeating: .zero, count: last + 1)
+        }
+        optPrev[0] = -1; optPen[0] = 0; optLen[0] = 0
+        if last >= 1 {
+            for j in 1...last {
+                optPrev[j] = j - 1; optPen[j] = optPen[j - 1]; optLen[j] = optLen[j - 1] + 1
+                var i = j - 2
+                while i >= 0 {
+                    guard let o = optiPenalty(i, open ? j : j % m, open: open) else { break }
+                    if optLen[j] > optLen[i] + 1 || (optLen[j] == optLen[i] + 1 && optPen[j] > optPen[i] + o.pen) {
+                        optPrev[j] = i; optPen[j] = optPen[i] + o.pen; optLen[j] = optLen[i] + 1
+                        optC0[j] = o.c0; optC1[j] = o.c1
+                    }
+                    i -= 1
+                }
+            }
+        }
+
+        outCorner.removeAll(keepingCapacity: true); outC0.removeAll(keepingCapacity: true)
+        outC1.removeAll(keepingCapacity: true); outVertex.removeAll(keepingCapacity: true)
+        outEnd.removeAll(keepingCapacity: true)
+        var j = last
+        while j > 0 {
+            let jm = j % m
+            if optPrev[j] == j - 1 {
+                outCorner.append(segCorner[jm]); outC0.append(segC0[jm]); outC1.append(segC1[jm])
+                outVertex.append(segVertex[jm])
+            } else {
+                outCorner.append(false); outC0.append(optC0[j]); outC1.append(optC1[j]); outVertex.append(segVertex[jm])
+            }
+            outEnd.append(segEnd[jm])
+            j = optPrev[j]
+        }
+        outCorner.reverse(); outC0.reverse(); outC1.reverse(); outVertex.reverse(); outEnd.reverse()
+    }
+
+    /// Appends the optimized curve, starting after `start` (already emitted).
+    private func flattenOutput(from start: SIMD2<Double>, into out: inout DenseCurve) {
+        var p0 = start
+        for s in 0..<outEnd.count {
+            let end = outEnd[s]
+            if outCorner[s] {
+                out.append(outVertex[s], pinned: true)
+                out.append(end, pinned: false)
+            } else {
+                let c0 = outC0[s], c1 = outC1[s]
+                let d1 = p0 - 2 * c0 + c1, d2 = c0 - 2 * c1 + end
+                let dd = max((d1 * d1).sum(), (d2 * d2).sum()).squareRoot()
+                let steps = min(64, max(1, Int((0.75 * dd / flattenTolerance).squareRoot().rounded(.up))))
+                for k in 1...steps { out.append(CurveFitter.bezier(Double(k) / Double(steps), p0, c0, c1, end), pinned: false) }
+            }
+            p0 = end
+        }
+    }
+}
+
+/// A flattened curve and which of its points must stay put (junction ends, corners).
+struct DenseCurve {
+    var points: [SIMD2<Double>] = []
+    var pinned: [Bool] = []
+
+    mutating func removeAll() {
+        points.removeAll(keepingCapacity: true)
+        pinned.removeAll(keepingCapacity: true)
+    }
+
+    /// Appends a point, merging it into the previous one when they coincide.
+    mutating func append(_ p: SIMD2<Double>, pinned pin: Bool) {
+        if let last = points.last, last == p {
+            if pin { pinned[pinned.count - 1] = true }
             return
         }
-        alpha = min(max(alpha, 0.55), 1)
-        let start = (vi + vj) * 0.5
-        let c1 = vi + (0.5 + 0.5 * alpha) * (vj - vi)
-        let c2 = vk + (0.5 + 0.5 * alpha) * (vj - vk)
-        let d1 = start - 2 * c1 + c2, d2 = c1 - 2 * c2 + end
-        let dd = max((d1 * d1).sum(), (d2 * d2).sum()).squareRoot()
-        let steps = min(64, max(1, Int((0.75 * dd / flattenTolerance).squareRoot().rounded(.up))))
-        for s in 1...steps {
-            let t = Double(s) / Double(steps), u = 1 - t
-            let p = (u * u * u) * start + (3 * u * u * t) * c1 + (3 * u * t * t) * c2 + (t * t * t) * end
-            out.append(p)
-        }
+        points.append(p)
+        pinned.append(pin)
     }
 }

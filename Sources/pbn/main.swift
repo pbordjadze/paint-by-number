@@ -6,6 +6,10 @@ import PaintCore
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--importance m.pgm]
 //   pbn bench <in.ppm>... [--runs N] [--colors N] [--detail F] [--smooth F]
+//   pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]
+//       vectorizes a flat-color image directly (each distinct color is a palette entry,
+//       each 4-connected component a region), bypassing segmentation
+//   pbn check <template.pbnt>   validates a template's invariants
 
 struct Options {
     var positional: [String] = []
@@ -112,8 +116,38 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
         encodedBytes: t.encoded().count)
 }
 
+func writeSVGs(_ t: Template, to outDir: URL) throws {
+    try SVGExport.render(t, options: .init(painted: true, outlines: false, numbers: false))
+        .write(to: outDir.appendingPathComponent("painted.svg"), atomically: true, encoding: .utf8)
+    try SVGExport.render(t, options: .init(painted: false, outlines: true, numbers: true))
+        .write(to: outDir.appendingPathComponent("template.svg"), atomically: true, encoding: .utf8)
+    try SVGExport.render(t, options: .init(painted: true, outlines: true, numbers: false))
+        .write(to: outDir.appendingPathComponent("painted-outlined.svg"), atomically: true, encoding: .utf8)
+}
+
+/// Flat-color image → segmentation: one palette entry per distinct color.
+func flatSegmentation(_ image: RGBAImage) -> Segmentation {
+    var index: [UInt32: UInt32] = [:]
+    var palette: [PaletteColor] = []
+    var classes = [UInt32](repeating: 0, count: image.width * image.height)
+    for i in 0..<classes.count {
+        let key = UInt32(image.pixels[i * 4]) << 16 | UInt32(image.pixels[i * 4 + 1]) << 8 | UInt32(image.pixels[i * 4 + 2])
+        if let c = index[key] {
+            classes[i] = c
+        } else {
+            let c = UInt32(palette.count)
+            index[key] = c
+            let rgb = SIMD3(Float(image.pixels[i * 4]), Float(image.pixels[i * 4 + 1]), Float(image.pixels[i * 4 + 2])) / 255
+            palette.append(PaletteColor(oklab: ColorScience.encodedToOKLab(rgb, space: .sRGB), rgb: rgb))
+            classes[i] = c
+        }
+    }
+    let cc = ConnectedComponents.label(Grid(width: image.width, height: image.height, storage: classes))
+    return Segmentation(labels: cc.labels, regionColor: cc.classOf, palette: palette, colorSpace: .sRGB)
+}
+
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|bench ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|bench|trace|check ...") }
 let options = parse(args.dropFirst(2))
 
 switch args[1] {
@@ -137,13 +171,50 @@ case "generate":
     try t.encoded().write(to: outDir.appendingPathComponent("template.pbnt"))
     try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("raster.ppm"))
     try Netpbm.encodePPM(working).write(to: outDir.appendingPathComponent("working.ppm"))
-    try SVGExport.render(t, options: .init(painted: true, outlines: false, numbers: false))
-        .write(to: outDir.appendingPathComponent("painted.svg"), atomically: true, encoding: .utf8)
-    try SVGExport.render(t, options: .init(painted: false, outlines: true, numbers: true))
-        .write(to: outDir.appendingPathComponent("template.svg"), atomically: true, encoding: .utf8)
-    try SVGExport.render(t, options: .init(painted: true, outlines: true, numbers: false))
-        .write(to: outDir.appendingPathComponent("painted-outlined.svg"), atomically: true, encoding: .utf8)
+    try writeSVGs(t, to: outDir)
     print(String(data: try encoder.encode(m), encoding: .utf8)!)
+
+case "trace":
+    guard options.positional.count == 2 else { fail("usage: pbn trace <flat.ppm> <outdir> [--smooth F]") }
+    let image = loadImage(options.positional[0])
+    let outDir = URL(fileURLWithPath: options.positional[1])
+    try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+    let segmentation = flatSegmentation(image)
+    var template: Template?
+    var best: [String: Double] = [:]
+    for _ in 0..<max(1, options.runs) {
+        let clock = StageClock()
+        do {
+            template = try Vectorizer.vectorize(segmentation, settings: options.settings, cancel: .none, clock: clock)
+        } catch { fail("vectorize failed: \(error)") }
+        for timing in clock.timings { best[timing.name] = min(best[timing.name] ?? .infinity, timing.seconds * 1000) }
+    }
+    let t = template!
+    try t.encoded().write(to: outDir.appendingPathComponent("template.pbnt"))
+    try Netpbm.encodePPM(image).write(to: outDir.appendingPathComponent("working.ppm"))
+    try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("raster.ppm"))
+    try writeSVGs(t, to: outDir)
+    let report = t.validate()
+    let summary: [String: String] = [
+        "regions": "\(t.regions.count)", "edges": "\(t.edges.count)", "points": "\(t.points.count)",
+        "triangles": "\(t.mesh.indices.count / 3)", "labels": "\(t.labels.count)", "valid": "\(report.isValid)",
+        "report": report.description,
+        "timings": best.sorted { $0.key < $1.key }.map { String(format: "%@=%.1f", $0.key, $0.value) }.joined(separator: " "),
+    ]
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    let json = try encoder.encode(summary)
+    try json.write(to: outDir.appendingPathComponent("trace.json"))
+    print(String(data: json, encoding: .utf8)!)
+
+case "check":
+    guard let path = options.positional.first, let data = FileManager.default.contents(atPath: path) else {
+        fail("usage: pbn check <template.pbnt>")
+    }
+    do {
+        let report = try Template(encoded: data).validate()
+        print(report.isValid ? "valid" : "INVALID", report)
+    } catch { fail("cannot decode: \(error)") }
 
 case "bench":
     guard !options.positional.isEmpty else { fail("usage: pbn bench <in.ppm>...") }
