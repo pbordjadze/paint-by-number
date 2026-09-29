@@ -67,8 +67,8 @@ jobs:
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
-          APP=$(find build/dd/Build/Products/Debug-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
-          [ -n "$APP" ] || exit 0
+          APP=build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
+          [ -d "$APP" ] || exit 0
           ci/screenshots.sh "$APP" out/shots iphone "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
       - name: Test
         if: always() && steps.sim.outcome == 'success'
@@ -112,7 +112,7 @@ jobs:
         run: |
           read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh ipad)
           echo "$MODEL $RUNTIME $UDID"
-          APP=$(find build/dd/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
+          APP=build/dd/Build/Products/Release-iphonesimulator/PaintByNumber.app
           ci/screenshots.sh "$APP" out/shots ipad "$UDID" ${SCENARIOS:-$(cat ci/scenarios.txt)}
       - name: Pipeline benchmark (Apple silicon)
         if: always()
