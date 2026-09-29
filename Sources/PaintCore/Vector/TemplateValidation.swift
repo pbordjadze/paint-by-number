@@ -70,6 +70,7 @@ extension Template {
             var meshArea = 0.0
             var meshOK = region.indexCount % 3 == 0
             let lo = Int(region.indexStart), hi = Int(region.indexStart + region.indexCount)
+            var used = Set<SIMD2<Float>>()
             for t in stride(from: lo, to: hi, by: 3) where meshOK {
                 let a = mesh.vertices[Int(mesh.indices[t])], b = mesh.vertices[Int(mesh.indices[t + 1])]
                 let c = mesh.vertices[Int(mesh.indices[t + 2])]
@@ -77,7 +78,11 @@ extension Template {
                 let ta = Template.signedArea([a, b, c])
                 if ta < 0 { meshOK = false }
                 meshArea += ta
+                used.insert(a); used.insert(b); used.insert(c)
             }
+            // Watertight: every boundary vertex is a triangle vertex (no T-junctions against
+            // the neighbouring region's triangles).
+            if polygons.contains(where: { $0.contains { !used.contains($0) } }) { meshOK = false }
             if !meshOK || abs(meshArea - area) > 1e-4 * max(1, abs(area)) || abs(Double(region.area) - area) > 1e-3 * max(1, abs(area)) {
                 report.badMeshRegions.append(r)
             }

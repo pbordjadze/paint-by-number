@@ -232,6 +232,7 @@ struct RegionFills {
                         for i in local { tri.append(map[Int(i)]) }
                     }
                 }
+                RegionFills.splitTJunctions(poly.points, &tri)
                 for i in tri { band.indices.append(i + base) }
                 band.indexCount.append(UInt32(tri.count))
 
@@ -258,6 +259,44 @@ struct RegionFills {
             out.extraLabels.append(contentsOf: band.extraLabels)
         }
         return out
+    }
+
+    /// Earcut drops ring vertices that became collinear with their neighbours while it
+    /// filtered degenerate cases. The neighbouring region still uses such a vertex, so it
+    /// would be a T-junction — a source of pixel cracks on the GPU. Splits every triangle
+    /// whose edge passes through an unused vertex so the mesh stays conforming. Exact:
+    /// coordinates lie on the `Template.coordinateQuantum` grid.
+    static func splitTJunctions(_ points: [SIMD2<Double>], _ tri: inout [UInt32]) {
+        var used = [Bool](repeating: false, count: points.count)
+        for i in tri { used[Int(i)] = true }
+        guard used.contains(false) else { return }
+        let scale = Double(1 / Template.coordinateQuantum)
+        @inline(__always) func fixed(_ i: Int) -> SIMD2<Int64> {
+            SIMD2(Int64((points[i].x * scale).rounded()), Int64((points[i].y * scale).rounded()))
+        }
+        var usedCoordinates = Set<SIMD2<Int64>>()
+        for i in points.indices where used[i] { usedCoordinates.insert(fixed(i)) }
+        for v in points.indices where !used[v] {
+            let p = fixed(v)
+            guard usedCoordinates.insert(p).inserted else { continue }
+            var t = 0
+            while t < tri.count {
+                var split = false
+                for k in 0..<3 {
+                    let a = fixed(Int(tri[t + k])), b = fixed(Int(tri[t + (k + 1) % 3]))
+                    let ab = b &- a, ap = p &- a, bp = p &- b
+                    if ab.x * ap.y - ab.y * ap.x == 0 && (ab &* ap).wrappedSum() > 0 && (ab &* bp).wrappedSum() < 0 {
+                        // (a, b, c) → (a, v, c) + (v, b, c): same orientation.
+                        let ia = tri[t + k], ib = tri[t + (k + 1) % 3], ic = tri[t + (k + 2) % 3]
+                        tri[t] = ia; tri[t + 1] = UInt32(v); tri[t + 2] = ic
+                        tri.append(UInt32(v)); tri.append(ib); tri.append(ic)
+                        split = true
+                        break
+                    }
+                }
+                if !split { t += 3 }
+            }
+        }
     }
 
     static func ringContains(_ poly: FlatPolygon, ring k: Int, _ p: SIMD2<Double>) -> Bool {
