@@ -29,6 +29,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   Look at the PNGs with the Read tool.
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
   corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
+- `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
+  distinct color) — ideal for judging curve quality on synthetic shapes. `pbn check <t.pbnt>`
+  runs `Template.validate()` (planarity, ring orientation, mesh coverage/watertightness, labels).
+- Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
+  documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
 
 ## iOS app (App/)
 
@@ -54,9 +59,12 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 
 1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).
 2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the
-   report CI publishes to `ci-shots/<branch>`: `STATUS.md`, `*-errors.txt` (compiler errors),
-   trimmed `*.log`, `test-results.json`, screenshots (`app-screens/shots/*.png`), test
-   attachments. Typical turnaround ~8–12 min.
+   report CI publishes to `ci-shots/<branch>`: `STATUS.md`, `iphone/errors.txt` +
+   `ipad/errors.txt` (compiler errors; iPhone builds Debug, iPad builds Release), trimmed `*.log`,
+   `iphone/test-results.json`, screenshots (`iphone/shots/*.png`, `ipad/shots/*.png`, plus
+   `*-app.log` with the app's os_log output), test attachments (`iphone/attachments/`), and
+   `ipad/bench.txt` (pipeline timings on the M1 runner). Turnaround ~10–15 min (longer if
+   several branches are queued: only 5 macOS jobs run concurrently).
 3. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 
 ## Conventions

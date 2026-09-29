@@ -6,13 +6,18 @@ public enum SVGExport {
     public struct Options: Sendable {
         /// Fill regions with their palette color (a "finished painting" preview).
         public var painted: Bool = false
-        /// Draw region boundaries.
+        /// Draw region boundaries (including the canvas border).
         public var outlines: Bool = true
         /// Draw region numbers.
         public var numbers: Bool = true
-        /// Outline stroke width in canvas units.
-        public var strokeWidth: Float = 0.9
-        public var outlineColor: String = "#9aa0a6"
+        /// Outline stroke width in canvas units; `nil` derives it from the canvas size so a
+        /// printed page gets ~0.1 mm lines.
+        public var strokeWidth: Float? = nil
+        public var outlineColor: String = "#9ea3aa"
+        public var numberColor: String = "#6d727a"
+        /// Largest number size as a fraction of the canvas' long side; big regions get
+        /// several numbers of this size rather than one huge one.
+        public var maxNumberSize: Float = 1.0 / 64
 
         public init(painted: Bool = false, outlines: Bool = true, numbers: Bool = true) {
             self.painted = painted
@@ -23,51 +28,48 @@ public enum SVGExport {
 
     public static func render(_ t: Template, options: Options = Options()) -> String {
         var s = ""
-        s.reserveCapacity(t.points.count * 24 + 4096)
+        s.reserveCapacity(t.points.count * 16 + t.labels.count * 96 + 4096)
         s += "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 \(t.width) \(t.height)\" width=\"\(t.width)\" height=\"\(t.height)\">\n"
         s += "<rect width=\"100%\" height=\"100%\" fill=\"#ffffff\"/>\n"
 
-        func fmt(_ v: Float) -> String {
-            let r = (v * 100).rounded() / 100
-            return r == r.rounded() ? String(Int(r)) : String(r)
-        }
-
-        // Region fills.
-        if !t.rings.isEmpty {
-            s += "<g stroke=\"none\" fill-rule=\"evenodd\">\n"
-            for (index, region) in t.regions.enumerated() {
-                let fill = options.painted ? hex(t.palette[Int(region.colorIndex)].rgb) : "#ffffff"
+        if options.painted && !t.rings.isEmpty {
+            // Fills tile the canvas exactly, but anti-aliased rasterizers composite each
+            // edge pixel's partial coverage of both neighbours over the background, which
+            // leaves faint light seams. A hairline of the fill color (constant in screen
+            // pixels, so it never grows with zoom) covers them.
+            s += "<g fill-rule=\"evenodd\" stroke-width=\"0.6\" stroke-linejoin=\"round\">\n"
+            for index in t.regions.indices {
+                let color = hex(t.palette[Int(t.regions[index].colorIndex)].rgb)
                 var d = ""
                 for poly in t.polygons(ofRegion: index) where !poly.isEmpty {
-                    d += "M\(fmt(poly[0].x)) \(fmt(poly[0].y))"
-                    for p in poly.dropFirst() { d += "L\(fmt(p.x)) \(fmt(p.y))" }
+                    d += "M" + fmt(poly[0])
+                    for p in poly.dropFirst() { d += "L" + fmt(p) }
                     d += "Z"
                 }
-                // A hairline of the same color hides anti-aliasing seams between fills.
-                s += "<path d=\"\(d)\" fill=\"\(fill)\" stroke=\"\(fill)\" stroke-width=\"0.35\"/>\n"
+                s += "<path d=\"\(d)\" fill=\"\(color)\" stroke=\"\(color)\" vector-effect=\"non-scaling-stroke\"/>\n"
             }
             s += "</g>\n"
         }
 
         if options.outlines && !t.edges.isEmpty {
-            s += "<g fill=\"none\" stroke=\"\(options.outlineColor)\" stroke-width=\"\(options.strokeWidth)\" stroke-linejoin=\"round\" stroke-linecap=\"round\">\n"
-            for e in t.edges where e.right != BoundaryEdge.outside {
+            let width = options.strokeWidth ?? max(0.5, Float(max(t.width, t.height)) / 1900)
+            var d = ""
+            for e in t.edges {
                 let pts = t.points(of: e)
                 guard let first = pts.first else { continue }
-                var d = "M\(fmt(first.x)) \(fmt(first.y))"
-                for p in pts.dropFirst() { d += "L\(fmt(p.x)) \(fmt(p.y))" }
-                s += "<path d=\"\(d)\"/>\n"
+                d += "M" + fmt(first)
+                for p in pts.dropFirst() { d += "L" + fmt(p) }
             }
-            s += "</g>\n"
+            s += "<path d=\"\(d)\" fill=\"none\" stroke=\"\(options.outlineColor)\" stroke-width=\"\(fmt(width))\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>\n"
         }
 
         if options.numbers {
-            s += "<g font-family=\"Helvetica, Arial, sans-serif\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"#5f6368\">\n"
+            let maxSize = options.maxNumberSize * Float(max(t.width, t.height))
+            s += "<g font-family=\"Helvetica Neue, Helvetica, Arial, DejaVu Sans, sans-serif\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"\(options.numberColor)\">\n"
             for label in t.labels {
-                let region = t.regions[Int(label.region)]
-                let text = String(region.colorIndex + 1)
-                let size = fontSize(forRadius: label.radius, digits: text.count)
-                guard size >= 1.2 else { continue }
+                let text = String(t.regions[Int(label.region)].colorIndex + 1)
+                let size = min(fontSize(forRadius: label.radius, digits: text.count), maxSize)
+                guard size >= 1 else { continue }
                 s += "<text x=\"\(fmt(label.position.x))\" y=\"\(fmt(label.position.y))\" font-size=\"\(fmt(size))\">\(text)</text>\n"
             }
             s += "</g>\n"
@@ -82,8 +84,15 @@ public enum SVGExport {
         // diagonal inside the disc with a little breathing room.
         let w = 0.6 * Float(digits), h: Float = 0.72
         let diag = (w * w + h * h).squareRoot()
-        return min(2 * radius * 0.9 / diag, 60)
+        return 2 * radius * 0.85 / diag
     }
+
+    static func fmt(_ v: Float) -> String {
+        let r = (v * 100).rounded() / 100
+        return r == r.rounded() ? String(Int(r)) : String(r)
+    }
+
+    static func fmt(_ p: SIMD2<Float>) -> String { fmt(p.x) + " " + fmt(p.y) }
 
     static func hex(_ rgb: SIMD3<Float>) -> String {
         func c(_ v: Float) -> String {
