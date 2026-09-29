@@ -102,33 +102,41 @@ enum LabelRegularizer {
                                     Parallel.forEachBand(rowCount, minimumBandSize: 8) { rows in
                                         withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 8) { nl in
                                             withUnsafeTemporaryAllocation(of: Float.self, capacity: 8) { nw in
-                                                for r in rows {
-                                                    let y = r * 2 + py
-                                                    let y0 = max(y - 1, 0), y1 = min(y + 1, h - 1)
-                                                    if sweep > 0 {
-                                                        var latest = rc.value[y0]
-                                                        for yy in y0...y1 { latest = max(latest, rc.value[yy]) }
-                                                        if latest <= lastVisit { continue }
-                                                    }
-                                                    var x = px
-                                                    while x < w {
-                                                        if sweep > 0 {
-                                                            let x0 = max(x - 1, 0), x1 = min(x + 1, w - 1)
-                                                            var latest: Int16 = -1
-                                                            for yy in y0...y1 {
-                                                                let row = ch.value + yy * w
-                                                                for xx in x0...x1 { latest = max(latest, row[xx]) }
+                                                withUnsafeTemporaryAllocation(of: UInt8.self, capacity: w) { needBuffer in
+                                                    withUnsafeTemporaryAllocation(of: Int16.self, capacity: w) { recentBuffer in
+                                                        let need = needBuffer.baseAddress!, recent = recentBuffer.baseAddress!
+                                                        for r in rows {
+                                                            let y = r * 2 + py
+                                                            let y0 = max(y - 1, 0), y1 = min(y + 1, h - 1)
+                                                            if sweep > 0 {
+                                                                var latest = rc.value[y0]
+                                                                for yy in y0...y1 { latest = max(latest, rc.value[yy]) }
+                                                                if latest <= lastVisit { continue }
                                                             }
-                                                            if latest <= lastVisit { x += 2; continue }
+                                                            Self.changeCandidates(
+                                                                y: y, w: w, h: h, labels: lp.value, into: need)
+                                                            if sweep > 0 {
+                                                                let a = ch.value + y0 * w, b = ch.value + y * w, c = ch.value + y1 * w
+                                                                for x in 0..<w { recent[x] = max(a[x], b[x], c[x]) }
+                                                                var x = px
+                                                                while x < w {
+                                                                    let x0 = max(x - 1, 0), x1 = min(x + 1, w - 1)
+                                                                    if max(recent[x0], recent[x], recent[x1]) <= lastVisit { need[x] = 0 }
+                                                                    x += 2
+                                                                }
+                                                            }
+                                                            var x = px
+                                                            while x < w {
+                                                                if need[x] != 0 && sweepPixel(
+                                                                    x: x, y: y, w: w, h: h, labels: lp.value, colors: cp.value,
+                                                                    palette: pp.value, strength: strength, invSigma2: invSigma2,
+                                                                    diagonal: diagonal, nl: nl.baseAddress!, nw: nw.baseAddress!) {
+                                                                    ch.value[y * w + x] = step
+                                                                    rc.value[y] = step
+                                                                }
+                                                                x += 2
+                                                            }
                                                         }
-                                                        if sweepPixel(
-                                                            x: x, y: y, w: w, h: h, labels: lp.value, colors: cp.value,
-                                                            palette: pp.value, strength: strength, invSigma2: invSigma2,
-                                                            diagonal: diagonal, nl: nl.baseAddress!, nw: nw.baseAddress!) {
-                                                            ch.value[y * w + x] = step
-                                                            rc.value[y] = step
-                                                        }
-                                                        x += 2
                                                     }
                                                 }
                                             }
@@ -143,6 +151,27 @@ enum LabelRegularizer {
         }
     }
 
+    /// 1 for pixels of row y that have a differently labelled 8-neighbour (or lie on the
+    /// image edge): the only ones an update can change. Neighbouring pixels belong to other
+    /// phases, so the mask stays valid while this phase updates the row.
+    @inline(__always)
+    private static func changeCandidates(y: Int, w: Int, h: Int, labels: UnsafePointer<UInt32>, into need: UnsafeMutablePointer<UInt8>) {
+        need[0] = 1
+        need[w - 1] = 1
+        guard y > 0 && y + 1 < h else {
+            for x in 0..<w { need[x] = 1 }
+            return
+        }
+        let row = labels + y * w, up = row - w, down = row + w
+        @inline(__always) func differs(_ a: UInt32, _ b: UInt32) -> UInt8 { a != b ? 1 : 0 }
+        for x in 1..<(w - 1) {
+            let v = row[x]
+            need[x] = differs(row[x - 1], v) | differs(row[x + 1], v)
+                | differs(up[x - 1], v) | differs(up[x], v) | differs(up[x + 1], v)
+                | differs(down[x - 1], v) | differs(down[x], v) | differs(down[x + 1], v)
+        }
+    }
+
     @inline(__always)
     private static func sweepPixel(
         x: Int, y: Int, w: Int, h: Int,
@@ -152,15 +181,6 @@ enum LabelRegularizer {
     ) -> Bool {
         let i = y * w + x
         let current = labels[i]
-        // Interior pixels (all 8 neighbours agree) cannot change; most pixels are interior.
-        if x > 0 && y > 0 && x + 1 < w && y + 1 < h {
-            let up = i - w, down = i + w
-            if labels[up - 1] == current && labels[up] == current && labels[up + 1] == current
-                && labels[i - 1] == current && labels[i + 1] == current
-                && labels[down - 1] == current && labels[down] == current && labels[down + 1] == current {
-                return false
-            }
-        }
         let c = colors[i]
         var count = 0
         var differs = false
