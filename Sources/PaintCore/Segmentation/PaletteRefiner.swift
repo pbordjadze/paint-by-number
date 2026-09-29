@@ -90,10 +90,14 @@ enum PaletteRefiner {
             for j in 0..<k where acc[j].w > 0 {
                 var c = SIMD3(Float(acc[j].x / acc[j].w), Float(acc[j].y / acc[j].w), Float(acc[j].z / acc[j].w))
                 let meanChroma = (c.y * c.y + c.z * c.z).squareRoot()
-                if meanChroma > 0.02 * chromaScale {
+                // Near-neutral paints are left alone: there the pixels' chroma is mostly a
+                // cast or noise, and boosting it would turn white teeth or grey stone minty.
+                let vividness = min(max((meanChroma / chromaScale - 0.04) / 0.03, 0), 1)
+                if vividness > 0 {
                     let boost = min(Float(chroma[j] / acc[j].w) / meanChroma, 1.2)
-                    c.y *= boost
-                    c.z *= boost
+                    let factor = 1 + (boost - 1) * vividness
+                    c.y *= factor
+                    c.z *= factor
                 }
                 palette[j] = c
             }

@@ -26,6 +26,18 @@ enum RegionSimplifier {
             classes: &classes, width: w, height: h,
             colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
         var cc = components(classes, w, h)
+        // Pathologically fragmented input (sensor noise, dithering) would leave hundreds of
+        // thousands of regions for the merge queue; a few colour-blind majority passes turn
+        // speckle into blobs in linear time first.
+        if cc.count > w * h / 20 {
+            _ = BoundarySmoothing.apply(
+                classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
+                radius: 2, passes: 4, fidelity: 0)
+            _ = ThinPartRemoval.apply(
+                classes: &classes, width: w, height: h,
+                colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
+            cc = components(classes, w, h)
+        }
         var cleanupRounds = 5
         var round = 0
         while true {
