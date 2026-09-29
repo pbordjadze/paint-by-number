@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 /// Gallery → painting → gallery. The painting is pushed with a zoom transition, whose
@@ -46,15 +47,39 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertNotEqual(badge.label, before, "Undo didn't take anything back")
     }
 
-    /// Palette swatches (plain buttons over the canvas, no interactive glass) select their color.
+    /// The Hint button flies the camera to an unpainted area.
+    @MainActor
+    func testHintButtonMovesTheCanvas() throws {
+        let app = openSeededPainting()
+        let before = app.screenshot()
+        app.buttons["Hint"].tap()
+        sleep(2)
+        let after = app.screenshot()
+        for (shot, name) in [(before, "before-hint"), (after, "after-hint")] {
+            let attachment = XCTAttachment(screenshot: shot)
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        XCTAssertNotEqual(canvasArea(of: before), canvasArea(of: after), "Hint didn't move the canvas")
+    }
+
+    /// Palette swatches select their color.
     @MainActor
     func testPaletteButtonSelects() throws {
         let app = openSeededPainting()
         let swatch = app.buttons["Color 14"]
-        XCTAssertFalse((swatch.value as? String ?? "").contains("Selected"))
+        XCTAssertFalse(swatch.isSelected)
         swatch.tap()
         sleep(1)
-        XCTAssertTrue((swatch.value as? String ?? "").contains("Selected"), "Tapping a swatch didn't select it")
+        XCTAssertTrue(swatch.isSelected, "Tapping a swatch didn't select it")
+    }
+
+    /// The middle half of the screen, clear of the status bar and the chrome.
+    private func canvasArea(of shot: XCUIScreenshot) -> Data? {
+        guard let image = shot.image.cgImage else { return nil }
+        let rect = CGRect(x: 0, y: image.height / 4, width: image.width, height: image.height / 2)
+        return image.cropping(to: rect).flatMap { UIImage(cgImage: $0).pngData() }
     }
 
     /// Launches the demo that seeds a painting in the background and opens it once it is ready.

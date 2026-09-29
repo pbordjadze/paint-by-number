@@ -189,7 +189,8 @@ struct PaintView: View {
     }
 }
 
-/// A 44 pt circular Liquid Glass button with an SF Symbol.
+/// A 44 pt circular Liquid Glass button with an SF Symbol. Uses the system glass button style:
+/// interactive glass on a plain button's label swallows the tap, so the action never ran.
 struct GlassIconButton: View {
     let systemImage: String
     let label: LocalizedStringKey
@@ -205,14 +206,24 @@ struct GlassIconButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 17, weight: .semibold))
-                .frame(width: 44, height: 44)
+            GlassIconLabel(systemImage: systemImage)
                 .opacity(isEnabled ? 1 : 0.35)
-                .glassEffect(.regular.interactive(), in: .circle)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
         .accessibilityLabel(Text(label))
+    }
+}
+
+/// The symbol inside a circular glass button; the style's padding brings it to 44 pt.
+struct GlassIconLabel: View {
+    let systemImage: String
+
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(Color.primary)
+            .frame(width: 30, height: 30)
     }
 }
 
@@ -245,12 +256,10 @@ private struct CompletionBar: View {
             Spacer(minLength: 0)
             if let shareImage {
                 ShareLink(item: shareImage, preview: SharePreview(title.isEmpty ? "Painting" : title, image: shareImage)) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 17, weight: .semibold))
-                        .frame(width: 44, height: 44)
-                        .glassEffect(.regular.interactive(), in: .circle)
+                    GlassIconLabel(systemImage: "square.and.arrow.up")
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
                 .accessibilityLabel(Text("Share"))
             }
             if let onClose {
