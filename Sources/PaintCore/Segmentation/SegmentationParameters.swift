@@ -49,6 +49,10 @@ struct SegmentationParameters: Sendable {
     /// Paint difference (OKLab) up to which neighbours merge in fully textured, unimportant
     /// areas (scaled down by texture density and importance).
     var consolidationTolerance: Float
+    /// Mode-filter smoothing of region outlines (see `BoundarySmoothing`).
+    var boundaryRadius: Int
+    var boundaryPasses: Int
+    var boundaryFidelity: Float
     /// Merge target preference for long shared borders (OKLab-distance equivalent).
     var mergeShareWeight: Float
     /// Region-level k-means passes when refitting the palette.
@@ -88,6 +92,9 @@ struct SegmentationParameters: Sendable {
         importanceStrength = Tune.f("IMPS", 3)
         mergeShareWeight = Tune.f("SHARE", 0.04)
         textureStrength = Tune.f("TEX", 4)
+        boundaryRadius = sm > 0.66 ? 3 : 2
+        boundaryPasses = Int(Tune.f("BPASS", (3 * sm).rounded()))
+        boundaryFidelity = Tune.f("BFID", 40)
         consolidationTolerance = Tune.f("CONS", 0.1) * lerp(1.4, 0.7, d)
         importanceSharpening = Tune.f("ISHARP", 1)
         refineIterations = Int(Tune.f("REFINE", 3))

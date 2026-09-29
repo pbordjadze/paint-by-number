@@ -42,6 +42,13 @@ enum RegionSimplifier {
             let t2 = ContinuousClock.now
             if merged > 0 { cc = components(classes, w, h) }
             let t3 = ContinuousClock.now
+            var smoothed = 0
+            if round < 2 && p.boundaryPasses > 0 {
+                smoothed = BoundarySmoothing.apply(
+                    classes: &classes, width: w, height: h, colors: colors.storage, palette: palette,
+                    radius: p.boundaryRadius, passes: p.boundaryPasses, fidelity: p.boundaryFidelity)
+                if smoothed > 0 { cc = components(classes, w, h) }
+            }
             var peeled = 0
             if round < cleanupRounds {
                 peeled = ThinPartRemoval.apply(
@@ -51,7 +58,7 @@ enum RegionSimplifier {
             }
             let t4 = ContinuousClock.now
             if Tune.debug { debugLog("round \(round): merged \(merged) peeled \(peeled) regions \(cc.count)  edt \(t1 - t0) merge \(t2 - t1) cc \(t3 - t2) peel+cc \(t4 - t3)") }
-            if merged == 0 && peeled == 0 && wide != nil { return cc }
+            if merged == 0 && peeled == 0 && smoothed == 0 && wide != nil { return cc }
             // Late peels only nudge single pixels at junctions; stop cleaning once that is all
             // that happens and let the remaining rounds settle sizes.
             if round >= 1 && peeled < w * h / 1000 { cleanupRounds = min(cleanupRounds, round + 1) }
