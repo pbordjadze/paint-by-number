@@ -95,7 +95,7 @@ struct VectorizerTests {
             for p in rings[0] { lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p) }
             return (lo, hi)
         }
-        let depth = try! DistanceTransform.interiorDistance(labels: t.regionMap)
+        let depth = DistanceTransform.interiorDistance(labels: t.regionMap)
         var rng = SplitMix64(seed: seed)
         var failures = 0
         for _ in 0..<samples {

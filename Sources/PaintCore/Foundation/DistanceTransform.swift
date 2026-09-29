@@ -28,7 +28,13 @@ public enum DistanceTransform {
     /// This is the radius of the largest disc centred on the pixel that stays inside the
     /// region, which drives label placement ("pole of inaccessibility") and thin-region
     /// detection.
-    public static func interiorDistance(labels: RegionMap, cancel: CancellationCheck = .none) throws -> Grid<Float> {
+    public static func interiorDistance(labels: RegionMap) -> Grid<Float> {
+        // Without a cancellation check nothing can throw.
+        try! interiorDistance(labels: labels, cancel: .none)
+    }
+
+    /// `interiorDistance(labels:)` with cancellation checks between passes.
+    static func interiorDistance(labels: RegionMap, cancel: CancellationCheck) throws -> Grid<Float> {
         let w = labels.width, h = labels.height, n = w * h
         guard n > 0 else { return Grid(width: w, height: h, storage: []) }
         var isBoundary = [UInt8](repeating: 1, count: n)

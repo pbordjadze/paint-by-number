@@ -61,7 +61,7 @@ struct FoundationTests {
         // 9×9 region inside a 1-pixel frame of another region: centre is 4.5 from edges.
         var map = RegionMap(width: 11, height: 11, repeating: 0)
         for y in 1..<10 { for x in 1..<10 { map[x, y] = 1 } }
-        let d = try! DistanceTransform.interiorDistance(labels: map)
+        let d = DistanceTransform.interiorDistance(labels: map)
         #expect(d[5, 5] == 4.5)
         #expect(d[1, 1] == 0.5)
     }

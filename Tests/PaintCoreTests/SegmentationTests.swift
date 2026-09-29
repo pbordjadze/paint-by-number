@@ -73,7 +73,7 @@ struct SegmentationTests {
         }
         // Size guarantee: largest inscribed disc per region.
         if let minRadius, n > 1 {
-            let d = try! DistanceTransform.interiorDistance(labels: s.labels)
+            let d = DistanceTransform.interiorDistance(labels: s.labels)
             var best = [Float](repeating: 0, count: n)
             for i in 0..<d.count { best[Int(s.labels.storage[i])] = max(best[Int(s.labels.storage[i])], d.storage[i]) }
             #expect(best.allSatisfy { $0 >= minRadius })
@@ -246,7 +246,7 @@ struct SegmentationTests {
         }
         let regions = RegionRuns(classes: classes, width: w, height: h)
         let cc = regions.components()
-        let d = try! DistanceTransform.interiorDistance(labels: cc.labels)
+        let d = DistanceTransform.interiorDistance(labels: cc.labels)
         var best = [Float](repeating: 0, count: cc.count)
         for i in 0..<d.count { best[Int(cc.labels.storage[i])] = max(best[Int(cc.labels.storage[i])], d.storage[i]) }
         for radius in [Float(0.5), 1, 1.5, 2, 2.75, 3.5, 4.2] {
