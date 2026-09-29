@@ -96,7 +96,7 @@ private final class Demo {
         case "paint-fill":
             paint(fraction: 0.2)
             // Big fills take 0.6 s; stretched so the CI screenshot (~10 s later) lands mid-spread.
-            fillDurationScale = 64
+            fillDurationScale = 128
         case "paint-hint":
             paint(fraction: 0.4)
         default:
