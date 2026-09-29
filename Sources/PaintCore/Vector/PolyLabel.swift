@@ -66,6 +66,59 @@ struct FlatPolygon {
     }
 }
 
+/// The part of a polygon's outline that matters within a small box around an interior
+/// point: every segment that can be the nearest one to some point of the box, and every
+/// segment that can cross the line from the box centre to such a point — so distances
+/// are exact and inside/outside follows from crossing parity relative to the centre.
+struct LocalOutline {
+    let origin: SIMD2<Double>
+    let halfSize: Double
+    private var a: [SIMD2<Double>] = [], b: [SIMD2<Double>] = []
+
+    /// Nil when `origin` is not strictly inside the polygon.
+    init?(_ poly: FlatPolygon, around origin: SIMD2<Double>, halfSize: Double) {
+        let d0 = poly.signedDistance(origin.x, origin.y)
+        guard d0 > 0 else { return nil }
+        self.origin = origin
+        self.halfSize = halfSize
+        // A box point q is within halfSize·√2 of the origin, so its nearest outline point is
+        // within d0 + 2·halfSize·√2 of the origin.
+        let reach = d0 + 2 * halfSize * 2.0.squareRoot() + 0.5
+        let lo = origin - reach, hi = origin + reach
+        for k in 0..<poly.ringCount {
+            let s = poly.ringStarts[k], e = poly.ringStarts[k + 1]
+            guard e > s else { continue }
+            var j = e - 1
+            for i in s..<e {
+                let p = poly.points[j], q = poly.points[i]
+                if max(p.x, q.x) >= lo.x && min(p.x, q.x) <= hi.x && max(p.y, q.y) >= lo.y && min(p.y, q.y) <= hi.y {
+                    a.append(p); b.append(q)
+                }
+                j = i
+            }
+        }
+    }
+
+    func signedDistance(_ x: Double, _ y: Double) -> Double {
+        let q = SIMD2(x, y)
+        var minDistSq = Double.infinity
+        var outside = false
+        @inline(__always) func orient(_ p: SIMD2<Double>, _ r: SIMD2<Double>, _ t: SIMD2<Double>) -> Double {
+            (r.x - p.x) * (t.y - p.y) - (r.y - p.y) * (t.x - p.x)
+        }
+        for i in 0..<a.count {
+            minDistSq = min(minDistSq, FlatPolygon.segmentDistanceSquared(x, y, a[i], b[i]))
+            // Half-open side test keeps crossings through vertices counted exactly once.
+            if (orient(origin, q, a[i]) > 0) != (orient(origin, q, b[i]) > 0)
+                && (orient(a[i], b[i], origin) > 0) != (orient(a[i], b[i], q) > 0) {
+                outside.toggle()
+            }
+        }
+        guard minDistSq.isFinite else { return 0 }
+        return (outside ? -1 : 1) * minDistSq.squareRoot()
+    }
+}
+
 /// Pole of inaccessibility — the interior point farthest from the outline — after
 /// mapbox/polylabel (ISC license): best-first quadtree search that prunes cells which
 /// cannot beat the best distance found so far by more than `precision`.
@@ -75,28 +128,49 @@ enum PolyLabel {
         var max: Double { d + h * 2.0.squareRoot() }
     }
 
-    /// Returns the pole and its distance to the outline. `seed` (e.g. a raster distance
-    /// transform maximum) primes the search so most cells are pruned immediately.
-    static func find(_ poly: FlatPolygon, precision: Double, seed: SIMD2<Double>?) -> (position: SIMD2<Double>, distance: Double) {
+    /// Above this many vertices, search only near the seed (see `find`).
+    static let localSearchThreshold = 400
+
+    /// Returns the pole and its distance to the outline. `seed` (a raster distance
+    /// transform maximum) primes the search so most cells are pruned immediately. For large
+    /// polygons the search is confined to a few units around the seed — the smoothed
+    /// polygon's pole lies next to the raster one — and only boundary segments that can be
+    /// nearest to that neighbourhood are consulted, so the cost no longer scales with the
+    /// number of vertices (big regions with thousands of holes).
+    static func find(_ poly: FlatPolygon, precision: Double, seed: SIMD2<Double>) -> (position: SIMD2<Double>, distance: Double) {
+        if poly.points.count > localSearchThreshold, let local = LocalOutline(poly, around: seed, halfSize: 3) {
+            let h = local.halfSize
+            return search(minX: seed.x - h, minY: seed.y - h, maxX: seed.x + h, maxY: seed.y + h, precision: precision, seed: seed) {
+                local.signedDistance($0, $1)
+            }
+        }
         let outerEnd = poly.ringStarts.count > 1 ? poly.ringStarts[1] : 0
-        guard outerEnd > 0 else { return (seed ?? .zero, 0) }
+        guard outerEnd > 0 else { return (seed, 0) }
         var minX = Double.infinity, minY = Double.infinity, maxX = -Double.infinity, maxY = -Double.infinity
         for i in 0..<outerEnd {
             let p = poly.points[i]
             minX = min(minX, p.x); minY = min(minY, p.y); maxX = max(maxX, p.x); maxY = max(maxY, p.y)
         }
+        return search(minX: minX, minY: minY, maxX: maxX, maxY: maxY, precision: precision, seed: seed) {
+            poly.signedDistance($0, $1)
+        }
+    }
+
+    /// Best-first search over the box for the maximum of `distance`.
+    private static func search(
+        minX: Double, minY: Double, maxX: Double, maxY: Double, precision: Double, seed: SIMD2<Double>,
+        distance: (Double, Double) -> Double
+    ) -> (position: SIMD2<Double>, distance: Double) {
         let width = maxX - minX, height = maxY - minY
         let cellSize = max(precision, min(width, height))
 
         func cell(_ x: Double, _ y: Double, _ h: Double) -> Cell {
-            Cell(x: x, y: y, h: h, d: poly.signedDistance(x, y))
+            Cell(x: x, y: y, h: h, d: distance(x, y))
         }
 
         var best = cell(minX + width / 2, minY + height / 2, 0)
-        if let seed {
-            let s = cell(seed.x, seed.y, 0)
-            if s.d > best.d { best = s }
-        }
+        let s = cell(seed.x, seed.y, 0)
+        if s.d > best.d { best = s }
         if cellSize == precision { return (SIMD2(best.x, best.y), max(0, best.d)) }
 
         var heap: [Cell] = []

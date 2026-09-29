@@ -175,7 +175,8 @@ struct RegionFills {
 
     static func build(_ shapes: RegionShapes, raster: RasterStats, width: Int, height: Int) -> RegionFills {
         let regionCount = shapes.topology.regionRingStart.count
-        let bands = Parallel.mapBands(regionCount, minimumBandSize: 16) { range -> RegionFills in
+        // Small chunks balance the load: a single huge region must not stall a whole band.
+        let bands = mapChunks(regionCount, chunk: 16) { range -> RegionFills in
             var band = RegionFills()
             var poly = FlatPolygon()
             var earcut = Earcut()
@@ -287,7 +288,7 @@ struct RegionFills {
         let big = (0..<regionCount).filter { raster.pixelArea[$0] >= minArea && raster.bestDistance[$0] >= minRadius }
         guard !big.isEmpty else { return }
 
-        let found = Parallel.mapBands(big.count, minimumBandSize: 1) { range -> [[Label]] in
+        let found = mapChunks(big.count, chunk: 1) { range -> [[Label]] in
             var result: [[Label]] = []
             var poly = FlatPolygon()
             var candidates: [(key: Int32, pixel: Int32)] = []
@@ -331,3 +332,21 @@ struct RegionFills {
 
 @inline(__always)
 private func simd_length_squared(_ v: SIMD2<Float>) -> Float { (v * v).sum() }
+
+/// Parallel map over `0..<count` in chunks of `chunk`, scheduled dynamically; results
+/// in chunk order.
+func mapChunks<T>(_ count: Int, chunk: Int, _ body: (Range<Int>) -> T) -> [T] {
+    guard count > 0 else { return [] }
+    let n = (count + chunk - 1) / chunk
+    var results = [T?](repeating: nil, count: n)
+    results.withUnsafeMutableBufferPointer { buf in
+        let out = UncheckedSendable(buf.baseAddress!)
+        withoutActuallyEscaping(body) { body in
+            let work = UncheckedSendable(body)
+            DispatchQueue.concurrentPerform(iterations: n) { i in
+                out.value[i] = work.value((i * chunk)..<min(count, (i + 1) * chunk))
+            }
+        }
+    }
+    return results.map { $0! }
+}

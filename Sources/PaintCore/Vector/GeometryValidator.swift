@@ -10,6 +10,11 @@ public enum GeometryValidator {
     /// Indices of all edges involved in an improper contact (or containing a zero-length
     /// segment), ascending. Empty when the geometry is valid.
     public static func invalidEdges(points: [SIMD2<Float>], edges: [BoundaryEdge], cellSize: Float = 6) -> [Int] {
+        invalidEdges(points: points, edges: edges, cellSize: cellSize, onlyInvolving: nil)
+    }
+
+    /// As above, but only tests pairs where at least one edge is flagged in `onlyInvolving`.
+    static func invalidEdges(points: [SIMD2<Float>], edges: [BoundaryEdge], cellSize: Float = 6, onlyInvolving dirty: [Bool]?) -> [Int] {
         guard !edges.isEmpty else { return [] }
         let scale = 1 / Template.coordinateQuantum
         let fixed: [SIMD2<Int64>] = points.map {
@@ -71,8 +76,10 @@ public enum GeometryValidator {
                         let a = Int(cellSegs[i])
                         let a0 = fixed[a], a1 = fixed[a + 1]
                         let aMin = pointwiseMin(a0, a1), aMax = pointwiseMax(a0, a1)
+                        let aDirty = dirty?[Int(segEdge[a])] ?? true
                         for j in (i + 1)..<s1 {
                             let b = Int(cellSegs[j])
+                            if !aDirty && !(dirty?[Int(segEdge[b])] ?? true) { continue }
                             let b0 = fixed[b], b1 = fixed[b + 1]
                             let bMin = pointwiseMin(b0, b1), bMax = pointwiseMax(b0, b1)
                             if aMax.x < bMin.x || bMax.x < aMin.x || aMax.y < bMin.y || bMax.y < aMin.y { continue }

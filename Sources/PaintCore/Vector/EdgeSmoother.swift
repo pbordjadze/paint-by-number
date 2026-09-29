@@ -80,18 +80,21 @@ struct EdgeSmoother {
         var offset: Int32 = 0
         for c in first.counts { geo.start.append(offset); offset += c }
 
-        var round = 0
+        // Every round moves each offending edge one shape down, so the loop terminates. After
+        // the first round only pairs involving a changed edge can newly conflict.
+        var dirty: [Bool]? = nil
         while true {
-            var bad = Set(GeometryValidator.invalidEdges(points: geo.points, edges: geo.boundaryEdges(graph)))
+            var bad = Set(GeometryValidator.invalidEdges(points: geo.points, edges: geo.boundaryEdges(graph), onlyInvolving: dirty))
             bad.formUnion(junctionOrderViolations(geo))
             let fix = bad.filter { graph.edgeRight[$0] != BoundaryEdge.outside && shapes[$0] < Shape.lattice.rawValue }.sorted()
             if fix.isEmpty { break }
-            round += 1
+            var changed = [Bool](repeating: false, count: edgeCount)
             for e in fix {
                 if shapes[e] == Shape.faired.rawValue { repairs += 1 }
-                // Escalate straight to the lattice if repairs keep failing (never expected).
-                shapes[e] = round > 4 ? Shape.lattice.rawValue : shapes[e] + 1
+                shapes[e] += 1
+                changed[e] = true
             }
+            dirty = changed
             let redo = polylines(for: fix, shapes: shapes)
             geo.replace(fix, points: redo.points, counts: redo.counts)
         }
