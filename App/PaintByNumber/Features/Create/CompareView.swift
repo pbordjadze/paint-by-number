@@ -99,16 +99,16 @@ struct CompareView: View {
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
-                .glassEffect(.regular, in: .circle)
+                .glassEffect(.regular.interactive(), in: .circle)
         }
         .position(x: x, y: height / 2)
     }
 
     private func labels(split: CGFloat) -> some View {
         HStack {
-            tag("Photo").opacity(split > 0.16 ? 1 : 0)
+            caption("Photo").opacity(split > 0.16 ? 1 : 0)
             Spacer()
-            tag(afterLabel).opacity(split < 0.84 ? 1 : 0)
+            caption(afterLabel).opacity(split < 0.84 ? 1 : 0)
         }
         .padding(12)
         .animation(.easeOut(duration: 0.15), value: split > 0.16)
@@ -116,7 +116,9 @@ struct CompareView: View {
         .allowsHitTesting(false)
     }
 
-    private func tag(_ text: LocalizedStringKey) -> some View {
+    // Not named `tag`: that would resolve `tag("Photo")` to `View.tag(_:)` on `self` and nest
+    // the whole comparison inside its own overlay, recursing until the stack overflows.
+    private func caption(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(.rounded(.caption, weight: .semibold))
             .padding(.horizontal, 10)
