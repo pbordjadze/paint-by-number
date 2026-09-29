@@ -68,8 +68,21 @@ public enum Segmenter {
         progress(0.5)
 
         let labelling = classes
-        let texture = clock.measure("segment.texture") { TextureMap.boundaryDensity(labelling, width: w, height: h) }
-        let areaScale = zip(weights, texture).map { p.areaScale(importance: $0, texture: $1) }
+        let (texture, areaScale) = clock.measure("segment.texture") { () -> ([Float], [Float]) in
+            let texture = TextureMap.boundaryDensity(labelling, width: w, height: h)
+            var scale = [Float](repeating: 0, count: w * h)
+            weights.withUnsafeBufferPointer { ib in
+                texture.withUnsafeBufferPointer { tb in
+                    scale.withUnsafeMutableBufferPointer { sb in
+                        let i = UncheckedSendable(ib), t = UncheckedSendable(tb), s = UncheckedSendable(sb)
+                        Parallel.forEachBand(w * h, minimumBandSize: 16_384) { range in
+                            for k in range { s.value[k] = p.areaScale(importance: i.value[k], texture: t.value[k]) }
+                        }
+                    }
+                }
+            }
+            return (texture, scale)
+        }
         var (regions, adjacency) = try clock.measure("segment.regions") {
             try RegionSimplifier.simplify(
                 classes: &classes, width: w, height: h, colors: smooth, areaScale: areaScale,
@@ -86,17 +99,15 @@ public enum Segmenter {
 
         let finalPalette = clock.measure("segment.refine") {
             PaletteRefiner.refine(
-                classes: &classes, width: w, height: h, lab: lab.storage, importance: weights,
+                classes: &classes, regions: &regions, adjacency: &adjacency, lab: lab.storage, importance: weights,
                 labelling: labelling, palette: palette, minDistance: p.minPaletteDistance,
                 chromaScale: p.chromaScale, iterations: p.refineIterations)
         }
-        let components = clock.measure("segment.finalize") {
-            RunComponents.label(classes, width: w, height: h)
-        }
+        let labels = clock.measure("segment.finalize") { regions.labelMap() }
         progress(1)
         return Segmentation(
-            labels: components.labels,
-            regionColor: components.classOf,
+            labels: labels,
+            regionColor: regions.classOf,
             palette: finalPalette.map { PaletteColor(oklab: $0, space: image.colorSpace) },
             colorSpace: image.colorSpace)
     }

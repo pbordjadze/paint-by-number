@@ -184,10 +184,10 @@ struct RegionRuns: Sendable {
         Components(labels: labelMap(), classOf: classOf, area: area, bounds: bounds)
     }
 
-    /// Per-region accumulation over pixels: `add(&value, pixelIndex)` sees each region's
+    /// Per-region accumulation over pixels: `add(&value, region, pixelIndex)` sees each region's
     /// pixels in raster order (so floating-point sums equal those of a plain image scan);
     /// regions run in parallel. Regions without `include` keep `zero`.
-    func accumulate<T>(_ zero: T, include: [Bool]? = nil, _ add: (inout T, Int) -> Void) -> [T] {
+    func accumulate<T>(_ zero: T, include: [Bool]? = nil, _ add: (inout T, Int, Int) -> Void) -> [T] {
         let n = count
         // Runs regrouped by region (CSR), each as first pixel index and length.
         var offset = [Int](repeating: 0, count: n + 1)
@@ -213,7 +213,7 @@ struct RegionRuns: Sendable {
                     var value = zero
                     for k in offset[r]..<offset[r + 1] {
                         let i0 = first[k]
-                        for i in i0..<(i0 + Int(length[k])) { add(&value, i) }
+                        for i in i0..<(i0 + Int(length[k])) { add(&value, r, i) }
                     }
                     ob[r] = value
                 }
@@ -226,7 +226,7 @@ struct RegionRuns: Sendable {
     func sums(_ a: [Float], _ b: [Float]) -> [SIMD2<Double>] {
         a.withUnsafeBufferPointer { ab in
             b.withUnsafeBufferPointer { bb in
-                accumulate(SIMD2<Double>.zero) { sum, i in sum += SIMD2(Double(ab[i]), Double(bb[i])) }
+                accumulate(SIMD2<Double>.zero) { sum, _, i in sum += SIMD2(Double(ab[i]), Double(bb[i])) }
             }
         }
     }
@@ -430,11 +430,5 @@ struct RegionAdjacency: Sendable {
     private init(pairs: [UInt64], lengths: [Int32]) {
         self.pairs = pairs
         self.lengths = lengths
-    }
-}
-
-enum RunComponents {
-    static func label(_ classes: [UInt32], width w: Int, height h: Int) -> Components {
-        RegionRuns(classes: classes, width: w, height: h).components()
     }
 }

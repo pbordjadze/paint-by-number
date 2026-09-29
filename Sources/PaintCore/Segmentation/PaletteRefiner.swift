@@ -11,7 +11,8 @@ enum PaletteRefiner {
 
     static func refine(
         classes: inout [UInt32],
-        width w: Int, height h: Int,
+        regions: inout RegionRuns,
+        adjacency: inout RegionAdjacency,
         lab: [SIMD4<Float>],
         importance: [Float],
         labelling: [UInt32],
@@ -21,8 +22,7 @@ enum PaletteRefiner {
         iterations: Int
     ) -> [SIMD3<Float>] {
         let unscale = SIMD3<Float>(1, 1 / chromaScale, 1 / chromaScale)
-        let cc = RunComponents.label(classes, width: w, height: h)
-        let n = cc.count
+        let n = regions.count
         guard n > 0 else { return [] }
         // Per region: color sum and pixel count, and the importance-weighted equivalents
         // (paints are refitted toward what they cover in important areas, so a face does
@@ -31,34 +31,34 @@ enum PaletteRefiner {
         // Colors come from a region's core: the pixels that were labelled with its paint
         // before simplification. Specks it absorbed (the black stripes on a macaw's white
         // cheek) would otherwise drag it toward a muddy average and a wrong paint.
-        var all = [SIMD4<Double>](repeating: .zero, count: n)
-        var core = [SIMD4<Double>](repeating: .zero, count: n)
-        var coreWeighted = [SIMD4<Double>](repeating: .zero, count: n)
-        var coreChroma = [Double](repeating: 0, count: n)
-        var allWeighted = [SIMD4<Double>](repeating: .zero, count: n)
-        var allChroma = [Double](repeating: 0, count: n)
-        cc.labels.storage.withUnsafeBufferPointer { lb in
-            lab.withUnsafeBufferPointer { cb in
-                importance.withUnsafeBufferPointer { ib in
-                    labelling.withUnsafeBufferPointer { ob in
-                        for i in 0..<lb.count {
+        struct Sums {
+            var all = SIMD4<Double>.zero, allWeighted = SIMD4<Double>.zero, allChroma = 0.0
+            var core = SIMD4<Double>.zero, coreWeighted = SIMD4<Double>.zero, coreChroma = 0.0
+        }
+        let regionSums: [Sums] = lab.withUnsafeBufferPointer { cb in
+            importance.withUnsafeBufferPointer { ib in
+                labelling.withUnsafeBufferPointer { ob in
+                    regions.classOf.withUnsafeBufferPointer { paint in
+                        regions.accumulate(Sums()) { s, r, i in
                             let c = SIMD4(Double(cb[i].x), Double(cb[i].y), Double(cb[i].z), 1)
-                            let r = Int(lb[i])
                             let weight = Double(PaletteBuilder.paletteWeight(importance: ib[i]))
                             let chroma = (c.y * c.y + c.z * c.z).squareRoot() * weight
-                            all[r] += c
-                            allWeighted[r] += c * weight
-                            allChroma[r] += chroma
-                            if ob[i] == cc.classOf[r] {
-                                core[r] += c
-                                coreWeighted[r] += c * weight
-                                coreChroma[r] += chroma
+                            s.all += c
+                            s.allWeighted += c * weight
+                            s.allChroma += chroma
+                            if ob[i] == paint[r] {
+                                s.core += c
+                                s.coreWeighted += c * weight
+                                s.coreChroma += chroma
                             }
                         }
                     }
                 }
             }
         }
+        let all = regionSums.map(\.all), allWeighted = regionSums.map(\.allWeighted)
+        let allChroma = regionSums.map(\.allChroma), core = regionSums.map(\.core)
+        let coreWeighted = regionSums.map(\.coreWeighted), coreChroma = regionSums.map(\.coreChroma)
         var sums = all
         var weighted = allWeighted
         var weightedChroma = allChroma
@@ -69,7 +69,7 @@ enum PaletteRefiner {
             weightedChroma[r] = coreChroma[r] * scale
         }
         let means = sums.map { SIMD3(Float($0.x / $0.w), Float($0.y / $0.w), Float($0.z / $0.w)) }
-        var cls = cc.classOf.map { Int($0) }
+        var cls = regions.classOf.map { Int($0) }
         var palette = initial
         let k = palette.count
         var used = [Bool](repeating: false, count: k)
@@ -153,20 +153,8 @@ enum PaletteRefiner {
         let order = PaletteOrdering.order(finalColors)
         var remap = [UInt32](repeating: 0, count: k)
         for (newIndex, orderIndex) in order.enumerated() { remap[usedIndices[orderIndex]] = UInt32(newIndex) }
-        let regionClass = cls.map { remap[$0] }
-        let count = w * h
-        classes.withUnsafeMutableBufferPointer { out in
-            cc.labels.storage.withUnsafeBufferPointer { lb in
-                regionClass.withUnsafeBufferPointer { rc in
-                    let o = UncheckedSendable(out.baseAddress!)
-                    let l = UncheckedSendable(lb.baseAddress!)
-                    let c = UncheckedSendable(rc.baseAddress!)
-                    Parallel.forEachBand(count, minimumBandSize: 16_384) { range in
-                        for i in range { o.value[i] = c.value[Int(l.value[i])] }
-                    }
-                }
-            }
-        }
+        // Recolor regions; neighbours that now share a paint fuse.
+        regions.merge(roots: (0..<n).map { Int32($0) }, paint: cls.map { remap[$0] }, adjacency: &adjacency, classes: &classes)
         return order.map { finalColors[$0] }
     }
 }

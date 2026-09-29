@@ -230,7 +230,7 @@ enum RegionSimplifier {
         // OKLab sum and area-scale sum per queued region, accumulated in raster order.
         var sums = colors.withUnsafeBufferPointer { cb in
             areaScale.withUnsafeBufferPointer { ab in
-                regions.accumulate(SIMD4<Double>.zero, include: big.map { !$0 }) { sum, i in
+                regions.accumulate(SIMD4<Double>.zero, include: big.map { !$0 }) { sum, _, i in
                     let c = cb[i]
                     sum += SIMD4(Double(c.x), Double(c.y), Double(c.z), Double(ab[i]))
                 }

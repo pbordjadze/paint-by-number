@@ -227,7 +227,7 @@ struct SegmentationTests {
         for (w, h, k) in [(1, 1, 1), (7, 1, 3), (1, 9, 2), (37, 23, 3), (64, 48, 5)] {
             let classes = (0..<(w * h)).map { _ in UInt32(rng.next() % UInt64(k)) }
             let reference = ConnectedComponents.label(Grid(width: w, height: h, storage: classes))
-            let runs = RunComponents.label(classes, width: w, height: h)
+            let runs = RegionRuns(classes: classes, width: w, height: h).components()
             #expect(runs.labels == reference.labels)
             #expect(runs.classOf == reference.classOf)
             #expect(runs.area == reference.area)
