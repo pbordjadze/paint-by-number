@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Creates (or reuses) clean simulators for screenshots and prints "<kind> <udid>" lines.
+# Creates clean simulators and prints "<kind> <udid> <model> <runtime>" lines.
+#   ci/simulators.sh [iphone|ipad ...]   (default: both)
 # Picks the newest iOS runtime and the newest iPhone Pro / largest iPad Pro device types.
 set -euo pipefail
-python3 - <<'PY'
-import json, subprocess, re
+python3 - "$@" <<'PY'
+import json, subprocess, re, sys
+wanted = sys.argv[1:] or ["iphone", "ipad"]
 def sim(*a): return subprocess.run(["xcrun", "simctl", *a], check=True, capture_output=True, text=True).stdout
 runtimes = [r for r in json.loads(sim("list", "runtimes", "-j"))["runtimes"] if r["platform"] == "iOS" and r["isAvailable"]]
 runtime = sorted(runtimes, key=lambda r: [int(x) for x in r["version"].split(".")])[-1]
@@ -17,6 +19,7 @@ def pick(patterns):
 phone = pick([r"iPhone 17 Pro", r"iPhone 1\d Pro", r"iPhone .*Pro"])
 pad = pick([r"iPad Pro 13-inch \(M5\)", r"iPad Pro 13-inch \(M\d\)", r"iPad Pro 13-inch.*", r"iPad Pro.*"])
 for kind, t in (("iphone", phone), ("ipad", pad)):
+    if kind not in wanted: continue
     name = "PBN-" + kind
     udid = sim("create", name, t["identifier"], runtime["identifier"]).strip()
     print(kind, udid, t["name"].replace(" ", "_"), runtime["version"])

@@ -15,7 +15,7 @@ for _ in $(seq 1 120); do
       rm -rf "$OUT" && mkdir -p "$OUT"
       git archive "origin/${REF}" | tar -x -C "$OUT"
       cat "$OUT/STATUS.md"
-      find "$OUT" -name '*-errors.txt' -size +0 -exec sh -c 'echo "== $1"; head -60 "$1"' _ {} \;
+      find "$OUT" -name '*errors.txt' -size +0 -exec sh -c 'echo "== $1"; head -60 "$1"' _ {} \;
       find "$OUT" -name '*.png' | sort
       exit 0
     fi
