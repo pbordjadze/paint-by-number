@@ -99,6 +99,7 @@ jobs:
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
+        with: { fetch-depth: 2 }
       - name: Build
         run: |
           set -o pipefail
@@ -117,6 +118,10 @@ jobs:
       - name: Pipeline benchmark (Apple silicon)
         if: always()
         run: |
+          # Only when the pipeline changed; app-only commits skip the 2-minute benchmark.
+          if git rev-parse -q --verify HEAD~1 >/dev/null && git diff --quiet HEAD~1 -- Sources Package.swift; then
+            echo "PaintCore unchanged; benchmark skipped" | tee out/bench.txt; exit 0
+          fi
           swift build -c release --product pbn 2>&1 | tail -2
           .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3 | tee out/bench.txt
       - name: Collect diagnostics
