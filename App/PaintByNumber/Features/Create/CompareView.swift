@@ -9,7 +9,19 @@ struct CompareView: View {
     let afterID: String
     let afterLabel: LocalizedStringKey
     let aspectRatio: CGFloat
-    @Binding var split: CGFloat
+    /// Owned here rather than bound from outside: a `@Binding` read inside the
+    /// `GeometryReader` of a continuously updating view got re-wrapped on every update
+    /// until the main thread's stack overflowed.
+    @State private var split: CGFloat
+
+    init(photo: CGImage?, after: CGImage?, afterID: String, afterLabel: LocalizedStringKey, aspectRatio: CGFloat, initialSplit: CGFloat = 0.5) {
+        self.photo = photo
+        self.after = after
+        self.afterID = afterID
+        self.afterLabel = afterLabel
+        self.aspectRatio = aspectRatio
+        _split = State(initialValue: initialSplit)
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -87,7 +99,7 @@ struct CompareView: View {
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
-                .glassEffect(.regular.interactive(), in: .circle)
+                .glassEffect(.regular, in: .circle)
         }
         .position(x: x, y: height / 2)
     }

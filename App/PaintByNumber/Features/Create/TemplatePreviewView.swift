@@ -14,7 +14,6 @@ struct TemplatePreviewView: View {
 
     @State private var size: CGSize = .zero
     @State private var layer: Layer = .painting
-    @State private var split: CGFloat = 0.5
     @State private var isStarting = false
     @State private var startError: String?
 
@@ -70,15 +69,10 @@ struct TemplatePreviewView: View {
     private var isSideBySide: Bool { size.width >= 700 || size.width > size.height * 1.2 }
     private var sidePadding: CGFloat { size.width > 900 ? 32 : 16 }
 
-    /// Binds a setting without writing unchanged values back: a slider re-asserting its
-    /// value would otherwise invalidate the model on every update and never settle.
-    private func setting(_ keyPath: ReferenceWritableKeyPath<CreateModel, Double>) -> Binding<Double> {
-        let model = self.model
-        return Binding(
-            get: { model[keyPath: keyPath] },
-            set: { newValue in
-                if abs(model[keyPath: keyPath] - newValue) > 1e-9 { model[keyPath: keyPath] = newValue }
-            })
+    /// Updates a setting, ignoring unchanged values: a slider re-asserting its value would
+    /// otherwise invalidate the model on every update.
+    private func update(_ keyPath: ReferenceWritableKeyPath<CreateModel, Double>, _ value: Double) {
+        if abs(model[keyPath: keyPath] - value) > 1e-9 { model[keyPath: keyPath] = value }
     }
 
     // MARK: Canvas
@@ -98,8 +92,7 @@ struct TemplatePreviewView: View {
                     CompareView(
                         photo: source.preview, after: afterImage, afterID: afterID,
                         afterLabel: layer == .painting ? "Painting" : "Numbers",
-                        aspectRatio: CGFloat(source.image.width) / CGFloat(max(1, source.image.height)),
-                        split: $split)
+                        aspectRatio: CGFloat(source.image.width) / CGFloat(max(1, source.image.height)))
                         .overlay(alignment: .bottom) {
                             status.padding(14)
                         }
@@ -152,14 +145,14 @@ struct TemplatePreviewView: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: 18) {
             SettingSlider(
-                title: "Colors", value: setting(\.colorCount), range: Double(6)...Double(60), step: 1,
+                title: "Colors", value: model.colorCount, onChange: { update(\.colorCount, $0) }, range: Double(6)...Double(60), step: 1,
                 valueText: "\(Int(model.colorCount.rounded()))", onEditing: model.setAdjusting)
             SettingSlider(
-                title: "Detail", value: setting(\.detail), range: 0...1,
+                title: "Detail", value: model.detail, onChange: { update(\.detail, $0) }, range: 0...1,
                 valueText: Self.word(model.detail, ["Simple", "Moderate", "Detailed", "Intricate"]),
                 onEditing: model.setAdjusting)
             SettingSlider(
-                title: "Smoothness", value: setting(\.smoothness), range: 0...1,
+                title: "Smoothness", value: model.smoothness, onChange: { update(\.smoothness, $0) }, range: 0...1,
                 valueText: Self.word(model.smoothness, ["Crisp", "Clean", "Smooth", "Flowing"]),
                 onEditing: model.setAdjusting)
 
@@ -223,13 +216,15 @@ private struct StatusCapsule<Content: View>: View {
 
 private struct SettingSlider: View {
     let title: LocalizedStringKey
-    @Binding var value: Double
+    let value: Double
+    var onChange: (Double) -> Void
     let range: ClosedRange<Double>
     var step: Double?
     let valueText: String
     var onEditing: (Bool) -> Void
 
     var body: some View {
+        let value = Binding(get: { self.value }, set: { onChange($0) })
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
                 Text(title)
@@ -244,9 +239,9 @@ private struct SettingSlider: View {
             }
             Group {
                 if let step {
-                    Slider(value: $value, in: range, step: step, onEditingChanged: onEditing)
+                    Slider(value: value, in: range, step: step, onEditingChanged: onEditing)
                 } else {
-                    Slider(value: $value, in: range, onEditingChanged: onEditing)
+                    Slider(value: value, in: range, onEditingChanged: onEditing)
                 }
             }
             .accessibilityLabel(title)
