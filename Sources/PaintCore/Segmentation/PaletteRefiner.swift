@@ -19,8 +19,9 @@ enum PaletteRefiner {
         palette initial: [SIMD3<Float>],
         minDistance: Float,
         chromaScale: Float,
-        iterations: Int
-    ) -> [SIMD3<Float>] {
+        iterations: Int,
+        cancel: CancellationCheck = .none
+    ) throws -> [SIMD3<Float>] {
         let unscale = SIMD3<Float>(1, 1 / chromaScale, 1 / chromaScale)
         let n = regions.count
         guard n > 0 else { return [] }
@@ -56,6 +57,7 @@ enum PaletteRefiner {
                 }
             }
         }
+        try cancel.throwIfCancelled()
         let all = regionSums.map(\.all), allWeighted = regionSums.map(\.allWeighted)
         let allChroma = regionSums.map(\.allChroma), core = regionSums.map(\.core)
         let coreWeighted = regionSums.map(\.coreWeighted), coreChroma = regionSums.map(\.coreChroma)
@@ -147,6 +149,7 @@ enum PaletteRefiner {
             for r in 0..<n where cls[r] == bj { cls[r] = bi }
         }
 
+        try cancel.throwIfCancelled()
         // Compact to used paints in a pleasant order.
         let usedIndices = (0..<k).filter { used[$0] }
         let finalColors = usedIndices.map { palette[$0] * unscale }

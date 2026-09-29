@@ -107,11 +107,11 @@ public enum Segmenter {
         try cancel.throwIfCancelled()
         progress(0.85)
 
-        let finalPalette = clock.measure("segment.refine") {
-            PaletteRefiner.refine(
+        let finalPalette = try clock.measure("segment.refine") {
+            try PaletteRefiner.refine(
                 classes: &classes, regions: &regions, adjacency: &adjacency, lab: lab.storage, importance: weights,
                 labelling: labelling, palette: palette, minDistance: p.minPaletteDistance,
-                chromaScale: p.chromaScale, iterations: p.refineIterations)
+                chromaScale: p.chromaScale, iterations: p.refineIterations, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         let labels = clock.measure("segment.finalize") { regions.labelMap() }
