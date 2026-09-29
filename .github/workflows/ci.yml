@@ -1,7 +1,8 @@
 name: CI
 
-# Every run publishes a report (STATUS.md, trimmed logs, compiler errors, screenshots) to
-# the branch `ci-shots/<branch>`, so results can be read with plain git (see ci/fetch.sh).
+# Every run publishes a report (STATUS.md, trimmed logs, compiler errors, test results,
+# screenshots) to the branch `ci-shots/<branch>`, readable with plain git (see ci/fetch.sh).
+# Each simulator gets its own VM: two booted simulators on one 3-core runner thrash.
 
 on:
   push:
@@ -26,68 +27,77 @@ env:
 
 jobs:
   core:
-    name: PaintCore tests + benchmark
-    runs-on: macos-26
+    name: PaintCore tests (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.2-noble
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - name: Test
+        shell: bash
         run: |
           set -o pipefail
           mkdir -p out
           swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tee out/core-test.log | tail -60
-      - name: Benchmark
-        run: |
-          set -o pipefail
-          swift build -c release --product pbn 2>&1 | tail -3
-          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3 | tee out/bench.txt
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: core, path: out, if-no-files-found: ignore }
 
-  app-test:
-    name: App build + tests (Debug)
+  iphone:
+    name: iPhone — Debug build, tests, screenshots
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
-      - name: Create and boot simulator
+      - name: Build for testing
+        run: |
+          set -o pipefail
+          mkdir -p out
+          xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
+      - name: Boot simulator
         id: sim
         run: |
-          UDID=$(ci/simulators.sh | awk '$1=="iphone"{print $2}')
-          xcrun simctl boot "$UDID"
+          read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh iphone)
+          echo "$MODEL $RUNTIME $UDID"
+          xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b > /dev/null
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
       - name: Test
         run: |
           set -o pipefail
-          mkdir -p out
-          xcodebuild test -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+          xcodebuild test-without-building -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
             -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
             -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
-      - name: Test summary
+      - name: Screenshots
+        if: always() && steps.sim.outcome == 'success'
+        env:
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          APP=$(find build/dd/Build/Products/Debug-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
+          [ -n "$APP" ] || exit 0
+          ci/screenshots.sh "$APP" out/shots iphone "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
+      - name: Collect diagnostics
         if: always()
         run: |
           mkdir -p out/attachments
-          grep -E "error:" out/app-test.log | sort -u > out/app-test-errors.txt || true
-          xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact > out/test-summary.json 2>/dev/null || true
-          xcrun xcresulttool get test-results tests --path build/Tests.xcresult --compact > out/test-results.json 2>/dev/null || true
-          xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path out/attachments >/dev/null 2>&1 || true
+          grep -hE "error:" out/app-build.log out/app-test.log 2>/dev/null | sort -u > out/errors.txt || true
+          if [ -d build/Tests.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact > out/test-summary.json 2>/dev/null || true
+            xcrun xcresulttool get test-results tests --path build/Tests.xcresult --compact > out/test-results.json 2>/dev/null || true
+            xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path out/attachments >/dev/null 2>&1 || true
+          fi
       - uses: actions/upload-artifact@v5
         if: always()
-        with: { name: app-test, path: out, if-no-files-found: ignore }
+        with: { name: iphone, path: out, if-no-files-found: ignore }
 
-  app-screens:
-    name: App build (Release) + screenshots
+  ipad:
+    name: iPad — Release build, screenshots, benchmark
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
-      - name: Create and boot simulators (they boot while the app builds)
-        run: |
-          ci/simulators.sh > /tmp/devices.txt
-          cat /tmp/devices.txt
-          awk '{print $2}' /tmp/devices.txt | xargs -n1 xcrun simctl boot
       - name: Build
         run: |
           set -o pipefail
@@ -95,24 +105,29 @@ jobs:
           xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
-      - name: Build errors
-        if: always()
-        run: grep -E "error:" out/app-build.log | sort -u > out/app-build-errors.txt || true
       - name: Screenshots
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
-          DEVICES_FILE: /tmp/devices.txt
         run: |
+          read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh ipad)
+          echo "$MODEL $RUNTIME $UDID"
           APP=$(find build/dd/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
-          LIST="${SCENARIOS:-$(cat ci/scenarios.txt 2>/dev/null || echo pipeline)}"
-          ci/screenshots.sh "$APP" out/shots $LIST
+          ci/screenshots.sh "$APP" out/shots ipad "$UDID" ${SCENARIOS:-$(cat ci/scenarios.txt)}
+      - name: Pipeline benchmark (Apple silicon)
+        if: always()
+        run: |
+          swift build -c release --product pbn 2>&1 | tail -2
+          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3 | tee out/bench.txt
+      - name: Collect diagnostics
+        if: always()
+        run: grep -hE "error:" out/app-build.log 2>/dev/null | sort -u > out/errors.txt || true
       - uses: actions/upload-artifact@v5
         if: always()
-        with: { name: app-screens, path: out, if-no-files-found: ignore }
+        with: { name: ipad, path: out, if-no-files-found: ignore }
 
   report:
     name: Publish report
-    needs: [core, app-test, app-screens]
+    needs: [core, iphone, ipad]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -130,8 +145,8 @@ jobs:
             echo "commit: ${GITHUB_SHA}"
             echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "core: ${{ needs.core.result }}"
-            echo "app-test: ${{ needs.app-test.result }}"
-            echo "app-screens: ${{ needs.app-screens.result }}"
+            echo "iphone: ${{ needs.iphone.result }}"
+            echo "ipad: ${{ needs.ipad.result }}"
           } > STATUS.md
           echo "${GITHUB_SHA}" > COMMIT
           git init -q && git checkout -q -b shots

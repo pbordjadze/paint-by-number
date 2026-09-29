@@ -59,9 +59,12 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 
 1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).
 2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the
-   report CI publishes to `ci-shots/<branch>`: `STATUS.md`, `*-errors.txt` (compiler errors),
-   trimmed `*.log`, `test-results.json`, screenshots (`app-screens/shots/*.png`), test
-   attachments. Typical turnaround ~8–12 min.
+   report CI publishes to `ci-shots/<branch>`: `STATUS.md`, `iphone/errors.txt` +
+   `ipad/errors.txt` (compiler errors; iPhone builds Debug, iPad builds Release), trimmed `*.log`,
+   `iphone/test-results.json`, screenshots (`iphone/shots/*.png`, `ipad/shots/*.png`, plus
+   `*-app.log` with the app's os_log output), test attachments (`iphone/attachments/`), and
+   `ipad/bench.txt` (pipeline timings on the M1 runner). Turnaround ~10–15 min (longer if
+   several branches are queued: only 5 macOS jobs run concurrently).
 3. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 
 ## Conventions
