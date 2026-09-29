@@ -312,6 +312,31 @@ struct VectorizerTests {
         #expect(t.regions[rect].area == 1500)
     }
 
+    @Test func cleanShapesNeedNoFallbacks() throws {
+        // Discs, a rotated rectangle and a 3-px diagonal stripe: every edge keeps its faired
+        // curve (no repair fell back to cruder geometry).
+        let w = 120, h = 90
+        var classes = [UInt32](repeating: 0, count: w * h)
+        for y in 0..<h {
+            for x in 0..<w {
+                let fx = Double(x) + 0.5, fy = Double(y) + 0.5
+                var c: UInt32 = 0
+                if (fx - 30) * (fx - 30) + (fy - 30) * (fy - 30) < 400 { c = 1 }
+                if (fx - 30) * (fx - 30) + (fy - 30) * (fy - 30) < 64 { c = 2 }
+                let u = (fx - 85) * 0.9 + (fy - 30) * 0.44, v = -(fx - 85) * 0.44 + (fy - 30) * 0.9
+                if abs(u) < 20 && abs(v) < 11 { c = 3 }
+                if abs(fy - 0.6 * fx - 40) < 2 { c = 4 }
+                classes[y * w + x] = c
+            }
+        }
+        let s = Self.segmentation(width: w, height: h, classes: classes)
+        let graph = BoundaryGraph.build(labels: s.labels)
+        for smoothness in [Float(0), 0.5, 1] {
+            #expect(EdgeSmoother(graph: graph, smoothness: smoothness).run().repairs == 0)
+            try Self.expectValid(try Self.vectorize(s, smoothness: smoothness), s)
+        }
+    }
+
     @Test func largeRegionsGetExtraLabels() throws {
         let rows = (0..<300).map { y in (0..<400).map { x in UInt32(x < 20 && y < 20 ? 1 : 0) } }
         let s = Self.segmentation(rows)

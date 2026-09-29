@@ -35,14 +35,10 @@ public enum Vectorizer {
         let topology = clock.measure("vectorize.rings") { graph.assembleRings(labels: map, regionCount: regionCount) }
         try cancel.throwIfCancelled()
 
-        var repairs = 0
         let geometry = clock.measure("vectorize.smooth") {
-            EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run(repairs: &repairs)
+            EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run().geometry
         }
         let edges = geometry.boundaryEdges(graph)
-        if ProcessInfo.processInfo.environment["PBN_DEBUG"] != nil {
-            FileHandle.standardError.write(Data("repairs \(repairs) of \(graph.edgeCount) edges\n".utf8))
-        }
         try cancel.throwIfCancelled()
 
         let distance = clock.measure("vectorize.edt") { DistanceTransform.interiorDistance(labels: map) }

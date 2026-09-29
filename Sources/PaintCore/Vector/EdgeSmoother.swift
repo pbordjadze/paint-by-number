@@ -71,8 +71,9 @@ struct EdgeSmoother {
     }
 
     /// Smooths all edges and repairs invalid geometry. `repairs` counts edges that needed a
-    /// fallback shape (a quality metric).
-    func run(repairs: inout Int) -> EdgePolylines {
+    /// fallback shape (a quality metric: zero for clean segmentations).
+    func run() -> (geometry: EdgePolylines, repairs: Int) {
+        var repairs = 0
         let edgeCount = graph.edgeCount
         var shapes = [UInt8](repeating: Shape.faired.rawValue, count: edgeCount)
         let all = Array(0..<edgeCount)
@@ -100,7 +101,7 @@ struct EdgeSmoother {
             let redo = polylines(for: fix, shapes: shapes)
             geo.replace(fix, points: redo.points, counts: redo.counts)
         }
-        return geo
+        return (geo, repairs)
     }
 
     // MARK: - Polylines
