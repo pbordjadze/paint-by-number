@@ -90,7 +90,7 @@ public enum Segmenter {
                 minDistance: p.minPaletteDistance, chromaScale: p.chromaScale, iterations: p.refineIterations)
         }
         let components = clock.measure("segment.finalize") {
-            ConnectedComponents.label(Grid(width: w, height: h, storage: classes))
+            RunComponents.label(classes, width: w, height: h)
         }
         progress(1)
         return Segmentation(

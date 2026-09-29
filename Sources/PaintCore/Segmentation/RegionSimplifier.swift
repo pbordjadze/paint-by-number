@@ -20,8 +20,14 @@ enum RegionSimplifier {
         cancel: CancellationCheck
     ) throws -> Components {
         var cleanupRounds = 5
+        // Pixel specks and hairlines dissolve far more cheaply at pixel level than as
+        // thousands of one-pixel regions in the merge queue.
+        let tp = ContinuousClock.now
+        let pre = ThinPartRemoval.apply(
+            classes: &classes, width: w, height: h,
+            colors: colors.storage, palette: palette, radiusSquared: p.openingRadiusSquared, maxPasses: 3)
         var cc = components(classes, w, h)
-        if Tune.debug { debugLog("initial regions \(cc.count)") }
+        if Tune.debug { debugLog("initial regions \(cc.count) prepeel \(pre) in \(ContinuousClock.now - tp)") }
         var round = 0
         while true {
             try cancel.throwIfCancelled()
@@ -48,13 +54,13 @@ enum RegionSimplifier {
             if merged == 0 && peeled == 0 && wide != nil { return cc }
             // Late peels only nudge single pixels at junctions; stop cleaning once that is all
             // that happens and let the remaining rounds settle sizes.
-            if round >= 2 && peeled < w * h / 2000 { cleanupRounds = min(cleanupRounds, round + 1) }
+            if round >= 1 && peeled < w * h / 1000 { cleanupRounds = min(cleanupRounds, round + 1) }
             round += 1
         }
     }
 
     static func components(_ classes: [UInt32], _ w: Int, _ h: Int) -> Components {
-        ConnectedComponents.label(Grid(width: w, height: h, storage: classes))
+        RunComponents.label(classes, width: w, height: h)
     }
 
     /// Whether each region's largest inscribed disc reaches `radius`, in the exact sense of
@@ -269,10 +275,14 @@ enum RegionSimplifier {
 
     /// Neighbour lists with shared border lengths (4-neighbour pixel pairs).
     static func adjacencyLists(_ labels: [UInt32], width w: Int, height h: Int, count n: Int) -> [[Link]] {
-        var keys: [UInt64] = []
-        var counts: [Int32] = []
-        keys.reserveCapacity(labels.count / 8)
-        counts.reserveCapacity(labels.count / 8)
+        // Each entry packs (low id: 24 bits, high id: 24 bits, run length: 16 bits) so one
+        // direct integer sort groups all runs of a pair together.
+        precondition(n < 1 << 24, "too many regions")
+        var entries: [UInt64] = []
+        entries.reserveCapacity(labels.count / 8)
+        @inline(__always) func pack(_ a: UInt32, _ b: UInt32) -> UInt64 {
+            a < b ? UInt64(a) << 40 | UInt64(b) << 16 : UInt64(b) << 40 | UInt64(a) << 16
+        }
         labels.withUnsafeBufferPointer { lb in
             var lastH = -1, lastV = -1
             for y in 0..<h {
@@ -283,40 +293,41 @@ enum RegionSimplifier {
                     if x + 1 < w {
                         let b = lb[i + 1]
                         if a != b {
-                            let key = a < b ? UInt64(a) << 32 | UInt64(b) : UInt64(b) << 32 | UInt64(a)
-                            if lastH >= 0 && keys[lastH] == key {
-                                counts[lastH] += 1
+                            let key = pack(a, b)
+                            if lastH >= 0 && entries[lastH] & ~0xFFFF == key && entries[lastH] & 0xFFFF < 0xFFFF {
+                                entries[lastH] += 1
                             } else {
-                                lastH = keys.count; keys.append(key); counts.append(1)
+                                lastH = entries.count
+                                entries.append(key | 1)
                             }
                         }
                     }
                     if y + 1 < h {
                         let b = lb[i + w]
                         if a != b {
-                            let key = a < b ? UInt64(a) << 32 | UInt64(b) : UInt64(b) << 32 | UInt64(a)
-                            if lastV >= 0 && keys[lastV] == key {
-                                counts[lastV] += 1
+                            let key = pack(a, b)
+                            if lastV >= 0 && entries[lastV] & ~0xFFFF == key && entries[lastV] & 0xFFFF < 0xFFFF {
+                                entries[lastV] += 1
                             } else {
-                                lastV = keys.count; keys.append(key); counts.append(1)
+                                lastV = entries.count
+                                entries.append(key | 1)
                             }
                         }
                     }
                 }
             }
         }
-        var order = Array(0..<keys.count)
-        order.sort { keys[$0] < keys[$1] }
+        entries.sort()
         var adjacency = [[Link]](repeating: [], count: n)
         var k = 0
-        while k < order.count {
-            let key = keys[order[k]]
+        while k < entries.count {
+            let key = entries[k] & ~0xFFFF
             var total: Int32 = 0
-            while k < order.count && keys[order[k]] == key {
-                total += counts[order[k]]
+            while k < entries.count && entries[k] & ~0xFFFF == key {
+                total += Int32(entries[k] & 0xFFFF)
                 k += 1
             }
-            let a = Int(key >> 32), b = Int(key & 0xFFFF_FFFF)
+            let a = Int(key >> 40), b = Int((key >> 16) & 0xFF_FFFF)
             adjacency[a].append(Link(region: Int32(b), length: total))
             adjacency[b].append(Link(region: Int32(a), length: total))
         }

@@ -21,7 +21,7 @@ enum PaletteRefiner {
         iterations: Int
     ) -> [SIMD3<Float>] {
         let unscale = SIMD3<Float>(1, 1 / chromaScale, 1 / chromaScale)
-        let cc = ConnectedComponents.label(Grid(width: w, height: h, storage: classes))
+        let cc = RunComponents.label(classes, width: w, height: h)
         let n = cc.count
         guard n > 0 else { return [] }
         // Per region: color sum and pixel count, and the importance-weighted equivalents
