@@ -10,6 +10,7 @@ SCENARIOS=("$@")
 [[ ${#SCENARIOS[@]} -eq 0 ]] && SCENARIOS=(pipeline)
 BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
 mkdir -p "$OUT"
+exec > >(tee -a "$OUT/${KIND}-steps.log") 2>&1
 step() { echo "$(date +%T) $KIND: $*"; }
 
 xcrun simctl boot "$UDID" 2>/dev/null || true
@@ -27,9 +28,13 @@ for entry in "${SCENARIOS[@]}"; do
     appearance="$want"
   fi
   xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
-  xcrun simctl launch "$UDID" "$BUNDLE_ID" -demo "$scenario" > /dev/null
+  step "launch $scenario: $(xcrun simctl launch "$UDID" "$BUNDLE_ID" -demo "$scenario" 2>&1 | tr '\n' ' ')"
   sleep "$delay"
   xcrun simctl io "$UDID" screenshot --type=png "$OUT/${KIND}-${scenario}.png" 2>/dev/null
-  step "captured $scenario"
+  if xcrun simctl spawn "$UDID" launchctl list 2>/dev/null | grep -q "UIKitApplication:$BUNDLE_ID"; then
+    step "captured $scenario"
+  else
+    step "captured $scenario — WARNING: app not running (crashed or failed to launch; see crashes/)"
+  fi
 done
 xcrun simctl spawn "$UDID" log show --last 15m --style compact --predicate 'process == "PaintByNumber"' > "$OUT/${KIND}-app.log" 2>/dev/null || true
