@@ -6,7 +6,7 @@ import PaintCore
 import UniformTypeIdentifiers
 
 /// Offscreen rendering with the canvas shaders: gallery thumbnails, share/export images,
-/// printable previews and time-lapse frames. Thread-safe; call it off the main actor.
+/// printable previews. Thread-safe; call it off the main actor.
 nonisolated enum CanvasSnapshot {
     nonisolated struct Options: Sendable {
         var outlines: Bool
@@ -33,44 +33,16 @@ nonisolated enum CanvasSnapshot {
         return render(scene: scene, template: template, painted: painted, size: size, options: options, context: context)
     }
 
-    /// Time-lapse frame: the first `strokes` fills of the progress log.
-    static func timelapseFrame(template: Template, progress: PaintProgress, strokes: Int, size: CGSize) -> CGImage? {
-        guard let context = RenderContext.shared, let scene = CanvasScene(template: template, context: context) else { return nil }
-        var painted = [Bool](repeating: false, count: template.regions.count)
-        for stroke in progress.log.prefix(max(0, strokes)) { painted[Int(stroke.region)] = true }
-        return render(scene: scene, template: template, painted: painted, size: size, options: .thumbnail, context: context)
-    }
-
     static func render(
         scene: CanvasScene, template: Template, painted: [Bool], size: CGSize, options: Options, context: RenderContext
     ) -> CGImage? {
         let w = min(8192, max(1, Int(size.width.rounded()))), h = min(8192, max(1, Int(size.height.rounded())))
-        let canvasW = Float(template.width), canvasH = Float(template.height)
-        let scale = min(Float(w) / canvasW, Float(h) / canvasH)
-        let palette = CanvasPalette.appearance(dark: options.dark)
-
         var states: [RegionState] = []
         states.reserveCapacity(template.regions.count)
         for i in template.regions.indices {
             states.append(.settled(painted: painted[i], origin: .zero, seed: 0))
         }
-
-        var u = CanvasUniforms()
-        u.transform = SIMD4((Float(w) - canvasW * scale) / 2, (Float(h) - canvasH * scale) / 2, scale, 1)
-        u.viewport = SIMD4(Float(w), Float(h), canvasW, canvasH)
-        u.background = SIMD4(palette.background, 1)
-        u.paper = SIMD4(palette.paper, 0)
-        u.ink = SIMD4(palette.ink, palette.outlineOpacity)
-        let width = options.outlineWidth * max(scale, 0.25)
-        u.outline = SIMD4(width, width, 0, options.numbers ? 1 : 0)
-        u.labels = SIMD4(5, 7, .greatestFiniteMagnitude, 0)
-        u.numbers = SIMD4(0.8, 0.9, 0.04, 0)
-        u.time = SIMD4(0, -10_000, -10_000, -10_000)
-        if let color = options.highlight, color >= 0, color < scene.paletteLinear.count {
-            u.selected = SIMD4(scene.paletteLinear[color], 1)
-            u.ids.x = Int32(color)
-            u.outline.z = 1
-        }
+        let u = uniforms(scene: scene, width: w, height: h, options: options)
 
         let device = context.device
         let rowBytes = (w * 4 + 255) / 256 * 256
@@ -107,6 +79,31 @@ nonisolated enum CanvasSnapshot {
             width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: rowBytes, space: space,
             bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue),
             provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    }
+
+    /// Shader constants for an offscreen frame: canvas fitted and centred in `width`×`height`
+    /// pixels, renderer clock at 0.
+    static func uniforms(scene: CanvasScene, width w: Int, height h: Int, options: Options) -> CanvasUniforms {
+        let canvasW = scene.canvasSize.x, canvasH = scene.canvasSize.y
+        let scale = min(Float(w) / canvasW, Float(h) / canvasH)
+        let palette = CanvasPalette.appearance(dark: options.dark)
+        var u = CanvasUniforms()
+        u.transform = SIMD4((Float(w) - canvasW * scale) / 2, (Float(h) - canvasH * scale) / 2, scale, 1)
+        u.viewport = SIMD4(Float(w), Float(h), canvasW, canvasH)
+        u.background = SIMD4(palette.background, 1)
+        u.paper = SIMD4(palette.paper, 0)
+        u.ink = SIMD4(palette.ink, palette.outlineOpacity)
+        let width = options.outlineWidth * max(scale, 0.25)
+        u.outline = SIMD4(width, width, 0, options.numbers ? 1 : 0)
+        u.labels = SIMD4(5, 7, .greatestFiniteMagnitude, 0)
+        u.numbers = SIMD4(0.8, 0.9, 0.04, 0)
+        u.time = SIMD4(0, -10_000, -10_000, -10_000)
+        if let color = options.highlight, color >= 0, color < scene.paletteLinear.count {
+            u.selected = SIMD4(scene.paletteLinear[color], 1)
+            u.ids.x = Int32(color)
+            u.outline.z = 1
+        }
+        return u
     }
 
     /// Output size for a template fitted into `longSide` pixels.

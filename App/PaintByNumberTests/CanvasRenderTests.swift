@@ -1,4 +1,5 @@
 import CoreGraphics
+import CoreVideo
 import Foundation
 import PaintCore
 import Testing
@@ -160,6 +161,49 @@ struct CanvasRenderTests {
             """
         Attachment.record(Data(report.utf8), named: "large-timings.txt")
         #expect(upload < .milliseconds(250))
+    }
+
+    @Test func timelapseFramesReplayTheStrokeLog() throws {
+        let t = Self.template
+        var progress = PaintProgress(regionCount: t.regions.count)
+        for r in t.regions.indices.reversed() { progress.paint(r) }
+        let renderer = try #require(TimelapseFrameRenderer(template: t, progress: progress))
+        #expect(renderer.strokeCount == t.regions.count)
+        var buffer: CVPixelBuffer?
+        let attributes: [String: Any] = [
+            kCVPixelBufferMetalCompatibilityKey as String: true,
+            kCVPixelBufferCGBitmapContextCompatibilityKey as String: true,
+        ]
+        CVPixelBufferCreate(nil, 240, 320, kCVPixelFormatType_32BGRA, attributes as CFDictionary, &buffer)
+        let frame = try #require(buffer)
+        // Halfway through the log with the next stroke 40 % spread.
+        let half = t.regions.count / 2
+        try renderer.render(strokes: half, fraction: 0.4, into: frame)
+        CVPixelBufferLockBaseAddress(frame, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(frame, .readOnly) }
+        let base = try #require(CVPixelBufferGetBaseAddress(frame))
+        let data = Data(bytes: base, count: CVPixelBufferGetBytesPerRow(frame) * 320)
+        let provider = try #require(CGDataProvider(data: data as CFData))
+        let image = try #require(CGImage(
+            width: 240, height: 320, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: CVPixelBufferGetBytesPerRow(frame),
+            space: CGColorSpace(name: CGColorSpace.displayP3)!,
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue),
+            provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent))
+        record(image, "timelapse-frame")
+        // Strokes run from the last region backwards: late regions are painted, early ones paper.
+        let px = Pixels(image)
+        let paper = encoded(CanvasPalette.light.paper)
+        let scale = Float(240) / Float(t.width)
+        func sample(_ r: Int) -> SIMD3<Int>? {
+            guard let l = t.labels(ofRegion: r).first, l.radius * scale >= 3 else { return nil }
+            return px[Int(l.position.x * scale), Int(l.position.y * scale)]
+        }
+        if let last = sample(t.regions.count - 1) {
+            #expect(maxDifference(last, bytes(t.palette[Int(t.regions.last!.colorIndex)].rgb)) <= 4)
+        }
+        if let first = t.regions.indices.lazy.compactMap(sample).first {
+            #expect(maxDifference(first, paper) <= 4)
+        }
     }
 
     // MARK: Helpers
