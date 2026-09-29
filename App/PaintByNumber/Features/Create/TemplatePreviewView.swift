@@ -11,7 +11,7 @@ struct TemplatePreviewView: View {
         var id: String { rawValue }
     }
 
-    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var size: CGSize = .zero
     @State private var layer: Layer = .painting
     @State private var split: CGFloat = 0.5
     @State private var isStarting = false
@@ -19,15 +19,18 @@ struct TemplatePreviewView: View {
 
     var body: some View {
         Group {
-            if sizeClass == .regular {
+            if isSideBySide {
                 HStack(spacing: 24) {
                     canvas
-                    controls
-                        .frame(width: 360)
-                        .background(Theme.surface, in: .rect(cornerRadius: 30, style: .continuous))
-                        .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 8)
+                    ViewThatFits(in: .vertical) {
+                        controls
+                        ScrollView { controls }
+                    }
+                    .frame(width: size.width > 900 ? 360 : 320)
+                    .background(Theme.surface, in: .rect(cornerRadius: 30, style: .continuous))
+                    .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 8)
                 }
-                .padding(32)
+                .padding(size.width > 900 ? 32 : 16)
             } else {
                 VStack(spacing: 16) {
                     canvas
@@ -43,7 +46,9 @@ struct TemplatePreviewView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
         .navigationTitle(model.source?.title ?? "Preview")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.settings) { model.settingsChanged() }
@@ -53,6 +58,9 @@ struct TemplatePreviewView: View {
             Text(startError ?? "")
         }
     }
+
+    /// Canvas beside the controls on wide containers (iPad, iPhone in landscape).
+    private var isSideBySide: Bool { size.width >= 700 || size.width > size.height * 1.2 }
 
     // MARK: Canvas
 
@@ -160,7 +168,7 @@ struct TemplatePreviewView: View {
         }
         .padding(.horizontal, 22)
         .padding(.top, 22)
-        .padding(.bottom, sizeClass == .regular ? 22 : 8)
+        .padding(.bottom, isSideBySide ? 22 : 8)
     }
 
     private func start() {
