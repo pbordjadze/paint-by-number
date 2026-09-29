@@ -186,6 +186,28 @@ enum LabelRegularizer {
         let c = colors[i]
         var count = 0
         var differs = false
+        if x > 0 && y > 0 && x + 1 < w && y + 1 < h {
+            // All eight neighbours, in the order of the general loop below; the weights are
+            // computed eight at a time with exactly the scalar arithmetic per lane (the
+            // fourth colour lane is zero throughout).
+            let up = i - w, down = i + w
+            let index = SIMD8<Int>(up - 1, up, up + 1, i - 1, i + 1, down - 1, down, down + 1)
+            var ex = SIMD8<Float>(), ey = SIMD8<Float>(), ez = SIMD8<Float>()
+            for k in 0..<8 {
+                let j = index[k]
+                let l = labels[j]
+                if l != current { differs = true }
+                nl[k] = l
+                let e = c - colors[j]
+                ex[k] = e.x; ey[k] = e.y; ez[k] = e.z
+            }
+            guard differs else { return false }
+            let base = SIMD8<Float>(diagonal, 1, diagonal, 1, 1, diagonal, 1, diagonal)
+            let squared = ex * ex + ey * ey + ez * ez
+            let weights = (strength * base) / (1 + squared * invSigma2)
+            for k in 0..<8 { nw[k] = weights[k] }
+            count = 8
+        } else {
         // Gather neighbours with contrast-sensitive weights.
         for dy in -1...1 {
             let yy = y + dy
@@ -203,6 +225,7 @@ enum LabelRegularizer {
                 nw[count] = strength * base / (1 + (e * e).sum() * invSigma2)
                 count += 1
             }
+        }
         }
         guard differs else { return false }
         var total: Float = 0
