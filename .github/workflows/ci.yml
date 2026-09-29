@@ -1,0 +1,155 @@
+name: CI
+
+# Every run publishes a report (STATUS.md, trimmed logs, compiler errors, test results,
+# screenshots) to the branch `ci-shots/<branch>`, readable with plain git (see ci/fetch.sh).
+# Each simulator gets its own VM: two booted simulators on one 3-core runner thrash.
+
+on:
+  push:
+    branches-ignore: ['ci-shots/**']
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: 'Demo scenarios to screenshot (space separated, optional @seconds)'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  PROJECT: App/PaintByNumber.xcodeproj
+  SCHEME: PaintByNumber
+
+jobs:
+  core:
+    name: PaintCore tests (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.2-noble
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Test
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p out
+          swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tee out/core-test.log | tail -60
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: core, path: out, if-no-files-found: ignore }
+
+  iphone:
+    name: iPhone — Debug build, tests, screenshots
+    runs-on: macos-26
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build for testing
+        run: |
+          set -o pipefail
+          mkdir -p out
+          xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
+      - name: Boot simulator
+        id: sim
+        run: |
+          read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh iphone)
+          echo "$MODEL $RUNTIME $UDID"
+          xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b > /dev/null
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
+            -resultBundlePath build/Tests.xcresult -quiet \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
+      - name: Screenshots
+        if: always() && steps.sim.outcome == 'success'
+        env:
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          APP=$(find build/dd/Build/Products/Debug-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
+          [ -n "$APP" ] || exit 0
+          ci/screenshots.sh "$APP" out/shots iphone "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
+      - name: Collect diagnostics
+        if: always()
+        run: |
+          mkdir -p out/attachments
+          grep -hE "error:" out/app-build.log out/app-test.log 2>/dev/null | sort -u > out/errors.txt || true
+          if [ -d build/Tests.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact > out/test-summary.json 2>/dev/null || true
+            xcrun xcresulttool get test-results tests --path build/Tests.xcresult --compact > out/test-results.json 2>/dev/null || true
+            xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path out/attachments >/dev/null 2>&1 || true
+          fi
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: iphone, path: out, if-no-files-found: ignore }
+
+  ipad:
+    name: iPad — Release build, screenshots, benchmark
+    runs-on: macos-26
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build
+        run: |
+          set -o pipefail
+          mkdir -p out
+          xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
+      - name: Screenshots
+        env:
+          SCENARIOS: ${{ github.event.inputs.scenarios }}
+        run: |
+          read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh ipad)
+          echo "$MODEL $RUNTIME $UDID"
+          APP=$(find build/dd/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
+          ci/screenshots.sh "$APP" out/shots ipad "$UDID" ${SCENARIOS:-$(cat ci/scenarios.txt)}
+      - name: Pipeline benchmark (Apple silicon)
+        if: always()
+        run: |
+          swift build -c release --product pbn 2>&1 | tail -2
+          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3 | tee out/bench.txt
+      - name: Collect diagnostics
+        if: always()
+        run: grep -hE "error:" out/app-build.log 2>/dev/null | sort -u > out/errors.txt || true
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: ipad, path: out, if-no-files-found: ignore }
+
+  report:
+    name: Publish report
+    needs: [core, iphone, ipad]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v5
+        with: { path: report }
+      - name: Write status and push to ci-shots/${{ github.ref_name }}
+        run: |
+          mkdir -p report && cd report
+          for f in $(find . -name '*.log'); do
+            # Keep every diagnostic line plus the tail; full logs can be huge.
+            { grep -nE "error:|warning:|failed|FAIL|✘|Fatal|crash" "$f" | head -400; echo "----- tail -----"; tail -200 "$f"; } > "$f.trimmed"
+            mv "$f.trimmed" "$f"
+          done
+          {
+            echo "commit: ${GITHUB_SHA}"
+            echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo "core: ${{ needs.core.result }}"
+            echo "iphone: ${{ needs.iphone.result }}"
+            echo "ipad: ${{ needs.ipad.result }}"
+          } > STATUS.md
+          echo "${GITHUB_SHA}" > COMMIT
+          git init -q && git checkout -q -b shots
+          git add -A
+          git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "CI report for ${GITHUB_SHA}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" "shots:refs/heads/ci-shots/${GITHUB_REF_NAME}"

@@ -29,6 +29,43 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   Look at the PNGs with the Read tool.
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
   corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
+- `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
+  distinct color) — ideal for judging curve quality on synthetic shapes. `pbn check <t.pbnt>`
+  runs `Template.validate()` (planarity, ring orientation, mesh coverage/watertightness, labels).
+- Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
+  documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
+
+## iOS app (App/)
+
+- Deployment target iOS 26.0, iPhone + iPad. Build with Xcode 26.6 (CI). Swift 6 with
+  `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency: app types are
+  MainActor by default; mark pure/background helpers `nonisolated` and CPU-heavy async work
+  `@concurrent`. PaintCore is a separate module (nonisolated).
+- `MemberImportVisibility` is enabled: every file that touches members of a type from another
+  module must import that module itself (`import PaintCore`, `import simd`, …).
+- Closures handed to system APIs that call back on arbitrary threads (AVFoundation, Core Haptics,
+  Metal completion handlers, NotificationCenter with a queue) must not be MainActor-isolated —
+  form them in `nonisolated` code or they trap at runtime under Swift 6.
+- Liquid Glass design language (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)`,
+  `.glassProminent`), SF Symbols, Dynamic Type, dark mode, VoiceOver labels.
+- Key model types: `PaintingSession` (@Observable; painting rules, tap tolerance, drag-paint, undo,
+  per-color progress, events) + `PaintProgress` (persisted). The Metal canvas conforms to
+  `PaintingCanvas` and is driven by the session.
+- Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`). CI screenshots every
+  scenario listed in `ci/scenarios.txt` (`name@seconds` sets the settle delay) on an iPhone Pro
+  and a 13" iPad Pro simulator.
+
+## CI feedback loop (no Xcode locally)
+
+1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).
+2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the
+   report CI publishes to `ci-shots/<branch>`: `STATUS.md`, `iphone/errors.txt` +
+   `ipad/errors.txt` (compiler errors; iPhone builds Debug, iPad builds Release), trimmed `*.log`,
+   `iphone/test-results.json`, screenshots (`iphone/shots/*.png`, `ipad/shots/*.png`, plus
+   `*-app.log` with the app's os_log output), test attachments (`iphone/attachments/`), and
+   `ipad/bench.txt` (pipeline timings on the M1 runner). Turnaround ~10–15 min (longer if
+   several branches are queued: only 5 macOS jobs run concurrently).
+3. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 
 ## Conventions
 

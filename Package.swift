@@ -16,6 +16,8 @@ let package = Package(
         .target(
             name: "PaintCore",
             swiftSettings: [
+                // The pipeline must stay fast in Debug app builds too.
+                .unsafeFlags(["-O"], .when(configuration: .debug)),
                 .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
             ]
         ),
