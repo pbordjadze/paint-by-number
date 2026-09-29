@@ -260,6 +260,7 @@ private struct CompletionBar: View {
         }
         .padding(.horizontal, 18)
         .frame(height: PaletteBar.thickness)
+        .frame(maxWidth: 560)
         .glassEffect(.regular, in: .capsule)
         .task(id: session.revision) {
             let data = await Self.renderShareImage(template: session.template, progress: session.progress)
