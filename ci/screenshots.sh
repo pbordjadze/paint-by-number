@@ -19,7 +19,9 @@ xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi --wifi
   --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100 || true
 xcrun simctl install "$UDID" "$APP"; step installed
 appearance=light
-seen_reports=$(ls ~/Library/Logs/DiagnosticReports/PaintByNumber* 2>/dev/null | wc -l | tr -d ' ')
+# `ls` fails while there are no reports; under pipefail that would end the script.
+count_reports() { { ls ~/Library/Logs/DiagnosticReports/PaintByNumber* 2>/dev/null || true; } | wc -l | tr -d ' '; }
+seen_reports=$(count_reports)
 for entry in "${SCENARIOS[@]}"; do
   scenario="${entry%@*}"; delay=8
   [[ "$entry" == *@* ]] && delay="${entry#*@}"
@@ -33,7 +35,7 @@ for entry in "${SCENARIOS[@]}"; do
   sleep "$delay"
   xcrun simctl io "$UDID" screenshot --type=png "$OUT/${KIND}-${scenario}.png" 2>/dev/null
   # A crash leaves a new report in the host's DiagnosticReports (simulator apps are host processes).
-  reports=$(ls ~/Library/Logs/DiagnosticReports/PaintByNumber* 2>/dev/null | wc -l | tr -d ' ')
+  reports=$(count_reports)
   if [[ "$reports" -gt "${seen_reports:-0}" ]]; then
     step "captured $scenario — CRASH: app crashed (see crashes/)"
   else
