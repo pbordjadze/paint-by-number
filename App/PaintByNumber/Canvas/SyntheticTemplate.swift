@@ -8,7 +8,7 @@ import PaintCore
 ///
 /// Used by canvas tests and demo scenarios; it does not depend on the photo pipeline.
 nonisolated enum SyntheticTemplate {
-    struct Options: Sendable {
+    nonisolated struct Options: Sendable {
         var width = 1200
         var height = 1600
         var columns = 12
