@@ -1,5 +1,6 @@
 import PaintCore
 import SwiftUI
+import os
 import simd
 
 /// Demo scenarios for the painting screen, deterministic for CI screenshots. The template is
@@ -107,6 +108,10 @@ private final class Demo {
         if scenario == "paint-hint" {
             try? await Task.sleep(for: .seconds(1.5))
             session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
+            let canvas = session.canvas as? CanvasView
+            Self.log.notice("demo paint-hint: canvas \(canvas == nil ? "missing" : "attached", privacy: .public), frames \(canvas?.framesRendered ?? -1, privacy: .public)")
+            try? await Task.sleep(for: .seconds(2))
+            Self.log.notice("demo paint-hint: frames 2 s later \(canvas?.framesRendered ?? -1, privacy: .public)")
             return
         }
         guard scenario == "paint-fill" else { return }
@@ -118,10 +123,16 @@ private final class Demo {
             .sorted { t.regions[$0].area > t.regions[$1].area }
             .prefix(8)
         for r in targets {
-            let b = t.regions[r].bounds
-            session.paint([r], from: SIMD2(Float(b.minX) + 2, Float(b.minY) + 2), animated: true)
+            session.paint([r], from: Self.center(t, r), animated: true)
         }
+        let canvas = session.canvas as? CanvasView
+        Self.log.notice(
+            "demo paint-fill: painted \(Array(targets), privacy: .public) of color \(color, privacy: .public); canvas \(canvas == nil ? "missing" : "attached", privacy: .public), frames \(canvas?.framesRendered ?? -1, privacy: .public)")
+        try? await Task.sleep(for: .seconds(3))
+        Self.log.notice("demo paint-fill: frames 3 s later \(canvas?.framesRendered ?? -1, privacy: .public)")
     }
+
+    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "demo")
 
     private static func center(_ t: Template, _ region: Int) -> SIMD2<Float> {
         t.labels(ofRegion: region).first?.position ?? .zero

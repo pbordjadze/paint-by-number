@@ -1,4 +1,5 @@
 import Foundation
+import QuartzCore
 import PaintCore
 import Testing
 import UIKit
@@ -171,6 +172,49 @@ struct PaintingSessionTests {
         let restored = PaintingSession(template: template, progress: decoded)
         #expect(restored.remainingByColor == session.remainingByColor)
         #expect(throws: (any Error).self) { try PaintProgress(encoded: data.prefix(10)) }
+    }
+
+    /// Frames must keep flowing: a lost completion handler would exhaust the frames-in-flight
+    /// semaphore after three frames and freeze the canvas.
+    @Test func rendererKeepsProducingFrames() async throws {
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: template, context: context))
+        let states = template.regions.indices.map { RegionState.settled(painted: false, origin: .zero, seed: 0) }
+        let renderer = try #require(CanvasRenderer(scene: scene, context: context, states: states))
+        let layer = CAMetalLayer()
+        layer.device = context.device
+        layer.pixelFormat = RenderContext.colorFormat
+        layer.drawableSize = CGSize(width: 240, height: 320)
+        let uniforms = CanvasSnapshot.uniforms(scene: scene, width: 240, height: 320, options: .preview)
+        var drawn = 0
+        for _ in 0..<12 {
+            if renderer.draw(in: layer, uniforms: uniforms, content: RenderContext.Content()) { drawn += 1 }
+            try await Task.sleep(for: .milliseconds(40))
+        }
+        #expect(drawn >= 10)
+    }
+
+    /// The on-screen canvas animates a tapped fill: the region's paint state starts now and
+    /// the display link keeps presenting frames while it spreads.
+    @Test func liveCanvasAnimatesATap() async throws {
+        let session = PaintingSession(template: template)
+        let view = CanvasView(session: session)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+        window.addSubview(view)
+        view.frame = window.bounds
+        window.isHidden = false
+        view.layoutIfNeeded()
+        try await Task.sleep(for: .milliseconds(300))
+        let before = view.framesRendered
+        let r = template.regions.indices.max { template.regions[$0].area < template.regions[$1].area }!
+        session.select(color: session.colorOf(r))
+        session.tap(at: label(r), tolerance: 0)
+        let state = try #require(view.regionState(r))
+        #expect(state.painted == 1)
+        #expect(state.duration > 0.2)
+        try await Task.sleep(for: .milliseconds(500))
+        #expect(view.framesRendered > before + 5, "frames before \(before), after \(view.framesRendered)")
+        window.isHidden = true
     }
 
     @Test func canvasFitsAndCentresTheArtwork() {

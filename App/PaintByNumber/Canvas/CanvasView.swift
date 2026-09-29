@@ -4,6 +4,7 @@ import Metal
 import PaintCore
 import QuartzCore
 import UIKit
+import os
 import simd
 
 /// Where the canvas looks when it first lays out (demo scenarios, restored sessions).
@@ -460,8 +461,21 @@ final class CanvasView: UIView, PaintingCanvas {
         if renderer.draw(in: metalLayer, uniforms: uniforms, content: content) {
             needsRender = false
             lastCamera = camera
+            framesRendered += 1
+            skippedFrames = 0
+        } else {
+            skippedFrames += 1
+            if skippedFrames == 120 { Self.log.error("canvas: no frame produced for 120 ticks") }
         }
     }
+
+    /// Frames presented so far (diagnostics and tests).
+    private(set) var framesRendered = 0
+    private var skippedFrames = 0
+    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "canvas")
+
+    /// The paint state the shaders currently see for a region (tests).
+    func regionState(_ region: Int) -> RegionState? { renderer?.states[region] }
 
     private func makeUniforms(time: Float, camera: Camera, palette: CanvasPalette) -> CanvasUniforms {
         let s = Float(contentScaleFactor)
