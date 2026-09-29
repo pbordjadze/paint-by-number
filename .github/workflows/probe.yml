@@ -1,0 +1,14 @@
+name: probe
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/probe']
+jobs:
+  probe:
+    runs-on: macos-26
+    steps:
+      - run: sw_vers; uname -m; sysctl -n machdep.cpu.brand_string; sysctl -n hw.ncpu; sysctl -n hw.memsize
+      - run: ls /Applications | grep -i xcode; xcodebuild -version; xcode-select -p
+      - run: xcrun simctl list runtimes; xcrun simctl list devicetypes | grep -E "iPhone|iPad" | tail -30
+      - run: system_profiler SPDisplaysDataType || true
+      - run: which xcodegen tuist swiftlint swiftformat || true; brew --version || true
