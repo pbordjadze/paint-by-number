@@ -95,7 +95,8 @@ private final class Demo {
             paint(fraction: 1)
         case "paint-fill":
             paint(fraction: 0.2)
-            fillDurationScale = 160
+            // Big fills take 0.6 s; stretched so the CI screenshot (~10 s later) lands mid-spread.
+            fillDurationScale = 64
         case "paint-hint":
             paint(fraction: 0.4)
         default:
@@ -108,28 +109,32 @@ private final class Demo {
         if scenario == "paint-hint" {
             try? await Task.sleep(for: .seconds(1.5))
             session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
-            let canvas = session.canvas as? CanvasView
-            Self.log.notice("demo paint-hint: canvas \(canvas == nil ? "missing" : "attached", privacy: .public), frames \(canvas?.framesRendered ?? -1, privacy: .public)")
-            try? await Task.sleep(for: .seconds(2))
-            Self.log.notice("demo paint-hint: frames 2 s later \(canvas?.framesRendered ?? -1, privacy: .public)")
+            Self.log.notice("demo paint-hint: requested (canvas \(session.canvas == nil ? "missing" : "attached", privacy: .public))")
             return
         }
         guard scenario == "paint-fill" else { return }
         try? await Task.sleep(for: .seconds(1.5))
         let t = session.template
-        guard let color = session.selectedColor else { return }
+        // Large regions whose paint reads clearly against the paper, so the front is visible.
+        func luminance(_ r: Int) -> Float {
+            ColorScience.relativeLuminance(encoded: t.palette[Int(t.regions[r].colorIndex)].rgb, space: t.colorSpace)
+        }
+        guard let first = t.regions.indices
+            .filter({ !session.isPainted($0) && luminance($0) < 0.3 })
+            .max(by: { t.regions[$0].area < t.regions[$1].area })
+        else { return }
+        let color = session.colorOf(first)
+        session.select(color: color)
         let targets = t.regions.indices
             .filter { session.colorOf($0) == color && !session.isPainted($0) }
             .sorted { t.regions[$0].area > t.regions[$1].area }
-            .prefix(8)
+            .prefix(3)
         for r in targets {
             session.paint([r], from: Self.center(t, r), animated: true)
         }
         let canvas = session.canvas as? CanvasView
         Self.log.notice(
-            "demo paint-fill: painted \(Array(targets), privacy: .public) of color \(color, privacy: .public); canvas \(canvas == nil ? "missing" : "attached", privacy: .public), frames \(canvas?.framesRendered ?? -1, privacy: .public)")
-        try? await Task.sleep(for: .seconds(3))
-        Self.log.notice("demo paint-fill: frames 3 s later \(canvas?.framesRendered ?? -1, privacy: .public)")
+            "demo paint-fill: painted \(Array(targets), privacy: .public) of color \(color, privacy: .public); frames \(canvas?.framesRendered ?? -1, privacy: .public)")
     }
 
     private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "demo")
