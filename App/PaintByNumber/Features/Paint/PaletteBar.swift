@@ -1,0 +1,121 @@
+import PaintCore
+import SwiftUI
+
+/// The paint palette: circular swatches with their number, a progress ring per color, a
+/// checkmark once a color is done. Scrolls to keep the selected color in view.
+struct PaletteBar: View {
+    let session: PaintingSession
+    var axis: Axis = .horizontal
+    /// Per color, bumped to shake its swatch (e.g. after tapping a region of that color).
+    var shakes: [Int: Int] = [:]
+
+    static let thickness: CGFloat = 76
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
+                let layout = axis == .horizontal ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(spacing: 8))
+                layout {
+                    ForEach(0..<session.paletteCount, id: \.self) { index in
+                        swatch(index).id(index)
+                    }
+                }
+                .padding(axis == .horizontal ? .horizontal : .vertical, 16)
+                .frame(minWidth: axis == .horizontal ? nil : Self.thickness, minHeight: axis == .horizontal ? Self.thickness : nil)
+            }
+            .onAppear {
+                if let selected = session.selectedColor { proxy.scrollTo(selected, anchor: .center) }
+            }
+            .onChange(of: session.selectedColor) { _, selected in
+                guard let selected else { return }
+                withAnimation(.smooth(duration: 0.35)) { proxy.scrollTo(selected, anchor: .center) }
+            }
+        }
+        .frame(width: axis == .vertical ? Self.thickness : nil, height: axis == .horizontal ? Self.thickness : nil)
+        .clipShape(.capsule)
+        .glassEffect(.regular, in: .capsule)
+    }
+
+    private func swatch(_ index: Int) -> some View {
+        let template = session.template
+        let paint = template.palette[index].rgb
+        let total = max(session.totalByColor[index], 1)
+        let fraction = 1 - Double(session.remainingByColor[index]) / Double(total)
+        let complete = session.isColorComplete(index)
+        let selected = session.selectedColor == index
+        let darkInk = ColorScience.relativeLuminance(encoded: paint, space: template.colorSpace) > 0.36
+        return Button {
+            if selected {
+                session.showHint()
+            } else {
+                session.select(color: index)
+                FeedbackEngine.shared.selectionChanged()
+            }
+        } label: {
+            Swatch(
+                number: index + 1,
+                color: Color(template.colorSpace == .displayP3 ? .displayP3 : .sRGB,
+                             red: Double(paint.x), green: Double(paint.y), blue: Double(paint.z)),
+                darkInk: darkInk, fraction: fraction, isComplete: complete, isSelected: selected)
+                .modifier(Shake(amount: CGFloat(shakes[index] ?? 0)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Color \(index + 1)"))
+        .accessibilityValue(Text(complete ? "Complete" : "\(Int(fraction * 100)) percent painted"))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+private struct Swatch: View {
+    let number: Int
+    let color: Color
+    let darkInk: Bool
+    let fraction: Double
+    let isComplete: Bool
+    let isSelected: Bool
+
+    var body: some View {
+        ZStack {
+            Circle().fill(color)
+            Circle().strokeBorder(.black.opacity(0.12), lineWidth: 0.5)
+            if isComplete {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 15, weight: .heavy))
+            } else {
+                Text("\(number)")
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+            }
+        }
+        .foregroundStyle(darkInk ? Color.black.opacity(0.75) : Color.white)
+        .frame(width: 40, height: 40)
+        .padding(4)
+        .overlay {
+            Circle()
+                .stroke(Color.primary.opacity(isSelected ? 0.16 : 0.08), lineWidth: 2.5)
+            Circle()
+                .trim(from: 0, to: fraction)
+                .stroke(Color.primary.opacity(isSelected ? 0.85 : 0.4), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .opacity(isComplete && !isSelected ? 0.4 : 1)
+        .scaleEffect(isSelected ? 1.14 : 1)
+        .animation(.spring(response: 0.32, dampingFraction: 0.6), value: isSelected)
+        .animation(.easeOut(duration: 0.35), value: fraction)
+        .contentShape(.circle)
+    }
+}
+
+/// A short horizontal shake; animate `amount` by +1 to play it once.
+nonisolated private struct Shake: GeometryEffect {
+    var amount: CGFloat
+
+    var animatableData: CGFloat {
+        get { amount }
+        set { amount = newValue }
+    }
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: 5 * sin(amount * .pi * 4), y: 0))
+    }
+}

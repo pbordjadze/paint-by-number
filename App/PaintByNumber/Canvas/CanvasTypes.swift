@@ -20,6 +20,8 @@ nonisolated struct CanvasUniforms {
     var outline: SIMD4<Float> = .zero
     /// x…y: legibility fade range (font px), z: max font px, w: min font px of a bumped number.
     var labels: SIMD4<Float> = .zero
+    /// x: number opacity, y: selected-color number opacity, z: selected boldness (SDF units).
+    var numbers: SIMD4<Float> = .zero
     /// x: now, y: selection change, z: pulse start, w: bump start (renderer clock, seconds).
     var time: SIMD4<Float> = .zero
     /// xy: position (px), z: radius (px), w: opacity.

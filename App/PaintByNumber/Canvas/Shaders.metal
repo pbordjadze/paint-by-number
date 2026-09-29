@@ -15,6 +15,7 @@ struct FrameUniforms {
     float4 selected;    // rgb: selected paint, a: 1 when a color is selected
     float4 outline;     // x: width (px), y: selected width (px), z: hatch strength, w: numbers visibility
     float4 labels;      // x…y: legibility fade (font px), z: max font px, w: min font px of a bumped number
+    float4 numbers;     // x: number opacity, y: selected-color number opacity, z: selected boldness
     float4 time;        // x: now, y: selection change, z: pulse start, w: bump start
     float4 brush;       // xy: position (px), z: radius (px), w: opacity
     int4   ids;         // x: selected color, y: hovered region, z: pulsing region, w: bumped region
@@ -315,7 +316,7 @@ vertex GlyphOut glyphVertex(uint vid [[vertex_id]],
     PaintSample ps = samplePaint(states[g.region], g.center, now, 1.0 / u.transform.z);
     bool selected = u.selected.a > 0.5 && int(regionColors[g.region].w + 0.5) == u.ids.x;
     float visibility = max(legible * u.outline.w, bump);
-    float alpha = visibility * (1.0 - ps.coverage) * (selected || bump > 0.0 ? 0.92 : 0.5);
+    float alpha = visibility * (1.0 - ps.coverage) * (selected || bump > 0.0 ? u.numbers.y : u.numbers.x);
 
     float4 rect = digitRects[g.digit];
     float4 uvRect = digitUVs[g.digit];
@@ -326,7 +327,7 @@ vertex GlyphOut glyphVertex(uint vid [[vertex_id]],
     o.position = alpha < 0.004 ? float4(-2.0, -2.0, 0.0, 1.0) : toClip(p, u);
     o.uv = mix(uvRect.xy, uvRect.zw, corner);
     o.alpha = alpha;
-    o.weight = selected ? 0.05 : 0.0;
+    o.weight = selected ? u.numbers.z : 0.0;
     return o;
 }
 
