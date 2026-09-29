@@ -1,0 +1,225 @@
+15:2026-09-29 23:17:34.585 Df PaintByNumber[7379:69c3] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10390cc60>
+170:2026-09-29 23:18:13.375 Df PaintByNumber[8185:73da] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103cf8bc0>
+312:2026-09-29 23:18:14.784 E  PaintByNumber[8185:73da] (libCoreFSCache.dylib) fopen failed for data file: errno = 2 (No such file or directory)
+329:2026-09-29 23:18:26.644 Df PaintByNumber[8185:73e3] [com.apple.xpc:connection] [0x103fcfc00] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+330:2026-09-29 23:18:26.644 Df PaintByNumber[8185:73e3] [com.apple.xpc:connection] [0x103fcfc00] invalidated after a failed init
+460:2026-09-29 23:18:42.877 Df PaintByNumber[9342:7f53] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10654d9c0>
+567:2026-09-29 23:18:43.855 Df PaintByNumber[9342:7f5e] [com.apple.xpc:connection] [0x1067cb980] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+568:2026-09-29 23:18:43.855 Df PaintByNumber[9342:7f5e] [com.apple.xpc:connection] [0x1067cb980] invalidated after a failed init
+725:2026-09-29 23:19:04.517 Df PaintByNumber[10201:8854] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10410d100>
+855:2026-09-29 23:19:06.126 Df PaintByNumber[10201:8865] [com.apple.xpc:connection] [0x1043cb980] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+856:2026-09-29 23:19:06.126 Df PaintByNumber[10201:8865] [com.apple.xpc:connection] [0x1043cb980] invalidated after a failed init
+1010:2026-09-29 23:19:23.684 Df PaintByNumber[11010:9062] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101510e00>
+1150:2026-09-29 23:19:25.519 Df PaintByNumber[11010:906a] [com.apple.xpc:connection] [0x1017d3980] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+1151:2026-09-29 23:19:25.519 Df PaintByNumber[11010:906a] [com.apple.xpc:connection] [0x1017d3980] invalidated after a failed init
+1289:2026-09-29 23:19:46.963 E  PaintByNumber[11010:9062] (libCoreFSCache.dylib) fopen failed for data file: errno = 2 (No such file or directory)
+1342:2026-09-29 23:19:51.248 Df PaintByNumber[11903:99f7] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1060fcc80>
+1469:2026-09-29 23:19:54.408 Df PaintByNumber[11903:99fd] [com.apple.xpc:connection] [0x1063cf840] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+1470:2026-09-29 23:19:54.408 Df PaintByNumber[11903:99fd] [com.apple.xpc:connection] [0x1063cf840] invalidated after a failed init
+1654:2026-09-29 23:20:08.728 Df PaintByNumber[12517:a09b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101904ee0>
+1783:2026-09-29 23:20:10.044 Df PaintByNumber[12517:a0a2] [com.apple.xpc:connection] [0x101bcb980] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+1784:2026-09-29 23:20:10.044 Df PaintByNumber[12517:a0a2] [com.apple.xpc:connection] [0x101bcb980] invalidated after a failed init
+1943:2026-09-29 23:20:27.677 Df PaintByNumber[13314:a897] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1018f8de0>
+2077:2026-09-29 23:20:29.316 Df PaintByNumber[13314:a8a3] [com.apple.xpc:connection] [0x101bcf980] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+2078:2026-09-29 23:20:29.316 Df PaintByNumber[13314:a8a3] [com.apple.xpc:connection] [0x101bcf980] invalidated after a failed init
+----- tail -----
+2026-09-29 23:20:27.853 Df PaintByNumber[13314:a897] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100ddf080> (99353893-5F12-4291-AED2-DF1FB04D02E3)
+2026-09-29 23:20:27.856 Df PaintByNumber[13314:a897] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100ddf080> (99353893-5F12-4291-AED2-DF1FB04D02E3)
+2026-09-29 23:20:27.938 Df PaintByNumber[13314:a897] [com.apple.UIKit:Orientation] <UIWindowScene: 0x100ddf080> (99353893-5F12-4291-AED2-DF1FB04D02E3) Scene updated orientation preferences: none -> ( Pu Ll Lr )
+2026-09-29 23:20:27.949 Df PaintByNumber[13314:a897] [com.apple.UIKit:KeyWindow] Key window API is scene-level: YES
+2026-09-29 23:20:27.950 Df PaintByNumber[13314:a897] [com.apple.UIKit:KeyWindow] UIWindowScene: 0x100ddf080: Window became key in scene: UIWindow: 0x10198c400; contextId: 0xE39984: reason: UIWindowScene: 0x100ddf080: Window requested to become key in scene: 0x10198c400
+2026-09-29 23:20:27.950 Df PaintByNumber[13314:a897] [com.apple.UIKit:KeyWindow] Key window needs update: 1; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x100ddf080; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x10198c400; reason: UIWindowScene: 0x100ddf080: Window requested to become key in scene: 0x10198c400
+2026-09-29 23:20:27.950 Df PaintByNumber[13314:a897] [com.apple.UIKit:KeyWindow] Window did become application key: UIWindow: 0x10198c400; contextId: 0xE39984; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-99353893-5F12-4291-AED2-DF1FB04D02E3
+2026-09-29 23:20:27.950 Df PaintByNumber[13314:a897] [com.apple.UIKit:EventDeferring] [0x101a34e70] Begin local event deferring requested for token: 0x1019d8900; environments: 1; reason: UIWindowScene: 0x100ddf080: Begin event deferring in keyboardFocus for window: 0x10198c400
+2026-09-29 23:20:27.954 Df PaintByNumber[13314:a897] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100ddf080> (99353893-5F12-4291-AED2-DF1FB04D02E3)
+2026-09-29 23:20:27.956 Df PaintByNumber[13314:a8a5] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x1019dafa0; token: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-99353893-5F12-4291-AED2-DF1FB04D02E3; status: ancestor> was:target
+2026-09-29 23:20:27.958 Df PaintByNumber[13314:a897] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-99353893-5F12-4291-AED2-DF1FB04D02E3  persistentID: 99353893-5F12-4291-AED2-DF1FB04D02E3
+2026-09-29 23:20:27.960 Df PaintByNumber[13314:a897] [com.apple.UIKit:Application] Ignoring already applied deactivation reason: 5; deactivation reasons: 2080
+2026-09-29 23:20:27.960 Df PaintByNumber[13314:a897] [com.apple.UIKit:Application] Deactivation reason added: 12; deactivation reasons: 2080 -> 6176; animating application lifecycle event: 1
+2026-09-29 23:20:27.960 Df PaintByNumber[13314:a897] [com.apple.UIKit:Application] Deactivation reason removed: 11; deactivation reasons: 6176 -> 4128; animating application lifecycle event: 1
+2026-09-29 23:20:27.961 Df PaintByNumber[13314:a897] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneIntelligenceSupportSettings> on FBSSceneSettings
+2026-09-29 23:20:27.962 Df PaintByNumber[13314:a8a5] [com.apple.UIIntelligenceSupport:xpc] establishing connection to agent
+2026-09-29 23:20:27.963 Df PaintByNumber[13314:a8a5] [com.apple.xpc:session] [0x1019959f0] Session created.
+2026-09-29 23:20:27.963 Df PaintByNumber[13314:a8a5] [com.apple.xpc:session] [0x1019959f0] Session created from connection [0x101bce940]
+2026-09-29 23:20:27.963 Df PaintByNumber[13314:a8a5] [com.apple.xpc:connection] [0x101bce940] activating connection: mach=true listener=false peer=false name=com.apple.uiintelligencesupport.agent
+2026-09-29 23:20:27.963 Df PaintByNumber[13314:a8a5] [com.apple.xpc:session] [0x1019959f0] Session activated
+2026-09-29 23:20:27.964 Df PaintByNumber[13314:a897] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100ddf080> (99353893-5F12-4291-AED2-DF1FB04D02E3)
+2026-09-29 23:20:27.972 A  PaintByNumber[13314:a897] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-09-29 23:20:27.992 Df PaintByNumber[13314:a897] [com.apple.UIKit:_UIVisualStyleRegistry] Warning: no visual style classes have been registered at all.
+2026-09-29 23:20:27.992 Df PaintByNumber[13314:a897] [com.apple.UIKit:_UIVisualStyleRegistry] Warning: no visual style classes have been registered at all.
+2026-09-29 23:20:27.992 Df PaintByNumber[13314:a897] [com.apple.UIKit:_UIVisualStyleRegistry] Note: no default visual style class registered as fallback for stylable class UIActivityIndicatorView
+2026-09-29 23:20:27.992 Df PaintByNumber[13314:a897] [com.apple.UIKit:_UIVisualStyleRegistry] Note: no default visual style class registered as fallback for stylable class UIActivityIndicatorView
+2026-09-29 23:20:27.993 Df PaintByNumber[13314:a897] [PrototypeTools:domain] Not observing PTDefaults on customer install.
+2026-09-29 23:20:28.031 Df PaintByNumber[13314:a897] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:1 [272F1C7F-3C75-4680-9EF2-D1B2553A7A07] (reporting strategy default)>
+2026-09-29 23:20:28.031 Df PaintByNumber[13314:a897] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:2 [1259C192-A10F-45F8-92CA-1F228622C716] (reporting strategy default)>
+2026-09-29 23:20:28.031 Df PaintByNumber[13314:a897] [com.apple.network:activity] Set activity <nw_activity 50:1 [272F1C7F-3C75-4680-9EF2-D1B2553A7A07] (reporting strategy default)> as the global parent
+2026-09-29 23:20:28.031 Df PaintByNumber[13314:a897] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 1
+2026-09-29 23:20:28.031 Df PaintByNumber[13314:a897] [com.apple.UIKit:BackgroundTask] Ending task with identifier 1 and description: <_UIBackgroundTaskInfo: 0x10187ce00>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 569 (elapsed = 0), _expireHandler: (null)
+2026-09-29 23:20:28.031 Df PaintByNumber[13314:a897] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x100dda430> (used by background task with identifier 1: <_UIBackgroundTaskInfo: 0x10187ce00>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 569 (elapsed = 0))
+2026-09-29 23:20:28.031 Df PaintByNumber[13314:a897] [com.apple.UIKit:UpdateScheduler] Target list changed: <CADisplay:LCD PurpleMain>
+2026-09-29 23:20:28.032 Df PaintByNumber[13314:a897] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-99353893-5F12-4291-AED2-DF1FB04D02E3  persistentID: 99353893-5F12-4291-AED2-DF1FB04D02E3
+2026-09-29 23:20:28.032 Df PaintByNumber[13314:a897] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100ddf080> (99353893-5F12-4291-AED2-DF1FB04D02E3)
+2026-09-29 23:20:28.033 Df PaintByNumber[13314:a8a5] [com.apple.CoreAnalytics:client] No XPC connection in Simulator
+2026-09-29 23:20:28.036 A  PaintByNumber[13314:a8a8] (RunningBoardServices) didChangeInheritances
+2026-09-29 23:20:28.039 Df PaintByNumber[13314:a897] [com.apple.UIKit:EventDeferring] [0x101a34e70] Scene target of event deferring environments did update: scene: 0x100ddf080; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-09-29 23:20:28.039 Df PaintByNumber[13314:a897] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x100ddf080; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-99353893-5F12-4291-AED2-DF1FB04D02E3
+2026-09-29 23:20:28.040 Df PaintByNumber[13314:a897] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100ddf080> (99353893-5F12-4291-AED2-DF1FB04D02E3)
+2026-09-29 23:20:28.040 Df PaintByNumber[13314:a897] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-99353893-5F12-4291-AED2-DF1FB04D02E3  persistentID: 99353893-5F12-4291-AED2-DF1FB04D02E3
+2026-09-29 23:20:28.041 Df PaintByNumber[13314:a897] [com.apple.UIKit:Application] Deactivation reason removed: 12; deactivation reasons: 4128 -> 32; animating application lifecycle event: 1
+2026-09-29 23:20:28.041 Df PaintByNumber[13314:a897] [com.apple.KeyboardArbiter:Client] Send setDeactivating: N (-DeactivationReason:SuspendedEventsOnly)
+2026-09-29 23:20:28.041 Df PaintByNumber[13314:a8a5] (CoreVideo) Pixel format registry initialized. Constant classes enabled.
+2026-09-29 23:20:28.041 Df PaintByNumber[13314:a897] [com.apple.UIKit:Application] Deactivation reason removed: 5; deactivation reasons: 32 -> 0; animating application lifecycle event: 0
+2026-09-29 23:20:28.042 Df PaintByNumber[13314:a897] [com.apple.KeyboardArbiter:Client] startConnection
+2026-09-29 23:20:28.042 Df PaintByNumber[13314:a897] [com.apple.xpc:connection] [0x101bcc280] activating connection: mach=true listener=false peer=false name=com.apple.UIKit.KeyboardManagement.hosted
+2026-09-29 23:20:28.047 Df PaintByNumber[13314:a897] [com.apple.KeyboardArbiter:Client] handleKeyboardChange: set currentKeyboard:N (wasKeyboard:N)
+2026-09-29 23:20:28.054 Df PaintByNumber[13314:a897] [com.apple.UIKit:KeyboardSceneDelegate] forceReloadInputViews
+2026-09-29 23:20:28.054 Df PaintByNumber[13314:a897] [com.apple.UIKit:KeyboardSceneDelegate] Reloading input views for key-window scene responder: <(null): 0x0; > force:Y
+2026-09-29 23:20:28.055 Df PaintByNumber[13314:a897] [com.apple.UIKit:KeyboardArbiterClientLog] isWritingToolsHandlingKeyboardTracking:Y (WT ready:Y, Arbiter ready:Y)
+2026-09-29 23:20:28.100 Df PaintByNumber[13314:a897] [com.apple.network:activity] <nw_activity 50:1 [272F1C7F-3C75-4680-9EF2-D1B2553A7A07] (global parent) (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 923ms
+2026-09-29 23:20:28.100 Df PaintByNumber[13314:a897] [com.apple.network:activity] <nw_activity 50:2 [1259C192-A10F-45F8-92CA-1F228622C716] (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 923ms
+2026-09-29 23:20:28.100 Df PaintByNumber[13314:a897] [com.apple.network:activity] Unsetting the global parent activity <nw_activity 50:1 [272F1C7F-3C75-4680-9EF2-D1B2553A7A07] (global parent) (reporting strategy default) complete (reason success)>
+2026-09-29 23:20:28.100 Df PaintByNumber[13314:a897] [com.apple.network:activity] Unset the global parent activity
+2026-09-29 23:20:28.100 Df PaintByNumber[13314:a897] [com.apple.app_launch_measurement:ApplicationLaunch] alm_release_pageins_recording_assertion: releasing pageins recording assertion
+2026-09-29 23:20:28.244 Df PaintByNumber[13314:a897] [com.apple.Accessibility:AXCommon] Read Per-App on Init: Smart invert = (null)
+2026-09-29 23:20:28.357 Df PaintByNumber[13314:a8a7] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 2
+2026-09-29 23:20:28.359 Df PaintByNumber[13314:a8a7] [com.apple.UIKit:BackgroundTask] Ending task with identifier 2 and description: <_UIBackgroundTaskInfo: 0x101a396c0>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 569 (elapsed = 0), _expireHandler: <__NSGlobalBlock__: 0x1e78c84e8>
+2026-09-29 23:20:28.360 Df PaintByNumber[13314:a8a7] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x100dda430> (used by background task with identifier 2: <_UIBackgroundTaskInfo: 0x101a396c0>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 569 (elapsed = 0))
+2026-09-29 23:20:28.360 Df PaintByNumber[13314:a8a7] [com.apple.UIKit:BackgroundTask] Will invalidate assertion: <BKSProcessAssertion: 0x100dda430> for task identifier: 2
+2026-09-29 23:20:28.762 Df PaintByNumber[13314:a897] [com.apple.xpc:connection] [0x101bcdb80] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-09-29 23:20:28.763 Df PaintByNumber[13314:a897] [com.apple.xpc:connection] [0x101bccc80] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-09-29 23:20:28.764 Df PaintByNumber[13314:a897] [com.apple.xpc:connection] [0x101bcde00] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-09-29 23:20:28.780 Df PaintByNumber[13314:a8a3] [com.apple.xpc:connection] [0x101bcdf40] activating connection: mach=true listener=false peer=false name=com.apple.fontservicesd
+2026-09-29 23:20:28.840 A  PaintByNumber[13314:a8a5] (RunningBoardServices) didChangeInheritances
+2026-09-29 23:20:29.209 Df PaintByNumber[13314:a8a3] [com.apple.audio.caulk:alloc] Registered notify signal com.apple.caulk.alloc.rtdump (0)
+2026-09-29 23:20:29.210 Df PaintByNumber[13314:a8a3] [com.apple.xpc:connection] [0x101bcf980] activating connection: mach=false listener=false peer=false name=com.apple.audio.AudioConverterService.HighCapacity
+2026-09-29 23:20:29.316 Df PaintByNumber[13314:a8a3] [com.apple.xpc:connection] [0x101bcf980] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+2026-09-29 23:20:29.316 Df PaintByNumber[13314:a8a3] [com.apple.xpc:connection] [0x101bcf980] invalidated after a failed init
+2026-09-29 23:20:29.318 E  PaintByNumber[13314:a8a3] [com.apple.coreaudio:AudioConverter]     AudioConverterOOP.cpp:1084  Failed to prepare AudioConverterService: -302
+2026-09-29 23:20:29.334 Df PaintByNumber[13314:a8a5] [com.apple.extensionkit:NSExtension] Class EXGetExtensionClass(void) returning EXConcreteExtension
+2026-09-29 23:20:29.334 Df PaintByNumber[13314:a8a5] [com.apple.xpc:connection] [0x101bcf980] activating connection: mach=true listener=false peer=false name=com.apple.pluginkit.pkd
+2026-09-29 23:20:29.335 A  PaintByNumber[13314:a8a5] (PlugInKit) continuous-discovery
+2026-09-29 23:20:29.335 Df PaintByNumber[13314:a8a5] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x1018422e0> created discovery driver
+2026-09-29 23:20:29.335 Df PaintByNumber[13314:a8a5] [com.apple.PlugInKit:discovery] [d 35B711CF-AB77-4CC9-B546-0EF3625D0603] <PKHost:0x10187f9c0> Beginning discovery for flags: 0, point: com.apple.AudioUnit
+2026-09-29 23:20:29.343 Df PaintByNumber[13314:a8a3] [com.apple.PlugInKit:discovery] [d 35B711CF-AB77-4CC9-B546-0EF3625D0603] <PKHost:0x10187f9c0> Completed discovery. Final # of matches: 0
+2026-09-29 23:20:29.343 Df PaintByNumber[13314:a8a3] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x1018422e0> delivering update to host (0 plugins)
+2026-09-29 23:20:29.343 A  PaintByNumber[13314:a8a3] (ExtensionFoundation) discovering extensions
+2026-09-29 23:20:29.344 Df PaintByNumber[13314:a8a3] [com.apple.extensionkit:NSExtension] discovered extensions: attributes {
+    NSExtensionPointName = "com.apple.AudioUnit";
+}, extensionSet {(
+)}
+2026-09-29 23:20:29.345 Df PaintByNumber[13314:a8a3] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x1018422e0> installing watchers for continuous discovery
+2026-09-29 23:20:29.345 A  PaintByNumber[13314:a8a5] (PlugInKit) continuous-discovery
+2026-09-29 23:20:29.345 Df PaintByNumber[13314:a8a5] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x101840f60> created discovery driver
+2026-09-29 23:20:29.345 Df PaintByNumber[13314:a8a5] [com.apple.PlugInKit:discovery] [d FCCAB20A-6C51-49D3-8C86-BB3DB4BDCBB4] <PKHost:0x10187f9c0> Beginning discovery for flags: 0, point: com.apple.AudioUnit-UI
+2026-09-29 23:20:29.346 Df PaintByNumber[13314:a8a3] [com.apple.launchservices:appinstallation] registering for distributed notification com.apple.LaunchServices.pluginsregistered in this process
+2026-09-29 23:20:29.346 Df PaintByNumber[13314:a8a3] [com.apple.xpc:connection] [0x101bcf5c0] activating connection: mach=true listener=false peer=false name=com.apple.distributed_notifications@1v3
+2026-09-29 23:20:29.346 Df PaintByNumber[13314:a8a3] [com.apple.launchservices:appinstallation] registering for distributed notification com.apple.LaunchServices.pluginsunregistered in this process
+2026-09-29 23:20:29.348 Df PaintByNumber[13314:a8a7] [com.apple.PlugInKit:discovery] [d FCCAB20A-6C51-49D3-8C86-BB3DB4BDCBB4] <PKHost:0x10187f9c0> Completed discovery. Final # of matches: 0
+2026-09-29 23:20:29.354 Df PaintByNumber[13314:a8a7] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x101840f60> delivering update to host (0 plugins)
+2026-09-29 23:20:29.354 A  PaintByNumber[13314:a8a7] (ExtensionFoundation) discovering extensions
+2026-09-29 23:20:29.354 Df PaintByNumber[13314:a8a7] [com.apple.extensionkit:NSExtension] discovered extensions: attributes {
+    NSExtensionPointName = "com.apple.AudioUnit-UI";
+}, extensionSet {(
+)}
+2026-09-29 23:20:29.354 Df PaintByNumber[13314:a8a7] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x101840f60> installing watchers for continuous discovery
+2026-09-29 23:20:29.354 A  PaintByNumber[13314:a8a5] (PlugInKit) continuous-discovery
+2026-09-29 23:20:29.354 Df PaintByNumber[13314:a8a5] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x101843900> created discovery driver
+2026-09-29 23:20:29.354 Df PaintByNumber[13314:a8a5] [com.apple.PlugInKit:discovery] [d DDB7D80E-7829-4F2E-A08A-5BA0D2B26749] <PKHost:0x10187f9c0> Beginning discovery for flags: 0, point: com.apple.AudioUnit-Speech
+2026-09-29 23:20:29.358 Df PaintByNumber[13314:a8a1] [com.apple.PlugInKit:discovery] [d DDB7D80E-7829-4F2E-A08A-5BA0D2B26749] <PKHost:0x10187f9c0> Completed discovery. Final # of matches: 4
+2026-09-29 23:20:29.358 Df PaintByNumber[13314:a8a2] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x101843900> delivering update to host (4 plugins)
+2026-09-29 23:20:29.358 A  PaintByNumber[13314:a8a2] (ExtensionFoundation) discovering extensions
+2026-09-29 23:20:29.361 Df PaintByNumber[13314:a8a2] [com.apple.extensionkit:NSExtension] discovered extensions: attributes {
+    NSExtensionPointName = "com.apple.AudioUnit-Speech";
+}, extensionSet {(
+    <EXConcreteExtension: 0x101b657a0> {id = com.apple.ax.KonaTTSSupport.KonaSynthesizer},
+    <EXConcreteExtension: 0x101b656c0> {id = com.apple.texttospeech.SiriAUSP},
+    <EXConcreteExtension: 0x101b655e0> {id = com.apple.speech.MacinTalkFramework.MacinTalkAUSP},
+    <EXConcreteExtension: 0x101b67020> {id = com.apple.ax.MauiTTSSupport.MauiAUSP}
+)}
+2026-09-29 23:20:29.361 Df PaintByNumber[13314:a8a2] [com.apple.PlugInKit:discovery] <PKDiscoveryDriver:0x101843900> installing watchers for continuous discovery
+2026-09-29 23:20:29.374 Df PaintByNumber[13314:a897] (CoreAudio)   HALPlugInManagement.cpp:443    HALPlugInManagement::RegisterPlugIns: loading in-process plug-ins
+2026-09-29 23:20:29.375 E  PaintByNumber[13314:a897] [com.apple.CFBundle:plugin] AddInstanceForFactory: No factory registered for id <CFUUID 0x1062e9820> F8BB1C28-BAE8-11D6-9C31-00039315CD46
+2026-09-29 23:20:29.375 Df PaintByNumber[13314:a8a3] [com.apple.launchservices:progress] Establishing xpc connection to lsd
+2026-09-29 23:20:29.375 Df PaintByNumber[13314:a8a3] [com.apple.xpc:connection] [0x101bcfc00] activating connection: mach=true listener=false peer=false name=com.apple.lsd.xpc
+2026-09-29 23:20:29.377 Df PaintByNumber[13314:a8a2] [com.apple.launchservices:progress] Received LSWorkspaceObserverPing, xpc connection established
+2026-09-29 23:20:29.410 Df PaintByNumber[13314:a897] [com.apple.coreaudio:as_client] AVAudioSessionImpl_Simulator.mm:111   Set volume on device 81 to 0.60
+2026-09-29 23:20:29.411 Df PaintByNumber[13314:a897] [com.apple.coreaudio:as_client] AVAudioSessionImpl_Simulator.mm:111   Set volume on device 81 to 0.60
+2026-09-29 23:20:29.421 Df PaintByNumber[13314:a897] [com.apple.avfaudio:avae]      AVAudioIONodeImpl.mm:235   Engine@0x101897480: associating with audio session (0x0), error -10879
+2026-09-29 23:20:29.422 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1130  AURemoteIO@0x1061f0640: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x0, 0 channel descriptions [], err = 0
+2026-09-29 23:20:29.426 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:ddagg]        AggregateDevice.mm:887   Creating DefaultDeviceAggregate
+2026-09-29 23:20:29.443 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:ddagg]        AggregateDevice.mm:688   Built valid aggregate 110
+2026-09-29 23:20:29.446 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]           AQMixEngine.cpp:735   AQMEDevice (0x106319e58) has neither a defaultOutStreamClient nor a defaultInStreamClient
+2026-09-29 23:20:29.447 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aqme]              AQIONode.cpp:744   client <RemoteIOClient@0x1061f0c00(@0x1061f0e18); output; [13314]> is NOT Now Playing eligible
+2026-09-29 23:20:29.447 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1888  rio@0x1061f0e18 spatialization disabled.  layout = tag=0x0, 0 channel descriptions [], format =  2 ch,      0 Hz, Float32, deinterleaved
+2026-09-29 23:20:29.448 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:EnhanceDialogueProcessor] EnhanceDialogueProcessor.cpp:244   EnhanceDialogueProcessor() - Product does not support Enhance Dialogue
+2026-09-29 23:20:29.448 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:EnhanceDialogueProcessor] EnhanceDialogueProcessor.cpp:244   EnhanceDialogueProcessor() - Product does not support Enhance Dialogue
+2026-09-29 23:20:29.448 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+2026-09-29 23:20:29.449 Df PaintByNumber[13314:a8a5] [com.apple.audio.caulk:alloc] Registered notify signal com.apple.caulk.alloc.audiodump (0)
+2026-09-29 23:20:29.449 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:AudioConverter]        AudioConverter.cpp:1077  Created a new in process converter -> 0x104621410, from  2 ch,  48000 Hz, Float32, deinterleaved to  2 ch,  48000 Hz, Float32, interleaved
+2026-09-29 23:20:29.453 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aqme]          RemoteIOServer.h:101   rio@0x1061f0c00 Got output layout from io node or spatialized client: tag=0x0, 2 channel descriptions [L, R]
+2026-09-29 23:20:29.453 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1597  SetLoudnessFromLM(): ->
+2026-09-29 23:20:29.454 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1636  SetLoudnessFromLM(): is CoreAudioServices/LoudnessManager enabled? yes
+2026-09-29 23:20:29.455 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1639  SetLoudnessFromLM(): is CoreAudioServices/LoudnessManagerV2 enabled? yes
+2026-09-29 23:20:29.455 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1642  SetLoudnessFromLM(): is CoreAudioServices/lm-disable-hardware-check on? no
+2026-09-29 23:20:29.455 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1645  SetLoudnessFromLM(): is hardware supported? no
+2026-09-29 23:20:29.455 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1657  SetLoudnessFromLM(): hardware not supported, Loudness Manager disabled
+2026-09-29 23:20:29.456 Df PaintByNumber[13314:a897] [com.apple.coreaudio:AudioConverter]        AudioConverter.cpp:1077  Created a new in process converter -> 0x1062ce400, from  2 ch,      0 Hz, Float32, deinterleaved to  2 ch,  48000 Hz, Float32, deinterleaved
+2026-09-29 23:20:29.456 Df PaintByNumber[13314:a897] [com.apple.coreaudio:AudioConverter]        AudioConverter.cpp:1327  AudioConverter -> 0x1062ce400: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+2026-09-29 23:20:29.456 Df PaintByNumber[13314:a897] [com.apple.coreaudio:AudioConverter]        AudioConverter.cpp:1327  AudioConverter -> 0x1062ce400: The in-process GetProperty call returned 1886547824 for property 1936876401 with size 4.
+2026-09-29 23:20:29.456 Df PaintByNumber[13314:a897] [com.apple.coreaudio:AudioConverter]        AudioConverter.cpp:1327  AudioConverter -> 0x1062ce400: The in-process GetProperty call returned 1886547824 for property 1886546285 with size 8.
+2026-09-29 23:20:29.456 Df PaintByNumber[13314:a8f9] [com.apple.coreaudio:AudioConverter] AudioConverter -> 0x1062ce400: The in-process SetProperty call returned 1886547824 for property 1886547309 with size 4.
+2026-09-29 23:20:29.456 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1061f0640)
+2026-09-29 23:20:29.456 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:SpatialMgr] SpatializationManager.cpp:1461  Could not load preset file, invalid model/product name!
+2026-09-29 23:20:29.457 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aqme]        MEMixerChannel.cpp:3273  2-channel audiovisual content is NOT eligible for spatialization
+2026-09-29 23:20:29.457 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aqme]  MEDeviceStreamClient.cpp:245   AQME Default-InputOutput: client starting: <CA_UISoundClientBase@0x1061a2f40>; running count now 1
+2026-09-29 23:20:29.457 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aqme]            AQMEIO_HAL.cpp:2857  FetchAndLogFrameSize starting IO deviceID=110, frame size is 512
+2026-09-29 23:20:29.462 Df PaintByNumber[13314:a8a2] [com.apple.coreaudio:aqme]            AQMEIO_HAL.cpp:2826  aqmeio@0x1044a3018, device 110 (iOSSimulatorAudioDevice-13314-0), AudioDeviceStart (err 0)
+2026-09-29 23:20:29.482 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1130  AURemoteIO@0x1061f0640: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x650002, err = 0
+2026-09-29 23:20:29.482 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]              AQIONode.cpp:744   client <RemoteIOClient@0x1061f0c00(@0x1061f0e18); output; [13314]> is NOT Now Playing eligible
+2026-09-29 23:20:29.482 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1888  rio@0x1061f0e18 spatialization disabled.  layout = tag=0x650002, format =  2 ch,  44100 Hz, Float32, deinterleaved
+2026-09-29 23:20:29.482 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]          RemoteIOServer.h:101   rio@0x1061f0c00 Got output layout from io node or spatialized client: tag=0x0, 2 channel descriptions [L, R]
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1597  SetLoudnessFromLM(): ->
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1636  SetLoudnessFromLM(): is CoreAudioServices/LoudnessManager enabled? yes
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1639  SetLoudnessFromLM(): is CoreAudioServices/LoudnessManagerV2 enabled? yes
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1642  SetLoudnessFromLM(): is CoreAudioServices/lm-disable-hardware-check on? no
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1645  SetLoudnessFromLM(): is hardware supported? no
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1657  SetLoudnessFromLM(): hardware not supported, Loudness Manager disabled
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a897] [com.apple.coreaudio:AudioConverter]        AudioConverter.cpp:1077  Created a new in process converter -> 0x1062cebb0, from  2 ch,  44100 Hz, Float32, deinterleaved to  2 ch,  48000 Hz, Float32, deinterleaved
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a897] [com.apple.coreaudio:AudioConverter]        AudioConverter.cpp:1327  AudioConverter -> 0x1062cebb0: The in-process GetProperty call returned 1886547824 for property 1936876385 with size 4.
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1061f0640)
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1130  AURemoteIO@0x1061f0640: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x650002, err = 0
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]              AQIONode.cpp:744   client <RemoteIOClient@0x1061f0c00(@0x1061f0e18); output; [13314]> is NOT Now Playing eligible
+2026-09-29 23:20:29.483 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1888  rio@0x1061f0e18 spatialization disabled.  layout = tag=0x650002, format =  2 ch,  48000 Hz, Float32, deinterleaved
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]          RemoteIOServer.h:101   rio@0x1061f0c00 Got output layout from io node or spatialized client: tag=0x0, 2 channel descriptions [L, R]
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1597  SetLoudnessFromLM(): ->
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1636  SetLoudnessFromLM(): is CoreAudioServices/LoudnessManager enabled? yes
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1639  SetLoudnessFromLM(): is CoreAudioServices/LoudnessManagerV2 enabled? yes
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1642  SetLoudnessFromLM(): is CoreAudioServices/lm-disable-hardware-check on? no
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1645  SetLoudnessFromLM(): is hardware supported? no
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1657  SetLoudnessFromLM(): hardware not supported, Loudness Manager disabled
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1741  Stopping AURemoteIO(0x1061f0640)
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1130  AURemoteIO@0x1061f0640: set kAudioOutputUnitProperty_OutputChannelLayout.  Layout = tag=0x650002, err = 0
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]              AQIONode.cpp:744   client <RemoteIOClient@0x1061f0c00(@0x1061f0e18); output; [13314]> is NOT Now Playing eligible
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1888  rio@0x1061f0e18 spatialization disabled.  layout = tag=0x650002, format =  2 ch,  48000 Hz, Float32, deinterleaved
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]          RemoteIOServer.h:101   rio@0x1061f0c00 Got output layout from io node or spatialized client: tag=0x0, 2 channel descriptions [L, R]
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1597  SetLoudnessFromLM(): ->
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1636  SetLoudnessFromLM(): is CoreAudioServices/LoudnessManager enabled? yes
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1639  SetLoudnessFromLM(): is CoreAudioServices/LoudnessManagerV2 enabled? yes
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1642  SetLoudnessFromLM(): is CoreAudioServices/lm-disable-hardware-check on? no
+2026-09-29 23:20:29.484 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1645  SetLoudnessFromLM(): is hardware supported? no
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aurios]        RemoteIOServer.cpp:1657  SetLoudnessFromLM(): hardware not supported, Loudness Manager disabled
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a897] [com.apple.avfaudio:avae]          AVAudioEngine.mm:1182  Engine@0x1019e17f0: start, was running 0
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1666  Starting AURemoteIO(0x1061f0640)
+output client:  2 ch,  48000 Hz, Float32, deinterleaved, output HW:  2 ch,  48000 Hz, Float32, deinterleaved
+input client:   2 ch,      0 Hz, Float32, deinterleaved, input HW:   2 ch,      0 Hz, Float32, deinterleaved
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]            AQMEIO_HAL.cpp:1087  fetched workgroup 0x101a3ab40
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:auext]        AUOOPWorkgroups.mm:30    AUOOPWorkgroupManager: AddRemoteIOWorkgroup called with token 54534145.
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:auext]        AUOOPWorkgroups.mm:66    AUOOPWorkgroupManager: mutating workgroups.
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a897] [com.apple.coreaudio:aurioc]            AURemoteIO.cpp:1727  workgroup port 0x15203
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a90f] [com.apple.coreaudio:auext]        AUOOPWorkgroups.mm:30    AUOOPWorkgroupManager: AddRemoteIOWorkgroup called with token 54534144.
+2026-09-29 23:20:29.485 Df PaintByNumber[13314:a90f] [com.apple.coreaudio:auext]        AUOOPWorkgroups.mm:66    AUOOPWorkgroupManager: mutating workgroups.
+2026-09-29 23:20:29.486 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]              AQIONode.cpp:744   client <RemoteIOClient@0x1061f0c00(@0x1061f0e18); output; [13314]> is NOT Now Playing eligible
+2026-09-29 23:20:29.486 Df PaintByNumber[13314:a8a5] [com.apple.coreaudio:aqme]  MEDeviceStreamClient.cpp:245   AQME Default-InputOutput: client starting: <RemoteIOClient@0x1061f0c00(@0x1061f0e18); output; [13314]>; running count now 2
+2026-09-29 23:20:29.779 Df PaintByNumber[13314:a897] [com.apple.xpc:connection] [0x1063ad680] activating connection: mach=true listener=false peer=false name=com.apple.IOSurface.Remote
+2026-09-29 23:20:31.279 Df PaintByNumber[13314:a897] [com.pbordjadze.paintbynumber:demo] demo paint-hint: requested (canvas attached: true)
+2026-09-29 23:20:34.796 Df PaintByNumber[13314:a8a6] (libAudioDSP.dylib) cannot migrate AudioUnit assets for current process

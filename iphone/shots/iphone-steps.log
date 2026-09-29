@@ -1,0 +1,20 @@
+12:23:19:45 iphone: captured paint-complete — CRASH: app crashed (see crashes/)
+----- tail -----
+23:15:22 iphone: booted
+23:15:38 iphone: installed
+23:17:36 iphone: launch pipeline: com.pbordjadze.paintbynumber: 7379 
+23:18:11 iphone: captured pipeline
+23:18:13 iphone: launch paint: com.pbordjadze.paintbynumber: 8185 
+23:18:41 iphone: captured paint
+23:18:43 iphone: launch paint-progress: com.pbordjadze.paintbynumber: 9342 
+23:19:00 iphone: captured paint-progress
+23:19:04 iphone: launch paint-zoom: com.pbordjadze.paintbynumber: 10201 
+23:19:20 iphone: captured paint-zoom
+23:19:24 iphone: launch paint-complete: com.pbordjadze.paintbynumber: 11010 
+23:19:45 iphone: captured paint-complete — CRASH: app crashed (see crashes/)
+23:19:51 iphone: launch paint-dark: com.pbordjadze.paintbynumber: 11903 
+23:20:05 iphone: captured paint-dark
+23:20:09 iphone: launch paint-fill: com.pbordjadze.paintbynumber: 12517 
+23:20:25 iphone: captured paint-fill
+23:20:28 iphone: launch paint-hint: com.pbordjadze.paintbynumber: 13314 
+23:20:42 iphone: captured paint-hint
