@@ -34,6 +34,7 @@ enum BoundarySmoothing {
             }
         }
         offsets = offsets.map { ($0.dx, $0.dy, $0.weight / total) }
+        let steps = offsets.map { $0.dy * w + $0.dx }
         let packed = palette.map { SIMD4($0, 0) }
         let n = w * h
         var changedTotal = 0
@@ -72,19 +73,25 @@ enum BoundarySmoothing {
                                                         let i = y * w + x
                                                         let own = row[x]
                                                         var k = 0
-                                                        for j in 0..<m {
-                                                            let xx = x + off.value[j].dx, yy = y + off.value[j].dy
-                                                            if xx < 0 || yy < 0 || xx >= w || yy >= h { continue }
-                                                            let l = c.value[yy * w + xx]
+                                                        @inline(__always) func vote(_ l: UInt32, _ weight: Float) {
                                                             var slot = 0
                                                             while slot < k && labels[slot] != l { slot += 1 }
                                                             if slot == k {
-                                                                if k == 16 { continue }
+                                                                if k == 16 { return }
                                                                 labels[k] = l
                                                                 votes[k] = 0
                                                                 k += 1
                                                             }
-                                                            votes[slot] += off.value[j].weight
+                                                            votes[slot] += weight
+                                                        }
+                                                        if x >= radius && y >= radius && x < w - radius && y < h - radius {
+                                                            for j in 0..<m { vote(c.value[i + steps[j]], off.value[j].weight) }
+                                                        } else {
+                                                            for j in 0..<m {
+                                                                let xx = x + off.value[j].dx, yy = y + off.value[j].dy
+                                                                if xx < 0 || yy < 0 || xx >= w || yy >= h { continue }
+                                                                vote(c.value[yy * w + xx], off.value[j].weight)
+                                                            }
                                                         }
                                                         let color = col.value[i]
                                                         @inline(__always) func score(_ l: UInt32, _ v: Float) -> Float {
