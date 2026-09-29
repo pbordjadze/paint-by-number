@@ -34,7 +34,8 @@ struct PaintDemoView: View {
         .task {
             let synthetic = scenario.hasSuffix("-mosaic")
             let base = synthetic ? String(scenario.dropLast("-mosaic".count)) : scenario
-            let template = synthetic ? nil : await Self.template(photo: "parrots")
+            var template: Template?
+            if !synthetic { template = await Self.template(photo: "parrots") }
             demo = Demo(scenario: base, template: template ?? SyntheticTemplate.make(), title: template == nil ? "Mosaic" : "Parrots")
         }
     }
