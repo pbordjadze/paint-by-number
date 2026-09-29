@@ -107,7 +107,9 @@ struct EdgeSmoother {
     // MARK: - Polylines
 
     func polylines(for list: [Int], shapes: [UInt8]) -> (points: [SIMD2<Float>], counts: [Int32]) {
-        let bands = Parallel.mapBands(list.count, minimumBandSize: 32) { range -> ([SIMD2<Float>], [Int32]) in
+        // Edge lengths vary wildly (a coastline next to specks), so small chunks are handed
+        // out dynamically.
+        let bands = mapChunks(list.count, chunk: 48) { range -> ([SIMD2<Float>], [Int32]) in
             var worker = Worker(
                 fitter: CurveFitter(alphaMax: alphaMax, minCornerAngle: minCornerAngle, cornerRadius: cornerRadius, flattenTolerance: tolerance),
                 fairing: CurveFairing(halfWindow: fairingWindow, maxShift: fairingShift, tolerance: tolerance))
