@@ -2,9 +2,20 @@ import Foundation
 
 /// Photo → region label map + palette.
 ///
-/// PLACEHOLDER implementation: plain k-means in OKLab + connected components. It exists
-/// so the rest of the system can be developed against realistic data; the production
-/// pipeline replaces it.
+/// Pipeline (color math in OKLab with slightly stretched chroma):
+/// 1. Composite over white; tell structure from texture (relative total variation); take
+///    the importance map (Vision) or estimate one (center bias + coherent structure).
+/// 2. Structure-aware edge-preserving smoothing (domain transform): texture flattens into
+///    painterly patches, contours stay sharp, important areas keep more detail.
+/// 3. Palette: importance- and saliency-weighted histogram, k-means++ kept apart by the
+///    minimum paint distance, penalized swap search with restarts (small distinct colors
+///    such as an iris survive).
+/// 4. Pixel labelling: nearest paint, regularized by a contrast-sensitive Potts prior.
+/// 5. Regions: merge undersized/thin regions (importance- and texture-scaled), smooth
+///    outlines, peel hair-thin parts, until every region is tappable and holds a number;
+///    then merge similar neighbours inside busy texture.
+/// 6. Refit paints to the regions they cover, recolor regions, keep paints distinct and
+///    order the palette like a kit.
 public enum Segmenter {
     public static func segment(
         _ image: RGBAImage,
@@ -14,42 +25,79 @@ public enum Segmenter {
         clock: StageClock,
         progress: (Float) -> Void
     ) throws -> Segmentation {
-        let lab = clock.measure("segment.oklab") { ColorScience.okLabImage(from: image) }
-        let k = settings.colorCount
-        var rng = SplitMix64(seed: settings.seed)
-        let n = lab.count
-        var centers: [SIMD3<Float>] = (0..<k).map { _ in
-            let p = lab.storage[Int(rng.next() % UInt64(n))]
-            return SIMD3(p.x, p.y, p.z)
+        let w = image.width, h = image.height
+        guard w > 0, h > 0 else {
+            return Segmentation(
+                labels: RegionMap(width: w, height: h, repeating: 0), regionColor: [], palette: [],
+                colorSpace: image.colorSpace)
         }
-        var assignment = [UInt32](repeating: 0, count: n)
-        for _ in 0..<8 {
-            try cancel.throwIfCancelled()
-            var sums = [SIMD3<Float>](repeating: .zero, count: k)
-            var counts = [Int](repeating: 0, count: k)
-            for i in stride(from: 0, to: n, by: 1) {
-                let p = lab.storage[i]
-                let c = SIMD3(p.x, p.y, p.z)
-                var best = 0
-                var bestD = Float.infinity
-                for j in 0..<k {
-                    let d = c - centers[j]
-                    let dd = (d * d).sum()
-                    if dd < bestD { bestD = dd; best = j }
-                }
-                assignment[i] = UInt32(best)
-                sums[best] += c
-                counts[best] += 1
-            }
-            for j in 0..<k where counts[j] > 0 { centers[j] = sums[j] / Float(counts[j]) }
+        let p = SegmentationParameters(settings: settings, width: w, height: h)
+
+        let lab = clock.measure("segment.oklab") { WorkingImage.okLab(image, chromaScale: p.chromaScale) }
+        let structure = clock.measure("segment.structure") { StructureMap(lab, radius: p.structureRadius) }
+        let weights = clock.measure("segment.importance") { ImportanceMap.make(importance, structure: structure) }
+        try cancel.throwIfCancelled()
+        progress(0.05)
+
+        let smooth = try clock.measure("segment.smooth") { () throws -> Grid<SIMD4<Float>> in
+            let edgeScale = p.textureFlattening > 0
+                ? structure.edgeScales(importance: weights, strength: p.textureFlattening, exponent: p.structureExponent)
+                : nil
+            return try DomainTransformFilter.filter(
+                lab, sigmaSpatial: p.smoothSpatial, sigmaRange: p.smoothRange,
+                iterations: p.smoothIterations, edgeScale: edgeScale,
+                stiffness: weights.map { 1 + p.importanceSharpening * $0 }, cancel: cancel)
         }
-        let classes = Grid(width: image.width, height: image.height, storage: assignment)
-        let components = ConnectedComponents.label(classes)
+        try cancel.throwIfCancelled()
+        progress(0.25)
+
+        let palette = try clock.measure("segment.palette") {
+            try PaletteBuilder.build(colors: smooth, importance: weights, parameters: p, cancel: cancel)
+        }
+        try cancel.throwIfCancelled()
+        progress(0.35)
+
+        var classes = try clock.measure("segment.assign") { () throws -> [UInt32] in
+            var labels = LabelRegularizer.assignNearest(smooth, palette: palette)
+            try LabelRegularizer.regularize(
+                &labels, colors: smooth, palette: palette, strength: p.potts, edgeSigma: p.pottsEdgeSigma,
+                iterations: p.icmIterations, cancel: cancel)
+            return labels
+        }
+        try cancel.throwIfCancelled()
+        progress(0.5)
+
+        let labelling = classes
+        let texture = clock.measure("segment.texture") { TextureMap.boundaryDensity(labelling, width: w, height: h) }
+        let areaScale = zip(weights, texture).map { p.areaScale(importance: $0, texture: $1) }
+        let simplified = try clock.measure("segment.regions") {
+            try RegionSimplifier.simplify(
+                classes: &classes, width: w, height: h, colors: smooth, areaScale: areaScale,
+                palette: palette, parameters: p, cancel: cancel)
+        }
+        clock.measure("segment.consolidate") {
+            _ = TextureConsolidation.apply(
+                classes: &classes, components: simplified, texture: texture, importance: weights,
+                palette: palette, metric: SIMD3(1, 1 / p.chromaScale, 1 / p.chromaScale),
+                tolerance: p.consolidationTolerance)
+        }
+        try cancel.throwIfCancelled()
+        progress(0.85)
+
+        let finalPalette = clock.measure("segment.refine") {
+            PaletteRefiner.refine(
+                classes: &classes, width: w, height: h, lab: lab.storage, importance: weights,
+                labelling: labelling, palette: palette, minDistance: p.minPaletteDistance,
+                chromaScale: p.chromaScale, iterations: p.refineIterations)
+        }
+        let components = clock.measure("segment.finalize") {
+            RunComponents.label(classes, width: w, height: h)
+        }
         progress(1)
         return Segmentation(
             labels: components.labels,
             regionColor: components.classOf,
-            palette: centers.map { PaletteColor(oklab: $0, space: image.colorSpace) },
+            palette: finalPalette.map { PaletteColor(oklab: $0, space: image.colorSpace) },
             colorSpace: image.colorSpace)
     }
 }
