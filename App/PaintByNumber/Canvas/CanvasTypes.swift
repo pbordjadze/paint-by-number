@@ -26,6 +26,8 @@ nonisolated struct CanvasUniforms {
     var time: SIMD4<Float> = .zero
     /// xy: position (px), z: radius (px), w: opacity.
     var brush: SIMD4<Float> = .zero
+    /// x: start of a light sweep over finished paint, y: its palette color (-1 = everything).
+    var shine: SIMD4<Float> = SIMD4(-10_000, -1, 0, 0)
     /// x: selected color, y: hovered region, z: pulsing region, w: bumped region (-1 = none).
     var ids: SIMD4<Int32> = SIMD4(repeating: -1)
 }

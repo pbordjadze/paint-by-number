@@ -11,7 +11,7 @@ struct CanvasRenderTests {
     static let template = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
 
     @Test func shaderStructLayoutsMatchMetal() {
-        #expect(MemoryLayout<CanvasUniforms>.stride == 192)
+        #expect(MemoryLayout<CanvasUniforms>.stride == 208)
         #expect(MemoryLayout<RegionState>.stride == 32)
         #expect(MemoryLayout<GlyphInstance>.stride == 24)
     }

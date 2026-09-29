@@ -18,6 +18,7 @@ struct FrameUniforms {
     float4 numbers;     // x: number opacity, y: selected-color number opacity, z: selected boldness
     float4 time;        // x: now, y: selection change, z: pulse start, w: bump start
     float4 brush;       // xy: position (px), z: radius (px), w: opacity
+    float4 shine;       // x: start of a light sweep over finished paint, y: its color (-1 = all)
     int4   ids;         // x: selected color, y: hovered region, z: pulsing region, w: bumped region
 };
 
@@ -206,7 +207,17 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
     if (int(r) == u.ids.z) {
         base = mix(base, u.selected.rgb, 0.6 * pulse(now - u.time.z));
     }
-    float3 c = mix(base, wetPaint(info.rgb, ps), ps.coverage);
+    float3 paint = wetPaint(info.rgb, ps);
+    // A color (or the whole painting) was just finished: a glossy band sweeps across it.
+    float since = now - u.shine.x;
+    if (since >= 0.0 && since < 1.1 && (u.shine.y < 0.0 || int(u.shine.y + 0.5) == colorIndex)) {
+        float2 pt = in.position.xy / u.transform.w;
+        float span = (u.viewport.x + u.viewport.y) / u.transform.w * 0.70710678;
+        float head = mix(-160.0, span + 160.0, smoothstep(0.0, 1.1, since));
+        float x = ((pt.x + pt.y) * 0.70710678 - head) / 70.0;
+        paint = mix(paint, min(paint * 1.3 + 0.1, float3(1.0)), 0.55 * exp(-x * x));
+    }
+    float3 c = mix(base, paint, ps.coverage);
     return float4(c, 1.0);
 }
 

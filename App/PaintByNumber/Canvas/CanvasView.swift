@@ -64,6 +64,8 @@ final class CanvasView: UIView, PaintingCanvas {
     private var numbersFrom: Float = 1
     private var numbersTo: Float = 1
     private var numbersStart: Float = -10_000
+    private var shineStart: Float = -10_000
+    private var shineColor = -1
 
     // Camera
     private var fitZoom: CGFloat = 1
@@ -118,6 +120,7 @@ final class CanvasView: UIView, PaintingCanvas {
         accessibilityTraits = .allowsDirectInteraction
         registerForTraitChanges([UITraitUserInterfaceStyle.self], action: #selector(appearanceChanged))
         session.canvas = self
+        session.onEvent { [weak self] event in self?.celebrate(event) }
     }
 
     @available(*, unavailable)
@@ -478,6 +481,7 @@ final class CanvasView: UIView, PaintingCanvas {
         if let brushPoint {
             u.brush = SIMD4(Float(brushPoint.x) * s, Float(brushPoint.y) * s, Float(Self.brushRadius) * s, 1)
         }
+        u.shine = SIMD4(shineStart, Float(shineColor), 0, 0)
         u.ids = SIMD4(Int32(selected ?? -1), Int32(hoverRegion), Int32(pulseRegion), Int32(bumpRegion))
         return u
     }
@@ -494,6 +498,25 @@ final class CanvasView: UIView, PaintingCanvas {
     private func numbersVisibility(at t: Float) -> Float {
         let k = min(max((t - numbersStart) / 0.25, 0), 1)
         return numbersFrom + (numbersTo - numbersFrom) * k * k * (3 - 2 * k)
+    }
+
+    /// Finishing a color sweeps a gloss over it once its last fill has landed; finishing the
+    /// painting sweeps the whole canvas.
+    private func celebrate(_ event: PaintEvent) {
+        let delay: Float
+        switch event {
+        case let .colorCompleted(color):
+            shineColor = color
+            delay = 0.35
+        case .artworkCompleted:
+            shineColor = -1
+            delay = 0.6
+        default:
+            return
+        }
+        shineStart = now() + delay
+        activeUntil = max(activeUntil, shineStart + 1.2)
+        requestRender()
     }
 
     private func bump(_ region: Int) {
