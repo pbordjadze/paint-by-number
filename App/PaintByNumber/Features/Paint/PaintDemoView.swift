@@ -109,7 +109,8 @@ private final class Demo {
         if scenario == "paint-hint" {
             try? await Task.sleep(for: .seconds(1.5))
             session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
-            Self.log.notice("demo paint-hint: requested (canvas \(session.canvas == nil ? "missing" : "attached", privacy: .public))")
+            let attached = session.canvas != nil
+            Self.log.notice("demo paint-hint: requested (canvas attached: \(attached, privacy: .public))")
             return
         }
         guard scenario == "paint-fill" else { return }
