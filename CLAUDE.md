@@ -41,6 +41,14 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Key model types: `PaintingSession` (@Observable; painting rules, tap tolerance, drag-paint, undo,
   per-color progress, events) + `PaintProgress` (persisted). The Metal canvas conforms to
   `PaintingCanvas` and is driven by the session.
+- Library (`Model/`): `Library` (@Observable, injected via `.environment`) keeps `Artwork` metadata
+  in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
+  `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,
+  staging/trash folders). Writes are queued per artwork off the main actor; deletes are undoable.
+  `ArtworkPaintingView` hosts `PaintView` and autosaves (debounced, on background, on close).
+- Rendering without Metal: `Export/TemplateRasterizer` (CoreGraphics; vector geometry, falls back to
+  the region map) backs thumbnails, share PNGs, create-flow previews and `PDFExporter`.
+- Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`).
 - Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`). CI screenshots every
   scenario listed in `ci/scenarios.txt` (`name@seconds` sets the settle delay) on an iPhone Pro
   and a 13" iPad Pro simulator.
