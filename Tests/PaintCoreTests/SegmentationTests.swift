@@ -86,7 +86,7 @@ struct SegmentationTests {
     func invariantsAcrossDetail(detail: Float) throws {
         let settings = GenerationSettings(colorCount: 16, detail: detail, smoothness: 0.5)
         let s = try Self.segment(Self.scene(), settings: settings)
-        Self.checkInvariants(s, minRadius: 2)
+        Self.checkInvariants(s, minRadius: detail < 0.5 ? 2.7 + (0.5 - detail) * 1.6 : 2.7)
         #expect(s.regionCount > 1)
         #expect(s.palette.count > 3 && s.palette.count <= 16)
     }
@@ -94,7 +94,7 @@ struct SegmentationTests {
     @Test(arguments: [Float(0), 1])
     func invariantsAcrossSmoothness(smoothness: Float) throws {
         let settings = GenerationSettings(colorCount: 24, detail: 0.5, smoothness: smoothness)
-        Self.checkInvariants(try Self.segment(Self.scene(seed: 3), settings: settings), minRadius: 2)
+        Self.checkInvariants(try Self.segment(Self.scene(seed: 3), settings: settings), minRadius: 2.7)
     }
 
     @Test func lowDetailHasLargerRegions() throws {

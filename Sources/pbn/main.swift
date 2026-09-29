@@ -127,6 +127,7 @@ struct Metrics: Codable {
     var medianRegionArea: Float
     var regionsUnderRadius2: Int
     var regionsUnderRadius3: Int
+    var minInscribedRadius: Float
     var minPaletteDistance: Float
     var timingsMs: [String: Double]
     var totalMs: Double
@@ -161,6 +162,7 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
         medianRegionArea: areas.isEmpty ? 0 : areas[areas.count / 2],
         regionsUnderRadius2: t.regions.filter { $0.inscribedRadius < 2 }.count,
         regionsUnderRadius3: t.regions.filter { $0.inscribedRadius < 3 }.count,
+        minInscribedRadius: t.regions.map(\.inscribedRadius).min() ?? 0,
         minPaletteDistance: minPal.isFinite ? minPal : 0,
         timingsMs: timings, totalMs: out.totalSeconds * 1000,
         encodedBytes: t.encoded().count,
