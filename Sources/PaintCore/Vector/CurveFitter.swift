@@ -7,8 +7,9 @@ import Foundation
 ///    pixel of every lattice point),
 /// 2. choose the polygon with the fewest segments (then least squared deviation) whose
 ///    segments all follow straight sub-paths,
-/// 3. move each polygon vertex to the point within its lattice square that best fits
-///    the two adjacent segments' least-squares lines,
+/// 3. move each polygon vertex to the point near its lattice corner that best fits the
+///    two adjacent segments' least-squares lines (corrected for the bias of line fits
+///    along curves),
 /// 4. turn each vertex into either a sharp corner (when it sticks out far relative to its
 ///    neighbours, `alphaMax`) or a cubic Bézier through the adjacent edge midpoints,
 /// 5. join runs of Béziers into fewer, longer ones where that stays within tolerance,
@@ -40,6 +41,8 @@ struct CurveFitter {
     private var po: [Int] = []
     private var vx: [Double] = [], vy: [Double] = []
     private var quads: [Quad] = []
+    private var lineCentre: [SIMD2<Double>] = [], lineDir: [SIMD2<Double>] = [], lineLength: [Double] = []
+    private var lineShift: [SIMD2<Double>] = []
     // Curve segments: segment j runs from the end of segment j − 1 to `segEnd[j]`, either
     // as a corner (straight to `segVertex[j]`, then to the end) or as a cubic Bézier.
     private var segCorner: [Bool] = [], segVertex: [SIMD2<Double>] = [], segAlpha: [Double] = []
@@ -396,8 +399,8 @@ struct CurveFitter {
         return q
     }
 
-    /// The point within the unit square centred on (sxc, syc) minimizing Q.
-    private func minimize(_ qIn: Quad, _ sxc: Double, _ syc: Double) -> (Double, Double) {
+    /// The point within the square of half-size `r` centred on (sxc, syc) minimizing Q.
+    private func minimize(_ qIn: Quad, _ sxc: Double, _ syc: Double, _ r: Double) -> (Double, Double) {
         var q = qIn
         var wx = 0.0, wy = 0.0
         while true {
@@ -418,29 +421,29 @@ struct CurveFitter {
             }
             q.add(v0, v1, -v1 * syc - v0 * sxc, v0 * v0 + v1 * v1)
         }
-        if abs(wx - sxc) <= 0.5 && abs(wy - syc) <= 0.5 { return (wx, wy) }
+        if abs(wx - sxc) <= r && abs(wy - syc) <= r { return (wx, wy) }
         // Minimum outside the square: search its boundary.
         var best = q.eval(sxc, syc)
         var bx = sxc, by = syc
         if q.xx != 0 {
             for z in 0..<2 {
-                let y = syc - 0.5 + Double(z)
+                let y = syc + (z == 0 ? -r : r)
                 let x = -(q.xy * y + q.x1) / q.xx
                 let cand = q.eval(x, y)
-                if abs(x - sxc) <= 0.5 && cand < best { best = cand; bx = x; by = y }
+                if abs(x - sxc) <= r && cand < best { best = cand; bx = x; by = y }
             }
         }
         if q.yy != 0 {
             for z in 0..<2 {
-                let x = sxc - 0.5 + Double(z)
+                let x = sxc + (z == 0 ? -r : r)
                 let y = -(q.xy * x + q.y1) / q.yy
                 let cand = q.eval(x, y)
-                if abs(y - syc) <= 0.5 && cand < best { best = cand; bx = x; by = y }
+                if abs(y - syc) <= r && cand < best { best = cand; bx = x; by = y }
             }
         }
         for l in 0..<2 {
             for k in 0..<2 {
-                let x = sxc - 0.5 + Double(l), y = syc - 0.5 + Double(k)
+                let x = sxc + (l == 0 ? -r : r), y = syc + (k == 0 ? -r : r)
                 let cand = q.eval(x, y)
                 if cand < best { best = cand; bx = x; by = y }
             }
@@ -448,18 +451,62 @@ struct CurveFitter {
         return (bx, by)
     }
 
+    /// Records the least-squares line of polygon segment `s` (lattice points a…b), with its
+    /// direction oriented along the path.
+    private mutating func addLine(_ a: Int, _ b: Int, count n: Int, from ia: Int, to ib: Int) {
+        let ps = pointSlope(a, b, count: n)
+        var d = SIMD2(ps.dx, ps.dy)
+        let chord = SIMD2(Double(px[ib] - px[ia]), Double(py[ib] - py[ia]))
+        if (d * chord).sum() < 0 { d = -d }
+        lineCentre.append(SIMD2(ps.cx, ps.cy)); lineDir.append(d)
+        lineLength.append((chord * chord).sum().squareRoot())
+    }
+
+    /// A least-squares line through lattice points along a curved stretch lies inside the
+    /// curve's tangent by about κL²/24 (the mean sagitta over an arc of length L), and the
+    /// curve is later drawn tangent to it — so long polygon edges, such as the flat runs at
+    /// the extremes of a digitized circle, would come out flattened. Shift each line back
+    /// out where its neighbours show a smooth, consistently turning curve.
+    private mutating func correctCurvatureBias(cyclic: Bool) {
+        let m = lineDir.count
+        guard m >= 3 else { return }
+        let maxTurnCos = cos(Double.pi / 4)
+        lineShift.removeAll(keepingCapacity: true)
+        for s in 0..<m {
+            guard cyclic || (s > 0 && s < m - 1) else { lineShift.append(.zero); continue }
+            let a = lineDir[(s + m - 1) % m], b = lineDir[s], c = lineDir[(s + 1) % m]
+            let t1 = a.x * b.y - a.y * b.x, t2 = b.x * c.y - b.y * c.x
+            guard t1 * t2 > 0, (a * b).sum() > maxTurnCos, (b * c).sum() > maxTurnCos else {
+                lineShift.append(.zero)
+                continue
+            }
+            let theta = atan2(a.x * c.y - a.y * c.x, (a * c).sum())
+            let arc = 0.5 * lineLength[(s + m - 1) % m] + lineLength[s] + 0.5 * lineLength[(s + 1) % m]
+            let delta = min(0.5, abs(theta) / arc * lineLength[s] * lineLength[s] / 24)
+            let outward = theta > 0 ? SIMD2(b.y, -b.x) : SIMD2(-b.y, b.x)
+            lineShift.append(delta * outward)
+        }
+        for s in 0..<m { lineCentre[s] += lineShift[s] }
+    }
+
+    /// How far (per axis) a polygon vertex may move from its lattice corner. potrace uses
+    /// half a unit; along gently curving arcs the vertex that makes the curve tangent to the
+    /// true outline often lies further out, and clamping it flattens the curve there.
+    static let vertexReach = 1.0
+
     private mutating func adjustVerticesOpen(_ n: Int, _ m: Int) {
         let x0 = Double(px[0]), y0 = Double(py[0])
+        lineCentre.removeAll(keepingCapacity: true); lineDir.removeAll(keepingCapacity: true)
+        lineLength.removeAll(keepingCapacity: true)
+        for s in 0..<m { addLine(po[s], po[s + 1], count: n + 1, from: po[s], to: po[s + 1]) }
+        correctCurvatureBias(cyclic: false)
         quads.removeAll(keepingCapacity: true)
-        for s in 0..<m {
-            let ps = pointSlope(po[s], po[s + 1], count: n + 1)
-            quads.append(lineQuad(ps.cx, ps.cy, ps.dx, ps.dy))
-        }
+        for s in 0..<m { quads.append(lineQuad(lineCentre[s].x, lineCentre[s].y, lineDir[s].x, lineDir[s].y)) }
         vx.removeAll(keepingCapacity: true); vy.removeAll(keepingCapacity: true)
         vx.append(x0); vy.append(y0)
         for i in 1..<m {
             let q = quads[i - 1] + quads[i]
-            let (wx, wy) = minimize(q, Double(px[po[i]]) - x0, Double(py[po[i]]) - y0)
+            let (wx, wy) = minimize(q, Double(px[po[i]]) - x0, Double(py[po[i]]) - y0, CurveFitter.vertexReach)
             vx.append(wx + x0); vy.append(wy + y0)
         }
         vx.append(Double(px[n])); vy.append(Double(py[n]))
@@ -467,18 +514,21 @@ struct CurveFitter {
 
     private mutating func adjustVerticesCyclic(_ n: Int, _ m: Int) {
         let x0 = Double(px[0]), y0 = Double(py[0])
-        quads.removeAll(keepingCapacity: true)
+        lineCentre.removeAll(keepingCapacity: true); lineDir.removeAll(keepingCapacity: true)
+        lineLength.removeAll(keepingCapacity: true)
         for i in 0..<m {
             var j = po[(i + 1) % m]
             j = CurveFitter.mod(j - po[i], n) + po[i]
-            let ps = pointSlope(po[i], j, count: n)
-            quads.append(lineQuad(ps.cx, ps.cy, ps.dx, ps.dy))
+            addLine(po[i], j, count: n, from: po[i], to: po[(i + 1) % m])
         }
+        correctCurvatureBias(cyclic: true)
+        quads.removeAll(keepingCapacity: true)
+        for s in 0..<m { quads.append(lineQuad(lineCentre[s].x, lineCentre[s].y, lineDir[s].x, lineDir[s].y)) }
         vx.removeAll(keepingCapacity: true); vy.removeAll(keepingCapacity: true)
         for i in 0..<m {
             let j = (i + m - 1) % m
             let q = quads[j] + quads[i]
-            let (wx, wy) = minimize(q, Double(px[po[i]]) - x0, Double(py[po[i]]) - y0)
+            let (wx, wy) = minimize(q, Double(px[po[i]]) - x0, Double(py[po[i]]) - y0, CurveFitter.vertexReach)
             vx.append(wx + x0); vy.append(wy + y0)
         }
     }
