@@ -4,7 +4,7 @@ import SwiftUI
 /// Second step of the create flow: the generated template, compared with the photo,
 /// tuned live with a few simple controls.
 struct TemplatePreviewView: View {
-    @Bindable var model: CreateModel
+    let model: CreateModel
     var onStart: () async throws -> Void
 
     enum Layer: String, CaseIterable, Identifiable {
@@ -23,15 +23,21 @@ struct TemplatePreviewView: View {
             if isSideBySide {
                 HStack(spacing: 24) {
                     canvas
-                    ViewThatFits(in: .vertical) {
+                    // The card keeps its natural height, centred, and scrolls only when the
+                    // window is too short for it (iPhone in landscape).
+                    ScrollView {
                         controls
-                        ScrollView { controls }
+                            .background(Theme.surface, in: .rect(cornerRadius: 30, style: .continuous))
+                            .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 8)
+                            .padding(.vertical, 12)
+                            .frame(minHeight: max(0, size.height - 2 * sidePadding), alignment: .center)
                     }
+                    .scrollBounceBehavior(.basedOnSize)
+                    .scrollIndicators(.hidden)
                     .frame(width: size.width > 900 ? 360 : 320)
-                    .background(Theme.surface, in: .rect(cornerRadius: 30, style: .continuous))
-                    .shadow(color: .black.opacity(0.06), radius: 20, x: 0, y: 8)
                 }
-                .padding(size.width > 900 ? 32 : 16)
+                .padding(.horizontal, sidePadding)
+                .padding(.vertical, sidePadding - 12)
             } else {
                 VStack(spacing: 16) {
                     canvas
@@ -62,6 +68,18 @@ struct TemplatePreviewView: View {
 
     /// Canvas beside the controls on wide containers (iPad, iPhone in landscape).
     private var isSideBySide: Bool { size.width >= 700 || size.width > size.height * 1.2 }
+    private var sidePadding: CGFloat { size.width > 900 ? 32 : 16 }
+
+    /// Binds a setting without writing unchanged values back: a slider re-asserting its
+    /// value would otherwise invalidate the model on every update and never settle.
+    private func setting(_ keyPath: ReferenceWritableKeyPath<CreateModel, Double>) -> Binding<Double> {
+        let model = self.model
+        return Binding(
+            get: { model[keyPath: keyPath] },
+            set: { newValue in
+                if abs(model[keyPath: keyPath] - newValue) > 1e-9 { model[keyPath: keyPath] = newValue }
+            })
+    }
 
     // MARK: Canvas
 
@@ -134,14 +152,14 @@ struct TemplatePreviewView: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: 18) {
             SettingSlider(
-                title: "Colors", value: $model.colorCount, range: Double(6)...Double(60), step: 1,
+                title: "Colors", value: setting(\.colorCount), range: Double(6)...Double(60), step: 1,
                 valueText: "\(Int(model.colorCount.rounded()))", onEditing: model.setAdjusting)
             SettingSlider(
-                title: "Detail", value: $model.detail, range: 0...1,
+                title: "Detail", value: setting(\.detail), range: 0...1,
                 valueText: Self.word(model.detail, ["Simple", "Moderate", "Detailed", "Intricate"]),
                 onEditing: model.setAdjusting)
             SettingSlider(
-                title: "Smoothness", value: $model.smoothness, range: 0...1,
+                title: "Smoothness", value: setting(\.smoothness), range: 0...1,
                 valueText: Self.word(model.smoothness, ["Crisp", "Clean", "Smooth", "Flowing"]),
                 onEditing: model.setAdjusting)
 
