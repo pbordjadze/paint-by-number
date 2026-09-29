@@ -16,10 +16,19 @@ public enum GeometryValidator {
     /// As above, but only tests pairs where at least one edge is flagged in `onlyInvolving`.
     static func invalidEdges(points: [SIMD2<Float>], edges: [BoundaryEdge], cellSize: Float = 6, onlyInvolving dirty: [Bool]?) -> [Int] {
         guard !edges.isEmpty else { return [] }
-        let scale = 1 / Template.coordinateQuantum
-        let fixed: [SIMD2<Int64>] = points.map {
-            SIMD2(Int64((Double($0.x) * Double(scale)).rounded()), Int64((Double($0.y) * Double(scale)).rounded()))
-        }
+        let scale = Double(1 / Template.coordinateQuantum)
+        var fixed = [SIMD2<Int64>](repeating: .zero, count: points.count)
+        if !points.isEmpty { points.withUnsafeBufferPointer { pb in
+            fixed.withUnsafeMutableBufferPointer { fb in
+                let p = UncheckedSendable(pb.baseAddress!), f = UncheckedSendable(fb.baseAddress!)
+                Parallel.forEachBand(pb.count, minimumBandSize: 8192) { range in
+                    for i in range {
+                        let q = p.value[i]
+                        f.value[i] = SIMD2(Int64((Double(q.x) * scale).rounded()), Int64((Double(q.y) * scale).rounded()))
+                    }
+                }
+            }
+        } }
 
         // Segment s runs from fixed[s] to fixed[s + 1]; segEdge[s] < 0 marks the last point
         // of an edge (no segment starts there).
