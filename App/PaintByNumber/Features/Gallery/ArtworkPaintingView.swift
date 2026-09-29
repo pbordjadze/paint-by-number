@@ -2,6 +2,7 @@ import CoreGraphics
 import os
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// Opens an artwork for painting: loads it off the main actor, hosts `PaintView`, and
 /// saves progress while the user paints.
@@ -45,6 +46,7 @@ struct ArtworkPaintingView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .background { CanvasGesturesOverZoomDismissal().frame(width: 0, height: 0) }
         .task { await open() }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { autosaver?.saveNow(refreshThumbnail: true) }
@@ -71,6 +73,49 @@ struct ArtworkPaintingView: View {
     private func close() {
         autosaver?.saveNow(refreshThumbnail: true)
         onClose()
+    }
+}
+
+/// The zoom transition lets a swipe down or a pinch anywhere dismiss the pushed screen, which
+/// steals the canvas's pan and pinch and drops the painter back in the gallery. SwiftUI has no
+/// switch for it, so this turns those two recognizers off on the pushed controller's view once
+/// it has appeared; the edge swipe back and the Close button keep working. The recognizers are
+/// found by their UIKit class names (`PaintingNavigationTests` notices if they change).
+private struct CanvasGesturesOverZoomDismissal: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> Controller { Controller() }
+    func updateUIViewController(_ controller: Controller, context: Context) {}
+
+    final class Controller: UIViewController {
+        private static let dismissalRecognizers: Set<String> = [
+            "_UIContentSwipeDismissGestureRecognizer", "_UISwipeDownGestureRecognizer", "_UITransformGestureRecognizer",
+        ]
+
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            // The transition may install its recognizers just after the push completes.
+            disableDismissalGestures()
+            Task {
+                try? await Task.sleep(for: .milliseconds(400))
+                disableDismissalGestures()
+            }
+        }
+
+        private func disableDismissalGestures() {
+            var pushed: UIViewController? = self
+            while let controller = pushed, !(controller.parent is UINavigationController) { pushed = controller.parent }
+            guard let recognizers = pushed?.view.gestureRecognizers, !recognizers.isEmpty else { return }
+            var names: [String] = []
+            for recognizer in recognizers {
+                let name = String(describing: type(of: recognizer))
+                if recognizer.isEnabled && Self.dismissalRecognizers.contains(name) {
+                    recognizer.isEnabled = false
+                    names.append("\(name) (disabled)")
+                } else {
+                    names.append(name)
+                }
+            }
+            Log.library.notice("Painting screen recognizers: \(names.joined(separator: ", "), privacy: .public)")
+        }
     }
 }
 
