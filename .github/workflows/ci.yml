@@ -51,10 +51,11 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - name: Pick simulator
+      - name: Create and boot simulator
         id: sim
         run: |
           UDID=$(ci/simulators.sh | awk '$1=="iphone"{print $2}')
+          xcrun simctl boot "$UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
       - name: Test
         run: |
@@ -82,6 +83,11 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
+      - name: Create and boot simulators (they boot while the app builds)
+        run: |
+          ci/simulators.sh > /tmp/devices.txt
+          cat /tmp/devices.txt
+          awk '{print $2}' /tmp/devices.txt | xargs -n1 xcrun simctl boot
       - name: Build
         run: |
           set -o pipefail
@@ -95,6 +101,7 @@ jobs:
       - name: Screenshots
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
+          DEVICES_FILE: /tmp/devices.txt
         run: |
           APP=$(find build/dd/Build/Products/Release-iphonesimulator -maxdepth 1 -name '*.app' | head -1)
           LIST="${SCENARIOS:-$(cat ci/scenarios.txt 2>/dev/null || echo pipeline)}"

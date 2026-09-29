@@ -10,10 +10,13 @@ SCENARIOS=("$@")
 BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
 mkdir -p "$OUT"
 DIR="$(cd "$(dirname "$0")" && pwd)"
-"$DIR/simulators.sh" > "$OUT/devices.txt"
+# Reuse simulators created (and already booting) earlier in the job when available.
+if [[ -n "${DEVICES_FILE:-}" && -s "${DEVICES_FILE}" ]]; then cp "$DEVICES_FILE" "$OUT/devices.txt"
+else "$DIR/simulators.sh" > "$OUT/devices.txt"; fi
 cat "$OUT/devices.txt"
-while read -r kind udid model runtime; do
-  xcrun simctl boot "$udid"
+exec 3< "$OUT/devices.txt"
+while read -r -u 3 kind udid model runtime; do
+  xcrun simctl boot "$udid" 2>/dev/null || true
   xcrun simctl bootstatus "$udid" -b
   xcrun simctl status_bar "$udid" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
     --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100 || true
