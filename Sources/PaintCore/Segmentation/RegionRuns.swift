@@ -343,25 +343,18 @@ struct RegionAdjacency: Sendable {
     }
 
     init(_ runs: RegionRuns) {
-        let h = runs.height
-        // Entries pack (pair: 48 bits, length: 16 bits) so one integer sort groups them.
-        precondition(runs.count < 1 << 24, "too many regions")
-        let bands: [[UInt64]] = runs.rowStart.withUnsafeBufferPointer { rsb in
+        let h = runs.height, n = runs.count
+        struct Entry { var low: UInt32, high: UInt32, length: Int32 }
+        let bands: [[Entry]] = runs.rowStart.withUnsafeBufferPointer { rsb in
             runs.start.withUnsafeBufferPointer { sb in
                 runs.end.withUnsafeBufferPointer { eb in
                     runs.label.withUnsafeBufferPointer { lb in
                         let rs = UncheckedSendable(rsb), s = UncheckedSendable(sb)
                         let e = UncheckedSendable(eb), l = UncheckedSendable(lb)
-                        return Parallel.mapBands(h, minimumBandSize: 16) { rows -> [UInt64] in
-                            var out: [UInt64] = []
-                            @inline(__always) func emit(_ a: UInt32, _ b: UInt32, _ length: Int) {
-                                let key = a < b ? UInt64(a) << 40 | UInt64(b) << 16 : UInt64(b) << 40 | UInt64(a) << 16
-                                var rest = length
-                                while rest > 0 {
-                                    let part = min(rest, 0xFFFF)
-                                    out.append(key | UInt64(part))
-                                    rest -= part
-                                }
+                        return Parallel.mapBands(h, minimumBandSize: 16) { rows -> [Entry] in
+                            var out: [Entry] = []
+                            @inline(__always) func emit(_ a: UInt32, _ b: UInt32, _ length: Int32) {
+                                out.append(a < b ? Entry(low: a, high: b, length: length) : Entry(low: b, high: a, length: length))
                             }
                             for y in rows {
                                 let a0 = rs.value[y], a1 = rs.value[y + 1]
@@ -375,7 +368,7 @@ struct RegionAdjacency: Sendable {
                                     let la = l.value[a], lb = l.value[b]
                                     let ea = e.value[a], eb = e.value[b]
                                     if la != lb {
-                                        let overlap = Int(min(ea, eb) - max(s.value[a], s.value[b]))
+                                        let overlap = min(ea, eb) - max(s.value[a], s.value[b])
                                         if overlap > 0 { emit(la, lb, overlap) }
                                     }
                                     if ea < eb { a += 1 } else if eb < ea { b += 1 } else { a += 1; b += 1 }
@@ -387,22 +380,53 @@ struct RegionAdjacency: Sendable {
                 }
             }
         }
-        var entries: [UInt64] = []
-        entries.reserveCapacity(bands.reduce(0) { $0 + $1.count })
-        for band in bands { entries.append(contentsOf: band) }
-        entries.sort()
+        // Bucket by low region (counting sort), then sum per high region within each bucket.
+        var offset = [Int](repeating: 0, count: n + 1)
+        for band in bands { for entry in band { offset[Int(entry.low) + 1] += 1 } }
+        for r in 0..<n { offset[r + 1] += offset[r] }
+        var cursor = offset
+        var high = [UInt32](repeating: 0, count: offset[n])
+        var length = [Int32](repeating: 0, count: offset[n])
+        for band in bands {
+            for entry in band {
+                let k = cursor[Int(entry.low)]
+                high[k] = entry.high
+                length[k] = entry.length
+                cursor[Int(entry.low)] = k + 1
+            }
+        }
         pairs = []
         lengths = []
-        var k = 0
-        while k < entries.count {
-            let key = entries[k] & ~0xFFFF
-            var total: Int32 = 0
-            while k < entries.count && entries[k] & ~0xFFFF == key {
-                total += Int32(entries[k] & 0xFFFF)
-                k += 1
+        pairs.reserveCapacity(offset[n] / 2)
+        lengths.reserveCapacity(offset[n] / 2)
+        var slot = [Int32](repeating: -1, count: n)
+        for low in 0..<n where offset[low] < offset[low + 1] {
+            let first = pairs.count
+            for k in offset[low]..<offset[low + 1] {
+                let b = Int(high[k])
+                let at = Int(slot[b])
+                if at >= first {
+                    lengths[at] += length[k]
+                } else {
+                    slot[b] = Int32(pairs.count)
+                    pairs.append(UInt64(low) << 32 | UInt64(b))
+                    lengths.append(length[k])
+                }
             }
-            pairs.append((key >> 40) << 32 | (key >> 16) & 0xFF_FFFF)
-            lengths.append(total)
+            // Ascending within the bucket (buckets are small).
+            var i = first + 1
+            while i < pairs.count {
+                let p = pairs[i], q = lengths[i]
+                var j = i - 1
+                while j >= first && pairs[j] > p {
+                    pairs[j + 1] = pairs[j]
+                    lengths[j + 1] = lengths[j]
+                    j -= 1
+                }
+                pairs[j + 1] = p
+                lengths[j + 1] = q
+                i += 1
+            }
         }
     }
 
