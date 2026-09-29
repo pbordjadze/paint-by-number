@@ -173,7 +173,8 @@ struct CanvasRenderTests {
         let photo = try PhotoLoader.load(url: url, maxPixelSize: 2048)
         let clock = ContinuousClock()
         var t0 = clock.now
-        let t = try TemplateGenerator().generate(from: photo).template
+        // The most detailed settings a user can pick: the realistic worst case for the canvas.
+        let t = try TemplateGenerator(settings: GenerationSettings(colorCount: 48, detail: 1)).generate(from: photo).template
         let generate = clock.now - t0
         let context = try #require(RenderContext.shared)
         t0 = clock.now
@@ -213,7 +214,7 @@ struct CanvasRenderTests {
         }
         let wall = (clock.now - t0) / frames
         let report = """
-            parrots: \(t.regions.count) regions, \(t.mesh.indices.count / 3) triangles, \(scene.segmentCount) outline segments, \
+            parrots (48 colors, detail 1): \(t.regions.count) regions, \(t.mesh.indices.count / 3) triangles, \(scene.segmentCount) outline segments, \
             \(scene.glyphCount) digit quads
             generate \(generate), scene upload \(upload)
             frame 1206×2622 MSAA×\(context.sampleCount): wall \(wall), GPU \(String(format: "%.2f", gpu / Double(frames) * 1000)) ms (simulator)
