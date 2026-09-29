@@ -1,0 +1,126 @@
+----- tail -----
+Building for debugging...
+Build complete! (46.54s)
+Test Suite 'All tests' started at 2026-09-29 23:31:49.602
+Test Suite 'debug.xctest' started at 2026-09-29 23:31:49.603
+Test Suite 'debug.xctest' passed at 2026-09-29 23:31:49.603
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.0 (0.0) seconds
+Test Suite 'All tests' passed at 2026-09-29 23:31:49.603
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.0 (0.0) seconds
+◇ Test run started.
+↳ Testing Library Version: 6.2.4 (5ee435b15ad40ec)
+↳ Target Platform: x86_64-unknown-linux-gnu
+◇ Suite "Foundation" started.
+◇ Suite "Vectorizer" started.
+◇ Suite "Segmentation" started.
+◇ Test tinyImages() started.
+◇ Test cancellation() started.
+◇ Test photoThroughPipeline() started.
+◇ Test cleanShapesNeedNoFallbacks() started.
+◇ Test randomBlobMaps(seed:) started.
+◇ Test earcutCoversPolygonsExactly() started.
+◇ Test validatorDetectsBadContacts() started.
+◇ Test distanceTransformMatchesBruteForce() started.
+◇ Test displayP3Input() started.
+◇ Test largeRegionsGetExtraLabels() started.
+◇ Test transparentPixelsBecomePaper() started.
+◇ Test thinPartsArePeeled() started.
+◇ Test diagonalTouches() started.
+◇ Test areaResampleOfUniformImageIsExact() started.
+◇ Test regionWithManyHoles() started.
+◇ Test borderTouchingRegions() started.
+◇ Test orientationConvention() started.
+◇ Test tinyImages(size:) started.
+◇ Test checkerboard() started.
+◇ Test progressIsMonotonic() started.
+◇ Test distanceTransformWithoutFeaturesIsInfinite() started.
+◇ Test digitalStraightLinesStayStraight() started.
+◇ Test connectedComponents() started.
+◇ Test deterministic() started.
+◇ Test singleRegion() started.
+◇ Test nestedIslands() started.
+◇ Test salientSmallColorGetsAPaint() started.
+◇ Test okLabReferenceValues() started.
+◇ Test circlesAreRound() started.
+◇ Test emptyImage() started.
+◇ Test outOfGamutIsClippedByChroma() started.
+◇ Test rectangleCornersStayCrisp() started.
+◇ Test lowDetailHasLargerRegions() started.
+◇ Test paletteIsSortedIntoFamilies() started.
+◇ Test okLabRoundTrip() started.
+◇ Test invariantsAcrossSmoothness(smoothness:) started.
+◇ Test runComponentsMatchPixelComponents() started.
+◇ Test interiorDistanceOfSquare() started.
+◇ Test netpbmRoundTrip() started.
+◇ Test paletteOrderingGroupsHues() started.
+◇ Test uniformImage() started.
+◇ Test invariantsAcrossDetail(detail:) started.
+◇ Test cancellation() started.
+◇ Test importanceIsHonoured() started.
+◇ Test inscribedDiscTestMatchesDistanceTransform() started.
+◇ Test deterministic() started.
+◇ Test case passing 1 argument seed → 0 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 1 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 2 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 3 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 4 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 5 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument size → (1, 1) to tinyImages(size:) started.
+◇ Test case passing 1 argument size → (3, 2) to tinyImages(size:) started.
+◇ Test case passing 1 argument size → (2, 7) to tinyImages(size:) started.
+◇ Test case passing 1 argument size → (1, 40) to tinyImages(size:) started.
+◇ Test case passing 1 argument smoothness → 0.0 to invariantsAcrossSmoothness(smoothness:) started.
+◇ Test case passing 1 argument smoothness → 1.0 to invariantsAcrossSmoothness(smoothness:) started.
+◇ Test case passing 1 argument detail → 0.0 to invariantsAcrossDetail(detail:) started.
+◇ Test case passing 1 argument detail → 0.5 to invariantsAcrossDetail(detail:) started.
+◇ Test case passing 1 argument detail → 1.0 to invariantsAcrossDetail(detail:) started.
+✔ Test cancellation() passed after 0.473 seconds.
+✔ Test earcutCoversPolygonsExactly() passed after 0.474 seconds.
+✔ Test tinyImages() passed after 0.474 seconds.
+✔ Test validatorDetectsBadContacts() passed after 0.474 seconds.
+✔ Test cleanShapesNeedNoFallbacks() passed after 0.474 seconds.
+✔ Test distanceTransformMatchesBruteForce() passed after 0.474 seconds.
+✔ Test randomBlobMaps(seed:) with 6 test cases passed after 0.474 seconds.
+✔ Test photoThroughPipeline() passed after 0.475 seconds.
+✔ Test thinPartsArePeeled() passed after 0.475 seconds.
+✔ Test diagonalTouches() passed after 0.475 seconds.
+✔ Test areaResampleOfUniformImageIsExact() passed after 0.475 seconds.
+✔ Test largeRegionsGetExtraLabels() passed after 0.475 seconds.
+✔ Test borderTouchingRegions() passed after 0.475 seconds.
+✔ Test orientationConvention() passed after 0.475 seconds.
+✔ Test regionWithManyHoles() passed after 0.475 seconds.
+✔ Test displayP3Input() passed after 0.475 seconds.
+✔ Test tinyImages(size:) with 4 test cases passed after 0.475 seconds.
+✔ Test checkerboard() passed after 0.475 seconds.
+✔ Test distanceTransformWithoutFeaturesIsInfinite() passed after 0.475 seconds.
+✔ Test connectedComponents() passed after 0.475 seconds.
+✔ Test digitalStraightLinesStayStraight() passed after 0.475 seconds.
+✔ Test singleRegion() passed after 0.475 seconds.
+✔ Test nestedIslands() passed after 0.475 seconds.
+✔ Test deterministic() passed after 0.476 seconds.
+✔ Test okLabReferenceValues() passed after 0.475 seconds.
+✔ Test progressIsMonotonic() passed after 0.476 seconds.
+✔ Test emptyImage() passed after 0.476 seconds.
+✔ Test outOfGamutIsClippedByChroma() passed after 0.476 seconds.
+✔ Test circlesAreRound() passed after 0.476 seconds.
+✔ Test rectangleCornersStayCrisp() passed after 0.476 seconds.
+✔ Test transparentPixelsBecomePaper() passed after 0.477 seconds.
+✔ Test okLabRoundTrip() passed after 0.476 seconds.
+✔ Test salientSmallColorGetsAPaint() passed after 0.476 seconds.
+✔ Test paletteIsSortedIntoFamilies() passed after 0.476 seconds.
+✔ Test runComponentsMatchPixelComponents() passed after 0.476 seconds.
+✔ Test interiorDistanceOfSquare() passed after 0.476 seconds.
+✔ Test netpbmRoundTrip() passed after 0.476 seconds.
+✔ Test paletteOrderingGroupsHues() passed after 0.476 seconds.
+✔ Test uniformImage() passed after 0.476 seconds.
+✔ Test invariantsAcrossSmoothness(smoothness:) with 2 test cases passed after 0.477 seconds.
+✔ Test cancellation() passed after 0.477 seconds.
+✔ Test lowDetailHasLargerRegions() passed after 0.477 seconds.
+✔ Test inscribedDiscTestMatchesDistanceTransform() passed after 0.477 seconds.
+✔ Suite "Vectorizer" passed after 0.479 seconds.
+✔ Suite "Foundation" passed after 0.479 seconds.
+✔ Test invariantsAcrossDetail(detail:) with 3 test cases passed after 0.479 seconds.
+✔ Test deterministic() passed after 0.519 seconds.
+✔ Test importanceIsHonoured() passed after 0.582 seconds.
+✔ Suite "Segmentation" passed after 0.584 seconds.
+✔ Test run with 46 tests in 3 suites passed after 0.585 seconds.

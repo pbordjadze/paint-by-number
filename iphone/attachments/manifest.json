@@ -1,0 +1,320 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "E53E144B-EE18-471E-90D8-C1BA16C29D5E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "fills_0_C14103EC-1228-4EA1-AEDC-53697410727D.png",
+        "timestamp" : 1790725704.51
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/paintedRegionsShowTheirPaintAndTheRestIsPaper()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/paintedRegionsShowTheirPaintAndTheRestIsPaper()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "2BCA3140-B7A0-4F7A-8E8A-6424EEC40FCD.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "outlines-finished_0_A53C6711-5564-4E83-A0C0-952A2D42F56F.png",
+        "timestamp" : 1790725704.646
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "C4EDC650-2314-44E1-BDB8-8BA4318F9572.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "outlines-blank_0_C902F134-EB09-4A4C-9C3C-8D9D924C930D.png",
+        "timestamp" : 1790725704.624
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/outlinesDarkenOpenBoundariesAndDissolveBetweenPaintedRegions()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/outlinesDarkenOpenBoundariesAndDissolveBetweenPaintedRegions()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "5A5CDEF1-EB89-45ED-9887-CD8880E9B5C1.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "numbers_0_54922A0A-5E06-4174-BB99-262CBF2EB318.png",
+        "timestamp" : 1790725704.788
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/numbersAppearWhenLegibleAndVanishOncePainted()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/numbersAppearWhenLegibleAndVanishOncePainted()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "11DCE515-969F-4B13-98C9-F679737EDC4E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "highlight_0_794CD7CF-82ED-4822-B3D5-AA9CBC83598E.png",
+        "timestamp" : 1790725705.022
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/selectedColorIsHighlighted()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/selectedColorIsHighlighted()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "5FC0D8D6-918F-48AD-B100-1A8C559098BF.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "large-timings_0_98C3AA9E-1B2A-4724-9EAA-0B56AC74DA28.txt",
+        "timestamp" : 1790725708.974
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "4311DC93-5DFC-49FE-8288-0893BB94447A.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "large_0_20E9FB01-AA00-4E3D-9F6C-DD0DB7DEAC8C.png",
+        "timestamp" : 1790725708.958
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/largeTemplateBuildsAndRendersQuickly()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/largeTemplateBuildsAndRendersQuickly()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "44B42C08-A419-4EFC-BDC8-D8E415BC904A.txt",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "real-template-timings_0_F1FF1A6A-DEFF-49B8-AF00-ED57FBC8297B.txt",
+        "timestamp" : 1790725710.382
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/realTemplateFrameCost()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/realTemplateFrameCost()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "582D4F7E-E622-46D0-AC8A-EB089A93C849.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "timelapse-frame_0_4A442342-A882-4FAB-B74C-5A19ECEF7524.png",
+        "timestamp" : 1790725710.396
+      }
+    ],
+    "testIdentifier" : "CanvasRenderTests/timelapseFramesReplayTheStrokeLog()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/CanvasRenderTests/timelapseFramesReplayTheStrokeLog()"
+  },
+  {
+    "attachments" : [
+      {
+        "arguments" : [
+          "true"
+        ],
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "1F1D672C-7481-47D4-8F88-15AB3BF04CD5.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "stripes-template-vector_0_6123D7F0-2C0D-4134-9799-FDFDD7F5526F.png",
+        "timestamp" : 1790725729.177
+      },
+      {
+        "arguments" : [
+          "false"
+        ],
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "6D1A79B1-A6ED-4F43-AFDF-D6D602FFABC4.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "stripes-template-raster_0_AA5FE22C-3933-48E5-A507-99C2BC0FF183.png",
+        "timestamp" : 1790725729.212
+      }
+    ],
+    "testIdentifier" : "RasterizerTests/templateHasPaperOutlinesAndNumbers(vector:)",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/RasterizerTests/templateHasPaperOutlinesAndNumbers(vector:)"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "728FB0A5-959A-49D5-9D33-A69A3E90B83E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "parrots-numbers_0_6AF2EA78-2717-4D98-AF86-2BA690BEDB5D.png",
+        "timestamp" : 1790725729.975
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "FA2E9833-A6FB-48E0-9E2B-1C4B49A53120.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "parrots-finished_0_57AB9911-BFE2-4CC6-9A81-A7A8A4AD64B9.png",
+        "timestamp" : 1790725729.975
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "9376EDAB-6C95-41AB-92E2-9389B33CA316.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "parrots-thumbnail-40_0_DDB8C0B2-9D1A-4DE2-B9C9-E8C545C1A3A0.png",
+        "timestamp" : 1790725729.975
+      }
+    ],
+    "testIdentifier" : "RasterizerTests/rendersGeneratedSample()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/RasterizerTests/rendersGeneratedSample()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "34494E32-7B7A-4348-9B58-4D7CA1817004.pdf",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "stripes_0_919903A3-E319-40FD-AE30-977B199B4186.pdf",
+        "timestamp" : 1790725730.044
+      }
+    ],
+    "testIdentifier" : "PDFExporterTests/documentHasTemplateAndColorKeyPages()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/PDFExporterTests/documentHasTemplateAndColorKeyPages()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "5E9C1A97-6D2D-4FA8-B3F7-7312BF7F69CD.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "parrots-pdf-page2_0_1EC1FBF5-B49D-490E-9A1F-1B6AF55155B1.png",
+        "timestamp" : 1790725730.872
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "E05DAD8D-E664-480D-8A90-A08EA616C7FC.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "parrots-pdf-page1_0_E0A110DF-F3F2-41F4-904A-6784D72EA216.png",
+        "timestamp" : 1790725730.768
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "E883017A-B024-4CDC-B60F-1D1A757C5087.pdf",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "parrots_0_6863F768-45C0-4272-B8B3-F35A6940E736.pdf",
+        "timestamp" : 1790725730.679
+      }
+    ],
+    "testIdentifier" : "PDFExporterTests/samplePDFRendersPages()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberTests/PDFExporterTests/samplePDFRendersPages()"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "43311CC7-1F44-46DE-B8EA-8B90783D1613.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "compare-after-drag_0_402957A7-DAD7-4452-8B60-CFBFF1C484D4.png",
+        "timestamp" : 1790725763.705
+      }
+    ],
+    "testIdentifier" : "CreateFlowTests/testCompareDividerFollowsDrag()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/CreateFlowTests/testCompareDividerFollowsDrag"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "FE8376F7-0FE9-421E-9460-E3D32202F48D.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "painting-after-gestures_0_CAFF58B8-C203-4537-A93A-54EBECC04782.png",
+        "timestamp" : 1790725799.397
+      }
+    ],
+    "testIdentifier" : "PaintingNavigationTests/testCanvasGesturesStayInPainting()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/PaintingNavigationTests/testCanvasGesturesStayInPainting"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "B945B7AC-2A24-4126-99C8-CB241D6CFF3F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "after-close_0_3727D952-57DE-403F-A9AA-47CC788EC0BA.png",
+        "timestamp" : 1790725817.301
+      }
+    ],
+    "testIdentifier" : "PaintingNavigationTests/testCloseReturnsToGallery()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/PaintingNavigationTests/testCloseReturnsToGallery"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "F77045FB-6C81-434D-B027-0C8EF571766F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "after-edge-swipe_0_4B34DF04-5107-421D-8F81-ADB69333FCA0.png",
+        "timestamp" : 1790725833.821
+      }
+    ],
+    "testIdentifier" : "PaintingNavigationTests/testEdgeSwipeReturnsToGallery()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/PaintingNavigationTests/testEdgeSwipeReturnsToGallery"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "3F9CECA2-EEFE-4DD9-954F-20B86B2BF987.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "after-hint_0_57FEAC7B-2D4F-4643-99E2-7268E45E8970.png",
+        "timestamp" : 1790725849.93
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "22452A91-4697-4369-8812-53ADB77EB73B",
+        "deviceName" : "iPhone 17 Pro",
+        "exportedFileName" : "80A621AE-9039-4C26-8DA5-B0BC702FB17C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "before-hint_0_62F45DFA-BEAF-4BD6-9E1B-2F5A34AD1D19.png",
+        "timestamp" : 1790725849.928
+      }
+    ],
+    "testIdentifier" : "PaintingNavigationTests/testHintButtonMovesTheCanvas()",
+    "testIdentifierURL" : "test://com.apple.xcode/PaintByNumber/PaintByNumberUITests/PaintingNavigationTests/testHintButtonMovesTheCanvas"
+  }
+]

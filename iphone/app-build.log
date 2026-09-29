@@ -1,0 +1,39 @@
+1:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/PaintingNavigationTests.swift:80:32: warning: main actor-isolated property 'image' can not be referenced from a nonisolated context
+11:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/PaintingNavigationTests.swift:80:32: warning: main actor-isolated property 'image' can not be referenced from a nonisolated context
+21:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+24:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+27:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+30:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+----- tail -----
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/PaintingNavigationTests.swift:80:32: warning: main actor-isolated property 'image' can not be referenced from a nonisolated context
+        guard let image = shot.image.cgImage else { return nil }
+                               ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIScreenshot.h:31:37: note: property declared here
+@property (readonly, copy) UIImage *image;
+                                    ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/PaintingNavigationTests.swift:79:18: note: add '@MainActor' to make instance method 'canvasArea(of:)' part of global actor 'MainActor'
+    private func canvasArea(of shot: XCUIScreenshot) -> Data? {
+                 ^
+    @MainActor 
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/PaintingNavigationTests.swift:80:32: warning: main actor-isolated property 'image' can not be referenced from a nonisolated context
+        guard let image = shot.image.cgImage else { return nil }
+                               ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIScreenshot.h:31:37: note: property declared here
+@property (readonly, copy) UIImage *image;
+                                    ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/PaintingNavigationTests.swift:79:18: note: add '@MainActor' to make instance method 'canvasArea(of:)' part of global actor 'MainActor'
+    private func canvasArea(of shot: XCUIScreenshot) -> Data? {
+                 ^
+    @MainActor 
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+                     ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+                     ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+                     ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/PaintingSessionTests.swift:202:22: warning: 'init(frame:)' was deprecated in iOS 26.0: Use init(windowScene:) instead.
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+                     ^
