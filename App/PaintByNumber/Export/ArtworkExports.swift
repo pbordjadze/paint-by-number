@@ -25,7 +25,7 @@ nonisolated enum ArtworkExporter {
     /// current state with the unpainted areas sketched in.
     static func paintingPNG(store: ArtworkStore, artwork: Artwork, finished: Bool = false) throws -> Data {
         let template = try store.readTemplate(artwork.id)
-        let progress = store.readProgress(artwork.id, regionCount: template.regions.count)
+        let progress = try store.readProgress(artwork.id, regionCount: template.regions.count).progress
         let style: TemplateRasterizer.Style = finished || progress.isComplete ? .finished : .thumbnail
         guard let data = TemplateRasterizer.pngData(template, painted: progress.painted, style: style, maxPixelSize: imagePixelSize) else {
             throw ExportError.renderFailed
@@ -123,7 +123,7 @@ nonisolated struct TimelapseVideoFile: Transferable, Sendable {
     @concurrent
     func export(longSide: Int = 1080) async throws -> URL {
         let template = try store.readTemplate(artwork.id)
-        let progress = store.readProgress(artwork.id, regionCount: template.regions.count)
+        let progress = try store.readProgress(artwork.id, regionCount: template.regions.count).progress
         return try await TimelapseMovie(template: template, progress: progress, title: artwork.title).export(longSide: longSide)
     }
 }

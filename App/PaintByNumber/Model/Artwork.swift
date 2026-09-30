@@ -5,7 +5,12 @@ import PaintCore
 /// Metadata of one artwork in the library (its `meta.json`). Holds everything the gallery
 /// shows, so listing the library never touches the much larger template.
 nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
-    static let currentFormat = 1
+    /// Bump when older apps must not open or rewrite an artwork folder: a template
+    /// `formatVersion` bump or a new *required* template chunk. Such apps list the artwork
+    /// read-only (`needsNewerApp`) instead of misreading it. Set whenever the folder's
+    /// template is written; opening or painting keeps the recorded format.
+    /// 1: format-1 templates. 2: templates are written in `Template.formatVersion` 2.
+    static let currentFormat = 2
 
     var id: UUID
     var title: String
@@ -26,6 +31,8 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// The bundled sample the artwork was made from, if any.
     var sampleName: String?
     var format: Int
+    /// `Template.pipelineVersion` of the current template (0 = unknown).
+    var pipelineVersion: Int
 
     init(
         id: UUID = UUID(), title: String, createdAt: Date = .now, modifiedAt: Date? = nil,
@@ -41,6 +48,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         height = template.height
         colorCount = template.palette.count
         regionCount = template.regions.count
+        pipelineVersion = Int(template.pipelineVersion)
         paintedCount = progress?.paintedCount ?? 0
         activeSeconds = progress?.activeSeconds ?? 0
         completedAt = progress?.isComplete == true ? self.modifiedAt : nil
@@ -56,6 +64,18 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     var isComplete: Bool { regionCount > 0 && paintedCount >= regionCount }
     var isStarted: Bool { paintedCount > 0 }
     var aspectRatio: CGFloat { height == 0 ? 1 : CGFloat(width) / CGFloat(height) }
+    /// Written by a newer app: listed and deletable, but never opened or rewritten here.
+    var needsNewerApp: Bool { format > Self.currentFormat }
+
+    /// Mirrors the artwork's template and the settings that made it into the metadata.
+    mutating func adopt(_ template: Template, settings: GenerationSettings) {
+        width = template.width
+        height = template.height
+        colorCount = template.palette.count
+        regionCount = template.regions.count
+        pipelineVersion = Int(template.pipelineVersion)
+        self.settings = settings
+    }
 
     /// Mirrors a progress snapshot into the metadata.
     mutating func record(_ progress: PaintProgress, at date: Date = .now) {
@@ -73,10 +93,35 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, title, createdAt, modifiedAt, completedAt, settings, width, height
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
+        case pipelineVersion
     }
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        format = try c.decodeIfPresent(Int.self, forKey: .format) ?? Self.currentFormat
+        guard format <= Self.currentFormat else {
+            // A newer app may have changed any field; take what still reads so the gallery can
+            // show the artwork (and offer to delete it) instead of hiding it.
+            func field<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T {
+                (try? c.decodeIfPresent(T.self, forKey: key)) ?? fallback
+            }
+            id = field(.id, UUID())  // the folder name overrides it
+            title = field(.title, "")
+            createdAt = field(.createdAt, .distantPast)
+            modifiedAt = field(.modifiedAt, createdAt)
+            completedAt = try? c.decodeIfPresent(Date.self, forKey: .completedAt)
+            settings = field(.settings, GenerationSettings())
+            width = max(1, field(.width, 1))
+            height = max(1, field(.height, 1))
+            colorCount = max(0, field(.colorCount, 0))
+            regionCount = max(0, field(.regionCount, 0))
+            paintedCount = max(0, field(.paintedCount, 0))
+            activeSeconds = field(.activeSeconds, 0)
+            thumbnailVersion = field(.thumbnailVersion, 0)
+            sampleName = try? c.decodeIfPresent(String.self, forKey: .sampleName)
+            pipelineVersion = field(.pipelineVersion, 0)
+            return
+        }
         id = try c.decode(UUID.self, forKey: .id)
         title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
         createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? .distantPast
@@ -91,7 +136,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         activeSeconds = try c.decodeIfPresent(Double.self, forKey: .activeSeconds) ?? 0
         thumbnailVersion = try c.decodeIfPresent(Int.self, forKey: .thumbnailVersion) ?? 0
         sampleName = try c.decodeIfPresent(String.self, forKey: .sampleName)
-        format = try c.decodeIfPresent(Int.self, forKey: .format) ?? Self.currentFormat
+        pipelineVersion = try c.decodeIfPresent(Int.self, forKey: .pipelineVersion) ?? 0
         guard width > 0, height > 0, regionCount >= 0, paintedCount >= 0 else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "invalid artwork dimensions"))
         }

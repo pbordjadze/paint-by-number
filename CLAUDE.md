@@ -6,9 +6,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 ## Layout
 
 - `Package.swift`, `Sources/PaintCore` — portable, dependency-free template pipeline
-  (builds on Linux too). `Sources/pbn` — headless CLI. `Tests/PaintCoreTests` — Swift Testing.
+  (builds on Linux too). `Sources/pbn` — headless CLI. `Tests/PaintCoreTests` — Swift Testing
+  (`Fixtures/` holds files written by past encoders, e.g. `template-v1.pbnt`).
   - `Foundation/` grids, color science (OKLab, Display P3), EDT, connected components, resampling
-  - `Model/` `Template` (the product of the pipeline) + binary coding, `GenerationSettings`, `Segmentation`
+  - `Model/` `Template` (the product of the pipeline) + versioned binary coding, `GenerationSettings`,
+    `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map)
   - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
     its doc comment, all tunables in `SegmentationParameters`)
   - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
@@ -37,7 +39,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
 - `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
   distinct color) — ideal for judging curve quality on synthetic shapes. `pbn check <t.pbnt>`
-  runs `Template.validate()` (planarity, ring orientation, mesh coverage/watertightness, labels).
+  prints the file's format and pipeline versions and runs `Template.validate()` (planarity, ring
+  orientation, mesh coverage/watertightness, labels).
 - Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
   documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
 - `tools/regression.py [--sheets DIR] [--json FILE]` — the quality gate CI runs on every push:
@@ -83,6 +86,12 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
   `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,
   staging/trash folders). Writes are queued per artwork off the main actor; deletes are undoable.
+  `Library.loadForPainting` classifies failures (`Library.OpenError`: `needsNewerApp` or
+  `damaged(canRegenerate:)`), resets unusable progress with a one-time `OpenNotice` and repairs
+  stale metadata; `Library.regenerate(artwork:settings:)` re-runs the pipeline on the stored photo
+  (or bundled sample) off the main actor, carries progress over by region overlap
+  (`PaintProgress.remapped`) and swaps the folder in atomically (`ArtworkStore.replaceContents`).
+  Artworks written by a newer app (`Artwork.needsNewerApp`) are listed read-only: delete only.
   `ArtworkPaintingView` hosts `PaintView` and autosaves (debounced, on background, on close). It is
   pushed with a zoom transition whose swipe-down/pinch dismissal it turns off (they stole canvas
   gestures; `PaintingNavigationTests` guards this).
@@ -121,6 +130,34 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   notice (the repository is public); keep them when touching the fitter. Distributing the app
   (IPA, SideStore, and above all the App Store, which GPLv2 is generally held incompatible
   with) needs that settled first: license the app GPL-compatibly or replace `CurveFitter`.
+
+## Saved data compatibility (never lose a painting)
+
+Saved paintings must open in every later build. The format history is documented on
+`Template.formatVersion` and in `Model/TemplateCoding.swift`.
+
+- Never change how an existing template format is read: `readPayloadV1` is frozen, and
+  `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` must keep decoding (they
+  are never regenerated). Add a fixture file and decode test for every new `formatVersion`.
+- New template data goes in an extension chunk (FourCC tag, flags, length; see
+  `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
+  ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base
+  layout itself changes.
+- Bump `TemplateGenerator.pipelineVersion` in the same commit as any change that alters generated
+  output for identical inputs and settings; templates record it.
+- Decoders treat files as hostile: check every count against the bytes left before allocating,
+  and every span, reference and coordinate (inside the canvas) in `Int` arithmetic before
+  anything indexes with it. PaintCore is compiled `-Ounchecked` in release, so a missed check is a
+  silent out-of-bounds read; the truncation, random-corruption and crafted-reference tests in
+  `TemplateCodingTests` guard this.
+- A file from a newer app is never reset or rewritten: it throws a "newer" error
+  (`Template.CodingError.requiresNewerReader`, `PaintProgress.CodingError.newerVersion`) and the
+  app says it needs an update. `PaintProgress` fields are append-only (readers ignore trailing
+  bytes); bump its `formatVersion` only when an existing field changes meaning. Bump
+  `Artwork.currentFormat` when older apps must not open or rewrite an artwork folder (a template
+  `formatVersion` bump or a new required chunk).
+- Damaged data never traps: progress that doesn't fit its template is a recoverable error
+  (`PaintingSession.init(template:progress:) throws`), and `LibraryTests` cover each failure.
 
 ## CI feedback loop (no Xcode locally)
 

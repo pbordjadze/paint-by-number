@@ -26,7 +26,11 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
 
 /// Turns photos into ready-to-save artwork drafts, off the main actor.
 nonisolated enum ArtworkFactory {
-    enum FactoryError: Error { case missingSample }
+    enum FactoryError: Error, Equatable {
+        case missingSample
+        /// Neither the stored photo nor the bundled sample an artwork was made from is available.
+        case sourceUnavailable
+    }
 
     @concurrent
     static func draft(
@@ -37,8 +41,7 @@ nonisolated enum ArtworkFactory {
         guard let url = sample.url else { throw FactoryError.missingSample }
         let photo = try PhotoLoader.load(url: url, maxPixelSize: photoMaxPixelSize)
         let image = PhotoLoader.cgImage(from: photo)
-        let importance = image.flatMap(SubjectImportance.map(for:))
-        let template = try TemplateGenerator(settings: settings).generate(from: photo, importance: importance).template
+        let template = try self.template(from: photo, image: image, settings: settings, progress: nil)
         var progress: PaintProgress?
         if let paintedFraction {
             var painted = self.progress(painting: paintedFraction, of: template)
@@ -49,6 +52,42 @@ nonisolated enum ArtworkFactory {
         return ArtworkDraft(
             title: sample.title, template: template, settings: settings, photo: image,
             sampleName: sample.id, progress: progress, date: date)
+    }
+
+    /// The template of `photo`, generated the way the create flow does it: subject importance
+    /// from Vision (when available) guides colors and detail. Polls task cancellation.
+    static func template(
+        from photo: RGBAImage, settings: GenerationSettings, progress: (@Sendable (Float) -> Void)?
+    ) throws -> Template {
+        try template(from: photo, image: PhotoLoader.cgImage(from: photo), settings: settings, progress: progress)
+    }
+
+    private static func template(
+        from photo: RGBAImage, image: CGImage?, settings: GenerationSettings, progress: (@Sendable (Float) -> Void)?
+    ) throws -> Template {
+        let importance = image.flatMap(SubjectImportance.map(for:))
+        return try TemplateGenerator(settings: settings)
+            .generate(from: photo, importance: importance, cancel: .task, progress: progress)
+            .template
+    }
+
+    /// The photo an artwork was made from, as the create flow loaded it: the stored
+    /// `source.jpg`, else the bundled sample it came from.
+    static func sourcePhoto(of artwork: Artwork, in store: ArtworkStore) throws -> RGBAImage {
+        if store.hasSource(artwork.id) {
+            return try PhotoLoader.load(url: store.url(.source, of: artwork.id), maxPixelSize: ArtworkStore.sourceMaxPixelSize)
+        }
+        guard let url = sampleURL(of: artwork) else { throw FactoryError.sourceUnavailable }
+        return try PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize)
+    }
+
+    /// Whether `sourcePhoto(of:in:)` has a photo to regenerate the artwork from.
+    static func canRegenerate(_ artwork: Artwork, store: ArtworkStore) -> Bool {
+        store.hasSource(artwork.id) || sampleURL(of: artwork) != nil
+    }
+
+    private static func sampleURL(of artwork: Artwork) -> URL? {
+        artwork.sampleName.flatMap(Sample.named)?.url
     }
 
     /// Progress with `fraction` of the regions painted the way people paint: color by

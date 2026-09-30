@@ -28,7 +28,7 @@ let package = Package(
                 .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
             ]
         ),
-        .testTarget(name: "PaintCoreTests", dependencies: ["PaintCore"]),
+        .testTarget(name: "PaintCoreTests", dependencies: ["PaintCore"], resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v6]
 )

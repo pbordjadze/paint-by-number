@@ -11,7 +11,11 @@ struct ArtworkCard: View {
                 ArtworkThumbnail(artwork: artwork)
             }
             .overlay(alignment: .topTrailing) {
-                if artwork.isComplete { FinishedBadge().padding(10) }
+                if artwork.needsNewerApp {
+                    NeedsUpdateBadge().padding(10)
+                } else if artwork.isComplete {
+                    FinishedBadge().padding(10)
+                }
             }
             // The pointer lifts the picture, not its caption.
             .contentShape(.hoverEffect, .rect(cornerRadius: Theme.cardRadius, style: .continuous))
@@ -95,13 +99,28 @@ private struct FinishedBadge: View {
     }
 }
 
-/// "42%", "Ready to paint", "Finished".
+/// Marks an artwork made by a newer version of the app, which this one can't open.
+private struct NeedsUpdateBadge: View {
+    var body: some View {
+        Image(systemName: "arrow.up.circle.fill")
+            .font(.system(size: 17, weight: .semibold))
+            .foregroundStyle(.orange)
+            .frame(width: 30, height: 30)
+            .glassEffect(.regular, in: .circle)
+            .accessibilityHidden(true)
+    }
+}
+
+/// "42%", "Ready to paint", "Finished", "Needs app update".
 struct ProgressCaption: View {
     let artwork: Artwork
 
     var body: some View {
         HStack(spacing: 6) {
-            if artwork.isComplete {
+            if artwork.needsNewerApp {
+                Image(systemName: "arrow.up.circle").foregroundStyle(.orange)
+                Text("Needs app update")
+            } else if artwork.isComplete {
                 Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint)
                 if artwork.activeSeconds >= 60 {
                     Text("Finished · \(PaintingTime.spent(artwork.activeSeconds))")
@@ -129,6 +148,7 @@ struct ProgressCaption: View {
     }
 
     static func spoken(_ artwork: Artwork) -> String {
+        if artwork.needsNewerApp { return "Needs a newer version of the app" }
         if artwork.isComplete { return "Finished" }
         if !artwork.isStarted { return "Not started, \(artwork.colorCount) colors" }
         return "\(percent(artwork)) percent painted"

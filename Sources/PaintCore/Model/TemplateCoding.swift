@@ -5,20 +5,102 @@ import Foundation
 /// Templates carry hundreds of thousands of vertices, so JSON would be slow and large.
 /// Arrays of trivial types are written as raw memory; the region map is run-length
 /// encoded (it is piecewise constant, so this typically shrinks it ~50×).
+///
+/// **Versions.** A file starts with the magic "PBNT" and a `UInt32` format version. Saved
+/// paintings must open forever, so every version ever written stays readable:
+/// - 1: the original payload (`readPayloadV1`, frozen).
+/// - 2: the version-1 payload unchanged, followed by an extension section:
+///   ```
+///   UInt32 chunkCount
+///   repeat chunkCount:
+///       UInt32 tag      FourCC stored little-endian, so the bytes read e.g. "GENR"
+///       UInt32 flags    bit 0 = required
+///       UInt32 length
+///       length bytes of payload
+///   ```
+///   Nothing may follow the last chunk.
+///
+/// **Extension chunks** carry every later addition, so adding data needs no new version.
+/// Readers skip unknown chunks unless they are flagged required (then the file needs a newer
+/// reader: `CodingError.requiredExtension`); other flag bits are ignored. A known chunk's
+/// fields are read as a prefix of its payload, so a chunk may grow by appending fields; a
+/// payload shorter than the fields a reader knows, or a known chunk appearing twice, is
+/// corrupt. Chunks defined so far:
+/// - `GENR`: `UInt32 pipelineVersion` (see `Template.pipelineVersion`).
+///
+/// **Safety.** PaintCore is compiled with `-Ounchecked`, so the decoder checks every count
+/// against the bytes left before allocating, and every span, reference and coordinate in
+/// `Int` arithmetic (`validateReferences`), before anything can index with them.
 extension Template {
     static let magic: UInt32 = 0x544E_4250  // "PBNT"
 
     public enum CodingError: Error, Equatable {
         case badMagic
-        case unsupportedVersion(UInt32)
+        /// Written by a newer encoder: the file's format version is above `Template.formatVersion`.
+        case newerFormat(UInt32)
+        /// The file needs an extension chunk this reader does not know (its FourCC tag).
+        case requiredExtension(UInt32)
         case truncated
         case corrupt(String)
+
+        /// The file is not damaged; a newer app can read it.
+        public var requiresNewerReader: Bool {
+            switch self {
+            case .newerFormat, .requiredExtension: true
+            case .badMagic, .truncated, .corrupt: false
+            }
+        }
+    }
+
+    enum Chunk {
+        static let generator: UInt32 = 0x524E_4547  // "GENR"
+        static let requiredFlag: UInt32 = 1
+        /// Tag, flags and length.
+        static let headerSize = 12
+
+        static func name(_ tag: UInt32) -> String {
+            let bytes = withUnsafeBytes(of: tag.littleEndian) { Array($0) }
+            return bytes.allSatisfy { (0x20..<0x7F).contains($0) }
+                ? String(decoding: bytes, as: UTF8.self)
+                : "0x" + String(tag, radix: 16)
+        }
     }
 
     public func encoded() -> Data {
         var w = BinaryWriter()
         w.write(Template.magic)
         w.write(Template.formatVersion)
+        writePayloadV1(&w)
+
+        var generator = BinaryWriter()
+        generator.write(pipelineVersion)
+        let chunks: [(tag: UInt32, flags: UInt32, payload: Data)] = [(Chunk.generator, 0, generator.data)]
+        w.write(UInt32(chunks.count))
+        for chunk in chunks {
+            w.write(chunk.tag)
+            w.write(chunk.flags)
+            w.write(UInt32(chunk.payload.count))
+            w.write(bytes: chunk.payload)
+        }
+        return w.data
+    }
+
+    public init(encoded data: Data) throws {
+        var r = BinaryReader(data)
+        guard try r.read(UInt32.self) == Template.magic else { throw CodingError.badMagic }
+        let version = try r.read(UInt32.self)
+        guard version != 0 else { throw CodingError.corrupt("version") }
+        guard version <= Template.formatVersion else { throw CodingError.newerFormat(version) }
+        var template = try Template.readPayloadV1(&r)
+        if version >= 2 {
+            try template.readExtensions(&r)
+            guard r.isAtEnd else { throw CodingError.corrupt("trailing bytes") }
+        }
+        try template.validateReferences()
+        self = template
+    }
+
+    private func writePayloadV1(_ w: inout BinaryWriter) {
         w.write(Int32(width))
         w.write(Int32(height))
         w.write(colorSpace.rawValue)
@@ -66,20 +148,17 @@ extension Template {
             }
         }
         w.writeArray(runs)
-        return w.data
     }
 
-    public init(encoded data: Data) throws {
-        var r = BinaryReader(data)
-        guard try r.read(UInt32.self) == Template.magic else { throw CodingError.badMagic }
-        let version = try r.read(UInt32.self)
-        guard version == Template.formatVersion else { throw CodingError.unsupportedVersion(version) }
+    /// Frozen: the format-1 layout. Never change what it reads; later formats extend it with
+    /// chunks. Checks only what it needs to allocate safely; `validateReferences` does the rest.
+    private static func readPayloadV1(_ r: inout BinaryReader) throws -> Template {
         let width = Int(try r.read(Int32.self))
         let height = Int(try r.read(Int32.self))
-        guard width > 0, height > 0, width * height <= 64_000_000 else { throw CodingError.corrupt("size") }
+        guard width > 0, height > 0, width * height <= Template.maxCanvasArea else { throw CodingError.corrupt("size") }
         guard let space = RGBColorSpace(rawValue: try r.read(UInt8.self)) else { throw CodingError.corrupt("colorspace") }
 
-        let paletteCount = Int(try r.read(UInt32.self))
+        let paletteCount = try r.readCount(elementSize: 24)
         var palette: [PaletteColor] = []
         palette.reserveCapacity(paletteCount)
         for _ in 0..<paletteCount {
@@ -88,7 +167,7 @@ extension Template {
             palette.append(PaletteColor(oklab: lab, rgb: rgb))
         }
 
-        let regionCount = Int(try r.read(UInt32.self))
+        let regionCount = try r.readCount(elementSize: 52)
         var regions: [Region] = []
         regions.reserveCapacity(regionCount)
         for _ in 0..<regionCount {
@@ -106,7 +185,7 @@ extension Template {
         }
 
         let points: [SIMD2<Float>] = try r.readArray()
-        let edgeCount = Int(try r.read(UInt32.self))
+        let edgeCount = try r.readCount(elementSize: 16)
         var edges: [BoundaryEdge] = []
         edges.reserveCapacity(edgeCount)
         for _ in 0..<edgeCount {
@@ -116,13 +195,13 @@ extension Template {
         }
         let packedRefs: [UInt32] = try r.readArray()
         let ringEdges = packedRefs.map { EdgeRef(edge: $0 & 0x7FFF_FFFF, reversed: $0 & 0x8000_0000 != 0) }
-        let ringCount = Int(try r.read(UInt32.self))
+        let ringCount = try r.readCount(elementSize: 9)
         var rings: [Ring] = []
         rings.reserveCapacity(ringCount)
         for _ in 0..<ringCount {
             rings.append(Ring(edgeStart: try r.read(UInt32.self), edgeCount: try r.read(UInt32.self), isHole: try r.read(UInt8.self) != 0))
         }
-        let labelCount = Int(try r.read(UInt32.self))
+        let labelCount = try r.readCount(elementSize: 16)
         var labels: [Label] = []
         labels.reserveCapacity(labelCount)
         for _ in 0..<labelCount {
@@ -133,46 +212,98 @@ extension Template {
 
         let mesh = FillMesh(vertices: try r.readArray(), vertexRegion: try r.readArray(), indices: try r.readArray())
 
+        // The runs must tile the canvas exactly before the map is allocated: a damaged size
+        // field must not cost `width * height` cells.
         let runs: [UInt32] = try r.readArray()
         guard runs.count % 2 == 0 else { throw CodingError.corrupt("region map runs") }
-        var map = [UInt32](repeating: 0, count: width * height)
-        var pos = 0
-        try map.withUnsafeMutableBufferPointer { out in
-            var k = 0
-            while k < runs.count {
-                let v = runs[k], len = Int(runs[k + 1])
-                guard pos + len <= out.count else { throw CodingError.corrupt("region map overflow") }
-                for i in pos..<(pos + len) { out[i] = v }
-                pos += len
-                k += 2
+        let cells = width * height
+        var total = 0
+        for k in stride(from: 0, to: runs.count, by: 2) {
+            guard Int(runs[k]) < regions.count else { throw CodingError.corrupt("region map value") }
+            total += Int(runs[k + 1])
+            guard total <= cells else { throw CodingError.corrupt("region map overflow") }
+        }
+        guard total == cells else { throw CodingError.corrupt("region map underflow") }
+        let map = [UInt32](unsafeUninitializedCapacity: cells) { out, initialized in
+            var pos = 0
+            for k in stride(from: 0, to: runs.count, by: 2) {
+                let length = Int(runs[k + 1])
+                (out.baseAddress! + pos).initialize(repeating: runs[k], count: length)
+                pos += length
             }
+            initialized = pos
         }
-        guard pos == width * height else { throw CodingError.corrupt("region map underflow") }
 
-        // Structural validation so a corrupt file can never index out of bounds later.
-        let pointCount = UInt32(points.count)
-        for e in edges where e.pointStart &+ e.pointCount > pointCount || e.pointCount < 2 {
-            throw CodingError.corrupt("edge span")
-        }
-        for ref in ringEdges where Int(ref.edge) >= edges.count { throw CodingError.corrupt("ring edge") }
-        for ring in rings where Int(ring.edgeStart + ring.edgeCount) > ringEdges.count { throw CodingError.corrupt("ring span") }
-        for region in regions {
-            guard Int(region.colorIndex) < palette.count,
-                  Int(region.ringStart + region.ringCount) <= rings.count,
-                  Int(region.labelStart + region.labelCount) <= labels.count,
-                  Int(region.indexStart + region.indexCount) <= mesh.indices.count
-            else { throw CodingError.corrupt("region span") }
-        }
-        guard mesh.vertexRegion.count == mesh.vertices.count else { throw CodingError.corrupt("mesh") }
-        let vertexCount = UInt32(mesh.vertices.count)
-        for i in mesh.indices where i >= vertexCount { throw CodingError.corrupt("mesh index") }
-        for v in map where Int(v) >= regions.count { throw CodingError.corrupt("region map value") }
-        for l in labels where Int(l.region) >= regions.count { throw CodingError.corrupt("label region") }
-
-        self.init(
+        return Template(
             width: width, height: height, colorSpace: space, palette: palette, regions: regions,
             points: points, edges: edges, ringEdges: ringEdges, rings: rings, labels: labels,
             mesh: mesh, regionMap: RegionMap(width: width, height: height, storage: map))
+    }
+
+    private mutating func readExtensions(_ r: inout BinaryReader) throws {
+        let count = try r.readCount(elementSize: Chunk.headerSize)
+        var seen = Set<UInt32>()
+        for _ in 0..<count {
+            let tag = try r.read(UInt32.self)
+            let flags = try r.read(UInt32.self)
+            var payload = BinaryReader(try r.readBytes(Int(try r.read(UInt32.self))))
+            switch tag {
+            case Chunk.generator:
+                guard seen.insert(tag).inserted else { throw CodingError.corrupt("duplicate chunk") }
+                guard let version = try? payload.read(UInt32.self) else { throw CodingError.corrupt(Chunk.name(tag)) }
+                pipelineVersion = version
+            default:
+                if flags & Chunk.requiredFlag != 0 { throw CodingError.requiredExtension(tag) }
+            }
+        }
+    }
+
+    /// Every index, span and coordinate the accessors, `validate()` and the app's renderers
+    /// rely on. Arithmetic is in `Int`, so crafted `UInt32` spans cannot wrap.
+    func validateReferences() throws {
+        func corrupt(_ what: String) -> CodingError { .corrupt(what) }
+        let w = Float(width), h = Float(height)
+        // Also false for NaN, so this subsumes finiteness.
+        func inCanvas(_ p: SIMD2<Float>) -> Bool { p.x >= 0 && p.x <= w && p.y >= 0 && p.y <= h }
+        func isFinite(_ v: SIMD3<Float>) -> Bool { v.x.isFinite && v.y.isFinite && v.z.isFinite }
+
+        guard palette.allSatisfy({ isFinite($0.oklab) && isFinite($0.rgb) }) else { throw corrupt("palette") }
+        guard points.allSatisfy(inCanvas) else { throw corrupt("point") }
+        guard mesh.vertices.allSatisfy(inCanvas) else { throw corrupt("mesh vertex") }
+
+        for e in edges {
+            guard e.pointCount >= 2, Int(e.pointStart) + Int(e.pointCount) <= points.count else { throw corrupt("edge span") }
+            guard Int(e.left) < regions.count, e.right == BoundaryEdge.outside || Int(e.right) < regions.count
+            else { throw corrupt("edge side") }
+        }
+        guard ringEdges.allSatisfy({ Int($0.edge) < edges.count }) else { throw corrupt("ring edge") }
+        guard rings.allSatisfy({ Int($0.edgeStart) + Int($0.edgeCount) <= ringEdges.count }) else { throw corrupt("ring span") }
+
+        for region in regions {
+            guard Int(region.colorIndex) < palette.count else { throw corrupt("region color") }
+            guard Int(region.ringStart) + Int(region.ringCount) <= rings.count,
+                  Int(region.labelStart) + Int(region.labelCount) <= labels.count,
+                  Int(region.indexStart) + Int(region.indexCount) <= mesh.indices.count,
+                  region.indexCount % 3 == 0
+            else { throw corrupt("region span") }
+            guard region.area.isFinite, region.inscribedRadius.isFinite else { throw corrupt("region metrics") }
+            let b = region.bounds
+            // The vectorizer emits `.empty` for a region without an outer ring.
+            guard b == .empty
+                || (0 <= b.minX && b.minX <= b.maxX && Int(b.maxX) <= width
+                    && 0 <= b.minY && b.minY <= b.maxY && Int(b.maxY) <= height)
+            else { throw corrupt("region bounds") }
+        }
+
+        for l in labels {
+            guard Int(l.region) < regions.count, l.radius.isFinite, inCanvas(l.position) else { throw corrupt("label") }
+        }
+
+        guard mesh.vertexRegion.count == mesh.vertices.count,
+              mesh.vertexRegion.allSatisfy({ Int($0) < regions.count })
+        else { throw corrupt("mesh vertex region") }
+        let vertexCount = mesh.vertices.count
+        guard mesh.indices.count % 3 == 0, mesh.indices.allSatisfy({ Int($0) < vertexCount }) else { throw corrupt("mesh index") }
     }
 }
 
@@ -185,12 +316,17 @@ struct BinaryWriter {
         withUnsafeBytes(of: value) { data.append(contentsOf: $0) }
     }
 
+    mutating func write(bytes: Data) {
+        data.append(bytes)
+    }
+
     mutating func writeArray<T: BitwiseCopyable>(_ values: [T]) {
         write(UInt32(values.count))
         values.withUnsafeBytes { data.append(contentsOf: $0) }
     }
 }
 
+/// Reads from any `Data`, including slices (offsets are absolute indices into `data`).
 struct BinaryReader {
     let data: Data
     var offset: Int
@@ -200,9 +336,12 @@ struct BinaryReader {
         self.offset = data.startIndex
     }
 
+    var remaining: Int { data.endIndex - offset }
+    var isAtEnd: Bool { offset == data.endIndex }
+
     mutating func read<T: BitwiseCopyable>(_: T.Type) throws -> T {
         let size = MemoryLayout<T>.size
-        guard offset + size <= data.endIndex else { throw Template.CodingError.truncated }
+        guard size <= remaining else { throw Template.CodingError.truncated }
         let value = data.withUnsafeBytes { raw in
             raw.loadUnaligned(fromByteOffset: offset - data.startIndex, as: T.self)
         }
@@ -210,15 +349,28 @@ struct BinaryReader {
         return value
     }
 
-    mutating func readArray<T: BitwiseCopyable>() throws -> [T] {
+    /// An element count that the remaining bytes can hold at `elementSize` bytes each, so a
+    /// damaged count throws instead of reserving gigabytes.
+    mutating func readCount(elementSize: Int) throws -> Int {
         let count = Int(try read(UInt32.self))
+        guard count <= remaining / elementSize else { throw Template.CodingError.truncated }
+        return count
+    }
+
+    mutating func readBytes(_ count: Int) throws -> Data {
+        guard count <= remaining else { throw Template.CodingError.truncated }
+        defer { offset += count }
+        return data[offset..<(offset + count)]
+    }
+
+    mutating func readArray<T: BitwiseCopyable>() throws -> [T] {
         let stride = MemoryLayout<T>.stride
+        let count = try readCount(elementSize: stride)
         let bytes = count * stride
-        guard count >= 0, offset + bytes <= data.endIndex else { throw Template.CodingError.truncated }
+        let start = offset - data.startIndex
         let result = [T](unsafeUninitializedCapacity: count) { buf, initialized in
             data.withUnsafeBytes { raw in
-                let src = UnsafeRawBufferPointer(rebasing: raw[(offset - data.startIndex)..<(offset - data.startIndex + bytes)])
-                UnsafeMutableRawBufferPointer(buf).copyMemory(from: src)
+                UnsafeMutableRawBufferPointer(buf).copyMemory(from: UnsafeRawBufferPointer(rebasing: raw[start..<(start + bytes)]))
             }
             initialized = count
         }
