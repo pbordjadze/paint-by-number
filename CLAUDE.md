@@ -247,5 +247,7 @@ Saved paintings must open in every later build. The format history is documented
 - Canvas units = pixels of the working image; origin top-left, +y down.
 - Keep `PaintCore` free of Apple-only frameworks (guard any Accelerate/Metal use with
   `#if canImport(...)` and keep a portable path).
-- Deterministic output for identical inputs + settings (seeded `SplitMix64`).
+- Deterministic output for identical inputs + settings (seeded `SplitMix64`), on every device:
+  parallel floating-point reductions accumulate fixed-size chunks and add them in order
+  (`RegionRuns.accumulate`, `RegionAdjacency.boundarySteps`), never one partial sum per core.
 - Comments explain *why*, sparingly. No dead code, no TODO litter.

@@ -4,12 +4,13 @@ import Foundation
 /// to tap and to hold a number, and has no hair-thin parts. Once the palette is final,
 /// `enforceLabelRoom` makes room for numbers with more digits.
 ///
-/// Each round (1) merges regions that are too small (importance- and texture-scaled area)
-/// or too thin (largest inscribed disc) into their best neighbour, smallest first, then
-/// (2) peels pixels that no small disc inside their region covers (tendrils, necks, 1-px
-/// slivers, pixel corners; see `ThinPartRemoval`). The first round also smooths outlines
-/// (`BoundarySmoothing`). Rounds repeat until nothing changes, so the size and radius
-/// guarantees hold on the returned map.
+/// Each round (1) merges regions that are too small (importance- and texture-scaled area,
+/// counting for less the closer a region's colour is to a neighbouring paint), too thin
+/// (largest inscribed disc) or mere transition strips along blurred edges into their best
+/// neighbour, smallest first (see `mergeRound`), then (2) peels pixels that no small disc
+/// inside their region covers (tendrils, necks, 1-px slivers, pixel corners; see
+/// `ThinPartRemoval`). The first round also smooths outlines (`BoundarySmoothing`). Rounds
+/// repeat until nothing changes, so the size and radius guarantees hold on the returned map.
 ///
 /// Regions are kept in run-length form (`RegionRuns`) with their adjacency; merges update
 /// both directly, so only pixel-level edits (peeling, smoothing) need a fresh labelling.
@@ -334,11 +335,25 @@ enum RegionSimplifier {
     struct Link {
         var region: Int32
         var length: Int32
+        /// Colour step summed along the shared border (see `RegionAdjacency.boundarySteps`).
+        var steps: Float
     }
 
-    /// Merges every undersized or too-thin region into its best neighbour, smallest (relative
-    /// to its own threshold) first. Rewrites merged regions' paint per pixel, updates the
-    /// regions and their adjacency, and returns the number of merges.
+    /// Merges every undersized, too-thin or transition-strip region into its best neighbour,
+    /// smallest (relative to its own threshold) first. Rewrites merged regions' paint per
+    /// pixel, updates the regions and their adjacency, and returns the number of merges.
+    ///
+    /// A region's size counts for less the closer its colour is to a neighbouring paint (a
+    /// crumb nobody would miss), so the leftovers of fine texture merge while a small distinct
+    /// spot such as an eye survives on the same area.
+    ///
+    /// Transition strips: a photo's edges are blurred over a few pixels, and where two paints
+    /// meet, the blur's intermediate colours often fall nearest a third paint, which then
+    /// forms a strip a few pixels wide along the whole edge. Such a strip is elongated and
+    /// narrow, its mean colour is a mix of its two dominant neighbours' paints (it lies close
+    /// to the line between them) and its boundaries are ramps rather than contours; a real
+    /// thin feature (a twig, a whisker, an iris ring) fails one of those. Strips merge
+    /// whatever their area.
     static func mergeRound(
         _ regions: inout RegionRuns,
         adjacency: inout RegionAdjacency,
@@ -355,12 +370,29 @@ enum RegionSimplifier {
         guard n > 1 else { return 0 }
         var thin = [Bool](repeating: false, count: n)
         if let wide { for r in 0..<n { thin[r] = !wide[r] } }
-        // Regions whose area alone guarantees a relative area ≥ 1 (the area-scale sum is at
-        // most area × max scale) and that are wide never enter the queue, and neither does
-        // anything merged into them; their colour and scale sums are never needed.
-        let bigArea = Double(p.minArea) * Double(maxAreaScale) * 1.001 + 1
+        var area = regions.area
+        // Perimeter as the sum of shared borders (the image edge does not count, which only
+        // makes regions along it look more compact and wider).
+        var perimeter = [Int32](repeating: 0, count: n)
+        for k in adjacency.pairs.indices {
+            let length = adjacency.lengths[k]
+            perimeter[Int(adjacency.pairs[k] >> 32)] += length
+            perimeter[Int(adjacency.pairs[k] & 0xFFFF_FFFF)] += length
+        }
+        // Shape alone: elongated (compactness 16·area/perimeter², 1 for a square) and narrower
+        // than a strip (mean width 2·area/perimeter); the necessary half of the strip test.
+        func narrow(_ r: Int) -> Bool {
+            let a = Float(area[r]), pm = Float(perimeter[r])
+            return pm > 0 && 16 * a < p.stripCompactness * pm * pm && 2 * a < p.stripWidth * pm
+        }
+        // Regions whose area alone guarantees a key ≥ 1 (the area-scale sum is at most
+        // area × max scale, the contrast factor at least the floor) and that are neither thin
+        // nor narrow never enter the queue, and neither does anything merged into them; their
+        // colour and scale sums are never needed.
+        let discArea = Double(Float.pi * p.minRadius * p.minRadius)
+        let bigArea = max(Double(p.minArea) * Double(maxAreaScale), discArea) * 1.001 / Double(p.crumbFloor) + 1
         var big = [Bool](repeating: false, count: n)
-        for r in 0..<n { big[r] = Double(regions.area[r]) >= bigArea && !thin[r] }
+        for r in 0..<n { big[r] = Double(area[r]) >= bigArea && !thin[r] && !narrow(r) }
 
         // OKLab sum and area-scale sum per queued region, accumulated in raster order.
         var sums = colors.withUnsafeBufferPointer { cb in
@@ -371,17 +403,18 @@ enum RegionSimplifier {
                 }
             }
         }
+        let steps = adjacency.boundarySteps(regions, colors: colors, metric: SIMD3(repeating: 1))
+        try cancel.throwIfCancelled()
 
         // Neighbour lists of queued regions (merged lists of big ones are never read).
         var links = [[Link]](repeating: [], count: n)
         for k in adjacency.pairs.indices {
             let a = Int(adjacency.pairs[k] >> 32), b = Int(adjacency.pairs[k] & 0xFFFF_FFFF)
             let length = adjacency.lengths[k]
-            if !big[a] { links[a].append(Link(region: Int32(b), length: length)) }
-            if !big[b] { links[b].append(Link(region: Int32(a), length: length)) }
+            if !big[a] { links[a].append(Link(region: Int32(b), length: length, steps: steps[k])) }
+            if !big[b] { links[b].append(Link(region: Int32(a), length: length, steps: steps[k])) }
         }
 
-        var area = regions.area
         var cls = regions.classOf
         var parent = (0..<n).map { Int32($0) }
         var stamp = [Int32](repeating: 0, count: n)
@@ -397,16 +430,71 @@ enum RegionSimplifier {
             }
             return r
         }
-        // Area relative to the region's own minimum (base × its mean area scale).
+        // Area relative to the region's own minimum (base × its mean area scale, never below
+        // the disc the radius rule demands, so the contrast factor has a footing at high
+        // detail where the area rule alone asks for less than that disc).
         func relativeArea(_ r: Int) -> Float {
-            Float(Double(area[r]) * Double(area[r]) / (Double(p.minArea) * sums[r].w))
+            let minimum = max(Double(p.minArea) * sums[r].w / Double(area[r]), discArea)
+            return Float(Double(area[r]) / minimum)
+        }
+        func meanColor(_ r: Int) -> SIMD3<Float> {
+            let s = sums[r] / Double(area[r])
+            return SIMD3(Float(s.x), Float(s.y), Float(s.z))
+        }
+        // How visible the region is: its colour distance to the closest neighbouring paint.
+        func contrastFactor(_ r: Int, neighbours: [Link]) -> Float {
+            let mean = meanColor(r)
+            var closest = Float.infinity
+            for l in neighbours {
+                let t = find(Int(l.region))
+                if t != r { closest = min(closest, ColorScience.distance(mean, palette[Int(cls[t])])) }
+            }
+            return min(max(closest / p.crumbContrast, p.crumbFloor), 1)
+        }
+        func mergeKey(_ r: Int, neighbours: [Link]) -> Float { relativeArea(r) * contrastFactor(r, neighbours: neighbours) }
+        // The transition-strip test (see above) on a compacted neighbour list.
+        func isStrip(_ r: Int, neighbours: [Link]) -> Bool {
+            guard narrow(r), neighbours.count >= 2 else { return false }
+            // The two neighbours with the longest borders must own most of the perimeter: a
+            // strip along an edge has one on each side.
+            var first = 0, second = -1
+            for k in 1..<neighbours.count {
+                if neighbours[k].length > neighbours[first].length {
+                    second = first
+                    first = k
+                } else if second < 0 || neighbours[k].length > neighbours[second].length {
+                    second = k
+                }
+            }
+            let a = neighbours[first], b = neighbours[second]
+            let pm = Float(perimeter[r])
+            guard Float(b.length) >= 0.15 * pm, Float(a.length + b.length) >= 0.5 * pm else { return false }
+            let pa = palette[Int(cls[Int(a.region)])], pb = palette[Int(cls[Int(b.region)])]
+            let ab = pb - pa
+            let ab2 = (ab * ab).sum()
+            guard ab2 > 0 else { return false }  // the same paint on both sides: an extremum, not a mix
+            // The mean colour projects well inside the segment between the two paints and lies
+            // close to it, relative to its distance from the nearer paint.
+            let m = meanColor(r)
+            let t = ((m - pa) * ab).sum() / ab2
+            guard t >= 0.15, t <= 0.85 else { return false }
+            let off = ColorScience.distance(m, pa + t * ab)
+            guard off <= p.stripMixture * min(ColorScience.distance(m, pa), ColorScience.distance(m, pb)) else {
+                return false
+            }
+            let own = palette[Int(cls[r])]
+            for l in [a, b] {
+                let difference = ColorScience.distance(own, palette[Int(cls[Int(l.region)])])
+                if l.steps > p.stripContrast * difference * Float(l.length) { return false }
+            }
+            return true
         }
 
         try cancel.throwIfCancelled()
         var heap = MinHeap()
         for r in 0..<n where !big[r] {
-            let key = relativeArea(r)
-            if key < 1 || thin[r] { heap.push(key, Int32(r), 0) }
+            let key = mergeKey(r, neighbours: links[r])
+            if key < 1 || thin[r] || narrow(r) { heap.push(key, Int32(r), 0) }
         }
 
         var merges = 0
@@ -417,44 +505,45 @@ enum RegionSimplifier {
             if pops & 4095 == 0 { try cancel.throwIfCancelled() }
             let r = Int(item.region)
             if Int(parent[r]) != r || stamp[r] != item.stamp { continue }
-            let key = relativeArea(r)
-            guard key < 1 || thin[r] else { continue }
 
-            // Compact the neighbour list: resolve merged ids, drop self links, sum lengths.
+            // Compact the neighbour list: resolve merged ids, drop self links, sum borders.
             var list = links[r]
             for k in list.indices { list[k].region = Int32(find(Int(list[k].region))) }
             list.removeAll { Int($0.region) == r }
             guard !list.isEmpty else { links[r] = []; continue }
             list.sort { $0.region < $1.region }
             compacted.removeAll(keepingCapacity: true)
-            var perimeter: Int32 = 0
             for l in list {
-                perimeter += l.length
                 if let last = compacted.last, last.region == l.region {
                     compacted[compacted.count - 1].length += l.length
+                    compacted[compacted.count - 1].steps += l.steps
                 } else {
                     compacted.append(l)
                 }
             }
+            guard thin[r] || mergeKey(r, neighbours: compacted) < 1 || isStrip(r, neighbours: compacted) else {
+                links[r] = compacted
+                continue
+            }
 
             // Best neighbour: closest paint to this region's mean color, favouring long
             // shared borders so shapes stay compact.
-            let s = sums[r] / Double(area[r])
-            let mean = SIMD3(Float(s.x), Float(s.y), Float(s.z))
-            var target = -1
+            let mean = meanColor(r)
+            var best = compacted[0]
             var bestCost = Float.infinity
             for l in compacted {
-                let t = Int(l.region)
-                let dc = ColorScience.distance(mean, palette[Int(cls[t])])
-                let share = Float(l.length) / Float(perimeter)
+                let dc = ColorScience.distance(mean, palette[Int(cls[Int(l.region)])])
+                let share = Float(l.length) / Float(perimeter[r])
                 let cost = dc + p.mergeShareWeight * (1 - share)
-                if cost < bestCost { bestCost = cost; target = t }
+                if cost < bestCost { bestCost = cost; best = l }
             }
+            let target = Int(best.region)
 
             let root = area[target] >= area[r] ? target : r
             let other = root == target ? r : target
             parent[other] = Int32(root)
             area[root] = area[r] + area[target]
+            perimeter[root] = perimeter[r] + perimeter[target] - 2 * best.length
             sums[root] = sums[r] + sums[target]
             cls[root] = cls[target]
             thin[root] = false  // re-checked by the next round's inscribed-disc test
@@ -470,8 +559,8 @@ enum RegionSimplifier {
             stamp[root] &+= 1
             merges += 1
             if !big[root] {
-                let newKey = relativeArea(root)
-                if newKey < 1 { heap.push(newKey, Int32(root), stamp[root]) }
+                let newKey = mergeKey(root, neighbours: links[root])
+                if newKey < 1 || narrow(root) { heap.push(newKey, Int32(root), stamp[root]) }
             }
         }
         guard merges > 0 else { return 0 }

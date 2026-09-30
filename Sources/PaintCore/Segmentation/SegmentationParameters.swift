@@ -66,6 +66,34 @@ struct SegmentationParameters: Sendable {
     var textureStrength: Float
     /// Merge target preference for long shared borders (OKLab-distance equivalent).
     var mergeShareWeight: Float
+    /// A small region whose mean colour lies within this distance (working OKLab) of a
+    /// neighbouring paint is nearly invisible against it, so it counts only a fraction of
+    /// its area, down to `crumbFloor` at no contrast: low-contrast crumbs (the leftovers of
+    /// fine feather or fur texture) need several times the area a distinct spot such as an
+    /// eye needs to survive.
+    var crumbContrast: Float
+    var crumbFloor: Float
+    /// Transition strips (see `RegionSimplifier.mergeRound`), the blur of an edge labelled
+    /// with a third paint: a region is one when its compactness (16 × area / perimeter², 1
+    /// for a square) is below `stripCompactness`, its mean width (2 × area / perimeter) below
+    /// `stripWidth`, its mean colour lies within `stripMixture` × its distance to the nearer
+    /// of its two dominant neighbours' paints of the line between those paints, and the mean
+    /// colour step across each of those two borders is below `stripContrast` × the paint
+    /// difference (an edge blurred over 4+ pixels; a sharp contour steps by the whole
+    /// difference within a pixel or two).
+    var stripCompactness: Float
+    var stripWidth: Float
+    var stripMixture: Float
+    var stripContrast: Float
+    /// Gradient bands (see `BandMerging`): the largest spread (OKLab) of paints fused into
+    /// one region across weak boundaries, for paints too close to tell apart (anywhere) and
+    /// for narrow bands in unimportant areas; the mean width up to which a region is a
+    /// narrow band; and the fraction of the paint difference the colour step across a
+    /// boundary must stay under to count as a ramp rather than a contour.
+    var bandNearTolerance: Float
+    var bandTolerance: Float
+    var bandWidth: Float
+    var bandContrast: Float
     /// Mode-filter smoothing of region outlines (see `BoundarySmoothing`).
     var boundaryRadius: Int
     var boundaryPasses: Int
@@ -113,6 +141,28 @@ struct SegmentationParameters: Sendable {
         importanceStrength = 3
         textureStrength = 4
         mergeShareWeight = 0.04
+        // Full weight from about six just-noticeable differences; at no contrast a crumb needs
+        // five times the area (a small eye or highlight against skin stays, feather and fur
+        // leftovers go).
+        crumbContrast = 0.12
+        crumbFloor = 0.2
+        // Aspect ratio above ~10 (a rectangle's compactness is 4·L·w/(L + w)²) and narrower
+        // than three number-holding discs; the mean colour may stray from the mixing line by
+        // 40% of its distance to the nearer paint (blur mixes are rarely exact), and a border
+        // whose pixel step reaches 70% of the paint difference is a contour, not a ramp.
+        stripCompactness = 0.35
+        stripWidth = 3 * minRadius
+        stripMixture = 0.4
+        stripContrast = 0.7
+        // Paints about two just-noticeable differences apart (below a large palette's
+        // spacing) fuse anywhere; the rings of a background ramp fuse up to clearly different
+        // shades. Bold templates fuse more gradation than fine ones, so the detail slider
+        // keeps its meaning. Bokeh rings are a few percent of the frame wide, a sky band far
+        // more.
+        bandNearTolerance = 0.045 * lerp(1.3, 0.8, d)
+        bandTolerance = 0.1 * lerp(1.4, 0.7, d)
+        bandWidth = side * 0.02
+        bandContrast = 0.25
         boundaryRadius = sm > 0.66 ? 3 : 2
         boundaryPasses = Int((3 * sm).rounded())
         boundaryFidelity = 40

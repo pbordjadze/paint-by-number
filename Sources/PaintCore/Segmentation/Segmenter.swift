@@ -11,9 +11,11 @@ import Foundation
 ///    minimum paint distance, penalized swap search with restarts (small distinct colors
 ///    such as an iris survive).
 /// 4. Pixel labelling: nearest paint, regularized by a contrast-sensitive Potts prior.
-/// 5. Regions: merge undersized/thin regions (importance- and texture-scaled), smooth
-///    outlines, peel hair-thin parts, until every region is tappable and holds a number;
-///    then merge similar neighbours inside busy texture.
+/// 5. Regions: merge undersized/thin regions (importance- and texture-scaled; low-contrast
+///    crumbs need more area) and the transition strips of blurred edges, smooth outlines,
+///    peel hair-thin parts, until every region is tappable and holds a number; then fuse
+///    the bands of smooth gradients across weak boundaries and merge similar neighbours
+///    inside busy texture.
 /// 6. Refit paints to the regions they cover, recolor regions, keep paints distinct and
 ///    order the palette like a kit.
 /// 7. Regions too small for a multi-digit number take a paint with a shorter number or
@@ -77,7 +79,7 @@ public enum Segmenter {
         try cancel.throwIfCancelled()
         progress(0.5)
 
-        let labelling = classes
+        var labelling = classes
         let (texture, areaScale) = try clock.measure("segment.texture") { () throws -> ([Float], [Float]) in
             let texture = try TextureMap.boundaryDensity(labelling, width: w, height: h, cancel: cancel)
             var scale = [Float](uninitializedCount: w * h)
@@ -100,11 +102,19 @@ public enum Segmenter {
                 palette: palette, parameters: p, cancel: cancel, clock: clock)
         }
         try cancel.throwIfCancelled()
+        let metric = SIMD3<Float>(1, 1 / p.chromaScale, 1 / p.chromaScale)
+        try clock.measure("segment.bands") {
+            _ = try BandMerging.apply(
+                classes: &classes, labelling: &labelling, regions: &regions, adjacency: &adjacency, colors: smooth.storage,
+                importance: weights, palette: palette, metric: metric,
+                tolerance: (p.bandNearTolerance, p.bandTolerance), bandWidth: p.bandWidth, contrast: p.bandContrast,
+                cancel: cancel)
+        }
+        try cancel.throwIfCancelled()
         clock.measure("segment.consolidate") {
             _ = TextureConsolidation.apply(
                 classes: &classes, regions: &regions, adjacency: &adjacency, texture: texture, importance: weights,
-                palette: palette, metric: SIMD3(1, 1 / p.chromaScale, 1 / p.chromaScale),
-                tolerance: p.consolidationTolerance)
+                palette: palette, metric: metric, tolerance: p.consolidationTolerance)
         }
         try cancel.throwIfCancelled()
         progress(0.85)
