@@ -37,19 +37,18 @@ final class CreateFlowTests: XCTestCase {
         let ok = app.buttons["OK"]
         if ok.waitForExistence(timeout: 10) { ok.tap() }
 
+        // The picker runs out of process: its photos are listed but report frames in the
+        // picker's own coordinates, so tap by position inside the picker (first photo).
+        let picker = app.descendants(matching: .any)["library-picker"]
         let photo = app.images.matching(NSPredicate(format: "label BEGINSWITH 'Photo'")).firstMatch
-        guard photo.waitForExistence(timeout: 20) else {
+        guard picker.waitForExistence(timeout: 20), photo.waitForExistence(timeout: 20) else {
             let tree = XCTAttachment(string: app.debugDescription)
             tree.name = "library-picker-tree"
             tree.lifetime = .keepAlways
             add(tree)
-            let shot = XCTAttachment(screenshot: app.screenshot())
-            shot.name = "library-picker"
-            shot.lifetime = .keepAlways
-            add(shot)
             throw XCTSkip("The library picker's photos aren't reachable from the UI test")
         }
-        photo.tap()
+        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.25)).tap()
         let start = app.buttons["Start Painting"]
         let opened = start.waitForExistence(timeout: 60)
         let shot = XCTAttachment(screenshot: app.screenshot())

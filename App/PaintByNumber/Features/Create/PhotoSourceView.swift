@@ -37,6 +37,7 @@ struct PhotoSourceView: View {
                     .photosPickerStyle(.inline)
                     .photosPickerDisabledCapabilities(.selectionActions)
                     .photosPickerAccessoryVisibility(.hidden, edges: .all)
+                    .accessibilityIdentifier("library-picker")
                     .frame(height: isWide ? 380 : 300)
                     .background(Theme.surface)
                     .clipShape(.rect(cornerRadius: Theme.cardRadius, style: .continuous))

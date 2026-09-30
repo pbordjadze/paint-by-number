@@ -128,15 +128,15 @@ struct PreferencesTests {
         #expect(preferences.defaultColorCount == 24)
 
         defaults.set(false, forKey: SettingsKey.autoAdvance)
-        defaults.set(99, forKey: SettingsKey.defaultColorCount)
+        defaults.set(999, forKey: SettingsKey.defaultColorCount)
         defaults.set("a4", forKey: SettingsKey.paperSize)
         defaults.set(false, forKey: "hapticsEnabled")
         preferences = Preferences(defaults: defaults)
         #expect(!preferences.autoAdvance)
         #expect(!preferences.haptics)
-        #expect(preferences.defaultColorCount == 60)
+        #expect(preferences.defaultColorCount == GenerationSettings.colorCountRange.upperBound)
         #expect(preferences.paper == .a4)
-        #expect(preferences.initialGenerationSettings.colorCount == 60)
+        #expect(preferences.initialGenerationSettings.colorCount == GenerationSettings.colorCountRange.upperBound)
 
         let session = PaintingSession(template: Fixtures.stripes())
         #expect(session.autoAdvance)
@@ -149,8 +149,8 @@ struct PreferencesTests {
         #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
         model.colorCount = 11.6
         #expect(model.settings.colorCount == 12)
-        model.colorCount = 200
-        #expect(model.settings.colorCount == 60)
+        model.colorCount = 999
+        #expect(model.settings.colorCount == GenerationSettings.colorCountRange.upperBound)
         #expect(model.preview == nil && !model.isFinal)
     }
 
