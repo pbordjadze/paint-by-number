@@ -20,7 +20,7 @@ baseline tools/baseline/regression.json:
 Prints a table with deltas and exits 1 on any failure (2 on a usage or setup error).
 --update rewrites the baseline from this run (only if every hard invariant holds): do it
 when a pipeline change is intended, look at the sheets, and commit the baseline with the
-change. --sheets DIR writes DIR/<regime>/<sample>.png (source | painted | region outlines,
+change. --sheets DIR writes DIR/<regime>/<sample>.jpg (source | painted | region outlines,
 palette). --json FILE writes every metric and verdict. --out DIR keeps pbn's output.
 
 Requires the release pbn (tools/swift.sh build -c release --static-swift-stdlib, or set
@@ -68,10 +68,12 @@ def regime_name(regime):
     return f"c{regime['colors']}-d{regime['detail']:g}"
 
 
-def palette_floor(colors):
-    """Minimum OKLab distance between paints: SegmentationParameters.minPaletteDistance
-    (large palettes pack paints closer, down to about twice a just-noticeable difference)."""
-    return 0.04 * min(1.0, math.sqrt(24 / colors))
+def palette_floor(regime, result):
+    """Minimum OKLab distance between paints. pbn reports the pipeline's own floor
+    (GenerationSettings.minPaletteDistance) as minPaletteDistanceFloor; the formula mirrors it
+    for a pbn that predates that field."""
+    reported = number(result.get("minPaletteDistanceFloor"))
+    return reported if reported is not None else 0.04 * min(1.0, math.sqrt(24 / regime["colors"]))
 
 
 def number(value):
@@ -88,7 +90,7 @@ def invariant_failures(regime, result):
     """Hard-invariant failures of one generated case. `result` holds pbn's metrics plus the
     run's own findings (`error`, `validation`, `deterministic`)."""
     if result.get("error"):
-        return [f"generation failed: {result['error']}"]
+        return [f"pbn: {result['error']}"]
     failures = []
     validation = result.get("validation") or ""
     if not validation.startswith("valid"):
@@ -103,7 +105,7 @@ def invariant_failures(regime, result):
         failures.append(f"{under2:g} region(s) under radius 2"
                         + (f" (min inscribed radius {radius:.3f})" if radius is not None else ""))
     distance = number(result.get("minPaletteDistance"))
-    floor = palette_floor(regime["colors"])
+    floor = palette_floor(regime, result)
     if distance is None:
         failures.append("pbn did not report minPaletteDistance")
     elif distance < floor - FLOAT_SLACK:
@@ -181,9 +183,10 @@ def row(name, regime, result, base, failures):
         cell(result.get("encodedBytes"), base.get("encodedBytes"), "{:.0f}"),
         cell(result.get("regionsUnderRadius2"), fmt="{:.0f}"),
         cell(result.get("regionsUnderRadius3"), base.get("regionsUnderRadius3"), "{:.0f}"),
-        cell(result.get("minInscribedRadius"), fmt="{:.3f}"),
-        f"{cell(result.get('minPaletteDistance'), fmt='{:.4f}')} >= {palette_floor(regime['colors']):.4f}",
-        cell(result.get("colors"), fmt="{:.0f}"),
+        cell(result.get("minInscribedRadius"), base.get("minInscribedRadius"), "{:.3f}"),
+        f"{cell(result.get('minPaletteDistance'), base.get('minPaletteDistance'), '{:.4f}')}"
+        f" >= {palette_floor(regime, result):.4f}",
+        cell(result.get("colors"), base.get("colors"), "{:.0f}"),
         cell(result.get("totalMs"), base.get("totalMs"), "{:.0f}"),
         template,
         "FAIL" if failures else "ok",
@@ -223,7 +226,8 @@ def run_case(ppm, regime, out):
     for target in (out, os.path.join(out, "repeat")):
         res = subprocess.run([PBN, "generate", ppm, target] + args, capture_output=True, text=True)
         if res.returncode != 0:
-            return {"error": (res.stderr.strip() or f"exit {res.returncode}").splitlines()[-1]}
+            # pbn's last stderr line already says what failed ("generation failed: ...").
+            return {"error": (res.stderr.strip() or f"exited {res.returncode}").splitlines()[-1]}
         with open(os.path.join(target, "template.pbnt"), "rb") as f:
             templates.append(f.read())
     with open(os.path.join(out, "stats.json")) as f:
@@ -270,7 +274,8 @@ def write_sheet(path, title, lines, failures, out):
         d.text((10, 6 + 26 * i), text, fill=color, font=font)
     draw_palette(d, palette, (0, header + panel_h + 4, 3 * panel_w, 30 * swatch_rows), cols=cols)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    sheet.save(path, optimize=True)
+    # JPEG: photo panels as PNG would add ~14 MB to every CI report.
+    sheet.save(path, quality=88)
 
 
 def main(argv):
@@ -357,7 +362,7 @@ def main(argv):
                 cells = dict(zip(COLUMNS, row(name, regime, results[k], base_cases.get(k), verdicts[k])))
                 lines = ["  ".join(f"{c} {cells[c]}" for c in COLUMNS[1:6]),
                          "  ".join(f"{c} {cells[c]}" for c in COLUMNS[6:-1])]
-                write_sheet(os.path.join(options["--sheets"], regime_name(regime), name + ".png"),
+                write_sheet(os.path.join(options["--sheets"], regime_name(regime), name + ".jpg"),
                             f"{k}  ({results[k]['width']}x{results[k]['height']})  {cells['verdict']}",
                             lines, verdicts[k], out)
         if options.get("--json"):
@@ -389,7 +394,7 @@ def main(argv):
 def self_test():
     """Exercises the comparison rules on synthetic metrics."""
     regime = {"colors": 150, "detail": 1.0}
-    floor = palette_floor(150)
+    floor = palette_floor(regime, {})
     base = {"regions": 1000, "meanDeltaE": 0.02, "p95DeltaE": 0.05, "encodedBytes": 2_000_000, "colors": 140,
             "regionsUnderRadius3": 50, "minInscribedRadius": 2.2, "minPaletteDistance": 0.0162, "totalMs": 400.0,
             "templateSHA1": "a" * 40}
@@ -430,13 +435,17 @@ def self_test():
     expect({"minPaletteDistance": floor - 1e-4}, True)
     assert expect({"minPaletteDistance": 0.03}, True, regime={"colors": 24, "detail": 0.5})
     expect({"minPaletteDistance": 0.04}, False, regime={"colors": 12, "detail": 0.0})
+    # The floor pbn reports wins over the formula.
+    expect({"minPaletteDistanceFloor": 0.02}, True)
+    expect({"minPaletteDistanceFloor": 0.01, "minPaletteDistance": 0.012}, False)
+    expect({"minPaletteDistanceFloor": None, "minPaletteDistance": 0.012}, True)
     expect({"labelsBelowLegibleSize": 0}, False)
     expect({"labelsBelowLegibleSize": 3}, True)
     expect({"labelsBelowLegibleSize": "n/a"}, False)
     expect({"deterministic": False}, True)
     expect({"validation": "INVALID edges 2"}, True)
     expect({"validation": None}, True)
-    assert expect({"error": "exit 1"}, True) == ["generation failed: exit 1"]
+    assert expect({"error": "generation failed: boom"}, True) == ["pbn: generation failed: boom"]
     # Missing or malformed fields are failures with a message, never crashes.
     del good["regionsUnderRadius2"]
     assert "regionsUnderRadius2" in expect({}, True)[0]
@@ -458,8 +467,17 @@ def self_test():
     assert cell(None) == "-" and cell(3, 2, "{:.0f}") == "3 +50.0%"
     assert regime_name({"colors": 24, "detail": 0.5}) == "c24-d0.5"
     assert regime_name({"colors": 12, "detail": 0.0}) == "c12-d0"
-    assert abs(palette_floor(24) - 0.04) < 1e-12 and abs(palette_floor(150) - 0.016) < 1e-12
-    checks += 5
+    assert abs(palette_floor({"colors": 24}, {}) - 0.04) < 1e-12
+    assert abs(palette_floor({"colors": 150}, {}) - 0.016) < 1e-12
+    assert palette_floor({"colors": 150}, {"minPaletteDistanceFloor": 0.02}) == 0.02
+    assert abs(palette_floor({"colors": 150}, {"minPaletteDistanceFloor": "x"}) - 0.016) < 1e-12
+    checks += 7
+    # Baseline-held metrics show their delta.
+    cells = dict(zip(COLUMNS, row("x", regime, dict(good, minInscribedRadius=2.09, colors=147,
+                                                     minPaletteDistanceFloor=0.016), base, [])))
+    assert cells["min r"] == "2.090 -5.0%" and cells["colors"] == "147 +5.0%", cells
+    assert cells["paint gap"] == "0.0162 = >= 0.0160", cells
+    checks += 1
     table([row("x", regime, good, base, [])])
     totals({"k": good}, {"k": base}, ["k"])
     totals({"k": good}, {}, ["k"])

@@ -97,6 +97,26 @@ struct SegmentationTests {
         Self.checkInvariants(try Self.segment(Self.scene(seed: 3), settings: settings), minRadius: 2.7)
     }
 
+    /// `GenerationSettings.minPaletteDistance` is the floor tools/regression.py holds templates
+    /// to, so it must be the one segmentation enforces.
+    @Test(arguments: [12, 24, 150])
+    func paletteHonoursThePublishedFloor(colorCount: Int) throws {
+        let settings = GenerationSettings(colorCount: colorCount, detail: 1)
+        #expect(SegmentationParameters(settings: settings, width: 160, height: 120).minPaletteDistance
+            == settings.minPaletteDistance)
+        let s = try Self.segment(Self.scene(seed: 5), settings: settings)
+        Self.checkInvariants(s, minRadius: nil, minDistance: settings.minPaletteDistance)
+    }
+
+    @Test func publishedPaletteFloor() {
+        #expect(GenerationSettings(colorCount: 12).minPaletteDistance == 0.04)
+        #expect(GenerationSettings(colorCount: 24).minPaletteDistance == 0.04)
+        #expect(abs(GenerationSettings(colorCount: 150).minPaletteDistance - 0.016) < 1e-6)
+        // Clamped like every other setting.
+        #expect(GenerationSettings(colorCount: 1000).minPaletteDistance
+            == GenerationSettings(colorCount: 150).minPaletteDistance)
+    }
+
     @Test func lowDetailHasLargerRegions() throws {
         let image = Self.scene(width: 200, height: 150)
         let bold = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 0))

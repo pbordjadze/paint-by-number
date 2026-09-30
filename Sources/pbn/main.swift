@@ -129,13 +129,15 @@ struct Metrics: Codable {
     var regionsUnderRadius3: Int
     var minInscribedRadius: Float
     var minPaletteDistance: Float
+    /// What the segmentation guarantees for `minPaletteDistance` at these settings.
+    var minPaletteDistanceFloor: Float
     var timingsMs: [String: Double]
     var totalMs: Double
     var encodedBytes: Int
     var palette: [String]
 }
 
-func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
+func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: GenerationSettings) -> Metrics {
     let t = out.template
     let lab = ColorScience.okLabImage(from: working)
     var errors = [Float](repeating: 0, count: t.width * t.height)
@@ -164,6 +166,7 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
         regionsUnderRadius3: t.regions.filter { $0.inscribedRadius < 3 }.count,
         minInscribedRadius: t.regions.map(\.inscribedRadius).min() ?? 0,
         minPaletteDistance: minPal.isFinite ? minPal : 0,
+        minPaletteDistanceFloor: settings.minPaletteDistance,
         timingsMs: timings, totalMs: out.totalSeconds * 1000,
         encodedBytes: t.encoded().count,
         palette: t.palette.map { c in
@@ -258,7 +261,7 @@ case "generate":
     let t = output.template
     let size = generator.settings.workingSize(sourceWidth: image.width, sourceHeight: image.height)
     let working = Resample.area(image, width: size.width, height: size.height)
-    let m = metrics(output, working: working)
+    let m = metrics(output, working: working, settings: generator.settings)
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     try encoder.encode(m).write(to: outDir.appendingPathComponent("stats.json"))

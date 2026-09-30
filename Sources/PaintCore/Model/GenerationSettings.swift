@@ -18,6 +18,14 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
 
     public static let colorCountRange = 6...150
 
+    /// The closest (OKLab distance) two paints of a template may be: segmentation pushes apart
+    /// or merges nearer ones. Public so tools can check the guarantee against the pipeline's
+    /// own number. Large palettes pack paints closer (down to about twice a just-noticeable
+    /// difference), or a photo's gamut couldn't hold that many distinct paints.
+    public var minPaletteDistance: Float {
+        0.04 * min(1, (24 / Float(normalized.colorCount)).squareRoot())
+    }
+
     /// Clamped copy.
     public var normalized: GenerationSettings {
         var s = self

@@ -3,7 +3,7 @@
 #   [CI_BRANCH=<pushed-branch>] ci/fetch.sh [<commit-sha>] [<outdir>]   (defaults: HEAD, ./ci-report)
 # The report (published by .github/workflows/ci.yml to ci-shots/<branch>) contains STATUS.md,
 # trimmed logs (*.log), *-errors.txt, test results, screenshots under */shots/*.png, and the
-# quality regression under core/regression/ (regression.txt, regression.json, sheets/).
+# quality regression under core/regression/ (regression.txt, regression.json, sheets/*/*.jpg).
 # Polls every 30 s for up to 60 min. Run it in the background and read the report when done.
 set -euo pipefail
 SHA="${1:-$(git rev-parse HEAD)}"
@@ -17,7 +17,7 @@ for _ in $(seq 1 120); do
       git archive "origin/${REF}" | tar -x -C "$OUT"
       cat "$OUT/STATUS.md"
       find "$OUT" -name '*errors.txt' -size +0 -exec sh -c 'echo "== $1"; head -60 "$1"' _ {} \;
-      find "$OUT" -name '*.png' | sort
+      find "$OUT" \( -name '*.png' -o -name '*.jpg' \) | sort
       exit 0
     fi
   fi

@@ -80,9 +80,7 @@ struct SegmentationParameters: Sendable {
         histogramGamma = 0.6
         paletteRestarts = 3
         paletteSaliency = 1
-        // Large palettes pack paints closer (down to about twice a just-noticeable difference),
-        // or a photo's gamut couldn't hold that many distinct paints.
-        minPaletteDistance = 0.04 * min(1, (24 / Float(s.colorCount)).squareRoot())
+        minPaletteDistance = s.minPaletteDistance
         refineIterations = 3
 
         potts = 0.0012 * lerp(0.5, 1.6, sm)
