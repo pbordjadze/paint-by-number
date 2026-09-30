@@ -5,8 +5,9 @@ name: CI
 # `ci-shots/<branch>`, readable with plain git (see ci/fetch.sh).
 # Each simulator gets its own VM: two booted simulators on one 3-core runner thrash. The
 # simulator boots in the background while the app builds.
-# iPad is the primary device (Debug build, screenshots, tests on every push); iPhone (the
-# same) runs on the main development branch or on request.
+# iPad is the primary device (Debug build, screenshots, tests on every push, then a Release
+# build checked for the privacy manifest and for demo code that must not ship); iPhone (the
+# same, without the Release check) runs on the main development branch or on request.
 # The main development branch also publishes an unsigned device IPA as a `build-<n>`
 # prerelease and a SideStore source listing the latest builds (branch `sidestore`).
 
@@ -69,7 +70,7 @@ jobs:
         with: { name: core, path: out, if-no-files-found: ignore }
 
   ipad:
-    name: iPad — Debug build, screenshots, tests, benchmark
+    name: iPad — Debug build, screenshots, tests, Release check, benchmark
     runs-on: macos-26
     timeout-minutes: 50
     steps:
@@ -85,6 +86,7 @@ jobs:
           nohup xcrun simctl boot "$UDID" > out/boot.log 2>&1 &
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
       - name: Build for testing
+        id: build
         run: |
           set -o pipefail
           xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
@@ -109,6 +111,18 @@ jobs:
             -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
             -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
+      - name: Release build
+        # Not `always()`: that runs on cancelled runs too (holding a runner for a superseded
+        # commit) and would repeat the compiler errors of a failed Debug build.
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          # Debug-only code is compiled out of Release (`#if DEBUG`): build it, and check the
+          # shipped app has the privacy manifest and none of the demo code.
+          set -o pipefail
+          xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/release -quiet \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/release-build.log | tail -60
+          ci/check_release.sh build/release/Build/Products/Release-iphonesimulator/PaintByNumber.app 2>&1 | tee out/release-check.log
       - name: Pipeline benchmark (Apple silicon)
         if: always()
         run: |
@@ -123,7 +137,7 @@ jobs:
         run: |
           mkdir -p out/attachments out/crashes
           cp ~/Library/Logs/DiagnosticReports/PaintByNumber* out/crashes/ 2>/dev/null || true
-          grep -hE "error:" out/app-build.log out/app-test.log 2>/dev/null | sort -u > out/errors.txt || true
+          grep -hE "error:|FAIL:" out/app-build.log out/app-test.log out/release-build.log out/release-check.log 2>/dev/null | sort -u > out/errors.txt || true
           if [ -d build/Tests.xcresult ]; then
             xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact > out/test-summary.json 2>/dev/null || true
             xcrun xcresulttool get test-results tests --path build/Tests.xcresult --compact > out/test-results.json 2>/dev/null || true
@@ -135,8 +149,8 @@ jobs:
 
   iphone:
     name: iPhone — Debug build, screenshots, tests
-    # Secondary device: on the main development branch, or when requested. (The IPA job
-    # covers the Release build.)
+    # Secondary device: on the main development branch, or when requested. (The iPad job
+    # covers the Release build and its check.)
     if: github.ref_name == 'claude/paint-by-numbers-app' || github.event.inputs.iphone == 'true'
     runs-on: macos-26
     timeout-minutes: 50

@@ -20,6 +20,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   committed `baseline/regression.json`, `svg2png.mjs`).
 - `.github/workflows/` CI: Linux PaintCore tests + quality regression; macOS builds the app, runs
   tests, captures simulator screenshots.
+- `ACKNOWLEDGEMENTS.md` credits and license texts for the ported code and published methods (also shown in the app).
 
 ## Building & testing on Linux (no Xcode here)
 
@@ -91,6 +92,29 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`). CI screenshots every
   scenario listed in `ci/scenarios.txt` ~2 s after the app calls `DemoMode.markReady()` (a new
   scenario must call it once its content is on screen; `name@seconds` is only the timeout).
+  Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `PipelineCheckView` and
+  `SyntheticTemplate` are wrapped in `#if DEBUG`, and every other reference (`RootView`,
+  `Library.forLaunch`, `AppShellView`, `SettingsView`, …) sits in an `#if DEBUG` block, so Release
+  builds and the IPA have no `-demo` switch. New demo code follows the same rule;
+  `ci/check_release.sh` (run by the iPad job on a Release build) fails if a demo type name
+  shows up in the Release binary.
+- Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking, no
+  collected data; required-reason APIs: UserDefaults `CA92.1`). Using another required-reason API
+  (file timestamps, disk space, boot time via `systemUptime`/`mach_absolute_time`, active
+  keyboards) means adding its category and reason code there; `AboutTests` fails when the
+  sources of the app or of `Sources/PaintCore` (not the `pbn` CLI) and the manifest disagree.
+  Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category are in
+  `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings.
+- Settings › About shows the bundle version/build (`AppInfo`) and Acknowledgements
+  (`Acknowledgements.swift`). Ported or adapted third-party code and the methods the pipeline
+  implements are credited there and in `ACKNOWLEDGEMENTS.md` (`AboutTests` keeps the two in
+  step): add an entry when adding either.
+- Licensing: `Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox); `Vector/CurveFitter.swift`
+  is a translation of potrace 1.16 and therefore GPL-2.0-or-later (Peter Selinger). Settings ›
+  Acknowledgements and `ACKNOWLEDGEMENTS.md` carry the full license texts and the GPL source
+  notice (the repository is public); keep them when touching the fitter. Distributing the app
+  (IPA, SideStore, and above all the App Store, which GPLv2 is generally held incompatible
+  with) needs that settled first: license the app GPL-compatibly or replace `CurveFitter`.
 
 ## CI feedback loop (no Xcode locally)
 
@@ -102,7 +126,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
    `errors.txt` (compiler errors), `shots/*.png` plus `*-app.log` (the app's os_log output) and
    `*-steps.log` (readiness, crashes). iPad is the primary device: every push builds Debug on a
    13" iPad Pro simulator and adds `ipad/test-results.json`, `ipad/attachments/` and
-   `ipad/bench.txt` (pipeline timings on the M1 runner, only when `Sources/` changed). The
+   `ipad/bench.txt` (pipeline timings on the M1 runner, only when `Sources/` changed). The iPad
+   job also builds Release and runs `ci/check_release.sh` (privacy manifest present, no demo
+   code); its problems land in `ipad/errors.txt` too. The
    iPhone job (the same on an iPhone 17 Pro, without the benchmark) runs on
    `claude/paint-by-numbers-app` or via workflow_dispatch with `iphone: true`. Turnaround
    ~15–20 min (longer if several branches are queued: only 5 macOS jobs run concurrently).

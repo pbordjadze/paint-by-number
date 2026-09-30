@@ -40,8 +40,10 @@ final class Library {
         artworks = store.loadAll().sorted(by: Self.newestFirst)
     }
 
-    /// The library used by the running app: the real one, or a throwaway one for demos.
+    /// The library used by the running app: the real one (Debug builds: or a throwaway one
+    /// for demos and the test host, so they never touch real paintings).
     static func forLaunch() -> Library {
+        #if DEBUG
         let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if DemoMode.isActive || isTestHost {
             let root = FileManager.default.temporaryDirectory.appending(path: "DemoLibrary", directoryHint: .isDirectory)
@@ -50,6 +52,7 @@ final class Library {
             ShellDemo.current?.prepare(library)
             return library
         }
+        #endif
         let library = Library(store: ArtworkStore(root: ArtworkStore.defaultRoot))
         library.seedIfNeeded()
         return library

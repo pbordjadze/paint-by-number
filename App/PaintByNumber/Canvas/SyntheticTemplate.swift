@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import PaintCore
 
@@ -6,7 +7,8 @@ import PaintCore
 /// way the production vectorizer lays out its output: shared boundary polylines, rings of
 /// edge references, a watertight per-region triangulation, labels and a region map.
 ///
-/// Used by canvas tests and demo scenarios; it does not depend on the photo pipeline.
+/// Used by canvas tests and demo scenarios (Debug builds only); it does not depend on the photo
+/// pipeline.
 nonisolated enum SyntheticTemplate {
     nonisolated struct Options: Sendable {
         var width = 1200
@@ -472,3 +474,4 @@ nonisolated private struct Builder {
         }
     }
 }
+#endif

@@ -1,8 +1,9 @@
+#if DEBUG
 import PaintCore
 import SwiftUI
 
-/// Temporary bring-up screen: generates a template from a bundled sample and shows it,
-/// proving the pipeline links and runs on device.
+/// The `pipeline` demo scenario (Debug builds only): generates a template from a bundled
+/// sample and shows it with the stage timings, proving the pipeline links and runs.
 struct PipelineCheckView: View {
     @State private var report = "Generating…"
     @State private var preview: CGImage?
@@ -56,3 +57,4 @@ struct PipelineCheckView: View {
         return (image, lines.joined(separator: "\n"))
     }
 }
+#endif

@@ -17,6 +17,15 @@ templates — entirely on-device — and makes painting them fluid and satisfyin
 - **Liquid Glass UI**: gallery, a live create flow with before/after comparison, printable PDF
   templates, share images and time-lapse videos.
 
+## Privacy
+
+Photos are turned into templates entirely on the device. The app has no accounts, no analytics
+and no network code, so your photos and paintings stay on your iPhone or iPad unless you share
+them. It declares no tracking and no collected data in its privacy manifest
+(`App/PaintByNumber/Resources/PrivacyInfo.xcprivacy`); the only sensitive API it uses is
+`UserDefaults`, for its own settings. Third-party credits and licenses are in
+[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
+
 ## Project layout
 
 | Path | What |
@@ -26,7 +35,7 @@ templates — entirely on-device — and makes painting them fluid and satisfyin
 | `Tests/PaintCoreTests` | Swift Testing suite for the pipeline |
 | `App/` | Xcode project: SwiftUI app, Metal canvas, feedback, export, tests |
 | `tools/` | Visual evaluation harness, icon generator |
-| `ci/`, `.github/workflows/` | macOS CI with simulator screenshots |
+| `ci/`, `.github/workflows/` | macOS CI with simulator screenshots and a Release-build check |
 
 ## Building
 
