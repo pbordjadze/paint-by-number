@@ -37,11 +37,15 @@ enum ShellDemo: Equatable {
             ]
             library.seed(items.map { sample, painted, hours in
                 Library.SeedItem(sample: Sample.all[sample], painted: painted, age: hours * hour, photoMaxPixelSize: 560)
-            })
+            }, completion: { DemoMode.markReady() })
         case .galleryOpen:
             library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .create, .createPreview, .galleryEmpty, .settings:
             break
         }
     }
+
+    /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
+    /// once their content has been generated or loaded).
+    var isReadyOnAppear: Bool { self == .create || self == .galleryEmpty || self == .settings }
 }

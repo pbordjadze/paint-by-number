@@ -20,7 +20,10 @@ struct PipelineCheckView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
-        .task { await run() }
+        .task {
+            await run()
+            DemoMode.markReady()
+        }
     }
 
     private func run() async {

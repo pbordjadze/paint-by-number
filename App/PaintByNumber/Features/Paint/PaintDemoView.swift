@@ -27,7 +27,10 @@ struct PaintDemoView: View {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
                     initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale)
-                    .task { await demo.run() }
+                    .task {
+                        await demo.run()
+                        DemoMode.markReady()
+                    }
             } else {
                 Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
                 ProgressView()

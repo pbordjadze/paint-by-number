@@ -2,7 +2,9 @@
 # Installs the built app on a simulator and captures one screenshot per demo scenario.
 #   ci/screenshots.sh <path/to/PaintByNumber.app> <outdir> <kind> <udid> [scenario...]
 # Each scenario is passed to the app as `-demo <scenario>`; the app renders that state
-# deterministically. "<scenario>@<seconds>" overrides the settle delay (default 8 s).
+# deterministically and writes tmp/demo-ready in its container once the content is on
+# screen (`DemoMode.markReady`); the screenshot follows after a short settle. Without a
+# marker it is taken after the scenario's timeout: "<scenario>@<seconds>" (default 8 s).
 # Scenarios whose name contains "dark" are captured in dark appearance.
 set -euo pipefail
 APP="$1"; OUT="$2"; KIND="$3"; UDID="$4"; shift 4
@@ -18,6 +20,8 @@ xcrun simctl bootstatus "$UDID" -b >/dev/null; step booted
 xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
   --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100 || true
 xcrun simctl install "$UDID" "$APP"; step installed
+MARKER="$(xcrun simctl get_app_container "$UDID" "$BUNDLE_ID" data)/tmp/demo-ready"
+SETTLE=${SETTLE:-2}
 appearance=light
 # `ls` fails while there are no reports; under pipefail that would end the script.
 count_reports() { { ls ~/Library/Logs/DiagnosticReports/PaintByNumber* 2>/dev/null || true; } | wc -l | tr -d ' '; }
@@ -31,8 +35,16 @@ for entry in "${SCENARIOS[@]}"; do
     appearance="$want"
   fi
   xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
+  rm -f "$MARKER"
   step "launch $scenario: $(xcrun simctl launch "$UDID" "$BUNDLE_ID" -demo "$scenario" 2>&1 | tr '\n' ' ')"
-  sleep "$delay"
+  started=$SECONDS
+  while [[ ! -f "$MARKER" && $((SECONDS - started)) -lt $delay ]]; do sleep 0.25; done
+  if [[ -f "$MARKER" ]]; then
+    step "$scenario ready after $((SECONDS - started)) s"
+    sleep "$SETTLE"
+  else
+    step "$scenario: no ready marker within $delay s"
+  fi
   xcrun simctl io "$UDID" screenshot --type=png "$OUT/${KIND}-${scenario}.png" 2>/dev/null
   # A crash leaves a new report in the host's DiagnosticReports (simulator apps are host processes).
   reports=$(count_reports)

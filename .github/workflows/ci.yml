@@ -3,6 +3,8 @@ name: CI
 # Every run publishes a report (STATUS.md, trimmed logs, compiler errors, test results,
 # screenshots) to the branch `ci-shots/<branch>`, readable with plain git (see ci/fetch.sh).
 # Each simulator gets its own VM: two booted simulators on one 3-core runner thrash.
+# iPad is the primary device (Debug build, screenshots, tests on every push); iPhone
+# (Release build, screenshots) runs on the main development branch or on request.
 
 on:
   push:
@@ -10,8 +12,12 @@ on:
   workflow_dispatch:
     inputs:
       scenarios:
-        description: 'Demo scenarios to screenshot (space separated, optional @seconds)'
+        description: 'Demo scenarios to screenshot (space separated, optional @timeout-seconds)'
         required: false
+      iphone:
+        description: 'Also build Release and screenshot on iPhone'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -43,12 +49,13 @@ jobs:
         if: always()
         with: { name: core, path: out, if-no-files-found: ignore }
 
-  iphone:
-    name: iPhone — Debug build, tests, screenshots
+  ipad:
+    name: iPad — Debug build, screenshots, tests, benchmark
     runs-on: macos-26
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
+        with: { fetch-depth: 2 }
       - name: Build for testing
         run: |
           set -o pipefail
@@ -59,7 +66,7 @@ jobs:
       - name: Boot simulator
         id: sim
         run: |
-          read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh iphone)
+          read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh ipad)
           echo "$MODEL $RUNTIME $UDID"
           xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b > /dev/null
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
@@ -69,7 +76,7 @@ jobs:
         run: |
           APP=build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
           [ -d "$APP" ] || exit 0
-          ci/screenshots.sh "$APP" out/shots iphone "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
+          ci/screenshots.sh "$APP" out/shots ipad "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
       - name: Test
         if: always() && steps.sim.outcome == 'success'
         run: |
@@ -78,6 +85,15 @@ jobs:
             -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
             -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
+      - name: Pipeline benchmark (Apple silicon)
+        if: always()
+        run: |
+          # Only when the pipeline changed; app-only commits skip the 2-minute benchmark.
+          if git rev-parse -q --verify HEAD~1 >/dev/null && git diff --quiet HEAD~1 -- Sources Package.swift; then
+            echo "PaintCore unchanged; benchmark skipped" | tee out/bench.txt; exit 0
+          fi
+          swift build -c release --product pbn 2>&1 | tail -2
+          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3 | tee out/bench.txt
       - name: Collect diagnostics
         if: always()
         run: |
@@ -91,15 +107,16 @@ jobs:
           fi
       - uses: actions/upload-artifact@v5
         if: always()
-        with: { name: iphone, path: out, if-no-files-found: ignore }
+        with: { name: ipad, path: out, if-no-files-found: ignore }
 
-  ipad:
-    name: iPad — Release build, screenshots, benchmark
+  iphone:
+    name: iPhone — Release build, screenshots
+    # Secondary device: on the main development branch, or when requested.
+    if: github.ref_name == 'claude/paint-by-numbers-app' || github.event.inputs.iphone == 'true'
     runs-on: macos-26
-    timeout-minutes: 50
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
-        with: { fetch-depth: 2 }
       - name: Build
         run: |
           set -o pipefail
@@ -111,19 +128,11 @@ jobs:
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
-          read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh ipad)
+          read -r KIND UDID MODEL RUNTIME < <(ci/simulators.sh iphone)
           echo "$MODEL $RUNTIME $UDID"
           APP=build/dd/Build/Products/Release-iphonesimulator/PaintByNumber.app
-          ci/screenshots.sh "$APP" out/shots ipad "$UDID" ${SCENARIOS:-$(cat ci/scenarios.txt)}
-      - name: Pipeline benchmark (Apple silicon)
-        if: always()
-        run: |
-          # Only when the pipeline changed; app-only commits skip the 2-minute benchmark.
-          if git rev-parse -q --verify HEAD~1 >/dev/null && git diff --quiet HEAD~1 -- Sources Package.swift; then
-            echo "PaintCore unchanged; benchmark skipped" | tee out/bench.txt; exit 0
-          fi
-          swift build -c release --product pbn 2>&1 | tail -2
-          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3 | tee out/bench.txt
+          [ -d "$APP" ] || exit 0
+          ci/screenshots.sh "$APP" out/shots iphone "$UDID" ${SCENARIOS:-$(cat ci/scenarios.txt)}
       - name: Collect diagnostics
         if: always()
         run: |
@@ -132,11 +141,11 @@ jobs:
           grep -hE "error:" out/app-build.log 2>/dev/null | sort -u > out/errors.txt || true
       - uses: actions/upload-artifact@v5
         if: always()
-        with: { name: ipad, path: out, if-no-files-found: ignore }
+        with: { name: iphone, path: out, if-no-files-found: ignore }
 
   report:
     name: Publish report
-    needs: [core, iphone, ipad]
+    needs: [core, ipad, iphone]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -154,8 +163,8 @@ jobs:
             echo "commit: ${GITHUB_SHA}"
             echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "core: ${{ needs.core.result }}"
-            echo "iphone: ${{ needs.iphone.result }}"
             echo "ipad: ${{ needs.ipad.result }}"
+            echo "iphone: ${{ needs.iphone.result }}"
           } > STATUS.md
           echo "${GITHUB_SHA}" > COMMIT
           git init -q && git checkout -q -b shots

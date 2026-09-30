@@ -24,6 +24,9 @@ struct CreateFlowView: View {
             // presented would stall the presentation).
             if let sample = demo?.previewSample, model.source == nil { model.load(sample: sample) }
         }
+        .onChange(of: model.isFinal) { _, isFinal in
+            if isFinal, demo?.previewSample != nil { DemoMode.markReady() }
+        }
         .onDisappear { model.cancelAll() }
     }
 

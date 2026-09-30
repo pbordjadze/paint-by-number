@@ -65,19 +65,21 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the region map) backs thumbnails, share PNGs, create-flow previews and `PDFExporter`.
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`).
 - Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`). CI screenshots every
-  scenario listed in `ci/scenarios.txt` (`name@seconds` sets the settle delay) on an iPhone Pro
-  and a 13" iPad Pro simulator.
+  scenario listed in `ci/scenarios.txt` ~2 s after the app calls `DemoMode.markReady()` (a new
+  scenario must call it once its content is on screen; `name@seconds` is only the timeout).
 
 ## CI feedback loop (no Xcode locally)
 
 1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).
 2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the
-   report CI publishes to `ci-shots/<branch>`: `STATUS.md`, `iphone/errors.txt` +
-   `ipad/errors.txt` (compiler errors; iPhone builds Debug, iPad builds Release), trimmed `*.log`,
-   `iphone/test-results.json`, screenshots (`iphone/shots/*.png`, `ipad/shots/*.png`, plus
-   `*-app.log` with the app's os_log output), test attachments (`iphone/attachments/`), and
-   `ipad/bench.txt` (pipeline timings on the M1 runner). Turnaround ~10–15 min (longer if
-   several branches are queued: only 5 macOS jobs run concurrently).
+   report CI publishes to `ci-shots/<branch>`: `STATUS.md`, trimmed `*.log`, and per device
+   `errors.txt` (compiler errors), `shots/*.png` plus `*-app.log` (the app's os_log output) and
+   `*-steps.log` (readiness, crashes). iPad is the primary device: every push builds Debug on a
+   13" iPad Pro simulator and adds `ipad/test-results.json`, `ipad/attachments/` and
+   `ipad/bench.txt` (pipeline timings on the M1 runner, only when `Sources/` changed). The
+   iPhone job (Release build, screenshots) runs on `claude/paint-by-numbers-app` or via
+   workflow_dispatch with `iphone: true`. Turnaround ~10 min (longer if several branches are
+   queued: only 5 macOS jobs run concurrently). Work on something else while it runs.
 3. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 
 ## Conventions

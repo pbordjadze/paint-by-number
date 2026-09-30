@@ -10,4 +10,14 @@ enum DemoMode {
     static let scenario: String? = UserDefaults.standard.string(forKey: "demo")
 
     static var isActive: Bool { scenario != nil }
+
+    /// `tmp/demo-ready` in the app's data container. CI screenshots a scenario shortly after
+    /// this file appears instead of sleeping for a worst-case delay (`ci/screenshots.sh`).
+    static let readyMarker = FileManager.default.temporaryDirectory.appending(path: "demo-ready")
+
+    /// Signals that the scenario's content is on screen; only animations are still settling.
+    static func markReady() {
+        guard let scenario else { return }
+        try? Data(scenario.utf8).write(to: readyMarker, options: .atomic)
+    }
 }
