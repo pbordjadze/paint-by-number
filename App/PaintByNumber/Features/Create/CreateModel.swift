@@ -57,12 +57,13 @@ final class CreateModel {
     }
 
     nonisolated enum CreateError: LocalizedError {
-        case unreadable, renderFailed
+        case unreadable, renderFailed, cameraCapture
 
         var errorDescription: String? {
             switch self {
             case .unreadable: "This photo couldn’t be opened. Try another one."
             case .renderFailed: "The template couldn’t be created. Try different settings."
+            case .cameraCapture: "The photo from the camera couldn’t be used. Try taking it again."
             }
         }
     }
@@ -134,6 +135,16 @@ final class CreateModel {
 
     func load(imageData: Data) {
         begin(title: Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
+    }
+
+    /// A photo that never arrived (the camera's shot couldn't be read): shown in place of the
+    /// preview.
+    func fail(_ error: CreateError) {
+        cancelAll()
+        source = nil
+        preview = nil
+        stats = nil
+        phase = .failed(error.localizedDescription)
     }
 
     private func begin(title: String, sampleName: String?, decode: @escaping () async throws -> Decoded) {

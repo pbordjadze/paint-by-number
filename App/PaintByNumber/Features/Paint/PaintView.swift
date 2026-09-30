@@ -22,6 +22,7 @@ struct PaintView: View {
     @State private var showsNumbers = true
     @State private var confirmRestart = false
     @State private var timelapse: TimelapseRequest?
+    @State private var canvasUnavailable = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.undoManager) private var undoManager
 
@@ -41,36 +42,10 @@ struct PaintView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let palette = paletteLayout(in: geo.size)
-            ZStack {
-                PaintCanvas(
-                    session: session, controller: controller,
-                    chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
-                    showsNumbers: showsNumbers, initialCamera: initialCamera, fillDurationScale: fillDurationScale,
-                    onPencilAction: { handlePencil($0) })
-                    .id(ObjectIdentifier(session))
-                    .ignoresSafeArea()
-
-                VStack(spacing: 0) {
-                    topBar
-                        .padding(.horizontal, Self.edge)
-                        .padding(.top, 6)
-                    Spacer(minLength: 0)
-                    if !palette.side || session.isComplete {
-                        bottomBar(palette)
-                            .padding(.horizontal, Self.edge)
-                            .padding(.bottom, 4)
-                    }
-                }
-                if palette.side && !session.isComplete {
-                    HStack {
-                        Spacer(minLength: 0)
-                        bottomBar(palette)
-                            .padding(.trailing, Self.edge)
-                            .padding(.top, Self.sidePaletteTop)
-                            .padding(.bottom, Self.edge)
-                    }
-                }
+            if canvasUnavailable {
+                CanvasUnavailableView(onClose: onClose)
+            } else {
+                canvasAndChrome(geo: geo, palette: paletteLayout(in: geo.size))
             }
         }
         .background(Color(uiColor: .systemGroupedBackground))
@@ -93,6 +68,40 @@ struct PaintView: View {
         }
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
+        }
+    }
+
+    /// The Metal canvas with the floating bars over it.
+    private func canvasAndChrome(geo: GeometryProxy, palette: PaletteLayout) -> some View {
+        ZStack {
+            PaintCanvas(
+                session: session, controller: controller,
+                chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
+                showsNumbers: showsNumbers, initialCamera: initialCamera, fillDurationScale: fillDurationScale,
+                onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true })
+                .id(ObjectIdentifier(session))
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                topBar
+                    .padding(.horizontal, Self.edge)
+                    .padding(.top, 6)
+                Spacer(minLength: 0)
+                if !palette.side || session.isComplete {
+                    bottomBar(palette)
+                        .padding(.horizontal, Self.edge)
+                        .padding(.bottom, 4)
+                }
+            }
+            if palette.side && !session.isComplete {
+                HStack {
+                    Spacer(minLength: 0)
+                    bottomBar(palette)
+                        .padding(.trailing, Self.edge)
+                        .padding(.top, Self.sidePaletteTop)
+                        .padding(.bottom, Self.edge)
+                }
+            }
         }
     }
 

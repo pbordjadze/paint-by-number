@@ -267,6 +267,12 @@ struct PaintingSessionTests {
         #expect(abs(center.y - Float(template.height) / 2) < 1)
         #expect(session.canvas === view)
     }
+
+    /// With Metal (the simulator has it) the canvas draws, so the painting screen never shows
+    /// its "Can't Show the Canvas" stand-in.
+    @Test func canvasIsRenderableWithMetal() {
+        #expect(CanvasView(session: PaintingSession(template: template)).isRenderable)
+    }
 }
 
 @MainActor

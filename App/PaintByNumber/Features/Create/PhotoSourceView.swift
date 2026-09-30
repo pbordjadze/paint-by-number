@@ -89,6 +89,9 @@ struct PhotoSourceView: View {
             CameraPicker { data in
                 model.load(imageData: data)
                 onPicked()
+            } onFailure: {
+                model.fail(.cameraCapture)
+                onPicked()
             }
             .ignoresSafeArea()
         }

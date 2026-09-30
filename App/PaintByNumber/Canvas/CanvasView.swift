@@ -130,6 +130,9 @@ final class CanvasView: UIView, PaintingCanvas {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
+    /// False when Metal couldn't be set up for this painting: nothing would ever be drawn.
+    var isRenderable: Bool { renderer != nil }
+
     private var metalLayer: CAMetalLayer { layer as! CAMetalLayer }
 
     private static func settledStates(template: Template, progress: PaintProgress) -> [RegionState] {

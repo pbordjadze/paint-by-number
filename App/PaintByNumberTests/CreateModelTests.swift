@@ -44,6 +44,19 @@ struct CreateModelTests {
         #expect(model.isFinal)
     }
 
+    @Test func cameraFailureSurfacesAnError() async throws {
+        let model = CreateModel(initial: GenerationSettings(colorCount: 10, detail: 0.2))
+        model.load(sample: try #require(Sample.named("espresso")))
+        try await waitUntil { model.source != nil }
+        // The camera's shot couldn't be read: the earlier photo and its work are dropped.
+        model.fail(.cameraCapture)
+        #expect(model.phase == .failed(CreateModel.CreateError.cameraCapture.localizedDescription))
+        #expect(model.source == nil && model.preview == nil && model.stats == nil)
+        #expect(!model.isWorking)
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(model.preview == nil)
+    }
+
     private func waitUntil(timeout: Duration = .seconds(120), _ condition: () -> Bool) async throws {
         let clock = ContinuousClock()
         let deadline = clock.now + timeout
