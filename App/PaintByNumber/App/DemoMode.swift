@@ -11,6 +11,9 @@ enum DemoMode {
 
     static var isActive: Bool { scenario != nil }
 
+    /// The app is hosting the unit tests: like a demo, it keeps no state between runs.
+    static var isTestHost: Bool { ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil }
+
     /// `tmp/demo-ready` in the app's data container. CI screenshots a scenario shortly after
     /// this file appears instead of sleeping for a worst-case delay (`ci/screenshots.sh`).
     static let readyMarker = FileManager.default.temporaryDirectory.appending(path: "demo-ready")

@@ -1,6 +1,7 @@
 import Observation
 import PaintCore
 import SwiftUI
+import TipKit
 import UIKit
 
 /// The painting screen: full-bleed Metal canvas, floating Liquid Glass controls on top and
@@ -8,7 +9,8 @@ import UIKit
 ///
 /// Contract used by the rest of the app: `PaintView(session:title:onClose:)`. Persistence
 /// lives outside (observe `session.revision`). With a `sourcePhotoLoader` in the environment
-/// the top bar offers the Photo control (see `PhotoPeek`).
+/// the top bar offers the Photo control (see `PhotoPeek`). First-run tips (`PaintTips`) point
+/// at the selected swatch or the middle of the canvas, one at a time.
 struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
@@ -24,6 +26,7 @@ struct PaintView: View {
     @State private var confirmRestart = false
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
+    @State private var tips: TipGroup?
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.undoManager) private var undoManager
     @Environment(\.sourcePhotoLoader) private var photoLoader
@@ -58,9 +61,18 @@ struct PaintView: View {
                         photoUnavailable = true
                         peek = PhotoPeek()
                     },
-                    onDismissPhoto: { peek.setLatched(false) })
+                    onDismissPhoto: { peek.setLatched(false) },
+                    onZoomStep: { PaintTips.record(.zoomedByDoubleTap) })
                     .id(ObjectIdentifier(session))
                     .ignoresSafeArea()
+
+                // Canvas tips point at the middle of the visible canvas.
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .popoverTip(canvasTip)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette))
+                    .allowsHitTesting(false)
 
                 VStack(spacing: 0) {
                     topBar(width: geo.size.width)
@@ -88,6 +100,7 @@ struct PaintView: View {
         .focusedSceneValue(\.painting, PaintingFocus(
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding))
         .onAppear {
+            if tips == nil { tips = PaintTips.makeGroup() }
             FeedbackAttachment.attach(session)
             chrome.undoManager = undoManager
             chrome.observe(session, controller: controller)
@@ -142,6 +155,27 @@ struct PaintView: View {
         }
         return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + palette.thickness + 6,
                           trailing: safe.trailing)
+    }
+
+    /// The canvas's visible area within the safe area (the canvas itself ignores it).
+    private func visibleCanvasPadding(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
+        let insets = canvasInsets(safe: safe, palette: palette)
+        return EdgeInsets(
+            top: max(0, insets.top - safe.top), leading: max(0, insets.leading - safe.leading),
+            bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
+    }
+
+    // MARK: Tips
+
+    /// Tips about canvas gestures; the rest belong to the selected swatch.
+    private var canvasTip: (any Tip)? {
+        guard let tip = tips?.currentTip, tip is DragPaintTip || tip is ZoomTip || tip is PencilTip else { return nil }
+        return tip
+    }
+
+    private var swatchTip: (any Tip)? {
+        guard let tip = tips?.currentTip, tip is FirstPaintTip || tip is HintTip else { return nil }
+        return tip
     }
 
     // MARK: Top bar
@@ -251,7 +285,7 @@ struct PaintView: View {
         } else {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
-                shakes: chrome.shakes)
+                shakes: chrome.shakes, tip: swatchTip)
         }
     }
 
@@ -283,7 +317,7 @@ struct PaintView: View {
         case .squeeze:
             controller.showHint()
         case .lifted:
-            break
+            PaintTips.record(.pencilUsed)
         }
     }
 }
@@ -410,7 +444,7 @@ private struct CompletionBar: View {
     }
 }
 
-/// Transient chrome reactions to painting events, and undo registration.
+/// Transient chrome reactions to painting events, undo registration, and the tips they feed.
 @Observable
 final class PaintChromeState {
     /// Per color: bumped to shake its swatch.
@@ -423,7 +457,11 @@ final class PaintChromeState {
     func observe(_ session: PaintingSession, controller: CanvasController) {
         guard observed != ObjectIdentifier(session) else { return }
         observed = ObjectIdentifier(session)
+        PaintTips.paintingOpened(hasProgress: session.progress.paintedCount > 0)
         session.onEvent { [weak self, weak controller, weak session] event in
+            if let session, let signal = PaintTips.signal(for: event, isStroking: session.isStroking) {
+                PaintTips.record(signal)
+            }
             switch event {
             case let .painted(regions, _):
                 if let session, !session.isStroking { self?.registerUndo(of: regions.count, in: session) }

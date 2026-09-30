@@ -1,5 +1,6 @@
 import PaintCore
 import SwiftUI
+import TipKit
 
 /// The paint palette: circular swatches with their number and a progress ring per color;
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
@@ -11,6 +12,8 @@ struct PaletteBar: View {
     var lines = 1
     /// Per color, bumped to shake its swatch (e.g. after tapping a region of that color).
     var shakes: [Int: Int] = [:]
+    /// A tip about the selected color, shown from its swatch.
+    var tip: (any Tip)? = nil
 
     static let swatchPitch: CGFloat = 56
     private static let spacing: CGFloat = 8
@@ -102,6 +105,8 @@ struct PaletteBar: View {
         .accessibilityLabel(Text("Color \(index + 1)"))
         .accessibilityValue(Text(complete ? "Complete" : "\(Int(fraction * 100)) percent painted"))
         .accessibilityAddTraits(selected ? .isSelected : [])
+        // Over a bottom bar, beside a trailing one.
+        .popoverTip(selected ? tip : nil, arrowEdge: axis == .horizontal ? .bottom : .trailing)
     }
 }
 

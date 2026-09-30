@@ -60,6 +60,16 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu, three-finger undo); the Pencil paints while
   fingers navigate (and only navigate under "Only Draw with Apple Pencil"). The app is single
   window: one live `PaintingSession` per painting.
+- Photo peek: `PhotoPeek`/`PhotoPeekButton` (hold to peek, tap to latch, `p` in the Paint menu)
+  drive `CanvasView.showsPhoto`. The canvas loads the photo once through `sourcePhotoLoader`
+  (bounded by the canvas size) and draws it in the canvas pass (`photoFragment`,
+  `RenderContext.makePhotoTexture`), so it tracks zoom and pan exactly. Canvas touches hide a
+  latched photo instead of painting.
+- Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
+  and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
+  Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the
+  selected swatch or the middle of the canvas. Tip types are `nonisolated struct`s driven only
+  by `Tips.Event`s; their ids carry a generation that Settings ▸ Show Tips Again bumps.
 - Library (`Model/`): `Library` (@Observable, injected via `.environment`) keeps `Artwork` metadata
   in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
   `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,
@@ -73,6 +83,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`). CI screenshots every
   scenario listed in `ci/scenarios.txt` ~2 s after the app calls `DemoMode.markReady()` (a new
   scenario must call it once its content is on screen; `name@seconds` is only the timeout).
+  Demo launches and the unit-test host (`DemoMode.isTestHost`) reset TipKit and hide every tip
+  except in `paint-tip`.
 
 ## CI feedback loop (no Xcode locally)
 

@@ -16,6 +16,8 @@ import simd
 /// - `paint-hint`: the hint flies the camera to a region of the selected color
 /// - `paint-replay`: a finished painting mid-replay
 /// - `paint-photo`: the source photo shown over a painting in progress
+/// - `paint-tip`: a fresh canvas with the first tip ("Tap to Paint") at the selected swatch;
+///   the only scenario that shows tips (`PaintTips.configure`)
 ///
 /// Photo-based scenarios have the photo loader, so the top bar is the one users see.
 struct PaintDemoView: View {
@@ -154,6 +156,11 @@ private final class Demo {
                 try? await Task.sleep(for: .milliseconds(100))
             }
             Self.log.notice("demo paint-photo: photo opacity \(opacity, privacy: .public)")
+            return
+        }
+        if scenario == PaintTips.demoScenario {
+            // TipKit evaluates eligibility asynchronously; the popover is up well within this.
+            try? await Task.sleep(for: .seconds(1.5))
             return
         }
         if scenario == "paint-replay" {

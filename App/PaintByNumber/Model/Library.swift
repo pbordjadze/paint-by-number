@@ -42,8 +42,7 @@ final class Library {
 
     /// The library used by the running app: the real one, or a throwaway one for demos.
     static func forLaunch() -> Library {
-        let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        if DemoMode.isActive || isTestHost {
+        if DemoMode.isActive || DemoMode.isTestHost {
             let root = FileManager.default.temporaryDirectory.appending(path: "DemoLibrary", directoryHint: .isDirectory)
             try? FileManager.default.removeItem(at: root)
             let library = Library(store: ArtworkStore(root: root))
