@@ -61,7 +61,7 @@ nonisolated enum CanvasAccessibility {
     /// nearest `center` (ties: lower index), in reading order.
     static func visibleAreas(
         _ regions: [Int], anchors: [SIMD2<Float>], visible: CGRect, center: SIMD2<Float>, rowHeight: Float,
-        limit: Int = limit
+        limit: Int = CanvasAccessibility.limit
     ) -> [Int] {
         let inside = regions.filter { r in
             let a = anchors[r]
@@ -72,7 +72,7 @@ nonisolated enum CanvasAccessibility {
             .map { (distance: simd_distance_squared(anchors[$0], center), region: $0) }
             .sorted { ($0.distance, $0.region) < ($1.distance, $1.region) }
             .prefix(max(limit, 0))
-            .map(\.region)
+            .map { $0.region }
         return nearest.sorted { key($0, anchor: anchors[$0], rowHeight: rowHeight) < key($1, anchor: anchors[$1], rowHeight: rowHeight) }
     }
 
