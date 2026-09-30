@@ -9,8 +9,9 @@ struct SegmentationParameters: Sendable {
     static let jnd: Float = 0.02
     /// How far below its raster minimum (`minRadius(digits:)`) a smoothed polygon's label
     /// room may fall before the vectorizer steps that region's edges toward the pixel
-    /// outline (see `EdgeSmoother.run`). Not lower: `LabelSizing.minimumRadius` relies on it.
-    static let vectorRadiusTolerance: Float = 0.8
+    /// outline (see `EdgeSmoother.run`). `LabelSizing.minimumRadius` needs at least 0.8;
+    /// 0.9 touches under 0.1 % of regions on photos, with no visible faceting.
+    static let vectorRadiusTolerance: Float = 0.9
 
     var colorCount: Int
     var seed: UInt64
@@ -102,8 +103,8 @@ struct SegmentationParameters: Sendable {
         // Log-interpolated fraction of the canvas: detail 0 → 1/3000, 1 → 1/60000.
         minArea = max(area * exp(lerp(log(1 / 3000), log(1 / 60000), d)), 12)
         // interiorDistance is quantized (2.5, 2.74, 3.33, 3.5, …). 2.74 asks for a 5-px spot
-        // with some diagonal extent, so the vectorizer's smoothed polygon still holds a
-        // radius-2 disc; 3.5 asks for a 7-px spot.
+        // with some diagonal extent, so the vectorizer's polygon still holds a label disc of
+        // `LabelSizing.minimumRadius`; 3.5 asks for a 7-px spot.
         minRadius = lerp(3.5, 2.7, min(1, 2 * d))
         // Bold templates also require every part to be ~5 px wide; otherwise 3 px (cross).
         openingRadiusSquared = d < 0.25 ? 4 : 1

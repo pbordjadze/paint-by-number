@@ -11,6 +11,8 @@ public struct TemplateGenerator: Sendable {
     public struct Output: Sendable {
         public var template: Template
         public var segmentation: Segmentation
+        /// What vectorizing had to give up (fallback edges; see `VectorStats`).
+        public var vectorStats: VectorStats
         public var timings: [StageClock.Timing]
         public var totalSeconds: Double { timings.filter { !$0.name.contains(".") }.reduce(0) { $0 + $1.seconds } }
     }
@@ -45,11 +47,12 @@ public struct TemplateGenerator: Sendable {
         try cancel.throwIfCancelled()
         progress?(0.7)
 
-        let template = try clock.measure("vectorize") {
-            try Vectorizer.vectorize(segmentation, settings: settings, cancel: cancel, clock: clock)
+        let vector = try clock.measure("vectorize") {
+            try Vectorizer.vectorizeWithStats(segmentation, settings: settings, cancel: cancel, clock: clock)
         }
         progress?(1)
-        return Output(template: template, segmentation: segmentation, timings: clock.timings)
+        return Output(
+            template: vector.template, segmentation: segmentation, vectorStats: vector.stats, timings: clock.timings)
     }
 }
 

@@ -82,7 +82,8 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
             lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
             d.text((x0 + 8, y0 + 6), str(i + 1), fill=(0, 0, 0) if lum > 128 else (255, 255, 255), font=font)
     caption = (f"{name}  {stats['width']}x{stats['height']}  colors={stats['colors']}  regions={stats['regions']}  "
-               f"dE={stats['meanDeltaE']:.4f}  r<2:{stats['regionsUnderRadius2']}  total={stats['totalMs']:.0f}ms")
+               f"dE={stats['meanDeltaE']:.4f}  r<2:{stats['regionsUnderRadius2']}  "
+               f"legible:{stats.get('labelsBelowLegibleSize', '?')}  total={stats['totalMs']:.0f}ms")
     d.text((8, 6), caption, fill=(0, 0, 0), font=ImageFont.load_default(size=16))
     sheet.save(os.path.join(out, "sheet.png"))
     return name, stats
@@ -135,10 +136,12 @@ def main():
             grid.paste(t, ((i % cols) * cell, (i // cols) * cell))
         grid.save(os.path.join(out_root, "overview.png"))
 
-    keys = ["regions", "meanDeltaE", "regionsUnderRadius2", "totalMs"]
+    keys = ["regions", "meanDeltaE", "regionsUnderRadius2", "minLabelRadius", "minLabelRoom",
+            "labelsBelowLegibleSize", "valid", "totalMs"]
     for name, stats in results:
         if stats:
-            print(f"{name:16s} " + "  ".join(f"{k}={stats[k]:.4g}" if isinstance(stats[k], float) else f"{k}={stats[k]}" for k in keys))
+            print(f"{name:16s} " + "  ".join(
+                f"{k}={stats.get(k):.4g}" if isinstance(stats.get(k), float) else f"{k}={stats.get(k)}" for k in keys))
 
 
 if __name__ == "__main__":

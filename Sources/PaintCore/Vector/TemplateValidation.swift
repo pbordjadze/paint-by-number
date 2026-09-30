@@ -11,24 +11,38 @@ extension Template {
         /// Regions whose triangles do not exactly cover their polygon area, or that contain
         /// negatively oriented triangles.
         public var badMeshRegions: [Int] = []
-        /// Regions with a label outside their polygon (or inside a hole).
+        /// Regions with a label outside their polygon (or inside a hole) or, when label room
+        /// is checked, a label claiming more free radius than it has.
         public var badLabelRegions: [Int] = []
+        /// Regions with a label whose free radius is short of the minimum for its number
+        /// (`validate(minLabelRadius:)`).
+        public var crampedLabelRegions: [Int] = []
+        /// Smallest free radius of any label divided by `LabelSizing.roomFactor` of its number
+        /// (the single-digit equivalent); infinite unless label room was checked.
+        public var minLabelRoom: Float = .infinity
         /// |Σ region areas − canvas area|.
         public var canvasAreaError: Double = 0
 
         public var isValid: Bool {
             invalidEdges.isEmpty && badRingRegions.isEmpty && badMeshRegions.isEmpty && badLabelRegions.isEmpty
-                && canvasAreaError <= 1e-3 * Double(max(1, canvasArea))
+                && crampedLabelRegions.isEmpty && canvasAreaError <= 1e-3 * Double(max(1, canvasArea))
         }
         var canvasArea: Int = 0
 
         public var description: String {
-            "edges \(invalidEdges.count) rings \(badRingRegions.count) mesh \(badMeshRegions.count) "
-                + "labels \(badLabelRegions.count) canvasAreaError \(canvasAreaError)"
+            var text = "edges \(invalidEdges.count) rings \(badRingRegions.count) mesh \(badMeshRegions.count) "
+                + "labels \(badLabelRegions.count) canvasAreaError \(canvasAreaError) cramped \(crampedLabelRegions.count)"
+            if minLabelRoom.isFinite { text += " minLabelRoom " + String(format: "%.3f", Double(minLabelRoom)) }
+            return text
         }
     }
 
-    public func validate() -> ValidationReport {
+    /// Checks the template's invariants.
+    /// - Parameter minLabelRadius: When set, also requires every label to keep this free
+    ///   radius from its region's outline (scaled per number by `LabelSizing.roomFactor`) and
+    ///   its stored radius to be honest. Pipeline outputs pass `LabelSizing.minimumRadius`;
+    ///   nil suits hand-made or synthetic templates (one-pixel regions, raster-derived radii).
+    public func validate(minLabelRadius: Float? = nil) -> ValidationReport {
         var report = ValidationReport()
         report.canvasArea = width * height
         var badEdges = Set<Int>()
@@ -87,14 +101,39 @@ extension Template {
                 report.badMeshRegions.append(r)
             }
 
+            var labelOK = true, roomOK = true
+            let digits = LabelSizing.digitCount(colorIndex: region.colorIndex)
             for label in labels(ofRegion: r) {
                 var inside = false
                 for poly in polygons where Template.contains(poly, label.position) { inside.toggle() }
-                if !inside || label.region != UInt32(r) { report.badLabelRegions.append(r); break }
+                if !inside || label.region != UInt32(r) { labelOK = false }
+                guard let minLabelRadius else { continue }
+                let free = Template.outlineDistance(polygons, label.position)
+                // The stored radius may exceed the measured one only by Float rounding.
+                if Double(label.radius) > free + 2e-3 { labelOK = false }
+                let factor = LabelSizing.roomFactor(digits: digits)
+                report.minLabelRoom = min(report.minLabelRoom, Float(free) / factor)
+                if free < Double(minLabelRadius * factor) - 1e-3 { roomOK = false }
             }
+            if !labelOK { report.badLabelRegions.append(r) }
+            if !roomOK { report.crampedLabelRegions.append(r) }
         }
         report.canvasAreaError = abs(totalArea - Double(width * height))
         return report
+    }
+
+    /// Distance from `p` to the nearest point of any ring.
+    static func outlineDistance(_ polygons: [[SIMD2<Float>]], _ p: SIMD2<Float>) -> Double {
+        var best = Double.infinity
+        for poly in polygons where !poly.isEmpty {
+            var j = poly.count - 1
+            for i in 0..<poly.count {
+                best = min(best, FlatPolygon.segmentDistanceSquared(
+                    Double(p.x), Double(p.y), SIMD2<Double>(poly[j]), SIMD2<Double>(poly[i])))
+                j = i
+            }
+        }
+        return best.squareRoot()
     }
 
     static func signedArea(_ poly: [SIMD2<Float>]) -> Double {

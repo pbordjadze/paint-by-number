@@ -137,6 +137,9 @@ enum PolyLabel {
     /// polygon's pole lies next to the raster one — and only boundary segments that can be
     /// nearest to that neighbourhood are consulted, so the cost no longer scales with the
     /// number of vertices (big regions with thousands of holes).
+    ///
+    /// The seed itself is always evaluated (exactly, in both paths), so the returned distance
+    /// is at least the seed's: `EdgeSmoother`'s label room guarantee relies on it.
     static func find(_ poly: FlatPolygon, precision: Double, seed: SIMD2<Double>) -> (position: SIMD2<Double>, distance: Double) {
         if poly.points.count > localSearchThreshold, let local = LocalOutline(poly, around: seed, halfSize: 3) {
             let h = local.halfSize
