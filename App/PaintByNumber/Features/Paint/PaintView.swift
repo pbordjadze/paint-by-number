@@ -1,13 +1,16 @@
 import Observation
 import PaintCore
 import SwiftUI
+import TipKit
 import UIKit
 
 /// The painting screen: full-bleed Metal canvas, floating Liquid Glass controls on top and
 /// the palette at the bottom (trailing edge on a landscape iPad, see `PaletteLayout`).
 ///
 /// Contract used by the rest of the app: `PaintView(session:title:onClose:)`. Persistence
-/// lives outside (observe `session.revision`).
+/// lives outside (observe `session.revision`). With a `sourcePhotoLoader` in the environment
+/// the top bar offers the Photo control (see `PhotoPeek`). First-run tips (`PaintTips`) point
+/// at the selected swatch or the middle of the canvas, one at a time.
 struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
@@ -24,21 +27,27 @@ struct PaintView: View {
     @State private var timelapse: TimelapseRequest?
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
+    @State private var peek: PhotoPeek
+    @State private var photoUnavailable = false
+    @State private var tips: TipGroup?
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.sourcePhotoLoader) private var photoLoader
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
 
+    /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil,
-        initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1
+        initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false
     ) {
         self.session = session
         self.title = title
         self.onClose = onClose
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
+        _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
     }
 
     var body: some View {
@@ -50,8 +59,10 @@ struct PaintView: View {
             }
         }
         .background(Color(uiColor: .systemGroupedBackground))
-        .focusedSceneValue(\.painting, PaintingFocus(session: session, controller: controller, showsNumbers: $showsNumbers))
+        .focusedSceneValue(\.painting, PaintingFocus(
+            session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding))
         .onAppear {
+            if tips == nil { tips = PaintTips.makeGroup() }
             FeedbackAttachment.attach(session)
             chrome.undoManager = undoManager
             chrome.observe(session, controller: controller)
@@ -79,12 +90,27 @@ struct PaintView: View {
                 session: session, controller: controller,
                 chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
                 showsNumbers: showsNumbers, initialCamera: initialCamera, fillDurationScale: fillDurationScale,
-                onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true })
+                onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true },
+                photoLoader: photoLoader, showsPhoto: peek.isShown,
+                onPhotoUnavailable: {
+                    photoUnavailable = true
+                    peek = PhotoPeek()
+                },
+                onDismissPhoto: { peek.setLatched(false) },
+                onZoomStep: { PaintTips.record(.zoomedByDoubleTap) })
                 .id(ObjectIdentifier(session))
                 .ignoresSafeArea()
 
+            // Canvas tips point at the middle of the visible canvas.
+            Color.clear
+                .frame(width: 1, height: 1)
+                .popoverTip(canvasTip)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(visibleCanvasPadding(safe: geo.safeAreaInsets, palette: palette))
+                .allowsHitTesting(false)
+
             VStack(spacing: 0) {
-                topBar
+                topBar(width: geo.size.width)
                     .padding(.horizontal, Self.edge)
                     .padding(.top, 6)
                 Spacer(minLength: 0)
@@ -145,18 +171,51 @@ struct PaintView: View {
                           trailing: safe.trailing)
     }
 
+    /// The canvas's visible area within the safe area (the canvas itself ignores it).
+    private func visibleCanvasPadding(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
+        let insets = canvasInsets(safe: safe, palette: palette)
+        return EdgeInsets(
+            top: max(0, insets.top - safe.top), leading: max(0, insets.leading - safe.leading),
+            bottom: max(0, insets.bottom - safe.bottom), trailing: max(0, insets.trailing - safe.trailing))
+    }
+
+    // MARK: Tips
+
+    /// Tips about canvas gestures; the rest belong to the selected swatch.
+    private var canvasTip: (any Tip)? {
+        guard let tip = tips?.currentTip, tip is DragPaintTip || tip is ZoomTip || tip is PencilTip else { return nil }
+        return tip
+    }
+
+    private var swatchTip: (any Tip)? {
+        guard let tip = tips?.currentTip, tip is FirstPaintTip || tip is HintTip else { return nil }
+        return tip
+    }
+
     // MARK: Top bar
 
-    private var topBar: some View {
-        GlassEffectContainer(spacing: 10) {
+    /// Close, the progress badge, then Photo, Hint, Undo and More. The badge shrinks to its
+    /// ring before any control goes; only the narrowest windows (~320 pt) drop Hint, which the
+    /// selected swatch and the `h` key still offer.
+    private func topBar(width: CGFloat) -> some View {
+        let showsPhotoControl = photoLoader != nil
+        let buttons = (onClose == nil ? 0 : 1) + (showsPhotoControl ? 1 : 0) + 3
+        let showsHint = CGFloat(buttons) * 54 + 10 + 46 + 2 * Self.edge <= width
+        return GlassEffectContainer(spacing: 10) {
             HStack(spacing: 10) {
                 if let onClose {
                     GlassIconButton(systemImage: "xmark", label: "Close", action: onClose)
                 }
                 progressBadge
                 Spacer(minLength: 0)
-                GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
-                    .disabled(session.isComplete)
+                if showsPhotoControl {
+                    PhotoPeekButton(peek: $peek)
+                        .disabled(photoUnavailable)
+                }
+                if showsHint {
+                    GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
+                        .disabled(session.isComplete)
+                }
                 GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                     .disabled(session.progress.paintedCount == 0)
                 moreMenu
@@ -166,10 +225,11 @@ struct PaintView: View {
 
     private var progressBadge: some View {
         let fraction = session.fractionComplete
-        // The title shows only when it fits whole (compact widths drop it).
+        // The title shows only when it fits whole (compact widths drop it, then the percentage).
         return ViewThatFits(in: .horizontal) {
             if !title.isEmpty { badgeContent(fraction: fraction, showsTitle: true) }
             badgeContent(fraction: fraction, showsTitle: false)
+            badgeContent(fraction: fraction, showsTitle: false, showsPercent: false)
         }
         .frame(height: Self.barHeight)
         .glassEffect(.regular, in: .capsule)
@@ -179,7 +239,7 @@ struct PaintView: View {
             : Text("\(title), \(Int(fraction * 100)) percent painted"))
     }
 
-    private func badgeContent(fraction: Double, showsTitle: Bool) -> some View {
+    private func badgeContent(fraction: Double, showsTitle: Bool, showsPercent: Bool = true) -> some View {
         HStack(spacing: 8) {
             ZStack {
                 Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
@@ -196,14 +256,16 @@ struct PaintView: View {
                     .lineLimit(1)
                     .fixedSize()
             }
-            Text(verbatim: "\(Int(fraction * 100))%")
-                .font(.subheadline.weight(.semibold))
-                .monospacedDigit()
-                .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
-                .contentTransition(.numericText())
-                .animation(.snappy, value: Int(fraction * 100))
-                .lineLimit(1)
-                .fixedSize()
+            if showsPercent {
+                Text(verbatim: "\(Int(fraction * 100))%")
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
+                    .contentTransition(.numericText())
+                    .animation(.snappy, value: Int(fraction * 100))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
         }
         .padding(.horizontal, 14)
     }
@@ -239,11 +301,17 @@ struct PaintView: View {
         } else {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
-                shakes: chrome.shakes)
+                shakes: chrome.shakes, tip: swatchTip)
         }
     }
 
     // MARK: Actions
+
+    /// The photo as a menu toggle (`p`), while there is one to show.
+    private var photoBinding: Binding<Bool>? {
+        guard photoLoader != nil, !photoUnavailable else { return nil }
+        return Binding { peek.isShown } set: { peek.setLatched($0) }
+    }
 
     /// Undoes through the window's undo manager (so redo works) while it has this session's
     /// fills; older history comes straight from the saved stroke log.
@@ -270,6 +338,8 @@ struct PaintView: View {
             }
         case .squeeze:
             controller.showHint()
+        case .lifted:
+            PaintTips.record(.pencilUsed)
         }
     }
 }
@@ -419,7 +489,7 @@ final class CompletionShare {
     }
 }
 
-/// Transient chrome reactions to painting events, and undo registration.
+/// Transient chrome reactions to painting events, undo registration, and the tips they feed.
 @Observable
 final class PaintChromeState {
     /// Per color: bumped to shake its swatch.
@@ -432,7 +502,11 @@ final class PaintChromeState {
     func observe(_ session: PaintingSession, controller: CanvasController) {
         guard observed != ObjectIdentifier(session) else { return }
         observed = ObjectIdentifier(session)
+        PaintTips.paintingOpened(hasProgress: session.progress.paintedCount > 0)
         session.onEvent { [weak self, weak controller, weak session] event in
+            if let session, let signal = PaintTips.signal(for: event, isStroking: session.isStroking) {
+                PaintTips.record(signal)
+            }
             switch event {
             case let .painted(regions, _):
                 if let session, !session.isStroking { self?.registerUndo(of: regions.count, in: session) }

@@ -16,7 +16,7 @@ nonisolated enum Log {
 ///     <root>/<uuid>/meta.json      `Artwork`, written last: a folder without valid meta is ignored
 ///                   template.pbnt  `Template.encoded()`, LZFSE-compressed
 ///                   progress.bin   `PaintProgress.encoded()`
-///                   source.jpg     the photo (≤ 2048 px) for "compare with photo" and regeneration
+///                   source.jpg     the photo (≤ 2048 px) for the photo peek and regeneration
 ///                   thumbnail.png  the current state of the painting
 ///     <root>/.staging/  new artworks are assembled here and moved into place atomically
 ///     <root>/.trash/    deleted artworks wait here while the deletion can still be undone

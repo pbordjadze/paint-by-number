@@ -321,6 +321,53 @@ struct PaintingSessionTests {
         }
     }
 
+    @Test func hintReportsTheRegionItShows() throws {
+        let session = PaintingSession(template: template)
+        let canvas = RecordingCanvas()
+        session.canvas = canvas
+        session.select(color: 4)
+        let events = recordEvents(session)
+        session.showHint(near: SIMD2(240, 320))
+        let shown = try #require(canvas.focused.first)
+        #expect(events() == [.hintShown(region: shown)])
+    }
+
+    @Test func hintWithNothingLeftStaysQuiet() {
+        let session = PaintingSession(template: template)
+        session.autoAdvance = false
+        let canvas = RecordingCanvas()
+        session.canvas = canvas
+        session.select(color: 4)
+        session.paint(regions(ofColor: 4), from: .zero, animated: false)
+        let events = recordEvents(session)
+        session.showHint(near: SIMD2(240, 320))
+        #expect(events().isEmpty)
+        #expect(canvas.focused.isEmpty)
+    }
+
+    /// Stripe 0 is 20 wide (inscribed radius 10): a tap 15.5 units from its nearest pixel
+    /// misses the 10-unit tolerance but lands within 3× of it.
+    @Test func tapBesideASmallAreaReportsAMiss() {
+        let stripes = Fixtures.stripes(count: 3, stripeWidth: 20, height: 40)
+        let session = PaintingSession(template: stripes)
+        session.select(color: 0)
+        let events = recordEvents(session)
+        let event = session.tap(at: SIMD2(35, 20), tolerance: 10)
+        #expect(event == .rejected(region: 1, expectedColor: 1))
+        #expect(events() == [.rejected(region: 1, expectedColor: 1), .missedSmallArea(region: 0)])
+        #expect(!session.isPainted(0))
+    }
+
+    /// A wide stripe nearby is easy to hit at this zoom: no zoom suggestion.
+    @Test func tapBesideALargeAreaIsNoMiss() {
+        let stripes = Fixtures.stripes(count: 3, stripeWidth: 60, height: 100)
+        let session = PaintingSession(template: stripes)
+        session.select(color: 0)
+        let events = recordEvents(session)
+        session.tap(at: SIMD2(70, 50), tolerance: 4)
+        #expect(events() == [.rejected(region: 1, expectedColor: 1)])
+    }
+
     @Test func progressSurvivesEncoding() throws {
         let session = PaintingSession(template: template)
         session.paint([3, 1, 4, 1, 5, 9, 2, 6], from: .zero, animated: false)

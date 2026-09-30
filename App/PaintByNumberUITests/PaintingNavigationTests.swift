@@ -122,6 +122,72 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertEqual(swatch.value as? String, painted, "⇧⌘Z didn't redo")
     }
 
+    /// The Photo control: a tap keeps the photo shown until the next tap; a hold only peeks.
+    @MainActor
+    func testPhotoControlPeeksAndLatches() throws {
+        let app = openSeededPainting()
+        let photo = app.buttons["Photo"]
+        XCTAssertTrue(photo.exists, "The painting has no Photo control")
+        XCTAssertEqual(photo.value as? String, "Hidden")
+        photo.tap()
+        XCTAssertTrue(wait(for: photo, value: "Showing"), "A tap didn't keep the photo shown")
+        attachScreenshot(of: app, named: "photo-shown")
+        photo.tap()
+        XCTAssertTrue(wait(for: photo, value: "Hidden"), "A second tap didn't hide the photo")
+        photo.press(forDuration: 1.2)
+        XCTAssertTrue(wait(for: photo, value: "Hidden"), "A hold kept the photo shown")
+    }
+
+    /// Holding the Photo control shows the photo while held and hides it on release.
+    /// `press(forDuration:)` blocks until the release, so the app traces the control's values
+    /// in its accessibility identifier (`-tracePhotoPeek`).
+    @MainActor
+    func testHoldingPhotoPeeks() throws {
+        let app = openSeededPainting(tracingPhotoPeek: true)
+        let photo = app.buttons.matching(NSPredicate(format: "label == 'Photo'")).firstMatch
+        XCTAssertTrue(photo.exists, "The painting has no Photo control")
+        XCTAssertEqual(photo.identifier, "Hidden")
+        photo.press(forDuration: 1.2)
+        let traced = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "identifier == 'Hidden,Showing,Hidden'"), object: photo)
+        let result = XCTWaiter.wait(for: [traced], timeout: 3)
+        XCTAssertEqual(result, .completed, "Holding didn't show the photo only while held: \(photo.identifier)")
+        XCTAssertEqual(photo.value as? String, "Hidden")
+    }
+
+    /// A tap on the canvas while the photo shows hides it instead of painting blind.
+    @MainActor
+    func testCanvasTapHidesThePhoto() throws {
+        let app = openSeededPainting()
+        let photo = app.buttons["Photo"]
+        photo.tap()
+        XCTAssertTrue(wait(for: photo, value: "Showing"), "A tap didn't keep the photo shown")
+        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
+        let before = badge.label
+        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)).tap()
+        XCTAssertTrue(wait(for: photo, value: "Hidden"), "A canvas tap didn't hide the photo")
+        sleep(1)
+        XCTAssertEqual(badge.label, before, "The tap that hid the photo also painted")
+    }
+
+    /// Hardware keyboard: `p` toggles the photo (Paint ▸ Show Photo).
+    @MainActor
+    func testPhotoKey() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")
+        let app = openSeededPainting()
+        let photo = app.buttons["Photo"]
+        app.typeKey("p", modifierFlags: [])
+        XCTAssertTrue(wait(for: photo, value: "Showing"), "p didn't show the photo")
+        app.typeKey("p", modifierFlags: [])
+        XCTAssertTrue(wait(for: photo, value: "Hidden"), "p didn't hide the photo")
+    }
+
+    @MainActor
+    private func wait(for element: XCUIElement, value: String, timeout: TimeInterval = 3) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: element)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
     /// The middle half of the screen, clear of the status bar and the chrome.
     @MainActor
     private func canvasArea(of shot: XCUIScreenshot) -> Data? {
@@ -132,9 +198,9 @@ final class PaintingNavigationTests: XCTestCase {
 
     /// Launches the demo that seeds a painting in the background and opens it once it is ready.
     @MainActor
-    private func openSeededPainting() -> XCUIApplication {
+    private func openSeededPainting(tracingPhotoPeek: Bool = false) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "gallery-open"]
+        app.launchArguments = ["-demo", "gallery-open"] + (tracingPhotoPeek ? ["-tracePhotoPeek", "YES"] : [])
         app.launch()
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 90), "The painting didn't open")
         sleep(2)

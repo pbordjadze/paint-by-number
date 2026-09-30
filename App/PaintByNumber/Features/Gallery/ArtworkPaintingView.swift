@@ -285,8 +285,8 @@ private extension OpenNotice {
     }
 }
 
-/// Loads the photo the open painting was made from, for the painting screen's "compare with
-/// photo" (read it with `@Environment(\.sourcePhotoLoader)`).
+/// Loads the photo the open painting was made from, for the painting screen's photo peek:
+/// read by `PaintView` (`@Environment(\.sourcePhotoLoader)`) and called by `CanvasView`.
 nonisolated struct SourcePhotoLoader: Sendable {
     let load: @Sendable (_ maxPixelSize: Int?) async -> CGImage?
 

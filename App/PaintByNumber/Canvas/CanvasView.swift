@@ -15,7 +15,11 @@ struct CanvasCamera: Equatable {
     var center: SIMD2<Float>
 }
 
-enum PencilAction { case tap, squeeze }
+enum PencilAction {
+    case tap, squeeze
+    /// The Pencil left the canvas after a stroke.
+    case lifted
+}
 
 /// The painting surface: a `CAMetalLayer` driven by an invisible `UIScrollView` overlay so
 /// pan, pinch, deceleration and rubber-banding are exactly the system's. Renders with a
@@ -24,6 +28,8 @@ enum PencilAction { case tap, squeeze }
 /// Gestures: tap paints (with tolerance), a quick second tap on something unpaintable zooms,
 /// press-and-drag paints every matching region under the finger, Apple Pencil paints
 /// directly while fingers navigate, and Pencil hover previews the region under the tip.
+/// A held Photo control fades the source photo in over the canvas; while it shows, any
+/// canvas touch (tap or long press) hides it again instead of painting blind.
 final class CanvasView: UIView, PaintingCanvas {
     override class var layerClass: AnyClass { CAMetalLayer.self }
 
@@ -39,6 +45,18 @@ final class CanvasView: UIView, PaintingCanvas {
     var onPencilAction: ((PencilAction) -> Void)?
     /// Scales fill and replay durations (demo scenarios catch them mid-way).
     var fillDurationScale: Float = 1
+    /// Loads the photo the painting was made from, the first time it is shown.
+    var photoLoader: SourcePhotoLoader?
+    /// Fades the source photo in over the canvas (loading it first if needed).
+    var showsPhoto = false {
+        didSet { if showsPhoto != oldValue { photoChanged() } }
+    }
+    /// The photo couldn't be loaded (no loader, no Metal, or no readable file).
+    var onPhotoUnavailable: (() -> Void)?
+    /// A canvas touch asked to hide the photo.
+    var onDismissPhoto: (() -> Void)?
+    /// A double-tap zoomed the canvas.
+    var onZoomStep: (() -> Void)?
 
     private let template: Template
     private let scene: CanvasScene?
@@ -69,6 +87,11 @@ final class CanvasView: UIView, PaintingCanvas {
     private var replayTask: Task<Void, Never>?
     private var isReplaying = false
     private var shineColor = -1
+    private var photoTexture: (any MTLTexture)?
+    private var photoTask: Task<Void, Never>?
+    private var photoFrom: Float = 0
+    private var photoTo: Float = 0
+    private var photoStart: Float = -10_000
 
     // Camera
     private var fitZoom: CGFloat = 1
@@ -87,6 +110,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private static let margin: CGFloat = 16
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
+    private static let photoFade: Float = 0.2
 
     private struct Camera: Equatable {
         var zoom: CGFloat
@@ -477,7 +501,8 @@ final class CanvasView: UIView, PaintingCanvas {
             shadowMargin: Float(44 * contentScaleFactor),
             clear: MTLClearColor(
                 red: Double(palette.background.x), green: Double(palette.background.y),
-                blue: Double(palette.background.z), alpha: 1))
+                blue: Double(palette.background.z), alpha: 1),
+            photo: uniforms.photo.x > 0.001 ? photoTexture : nil)
         if renderer.draw(in: metalLayer, uniforms: uniforms, content: content) {
             needsRender = false
             lastCamera = camera
@@ -526,6 +551,7 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         u.shine = SIMD4(shineStart, Float(shineColor), 0, 0)
         u.ids = SIMD4(Int32(selected ?? -1), Int32(isReplaying ? -1 : hoverRegion), Int32(pulseRegion), Int32(bumpRegion))
+        u.photo = SIMD4(photoVisibility(at: time), 0, 0, 0)
         return u
     }
 
@@ -542,6 +568,67 @@ final class CanvasView: UIView, PaintingCanvas {
         let k = min(max((t - numbersStart) / 0.25, 0), 1)
         return numbersFrom + (numbersTo - numbersFrom) * k * k * (3 - 2 * k)
     }
+
+    // MARK: Source photo
+
+    /// Opacity of the photo overlay now (tests and demos).
+    var photoOpacity: Float { photoVisibility(at: now()) }
+
+    private func photoChanged() {
+        accessibilityValue = showsPhoto ? String(localized: "Showing the photo") : nil
+        if showsPhoto && photoTexture == nil {
+            loadPhoto()
+        } else {
+            fadePhoto(to: showsPhoto ? 1 : 0)
+        }
+    }
+
+    /// Loads the photo once for the life of the view, at no more pixels than the canvas has
+    /// units. Releasing before it arrives fades nothing in.
+    private func loadPhoto() {
+        guard photoTask == nil else { return }
+        guard let loader = photoLoader, let context = renderer?.context else {
+            // Never synchronously: this runs from `showsPhoto`'s didSet inside a SwiftUI update.
+            Task { [weak self] in self?.onPhotoUnavailable?() }
+            return
+        }
+        let size = max(template.width, template.height)
+        photoTask = Task { [weak self] in
+            let image = await loader(maxPixelSize: size)
+            let texture = await Self.makePhotoTexture(from: image, context: context)
+            guard let self else { return }
+            photoTask = nil
+            guard let texture else {
+                Self.log.error("canvas: source photo unavailable")
+                onPhotoUnavailable?()
+                return
+            }
+            photoTexture = texture.value
+            if showsPhoto { fadePhoto(to: 1) }
+        }
+    }
+
+    @concurrent
+    private static func makePhotoTexture(from image: CGImage?, context: RenderContext) async -> UncheckedSendable<any MTLTexture>? {
+        guard let image, let texture = context.makePhotoTexture(image) else { return nil }
+        return UncheckedSendable(texture)
+    }
+
+    private func fadePhoto(to target: Float) {
+        let t = now()
+        photoFrom = photoVisibility(at: t)
+        photoTo = target
+        photoStart = t
+        activeUntil = max(activeUntil, t + Self.photoFade + 0.05)
+        requestRender()
+    }
+
+    private func photoVisibility(at t: Float) -> Float {
+        let k = min(max((t - photoStart) / Self.photoFade, 0), 1)
+        return photoFrom + (photoTo - photoFrom) * k * k * (3 - 2 * k)
+    }
+
+    // MARK: Replay
 
     /// Replays the painting: the paint lifts off, then every region fills again in the order
     /// it was painted, all scheduled at once so the GPU animates it without per-frame work.
@@ -699,9 +786,15 @@ final class CanvasView: UIView, PaintingCanvas {
         let view = g.location(in: self)
         let p = canvasPoint(g.location(in: zoomView))
         let t = CACurrentMediaTime()
+        if showsPhoto {
+            lastTap = nil
+            onDismissPhoto?()
+            return
+        }
         if let last = lastTap, t - last.time < 0.3, hypot(last.point.x - view.x, last.point.y - view.y) < 40, !last.painted {
             lastTap = nil
             zoomStep(at: view)
+            onZoomStep?()
             return
         }
         // "Only Draw with Apple Pencil": fingers navigate (double-tap still zooms), pointers paint.
@@ -725,14 +818,20 @@ final class CanvasView: UIView, PaintingCanvas {
         let radius = Float(Self.brushRadius / scrollView.zoomScale)
         switch g.state {
         case .began:
+            // A long press returns to painting exactly like a tap.
+            if showsPhoto {
+                onDismissPhoto?()
+                return
+            }
             FeedbackEngine.shared.selectionChanged()
             brushPoint = g.location(in: self)
             dragLast = p
             session.beginStroke()
             session.drag(from: p, to: p, radius: radius)
         case .changed:
+            guard let last = dragLast else { return }
             brushPoint = g.location(in: self)
-            if let last = dragLast { session.drag(from: last, to: p, radius: radius) }
+            session.drag(from: last, to: p, radius: radius)
             dragLast = p
         default:
             brushPoint = nil
@@ -746,15 +845,22 @@ final class CanvasView: UIView, PaintingCanvas {
         let p = canvasPoint(g.location(in: zoomView))
         switch g.state {
         case .began:
+            if showsPhoto {
+                onDismissPhoto?()
+                return
+            }
             dragLast = p
             session.beginStroke()
             if case let .rejected(region, _)? = session.tap(at: p, tolerance: Float(6 / scrollView.zoomScale)) {
                 bump(region)
             }
         case .changed:
-            if let last = dragLast { session.drag(from: last, to: p, radius: Float(4 / scrollView.zoomScale)) }
+            guard let last = dragLast else { return }
+            session.drag(from: last, to: p, radius: Float(4 / scrollView.zoomScale))
             dragLast = p
         default:
+            // At the stroke's end, so nothing it triggers (a tip) lands mid-stroke.
+            if dragLast != nil { onPencilAction?(.lifted) }
             dragLast = nil
             session.endStroke()
         }

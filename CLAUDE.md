@@ -87,6 +87,19 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu, three-finger undo); the Pencil paints while
   fingers navigate (and only navigate under "Only Draw with Apple Pencil"). The app is single
   window: one live `PaintingSession` per painting.
+- Photo peek: `PhotoPeek`/`PhotoPeekButton` (hold to peek, tap to latch, `p` in the Paint menu)
+  drive `CanvasView.showsPhoto`. The canvas loads the photo once through `sourcePhotoLoader`
+  (bounded by the canvas size) and draws it in the canvas pass (`photoFragment`,
+  `RenderContext.makePhotoTexture`), so it tracks zoom and pan exactly. Canvas touches hide a
+  latched photo instead of painting. Launched with `-tracePhotoPeek YES`, the control's
+  accessibility identifier lists its values so UI tests can check a hold.
+- Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
+  and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
+  Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the
+  selected swatch or the middle of the canvas. Tip types are `nonisolated struct`s driven by
+  `Tips.Event`s (plus a `hasPaint` parameter for the first tip); their ids carry a generation
+  that Settings ▸ Show Tips Again bumps. Invalidations, like donations, go to TipKit at most
+  once per tip and launch (strokes report paint many times a second).
 - Library (`Model/`): `Library` (@Observable, injected via `.environment`) keeps `Artwork` metadata
   in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
   `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,
@@ -127,7 +140,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   calls `DemoMode.markReady()` (a new scenario must call it once its content is on screen;
   `name@seconds` is only the timeout). Failure states have scenarios too: `gallery-damaged`
   (recovery screen), `gallery-timelapse` (time-lapse progress sheet), `paint-unavailable` (the
-  painting screen's stand-in when Metal is unavailable).
+  painting screen's stand-in when Metal is unavailable). Demo launches and the unit-test host
+  (`DemoMode.isTestHost`) reset TipKit and hide every tip except in `paint-tip`.
   Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `PipelineCheckView` and
   `SyntheticTemplate` are wrapped in `#if DEBUG`, and every other reference (`RootView`,
   `Library.forLaunch`, `AppShellView`, `SettingsView`, …) sits in an `#if DEBUG` block, so Release

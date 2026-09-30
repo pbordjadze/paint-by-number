@@ -20,6 +20,7 @@ struct FrameUniforms {
     float4 brush;       // xy: position (px), z: radius (px), w: opacity
     float4 shine;       // x: start of a light sweep over finished paint, y: its color (-1 = all)
     int4   ids;         // x: selected color, y: hovered region, z: pulsing region, w: bumped region
+    float4 photo;       // x: source photo opacity
 };
 
 // Must match `RegionState` (CanvasTypes.swift).
@@ -351,6 +352,20 @@ fragment float4 glyphFragment(GlyphOut in [[stage_in]],
     float edge = 0.5 - in.weight;
     float a = smoothstep(edge - w, edge + w, d) * in.alpha;
     return float4(u.ink.rgb * a, a);
+}
+
+// MARK: - Source photo
+
+// The photo the painting was made from, over the canvas rect (drawn with canvasRectVertex,
+// margin 0). UVs come from the same transform as the fills, so it lines up exactly at any
+// zoom and pan; mipmaps keep zoomed-out views free of aliasing.
+fragment float4 photoFragment(RectOut in [[stage_in]],
+                              texture2d<float> photo [[texture(0)]],
+                              constant FrameUniforms &u [[buffer(0)]]) {
+    constexpr sampler trilinear(filter::linear, mip_filter::linear, address::clamp_to_edge);
+    float2 uv = (in.position.xy - u.transform.xy) / (u.viewport.zw * u.transform.z);
+    float a = u.photo.x;
+    return float4(photo.sample(trilinear, uv).rgb * a, a);     // premultiplied
 }
 
 // MARK: - Brush (drag painting)

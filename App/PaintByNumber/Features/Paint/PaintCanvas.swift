@@ -24,11 +24,17 @@ struct PaintCanvas: UIViewRepresentable {
     var onPencilAction: ((PencilAction) -> Void)?
     /// Called (after this update) when the device can't draw the canvas.
     var onUnavailable: (() -> Void)?
+    var photoLoader: SourcePhotoLoader?
+    var showsPhoto = false
+    var onPhotoUnavailable: (() -> Void)?
+    var onDismissPhoto: (() -> Void)?
+    var onZoomStep: (() -> Void)?
 
     func makeUIView(context: Context) -> CanvasView {
         let view = CanvasView(session: session)
         view.initialCamera = initialCamera
         view.fillDurationScale = fillDurationScale
+        view.photoLoader = photoLoader
         controller?.view = view
         // Deferred: state mustn't change while SwiftUI is making views.
         if !view.isRenderable, let onUnavailable { Task { onUnavailable() } }
@@ -42,6 +48,12 @@ struct PaintCanvas: UIViewRepresentable {
             bottom: chromeInsets.bottom, right: rtl ? chromeInsets.leading : chromeInsets.trailing)
         view.showsNumbers = showsNumbers
         view.onPencilAction = onPencilAction
+        // Loader and callbacks first: showing the photo may start loading it.
+        view.photoLoader = photoLoader
+        view.onPhotoUnavailable = onPhotoUnavailable
+        view.onDismissPhoto = onDismissPhoto
+        view.onZoomStep = onZoomStep
+        view.showsPhoto = showsPhoto
         controller?.view = view
     }
 }

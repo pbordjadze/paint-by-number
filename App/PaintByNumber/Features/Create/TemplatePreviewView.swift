@@ -2,9 +2,9 @@ import PaintCore
 import SwiftUI
 
 /// Second step of the create flow: the generated template, compared with the photo,
-/// tuned live with a few simple controls.
+/// tuned live with a few simple controls, and the painting's name.
 struct TemplatePreviewView: View {
-    let model: CreateModel
+    @Bindable var model: CreateModel
     var onStart: () async throws -> Void
 
     enum Layer: String, CaseIterable, Identifiable {
@@ -16,6 +16,7 @@ struct TemplatePreviewView: View {
     @State private var layer: Layer = .painting
     @State private var isStarting = false
     @State private var startError: String?
+    @FocusState private var titleFocused: Bool
 
     var body: some View {
         Group {
@@ -57,7 +58,8 @@ struct TemplatePreviewView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
-        .navigationTitle(model.source?.title ?? "Preview")
+        // The title field names the painting; the bar says which step this is.
+        .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.settings) { model.settingsChanged() }
         .alert("Couldn’t Create Painting", isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
@@ -73,9 +75,10 @@ struct TemplatePreviewView: View {
     private var isSideBySide: Bool {
         guard size.width > 0, size.height > 0 else { return false }
         let pickerHeight: CGFloat = 60
+        // The stacked controls card, title row included.
         let stacked = Self.fittedArea(
             width: size.width - 2 * sidePadding,
-            height: size.height - pickerHeight - 340, aspect: photoAspect)
+            height: size.height - pickerHeight - 398, aspect: photoAspect)
         let beside = Self.fittedArea(
             width: size.width - 2 * sidePadding - panelWidth - 24,
             height: size.height - pickerHeight - 2 * sidePadding, aspect: photoAspect)
@@ -185,6 +188,7 @@ struct TemplatePreviewView: View {
 
     private var controls: some View {
         VStack(alignment: .leading, spacing: 18) {
+            titleField
             SettingSlider(
                 title: "Colors", value: Self.colorPosition(model.colorCount),
                 onChange: { update(\.colorCount, Self.colorCount(at: $0)) }, range: 0...1,
@@ -225,8 +229,30 @@ struct TemplatePreviewView: View {
         .padding(.bottom, isSideBySide ? 22 : 8)
     }
 
+    /// Empty shows the default (the sample's name or the date) as the prompt, and the
+    /// painting takes that name.
+    private var titleField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "pencil")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            TextField("Title", text: $model.title, prompt: Text(model.defaultTitle))
+                .font(.rounded(.title3, weight: .semibold))
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+                .submitLabel(.done)
+                .focused($titleFocused)
+                .onSubmit { titleFocused = false }
+                .accessibilityIdentifier("painting-title")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Theme.paper, in: .rect(cornerRadius: 14, style: .continuous))
+    }
+
     private func start() {
         guard !isStarting else { return }
+        titleFocused = false
         isStarting = true
         Task {
             do {

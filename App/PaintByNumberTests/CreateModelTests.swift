@@ -13,7 +13,8 @@ struct CreateModelTests {
         #expect(!first.isDraft)
         #expect(model.phase == .ready)
         #expect((model.stats?.areas ?? 0) > 0)
-        #expect(model.source?.title == "Espresso")
+        #expect(model.defaultTitle == "Espresso")
+        #expect(model.resolvedTitle == "Espresso")
 
         // Dragging a slider: quick drafts at reduced size…
         model.setAdjusting(true)
@@ -27,7 +28,9 @@ struct CreateModelTests {
         try await waitUntil { model.isFinal }
         #expect(model.preview?.settings.colorCount == 8)
 
+        model.title = "  Morning Coffee "
         let draft = try await model.makeDraft()
+        #expect(draft.title == "Morning Coffee")
         #expect(draft.template.palette.count <= 8)
         #expect(draft.sampleName == "espresso")
         #expect(draft.photo != nil)
@@ -55,6 +58,26 @@ struct CreateModelTests {
         #expect(!model.isWorking)
         try await Task.sleep(for: .milliseconds(300))
         #expect(model.preview == nil)
+    }
+
+    /// The typed name is trimmed; an empty one falls back to the sample's name or, for a
+    /// photo, the date. A new photo starts over with its own default.
+    @Test func titleFallsBackToTheDefault() throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("espresso")))
+        #expect(model.title == "")
+        #expect(model.defaultTitle == "Espresso")
+        model.title = "  Jungle \n"
+        #expect(model.resolvedTitle == "Jungle")
+        model.title = "   "
+        #expect(model.resolvedTitle == "Espresso")
+
+        model.title = "Jungle"
+        model.load(imageData: Data())
+        #expect(model.title == "")
+        #expect(model.defaultTitle == Date.now.formatted(.dateTime.month(.wide).day()))
+        #expect(model.resolvedTitle == model.defaultTitle)
+        model.cancelAll()
     }
 
     private func waitUntil(timeout: Duration = .seconds(120), _ condition: () -> Bool) async throws {

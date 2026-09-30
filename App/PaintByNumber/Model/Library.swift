@@ -99,8 +99,7 @@ final class Library {
         let launch = Date.now
         Task { await Background.run { ArtworkExporter.purgeExports(createdBefore: launch) } }
         #if DEBUG
-        let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        if DemoMode.isActive || isTestHost {
+        if DemoMode.isActive || DemoMode.isTestHost {
             let root = FileManager.default.temporaryDirectory.appending(path: "DemoLibrary", directoryHint: .isDirectory)
             try? FileManager.default.removeItem(at: root)
             let library = Library(store: ArtworkStore(root: root))
@@ -453,7 +452,7 @@ final class Library {
         return PaintingDocument(template: template, progress: progress, notice: .regenerated(keptProgress: progress.paintedCount > 0))
     }
 
-    /// The photo an artwork was made from ("compare with photo"), decoded off the main actor.
+    /// The photo an artwork was made from (the painting screen's photo peek), decoded off the main actor.
     func sourcePhoto(for id: UUID, maxPixelSize: Int? = nil) async -> CGImage? {
         let store = self.store
         return await Background.run { store.source(id, maxPixelSize: maxPixelSize) }

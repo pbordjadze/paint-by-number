@@ -5,6 +5,8 @@ struct PaintingFocus {
     let session: PaintingSession
     let controller: CanvasController
     let showsNumbers: Binding<Bool>
+    /// Nil when the painting has no photo to show.
+    let showsPhoto: Binding<Bool>?
 }
 
 extension FocusedValues {
@@ -30,6 +32,9 @@ struct PaintCommands: Commands {
                 Divider()
                 Toggle("Show Numbers", isOn: painting?.showsNumbers ?? .constant(true))
                     .keyboardShortcut("n", modifiers: [])
+                Toggle("Show Photo", isOn: painting?.showsPhoto ?? .constant(false))
+                    .keyboardShortcut("p", modifiers: [])
+                    .disabled(painting?.showsPhoto == nil)
                 Divider()
                 Button("Zoom In") { painting?.controller.zoom(by: 2) }
                     .keyboardShortcut("+")

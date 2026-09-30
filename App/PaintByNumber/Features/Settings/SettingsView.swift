@@ -17,6 +17,7 @@ struct SettingsView: View {
     private let appInfo = AppInfo()
 
     private enum Destination: Hashable { case acknowledgements }
+    @State private var tipsReset = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -29,6 +30,22 @@ struct SettingsView: View {
                     Text("Painting")
                 } footer: {
                     Text("When you finish a color, the next one is picked up automatically.")
+                }
+
+                Section {
+                    Button {
+                        PaintTips.showAgain()
+                        tipsReset = true
+                    } label: {
+                        if tipsReset {
+                            SwiftUI.Label("Tips Will Show Again", systemImage: "checkmark")
+                        } else {
+                            SwiftUI.Label("Show Tips Again", systemImage: "lightbulb")
+                        }
+                    }
+                    .disabled(tipsReset)
+                } footer: {
+                    Text("Short tips explain painting gestures as you go.")
                 }
 
                 Section("Feedback") {
