@@ -1,3 +1,4 @@
+#if DEBUG
 import PaintCore
 import SwiftUI
 import os
@@ -159,3 +160,4 @@ private final class Demo {
         t.labels(ofRegion: region).first?.position ?? .zero
     }
 }
+#endif

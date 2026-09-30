@@ -64,7 +64,9 @@ struct ArtworkPaintingView: View {
             withAnimation(.easeOut(duration: 0.25)) {
                 autosaver = PaintingAutosaver(session: session, artworkID: artworkID, library: library)
             }
+            #if DEBUG
             if ShellDemo.current == .galleryOpen { DemoMode.markReady() }
+            #endif
         } catch {
             Log.library.error("Opening \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
             failed = true

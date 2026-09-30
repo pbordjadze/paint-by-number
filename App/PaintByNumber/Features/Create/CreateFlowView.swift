@@ -2,7 +2,8 @@ import SwiftUI
 
 /// New painting: pick a photo (library, camera or a sample) → tune the template → paint.
 struct CreateFlowView: View {
-    var demo: ShellDemo?
+    /// A bundled sample to open straight on its preview (demo scenarios).
+    var openingSample: Sample?
     /// A photo dropped on the gallery: the flow opens on its preview.
     var droppedPhoto: Data?
     var onStart: (Artwork) -> Void
@@ -27,19 +28,21 @@ struct CreateFlowView: View {
             guard model.source == nil else { return }
             if let droppedPhoto {
                 model.load(imageData: droppedPhoto)
-            } else if let sample = demo?.previewSample {
-                model.load(sample: sample)
+            } else if let openingSample {
+                model.load(sample: openingSample)
             }
         }
+        #if DEBUG
         .onChange(of: model.isFinal) { _, isFinal in
-            if isFinal, demo?.previewSample != nil { DemoMode.markReady() }
+            if isFinal, openingSample != nil { DemoMode.markReady() }
         }
+        #endif
         .onDisappear { model.cancelAll() }
     }
 
     @ViewBuilder
     private var root: some View {
-        if droppedPhoto != nil || demo?.previewSample != nil {
+        if droppedPhoto != nil || openingSample != nil {
             TemplatePreviewView(model: model, onStart: start)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

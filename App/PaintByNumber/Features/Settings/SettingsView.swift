@@ -8,9 +8,18 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.sounds) private var sounds = true
     @AppStorage(SettingsKey.defaultColorCount) private var defaultColorCount = Preferences.defaultColorCountValue
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
+    #if DEBUG
+    @State private var path: [Destination] = ShellDemo.current == .settingsAcknowledgements ? [.acknowledgements] : []
+    #else
+    @State private var path: [Destination] = []
+    #endif
+
+    private let appInfo = AppInfo()
+
+    private enum Destination: Hashable { case acknowledgements }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Form {
                 Section {
                     Toggle(isOn: $autoAdvance) {
@@ -63,6 +72,28 @@ struct SettingsView: View {
                     Text("New Paintings")
                 } footer: {
                     Text("Photos are turned into templates entirely on this device and never leave it.")
+                }
+
+                Section {
+                    LabeledContent {
+                        Text(appInfo.summary)
+                    } label: {
+                        SwiftUI.Label("Version", systemImage: "info.circle")
+                    }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("about-version")
+                    NavigationLink(value: Destination.acknowledgements) {
+                        SwiftUI.Label("Acknowledgements", systemImage: "text.book.closed")
+                    }
+                } header: {
+                    Text("About")
+                } footer: {
+                    Text("Your photos and paintings stay on this device unless you share them. Paint by Numbers collects no data.")
+                }
+            }
+            .navigationDestination(for: Destination.self) { destination in
+                switch destination {
+                case .acknowledgements: AcknowledgementsView()
                 }
             }
             .navigationTitle("Settings")

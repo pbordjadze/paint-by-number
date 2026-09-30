@@ -8,10 +8,15 @@ struct AppShellView: View {
     @Environment(Library.self) private var library
     @Namespace private var zoom
     @State private var path: [UUID] = []
+    #if DEBUG
     @State private var isCreating = ShellDemo.current?.opensCreateFlow ?? false
+    @State private var isShowingSettings = ShellDemo.current?.opensSettings ?? false
+    #else
+    @State private var isCreating = false
+    @State private var isShowingSettings = false
+    #endif
     @State private var droppedPhoto: Data?
     @State private var isDropTargeted = false
-    @State private var isShowingSettings = ShellDemo.current == .settings
     @State private var didRestore = false
     /// A painting just created in the create flow, opened once the flow has closed.
     @State private var pendingOpen: UUID?
@@ -41,7 +46,7 @@ struct AppShellView: View {
             droppedPhoto = nil
             openPending()
         }) {
-            CreateFlowView(demo: ShellDemo.current, droppedPhoto: droppedPhoto) { artwork in
+            CreateFlowView(openingSample: launchSample, droppedPhoto: droppedPhoto) { artwork in
                 pendingOpen = artwork.id
                 isCreating = false
             }
@@ -55,12 +60,16 @@ struct AppShellView: View {
         // Metal setup off the main thread while the gallery shows, so the first painting opens instantly.
         .task {
             RenderContext.prewarm()
+            #if DEBUG
             if ShellDemo.current?.isReadyOnAppear == true { DemoMode.markReady() }
+            #endif
         }
+        #if DEBUG
         .onChange(of: library.artworks.first?.id) { _, id in
             // Demo: open the painting as soon as it is ready.
             if ShellDemo.current == .galleryOpen, path.isEmpty, let id { path = [id] }
         }
+        #endif
         .onChange(of: path) { _, path in openArtwork = path.last?.uuidString ?? "" }
     }
 
@@ -86,6 +95,15 @@ struct AppShellView: View {
         }
     }
 
+    /// The sample the create flow opens on (demo scenarios; none in Release builds).
+    private var launchSample: Sample? {
+        #if DEBUG
+        return ShellDemo.current?.previewSample
+        #else
+        return nil
+        #endif
+    }
+
     private func openPending() {
         guard let id = pendingOpen else { return }
         pendingOpen = nil
@@ -96,7 +114,10 @@ struct AppShellView: View {
     private func restoreOpenArtwork() {
         guard !didRestore else { return }
         didRestore = true
-        guard !DemoMode.isActive, let id = UUID(uuidString: openArtwork), library.artwork(with: id) != nil else { return }
+        #if DEBUG
+        guard !DemoMode.isActive else { return }
+        #endif
+        guard let id = UUID(uuidString: openArtwork), library.artwork(with: id) != nil else { return }
         path = [id]
     }
 }
