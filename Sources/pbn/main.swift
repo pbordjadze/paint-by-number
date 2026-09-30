@@ -10,16 +10,21 @@ import ImageIO
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--importance m.pgm]
 //   pbn bench <in.ppm>... [--runs N] [--colors N] [--detail F] [--smooth F]
+//       also times a live preview, detail 1 on a large photo and the same with 150 colors
 //   pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]
 //       vectorizes a flat-color image directly (each distinct color is a palette entry,
 //       each 4-connected component a region), bypassing segmentation
-//   pbn check <template.pbnt>   prints format and pipeline versions, validates invariants
+//   pbn check <template.pbnt> [--min-label-radius R]
+//       prints format and pipeline versions, validates a template's invariants, including
+//       every label's room for its number (single-digit minimum R, default
+//       LabelSizing.minimumRadius; R ≤ 0 skips that check)
 
 struct Options {
     var positional: [String] = []
     var settings = GenerationSettings()
     var importance: String?
     var runs = 3
+    var minLabelRadius = LabelSizing.minimumRadius
 }
 
 func parse(_ args: ArraySlice<String>) -> Options {
@@ -33,6 +38,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--seed": o.settings.seed = UInt64(it.next() ?? "") ?? o.settings.seed
         case "--importance": o.importance = it.next()
         case "--runs": o.runs = Int(it.next() ?? "") ?? o.runs
+        case "--min-label-radius": o.minLabelRadius = Float(it.next() ?? "") ?? o.minLabelRadius
         default: o.positional.append(a)
         }
     }
@@ -114,6 +120,8 @@ func boundaryRaster(_ t: Template) -> RGBAImage {
     return RGBAImage(width: ow, height: oh, pixels: px, colorSpace: t.colorSpace)
 }
 
+/// `pbn generate`'s stats.json. Field names are a stable interface for regression tooling:
+/// add fields, never rename or repurpose them. Validation runs outside the timed pipeline.
 struct Metrics: Codable {
     var width: Int
     var height: Int
@@ -135,6 +143,28 @@ struct Metrics: Codable {
     var totalMs: Double
     var encodedBytes: Int
     var palette: [String]
+    /// Smallest free radius of any label (canvas units, measured on the vector polygons).
+    var minLabelRadius: Float
+    /// Smallest label radius divided by `LabelSizing.roomFactor` of its number: the
+    /// single-digit equivalent, comparable with `legibleLabelRadius`.
+    var minLabelRoom: Float
+    /// `LabelSizing.minimumRadius`: the single-digit room every label is guaranteed.
+    var legibleLabelRadius: Float
+    /// Smallest size any number fits in its label (canvas units, `LabelSizing.fittedFontSize`).
+    var minLabelFontSize: Float
+    /// `LabelSizing.minimumFontSize`: numbers are never drawn smaller.
+    var legibleFontSize: Float
+    /// Labels whose number would fit only below `legibleFontSize`; 0 for pipeline output.
+    var labelsBelowLegibleSize: Int
+    /// Edges the smoother left unfaired to keep the geometry valid.
+    var smoothingFallbackEdges: Int
+    /// Edges stepped toward the pixel outline so a label keeps its room.
+    var labelRoomEdges: Int
+    /// Regions whose label needed such edges.
+    var labelRoomRegions: Int
+    /// `Template.validate(minLabelRadius: LabelSizing.minimumRadius)` and its report.
+    var valid: Bool
+    var validation: String
 }
 
 func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: GenerationSettings) -> Metrics {
@@ -156,6 +186,16 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
     }
     var timings: [String: Double] = [:]
     for timing in out.timings { timings[timing.name, default: 0] += timing.seconds * 1000 }
+    var minLabelRoom = Float.infinity, minFontSize = Float.infinity
+    var belowLegible = 0
+    for label in t.labels {
+        let digits = LabelSizing.digitCount(colorIndex: t.regions[Int(label.region)].colorIndex)
+        minLabelRoom = min(minLabelRoom, label.radius / LabelSizing.roomFactor(digits: digits))
+        let size = LabelSizing.fittedFontSize(radius: label.radius, digits: digits)
+        minFontSize = min(minFontSize, size)
+        if size < LabelSizing.minimumFontSize - 1e-4 { belowLegible += 1 }
+    }
+    let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
     return Metrics(
         width: t.width, height: t.height, colors: t.palette.count, regions: t.regions.count,
         edges: t.edges.count, points: t.points.count, triangles: t.mesh.indices.count / 3,
@@ -171,7 +211,18 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         encodedBytes: t.encoded().count,
         palette: t.palette.map { c in
             c.rgb.indices.map { String(format: "%02x", Int((min(max(c.rgb[$0], 0), 1) * 255).rounded())) }.joined()
-        })
+        },
+        minLabelRadius: t.labels.map(\.radius).min() ?? 0,
+        minLabelRoom: minLabelRoom.isFinite ? minLabelRoom : 0,
+        legibleLabelRadius: LabelSizing.minimumRadius,
+        minLabelFontSize: minFontSize.isFinite ? minFontSize : 0,
+        legibleFontSize: LabelSizing.minimumFontSize,
+        labelsBelowLegibleSize: belowLegible,
+        smoothingFallbackEdges: out.vectorStats.fallbackEdges,
+        labelRoomEdges: out.vectorStats.labelRoomEdges,
+        labelRoomRegions: out.vectorStats.labelRoomRegions,
+        valid: report.isValid,
+        validation: report.description)
 }
 
 /// Measures the longest stretch of pipeline work between two cancellation checks, i.e. the
@@ -278,16 +329,16 @@ case "trace":
     let outDir = URL(fileURLWithPath: options.positional[1])
     try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
     let segmentation = flatSegmentation(image)
-    var template: Template?
+    var result: (template: Template, stats: VectorStats)?
     var best: [String: Double] = [:]
     for _ in 0..<max(1, options.runs) {
         let clock = StageClock()
         do {
-            template = try Vectorizer.vectorize(segmentation, settings: options.settings, cancel: .none, clock: clock)
+            result = try Vectorizer.vectorizeWithStats(segmentation, settings: options.settings, cancel: .none, clock: clock)
         } catch { fail("vectorize failed: \(error)") }
         for timing in clock.timings { best[timing.name] = min(best[timing.name] ?? .infinity, timing.seconds * 1000) }
     }
-    let t = template!
+    let t = result!.template, stats = result!.stats
     try t.encoded().write(to: outDir.appendingPathComponent("template.pbnt"))
     try Netpbm.encodePPM(image).write(to: outDir.appendingPathComponent("working.ppm"))
     try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("raster.ppm"))
@@ -296,7 +347,8 @@ case "trace":
     let summary: [String: String] = [
         "regions": "\(t.regions.count)", "edges": "\(t.edges.count)", "points": "\(t.points.count)",
         "triangles": "\(t.mesh.indices.count / 3)", "labels": "\(t.labels.count)", "valid": "\(report.isValid)",
-        "report": report.description,
+        "report": report.description, "fallbackEdges": "\(stats.fallbackEdges)",
+        "labelRoomEdges": "\(stats.labelRoomEdges)", "labelRoomRegions": "\(stats.labelRoomRegions)",
         "timings": best.sorted { $0.key < $1.key }.map { String(format: "%@=%.1f", $0.key, $0.value) }.joined(separator: " "),
     ]
     let encoder = JSONEncoder()
@@ -307,14 +359,14 @@ case "trace":
 
 case "check":
     guard let path = options.positional.first, let data = FileManager.default.contents(atPath: path) else {
-        fail("usage: pbn check <template.pbnt>")
+        fail("usage: pbn check <template.pbnt> [--min-label-radius R]")
     }
     do {
         let template = try Template(encoded: data)
         // Decoding succeeded, so the 8-byte header is there.
         let format = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 4, as: UInt32.self) }
         print("format \(format), pipeline \(template.pipelineVersion)")
-        let report = template.validate()
+        let report = template.validate(minLabelRadius: options.minLabelRadius > 0 ? options.minLabelRadius : nil)
         print(report.isValid ? "valid" : "INVALID", report)
     } catch { fail("cannot decode: \(error)") }
 
@@ -372,14 +424,21 @@ case "bench":
         for name in m.order + ["total"] {
             print(String(format: "  %-28@ ", name as NSString) + stat(m.totals[name]!))
         }
-        // The app's other two regimes: a live preview at about 700 px, and full detail on a
-        // large photo (the source is enlarged so the working size reaches its 2100 px cap).
+        // The app's other regimes: a live preview at about 700 px, full detail on a large photo
+        // (the source is enlarged so the working size reaches its 2100 px cap), and that with
+        // the largest palette.
         let long = max(image.width, image.height)
         let preview = Resample.area(image, width: max(1, image.width * 467 / long), height: max(1, image.height * 467 / long))
         var fine = options.settings
         fine.detail = 1
+        var many = fine
+        many.colorCount = GenerationSettings.colorCountRange.upperBound
         let big = Resample.area(image, width: image.width * 1400 / long, height: image.height * 1400 / long)
-        for (label, input, settings) in [("preview", preview, options.settings), ("detail 1", big, fine)] {
+        let regimes = [
+            ("preview", preview, options.settings), ("detail 1", big, fine),
+            ("\(many.colorCount) colors, detail 1", big, many),
+        ]
+        for (label, input, settings) in regimes {
             let v = measure(input, settings, runs: options.runs)
             print(String(format: "  %-28@ ", "\(label) \(v.size)" as NSString) + stat(v.totals["total"]!)
                 + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage

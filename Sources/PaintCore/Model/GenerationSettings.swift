@@ -20,10 +20,11 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
 
     /// The closest (OKLab distance) two paints of a template may be: segmentation pushes apart
     /// or merges nearer ones. Public so tools can check the guarantee against the pipeline's
-    /// own number. Large palettes pack paints closer (down to about twice a just-noticeable
-    /// difference), or a photo's gamut couldn't hold that many distinct paints.
+    /// own number. Large palettes pack paints closer, or a photo's gamut couldn't hold that
+    /// many distinct paints — down to one just-noticeable difference (`SegmentationParameters.jnd`)
+    /// and never below: paints a painter can't tell apart would be one paint with two numbers.
     public var minPaletteDistance: Float {
-        0.04 * min(1, (24 / Float(normalized.colorCount)).squareRoot())
+        max(SegmentationParameters.jnd, 0.04 * min(1, (24 / Float(normalized.colorCount)).squareRoot()))
     }
 
     /// Clamped copy.

@@ -53,8 +53,9 @@ nonisolated final class CanvasScene: @unchecked Sendable {
             for k in 0..<(edge.pointCount - 1) { segs.append(SIMD2(edge.pointStart + k, UInt32(e))) }
         }
 
-        // Numbers: size each run to fit its label's free disc, capped so huge regions don't
-        // shout, then emit one instance per digit.
+        // Numbers: size each run by the shared `LabelSizing` rule (the same as thumbnails, PDFs
+        // and SVG), capped so huge regions don't shout, then emit one instance per digit
+        // placed with the atlas's real advances.
         let atlas = context.atlas
         let maxSize = 0.045 * Float(min(t.width, t.height))
         var glyphList: [GlyphInstance] = []
@@ -65,9 +66,8 @@ nonisolated final class CanvasScene: @unchecked Sendable {
             let region = Int(label.region)
             let number = Int(t.regions[region].colorIndex) + 1
             let digits = String(number).compactMap(\.wholeNumberValue)
-            let w = atlas.runWidth(digits), h = atlas.digitHeight
-            let halfDiagonal = ((w * w + h * h) / 4).squareRoot()
-            let size = min(0.9 * label.radius / max(halfDiagonal, 0.01), maxSize)
+            let w = atlas.runWidth(digits)
+            let size = LabelSizing.fontSize(radius: label.radius, digits: digits.count, maximum: maxSize)
             if !primary[region] {
                 primary[region] = true
                 sizes[region] = size

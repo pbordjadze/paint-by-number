@@ -338,6 +338,14 @@ final class CreateModel {
             .generate(from: image, importance: importance, cancel: .task, progress: progress)
             .template
         try Task.checkCancellation()
+        #if DEBUG
+        // Debug builds (CI's simulator runs) check every final template's invariants,
+        // legible numbers included.
+        if !isDraft {
+            let report = template.validate(minLabelRadius: LabelSizing.minimumRadius)
+            if !report.isValid { assertionFailure("Generated template violates its invariants: \(report)") }
+        }
+        #endif
         let long = max(template.width, template.height)
         guard let painting = TemplateRasterizer.image(template, style: .painting, maxPixelSize: long),
               let outlines = TemplateRasterizer.image(template, style: .template, maxPixelSize: min(2400, max(1280, long * 2)))

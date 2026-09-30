@@ -9,9 +9,11 @@ import Foundation
 ///    `CurveFairing`), so both neighbouring regions use the very same curve and fills tile
 ///    the canvas without gaps or overlaps; `GeometryValidator` finds any curve that would
 ///    cross or touch another edge and it falls back to cruder but provably valid shapes.
+///    Each region is labelled at the pole of inaccessibility of its smoothed polygon
+///    (`PolyLabel`); where smoothing left a label less room than the raster promised
+///    (`LabelRoom`), the edges near it fall back the same way until it has enough.
 /// 3. Each region's rings are triangulated (`Earcut`, kept conforming along shared
-///    boundaries) and labelled at the pole of inaccessibility of the smoothed polygon
-///    (`PolyLabel`), with extra labels spread over large regions.
+///    boundaries), with extra labels spread over large regions.
 public enum Vectorizer {
     /// Precision of the pole of inaccessibility, canvas units. The pole radius sizes the
     /// number and is the region's `inscribedRadius`, which must be 2 or more. For regions
@@ -20,6 +22,8 @@ public enum Vectorizer {
     static let labelPrecision = 0.25
     static let smallRegionLabelPrecision = 0.005
     static let smallRegionRadius: Float = 3
+    /// Precision of the second search for a label short of its room.
+    static let finePrecision = 0.01
 
     public static func vectorize(
         _ segmentation: Segmentation,
@@ -27,13 +31,24 @@ public enum Vectorizer {
         cancel: CancellationCheck,
         clock: StageClock
     ) throws -> Template {
+        try vectorizeWithStats(segmentation, settings: settings, cancel: cancel, clock: clock).template
+    }
+
+    /// `vectorize`, also reporting what the vectorizer had to give up.
+    public static func vectorizeWithStats(
+        _ segmentation: Segmentation,
+        settings: GenerationSettings,
+        cancel: CancellationCheck,
+        clock: StageClock
+    ) throws -> (template: Template, stats: VectorStats) {
         let map = segmentation.labels
         let w = map.width, h = map.height
         let regionCount = segmentation.regionCount
         guard w > 0, h > 0, regionCount > 0 else {
-            return Template(
+            let empty = Template(
                 width: w, height: h, colorSpace: segmentation.colorSpace, palette: segmentation.palette,
                 regions: [], points: [], edges: [], ringEdges: [], rings: [], labels: [], mesh: FillMesh(), regionMap: map)
+            return (empty, VectorStats())
         }
 
         let graph = try clock.measure("vectorize.graph") { try BoundaryGraph.build(labels: map, cancel: cancel) }
@@ -41,23 +56,47 @@ public enum Vectorizer {
         let topology = clock.measure("vectorize.rings") { graph.assembleRings(labels: map, regionCount: regionCount) }
         try cancel.throwIfCancelled()
 
-        let geometry = try clock.measure("vectorize.smooth") {
-            try EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run(cancel: cancel).geometry
-        }
-        let edges = geometry.boundaryEdges(graph)
-        try cancel.throwIfCancelled()
-
         let distance = try clock.measure("vectorize.edt") { try DistanceTransform.interiorDistance(labels: map, cancel: cancel) }
         let raster = clock.measure("vectorize.raster") { RasterStats(labels: map, distance: distance, regionCount: regionCount) }
         try cancel.throwIfCancelled()
 
+        // Label room: the segmentation promised each region a disc of its raster minimum
+        // (`SegmentationParameters.minRadius(digits:)`); the smoothed polygon may lose up to
+        // the tolerance of it, never more than the pixel outline would.
+        let room = clock.measure("vectorize.room") { () -> LabelRoom in
+            let params = SegmentationParameters(settings: settings, width: w, height: h)
+            let bands = Parallel.mapBands(regionCount, minimumBandSize: 256) { range -> [(SIMD2<Double>, Float)] in
+                range.map { r in
+                    let pixel = Int(raster.bestPixel[r])
+                    let digits = LabelSizing.digitCount(colorIndex: segmentation.regionColor[r])
+                    let required = SegmentationParameters.vectorRadiusTolerance * params.minRadius(digits: digits)
+                    let clearance = RasterStats.latticeClearance(map, pixel: pixel, region: UInt32(r), limit: required)
+                    return (SIMD2(Double(pixel % w) + 0.5, Double(pixel / w) + 0.5), min(required, clearance))
+                }
+            }
+            let all = Array(bands.joined())
+            let small = (0..<regionCount).map { raster.bestDistance[$0] < Vectorizer.smallRegionRadius }
+            return LabelRoom(topology: topology, seeds: all.map(\.0), minRadius: all.map(\.1), measureFinely: small)
+        }
+        try cancel.throwIfCancelled()
+
+        let smoothing = try clock.measure("vectorize.smooth") {
+            try EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run(labelRoom: room, cancel: cancel)
+        }
+        guard let poles = smoothing.poles else { preconditionFailure("label room requested, poles missing") }
+        let geometry = smoothing.geometry
+        let edges = geometry.boundaryEdges(graph)
+        try cancel.throwIfCancelled()
+
         let shapes = RegionShapes(points: geometry.points, edges: edges, topology: topology)
         var fills = try clock.measure("vectorize.fill") {
-            try RegionFills.build(shapes, raster: raster, width: w, height: h, cancel: cancel)
+            try RegionFills.build(shapes, poles: poles, width: w, height: h, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         clock.measure("vectorize.labels") {
-            fills.addExtraLabels(shapes, raster: raster, distance: distance, map: map, width: w, height: h)
+            fills.addExtraLabels(
+                shapes, raster: raster, distance: distance, map: map, regionColor: segmentation.regionColor,
+                width: w, height: h)
         }
         try cancel.throwIfCancelled()
 
@@ -79,12 +118,32 @@ public enum Vectorizer {
             indexCursor += fills.indexCount[r]
         }
 
-        return Template(
+        let template = Template(
             width: w, height: h, colorSpace: segmentation.colorSpace, palette: segmentation.palette,
             regions: regions, points: geometry.points, edges: edges,
             ringEdges: topology.ringEdges, rings: topology.rings, labels: labels,
             mesh: FillMesh(vertices: fills.vertices, vertexRegion: fills.vertexRegion, indices: fills.indices),
             regionMap: map)
+        let stats = VectorStats(
+            fallbackEdges: smoothing.repairs, labelRoomEdges: smoothing.labelRoomEdges,
+            labelRoomRegions: smoothing.labelRoomRegions)
+        return (template, stats)
+    }
+}
+
+/// What vectorizing a segmentation had to give up (quality metrics; zero for clean input).
+public struct VectorStats: Sendable, Equatable {
+    /// Edges that fell back from the faired curve to keep the geometry valid.
+    public var fallbackEdges = 0
+    /// Distinct edges stepped toward the pixel outline so a label keeps its room.
+    public var labelRoomEdges = 0
+    /// Distinct regions whose label was short of its room at some point.
+    public var labelRoomRegions = 0
+
+    public init(fallbackEdges: Int = 0, labelRoomEdges: Int = 0, labelRoomRegions: Int = 0) {
+        self.fallbackEdges = fallbackEdges
+        self.labelRoomEdges = labelRoomEdges
+        self.labelRoomRegions = labelRoomRegions
     }
 }
 
@@ -134,6 +193,36 @@ struct RasterStats {
                 if b.best[r] > bestDistance[r] { bestDistance[r] = b.best[r]; bestPixel[r] = b.bestPixel[r] }
             }
         }
+    }
+
+    /// Distance from the centre of `pixel` (a pixel of `region`) to the nearest pixel square
+    /// outside the region (or outside the canvas), at most `limit`: how far the region's
+    /// pixel-exact outline stays from that point. Walks square rings outward, so the cost
+    /// grows with the answer, not the region.
+    static func latticeClearance(_ labels: RegionMap, pixel: Int, region: UInt32, limit: Float) -> Float {
+        let w = labels.width, h = labels.height
+        let px = pixel % w, py = pixel / w
+        var best = limit
+        var k = 1
+        // Every square on ring k is at least k − ½ away; the canvas edge ends the walk.
+        while Float(k) - 0.5 < best {
+            func visit(_ ox: Int, _ oy: Int) {
+                let x = px + ox, y = py + oy
+                guard x < 0 || y < 0 || x >= w || y >= h || labels.storage[y * w + x] != region else { return }
+                let dx = max(Float(abs(ox)) - 0.5, 0), dy = max(Float(abs(oy)) - 0.5, 0)
+                best = min(best, (dx * dx + dy * dy).squareRoot())
+            }
+            for ox in -k...k {
+                visit(ox, -k)
+                visit(ox, k)
+            }
+            for oy in (1 - k)..<k {
+                visit(-k, oy)
+                visit(k, oy)
+            }
+            k += 1
+        }
+        return best
     }
 }
 
@@ -190,7 +279,7 @@ struct RegionFills {
     var extraLabels: [[Label]] = []
 
     static func build(
-        _ shapes: RegionShapes, raster: RasterStats, width: Int, height: Int, cancel: CancellationCheck = .none
+        _ shapes: RegionShapes, poles: LabelPoles, width: Int, height: Int, cancel: CancellationCheck = .none
     ) throws -> RegionFills {
         let regionCount = shapes.topology.regionRingStart.count
         // Small chunks balance the load: a single huge region must not stall a whole band.
@@ -262,13 +351,8 @@ struct RegionFills {
                     for i in tri { band.indices.append(i + base) }
                     band.indexCount.append(UInt32(tri.count))
 
-                    let seedPixel = Int(raster.bestPixel[r])
-                    let seed = SIMD2(Double(seedPixel % width) + 0.5, Double(seedPixel / width) + 0.5)
-                    let precision = raster.bestDistance[r] < Vectorizer.smallRegionRadius
-                        ? Vectorizer.smallRegionLabelPrecision : Vectorizer.labelPrecision
-                    let label = PolyLabel.find(poly, precision: precision, seed: seed)
-                    band.pole.append(SIMD2<Float>(label.position))
-                    band.poleRadius.append(Float(label.distance))
+                    band.pole.append(poles.position[r])
+                    band.poleRadius.append(poles.radius[r])
                     band.extraLabels.append([])
                 }
                 return band
@@ -346,7 +430,8 @@ struct RegionFills {
     /// into any part of them: raster distance-transform samples are visited from the most
     /// to the least spacious and accepted when far enough from every label placed so far.
     mutating func addExtraLabels(
-        _ shapes: RegionShapes, raster: RasterStats, distance: Grid<Float>, map: RegionMap, width: Int, height: Int
+        _ shapes: RegionShapes, raster: RasterStats, distance: Grid<Float>, map: RegionMap, regionColor: [UInt32],
+        width: Int, height: Int
     ) {
         let regionCount = pole.count
         // Typical label radius: median pole radius of regions that can hold a number.
@@ -377,6 +462,7 @@ struct RegionFills {
                 }
                 candidates.sort { $0.key != $1.key ? $0.key < $1.key : $0.pixel < $1.pixel }
                 let cap = min(64, Int(Float(raster.pixelArea[r]) / (spacing * spacing * 0.6)))
+                let legible = LabelSizing.minimumRadius(digits: LabelSizing.digitCount(colorIndex: regionColor[r]))
                 var placed: [SIMD2<Float>] = [pole[r]]
                 var extras: [Label] = []
                 var polyBuilt = false
@@ -388,7 +474,7 @@ struct RegionFills {
                     guard far else { continue }
                     if !polyBuilt { shapes.polygon(r, into: &poly); polyBuilt = true }
                     let free = poly.signedDistance(Double(p.x), Double(p.y))
-                    guard free >= Double(minRadius) * 0.8 else { continue }
+                    guard free >= max(Double(minRadius) * 0.8, Double(legible)) else { continue }
                     placed.append(p)
                     extras.append(Label(position: p, radius: Float(free), region: UInt32(r)))
                 }

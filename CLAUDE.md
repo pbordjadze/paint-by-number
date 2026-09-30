@@ -31,8 +31,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `tools/swift.sh test` — runs the package tests in Docker.
 - `python3 tools/eval.py run <images...> --out <dir> [-- --colors 24 --detail 0.5]` — runs the
   pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
-  `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, timings).
-  Look at the PNGs with the Read tool. The sheet's second row shows the raw region raster, a 2×
+  `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, label
+  legibility — `labelsBelowLegibleSize` must be 0, `minLabelRadius`, `minLabelRoom`, `valid` —
+  and timings). The metrics are `pbn generate`'s `stats.json`, a stable interface for regression
+  tooling: add fields, never rename them. Look at the PNGs with the Read tool. The sheet's second row shows the raw region raster, a 2×
   `boundaries.png` (1-px region outlines, best for judging segmentation shapes) and the palette;
   `--importance-dir DIR` passes `DIR/<name>.pgm` as the importance map (Vision stand-in).
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
@@ -40,7 +42,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
   distinct color) — ideal for judging curve quality on synthetic shapes. `pbn check <t.pbnt>`
   prints the file's format and pipeline versions and runs `Template.validate()` (planarity, ring
-  orientation, mesh coverage/watertightness, labels).
+  orientation, mesh coverage/watertightness, labels, and every label's room for its number:
+  `--min-label-radius R`, default `LabelSizing.minimumRadius`, `0` skips it). `pbn bench
+  <ppm...>` times the pipeline, including a preview, detail 1 on a large photo and 150 colors
+  at detail 1.
 - Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
   documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
 - `tools/regression.py [--sheets DIR] [--json FILE]` — the quality gate CI runs on every push:
@@ -189,7 +194,12 @@ Saved paintings must open in every later build. The format history is documented
 - Swift 6 language mode, strict concurrency. Core types are `Sendable` value types.
 - Hot loops use `withUnsafe(Mutable)BufferPointer` + `Parallel.forEachBand`; wrap raw pointers in
   `UncheckedSendable` to share them with workers writing disjoint ranges.
-- Color math happens in OKLab (`ColorScience`). Distances there ≈ ΔE; 0.02 ≈ just noticeable.
+- Color math happens in OKLab (`ColorScience`). Distances there ≈ ΔE; 0.02 ≈ just noticeable,
+  and paints are never closer than that (`SegmentationParameters.jnd`).
+- Numbers are sized only by `LabelSizing` (`Model/Template.swift`): SVG, `TemplateRasterizer`
+  (thumbnails, PDF) and the Metal canvas all use it and never drop a number. The pipeline gives
+  every label room for its digit count (raster `minRadius(digits:)`, vector `LabelRoom`), so no
+  number is smaller than `LabelSizing.minimumFontSize`; `validate(minLabelRadius:)` checks it.
 - Canvas units = pixels of the working image; origin top-left, +y down.
 - Keep `PaintCore` free of Apple-only frameworks (guard any Accelerate/Metal use with
   `#if canImport(...)` and keep a portable path).

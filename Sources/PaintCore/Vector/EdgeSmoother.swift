@@ -32,6 +32,38 @@ struct EdgePolylines: Sendable {
     }
 }
 
+/// Room every region's number must keep once edges are smoothed (see `EdgeSmoother.run`).
+struct LabelRoom: Sendable {
+    let topology: RingTopology
+    /// Per region: centre of its raster interior-distance maximum pixel.
+    let seeds: [SIMD2<Double>]
+    /// Per region: the free radius its label must keep. At most the pixel outline's
+    /// clearance at the seed (`RasterStats.latticeClearance`), so lattice edges always
+    /// provide it.
+    let minRadius: [Float]
+    /// Per region: whether its pole is searched at `Vectorizer.smallRegionLabelPrecision`
+    /// from the start (regions near the radius floor, whose radius sizes their number).
+    let measureFinely: [Bool]
+}
+
+/// Per region: label position (pole of inaccessibility) and its free radius.
+struct LabelPoles: Sendable {
+    var position: [SIMD2<Float>]
+    var radius: [Float]
+}
+
+struct SmoothingResult {
+    var geometry: EdgePolylines
+    /// Edges that needed a fallback shape for valid geometry (zero for clean segmentations).
+    var repairs: Int
+    /// Edges stepped toward the lattice so a label keeps its room, and the regions whose
+    /// labels needed it.
+    var labelRoomEdges: Int
+    var labelRoomRegions: Int
+    /// Labels of the final geometry; nil when no label room was requested.
+    var poles: LabelPoles?
+}
+
 /// Turns lattice chains into smooth shared boundary polylines and guarantees the result
 /// is a valid planar subdivision.
 ///
@@ -43,6 +75,11 @@ struct EdgePolylines: Sendable {
 /// down to the unfaired fit, then the midpoint polyline (stair corners cut at the lattice
 /// segment midpoints), then the raw lattice chain. The last two are provably free of
 /// crossings among themselves, so the loop always terminates with valid geometry.
+///
+/// Smoothing can also shave a thin region's interior (a fitted curve cuts across a narrow
+/// waist), leaving its number too little room. With a `LabelRoom`, each region's label is
+/// placed on the smoothed polygon and a region whose label falls short of its minimum
+/// steps the edges near its raster seed down the same chain until it holds.
 struct EdgeSmoother {
     /// Edge shapes in order of preference; the repair loop moves offending edges down.
     enum Shape: UInt8 { case faired = 0, fitted = 1, midpoints = 2, lattice = 3 }
@@ -70,9 +107,16 @@ struct EdgeSmoother {
         fairingShift = 0.3 + 0.4 * s
     }
 
-    /// Smooths all edges and repairs invalid geometry. `repairs` counts edges that needed a
-    /// fallback shape (a quality metric: zero for clean segmentations).
-    func run(cancel: CancellationCheck = .none) throws -> (geometry: EdgePolylines, repairs: Int) {
+    /// Smooths all edges, repairs invalid geometry and, with `labelRoom`, places every
+    /// region's label and makes sure it keeps its minimum room.
+    ///
+    /// The label stage terminates with every label at least `labelRoom.minRadius` (less a
+    /// rounding slack) from its outline: `PolyLabel` evaluates the seed, so a label's radius
+    /// is at least the seed's distance to the outline. If that is short of the minimum, some
+    /// edge within the minimum of the seed is not lattice-shaped (border edges always are),
+    /// since lattice edges keep at least the seed's clearance, which bounds the minimum. Those
+    /// edges step down; shapes only ever step down, so the loop ends.
+    func run(labelRoom room: LabelRoom? = nil, cancel: CancellationCheck = .none) throws -> SmoothingResult {
         var repairs = 0
         let edgeCount = graph.edgeCount
         var shapes = [UInt8](repeating: Shape.faired.rawValue, count: edgeCount)
@@ -89,6 +133,27 @@ struct EdgeSmoother {
         var offset: Int32 = 0
         for c in first.counts { geo.start.append(offset); offset += c }
 
+        let regionCount = room?.seeds.count ?? 0
+        var poles = LabelPoles(
+            position: [SIMD2<Float>](repeating: .zero, count: regionCount), radius: [Float](repeating: 0, count: regionCount))
+        var needPole = [Bool](repeating: true, count: regionCount)
+        var roomEdge = [Bool](repeating: false, count: edgeCount)
+        var roomRegion = [Bool](repeating: false, count: regionCount)
+        func step(_ list: [Int], shapes: inout [UInt8]) -> [Bool] {
+            var changed = [Bool](repeating: false, count: edgeCount)
+            for e in list {
+                shapes[e] += 1
+                changed[e] = true
+                if room != nil {
+                    needPole[Int(graph.edgeLeft[e])] = true
+                    if graph.edgeRight[e] != BoundaryEdge.outside { needPole[Int(graph.edgeRight[e])] = true }
+                }
+            }
+            let redo = polylines(for: list, shapes: shapes)
+            geo.replace(list, points: redo.points, counts: redo.counts)
+            return changed
+        }
+
         // Every round moves each offending edge one shape down, so the loop terminates. After
         // the first round only pairs involving a changed edge can newly conflict.
         var dirty: [Bool]? = nil
@@ -97,18 +162,81 @@ struct EdgeSmoother {
             var bad = Set(GeometryValidator.invalidEdges(points: geo.points, edges: geo.boundaryEdges(graph), onlyInvolving: dirty))
             bad.formUnion(junctionOrderViolations(geo))
             let fix = bad.filter { graph.edgeRight[$0] != BoundaryEdge.outside && shapes[$0] < Shape.lattice.rawValue }.sorted()
-            if fix.isEmpty { break }
-            var changed = [Bool](repeating: false, count: edgeCount)
-            for e in fix {
-                if shapes[e] == Shape.faired.rawValue { repairs += 1 }
-                shapes[e] += 1
-                changed[e] = true
+            if !fix.isEmpty {
+                for e in fix where shapes[e] == Shape.faired.rawValue { repairs += 1 }
+                dirty = step(fix, shapes: &shapes)
+                continue
             }
-            dirty = changed
-            let redo = polylines(for: fix, shapes: shapes)
-            geo.replace(fix, points: redo.points, counts: redo.counts)
+            guard let room else { break }
+
+            // Valid geometry: place the labels of regions whose outline changed.
+            let edges = geo.boundaryEdges(graph)
+            try placeLabels(
+                &poles, regions: (0..<regionCount).filter { needPole[$0] }, room: room,
+                shapes: RegionShapes(points: geo.points, edges: edges, topology: room.topology), cancel: cancel)
+            needPole = [Bool](repeating: false, count: regionCount)
+            var pick = [Bool](repeating: false, count: edgeCount)
+            for r in 0..<regionCount where poles.radius[r] < room.minRadius[r] - Self.labelRoomSlack {
+                roomRegion[r] = true
+                let seed = room.seeds[r]
+                let reach = Double(room.minRadius[r]) + 1
+                let ringStart = Int(room.topology.regionRingStart[r]), ringCount = Int(room.topology.regionRingCount[r])
+                for ring in room.topology.rings[ringStart..<(ringStart + ringCount)] {
+                    for ref in room.topology.ringEdges[Int(ring.edgeStart)..<Int(ring.edgeStart + ring.edgeCount)] {
+                        let e = Int(ref.edge)
+                        guard !pick[e], shapes[e] < Shape.lattice.rawValue, graph.edgeRight[e] != BoundaryEdge.outside else { continue }
+                        let s = Int(geo.start[e]), c = Int(geo.count[e])
+                        for i in s..<(s + c - 1) where FlatPolygon.segmentDistanceSquared(
+                            seed.x, seed.y, SIMD2<Double>(geo.points[i]), SIMD2<Double>(geo.points[i + 1])) < reach * reach {
+                            pick[e] = true
+                            break
+                        }
+                    }
+                }
+            }
+            let demote = (0..<edgeCount).filter { pick[$0] }
+            // Never empty while a label is short (see above); the guard only rules out a spin.
+            if demote.isEmpty { break }
+            for e in demote { roomEdge[e] = true }
+            dirty = step(demote, shapes: &shapes)
         }
-        return (geo, repairs)
+        return SmoothingResult(
+            geometry: geo, repairs: repairs, labelRoomEdges: roomEdge.count(where: { $0 }),
+            labelRoomRegions: roomRegion.count(where: { $0 }), poles: room == nil ? nil : poles)
+    }
+
+    /// Tolerance of the label room check: a lattice polygon clears exactly the seed's lattice
+    /// clearance, but `PolyLabel` measures it along a different route of float operations.
+    static let labelRoomSlack: Float = 1e-4
+
+    /// Places the labels of `regions` at the poles of their current polygons. A label short
+    /// of its room is searched again more finely before it counts as failing: the coarse
+    /// search only promises a pole within `Vectorizer.labelPrecision` of the best one.
+    private func placeLabels(
+        _ poles: inout LabelPoles, regions list: [Int], room: LabelRoom, shapes: RegionShapes, cancel: CancellationCheck
+    ) throws {
+        for first in stride(from: 0, to: list.count, by: 512) {
+            try cancel.throwIfCancelled()
+            let wave = Array(list[first..<min(list.count, first + 512)])
+            let found = mapChunks(wave.count, chunk: 16, cost: { shapes.pointCount(wave[$0]) }) { range -> [(SIMD2<Double>, Double)] in
+                var poly = FlatPolygon()
+                return range.map { k in
+                    let r = wave[k]
+                    shapes.polygon(r, into: &poly)
+                    let precision = room.measureFinely[r] ? Vectorizer.smallRegionLabelPrecision : Vectorizer.labelPrecision
+                    var label = PolyLabel.find(poly, precision: precision, seed: room.seeds[r])
+                    if precision > Vectorizer.finePrecision, Float(label.distance) < room.minRadius[r] - Self.labelRoomSlack {
+                        let fine = PolyLabel.find(poly, precision: Vectorizer.finePrecision, seed: room.seeds[r])
+                        if fine.distance > label.distance { label = fine }
+                    }
+                    return label
+                }
+            }
+            for (k, label) in found.joined().enumerated() {
+                poles.position[wave[k]] = SIMD2<Float>(label.0)
+                poles.radius[wave[k]] = Float(label.1)
+            }
+        }
     }
 
     // MARK: - Polylines

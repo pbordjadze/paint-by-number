@@ -16,7 +16,8 @@ public enum SVGExport {
         public var outlineColor: String = "#9ea3aa"
         public var numberColor: String = "#6d727a"
         /// Largest number size as a fraction of the canvas' long side; big regions get
-        /// several numbers of this size rather than one huge one.
+        /// several numbers of this size rather than one huge one. Numbers are sized by
+        /// `LabelSizing` and never dropped: none is smaller than `LabelSizing.minimumFontSize`.
         public var maxNumberSize: Float = 1.0 / 64
 
         public init(painted: Bool = false, outlines: Bool = true, numbers: Bool = true) {
@@ -68,23 +69,13 @@ public enum SVGExport {
             s += "<g font-family=\"Helvetica Neue, Helvetica, Arial, DejaVu Sans, sans-serif\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"\(options.numberColor)\">\n"
             for label in t.labels {
                 let text = String(t.regions[Int(label.region)].colorIndex + 1)
-                let size = min(fontSize(forRadius: label.radius, digits: text.count), maxSize)
-                guard size >= 1 else { continue }
+                let size = LabelSizing.fontSize(radius: label.radius, digits: text.count, maximum: maxSize)
                 s += "<text x=\"\(fmt(label.position.x))\" y=\"\(fmt(label.position.y))\" font-size=\"\(fmt(size))\">\(text)</text>\n"
             }
             s += "</g>\n"
         }
         s += "</svg>\n"
         return s
-    }
-
-    /// Font size (canvas units) whose glyph run fits inside a disc of `radius`.
-    public static func fontSize(forRadius radius: Float, digits: Int) -> Float {
-        // Digits are ~0.6em wide and ~0.72em tall (cap height); fit the run's bounding box
-        // diagonal inside the disc with a little breathing room.
-        let w = 0.6 * Float(digits), h: Float = 0.72
-        let diag = (w * w + h * h).squareRoot()
-        return 2 * radius * 0.85 / diag
     }
 
     static func fmt(_ v: Float) -> String {

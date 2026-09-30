@@ -36,6 +36,38 @@ struct SegmentationTests {
         return image
     }
 
+    /// A crowded, colourful scene for large palettes: a 12 × 8 grid of tiles covering an
+    /// OKLab hue wheel (12 hues × 4 lightnesses × 2 chromas) with a gentle in-tile gradient,
+    /// small discs of the complementary hue and per-pixel noise.
+    static func colorful(width: Int = 300, height: Int = 200, seed: UInt64 = 13) -> RGBAImage {
+        var rng = SplitMix64(seed: seed)
+        var image = RGBAImage(width: width, height: height, fill: SIMD4(0, 0, 0, 255))
+        let columns = 12, rows = 8
+        let lightness: [Float] = [0.42, 0.56, 0.7, 0.84]
+        let tileW = Float(width) / Float(columns), tileH = Float(height) / Float(rows)
+        for y in 0..<height {
+            for x in 0..<width {
+                let tx = min(columns - 1, Int(Float(x) / tileW)), ty = min(rows - 1, Int(Float(y) / tileH))
+                let u = Float(x) / tileW - Float(tx), v = Float(y) / tileH - Float(ty)
+                var hue = Float(tx) / Float(columns) * 2 * .pi
+                var chroma: Float = ty < 4 ? 0.07 : 0.14
+                var l = lightness[ty % 4] + 0.08 * (u - 0.5)
+                let dx = (u - 0.7) * tileW, dy = (v - 0.35) * tileH
+                if (tx + ty) % 3 == 0 && dx * dx + dy * dy < 25 {
+                    hue += .pi
+                    chroma = 0.1
+                    l = 1.1 - l
+                }
+                let lab = SIMD3(l, chroma * cos(hue), chroma * sin(hue))
+                var c = ColorScience.okLabToEncoded(lab, space: .sRGB) * 255
+                c += SIMD3(rng.nextFloat(), rng.nextFloat(), rng.nextFloat()) * 12 - 6
+                image[x, y] = SIMD4(
+                    UInt8(min(max(c.x, 0), 255)), UInt8(min(max(c.y, 0), 255)), UInt8(min(max(c.z, 0), 255)), 255)
+            }
+        }
+        return image
+    }
+
     static func segment(
         _ image: RGBAImage, settings: GenerationSettings = GenerationSettings(), importance: Grid<Float>? = nil
     ) throws -> Segmentation {
@@ -44,8 +76,10 @@ struct SegmentationTests {
             progress: { _ in })
     }
 
-    /// Structural invariants every segmentation must satisfy.
-    static func checkInvariants(_ s: Segmentation, minRadius: Float?, minDistance: Float = 0.04) {
+    /// Structural invariants every segmentation made with `settings` must satisfy.
+    static func checkInvariants(_ s: Segmentation, settings: GenerationSettings, minRadius: Float?) {
+        let minDistance = SegmentationParameters(settings: settings, width: s.width, height: s.height).minPaletteDistance
+        #expect(minDistance >= SegmentationParameters.jnd)
         let n = s.regionCount
         #expect(s.labels.count == s.width * s.height)
         #expect(n > 0 || s.labels.count == 0)
@@ -71,12 +105,15 @@ struct SegmentationTests {
                 #expect(ColorScience.distance(s.palette[i].oklab, s.palette[j].oklab) >= minDistance - 1e-4)
             }
         }
-        // Size guarantee: largest inscribed disc per region.
+        // Size guarantee: largest inscribed disc per region, scaled for multi-digit numbers.
         if let minRadius, n > 1 {
             let d = DistanceTransform.interiorDistance(labels: s.labels)
             var best = [Float](repeating: 0, count: n)
             for i in 0..<d.count { best[Int(s.labels.storage[i])] = max(best[Int(s.labels.storage[i])], d.storage[i]) }
-            #expect(best.allSatisfy { $0 >= minRadius })
+            for r in 0..<n {
+                let digits = LabelSizing.digitCount(colorIndex: s.regionColor[r])
+                #expect(best[r] >= minRadius * LabelSizing.roomFactor(digits: digits), "region \(r), \(digits) digits")
+            }
         }
     }
 
@@ -86,7 +123,7 @@ struct SegmentationTests {
     func invariantsAcrossDetail(detail: Float) throws {
         let settings = GenerationSettings(colorCount: 16, detail: detail, smoothness: 0.5)
         let s = try Self.segment(Self.scene(), settings: settings)
-        Self.checkInvariants(s, minRadius: detail < 0.5 ? 2.7 + (0.5 - detail) * 1.6 : 2.7)
+        Self.checkInvariants(s, settings: settings, minRadius: detail < 0.5 ? 2.7 + (0.5 - detail) * 1.6 : 2.7)
         #expect(s.regionCount > 1)
         #expect(s.palette.count > 3 && s.palette.count <= 16)
     }
@@ -94,7 +131,40 @@ struct SegmentationTests {
     @Test(arguments: [Float(0), 1])
     func invariantsAcrossSmoothness(smoothness: Float) throws {
         let settings = GenerationSettings(colorCount: 24, detail: 0.5, smoothness: smoothness)
-        Self.checkInvariants(try Self.segment(Self.scene(seed: 3), settings: settings), minRadius: 2.7)
+        Self.checkInvariants(try Self.segment(Self.scene(seed: 3), settings: settings), settings: settings, minRadius: 2.7)
+    }
+
+    @Test(arguments: [6, 24, 60, 150])
+    func paletteSpacing(colors: Int) throws {
+        let settings = GenerationSettings(colorCount: colors, detail: 0.5)
+        let image = Self.colorful()
+        let p = SegmentationParameters(settings: settings, width: image.width, height: image.height)
+        #expect(p.minPaletteDistance >= SegmentationParameters.jnd)
+        #expect(p.minPaletteDistance == (colors <= 24 ? 0.04 : max(0.02, 0.04 * (24 / Float(colors)).squareRoot())))
+        let s = try Self.segment(image, settings: settings)
+        Self.checkInvariants(s, settings: settings, minRadius: 2.7)
+        #expect(s.palette.count <= colors)
+    }
+
+    @Test func minPaletteDistanceNeverBelowJND() {
+        for n in GenerationSettings.colorCountRange {
+            let p = SegmentationParameters(settings: GenerationSettings(colorCount: n), width: 100, height: 100)
+            #expect(p.minPaletteDistance >= SegmentationParameters.jnd)
+            if n >= 96 { #expect(p.minPaletteDistance == SegmentationParameters.jnd) }
+        }
+    }
+
+    @Test func highColorScene() throws {
+        let settings = GenerationSettings(colorCount: 150, detail: 1)
+        let image = Self.colorful()
+        let s = try Self.segment(image, settings: settings)
+        Self.checkInvariants(s, settings: settings, minRadius: 2.7)
+        #expect(s.palette.count >= 100)
+        #expect(s.regionColor.contains { $0 >= 99 })
+        let again = try Self.segment(image, settings: settings)
+        #expect(again.labels == s.labels)
+        #expect(again.regionColor == s.regionColor)
+        #expect(again.palette == s.palette)
     }
 
     /// `GenerationSettings.minPaletteDistance` is the floor tools/regression.py holds templates
@@ -105,13 +175,14 @@ struct SegmentationTests {
         #expect(SegmentationParameters(settings: settings, width: 160, height: 120).minPaletteDistance
             == settings.minPaletteDistance)
         let s = try Self.segment(Self.scene(seed: 5), settings: settings)
-        Self.checkInvariants(s, minRadius: nil, minDistance: settings.minPaletteDistance)
+        Self.checkInvariants(s, settings: settings, minRadius: nil)
     }
 
     @Test func publishedPaletteFloor() {
         #expect(GenerationSettings(colorCount: 12).minPaletteDistance == 0.04)
         #expect(GenerationSettings(colorCount: 24).minPaletteDistance == 0.04)
-        #expect(abs(GenerationSettings(colorCount: 150).minPaletteDistance - 0.016) < 1e-6)
+        // 150 colours would pack paints 0.016 apart; the floor holds them one JND (0.02) apart.
+        #expect(GenerationSettings(colorCount: 150).minPaletteDistance == SegmentationParameters.jnd)
         // Clamped like every other setting.
         #expect(GenerationSettings(colorCount: 1000).minPaletteDistance
             == GenerationSettings(colorCount: 150).minPaletteDistance)
@@ -119,9 +190,10 @@ struct SegmentationTests {
 
     @Test func lowDetailHasLargerRegions() throws {
         let image = Self.scene(width: 200, height: 150)
-        let bold = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 0))
+        let boldSettings = GenerationSettings(colorCount: 16, detail: 0)
+        let bold = try Self.segment(image, settings: boldSettings)
         let fine = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 1))
-        Self.checkInvariants(bold, minRadius: 3.5)
+        Self.checkInvariants(bold, settings: boldSettings, minRadius: 3.5)
         #expect(bold.regionCount <= fine.regionCount)
     }
 
@@ -130,7 +202,7 @@ struct SegmentationTests {
         var important = Grid<Float>(width: 50, height: 40, repeating: 0.25)
         for y in 10..<30 { for x in 10..<40 { important[x, y] = 1 } }
         let s = try Self.segment(image, importance: important)
-        Self.checkInvariants(s, minRadius: 2)
+        Self.checkInvariants(s, settings: GenerationSettings(), minRadius: 2)
         // Importance maps of any size are accepted, including degenerate ones.
         _ = try Self.segment(image, importance: Grid(width: 0, height: 0, repeating: 0))
         _ = try Self.segment(image, importance: Grid(width: 1, height: 1, repeating: 2))
@@ -147,8 +219,9 @@ struct SegmentationTests {
                 if dx * dx + dy * dy < 36 { image[x, y] = SIMD4(220, 20, 60, 255) }
             }
         }
-        let s = try Self.segment(image, settings: GenerationSettings(colorCount: 12))
-        Self.checkInvariants(s, minRadius: 2)
+        let settings = GenerationSettings(colorCount: 12)
+        let s = try Self.segment(image, settings: settings)
+        Self.checkInvariants(s, settings: settings, minRadius: 2)
         let red = ColorScience.encodedToOKLab(SIMD3(220, 20, 60) / 255, space: .sRGB)
         let center = s.palette[Int(s.regionColor[Int(s.labels[120, 60])])].oklab
         #expect(ColorScience.distance(center, red) < 0.08)
@@ -186,7 +259,7 @@ struct SegmentationTests {
             }
         }
         let s = try Self.segment(image)
-        Self.checkInvariants(s, minRadius: nil)
+        Self.checkInvariants(s, settings: GenerationSettings(), minRadius: nil)
         #expect(s.width == size.0 && s.height == size.1)
     }
 
@@ -198,7 +271,7 @@ struct SegmentationTests {
 
     @Test func uniformImage() throws {
         let s = try Self.segment(RGBAImage(width: 64, height: 48, fill: SIMD4(30, 120, 200, 255)))
-        Self.checkInvariants(s, minRadius: nil)
+        Self.checkInvariants(s, settings: GenerationSettings(), minRadius: nil)
         #expect(s.regionCount == 1)
         #expect(s.palette.count == 1)
         let expected = ColorScience.encodedToOKLab(SIMD3(30, 120, 200) / 255, space: .sRGB)
@@ -207,7 +280,7 @@ struct SegmentationTests {
 
     @Test func transparentPixelsBecomePaper() throws {
         let s = try Self.segment(Self.scene(alpha: true))
-        Self.checkInvariants(s, minRadius: 2)
+        Self.checkInvariants(s, settings: GenerationSettings(), minRadius: 2)
         // The fully transparent left quarter is painted white.
         let paint = s.palette[Int(s.regionColor[Int(s.labels[5, 60])])].oklab
         #expect(paint.x > 0.97 && ColorScience.lch(paint).y < 0.02)
@@ -218,7 +291,7 @@ struct SegmentationTests {
         image.colorSpace = .displayP3
         let s = try Self.segment(image)
         #expect(s.colorSpace == .displayP3)
-        Self.checkInvariants(s, minRadius: 2)
+        Self.checkInvariants(s, settings: GenerationSettings(), minRadius: 2)
     }
 
     @Test func cancellation() {
@@ -273,6 +346,62 @@ struct SegmentationTests {
             let wide = RegionSimplifier.hasInscribedDisc(regions, classes: classes, radius: radius)
             for r in 0..<cc.count { #expect(wide[r] == (best[r] >= radius)) }
         }
+    }
+
+    @Test func enforceLabelRoomUsesDigitCount() throws {
+        // Paints 0–9 own wide stripes along the top; four equal discs sit on paint 12. Each
+        // disc has room for one digit but not two. The disc showing "2" (paint 1) stays as it
+        // is. The one showing "11" looks almost like paint 8 and takes it ("9"). The two
+        // showing "12" merge into the background: one looks like it, the other like no paint
+        // with a 1-digit number (recolouring it would change its colour visibly). The unused
+        // paints are dropped.
+        let w = 120, h = 60
+        let p = SegmentationParameters(settings: GenerationSettings(colorCount: 13, detail: 0.5), width: w, height: h)
+        let palette = (0..<12).map { SIMD3<Float>(0.3 + 0.05 * Float($0), 0.02 * Float($0 % 3), 0) } + [SIMD3(0.5, -0.1, 0.1)]
+        let discRadius: Float = 3.2
+        let discs: [(x: Int, paint: UInt32, color: SIMD3<Float>)] = [
+            (15, 1, palette[1]), (45, 10, palette[8] + SIMD3(0.01, 0, 0)),
+            (75, 11, palette[12]), (105, 11, SIMD3(0.9, 0.2, 0.2)),
+        ]
+        var classes = [UInt32](repeating: 12, count: w * h)
+        var colors = [SIMD4<Float>](repeating: SIMD4(palette[12], 0), count: w * h)
+        for y in 0..<h {
+            for x in 0..<w {
+                if y < 12 {
+                    classes[y * w + x] = UInt32(x / 12)
+                    colors[y * w + x] = SIMD4(palette[x / 12], 0)
+                }
+                for disc in discs {
+                    let dx = Float(x - disc.x), dy = Float(y - 40)
+                    if dx * dx + dy * dy <= discRadius * discRadius {
+                        classes[y * w + x] = disc.paint
+                        colors[y * w + x] = SIMD4(disc.color, 0)
+                    }
+                }
+            }
+        }
+        let initial = RegionRuns(classes: classes, width: w, height: h).components()
+        let d = DistanceTransform.interiorDistance(labels: initial.labels)
+        let discBest = (12 * w..<(w * h)).filter { classes[$0] == 1 }.map { d.storage[$0] }.max() ?? 0
+        #expect(discBest >= p.minRadius(digits: 1))
+        #expect(discBest < p.minRadius(digits: 2))
+
+        var regions = RegionRuns(classes: classes, width: w, height: h)
+        var adjacency = RegionAdjacency(regions)
+        let result = try RegionSimplifier.enforceLabelRoom(
+            classes: &classes, regions: &regions, adjacency: &adjacency, colors: colors,
+            areaScale: [Float](repeating: 1, count: w * h), palette: palette, parameters: p, cancel: .none)
+        #expect(result.recolors == 1)
+        #expect(result.merges == 2)
+        #expect(result.kept == Array(0..<10) + [12])
+        #expect(regions.count == 13)
+        #expect(classes[40 * w + 15] == 1)
+        #expect(classes[40 * w + 45] == 8)
+        #expect(classes[40 * w + 75] == 10)
+        #expect(classes[40 * w + 105] == 10)
+        #expect(classes[40 * w + 2] == 10)
+        let labels = regions.labelMap()
+        for i in 0..<(w * h) { #expect(classes[i] == regions.classOf[Int(labels.storage[i])]) }
     }
 
     @Test func thinPartsArePeeled() {

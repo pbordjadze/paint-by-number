@@ -334,7 +334,116 @@ struct VectorizerTests {
         for smoothness in [Float(0), 0.5, 1] {
             #expect(try EdgeSmoother(graph: graph, smoothness: smoothness).run().repairs == 0)
             try Self.expectValid(try Self.vectorize(s, smoothness: smoothness), s)
+            var settings = GenerationSettings()
+            settings.smoothness = smoothness
+            let stats = try Vectorizer.vectorizeWithStats(s, settings: settings, cancel: .none, clock: StageClock()).stats
+            #expect(stats == VectorStats())
         }
+    }
+
+    // MARK: - Label room
+
+    /// The room each region's label must keep (`LabelRoom.minRadius`), recomputed from the
+    /// raster: the tolerance times its raster minimum, at most the pixel outline's clearance.
+    static func requiredRoom(_ s: Segmentation, settings: GenerationSettings) -> (seeds: [SIMD2<Double>], radius: [Float]) {
+        let map = s.labels
+        let raster = RasterStats(
+            labels: map, distance: DistanceTransform.interiorDistance(labels: map), regionCount: s.regionCount)
+        let p = SegmentationParameters(settings: settings, width: map.width, height: map.height)
+        var seeds: [SIMD2<Double>] = [], radius: [Float] = []
+        for r in 0..<s.regionCount {
+            let pixel = Int(raster.bestPixel[r])
+            let digits = LabelSizing.digitCount(colorIndex: s.regionColor[r])
+            let required = SegmentationParameters.vectorRadiusTolerance * p.minRadius(digits: digits)
+            seeds.append(SIMD2(Double(pixel % map.width) + 0.5, Double(pixel / map.width) + 0.5))
+            radius.append(min(required, RasterStats.latticeClearance(map, pixel: pixel, region: UInt32(r), limit: required)))
+        }
+        return (seeds, radius)
+    }
+
+    @Test func labelRoomHoldsAfterSmoothing() throws {
+        // Organic blobs with salt noise: smoothing shaves thin regions and specks, and the
+        // edges near their labels fall back until every label has its room again.
+        let s = Self.blobMap(width: 120, height: 90, colors: 12, cell: 5, noise: 0.02, seed: 7)
+        var demoted = 0
+        for smoothness in [Float(0), 0.5, 1] {
+            var settings = GenerationSettings()
+            settings.smoothness = smoothness
+            let (t, stats) = try Vectorizer.vectorizeWithStats(s, settings: settings, cancel: .none, clock: StageClock())
+            try Self.expectValid(t, s)
+            let room = Self.requiredRoom(s, settings: settings)
+            for r in t.regions.indices {
+                #expect(t.regions[r].inscribedRadius >= room.radius[r] - 1e-4, "region \(r), smoothness \(smoothness)")
+                #expect(t.labels(ofRegion: r).first?.radius == t.regions[r].inscribedRadius)
+            }
+            #expect(stats.labelRoomRegions > 0 || stats.labelRoomEdges == 0)
+            demoted += stats.labelRoomEdges
+        }
+        #expect(demoted > 0)
+    }
+
+    @Test func labelRoomReachesLatticeWhenNeeded() throws {
+        // Asking every label for the full clearance of the pixel outline is always satisfiable:
+        // the lattice provides it exactly.
+        let s = Self.blobMap(width: 90, height: 70, colors: 5, cell: 6, noise: 0.01, seed: 3)
+        let map = s.labels
+        let graph = try BoundaryGraph.build(labels: map)
+        let topology = graph.assembleRings(labels: map, regionCount: s.regionCount)
+        let raster = RasterStats(
+            labels: map, distance: DistanceTransform.interiorDistance(labels: map), regionCount: s.regionCount)
+        var seeds: [SIMD2<Double>] = [], clearance: [Float] = []
+        for r in 0..<s.regionCount {
+            let pixel = Int(raster.bestPixel[r])
+            seeds.append(SIMD2(Double(pixel % map.width) + 0.5, Double(pixel / map.width) + 0.5))
+            clearance.append(RasterStats.latticeClearance(map, pixel: pixel, region: UInt32(r), limit: .infinity))
+        }
+        let room = LabelRoom(
+            topology: topology, seeds: seeds, minRadius: clearance,
+            measureFinely: Array(repeating: false, count: seeds.count))
+        let result = try EdgeSmoother(graph: graph, smoothness: 1).run(labelRoom: room)
+        let poles = try #require(result.poles)
+        for r in 0..<s.regionCount { #expect(poles.radius[r] >= clearance[r] - 1e-4, "region \(r)") }
+        #expect(result.labelRoomEdges > 0)
+        #expect(GeometryValidator.invalidEdges(points: result.geometry.points, edges: result.geometry.boundaryEdges(graph)).isEmpty)
+    }
+
+    @Test func latticeClearanceMeasuresThePixelOutline() {
+        // A 7×5 block of region 1 in region 0 on a 12×9 canvas, touching the right edge.
+        var rows = Array(repeating: Array(repeating: UInt32(0), count: 12), count: 9)
+        for y in 2..<7 { for x in 5..<12 { rows[y][x] = 1 } }
+        let map = Self.segmentation(rows).labels
+        let block = map[8, 4]
+        // From the centre of (8, 4) to the pixel squares of rows 1 and 7: 2.5.
+        #expect(RasterStats.latticeClearance(map, pixel: 4 * 12 + 8, region: block, limit: .infinity) == 2.5)
+        #expect(RasterStats.latticeClearance(map, pixel: 4 * 12 + 8, region: block, limit: 1) == 1)
+        // Next to the canvas edge: the outside counts as another region.
+        #expect(RasterStats.latticeClearance(map, pixel: 4 * 12 + 11, region: block, limit: .infinity) == 0.5)
+        // Only a diagonal neighbour is foreign: from (4, 1) of the frame to the corner of the
+        // block's pixel (5, 2) is √(½² + ½²).
+        let frame = map[0, 0]
+        let diagonal = RasterStats.latticeClearance(map, pixel: 1 * 12 + 4, region: frame, limit: .infinity)
+        #expect(abs(diagonal - 0.5 * Float(2).squareRoot()) < 1e-6)
+    }
+
+    @Test func validateReportsCrampedLabels() throws {
+        // A 3×3 island in a ring in a frame: the ring and the frame are roomy, the island not.
+        var rows = Array(repeating: Array(repeating: UInt32(0), count: 30), count: 30)
+        for y in 8..<22 { for x in 8..<22 { rows[y][x] = 1 } }
+        for y in 13..<16 { for x in 13..<16 { rows[y][x] = 2 } }
+        let s = Self.segmentation(rows)
+        var t = try Self.vectorize(s)
+        let island = try #require(t.regions.firstIndex { $0.colorIndex == 2 })
+        #expect(t.validate().isValid)
+        let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
+        #expect(!report.isValid)
+        #expect(report.crampedLabelRegions == [island])
+        #expect(report.minLabelRoom < LabelSizing.minimumRadius)
+        #expect(t.validate(minLabelRadius: 0.5).isValid)
+        // A label claiming more room than it has is caught too.
+        let k = Int(t.regions[island].labelStart)
+        t.labels[k].radius += 1
+        #expect(t.validate().isValid)
+        #expect(t.validate(minLabelRadius: 0.5).badLabelRegions == [island])
     }
 
     @Test func largeRegionsGetExtraLabels() throws {
@@ -429,7 +538,26 @@ struct VectorizerTests {
         settings.detail = 0
         let out = try TemplateGenerator(settings: settings).generate(from: RGBAImage(width: w, height: h, pixels: px), cancel: .none)
         try Self.expectValid(out.template, out.segmentation)
+        let report = out.template.validate(minLabelRadius: LabelSizing.minimumRadius)
+        #expect(report.isValid, "\(report)")
         #expect(out.timings.contains { $0.name == "vectorize.smooth" })
+    }
+
+    @Test func highColorPipelineIsLegibleAndDeterministic() throws {
+        let generator = TemplateGenerator(settings: GenerationSettings(colorCount: 150, detail: 1))
+        let image = SegmentationTests.colorful()
+        let out = try generator.generate(from: image, cancel: .none)
+        let again = try generator.generate(from: image, cancel: .none)
+        #expect(again.template == out.template)
+        #expect(again.vectorStats == out.vectorStats)
+        try Self.expectValid(out.template, out.segmentation)
+        let report = out.template.validate(minLabelRadius: LabelSizing.minimumRadius)
+        #expect(report.isValid, "\(report)")
+        #expect(out.template.regions.contains { LabelSizing.digitCount(colorIndex: $0.colorIndex) == 3 })
+        for label in out.template.labels {
+            let digits = LabelSizing.digitCount(colorIndex: out.template.regions[Int(label.region)].colorIndex)
+            #expect(LabelSizing.fittedFontSize(radius: label.radius, digits: digits) >= LabelSizing.minimumFontSize - 1e-4)
+        }
     }
 
     // MARK: - Components
