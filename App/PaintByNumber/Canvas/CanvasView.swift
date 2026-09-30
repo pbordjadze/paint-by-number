@@ -66,6 +66,8 @@ final class CanvasView: UIView, PaintingCanvas {
     private var numbersTo: Float = 1
     private var numbersStart: Float = -10_000
     private var shineStart: Float = -10_000
+    private var replayTask: Task<Void, Never>?
+    private var isReplaying = false
     private var shineColor = -1
 
     // Camera
@@ -78,6 +80,7 @@ final class CanvasView: UIView, PaintingCanvas {
     // Gestures
     private var tapRecognizer: UITapGestureRecognizer!
     private var tapBeganWhileMoving = false
+    private var tapWasFinger = false
     private var lastTap: (time: CFTimeInterval, point: CGPoint, painted: Bool)?
     private var dragLast: SIMD2<Float>?
 
@@ -210,6 +213,8 @@ final class CanvasView: UIView, PaintingCanvas {
 
     // MARK: Lifecycle
 
+    override var canBecomeFirstResponder: Bool { true }
+
     override func didMoveToWindow() {
         super.didMoveToWindow()
         if window != nil {
@@ -221,6 +226,8 @@ final class CanvasView: UIView, PaintingCanvas {
             }
             setNeedsLayout()
             requestRender()
+            // First responder so the window's undo manager serves three-finger undo and ⌘Z.
+            Task { self.becomeFirstResponder() }
         } else {
             displayLink?.invalidate()
             displayLink = nil
@@ -390,6 +397,16 @@ final class CanvasView: UIView, PaintingCanvas {
         }
     }
 
+    /// Keyboard zoom about the middle of the visible area.
+    func zoom(by factor: CGFloat) {
+        let avail = bounds.inset(by: chromeInsets)
+        let anchor = CGPoint(x: avail.midX, y: avail.midY)
+        let target = clampZoom(scrollView.zoomScale * factor)
+        let c = canvasPoint(forView: anchor)
+        let o = clampedOffset(CGPoint(x: CGFloat(c.x) * target - anchor.x, y: CGFloat(c.y) * target - anchor.y), zoom: target)
+        animateCamera(zoom: target, offset: o, duration: 0.3)
+    }
+
     /// Double-tap: zoom in around the point, or back out to fit when already deep.
     private func zoomStep(at view: CGPoint) {
         let z = scrollView.zoomScale, maxZ = scrollView.maximumZoomScale
@@ -509,7 +526,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private func numbersChanged() {
         let t = now()
         numbersFrom = numbersVisibility(at: t)
-        numbersTo = showsNumbers ? 1 : 0
+        numbersTo = showsNumbers && !isReplaying ? 1 : 0
         numbersStart = t
         activeUntil = max(activeUntil, t + 0.3)
         requestRender()
@@ -518,6 +535,48 @@ final class CanvasView: UIView, PaintingCanvas {
     private func numbersVisibility(at t: Float) -> Float {
         let k = min(max((t - numbersStart) / 0.25, 0), 1)
         return numbersFrom + (numbersTo - numbersFrom) * k * k * (3 - 2 * k)
+    }
+
+    /// Replays the painting: the paint lifts off, then every region fills again in the order
+    /// it was painted, all scheduled at once so the GPU animates it without per-frame work.
+    func replay() {
+        guard let renderer, !session.progress.log.isEmpty else { return }
+        replayTask?.cancel()
+        isReplaying = true
+        numbersChanged()
+        zoomToFit()
+        let painted = session.progress.log.map { Int($0.region) }
+        let lift: Float = 0.45
+        let time = now()
+        for r in painted {
+            renderer.update(r, RegionState(
+                origin: Self.labelPosition(template, r), start: time, duration: lift, radius: 0, painted: 0,
+                seed: Float(r % 61) * 0.73))
+        }
+        activeUntil = max(activeUntil, time + lift)
+        requestRender()
+        replayTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(Double(lift) + 0.25))
+            guard let self, !Task.isCancelled else { return }
+            // About 7 s for a typical painting, never a slog for a large one.
+            let span = min(10, max(4, Float(painted.count) * 0.02))
+            let step = span / Float(painted.count)
+            let begin = now()
+            for (i, r) in painted.enumerated() {
+                let origin = Self.labelPosition(template, r)
+                renderer.update(r, RegionState(
+                    origin: origin, start: begin + Float(i) * step, duration: 0.5,
+                    radius: farthestDistance(from: origin, in: template.regions[r].bounds), painted: 1,
+                    seed: Float(r % 61) * 0.73))
+            }
+            activeUntil = max(activeUntil, begin + span + 1.5)
+            requestRender()
+            try? await Task.sleep(for: .seconds(Double(span) + 0.4))
+            guard !Task.isCancelled else { return }
+            isReplaying = false
+            numbersChanged()
+            celebrate(.artworkCompleted)
+        }
     }
 
     /// Finishing a color sweeps a gloss over it once its last fill has landed; finishing the
@@ -639,6 +698,11 @@ final class CanvasView: UIView, PaintingCanvas {
             zoomStep(at: view)
             return
         }
+        // "Only Draw with Apple Pencil": fingers navigate (double-tap still zooms), pointers paint.
+        if tapWasFinger && UIPencilInteraction.prefersPencilOnlyDrawing {
+            lastTap = (t, view, false)
+            return
+        }
         let event = session.tap(at: p, tolerance: Float(Self.tapTolerance / scrollView.zoomScale))
         var painted = false
         switch event {
@@ -650,6 +714,7 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     @objc private func handleDragPaint(_ g: UILongPressGestureRecognizer) {
+        guard !UIPencilInteraction.prefersPencilOnlyDrawing else { return }
         let p = canvasPoint(g.location(in: zoomView))
         let radius = Float(Self.brushRadius / scrollView.zoomScale)
         switch g.state {
@@ -722,6 +787,7 @@ extension CanvasView: UIGestureRecognizerDelegate {
         if gestureRecognizer === tapRecognizer {
             // A tap that stops a fling (or a camera flight) only stops it.
             tapBeganWhileMoving = scrollView.isDecelerating || cameraAnimation != nil
+            tapWasFinger = touch.type == .direct
             cameraAnimation = nil
         }
         return true
@@ -729,12 +795,15 @@ extension CanvasView: UIGestureRecognizerDelegate {
 }
 
 extension CanvasView: UIPencilInteractionDelegate {
+    // Honour the Apple Pencil settings: either gesture may be turned off there.
     func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {
+        guard UIPencilInteraction.preferredTapAction != .ignore else { return }
         onPencilAction?(.tap)
     }
 
     func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveSqueeze squeeze: UIPencilInteraction.Squeeze) {
-        if squeeze.phase == .ended { onPencilAction?(.squeeze) }
+        guard squeeze.phase == .ended, UIPencilInteraction.preferredSqueezeAction != .ignore else { return }
+        onPencilAction?(.squeeze)
     }
 }
 

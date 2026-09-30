@@ -4,7 +4,7 @@ import SwiftUI
 import UIKit
 
 /// The painting screen: full-bleed Metal canvas, floating Liquid Glass controls on top and
-/// the palette at the bottom (trailing edge on a landscape iPad).
+/// the palette at the bottom (trailing edge on a landscape iPad, see `PaletteLayout`).
 ///
 /// Contract used by the rest of the app: `PaintView(session:title:onClose:)`. Persistence
 /// lives outside (observe `session.revision`).
@@ -22,6 +22,7 @@ struct PaintView: View {
     @State private var showsNumbers = true
     @State private var confirmRestart = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.undoManager) private var undoManager
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
@@ -39,11 +40,11 @@ struct PaintView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let sidePalette = sizeClass == .regular && geo.size.width > geo.size.height
+            let palette = paletteLayout(in: geo.size)
             ZStack {
                 PaintCanvas(
                     session: session, controller: controller,
-                    chromeInsets: canvasInsets(safe: geo.safeAreaInsets, sidePalette: sidePalette),
+                    chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
                     showsNumbers: showsNumbers, initialCamera: initialCamera, fillDurationScale: fillDurationScale,
                     onPencilAction: { handlePencil($0) })
                     .id(ObjectIdentifier(session))
@@ -54,30 +55,38 @@ struct PaintView: View {
                         .padding(.horizontal, Self.edge)
                         .padding(.top, 6)
                     Spacer(minLength: 0)
-                    if !sidePalette || session.isComplete {
-                        bottomBar(side: false)
+                    if !palette.side || session.isComplete {
+                        bottomBar(palette)
                             .padding(.horizontal, Self.edge)
                             .padding(.bottom, 4)
                     }
                 }
-                if sidePalette && !session.isComplete {
+                if palette.side && !session.isComplete {
                     HStack {
                         Spacer(minLength: 0)
-                        bottomBar(side: true)
+                        bottomBar(palette)
                             .padding(.trailing, Self.edge)
-                            .padding(.vertical, Self.barHeight + 24)
+                            .padding(.top, Self.sidePaletteTop)
+                            .padding(.bottom, Self.edge)
                     }
                 }
             }
         }
         .background(Color(uiColor: .systemGroupedBackground))
+        .focusedSceneValue(\.painting, PaintingFocus(session: session, controller: controller, showsNumbers: $showsNumbers))
         .onAppear {
             FeedbackAttachment.attach(session)
+            chrome.undoManager = undoManager
             chrome.observe(session, controller: controller)
             RenderContext.prewarm()
         }
+        .onChange(of: undoManager) { _, manager in chrome.undoManager = manager }
+        .onDisappear { undoManager?.removeAllActions(withTarget: session) }
         .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
-            Button("Restart", role: .destructive) { session.reset() }
+            Button("Restart", role: .destructive) {
+                undoManager?.removeAllActions(withTarget: session)
+                session.reset()
+            }
         } message: {
             Text("All paint will be cleared.")
         }
@@ -85,14 +94,40 @@ struct PaintView: View {
 
     // MARK: Layout
 
-    /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
-    private func canvasInsets(safe: EdgeInsets, sidePalette: Bool) -> EdgeInsets {
-        let top = safe.top + 6 + Self.barHeight + 6
-        if sidePalette && !session.isComplete {
-            return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 8,
-                              trailing: safe.trailing + Self.edge + PaletteBar.thickness + 4)
+    /// Where the palette goes and how many lines it wraps into: along the trailing edge of a
+    /// wide window (landscape iPad), otherwise at the bottom. Roomy windows show every color
+    /// at once in a few lines; compact ones scroll a single line.
+    struct PaletteLayout: Equatable {
+        var side: Bool
+        var lines: Int
+        var thickness: CGFloat { PaletteBar.thickness(lines: lines) }
+    }
+
+    private static let sidePaletteTop: CGFloat = 6 + barHeight + 12
+
+    private func paletteLayout(in size: CGSize) -> PaletteLayout {
+        let count = session.paletteCount
+        if sizeClass == .regular && size.width > size.height {
+            let length = size.height - Self.sidePaletteTop - Self.edge
+            return PaletteLayout(side: true, lines: PaletteBar.lines(count: count, length: length, maxLines: 2))
         }
-        return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + PaletteBar.thickness + 6,
+        let length = size.width - 2 * Self.edge
+        return PaletteLayout(
+            side: false, lines: PaletteBar.lines(count: count, length: length, maxLines: sizeClass == .regular ? 3 : 1))
+    }
+
+    /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
+    private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
+        let top = safe.top + 6 + Self.barHeight + 6
+        if session.isComplete {
+            return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + PaletteBar.thickness + 6,
+                              trailing: safe.trailing)
+        }
+        if palette.side {
+            return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 8,
+                              trailing: safe.trailing + Self.edge + palette.thickness + 4)
+        }
+        return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + palette.thickness + 6,
                           trailing: safe.trailing)
     }
 
@@ -108,7 +143,7 @@ struct PaintView: View {
                 Spacer(minLength: 0)
                 GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
                     .disabled(session.isComplete)
-                GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo") { session.undo() }
+                GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                     .disabled(session.progress.paintedCount == 0)
                 moreMenu
             }
@@ -150,6 +185,9 @@ struct PaintView: View {
         Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
+            if session.isComplete {
+                Button { controller.replay() } label: { Label("Replay Painting", systemImage: "play") }
+            }
             Divider()
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
         } label: {
@@ -165,16 +203,28 @@ struct PaintView: View {
     // MARK: Bottom
 
     @ViewBuilder
-    private func bottomBar(side: Bool) -> some View {
-        if session.isComplete && !side {
-            CompletionBar(session: session, title: title, onClose: onClose)
+    private func bottomBar(_ palette: PaletteLayout) -> some View {
+        if session.isComplete {
+            CompletionBar(session: session, title: title, onReplay: controller.replay, onClose: onClose)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
-            PaletteBar(session: session, axis: side ? .vertical : .horizontal, shakes: chrome.shakes)
+            PaletteBar(
+                session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
+                shakes: chrome.shakes)
         }
     }
 
     // MARK: Actions
+
+    /// Undoes through the window's undo manager (so redo works) while it has this session's
+    /// fills; older history comes straight from the saved stroke log.
+    private func undo() {
+        if let undoManager, undoManager.canUndo {
+            undoManager.undo()
+        } else {
+            session.undo()
+        }
+    }
 
     private func handlePencil(_ action: PencilAction) {
         switch action {
@@ -231,12 +281,14 @@ struct GlassIconLabel: View {
 private struct CompletionBar: View {
     let session: PaintingSession
     let title: String
+    let onReplay: () -> Void
     let onClose: (() -> Void)?
     @State private var shareImage: Image?
 
-    init(session: PaintingSession, title: String, onClose: (() -> Void)?) {
+    init(session: PaintingSession, title: String, onReplay: @escaping () -> Void, onClose: (() -> Void)?) {
         self.session = session
         self.title = title
+        self.onReplay = onReplay
         self.onClose = onClose
     }
 
@@ -254,6 +306,12 @@ private struct CompletionBar: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
+            Button(action: onReplay) {
+                GlassIconLabel(systemImage: "play.fill")
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
+            .accessibilityLabel(Text("Replay"))
             if let shareImage {
                 ShareLink(item: shareImage, preview: SharePreview(title.isEmpty ? "Painting" : title, image: shareImage)) {
                     GlassIconLabel(systemImage: "square.and.arrow.up")
@@ -285,18 +343,23 @@ private struct CompletionBar: View {
     }
 }
 
-/// Transient chrome reactions to painting events.
+/// Transient chrome reactions to painting events, and undo registration.
 @Observable
 final class PaintChromeState {
     /// Per color: bumped to shake its swatch.
     var shakes: [Int: Int] = [:]
+    /// The window's undo manager: every fill is registered with it (⌘Z, the Edit menu,
+    /// three-finger undo and redo).
+    @ObservationIgnored weak var undoManager: UndoManager?
     @ObservationIgnored private var observed: ObjectIdentifier?
 
     func observe(_ session: PaintingSession, controller: CanvasController) {
         guard observed != ObjectIdentifier(session) else { return }
         observed = ObjectIdentifier(session)
-        session.onEvent { [weak self, weak controller] event in
+        session.onEvent { [weak self, weak controller, weak session] event in
             switch event {
+            case let .painted(regions, _):
+                if let session { self?.registerUndo(of: regions.count, in: session) }
             case let .rejected(_, expected):
                 withAnimation(.linear(duration: 0.45)) { self?.shakes[expected, default: 0] += 1 }
             case .artworkCompleted:
@@ -305,6 +368,29 @@ final class PaintChromeState {
                 break
             }
         }
+    }
+
+    /// Undo takes back the fills of one paint event (a tap, or one step of a drag). Redoing
+    /// paints them again, which registers the next undo through the same event.
+    private func registerUndo(of count: Int, in session: PaintingSession) {
+        guard let undoManager else { return }
+        // UndoManager calls back on the thread that undoes: the main thread.
+        undoManager.registerUndo(withTarget: session) { [weak self] session in
+            MainActor.assumeIsolated { self?.undoFills(count, in: session) }
+        }
+        undoManager.setActionName(String(localized: "Paint"))
+    }
+
+    private func undoFills(_ count: Int, in session: PaintingSession) {
+        let undone = (0..<count).compactMap { _ in session.undo() }
+        guard let undoManager, let first = undone.first else { return }
+        undoManager.registerUndo(withTarget: session) { session in
+            MainActor.assumeIsolated {
+                let origin = session.template.labels(ofRegion: first).first?.position ?? .zero
+                session.paint(undone.reversed(), from: origin, animated: true)
+            }
+        }
+        undoManager.setActionName(String(localized: "Paint"))
     }
 }
 

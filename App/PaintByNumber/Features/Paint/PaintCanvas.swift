@@ -2,12 +2,14 @@ import PaintCore
 import SwiftUI
 import UIKit
 
-/// Lets SwiftUI chrome drive the live canvas (hints, zoom to fit).
+/// Lets SwiftUI chrome and commands drive the live canvas (hints, zoom).
 final class CanvasController {
     fileprivate weak var view: CanvasView?
 
     func showHint() { view?.showHint() }
     func zoomToFit() { view?.zoomToFit() }
+    func zoom(by factor: CGFloat) { view?.zoom(by: factor) }
+    func replay() { view?.replay() }
 }
 
 /// SwiftUI host of the Metal canvas.

@@ -13,6 +13,7 @@ import simd
 /// - `paint-dark`: `paint-progress` for dark appearance
 /// - `paint-fill`: fills frozen mid-animation to inspect the paint front
 /// - `paint-hint`: the hint flies the camera to a region of the selected color
+/// - `paint-replay`: a finished painting mid-replay
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -94,7 +95,7 @@ private final class Demo {
             }
             let target = candidates.min { simd_distance(Self.center(t, $0), middle) < simd_distance(Self.center(t, $1), middle) }
             camera = CanvasCamera(zoom: 4, center: target.map { Self.center(t, $0) } ?? middle)
-        case "paint-complete":
+        case "paint-complete", "paint-replay":
             paint(fraction: 1)
         case "paint-fill":
             paint(fraction: 0.2)
@@ -114,6 +115,13 @@ private final class Demo {
             session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
             let attached = session.canvas != nil
             Self.log.notice("demo paint-hint: requested (canvas attached: \(attached, privacy: .public))")
+            return
+        }
+        if scenario == "paint-replay" {
+            try? await Task.sleep(for: .seconds(1.5))
+            (session.canvas as? CanvasView)?.replay()
+            // Readiness is signalled on return; the screenshot follows ~2 s later, mid-replay.
+            try? await Task.sleep(for: .seconds(1.5))
             return
         }
         guard scenario == "paint-fill" else { return }

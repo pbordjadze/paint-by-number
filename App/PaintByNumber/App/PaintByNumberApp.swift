@@ -10,5 +10,6 @@ struct PaintByNumberApp: App {
                 .environment(library)
                 .tint(Theme.accent)
         }
+        .commands { PaintCommands() }
     }
 }

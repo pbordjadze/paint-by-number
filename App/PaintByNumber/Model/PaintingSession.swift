@@ -154,12 +154,15 @@ final class PaintingSession {
         return event
     }
 
-    func undo() {
-        guard let region = progress.undo() else { return }
+    /// Unpaints the most recent fill; returns its region.
+    @discardableResult
+    func undo() -> Int? {
+        guard let region = progress.undo() else { return nil }
         remainingByColor[colorOf(region)] += 1
         revision += 1
         canvas?.session(self, didUnpaint: [region])
         emit(.undone(region: region))
+        return region
     }
 
     func reset() {

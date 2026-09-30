@@ -2,26 +2,55 @@ import PaintCore
 import SwiftUI
 
 /// The paint palette: circular swatches with their number, a progress ring per color, a
-/// checkmark once a color is done. Scrolls to keep the selected color in view.
+/// checkmark once a color is done. Swatches wrap into up to `lines` rows (columns when
+/// vertical) numbered row by row, and scroll when they still don't fit; the selected color
+/// is kept in view.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
+    /// Rows of a horizontal bar, columns of a vertical one.
+    var lines = 1
     /// Per color, bumped to shake its swatch (e.g. after tapping a region of that color).
     var shakes: [Int: Int] = [:]
 
-    static let thickness: CGFloat = 76
+    static let swatchPitch: CGFloat = 56
+    private static let spacing: CGFloat = 8
+    private static let padding: CGFloat = 14
+    private static let endPadding: CGFloat = 16
+
+    /// Bar thickness across its axis.
+    static func thickness(lines: Int) -> CGFloat { CGFloat(lines) * swatchPitch - spacing + 2 * padding }
+    static var thickness: CGFloat { thickness(lines: 1) }
+
+    /// Bar length along its axis for `count` swatches in `lines` lines.
+    static func length(count: Int, lines: Int) -> CGFloat {
+        CGFloat((count + lines - 1) / max(lines, 1)) * swatchPitch - spacing + 2 * endPadding
+    }
+
+    /// The fewest lines (up to `maxLines`) that fit `count` swatches in `length` points.
+    static func lines(count: Int, length: CGFloat, maxLines: Int) -> Int {
+        let perLine = max(1, Int((length - 2 * endPadding + spacing) / swatchPitch))
+        return min(max(1, maxLines), max(1, (count + perLine - 1) / perLine))
+    }
 
     var body: some View {
+        let count = session.paletteCount
+        let lineCount = max(1, min(lines, count))
+        let columns = max(1, axis == .horizontal ? (count + lineCount - 1) / lineCount : lineCount)
+        let radius = min(Self.thickness(lines: lineCount) / 2, 38)
         ScrollViewReader { proxy in
             ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
-                let layout = axis == .horizontal ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(spacing: 8))
-                layout {
-                    ForEach(0..<session.paletteCount, id: \.self) { index in
-                        swatch(index).id(index)
+                VStack(alignment: .leading, spacing: Self.spacing) {
+                    ForEach(Array(stride(from: 0, to: count, by: columns)), id: \.self) { start in
+                        HStack(spacing: Self.spacing) {
+                            ForEach(start..<min(start + columns, count), id: \.self) { index in
+                                swatch(index).id(index)
+                            }
+                        }
                     }
                 }
-                .padding(axis == .horizontal ? .horizontal : .vertical, 16)
-                .frame(minWidth: axis == .horizontal ? nil : Self.thickness, minHeight: axis == .horizontal ? Self.thickness : nil)
+                .padding(axis == .horizontal ? .horizontal : .vertical, Self.endPadding)
+                .padding(axis == .horizontal ? .vertical : .horizontal, Self.padding)
             }
             .onAppear {
                 if let selected = session.selectedColor { proxy.scrollTo(selected, anchor: .center) }
@@ -31,9 +60,12 @@ struct PaletteBar: View {
                 withAnimation(.smooth(duration: 0.35)) { proxy.scrollTo(selected, anchor: .center) }
             }
         }
-        .frame(width: axis == .vertical ? Self.thickness : nil, height: axis == .horizontal ? Self.thickness : nil)
-        .clipShape(.capsule)
-        .glassEffect(.regular, in: .capsule)
+        .frame(width: axis == .vertical ? Self.thickness(lines: lineCount) : nil,
+               height: axis == .horizontal ? Self.thickness(lines: lineCount) : nil)
+        .frame(maxWidth: axis == .horizontal ? Self.length(count: count, lines: lineCount) : nil,
+               maxHeight: axis == .vertical ? Self.length(count: count, lines: lineCount) : nil)
+        .clipShape(.rect(cornerRadius: radius))
+        .glassEffect(.regular, in: .rect(cornerRadius: radius))
     }
 
     private func swatch(_ index: Int) -> some View {

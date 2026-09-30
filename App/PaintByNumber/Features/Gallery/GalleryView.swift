@@ -74,11 +74,12 @@ struct GalleryView: View {
 
     // MARK: Layout
 
+    /// Cards of roughly 240–330 pt: three across a portrait iPad, four or five in landscape.
     private var columnCount: Int {
         switch width {
         case ..<560: 2
-        case ..<840: 3
-        case ..<1140: 4
+        case ..<1100: 3
+        case ..<1300: 4
         default: 5
         }
     }

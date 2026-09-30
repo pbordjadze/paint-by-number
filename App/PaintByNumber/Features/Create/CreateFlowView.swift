@@ -3,6 +3,8 @@ import SwiftUI
 /// New painting: pick a photo (library, camera or a sample) → tune the template → paint.
 struct CreateFlowView: View {
     var demo: ShellDemo?
+    /// A photo dropped on the gallery: the flow opens on its preview.
+    var droppedPhoto: Data?
     var onStart: (Artwork) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -20,9 +22,14 @@ struct CreateFlowView: View {
                 }
         }
         .task {
-            // Demo: open straight on the preview (pushing while the cover is still being
-            // presented would stall the presentation).
-            if let sample = demo?.previewSample, model.source == nil { model.load(sample: sample) }
+            // A dropped photo or demo opens straight on the preview (pushing while the cover
+            // is still being presented would stall the presentation).
+            guard model.source == nil else { return }
+            if let droppedPhoto {
+                model.load(imageData: droppedPhoto)
+            } else if let sample = demo?.previewSample {
+                model.load(sample: sample)
+            }
         }
         .onChange(of: model.isFinal) { _, isFinal in
             if isFinal, demo?.previewSample != nil { DemoMode.markReady() }
@@ -32,7 +39,7 @@ struct CreateFlowView: View {
 
     @ViewBuilder
     private var root: some View {
-        if demo?.previewSample != nil {
+        if droppedPhoto != nil || demo?.previewSample != nil {
             TemplatePreviewView(model: model, onStart: start)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

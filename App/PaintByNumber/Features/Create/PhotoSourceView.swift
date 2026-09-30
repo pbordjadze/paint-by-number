@@ -130,6 +130,8 @@ private struct SampleTile: View {
             .background(Theme.surface)
             .clipShape(.rect(cornerRadius: 18, style: .continuous))
             .contentShape(.rect(cornerRadius: 18, style: .continuous))
+            .contentShape(.hoverEffect, .rect(cornerRadius: 18, style: .continuous))
+            .hoverEffect(.lift)
             .task {
                 let loaded = await SampleImages.shared.load(sample, maxPixelSize: 640)
                 withAnimation(.easeOut(duration: 0.2)) { image = loaded }

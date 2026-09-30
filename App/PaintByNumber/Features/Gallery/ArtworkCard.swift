@@ -13,6 +13,9 @@ struct ArtworkCard: View {
             .overlay(alignment: .topTrailing) {
                 if artwork.isComplete { FinishedBadge().padding(10) }
             }
+            // The pointer lifts the picture, not its caption.
+            .contentShape(.hoverEffect, .rect(cornerRadius: Theme.cardRadius, style: .continuous))
+            .hoverEffect(.lift)
             .matchedTransitionSource(id: artwork.id, in: namespace) { source in
                 source.clipShape(RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
             }

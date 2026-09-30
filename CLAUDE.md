@@ -54,6 +54,12 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Key model types: `PaintingSession` (@Observable; painting rules, tap tolerance, drag-paint, undo,
   per-color progress, events) + `PaintProgress` (persisted). The Metal canvas conforms to
   `PaintingCanvas` and is driven by the session.
+- iPad first: `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns (trailing
+  edge of wide windows) so every color shows at once; `PaintCommands` is the Paint menu (iPadOS
+  menu bar, single-key shortcuts) fed by the focused `PaintingFocus`; fills are registered with
+  the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu, three-finger undo); the Pencil paints while
+  fingers navigate (and only navigate under "Only Draw with Apple Pencil"). The app is single
+  window: one live `PaintingSession` per painting.
 - Library (`Model/`): `Library` (@Observable, injected via `.environment`) keeps `Artwork` metadata
   in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
   `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,
