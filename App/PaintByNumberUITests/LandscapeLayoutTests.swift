@@ -1,8 +1,9 @@
 import UIKit
 import XCTest
 
-/// iPad layouts in landscape (the CI screenshot pass is portrait only); each test attaches a
-/// screenshot for review.
+/// iPad layouts in landscape (the CI screenshot pass is portrait only). Each test attaches a
+/// screenshot for review, then runs the system accessibility audit on the screen: all issues
+/// are attached (`accessibility-<screen>`); missing labels and small hit regions fail.
 final class LandscapeLayoutTests: XCTestCase {
     /// The palette (along the trailing edge) shows every color without scrolling.
     @MainActor
@@ -17,6 +18,7 @@ final class LandscapeLayoutTests: XCTestCase {
         for swatch in swatches {
             XCTAssertTrue(window.contains(swatch.frame), "\(swatch.label) is scrolled out of view")
         }
+        try audit(app, named: "paint-progress")
     }
 
     @MainActor
@@ -28,6 +30,7 @@ final class LandscapeLayoutTests: XCTestCase {
         waitForExpectations(timeout: 60)
         sleep(1)
         attachScreenshot(of: app, named: "landscape-create-preview")
+        try audit(app, named: "create-preview")
     }
 
     @MainActor
@@ -40,6 +43,44 @@ final class LandscapeLayoutTests: XCTestCase {
         sleep(2)
         attachScreenshot(of: app, named: "landscape-gallery")
         XCTAssertFalse(preparing.exists, "Samples were still being prepared")
+        try audit(app, named: "gallery")
+    }
+
+    /// Collects issues from the audit's handler, whatever its isolation.
+    private final class Findings: @unchecked Sendable {
+        var all: [String] = []
+        var blocking: [String] = []
+    }
+
+    @MainActor
+    private func audit(_ app: XCUIApplication, named name: String) throws {
+        let findings = Findings()
+        try app.performAccessibilityAudit { issue in
+            // The audit reports on the main thread.
+            MainActor.assumeIsolated {
+                let element = issue.element.map { "'\($0.label)' (\($0.elementType.rawValue))" } ?? "no element"
+                let line = "\(Self.name(of: issue.auditType)): \(issue.compactDescription) — \(element)"
+                findings.all.append(line)
+                if issue.auditType == .sufficientElementDescription || issue.auditType == .hitRegion {
+                    findings.blocking.append(line)
+                }
+            }
+            return true
+        }
+        let attachment = XCTAttachment(string: findings.all.isEmpty ? "No issues" : findings.all.joined(separator: "\n"))
+        attachment.name = "accessibility-\(name)"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        XCTAssertTrue(findings.blocking.isEmpty, "Accessibility issues:\n" + findings.blocking.joined(separator: "\n"))
+    }
+
+    private static func name(of type: XCUIAccessibilityAuditType) -> String {
+        let names: [(XCUIAccessibilityAuditType, String)] = [
+            (.contrast, "contrast"), (.elementDetection, "element detection"), (.hitRegion, "hit region"),
+            (.sufficientElementDescription, "description"), (.dynamicType, "dynamic type"),
+            (.textClipped, "text clipped"), (.trait, "trait"),
+        ]
+        return names.first { type.contains($0.0) }?.1 ?? "type \(type.rawValue)"
     }
 
     @MainActor

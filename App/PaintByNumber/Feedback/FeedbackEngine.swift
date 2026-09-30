@@ -65,6 +65,8 @@ final class FeedbackEngine {
             if sound { sounds.celebrate() }
         case .undone:
             if haptic { haptics.tick() }
+        case .strokeEnded:
+            break
         }
     }
 }

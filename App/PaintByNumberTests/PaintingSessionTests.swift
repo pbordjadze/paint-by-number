@@ -88,6 +88,43 @@ struct PaintingSessionTests {
         }
     }
 
+    /// Fills registered with an undo manager: a tap undoes alone, a stroke as a whole, and
+    /// redo paints them again.
+    @Test func undoManagerUndoesTapsAndWholeStrokes() throws {
+        let session = PaintingSession(template: template)
+        let undo = UndoManager()
+        undo.groupsByEvent = false
+        let chrome = PaintChromeState()
+        chrome.undoManager = undo
+        chrome.observe(session, controller: CanvasController())
+        let color = try #require(template.palette.indices.first { regions(ofColor: $0).count >= 4 })
+        let reds = regions(ofColor: color)
+        session.select(color: color)
+
+        undo.beginUndoGrouping()
+        session.paint([reds[0]], from: label(reds[0]), animated: false)
+        undo.endUndoGrouping()
+        undo.beginUndoGrouping()
+        session.beginStroke()
+        session.paint([reds[1]], from: label(reds[1]), animated: false)
+        session.paint([reds[2], reds[3]], from: label(reds[2]), animated: false)
+        session.endStroke()
+        undo.endUndoGrouping()
+        #expect(!session.isStroking)
+
+        undo.undo()
+        #expect(session.isPainted(reds[0]))
+        #expect(!session.isPainted(reds[1]) && !session.isPainted(reds[2]) && !session.isPainted(reds[3]))
+        undo.undo()
+        #expect(!session.isPainted(reds[0]))
+        #expect(!undo.canUndo)
+        undo.redo()
+        #expect(session.isPainted(reds[0]))
+        undo.redo()
+        #expect(session.isPainted(reds[1]) && session.isPainted(reds[2]) && session.isPainted(reds[3]))
+        #expect(session.progress.paintedCount == 4)
+    }
+
     @Test func undoRevertsTheLastFill() {
         let session = PaintingSession(template: template)
         let canvas = RecordingCanvas()
@@ -199,7 +236,9 @@ struct PaintingSessionTests {
     @Test func liveCanvasAnimatesATap() async throws {
         let session = PaintingSession(template: template)
         let view = CanvasView(session: session)
-        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
         window.addSubview(view)
         view.frame = window.bounds
         window.isHidden = false

@@ -120,6 +120,7 @@ final class PaintingNavigationTests: XCTestCase {
     }
 
     /// The middle half of the screen, clear of the status bar and the chrome.
+    @MainActor
     private func canvasArea(of shot: XCUIScreenshot) -> Data? {
         guard let image = shot.image.cgImage else { return nil }
         let rect = CGRect(x: 0, y: image.height / 4, width: image.width, height: image.height / 2)

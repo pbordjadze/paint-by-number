@@ -722,6 +722,7 @@ final class CanvasView: UIView, PaintingCanvas {
             FeedbackEngine.shared.selectionChanged()
             brushPoint = g.location(in: self)
             dragLast = p
+            session.beginStroke()
             session.drag(from: p, to: p, radius: radius)
         case .changed:
             brushPoint = g.location(in: self)
@@ -730,6 +731,7 @@ final class CanvasView: UIView, PaintingCanvas {
         default:
             brushPoint = nil
             dragLast = nil
+            session.endStroke()
         }
         requestRender()
     }
@@ -739,6 +741,7 @@ final class CanvasView: UIView, PaintingCanvas {
         switch g.state {
         case .began:
             dragLast = p
+            session.beginStroke()
             if case let .rejected(region, _)? = session.tap(at: p, tolerance: Float(6 / scrollView.zoomScale)) {
                 bump(region)
             }
@@ -747,6 +750,7 @@ final class CanvasView: UIView, PaintingCanvas {
             dragLast = p
         default:
             dragLast = nil
+            session.endStroke()
         }
     }
 

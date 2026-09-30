@@ -23,6 +23,8 @@ enum PaintEvent: Equatable {
     case colorCompleted(Int)
     case artworkCompleted
     case undone(region: Int)
+    /// A drag or Pencil stroke ended; `regions` are all it painted (it undoes as one step).
+    case strokeEnded(regions: [Int])
 }
 
 /// The live state of painting one artwork: template, progress, selection and the rules of
@@ -45,6 +47,8 @@ final class PaintingSession {
     @ObservationIgnored private let clock = ContinuousClock()
     /// Automatically select the next unfinished color when one is completed.
     @ObservationIgnored var autoAdvance = true
+    /// Fills of the stroke in progress (nil between strokes).
+    @ObservationIgnored private var strokeFills: [Int]?
 
     init(template: Template, progress: PaintProgress? = nil) {
         self.template = template
@@ -129,6 +133,17 @@ final class PaintingSession {
         return paint(found, from: b, animated: true)
     }
 
+    /// Brackets a drag or Pencil stroke so everything it paints undoes together.
+    func beginStroke() { strokeFills = [] }
+
+    func endStroke() {
+        guard let fills = strokeFills else { return }
+        strokeFills = nil
+        if !fills.isEmpty { emit(.strokeEnded(regions: fills)) }
+    }
+
+    var isStroking: Bool { strokeFills != nil }
+
     /// Paints regions (programmatic entry point; also used by demos and tests).
     @discardableResult
     func paint(_ regions: [Int], from origin: SIMD2<Float>, animated: Bool) -> PaintEvent? {
@@ -139,6 +154,7 @@ final class PaintingSession {
             remainingByColor[colorOf(r)] -= 1
         }
         guard !newly.isEmpty else { return nil }
+        strokeFills?.append(contentsOf: newly)
         revision += 1
         canvas?.session(self, didPaint: newly, from: origin, animated: animated)
         let color = colorOf(newly[0])

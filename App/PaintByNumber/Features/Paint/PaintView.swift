@@ -152,7 +152,21 @@ struct PaintView: View {
 
     private var progressBadge: some View {
         let fraction = session.fractionComplete
-        return HStack(spacing: 8) {
+        // The title shows only when it fits whole (compact widths drop it).
+        return ViewThatFits(in: .horizontal) {
+            if !title.isEmpty { badgeContent(fraction: fraction, showsTitle: true) }
+            badgeContent(fraction: fraction, showsTitle: false)
+        }
+        .frame(height: Self.barHeight)
+        .glassEffect(.regular, in: .capsule)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title.isEmpty
+            ? Text("\(Int(fraction * 100)) percent painted")
+            : Text("\(title), \(Int(fraction * 100)) percent painted"))
+    }
+
+    private func badgeContent(fraction: Double, showsTitle: Bool) -> some View {
+        HStack(spacing: 8) {
             ZStack {
                 Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
                 Circle()
@@ -162,23 +176,22 @@ struct PaintView: View {
             }
             .frame(width: 18, height: 18)
             .animation(.easeOut(duration: 0.4), value: fraction)
-            if !title.isEmpty {
+            if showsTitle {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
+                    .fixedSize()
             }
             Text(verbatim: "\(Int(fraction * 100))%")
                 .font(.subheadline.weight(.semibold))
                 .monospacedDigit()
-                .foregroundStyle(title.isEmpty ? Color.primary : Color.secondary)
+                .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
                 .contentTransition(.numericText())
                 .animation(.snappy, value: Int(fraction * 100))
+                .lineLimit(1)
+                .fixedSize()
         }
         .padding(.horizontal, 14)
-        .frame(height: Self.barHeight)
-        .glassEffect(.regular, in: .capsule)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("\(Int(fraction * 100)) percent painted"))
     }
 
     private var moreMenu: some View {
@@ -359,6 +372,8 @@ final class PaintChromeState {
         session.onEvent { [weak self, weak controller, weak session] event in
             switch event {
             case let .painted(regions, _):
+                if let session, !session.isStroking { self?.registerUndo(of: regions.count, in: session) }
+            case let .strokeEnded(regions):
                 if let session { self?.registerUndo(of: regions.count, in: session) }
             case let .rejected(_, expected):
                 withAnimation(.linear(duration: 0.45)) { self?.shakes[expected, default: 0] += 1 }
@@ -370,8 +385,8 @@ final class PaintChromeState {
         }
     }
 
-    /// Undo takes back the fills of one paint event (a tap, or one step of a drag). Redoing
-    /// paints them again, which registers the next undo through the same event.
+    /// Undo takes back the fills of one tap or one whole stroke. Redoing paints them again,
+    /// which registers the next undo through the same event.
     private func registerUndo(of count: Int, in session: PaintingSession) {
         guard let undoManager else { return }
         // UndoManager calls back on the thread that undoes: the main thread.
