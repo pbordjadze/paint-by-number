@@ -6,10 +6,12 @@ name: CI
 # simulator boots in the background while the app builds.
 # iPad is the primary device (Debug build, screenshots, tests on every push); iPhone
 # (Release build, screenshots) runs on the main development branch or on request.
+# The main development branch also publishes an unsigned device IPA as a `build-<n>`
+# prerelease and a SideStore source listing the latest builds (branch `sidestore`).
 
 on:
   push:
-    branches-ignore: ['ci-shots/**']
+    branches-ignore: ['ci-shots/**', 'sidestore']
   workflow_dispatch:
     inputs:
       scenarios:
@@ -154,9 +156,61 @@ jobs:
         if: always()
         with: { name: iphone, path: out, if-no-files-found: ignore }
 
+  ipa:
+    name: IPA for SideStore (unsigned device build)
+    if: github.ref_name == 'claude/paint-by-numbers-app'
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      BUILD: ${{ github.run_number }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Archive
+        run: |
+          set -o pipefail
+          mkdir -p out
+          # Version 1.0.<run>, build <run>: every build is an update to the installed one.
+          xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/PaintByNumber.xcarchive -quiet \
+            MARKETING_VERSION="1.0.$BUILD" CURRENT_PROJECT_VERSION="$BUILD" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            2>&1 | tee out/ipa-build.log | tail -80
+      - name: Package
+        run: |
+          # SideStore signs the app with the user's Apple ID when installing it.
+          APP=build/PaintByNumber.xcarchive/Products/Applications/PaintByNumber.app
+          mkdir -p build/ipa/Payload
+          cp -R "$APP" build/ipa/Payload/
+          (cd build/ipa && zip -qry ../../out/PaintByNumber.ipa Payload)
+          ls -l out/PaintByNumber.ipa
+          /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"
+      - name: Publish release and SideStore source
+        run: |
+          git log -1 --format=%s > out/notes.txt
+          gh release create "build-$BUILD" out/PaintByNumber.ipa --prerelease --target "$GITHUB_SHA" \
+            --title "Build $BUILD" --notes-file out/notes.txt
+          # Keep the five newest builds.
+          gh release list --limit 100 --json tagName -q '.[].tagName' | grep '^build-' | tail -n +6 |
+            while read -r tag; do gh release delete "$tag" --yes --cleanup-tag; done
+          SOURCE="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/sidestore"
+          mkdir -p build/source
+          python3 ci/sidestore_source.py build/PaintByNumber.xcarchive/Products/Applications/PaintByNumber.app \
+            "$SOURCE/icon.png" > build/source/source.json
+          cp App/PaintByNumber/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png build/source/icon.png
+          printf '# SideStore source\n\nAdd %s/source.json in SideStore (Sources → +).\n' "$SOURCE" > build/source/README.md
+          cp build/source/source.json out/
+          cd build/source
+          git init -q && git checkout -q -b sidestore && git add -A
+          git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "SideStore source for build $BUILD"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "sidestore:refs/heads/sidestore"
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: ipa, path: out, if-no-files-found: ignore }
+
   report:
     name: Publish report
-    needs: [core, ipad, iphone]
+    needs: [core, ipad, iphone, ipa]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -176,6 +230,7 @@ jobs:
             echo "core: ${{ needs.core.result }}"
             echo "ipad: ${{ needs.ipad.result }}"
             echo "iphone: ${{ needs.iphone.result }}"
+            echo "ipa: ${{ needs.ipa.result }}"
           } > STATUS.md
           echo "${GITHUB_SHA}" > COMMIT
           git init -q && git checkout -q -b shots

@@ -87,6 +87,12 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
    workflow_dispatch with `iphone: true`. Turnaround ~10 min (longer if several branches are
    queued: only 5 macOS jobs run concurrently). Work on something else while it runs.
 3. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
+4. Device builds: every push to `claude/paint-by-numbers-app` also archives an unsigned Release
+   IPA (version `1.0.<run>`, build `<run>`), publishes it as the `build-<run>` prerelease (the
+   five newest are kept) and rewrites the SideStore/AltStore source on the `sidestore` branch
+   (`ci/sidestore_source.py`). Users add
+   `https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/source.json` in
+   SideStore; it signs the IPA with their Apple ID and offers each new build as an update.
 
 ## Conventions
 
