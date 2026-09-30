@@ -41,6 +41,45 @@ struct RasterizerTests {
         }
     }
 
+    @Test func numbersAreNeverDropped() throws {
+        // Labels with almost no room: the numbers are drawn at the legible floor, not left out.
+        var t = Fixtures.stripes(count: 3, stripeWidth: 40, height: 40)
+        for k in t.labels.indices { t.labels[k].radius = 0.2 }
+        let image = try #require(TemplateRasterizer.image(t, style: .template, maxPixelSize: 480))
+        let pixels = PixelReader(image)
+        for label in t.labels {
+            let cx = Int(label.position.x * 4), cy = Int(label.position.y * 4)
+            var ink = 0
+            for y in (cy - 12)..<(cy + 12) {
+                for x in (cx - 12)..<(cx + 12) where pixels[x, y].x < 170 { ink += 1 }
+            }
+            #expect(ink > 5, "number of region \(label.region)")
+        }
+    }
+
+    @Test func threeDigitNumbersFit() throws {
+        // The middle stripe shows 121: sized for three digits, its run stays inside the stripe.
+        var t = Fixtures.stripes(count: 3, stripeWidth: 40, height: 40)
+        let grey = PaletteColor(oklab: SIMD3(0.6, 0, 0), space: .sRGB)
+        t.palette += Array(repeating: grey, count: 121 - t.palette.count)
+        t.regions[1].colorIndex = 120
+        var style = TemplateRasterizer.Style.template
+        style.maximumNumberFraction = 1
+        let image = try #require(TemplateRasterizer.image(t, style: style, maxPixelSize: 480))
+        let pixels = PixelReader(image)
+        // Separators at canvas x = 40 and 80 → 160 and 320 px; the bands just outside them are
+        // clear of the other stripes' single digits.
+        var outside = 0, inside = 0
+        for y in 0..<pixels.height {
+            for x in 130..<157 where pixels[x, y].x < 170 { outside += 1 }
+            for x in 324..<350 where pixels[x, y].x < 170 { outside += 1 }
+            for x in 164..<317 where pixels[x, y].x < 170 { inside += 1 }
+        }
+        #expect(outside == 0)
+        #expect(inside > 100)
+        if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "three-digit-number.png") }
+    }
+
     @Test func finishedPaintingHasNoSketch() throws {
         let t = Fixtures.stripes()
         let image = try #require(TemplateRasterizer.image(t, style: .painting, maxPixelSize: 60))

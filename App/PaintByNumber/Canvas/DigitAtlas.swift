@@ -18,10 +18,9 @@ nonisolated struct DigitAtlas: Sendable {
     let rects: [SIMD4<Float>]
     /// Per digit: texture coordinates u0, v0, u1, v1.
     let uvs: [SIMD4<Float>]
-    /// Per digit advance in em.
+    /// Per digit advance in em: places the digits of a run. How big a run is drawn is
+    /// `LabelSizing`'s decision, shared with every other renderer.
     let advances: [Float]
-    /// Height of the digits (cap height) in em.
-    let digitHeight: Float
 
     static func make(fontSize: Int = 64, spread: Int = 8, supersample: Int = 3) -> DigitAtlas? {
         let ss = supersample
@@ -77,7 +76,7 @@ nonisolated struct DigitAtlas: Sendable {
         }
         return DigitAtlas(
             width: atlasW, height: atlasH, pixels: pixels, rects: rects, uvs: uvs,
-            advances: advances.map { Float($0.width / size) }, digitHeight: Float(cap / size))
+            advances: advances.map { Float($0.width / size) })
     }
 
     /// Width in em of the digit run for `number`.

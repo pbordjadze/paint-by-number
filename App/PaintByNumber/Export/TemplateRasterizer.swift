@@ -30,7 +30,8 @@ nonisolated enum TemplateRasterizer {
         var hidesOutlinesBetweenPainted = true
         var numbers = false
         var numberColor = SIMD4<Float>(0.38, 0.40, 0.43, 1)
-        /// Numbers smaller than this (output pixels/points) are left out.
+        /// Numbers are never drawn smaller than this (output pixels/points), even where that
+        /// overflows a tiny region: a number left out is a region nobody can paint.
         var minimumNumberSize: CGFloat = 5
         /// Largest number as a fraction of the canvas' long side; big regions carry several
         /// labels of this size rather than one huge number.
@@ -297,8 +298,11 @@ nonisolated enum TemplateRasterizer {
             let region = Int(label.region)
             guard region < painted.count, !painted[region] else { continue }
             let number = Int(t.regions[region].colorIndex) + 1
-            let size = min(CGFloat(SVGExport.fontSize(forRadius: label.radius, digits: number < 10 ? 1 : 2)), maximumSize)
-            guard size * scale >= style.minimumNumberSize else { continue }
+            let fitted = CGFloat(LabelSizing.fontSize(
+                radius: label.radius, digits: LabelSizing.digitCount(of: number), maximum: Float(maximumSize)))
+            // Never dropped: an unnumbered region can't be painted, so small outputs draw
+            // numbers at the legible floor even where that overflows a tiny region.
+            let size = max(fitted, style.minimumNumberSize / max(scale, 0.0001))
             let run = line(for: number)
             let s = size / referenceFontSize
             ctx.saveGState()

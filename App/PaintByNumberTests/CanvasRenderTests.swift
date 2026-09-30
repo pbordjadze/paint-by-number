@@ -139,6 +139,21 @@ struct CanvasRenderTests {
         }
     }
 
+    @Test func labelSizesFollowSharedRule() throws {
+        let t = Self.template
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: t, context: context))
+        let maxSize = 0.045 * Float(min(t.width, t.height))
+        for r in t.regions.indices {
+            guard let label = t.labels(ofRegion: r).first else {
+                #expect(scene.labelSizes[r] == 0)
+                continue
+            }
+            let digits = LabelSizing.digitCount(colorIndex: t.regions[r].colorIndex)
+            #expect(scene.labelSizes[r] == LabelSizing.fontSize(radius: label.radius, digits: digits, maximum: maxSize))
+        }
+    }
+
     @Test func largeTemplateBuildsAndRendersQuickly() throws {
         let clock = ContinuousClock()
         var t0 = clock.now
