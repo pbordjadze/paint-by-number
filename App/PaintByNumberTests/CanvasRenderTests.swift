@@ -12,7 +12,7 @@ struct CanvasRenderTests {
     static let template = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
 
     @Test func shaderStructLayoutsMatchMetal() {
-        #expect(MemoryLayout<CanvasUniforms>.stride == 208)
+        #expect(MemoryLayout<CanvasUniforms>.stride == 224)
         #expect(MemoryLayout<RegionState>.stride == 32)
         #expect(MemoryLayout<GlyphInstance>.stride == 24)
     }
@@ -223,6 +223,69 @@ struct CanvasRenderTests {
         #expect(upload < .milliseconds(300))
     }
 
+    /// The photo overlay fills exactly the canvas rect, the right way up, and blends with the
+    /// canvas below at partial opacity.
+    @Test func photoOverlayCoversTheCanvasExactly() throws {
+        let t = Self.template
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: t, context: context))
+        // Quadrants, top row first: red | green over blue | yellow.
+        let pw = 240, ph = 320
+        let red = SIMD3<Float>(1, 0, 0), green = SIMD3<Float>(0, 1, 0), blue = SIMD3<Float>(0, 0, 1), yellow = SIMD3<Float>(1, 1, 0)
+        var rgba = [UInt8](repeating: 255, count: pw * ph * 4)
+        for y in 0..<ph {
+            for x in 0..<pw {
+                let c = y < ph / 2 ? (x < pw / 2 ? red : green) : (x < pw / 2 ? blue : yellow)
+                let i = (y * pw + x) * 4
+                rgba[i] = UInt8(c.x * 255)
+                rgba[i + 1] = UInt8(c.y * 255)
+                rgba[i + 2] = UInt8(c.z * 255)
+            }
+        }
+        let provider = try #require(CGDataProvider(data: Data(rgba) as CFData))
+        let photo = try #require(CGImage(
+            width: pw, height: ph, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: pw * 4,
+            space: CGColorSpace(name: CGColorSpace.displayP3)!, bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+            provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent))
+        let texture = try #require(context.makePhotoTexture(photo))
+        #expect(texture.mipmapLevelCount > 1)
+        #expect(texture.width == pw && texture.height == ph)
+
+        // Letterboxed: the 480×640 canvas is fitted into 600×700, 37.5 px in from each side.
+        let w = 600, h = 700
+        var u = CanvasSnapshot.uniforms(scene: scene, width: w, height: h, options: .painting)
+        u.photo.x = 1
+        let content = RenderContext.Content(outlines: false, numbers: false, photo: texture)
+        let shown = try #require(render(scene: scene, uniforms: u, content: content, width: w, height: h))
+        record(shown, "photo-overlay")
+        let px = Pixels(shown)
+        let left = Double(u.transform.x), right = left + Double(u.transform.z) * Double(t.width)
+        let midX = Int((left + right) / 2), midY = h / 2
+        let expected = [red, green, blue, yellow].map { bytes($0) }
+        let centres = [(left + (right - left) / 4, h / 4), (left + 3 * (right - left) / 4, h / 4),
+                       (left + (right - left) / 4, 3 * h / 4), (left + 3 * (right - left) / 4, 3 * h / 4)]
+        for (i, (x, y)) in centres.enumerated() {
+            #expect(maxDifference(px[Int(x), y], expected[i]) <= 2, "quadrant \(i): \(px[Int(x), y])")
+        }
+        // Just either side of the midlines: not blurred together, not flipped.
+        #expect(maxDifference(px[midX - 3, h / 4], expected[0]) <= 4)
+        #expect(maxDifference(px[midX + 3, h / 4], expected[1]) <= 4)
+        #expect(maxDifference(px[midX - 3, 3 * h / 4], expected[2]) <= 4)
+        #expect(maxDifference(px[midX + 3, 3 * h / 4], expected[3]) <= 4)
+        #expect(maxDifference(px[Int(left) + 20, midY - 3], expected[0]) <= 4)
+        #expect(maxDifference(px[Int(left) + 20, midY + 3], expected[2]) <= 4)
+        // Outside the canvas rect there is no photo.
+        #expect(maxDifference(px[Int(left) - 3, h / 4], expected[0]) > 100)
+        #expect(maxDifference(px[Int(right.rounded(.up)) + 3, 3 * h / 4], expected[3]) > 100)
+
+        // Half faded in: paint and photo mix in linear light.
+        u.photo.x = 0.5
+        let half = try #require(render(scene: scene, uniforms: u, content: content, width: w, height: h))
+        let mixed = encoded(0.5 * red + 0.5 * CanvasPalette.light.paper)
+        let (x, y) = centres[0]
+        #expect(maxDifference(Pixels(half)[Int(x), y], mixed) <= 3, "\(Pixels(half)[Int(x), y]) vs \(mixed)")
+    }
+
     @Test func timelapseFramesReplayTheStrokeLog() throws {
         let t = Self.template
         var progress = PaintProgress(regionCount: t.regions.count)
@@ -267,6 +330,40 @@ struct CanvasRenderTests {
     }
 
     // MARK: Helpers
+
+    /// One offscreen frame with explicit uniforms and content (unpainted regions).
+    private func render(scene: CanvasScene, uniforms: CanvasUniforms, content: RenderContext.Content, width w: Int, height h: Int) -> CGImage? {
+        guard let context = RenderContext.shared else { return nil }
+        let device = context.device
+        let states = (0..<scene.regionCount).map { _ in RegionState.settled(painted: false, origin: .zero, seed: 0) }
+        let rowBytes = (w * 4 + 255) / 256 * 256
+        guard let stateBuffer = device.makeBuffer(bytes: states, length: MemoryLayout<RegionState>.stride * max(states.count, 1), options: .storageModeShared),
+              let color = context.makeColorTarget(width: w, height: h),
+              let outlines = context.makeOutlineTarget(width: w, height: h),
+              let readback = device.makeBuffer(length: rowBytes * h, options: .storageModeShared),
+              let commands = context.queue.makeCommandBuffer()
+        else { return nil }
+        context.encode(
+            commands, scene: scene, states: stateBuffer, uniforms: uniforms,
+            targets: RenderContext.Targets(color: color, multisample: context.makeMultisampleTarget(width: w, height: h), outlines: outlines),
+            content: content)
+        guard let blit = commands.makeBlitCommandEncoder() else { return nil }
+        blit.copy(
+            from: color, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
+            sourceSize: MTLSize(width: w, height: h, depth: 1),
+            to: readback, destinationOffset: 0, destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * h)
+        blit.endEncoding()
+        commands.commit()
+        commands.waitUntilCompleted()
+        guard commands.status == .completed,
+              let provider = CGDataProvider(data: Data(bytes: readback.contents(), count: rowBytes * h) as CFData),
+              let space = CGColorSpace(name: CGColorSpace.displayP3)
+        else { return nil }
+        return CGImage(
+            width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: rowBytes, space: space,
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue),
+            provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+    }
 
     private func size(_ t: Template, _ scale: Int) -> CGSize {
         CGSize(width: t.width * scale, height: t.height * scale)

@@ -245,7 +245,7 @@ final class Library {
         }
     }
 
-    /// The photo an artwork was made from ("compare with photo"), decoded off the main actor.
+    /// The photo an artwork was made from (the painting screen's photo peek), decoded off the main actor.
     func sourcePhoto(for id: UUID, maxPixelSize: Int? = nil) async -> CGImage? {
         let store = self.store
         return await Background.run { store.source(id, maxPixelSize: maxPixelSize) }

@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Metal
 import PaintCore
@@ -25,6 +26,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
     let compositePipeline: any MTLRenderPipelineState
     let glyphPipeline: any MTLRenderPipelineState
     let brushPipeline: any MTLRenderPipelineState
+    let photoPipeline: any MTLRenderPipelineState
 
     /// Warms up the device, pipelines and atlas off the main thread so the first canvas
     /// opens instantly.
@@ -80,6 +82,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
               let composite = pipeline("canvasRectVertex", "outlineCompositeFragment", format: f, samples: n, blend: .premultiplied),
               let glyph = pipeline("glyphVertex", "glyphFragment", format: f, samples: n, blend: .premultiplied),
               let brush = pipeline("brushVertex", "brushFragment", format: f, samples: n, blend: .premultiplied),
+              let photo = pipeline("canvasRectVertex", "photoFragment", format: f, samples: n, blend: .premultiplied),
               let texture = RenderContext.upload(atlas: atlas, device: device, queue: queue)
         else { return nil }
         paperPipeline = paper
@@ -88,6 +91,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
         compositePipeline = composite
         glyphPipeline = glyph
         brushPipeline = brush
+        photoPipeline = photo
         atlasTexture = texture
     }
 
@@ -116,6 +120,41 @@ nonisolated final class RenderContext: @unchecked Sendable {
         commands.commit()
         commands.waitUntilCompleted()
         return texture
+    }
+
+    /// The source photo as a mipmapped texture for the photo overlay. Drawn into Display P3
+    /// with the sRGB curve, so sampling the `_srgb` texture yields linear P3 like every other
+    /// canvas color; uploaded by blit into private storage. Waits for the GPU: call it off
+    /// the main actor.
+    func makePhotoTexture(_ image: CGImage) -> (any MTLTexture)? {
+        let w = image.width, h = image.height
+        guard w > 0, h > 0, let space = CGColorSpace(name: CGColorSpace.displayP3) else { return nil }
+        let rowBytes = (w * 4 + 255) / 256 * 256
+        guard let staging = device.makeBuffer(length: rowBytes * h, options: .storageModeShared),
+              let bitmap = CGContext(
+                data: staging.contents(), width: w, height: h, bitsPerComponent: 8, bytesPerRow: rowBytes,
+                space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        // Row 0 in memory is the photo's top row, matching canvas +y down.
+        bitmap.interpolationQuality = .high
+        bitmap.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
+
+        let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .rgba8Unorm_srgb, width: w, height: h, mipmapped: true)
+        desc.usage = .shaderRead
+        desc.storageMode = .private
+        guard let texture = device.makeTexture(descriptor: desc),
+              let commands = queue.makeCommandBuffer(),
+              let blit = commands.makeBlitCommandEncoder()
+        else { return nil }
+        blit.copy(
+            from: staging, sourceOffset: 0, sourceBytesPerRow: rowBytes, sourceBytesPerImage: rowBytes * h,
+            sourceSize: MTLSize(width: w, height: h, depth: 1),
+            to: texture, destinationSlice: 0, destinationLevel: 0, destinationOrigin: MTLOrigin(x: 0, y: 0, z: 0))
+        blit.generateMipmaps(for: texture)
+        blit.endEncoding()
+        commands.commit()
+        commands.waitUntilCompleted()
+        return commands.status == .completed ? texture : nil
     }
 
     // MARK: Render targets
@@ -165,11 +204,13 @@ nonisolated final class RenderContext: @unchecked Sendable {
         /// Margin around the paper for the drop shadow, in px (0 = no shadow).
         var shadowMargin: Float = 0
         var clear = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
+        /// The source photo, drawn over everything but the brush at `uniforms.photo.x`.
+        var photo: (any MTLTexture)? = nil
     }
 
     /// Encodes one frame: outline coverage (R16F, max blending), then a single multisampled
-    /// pass with paper + shadow, all fills in one indexed draw, the outline composite and
-    /// the numbers.
+    /// pass with paper + shadow, all fills in one indexed draw, the outline composite, the
+    /// numbers, the source photo while it shows and the brush.
     func encode(
         _ commands: any MTLCommandBuffer, scene: CanvasScene, states: any MTLBuffer,
         uniforms: CanvasUniforms, targets: Targets, content: Content
@@ -254,6 +295,16 @@ nonisolated final class RenderContext: @unchecked Sendable {
             enc.setFragmentTexture(atlasTexture, index: 0)
             enc.setFragmentBytes(&u, length: uniformSize, index: 0)
             enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: scene.glyphCount)
+        }
+
+        if let photo = content.photo, u.photo.x > 0 {
+            var edge: Float = 0
+            enc.setRenderPipelineState(photoPipeline)
+            enc.setVertexBytes(&u, length: uniformSize, index: 0)
+            enc.setVertexBytes(&edge, length: MemoryLayout<Float>.size, index: 1)
+            enc.setFragmentTexture(photo, index: 0)
+            enc.setFragmentBytes(&u, length: uniformSize, index: 0)
+            enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         }
 
         if content.brush {

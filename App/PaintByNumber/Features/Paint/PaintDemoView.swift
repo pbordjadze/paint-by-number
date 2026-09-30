@@ -1,3 +1,4 @@
+import CoreGraphics
 import PaintCore
 import SwiftUI
 import os
@@ -14,6 +15,9 @@ import simd
 /// - `paint-fill`: fills frozen mid-animation to inspect the paint front
 /// - `paint-hint`: the hint flies the camera to a region of the selected color
 /// - `paint-replay`: a finished painting mid-replay
+/// - `paint-photo`: the source photo shown over a painting in progress
+///
+/// Photo-based scenarios have the photo loader, so the top bar is the one users see.
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -27,7 +31,10 @@ struct PaintDemoView: View {
             if let demo {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
-                    initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale)
+                    initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto)
+                    .environment(\.sourcePhotoLoader, demo.isSynthetic ? nil : SourcePhotoLoader(load: { size in
+                        await Self.photo(maxPixelSize: size)
+                    }))
                     .task {
                         await demo.run()
                         DemoMode.markReady()
@@ -42,8 +49,17 @@ struct PaintDemoView: View {
             let base = synthetic ? String(scenario.dropLast("-mosaic".count)) : scenario
             var template: Template?
             if !synthetic { template = await Self.template(photo: "parrots") }
-            demo = Demo(scenario: base, template: template ?? SyntheticTemplate.make(), title: template == nil ? "Mosaic" : "Parrots")
+            demo = Demo(
+                scenario: base, template: template ?? SyntheticTemplate.make(), title: template == nil ? "Mosaic" : "Parrots",
+                isSynthetic: template == nil)
         }
+    }
+
+    /// The photo the demo template is generated from, so the overlay lines up for real.
+    @concurrent
+    private static func photo(maxPixelSize: Int?) async -> CGImage? {
+        guard let url = Bundle.main.url(forResource: "parrots", withExtension: "jpg") else { return nil }
+        return ImageCodec.image(at: url, maxPixelSize: maxPixelSize)
     }
 
     @concurrent
@@ -60,13 +76,16 @@ struct PaintDemoView: View {
 private final class Demo {
     let session: PaintingSession
     let title: String
+    let isSynthetic: Bool
     var camera: CanvasCamera?
     var fillDurationScale: Float = 1
+    var showsPhoto = false
     private let scenario: String
 
-    init(scenario: String, template t: Template, title: String) {
+    init(scenario: String, template t: Template, title: String, isSynthetic: Bool) {
         self.scenario = scenario
         self.title = title
+        self.isSynthetic = isSynthetic
         session = PaintingSession(template: t)
 
         // Paint colors in palette order (how people tend to work), each color top to bottom.
@@ -107,6 +126,9 @@ private final class Demo {
             fillDurationScale = 128
         case "paint-hint":
             paint(fraction: 0.4)
+        case "paint-photo":
+            paint(fraction: 0.4)
+            showsPhoto = true
         default:
             break
         }
@@ -119,6 +141,19 @@ private final class Demo {
             session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
             let attached = session.canvas != nil
             Self.log.notice("demo paint-hint: requested (canvas attached: \(attached, privacy: .public))")
+            return
+        }
+        if scenario == "paint-photo" {
+            // Ready once the photo has loaded and faded in.
+            let clock = ContinuousClock()
+            let deadline = clock.now + .seconds(5)
+            var opacity: Float = 0
+            while clock.now < deadline {
+                opacity = (session.canvas as? CanvasView)?.photoOpacity ?? 0
+                if opacity >= 0.999 { break }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            Self.log.notice("demo paint-photo: photo opacity \(opacity, privacy: .public)")
             return
         }
         if scenario == "paint-replay" {

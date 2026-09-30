@@ -30,6 +30,8 @@ nonisolated struct CanvasUniforms {
     var shine: SIMD4<Float> = SIMD4(-10_000, -1, 0, 0)
     /// x: selected color, y: hovered region, z: pulsing region, w: bumped region (-1 = none).
     var ids: SIMD4<Int32> = SIMD4(repeating: -1)
+    /// x: source photo opacity (0 = hidden).
+    var photo: SIMD4<Float> = .zero
 }
 
 /// Animated paint state of one region. Layout mirrors `RegionState` in Shaders.metal.
