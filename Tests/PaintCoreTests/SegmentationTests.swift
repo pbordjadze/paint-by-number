@@ -98,11 +98,20 @@ struct SegmentationTests {
     }
 
     @Test func lowDetailHasLargerRegions() throws {
-        let image = Self.scene(width: 200, height: 150)
-        let bold = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 0))
-        let fine = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 1))
+        // Small distinct spots (9 px, white on grass) in an unimportant area: the fine
+        // regime keeps them, the bold one folds them into the grass.
+        var image = Self.scene(width: 400, height: 300)
+        for k in 0..<10 {
+            let x0 = 40 + 33 * k, y0 = 266
+            for y in y0..<(y0 + 9) {
+                for x in x0..<(x0 + 9) { image[x, y] = SIMD4(250, 250, 250, 255) }
+            }
+        }
+        let nowhere = Grid<Float>(width: 1, height: 1, repeating: 0)
+        let bold = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 0), importance: nowhere)
+        let fine = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 1), importance: nowhere)
         Self.checkInvariants(bold, minRadius: 3.5)
-        #expect(bold.regionCount <= fine.regionCount)
+        #expect(bold.regionCount + 8 <= fine.regionCount)
     }
 
     @Test func importanceIsHonoured() throws {

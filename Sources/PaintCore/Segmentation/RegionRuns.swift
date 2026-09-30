@@ -478,4 +478,85 @@ struct RegionAdjacency: Sendable {
         self.pairs = pairs
         self.lengths = lengths
     }
+
+    /// Colour step summed over each pair's shared border (in the order of `pairs`): the
+    /// distance, after scaling the axes by `metric`, between the two pixels of every 4-neighbour
+    /// pair on the border, so `boundarySteps / lengths` is the mean step across it. A real
+    /// contour carries most of the paint difference within a pixel or two; the boundary a
+    /// smooth ramp is sliced at barely changes colour.
+    func boundarySteps(_ runs: RegionRuns, colors: [SIMD4<Float>], metric: SIMD3<Float>) -> [Float] {
+        let w = runs.width, h = runs.height, m = pairs.count
+        guard m > 0, h > 0 else { return [] }
+        let scale = SIMD4(metric, 0)
+        // Fixed row chunks, each summing into its own slice, added up in chunk order: the
+        // floating-point result then does not depend on the number of cores.
+        let chunkRows = 32
+        let chunks = (h + chunkRows - 1) / chunkRows
+        var partial = [Float](repeating: 0, count: chunks * m)
+        runs.rowStart.withUnsafeBufferPointer { rsb in
+            runs.start.withUnsafeBufferPointer { sb in
+                runs.end.withUnsafeBufferPointer { eb in
+                    runs.label.withUnsafeBufferPointer { lb in
+                        pairs.withUnsafeBufferPointer { pb in
+                            colors.withUnsafeBufferPointer { cb in
+                                partial.withUnsafeMutableBufferPointer { partialBuffer in
+                                    let rs = UncheckedSendable(rsb), s = UncheckedSendable(sb)
+                                    let e = UncheckedSendable(eb), l = UncheckedSendable(lb)
+                                    let keys = UncheckedSendable(pb), c = UncheckedSendable(cb)
+                                    let out = UncheckedSendable(partialBuffer.baseAddress!)
+                                    Parallel.forEachChunk(h, chunk: chunkRows) { rows in
+                                        let sum = out.value + (rows.lowerBound / chunkRows) * m
+                                        @inline(__always) func slot(_ a: UInt32, _ b: UInt32) -> Int {
+                                            // Pairs are ascending, so the index is a binary search.
+                                            let key = RegionAdjacency.key(a, b)
+                                            var lo = 0, hi = m
+                                            while lo < hi {
+                                                let mid = (lo + hi) >> 1
+                                                if keys.value[mid] < key { lo = mid + 1 } else { hi = mid }
+                                            }
+                                            return lo
+                                        }
+                                        @inline(__always) func step(_ i: Int, _ j: Int) -> Float {
+                                            let d = (c.value[i] - c.value[j]) * scale
+                                            return (d * d).sum().squareRoot()
+                                        }
+                                        for y in rows {
+                                            let a0 = rs.value[y], a1 = rs.value[y + 1]
+                                            let row = y * w
+                                            for k in a0..<(a1 - 1) where l.value[k] != l.value[k + 1] {
+                                                let x = Int(e.value[k])
+                                                sum[slot(l.value[k], l.value[k + 1])] += step(row + x - 1, row + x)
+                                            }
+                                            guard y + 1 < h else { continue }
+                                            var a = a0, b = a1
+                                            let bEnd = rs.value[y + 2]
+                                            while a < a1 && b < bEnd {
+                                                let la = l.value[a], lb = l.value[b]
+                                                let ea = e.value[a], eb = e.value[b]
+                                                if la != lb {
+                                                    let x0 = Int(max(s.value[a], s.value[b])), x1 = Int(min(ea, eb))
+                                                    if x0 < x1 {
+                                                        var total: Float = 0
+                                                        for x in x0..<x1 { total += step(row + x, row + w + x) }
+                                                        sum[slot(la, lb)] += total
+                                                    }
+                                                }
+                                                if ea < eb { a += 1 } else if eb < ea { b += 1 } else { a += 1; b += 1 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        var out = [Float](repeating: 0, count: m)
+        for chunk in 0..<chunks {
+            let base = chunk * m
+            for k in 0..<m { out[k] += partial[base + k] }
+        }
+        return out
+    }
 }
