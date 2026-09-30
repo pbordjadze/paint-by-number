@@ -12,6 +12,11 @@ struct SegmentationParameters: Sendable {
     /// outline (see `EdgeSmoother.run`). `LabelSizing.minimumRadius` needs at least 0.8;
     /// 0.9 touches under 0.1 % of regions on photos, with no visible faceting.
     static let vectorRadiusTolerance: Float = 0.9
+    /// Furthest (working-space OKLab) a region too thin for its number may be recoloured to
+    /// a paint with a shorter number (`RegionSimplifier.enforceLabelRoom`). Beyond two JNDs
+    /// the new paint reads as a different colour (dark slats on a blue shutter turning
+    /// brown), and merging into a neighbour looks better.
+    static let labelRecolorLimit: Float = 2 * jnd
 
     var colorCount: Int
     var seed: UInt64

@@ -328,24 +328,35 @@ struct SegmentationTests {
     }
 
     @Test func enforceLabelRoomUsesDigitCount() throws {
-        // Paints 0–9 own wide stripes along the top; three equal discs sit on paint 12. Each
+        // Paints 0–9 own wide stripes along the top; four equal discs sit on paint 12. Each
         // disc has room for one digit but not two. The disc showing "2" (paint 1) stays as it
-        // is. The one showing "11" looks like paint 8 and takes it ("9"). The one showing "12"
-        // looks like the background, so it merges into it. The unused paints are dropped.
+        // is. The one showing "11" looks almost like paint 8 and takes it ("9"). The two
+        // showing "12" merge into the background: one looks like it, the other like no paint
+        // with a 1-digit number (recolouring it would change its colour visibly). The unused
+        // paints are dropped.
         let w = 120, h = 60
         let p = SegmentationParameters(settings: GenerationSettings(colorCount: 13, detail: 0.5), width: w, height: h)
         let palette = (0..<12).map { SIMD3<Float>(0.3 + 0.05 * Float($0), 0.02 * Float($0 % 3), 0) } + [SIMD3(0.5, -0.1, 0.1)]
         let discRadius: Float = 3.2
+        let discs: [(x: Int, paint: UInt32, color: SIMD3<Float>)] = [
+            (15, 1, palette[1]), (45, 10, palette[8] + SIMD3(0.01, 0, 0)),
+            (75, 11, palette[12]), (105, 11, SIMD3(0.9, 0.2, 0.2)),
+        ]
         var classes = [UInt32](repeating: 12, count: w * h)
         var colors = [SIMD4<Float>](repeating: SIMD4(palette[12], 0), count: w * h)
         for y in 0..<h {
             for x in 0..<w {
-                if y < 12 { classes[y * w + x] = UInt32(x / 12) }
-                for (cx, paint) in [(20, UInt32(1)), (60, UInt32(10)), (100, UInt32(11))] {
-                    let dx = Float(x - cx), dy = Float(y - 40)
-                    if dx * dx + dy * dy <= discRadius * discRadius { classes[y * w + x] = paint }
+                if y < 12 {
+                    classes[y * w + x] = UInt32(x / 12)
+                    colors[y * w + x] = SIMD4(palette[x / 12], 0)
                 }
-                if classes[y * w + x] != 11 { colors[y * w + x] = SIMD4(palette[Int(classes[y * w + x])], 0) }
+                for disc in discs {
+                    let dx = Float(x - disc.x), dy = Float(y - 40)
+                    if dx * dx + dy * dy <= discRadius * discRadius {
+                        classes[y * w + x] = disc.paint
+                        colors[y * w + x] = SIMD4(disc.color, 0)
+                    }
+                }
             }
         }
         let initial = RegionRuns(classes: classes, width: w, height: h).components()
@@ -360,13 +371,14 @@ struct SegmentationTests {
             classes: &classes, regions: &regions, adjacency: &adjacency, colors: colors,
             areaScale: [Float](repeating: 1, count: w * h), palette: palette, parameters: p, cancel: .none)
         #expect(result.recolors == 1)
-        #expect(result.merges == 1)
+        #expect(result.merges == 2)
         #expect(result.kept == Array(0..<10) + [12])
         #expect(regions.count == 13)
-        #expect(classes[40 * w + 20] == 1)
-        #expect(classes[40 * w + 60] == 8)
-        #expect(classes[40 * w + 100] == 10)
-        #expect(classes[40 * w + 5] == 10)
+        #expect(classes[40 * w + 15] == 1)
+        #expect(classes[40 * w + 45] == 8)
+        #expect(classes[40 * w + 75] == 10)
+        #expect(classes[40 * w + 105] == 10)
+        #expect(classes[40 * w + 2] == 10)
         let labels = regions.labelMap()
         for i in 0..<(w * h) { #expect(classes[i] == regions.classOf[Int(labels.storage[i])]) }
     }

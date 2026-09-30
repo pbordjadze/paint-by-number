@@ -106,7 +106,8 @@ enum RegionSimplifier {
     /// disc of `minRadius(digits:)`. Each too-thin region either takes the paint closest to
     /// its mean colour among those whose number it has room for, keeping its shape, or merges
     /// into its best neighbour (as in `simplify`), whichever costs less colour (merges also
-    /// pay for a short shared border). Recolouring comes first: it often frees a paint and
+    /// pay for a short shared border); recolouring only within
+    /// `SegmentationParameters.labelRecolorLimit`. Recolouring comes first: it often frees a paint and
     /// thereby shortens later numbers.
     ///
     /// Paints left without regions are dropped, keeping the kit order (`kept` lists the
@@ -178,7 +179,8 @@ enum RegionSimplifier {
     }
 
     /// For each thin region, the paint to recolour it with, or nil where merging into a
-    /// neighbour (cost as in `mergeRound`) is cheaper or no paint's number fits.
+    /// neighbour (cost as in `mergeRound`) is cheaper, or no paint whose number fits is
+    /// within the recolour limit.
     private static func recolorings(
         _ regions: RegionRuns, adjacency: RegionAdjacency, thin: [Bool], room: [Int],
         colors: [SIMD4<Float>], palette: [SIMD3<Float>], parameters p: SegmentationParameters
@@ -211,7 +213,7 @@ enum RegionSimplifier {
         var result = [UInt32?](repeating: nil, count: n)
         for r in 0..<n where thin[r] {
             var best: UInt32?
-            var bestCost = mergeCost[r]
+            var bestCost = min(mergeCost[r], SegmentationParameters.labelRecolorLimit)
             for j in palette.indices where LabelSizing.digitCount(colorIndex: UInt32(j)) <= room[r] {
                 let cost = ColorScience.distance(mean[r], palette[j])
                 if cost < bestCost { bestCost = cost; best = UInt32(j) }
