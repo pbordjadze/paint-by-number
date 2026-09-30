@@ -1,0 +1,165 @@
+import CoreGraphics
+import Foundation
+import PaintCore
+import Testing
+@testable import PaintByNumber
+
+struct RasterizerTests {
+    @Test(arguments: [true, false])
+    func paintsRegionsInPaletteColors(vector: Bool) throws {
+        let t = Fixtures.stripes(vector: vector)
+        let image = try #require(TemplateRasterizer.image(t, painted: [true, false, true], style: .thumbnail, maxPixelSize: 120))
+        #expect(image.width == 120 && image.height == 80)
+        let pixels = PixelReader(image)
+        #expect(pixels[20, 40] == SIMD3(255, 0, 0))
+        #expect(pixels[100, 40] == SIMD3(0, 0, 255))
+        // The unpainted green stripe is sketched as a light neutral grey.
+        let sketch = pixels[60, 40]
+        #expect(sketch.x == sketch.y && sketch.y == sketch.z)
+        #expect(sketch.x > 200 && sketch.x < 255)
+    }
+
+    @Test(arguments: [true, false])
+    func templateHasPaperOutlinesAndNumbers(vector: Bool) throws {
+        let t = Fixtures.stripes(count: 3, stripeWidth: 40, height: 40, vector: vector)
+        var style = TemplateRasterizer.Style.template
+        style.maximumNumberFraction = 1
+        let image = try #require(TemplateRasterizer.image(t, style: style, maxPixelSize: 480))
+        let pixels = PixelReader(image)
+        #expect(pixels[8, 8] == SIMD3(255, 255, 255))
+        // Stripe boundary at canvas x = 40 → 160 px.
+        let boundary = (156...163).map { pixels[$0, 20].x }.min() ?? 255
+        #expect(boundary < 230)
+        // A number is drawn at each label (canvas (20, 20) → (80, 80)).
+        var ink = 0
+        for y in 50..<110 {
+            for x in 50..<110 where pixels[x, y].x < 170 { ink += 1 }
+        }
+        #expect(ink > 40)
+        if let png = ImageCodec.pngData(image) {
+            Attachment.record(png, named: "stripes-template-\(vector ? "vector" : "raster").png")
+        }
+    }
+
+    @Test func finishedPaintingHasNoSketch() throws {
+        let t = Fixtures.stripes()
+        let image = try #require(TemplateRasterizer.image(t, style: .painting, maxPixelSize: 60))
+        let pixels = PixelReader(image)
+        #expect(pixels[30, 20] == SIMD3(0, 255, 0))
+        #expect(pixels[50, 5] == SIMD3(0, 0, 255))
+    }
+
+    @Test func rendersGeneratedSample() throws {
+        let t = try Fixtures.sample()
+        let progress = ArtworkFactory.progress(painting: 0.4, of: t)
+        #expect(abs(Double(progress.paintedCount) / Double(t.regions.count) - 0.4) < 0.01)
+        let thumbnail = try #require(TemplateRasterizer.pngData(t, painted: progress.painted, style: .thumbnail, maxPixelSize: 1024))
+        let finished = try #require(TemplateRasterizer.pngData(t, style: .finished, maxPixelSize: 1600))
+        let numbers = try #require(TemplateRasterizer.pngData(t, style: .template, maxPixelSize: 2000))
+        #expect(thumbnail.count > 10_000)
+        Attachment.record(thumbnail, named: "parrots-thumbnail-40.png")
+        Attachment.record(finished, named: "parrots-finished.png")
+        Attachment.record(numbers, named: "parrots-numbers.png")
+    }
+}
+
+struct PDFExporterTests {
+    @Test func documentHasTemplateAndColorKeyPages() throws {
+        let data = PDFExporter.document(for: Fixtures.stripes(), title: "Stripes", paper: .letter)
+        #expect(data.starts(with: Data("%PDF".utf8)))
+        let document = try #require(CGDataProvider(data: data as CFData).flatMap { CGPDFDocument($0) })
+        #expect(document.numberOfPages == 2)
+        let box = try #require(document.page(at: 1)?.getBoxRect(.mediaBox))
+        // Wide templates print in landscape.
+        #expect(box.width == 792 && box.height == 612)
+        Attachment.record(data, named: "stripes.pdf")
+    }
+
+    @Test func samplePDFRendersPages() throws {
+        let t = try Fixtures.sample(colors: 18)
+        let data = PDFExporter.document(for: t, title: "Parrots", paper: .a4)
+        let document = try #require(CGDataProvider(data: data as CFData).flatMap { CGPDFDocument($0) })
+        #expect(document.numberOfPages == 2)
+        Attachment.record(data, named: "parrots.pdf")
+        for index in 1...2 {
+            let page = try #require(document.page(at: index))
+            let image = try #require(render(page, scale: 2))
+            let pixels = PixelReader(image)
+            // Something besides white paper was drawn.
+            var ink = 0
+            for y in stride(from: 0, to: pixels.height, by: 4) {
+                for x in stride(from: 0, to: pixels.width, by: 4) where pixels[x, y].x < 200 { ink += 1 }
+            }
+            #expect(ink > 50)
+            if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "parrots-pdf-page\(index).png") }
+        }
+    }
+
+    @Test func paperFollowsRegion() {
+        #expect(PDFExporter.Paper.default(for: Locale.Region("US")) == .letter)
+        #expect(PDFExporter.Paper.default(for: Locale.Region("DE")) == .a4)
+        #expect(PDFExporter.Paper.default(for: nil) == .a4)
+    }
+
+    private func render(_ page: CGPDFPage, scale: CGFloat) -> CGImage? {
+        let box = page.getBoxRect(.mediaBox)
+        let width = Int(box.width * scale), height = Int(box.height * scale)
+        guard let ctx = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.drawPDFPage(page)
+        return ctx.makeImage()
+    }
+}
+
+@MainActor
+struct PreferencesTests {
+    @Test func defaultsClampingAndSessionMapping() throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        var preferences = Preferences(defaults: defaults)
+        #expect(preferences.autoAdvance && preferences.haptics && preferences.sounds)
+        #expect(preferences.defaultColorCount == 24)
+
+        defaults.set(false, forKey: SettingsKey.autoAdvance)
+        defaults.set(99, forKey: SettingsKey.defaultColorCount)
+        defaults.set("a4", forKey: SettingsKey.paperSize)
+        defaults.set(false, forKey: "hapticsEnabled")
+        preferences = Preferences(defaults: defaults)
+        #expect(!preferences.autoAdvance)
+        #expect(!preferences.haptics)
+        #expect(preferences.defaultColorCount == 60)
+        #expect(preferences.paper == .a4)
+        #expect(preferences.initialGenerationSettings.colorCount == 60)
+
+        let session = PaintingSession(template: Fixtures.stripes())
+        #expect(session.autoAdvance)
+        preferences.apply(to: session)
+        #expect(!session.autoAdvance)
+    }
+
+    @Test func createModelMapsSliders() {
+        let model = CreateModel(initial: GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
+        #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
+        model.colorCount = 11.6
+        #expect(model.settings.colorCount == 12)
+        model.colorCount = 200
+        #expect(model.settings.colorCount == 60)
+        #expect(model.preview == nil && !model.isFinal)
+    }
+
+    @Test func formatsDurations() {
+        #expect(PaintingTime.approximate(10 * 60) == "~10 min")
+        #expect(PaintingTime.approximate(2 * 3600) == "~2 h")
+        #expect(PaintingTime.approximate(1.4 * 3600) == "~1.5 h")
+        #expect(PaintingTime.approximate(30 * 3600) == "~30 h")
+        #expect(PaintingTime.spent(125 * 60) == "2 h 5 min")
+        #expect(PaintingTime.spent(20) == "< 1 min")
+    }
+}
