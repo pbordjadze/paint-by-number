@@ -20,7 +20,11 @@ nonisolated enum Log {
 ///     <root>/.staging/  new artworks are assembled here and moved into place atomically
 ///     <root>/.trash/    deleted artworks wait here while the deletion can still be undone
 nonisolated struct ArtworkStore: Sendable {
-    enum StoreError: Error { case notFound, unreadable(String) }
+    enum StoreError: Error, Equatable {
+        case notFound, unreadable(String)
+        /// The artwork was written by a newer app (`Artwork.needsNewerApp`); never rewrite it.
+        case newerFormat
+    }
 
     enum File: String, CaseIterable {
         case meta = "meta.json"
@@ -53,6 +57,7 @@ nonisolated struct ArtworkStore: Sendable {
     func directory(for id: UUID) -> URL { root.appending(path: id.uuidString, directoryHint: .isDirectory) }
     func url(_ file: File, of id: UUID) -> URL { directory(for: id).appending(path: file.rawValue) }
     func exists(_ id: UUID) -> Bool { fm.fileExists(atPath: url(.meta, of: id).path) }
+    func hasSource(_ id: UUID) -> Bool { fm.fileExists(atPath: url(.source, of: id).path) }
 
     // MARK: Listing
 
@@ -87,6 +92,8 @@ nonisolated struct ArtworkStore: Sendable {
     }
 
     private func writeMeta(_ artwork: Artwork, in dir: URL) throws {
+        // Rewriting would drop whatever the newer app stored in fields this one doesn't know.
+        guard !artwork.needsNewerApp else { throw StoreError.newerFormat }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         try encoder.encode(artwork).write(to: dir.appending(path: File.meta.rawValue), options: .atomic)
@@ -112,16 +119,36 @@ nonisolated struct ArtworkStore: Sendable {
 
     // MARK: Progress
 
-    /// The saved progress, or a fresh one if the file is missing, damaged or doesn't match.
-    func readProgress(_ id: UUID, regionCount: Int) -> PaintProgress {
+    /// Progress as read from disk, or fresh progress and why the saved one couldn't be used.
+    struct SavedProgress: Sendable {
+        enum Problem: Sendable, Equatable { case missing, damaged, mismatched }
+
+        var progress: PaintProgress
+        var problem: Problem?
+    }
+
+    /// The saved progress, or a fresh one (with the `problem`) if the file is missing, damaged
+    /// or belongs to a different template. Throws only for progress written by a newer app
+    /// (`PaintProgress.CodingError.newerVersion`), which must be kept, not replaced.
+    func readProgress(_ id: UUID, regionCount: Int) throws -> SavedProgress {
+        let fresh = PaintProgress(regionCount: regionCount)
         guard let data = try? Data(contentsOf: url(.progress, of: id)) else {
-            return PaintProgress(regionCount: regionCount)
+            return SavedProgress(progress: fresh, problem: .missing)
         }
-        guard let progress = try? PaintProgress(encoded: data), progress.regionCount == regionCount else {
+        let progress: PaintProgress
+        do {
+            progress = try PaintProgress(encoded: data)
+        } catch PaintProgress.CodingError.newerVersion(let version) {
+            throw PaintProgress.CodingError.newerVersion(version)
+        } catch {
             Log.library.error("Discarding unreadable progress of \(id.uuidString, privacy: .public)")
-            return PaintProgress(regionCount: regionCount)
+            return SavedProgress(progress: fresh, problem: .damaged)
         }
-        return progress
+        guard progress.regionCount == regionCount else {
+            Log.library.error("Discarding progress of \(id.uuidString, privacy: .public): \(progress.regionCount) regions, template has \(regionCount)")
+            return SavedProgress(progress: fresh, problem: .mismatched)
+        }
+        return SavedProgress(progress: progress)
     }
 
     func writeProgress(_ progress: PaintProgress, for id: UUID) throws {
@@ -157,6 +184,37 @@ nonisolated struct ArtworkStore: Sendable {
             try thumbnailPNG?.write(to: staging.appending(path: File.thumbnail.rawValue), options: .atomic)
             try writeMeta(artwork, in: staging)
             try fm.moveItem(at: staging, to: directory(for: artwork.id))
+        } catch {
+            try? fm.removeItem(at: staging)
+            throw error
+        }
+    }
+
+    /// Swaps in a regenerated template with its progress, thumbnail and metadata as one step:
+    /// the new folder is assembled in staging (keeping the photo and any file this version
+    /// doesn't know) and replaces the old one atomically, so a crash leaves either version.
+    /// A nil `thumbnailPNG` keeps the current thumbnail.
+    func replaceContents(of artwork: Artwork, template: Template, progress: PaintProgress, thumbnailPNG: Data?) throws {
+        let id = artwork.id
+        let staging = stagingRoot.appending(path: id.uuidString, directoryHint: .isDirectory)
+        try? fm.removeItem(at: staging)
+        try fm.createDirectory(at: staging, withIntermediateDirectories: true)
+        do {
+            let rewritten = Set([File.meta, .template, .progress, .thumbnail].map(\.rawValue))
+            for item in try fm.contentsOfDirectory(at: directory(for: id), includingPropertiesForKeys: nil)
+            where !rewritten.contains(item.lastPathComponent) {
+                try fm.copyItem(at: item, to: staging.appending(path: item.lastPathComponent))
+            }
+            try writeTemplate(template, in: staging)
+            try progress.encoded().write(to: staging.appending(path: File.progress.rawValue), options: .atomic)
+            let thumbnail = staging.appending(path: File.thumbnail.rawValue)
+            if let thumbnailPNG {
+                try thumbnailPNG.write(to: thumbnail, options: .atomic)
+            } else if fm.fileExists(atPath: url(.thumbnail, of: id).path) {
+                try fm.copyItem(at: url(.thumbnail, of: id), to: thumbnail)
+            }
+            try writeMeta(artwork, in: staging)
+            _ = try fm.replaceItemAt(directory(for: id), withItemAt: staging)
         } catch {
             try? fm.removeItem(at: staging)
             throw error

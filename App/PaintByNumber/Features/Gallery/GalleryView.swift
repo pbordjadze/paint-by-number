@@ -120,6 +120,16 @@ struct GalleryView: View {
 
     @ViewBuilder
     private func menu(for artwork: Artwork) -> some View {
+        if artwork.needsNewerApp {
+            // Everything else would read or rewrite files this version doesn't understand.
+            deleteButton(for: artwork)
+        } else {
+            editingMenu(for: artwork)
+        }
+    }
+
+    @ViewBuilder
+    private func editingMenu(for artwork: Artwork) -> some View {
         Button("Rename", systemImage: "pencil") {
             renameText = artwork.title
             renaming = artwork
@@ -154,6 +164,10 @@ struct GalleryView: View {
         Divider()
         Button("Restart", systemImage: "arrow.counterclockwise") { restarting = artwork }
             .disabled(!artwork.isStarted)
+        deleteButton(for: artwork)
+    }
+
+    private func deleteButton(for artwork: Artwork) -> some View {
         Button("Delete", systemImage: "trash", role: .destructive) {
             library.delete(artwork.id)
         }
@@ -215,6 +229,8 @@ struct GalleryView: View {
 struct Toast<Trailing: View>: View {
     let text: String
     let systemImage: String
+    /// The screen edge it slides in from.
+    var edge: Edge = .bottom
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
@@ -229,13 +245,13 @@ struct Toast<Trailing: View>: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 13)
         .glassEffect(.regular, in: .capsule)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .transition(.move(edge: edge).combined(with: .opacity))
         .accessibilityElement(children: .combine)
     }
 }
 
 extension Toast where Trailing == EmptyView {
-    init(text: String, systemImage: String) {
-        self.init(text: text, systemImage: systemImage) { EmptyView() }
+    init(text: String, systemImage: String, edge: Edge = .bottom) {
+        self.init(text: text, systemImage: systemImage, edge: edge) { EmptyView() }
     }
 }

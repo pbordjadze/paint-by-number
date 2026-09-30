@@ -61,6 +61,12 @@ struct AppShellView: View {
             // Demo: open the painting as soon as it is ready.
             if ShellDemo.current == .galleryOpen, path.isEmpty, let id { path = [id] }
         }
+        .onChange(of: library.placeholders) { _, placeholders in
+            // Demo: open the damaged painting once it has been seeded (and damaged).
+            guard ShellDemo.current == .galleryDamaged, placeholders.isEmpty, path.isEmpty,
+                  let id = library.artworks.first?.id else { return }
+            path = [id]
+        }
         .onChange(of: path) { _, path in openArtwork = path.last?.uuidString ?? "" }
     }
 

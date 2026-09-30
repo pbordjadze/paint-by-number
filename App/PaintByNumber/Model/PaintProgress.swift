@@ -1,4 +1,5 @@
 import Foundation
+import PaintCore
 
 /// Persistent painting state of one artwork: which regions are painted, and in what order
 /// (the log drives the time-lapse replay).
@@ -48,13 +49,22 @@ nonisolated struct PaintProgress: Sendable, Equatable {
 
     // MARK: Coding (compact binary: header, painting time, stroke log)
 
+    nonisolated enum CodingError: Error, Equatable {
+        case corrupt
+        /// Written by a newer app; never replace such a file.
+        case newerVersion(UInt32)
+    }
+
     private static let magic: UInt32 = 0x5250_4250  // "PBPR"
+    /// Fields are only ever appended (readers ignore trailing bytes), so older apps keep
+    /// reading newer files; bump only when an existing field changes meaning.
+    static let formatVersion: UInt32 = 1
 
     func encoded() -> Data {
         var data = Data()
         func put<T: BitwiseCopyable>(_ v: T) { withUnsafeBytes(of: v) { data.append(contentsOf: $0) } }
         put(Self.magic)
-        put(UInt32(1))
+        put(Self.formatVersion)
         put(UInt32(painted.count))
         put(activeSeconds)
         put(UInt32(log.count))
@@ -63,28 +73,56 @@ nonisolated struct PaintProgress: Sendable, Equatable {
     }
 
     init(encoded data: Data) throws {
-        struct Corrupt: Error {}
         var offset = data.startIndex
         func get<T: BitwiseCopyable>(_: T.Type) throws -> T {
             let size = MemoryLayout<T>.size
-            guard offset + size <= data.endIndex else { throw Corrupt() }
+            guard size <= data.endIndex - offset else { throw CodingError.corrupt }
             let v = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: offset - data.startIndex, as: T.self) }
             offset += size
             return v
         }
-        guard try get(UInt32.self) == Self.magic, try get(UInt32.self) == 1 else { throw Corrupt() }
+        guard try get(UInt32.self) == Self.magic else { throw CodingError.corrupt }
+        let version = try get(UInt32.self)
+        guard version != 0 else { throw CodingError.corrupt }
+        guard version <= Self.formatVersion else { throw CodingError.newerVersion(version) }
+        // Counts are checked before anything is allocated, so a damaged file cannot ask for gigabytes.
         let count = Int(try get(UInt32.self))
-        self.init(regionCount: count)
-        activeSeconds = try get(Double.self)
+        guard count <= Template.maxCanvasArea else { throw CodingError.corrupt }
+        let seconds = try get(Double.self)
         let strokes = Int(try get(UInt32.self))
-        guard strokes <= count else { throw Corrupt() }
+        let strokeSize = MemoryLayout<UInt32>.size + MemoryLayout<Float>.size
+        guard strokes <= count, strokes <= (data.endIndex - offset) / strokeSize else { throw CodingError.corrupt }
+        self.init(regionCount: count)
+        activeSeconds = Self.sanitized(seconds)
         log.reserveCapacity(strokes)
         for _ in 0..<strokes {
             let region = try get(UInt32.self)
             let time = try get(Float.self)
-            guard Int(region) < count, !painted[Int(region)] else { throw Corrupt() }
+            guard Int(region) < count, !painted[Int(region)] else { throw CodingError.corrupt }
             painted[Int(region)] = true
-            log.append(Stroke(region: region, time: time))
+            log.append(Stroke(region: region, time: Float(Self.sanitized(Double(time)))))
         }
+    }
+
+    /// Times feed the replay's pacing; a damaged value must not stall or break it.
+    private static func sanitized(_ seconds: Double) -> Double { seconds.isFinite && seconds > 0 ? seconds : 0 }
+
+    // MARK: Regeneration
+
+    /// This progress carried onto `new`, a regenerated version of `old` (the template it was
+    /// painted on): a new region counts as painted when most of its area was painted before
+    /// (`RegionRemap`), in the old painting order and with the old stroke times.
+    func remapped(from old: Template, to new: Template) -> PaintProgress {
+        var result = PaintProgress(regionCount: new.regions.count)
+        guard regionCount == old.regions.count else { return result }
+        let carried = RegionRemap.carryOver(
+            paintOrder: log.map(\.region), oldMap: old.regionMap, oldRegionCount: old.regions.count,
+            newMap: new.regionMap, newRegionCount: new.regions.count)
+        for c in carried {
+            result.painted[c.region] = true
+            result.log.append(Stroke(region: UInt32(c.region), time: log[c.stroke].time))
+        }
+        result.activeSeconds = activeSeconds
+        return result
     }
 }

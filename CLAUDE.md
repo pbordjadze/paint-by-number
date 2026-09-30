@@ -67,6 +67,12 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
   `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,
   staging/trash folders). Writes are queued per artwork off the main actor; deletes are undoable.
+  `Library.loadForPainting` classifies failures (`Library.OpenError`: `needsNewerApp` or
+  `damaged(canRegenerate:)`), resets unusable progress with a one-time `OpenNotice` and repairs
+  stale metadata; `Library.regenerate(artwork:settings:)` re-runs the pipeline on the stored photo
+  (or bundled sample) off the main actor, carries progress over by region overlap
+  (`PaintProgress.remapped`) and swaps the folder in atomically (`ArtworkStore.replaceContents`).
+  Artworks written by a newer app (`Artwork.needsNewerApp`) are listed read-only: delete only.
   `ArtworkPaintingView` hosts `PaintView` and autosaves (debounced, on background, on close). It is
   pushed with a zoom transition whose swipe-down/pinch dismissal it turns off (they stole canvas
   gestures; `PaintingNavigationTests` guards this).
@@ -96,6 +102,14 @@ Saved paintings must open in every later build. The format history is documented
   anything indexes with it. PaintCore is compiled `-Ounchecked` in release, so a missed check is a
   silent out-of-bounds read; the truncation, random-corruption and crafted-reference tests in
   `TemplateCodingTests` guard this.
+- A file from a newer app is never reset or rewritten: it throws a "newer" error
+  (`Template.CodingError.requiresNewerReader`, `PaintProgress.CodingError.newerVersion`) and the
+  app says it needs an update. `PaintProgress` fields are append-only (readers ignore trailing
+  bytes); bump its `formatVersion` only when an existing field changes meaning. Bump
+  `Artwork.currentFormat` when older apps must not open or rewrite an artwork folder (a template
+  `formatVersion` bump or a new required chunk).
+- Damaged data never traps: progress that doesn't fit its template is a recoverable error
+  (`PaintingSession.init(template:progress:) throws`), and `LibraryTests` cover each failure.
 
 ## CI feedback loop (no Xcode locally)
 

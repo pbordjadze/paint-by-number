@@ -50,10 +50,27 @@ final class PaintingSession {
     /// Fills of the stroke in progress (nil between strokes).
     @ObservationIgnored private var strokeFills: [Int]?
 
-    init(template: Template, progress: PaintProgress? = nil) {
+    /// Saved progress that belongs to a different template (e.g. a stale or damaged file).
+    nonisolated struct ProgressMismatch: Error, Equatable {
+        let templateRegions: Int
+        let progressRegions: Int
+    }
+
+    /// A fresh painting of `template`.
+    convenience init(template: Template) {
+        self.init(checked: template, progress: PaintProgress(regionCount: template.regions.count))
+    }
+
+    /// Resumes saved progress; throws instead of trapping when it does not fit the template.
+    convenience init(template: Template, progress: PaintProgress) throws {
+        guard progress.regionCount == template.regions.count else {
+            throw ProgressMismatch(templateRegions: template.regions.count, progressRegions: progress.regionCount)
+        }
+        self.init(checked: template, progress: progress)
+    }
+
+    private init(checked template: Template, progress: PaintProgress) {
         self.template = template
-        let progress = progress ?? PaintProgress(regionCount: template.regions.count)
-        precondition(progress.regionCount == template.regions.count, "progress does not match template")
         self.progress = progress
         let totals = template.regionCountsByColor
         totalByColor = totals

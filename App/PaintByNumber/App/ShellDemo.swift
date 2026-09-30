@@ -9,14 +9,16 @@ import Foundation
 /// - `create-preview`, `create-preview-dark`: a sample generated, comparison at half.
 /// - `settings`: the settings sheet over the gallery.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
+/// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 enum ShellDemo: Equatable {
-    case gallery, galleryEmpty, galleryOpen, create, createPreview, settings
+    case gallery, galleryEmpty, galleryOpen, galleryDamaged, create, createPreview, settings
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
         case "gallery", "gallery-dark": .gallery
         case "gallery-empty": .galleryEmpty
         case "gallery-open": .galleryOpen
+        case "gallery-damaged": .galleryDamaged
         case "create", "create-dark": .create
         case "create-preview", "create-preview-dark": .createPreview
         case "settings": .settings
@@ -40,6 +42,14 @@ enum ShellDemo: Equatable {
             }, completion: { DemoMode.markReady() })
         case .galleryOpen:
             library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
+        case .galleryDamaged:
+            library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)]) {
+                // Synchronous on purpose: this runs in the same main-actor job that empties
+                // `placeholders`, so the file is damaged before SwiftUI's next update delivers
+                // the `onChange` that opens the painting (`AppShellView`).
+                guard let id = library.artworks.first?.id else { return }
+                try? Data("damaged".utf8).write(to: library.store.url(.template, of: id))
+            }
         case .create, .createPreview, .galleryEmpty, .settings:
             break
         }

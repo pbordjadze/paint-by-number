@@ -5,7 +5,8 @@ import SwiftUI
 import UIKit
 
 /// Opens an artwork for painting: loads it off the main actor, hosts `PaintView`, and
-/// saves progress while the user paints.
+/// saves progress while the user paints. When it can't be opened it explains why and offers
+/// recovery (`PaintingRecoveryView`).
 struct ArtworkPaintingView: View {
     let artworkID: UUID
     var onClose: () -> Void
@@ -14,7 +15,15 @@ struct ArtworkPaintingView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @State private var autosaver: PaintingAutosaver?
-    @State private var failed = false
+    @State private var failure: Library.OpenError?
+    @State private var regeneration: Task<Void, Never>?
+    @State private var regenerationFailed = false
+    @State private var notice: ShownNotice?
+
+    private struct ShownNotice: Equatable {
+        var notice: OpenNotice
+        var id = UUID()
+    }
 
     private var artwork: Artwork? { library.artwork(with: artworkID) }
 
@@ -28,15 +37,16 @@ struct ArtworkPaintingView: View {
                     })
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
                     .transition(.opacity)
-            } else if failed {
-                ContentUnavailableView {
-                    SwiftUI.Label("Can’t Open Painting", systemImage: "exclamationmark.triangle")
-                } description: {
-                    Text("Its file may be damaged.")
-                } actions: {
-                    Button("Back to Gallery", action: onClose)
-                        .buttonStyle(.glass)
-                }
+            } else if let failure {
+                PaintingRecoveryView(
+                    artwork: artwork, failure: failure,
+                    progress: regeneration == nil ? nil : (library.regenerating[artworkID] ?? 0),
+                    didFail: regenerationFailed,
+                    onRegenerate: regenerate, onDelete: delete, onClose: onClose)
+                    .transition(.opacity)
+                    .onAppear {
+                        if ShellDemo.current == .galleryDamaged { DemoMode.markReady() }
+                    }
             } else if let artwork {
                 // Where the zoom transition lands while the template loads.
                 ArtworkThumbnail(artwork: artwork, contentMode: .fit)
@@ -45,6 +55,17 @@ struct ArtworkPaintingView: View {
                     .overlay { ProgressView().controlSize(.large) }
             }
         }
+        // Below PaintView's top bar (6 pt inset + 44 pt buttons).
+        .overlay(alignment: .top) {
+            if let notice {
+                Toast(text: notice.notice.text, systemImage: notice.notice.systemImage, edge: .top)
+                    .padding(.top, 62)
+                    .padding(.horizontal, 20)
+                    // Taps reach the canvas under it.
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(.snappy, value: notice)
         .toolbar(.hidden, for: .navigationBar)
         .background { CanvasGesturesOverZoomDismissal().frame(width: 0, height: 0) }
         .task { await open() }
@@ -52,23 +73,74 @@ struct ArtworkPaintingView: View {
             if phase != .active { autosaver?.saveNow(refreshThumbnail: true) }
         }
         .onChange(of: autoAdvance) { _, value in autosaver?.session.autoAdvance = value }
-        .onDisappear { autosaver?.saveNow(refreshThumbnail: true) }
+        .onDisappear {
+            regeneration?.cancel()
+            autosaver?.saveNow(refreshThumbnail: true)
+        }
     }
 
     private func open() async {
-        guard autosaver == nil, !failed else { return }
+        guard autosaver == nil, failure == nil else { return }
         do {
-            let document = try await library.loadForPainting(artworkID)
-            let session = PaintingSession(template: document.template, progress: document.progress)
-            Preferences().apply(to: session)
-            withAnimation(.easeOut(duration: 0.25)) {
-                autosaver = PaintingAutosaver(session: session, artworkID: artworkID, library: library)
-            }
-            if ShellDemo.current == .galleryOpen { DemoMode.markReady() }
+            present(try await library.loadForPainting(artworkID))
         } catch {
             Log.library.error("Opening \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
-            failed = true
+            withAnimation(.easeOut(duration: 0.25)) {
+                failure = error as? Library.OpenError ?? .damaged(canRegenerate: false)
+            }
         }
+    }
+
+    private func present(_ document: PaintingDocument) {
+        let session: PaintingSession
+        do {
+            session = try PaintingSession(template: document.template, progress: document.progress)
+        } catch {
+            // The library hands out matching progress; this guards against a bug, not a file.
+            Log.library.error("Opening \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+            failure = .damaged(canRegenerate: artwork.map { ArtworkFactory.canRegenerate($0, store: library.store) } ?? false)
+            return
+        }
+        Preferences().apply(to: session)
+        withAnimation(.easeOut(duration: 0.25)) {
+            failure = nil
+            regenerationFailed = false
+            autosaver = PaintingAutosaver(session: session, artworkID: artworkID, library: library)
+        }
+        if let notice = document.notice { show(notice) }
+        if ShellDemo.current == .galleryOpen { DemoMode.markReady() }
+    }
+
+    private func show(_ openNotice: OpenNotice) {
+        let shown = ShownNotice(notice: openNotice)
+        notice = shown
+        UIAccessibility.post(notification: .announcement, argument: openNotice.text)
+        Task {
+            try? await Task.sleep(for: .seconds(4))
+            if notice == shown { notice = nil }
+        }
+    }
+
+    private func regenerate() {
+        guard let artwork, regeneration == nil else { return }
+        regenerationFailed = false
+        regeneration = Task {
+            do {
+                present(try await library.regenerate(artwork: artworkID, settings: artwork.settings))
+            } catch is CancellationError {
+            } catch let error as Library.OpenError {
+                failure = error
+            } catch {
+                Log.library.error("Regenerating \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
+                regenerationFailed = true
+            }
+            regeneration = nil
+        }
+    }
+
+    private func delete() {
+        library.delete(artworkID)
+        onClose()
     }
 
     private func close() {
@@ -175,6 +247,23 @@ final class PaintingAutosaver {
             thumbnailRevision = session.revision
             let library = library, id = artworkID, template = session.template, progress = session.progress
             Task { await library.refreshThumbnail(id, template: template, progress: progress) }
+        }
+    }
+}
+
+private extension OpenNotice {
+    var text: String {
+        switch self {
+        case .progressReset: "This painting’s saved progress couldn’t be read, so it starts fresh."
+        case .regenerated(keptProgress: true): "Painting regenerated. Your painted areas were kept."
+        case .regenerated(keptProgress: false): "Painting regenerated from the original photo."
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .progressReset: "exclamationmark.triangle"
+        case .regenerated: "checkmark.circle"
         }
     }
 }
