@@ -24,6 +24,11 @@ enum PencilAction { case tap, squeeze }
 /// Gestures: tap paints (with tolerance), a quick second tap on something unpaintable zooms,
 /// press-and-drag paints every matching region under the finger, Apple Pencil paints
 /// directly while fingers navigate, and Pencil hover previews the region under the tip.
+///
+/// VoiceOver and Switch Control see the canvas as a container of the unpainted areas of the
+/// selected color that are in view (activating one paints it), with custom actions (paint
+/// next, zoom to next, hint, zoom to fit) and an "Unpainted areas" rotor. `reduceMotion`
+/// makes fills land at once, drops the finishing shine and steps the replay.
 final class CanvasView: UIView, PaintingCanvas {
     override class var layerClass: AnyClass { CAMetalLayer.self }
 
@@ -39,6 +44,9 @@ final class CanvasView: UIView, PaintingCanvas {
     var onPencilAction: ((PencilAction) -> Void)?
     /// Scales fill and replay durations (demo scenarios catch them mid-way).
     var fillDurationScale: Float = 1
+    /// Set from SwiftUI's `accessibilityReduceMotion`: camera moves jump, fills land at once,
+    /// finishing doesn't shine and the replay steps through the fills.
+    var reduceMotion = false
 
     private let template: Template
     private let scene: CanvasScene?
@@ -65,7 +73,8 @@ final class CanvasView: UIView, PaintingCanvas {
     private var numbersFrom: Float = 1
     private var numbersTo: Float = 1
     private var numbersStart: Float = -10_000
-    private var shineStart: Float = -10_000
+    /// When the finishing shine starts (renderer clock; tests read it).
+    private(set) var shineStart: Float = -10_000
     private var replayTask: Task<Void, Never>?
     private var isReplaying = false
     private var shineColor = -1
@@ -83,6 +92,29 @@ final class CanvasView: UIView, PaintingCanvas {
     private var tapWasFinger = false
     private var lastTap: (time: CFTimeInterval, point: CGPoint, painted: Bool)?
     private var dragLast: SIMD2<Float>?
+
+    // Accessibility
+    /// Per region: where its number sits (the bounds centre when it has none), the number's
+    /// free radius, and per color its regions.
+    private let anchors: [SIMD2<Float>]
+    private let labelRadii: [Float]
+    private let regionsByColor: [[Int]]
+    /// The elements VoiceOver sees; nil when stale (rebuilt on demand).
+    private var accessibleItems: [NSObject]?
+    /// Reused across rebuilds so VoiceOver focus survives camera moves.
+    private var areaElements: [Int: CanvasAreaElement] = [:]
+    private lazy var placeholder = UIAccessibilityElement(accessibilityContainer: self)
+    /// Where VoiceOver focus goes once the camera settles (after a hint or an action).
+    private(set) var pendingFocus: PendingFocus?
+    /// The last area "Zoom to next area" visited, in reading order over the whole canvas.
+    private var tourKey: CanvasAccessibility.ReadingKey?
+    /// True while VoiceOver paints an area: that path moves focus and speaks itself.
+    private var isAccessibilityPainting = false
+
+    enum PendingFocus: Equatable {
+        case region(Int)
+        case first
+    }
 
     private static let margin: CGFloat = 16
     private static let tapTolerance: CGFloat = 14
@@ -104,7 +136,15 @@ final class CanvasView: UIView, PaintingCanvas {
 
     init(session: PaintingSession) {
         self.session = session
-        template = session.template
+        let template = session.template
+        self.template = template
+        anchors = template.regions.indices.map { CanvasView.labelPosition(template, $0) }
+        labelRadii = template.regions.indices.map { i in
+            template.labels(ofRegion: i).first?.radius ?? template.regions[i].inscribedRadius
+        }
+        var byColor = [[Int]](repeating: [], count: template.palette.count)
+        for (i, region) in template.regions.enumerated() { byColor[Int(region.colorIndex)].append(i) }
+        regionsByColor = byColor
         let context = RenderContext.shared
         let scene = context.flatMap { CanvasScene(template: session.template, context: $0) }
         self.scene = scene
@@ -119,9 +159,12 @@ final class CanvasView: UIView, PaintingCanvas {
         configureLayer(device: context?.device)
         configureScrollView()
         configureGestures()
-        isAccessibilityElement = true
-        accessibilityLabel = String(localized: "Canvas")
-        accessibilityTraits = .allowsDirectInteraction
+        isAccessibilityElement = false
+        accessibilityContainerType = .semanticGroup
+        accessibilityLabel = PaintSpeech.canvasLabel
+        accessibilityIdentifier = "canvas"
+        accessibilityCustomActions = accessibilityActionList
+        accessibilityCustomRotors = [areasRotor]
         registerForTraitChanges([UITraitUserInterfaceStyle.self], action: #selector(appearanceChanged))
         session.canvas = self
         session.onEvent { [weak self] event in self?.celebrate(event) }
@@ -138,7 +181,8 @@ final class CanvasView: UIView, PaintingCanvas {
         }
     }
 
-    private static func labelPosition(_ template: Template, _ region: Int) -> SIMD2<Float> {
+    /// Where a region's number sits; the bounds centre for a region without a label.
+    static func labelPosition(_ template: Template, _ region: Int) -> SIMD2<Float> {
         if let label = template.labels(ofRegion: region).first { return label.position }
         let b = template.regions[region].bounds
         return SIMD2(Float(b.minX + b.maxX) / 2, Float(b.minY + b.maxY) / 2)
@@ -265,6 +309,7 @@ final class CanvasView: UIView, PaintingCanvas {
         let z = clampZoom(fitZoom * relative)
         cameraAnimation = nil
         apply(zoom: z, offset: offset(centering: center, zoom: z))
+        cameraDidSettle()
     }
 
     @objc private func appearanceChanged() {
@@ -317,13 +362,16 @@ final class CanvasView: UIView, PaintingCanvas {
         scrollView.contentInset = insets(forZoom: z)
         scrollView.contentOffset = o
         isApplyingCamera = false
+        // Runs every animation frame: invalidate only, the settle announces the new layout.
+        accessibilityChanged(post: false)
         requestRender()
     }
 
     private func animateCamera(zoom: CGFloat, offset: CGPoint, duration: CFTimeInterval) {
-        if UIAccessibility.isReduceMotionEnabled {
+        if reduceMotion {
             cameraAnimation = nil
             apply(zoom: zoom, offset: offset)
+            cameraDidSettle()
             return
         }
         cameraAnimation = CameraAnimation(
@@ -353,6 +401,7 @@ final class CanvasView: UIView, PaintingCanvas {
             cameraAnimation = nil
         }
         apply(zoom: t >= 1 ? a.toZoom : z, offset: o)
+        if t >= 1 { cameraDidSettle() }
     }
 
     /// The current view transform (view = origin + canvas · zoom). Reads presentation values
@@ -372,9 +421,16 @@ final class CanvasView: UIView, PaintingCanvas {
                 y: z.position.y - z.anchorPoint.y * size.height * scale - s.bounds.origin.y))
     }
 
-    private func canvasPoint(forView p: CGPoint) -> SIMD2<Float> {
+    /// View point → canvas point (internal for tests).
+    func canvasPoint(forView p: CGPoint) -> SIMD2<Float> {
         let c = currentCamera()
         return SIMD2(Float((p.x - c.origin.x) / c.zoom), Float((p.y - c.origin.y) / c.zoom))
+    }
+
+    /// Canvas point → view point (accessibility frames and tests).
+    func viewPoint(forCanvas p: SIMD2<Float>) -> CGPoint {
+        let c = currentCamera()
+        return CGPoint(x: c.origin.x + CGFloat(p.x) * c.zoom, y: c.origin.y + CGFloat(p.y) * c.zoom)
     }
 
     private func canvasPoint(_ zoomViewPoint: CGPoint) -> SIMD2<Float> {
@@ -393,7 +449,9 @@ final class CanvasView: UIView, PaintingCanvas {
         if animated {
             animateCamera(zoom: fitZoom, offset: target, duration: 0.5)
         } else {
+            cameraAnimation = nil
             apply(zoom: fitZoom, offset: target)
+            cameraDidSettle()
         }
     }
 
@@ -547,7 +605,8 @@ final class CanvasView: UIView, PaintingCanvas {
         numbersChanged()
         zoomToFit()
         let painted = session.progress.log.map { Int($0.region) }
-        let lift: Float = 0.45
+        let reduceMotion = self.reduceMotion
+        let lift: Float = reduceMotion ? 0 : 0.45
         let time = now()
         for r in painted {
             renderer.update(r, RegionState(
@@ -566,8 +625,8 @@ final class CanvasView: UIView, PaintingCanvas {
             for (i, r) in painted.enumerated() {
                 let origin = Self.labelPosition(template, r)
                 renderer.update(r, RegionState(
-                    origin: origin, start: begin + Float(i) * step, duration: 0.5,
-                    radius: farthestDistance(from: origin, in: template.regions[r].bounds), painted: 1,
+                    origin: origin, start: begin + Float(i) * step, duration: reduceMotion ? 0 : 0.5,
+                    radius: reduceMotion ? 0 : farthestDistance(from: origin, in: template.regions[r].bounds), painted: 1,
                     seed: Float(r % 61) * 0.73))
             }
             activeUntil = max(activeUntil, begin + span + 1.5)
@@ -581,8 +640,9 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     /// Finishing a color sweeps a gloss over it once its last fill has landed; finishing the
-    /// painting sweeps the whole canvas.
+    /// painting sweeps the whole canvas (not under Reduce Motion).
     private func celebrate(_ event: PaintEvent) {
+        guard !reduceMotion else { return }
         let delay: Float
         switch event {
         case let .colorCompleted(color):
@@ -609,13 +669,15 @@ final class CanvasView: UIView, PaintingCanvas {
     // MARK: PaintingCanvas
 
     func session(_ session: PaintingSession, didPaint regions: [Int], from origin: SIMD2<Float>, animated: Bool) {
+        accessibilityChanged()
         guard let renderer else { return }
         let time = now()
         let zoom = Float(scrollView.zoomScale)
+        let animate = animated && !reduceMotion
         var longest: Float = 0
         for r in regions {
             let seed = Float(r % 61) * 0.73
-            guard animated else {
+            guard animate else {
                 renderer.update(r, .settled(painted: true, origin: Self.labelPosition(template, r), seed: seed))
                 continue
             }
@@ -633,6 +695,7 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     func session(_ session: PaintingSession, didUnpaint regions: [Int]) {
+        accessibilityChanged()
         guard let renderer else { return }
         let time = now()
         for r in regions {
@@ -645,13 +708,26 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     func sessionDidChangeSelection(_ session: PaintingSession) {
-        selectionTime = now()
+        let time = now()
         hoverRegion = -1
-        activeUntil = max(activeUntil, selectionTime + 2)
+        tourKey = nil
+        if reduceMotion {
+            // The hatch of the new color starts at rest instead of gliding in.
+            selectionTime = time - 10
+        } else {
+            selectionTime = time
+            activeUntil = max(activeUntil, time + 2)
+        }
+        if isAccessibilityPainting, let color = session.selectedColor {
+            Announcer.announce(PaintSpeech.nextColor(number: color + 1, name: session.colorNames[color]))
+        }
+        accessibilityChanged()
         requestRender()
     }
 
     func session(_ session: PaintingSession, focusOn region: Int) {
+        // VoiceOver (and Switch Control) follow the hint to the revealed area.
+        pendingFocus = .region(region)
         reveal(region: region)
     }
 
@@ -768,6 +844,224 @@ final class CanvasView: UIView, PaintingCanvas {
             requestRender()
         }
     }
+
+    // MARK: Accessibility
+
+    /// UIKit reads the whole array at once, so a rebuild between reads can't mismatch a count
+    /// and an element lookup.
+    override var accessibilityElements: [Any]? {
+        get { accessibleElements() }
+        set {}
+    }
+
+    private func accessibleElements() -> [NSObject] {
+        if let accessibleItems { return accessibleItems }
+        let items = buildAccessibleElements()
+        accessibleItems = items
+        return items
+    }
+
+    /// The unpainted areas of the selected color whose numbers are in view (at most
+    /// `CanvasAccessibility.limit`, nearest the middle, in reading order), or one placeholder
+    /// that says why there are none and carries the actions.
+    private func buildAccessibleElements() -> [NSObject] {
+        let area = bounds.inset(by: chromeInsets)
+        guard let color = session.selectedColor, area.width >= 44, area.height >= 44 else {
+            areaElements = [:]
+            return [configuredPlaceholder(frame: area.isEmpty ? bounds : area)]
+        }
+        let camera = currentCamera()
+        // Numbers at least half a touch target inside the area, so every frame stays whole.
+        let inner = area.insetBy(dx: 22, dy: 22)
+        let a = canvasPoint(forView: inner.origin)
+        let b = canvasPoint(forView: CGPoint(x: inner.maxX, y: inner.maxY))
+        let visible = CGRect(x: CGFloat(a.x), y: CGFloat(a.y), width: CGFloat(b.x - a.x), height: CGFloat(b.y - a.y))
+        let candidates = regionsByColor[color].filter { !session.isPainted($0) }
+        let regions = CanvasAccessibility.visibleAreas(
+            candidates, anchors: anchors, visible: visible, center: visibleCenter, rowHeight: Float(44 / camera.zoom))
+        guard !regions.isEmpty else {
+            areaElements = [:]
+            return [configuredPlaceholder(frame: area)]
+        }
+        let number = color + 1
+        let hint = PaintSpeech.areaHint(number: number, name: session.colorNames[color])
+        var elements: [Int: CanvasAreaElement] = [:]
+        let items = regions.map { r -> CanvasAreaElement in
+            let element = areaElements[r] ?? CanvasAreaElement(region: r, container: self)
+            element.accessibilityLabel = PaintSpeech.areaLabel(number: number)
+            element.accessibilityValue = PaintSpeech.areaValue(
+                CanvasPosition(anchors[r], width: template.width, height: template.height))
+            element.accessibilityHint = hint
+            element.accessibilityTraits = .button
+            element.accessibilityIdentifier = "canvas-area-\(r)"
+            element.accessibilityFrameInContainerSpace = areaFrame(r, zoom: camera.zoom, in: area)
+            element.accessibilityCustomActions = accessibilityActionList
+            element.accessibilityCustomRotors = [areasRotor]
+            elements[r] = element
+            return element
+        }
+        areaElements = elements
+        return items
+    }
+
+    /// A square around the area's number, as big as the number's free space (44–160 pt), cut
+    /// symmetrically to the chrome-free area so it stays centred on the number: a tap at its
+    /// centre paints the area.
+    private func areaFrame(_ region: Int, zoom: CGFloat, in area: CGRect) -> CGRect {
+        let c = viewPoint(forCanvas: anchors[region])
+        let half = min(max(CGFloat(labelRadii[region]) * zoom, 22), 80)
+        let hx = min(half, c.x - area.minX, area.maxX - c.x)
+        let hy = min(half, c.y - area.minY, area.maxY - c.y)
+        return CGRect(x: c.x - hx, y: c.y - hy, width: 2 * hx, height: 2 * hy)
+    }
+
+    private func configuredPlaceholder(frame: CGRect) -> UIAccessibilityElement {
+        let element = placeholder
+        element.accessibilityLabel = PaintSpeech.canvasLabel
+        if session.isComplete {
+            element.accessibilityValue = PaintSpeech.finished
+        } else if let color = session.selectedColor {
+            element.accessibilityValue = PaintSpeech.noAreasInView(number: color + 1, name: session.colorNames[color])
+        } else {
+            element.accessibilityValue = ""
+        }
+        element.accessibilityHint = session.isComplete ? nil : PaintSpeech.canvasHint
+        element.accessibilityIdentifier = "canvas-placeholder"
+        element.accessibilityFrameInContainerSpace = frame
+        element.accessibilityCustomActions = accessibilityActionList
+        element.accessibilityCustomRotors = [areasRotor]
+        return element
+    }
+
+    /// Marks the elements stale and, unless VoiceOver is painting (that path focuses itself),
+    /// tells VoiceOver or Switch Control that the layout changed.
+    private func accessibilityChanged(post: Bool = true) {
+        accessibleItems = nil
+        guard post, !isAccessibilityPainting else { return }
+        postLayoutChanged(nil)
+    }
+
+    private func postLayoutChanged(_ focus: Any?) {
+        guard UIAccessibility.isVoiceOverRunning || UIAccessibility.isSwitchControlRunning else { return }
+        UIAccessibility.post(notification: .layoutChanged, argument: focus)
+    }
+
+    /// The camera came to rest: rebuild, and focus what a hint or an action asked for.
+    private func cameraDidSettle() {
+        accessibleItems = nil
+        let focus: NSObject?
+        switch pendingFocus {
+        case let .region(region)?:
+            let items = accessibleElements()
+            focus = areaElements[region] ?? items.first
+        case .first?:
+            focus = accessibleElements().first
+        case nil:
+            focus = nil
+        }
+        pendingFocus = nil
+        postLayoutChanged(focus)
+    }
+
+    private func unpaintedOfSelectedColor() -> [Int] {
+        guard let color = session.selectedColor else { return [] }
+        return regionsByColor[color].filter { !session.isPainted($0) }
+    }
+
+    /// Whether a region's number is where VoiceOver would offer it (inside the chrome-free area).
+    private func isInView(_ region: Int) -> Bool {
+        let area = bounds.inset(by: chromeInsets).insetBy(dx: 22, dy: 22)
+        return !area.isEmpty && area.contains(viewPoint(forCanvas: anchors[region]))
+    }
+
+    /// Paints an area for VoiceOver or Switch Control the way a tap on its number would, then
+    /// moves focus to the area that took its place in the list.
+    func paintForAccessibility(_ region: Int) -> Bool {
+        guard let color = session.selectedColor, session.colorOf(region) == color, !session.isPainted(region) else {
+            return false
+        }
+        let before = accessibleElements()
+        let index = before.firstIndex { ($0 as? CanvasAreaElement)?.region == region }
+        isAccessibilityPainting = true
+        defer { isAccessibilityPainting = false }
+        let anchor = anchors[region]
+        // A region without a label is anchored at its bounds centre, which may lie in a
+        // neighbour; paint it directly then rather than letting the tap pick the neighbour.
+        if template.region(at: anchor) == region {
+            session.tap(at: anchor, tolerance: Float(Self.tapTolerance / scrollView.zoomScale))
+        }
+        if !session.isPainted(region) {
+            session.paint([region], from: anchor, animated: true)
+        }
+        guard session.isPainted(region) else { return false }
+        // A camera flight in progress (Paint next area) focuses once it lands.
+        if cameraAnimation == nil {
+            let items = accessibleElements()
+            let next = items.isEmpty ? nil : items[min(index ?? 0, items.count - 1)]
+            postLayoutChanged(next)
+        }
+        let remaining = session.remainingByColor[color]
+        if remaining > 0 { Announcer.announce(PaintSpeech.painted(remaining: remaining)) }
+        return true
+    }
+
+    private lazy var accessibilityActionList: [UIAccessibilityCustomAction] = [
+        UIAccessibilityCustomAction(
+            name: String(localized: "paint.action.paintNext", defaultValue: "Paint next area",
+                         comment: "VoiceOver action: paint the unpainted area nearest the middle of the view")
+        ) { [weak self] _ in
+            guard let self, let target = CanvasAccessibility.nearest(
+                self.unpaintedOfSelectedColor(), anchors: self.anchors, to: self.visibleCenter) else { return false }
+            if !isInView(target) {
+                pendingFocus = .first
+                reveal(region: target)
+            }
+            return paintForAccessibility(target)
+        },
+        UIAccessibilityCustomAction(
+            name: String(localized: "paint.action.zoomNext", defaultValue: "Zoom to next area",
+                         comment: "VoiceOver action: move the view to the next unpainted area, in reading order")
+        ) { [weak self] _ in
+            guard let self else { return false }
+            let rowHeight = Float(template.height) / 12
+            guard let next = CanvasAccessibility.next(
+                after: tourKey, in: unpaintedOfSelectedColor(), anchors: anchors, rowHeight: rowHeight) else { return false }
+            tourKey = CanvasAccessibility.key(next, anchor: anchors[next], rowHeight: rowHeight)
+            pendingFocus = .region(next)
+            reveal(region: next)
+            return true
+        },
+        UIAccessibilityCustomAction(
+            name: String(localized: "paint.action.hint", defaultValue: "Hint",
+                         comment: "VoiceOver action: show an unpainted area of the selected color near the view")
+        ) { [weak self] _ in
+            guard let self, !self.unpaintedOfSelectedColor().isEmpty else { return false }
+            showHint()
+            return true
+        },
+        UIAccessibilityCustomAction(
+            name: String(localized: "paint.action.zoomToFit", defaultValue: "Zoom to fit",
+                         comment: "VoiceOver action: show the whole painting")
+        ) { [weak self] _ in
+            guard let self else { return false }
+            pendingFocus = .first
+            zoomToFit()
+            return true
+        },
+    ]
+
+    private lazy var areasRotor: UIAccessibilityCustomRotor = UIAccessibilityCustomRotor(
+        name: String(localized: "paint.rotor.unpaintedAreas", defaultValue: "Unpainted areas",
+                     comment: "VoiceOver rotor that moves between the unpainted areas in view")
+    ) { [weak self] predicate in
+        guard let self else { return nil }
+        let items = accessibleElements().compactMap { $0 as? CanvasAreaElement }
+        let current = predicate.currentItem.targetElement as? CanvasAreaElement
+        let i = items.firstIndex { $0 === current }
+        let j = predicate.searchDirection == .next ? (i.map { $0 + 1 } ?? 0) : (i.map { $0 - 1 } ?? items.count - 1)
+        guard items.indices.contains(j) else { return nil }
+        return UIAccessibilityCustomRotorItemResult(targetElement: items[j], targetRange: nil)
+    }
 }
 
 // MARK: - Delegates
@@ -775,16 +1069,36 @@ final class CanvasView: UIView, PaintingCanvas {
 extension CanvasView: UIScrollViewDelegate {
     func viewForZooming(in scrollView: UIScrollView) -> UIView? { zoomView }
 
-    func scrollViewDidScroll(_ scrollView: UIScrollView) { requestRender() }
-
-    func scrollViewDidZoom(_ scrollView: UIScrollView) {
-        if !isApplyingCamera { scrollView.contentInset = insets(forZoom: scrollView.zoomScale) }
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        accessibilityChanged(post: false)
         requestRender()
     }
 
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) { cameraAnimation = nil }
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+        if !isApplyingCamera { scrollView.contentInset = insets(forZoom: scrollView.zoomScale) }
+        accessibilityChanged(post: false)
+        requestRender()
+    }
 
-    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) { cameraAnimation = nil }
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        cameraAnimation = nil
+        pendingFocus = nil
+    }
+
+    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
+        cameraAnimation = nil
+        pendingFocus = nil
+    }
+
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate { cameraDidSettle() }
+    }
+
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) { cameraDidSettle() }
+
+    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+        cameraDidSettle()
+    }
 }
 
 extension CanvasView: UIGestureRecognizerDelegate {

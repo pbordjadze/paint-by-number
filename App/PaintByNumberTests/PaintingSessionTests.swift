@@ -267,6 +267,14 @@ struct PaintingSessionTests {
         #expect(abs(center.y - Float(template.height) / 2) < 1)
         #expect(session.canvas === view)
     }
+
+    @Test func colorNamesMatchPalette() {
+        let session = PaintingSession(template: template)
+        #expect(session.colorNames.count == session.paletteCount)
+        for (i, color) in template.palette.enumerated() {
+            #expect(session.colorNames[i] == color.colorName)
+        }
+    }
 }
 
 @MainActor

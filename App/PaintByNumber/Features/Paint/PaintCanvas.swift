@@ -27,6 +27,7 @@ struct PaintCanvas: UIViewRepresentable {
         let view = CanvasView(session: session)
         view.initialCamera = initialCamera
         view.fillDurationScale = fillDurationScale
+        view.reduceMotion = context.environment.accessibilityReduceMotion
         controller?.view = view
         return view
     }
@@ -37,6 +38,7 @@ struct PaintCanvas: UIViewRepresentable {
             top: chromeInsets.top, left: rtl ? chromeInsets.trailing : chromeInsets.leading,
             bottom: chromeInsets.bottom, right: rtl ? chromeInsets.leading : chromeInsets.trailing)
         view.showsNumbers = showsNumbers
+        view.reduceMotion = context.environment.accessibilityReduceMotion
         view.onPencilAction = onPencilAction
         controller?.view = view
     }

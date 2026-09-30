@@ -23,6 +23,8 @@ struct PaintView: View {
     @State private var confirmRestart = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
@@ -96,31 +98,40 @@ struct PaintView: View {
 
     /// Where the palette goes and how many lines it wraps into: along the trailing edge of a
     /// wide window (landscape iPad), otherwise at the bottom. Roomy windows show every color
-    /// at once in a few lines; compact ones scroll a single line.
+    /// at once in a few lines; compact ones scroll a single line and name the selected color
+    /// in a caption above it (regular widths name it in the progress badge).
     struct PaletteLayout: Equatable {
         var side: Bool
         var lines: Int
-        var thickness: CGFloat { PaletteBar.thickness(lines: lines) }
+        var caption: Bool
+        var metrics: PaletteMetrics
+        var thickness: CGFloat { metrics.thickness(lines: lines, caption: caption) }
     }
+
+    private var paletteMetrics: PaletteMetrics { PaletteMetrics(dynamicTypeSize: dynamicTypeSize) }
 
     private static let sidePaletteTop: CGFloat = 6 + barHeight + 12
 
     private func paletteLayout(in size: CGSize) -> PaletteLayout {
         let count = PaletteBar.visibleColors(session).count
+        let metrics = paletteMetrics
         if sizeClass == .regular && size.width > size.height {
             let length = size.height - Self.sidePaletteTop - Self.edge
-            return PaletteLayout(side: true, lines: PaletteBar.lines(count: count, length: length, maxLines: 2))
+            return PaletteLayout(
+                side: true, lines: metrics.lines(count: count, length: length, maxLines: 2), caption: false,
+                metrics: metrics)
         }
         let length = size.width - 2 * Self.edge
         return PaletteLayout(
-            side: false, lines: PaletteBar.lines(count: count, length: length, maxLines: sizeClass == .regular ? 3 : 1))
+            side: false, lines: metrics.lines(count: count, length: length, maxLines: sizeClass == .regular ? 3 : 1),
+            caption: sizeClass != .regular, metrics: metrics)
     }
 
     /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
     private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
         let top = safe.top + 6 + Self.barHeight + 6
         if session.isComplete {
-            return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + PaletteBar.thickness + 6,
+            return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + CompletionBar.height + 6,
                               trailing: safe.trailing)
         }
         if palette.side {
@@ -148,24 +159,46 @@ struct PaintView: View {
                 moreMenu
             }
         }
+        // The bar keeps its 44 pt height (the canvas insets assume it); larger text sizes
+        // reach its controls through the Large Content Viewer.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
+    /// Progress, the title when it fits whole, and on regular widths the selected color's
+    /// name (compact widths show it above the palette instead).
     private var progressBadge: some View {
         let fraction = session.fractionComplete
-        // The title shows only when it fits whole (compact widths drop it).
+        let showsColor = sizeClass == .regular && session.selectedColor != nil
         return ViewThatFits(in: .horizontal) {
-            if !title.isEmpty { badgeContent(fraction: fraction, showsTitle: true) }
-            badgeContent(fraction: fraction, showsTitle: false)
+            if showsColor {
+                if !title.isEmpty { badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: true) }
+                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: true)
+                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: false, showsColor: true)
+            } else if !title.isEmpty {
+                badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: false)
+            }
+            badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: false)
         }
         .frame(height: Self.barHeight)
         .glassEffect(.regular, in: .capsule)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(title.isEmpty
-            ? Text("\(Int(fraction * 100)) percent painted")
-            : Text("\(title), \(Int(fraction * 100)) percent painted"))
     }
 
-    private func badgeContent(fraction: Double, showsTitle: Bool) -> some View {
+    private func badgeVariant(fraction: Double, showsTitle: Bool, showsPercent: Bool, showsColor: Bool) -> some View {
+        HStack(spacing: 10) {
+            progressGroup(fraction: fraction, showsTitle: showsTitle, showsPercent: showsPercent)
+            if showsColor {
+                Capsule()
+                    .fill(Color.primary.opacity(0.15))
+                    .frame(width: 1, height: 18)
+                    .accessibilityHidden(true)
+                CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
+                    .fixedSize()
+            }
+        }
+        .padding(.horizontal, 14)
+    }
+
+    private func progressGroup(fraction: Double, showsTitle: Bool, showsPercent: Bool) -> some View {
         HStack(spacing: 8) {
             ZStack {
                 Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
@@ -175,23 +208,29 @@ struct PaintView: View {
                     .rotationEffect(.degrees(-90))
             }
             .frame(width: 18, height: 18)
-            .animation(.easeOut(duration: 0.4), value: fraction)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: fraction)
             if showsTitle {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
                     .fixedSize()
             }
-            Text(verbatim: "\(Int(fraction * 100))%")
-                .font(.subheadline.weight(.semibold))
-                .monospacedDigit()
-                .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
-                .contentTransition(.numericText())
-                .animation(.snappy, value: Int(fraction * 100))
-                .lineLimit(1)
-                .fixedSize()
+            if showsPercent {
+                Text(verbatim: "\(Int(fraction * 100))%")
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
+                    .contentTransition(.numericText())
+                    .animation(reduceMotion ? nil : .snappy, value: Int(fraction * 100))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
         }
-        .padding(.horizontal, 14)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title.isEmpty
+            ? Text("\(Int(fraction * 100)) percent painted")
+            : Text("\(title), \(Int(fraction * 100)) percent painted"))
+        .accessibilityShowsLargeContentViewer()
     }
 
     private var moreMenu: some View {
@@ -205,12 +244,13 @@ struct PaintView: View {
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
         } label: {
             Image(systemName: "ellipsis")
-                .font(.system(size: 17, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(Color.primary)
                 .frame(width: Self.barHeight, height: Self.barHeight)
                 .glassEffect(.regular.interactive(), in: .circle)
         }
         .accessibilityLabel(Text("More"))
+        .accessibilityShowsLargeContentViewer { Label("More", systemImage: "ellipsis") }
     }
 
     // MARK: Bottom
@@ -218,12 +258,13 @@ struct PaintView: View {
     @ViewBuilder
     private func bottomBar(_ palette: PaletteLayout) -> some View {
         if session.isComplete {
+            let transition: AnyTransition = reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
             CompletionBar(session: session, title: title, onReplay: controller.replay, onClose: onClose)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .transition(transition)
         } else {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
-                shakes: chrome.shakes)
+                shakes: chrome.shakes, metrics: palette.metrics, showsCurrentColor: palette.caption)
         }
     }
 
@@ -275,6 +316,7 @@ struct GlassIconButton: View {
         .buttonStyle(.glass)
         .buttonBorderShape(.circle)
         .accessibilityLabel(Text(label))
+        .accessibilityShowsLargeContentViewer { Label(label, systemImage: systemImage) }
     }
 }
 
@@ -284,7 +326,7 @@ struct GlassIconLabel: View {
 
     var body: some View {
         Image(systemName: systemImage)
-            .font(.system(size: 17, weight: .semibold))
+            .font(.body.weight(.semibold))
             .foregroundStyle(Color.primary)
             .frame(width: 30, height: 30)
     }
@@ -292,6 +334,9 @@ struct GlassIconLabel: View {
 
 /// Replaces the palette once the painting is finished.
 private struct CompletionBar: View {
+    /// As tall as a one-line palette, so the canvas keeps its place when the painting finishes.
+    static let height = PaletteMetrics.standard.thickness(lines: 1, caption: false)
+
     let session: PaintingSession
     let title: String
     let onReplay: () -> Void
@@ -326,6 +371,7 @@ private struct CompletionBar: View {
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
             .accessibilityLabel(Text("Replay"))
+            .accessibilityShowsLargeContentViewer { Label("Replay", systemImage: "play.fill") }
             if let shareImage {
                 let name = title.isEmpty ? String(localized: "Painting") : title
                 Menu {
@@ -344,6 +390,7 @@ private struct CompletionBar: View {
                 .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
                 .accessibilityLabel(Text("Share"))
+                .accessibilityShowsLargeContentViewer { Label("Share", systemImage: "square.and.arrow.up") }
             }
             if let onClose {
                 Button(action: onClose) {
@@ -351,13 +398,15 @@ private struct CompletionBar: View {
                 }
                 .buttonStyle(.glassProminent)
                 .fixedSize()
+                .accessibilityShowsLargeContentViewer()
             }
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 8)
-        .frame(minHeight: PaletteBar.thickness)
+        .frame(minHeight: Self.height)
         .frame(maxWidth: 560)
-        // One compact row even at the largest text sizes.
+        // One compact row even at the largest text sizes: the canvas insets assume its height,
+        // and the Large Content Viewer shows its buttons enlarged.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .capsule)
         .task(id: session.revision) {
@@ -394,8 +443,16 @@ final class PaintChromeState {
             case let .strokeEnded(regions):
                 if let session { self?.registerUndo(of: regions.count, in: session) }
             case let .rejected(_, expected):
-                withAnimation(.linear(duration: 0.45)) { self?.shakes[expected, default: 0] += 1 }
+                // Without animation the shake's whole-number step leaves the swatch in place.
+                withAnimation(UIAccessibility.isReduceMotionEnabled ? nil : .linear(duration: 0.45)) {
+                    self?.shakes[expected, default: 0] += 1
+                }
+            case let .colorCompleted(color):
+                if let session {
+                    Announcer.announce(PaintSpeech.colorFinished(number: color + 1, name: session.colorNames[color]))
+                }
             case .artworkCompleted:
+                Announcer.announce(PaintSpeech.paintingFinished)
                 controller?.zoomToFit()
             default:
                 break
