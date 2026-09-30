@@ -19,6 +19,7 @@ Paused on 2026-09-30 around 22:00 UTC because of the session usage limit. Nothin
 3. Localization per handoff/localization-brief.md, on top of the green integration branch.
 4. Merge everything into claude/wave1-merge, regenerate tools/baseline/regression.json once, and keep TemplateGenerator.pipelineVersion at 2 (unreleased).
 5. Whole-diff review, then push to claude/paint-by-numbers-app for the iPhone job and the build-68 IPA.
+6. After build 68: automatic generation settings, designed in docs/design/auto-settings.md on the integration branch.
 
 Agent rules used for all continuation work: handoff/RULES.md (Opus 5.5 agents, one worktree each, no history rewrites).
 
