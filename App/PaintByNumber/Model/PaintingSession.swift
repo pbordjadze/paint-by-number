@@ -25,6 +25,11 @@ enum PaintEvent: Equatable {
     case undone(region: Int)
     /// A drag or Pencil stroke ended; `regions` are all it painted (it undoes as one step).
     case strokeEnded(regions: [Int])
+    /// A tap painted nothing but landed just beside an unpainted area of the selected color
+    /// that is small at this zoom: zooming in would help.
+    case missedSmallArea(region: Int)
+    /// The hint revealed `region`.
+    case hintShown(region: Int)
 }
 
 /// The live state of painting one artwork: template, progress, selection and the rules of
@@ -102,15 +107,22 @@ final class PaintingSession {
             target = nearestPaintable(to: point, color: color, radius: tolerance)
         }
         guard let target else {
-            if !progress.isPainted(hit) && colorOf(hit) != color {
-                let event = PaintEvent.rejected(region: hit, expectedColor: colorOf(hit))
-                emit(event)
-                return event
+            let rejected: PaintEvent? = !progress.isPainted(hit) && colorOf(hit) != color
+                ? .rejected(region: hit, expectedColor: colorOf(hit)) : nil
+            if let rejected { emit(rejected) }
+            // "Small" = its inscribed disc fits under the tolerance (a fingertip on screen).
+            if tolerance > 0, let small = nearestPaintable(
+                to: point, color: color, radius: tolerance * Self.nearMissReach, maxInscribedRadius: tolerance) {
+                emit(.missedSmallArea(region: small))
             }
-            return nil
+            return rejected
         }
         return paint([target], from: point, animated: true)
     }
+
+    /// How far beyond the tap tolerance (as a multiple of it) a miss still counts as aimed
+    /// at a small area.
+    private static let nearMissReach: Float = 3
 
     /// Paints every region of the selected color touched by a drag segment.
     @discardableResult
@@ -205,7 +217,10 @@ final class PaintingSession {
             }
             if score < bestScore { bestScore = score; best = i }
         }
-        if let best { canvas?.session(self, focusOn: best) }
+        if let best {
+            canvas?.session(self, focusOn: best)
+            emit(.hintShown(region: best))
+        }
     }
 
     func nextIncompleteColor(after color: Int) -> Int? {
@@ -235,11 +250,14 @@ final class PaintingSession {
         lastInteraction = now
     }
 
-    private func nearestPaintable(to point: SIMD2<Float>, color: Int, radius: Float) -> Int? {
+    private func nearestPaintable(
+        to point: SIMD2<Float>, color: Int, radius: Float, maxInscribedRadius: Float = .infinity
+    ) -> Int? {
         var best: Int?
         var bestD = Float.infinity
         forEachRegion(inDiscAt: point, radius: radius) { region, d2 in
-            if d2 < bestD && !progress.isPainted(region) && colorOf(region) == color {
+            if d2 < bestD && !progress.isPainted(region) && colorOf(region) == color
+                && template.regions[region].inscribedRadius <= maxInscribedRadius {
                 bestD = d2
                 best = region
             }

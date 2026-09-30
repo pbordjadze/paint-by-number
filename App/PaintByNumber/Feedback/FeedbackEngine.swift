@@ -65,7 +65,8 @@ final class FeedbackEngine {
             if sound { sounds.celebrate() }
         case .undone:
             if haptic { haptics.tick() }
-        case .strokeEnded:
+        case .strokeEnded, .hintShown, .missedSmallArea:
+            // A near miss follows the rejected buzz already felt; the hint moves the camera.
             break
         }
     }
