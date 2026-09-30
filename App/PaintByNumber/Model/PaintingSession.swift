@@ -43,6 +43,8 @@ final class PaintingSession {
     /// Regions left to paint per palette color.
     private(set) var remainingByColor: [Int]
     let totalByColor: [Int]
+    /// Names of the palette colors, index-aligned with `template.palette`.
+    let colorNames: [ColorName]
     /// Increments on every progress change; cheap to observe for autosave/thumbnails.
     private(set) var revision = 0
 
@@ -79,6 +81,7 @@ final class PaintingSession {
         self.progress = progress
         let totals = template.regionCountsByColor
         totalByColor = totals
+        colorNames = template.palette.map(\.colorName)
         var remaining = totals
         for (i, region) in template.regions.enumerated() where progress.isPainted(i) {
             remaining[Int(region.colorIndex)] -= 1

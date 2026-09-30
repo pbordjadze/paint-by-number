@@ -165,6 +165,7 @@ struct Metrics: Codable {
     /// `Template.validate(minLabelRadius: LabelSizing.minimumRadius)` and its report.
     var valid: Bool
     var validation: String
+    var colorNames: [String]
 }
 
 func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: GenerationSettings) -> Metrics {
@@ -222,7 +223,8 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         labelRoomEdges: out.vectorStats.labelRoomEdges,
         labelRoomRegions: out.vectorStats.labelRoomRegions,
         valid: report.isValid,
-        validation: report.description)
+        validation: report.description,
+        colorNames: t.palette.map(\.colorName.english))
 }
 
 /// Measures the longest stretch of pipeline work between two cancellation checks, i.e. the

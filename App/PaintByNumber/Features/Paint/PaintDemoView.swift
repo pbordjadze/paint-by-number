@@ -21,9 +21,12 @@ import simd
 ///   the only scenario that shows tips (`PaintTips.configure`)
 ///
 /// Photo-based scenarios have the photo loader, so the top bar is the one users see.
+/// - `paint-ax`: `paint-progress`, showing the selected color's name
+/// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
+    @Environment(\.dynamicTypeSize) private var systemTypeSize
 
     init(scenario: String) {
         self.scenario = scenario
@@ -38,6 +41,7 @@ struct PaintDemoView: View {
                     .environment(\.sourcePhotoLoader, demo.isSynthetic ? nil : SourcePhotoLoader(load: { size in
                         await Self.photo(maxPixelSize: size)
                     }))
+                    .environment(\.dynamicTypeSize, demo.dynamicTypeSize ?? systemTypeSize)
                     .task {
                         await demo.run()
                         DemoMode.markReady()
@@ -83,6 +87,8 @@ private final class Demo {
     var camera: CanvasCamera?
     var fillDurationScale: Float = 1
     var showsPhoto = false
+    /// Overrides the system text size (accessibility scenarios).
+    var dynamicTypeSize: DynamicTypeSize?
     private let scenario: String
 
     init(scenario: String, template t: Template, title: String, isSynthetic: Bool) {
@@ -105,8 +111,11 @@ private final class Demo {
         }
 
         switch scenario {
-        case "paint-progress", "paint-dark":
+        case "paint-progress", "paint-dark", "paint-ax":
             paint(fraction: 0.55)
+        case "paint-ax-large":
+            paint(fraction: 0.55)
+            dynamicTypeSize = .accessibility5
         case "paint-zoom":
             paint(fraction: 0.3)
             // Centre on a mid-sized unpainted region of the selected color near the middle.

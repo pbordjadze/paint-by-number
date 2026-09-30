@@ -35,6 +35,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.initialCamera = initialCamera
         view.fillDurationScale = fillDurationScale
         view.photoLoader = photoLoader
+        view.reduceMotion = context.environment.accessibilityReduceMotion
         controller?.view = view
         // Deferred: state mustn't change while SwiftUI is making views.
         if !view.isRenderable, let onUnavailable { Task { onUnavailable() } }
@@ -47,6 +48,7 @@ struct PaintCanvas: UIViewRepresentable {
             top: chromeInsets.top, left: rtl ? chromeInsets.trailing : chromeInsets.leading,
             bottom: chromeInsets.bottom, right: rtl ? chromeInsets.leading : chromeInsets.trailing)
         view.showsNumbers = showsNumbers
+        view.reduceMotion = context.environment.accessibilityReduceMotion
         view.onPencilAction = onPencilAction
         // Loader and callbacks first: showing the photo may start loading it.
         view.photoLoader = photoLoader

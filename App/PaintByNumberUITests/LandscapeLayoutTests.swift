@@ -12,11 +12,18 @@ final class LandscapeLayoutTests: XCTestCase {
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 60))
         sleep(3)
         attachScreenshot(of: app, named: "landscape-paint-progress")
-        let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Color '")).allElementsBoundByIndex
+        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
         XCTAssertFalse(swatches.isEmpty)
         let window = app.windows.firstMatch.frame
         for swatch in swatches {
             XCTAssertTrue(window.contains(swatch.frame), "\(swatch.label) is scrolled out of view")
+        }
+        // The canvas's VoiceOver areas are part of the audit below; they must be big enough to hit.
+        let areas = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'canvas-area-'")).allElementsBoundByIndex
+        XCTAssertFalse(areas.isEmpty, "The canvas offers no areas to VoiceOver")
+        for area in areas {
+            XCTAssertGreaterThanOrEqual(min(area.frame.width, area.frame.height), 43.5, "\(area.identifier) is too small")
+            XCTAssertFalse(area.label.isEmpty)
         }
         try audit(app, named: "paint-progress")
     }

@@ -29,20 +29,26 @@ def svg_to_png(svg, png, width=None):
     subprocess.run(cmd, check=True, cwd=os.path.join(ROOT, "tools"))
 
 
-def draw_palette(draw, palette, box, cols=6):
-    """Numbered swatches of `palette` (hex strings) laid out in `box` = (x, y, width, height)."""
+def draw_palette(draw, palette, box, cols=6, names=()):
+    """Numbered swatches of `palette` (hex strings) laid out in `box` = (x, y, width, height);
+    `names` (one per swatch, optional) are written under the numbers when the cells are tall enough."""
     if not palette:
         return
     x, y, width, height = box
     rows = (len(palette) + cols - 1) // cols
     cw, ch = width // cols, min(height // rows, 60)
     font = ImageFont.load_default(size=max(10, min(ch // 2, 18)))
+    name_size = max(9, ch // 4)
+    name_font = ImageFont.load_default(size=name_size)
     for i, hx in enumerate(palette):
         x0, y0 = x + (i % cols) * cw, y + (i // cols) * ch
         rgb = tuple(int(hx[k:k + 2], 16) for k in (0, 2, 4))
         draw.rectangle([x0 + 2, y0 + 2, x0 + cw - 2, y0 + ch - 2], fill=rgb)
         lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
-        draw.text((x0 + 8, y0 + 6), str(i + 1), fill=(0, 0, 0) if lum > 128 else (255, 255, 255), font=font)
+        ink = (0, 0, 0) if lum > 128 else (255, 255, 255)
+        draw.text((x0 + 8, y0 + 6), str(i + 1), fill=ink, font=font)
+        if ch >= 36 and i < len(names):
+            draw.text((x0 + 8, y0 + ch - 6 - name_size), names[i], fill=ink, font=name_font)
 
 
 def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
@@ -85,7 +91,8 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
     if boundaries is not None:
         sheet.paste(boundaries.resize((panel_w, panel_h), Image.LANCZOS), (panel_w, 28 + panel_h))
     d = ImageDraw.Draw(sheet)
-    draw_palette(d, stats.get("palette", []), (2 * panel_w, 28 + panel_h, panel_w, panel_h))
+    draw_palette(d, stats.get("palette", []), (2 * panel_w, 28 + panel_h, panel_w, panel_h),
+                 names=stats.get("colorNames", []))
     caption = (f"{name}  {stats['width']}x{stats['height']}  colors={stats['colors']}  regions={stats['regions']}  "
                f"dE={stats['meanDeltaE']:.4f}  r<2:{stats['regionsUnderRadius2']}  "
                f"legible:{stats.get('labelsBelowLegibleSize', '?')}  total={stats['totalMs']:.0f}ms")

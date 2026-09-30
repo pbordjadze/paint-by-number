@@ -535,6 +535,14 @@ struct PaintingSessionTests {
     @Test func canvasIsRenderableWithMetal() {
         #expect(CanvasView(session: PaintingSession(template: template)).isRenderable)
     }
+
+    @Test func colorNamesMatchPalette() {
+        let session = PaintingSession(template: template)
+        #expect(session.colorNames.count == session.paletteCount)
+        for (i, color) in template.palette.enumerated() {
+            #expect(session.colorNames[i] == color.colorName)
+        }
+    }
 }
 
 @MainActor

@@ -68,7 +68,7 @@ final class PaintingNavigationTests: XCTestCase {
     @MainActor
     func testPaletteButtonSelects() throws {
         let app = openSeededPainting()
-        let swatch = app.buttons["Color 14"]
+        let swatch = app.buttons["swatch-14"]
         XCTAssertFalse(swatch.isSelected)
         swatch.tap()
         sleep(1)
@@ -81,9 +81,9 @@ final class PaintingNavigationTests: XCTestCase {
     func testKeyboardColorsUndoAndRedo() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")
         let app = openSeededPainting()
-        let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Color '"))
+        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'"))
         func selected() -> Set<String> {
-            Set(swatches.matching(NSPredicate(format: "selected == true")).allElementsBoundByIndex.map(\.label))
+            Set(swatches.matching(NSPredicate(format: "selected == true")).allElementsBoundByIndex.map(\.identifier))
         }
 
         let before = selected()

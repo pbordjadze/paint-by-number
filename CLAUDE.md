@@ -8,7 +8,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `Package.swift`, `Sources/PaintCore` — portable, dependency-free template pipeline
   (builds on Linux too). `Sources/pbn` — headless CLI. `Tests/PaintCoreTests` — Swift Testing
   (`Fixtures/` holds files written by past encoders, e.g. `template-v1.pbnt`).
-  - `Foundation/` grids, color science (OKLab, Display P3), EDT, connected components, resampling
+  - `Foundation/` grids, color science (OKLab, Display P3), EDT, connected components, resampling,
+    color naming (`ColorName`: OKLab → structured name, e.g. "dark grayish green"; `english` for the CLI)
   - `Model/` `Template` (the product of the pipeline) + versioned binary coding, `GenerationSettings`,
     `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map)
   - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
@@ -33,7 +34,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
   `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, label
   legibility — `labelsBelowLegibleSize` must be 0, `minLabelRadius`, `minLabelRoom`, `valid` —
-  and timings). The metrics are `pbn generate`'s `stats.json`, a stable interface for regression
+  timings, palette and `colorNames`; the sheet's palette panel labels each swatch with its
+  name). The metrics are `pbn generate`'s `stats.json`, a stable interface for regression
   tooling: add fields, never rename them. Look at the PNGs with the Read tool. The sheet's second row shows the raw region raster, a 2×
   `boundaries.png` (1-px region outlines, best for judging segmentation shapes) and the palette;
   `--importance-dir DIR` passes `DIR/<name>.pgm` as the importance map (Vision stand-in).
@@ -134,6 +136,18 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   scrolls). It fills the page; compact windows switch Photos/Samples with a segmented control,
   wide windows put a scrolling samples column beside it. "Browse All…" presents the full picker.
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`).
+- Accessibility: `CanvasView` is a VoiceOver container (`CanvasAccessibility`): up to 40
+  `canvas-area-<region>` buttons for the unpainted areas of the selected color in view (activating
+  one paints it), a `canvas-placeholder` when none are, custom actions Paint next area / Zoom to
+  next area / Hint / Zoom to fit and an "Unpainted areas" rotor; it posts `layoutChanged` on
+  selection, progress and camera settle, and hints move VoiceOver focus to the revealed area.
+  Swatches are `swatch-N` labelled "N, <color name>" (`PaintSpeech` holds all spoken strings,
+  `ColorNameText` the localizable color names); `current-color` shows the selected color's name
+  (progress badge on regular widths, palette caption on compact). `PaletteMetrics` scales swatches
+  with Dynamic Type up to 1.4×; the fixed-height top and completion bars clamp at `.xxLarge` and use
+  the Large Content Viewer. Reduce Motion reaches the canvas via `CanvasView.reduceMotion` (instant
+  fills, no shine, stepped replay). UI tests query these identifiers; demo scenarios `paint-ax` and
+  `paint-ax-large` cover the color name and the largest text size.
 - Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`; `ShellDemo` owns the
   gallery, create and settings ones, e.g. `create` on the Photos pane, `create-samples` on the
   Samples pane). CI screenshots every scenario listed in `ci/scenarios.txt` ~2 s after the app
