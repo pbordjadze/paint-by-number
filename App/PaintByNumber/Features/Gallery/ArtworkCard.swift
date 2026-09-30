@@ -56,12 +56,20 @@ struct CardFrame<Content: View>: View {
     }
 }
 
-/// The artwork's stored thumbnail, reloaded (with a crossfade) when it changes.
+/// The artwork's stored thumbnail, decoded at the size it is shown and reloaded (with a
+/// crossfade) when it changes.
 struct ArtworkThumbnail: View {
     let artwork: Artwork
     var contentMode: ContentMode = .fill
     @Environment(Library.self) private var library
+    @Environment(\.displayScale) private var displayScale
     @State private var image: CGImage?
+    @State private var size: CGSize = .zero
+
+    private struct Load: Equatable {
+        let key: String
+        let pixelSize: Int
+    }
 
     var body: some View {
         ZStack {
@@ -74,13 +82,22 @@ struct ArtworkThumbnail: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task(id: ThumbnailCache.key(artwork)) {
-            if image == nil { image = ThumbnailCache.shared.cached(artwork) }
-            let loaded = await ThumbnailCache.shared.load(artwork, from: library.store)
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+        .task(id: Load(key: ThumbnailCache.key(artwork), pixelSize: pixelSize)) {
+            let pixelSize = pixelSize
+            guard pixelSize > 0 else { return }
+            let cache = ThumbnailCache.shared
+            if image == nil { image = cache.cached(artwork, maxPixelSize: pixelSize) ?? cache.bestCached(artwork) }
+            let loaded = await cache.load(artwork, maxPixelSize: pixelSize, from: library.store)
             if let loaded, loaded !== image {
                 withAnimation(.easeInOut(duration: 0.3)) { image = loaded }
             }
         }
+    }
+
+    private var pixelSize: Int {
+        ThumbnailCache.pixelSize(
+            frame: size, displayScale: displayScale, aspectRatio: artwork.aspectRatio, fills: contentMode == .fill)
     }
 }
 

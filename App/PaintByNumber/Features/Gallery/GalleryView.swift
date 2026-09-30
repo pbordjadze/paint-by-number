@@ -165,7 +165,7 @@ struct GalleryView: View {
     }
 
     private func previewImage(_ artwork: Artwork) -> Image {
-        if let cached = ThumbnailCache.shared.cached(artwork) { return Image(decorative: cached, scale: 1) }
+        if let cached = ThumbnailCache.shared.bestCached(artwork) { return Image(decorative: cached, scale: 1) }
         return Image(systemName: "paintpalette")
     }
 
