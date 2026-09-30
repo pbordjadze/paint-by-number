@@ -13,8 +13,13 @@ import Foundation
 ///    boundaries) and labelled at the pole of inaccessibility of the smoothed polygon
 ///    (`PolyLabel`), with extra labels spread over large regions.
 public enum Vectorizer {
-    /// Precision of label placement, canvas units.
+    /// Precision of the pole of inaccessibility, canvas units. The pole radius sizes the
+    /// number and is the region's `inscribedRadius`, which must be 2 or more. For regions
+    /// near that floor (raster radius under `smallRegionRadius`) 0.25 would understate it by
+    /// up to 12 %, so they are measured finely; that is cheap, their outlines are short.
     static let labelPrecision = 0.25
+    static let smallRegionLabelPrecision = 0.005
+    static let smallRegionRadius: Float = 3
 
     public static func vectorize(
         _ segmentation: Segmentation,
@@ -259,7 +264,9 @@ struct RegionFills {
 
                     let seedPixel = Int(raster.bestPixel[r])
                     let seed = SIMD2(Double(seedPixel % width) + 0.5, Double(seedPixel / width) + 0.5)
-                    let label = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: seed)
+                    let precision = raster.bestDistance[r] < Vectorizer.smallRegionRadius
+                        ? Vectorizer.smallRegionLabelPrecision : Vectorizer.labelPrecision
+                    let label = PolyLabel.find(poly, precision: precision, seed: seed)
                     band.pole.append(SIMD2<Float>(label.position))
                     band.poleRadius.append(Float(label.distance))
                     band.extraLabels.append([])

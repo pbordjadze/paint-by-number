@@ -352,6 +352,60 @@ struct VectorizerTests {
         #expect(t.labels(ofRegion: smallRegion).count == 1)
     }
 
+    @Test func smallRegionsReportTheirInscribedRadiusPrecisely() throws {
+        // Spots about 5 px across, the smallest the segmentation keeps: their inscribed radius
+        // is held to the paintability floor of 2, so it must not be understated.
+        let w = 96, h = 64
+        var rng = SplitMix64(seed: 3)
+        var classes = [UInt32](repeating: 0, count: w * h)
+        for cy in stride(from: 8, to: h, by: 16) {
+            for cx in stride(from: 8, to: w, by: 16) {
+                let r = 2.6 + 0.6 * Double(rng.nextFloat())
+                let ox = Double(cx) + Double(rng.nextFloat()), oy = Double(cy) + Double(rng.nextFloat())
+                for y in (cy - 5)...(cy + 5) {
+                    for x in (cx - 5)...(cx + 5) {
+                        let dx = Double(x) + 0.5 - ox, dy = Double(y) + 0.5 - oy
+                        if dx * dx + dy * dy < r * r { classes[y * w + x] = 1 }
+                    }
+                }
+            }
+        }
+        let s = Self.segmentation(width: w, height: h, classes: classes)
+        let t = try Self.vectorize(s)
+        try Self.expectValid(t, s)
+        let spots = t.regions.indices.filter { t.regions[$0].colorIndex == 1 }
+        #expect(spots.count == 24)
+        for r in spots {
+            var poly = FlatPolygon()
+            for ring in t.polygons(ofRegion: r) {
+                for p in ring { poly.points.append(SIMD2<Double>(p)) }
+                poly.closeRing()
+            }
+            // Dense search for the largest inscribed disc: a 0.05 grid, then a 0.002 grid
+            // around its best point. Distance is 1-Lipschitz, so the true maximum is within
+            // 0.036 of the coarse one.
+            let b = t.regions[r].bounds
+            var best = (d: -Double.infinity, x: 0.0, y: 0.0)
+            for y in stride(from: Double(b.minY), through: Double(b.maxY), by: 0.05) {
+                for x in stride(from: Double(b.minX), through: Double(b.maxX), by: 0.05) {
+                    let d = poly.signedDistance(x, y)
+                    if d > best.d { best = (d, x, y) }
+                }
+            }
+            let coarse = best.d
+            for y in stride(from: best.y - 0.05, through: best.y + 0.05, by: 0.002) {
+                for x in stride(from: best.x - 0.05, through: best.x + 0.05, by: 0.002) {
+                    best.d = max(best.d, poly.signedDistance(x, y))
+                }
+            }
+            let reported = Double(t.regions[r].inscribedRadius)
+            #expect(reported >= best.d - 0.006, "region \(r): \(reported) vs \(best.d)")
+            #expect(reported <= coarse + 0.036, "region \(r): \(reported) vs \(coarse)")
+            let label = t.labels(ofRegion: r).first!
+            #expect(abs(poly.signedDistance(Double(label.position.x), Double(label.position.y)) - reported) < 1e-4)
+        }
+    }
+
     // MARK: - Pipeline
 
     @Test func photoThroughPipeline() throws {
