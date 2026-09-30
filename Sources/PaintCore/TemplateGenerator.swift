@@ -2,6 +2,11 @@ import Foundation
 
 /// Photo → paint-by-numbers template. The single entry point used by the app and `pbn`.
 public struct TemplateGenerator: Sendable {
+    /// Stamped into every generated template (`Template.pipelineVersion`). Bump in the same
+    /// commit as any change that alters generated output for identical inputs and settings,
+    /// so saved paintings record which pipeline drew them.
+    public static let pipelineVersion: UInt32 = 1
+
     public var settings: GenerationSettings
 
     public init(settings: GenerationSettings = GenerationSettings()) {
@@ -45,9 +50,10 @@ public struct TemplateGenerator: Sendable {
         try cancel.throwIfCancelled()
         progress?(0.7)
 
-        let template = try clock.measure("vectorize") {
+        var template = try clock.measure("vectorize") {
             try Vectorizer.vectorize(segmentation, settings: settings, cancel: cancel, clock: clock)
         }
+        template.pipelineVersion = Self.pipelineVersion
         progress?(1)
         return Output(template: template, segmentation: segmentation, timings: clock.timings)
     }

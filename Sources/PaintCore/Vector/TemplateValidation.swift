@@ -35,7 +35,7 @@ extension Template {
         for (i, e) in edges.enumerated() {
             let sidesOK = e.left != e.right && Int(e.left) < regions.count
                 && (e.right == BoundaryEdge.outside || Int(e.right) < regions.count)
-            if !sidesOK || e.pointCount < 2 || Int(e.pointStart + e.pointCount) > points.count { badEdges.insert(i) }
+            if !sidesOK || e.pointCount < 2 || Int(e.pointStart) + Int(e.pointCount) > points.count { badEdges.insert(i) }
         }
         if badEdges.isEmpty { badEdges.formUnion(GeometryValidator.invalidEdges(points: points, edges: edges)) }
         report.invalidEdges = badEdges.sorted()
@@ -54,8 +54,8 @@ extension Template {
                     let next = ringEdges[Int(ring.edgeStart) + (q + 1) % Int(ring.edgeCount)]
                     let e = edges[Int(ref.edge)], n = edges[Int(next.edge)]
                     if (ref.reversed ? e.right : e.left) != UInt32(r) { ringsOK = false }
-                    let end = ref.reversed ? points[Int(e.pointStart)] : points[Int(e.pointStart + e.pointCount) - 1]
-                    let start = next.reversed ? points[Int(n.pointStart + n.pointCount) - 1] : points[Int(n.pointStart)]
+                    let end = ref.reversed ? points[Int(e.pointStart)] : points[Int(e.pointStart) + Int(e.pointCount) - 1]
+                    let start = next.reversed ? points[Int(n.pointStart) + Int(n.pointCount) - 1] : points[Int(n.pointStart)]
                     if end != start { ringsOK = false }
                 }
                 let poly = polygon(of: ring)
@@ -69,7 +69,7 @@ extension Template {
             totalArea += area
             var meshArea = 0.0
             var meshOK = region.indexCount % 3 == 0
-            let lo = Int(region.indexStart), hi = Int(region.indexStart + region.indexCount)
+            let lo = Int(region.indexStart), hi = Int(region.indexStart) + Int(region.indexCount)
             var used = Set<SIMD2<Float>>()
             for t in stride(from: lo, to: hi, by: 3) where meshOK {
                 let a = mesh.vertices[Int(mesh.indices[t])], b = mesh.vertices[Int(mesh.indices[t + 1])]

@@ -6,7 +6,14 @@
 /// as flat arrays with index spans so it can be uploaded to Metal buffers directly and
 /// serialized quickly.
 public struct Template: Sendable, Equatable {
-    public static let formatVersion: UInt32 = 1
+    /// Binary layout written by `encoded()`. Every version ever written stays readable:
+    /// 1 = the original layout; 2 = the version-1 payload followed by extension chunks (see
+    /// `TemplateCoding.swift`), so later additions need no new version.
+    public static let formatVersion: UInt32 = 2
+    /// Largest canvas (`width * height`) the decoder accepts. The generator caps the long side
+    /// at 2100 units (≈ 3 M cells); the headroom is for `pbn trace` of large flat images, and
+    /// the cap keeps a damaged size field from allocating gigabytes.
+    public static let maxCanvasArea = 64_000_000
     /// Grid all boundary coordinates are snapped to, canvas units.
     public static let coordinateQuantum: Float = 1.0 / 256
 
@@ -23,6 +30,9 @@ public struct Template: Sendable, Equatable {
 
     /// Shared polyline vertices for all boundary edges. Coordinates are exact multiples of
     /// `coordinateQuantum`, so geometric predicates on them can be evaluated exactly.
+    /// Like every coordinate in a template (mesh vertices, label positions) they lie inside
+    /// the canvas, `0...width` × `0...height`: the decoder enforces it, and
+    /// `GeometryValidator` relies on it to size its fixed-point grid.
     public var points: [SIMD2<Float>]
     /// Boundary edges: maximal polylines separating exactly two regions (or a region and
     /// the canvas border). Shared by both neighbours, so fills never crack or overlap.
@@ -43,16 +53,21 @@ public struct Template: Sendable, Equatable {
     /// Region index per canvas unit (`width * height`), for hit testing.
     public var regionMap: RegionMap
 
+    /// `TemplateGenerator.pipelineVersion` that produced the template; 0 = unknown
+    /// (format-1 files, templates built outside the generator such as `pbn trace`).
+    public var pipelineVersion: UInt32
+
     public init(
         width: Int, height: Int, colorSpace: RGBColorSpace,
         palette: [PaletteColor], regions: [Region],
         points: [SIMD2<Float>], edges: [BoundaryEdge], ringEdges: [EdgeRef], rings: [Ring],
-        labels: [Label], mesh: FillMesh, regionMap: RegionMap
+        labels: [Label], mesh: FillMesh, regionMap: RegionMap, pipelineVersion: UInt32 = 0
     ) {
         self.width = width; self.height = height; self.colorSpace = colorSpace
         self.palette = palette; self.regions = regions
         self.points = points; self.edges = edges; self.ringEdges = ringEdges; self.rings = rings
         self.labels = labels; self.mesh = mesh; self.regionMap = regionMap
+        self.pipelineVersion = pipelineVersion
     }
 }
 
@@ -173,6 +188,7 @@ public struct Ring: Sendable, Hashable {
 /// inaccessibility of its polygon (the most spacious point); large regions get further
 /// labels spread across them so a number stays in view when zoomed in.
 public struct Label: Sendable, Hashable {
+    /// Inside the canvas, like every template coordinate.
     public var position: SIMD2<Float>
     /// Radius of free space around `position`; the glyph run is sized to fit inside.
     public var radius: Float
@@ -185,6 +201,7 @@ public struct Label: Sendable, Hashable {
 
 /// Triangulated fills for all regions, ready for a single indexed draw call.
 public struct FillMesh: Sendable, Equatable {
+    /// Inside the canvas, like every template coordinate.
     public var vertices: [SIMD2<Float>]
     /// Owning region of each vertex (vertices are never shared between regions).
     public var vertexRegion: [UInt32]
@@ -212,7 +229,7 @@ extension Template {
 
     /// Points of an edge in storage order.
     public func points(of edge: BoundaryEdge) -> ArraySlice<SIMD2<Float>> {
-        points[Int(edge.pointStart)..<Int(edge.pointStart + edge.pointCount)]
+        points[Int(edge.pointStart)..<Int(edge.pointStart) + Int(edge.pointCount)]
     }
 
     /// The closed polygon of a ring as a point list (first point not repeated).
@@ -239,7 +256,7 @@ extension Template {
     /// Labels belonging to a region.
     public func labels(ofRegion index: Int) -> ArraySlice<Label> {
         let r = regions[index]
-        return labels[Int(r.labelStart)..<Int(r.labelStart + r.labelCount)]
+        return labels[Int(r.labelStart)..<Int(r.labelStart) + Int(r.labelCount)]
     }
 
     /// Region under a canvas-space point, if inside the canvas.

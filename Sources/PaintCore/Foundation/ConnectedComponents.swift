@@ -12,8 +12,9 @@ public struct PixelBounds: Sendable, Hashable, Codable {
     public static let empty = PixelBounds(minX: .max, minY: .max, maxX: .min, maxY: .min)
 
     public var isEmpty: Bool { minX >= maxX || minY >= maxY }
-    public var width: Int { Int(maxX - minX) }
-    public var height: Int { Int(maxY - minY) }
+    /// Negative for `.empty` (computed in Int: the Int32 difference would overflow).
+    public var width: Int { Int(maxX) - Int(minX) }
+    public var height: Int { Int(maxY) - Int(minY) }
 
     @inlinable
     public mutating func include(x: Int, y: Int) {

@@ -13,7 +13,7 @@ import ImageIO
 //   pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]
 //       vectorizes a flat-color image directly (each distinct color is a palette entry,
 //       each 4-connected component a region), bypassing segmentation
-//   pbn check <template.pbnt>   validates a template's invariants
+//   pbn check <template.pbnt>   prints format and pipeline versions, validates invariants
 
 struct Options {
     var positional: [String] = []
@@ -307,7 +307,11 @@ case "check":
         fail("usage: pbn check <template.pbnt>")
     }
     do {
-        let report = try Template(encoded: data).validate()
+        let template = try Template(encoded: data)
+        // Decoding succeeded, so the 8-byte header is there.
+        let format = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 4, as: UInt32.self) }
+        print("format \(format), pipeline \(template.pipelineVersion)")
+        let report = template.validate()
         print(report.isValid ? "valid" : "INVALID", report)
     } catch { fail("cannot decode: \(error)") }
 
