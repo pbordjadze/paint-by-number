@@ -164,8 +164,8 @@ struct PaintingSessionTests {
         }
         let cap = PaintingSession.maxBrushRadius
         // A color with regions both inside and (well) outside the cap.
-        let color = try #require((0..<template.palette.count).first { color in
-            let distances = regions(ofColor: color).map { nearest[$0] }
+        let color = try #require((0..<template.palette.count).first { candidate in
+            let distances = regions(ofColor: candidate).map { nearest[$0] }
             return distances.contains { $0 <= cap - 1 } && distances.contains { $0 > cap + 1 }
         })
         let session = PaintingSession(template: template)
@@ -191,11 +191,11 @@ struct PaintingSessionTests {
             SIMD2(100 + Float(i) * 46, i % 2 == 0 ? 400 : 700)
         }
         let clock = ContinuousClock()
-        let elapsed = clock.measure {
-            session.beginStroke()
-            for (a, b) in zip(points, points.dropFirst()) { session.drag(from: a, to: b, radius: 200) }
-            session.endStroke()
-        }
+        let started = clock.now
+        session.beginStroke()
+        for (a, b) in zip(points, points.dropFirst()) { session.drag(from: a, to: b, radius: 200) }
+        session.endStroke()
+        let elapsed = clock.now - started
         #expect(elapsed < .milliseconds(1500), "\(elapsed)")
 
         for (a, b) in zip(points, points.dropFirst()) {
