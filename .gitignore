@@ -9,3 +9,5 @@ tools/node_modules/
 /out/
 .claude/worktrees/
 ci-report/
+__pycache__/
+.claude/corpus/

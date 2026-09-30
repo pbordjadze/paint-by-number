@@ -1,7 +1,8 @@
 name: CI
 
 # Every run publishes a report (STATUS.md, trimmed logs, compiler errors, test results,
-# screenshots) to the branch `ci-shots/<branch>`, readable with plain git (see ci/fetch.sh).
+# screenshots, the pipeline quality regression under core/regression/) to the branch
+# `ci-shots/<branch>`, readable with plain git (see ci/fetch.sh).
 # Each simulator gets its own VM: two booted simulators on one 3-core runner thrash. The
 # simulator boots in the background while the app builds.
 # iPad is the primary device (Debug build, screenshots, tests on every push); iPhone (the
@@ -36,7 +37,7 @@ env:
 
 jobs:
   core:
-    name: PaintCore tests (Linux)
+    name: PaintCore tests and quality regression (Linux)
     runs-on: ubuntu-latest
     container: swift:6.2-noble
     timeout-minutes: 30
@@ -48,6 +49,21 @@ jobs:
           set -o pipefail
           mkdir -p out
           swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tee out/core-test.log | tail -60
+      - name: Quality regression
+        # Also after failed tests: the metrics help explain them.
+        if: ${{ !cancelled() }}
+        shell: bash
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          set -o pipefail
+          # Pillow decodes the samples and draws the sheets (from pbn's rasters; no node needed).
+          apt-get update -qq && apt-get install -y -qq --no-install-recommends python3 python3-pil > /dev/null
+          swift build -c release --product pbn 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tail -3
+          mkdir -p out/regression
+          python3 tools/regression.py --self-test
+          python3 tools/regression.py --json out/regression/regression.json --sheets out/regression/sheets \
+            | tee out/regression/regression.txt
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: core, path: out, if-no-files-found: ignore }
@@ -246,6 +262,7 @@ jobs:
             echo "commit: ${GITHUB_SHA}"
             echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "core: ${{ needs.core.result }}"
+            if [ -f core/regression/regression.txt ]; then echo "regression: $(tail -n 1 core/regression/regression.txt)"; fi
             echo "ipad: ${{ needs.ipad.result }}"
             echo "iphone: ${{ needs.iphone.result }}"
             echo "ipa: ${{ needs.ipa.result }}"

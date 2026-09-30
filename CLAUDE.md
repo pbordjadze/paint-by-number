@@ -16,8 +16,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   - `TemplateGenerator.swift` entry point composing the stages, with `StageClock` timings
 - `App/` Xcode project (`PaintByNumber.xcodeproj`, synchronized folders — adding files needs no
   project edits) with the SwiftUI app, Metal renderer and UI tests.
-- `tools/` evaluation tooling (`swift.sh`, `eval.py`, `svg2png.mjs`).
-- `.github/workflows/` macOS CI: builds the app, runs tests, captures simulator screenshots.
+- `tools/` evaluation tooling (`swift.sh`, `eval.py`, `compare.py`, `regression.py` + its
+  committed `baseline/regression.json`, `svg2png.mjs`).
+- `.github/workflows/` CI: Linux PaintCore tests + quality regression; macOS builds the app, runs
+  tests, captures simulator screenshots.
 
 ## Building & testing on Linux (no Xcode here)
 
@@ -37,6 +39,21 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   runs `Template.validate()` (planarity, ring orientation, mesh coverage/watertightness, labels).
 - Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
   documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
+- `tools/regression.py [--sheets DIR] [--json FILE]` — the quality gate CI runs on every push:
+  the six bundled samples in three regimes (24 colors/detail 0.5, 150/1.0, 12/0.0), each
+  generated twice. Hard invariants: `pbn check` valid, byte-identical runs, no region under
+  radius 2, palette distance ≥ the `SegmentationParameters.minPaletteDistance` floor, and
+  `labelsBelowLegibleSize == 0` once pbn's stats report that field. Bands versus
+  `tools/baseline/regression.json`: mean ΔE ≤ baseline × 1.05, regions ±15 %, template bytes
+  ±20 %; timings are informational. Prints a table with deltas, exits 1 on any failure;
+  `--self-test` checks the rules themselves. Needs the release `pbn` and Pillow (no node: its
+  sheets are source | painted raster | region outlines + palette).
+- **Whenever a change alters pipeline output, run `tools/regression.py --update` (it only writes
+  a baseline that satisfies the hard invariants), look at the `--sheets`, and commit
+  `tools/baseline/regression.json` together with the change**: CI fails once a metric leaves
+  its band, and a fresh baseline keeps the table's deltas and its `template same/changed`
+  column meaningful (the host's static `pbn` gives the same templates as CI's). Use
+  `eval.py`/`compare.py` for deeper before/after looks (vector previews with numbers).
 
 ## iOS app (App/)
 
@@ -78,7 +95,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 
 1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).
 2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the
-   report CI publishes to `ci-shots/<branch>`: `STATUS.md`, trimmed `*.log`, and per device
+   report CI publishes to `ci-shots/<branch>`: `STATUS.md` (job results and the regression
+   verdict), trimmed `*.log`, `core/core-test.log` and `core/regression/` (`regression.txt`
+   table, `regression.json`, `sheets/<regime>/<sample>.png`) from the Linux job, and per device
    `errors.txt` (compiler errors), `shots/*.png` plus `*-app.log` (the app's os_log output) and
    `*-steps.log` (readiness, crashes). iPad is the primary device: every push builds Debug on a
    13" iPad Pro simulator and adds `ipad/test-results.json`, `ipad/attachments/` and

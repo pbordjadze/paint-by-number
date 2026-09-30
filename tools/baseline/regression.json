@@ -1,0 +1,235 @@
+{
+  "about": "Quality baseline for tools/regression.py; regenerate with --update.",
+  "cases": {
+    "c12-d0/barn": {
+      "colors": 12,
+      "encodedBytes": 1069331,
+      "meanDeltaE": 0.04239636,
+      "minInscribedRadius": 3.620239,
+      "minPaletteDistance": 0.061990127,
+      "p95DeltaE": 0.09451113,
+      "regions": 180,
+      "regionsUnderRadius3": 0,
+      "templateSHA1": "3b460c5d4c607be442b4f86a78f1b593ae506fa7",
+      "totalMs": 308.4
+    },
+    "c12-d0/espresso": {
+      "colors": 12,
+      "encodedBytes": 688988,
+      "meanDeltaE": 0.0386597,
+      "minInscribedRadius": 3.623268,
+      "minPaletteDistance": 0.059047375,
+      "p95DeltaE": 0.095769584,
+      "regions": 151,
+      "regionsUnderRadius3": 0,
+      "templateSHA1": "f9a77947a675be1b50b09247b77da3b4638cedda",
+      "totalMs": 286.3
+    },
+    "c12-d0/hibiscus": {
+      "colors": 12,
+      "encodedBytes": 1111220,
+      "meanDeltaE": 0.038584795,
+      "minInscribedRadius": 3.18685,
+      "minPaletteDistance": 0.073105425,
+      "p95DeltaE": 0.102600366,
+      "regions": 321,
+      "regionsUnderRadius3": 0,
+      "templateSHA1": "aa9ed7765b1d1a8b2960b43899e3ca0b2d072ec0",
+      "totalMs": 364.4
+    },
+    "c12-d0/lighthouse": {
+      "colors": 12,
+      "encodedBytes": 1069178,
+      "meanDeltaE": 0.040616468,
+      "minInscribedRadius": 4.127124,
+      "minPaletteDistance": 0.05137503,
+      "p95DeltaE": 0.12514874,
+      "regions": 270,
+      "regionsUnderRadius3": 0,
+      "templateSHA1": "0dd0c970050b7a7fe54263a6b7b50d98b23bce55",
+      "totalMs": 383.1
+    },
+    "c12-d0/parrots": {
+      "colors": 12,
+      "encodedBytes": 652301,
+      "meanDeltaE": 0.045531135,
+      "minInscribedRadius": 3.5535731,
+      "minPaletteDistance": 0.077514574,
+      "p95DeltaE": 0.08898631,
+      "regions": 116,
+      "regionsUnderRadius3": 0,
+      "templateSHA1": "9a1fc2a86ac473832b259a56e77bf6494f091ad0",
+      "totalMs": 393.5
+    },
+    "c12-d0/regatta": {
+      "colors": 12,
+      "encodedBytes": 615746,
+      "meanDeltaE": 0.037574023,
+      "minInscribedRadius": 3.64697,
+      "minPaletteDistance": 0.084022984,
+      "p95DeltaE": 0.091926426,
+      "regions": 136,
+      "regionsUnderRadius3": 0,
+      "templateSHA1": "9267ed03e893702af66599ad9ce37ced7aa5b354",
+      "totalMs": 305.7
+    },
+    "c150-d1/barn": {
+      "colors": 147,
+      "encodedBytes": 4211035,
+      "meanDeltaE": 0.024630673,
+      "minInscribedRadius": 2.2714293,
+      "minPaletteDistance": 0.01617616,
+      "p95DeltaE": 0.06961478,
+      "regions": 2740,
+      "regionsUnderRadius3": 186,
+      "templateSHA1": "5bca7c901bb7be42efdec100dd70f7adfef0c592",
+      "totalMs": 712.3
+    },
+    "c150-d1/espresso": {
+      "colors": 118,
+      "encodedBytes": 2172104,
+      "meanDeltaE": 0.023175718,
+      "minInscribedRadius": 2.230474,
+      "minPaletteDistance": 0.016166557,
+      "p95DeltaE": 0.07964164,
+      "regions": 984,
+      "regionsUnderRadius3": 97,
+      "templateSHA1": "0c79b85f9c42c6a29508b1bb383c152bfcdaf94a",
+      "totalMs": 431.9
+    },
+    "c150-d1/hibiscus": {
+      "colors": 143,
+      "encodedBytes": 2994878,
+      "meanDeltaE": 0.022375127,
+      "minInscribedRadius": 2.0092044,
+      "minPaletteDistance": 0.016165782,
+      "p95DeltaE": 0.08554798,
+      "regions": 2024,
+      "regionsUnderRadius3": 139,
+      "templateSHA1": "209a16be25f877148bf199ff83cc551e6aa861d2",
+      "totalMs": 709.1
+    },
+    "c150-d1/lighthouse": {
+      "colors": 146,
+      "encodedBytes": 3502600,
+      "meanDeltaE": 0.025809657,
+      "minInscribedRadius": 2.1705813,
+      "minPaletteDistance": 0.016161252,
+      "p95DeltaE": 0.09603498,
+      "regions": 2245,
+      "regionsUnderRadius3": 155,
+      "templateSHA1": "4f20ce11ae80b2351e67c6464de54167c4cd502d",
+      "totalMs": 733.8
+    },
+    "c150-d1/parrots": {
+      "colors": 148,
+      "encodedBytes": 2594270,
+      "meanDeltaE": 0.019727884,
+      "minInscribedRadius": 2.0644982,
+      "minPaletteDistance": 0.017799065,
+      "p95DeltaE": 0.04699158,
+      "regions": 1166,
+      "regionsUnderRadius3": 84,
+      "templateSHA1": "da3bcbc953b3a7f15bdac41dc308aa83ae097302",
+      "totalMs": 566.4
+    },
+    "c150-d1/regatta": {
+      "colors": 120,
+      "encodedBytes": 2471839,
+      "meanDeltaE": 0.01882018,
+      "minInscribedRadius": 2.4533935,
+      "minPaletteDistance": 0.016168501,
+      "p95DeltaE": 0.06502982,
+      "regions": 1250,
+      "regionsUnderRadius3": 78,
+      "templateSHA1": "0208692f7a9e416caad1895b327b2269efc67841",
+      "totalMs": 611.9
+    },
+    "c24-d0.5/barn": {
+      "colors": 24,
+      "encodedBytes": 2390885,
+      "meanDeltaE": 0.032814708,
+      "minInscribedRadius": 2.5683835,
+      "minPaletteDistance": 0.040440403,
+      "p95DeltaE": 0.073999144,
+      "regions": 783,
+      "regionsUnderRadius3": 22,
+      "templateSHA1": "b7817d717ed391ab1b070b43ab4a116e558e57ec",
+      "totalMs": 419.6
+    },
+    "c24-d0.5/espresso": {
+      "colors": 23,
+      "encodedBytes": 1187358,
+      "meanDeltaE": 0.030423274,
+      "minInscribedRadius": 2.1127632,
+      "minPaletteDistance": 0.0404404,
+      "p95DeltaE": 0.07905412,
+      "regions": 393,
+      "regionsUnderRadius3": 34,
+      "templateSHA1": "46ea9c546618953e6cd0e8d1ea9f63cd20aabbd8",
+      "totalMs": 305.0
+    },
+    "c24-d0.5/hibiscus": {
+      "colors": 24,
+      "encodedBytes": 1816670,
+      "meanDeltaE": 0.029062867,
+      "minInscribedRadius": 2.0804403,
+      "minPaletteDistance": 0.04374857,
+      "p95DeltaE": 0.08606732,
+      "regions": 900,
+      "regionsUnderRadius3": 38,
+      "templateSHA1": "dd5f018f7bb040cbf2ecc6fba2633652d7f483f6",
+      "totalMs": 399.4
+    },
+    "c24-d0.5/lighthouse": {
+      "colors": 24,
+      "encodedBytes": 2206208,
+      "meanDeltaE": 0.032579664,
+      "minInscribedRadius": 2.5158696,
+      "minPaletteDistance": 0.040440388,
+      "p95DeltaE": 0.09697867,
+      "regions": 1155,
+      "regionsUnderRadius3": 30,
+      "templateSHA1": "8bebf5e730c687076c2f3bdd67ed93a79be7aa60",
+      "totalMs": 508.4
+    },
+    "c24-d0.5/parrots": {
+      "colors": 24,
+      "encodedBytes": 1254622,
+      "meanDeltaE": 0.032887932,
+      "minInscribedRadius": 2.136659,
+      "minPaletteDistance": 0.051480856,
+      "p95DeltaE": 0.06591829,
+      "regions": 332,
+      "regionsUnderRadius3": 11,
+      "templateSHA1": "d2024411d19b022050c65301f315bfa82baf475c",
+      "totalMs": 366.1
+    },
+    "c24-d0.5/regatta": {
+      "colors": 23,
+      "encodedBytes": 1285764,
+      "meanDeltaE": 0.02726145,
+      "minInscribedRadius": 2.6405053,
+      "minPaletteDistance": 0.055712752,
+      "p95DeltaE": 0.067165926,
+      "regions": 455,
+      "regionsUnderRadius3": 7,
+      "templateSHA1": "214209969fb1e9f50905ad3a8e87f2a3c9f5ae6b",
+      "totalMs": 407.9
+    }
+  },
+  "regimes": {
+    "c12-d0": {
+      "colors": 12,
+      "detail": 0.0
+    },
+    "c150-d1": {
+      "colors": 150,
+      "detail": 1.0
+    },
+    "c24-d0.5": {
+      "colors": 24,
+      "detail": 0.5
+    }
+  }
+}
