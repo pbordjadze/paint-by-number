@@ -30,6 +30,12 @@ enum ShellDemo: Equatable {
 
     var previewSample: Sample? { self == .createPreview ? Sample.named("parrots") : nil }
 
+    /// How long `create` and `create-samples` give the library picker to load before they
+    /// signal readiness: it runs out of process and reports nothing when its grid is up. The
+    /// value is empirical: raise it if CI's `create` screenshots show the picker still loading
+    /// (`*-steps.log` gives each scenario's time to readiness, launch included).
+    static let pickerLoadAllowance: Duration = .seconds(3)
+
     func prepare(_ library: Library) {
         switch self {
         case .gallery:

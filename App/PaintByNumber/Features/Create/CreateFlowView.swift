@@ -32,10 +32,9 @@ struct CreateFlowView: View {
             }
         }
         .task {
-            // The library picker loads out of process and reports nothing; give it a moment
-            // before the screenshot (a cancelled wait must not signal readiness).
+            // A cancelled wait must not signal readiness.
             guard demo == .create || demo == .createSamples else { return }
-            do { try await Task.sleep(for: .seconds(3)) } catch { return }
+            do { try await Task.sleep(for: ShellDemo.pickerLoadAllowance) } catch { return }
             DemoMode.markReady()
         }
         .onChange(of: model.isFinal) { _, isFinal in

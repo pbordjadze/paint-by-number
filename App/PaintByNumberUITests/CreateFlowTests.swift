@@ -29,9 +29,8 @@ final class CreateFlowTests: XCTestCase {
     /// runs out of process and can't be arbitrated against an in-process ancestor's pan.
     @MainActor
     func testLibraryFillsTheScreenOutsideAnyScrollView() throws {
-        let app = launch("create")
-        let picker = app.descendants(matching: .any).matching(pickerPredicate).firstMatch
-        XCTAssertTrue(picker.waitForExistence(timeout: 20))
+        let (app, picker) = launchToPicker("create")
+        XCTAssertTrue(picker.exists, "No library picker")
         attachTree(app, named: "library-layout-tree")
 
         XCTAssertEqual(app.scrollViews.containing(pickerPredicate).count, 0, "The library picker is inside a scroll view")
@@ -55,11 +54,10 @@ final class CreateFlowTests: XCTestCase {
     /// be picked again (the selection is reset after each pick).
     @MainActor
     func testLibraryPhotoOpensPreviewAndCanBePickedAgain() throws {
-        let app = launch("create")
-        let picker = app.descendants(matching: .any).matching(pickerPredicate).firstMatch
-        XCTAssertTrue(picker.waitForExistence(timeout: 20))
+        let (app, picker) = launchToPicker("create")
+        XCTAssertTrue(picker.exists, "No library picker")
 
-        try tapFirstPhoto(app, in: picker)
+        try tapFirstPhoto(app, in: picker.frame)
         let start = app.buttons["Start Painting"]
         let opened = start.waitForExistence(timeout: 60)
         attachScreenshot(app, named: "library-photo-picked")
@@ -77,7 +75,7 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(returned, "Back didn't return to the photo step")
         XCTAssertTrue(picker.waitForExistence(timeout: 20))
 
-        try tapFirstPhoto(app, in: picker)
+        try tapFirstPhoto(app, in: picker.frame)
         let reopened = start.waitForExistence(timeout: 60)
         attachScreenshot(app, named: "library-photo-picked-again")
         XCTAssertTrue(reopened, "The same photo couldn't be picked a second time")
@@ -86,9 +84,8 @@ final class CreateFlowTests: XCTestCase {
     /// Samples (behind a segment on compact widths, beside the picker on wide ones) open their preview.
     @MainActor
     func testSamplesOpenPreview() throws {
-        let app = launch("create")
-        let picker = app.descendants(matching: .any).matching(pickerPredicate).firstMatch
-        XCTAssertTrue(picker.waitForExistence(timeout: 20))
+        let (app, picker) = launchToPicker("create")
+        XCTAssertTrue(picker.exists, "No library picker")
         let pickerHeight = picker.frame.height
         let samples = sourceControl(app).buttons["Samples"]
         if !isPad {
@@ -116,55 +113,76 @@ final class CreateFlowTests: XCTestCase {
     /// "Browse All…" presents the full system picker, which dismisses back to the create flow.
     @MainActor
     func testBrowseAllPresentsSystemPickerAndDismisses() throws {
-        let app = launch("create")
-        let picker = app.descendants(matching: .any).matching(pickerPredicate).firstMatch
-        XCTAssertTrue(picker.waitForExistence(timeout: 20))
-        // The sheet is recognised by a hittable Cancel/Close button that wasn't on the page
-        // before: the page keeps its own Close, the inline picker's bar may bring its own, and a
-        // modal sheet may hide the page from accessibility, so neither names nor counts identify
-        // it. (On iPad the form sheet overlaps the inline picker, so position can't either.)
-        let existing = dismissButtons(app).allElementsBoundByIndex.map { $0.frame }
-        func sheetDismissButton() -> XCUIElement? {
-            dismissButtons(app).allElementsBoundByIndex.first { button in
-                let frame = button.frame
-                return button.isHittable && !existing.contains { $0.insetBy(dx: -2, dy: -2).contains(frame) }
-            }
-        }
-        XCTAssertNil(sheetDismissButton())
+        let (app, picker) = launchToPicker("create")
+        XCTAssertTrue(picker.exists, "No library picker")
+        let sheet = settledSheetDetector(app)
+        XCTAssertNil(sheet.dismissButton)
 
-        app.buttons["Browse All…"].tap()
-        let shown = poll(timeout: 15) { sheetDismissButton() != nil }
-        attachScreenshot(app, named: "browse-all")
-        guard shown, let cancel = sheetDismissButton() else {
-            attachTree(app, named: "browse-all-tree")
-            XCTFail("Browse All didn't present the system picker")
-            return
-        }
+        guard let cancel = openBrowseAll(app, sheet: sheet) else { return }
         cancel.tap()
-        let dismissed = poll(timeout: 15) { sheetDismissButton() == nil }
+        let dismissed = poll(timeout: 15) { sheet.dismissButton == nil }
         if !dismissed { attachTree(app, named: "browse-all-dismiss-tree") }
         XCTAssertTrue(dismissed, "The system picker didn't dismiss")
         XCTAssertTrue(picker.waitForExistence(timeout: 10))
         XCTAssertFalse(app.buttons["Start Painting"].exists)
     }
 
+    /// A photo picked in the full system picker opens its preview: the push happens while the
+    /// sheet dismisses, which must not stall either transition.
+    @MainActor
+    func testBrowseAllPickOpensPreview() throws {
+        let (app, picker) = launchToPicker("create")
+        XCTAssertTrue(picker.exists, "No library picker")
+        let sheet = settledSheetDetector(app)
+        let inlinePhotos = app.images.matching(photoPredicate).allElementsBoundByIndex.map { $0.frame }
+
+        guard let cancel = openBrowseAll(app, sheet: sheet) else { return }
+        // The sheet's grid lies below its top bar. Sheets are centred horizontally, and the
+        // Cancel button sits at the sheet's leading edge, so mirroring its inset bounds an area
+        // inside the sheet on both device classes (the sheet reaches at least as far down).
+        let window = app.windows.firstMatch.frame
+        let bar = cancel.frame
+        let inset = max(0, bar.minX - window.minX - 20)
+        let sheetTop = max(window.minY, bar.minY - 12)
+        let grid = CGRect(
+            x: window.minX + inset, y: bar.maxY + 8,
+            width: window.width - 2 * inset, height: window.maxY - (sheetTop - window.minY) - bar.maxY - 8)
+        try tapFirstPhoto(
+            app, in: grid, origin: CGPoint(x: window.minX + inset, y: sheetTop), excluding: inlinePhotos)
+
+        let start = app.buttons["Start Painting"]
+        let opened = start.waitForExistence(timeout: 60)
+        attachScreenshot(app, named: "browse-all-picked")
+        if !opened { attachTree(app, named: "browse-all-pick-tree") }
+        XCTAssertTrue(opened, "Picking a photo in Browse All didn't open its preview")
+        XCTAssertTrue(poll(timeout: 15) { sheet.dismissButton == nil }, "The system picker stayed up after a pick")
+    }
+
     // MARK: - Helpers
 
     private var pickerPredicate: NSPredicate { NSPredicate(format: "identifier == 'library-picker'") }
+
+    /// Library photos as the picker exposes them to UI tests.
+    private var photoPredicate: NSPredicate { NSPredicate(format: "label BEGINSWITH 'Photo'") }
 
     /// Portrait CI devices: the iPad is wide (1032 pt), the iPhone compact (402 pt).
     @MainActor
     private var isPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
+    /// Launches a create scenario and waits for the library picker (not asserted here, so each
+    /// test reports its own failure).
     @MainActor
-    private func launch(_ scenario: String) -> XCUIApplication {
+    private func launchToPicker(_ scenario: String) -> (XCUIApplication, XCUIElement) {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", scenario]
         app.launch()
-        // First use explains limited library access.
+        let picker = app.descendants(matching: .any).matching(pickerPredicate).firstMatch
+        _ = picker.waitForExistence(timeout: 20)
+        // First use may explain limited library access. It is up by the time the picker is, so
+        // a short wait suffices; the usual case, no alert, then costs little per test.
         let ok = app.buttons["OK"]
-        if ok.waitForExistence(timeout: 10) { ok.tap() }
-        return app
+        if ok.waitForExistence(timeout: 2) { ok.tap() }
+        return (app, picker)
     }
 
     /// The Photos/Samples segmented control, whatever element type carries its identifier.
@@ -174,30 +192,54 @@ final class CreateFlowTests: XCTestCase {
         app.descendants(matching: .any).matching(identifier: "photo-source").firstMatch
     }
 
+    /// A sheet detector made once the inline picker has loaded (its photos are up, or it had
+    /// as long as the demo gives it): a Cancel/Close its bar brought in after the snapshot would
+    /// otherwise pass for the sheet's.
     @MainActor
-    private func dismissButtons(_ app: XCUIApplication) -> XCUIElementQuery {
-        app.buttons.matching(NSPredicate(format: "label IN {'Cancel', 'Close'}"))
+    private func settledSheetDetector(_ app: XCUIApplication) -> SheetDetector {
+        _ = app.images.matching(photoPredicate).firstMatch.waitForExistence(timeout: 10)
+        sleep(1)
+        return SheetDetector(app)
     }
 
-    /// Taps the first library photo that is fully visible inside the picker. The picker runs
-    /// out of process and its photos may report frames in its own coordinates rather than the
-    /// window's, so both readings are tried; a photo frame that is fully inside the picker in
-    /// window coordinates can't be picker-relative, since the picker is inset from the window.
+    /// Taps "Browse All…" and returns the presented sheet's dismiss button, or fails the test
+    /// (with diagnostics) and returns nil when no sheet appears.
     @MainActor
-    private func tapFirstPhoto(_ app: XCUIApplication, in picker: XCUIElement) throws {
-        let photos = app.images.matching(NSPredicate(format: "label BEGINSWITH 'Photo'"))
+    private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector) -> XCUIElement? {
+        app.buttons["Browse All…"].tap()
+        let shown = poll(timeout: 15) { sheet.dismissButton != nil }
+        attachScreenshot(app, named: "browse-all")
+        guard shown, let cancel = sheet.dismissButton else {
+            attachTree(app, named: "browse-all-tree")
+            XCTFail("Browse All didn't present the system picker")
+            return nil
+        }
+        return cancel
+    }
+
+    /// Taps the first library photo that is fully visible inside `area` (window coordinates).
+    /// The picker runs out of process and its photos may report frames in its own coordinates
+    /// (relative to `origin`, the picker's top-left corner in the window) rather than the
+    /// window's. A photo whose reported frame passes XCUITest's hit test is in window
+    /// coordinates; otherwise the picker-relative reading is used. Photos at the `excluding`
+    /// frames (as reported) belong to another picker and are skipped.
+    @MainActor
+    private func tapFirstPhoto(
+        _ app: XCUIApplication, in area: CGRect, origin: CGPoint? = nil, excluding: [CGRect] = []
+    ) throws {
+        let photos = app.images.matching(photoPredicate)
         guard photos.firstMatch.waitForExistence(timeout: 20) else {
             attachTree(app, named: "library-picker-tree")
             throw XCTSkip("The library picker's photos aren't reachable from the UI test")
         }
-        let area = picker.frame
+        let origin = origin ?? area.origin
         var target: CGRect?
-        for photo in photos.allElementsBoundByIndex.prefix(30) {
+        for photo in photos.allElementsBoundByIndex.prefix(60) {
             let frame = photo.frame
             // Thumbnails only (the picker's bar may carry small glyphs with similar labels).
-            guard frame.width >= 40, frame.height >= 40 else { continue }
-            let relative = frame.offsetBy(dx: area.minX, dy: area.minY)
-            if area.contains(frame) {
+            guard frame.width >= 40, frame.height >= 40, !excluding.contains(frame) else { continue }
+            let relative = frame.offsetBy(dx: origin.x, dy: origin.y)
+            if area.contains(frame), photo.isHittable {
                 target = frame
             } else if area.contains(relative) {
                 target = relative
@@ -236,5 +278,28 @@ final class CreateFlowTests: XCTestCase {
         shot.name = name
         shot.lifetime = .keepAlways
         add(shot)
+    }
+}
+
+/// Finds the system picker sheet by a hittable Cancel/Close button that wasn't on the page when
+/// the detector was made: the page keeps its own Close, the inline picker's bar may bring its
+/// own, and a modal sheet may hide the page from accessibility, so neither names nor counts
+/// identify it. (On iPad the form sheet overlaps the inline picker, so position can't either.)
+@MainActor
+private struct SheetDetector {
+    private let buttons: XCUIElementQuery
+    private let existing: [CGRect]
+
+    init(_ app: XCUIApplication) {
+        let buttons = app.buttons.matching(NSPredicate(format: "label IN {'Cancel', 'Close'}"))
+        self.buttons = buttons
+        existing = buttons.allElementsBoundByIndex.map { $0.frame }
+    }
+
+    var dismissButton: XCUIElement? {
+        buttons.allElementsBoundByIndex.first { button in
+            let frame = button.frame
+            return button.isHittable && !existing.contains { $0.insetBy(dx: -2, dy: -2).contains(frame) }
+        }
     }
 }
