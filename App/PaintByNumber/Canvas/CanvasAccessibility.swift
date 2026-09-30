@@ -85,6 +85,19 @@ nonisolated enum CanvasAccessibility {
         return (keys.filter { $0 > key }.min() ?? first).region
     }
 
+    /// How far a VoiceOver page scroll moves the content offset for a page of `page`.
+    /// Directions name the three-finger swipe and act like dragging: swiping up brings what
+    /// is below into view. Next and previous page vertically.
+    static func pageStep(_ direction: UIAccessibilityScrollDirection, page: CGSize) -> CGVector? {
+        switch direction {
+        case .up, .next: return CGVector(dx: 0, dy: page.height)
+        case .down, .previous: return CGVector(dx: 0, dy: -page.height)
+        case .left: return CGVector(dx: page.width, dy: 0)
+        case .right: return CGVector(dx: -page.width, dy: 0)
+        @unknown default: return nil
+        }
+    }
+
     /// The region whose anchor is nearest `point` (ties: lower index).
     static func nearest(_ regions: [Int], anchors: [SIMD2<Float>], to point: SIMD2<Float>) -> Int? {
         regions.min { a, b in

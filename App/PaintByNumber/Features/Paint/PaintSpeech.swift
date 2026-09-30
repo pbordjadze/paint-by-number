@@ -69,6 +69,13 @@ nonisolated enum PaintSpeech {
                       comment: "VoiceOver value of the canvas when no area of the selected color is visible")
     }
 
+    /// "Painting, top left": which part of the painting a VoiceOver page scroll brought into view.
+    static func pageScrolled(_ position: CanvasPosition) -> String {
+        let place = position.spoken
+        return String(localized: "paint.speech.pageScrolled", defaultValue: "Painting, \(place)",
+                      comment: "VoiceOver announcement after scrolling the canvas by a page: the part of the painting now in the middle of the view")
+    }
+
     /// "Painted, 7 left".
     static func painted(remaining: Int) -> String {
         String(localized: "paint.speech.painted", defaultValue: "Painted, \(remaining) left",

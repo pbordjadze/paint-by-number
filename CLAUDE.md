@@ -75,15 +75,17 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Accessibility: `CanvasView` is a VoiceOver container (`CanvasAccessibility`): up to 40
   `canvas-area-<region>` buttons for the unpainted areas of the selected color in view (activating
   one paints it), a `canvas-placeholder` when none are, custom actions Paint next area / Zoom to
-  next area / Hint / Zoom to fit and an "Unpainted areas" rotor; it posts `layoutChanged` on
+  next area / Hint / Zoom to fit, an "Unpainted areas" rotor and `accessibilityScroll` (three-finger
+  swipes page the camera; the container hides the scroll view); it posts `layoutChanged` on
   selection, progress and camera settle, and hints move VoiceOver focus to the revealed area.
   Swatches are `swatch-N` labelled "N, <color name>" (`PaintSpeech` holds all spoken strings,
   `ColorNameText` the localizable color names); `current-color` shows the selected color's name
   (progress badge on regular widths, palette caption on compact). `PaletteMetrics` scales swatches
   with Dynamic Type up to 1.4×; the fixed-height top and completion bars clamp at `.xxLarge` and use
   the Large Content Viewer. Reduce Motion reaches the canvas via `CanvasView.reduceMotion` (instant
-  fills, no shine, stepped replay). UI tests query these identifiers; demo scenarios `paint-ax` and
-  `paint-ax-large` cover the color name and the largest text size.
+  fills and undos, no shine, stepped replay; hint highlights and wrong-paint numbers fade in place,
+  flagged to the shaders in `CanvasUniforms.numbers.w`). UI tests query these identifiers; demo
+  scenarios `paint-ax` and `paint-ax-large` cover the color name and the largest text size.
 - Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`). CI screenshots every
   scenario listed in `ci/scenarios.txt` ~2 s after the app calls `DemoMode.markReady()` (a new
   scenario must call it once its content is on screen; `name@seconds` is only the timeout).
