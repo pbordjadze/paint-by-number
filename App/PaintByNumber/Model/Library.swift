@@ -37,6 +37,14 @@ final class Library {
     private(set) var recentlyDeleted: Artwork?
     /// Artworks being regenerated (`regenerate(artwork:settings:)`) and their 0…1 progress.
     private(set) var regenerating: [UUID: Double] = [:]
+    /// Artworks whose progress or details didn't reach the disk; cleared by the next
+    /// successful save of them.
+    private(set) var writeFailures: [UUID: WriteFailure] = [:]
+
+    struct WriteFailure: Equatable {
+        var message: String
+        var date: Date
+    }
 
     /// Why an artwork can't be opened for painting.
     nonisolated enum OpenError: Error, Equatable {
@@ -54,9 +62,27 @@ final class Library {
     @ObservationIgnored let store: ArtworkStore
     @ObservationIgnored private var writes: [UUID: Task<Bool, Never>] = [:]
     @ObservationIgnored private var purge: Task<Void, Never>?
+    /// The newest progress submitted per artwork, kept until a write of exactly that
+    /// submission succeeds. Retrying saves it, so a retry never puts an older snapshot over
+    /// a newer queued one.
+    @ObservationIgnored private var unsavedProgress: [UUID: (progress: PaintProgress, token: Int)] = [:]
+    /// Artworks whose metadata write failed and hasn't been superseded by a successful one.
+    @ObservationIgnored private var unsavedMeta: Set<UUID> = []
+    @ObservationIgnored private var nextToken = 0
+
+    /// What a queued write saves, for failure bookkeeping.
+    private enum Saves {
+        /// Thumbnails, trash: cosmetic or redone later, so failures are only logged.
+        case other
+        case meta
+        case progress(token: Int)
+    }
 
     static let undoWindow: Duration = .seconds(6)
     static let seededKey = "library.seededStarterSamples"
+    /// Launches whose seeding produced nothing; seeding is retried until `maxSeedAttempts`.
+    static let seedFailuresKey = "library.starterSampleFailures"
+    static let maxSeedAttempts = 3
 
     init(store: ArtworkStore) {
         self.store = store
@@ -68,6 +94,10 @@ final class Library {
     /// The library used by the running app: the real one (Debug builds: or a throwaway one
     /// for demos and the test host, so they never touch real paintings).
     static func forLaunch() -> Library {
+        // Shared files left over from earlier runs. The cutoff spares exports started right
+        // after launch; the sweep runs off the main actor so it never delays launch.
+        let launch = Date.now
+        Task { await Background.run { ArtworkExporter.purgeExports(createdBefore: launch) } }
         #if DEBUG
         let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if DemoMode.isActive || isTestHost {
@@ -92,6 +122,13 @@ final class Library {
     var isEmpty: Bool { artworks.isEmpty && placeholders.isEmpty }
 
     func artwork(with id: UUID) -> Artwork? { artworks.first { $0.id == id } }
+
+    /// The newest failed save of an artwork still in the library (a pending deletion hides it).
+    var latestWriteFailure: (artwork: Artwork, failure: WriteFailure)? {
+        writeFailures
+            .compactMap { entry in artwork(with: entry.key).map { (artwork: $0, failure: entry.value) } }
+            .max { $0.failure.date < $1.failure.date }
+    }
 
     // MARK: Creating
 
@@ -122,10 +159,19 @@ final class Library {
         guard !defaults.bool(forKey: Self.seededKey) else { return nil }
         guard artworks.isEmpty else {
             defaults.set(true, forKey: Self.seededKey)
+            defaults.removeObject(forKey: Self.seedFailuresKey)
             return nil
         }
-        return seed(samples.map { SeedItem(sample: $0) }) {
-            defaults.set(true, forKey: Self.seededKey)
+        return seed(samples.map { SeedItem(sample: $0) }) { created in
+            // Nothing made (say, the device was out of space): try again on later launches,
+            // but not forever.
+            let failures = created > 0 ? 0 : defaults.integer(forKey: Self.seedFailuresKey) + 1
+            if failures == 0 || failures >= Self.maxSeedAttempts {
+                defaults.set(true, forKey: Self.seededKey)
+                defaults.removeObject(forKey: Self.seedFailuresKey)
+            } else {
+                defaults.set(failures, forKey: Self.seedFailuresKey)
+            }
         }
     }
 
@@ -140,12 +186,13 @@ final class Library {
     }
 
     /// Generates artworks from bundled samples, one after another, showing placeholders
-    /// until each is ready.
+    /// until each is ready. `completion` gets the number of artworks created.
     @discardableResult
-    func seed(_ items: [SeedItem], completion: (() -> Void)? = nil) -> Task<Void, Never> {
+    func seed(_ items: [SeedItem], completion: ((_ created: Int) -> Void)? = nil) -> Task<Void, Never> {
         let now = Date.now
         placeholders = items.map { Placeholder(sample: $0.sample) }
         return Task {
+            var created = 0
             for (index, item) in items.enumerated() {
                 // Earlier items sort first when ages tie.
                 let date = now.addingTimeInterval(-item.age - Double(index))
@@ -154,12 +201,13 @@ final class Library {
                         sample: item.sample, paintedFraction: item.painted, date: date,
                         photoMaxPixelSize: item.photoMaxPixelSize)
                     try await create(draft)
+                    created += 1
                 } catch {
                     Log.library.error("Seeding \(item.sample.id, privacy: .public) failed: \(String(describing: error), privacy: .public)")
                 }
                 placeholders.removeAll { $0.id == item.sample.id }
             }
-            completion?()
+            completion?(created)
         }
     }
 
@@ -210,11 +258,7 @@ final class Library {
         let fresh = PaintProgress(regionCount: artwork.regionCount)
         artwork.record(fresh)
         replace(artwork)
-        let snapshot = artwork
-        enqueue(id) { store in
-            try store.writeProgress(fresh, for: id)
-            try store.writeMeta(snapshot)
-        }
+        persistProgress(fresh, of: artwork)
         await refreshThumbnail(id, template: template, progress: fresh)
     }
 
@@ -227,10 +271,18 @@ final class Library {
         }
         artwork.record(progress)
         replace(artwork)
-        let snapshot = artwork
-        enqueue(id) { store in
-            try store.writeProgress(progress, for: id)
-            try store.writeMeta(snapshot)
+        persistProgress(progress, of: artwork)
+    }
+
+    /// Saves again what a failed write left unsaved: the newest progress submitted, or else
+    /// the details. A new failure shows up again in `writeFailures`.
+    func retrySaving(_ id: UUID) {
+        clearWriteFailure(id)
+        guard let artwork = artwork(with: id) else { return }
+        if let unsaved = unsavedProgress[id] {
+            persistProgress(unsaved.progress, of: artwork)
+        } else if unsavedMeta.contains(id) {
+            persistMeta(artwork)
         }
     }
 
@@ -280,6 +332,9 @@ final class Library {
         purge?.cancel()
         recentlyDeleted = nil
         let id = artwork.id
+        clearWriteFailure(id)
+        unsavedProgress[id] = nil
+        unsavedMeta.remove(id)
         enqueue(id) { store in store.purgeTrash(id) }
     }
 
@@ -426,7 +481,20 @@ final class Library {
     }
 
     private func persistMeta(_ artwork: Artwork) {
-        enqueue(artwork.id) { store in try store.writeMeta(artwork) }
+        enqueue(artwork.id, saves: .meta) { store in try store.writeMeta(artwork) }
+    }
+
+    /// Writes progress and the details recording it, remembering the progress until it is
+    /// on disk.
+    private func persistProgress(_ progress: PaintProgress, of artwork: Artwork) {
+        let id = artwork.id
+        nextToken += 1
+        let token = nextToken
+        unsavedProgress[id] = (progress, token)
+        enqueue(id, saves: .progress(token: token)) { store in
+            try store.writeProgress(progress, for: id)
+            try store.writeMeta(artwork)
+        }
     }
 
     private func copyTitle(for title: String) -> String {
@@ -442,20 +510,56 @@ final class Library {
 
     /// Queues file work for one artwork behind its earlier writes; resolves to success.
     @discardableResult
-    private func enqueue(_ id: UUID, _ work: @escaping @Sendable (ArtworkStore) throws -> Void) -> Task<Bool, Never> {
+    private func enqueue(
+        _ id: UUID, saves: Saves = .other, _ work: @escaping @Sendable (ArtworkStore) throws -> Void
+    ) -> Task<Bool, Never> {
         let previous = writes[id]
         let store = self.store
         let task = Task<Bool, Never> {
             _ = await previous?.value
             do {
                 try await Background.run { try work(store) }
+                recordWrite(id, saves, error: nil)
                 return true
             } catch {
                 Log.library.error("Write failed for \(id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
+                recordWrite(id, saves, error: error)
                 return false
             }
         }
         writes[id] = task
         return task
+    }
+
+    private func recordWrite(_ id: UUID, _ saves: Saves, error: (any Error)?) {
+        if let error {
+            // Nothing to retry for an artwork deleted meanwhile.
+            guard artwork(with: id) != nil || recentlyDeleted?.id == id else {
+                unsavedProgress[id] = nil
+                unsavedMeta.remove(id)
+                return
+            }
+            switch saves {
+            case .other: return
+            case .meta, .progress: unsavedMeta.insert(id)
+            }
+            writeFailures[id] = WriteFailure(message: error.localizedDescription, date: .now)
+            return
+        }
+        switch saves {
+        case .other: return
+        case .meta:
+            unsavedMeta.remove(id)
+        case .progress(let token):
+            if unsavedProgress[id]?.token == token { unsavedProgress[id] = nil }
+            // Writes of one artwork land in order, so these details include every earlier change.
+            unsavedMeta.remove(id)
+        }
+        if unsavedProgress[id] == nil, !unsavedMeta.contains(id) { clearWriteFailure(id) }
+    }
+
+    /// Only when there is one: every save lands here, and views observe the failures.
+    private func clearWriteFailure(_ id: UUID) {
+        if writeFailures[id] != nil { writeFailures[id] = nil }
     }
 }

@@ -17,18 +17,29 @@ nonisolated enum TimelapseExporter {
         var outroSeconds: Double = 1.8
     }
 
-    enum ExportError: Error { case writerSetup, appendFailed, cancelled }
+    enum ExportError: Error { case writerSetup, appendFailed }
+
+    /// Frames drawn ahead of the encoder: the GPU renders the next frames while the oldest
+    /// one is appended, instead of stalling on every frame.
+    static let framesInFlight = 3
+
+    /// Blocks until the frame's pixels are in its buffer; throws if the GPU didn't draw them.
+    typealias FrameCompletion = () throws -> Void
 
     /// Writes an HEVC movie to `url`. Runs on the caller's executor (frames are rendered by the
-    /// caller's closure), so call it from a background task for large exports.
-    /// - Parameter renderFrame: draws frame `index` showing the first `strokes` fills of the log
-    ///   (plus `fraction` 0…1 of the next one, for smooth in-progress fills) into the buffer.
+    /// caller's closure), so call it from a background task for large exports. Cancellation is
+    /// checked every frame; it throws `CancellationError`, and like any failure leaves no file.
+    /// - Parameter renderFrame: starts drawing frame `index` showing the first `strokes` fills
+    ///   of the log (plus `fraction` 0…1 of the next one, for smooth in-progress fills) into the
+    ///   buffer and returns the wait for it. When it is called for frame `i`, every frame up to
+    ///   `i − framesInFlight` has completed, so per-frame state can live in a ring of
+    ///   `framesInFlight` slots indexed by `i % framesInFlight`.
     static func export(
         strokeCount: Int,
         options: Options,
         to url: URL,
         progress: (@Sendable (Double) -> Void)? = nil,
-        renderFrame: (_ index: Int, _ strokes: Int, _ fraction: Float, _ buffer: CVPixelBuffer) throws -> Void
+        renderFrame: (_ index: Int, _ strokes: Int, _ fraction: Float, _ buffer: CVPixelBuffer) throws -> FrameCompletion
     ) async throws {
         try? FileManager.default.removeItem(at: url)
         let width = Int(options.size.width) & ~1, height = Int(options.size.height) & ~1
@@ -53,24 +64,47 @@ nonisolated enum TimelapseExporter {
         writer.startSession(atSourceTime: .zero)
 
         let schedule = TimelapseSchedule(strokeCount: strokeCount, options: options)
+        let frameCount = schedule.frameCount
         let timescale = CMTimeScale(options.framesPerSecond)
-        for frame in 0..<schedule.frameCount {
-            if Task.isCancelled { writer.cancelWriting(); throw ExportError.cancelled }
+        var pending: [(buffer: CVPixelBuffer, time: CMTime, done: FrameCompletion)] = []
+        var appended = 0
+
+        func appendOldest() async throws {
+            let frame = pending.removeFirst()
+            try frame.done()
             while !input.isReadyForMoreMediaData { try await Task.sleep(for: .milliseconds(2)) }
-            guard let pool = adaptor.pixelBufferPool else { throw ExportError.writerSetup }
-            var buffer: CVPixelBuffer?
-            CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer)
-            guard let buffer else { throw ExportError.appendFailed }
-            let (strokes, fraction) = schedule.state(atFrame: frame)
-            try renderFrame(frame, strokes, fraction, buffer)
-            guard adaptor.append(buffer, withPresentationTime: CMTime(value: CMTimeValue(frame), timescale: timescale)) else {
+            guard adaptor.append(frame.buffer, withPresentationTime: frame.time) else {
                 throw writer.error ?? ExportError.appendFailed
             }
-            progress?(Double(frame + 1) / Double(schedule.frameCount))
+            appended += 1
+            progress?(Double(appended) / Double(frameCount))
         }
-        input.markAsFinished()
-        await writer.finishWriting()
-        if writer.status != .completed { throw writer.error ?? ExportError.appendFailed }
+
+        do {
+            for frame in 0..<frameCount {
+                try Task.checkCancellation()
+                // Leaves at most framesInFlight − 1 frames pending, so frame − framesInFlight
+                // (the previous user of this frame's slot) has completed.
+                while pending.count >= framesInFlight { try await appendOldest() }
+                guard let pool = adaptor.pixelBufferPool else { throw ExportError.writerSetup }
+                var buffer: CVPixelBuffer?
+                CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer)
+                guard let buffer else { throw ExportError.appendFailed }
+                let (strokes, fraction) = schedule.state(atFrame: frame)
+                let done = try renderFrame(frame, strokes, fraction, buffer)
+                pending.append((buffer, CMTime(value: CMTimeValue(frame), timescale: timescale), done))
+            }
+            while !pending.isEmpty { try await appendOldest() }
+            input.markAsFinished()
+            await writer.finishWriting()
+            if writer.status != .completed { throw writer.error ?? ExportError.appendFailed }
+        } catch {
+            // Let the GPU finish writing into the pending buffers before they are released.
+            for frame in pending { try? frame.done() }
+            if writer.status == .writing { writer.cancelWriting() }
+            try? FileManager.default.removeItem(at: url)
+            throw error
+        }
     }
 }
 

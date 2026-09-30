@@ -8,8 +8,9 @@ import Testing
 @MainActor
 struct LibraryTests {
     let root = Fixtures.temporaryDirectory()
+    let faults = WriteFaults()
 
-    private func makeLibrary() -> Library { Library(store: ArtworkStore(root: root)) }
+    private func makeLibrary() -> Library { Library(store: ArtworkStore(root: root, writeFaults: faults)) }
 
     private func draft(title: String = "Stripes", painted: [Int] = [], photo: CGImage? = nil) -> ArtworkDraft {
         var progress = PaintProgress(regionCount: 3)
@@ -77,7 +78,8 @@ struct LibraryTests {
         #expect(png.lastPathComponent == "Stripes- Blue-Red.png")
         #expect(ImageCodec.image(at: png)?.width == ArtworkExporter.imagePixelSize)
 
-        let movie = try await TimelapseVideoFile(store: library.store, artwork: artwork).export(longSide: 320)
+        let movie = try await TimelapseRequest(title: artwork.title, source: .saved(store: library.store, artwork: artwork))
+            .render(longSide: 320)
         #expect(movie.pathExtension == "mp4")
         let asset = AVURLAsset(url: movie)
         let duration = try await asset.load(.duration)
@@ -443,7 +445,149 @@ struct LibraryTests {
         #expect(library.artworks.map(\.title) == ["Espresso"])
         #expect(library.artworks.first?.sampleName == "espresso")
         #expect(defaults.bool(forKey: Library.seededKey))
+        #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
         #expect(library.seedIfNeeded([espresso], defaults: defaults) == nil)
+    }
+
+    @Test func seedingRetriesAfterFailuresAndGivesUpAfterThree() async throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let library = makeLibrary()
+        let missing = Sample(id: "missing", title: "Missing")
+
+        for launch in 1..<Library.maxSeedAttempts {
+            let task = try #require(library.seedIfNeeded([missing], defaults: defaults), "launch \(launch)")
+            await task.value
+            #expect(!defaults.bool(forKey: Library.seededKey))
+            #expect(defaults.integer(forKey: Library.seedFailuresKey) == launch)
+        }
+        let last = try #require(library.seedIfNeeded([missing], defaults: defaults))
+        await last.value
+        #expect(defaults.bool(forKey: Library.seededKey))
+        #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
+        #expect(library.seedIfNeeded([missing], defaults: defaults) == nil)
+        #expect(library.artworks.isEmpty)
+        #expect(library.placeholders.isEmpty)
+    }
+
+    @Test func seedingCountsPartialSuccess() async throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let library = makeLibrary()
+        let espresso = try #require(Sample.named("espresso"))
+
+        let task = try #require(library.seedIfNeeded([Sample(id: "missing", title: "Missing"), espresso], defaults: defaults))
+        await task.value
+        #expect(library.artworks.map(\.title) == ["Espresso"])
+        #expect(defaults.bool(forKey: Library.seededKey))
+        #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
+    }
+
+    // MARK: Write failures
+
+    private func progress(painting regions: [Int]) -> PaintProgress {
+        var progress = PaintProgress(regionCount: 3)
+        for region in regions { progress.paint(region) }
+        return progress
+    }
+
+    private func savedProgress(_ id: UUID) async throws -> PaintProgress {
+        try await makeLibrary().loadForPainting(id).progress
+    }
+
+    @Test func surfacesWriteFailuresUntilASaveSucceeds() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+
+        faults.fail(.progress)
+        library.saveProgress(progress(painting: [0]), for: artwork.id)
+        await library.flush()
+        #expect(library.writeFailures[artwork.id] != nil)
+        #expect(library.latestWriteFailure?.artwork.id == artwork.id)
+
+        faults.heal(.progress)
+        library.retrySaving(artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        #expect(library.latestWriteFailure == nil)
+        #expect(try await savedProgress(artwork.id).isPainted(0))
+
+        // A later save that succeeds clears the error too, and its progress is what's kept.
+        faults.fail(.progress)
+        library.saveProgress(progress(painting: [0, 1]), for: artwork.id)
+        await library.flush()
+        #expect(library.writeFailures[artwork.id] != nil)
+        faults.heal(.progress)
+        library.saveProgress(progress(painting: [0, 2]), for: artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        let saved = try await savedProgress(artwork.id)
+        #expect(saved.isPainted(2) && !saved.isPainted(1))
+    }
+
+    @Test func retryNeverWritesAnOlderSnapshot() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        faults.fail(.progress)
+        library.saveProgress(progress(painting: [1]), for: artwork.id)
+        await library.flush()
+        #expect(library.writeFailures[artwork.id] != nil)
+
+        faults.heal(.progress)
+        library.saveProgress(progress(painting: [2]), for: artwork.id)
+        library.retrySaving(artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        let saved = try await savedProgress(artwork.id)
+        #expect(saved.isPainted(2) && !saved.isPainted(1))
+    }
+
+    @Test func metadataWriteFailuresAreRetried() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        faults.fail(.meta)
+        library.rename(artwork.id, to: "Sunset")
+        await library.flush()
+        #expect(library.writeFailures[artwork.id] != nil)
+
+        faults.heal(.meta)
+        library.retrySaving(artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        #expect(makeLibrary().artwork(with: artwork.id)?.title == "Sunset")
+    }
+
+    @Test func thumbnailWriteFailuresOnlyLog() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        faults.fail(.thumbnail)
+        await library.refreshThumbnail(artwork.id, progress: progress(painting: [0]))
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        #expect(library.artwork(with: artwork.id)?.thumbnailVersion == artwork.thumbnailVersion)
+    }
+
+    @Test func failedWriteOfADeletedArtworkIsHiddenThenDropped() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        faults.fail(.progress)
+        library.saveProgress(progress(painting: [0]), for: artwork.id)
+        await library.flush()
+        #expect(library.latestWriteFailure?.artwork.id == artwork.id)
+
+        library.delete(artwork.id)
+        #expect(library.latestWriteFailure == nil)
+        library.undoDelete()
+        #expect(library.latestWriteFailure?.artwork.id == artwork.id)
+
+        library.delete(artwork.id)
+        library.finalizeDeletion()
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
     }
 
     @Test func artworkDecodingToleratesMissingFields() throws {

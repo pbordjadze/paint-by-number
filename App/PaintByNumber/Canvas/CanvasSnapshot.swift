@@ -1,9 +1,7 @@
 import CoreGraphics
 import Foundation
-import ImageIO
 import Metal
 import PaintCore
-import UniformTypeIdentifiers
 
 /// Offscreen rendering with the canvas shaders: gallery thumbnails, share/export images,
 /// printable previews. Thread-safe; call it off the main actor.
@@ -110,12 +108,5 @@ nonisolated enum CanvasSnapshot {
     static func fittedSize(for template: Template, longSide: Int) -> CGSize {
         let s = Double(longSide) / Double(max(template.width, template.height))
         return CGSize(width: (Double(template.width) * s).rounded(), height: (Double(template.height) * s).rounded())
-    }
-
-    static func pngData(_ image: CGImage) -> Data? {
-        let data = NSMutableData()
-        guard let dest = CGImageDestinationCreateWithData(data as CFMutableData, UTType.png.identifier as CFString, 1, nil) else { return nil }
-        CGImageDestinationAddImage(dest, image, nil)
-        return CGImageDestinationFinalize(dest) ? data as Data : nil
     }
 }

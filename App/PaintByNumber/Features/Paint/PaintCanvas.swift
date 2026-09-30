@@ -22,12 +22,16 @@ struct PaintCanvas: UIViewRepresentable {
     var initialCamera: CanvasCamera?
     var fillDurationScale: Float = 1
     var onPencilAction: ((PencilAction) -> Void)?
+    /// Called (after this update) when the device can't draw the canvas.
+    var onUnavailable: (() -> Void)?
 
     func makeUIView(context: Context) -> CanvasView {
         let view = CanvasView(session: session)
         view.initialCamera = initialCamera
         view.fillDurationScale = fillDurationScale
         controller?.view = view
+        // Deferred: state mustn't change while SwiftUI is making views.
+        if !view.isRenderable, let onUnavailable { Task { onUnavailable() } }
         return view
     }
 
@@ -39,5 +43,25 @@ struct PaintCanvas: UIViewRepresentable {
         view.showsNumbers = showsNumbers
         view.onPencilAction = onPencilAction
         controller?.view = view
+    }
+}
+
+/// Stands in for the canvas when the device can't draw it (Metal unavailable), instead of a
+/// blank screen.
+struct CanvasUnavailableView: View {
+    var onClose: (() -> Void)?
+
+    var body: some View {
+        // `SwiftUI.Label`: PaintCore has a `Label` too.
+        ContentUnavailableView {
+            SwiftUI.Label("Can’t Show the Canvas", systemImage: "exclamationmark.triangle")
+        } description: {
+            Text("This device can’t draw the painting right now. Your progress is saved.")
+        } actions: {
+            if let onClose {
+                Button("Back to Gallery", action: onClose)
+                    .buttonStyle(.glass)
+            }
+        }
     }
 }

@@ -21,6 +21,9 @@ struct PaintView: View {
     @State private var chrome = PaintChromeState()
     @State private var showsNumbers = true
     @State private var confirmRestart = false
+    @State private var timelapse: TimelapseRequest?
+    @State private var canvasUnavailable = false
+    @State private var completionShare = CompletionShare()
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.undoManager) private var undoManager
 
@@ -40,36 +43,10 @@ struct PaintView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let palette = paletteLayout(in: geo.size)
-            ZStack {
-                PaintCanvas(
-                    session: session, controller: controller,
-                    chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
-                    showsNumbers: showsNumbers, initialCamera: initialCamera, fillDurationScale: fillDurationScale,
-                    onPencilAction: { handlePencil($0) })
-                    .id(ObjectIdentifier(session))
-                    .ignoresSafeArea()
-
-                VStack(spacing: 0) {
-                    topBar
-                        .padding(.horizontal, Self.edge)
-                        .padding(.top, 6)
-                    Spacer(minLength: 0)
-                    if !palette.side || session.isComplete {
-                        bottomBar(palette)
-                            .padding(.horizontal, Self.edge)
-                            .padding(.bottom, 4)
-                    }
-                }
-                if palette.side && !session.isComplete {
-                    HStack {
-                        Spacer(minLength: 0)
-                        bottomBar(palette)
-                            .padding(.trailing, Self.edge)
-                            .padding(.top, Self.sidePaletteTop)
-                            .padding(.bottom, Self.edge)
-                    }
-                }
+            if canvasUnavailable {
+                CanvasUnavailableView(onClose: onClose)
+            } else {
+                canvasAndChrome(geo: geo, palette: paletteLayout(in: geo.size))
             }
         }
         .background(Color(uiColor: .systemGroupedBackground))
@@ -89,6 +66,43 @@ struct PaintView: View {
             }
         } message: {
             Text("All paint will be cleared.")
+        }
+        .sheet(item: $timelapse) { request in
+            TimelapseExportSheet(request: request)
+        }
+    }
+
+    /// The Metal canvas with the floating bars over it.
+    private func canvasAndChrome(geo: GeometryProxy, palette: PaletteLayout) -> some View {
+        ZStack {
+            PaintCanvas(
+                session: session, controller: controller,
+                chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
+                showsNumbers: showsNumbers, initialCamera: initialCamera, fillDurationScale: fillDurationScale,
+                onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true })
+                .id(ObjectIdentifier(session))
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                topBar
+                    .padding(.horizontal, Self.edge)
+                    .padding(.top, 6)
+                Spacer(minLength: 0)
+                if !palette.side || session.isComplete {
+                    bottomBar(palette)
+                        .padding(.horizontal, Self.edge)
+                        .padding(.bottom, 4)
+                }
+            }
+            if palette.side && !session.isComplete {
+                HStack {
+                    Spacer(minLength: 0)
+                    bottomBar(palette)
+                        .padding(.trailing, Self.edge)
+                        .padding(.top, Self.sidePaletteTop)
+                        .padding(.bottom, Self.edge)
+                }
+            }
         }
     }
 
@@ -218,7 +232,9 @@ struct PaintView: View {
     @ViewBuilder
     private func bottomBar(_ palette: PaletteLayout) -> some View {
         if session.isComplete {
-            CompletionBar(session: session, title: title, onReplay: controller.replay, onClose: onClose)
+            CompletionBar(
+                session: session, title: title, share: completionShare, onReplay: controller.replay,
+                onShareTimelapse: shareTimelapse, onClose: onClose)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
             PaletteBar(
@@ -237,6 +253,12 @@ struct PaintView: View {
         } else {
             session.undo()
         }
+    }
+
+    /// From the live session: the saved copy may lag behind.
+    private func shareTimelapse() {
+        let name = title.isEmpty ? String(localized: "Painting") : title
+        timelapse = TimelapseRequest(title: name, source: .live(template: session.template, progress: session.progress))
     }
 
     private func handlePencil(_ action: PencilAction) {
@@ -294,14 +316,20 @@ struct GlassIconLabel: View {
 private struct CompletionBar: View {
     let session: PaintingSession
     let title: String
+    let share: CompletionShare
     let onReplay: () -> Void
+    let onShareTimelapse: () -> Void
     let onClose: (() -> Void)?
-    @State private var shareImage: Image?
 
-    init(session: PaintingSession, title: String, onReplay: @escaping () -> Void, onClose: (() -> Void)?) {
+    init(
+        session: PaintingSession, title: String, share: CompletionShare, onReplay: @escaping () -> Void,
+        onShareTimelapse: @escaping () -> Void, onClose: (() -> Void)?
+    ) {
         self.session = session
         self.title = title
+        self.share = share
         self.onReplay = onReplay
+        self.onShareTimelapse = onShareTimelapse
         self.onClose = onClose
     }
 
@@ -326,16 +354,15 @@ private struct CompletionBar: View {
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
             .accessibilityLabel(Text("Replay"))
-            if let shareImage {
+            if let picture = share.picture {
                 let name = title.isEmpty ? String(localized: "Painting") : title
+                // UIImage keeps the picture's Display P3 colors.
+                let shareImage = Image(uiImage: UIImage(cgImage: picture))
                 Menu {
                     ShareLink(item: shareImage, preview: SharePreview(name, image: shareImage)) {
                         Label("Share Picture", systemImage: "photo")
                     }
-                    ShareLink(
-                        item: TimelapseMovie(template: session.template, progress: session.progress, title: name),
-                        preview: SharePreview("\(name) Time-lapse", image: shareImage)
-                    ) {
+                    Button { onShareTimelapse() } label: {
                         Label("Share Time-lapse", systemImage: "timelapse")
                     }
                 } label: {
@@ -360,17 +387,35 @@ private struct CompletionBar: View {
         // One compact row even at the largest text sizes.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .capsule)
-        .task(id: session.revision) {
-            let data = await Self.renderShareImage(template: session.template, progress: session.progress)
-            if let data, let image = UIImage(data: data) { shareImage = Image(uiImage: image) }
-        }
+        .task(id: session.revision) { await share.prepare(for: session) }
+    }
+}
+
+/// The finished painting as a picture to share, rendered once per completion (the bar
+/// showing it is rebuilt far more often: layout changes, the palette moving aside).
+@Observable
+final class CompletionShare {
+    private(set) var picture: CGImage?
+    /// The session revision `picture` shows (or is being rendered for).
+    @ObservationIgnored private var revision: Int?
+
+    func prepare(for session: PaintingSession) async {
+        guard session.isComplete, revision != session.revision else { return }
+        let target = session.revision
+        revision = target
+        picture = nil
+        let image = await Self.render(template: session.template, progress: session.progress)
+        // Undone and finished again meanwhile: that completion renders its own.
+        guard revision == target else { return }
+        picture = image
+        // A failed render may succeed next time the bar appears.
+        if image == nil { revision = nil }
     }
 
     @concurrent
-    private static func renderShareImage(template: Template, progress: PaintProgress) async -> Data? {
+    private static func render(template: Template, progress: PaintProgress) async -> CGImage? {
         let size = CanvasSnapshot.fittedSize(for: template, longSide: 2048)
-        guard let image = CanvasSnapshot.render(template: template, progress: progress, size: size, options: .painting) else { return nil }
-        return CanvasSnapshot.pngData(image)
+        return CanvasSnapshot.render(template: template, progress: progress, size: size, options: .painting)
     }
 }
 

@@ -13,9 +13,10 @@ import Foundation
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
+/// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
 enum ShellDemo: Equatable {
-    case gallery, galleryEmpty, galleryOpen, galleryDamaged, create, createSamples, createPreview, settings,
-         settingsAcknowledgements
+    case gallery, galleryEmpty, galleryOpen, galleryDamaged, galleryTimelapse, create, createSamples, createPreview,
+         settings, settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -23,6 +24,7 @@ enum ShellDemo: Equatable {
         case "gallery-empty": .galleryEmpty
         case "gallery-open": .galleryOpen
         case "gallery-damaged": .galleryDamaged
+        case "gallery-timelapse": .galleryTimelapse
         case "create", "create-dark": .create
         case "create-samples": .createSamples
         case "create-preview", "create-preview-dark": .createPreview
@@ -53,7 +55,7 @@ enum ShellDemo: Equatable {
             ]
             library.seed(items.map { sample, painted, hours in
                 Library.SeedItem(sample: Sample.all[sample], painted: painted, age: hours * hour, photoMaxPixelSize: 560)
-            }, completion: { DemoMode.markReady() })
+            }, completion: { _ in DemoMode.markReady() })
         case .galleryOpen:
             library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .galleryDamaged:
@@ -64,6 +66,8 @@ enum ShellDemo: Equatable {
                 guard let id = library.artworks.first?.id else { return }
                 try? Data("damaged".utf8).write(to: library.store.url(.template, of: id))
             }
+        case .galleryTimelapse:
+            library.seed([Library.SeedItem(sample: Sample.all[1], painted: 1, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createPreview, .galleryEmpty, .settings, .settingsAcknowledgements:
             break
         }

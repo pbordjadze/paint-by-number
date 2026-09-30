@@ -11,6 +11,8 @@ struct GalleryView: View {
     @State private var renaming: Artwork?
     @State private var renameText = ""
     @State private var restarting: Artwork?
+    @State private var deleting: Artwork?
+    @State private var timelapse: TimelapseRequest?
     @State private var notice: Notice?
 
     private struct Notice: Equatable {
@@ -70,6 +72,29 @@ struct GalleryView: View {
         } message: { _ in
             Text("Every painted area will be cleared.")
         }
+        .confirmationDialog("Delete this painting?", isPresented: isPresent($deleting), titleVisibility: .visible, presenting: deleting) { artwork in
+            // Undoable for a few seconds afterwards (the toast's Undo).
+            Button("Delete “\(artwork.title)”", role: .destructive) { library.delete(artwork.id) }
+        } message: { artwork in
+            if artwork.isComplete {
+                Text("“\(artwork.title)” is finished.")
+            } else if artwork.isStarted {
+                Text("“\(artwork.title)” is \(Double(ProgressCaption.percent(artwork)) / 100, format: .percent.precision(.fractionLength(0))) painted.")
+            } else {
+                Text("“\(artwork.title)” hasn’t been started yet.")
+            }
+        }
+        .sheet(item: $timelapse) { request in
+            TimelapseExportSheet(request: request)
+        }
+        #if DEBUG
+        .task(id: library.finished.first?.id) {
+            // Demo: share the finished painting's time-lapse once it is ready.
+            if ShellDemo.current == .galleryTimelapse, timelapse == nil, let artwork = library.finished.first {
+                shareTimelapse(artwork)
+            }
+        }
+        #endif
     }
 
     // MARK: Layout
@@ -147,12 +172,7 @@ struct GalleryView: View {
             Label(artwork.isComplete ? "Share Painting" : "Share Progress", systemImage: "square.and.arrow.up")
         }
         if artwork.isComplete {
-            ShareLink(
-                item: TimelapseVideoFile(store: library.store, artwork: artwork),
-                preview: SharePreview("\(artwork.title) Time-lapse", image: previewImage(artwork))
-            ) {
-                Label("Share Time-lapse", systemImage: "timelapse")
-            }
+            Button("Share Time-lapse", systemImage: "timelapse") { shareTimelapse(artwork) }
         }
         ShareLink(
             item: PrintableTemplateFile(store: library.store, artwork: artwork, paper: paper),
@@ -168,14 +188,16 @@ struct GalleryView: View {
     }
 
     private func deleteButton(for artwork: Artwork) -> some View {
-        Button("Delete", systemImage: "trash", role: .destructive) {
-            library.delete(artwork.id)
-        }
+        Button("Delete", systemImage: "trash", role: .destructive) { deleting = artwork }
     }
 
     private func previewImage(_ artwork: Artwork) -> Image {
-        if let cached = ThumbnailCache.shared.cached(artwork) { return Image(decorative: cached, scale: 1) }
+        if let cached = ThumbnailCache.shared.bestCached(artwork) { return Image(decorative: cached, scale: 1) }
         return Image(systemName: "paintpalette")
+    }
+
+    private func shareTimelapse(_ artwork: Artwork) {
+        timelapse = TimelapseRequest(title: artwork.title, source: .saved(store: library.store, artwork: artwork))
     }
 
     private func saveToPhotos(_ artwork: Artwork) {
@@ -204,6 +226,12 @@ struct GalleryView: View {
 
     private var toasts: some View {
         VStack(spacing: 10) {
+            if let failed = library.latestWriteFailure?.artwork {
+                Toast(text: "Couldn’t save “\(failed.title)”", systemImage: "exclamationmark.triangle") {
+                    Button("Retry") { library.retrySaving(failed.id) }
+                        .fontWeight(.semibold)
+                }
+            }
             if let notice {
                 Toast(text: notice.text, systemImage: notice.systemImage)
             }
@@ -216,6 +244,7 @@ struct GalleryView: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 12)
+        .animation(.snappy, value: library.latestWriteFailure?.artwork.id)
         .animation(.snappy, value: library.recentlyDeleted?.id)
         .animation(.snappy, value: notice)
     }

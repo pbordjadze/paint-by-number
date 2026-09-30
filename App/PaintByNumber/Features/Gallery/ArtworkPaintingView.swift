@@ -26,6 +26,7 @@ struct ArtworkPaintingView: View {
     }
 
     private var artwork: Artwork? { library.artwork(with: artworkID) }
+    private var saveFailed: Bool { library.writeFailures[artworkID] != nil }
 
     var body: some View {
         ZStack {
@@ -59,15 +60,27 @@ struct ArtworkPaintingView: View {
         }
         // Below PaintView's top bar (6 pt inset + 44 pt buttons).
         .overlay(alignment: .top) {
-            if let notice {
-                Toast(text: notice.notice.text, systemImage: notice.notice.systemImage, edge: .top)
-                    .padding(.top, 62)
-                    .padding(.horizontal, 20)
-                    // Taps reach the canvas under it.
-                    .allowsHitTesting(false)
+            VStack(spacing: 8) {
+                if let notice {
+                    Toast(text: notice.notice.text, systemImage: notice.notice.systemImage, edge: .top)
+                        // Taps reach the canvas under it.
+                        .allowsHitTesting(false)
+                }
+                if saveFailed {
+                    Toast(text: "Couldn’t save progress", systemImage: "exclamationmark.triangle", edge: .top) {
+                        Button("Retry") { library.retrySaving(artworkID) }
+                            .fontWeight(.semibold)
+                    }
+                }
             }
+            .padding(.top, 62)
+            .padding(.horizontal, 20)
         }
         .animation(.snappy, value: notice)
+        .animation(.snappy, value: saveFailed)
+        .onChange(of: saveFailed) { _, failed in
+            if failed { UIAccessibility.post(notification: .announcement, argument: String(localized: "Couldn’t save progress")) }
+        }
         .toolbar(.hidden, for: .navigationBar)
         .background { CanvasGesturesOverZoomDismissal().frame(width: 0, height: 0) }
         .task { await open() }

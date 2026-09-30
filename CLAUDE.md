@@ -100,6 +100,20 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `ArtworkPaintingView` hosts `PaintView` and autosaves (debounced, on background, on close). It is
   pushed with a zoom transition whose swipe-down/pinch dismissal it turns off (they stole canvas
   gestures; `PaintingNavigationTests` guards this).
+- Save failures: `Library.writeFailures` records failed progress/metadata writes per artwork (the
+  newest unsaved progress is kept for `retrySaving`); the painting screen and the gallery show a
+  Retry toast, and the next successful save clears it. Thumbnail and trash writes only log.
+  Tests make writes fail through `ArtworkStore.writeFaults` (`WriteFaults`).
+- Sharing: the time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress,
+  Cancel, Try Again) and is handed to `ActivityShareSheet`, which reports when the share sheet
+  closes so the movie is deleted (also when the sheet is dismissed). Every export lives in
+  `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture/template `ShareLink`s can't report
+  completion, so they rely on the launch purge and the sweep of exports older than ten
+  minutes that each new export runs (`ArtworkExporter.staleExportAge`).
+- Image caches (`ImageCache`): LRU by decoded bytes (thumbnails 48 MB, samples 16 MB), emptied on
+  memory warnings; gallery tiles decode thumbnails at their own pixel size.
+- Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`), radius capped at
+  `PaintingSession.maxBrushRadius` canvas units (a cost bound never reached on current devices).
 - Rendering without Metal: `Export/TemplateRasterizer` (CoreGraphics; vector geometry, falls back to
   the region map) backs thumbnails, share PNGs, create-flow previews and `PDFExporter`.
 - Create flow `PhotoSourceView`: the inline `PhotosPicker` runs out of process, so it must never
@@ -111,7 +125,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   gallery, create and settings ones, e.g. `create` on the Photos pane, `create-samples` on the
   Samples pane). CI screenshots every scenario listed in `ci/scenarios.txt` ~2 s after the app
   calls `DemoMode.markReady()` (a new scenario must call it once its content is on screen;
-  `name@seconds` is only the timeout).
+  `name@seconds` is only the timeout). Failure states have scenarios too: `gallery-damaged`
+  (recovery screen), `gallery-timelapse` (time-lapse progress sheet), `paint-unavailable` (the
+  painting screen's stand-in when Metal is unavailable).
   Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `PipelineCheckView` and
   `SyntheticTemplate` are wrapped in `#if DEBUG`, and every other reference (`RootView`,
   `Library.forLaunch`, `AppShellView`, `SettingsView`, …) sits in an `#if DEBUG` block, so Release
