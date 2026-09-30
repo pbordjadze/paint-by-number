@@ -186,7 +186,7 @@ struct TemplatePreviewView: View {
 
             Text(model.stats?.summary ?? " ")
                 .font(.footnote.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary.opacity(0.7))
                 .monospacedDigit()
                 .contentTransition(.numericText())
                 .opacity(model.isFinal ? 1 : 0.7)

@@ -104,7 +104,7 @@ struct ProgressCaption: View {
             if artwork.isComplete {
                 Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint)
                 if artwork.activeSeconds >= 60 {
-                    Text(verbatim: "Finished · \(PaintingTime.spent(artwork.activeSeconds))")
+                    Text("Finished · \(PaintingTime.spent(artwork.activeSeconds))")
                 } else {
                     Text("Finished")
                 }
@@ -119,7 +119,8 @@ struct ProgressCaption: View {
         }
         .font(.subheadline)
         .foregroundStyle(.secondary)
-        .lineLimit(1)
+        // Wraps rather than clips at large text sizes on narrow cards.
+        .lineLimit(2)
     }
 
     static func percent(_ artwork: Artwork) -> Int {

@@ -83,9 +83,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
    `*-steps.log` (readiness, crashes). iPad is the primary device: every push builds Debug on a
    13" iPad Pro simulator and adds `ipad/test-results.json`, `ipad/attachments/` and
    `ipad/bench.txt` (pipeline timings on the M1 runner, only when `Sources/` changed). The
-   iPhone job (Release build, screenshots) runs on `claude/paint-by-numbers-app` or via
-   workflow_dispatch with `iphone: true`. Turnaround ~10 min (longer if several branches are
-   queued: only 5 macOS jobs run concurrently). Work on something else while it runs.
+   iPhone job (the same on an iPhone 17 Pro, without the benchmark) runs on
+   `claude/paint-by-numbers-app` or via workflow_dispatch with `iphone: true`. Turnaround
+   ~15–20 min (longer if several branches are queued: only 5 macOS jobs run concurrently).
+   Work on something else while it runs.
 3. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 4. Device builds: every push to `claude/paint-by-numbers-app` also archives an unsigned Release
    IPA (version `1.0.<run>`, build `<run>`), publishes it as the `build-<run>` prerelease (the

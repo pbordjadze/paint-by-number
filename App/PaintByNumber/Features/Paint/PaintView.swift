@@ -306,7 +306,7 @@ private struct CompletionBar: View {
     }
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 12) {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 28))
                 .foregroundStyle(.tint)
@@ -316,8 +316,9 @@ private struct CompletionBar: View {
                 Text(title.isEmpty ? "Every region is painted." : title)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
             }
+            // The buttons keep their size on a phone; the caption truncates instead.
+            .lineLimit(1)
             Spacer(minLength: 0)
             Button(action: onReplay) {
                 GlassIconLabel(systemImage: "play.fill")
@@ -336,6 +337,7 @@ private struct CompletionBar: View {
             if let onClose {
                 Button("Done", action: onClose)
                     .buttonStyle(.glassProminent)
+                    .fixedSize()
             }
         }
         .padding(.horizontal, 18)

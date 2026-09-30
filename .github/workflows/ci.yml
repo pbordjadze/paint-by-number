@@ -4,8 +4,8 @@ name: CI
 # screenshots) to the branch `ci-shots/<branch>`, readable with plain git (see ci/fetch.sh).
 # Each simulator gets its own VM: two booted simulators on one 3-core runner thrash. The
 # simulator boots in the background while the app builds.
-# iPad is the primary device (Debug build, screenshots, tests on every push); iPhone
-# (Release build, screenshots) runs on the main development branch or on request.
+# iPad is the primary device (Debug build, screenshots, tests on every push); iPhone (the
+# same) runs on the main development branch or on request.
 # The main development branch also publishes an unsigned device IPA as a `build-<n>`
 # prerelease and a SideStore source listing the latest builds (branch `sidestore`).
 
@@ -18,7 +18,7 @@ on:
         description: 'Demo scenarios to screenshot (space separated, optional @timeout-seconds)'
         required: false
       iphone:
-        description: 'Also build Release and screenshot on iPhone'
+        description: 'Also screenshot and test on iPhone'
         type: boolean
         default: false
 
@@ -118,11 +118,12 @@ jobs:
         with: { name: ipad, path: out, if-no-files-found: ignore }
 
   iphone:
-    name: iPhone — Release build, screenshots
-    # Secondary device: on the main development branch, or when requested.
+    name: iPhone — Debug build, screenshots, tests
+    # Secondary device: on the main development branch, or when requested. (The IPA job
+    # covers the Release build.)
     if: github.ref_name == 'claude/paint-by-numbers-app' || github.event.inputs.iphone == 'true'
     runs-on: macos-26
-    timeout-minutes: 40
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
       - name: Start simulator
@@ -133,25 +134,42 @@ jobs:
           mkdir -p out
           nohup xcrun simctl boot "$UDID" > out/boot.log 2>&1 &
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
-      - name: Build
+      - name: Build for testing
         run: |
           set -o pipefail
-          xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
+          xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
+      - name: Wait for simulator
+        id: boot
+        run: |
+          xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b > /dev/null
       - name: Screenshots
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
-          APP=build/dd/Build/Products/Release-iphonesimulator/PaintByNumber.app
+          APP=build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
           [ -d "$APP" ] || exit 0
           ci/screenshots.sh "$APP" out/shots iphone "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
+      - name: Test
+        if: always() && steps.boot.outcome == 'success'
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
+            -resultBundlePath build/Tests.xcresult -quiet \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
       - name: Collect diagnostics
         if: always()
         run: |
-          mkdir -p out/crashes
+          mkdir -p out/attachments out/crashes
           cp ~/Library/Logs/DiagnosticReports/PaintByNumber* out/crashes/ 2>/dev/null || true
-          grep -hE "error:" out/app-build.log 2>/dev/null | sort -u > out/errors.txt || true
+          grep -hE "error:" out/app-build.log out/app-test.log 2>/dev/null | sort -u > out/errors.txt || true
+          if [ -d build/Tests.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact > out/test-summary.json 2>/dev/null || true
+            xcrun xcresulttool get test-results tests --path build/Tests.xcresult --compact > out/test-results.json 2>/dev/null || true
+            xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path out/attachments >/dev/null 2>&1 || true
+          fi
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: iphone, path: out, if-no-files-found: ignore }

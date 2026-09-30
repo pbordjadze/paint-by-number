@@ -123,6 +123,6 @@ struct CompareView: View {
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .background(.black.opacity(0.5), in: .capsule)
+            .background(.black.opacity(0.62), in: .capsule)
     }
 }

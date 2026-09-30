@@ -79,6 +79,7 @@ final class PaintingNavigationTests: XCTestCase {
     /// with ⇧⌘Z (window undo manager).
     @MainActor
     func testKeyboardColorsUndoAndRedo() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")
         let app = openSeededPainting()
         let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Color '"))
         func selected() -> Set<String> {
