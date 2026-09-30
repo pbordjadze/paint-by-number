@@ -1,7 +1,9 @@
 import Foundation
 
-/// Fits smooth curves to stair-stepped lattice chains, after Peter Selinger's potrace
-/// ("Potrace: a polygon-based tracing algorithm", 2003):
+/// Fits smooth curves to stair-stepped lattice chains. A Swift translation of potrace 1.16
+/// (Copyright (C) 2001-2019 Peter Selinger, GPL-2.0-or-later; "Potrace: a polygon-based
+/// tracing algorithm", 2003), so it is a derivative work under the same license (see
+/// `ACKNOWLEDGEMENTS.md`), extended to open chains. potrace's stages:
 ///
 /// 1. find the longest *straight* sub-paths (a line exists that passes within half a
 ///    pixel of every lattice point),

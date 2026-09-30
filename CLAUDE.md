@@ -18,7 +18,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   project edits) with the SwiftUI app, Metal renderer and UI tests.
 - `tools/` evaluation tooling (`swift.sh`, `eval.py`, `svg2png.mjs`).
 - `.github/workflows/` macOS CI: builds the app, runs tests, captures simulator screenshots.
-- `ACKNOWLEDGEMENTS.md` credits for the ported code and published methods (also shown in the app).
+- `ACKNOWLEDGEMENTS.md` credits and license texts for the ported code and published methods (also shown in the app).
 
 ## Building & testing on Linux (no Xcode here)
 
@@ -84,12 +84,19 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   collected data; required-reason APIs: UserDefaults `CA92.1`). Using another required-reason API
   (file timestamps, disk space, boot time via `systemUptime`/`mach_absolute_time`, active
   keyboards) means adding its category and reason code there; `AboutTests` fails when the
-  sources and the manifest disagree. Export compliance (`ITSAppUsesNonExemptEncryption`) and the
-  app category are in `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings.
+  sources of the app or of `Sources/PaintCore` (not the `pbn` CLI) and the manifest disagree.
+  Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category are in
+  `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings.
 - Settings › About shows the bundle version/build (`AppInfo`) and Acknowledgements
   (`Acknowledgements.swift`). Ported or adapted third-party code and the methods the pipeline
   implements are credited there and in `ACKNOWLEDGEMENTS.md` (`AboutTests` keeps the two in
   step): add an entry when adding either.
+- Licensing: `Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox); `Vector/CurveFitter.swift`
+  is a translation of potrace 1.16 and therefore GPL-2.0-or-later (Peter Selinger). Settings ›
+  Acknowledgements and `ACKNOWLEDGEMENTS.md` carry the full license texts and the GPL source
+  notice (the repository is public); keep them when touching the fitter. Distributing the app
+  (IPA, SideStore, and above all the App Store, which GPLv2 is generally held incompatible
+  with) needs that settled first: license the app GPL-compatibly or replace `CurveFitter`.
 
 ## CI feedback loop (no Xcode locally)
 

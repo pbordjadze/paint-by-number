@@ -35,7 +35,7 @@ struct PrivacyManifestTests {
     }
 
     /// Apple's required-reason APIs: a category must be declared exactly when the app's
-    /// sources use one of its APIs, so the manifest neither misses a use nor claims one.
+    /// sources (the app's and PaintCore's) use one of its APIs, so the manifest neither misses a use nor claims one.
     @Test func manifestDeclaresExactlyTheRequiredReasonAPIsTheSourcesUse() throws {
         struct RequiredReasonAPI {
             let category: String
@@ -54,13 +54,19 @@ struct PrivacyManifestTests {
             RequiredReasonAPI(category: "NSPrivacyAccessedAPICategorySystemBootTime", symbols: ["systemUptime", "mach_absolute_time"]),
             RequiredReasonAPI(category: "NSPrivacyAccessedAPICategoryActiveKeyboards", symbols: ["activeInputModes"]),
         ]
-        let sourcesRoot = repositoryRoot.appending(path: "App/PaintByNumber", directoryHint: .isDirectory)
-        let enumerator = try #require(FileManager.default.enumerator(at: sourcesRoot, includingPropertiesForKeys: nil))
+        // PaintCore is linked into the app, so its sources answer to the same manifest
+        // (Sources/pbn is a separate command-line tool and is not part of the app).
         var text = ""
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            text += try String(contentsOf: url, encoding: .utf8)
+        for directory in ["App/PaintByNumber", "Sources/PaintCore"] {
+            let root = repositoryRoot.appending(path: directory, directoryHint: .isDirectory)
+            let enumerator = try #require(FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil))
+            var found = false
+            for case let url as URL in enumerator where url.pathExtension == "swift" {
+                text += try String(contentsOf: url, encoding: .utf8)
+                found = true
+            }
+            #expect(found, "No sources found at \(root.path)")
         }
-        #expect(!text.isEmpty, "No sources found at \(sourcesRoot.path)")
 
         let used = Set(apis.filter { api in api.symbols.contains(where: { text.contains($0) }) }.map { $0.category })
         let declaredAPIs = try Self.declaredAPIs()
@@ -110,11 +116,28 @@ struct AppInfoTests {
 struct AcknowledgementsTests {
     private static let all = Acknowledgements.code + Acknowledgements.methods
 
-    @Test func portedCodeIsCreditedToMapboxUnderISC() {
-        #expect(Acknowledgements.code.map(\.name) == ["Earcut", "Polylabel"])
-        #expect(Acknowledgements.code.allSatisfy { $0.copyright?.contains("Mapbox") == true })
-        #expect(Acknowledgements.methods.allSatisfy { $0.copyright == nil })
-        #expect(Acknowledgements.iscLicense.hasPrefix("Permission to use, copy, modify, and/or distribute"))
+    @Test func portedCodeIsCreditedWithItsLicense() throws {
+        #expect(Acknowledgements.code.map(\.name) == ["Earcut", "Polylabel", "Potrace"])
+        let mapbox = Acknowledgements.code.filter { $0.credit.contains("Mapbox") }
+        #expect(mapbox.map(\.name) == ["Earcut", "Polylabel"])
+        #expect(mapbox.allSatisfy { $0.license == .isc && $0.copyright?.contains("Mapbox") == true })
+        let potrace = try #require(Acknowledgements.code.first { $0.name == "Potrace" })
+        #expect(potrace.license == .gpl2OrLater)
+        #expect(potrace.copyright?.contains("Peter Selinger") == true)
+        #expect(Acknowledgements.code.allSatisfy { $0.license != nil && $0.copyright != nil })
+        #expect(Acknowledgements.methods.allSatisfy { $0.copyright == nil && $0.license == nil })
+    }
+
+    @Test func licenseTextsAreTheCompleteLicenses() {
+        #expect(License.isc.text.hasPrefix("Permission to use, copy, modify, and/or distribute"))
+        #expect(License.gpl2OrLater.text.hasPrefix("GNU GENERAL PUBLIC LICENSE\nVersion 2, June 1991"))
+        #expect(License.gpl2OrLater.text.contains("END OF TERMS AND CONDITIONS"))
+        #expect(License.gpl2OrLater.text.contains("either version 2 of the License, or (at your option) any later version"))
+    }
+
+    @Test func gplSourceNoticeNamesTheRepositoryTheSourceIsPublishedAt() {
+        #expect(Acknowledgements.sourceNotice.contains(Acknowledgements.sourceRepository))
+        #expect(URL(string: Acknowledgements.sourceRepository)?.host() == "github.com")
     }
 
     @Test func entriesAreCompleteAndUnique() {
@@ -124,13 +147,15 @@ struct AcknowledgementsTests {
         }
     }
 
-    /// The ported sources still name the projects they come from.
+    /// The ported sources still name the projects they come from and the licenses they are under.
     @Test func portedSourcesCiteTheirOrigin() throws {
         let vector = repositoryRoot.appending(path: "Sources/PaintCore/Vector", directoryHint: .isDirectory)
         let earcut = try String(contentsOf: vector.appending(path: "Earcut.swift"), encoding: .utf8)
         let polylabel = try String(contentsOf: vector.appending(path: "PolyLabel.swift"), encoding: .utf8)
+        let curveFitter = try String(contentsOf: vector.appending(path: "CurveFitter.swift"), encoding: .utf8)
         #expect(earcut.contains("mapbox/earcut") && earcut.contains("ISC"))
         #expect(polylabel.contains("mapbox/polylabel") && polylabel.contains("ISC"))
+        #expect(curveFitter.contains("potrace 1.16") && curveFitter.contains("GPL-2.0-or-later"))
     }
 
     /// `ACKNOWLEDGEMENTS.md` at the repository root repeats what Settings shows.
@@ -141,6 +166,10 @@ struct AcknowledgementsTests {
                 #expect(text.contains(part), "ACKNOWLEDGEMENTS.md is missing: \(part)")
             }
         }
-        #expect(text.contains(Acknowledgements.iscLicense), "ACKNOWLEDGEMENTS.md is missing the ISC license text")
+        for license in License.allCases {
+            #expect(text.contains(license.name), "ACKNOWLEDGEMENTS.md is missing the \(license.name) heading")
+            #expect(text.contains(license.text), "ACKNOWLEDGEMENTS.md is missing the \(license.name) text")
+        }
+        #expect(text.contains(Acknowledgements.sourceNotice), "ACKNOWLEDGEMENTS.md is missing the source notice")
     }
 }

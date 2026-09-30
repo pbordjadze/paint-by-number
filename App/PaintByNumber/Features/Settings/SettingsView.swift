@@ -71,7 +71,7 @@ struct SettingsView: View {
                 } header: {
                     Text("New Paintings")
                 } footer: {
-                    Text("Photos are turned into templates entirely on this device and never leave it.")
+                    Text("The number of colors new paintings start with, and the paper size for printed templates.")
                 }
 
                 Section {
@@ -85,6 +85,7 @@ struct SettingsView: View {
                     NavigationLink(value: Destination.acknowledgements) {
                         SwiftUI.Label("Acknowledgements", systemImage: "text.book.closed")
                     }
+                    .accessibilityIdentifier("about-acknowledgements")
                 } header: {
                     Text("About")
                 } footer: {

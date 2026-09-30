@@ -70,6 +70,7 @@ jobs:
           nohup xcrun simctl boot "$UDID" > out/boot.log 2>&1 &
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
       - name: Build for testing
+        id: build
         run: |
           set -o pipefail
           xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
@@ -95,7 +96,9 @@ jobs:
             -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
       - name: Release build
-        if: always()
+        # Not `always()`: that runs on cancelled runs too (holding a runner for a superseded
+        # commit) and would repeat the compiler errors of a failed Debug build.
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           # Debug-only code is compiled out of Release (`#if DEBUG`): build it, and check the
           # shipped app has the privacy manifest and none of the demo code.
@@ -130,8 +133,8 @@ jobs:
 
   iphone:
     name: iPhone — Debug build, screenshots, tests
-    # Secondary device: on the main development branch, or when requested. (The IPA job
-    # covers the Release build.)
+    # Secondary device: on the main development branch, or when requested. (The iPad job
+    # covers the Release build and its check.)
     if: github.ref_name == 'claude/paint-by-numbers-app' || github.event.inputs.iphone == 'true'
     runs-on: macos-26
     timeout-minutes: 50

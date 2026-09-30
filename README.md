@@ -23,7 +23,7 @@ Photos are turned into templates entirely on the device. The app has no accounts
 and no network code, so your photos and paintings stay on your iPhone or iPad unless you share
 them. It declares no tracking and no collected data in its privacy manifest
 (`App/PaintByNumber/Resources/PrivacyInfo.xcprivacy`); the only sensitive API it uses is
-`UserDefaults`, for its own settings. Third-party credits are in
+`UserDefaults`, for its own settings. Third-party credits and licenses are in
 [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
 
 ## Project layout

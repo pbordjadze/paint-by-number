@@ -18,13 +18,13 @@ final class SettingsTests: XCTestCase {
     @MainActor
     func testAcknowledgementsListTheAlgorithmPorts() throws {
         let app = openSettings()
-        let row = app.buttons["Acknowledgements"]
+        let row = app.descendants(matching: .any)["about-acknowledgements"]
         scroll(app, to: row)
         XCTAssertTrue(row.exists, "Settings has no Acknowledgements row")
         row.tap()
 
         XCTAssertTrue(app.navigationBars["Acknowledgements"].waitForExistence(timeout: 10))
-        for credit in ["mapbox/earcut", "mapbox/polylabel"] {
+        for credit in ["mapbox/earcut", "mapbox/polylabel", "potrace 1.16"] {
             let entry = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", credit)).firstMatch
             scroll(app, to: entry)
             XCTAssertTrue(entry.exists, "Acknowledgements doesn't credit \(credit)")
@@ -32,12 +32,16 @@ final class SettingsTests: XCTestCase {
         attachScreenshot(of: app, named: "acknowledgements")
     }
 
+    /// Opens Settings the way a person does: from the gallery's toolbar.
     @MainActor
     private func openSettings() -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "settings"]
+        app.launchArguments = ["-demo", "gallery-empty"]
         app.launch()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 30), "The settings sheet didn't open")
+        let button = app.buttons["Settings"]
+        XCTAssertTrue(button.waitForExistence(timeout: 30), "The gallery has no Settings button")
+        button.tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10), "The settings sheet didn't open")
         return app
     }
 

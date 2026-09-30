@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Settings › Acknowledgements: the open-source code and published methods behind the
-/// template engine, with the license the ported code is used under.
+/// template engine, with the licenses the ported code is used under.
 struct AcknowledgementsView: View {
     var body: some View {
         Form {
@@ -10,14 +10,16 @@ struct AcknowledgementsView: View {
             } header: {
                 Text("Open-Source Code")
             } footer: {
-                Text("Swift ports of these libraries are part of the template engine.")
+                Text("Swift ports of these libraries are part of the template engine. \(Acknowledgements.sourceNotice)")
             }
 
-            Section("ISC License") {
-                Text(Acknowledgements.iscLicense)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
+            ForEach(License.allCases, id: \.self) { license in
+                Section(license.name) {
+                    Text(license.text)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
             }
 
             Section {
@@ -47,6 +49,11 @@ private struct AcknowledgementRow: View {
                 .foregroundStyle(.secondary)
             if let copyright = item.copyright {
                 Text(copyright)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if let license = item.license {
+                Text(license.name)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
