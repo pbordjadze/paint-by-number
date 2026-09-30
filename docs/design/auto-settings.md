@@ -37,6 +37,10 @@ supplying the importance map (subjects, faces) as it does now.
      label room, tiny regions;
    - calm: share of low-contrast boundaries (banding) and slivers, the failure modes the
      segmentation research targets.
+   Every term is measured against this photo: colour error against its pixels, weighted by
+   its own importance map, and banding as boundaries where the photo itself shows no edge.
+   The rule is fixed and the inputs are the image, so different photos get different
+   settings while the same photo always gets the same ones.
    The objective is the best fidelity within a painting-time budget. The budget is the one
    user preference Auto needs: Settings › Painting length (Quick, Relaxed, Detailed).
 5. **Generate the winner at full detail**, exactly as a manual choice would be.
@@ -60,6 +64,10 @@ supplying the importance map (subjects, faces) as it does now.
 - Determinism: the same photo and preference always give the same settings on every device.
 
 ## Risks and open questions
+
+- A learned aesthetic score (Core ML on the painted preview) could capture taste the metrics
+  miss, but its output can differ slightly between chips and it is hard to test. If added, it
+  only breaks ties between candidates whose measured scores are close.
 
 - Older devices run the pipeline several times slower. The candidate count must adapt, and
   the time to first preview must not regress.
