@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import PDFKit
 import PaintCore
 import Testing
 @testable import PaintByNumber
@@ -93,6 +94,44 @@ struct PDFExporterTests {
             #expect(ink > 50)
             if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "parrots-pdf-page\(index).png") }
         }
+    }
+
+    /// The color key names every color, so the printed key helps people who can't tell paints apart.
+    @Test func colorKeyNamesEveryColor() throws {
+        let t = Fixtures.stripes()
+        let data = PDFExporter.document(for: t, title: "Stripes", paper: .letter)
+        let key = try #require(PDFDocument(data: data)?.page(at: 1)?.string)
+        for color in t.palette {
+            let name = ColorNameText.title(color.colorName)
+            #expect(key.contains(name), "\(name) missing from the key: \(key)")
+        }
+        #expect(key.contains("Vivid red"))
+    }
+
+    /// The key fits its page for every palette size the app makes (up to 150 colors).
+    @Test func keyLayoutFitsUpTo150Colors() {
+        for paper in PDFExporter.Paper.allCases {
+            for landscape in [false, true] {
+                let size = landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size
+                // Page margins and the header, as `document` lays them out.
+                let content = CGRect(origin: .zero, size: size).insetBy(dx: 36, dy: 36)
+                let body = CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
+                for count in [0, 1, 12, 24, 48, 100, 150] {
+                    for widest: CGFloat in [110, 160] {
+                        let layout = PDFExporter.keyLayout(count: count, widestEntry: widest, in: body)
+                        let context = "\(paper) landscape \(landscape), \(count) colors, entry \(widest)"
+                        #expect(layout.height <= body.height, "\(context)")
+                        #expect(CGFloat(layout.columns) * layout.columnWidth + 12 * CGFloat(layout.columns - 1)
+                                <= body.width + 0.5, "\(context)")
+                        #expect(layout.scale >= 0.6, "\(context)")
+                        #expect(layout.rows >= 1, "\(context)")
+                        #expect(layout.rows * layout.columns >= count, "\(context)")
+                    }
+                }
+            }
+        }
+        let a4 = CGRect(x: 36, y: 72, width: PDFExporter.Paper.a4.size.width - 72, height: PDFExporter.Paper.a4.size.height - 108)
+        #expect(PDFExporter.keyLayout(count: 24, widestEntry: 120, in: a4).scale == 1)
     }
 
     @Test func paperFollowsRegion() {

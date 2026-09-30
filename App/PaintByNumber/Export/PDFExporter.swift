@@ -5,7 +5,8 @@ import PaintCore
 import simd
 
 /// Printable template: page 1 is the outline template with numbers (vector, crisp at any
-/// zoom), page 2 the numbered color key plus a small reference of the finished picture.
+/// zoom), page 2 the color key (number, paint and name of every color) plus a small reference
+/// of the finished picture.
 nonisolated enum PDFExporter {
     enum Paper: String, Sendable, CaseIterable, Identifiable {
         case letter, a4
@@ -100,39 +101,72 @@ nonisolated enum PDFExporter {
         return CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
     }
 
-    /// Numbered swatches in a grid; returns the rect it used. Large palettes get more, smaller
-    /// cells so the key stays on its page.
-    private static func legend(_ ctx: CGContext, _ t: Template, in rect: CGRect) -> CGRect {
-        let base = rect.width > 600 ? 10 : 8
-        var columns = base
-        while columns < 3 * base, CGFloat((t.palette.count + columns - 1) / columns) * 62 * CGFloat(base) / CGFloat(columns) > rect.height {
-            columns += 2
+    /// How the color key's entries are laid out: `rows` per column, filled column by column.
+    nonisolated struct KeyLayout: Equatable, Sendable {
+        var columns: Int
+        var scale: CGFloat
+        var columnWidth: CGFloat
+        var rowHeight: CGFloat
+        var rows: Int
+        var count: Int
+
+        var height: CGFloat { count == 0 ? 0 : CGFloat(rows) * rowHeight }
+    }
+
+    private static let keyGap: CGFloat = 12
+    /// Width of an entry left of its name: number and dot, at scale 1.
+    private static let keyNameInset: CGFloat = 36
+
+    /// The largest scale (1 down to 0.6), then the fewest columns (3–5, or 4–6 on a wide page),
+    /// whose rows fit the page and whose widest entry (`widestEntry` at scale 1) fits a column.
+    /// When nothing fits, the smallest scale and most columns; long names then truncate.
+    static func keyLayout(count: Int, widestEntry: CGFloat, in rect: CGRect) -> KeyLayout {
+        let base = rect.width > 600 ? 4 : 3
+        func layout(scale: CGFloat, columns: Int) -> KeyLayout {
+            KeyLayout(
+                columns: columns, scale: scale,
+                columnWidth: (rect.width - keyGap * CGFloat(columns - 1)) / CGFloat(columns),
+                rowHeight: 24 * scale, rows: max(1, (count + columns - 1) / columns), count: count)
         }
-        let scale = CGFloat(base) / CGFloat(columns)
-        let cellW = rect.width / CGFloat(columns)
-        let cellH = 62 * scale
-        let diameter = 30 * scale
+        for scale: CGFloat in [1, 0.9, 0.8, 0.7, 0.6] {
+            for columns in base...(base + 2) {
+                let candidate = layout(scale: scale, columns: columns)
+                if candidate.height <= rect.height && widestEntry * scale <= candidate.columnWidth { return candidate }
+            }
+        }
+        return layout(scale: 0.6, columns: base + 2)
+    }
+
+    /// The color key as a list: number, a dot of the paint and the color's name, with its hex
+    /// value and area count below. Returns the rect it used.
+    private static func legend(_ ctx: CGContext, _ t: Template, in rect: CGRect) -> CGRect {
+        let names = t.palette.map { ColorNameText.title($0.colorName) }
+        let nameFont = font(.emphasizedSystem, 8)
+        let widestName = names.map { width(of: $0, font: nameFont) }.max() ?? 0
+        let layout = keyLayout(count: t.palette.count, widestEntry: keyNameInset + widestName, in: rect)
+        let s = layout.scale
         let counts = t.regionCountsByColor
         for (i, color) in t.palette.enumerated() {
-            let col = i % columns, row = i / columns
-            let center = CGPoint(x: rect.minX + (CGFloat(col) + 0.5) * cellW, y: rect.minY + CGFloat(row) * cellH + diameter / 2 + 2)
-            let circle = CGRect(x: center.x - diameter / 2, y: center.y - diameter / 2, width: diameter, height: diameter)
+            let col = i / layout.rows, row = i % layout.rows
+            let x = rect.minX + CGFloat(col) * (layout.columnWidth + keyGap)
+            let y = rect.minY + CGFloat(row) * layout.rowHeight
+            text(ctx, "\(i + 1)", font: font(.emphasizedSystem, 8 * s), color: gray(0.12),
+                 at: CGPoint(x: x + 18 * s, y: y + 10 * s), alignment: .right)
+            let diameter = 9 * s
+            let dot = CGRect(x: x + 26.5 * s - diameter / 2, y: y + 7 * s - diameter / 2, width: diameter, height: diameter)
             ctx.setFillColor(TemplateRasterizer.cgColor(SIMD4(color.rgb, 1), space: t.colorSpace))
-            ctx.fillEllipse(in: circle)
+            ctx.fillEllipse(in: dot)
             ctx.setStrokeColor(gray(0, alpha: 0.12))
             ctx.setLineWidth(0.5)
-            ctx.strokeEllipse(in: circle)
-            let luminance = ColorScience.relativeLuminance(encoded: color.rgb, space: t.colorSpace)
-            let ink = luminance > 0.42 ? gray(0.12) : gray(1)
-            text(ctx, "\(i + 1)", font: font(.emphasizedSystem, 12 * scale), color: ink,
-                 at: CGPoint(x: center.x, y: center.y + 4.3 * scale), alignment: .center)
-            text(ctx, hex(color.rgb), font: font(.system, max(4.5, 6.5 * scale)), color: gray(0.45),
-                 at: CGPoint(x: center.x, y: circle.maxY + 11 * scale), alignment: .center)
-            text(ctx, "\(counts[i]) areas", font: font(.system, max(4.5, 6.5 * scale)), color: gray(0.62),
-                 at: CGPoint(x: center.x, y: circle.maxY + 20 * scale), alignment: .center)
+            ctx.strokeEllipse(in: dot)
+            let textX = x + keyNameInset * s
+            let textWidth = layout.columnWidth - keyNameInset * s
+            text(ctx, names[i], font: font(.emphasizedSystem, 8 * s), color: gray(0.12),
+                 at: CGPoint(x: textX, y: y + 10 * s), maxWidth: textWidth)
+            text(ctx, "\(hex(color.rgb)) · \(counts[i]) areas", font: font(.system, 6 * s), color: gray(0.5),
+                 at: CGPoint(x: textX, y: y + 19 * s), maxWidth: textWidth)
         }
-        let rows = (t.palette.count + columns - 1) / columns
-        return CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: CGFloat(rows) * cellH)
+        return CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: layout.height)
     }
 
     private static func fit(aspect: CGFloat, in rect: CGRect) -> CGRect {
@@ -143,7 +177,7 @@ nonisolated enum PDFExporter {
 
     // MARK: Text & color
 
-    private enum Alignment { case left, center, right }
+    private enum Alignment { case left, right }
 
     private static func font(_ type: CTFontUIFontType, _ size: CGFloat) -> CTFont {
         CTFontCreateUIFontForLanguage(type, size, nil) ?? CTFontCreateWithName("Helvetica" as CFString, size, nil)
@@ -153,24 +187,37 @@ nonisolated enum PDFExporter {
         CGColor(gray: white, alpha: alpha)
     }
 
-    /// Draws one line of text with its baseline at `point` (y-down page space).
-    private static func text(_ ctx: CGContext, _ string: String, font: CTFont, color: CGColor, at point: CGPoint, alignment: Alignment = .left) {
+    private static func line(_ string: String, font: CTFont, color: CGColor) -> CTLine {
         let attributes: [NSAttributedString.Key: Any] = [
             NSAttributedString.Key(kCTFontAttributeName as String): font,
             NSAttributedString.Key(kCTForegroundColorAttributeName as String): color,
         ]
-        let line = CTLineCreateWithAttributedString(NSAttributedString(string: string, attributes: attributes))
-        let width = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
-        let x: CGFloat
-        switch alignment {
-        case .left: x = point.x
-        case .center: x = point.x - width / 2
-        case .right: x = point.x - width
+        return CTLineCreateWithAttributedString(NSAttributedString(string: string, attributes: attributes))
+    }
+
+    private static func width(of string: String, font: CTFont) -> CGFloat {
+        CGFloat(CTLineGetTypographicBounds(line(string, font: font, color: gray(0)), nil, nil, nil))
+    }
+
+    /// Draws one line of text with its baseline at `point` (y-down page space), truncated with
+    /// an ellipsis when wider than `maxWidth`.
+    private static func text(
+        _ ctx: CGContext, _ string: String, font: CTFont, color: CGColor, at point: CGPoint,
+        alignment: Alignment = .left, maxWidth: CGFloat? = nil
+    ) {
+        var run = line(string, font: font, color: color)
+        var runWidth = CGFloat(CTLineGetTypographicBounds(run, nil, nil, nil))
+        if let maxWidth, runWidth > maxWidth,
+           let truncated = CTLineCreateTruncatedLine(
+               run, Double(max(maxWidth, 0)), .end, line("…", font: font, color: color)) {
+            run = truncated
+            runWidth = CGFloat(CTLineGetTypographicBounds(run, nil, nil, nil))
         }
+        let x = alignment == .right ? point.x - runWidth : point.x
         ctx.saveGState()
         ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         ctx.textPosition = CGPoint(x: x, y: point.y)
-        CTLineDraw(line, ctx)
+        CTLineDraw(run, ctx)
         ctx.restoreGState()
     }
 
