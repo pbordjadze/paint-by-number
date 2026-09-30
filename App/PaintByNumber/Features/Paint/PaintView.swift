@@ -106,7 +106,7 @@ struct PaintView: View {
     private static let sidePaletteTop: CGFloat = 6 + barHeight + 12
 
     private func paletteLayout(in size: CGSize) -> PaletteLayout {
-        let count = session.paletteCount
+        let count = PaletteBar.visibleColors(session).count
         if sizeClass == .regular && size.width > size.height {
             let length = size.height - Self.sidePaletteTop - Self.edge
             return PaletteLayout(side: true, lines: PaletteBar.lines(count: count, length: length, maxLines: 2))
@@ -327,7 +327,18 @@ private struct CompletionBar: View {
             .buttonBorderShape(.circle)
             .accessibilityLabel(Text("Replay"))
             if let shareImage {
-                ShareLink(item: shareImage, preview: SharePreview(title.isEmpty ? "Painting" : title, image: shareImage)) {
+                let name = title.isEmpty ? String(localized: "Painting") : title
+                Menu {
+                    ShareLink(item: shareImage, preview: SharePreview(name, image: shareImage)) {
+                        Label("Share Picture", systemImage: "photo")
+                    }
+                    ShareLink(
+                        item: TimelapseMovie(template: session.template, progress: session.progress, title: name),
+                        preview: SharePreview("\(name) Time-lapse", image: shareImage)
+                    ) {
+                        Label("Share Time-lapse", systemImage: "timelapse")
+                    }
+                } label: {
                     GlassIconLabel(systemImage: "square.and.arrow.up")
                 }
                 .buttonStyle(.glass)
@@ -335,14 +346,19 @@ private struct CompletionBar: View {
                 .accessibilityLabel(Text("Share"))
             }
             if let onClose {
-                Button("Done", action: onClose)
-                    .buttonStyle(.glassProminent)
-                    .fixedSize()
+                Button(action: onClose) {
+                    Text("Done").lineLimit(1).fixedSize()
+                }
+                .buttonStyle(.glassProminent)
+                .fixedSize()
             }
         }
         .padding(.horizontal, 18)
-        .frame(height: PaletteBar.thickness)
+        .padding(.vertical, 8)
+        .frame(minHeight: PaletteBar.thickness)
         .frame(maxWidth: 560)
+        // One compact row even at the largest text sizes.
+        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .capsule)
         .task(id: session.revision) {
             let data = await Self.renderShareImage(template: session.template, progress: session.progress)

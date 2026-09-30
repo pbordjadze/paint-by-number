@@ -96,6 +96,19 @@ struct TemplatePreviewView: View {
         return fittedWidth * fittedWidth / aspect
     }
 
+    /// The colors slider runs on a squared scale: the first half of the track covers 6–42,
+    /// where each color matters, the rest reaches up to 150.
+    private static let colorBounds = (
+        Double(GenerationSettings.colorCountRange.lowerBound), Double(GenerationSettings.colorCountRange.upperBound))
+
+    private static func colorCount(at position: Double) -> Double {
+        (colorBounds.0 + (colorBounds.1 - colorBounds.0) * position * position).rounded()
+    }
+
+    private static func colorPosition(_ count: Double) -> Double {
+        min(max((count - colorBounds.0) / (colorBounds.1 - colorBounds.0), 0), 1).squareRoot()
+    }
+
     /// Updates a setting, ignoring unchanged values: a slider re-asserting its value would
     /// otherwise invalidate the model on every update.
     private func update(_ keyPath: ReferenceWritableKeyPath<CreateModel, Double>, _ value: Double) {
@@ -173,7 +186,8 @@ struct TemplatePreviewView: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: 18) {
             SettingSlider(
-                title: "Colors", value: model.colorCount, onChange: { update(\.colorCount, $0) }, range: Double(6)...Double(60), step: 1,
+                title: "Colors", value: Self.colorPosition(model.colorCount),
+                onChange: { update(\.colorCount, Self.colorCount(at: $0)) }, range: 0...1,
                 valueText: "\(Int(model.colorCount.rounded()))", onEditing: model.setAdjusting)
             SettingSlider(
                 title: "Detail", value: model.detail, onChange: { update(\.detail, $0) }, range: 0...1,

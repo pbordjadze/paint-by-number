@@ -124,7 +124,25 @@ nonisolated struct TimelapseVideoFile: Transferable, Sendable {
     func export(longSide: Int = 1080) async throws -> URL {
         let template = try store.readTemplate(artwork.id)
         let progress = store.readProgress(artwork.id, regionCount: template.regions.count)
-        let url = try ArtworkExporter.temporaryURL(name: "\(artwork.title) Time-lapse", pathExtension: "mp4")
+        return try await TimelapseMovie(template: template, progress: progress, title: artwork.title).export(longSide: longSide)
+    }
+}
+
+/// A time-lapse of an open painting, from its live state (the saved copy may lag behind).
+nonisolated struct TimelapseMovie: Transferable, Sendable {
+    let template: Template
+    let progress: PaintProgress
+    let title: String
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .mpeg4Movie) { item in
+            SentTransferredFile(try await item.export())
+        }
+    }
+
+    @concurrent
+    func export(longSide: Int = 1080) async throws -> URL {
+        let url = try ArtworkExporter.temporaryURL(name: "\(title) Time-lapse", pathExtension: "mp4")
         try await TimelapseFrameRenderer.export(template: template, progress: progress, to: url, longSide: longSide)
         return url
     }

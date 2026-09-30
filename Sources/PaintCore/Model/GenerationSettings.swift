@@ -16,7 +16,7 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         self.seed = seed
     }
 
-    public static let colorCountRange = 6...60
+    public static let colorCountRange = 6...150
 
     /// Clamped copy.
     public var normalized: GenerationSettings {

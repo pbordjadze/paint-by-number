@@ -507,7 +507,8 @@ final class CanvasView: UIView, PaintingCanvas {
         let depth = Float(log2(max(camera.zoom / fitZoom, 1)))
         let widthPt = min(1.0, 0.5 + 0.22 * depth)
         u.ink = SIMD4(palette.ink, palette.outlineOpacity * min(1, 0.7 + 0.15 * depth))
-        let selected = session.selectedColor
+        // A replay shows the painting as it was made, without the brush's highlight.
+        let selected = isReplaying ? nil : session.selectedColor
         if let selected, let scene, selected < scene.paletteLinear.count {
             u.selected = SIMD4(scene.paletteLinear[selected], 1)
         }
@@ -519,7 +520,7 @@ final class CanvasView: UIView, PaintingCanvas {
             u.brush = SIMD4(Float(brushPoint.x) * s, Float(brushPoint.y) * s, Float(Self.brushRadius) * s, 1)
         }
         u.shine = SIMD4(shineStart, Float(shineColor), 0, 0)
-        u.ids = SIMD4(Int32(selected ?? -1), Int32(hoverRegion), Int32(pulseRegion), Int32(bumpRegion))
+        u.ids = SIMD4(Int32(selected ?? -1), Int32(isReplaying ? -1 : hoverRegion), Int32(pulseRegion), Int32(bumpRegion))
         return u
     }
 

@@ -8,7 +8,7 @@ struct PhotoSourceView: View {
     var onClose: () -> Void
     var onPicked: () -> Void
 
-    @State private var pickerItem: PhotosPickerItem?
+    @State private var pickerItems: [PhotosPickerItem] = []
     @State private var isShowingCamera = false
     @State private var width: CGFloat = 0
 
@@ -26,7 +26,12 @@ struct PhotoSourceView: View {
 
                 VStack(alignment: .leading, spacing: 12) {
                     SectionTitle("Your Photos")
-                    PhotosPicker(selection: $pickerItem, matching: .images, preferredItemEncoding: .current) {
+                    // Continuous selection: with the Add/Cancel bar hidden, the default behaviour
+                    // would wait for a confirmation that can never come.
+                    PhotosPicker(
+                        selection: $pickerItems, maxSelectionCount: 1, selectionBehavior: .continuous,
+                        matching: .images, preferredItemEncoding: .current
+                    ) {
                         Label("Choose Photo", systemImage: "photo.on.rectangle")
                     }
                     .photosPickerStyle(.inline)
@@ -73,9 +78,9 @@ struct PhotoSourceView: View {
                 }
             }
         }
-        .onChange(of: pickerItem) { _, item in
-            guard let item else { return }
-            pickerItem = nil
+        .onChange(of: pickerItems) { _, items in
+            guard let item = items.first else { return }
+            pickerItems = []
             model.load(item: item)
             onPicked()
         }

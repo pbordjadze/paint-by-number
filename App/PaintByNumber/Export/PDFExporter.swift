@@ -100,12 +100,18 @@ nonisolated enum PDFExporter {
         return CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
     }
 
-    /// Numbered swatches in a grid; returns the rect it used.
+    /// Numbered swatches in a grid; returns the rect it used. Large palettes get more, smaller
+    /// cells so the key stays on its page.
     private static func legend(_ ctx: CGContext, _ t: Template, in rect: CGRect) -> CGRect {
-        let columns = rect.width > 600 ? 10 : 8
+        let base = rect.width > 600 ? 10 : 8
+        var columns = base
+        while columns < 3 * base, CGFloat((t.palette.count + columns - 1) / columns) * 62 * CGFloat(base) / CGFloat(columns) > rect.height {
+            columns += 2
+        }
+        let scale = CGFloat(base) / CGFloat(columns)
         let cellW = rect.width / CGFloat(columns)
-        let cellH: CGFloat = 62
-        let diameter: CGFloat = 30
+        let cellH = 62 * scale
+        let diameter = 30 * scale
         let counts = t.regionCountsByColor
         for (i, color) in t.palette.enumerated() {
             let col = i % columns, row = i / columns
@@ -118,9 +124,12 @@ nonisolated enum PDFExporter {
             ctx.strokeEllipse(in: circle)
             let luminance = ColorScience.relativeLuminance(encoded: color.rgb, space: t.colorSpace)
             let ink = luminance > 0.42 ? gray(0.12) : gray(1)
-            text(ctx, "\(i + 1)", font: font(.emphasizedSystem, 12), color: ink, at: CGPoint(x: center.x, y: center.y + 4.3), alignment: .center)
-            text(ctx, hex(color.rgb), font: font(.system, 6.5), color: gray(0.45), at: CGPoint(x: center.x, y: circle.maxY + 11), alignment: .center)
-            text(ctx, "\(counts[i]) areas", font: font(.system, 6.5), color: gray(0.62), at: CGPoint(x: center.x, y: circle.maxY + 20), alignment: .center)
+            text(ctx, "\(i + 1)", font: font(.emphasizedSystem, 12 * scale), color: ink,
+                 at: CGPoint(x: center.x, y: center.y + 4.3 * scale), alignment: .center)
+            text(ctx, hex(color.rgb), font: font(.system, max(4.5, 6.5 * scale)), color: gray(0.45),
+                 at: CGPoint(x: center.x, y: circle.maxY + 11 * scale), alignment: .center)
+            text(ctx, "\(counts[i]) areas", font: font(.system, max(4.5, 6.5 * scale)), color: gray(0.62),
+                 at: CGPoint(x: center.x, y: circle.maxY + 20 * scale), alignment: .center)
         }
         let rows = (t.palette.count + columns - 1) / columns
         return CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: CGFloat(rows) * cellH)

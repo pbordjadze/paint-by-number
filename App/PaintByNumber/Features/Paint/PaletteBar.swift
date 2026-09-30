@@ -1,10 +1,9 @@
 import PaintCore
 import SwiftUI
 
-/// The paint palette: circular swatches with their number, a progress ring per color, a
-/// checkmark once a color is done. Swatches wrap into up to `lines` rows (columns when
-/// vertical) numbered row by row, and scroll when they still don't fit; the selected color
-/// is kept in view.
+/// The paint palette: circular swatches with their number and a progress ring per color;
+/// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
+/// in palette order, and scroll when they still don't fit; the selected color is kept in view.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
@@ -33,18 +32,25 @@ struct PaletteBar: View {
         return min(max(1, maxLines), max(1, (count + perLine - 1) / perLine))
     }
 
+    /// Colors still to paint (plus the selected one): finished colors leave the palette.
+    static func visibleColors(_ session: PaintingSession) -> [Int] {
+        (0..<session.paletteCount).filter { !session.isColorComplete($0) || session.selectedColor == $0 }
+    }
+
     var body: some View {
-        let count = session.paletteCount
+        let colors = Self.visibleColors(session)
+        let count = max(colors.count, 1)
         let lineCount = max(1, min(lines, count))
         let columns = max(1, axis == .horizontal ? (count + lineCount - 1) / lineCount : lineCount)
         let radius = min(Self.thickness(lines: lineCount) / 2, 38)
         ScrollViewReader { proxy in
             ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: Self.spacing) {
-                    ForEach(Array(stride(from: 0, to: count, by: columns)), id: \.self) { start in
+                    ForEach(Array(stride(from: 0, to: colors.count, by: columns)), id: \.self) { start in
                         HStack(spacing: Self.spacing) {
-                            ForEach(start..<min(start + columns, count), id: \.self) { index in
+                            ForEach(colors[start..<min(start + columns, colors.count)], id: \.self) { index in
                                 swatch(index).id(index)
+                                    .transition(.scale(scale: 0.4).combined(with: .opacity))
                             }
                         }
                     }
@@ -66,6 +72,7 @@ struct PaletteBar: View {
                maxHeight: axis == .vertical ? Self.length(count: count, lines: lineCount) : nil)
         .clipShape(.rect(cornerRadius: radius))
         .glassEffect(.regular, in: .rect(cornerRadius: radius))
+        .animation(.snappy(duration: 0.35), value: colors)
     }
 
     private func swatch(_ index: Int) -> some View {

@@ -32,7 +32,14 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Stepper(value: $defaultColorCount, in: GenerationSettings.colorCountRange, step: 2) {
+                    // Fine steps where each color matters, coarse ones for large palettes.
+                    Stepper {
+                        defaultColorCount = min(
+                            defaultColorCount + (defaultColorCount < 40 ? 2 : 10), GenerationSettings.colorCountRange.upperBound)
+                    } onDecrement: {
+                        defaultColorCount = max(
+                            defaultColorCount - (defaultColorCount <= 40 ? 2 : 10), GenerationSettings.colorCountRange.lowerBound)
+                    } label: {
                         SwiftUI.Label {
                             HStack {
                                 Text("Starting Colors")

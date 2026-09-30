@@ -26,4 +26,36 @@ final class CreateFlowTests: XCTestCase {
         add(shot)
         XCTAssertNotEqual(compare.value as? String, "50 percent photo", "The divider didn't follow the drag")
     }
+
+    /// Tapping a photo in the inline library picker opens its template preview.
+    @MainActor
+    func testLibraryPhotoOpensPreview() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create"]
+        app.launch()
+        // First use explains limited library access.
+        let ok = app.buttons["OK"]
+        if ok.waitForExistence(timeout: 10) { ok.tap() }
+
+        let photo = app.images.matching(NSPredicate(format: "label BEGINSWITH 'Photo'")).firstMatch
+        guard photo.waitForExistence(timeout: 20) else {
+            let tree = XCTAttachment(string: app.debugDescription)
+            tree.name = "library-picker-tree"
+            tree.lifetime = .keepAlways
+            add(tree)
+            let shot = XCTAttachment(screenshot: app.screenshot())
+            shot.name = "library-picker"
+            shot.lifetime = .keepAlways
+            add(shot)
+            throw XCTSkip("The library picker's photos aren't reachable from the UI test")
+        }
+        photo.tap()
+        let start = app.buttons["Start Painting"]
+        let opened = start.waitForExistence(timeout: 60)
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "library-photo-picked"
+        shot.lifetime = .keepAlways
+        add(shot)
+        XCTAssertTrue(opened, "Picking a library photo didn't open its preview")
+    }
 }
