@@ -135,19 +135,22 @@ nonisolated struct ArtworkStore: Sendable {
         guard let data = try? Data(contentsOf: url(.progress, of: id)) else {
             return SavedProgress(progress: fresh, problem: .missing)
         }
+        func mismatched(_ count: Int) -> SavedProgress {
+            Log.library.error("Discarding progress of \(id.uuidString, privacy: .public): \(count) regions, template has \(regionCount)")
+            return SavedProgress(progress: fresh, problem: .mismatched)
+        }
         let progress: PaintProgress
         do {
-            progress = try PaintProgress(encoded: data)
+            progress = try PaintProgress(encoded: data, maxRegionCount: max(regionCount, 0))
         } catch PaintProgress.CodingError.newerVersion(let version) {
             throw PaintProgress.CodingError.newerVersion(version)
+        } catch PaintProgress.CodingError.tooManyRegions(let count) {
+            return mismatched(count)
         } catch {
             Log.library.error("Discarding unreadable progress of \(id.uuidString, privacy: .public)")
             return SavedProgress(progress: fresh, problem: .damaged)
         }
-        guard progress.regionCount == regionCount else {
-            Log.library.error("Discarding progress of \(id.uuidString, privacy: .public): \(progress.regionCount) regions, template has \(regionCount)")
-            return SavedProgress(progress: fresh, problem: .mismatched)
-        }
+        guard progress.regionCount == regionCount else { return mismatched(progress.regionCount) }
         return SavedProgress(progress: progress)
     }
 

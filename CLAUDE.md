@@ -89,8 +89,8 @@ Saved paintings must open in every later build. The format history is documented
 `Template.formatVersion` and in `Model/TemplateCoding.swift`.
 
 - Never change how an existing template format is read: `readPayloadV1` is frozen, and
-  `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` must keep decoding (it is never regenerated).
-  Add a fixture file and decode test for every new `formatVersion`.
+  `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` must keep decoding (they
+  are never regenerated). Add a fixture file and decode test for every new `formatVersion`.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
   ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base

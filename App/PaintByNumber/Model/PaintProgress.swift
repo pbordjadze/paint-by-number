@@ -53,6 +53,8 @@ nonisolated struct PaintProgress: Sendable, Equatable {
         case corrupt
         /// Written by a newer app; never replace such a file.
         case newerVersion(UInt32)
+        /// Progress for more regions than the caller's template has (its count).
+        case tooManyRegions(Int)
     }
 
     private static let magic: UInt32 = 0x5250_4250  // "PBPR"
@@ -72,7 +74,9 @@ nonisolated struct PaintProgress: Sendable, Equatable {
         return data
     }
 
-    init(encoded data: Data) throws {
+    /// `maxRegionCount` is the most regions the caller can use (its template's count): a
+    /// larger count throws before the flags are allocated, however large the file claims.
+    init(encoded data: Data, maxRegionCount: Int = Template.maxCanvasArea) throws {
         var offset = data.startIndex
         func get<T: BitwiseCopyable>(_: T.Type) throws -> T {
             let size = MemoryLayout<T>.size
@@ -88,6 +92,7 @@ nonisolated struct PaintProgress: Sendable, Equatable {
         // Counts are checked before anything is allocated, so a damaged file cannot ask for gigabytes.
         let count = Int(try get(UInt32.self))
         guard count <= Template.maxCanvasArea else { throw CodingError.corrupt }
+        guard count <= maxRegionCount else { throw CodingError.tooManyRegions(count) }
         let seconds = try get(Double.self)
         let strokes = Int(try get(UInt32.self))
         let strokeSize = MemoryLayout<UInt32>.size + MemoryLayout<Float>.size

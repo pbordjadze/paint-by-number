@@ -7,8 +7,10 @@ import PaintCore
 nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// Bump when older apps must not open or rewrite an artwork folder: a template
     /// `formatVersion` bump or a new *required* template chunk. Such apps list the artwork
-    /// read-only (`needsNewerApp`) instead of misreading it.
-    static let currentFormat = 1
+    /// read-only (`needsNewerApp`) instead of misreading it. Set whenever the folder's
+    /// template is written; opening or painting keeps the recorded format.
+    /// 1: format-1 templates. 2: templates are written in `Template.formatVersion` 2.
+    static let currentFormat = 2
 
     var id: UUID
     var title: String
@@ -65,7 +67,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// Written by a newer app: listed and deletable, but never opened or rewritten here.
     var needsNewerApp: Bool { format > Self.currentFormat }
 
-    /// Mirrors a (re)generated template and the settings that made it into the metadata.
+    /// Mirrors the artwork's template and the settings that made it into the metadata.
     mutating func adopt(_ template: Template, settings: GenerationSettings) {
         width = template.width
         height = template.height

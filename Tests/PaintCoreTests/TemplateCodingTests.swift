@@ -50,6 +50,25 @@ struct TemplateCodingTests {
         #expect(try Template(encoded: v2) == t)
     }
 
+    /// `Fixtures/template-v2.pbnt` was written by the format-2 encoder at commit 84762fb from
+    /// the v1 fixture's template with `pipelineVersion = 1` (`v1Template()` stamped, then
+    /// `encoded()`): the v1 payload followed by one `GENR` chunk. It pins the v2 layout, the
+    /// first one with extension chunks: never regenerate it.
+    @Test func decodesV2Fixture() throws {
+        let data = try Self.fixture("template-v2.pbnt"), v1 = try Self.fixture("template-v1.pbnt")
+        #expect(data.count == 5578)
+        #expect(data[4..<8] == Data([2, 0, 0, 0]))
+        // The payload is the v1 payload byte for byte, then 1 chunk: "GENR", flags 0, 4 bytes.
+        #expect(data[8..<v1.count] == v1[8...])
+        #expect(data[v1.count...] == Self.uint32(1, Self.genr, 0, 4, 1))
+        let t = try Template(encoded: data)
+        #expect(t.pipelineVersion == 1)
+        var expected = try Self.v1Template()
+        expected.pipelineVersion = 1
+        #expect(t == expected)
+        #expect(t.validate().isValid)
+    }
+
     static func v1Template() throws -> Template { try Template(encoded: fixture("template-v1.pbnt")) }
 
     /// The fixture's payload (everything after the 8-byte header).
@@ -161,7 +180,7 @@ struct TemplateCodingTests {
 
     /// Every proper prefix of a file is rejected with a `CodingError` (never a trap).
     @Test func truncationAtEveryOffset() throws {
-        for data in [try Self.fixture("template-v1.pbnt"), try Self.v1Template().encoded()] {
+        for data in [try Self.fixture("template-v1.pbnt"), try Self.fixture("template-v2.pbnt")] {
             for length in 0..<data.count {
                 #expect(throws: Template.CodingError.self, "length \(length)") { try Template(encoded: data.prefix(length)) }
             }
@@ -182,7 +201,7 @@ struct TemplateCodingTests {
         let data: Data
         switch source {
         case "v1": data = try Self.fixture("template-v1.pbnt")
-        case "v2": data = try Self.v1Template().encoded()
+        case "v2": data = try Self.fixture("template-v2.pbnt")
         default:
             let s = VectorizerTests.blobMap(width: 64, height: 48, colors: 6, cell: 8, noise: 0.01, seed: 5)
             data = try VectorizerTests.vectorize(s).encoded()

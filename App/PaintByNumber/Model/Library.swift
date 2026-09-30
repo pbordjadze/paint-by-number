@@ -189,7 +189,21 @@ final class Library {
     }
 
     func restart(_ id: UUID) async {
+        guard artwork(with: id)?.needsNewerApp == false else { return }
+        // The fresh progress is sized from the template: metadata can be stale, and progress
+        // that doesn't fit would be discarded on the next open with a "couldn't be read" notice.
+        _ = await writes[id]?.value
+        let store = self.store
+        let template: Template?
+        do {
+            template = try await Background.run { try store.readTemplate(id) }
+        } catch let error as Template.CodingError where error.requiresNewerReader {
+            return
+        } catch {
+            template = nil  // damaged: opening offers to regenerate, which sizes progress itself
+        }
         guard var artwork = artwork(with: id), !artwork.needsNewerApp else { return }
+        if let template { artwork.adopt(template, settings: artwork.settings) }
         let fresh = PaintProgress(regionCount: artwork.regionCount)
         artwork.record(fresh)
         replace(artwork)
@@ -198,7 +212,7 @@ final class Library {
             try store.writeProgress(fresh, for: id)
             try store.writeMeta(snapshot)
         }
-        await refreshThumbnail(id, progress: fresh)
+        await refreshThumbnail(id, template: template, progress: fresh)
     }
 
     /// Saves painting progress (called debounced while painting).
@@ -369,6 +383,7 @@ final class Library {
 
         var updated = self.artwork(with: id) ?? artwork
         updated.adopt(template, settings: settings)
+        updated.format = Artwork.currentFormat
         updated.record(progress)
         updated.thumbnailVersion += 1
         let snapshot = updated

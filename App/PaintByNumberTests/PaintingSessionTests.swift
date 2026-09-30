@@ -241,6 +241,13 @@ struct PaintingSessionTests {
         // A huge region count is rejected before anything is allocated.
         #expect(throws: PaintProgress.CodingError.corrupt) { try PaintProgress(encoded: patched(at: 8, UInt32.max)) }
         #expect(throws: PaintProgress.CodingError.corrupt) { try PaintProgress(encoded: patched(at: 20, UInt32.max)) }
+        // So is a count above what the caller's template has: a tiny file cannot claim the canvas cap.
+        let claimsCap = patched(at: 8, UInt32(Template.maxCanvasArea))
+        #expect(throws: PaintProgress.CodingError.tooManyRegions(Template.maxCanvasArea)) {
+            try PaintProgress(encoded: claimsCap, maxRegionCount: 4)
+        }
+        #expect(throws: PaintProgress.CodingError.tooManyRegions(4)) { try PaintProgress(encoded: data, maxRegionCount: 3) }
+        #expect(try PaintProgress(encoded: data, maxRegionCount: 4) == progress)
         // The second stroke repeats the first region.
         #expect(throws: PaintProgress.CodingError.corrupt) { try PaintProgress(encoded: patched(at: 32, UInt32(2))) }
 

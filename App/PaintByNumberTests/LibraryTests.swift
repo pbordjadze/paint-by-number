@@ -245,12 +245,42 @@ struct LibraryTests {
         #expect(library.store.isInTrash(artwork.id))
     }
 
+    /// Artworks from builds before format 2 open and paint as before; regenerating writes a
+    /// current-format template, and the metadata says so.
+    @Test func olderMetaFormatStaysOpenable() async throws {
+        let artwork = try await makeLibrary().create(draft(painted: [0], photo: try stripesPhoto()))
+        #expect(artwork.format == Artwork.currentFormat)
+        var older = artwork
+        older.format = 1
+        let store = ArtworkStore(root: root)
+        try store.writeMeta(older)
+
+        let library = makeLibrary()
+        #expect(library.artwork(with: artwork.id)?.needsNewerApp == false)
+        let document = try await library.loadForPainting(artwork.id)
+        var progress = document.progress
+        progress.paint(1)
+        library.saveProgress(progress, for: artwork.id)
+        await library.flush()
+        #expect(try store.readMeta(artwork.id).format == 1)
+        #expect(try store.readMeta(artwork.id).paintedCount == 2)
+
+        _ = try await library.regenerate(artwork: artwork.id, settings: artwork.settings)
+        await library.flush()
+        #expect(library.artwork(with: artwork.id)?.format == Artwork.currentFormat)
+        #expect(try store.readMeta(artwork.id).format == Artwork.currentFormat)
+    }
+
     @Test func progressMismatchIsGraceful() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft(painted: [0]))
         var other = PaintProgress(regionCount: 5)
         other.paint(4)
         try library.store.writeProgress(other, for: artwork.id)
+        // More regions than the template is refused before decoding the flags; fewer after.
+        #expect(try library.store.readProgress(artwork.id, regionCount: 3).problem == .mismatched)
+        #expect(try library.store.readProgress(artwork.id, regionCount: 6).problem == .mismatched)
+        #expect(try library.store.readProgress(artwork.id, regionCount: 5).progress == other)
 
         let document = try await library.loadForPainting(artwork.id)
         #expect(document.notice == .progressReset)
@@ -286,6 +316,29 @@ struct LibraryTests {
         #expect(try store.readMeta(artwork.id).regionCount == 3)
         #expect(try store.readMeta(artwork.id).paintedCount == 2)
         #expect(try store.readProgress(artwork.id, regionCount: 3).progress == progress)
+    }
+
+    /// Restarting sizes the fresh progress from the template, so stale metadata cannot make
+    /// the next open discard it with a notice.
+    @Test func restartWithStaleMetaFitsTheTemplate() async throws {
+        let artwork = try await makeLibrary().create(draft(painted: [0, 2]))
+        var stale = artwork
+        stale.regionCount = 7
+        let store = ArtworkStore(root: root)
+        try store.writeMeta(stale)
+
+        let library = makeLibrary()
+        await library.restart(artwork.id)
+        let restarted = try #require(library.artwork(with: artwork.id))
+        #expect(restarted.regionCount == 3 && restarted.paintedCount == 0)
+        await library.flush()
+        #expect(try store.readMeta(artwork.id).regionCount == 3)
+        let saved = try store.readProgress(artwork.id, regionCount: 3)
+        #expect(saved.problem == nil)
+        #expect(saved.progress == PaintProgress(regionCount: 3))
+        let document = try await library.loadForPainting(artwork.id)
+        #expect(document.notice == nil)
+        #expect(document.progress.paintedCount == 0)
     }
 
     @Test func regenerateKeepsProgressWhenRegionMapsMatch() async throws {
@@ -406,7 +459,7 @@ struct LibraryTests {
         #expect(artwork.pipelineVersion == 0)
 
         // A newer app's metadata always yields a (read-only) gallery entry.
-        let newer = #"{"id":"\#(id)","format":2}"#
+        let newer = #"{"id":"\#(id)","format":3}"#
         let future = try JSONDecoder().decode(Artwork.self, from: Data(newer.utf8))
         #expect(future.needsNewerApp)
         #expect(future.width == 1 && future.height == 1 && future.regionCount == 0)
