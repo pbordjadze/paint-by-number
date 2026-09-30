@@ -100,6 +100,19 @@ struct RasterizerTests {
         Attachment.record(finished, named: "parrots-finished.png")
         Attachment.record(numbers, named: "parrots-numbers.png")
     }
+
+    @Test(arguments: zip([12, 150], [Float(0.2), 1]))
+    func generatedTemplatesKeepEveryNumberLegible(colors: Int, detail: Float) throws {
+        // The bundled photo decoded on device, through the whole pipeline: every label has
+        // room for its number at the legible size (what CreateModel asserts in Debug builds).
+        let t = try Fixtures.sample(colors: colors, detail: detail)
+        let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
+        #expect(report.isValid, "\(report)")
+        for label in t.labels {
+            let digits = LabelSizing.digitCount(colorIndex: t.regions[Int(label.region)].colorIndex)
+            #expect(LabelSizing.fittedFontSize(radius: label.radius, digits: digits) >= LabelSizing.minimumFontSize - 1e-4)
+        }
+    }
 }
 
 struct PDFExporterTests {
