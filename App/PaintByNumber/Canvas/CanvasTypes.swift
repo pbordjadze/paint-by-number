@@ -20,7 +20,9 @@ nonisolated struct CanvasUniforms {
     var outline: SIMD4<Float> = .zero
     /// x…y: legibility fade range (font px), z: max font px, w: min font px of a bumped number.
     var labels: SIMD4<Float> = .zero
-    /// x: number opacity, y: selected-color number opacity, z: selected boldness (SDF units).
+    /// x: number opacity, y: selected-color number opacity, z: selected boldness (SDF units),
+    /// w: 1 under Reduce Motion (a bumped number shows enlarged at once and a hinted region
+    /// lights up at once; both fade instead of popping or throbbing).
     var numbers: SIMD4<Float> = .zero
     /// x: now, y: selection change, z: pulse start, w: bump start (renderer clock, seconds).
     var time: SIMD4<Float> = .zero

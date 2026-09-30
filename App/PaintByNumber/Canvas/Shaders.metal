@@ -15,7 +15,7 @@ struct FrameUniforms {
     float4 selected;    // rgb: selected paint, a: 1 when a color is selected
     float4 outline;     // x: width (px), y: selected width (px), z: hatch strength, w: numbers visibility
     float4 labels;      // x…y: legibility fade (font px), z: max font px, w: min font px of a bumped number
-    float4 numbers;     // x: number opacity, y: selected-color number opacity, z: selected boldness
+    float4 numbers;     // x: number opacity, y: selected-color number opacity, z: selected boldness, w: reduce motion
     float4 time;        // x: now, y: selection change, z: pulse start, w: bump start
     float4 brush;       // xy: position (px), z: radius (px), w: opacity
     float4 shine;       // x: start of a light sweep over finished paint, y: its color (-1 = all)
@@ -120,9 +120,10 @@ static float3 highlightPaper(float3 paper, float2 pt, constant FrameUniforms &u)
     return mix(tint, mix(paper, ink, 0.55 + 0.25 * intro), line * u.outline.z);
 }
 
-static float pulse(float t) {
+// Under Reduce Motion (`still`) the highlight shows at once and fades instead of throbbing.
+static float pulse(float t, bool still) {
     if (t < 0.0 || t > 2.0) return 0.0;
-    float wave = 0.5 - 0.5 * cos(t * 6.2831853 / 0.66);
+    float wave = still ? 1.0 : 0.5 - 0.5 * cos(t * 6.2831853 / 0.66);
     return wave * (1.0 - t / 2.0);
 }
 
@@ -206,7 +207,7 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
         base = mix(base, u.selected.rgb, 0.3);
     }
     if (int(r) == u.ids.z) {
-        base = mix(base, u.selected.rgb, 0.6 * pulse(now - u.time.z));
+        base = mix(base, u.selected.rgb, 0.6 * pulse(now - u.time.z, u.numbers.w > 0.5));
     }
     float3 paint = wetPaint(info.rgb, ps);
     // A color (or the whole painting) was just finished: a glossy band sweeps across it.
@@ -316,14 +317,17 @@ vertex GlyphOut glyphVertex(uint vid [[vertex_id]],
     float fontPx = g.size * u.transform.z;
     float legible = smoothstep(u.labels.x, u.labels.y, fontPx);
     fontPx = min(fontPx, u.labels.z);
-    // A number tapped with the wrong paint pops up so it can be read at any zoom.
+    // A number tapped with the wrong paint pops up so it can be read at any zoom. Under
+    // Reduce Motion it shows at the larger size at once and fades out instead of scaling.
     float bump = 0.0;
     if (int(g.region) == u.ids.w) {
         float t = now - u.time.w;
         if (t >= 0.0 && t < 1.4) {
-            bump = sin(min(t / 0.16, 1.0) * 1.5707963) * (1.0 - smoothstep(0.8, 1.4, t));
+            bool still = u.numbers.w > 0.5;
+            float fade = 1.0 - smoothstep(0.8, 1.4, t);
+            bump = (still ? 1.0 : sin(min(t / 0.16, 1.0) * 1.5707963)) * fade;
+            fontPx = mix(fontPx, max(fontPx * 1.3, u.labels.w), still ? 1.0 : bump);
         }
-        fontPx = mix(fontPx, max(fontPx * 1.3, u.labels.w), bump);
     }
     PaintSample ps = samplePaint(states[g.region], g.center, now, 1.0 / u.transform.z);
     bool selected = u.selected.a > 0.5 && int(regionColors[g.region].w + 0.5) == u.ids.x;

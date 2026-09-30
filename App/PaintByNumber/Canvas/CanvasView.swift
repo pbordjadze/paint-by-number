@@ -33,8 +33,9 @@ enum PencilAction {
 ///
 /// VoiceOver and Switch Control see the canvas as a container of the unpainted areas of the
 /// selected color that are in view (activating one paints it), with custom actions (paint
-/// next, zoom to next, hint, zoom to fit) and an "Unpainted areas" rotor. `reduceMotion`
-/// makes fills land at once, drops the finishing shine and steps the replay.
+/// next, zoom to next, hint, zoom to fit), an "Unpainted areas" rotor and three-finger page
+/// scrolling. `reduceMotion` makes fills land at once, drops the finishing shine and steps
+/// the replay.
 final class CanvasView: UIView, PaintingCanvas {
     override class var layerClass: AnyClass { CAMetalLayer.self }
 
@@ -62,8 +63,9 @@ final class CanvasView: UIView, PaintingCanvas {
     var onDismissPhoto: (() -> Void)?
     /// A double-tap zoomed the canvas.
     var onZoomStep: (() -> Void)?
-    /// Set from SwiftUI's `accessibilityReduceMotion`: camera moves jump, fills land at once,
-    /// finishing doesn't shine and the replay steps through the fills.
+    /// Set from SwiftUI's `accessibilityReduceMotion`: camera moves jump, fills and undos land
+    /// at once, finishing doesn't shine, the replay steps through the fills, and hints and
+    /// wrong-paint numbers light up and fade instead of throbbing or popping.
     var reduceMotion = false
 
     private let template: Template
@@ -519,7 +521,8 @@ final class CanvasView: UIView, PaintingCanvas {
         let z = clampZoom(max(scrollView.zoomScale, min(roomy, max(legible, fitZoom * 2))))
         animateCamera(zoom: z, offset: offset(centering: center, zoom: z), duration: 0.55)
         pulseRegion = region
-        pulseStart = now() + 0.4
+        // Pulse as the flight lands; under Reduce Motion the camera is already there.
+        pulseStart = now() + (reduceMotion ? 0 : 0.4)
         activeUntil = max(activeUntil, pulseStart + 2.1)
     }
 
@@ -580,6 +583,13 @@ final class CanvasView: UIView, PaintingCanvas {
     /// The paint state the shaders currently see for a region (tests).
     func regionState(_ region: Int) -> RegionState? { renderer?.states[region] }
 
+    /// The shader constants a frame drawn now would get (tests).
+    func frameUniforms() -> CanvasUniforms {
+        makeUniforms(
+            time: now(), camera: currentCamera(),
+            palette: CanvasPalette.appearance(dark: traitCollection.userInterfaceStyle == .dark))
+    }
+
     private func makeUniforms(time: Float, camera: Camera, palette: CanvasPalette) -> CanvasUniforms {
         let s = Float(contentScaleFactor)
         var u = CanvasUniforms()
@@ -600,7 +610,7 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersVisibility(at: time))
         u.labels = SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s)
-        u.numbers = SIMD4(0.5, 0.9, 0.05, 0)
+        u.numbers = SIMD4(0.5, 0.9, 0.05, reduceMotion ? 1 : 0)
         u.time = SIMD4(time, selectionTime, pulseStart, bumpStart)
         if let brushPoint {
             // Drawn as large as it paints (drags cap the radius in canvas units).
@@ -791,9 +801,10 @@ final class CanvasView: UIView, PaintingCanvas {
         guard let renderer else { return }
         let time = now()
         for r in regions {
-            renderer.update(r, RegionState(
-                origin: Self.labelPosition(template, r), start: time, duration: 0.25, radius: 0, painted: 0,
-                seed: Float(r % 61) * 0.73))
+            let origin = Self.labelPosition(template, r), seed = Float(r % 61) * 0.73
+            renderer.update(r, reduceMotion
+                ? .settled(painted: false, origin: origin, seed: seed)
+                : RegionState(origin: origin, start: time, duration: 0.25, radius: 0, painted: 0, seed: seed))
         }
         activeUntil = max(activeUntil, time + 0.3)
         requestRender()
@@ -1113,6 +1124,29 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         let remaining = session.remainingByColor[color]
         if remaining > 0 { Announcer.announce(PaintSpeech.painted(remaining: remaining)) }
+        return true
+    }
+
+    /// VoiceOver's three-finger swipes page through the painting (the container hides the
+    /// scroll view that would otherwise take them). A page is the band in which areas are
+    /// offered, so numbers just past its edge are offered on the next one; focus lands on the
+    /// first area there. False at the edges, so VoiceOver plays its boundary sound.
+    override func accessibilityScroll(_ direction: UIAccessibilityScrollDirection) -> Bool {
+        let area = bounds.inset(by: chromeInsets)
+        let inner = area.insetBy(dx: 22, dy: 22)
+        guard !inner.isEmpty, let step = CanvasAccessibility.pageStep(direction, page: inner.size) else { return false }
+        // From where a camera flight is heading, so quick swipes add up.
+        let zoom = cameraAnimation?.toZoom ?? scrollView.zoomScale
+        let from = cameraAnimation?.toOffset ?? scrollView.contentOffset
+        let to = clampedOffset(CGPoint(x: from.x + step.dx, y: from.y + step.dy), zoom: zoom)
+        guard hypot(to.x - from.x, to.y - from.y) >= 1 else { return false }
+        // View point = zoomed canvas point − content offset.
+        let middle = SIMD2(Float((to.x + area.midX) / zoom), Float((to.y + area.midY) / zoom))
+        UIAccessibility.post(
+            notification: .pageScrolled,
+            argument: PaintSpeech.pageScrolled(CanvasPosition(middle, width: template.width, height: template.height)))
+        pendingFocus = .first
+        animateCamera(zoom: zoom, offset: to, duration: 0.3)
         return true
     }
 

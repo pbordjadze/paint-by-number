@@ -55,6 +55,7 @@ struct PaintSpeechTests {
         #expect(PaintSpeech.colorFinished(number: 12, name: darkGreen) == "Color 12, dark green, finished")
         #expect(PaintSpeech.painted(remaining: 7) == "Painted, 7 left")
         #expect(PaintSpeech.swatchHint(selected: false) == "Selects this color")
+        #expect(PaintSpeech.pageScrolled(.topLeft) == "Painting, top left")
     }
 
     @Test func canvasPositionsInThirds() {
@@ -117,6 +118,17 @@ struct CanvasAccessibilityQueryTests {
         #expect(CanvasAccessibility.next(after: key(14), in: regions, anchors: anchors, rowHeight: 10) == 30)
         #expect(CanvasAccessibility.next(after: key(30), in: regions, anchors: anchors, rowHeight: 10) == 2)
         #expect(CanvasAccessibility.next(after: nil, in: [], anchors: anchors, rowHeight: 10) == nil)
+    }
+
+    /// Three-finger swipes act like dragging the painting: up shows what is below.
+    @Test func pageStepsFollowTheSwipe() {
+        let page = CGSize(width: 300, height: 500)
+        #expect(CanvasAccessibility.pageStep(.up, page: page) == CGVector(dx: 0, dy: 500))
+        #expect(CanvasAccessibility.pageStep(.next, page: page) == CGVector(dx: 0, dy: 500))
+        #expect(CanvasAccessibility.pageStep(.down, page: page) == CGVector(dx: 0, dy: -500))
+        #expect(CanvasAccessibility.pageStep(.previous, page: page) == CGVector(dx: 0, dy: -500))
+        #expect(CanvasAccessibility.pageStep(.left, page: page) == CGVector(dx: 300, dy: 0))
+        #expect(CanvasAccessibility.pageStep(.right, page: page) == CGVector(dx: -300, dy: 0))
     }
 
     @Test func nearestBreaksTiesByLowerIndex() {
@@ -295,6 +307,45 @@ struct CanvasViewAccessibilityTests {
         #expect(areas(canvas).contains { $0.region == hinted })
     }
 
+    @Test func pageScrollMovesByTheOfferedBand() throws {
+        let session = PaintingSession(template: template)
+        let middle = SIMD2(Float(template.width), Float(template.height)) / 2
+        let canvas = makeCanvas(session, camera: CanvasCamera(zoom: 4, center: middle))
+        canvas.reduceMotion = true
+        let origin = canvas.viewPoint(forCanvas: .zero)
+        let zoom = Float(canvas.viewPoint(forCanvas: SIMD2(1, 0)).x - origin.x)
+        let band = canvas.bounds.inset(by: Self.chrome).insetBy(dx: 22, dy: 22)
+        let start = canvas.visibleCenter
+
+        #expect(canvas.accessibilityScroll(.up))
+        #expect(canvas.pendingFocus == nil, "the settled camera should have consumed the focus request")
+        let down = canvas.visibleCenter
+        #expect(abs(down.x - start.x) < 0.01)
+        #expect(abs(down.y - start.y - Float(band.height) / zoom) < 0.01)
+        let area = canvas.bounds.inset(by: Self.chrome)
+        #expect(areas(canvas).allSatisfy { area.contains($0.accessibilityFrameInContainerSpace) })
+
+        #expect(canvas.accessibilityScroll(.down))
+        #expect(simd_distance(canvas.visibleCenter, start) < 0.01)
+
+        // Paging stops at the edge, where VoiceOver plays its boundary sound.
+        var pages = 0
+        while canvas.accessibilityScroll(.left) {
+            pages += 1
+            try #require(pages < 20)
+        }
+        #expect(pages >= 1)
+        #expect(!canvas.accessibilityScroll(.left))
+    }
+
+    @Test func pageScrollAtFitHasNowhereToGo() {
+        let canvas = makeCanvas(PaintingSession(template: template))
+        canvas.reduceMotion = true
+        for direction: UIAccessibilityScrollDirection in [.up, .down, .left, .right, .next, .previous] {
+            #expect(!canvas.accessibilityScroll(direction))
+        }
+    }
+
     @Test func reduceMotionFillsSettleInstantly() throws {
         let session = PaintingSession(template: template)
         let canvas = makeCanvas(session)
@@ -314,6 +365,33 @@ struct CanvasViewAccessibilityTests {
         let animated = try #require(canvas.regionState(own[1]))
         #expect(animated.start > -10_000)
         #expect(animated.duration > 0)
+    }
+
+    @Test(arguments: [true, false])
+    func reduceMotionUndoSettlesInstantly(reduceMotion: Bool) throws {
+        let session = PaintingSession(template: template)
+        let canvas = makeCanvas(session)
+        canvas.reduceMotion = reduceMotion
+        let color = try #require(session.selectedColor)
+        let region = try #require(regions(template, ofColor: color).first)
+        session.paint([region], from: anchor(template, region), animated: false)
+        #expect(session.undo() == region)
+        let state = try #require(canvas.regionState(region))
+        #expect(state.painted == 0)
+        #expect((state.start == -10_000) == reduceMotion)
+    }
+
+    /// A hint's highlight starts as the camera lands (at once under Reduce Motion, where the
+    /// shaders also hold it steady instead of throbbing, as they do for a wrong-paint number).
+    @Test(arguments: [true, false])
+    func reduceMotionHintLightsUpAtOnce(reduceMotion: Bool) {
+        let canvas = makeCanvas(PaintingSession(template: template))
+        canvas.reduceMotion = reduceMotion
+        canvas.showHint()
+        let uniforms = canvas.frameUniforms()
+        #expect(uniforms.numbers.w == (reduceMotion ? 1 : 0))
+        #expect(uniforms.ids.z >= 0)
+        #expect((uniforms.time.z <= uniforms.time.x) == reduceMotion)
     }
 
     @Test(arguments: [true, false])

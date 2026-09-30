@@ -50,7 +50,9 @@ final class AccessibilityUITests: XCTestCase {
         let id = first.identifier
         let value = swatch.value as? String
         let count = areas.count
-        first.tap()
+        // By coordinate: neighbouring areas' frames can overlap at fit zoom, which fails an
+        // element tap's hittability check; each frame is centred on its area's number.
+        first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         sleep(2)
         attachScreenshot(of: app, named: "paint-ax-after-tap")
         XCTAssertFalse(app.buttons[id].exists, "The tapped area is still unpainted")
