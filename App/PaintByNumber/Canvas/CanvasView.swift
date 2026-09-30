@@ -520,7 +520,9 @@ final class CanvasView: UIView, PaintingCanvas {
         u.numbers = SIMD4(0.5, 0.9, 0.05, 0)
         u.time = SIMD4(time, selectionTime, pulseStart, bumpStart)
         if let brushPoint {
-            u.brush = SIMD4(Float(brushPoint.x) * s, Float(brushPoint.y) * s, Float(Self.brushRadius) * s, 1)
+            // Drawn as large as it paints (drags cap the radius in canvas units).
+            let radius = min(Self.brushRadius, CGFloat(PaintingSession.maxBrushRadius) * camera.zoom)
+            u.brush = SIMD4(Float(brushPoint.x) * s, Float(brushPoint.y) * s, Float(radius) * s, 1)
         }
         u.shine = SIMD4(shineStart, Float(shineColor), 0, 0)
         u.ids = SIMD4(Int32(selected ?? -1), Int32(isReplaying ? -1 : hoverRegion), Int32(pulseRegion), Int32(bumpRegion))

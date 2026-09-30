@@ -112,24 +112,29 @@ final class PaintingSession {
         return paint([target], from: point, animated: true)
     }
 
-    /// Paints every region of the selected color touched by a drag segment.
+    /// Largest brush radius a drag paints with, in canvas units. The canvas never zooms out
+    /// past "fit", so the finger's 11 pt covers at most about 78 units (the largest working
+    /// canvas on the smallest iPhone) and about 24 on an iPad: the cap never bites on current
+    /// devices, so drags paint the same at every zoom. It bounds the work should canvases or
+    /// brushes grow; the capsule scan keeps the cost proportional to the area swept.
+    static let maxBrushRadius: Float = 96
+
+    /// Paints every region of the selected color that a brush of `radius` touches moving
+    /// from `a` to `b`, in the order it reaches them (replays follow the stroke).
     @discardableResult
     func drag(from a: SIMD2<Float>, to b: SIMD2<Float>, radius: Float) -> PaintEvent? {
         guard let color = selectedColor else { return nil }
-        var found: [Int] = []
-        var seen = Set<Int>()
-        let length = simd_length(b - a)
-        let steps = max(1, Int(length.rounded(.up)))
-        for s in 0...steps {
-            let p = a + (b - a) * (Float(s) / Float(steps))
-            forEachRegion(inDiscAt: p, radius: radius) { region, _ in
-                if !seen.contains(region) && !progress.isPainted(region) && colorOf(region) == color {
-                    seen.insert(region)
-                    found.append(region)
-                }
-            }
+        let eligible = template.regions.indices.map { !progress.isPainted($0) && colorOf($0) == color }
+        // Stroke parameter of the first contact per region; infinity = not touched.
+        var enter = [Float](repeating: .infinity, count: eligible.count)
+        var touched: [Int] = []
+        forEachRegion(inCapsuleFrom: a, to: b, radius: min(max(0, radius), Self.maxBrushRadius), among: eligible) { region, t in
+            guard t < enter[region] else { return }
+            if enter[region] == .infinity { touched.append(region) }
+            enter[region] = t
         }
-        guard !found.isEmpty else { return nil }
+        guard !touched.isEmpty else { return nil }
+        let found = touched.sorted { (enter[$0], $0) < (enter[$1], $1) }
         return paint(found, from: b, animated: true)
     }
 
@@ -245,6 +250,63 @@ final class PaintingSession {
             }
         }
         return best
+    }
+
+    /// Visits the pixels of `among` regions within `r` of the segment a→b (the area a brush
+    /// of radius `r` sweeps; pixel centres on the canvas grid), with the stroke parameter
+    /// 0…1 at which the moving brush first covers each. This is the continuous limit of
+    /// stamping the disc every canvas unit, at a cost proportional to the swept area.
+    private func forEachRegion(
+        inCapsuleFrom a: SIMD2<Float>, to b: SIMD2<Float>, radius r: Float, among eligible: [Bool],
+        _ body: (_ region: Int, _ enter: Float) -> Void
+    ) {
+        let map = template.regionMap
+        guard map.width > 0, map.height > 0 else { return }
+        let d = b - a
+        let len2 = simd_length_squared(d), len = len2.squareRoot()
+        let r2 = r * r
+        // The bounds below are padded by a pixel so rounding never drops an edge pixel; the
+        // exact distance test decides.
+        let pad: Float = 1
+        let y0 = max(0, Int((min(a.y, b.y) - r - pad).rounded(.down)))
+        let y1 = min(map.height - 1, Int((max(a.y, b.y) + r + pad).rounded(.up)))
+        guard y0 <= y1 else { return }
+        map.storage.withUnsafeBufferPointer { regions in
+            eligible.withUnsafeBufferPointer { eligible in
+                for y in y0...y1 {
+                    let cy = Float(y) + 0.5
+                    // Only the part of the segment within r (vertically) of this row can
+                    // bring its pixels within r.
+                    var t0: Float = 0, t1: Float = 1
+                    if d.y != 0 {
+                        let u = (cy - r - pad - a.y) / d.y, v = (cy + r + pad - a.y) / d.y
+                        t0 = max(0, min(u, v))
+                        t1 = min(1, max(u, v))
+                        if t0 > t1 { continue }
+                    } else if abs(cy - a.y) > r + pad {
+                        continue
+                    }
+                    let xa = a.x + d.x * t0, xb = a.x + d.x * t1
+                    let x0 = max(0, Int((min(xa, xb) - r - pad).rounded(.down)))
+                    let x1 = min(map.width - 1, Int((max(xa, xb) + r + pad).rounded(.up)))
+                    guard x0 <= x1 else { continue }
+                    let row = y * map.width
+                    for x in x0...x1 {
+                        let region = Int(regions[row + x])
+                        guard eligible[region] else { continue }
+                        let p = SIMD2(Float(x) + 0.5, cy) - a
+                        let along = len2 > 0 ? simd_dot(p, d) / len2 : 0
+                        guard simd_length_squared(p - d * min(max(along, 0), 1)) <= r2 else { continue }
+                        var enter: Float = 0
+                        if len > 0 {
+                            let perp2 = max(0, simd_length_squared(p) - along * along * len2)
+                            enter = min(max(along - max(0, r2 - perp2).squareRoot() / len, 0), 1)
+                        }
+                        body(region, enter)
+                    }
+                }
+            }
+        }
     }
 
     /// Visits region indices under a disc (sampled on the canvas grid) with squared distance.

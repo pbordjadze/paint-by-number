@@ -1,6 +1,7 @@
 import Foundation
 import QuartzCore
 import PaintCore
+import simd
 import Testing
 import UIKit
 @testable import PaintByNumber
@@ -85,6 +86,127 @@ struct PaintingSessionTests {
         for r in template.regions.indices {
             #expect(session.isPainted(r) == regions.contains(r))
             if session.isPainted(r) { #expect(session.colorOf(r) == color) }
+        }
+    }
+
+    /// Brute-force reference for drag painting: for every region of `color` not yet painted,
+    /// the stroke parameter at which a brush of radius `r` moving from `a` to `b` first covers
+    /// one of its pixel centres (checked pixel by pixel over the stroke's bounding box).
+    private func capsuleReference(
+        _ session: PaintingSession, from a: SIMD2<Float>, to b: SIMD2<Float>, radius r: Float, color: Int
+    ) -> [Int: Float] {
+        let d = b - a, len2 = simd_length_squared(d), len = len2.squareRoot()
+        let xs = max(0, Int(min(a.x, b.x) - r) - 2)...min(template.width - 1, Int(max(a.x, b.x) + r) + 2)
+        let ys = max(0, Int(min(a.y, b.y) - r) - 2)...min(template.height - 1, Int(max(a.y, b.y) + r) + 2)
+        var enter: [Int: Float] = [:]
+        for y in ys {
+            for x in xs {
+                let centre = SIMD2(Float(x) + 0.5, Float(y) + 0.5)
+                guard let region = template.region(at: centre), !session.isPainted(region), session.colorOf(region) == color
+                else { continue }
+                let p = centre - a
+                let along = len2 > 0 ? simd_dot(p, d) / len2 : 0
+                guard simd_length_squared(p - d * min(max(along, 0), 1)) <= r * r else { continue }
+                var t: Float = 0
+                if len > 0 {
+                    let perp2 = max(0, simd_length_squared(p) - along * along * len2)
+                    t = min(max(along - max(0, r * r - perp2).squareRoot() / len, 0), 1)
+                }
+                enter[region] = min(enter[region] ?? .infinity, t)
+            }
+        }
+        return enter
+    }
+
+    /// A drag paints exactly the regions (of the selected color, not yet painted) that the
+    /// brush sweeps over, in the order it reaches them.
+    @Test func dragPaintsExactlyTheCapsule() throws {
+        var rng = SplitMix64(seed: 42)
+        let radii: [Float] = [0.5, 2, 4, 7.5, 11, 18, 30]
+        for trial in 0..<20 {
+            let session = PaintingSession(template: template)
+            // Some regions are painted already and must be left alone.
+            session.paint(template.regions.indices.filter { $0 % 4 == 0 }, from: .zero, animated: false)
+            let a = SIMD2(rng.nextFloat() * Float(template.width), rng.nextFloat() * Float(template.height))
+            let offset = SIMD2(rng.nextFloat() - 0.5, rng.nextFloat() - 0.5) * 240
+            // Every fifth stroke is a single touch (a stroke's first point).
+            let b = trial % 5 == 0 ? a : a + offset
+            let radius = radii[trial % radii.count]
+            let color = session.colorOf(try #require(template.region(at: a)))
+            session.select(color: color)
+
+            let reference = capsuleReference(session, from: a, to: b, radius: radius, color: color)
+            let event = session.drag(from: a, to: b, radius: radius)
+            guard case let .painted(regions, _)? = event else {
+                #expect(reference.isEmpty, "trial \(trial): nothing painted, expected \(reference.keys.sorted())")
+                continue
+            }
+            #expect(Set(regions) == Set(reference.keys), "trial \(trial)")
+            for (first, second) in zip(regions, regions.dropFirst()) {
+                let e1 = reference[first] ?? .infinity, e2 = reference[second] ?? .infinity
+                #expect(e1 <= e2 + 1e-4, "trial \(trial): \(first) (\(e1)) before \(second) (\(e2))")
+                if e1 == e2 { #expect(first < second, "trial \(trial): ties go by region") }
+            }
+        }
+    }
+
+    /// However large the requested brush, a drag reaches at most `maxBrushRadius` units.
+    @Test func dragRadiusIsCapped() throws {
+        let centre = SIMD2(Float(template.width) / 2, Float(template.height) / 2)
+        // Each region's nearest pixel centre to the brush.
+        var nearest = [Float](repeating: .infinity, count: template.regions.count)
+        for y in 0..<template.height {
+            for x in 0..<template.width {
+                let p = SIMD2(Float(x) + 0.5, Float(y) + 0.5)
+                let region = try #require(template.region(at: p))
+                nearest[region] = min(nearest[region], simd_distance(p, centre))
+            }
+        }
+        let cap = PaintingSession.maxBrushRadius
+        // A color with regions both inside and (well) outside the cap.
+        let color = try #require((0..<template.palette.count).first { color in
+            let distances = regions(ofColor: color).map { nearest[$0] }
+            return distances.contains { $0 <= cap - 1 } && distances.contains { $0 > cap + 1 }
+        })
+        let session = PaintingSession(template: template)
+        session.select(color: color)
+        session.drag(from: centre, to: centre, radius: 500)
+        for region in regions(ofColor: color) where abs(nearest[region] - cap) > 0.01 {
+            #expect(session.isPainted(region) == (nearest[region] <= cap), "region \(region) at \(nearest[region])")
+        }
+    }
+
+    /// Zoomed far out, the finger covers a large part of the canvas; a drag across it must
+    /// still keep up. The budget is loose because tests run in a Debug build; stamping the
+    /// disc every canvas unit, as drags used to, takes well over ten times as long here.
+    @Test func zoomedOutDragIsFast() throws {
+        let big = SyntheticTemplate.make(.init(width: 2048, height: 1536, columns: 24, rows: 18, seed: 11))
+        let session = PaintingSession(template: big)
+        let start = SIMD2<Float>(100, 400)
+        let color = session.colorOf(try #require(big.region(at: start)))
+        session.select(color: color)
+        session.autoAdvance = false
+        // A zigzag of 40 strokes of about 300 units across the canvas.
+        let points = (0...40).map { i -> SIMD2<Float> in
+            SIMD2(100 + Float(i) * 46, i % 2 == 0 ? 400 : 700)
+        }
+        let clock = ContinuousClock()
+        let elapsed = clock.measure {
+            session.beginStroke()
+            for (a, b) in zip(points, points.dropFirst()) { session.drag(from: a, to: b, radius: 200) }
+            session.endStroke()
+        }
+        #expect(elapsed < .milliseconds(1500), "\(elapsed)")
+
+        for (a, b) in zip(points, points.dropFirst()) {
+            for step in 0...40 {
+                let p = a + (b - a) * (Float(step) / 40)
+                let region = try #require(big.region(at: p))
+                if session.colorOf(region) == color { #expect(session.isPainted(region)) }
+            }
+        }
+        for region in big.regions.indices where session.isPainted(region) {
+            #expect(session.colorOf(region) == color)
         }
     }
 
