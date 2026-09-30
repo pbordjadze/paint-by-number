@@ -58,13 +58,15 @@ struct RasterizerTests {
         }
     }
 
-    @Test func threeDigitNumbersFit() throws {
-        // The middle stripe shows 121: sized for three digits, its run stays inside the stripe.
+    @Test(arguments: [false, true])
+    func threeDigitNumbersFit(printable: Bool) throws {
+        // The middle stripe shows 121: sized for three digits, its run stays inside the stripe,
+        // on screen and in print alike (one sizing rule, no per-style floor).
         var t = Fixtures.stripes(count: 3, stripeWidth: 40, height: 40)
         let grey = PaletteColor(oklab: SIMD3(0.6, 0, 0), space: .sRGB)
         t.palette += Array(repeating: grey, count: 121 - t.palette.count)
         t.regions[1].colorIndex = 120
-        var style = TemplateRasterizer.Style.template
+        var style = printable ? TemplateRasterizer.Style.printable : TemplateRasterizer.Style.template
         style.maximumNumberFraction = 1
         let image = try #require(TemplateRasterizer.image(t, style: style, maxPixelSize: 480))
         let pixels = PixelReader(image)
@@ -78,7 +80,9 @@ struct RasterizerTests {
         }
         #expect(outside == 0)
         #expect(inside > 100)
-        if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "three-digit-number.png") }
+        if let png = ImageCodec.pngData(image) {
+            Attachment.record(png, named: "three-digit-number-\(printable ? "printable" : "template").png")
+        }
     }
 
     @Test func finishedPaintingHasNoSketch() throws {
@@ -148,6 +152,7 @@ struct PDFExporterTests {
         }
     }
 
+<<<<<<< ours
     /// The color key names every color, so the printed key helps people who can't tell paints apart.
     @Test func colorKeyNamesEveryColor() throws {
         let t = Fixtures.stripes()
@@ -184,6 +189,43 @@ struct PDFExporterTests {
         }
         let a4 = CGRect(x: 36, y: 72, width: PDFExporter.Paper.a4.size.width - 72, height: PDFExporter.Paper.a4.size.height - 108)
         #expect(PDFExporter.keyLayout(count: 24, widestEntry: 120, in: a4).scale == 1)
+=======
+    @Test func largeTemplatesPrintOnSheetsWithLegibleNumbers() throws {
+        // 2100 × 1400 canvas units whose labels have the minimum room: fitted to one page its
+        // numbers would print at about 1.3 pt, so it goes on overlapping sheets at a scale
+        // that prints the smallest number at the legible floor, after an overview page.
+        var t = Fixtures.stripes(count: 3, stripeWidth: 700, height: 1400)
+        for k in t.labels.indices { t.labels[k].radius = LabelSizing.minimumRadius }
+        let sheets = PDFExporter.sheets(for: t, paper: .letter)
+        #expect(sheets.columns == 2 && sheets.rows == 2)
+        #expect(CGFloat(LabelSizing.minimumFontSize) * sheets.scale >= PDFExporter.minimumNumberSize)
+        // The grid covers the template exactly, neighbours overlapping.
+        let last = sheets.window(column: sheets.columns - 1, row: sheets.rows - 1)
+        #expect(abs(last.maxX - sheets.printed.width) < 1e-6 && abs(last.maxY - sheets.printed.height) < 1e-6)
+        let first = sheets.window(column: 0, row: 0)
+        #expect(sheets.window(column: 1, row: 0).minX == first.maxX - PDFExporter.sheetOverlap)
+
+        let data = PDFExporter.document(for: t, title: "Stripes", paper: .letter)
+        let document = try #require(CGDataProvider(data: data as CFData).flatMap { CGPDFDocument($0) })
+        #expect(document.numberOfPages == sheets.count + 2)
+        Attachment.record(data, named: "stripes-sheets.pdf")
+        // Each sheet shows its part of the outlines: the separators at canvas x = 700 and 1400.
+        for index in 2...(sheets.count + 1) {
+            let page = try #require(document.page(at: index))
+            let image = try #require(render(page, scale: 2))
+            let pixels = PixelReader(image)
+            var ink = 0
+            // Inside the body (72...576 pt down, 36...756 pt across at 2 px/pt), clear of the
+            // header and of every sheet's border.
+            for y in stride(from: 160, to: 900, by: 2) {
+                for x in 80..<1504 where pixels[x, y].x < 230 { ink += 1 }
+            }
+            #expect(ink > 100, "sheet \(index - 1)")
+        }
+
+        // A template whose numbers are large enough stays on one page.
+        #expect(!PDFExporter.sheets(for: Fixtures.stripes(), paper: .letter).isTiled)
+>>>>>>> theirs
     }
 
     @Test func paperFollowsRegion() {

@@ -12,10 +12,12 @@ struct SegmentationParameters: Sendable {
     /// outline (see `EdgeSmoother.run`). `LabelSizing.minimumRadius` needs at least 0.8;
     /// 0.9 touches under 0.1 % of regions on photos, with no visible faceting.
     static let vectorRadiusTolerance: Float = 0.9
-    /// Furthest (working-space OKLab) a region too thin for its number may be recoloured to
-    /// a paint with a shorter number (`RegionSimplifier.enforceLabelRoom`). Beyond two JNDs
-    /// the new paint reads as a different colour (dark slats on a blue shutter turning
-    /// brown), and merging into a neighbour looks better.
+    /// Furthest a region too thin for its number may be recoloured to a paint with a shorter
+    /// number (`RegionSimplifier.enforceLabelRoom`). Measured in the working space (chroma
+    /// stretched by `chromaScale`), like the merge costs it competes with, so it allows two
+    /// JNDs of lightness but only about 1.25 of hue or colourfulness, the more visible
+    /// change. Beyond that the new paint reads as a different colour (dark slats on a blue
+    /// shutter turning brown), and merging into a neighbour looks better.
     static let labelRecolorLimit: Float = 2 * jnd
 
     var colorCount: Int
@@ -58,7 +60,10 @@ struct SegmentationParameters: Sendable {
     /// Minimum largest-inscribed-disc radius (as measured by `interiorDistance`) of a region
     /// with a 1-digit number; see `minRadius(digits:)`.
     var minRadius: Float
-    /// Every region pixel must lie in a disc (dx² + dy² ≤ this) inside its region.
+    /// Every region pixel must lie in a disc (dx² + dy² ≤ this) inside its region. Unlike
+    /// `minRadius(digits:)` this does not grow with the number's digits: it keeps tendrils
+    /// wide enough to paint, while the number sits at the region's widest spot, so a wider
+    /// opening for long numbers would only erase detail.
     var openingRadiusSquared: Int
     /// Strength of importance on the area threshold (see `areaScale`).
     var importanceStrength: Float

@@ -377,6 +377,7 @@ struct VectorizerTests {
                 #expect(t.labels(ofRegion: r).first?.radius == t.regions[r].inscribedRadius)
             }
             #expect(stats.labelRoomRegions > 0 || stats.labelRoomEdges == 0)
+            #expect(stats.labelRoomUnmet == 0)
             demoted += stats.labelRoomEdges
         }
         #expect(demoted > 0)
@@ -404,6 +405,7 @@ struct VectorizerTests {
         let poles = try #require(result.poles)
         for r in 0..<s.regionCount { #expect(poles.radius[r] >= clearance[r] - 1e-4, "region \(r)") }
         #expect(result.labelRoomEdges > 0)
+        #expect(result.labelRoomUnmet == 0)
         #expect(GeometryValidator.invalidEdges(points: result.geometry.points, edges: result.geometry.boundaryEdges(graph)).isEmpty)
     }
 
@@ -550,6 +552,7 @@ struct VectorizerTests {
         let again = try generator.generate(from: image, cancel: .none)
         #expect(again.template == out.template)
         #expect(again.vectorStats == out.vectorStats)
+        #expect(out.vectorStats.labelRoomUnmet == 0)
         try Self.expectValid(out.template, out.segmentation)
         let report = out.template.validate(minLabelRadius: LabelSizing.minimumRadius)
         #expect(report.isValid, "\(report)")

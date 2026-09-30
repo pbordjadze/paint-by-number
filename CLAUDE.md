@@ -33,10 +33,17 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `python3 tools/eval.py run <images...> --out <dir> [-- --colors 24 --detail 0.5]` — runs the
   pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
   `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, label
+<<<<<<< ours
   legibility — `labelsBelowLegibleSize` must be 0, `minLabelRadius`, `minLabelRoom`, `valid` —
   timings, palette and `colorNames`; the sheet's palette panel labels each swatch with its
   name). The metrics are `pbn generate`'s `stats.json`, a stable interface for regression
   tooling: add fields, never rename them. Look at the PNGs with the Read tool. The sheet's second row shows the raw region raster, a 2×
+=======
+  legibility — `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0, `minLabelRadius`,
+  `minLabelRoom`, `valid` — and timings). The metrics are `pbn generate`'s `stats.json`, a
+  stable interface for regression tooling: add fields, never rename them. Look at the PNGs with
+  the Read tool. The sheet's second row shows the raw region raster, a 2×
+>>>>>>> theirs
   `boundaries.png` (1-px region outlines, best for judging segmentation shapes) and the palette;
   `--importance-dir DIR` passes `DIR/<name>.pgm` as the importance map (Vision stand-in).
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
