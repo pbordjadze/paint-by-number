@@ -27,6 +27,36 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertNotEqual(compare.value as? String, "50 percent photo", "The divider didn't follow the drag")
     }
 
+    /// The preview's title field offers the sample's name and names the painting with what
+    /// was typed.
+    @MainActor
+    func testTitleNamesThePainting() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-preview"]
+        app.launch()
+
+        let start = app.buttons["Start Painting"]
+        XCTAssertTrue(start.waitForExistence(timeout: 30))
+        expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
+        waitForExpectations(timeout: 60)
+
+        let title = app.textFields["painting-title"]
+        XCTAssertTrue(title.exists, "The preview has no title field")
+        XCTAssertEqual(title.placeholderValue, "Parrots")
+        title.tap()
+        title.typeText("Jungle Birds\n")
+        XCTAssertEqual(title.value as? String, "Jungle Birds")
+        let shot = XCTAttachment(screenshot: app.screenshot())
+        shot.name = "create-title-typed"
+        shot.lifetime = .keepAlways
+        add(shot)
+
+        start.tap()
+        XCTAssertTrue(
+            app.staticTexts["Jungle Birds, 0 percent painted"].waitForExistence(timeout: 90),
+            "The painting didn't open with the typed title")
+    }
+
     /// Tapping a photo in the inline library picker opens its template preview.
     @MainActor
     func testLibraryPhotoOpensPreview() throws {

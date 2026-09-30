@@ -14,7 +14,6 @@ final class CreateModel {
     struct Source {
         let image: RGBAImage
         let preview: CGImage
-        let title: String
         let sampleName: String?
     }
 
@@ -75,6 +74,16 @@ final class CreateModel {
     /// 0…1 progress of the running full-resolution generation.
     private(set) var progress: Double = 0
     private(set) var isAdjusting = false
+    /// The painting's name as typed; empty means `defaultTitle`.
+    var title = ""
+    /// The sample's name, or the date for a photo.
+    private(set) var defaultTitle = ""
+
+    /// The name the painting is created with: the trimmed title, or the default.
+    var resolvedTitle: String {
+        let typed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return typed.isEmpty ? defaultTitle : typed
+    }
 
     var colorCount: Double
     var detail: Double
@@ -122,22 +131,25 @@ final class CreateModel {
             phase = .failed(CreateError.unreadable.localizedDescription)
             return
         }
-        begin(title: sample.title, sampleName: sample.id) { try await Self.decode(url: url) }
+        begin(defaultTitle: sample.title, sampleName: sample.id) { try await Self.decode(url: url) }
     }
 
     func load(item: PhotosPickerItem) {
-        begin(title: Self.photoTitle(), sampleName: nil) {
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil) {
             guard let data = try await item.loadTransferable(type: Data.self) else { throw CreateError.unreadable }
             return try await Self.decode(data: data)
         }
     }
 
     func load(imageData: Data) {
-        begin(title: Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
+        begin(defaultTitle: Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
     }
 
-    private func begin(title: String, sampleName: String?, decode: @escaping () async throws -> Decoded) {
+    private func begin(defaultTitle: String, sampleName: String?, decode: @escaping () async throws -> Decoded) {
         cancelAll()
+        // A new photo gets a new default name, and anything typed for the last one goes.
+        self.defaultTitle = defaultTitle
+        title = ""
         source = nil
         preview = nil
         stats = nil
@@ -149,7 +161,7 @@ final class CreateModel {
             do {
                 let decoded = try await decode()
                 try Task.checkCancellation()
-                source = Source(image: decoded.image, preview: decoded.preview, title: title, sampleName: sampleName)
+                source = Source(image: decoded.image, preview: decoded.preview, sampleName: sampleName)
                 phase = .analyzing
                 let prepared = await Self.prepare(decoded)
                 try Task.checkCancellation()
@@ -212,7 +224,7 @@ final class CreateModel {
         }
         guard let preview, !preview.isDraft, preview.settings == settings else { throw CreateError.renderFailed }
         return ArtworkDraft(
-            title: source.title, template: preview.template, settings: settings,
+            title: resolvedTitle, template: preview.template, settings: settings,
             photo: source.preview, sampleName: source.sampleName)
     }
 
