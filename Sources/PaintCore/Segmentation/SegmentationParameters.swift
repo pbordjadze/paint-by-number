@@ -4,6 +4,10 @@ import Foundation
 /// the canvas size. Spatial quantities scale with the canvas so a template's look depends
 /// on `detail`, not on the photo's resolution.
 struct SegmentationParameters: Sendable {
+    /// A just-noticeable color difference in OKLab (see `ColorScience`): the floor of
+    /// `minPaletteDistance`.
+    static let jnd: Float = 0.02
+
     var colorCount: Int
     var seed: UInt64
     /// The pipeline works in OKLab with the chroma axes stretched by this factor, so paints
@@ -29,7 +33,7 @@ struct SegmentationParameters: Sendable {
     var paletteRestarts: Int
     /// Extra palette weight for colors that stand out from their surroundings.
     var paletteSaliency: Float
-    /// Paints closer than this (OKLab) are pushed apart or merged.
+    /// Paints closer than this (OKLab) are pushed apart or merged; never below `jnd`.
     var minPaletteDistance: Float
     /// Region-level k-means passes when refitting the palette.
     var refineIterations: Int
@@ -80,9 +84,10 @@ struct SegmentationParameters: Sendable {
         histogramGamma = 0.6
         paletteRestarts = 3
         paletteSaliency = 1
-        // Large palettes pack paints closer (down to about twice a just-noticeable difference),
-        // or a photo's gamut couldn't hold that many distinct paints.
-        minPaletteDistance = 0.04 * min(1, (24 / Float(s.colorCount)).squareRoot())
+        // Large palettes pack paints closer, or a photo's gamut couldn't hold that many
+        // distinct paints — down to one just-noticeable difference and never below: paints a
+        // painter can't tell apart would be one paint with two numbers.
+        minPaletteDistance = max(Self.jnd, 0.04 * min(1, (24 / Float(s.colorCount)).squareRoot()))
         refineIterations = 3
 
         potts = 0.0012 * lerp(0.5, 1.6, sm)
