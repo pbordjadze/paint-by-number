@@ -81,13 +81,15 @@ final class PaintingNavigationTests: XCTestCase {
     func testKeyboardColorsUndoAndRedo() throws {
         let app = openSeededPainting()
         let swatches = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Color '"))
-        func selected() -> XCUIElement? { swatches.allElementsBoundByIndex.first { $0.isSelected } }
+        func selected() -> Set<String> {
+            Set(swatches.matching(NSPredicate(format: "selected == true")).allElementsBoundByIndex.map(\.label))
+        }
 
-        let before = selected()?.label
+        let before = selected()
         app.typeKey("]", modifierFlags: [])
         sleep(1)
-        let swatch = try XCTUnwrap(selected(), "No color selected after ]")
-        XCTAssertNotEqual(swatch.label, before, "] didn't change the color")
+        let newlySelected = try XCTUnwrap(selected().subtracting(before).first, "] didn't select another color")
+        let swatch = swatches[newlySelected]
 
         // The hint centres a region of the selected color in the canvas area: tap it, or (when
         // the camera couldn't centre it) drag-paint across the middle.

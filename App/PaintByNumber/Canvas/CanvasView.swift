@@ -37,7 +37,7 @@ final class CanvasView: UIView, PaintingCanvas {
     }
     var initialCamera: CanvasCamera?
     var onPencilAction: ((PencilAction) -> Void)?
-    /// Scales fill animation durations (demo scenarios freeze a fill mid-way).
+    /// Scales fill and replay durations (demo scenarios catch them mid-way).
     var fillDurationScale: Float = 1
 
     private let template: Template
@@ -559,7 +559,7 @@ final class CanvasView: UIView, PaintingCanvas {
             try? await Task.sleep(for: .seconds(Double(lift) + 0.25))
             guard let self, !Task.isCancelled else { return }
             // About 7 s for a typical painting, never a slog for a large one.
-            let span = min(10, max(4, Float(painted.count) * 0.02))
+            let span = min(10, max(4, Float(painted.count) * 0.02)) * fillDurationScale
             let step = span / Float(painted.count)
             let begin = now()
             for (i, r) in painted.enumerated() {

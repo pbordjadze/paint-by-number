@@ -185,11 +185,11 @@ struct TemplatePreviewView: View {
                 onEditing: model.setAdjusting)
 
             Text(model.stats?.summary ?? " ")
-                .font(.footnote)
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
                 .contentTransition(.numericText())
-                .opacity(model.isFinal ? 1 : 0.5)
+                .opacity(model.isFinal ? 1 : 0.7)
                 .animation(.easeInOut(duration: 0.25), value: model.stats)
                 .frame(maxWidth: .infinity, alignment: .center)
 

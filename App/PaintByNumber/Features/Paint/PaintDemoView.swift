@@ -95,8 +95,12 @@ private final class Demo {
             }
             let target = candidates.min { simd_distance(Self.center(t, $0), middle) < simd_distance(Self.center(t, $1), middle) }
             camera = CanvasCamera(zoom: 4, center: target.map { Self.center(t, $0) } ?? middle)
-        case "paint-complete", "paint-replay":
+        case "paint-complete":
             paint(fraction: 1)
+        case "paint-replay":
+            paint(fraction: 1)
+            // Slowed so the CI screenshot lands mid-replay.
+            fillDurationScale = 4
         case "paint-fill":
             paint(fraction: 0.2)
             // Big fills take 0.6 s; stretched so the CI screenshot (~10 s later) lands mid-spread.

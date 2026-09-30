@@ -116,11 +116,13 @@ struct CompareView: View {
 
     // Not named `tag`: that would resolve `tag("Photo")` to `View.tag(_:)` on `self` and nest
     // the whole comparison inside its own overlay, recursing until the stack overflows.
+    /// White on a dark scrim: legible over any photo, light or dark.
     private func caption(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(.rounded(.caption, weight: .semibold))
+            .foregroundStyle(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .glassEffect(.regular, in: .capsule)
+            .background(.black.opacity(0.5), in: .capsule)
     }
 }

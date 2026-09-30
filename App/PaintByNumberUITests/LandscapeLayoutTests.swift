@@ -94,9 +94,11 @@ final class LandscapeLayoutTests: XCTestCase {
         return app
     }
 
+    /// The whole screen in its native (portrait) orientation: app screenshots taken in
+    /// landscape come out rotated and cropped.
     @MainActor
     private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
+        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         shot.name = name
         shot.lifetime = .keepAlways
         add(shot)

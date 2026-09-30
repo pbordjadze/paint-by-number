@@ -93,7 +93,7 @@ struct GalleryView: View {
                 Text(title).font(.rounded(.title2, weight: .bold))
                 Text(count, format: .number)
                     .font(.rounded(.title3, weight: .semibold))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 4)
             .accessibilityElement(children: .combine)
