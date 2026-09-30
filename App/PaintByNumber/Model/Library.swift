@@ -42,6 +42,10 @@ final class Library {
 
     /// The library used by the running app: the real one, or a throwaway one for demos.
     static func forLaunch() -> Library {
+        // Shared files left over from earlier runs. The cutoff spares exports started right
+        // after launch; the sweep runs off the main actor so it never delays launch.
+        let launch = Date.now
+        Task { await Background.run { ArtworkExporter.purgeExports(createdBefore: launch) } }
         let isTestHost = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if DemoMode.isActive || isTestHost {
             let root = FileManager.default.temporaryDirectory.appending(path: "DemoLibrary", directoryHint: .isDirectory)

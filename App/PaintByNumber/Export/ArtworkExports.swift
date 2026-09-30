@@ -9,11 +9,13 @@ nonisolated enum ArtworkExporter {
     enum ExportError: LocalizedError {
         case renderFailed
         case photosAccessDenied
+        case timelapseFailed
 
         var errorDescription: String? {
             switch self {
             case .renderFailed: "The picture couldn't be rendered."
             case .photosAccessDenied: "Allow Paint by Numbers to add photos in Settings to save your painting."
+            case .timelapseFailed: "The time-lapse couldn’t be made."
             }
         }
     }
@@ -45,13 +47,44 @@ nonisolated enum ArtworkExporter {
         return url
     }
 
+    /// Every export lives in its own folder here: `tmp/Exports/<uuid>/<name>.<ext>`.
+    static var exportsRoot: URL {
+        FileManager.default.temporaryDirectory.appending(path: "Exports", directoryHint: .isDirectory)
+    }
+
+    /// Exports older than this are swept whenever a new one is made.
+    static let staleExportAge: TimeInterval = 3600
+
     /// A fresh temporary location, in its own folder so the file keeps a readable name.
-    static func temporaryURL(name: String, pathExtension: String) throws -> URL {
-        let dir = FileManager.default.temporaryDirectory
-            .appending(path: "Exports", directoryHint: .isDirectory)
-            .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+    static func temporaryURL(name: String, pathExtension: String, root: URL = exportsRoot) throws -> URL {
+        // Picture and template share links can't tell when their share sheet closes, and the
+        // app may not relaunch for days, so each new export sweeps the old ones. Receivers are
+        // handed copies, so an hour-old file is no longer needed.
+        purgeExports(createdBefore: Date.now - staleExportAge, in: root)
+        let dir = root.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appending(path: "\(fileName(name)).\(pathExtension)")
+    }
+
+    /// Removes the export folders created before `cutoff` (and any whose date is unknown).
+    static func purgeExports(createdBefore cutoff: Date, in root: URL = exportsRoot) {
+        let fm = FileManager.default
+        for entry in (try? fm.contentsOfDirectory(at: root, includingPropertiesForKeys: [.creationDateKey])) ?? [] {
+            let created = try? entry.resourceValues(forKeys: [.creationDateKey]).creationDate
+            if created.map({ $0 < cutoff }) ?? true { try? fm.removeItem(at: entry) }
+        }
+    }
+
+    /// Deletes the folder of an export once it has been shared.
+    static func removeExport(at file: URL, root: URL = exportsRoot) {
+        let folder = file.deletingLastPathComponent()
+        // Only ever a folder directly inside the exports root. Compared by resolved path
+        // components: tmp may be spelled /var or /private/var, and directory URLs may or may
+        // not end in a slash.
+        guard folder.deletingLastPathComponent().resolvingSymlinksInPath().pathComponents
+            == root.resolvingSymlinksInPath().pathComponents
+        else { return }
+        try? FileManager.default.removeItem(at: folder)
     }
 
     static func fileName(_ title: String) -> String {
@@ -108,42 +141,41 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     }
 }
 
-/// "Share Time-lapse": the painting replayed fill by fill with the canvas shaders, as a short
-/// movie rendered when the share sheet asks for it.
-nonisolated struct TimelapseVideoFile: Transferable, Sendable {
-    let store: ArtworkStore
-    let artwork: Artwork
-
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(exportedContentType: .mpeg4Movie) { item in
-            SentTransferredFile(try await item.export())
-        }
-    }
-
-    @concurrent
-    func export(longSide: Int = 1080) async throws -> URL {
-        let template = try store.readTemplate(artwork.id)
-        let progress = store.readProgress(artwork.id, regionCount: template.regions.count)
-        return try await TimelapseMovie(template: template, progress: progress, title: artwork.title).export(longSide: longSide)
-    }
+/// What a time-lapse replays: a saved artwork, or an open painting's live state (its saved
+/// copy may lag behind).
+nonisolated enum TimelapseSource: Sendable {
+    case saved(store: ArtworkStore, artwork: Artwork)
+    case live(template: Template, progress: PaintProgress)
 }
 
-/// A time-lapse of an open painting, from its live state (the saved copy may lag behind).
-nonisolated struct TimelapseMovie: Transferable, Sendable {
-    let template: Template
-    let progress: PaintProgress
+/// "Share Time-lapse": the painting replayed fill by fill with the canvas shaders, as a short
+/// movie (see `TimelapseExportSheet`).
+nonisolated struct TimelapseRequest: Identifiable, Sendable {
+    let id = UUID()
     let title: String
+    let source: TimelapseSource
 
-    static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(exportedContentType: .mpeg4Movie) { item in
-            SentTransferredFile(try await item.export())
-        }
-    }
-
+    /// Renders the movie into its own export folder. On failure or cancellation (checked every
+    /// frame) the folder and the partial movie are removed.
     @concurrent
-    func export(longSide: Int = 1080) async throws -> URL {
+    func render(longSide: Int = 1080, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> URL {
+        let template: Template, progress: PaintProgress
+        switch source {
+        case let .saved(store, artwork):
+            template = try store.readTemplate(artwork.id)
+            progress = store.readProgress(artwork.id, regionCount: template.regions.count)
+        case let .live(liveTemplate, liveProgress):
+            template = liveTemplate
+            progress = liveProgress
+        }
         let url = try ArtworkExporter.temporaryURL(name: "\(title) Time-lapse", pathExtension: "mp4")
-        try await TimelapseFrameRenderer.export(template: template, progress: progress, to: url, longSide: longSide)
+        do {
+            try await TimelapseFrameRenderer.export(
+                template: template, progress: progress, to: url, longSide: longSide, onProgress: onProgress)
+        } catch {
+            ArtworkExporter.removeExport(at: url)
+            throw error
+        }
         return url
     }
 }

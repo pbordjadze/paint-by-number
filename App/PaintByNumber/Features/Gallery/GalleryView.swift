@@ -11,6 +11,7 @@ struct GalleryView: View {
     @State private var renaming: Artwork?
     @State private var renameText = ""
     @State private var restarting: Artwork?
+    @State private var timelapse: TimelapseRequest?
     @State private var notice: Notice?
 
     private struct Notice: Equatable {
@@ -69,6 +70,15 @@ struct GalleryView: View {
             }
         } message: { _ in
             Text("Every painted area will be cleared.")
+        }
+        .sheet(item: $timelapse) { request in
+            TimelapseExportSheet(request: request)
+        }
+        .task(id: library.finished.first?.id) {
+            // Demo: share the finished painting's time-lapse once it is ready.
+            if ShellDemo.current == .galleryTimelapse, timelapse == nil, let artwork = library.finished.first {
+                shareTimelapse(artwork)
+            }
         }
     }
 
@@ -137,12 +147,7 @@ struct GalleryView: View {
             Label(artwork.isComplete ? "Share Painting" : "Share Progress", systemImage: "square.and.arrow.up")
         }
         if artwork.isComplete {
-            ShareLink(
-                item: TimelapseVideoFile(store: library.store, artwork: artwork),
-                preview: SharePreview("\(artwork.title) Time-lapse", image: previewImage(artwork))
-            ) {
-                Label("Share Time-lapse", systemImage: "timelapse")
-            }
+            Button("Share Time-lapse", systemImage: "timelapse") { shareTimelapse(artwork) }
         }
         ShareLink(
             item: PrintableTemplateFile(store: library.store, artwork: artwork, paper: paper),
@@ -162,6 +167,10 @@ struct GalleryView: View {
     private func previewImage(_ artwork: Artwork) -> Image {
         if let cached = ThumbnailCache.shared.cached(artwork) { return Image(decorative: cached, scale: 1) }
         return Image(systemName: "paintpalette")
+    }
+
+    private func shareTimelapse(_ artwork: Artwork) {
+        timelapse = TimelapseRequest(title: artwork.title, source: .saved(store: library.store, artwork: artwork))
     }
 
     private func saveToPhotos(_ artwork: Artwork) {

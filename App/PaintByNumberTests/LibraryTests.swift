@@ -77,7 +77,8 @@ struct LibraryTests {
         #expect(png.lastPathComponent == "Stripes- Blue-Red.png")
         #expect(ImageCodec.image(at: png)?.width == ArtworkExporter.imagePixelSize)
 
-        let movie = try await TimelapseVideoFile(store: library.store, artwork: artwork).export(longSide: 320)
+        let movie = try await TimelapseRequest(title: artwork.title, source: .saved(store: library.store, artwork: artwork))
+            .render(longSide: 320)
         #expect(movie.pathExtension == "mp4")
         let asset = AVURLAsset(url: movie)
         let duration = try await asset.load(.duration)

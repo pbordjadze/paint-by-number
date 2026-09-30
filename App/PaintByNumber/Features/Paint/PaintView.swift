@@ -21,6 +21,7 @@ struct PaintView: View {
     @State private var chrome = PaintChromeState()
     @State private var showsNumbers = true
     @State private var confirmRestart = false
+    @State private var timelapse: TimelapseRequest?
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.undoManager) private var undoManager
 
@@ -89,6 +90,9 @@ struct PaintView: View {
             }
         } message: {
             Text("All paint will be cleared.")
+        }
+        .sheet(item: $timelapse) { request in
+            TimelapseExportSheet(request: request)
         }
     }
 
@@ -218,7 +222,9 @@ struct PaintView: View {
     @ViewBuilder
     private func bottomBar(_ palette: PaletteLayout) -> some View {
         if session.isComplete {
-            CompletionBar(session: session, title: title, onReplay: controller.replay, onClose: onClose)
+            CompletionBar(
+                session: session, title: title, onReplay: controller.replay, onShareTimelapse: shareTimelapse,
+                onClose: onClose)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
             PaletteBar(
@@ -237,6 +243,12 @@ struct PaintView: View {
         } else {
             session.undo()
         }
+    }
+
+    /// From the live session: the saved copy may lag behind.
+    private func shareTimelapse() {
+        let name = title.isEmpty ? String(localized: "Painting") : title
+        timelapse = TimelapseRequest(title: name, source: .live(template: session.template, progress: session.progress))
     }
 
     private func handlePencil(_ action: PencilAction) {
@@ -295,13 +307,18 @@ private struct CompletionBar: View {
     let session: PaintingSession
     let title: String
     let onReplay: () -> Void
+    let onShareTimelapse: () -> Void
     let onClose: (() -> Void)?
     @State private var shareImage: Image?
 
-    init(session: PaintingSession, title: String, onReplay: @escaping () -> Void, onClose: (() -> Void)?) {
+    init(
+        session: PaintingSession, title: String, onReplay: @escaping () -> Void,
+        onShareTimelapse: @escaping () -> Void, onClose: (() -> Void)?
+    ) {
         self.session = session
         self.title = title
         self.onReplay = onReplay
+        self.onShareTimelapse = onShareTimelapse
         self.onClose = onClose
     }
 
@@ -332,10 +349,7 @@ private struct CompletionBar: View {
                     ShareLink(item: shareImage, preview: SharePreview(name, image: shareImage)) {
                         Label("Share Picture", systemImage: "photo")
                     }
-                    ShareLink(
-                        item: TimelapseMovie(template: session.template, progress: session.progress, title: name),
-                        preview: SharePreview("\(name) Time-lapse", image: shareImage)
-                    ) {
+                    Button { onShareTimelapse() } label: {
                         Label("Share Time-lapse", systemImage: "timelapse")
                     }
                 } label: {

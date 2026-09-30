@@ -238,7 +238,7 @@ struct CanvasRenderTests {
         let frame = try #require(buffer)
         // Halfway through the log with the next stroke 40 % spread.
         let half = t.regions.count / 2
-        try renderer.render(strokes: half, fraction: 0.4, into: frame)
+        try renderer.render(frame: 0, strokes: half, fraction: 0.4, into: frame)()
         CVPixelBufferLockBaseAddress(frame, .readOnly)
         defer { CVPixelBufferUnlockBaseAddress(frame, .readOnly) }
         let base = try #require(CVPixelBufferGetBaseAddress(frame))
