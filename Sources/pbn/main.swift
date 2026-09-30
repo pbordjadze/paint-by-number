@@ -133,6 +133,7 @@ struct Metrics: Codable {
     var totalMs: Double
     var encodedBytes: Int
     var palette: [String]
+    var colorNames: [String]
 }
 
 func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
@@ -168,7 +169,8 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage) -> Metrics {
         encodedBytes: t.encoded().count,
         palette: t.palette.map { c in
             c.rgb.indices.map { String(format: "%02x", Int((min(max(c.rgb[$0], 0), 1) * 255).rounded())) }.joined()
-        })
+        },
+        colorNames: t.palette.map(\.colorName.english))
 }
 
 /// Measures the longest stretch of pipeline work between two cancellation checks, i.e. the

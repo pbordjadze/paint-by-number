@@ -75,12 +75,17 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
         rows = (len(palette) + cols - 1) // cols
         cw, ch = panel_w // cols, min(panel_h // max(rows, 1), 60)
         font = ImageFont.load_default(size=max(10, min(ch // 2, 18)))
+        names = stats.get("colorNames", [])
+        name_font = ImageFont.load_default(size=max(9, ch // 4))
         for i, hx in enumerate(palette):
             x0, y0 = 2 * panel_w + (i % cols) * cw, 28 + panel_h + (i // cols) * ch
             rgb = tuple(int(hx[k:k + 2], 16) for k in (0, 2, 4))
             d.rectangle([x0 + 2, y0 + 2, x0 + cw - 2, y0 + ch - 2], fill=rgb)
             lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
-            d.text((x0 + 8, y0 + 6), str(i + 1), fill=(0, 0, 0) if lum > 128 else (255, 255, 255), font=font)
+            ink = (0, 0, 0) if lum > 128 else (255, 255, 255)
+            d.text((x0 + 8, y0 + 6), str(i + 1), fill=ink, font=font)
+            if ch >= 36 and i < len(names):
+                d.text((x0 + 8, y0 + ch - 6 - max(9, ch // 4)), names[i], fill=ink, font=name_font)
     caption = (f"{name}  {stats['width']}x{stats['height']}  colors={stats['colors']}  regions={stats['regions']}  "
                f"dE={stats['meanDeltaE']:.4f}  r<2:{stats['regionsUnderRadius2']}  total={stats['totalMs']:.0f}ms")
     d.text((8, 6), caption, fill=(0, 0, 0), font=ImageFont.load_default(size=16))
