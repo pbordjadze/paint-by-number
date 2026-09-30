@@ -234,7 +234,9 @@ def run_case(ppm, regime, out):
         result = json.load(f)
     shutil.rmtree(os.path.join(out, "repeat"))
     check = subprocess.run([PBN, "check", os.path.join(out, "template.pbnt")], capture_output=True, text=True)
-    result["validation"] = (check.stdout.strip() or check.stderr.strip())[:400]
+    # `pbn check` prints the file's versions first and its verdict ("valid …"/"INVALID …") last.
+    verdict = [l for l in check.stdout.splitlines() if l.startswith(("valid", "INVALID"))]
+    result["validation"] = (verdict[-1] if verdict else check.stdout.strip() or check.stderr.strip())[:400]
     result["deterministic"] = templates[0] == templates[1]
     result["templateSHA1"] = hashlib.sha1(templates[0]).hexdigest()
     return result

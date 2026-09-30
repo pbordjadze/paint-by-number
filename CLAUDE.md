@@ -163,7 +163,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `ci/check_release.sh` (run by the iPad job on a Release build) fails if a demo type name
   shows up in the Release binary.
 - Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking, no
-  collected data; required-reason APIs: UserDefaults `CA92.1`). Using another required-reason API
+  collected data; required-reason APIs: UserDefaults `CA92.1`, file timestamps `C617.1` for purging
+  the app's own export folders by creation date). Using another required-reason API
   (file timestamps, disk space, boot time via `systemUptime`/`mach_absolute_time`, active
   keyboards) means adding its category and reason code there; `AboutTests` fails when the
   sources of the app or of `Sources/PaintCore` (not the `pbn` CLI) and the manifest disagree.
