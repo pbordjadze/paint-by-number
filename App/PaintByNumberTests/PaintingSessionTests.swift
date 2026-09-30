@@ -268,6 +268,31 @@ struct PaintingSessionTests {
         #expect(session.canvas === view)
     }
 
+    /// The completion bar's share picture renders once per completion, however often the bar
+    /// is rebuilt, and again for a new completion.
+    @Test func completionShareRendersOncePerCompletion() async throws {
+        let session = PaintingSession(template: template)
+        let share = CompletionShare()
+        await share.prepare(for: session)
+        #expect(share.picture == nil)
+
+        for color in 0..<session.paletteCount {
+            session.paint(regions(ofColor: color), from: .zero, animated: false)
+        }
+        #expect(session.isComplete)
+        await share.prepare(for: session)
+        let first = try #require(share.picture)
+        await share.prepare(for: session)
+        #expect(share.picture === first)
+
+        let region = try #require(session.undo())
+        session.paint([region], from: .zero, animated: false)
+        #expect(session.isComplete)
+        await share.prepare(for: session)
+        let second = try #require(share.picture)
+        #expect(second !== first)
+    }
+
     /// With Metal (the simulator has it) the canvas draws, so the painting screen never shows
     /// its "Can't Show the Canvas" stand-in.
     @Test func canvasIsRenderableWithMetal() {

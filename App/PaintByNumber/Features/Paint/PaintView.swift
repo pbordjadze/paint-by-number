@@ -23,6 +23,7 @@ struct PaintView: View {
     @State private var confirmRestart = false
     @State private var timelapse: TimelapseRequest?
     @State private var canvasUnavailable = false
+    @State private var completionShare = CompletionShare()
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.undoManager) private var undoManager
 
@@ -232,8 +233,8 @@ struct PaintView: View {
     private func bottomBar(_ palette: PaletteLayout) -> some View {
         if session.isComplete {
             CompletionBar(
-                session: session, title: title, onReplay: controller.replay, onShareTimelapse: shareTimelapse,
-                onClose: onClose)
+                session: session, title: title, share: completionShare, onReplay: controller.replay,
+                onShareTimelapse: shareTimelapse, onClose: onClose)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
             PaletteBar(
@@ -315,17 +316,18 @@ struct GlassIconLabel: View {
 private struct CompletionBar: View {
     let session: PaintingSession
     let title: String
+    let share: CompletionShare
     let onReplay: () -> Void
     let onShareTimelapse: () -> Void
     let onClose: (() -> Void)?
-    @State private var shareImage: Image?
 
     init(
-        session: PaintingSession, title: String, onReplay: @escaping () -> Void,
+        session: PaintingSession, title: String, share: CompletionShare, onReplay: @escaping () -> Void,
         onShareTimelapse: @escaping () -> Void, onClose: (() -> Void)?
     ) {
         self.session = session
         self.title = title
+        self.share = share
         self.onReplay = onReplay
         self.onShareTimelapse = onShareTimelapse
         self.onClose = onClose
@@ -352,8 +354,10 @@ private struct CompletionBar: View {
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
             .accessibilityLabel(Text("Replay"))
-            if let shareImage {
+            if let picture = share.picture {
                 let name = title.isEmpty ? String(localized: "Painting") : title
+                // UIImage keeps the picture's Display P3 colors.
+                let shareImage = Image(uiImage: UIImage(cgImage: picture))
                 Menu {
                     ShareLink(item: shareImage, preview: SharePreview(name, image: shareImage)) {
                         Label("Share Picture", systemImage: "photo")
@@ -383,17 +387,35 @@ private struct CompletionBar: View {
         // One compact row even at the largest text sizes.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         .glassEffect(.regular, in: .capsule)
-        .task(id: session.revision) {
-            let data = await Self.renderShareImage(template: session.template, progress: session.progress)
-            if let data, let image = UIImage(data: data) { shareImage = Image(uiImage: image) }
-        }
+        .task(id: session.revision) { await share.prepare(for: session) }
+    }
+}
+
+/// The finished painting as a picture to share, rendered once per completion (the bar
+/// showing it is rebuilt far more often: layout changes, the palette moving aside).
+@Observable
+final class CompletionShare {
+    private(set) var picture: CGImage?
+    /// The session revision `picture` shows (or is being rendered for).
+    @ObservationIgnored private var revision: Int?
+
+    func prepare(for session: PaintingSession) async {
+        guard session.isComplete, revision != session.revision else { return }
+        let target = session.revision
+        revision = target
+        picture = nil
+        let image = await Self.render(template: session.template, progress: session.progress)
+        // Undone and finished again meanwhile: that completion renders its own.
+        guard revision == target else { return }
+        picture = image
+        // A failed render may succeed next time the bar appears.
+        if image == nil { revision = nil }
     }
 
     @concurrent
-    private static func renderShareImage(template: Template, progress: PaintProgress) async -> Data? {
+    private static func render(template: Template, progress: PaintProgress) async -> CGImage? {
         let size = CanvasSnapshot.fittedSize(for: template, longSide: 2048)
-        guard let image = CanvasSnapshot.render(template: template, progress: progress, size: size, options: .painting) else { return nil }
-        return CanvasSnapshot.pngData(image)
+        return CanvasSnapshot.render(template: template, progress: progress, size: size, options: .painting)
     }
 }
 

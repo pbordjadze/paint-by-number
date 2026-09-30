@@ -273,7 +273,7 @@ struct CanvasRenderTests {
     }
 
     private func record(_ image: CGImage, _ name: String) {
-        if let png = CanvasSnapshot.pngData(image) { Attachment.record(png, named: "\(name).png") }
+        if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "\(name).png") }
     }
 }
 
