@@ -8,8 +8,9 @@ import Testing
 @MainActor
 struct LibraryTests {
     let root = Fixtures.temporaryDirectory()
+    let faults = WriteFaults()
 
-    private func makeLibrary() -> Library { Library(store: ArtworkStore(root: root)) }
+    private func makeLibrary() -> Library { Library(store: ArtworkStore(root: root, writeFaults: faults)) }
 
     private func draft(title: String = "Stripes", painted: [Int] = [], photo: CGImage? = nil) -> ArtworkDraft {
         var progress = PaintProgress(regionCount: 3)
@@ -227,19 +228,6 @@ struct LibraryTests {
 
     // MARK: Write failures
 
-    /// Makes writes of `file` fail: a non-empty directory in its place can't be replaced by the
-    /// atomic write's rename (EISDIR or ENOTEMPTY, whichever the platform reports).
-    private func sabotage(_ file: ArtworkStore.File, of id: UUID, in library: Library) throws {
-        let url = library.store.url(file, of: id)
-        try? FileManager.default.removeItem(at: url)
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        try Data("x".utf8).write(to: url.appending(path: "blocker"))
-    }
-
-    private func repair(_ file: ArtworkStore.File, of id: UUID, in library: Library) throws {
-        try FileManager.default.removeItem(at: library.store.url(file, of: id))
-    }
-
     private func progress(painting regions: [Int]) -> PaintProgress {
         var progress = PaintProgress(regionCount: 3)
         for region in regions { progress.paint(region) }
@@ -256,13 +244,13 @@ struct LibraryTests {
         await library.flush()
         #expect(library.writeFailures.isEmpty)
 
-        try sabotage(.progress, of: artwork.id, in: library)
+        faults.fail(.progress)
         library.saveProgress(progress(painting: [0]), for: artwork.id)
         await library.flush()
         #expect(library.writeFailures[artwork.id] != nil)
         #expect(library.latestWriteFailure?.artwork.id == artwork.id)
 
-        try repair(.progress, of: artwork.id, in: library)
+        faults.heal(.progress)
         library.retrySaving(artwork.id)
         await library.flush()
         #expect(library.writeFailures.isEmpty)
@@ -270,11 +258,11 @@ struct LibraryTests {
         #expect(try await savedProgress(artwork.id).isPainted(0))
 
         // A later save that succeeds clears the error too, and its progress is what's kept.
-        try sabotage(.progress, of: artwork.id, in: library)
+        faults.fail(.progress)
         library.saveProgress(progress(painting: [0, 1]), for: artwork.id)
         await library.flush()
         #expect(library.writeFailures[artwork.id] != nil)
-        try repair(.progress, of: artwork.id, in: library)
+        faults.heal(.progress)
         library.saveProgress(progress(painting: [0, 2]), for: artwork.id)
         await library.flush()
         #expect(library.writeFailures.isEmpty)
@@ -285,12 +273,12 @@ struct LibraryTests {
     @Test func retryNeverWritesAnOlderSnapshot() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft())
-        try sabotage(.progress, of: artwork.id, in: library)
+        faults.fail(.progress)
         library.saveProgress(progress(painting: [1]), for: artwork.id)
         await library.flush()
         #expect(library.writeFailures[artwork.id] != nil)
 
-        try repair(.progress, of: artwork.id, in: library)
+        faults.heal(.progress)
         library.saveProgress(progress(painting: [2]), for: artwork.id)
         library.retrySaving(artwork.id)
         await library.flush()
@@ -302,12 +290,12 @@ struct LibraryTests {
     @Test func metadataWriteFailuresAreRetried() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft())
-        try sabotage(.meta, of: artwork.id, in: library)
+        faults.fail(.meta)
         library.rename(artwork.id, to: "Sunset")
         await library.flush()
         #expect(library.writeFailures[artwork.id] != nil)
 
-        try repair(.meta, of: artwork.id, in: library)
+        faults.heal(.meta)
         library.retrySaving(artwork.id)
         await library.flush()
         #expect(library.writeFailures.isEmpty)
@@ -317,7 +305,7 @@ struct LibraryTests {
     @Test func thumbnailWriteFailuresOnlyLog() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft())
-        try sabotage(.thumbnail, of: artwork.id, in: library)
+        faults.fail(.thumbnail)
         await library.refreshThumbnail(artwork.id, progress: progress(painting: [0]))
         await library.flush()
         #expect(library.writeFailures.isEmpty)
@@ -327,7 +315,7 @@ struct LibraryTests {
     @Test func failedWriteOfADeletedArtworkIsHiddenThenDropped() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft())
-        try sabotage(.progress, of: artwork.id, in: library)
+        faults.fail(.progress)
         library.saveProgress(progress(painting: [0]), for: artwork.id)
         await library.flush()
         #expect(library.latestWriteFailure?.artwork.id == artwork.id)

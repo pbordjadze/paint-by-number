@@ -70,11 +70,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Save failures: `Library.writeFailures` records failed progress/metadata writes per artwork (the
   newest unsaved progress is kept for `retrySaving`); the painting screen and the gallery show a
   Retry toast, and the next successful save clears it. Thumbnail and trash writes only log.
+  Tests make writes fail through `ArtworkStore.writeFaults` (`WriteFaults`).
 - Sharing: the time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress,
   Cancel, Try Again) and is handed to `ActivityShareSheet`, which reports when the share sheet
   closes so the movie is deleted (also when the sheet is dismissed). Every export lives in
   `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture/template `ShareLink`s can't report
-  completion, so they rely on the launch purge and the one-hour sweep each new export runs.
+  completion, so they rely on the launch purge and the sweep of exports older than ten
+  minutes that each new export runs (`ArtworkExporter.staleExportAge`).
 - Image caches (`ImageCache`): LRU by decoded bytes (thumbnails 48 MB, samples 16 MB), emptied on
   memory warnings; gallery tiles decode thumbnails at their own pixel size.
 - Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`), radius capped at

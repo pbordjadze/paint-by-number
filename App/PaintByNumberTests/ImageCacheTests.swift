@@ -37,15 +37,12 @@ struct ImageCacheTests {
         #expect(cache.totalCost == cache.costLimit)
     }
 
-    @Test func memoryWarningEmptiesTheCache() async throws {
+    @Test func memoryWarningEmptiesTheCache() throws {
         let cache = ImageCache<Int>(costLimit: 1 << 20)
         cache.insert(try image(50), for: 1)
         #expect(cache.totalCost > 0)
-        // Posted from another thread, as the system may: the cache still empties on the main actor.
-        let warning = UIApplication.didReceiveMemoryWarningNotification
-        await Task.detached { NotificationCenter.default.post(name: warning, object: nil) }.value
-        let deadline = ContinuousClock.now + .seconds(1)
-        while cache.totalCost > 0, ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(10)) }
+        // iOS posts memory warnings on the main thread, where a main-queue observer runs inline.
+        NotificationCenter.default.post(name: UIApplication.didReceiveMemoryWarningNotification, object: nil)
         #expect(cache.totalCost == 0)
         #expect(cache.image(for: 1) == nil)
     }

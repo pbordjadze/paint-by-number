@@ -20,7 +20,7 @@ final class GalleryActionsTests: XCTestCase {
         app.buttons["Delete “Parrots”"].tap()
         let undo = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Undo'")).firstMatch
         XCTAssertTrue(undo.waitForExistence(timeout: 5), "No undo after deleting")
-        XCTAssertTrue(card.waitForNonExistence(timeout: 5), "The painting is still in the gallery")
+        XCTAssertTrue(card.waitForNonExistence(withTimeout: 5), "The painting is still in the gallery")
         attachScreenshot(of: app, named: "deleted")
     }
 
@@ -40,7 +40,7 @@ final class GalleryActionsTests: XCTestCase {
         let cancel = app.buttons["Cancel"]
         guard cancel.exists, cancel.isHittable else { return }
         cancel.tap()
-        XCTAssertTrue(title.waitForNonExistence(timeout: 5), "Cancel didn't close the progress sheet")
+        XCTAssertTrue(title.waitForNonExistence(withTimeout: 5), "Cancel didn't close the progress sheet")
         XCTAssertTrue(card.exists)
     }
 

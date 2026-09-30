@@ -79,7 +79,7 @@ struct GalleryView: View {
             if artwork.isComplete {
                 Text("“\(artwork.title)” is finished.")
             } else if artwork.isStarted {
-                Text(verbatim: "“\(artwork.title)” is \(ProgressCaption.percent(artwork))% painted.")
+                Text("“\(artwork.title)” is \(Double(ProgressCaption.percent(artwork)) / 100, format: .percent.precision(.fractionLength(0))) painted.")
             } else {
                 Text("“\(artwork.title)” hasn’t been started yet.")
             }

@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import Synchronization
 import os
 
 nonisolated enum Log {
@@ -22,7 +23,7 @@ nonisolated enum Log {
 nonisolated struct ArtworkStore: Sendable {
     enum StoreError: Error { case notFound, unreadable(String) }
 
-    enum File: String, CaseIterable {
+    nonisolated enum File: String, CaseIterable {
         case meta = "meta.json"
         case template = "template.pbnt"
         case progress = "progress.bin"
@@ -34,9 +35,12 @@ nonisolated struct ArtworkStore: Sendable {
     static let thumbnailMaxPixelSize = 1024
 
     let root: URL
+    /// Failures to inject into in-place writes; only tests set it.
+    let writeFaults: WriteFaults?
 
-    init(root: URL) {
+    init(root: URL, writeFaults: WriteFaults? = nil) {
         self.root = root
+        self.writeFaults = writeFaults
         for dir in [root, root.appending(path: ".staging"), root.appending(path: ".trash")] {
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
@@ -82,6 +86,7 @@ nonisolated struct ArtworkStore: Sendable {
     }
 
     func writeMeta(_ artwork: Artwork) throws {
+        try writeFaults?.check(.meta)
         guard fm.fileExists(atPath: directory(for: artwork.id).path) else { throw StoreError.notFound }
         try writeMeta(artwork, in: directory(for: artwork.id))
     }
@@ -125,12 +130,14 @@ nonisolated struct ArtworkStore: Sendable {
     }
 
     func writeProgress(_ progress: PaintProgress, for id: UUID) throws {
+        try writeFaults?.check(.progress)
         try progress.encoded().write(to: url(.progress, of: id), options: .atomic)
     }
 
     // MARK: Images
 
     func writeThumbnail(_ png: Data, for id: UUID) throws {
+        try writeFaults?.check(.thumbnail)
         try png.write(to: url(.thumbnail, of: id), options: .atomic)
     }
 
@@ -207,5 +214,19 @@ nonisolated struct ArtworkStore: Sendable {
         for url in (try? fm.contentsOfDirectory(at: stagingRoot, includingPropertiesForKeys: nil)) ?? [] {
             try? fm.removeItem(at: url)
         }
+    }
+}
+
+/// Makes an `ArtworkStore`'s in-place writes of chosen files fail as a full disk would, so tests
+/// can check how the library copes. Shared by reference: tests flip it while the library's
+/// writes run on other threads.
+nonisolated final class WriteFaults: Sendable {
+    private let failing = Mutex<Set<ArtworkStore.File>>([])
+
+    func fail(_ file: ArtworkStore.File) { failing.withLock { _ = $0.insert(file) } }
+    func heal(_ file: ArtworkStore.File) { failing.withLock { _ = $0.remove(file) } }
+
+    func check(_ file: ArtworkStore.File) throws {
+        if failing.withLock({ $0.contains(file) }) { throw CocoaError(.fileWriteOutOfSpace) }
     }
 }

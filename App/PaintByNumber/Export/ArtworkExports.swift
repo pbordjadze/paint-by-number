@@ -53,13 +53,14 @@ nonisolated enum ArtworkExporter {
     }
 
     /// Exports older than this are swept whenever a new one is made.
-    static let staleExportAge: TimeInterval = 3600
+    static let staleExportAge: TimeInterval = 600
 
     /// A fresh temporary location, in its own folder so the file keeps a readable name.
     static func temporaryURL(name: String, pathExtension: String, root: URL = exportsRoot) throws -> URL {
         // Picture and template share links can't tell when their share sheet closes, and the
-        // app may not relaunch for days, so each new export sweeps the old ones. Receivers are
-        // handed copies, so an hour-old file is no longer needed.
+        // app may not relaunch for days, so each new export sweeps the old ones. The share sheet
+        // is modal and hands receivers copies, so by the time another export starts the earlier
+        // ones are done with; the age only leaves a margin.
         purgeExports(createdBefore: Date.now - staleExportAge, in: root)
         let dir = root.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

@@ -136,6 +136,10 @@ struct TimelapseExportSheet: View {
             Label("Ready to Share", systemImage: "checkmark.circle.fill")
                 .font(.headline)
                 .foregroundStyle(.tint)
+            // The share sheet normally covers this; if it couldn't appear, this still closes.
+            Button("Close") { dismiss() }
+                .buttonStyle(.glass)
+                .keyboardShortcut(.cancelAction)
         case .failed(let message):
             Text(message)
                 .font(.subheadline)
