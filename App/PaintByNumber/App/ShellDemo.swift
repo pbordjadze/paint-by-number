@@ -7,12 +7,13 @@ import Foundation
 /// - `gallery`, `gallery-dark`: six paintings at various stages.
 /// - `gallery-empty`: the empty state.
 /// - `create`, `create-dark`: the photo picker step of the create flow.
+/// - `create-samples`: the same step on its Samples pane (iPhone; iPad shows both).
 /// - `create-preview`, `create-preview-dark`: a sample generated, comparison at half.
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 enum ShellDemo: Equatable {
-    case gallery, galleryEmpty, galleryOpen, create, createPreview, settings, settingsAcknowledgements
+    case gallery, galleryEmpty, galleryOpen, create, createSamples, createPreview, settings, settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -20,6 +21,7 @@ enum ShellDemo: Equatable {
         case "gallery-empty": .galleryEmpty
         case "gallery-open": .galleryOpen
         case "create", "create-dark": .create
+        case "create-samples": .createSamples
         case "create-preview", "create-preview-dark": .createPreview
         case "settings": .settings
         case "settings-acknowledgements": .settingsAcknowledgements
@@ -27,11 +29,17 @@ enum ShellDemo: Equatable {
         }
     }()
 
-    var opensCreateFlow: Bool { self == .create || self == .createPreview }
+    var opensCreateFlow: Bool { self == .create || self == .createSamples || self == .createPreview }
 
     var opensSettings: Bool { self == .settings || self == .settingsAcknowledgements }
 
     var previewSample: Sample? { self == .createPreview ? Sample.named("parrots") : nil }
+
+    /// How long `create` and `create-samples` give the library picker to load before they
+    /// signal readiness: it runs out of process and reports nothing when its grid is up. The
+    /// value is empirical: raise it if CI's `create` screenshots show the picker still loading
+    /// (`*-steps.log` gives each scenario's time to readiness, launch included).
+    static let pickerLoadAllowance: Duration = .seconds(3)
 
     func prepare(_ library: Library) {
         switch self {
@@ -45,13 +53,13 @@ enum ShellDemo: Equatable {
             }, completion: { DemoMode.markReady() })
         case .galleryOpen:
             library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
-        case .create, .createPreview, .galleryEmpty, .settings, .settingsAcknowledgements:
+        case .create, .createSamples, .createPreview, .galleryEmpty, .settings, .settingsAcknowledgements:
             break
         }
     }
 
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded).
-    var isReadyOnAppear: Bool { self == .create || self == .galleryEmpty || opensSettings }
+    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings }
 }
 #endif

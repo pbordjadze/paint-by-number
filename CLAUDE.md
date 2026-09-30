@@ -88,10 +88,16 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   gestures; `PaintingNavigationTests` guards this).
 - Rendering without Metal: `Export/TemplateRasterizer` (CoreGraphics; vector geometry, falls back to
   the region map) backs thumbnails, share PNGs, create-flow previews and `PDFExporter`.
+- Create flow `PhotoSourceView`: the inline `PhotosPicker` runs out of process, so it must never
+  sit inside a ScrollView (UIKit can't arbitrate their pans across the process boundary: neither
+  scrolls). It fills the page; compact windows switch Photos/Samples with a segmented control,
+  wide windows put a scrolling samples column beside it. "Browse All…" presents the full picker.
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`).
-- Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`). CI screenshots every
-  scenario listed in `ci/scenarios.txt` ~2 s after the app calls `DemoMode.markReady()` (a new
-  scenario must call it once its content is on screen; `name@seconds` is only the timeout).
+- Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`; `ShellDemo` owns the
+  gallery, create and settings ones, e.g. `create` on the Photos pane, `create-samples` on the
+  Samples pane). CI screenshots every scenario listed in `ci/scenarios.txt` ~2 s after the app
+  calls `DemoMode.markReady()` (a new scenario must call it once its content is on screen;
+  `name@seconds` is only the timeout).
   Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `PipelineCheckView` and
   `SyntheticTemplate` are wrapped in `#if DEBUG`, and every other reference (`RootView`,
   `Library.forLaunch`, `AppShellView`, `SettingsView`, …) sits in an `#if DEBUG` block, so Release

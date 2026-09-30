@@ -33,6 +33,12 @@ struct CreateFlowView: View {
             }
         }
         #if DEBUG
+        .task {
+            // A cancelled wait must not signal readiness.
+            guard ShellDemo.current == .create || ShellDemo.current == .createSamples else { return }
+            do { try await Task.sleep(for: ShellDemo.pickerLoadAllowance) } catch { return }
+            DemoMode.markReady()
+        }
         .onChange(of: model.isFinal) { _, isFinal in
             if isFinal, openingSample != nil { DemoMode.markReady() }
         }
@@ -50,10 +56,18 @@ struct CreateFlowView: View {
                     }
                 }
         } else {
-            PhotoSourceView(model: model, onClose: { dismiss() }) {
+            PhotoSourceView(model: model, initialPane: initialPane, onClose: { dismiss() }) {
                 path = [.preview]
             }
         }
+    }
+
+    /// The `create-samples` demo opens on the Samples pane; everything else starts on Photos.
+    private var initialPane: PhotoSourceView.Pane {
+        #if DEBUG
+        if ShellDemo.current == .createSamples { return .samples }
+        #endif
+        return .photos
     }
 
     /// Saves the full-resolution template to the library and opens it for painting.
