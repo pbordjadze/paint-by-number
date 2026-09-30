@@ -25,6 +25,14 @@ struct PaintTipsTests {
         }
     }
 
+    /// A rule, not an invalidation: the first tip returns on the next fresh painting.
+    @Test func paintingProgressGatesTheFirstTip() {
+        PaintTips.paintingOpened(hasProgress: true)
+        #expect(FirstPaintTip.hasPaint)
+        PaintTips.paintingOpened(hasProgress: false)
+        #expect(!FirstPaintTip.hasPaint)
+    }
+
     @Test func showingTipsAgainGivesThemNewIDs() throws {
         let name = "PaintTipsTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: name))

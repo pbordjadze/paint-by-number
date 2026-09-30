@@ -64,12 +64,15 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   drive `CanvasView.showsPhoto`. The canvas loads the photo once through `sourcePhotoLoader`
   (bounded by the canvas size) and draws it in the canvas pass (`photoFragment`,
   `RenderContext.makePhotoTexture`), so it tracks zoom and pan exactly. Canvas touches hide a
-  latched photo instead of painting.
+  latched photo instead of painting. Launched with `-tracePhotoPeek YES`, the control's
+  accessibility identifier lists its values so UI tests can check a hold.
 - Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
   and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
   Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the
-  selected swatch or the middle of the canvas. Tip types are `nonisolated struct`s driven only
-  by `Tips.Event`s; their ids carry a generation that Settings ▸ Show Tips Again bumps.
+  selected swatch or the middle of the canvas. Tip types are `nonisolated struct`s driven by
+  `Tips.Event`s (plus a `hasPaint` parameter for the first tip); their ids carry a generation
+  that Settings ▸ Show Tips Again bumps. Invalidations, like donations, go to TipKit at most
+  once per tip and launch (strokes report paint many times a second).
 - Library (`Model/`): `Library` (@Observable, injected via `.environment`) keeps `Artwork` metadata
   in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
   `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,

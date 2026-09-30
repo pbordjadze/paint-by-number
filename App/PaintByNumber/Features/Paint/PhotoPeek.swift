@@ -38,6 +38,12 @@ struct PhotoPeek {
         }
     }
 
+    /// The system took the touch (a call, a multitasking gesture): the peek ends, but that was
+    /// no deliberate tap, so it neither latches nor unlatches.
+    mutating func pressCancelled() {
+        isPressed = false
+    }
+
     /// The menu or keyboard toggle, VoiceOver, or a canvas touch.
     mutating func setLatched(_ latched: Bool) {
         isLatched = latched
@@ -50,6 +56,8 @@ struct PhotoPeekButton: View {
     @Binding var peek: PhotoPeek
     @GestureState private var isPressing = false
     @Environment(\.isEnabled) private var isEnabled
+    /// Every accessibility value the control has had, under `DemoMode.tracesPhotoPeek`.
+    @State private var valueTrace: [String] = []
 
     var body: some View {
         Image(systemName: peek.isShown ? "photo.fill" : "photo")
@@ -68,8 +76,10 @@ struct PhotoPeekButton: View {
                     .onChanged { _ in press(down: true) }
                     .onEnded { _ in press(down: false) })
             // Gesture state resets when the system cancels the touch, which never calls onEnded.
+            // It also resets on a normal release, so the cancel waits for the current update:
+            // by then a release's onEnded has run and the cancel finds nothing pressed.
             .onChange(of: isPressing) { _, pressing in
-                if !pressing { press(down: false) }
+                if !pressing { Task { peek.pressCancelled() } }
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("Photo"))
@@ -77,6 +87,10 @@ struct PhotoPeekButton: View {
             .accessibilityHint(Text("Touch and hold to compare with the photo. Tap to keep it shown."))
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { peek.setLatched(!peek.isLatched) }
+            .accessibilityIdentifier(DemoMode.tracesPhotoPeek ? valueTrace.joined(separator: ",") : "Photo")
+            .onChange(of: peek.isShown, initial: true) { _, shown in
+                if DemoMode.tracesPhotoPeek { valueTrace.append(shown ? "Showing" : "Hidden") }
+            }
     }
 
     /// `.disabled` doesn't stop a custom gesture, so a press is ignored here; a release

@@ -52,6 +52,25 @@ struct PhotoOverlayTests {
         #expect(peek.isShown)
     }
 
+    @Test func aCancelledShortPressDoesNotLatch() {
+        var peek = PhotoPeek()
+        peek.pressBegan(at: 10)
+        peek.pressCancelled()
+        #expect(!peek.isShown)
+        #expect(!peek.isLatched)
+        // The release that never came changes nothing if it arrives late.
+        peek.pressEnded(at: 10.1)
+        #expect(!peek.isShown)
+    }
+
+    @Test func aCancelledPressLeavesALatchedPhotoShown() {
+        var peek = PhotoPeek(latched: true)
+        peek.pressBegan(at: 10)
+        peek.pressCancelled()
+        #expect(peek.isLatched)
+        #expect(peek.isShown)
+    }
+
     @Test func aSecondPressBeganIsIgnored() {
         var peek = PhotoPeek()
         peek.pressBegan(at: 10)
