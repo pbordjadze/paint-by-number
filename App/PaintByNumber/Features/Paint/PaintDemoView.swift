@@ -14,9 +14,12 @@ import simd
 /// - `paint-fill`: fills frozen mid-animation to inspect the paint front
 /// - `paint-hint`: the hint flies the camera to a region of the selected color
 /// - `paint-replay`: a finished painting mid-replay
+/// - `paint-ax`: `paint-progress`, showing the selected color's name
+/// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
+    @Environment(\.dynamicTypeSize) private var systemTypeSize
 
     init(scenario: String) {
         self.scenario = scenario
@@ -28,6 +31,7 @@ struct PaintDemoView: View {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
                     initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale)
+                    .environment(\.dynamicTypeSize, demo.dynamicTypeSize ?? systemTypeSize)
                     .task {
                         await demo.run()
                         DemoMode.markReady()
@@ -62,6 +66,8 @@ private final class Demo {
     let title: String
     var camera: CanvasCamera?
     var fillDurationScale: Float = 1
+    /// Overrides the system text size (accessibility scenarios).
+    var dynamicTypeSize: DynamicTypeSize?
     private let scenario: String
 
     init(scenario: String, template t: Template, title: String) {
@@ -83,8 +89,11 @@ private final class Demo {
         }
 
         switch scenario {
-        case "paint-progress", "paint-dark":
+        case "paint-progress", "paint-dark", "paint-ax":
             paint(fraction: 0.55)
+        case "paint-ax-large":
+            paint(fraction: 0.55)
+            dynamicTypeSize = .accessibility5
         case "paint-zoom":
             paint(fraction: 0.3)
             // Centre on a mid-sized unpainted region of the selected color near the middle.
