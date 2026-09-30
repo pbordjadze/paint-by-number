@@ -7,6 +7,10 @@ struct SegmentationParameters: Sendable {
     /// A just-noticeable color difference in OKLab (see `ColorScience`): the floor of
     /// `minPaletteDistance`.
     static let jnd: Float = 0.02
+    /// How far below its raster minimum (`minRadius(digits:)`) a smoothed polygon's label
+    /// room may fall before the vectorizer steps that region's edges toward the pixel
+    /// outline (see `EdgeSmoother.run`). Not lower: `LabelSizing.minimumRadius` relies on it.
+    static let vectorRadiusTolerance: Float = 0.8
 
     var colorCount: Int
     var seed: UInt64
@@ -45,7 +49,8 @@ struct SegmentationParameters: Sendable {
 
     /// Minimum region area (canvas units²) at neutral importance, before `areaScale`.
     var minArea: Float
-    /// Minimum largest-inscribed-disc radius (as measured by `interiorDistance`).
+    /// Minimum largest-inscribed-disc radius (as measured by `interiorDistance`) of a region
+    /// with a 1-digit number; see `minRadius(digits:)`.
     var minRadius: Float
     /// Every region pixel must lie in a disc (dx² + dy² ≤ this) inside its region.
     var openingRadiusSquared: Int
@@ -110,6 +115,11 @@ struct SegmentationParameters: Sendable {
         boundaryFidelity = 40
         consolidationTolerance = 0.1 * lerp(1.4, 0.7, d)
     }
+
+    /// Minimum inscribed radius of a region whose number has `digits` digits: scaled like the
+    /// digit run's diagonal, so a minimal region's number renders at the same size whatever
+    /// its digit count (`LabelSizing`).
+    func minRadius(digits: Int) -> Float { minRadius * LabelSizing.roomFactor(digits: digits) }
 
     /// Per-pixel multiplier of `minArea`: important areas keep smaller regions; busy
     /// texture (dense label changes, `texture` 0...1) outside important areas needs larger
