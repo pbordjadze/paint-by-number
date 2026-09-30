@@ -16,6 +16,8 @@ import Foundation
 ///    then merge similar neighbours inside busy texture.
 /// 6. Refit paints to the regions they cover, recolor regions, keep paints distinct and
 ///    order the palette like a kit.
+/// 7. Regions too small for a multi-digit number take a paint with a shorter number or
+///    merge (see `RegionSimplifier.enforceLabelRoom`), so every number is legible.
 public enum Segmenter {
     public static func segment(
         _ image: RGBAImage,
@@ -107,12 +109,20 @@ public enum Segmenter {
         try cancel.throwIfCancelled()
         progress(0.85)
 
-        let finalPalette = try clock.measure("segment.refine") {
+        var finalPalette = try clock.measure("segment.refine") {
             try PaletteRefiner.refine(
                 classes: &classes, regions: &regions, adjacency: &adjacency, lab: lab.storage, importance: weights,
                 labelling: labelling, palette: palette, minDistance: p.minPaletteDistance,
                 chromaScale: p.chromaScale, iterations: p.refineIterations, cancel: cancel)
         }
+        try cancel.throwIfCancelled()
+        let working = finalPalette.map { $0 * SIMD3(1, p.chromaScale, p.chromaScale) }
+        let room = try clock.measure("segment.legible") {
+            try RegionSimplifier.enforceLabelRoom(
+                classes: &classes, regions: &regions, adjacency: &adjacency, colors: smooth.storage,
+                areaScale: areaScale, palette: working, parameters: p, cancel: cancel)
+        }
+        finalPalette = room.kept.map { finalPalette[$0] }
         try cancel.throwIfCancelled()
         let labels = clock.measure("segment.finalize") { regions.labelMap() }
         progress(1)

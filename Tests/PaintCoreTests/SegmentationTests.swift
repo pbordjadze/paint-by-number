@@ -105,12 +105,15 @@ struct SegmentationTests {
                 #expect(ColorScience.distance(s.palette[i].oklab, s.palette[j].oklab) >= minDistance - 1e-4)
             }
         }
-        // Size guarantee: largest inscribed disc per region.
+        // Size guarantee: largest inscribed disc per region, scaled for multi-digit numbers.
         if let minRadius, n > 1 {
             let d = DistanceTransform.interiorDistance(labels: s.labels)
             var best = [Float](repeating: 0, count: n)
             for i in 0..<d.count { best[Int(s.labels.storage[i])] = max(best[Int(s.labels.storage[i])], d.storage[i]) }
-            #expect(best.allSatisfy { $0 >= minRadius })
+            for r in 0..<n {
+                let digits = LabelSizing.digitCount(colorIndex: s.regionColor[r])
+                #expect(best[r] >= minRadius * LabelSizing.roomFactor(digits: digits), "region \(r), \(digits) digits")
+            }
         }
     }
 
@@ -322,6 +325,50 @@ struct SegmentationTests {
             let wide = RegionSimplifier.hasInscribedDisc(regions, classes: classes, radius: radius)
             for r in 0..<cc.count { #expect(wide[r] == (best[r] >= radius)) }
         }
+    }
+
+    @Test func enforceLabelRoomUsesDigitCount() throws {
+        // Paints 0–9 own wide stripes along the top; three equal discs sit on paint 12. Each
+        // disc has room for one digit but not two. The disc showing "2" (paint 1) stays as it
+        // is. The one showing "11" looks like paint 8 and takes it ("9"). The one showing "12"
+        // looks like the background, so it merges into it. The unused paints are dropped.
+        let w = 120, h = 60
+        let p = SegmentationParameters(settings: GenerationSettings(colorCount: 13, detail: 0.5), width: w, height: h)
+        let palette = (0..<12).map { SIMD3<Float>(0.3 + 0.05 * Float($0), 0.02 * Float($0 % 3), 0) } + [SIMD3(0.5, -0.1, 0.1)]
+        let discRadius: Float = 3.2
+        var classes = [UInt32](repeating: 12, count: w * h)
+        var colors = [SIMD4<Float>](repeating: SIMD4(palette[12], 0), count: w * h)
+        for y in 0..<h {
+            for x in 0..<w {
+                if y < 12 { classes[y * w + x] = UInt32(x / 12) }
+                for (cx, paint) in [(20, UInt32(1)), (60, UInt32(10)), (100, UInt32(11))] {
+                    let dx = Float(x - cx), dy = Float(y - 40)
+                    if dx * dx + dy * dy <= discRadius * discRadius { classes[y * w + x] = paint }
+                }
+                if classes[y * w + x] != 11 { colors[y * w + x] = SIMD4(palette[Int(classes[y * w + x])], 0) }
+            }
+        }
+        let initial = RegionRuns(classes: classes, width: w, height: h).components()
+        let d = DistanceTransform.interiorDistance(labels: initial.labels)
+        let discBest = (12 * w..<(w * h)).filter { classes[$0] == 1 }.map { d.storage[$0] }.max() ?? 0
+        #expect(discBest >= p.minRadius(digits: 1))
+        #expect(discBest < p.minRadius(digits: 2))
+
+        var regions = RegionRuns(classes: classes, width: w, height: h)
+        var adjacency = RegionAdjacency(regions)
+        let result = try RegionSimplifier.enforceLabelRoom(
+            classes: &classes, regions: &regions, adjacency: &adjacency, colors: colors,
+            areaScale: [Float](repeating: 1, count: w * h), palette: palette, parameters: p, cancel: .none)
+        #expect(result.recolors == 1)
+        #expect(result.merges == 1)
+        #expect(result.kept == Array(0..<10) + [12])
+        #expect(regions.count == 13)
+        #expect(classes[40 * w + 20] == 1)
+        #expect(classes[40 * w + 60] == 8)
+        #expect(classes[40 * w + 100] == 10)
+        #expect(classes[40 * w + 5] == 10)
+        let labels = regions.labelMap()
+        for i in 0..<(w * h) { #expect(classes[i] == regions.classOf[Int(labels.storage[i])]) }
     }
 
     @Test func thinPartsArePeeled() {
