@@ -11,6 +11,7 @@ struct GalleryView: View {
     @State private var renaming: Artwork?
     @State private var renameText = ""
     @State private var restarting: Artwork?
+    @State private var deleting: Artwork?
     @State private var timelapse: TimelapseRequest?
     @State private var notice: Notice?
 
@@ -70,6 +71,18 @@ struct GalleryView: View {
             }
         } message: { _ in
             Text("Every painted area will be cleared.")
+        }
+        .confirmationDialog("Delete this painting?", isPresented: isPresent($deleting), titleVisibility: .visible, presenting: deleting) { artwork in
+            // Undoable for a few seconds afterwards (the toast's Undo).
+            Button("Delete “\(artwork.title)”", role: .destructive) { library.delete(artwork.id) }
+        } message: { artwork in
+            if artwork.isComplete {
+                Text("“\(artwork.title)” is finished.")
+            } else if artwork.isStarted {
+                Text(verbatim: "“\(artwork.title)” is \(ProgressCaption.percent(artwork))% painted.")
+            } else {
+                Text("“\(artwork.title)” hasn’t been started yet.")
+            }
         }
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
@@ -159,9 +172,7 @@ struct GalleryView: View {
         Divider()
         Button("Restart", systemImage: "arrow.counterclockwise") { restarting = artwork }
             .disabled(!artwork.isStarted)
-        Button("Delete", systemImage: "trash", role: .destructive) {
-            library.delete(artwork.id)
-        }
+        Button("Delete", systemImage: "trash", role: .destructive) { deleting = artwork }
     }
 
     private func previewImage(_ artwork: Artwork) -> Image {
