@@ -10,9 +10,9 @@ import Foundation
 /// separated by such weak boundaries are fused, closest paints first, as long as the paints
 /// of everything fused stay within a tolerance. Paints too close to tell apart in paint fuse
 /// anywhere; a wider tolerance applies to narrow bands (the rings of a bokeh highlight, the
-/// contour lines of a shaded forehead) and shrinks with importance, so a wide sky band or the
-/// modelling of the subject keeps its distinct tones. Fused regions are unions of regions, so
-/// every size and thickness guarantee holds.
+/// contour lines of a shaded forehead). Both shrink with importance, so a wide sky band or
+/// the modelling of the subject keeps its distinct tones. Fused regions are unions of
+/// regions, so every size and thickness guarantee holds.
 enum BandMerging {
 
     /// - Parameters:
@@ -21,8 +21,9 @@ enum BandMerging {
     ///     the fused paint so the refit centres it on the whole ramp rather than one band.
     ///   - metric: Per-axis scale turning working colours into true OKLab.
     ///   - tolerance: Largest OKLab spread of the paints fused into one region: `near` for
-    ///     paints too close to tell apart (anywhere), `band` for narrow bands at importance 0
-    ///     (falling to `near` at importance 1).
+    ///     paints too close to tell apart, anywhere at importance 0, falling to
+    ///     `nearImportant` at importance 1; `band` for narrow bands at importance 0, falling
+    ///     to `near` at importance 1.
     ///   - bandWidth: Mean width (area over half the perimeter, canvas units) up to which a
     ///     region counts as a narrow band.
     ///   - contrast: A boundary is weak when the mean colour step across it is below this
@@ -38,13 +39,13 @@ enum BandMerging {
         importance: [Float],
         palette: [SIMD3<Float>],
         metric: SIMD3<Float>,
-        tolerance: (near: Float, band: Float),
+        tolerance: (near: Float, nearImportant: Float, band: Float),
         bandWidth: Float,
         contrast: Float,
         cancel: CancellationCheck = .none
     ) throws -> Int {
         let n = regions.count
-        let maxTolerance = max(tolerance.near, tolerance.band)
+        let maxTolerance = max(tolerance.near, tolerance.nearImportant, tolerance.band)
         guard n > 1, maxTolerance > 0, !adjacency.pairs.isEmpty else { return 0 }
         let cls = regions.classOf
         let paints = palette.map { $0 * metric }
@@ -55,7 +56,7 @@ enum BandMerging {
             regions.accumulate(0.0) { sum, _, i in sum += Double(ib[i]) }
         }
         try cancel.throwIfCancelled()
-        let steps = adjacency.boundarySteps(regions, colors: colors, metric: metric)
+        let steps = adjacency.boundarySteps(regions, colors: colors)
         try cancel.throwIfCancelled()
 
         struct Link {
@@ -75,7 +76,10 @@ enum BandMerging {
             perimeter[a] += Int(length)
             perimeter[b] += Int(length)
             let d = distance(cls[a], cls[b])
-            guard d <= maxTolerance, steps[k] <= contrast * d * Float(length) else { continue }
+            guard d <= maxTolerance else { continue }
+            // Steps and the paint difference compared in the same (working) space.
+            let difference = ColorScience.distance(palette[Int(cls[a])], palette[Int(cls[b])])
+            guard steps[k] <= contrast * difference * Float(length) else { continue }
             edges.append((Int32(a), Int32(b), d))
         }
         guard !edges.isEmpty else { return 0 }
@@ -102,9 +106,9 @@ enum BandMerging {
         for e in edges {
             let a = find(Int(e.a)), b = find(Int(e.b))
             if a == b { continue }
-            var limit = tolerance.near
+            let imp = Float((weight[a] + weight[b]) / Double(area[a] + area[b]))
+            var limit = lerp(tolerance.near, tolerance.nearImportant, imp)
             if min(width(a), width(b)) <= bandWidth {
-                let imp = Float((weight[a] + weight[b]) / Double(area[a] + area[b]))
                 limit = max(limit, lerp(tolerance.band, tolerance.near, imp))
             }
             var joined = max(spread[a], spread[b])

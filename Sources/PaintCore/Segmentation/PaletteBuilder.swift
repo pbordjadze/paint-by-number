@@ -23,7 +23,7 @@ enum PaletteBuilder {
     ) throws -> [SIMD3<Float>] {
         let samples = try histogram(
             colors: colors, importance: importance, gamma: p.histogramGamma, chromaScale: p.chromaScale,
-            saliency: p.paletteSaliency)
+            saliency: p.paletteSaliency, smoothWeight: p.paletteSmoothWeight)
         guard !samples.colors.isEmpty else { return [] }
         let k = min(p.colorCount, samples.colors.count)
         // Separation is judged in true OKLab, not the chroma-stretched working space.
@@ -189,9 +189,12 @@ enum PaletteBuilder {
     ///
     /// Sample weights combine importance with a center–surround term: colors that stand out
     /// from their neighbourhood (an iris against skin and sclera, a flower against leaves)
-    /// count more, since they carry the picture's details.
+    /// count more, since they carry the picture's details; colors that do not stand out at
+    /// all (a smooth ramp, a flat backdrop) count `smoothWeight` in unimportant areas, so a
+    /// background gradient does not claim a paint per distinguishable shade.
     static func histogram(
-        colors: Grid<SIMD4<Float>>, importance: [Float], gamma: Float, chromaScale: Float, saliency: Float
+        colors: Grid<SIMD4<Float>>, importance: [Float], gamma: Float, chromaScale: Float, saliency: Float,
+        smoothWeight: Float = 1
     ) throws -> Samples {
         let w = colors.width, h = colors.height, n = w * h
         guard n > 0 else { return Samples(colors: [], weights: []) }
@@ -230,7 +233,9 @@ enum PaletteBuilder {
                                     kp.value[i] = Int32((lq * levels + aq) * levels + bq)
                                     let e = lab - su.value[i]
                                     let contrast = min((e * e).sum().squareRoot() / 0.05, 2)
-                                    let weight = paletteWeight(importance: im.value[i]) * (1 + saliency * contrast)
+                                    let imp = im.value[i]
+                                    let floor = lerp(smoothWeight, 1, imp * imp)
+                                    let weight = paletteWeight(importance: imp) * (floor + saliency * contrast)
                                     cp.value[i] = SIMD4(lab.x * weight, lab.y * weight, lab.z * weight, weight)
                                 }
                             }

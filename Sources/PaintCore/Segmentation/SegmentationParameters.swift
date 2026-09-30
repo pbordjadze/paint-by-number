@@ -43,6 +43,12 @@ struct SegmentationParameters: Sendable {
     var paletteRestarts: Int
     /// Extra palette weight for colors that stand out from their surroundings.
     var paletteSaliency: Float
+    /// Weight of a histogram sample that does not stand out from its surroundings at all
+    /// (a smooth ramp, a flat backdrop) in an unimportant area, relative to the base
+    /// weight; rises to the base weight with importance. A background gradient otherwise
+    /// claims a paint for every shade the eye can tell apart along it, which paints a bokeh
+    /// highlight as a target of concentric rings and starves the subject of paints.
+    var paletteSmoothWeight: Float
     /// Paints closer than this (OKLab) are pushed apart or merged; never below `jnd`.
     var minPaletteDistance: Float
     /// Region-level k-means passes when refitting the palette.
@@ -80,17 +86,22 @@ struct SegmentationParameters: Sendable {
     /// of its two dominant neighbours' paints of the line between those paints, and the mean
     /// colour step across each of those two borders is below `stripContrast` × the paint
     /// difference (an edge blurred over 4+ pixels; a sharp contour steps by the whole
-    /// difference within a pixel or two).
+    /// difference within a pixel or two). Both dominant neighbours must be open regions:
+    /// one that shares `stripEnclosure` or more of its whole outline with the region is
+    /// wrapped by it (a pupil inside its iris ring), and a ring is a feature, not a blur.
     var stripCompactness: Float
     var stripWidth: Float
     var stripMixture: Float
     var stripContrast: Float
+    var stripEnclosure: Float
     /// Gradient bands (see `BandMerging`): the largest spread (OKLab) of paints fused into
-    /// one region across weak boundaries, for paints too close to tell apart (anywhere) and
-    /// for narrow bands in unimportant areas; the mean width up to which a region is a
-    /// narrow band; and the fraction of the paint difference the colour step across a
-    /// boundary must stay under to count as a ramp rather than a contour.
+    /// one region across weak boundaries, for paints too close to tell apart (anywhere in
+    /// unimportant areas, `bandNearImportantTolerance` on the subject) and for narrow bands
+    /// in unimportant areas; the mean width up to which a region is a narrow band; and the
+    /// fraction of the paint difference the colour step across a boundary must stay under
+    /// to count as a ramp rather than a contour.
     var bandNearTolerance: Float
+    var bandNearImportantTolerance: Float
     var bandTolerance: Float
     var bandWidth: Float
     var bandContrast: Float
@@ -123,6 +134,7 @@ struct SegmentationParameters: Sendable {
         histogramGamma = 0.6
         paletteRestarts = 3
         paletteSaliency = 1
+        paletteSmoothWeight = 1
         minPaletteDistance = s.minPaletteDistance
         refineIterations = 3
 
@@ -154,12 +166,16 @@ struct SegmentationParameters: Sendable {
         stripWidth = 3 * minRadius
         stripMixture = 0.4
         stripContrast = 0.7
+        // A pupil cut by the eyelid still shares well over half its outline with the iris.
+        stripEnclosure = 0.6
         // Paints about two just-noticeable differences apart (below a large palette's
-        // spacing) fuse anywhere; the rings of a background ramp fuse up to clearly different
-        // shades. Bold templates fuse more gradation than fine ones, so the detail slider
-        // keeps its meaning. Bokeh rings are a few percent of the frame wide, a sky band far
-        // more.
+        // spacing) fuse anywhere in the background; on the subject only paints within about
+        // one, since its modelling is worth its regions and its colour error is the one
+        // people see. The rings of a background ramp fuse up to clearly different shades.
+        // Bold templates fuse more gradation than fine ones, so the detail slider keeps its
+        // meaning. Bokeh rings are a few percent of the frame wide, a sky band far more.
         bandNearTolerance = 0.045 * lerp(1.3, 0.8, d)
+        bandNearImportantTolerance = 0.5 * bandNearTolerance
         bandTolerance = 0.1 * lerp(1.4, 0.7, d)
         bandWidth = side * 0.02
         bandContrast = 0.25

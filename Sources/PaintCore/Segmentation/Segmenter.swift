@@ -107,8 +107,8 @@ public enum Segmenter {
             _ = try BandMerging.apply(
                 classes: &classes, labelling: &labelling, regions: &regions, adjacency: &adjacency, colors: smooth.storage,
                 importance: weights, palette: palette, metric: metric,
-                tolerance: (p.bandNearTolerance, p.bandTolerance), bandWidth: p.bandWidth, contrast: p.bandContrast,
-                cancel: cancel)
+                tolerance: (p.bandNearTolerance, p.bandNearImportantTolerance, p.bandTolerance),
+                bandWidth: p.bandWidth, contrast: p.bandContrast, cancel: cancel)
         }
         try cancel.throwIfCancelled()
         clock.measure("segment.consolidate") {
