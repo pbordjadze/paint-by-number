@@ -185,7 +185,162 @@ struct LibraryTests {
         #expect(library.artworks.map(\.title) == ["Espresso"])
         #expect(library.artworks.first?.sampleName == "espresso")
         #expect(defaults.bool(forKey: Library.seededKey))
+        #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
         #expect(library.seedIfNeeded([espresso], defaults: defaults) == nil)
+    }
+
+    @Test func seedingRetriesAfterFailuresAndGivesUpAfterThree() async throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let library = makeLibrary()
+        let missing = Sample(id: "missing", title: "Missing")
+
+        for launch in 1..<Library.maxSeedAttempts {
+            let task = try #require(library.seedIfNeeded([missing], defaults: defaults), "launch \(launch)")
+            await task.value
+            #expect(!defaults.bool(forKey: Library.seededKey))
+            #expect(defaults.integer(forKey: Library.seedFailuresKey) == launch)
+        }
+        let last = try #require(library.seedIfNeeded([missing], defaults: defaults))
+        await last.value
+        #expect(defaults.bool(forKey: Library.seededKey))
+        #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
+        #expect(library.seedIfNeeded([missing], defaults: defaults) == nil)
+        #expect(library.artworks.isEmpty)
+        #expect(library.placeholders.isEmpty)
+    }
+
+    @Test func seedingCountsPartialSuccess() async throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let library = makeLibrary()
+        let espresso = try #require(Sample.named("espresso"))
+
+        let task = try #require(library.seedIfNeeded([Sample(id: "missing", title: "Missing"), espresso], defaults: defaults))
+        await task.value
+        #expect(library.artworks.map(\.title) == ["Espresso"])
+        #expect(defaults.bool(forKey: Library.seededKey))
+        #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
+    }
+
+    // MARK: Write failures
+
+    /// Makes writes of `file` fail: a non-empty directory in its place can't be replaced by the
+    /// atomic write's rename (EISDIR or ENOTEMPTY, whichever the platform reports).
+    private func sabotage(_ file: ArtworkStore.File, of id: UUID, in library: Library) throws {
+        let url = library.store.url(file, of: id)
+        try? FileManager.default.removeItem(at: url)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        try Data("x".utf8).write(to: url.appending(path: "blocker"))
+    }
+
+    private func repair(_ file: ArtworkStore.File, of id: UUID, in library: Library) throws {
+        try FileManager.default.removeItem(at: library.store.url(file, of: id))
+    }
+
+    private func progress(painting regions: [Int]) -> PaintProgress {
+        var progress = PaintProgress(regionCount: 3)
+        for region in regions { progress.paint(region) }
+        return progress
+    }
+
+    private func savedProgress(_ id: UUID) async throws -> PaintProgress {
+        try await makeLibrary().loadForPainting(id).progress
+    }
+
+    @Test func surfacesWriteFailuresUntilASaveSucceeds() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+
+        try sabotage(.progress, of: artwork.id, in: library)
+        library.saveProgress(progress(painting: [0]), for: artwork.id)
+        await library.flush()
+        #expect(library.writeFailures[artwork.id] != nil)
+        #expect(library.latestWriteFailure?.artwork.id == artwork.id)
+
+        try repair(.progress, of: artwork.id, in: library)
+        library.retrySaving(artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        #expect(library.latestWriteFailure == nil)
+        #expect(try await savedProgress(artwork.id).isPainted(0))
+
+        // A later save that succeeds clears the error too, and its progress is what's kept.
+        try sabotage(.progress, of: artwork.id, in: library)
+        library.saveProgress(progress(painting: [0, 1]), for: artwork.id)
+        await library.flush()
+        #expect(library.writeFailures[artwork.id] != nil)
+        try repair(.progress, of: artwork.id, in: library)
+        library.saveProgress(progress(painting: [0, 2]), for: artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        let saved = try await savedProgress(artwork.id)
+        #expect(saved.isPainted(2) && !saved.isPainted(1))
+    }
+
+    @Test func retryNeverWritesAnOlderSnapshot() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        try sabotage(.progress, of: artwork.id, in: library)
+        library.saveProgress(progress(painting: [1]), for: artwork.id)
+        await library.flush()
+        #expect(library.writeFailures[artwork.id] != nil)
+
+        try repair(.progress, of: artwork.id, in: library)
+        library.saveProgress(progress(painting: [2]), for: artwork.id)
+        library.retrySaving(artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        let saved = try await savedProgress(artwork.id)
+        #expect(saved.isPainted(2) && !saved.isPainted(1))
+    }
+
+    @Test func metadataWriteFailuresAreRetried() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        try sabotage(.meta, of: artwork.id, in: library)
+        library.rename(artwork.id, to: "Sunset")
+        await library.flush()
+        #expect(library.writeFailures[artwork.id] != nil)
+
+        try repair(.meta, of: artwork.id, in: library)
+        library.retrySaving(artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        #expect(makeLibrary().artwork(with: artwork.id)?.title == "Sunset")
+    }
+
+    @Test func thumbnailWriteFailuresOnlyLog() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        try sabotage(.thumbnail, of: artwork.id, in: library)
+        await library.refreshThumbnail(artwork.id, progress: progress(painting: [0]))
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        #expect(library.artwork(with: artwork.id)?.thumbnailVersion == artwork.thumbnailVersion)
+    }
+
+    @Test func failedWriteOfADeletedArtworkIsHiddenThenDropped() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        try sabotage(.progress, of: artwork.id, in: library)
+        library.saveProgress(progress(painting: [0]), for: artwork.id)
+        await library.flush()
+        #expect(library.latestWriteFailure?.artwork.id == artwork.id)
+
+        library.delete(artwork.id)
+        #expect(library.latestWriteFailure == nil)
+        library.undoDelete()
+        #expect(library.latestWriteFailure?.artwork.id == artwork.id)
+
+        library.delete(artwork.id)
+        library.finalizeDeletion()
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
     }
 
     @Test func artworkDecodingToleratesMissingFields() throws {

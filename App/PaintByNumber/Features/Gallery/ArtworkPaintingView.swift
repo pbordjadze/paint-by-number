@@ -17,6 +17,7 @@ struct ArtworkPaintingView: View {
     @State private var failed = false
 
     private var artwork: Artwork? { library.artwork(with: artworkID) }
+    private var saveFailed: Bool { library.writeFailures[artworkID] != nil }
 
     var body: some View {
         ZStack {
@@ -44,6 +45,21 @@ struct ArtworkPaintingView: View {
                     .padding(20)
                     .overlay { ProgressView().controlSize(.large) }
             }
+        }
+        .overlay(alignment: .top) {
+            if saveFailed {
+                Toast(text: "Couldn’t save progress", systemImage: "exclamationmark.triangle", edge: .top) {
+                    Button("Retry") { library.retrySaving(artworkID) }
+                        .fontWeight(.semibold)
+                }
+                // Below the painting screen's top bar.
+                .padding(.top, 62)
+                .padding(.horizontal, 20)
+            }
+        }
+        .animation(.snappy, value: saveFailed)
+        .onChange(of: saveFailed) { _, failed in
+            if failed { UIAccessibility.post(notification: .announcement, argument: String(localized: "Couldn’t save progress")) }
         }
         .toolbar(.hidden, for: .navigationBar)
         .background { CanvasGesturesOverZoomDismissal().frame(width: 0, height: 0) }

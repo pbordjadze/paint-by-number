@@ -39,7 +39,7 @@ enum ShellDemo: Equatable {
             ]
             library.seed(items.map { sample, painted, hours in
                 Library.SeedItem(sample: Sample.all[sample], painted: painted, age: hours * hour, photoMaxPixelSize: 560)
-            }, completion: { DemoMode.markReady() })
+            }, completion: { _ in DemoMode.markReady() })
         case .galleryOpen:
             library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .galleryTimelapse:

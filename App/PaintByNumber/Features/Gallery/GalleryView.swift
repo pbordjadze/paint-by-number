@@ -199,6 +199,12 @@ struct GalleryView: View {
 
     private var toasts: some View {
         VStack(spacing: 10) {
+            if let failed = library.latestWriteFailure?.artwork {
+                Toast(text: "Couldn’t save “\(failed.title)”", systemImage: "exclamationmark.triangle") {
+                    Button("Retry") { library.retrySaving(failed.id) }
+                        .fontWeight(.semibold)
+                }
+            }
             if let notice {
                 Toast(text: notice.text, systemImage: notice.systemImage)
             }
@@ -211,6 +217,7 @@ struct GalleryView: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 12)
+        .animation(.snappy, value: library.latestWriteFailure?.artwork.id)
         .animation(.snappy, value: library.recentlyDeleted?.id)
         .animation(.snappy, value: notice)
     }
@@ -224,6 +231,8 @@ struct GalleryView: View {
 struct Toast<Trailing: View>: View {
     let text: String
     let systemImage: String
+    /// The screen edge it slides in from.
+    var edge: Edge = .bottom
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
@@ -238,7 +247,7 @@ struct Toast<Trailing: View>: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 13)
         .glassEffect(.regular, in: .capsule)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .transition(.move(edge: edge).combined(with: .opacity))
         .accessibilityElement(children: .combine)
     }
 }
