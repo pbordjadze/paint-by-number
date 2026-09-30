@@ -31,6 +31,13 @@ struct CreateFlowView: View {
                 model.load(sample: sample)
             }
         }
+        .task {
+            // The library picker loads out of process and reports nothing; give it a moment
+            // before the screenshot (a cancelled wait must not signal readiness).
+            guard demo == .create || demo == .createSamples else { return }
+            do { try await Task.sleep(for: .seconds(3)) } catch { return }
+            DemoMode.markReady()
+        }
         .onChange(of: model.isFinal) { _, isFinal in
             if isFinal, demo?.previewSample != nil { DemoMode.markReady() }
         }
@@ -47,7 +54,9 @@ struct CreateFlowView: View {
                     }
                 }
         } else {
-            PhotoSourceView(model: model, onClose: { dismiss() }) {
+            PhotoSourceView(
+                model: model, initialPane: demo == .createSamples ? .samples : .photos, onClose: { dismiss() }
+            ) {
                 path = [.preview]
             }
         }

@@ -6,11 +6,12 @@ import Foundation
 /// - `gallery`, `gallery-dark`: six paintings at various stages.
 /// - `gallery-empty`: the empty state.
 /// - `create`, `create-dark`: the photo picker step of the create flow.
+/// - `create-samples`: the same step on its Samples pane (iPhone; iPad shows both).
 /// - `create-preview`, `create-preview-dark`: a sample generated, comparison at half.
 /// - `settings`: the settings sheet over the gallery.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 enum ShellDemo: Equatable {
-    case gallery, galleryEmpty, galleryOpen, create, createPreview, settings
+    case gallery, galleryEmpty, galleryOpen, create, createSamples, createPreview, settings
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -18,13 +19,14 @@ enum ShellDemo: Equatable {
         case "gallery-empty": .galleryEmpty
         case "gallery-open": .galleryOpen
         case "create", "create-dark": .create
+        case "create-samples": .createSamples
         case "create-preview", "create-preview-dark": .createPreview
         case "settings": .settings
         default: nil
         }
     }()
 
-    var opensCreateFlow: Bool { self == .create || self == .createPreview }
+    var opensCreateFlow: Bool { self == .create || self == .createSamples || self == .createPreview }
 
     var previewSample: Sample? { self == .createPreview ? Sample.named("parrots") : nil }
 
@@ -40,12 +42,12 @@ enum ShellDemo: Equatable {
             }, completion: { DemoMode.markReady() })
         case .galleryOpen:
             library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
-        case .create, .createPreview, .galleryEmpty, .settings:
+        case .create, .createSamples, .createPreview, .galleryEmpty, .settings:
             break
         }
     }
 
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded).
-    var isReadyOnAppear: Bool { self == .create || self == .galleryEmpty || self == .settings }
+    var isReadyOnAppear: Bool { self == .galleryEmpty || self == .settings }
 }
