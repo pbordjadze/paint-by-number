@@ -381,7 +381,11 @@ final class Library {
     private func recordWrite(_ id: UUID, _ saves: Saves, error: (any Error)?) {
         if let error {
             // Nothing to retry for an artwork deleted meanwhile.
-            guard artwork(with: id) != nil || recentlyDeleted?.id == id else { return }
+            guard artwork(with: id) != nil || recentlyDeleted?.id == id else {
+                unsavedProgress[id] = nil
+                unsavedMeta.remove(id)
+                return
+            }
             switch saves {
             case .other: return
             case .meta, .progress: unsavedMeta.insert(id)

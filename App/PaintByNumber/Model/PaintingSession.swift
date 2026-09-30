@@ -124,6 +124,7 @@ final class PaintingSession {
     @discardableResult
     func drag(from a: SIMD2<Float>, to b: SIMD2<Float>, radius: Float) -> PaintEvent? {
         guard let color = selectedColor else { return nil }
+        let progress = self.progress
         let eligible = template.regions.indices.map { !progress.isPainted($0) && colorOf($0) == color }
         // Stroke parameter of the first contact per region; infinity = not touched.
         var enter = [Float](repeating: .infinity, count: eligible.count)
