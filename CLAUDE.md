@@ -117,6 +117,15 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `ArtworkPaintingView` hosts `PaintView` and autosaves (debounced, on background, on close). It is
   pushed with a zoom transition whose swipe-down/pinch dismissal it turns off (they stole canvas
   gestures; `PaintingNavigationTests` guards this).
+- Favorites and search: `Artwork.isFavorite` (tolerant `decodeIfPresent`, no format bump;
+  `Library.setFavorite` persists metadata like rename; the card badge is hidden from VoiceOver and
+  the card's *value* says "Favorite", its label stays the title). `Library.inProgress`/`finished`
+  list favorites first. The gallery's Show menu (`GalleryFilter`, `@SceneStorage("galleryFilter")` in
+  `AppShellView`) and `.searchable` make a `GalleryQuery`, which `Library.inProgress(matching:)`/
+  `finished(matching:)` apply and the subtitle counts; `TitleSearch.matches` (pure, unit-tested) needs
+  every query word to start a title word, ignoring case, diacritics and width ("ba" finds "Red Barn",
+  "arn" doesn't). Placeholders show only while nothing is narrowed. Demo scenarios `gallery-favorites`,
+  `gallery-search` (+ `-dark`) and `gallery-no-favorites-long-text`.
 - Save failures: `Library.writeFailures` records failed progress/metadata writes per artwork (the
   newest unsaved progress is kept for `retrySaving`); the painting screen and the gallery show a
   Retry toast, and the next successful save clears it. Thumbnail and trash writes only log.

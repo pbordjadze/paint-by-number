@@ -18,6 +18,9 @@ struct ArtworkCard: View {
                     FinishedBadge().padding(10)
                 }
             }
+            .overlay(alignment: .topLeading) {
+                if artwork.isFavorite { FavoriteBadge().padding(10) }
+            }
             // The pointer lifts the picture, not its caption.
             .contentShape(.hoverEffect, .rect(cornerRadius: Theme.cardRadius, style: .continuous))
             .hoverEffect(.lift)
@@ -38,8 +41,17 @@ struct ArtworkCard: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(artwork.title)
-        .accessibilityValue(ProgressCaption.spoken(artwork))
+        .accessibilityValue(spokenValue)
         .accessibilityAddTraits(.isButton)
+    }
+
+    /// The label stays the title (what people and UI tests look a card up by); the value carries
+    /// the favorite mark ahead of the progress.
+    private var spokenValue: String {
+        let progress = ProgressCaption.spoken(artwork)
+        guard artwork.isFavorite else { return progress }
+        return String(localized: "gallery.card.spoken.favorite", defaultValue: "Favorite, \(progress)",
+                      comment: "VoiceOver value of a favorite painting's card; the argument is its progress, e.g. 42 percent painted")
     }
 }
 
@@ -113,6 +125,18 @@ private struct FinishedBadge: View {
             .foregroundStyle(.white)
             .frame(width: 30, height: 30)
             .glassEffect(.regular.tint(Theme.accent), in: .circle)
+            .accessibilityHidden(true)
+    }
+}
+
+/// Marks a favorite. Hidden from VoiceOver: the card's value says it.
+private struct FavoriteBadge: View {
+    var body: some View {
+        Image(systemName: "heart.fill")
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(Theme.accent)
+            .frame(width: 30, height: 30)
+            .glassEffect(.regular, in: .circle)
             .accessibilityHidden(true)
     }
 }

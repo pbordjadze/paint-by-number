@@ -49,6 +49,23 @@ final class LongTextTests: XCTestCase {
         XCTAssertTrue(app.windows.firstMatch.frame.contains(frame), "The toast runs off the screen")
     }
 
+    /// The Favorites filter's empty state and the Show menu's button fit the screen when text doubles.
+    @MainActor
+    func testNoFavoritesStateAndShowMenuFitTheScreen() {
+        let app = launch("gallery-no-favorites-long-text")
+        let title = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'No Favorites'")).firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 150), "The Favorites filter shows no empty state")
+        let show = button(app, labelPrefix: "Show")
+        // The menu is disabled while the demo library is still being made.
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: show)
+        XCTAssertEqual(XCTWaiter.wait(for: [enabled], timeout: 150), .completed, "The Show menu never became available")
+        attachScreenshot(of: app, named: "gallery-no-favorites-long-text")
+        let window = app.windows.firstMatch.frame
+        XCTAssertTrue(show.isHittable, "The Show menu can't be tapped")
+        XCTAssertTrue(window.contains(show.frame), "The Show menu is cut off")
+        XCTAssertTrue(window.contains(title.frame), "The empty state's title runs off the screen")
+    }
+
     @MainActor
     func testSettingsKeepsItsDoneButton() {
         let app = launch("settings-long-text")

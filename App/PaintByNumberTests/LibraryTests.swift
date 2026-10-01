@@ -624,12 +624,136 @@ struct LibraryTests {
         #expect(throws: (any Error).self) { try JSONDecoder().decode(Artwork.self, from: Data(invalid.utf8)) }
         #expect(!artwork.needsNewerApp)
         #expect(artwork.pipelineVersion == 0)
+        #expect(!artwork.isFavorite)
 
         // A newer app's metadata always yields a (read-only) gallery entry.
         let newer = #"{"id":"\#(id)","format":3}"#
         let future = try JSONDecoder().decode(Artwork.self, from: Data(newer.utf8))
         #expect(future.needsNewerApp)
         #expect(future.width == 1 && future.height == 1 && future.regionCount == 0)
+    }
+
+    /// `meta.json` written before favorites existed has no `isFavorite` key.
+    @Test func metaWithoutFavoriteFieldIsNotFavorite() async throws {
+        var artwork = try await makeLibrary().create(draft())
+        artwork.isFavorite = true
+        let encoded = try JSONEncoder().encode(artwork)
+        #expect(try JSONDecoder().decode(Artwork.self, from: encoded).isFavorite)
+
+        var fields = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        #expect(fields.removeValue(forKey: "isFavorite") != nil)
+        let old = try JSONDecoder().decode(Artwork.self, from: JSONSerialization.data(withJSONObject: fields))
+        #expect(!old.isFavorite)
+        #expect(old.format == Artwork.currentFormat)
+    }
+
+    @Test func favoritesPersistAcrossAReload() async throws {
+        let library = makeLibrary()
+        let a = try await library.create(draft(title: "A"))
+        let b = try await library.create(draft(title: "B"))
+        #expect(!a.isFavorite && !b.isFavorite)
+
+        library.setFavorite(a.id, true)
+        #expect(library.artwork(with: a.id)?.isFavorite == true)
+        await library.flush()
+        #expect(makeLibrary().artwork(with: a.id)?.isFavorite == true)
+        #expect(makeLibrary().artwork(with: b.id)?.isFavorite == false)
+
+        // Painting rewrites the metadata; the mark stays.
+        library.saveProgress(progress(painting: [0]), for: a.id)
+        await library.flush()
+        #expect(makeLibrary().artwork(with: a.id)?.isFavorite == true)
+        #expect(makeLibrary().artwork(with: a.id)?.paintedCount == 1)
+
+        library.setFavorite(a.id, false)
+        await library.flush()
+        #expect(makeLibrary().artwork(with: a.id)?.isFavorite == false)
+
+        // A deletion that is undone brings the mark back with the painting.
+        library.setFavorite(b.id, true)
+        library.delete(b.id)
+        library.undoDelete()
+        await library.flush()
+        #expect(makeLibrary().artwork(with: b.id)?.isFavorite == true)
+    }
+
+    @Test func favoritesComeFirstWithinEachSection() async throws {
+        let library = makeLibrary()
+        func add(_ title: String, minutesAgo: Double, painted: [Int] = []) async throws -> Artwork {
+            var item = draft(title: title, painted: painted)
+            item.date = Date(timeIntervalSinceNow: -60 * minutesAgo)
+            return try await library.create(item)
+        }
+        let newest = try await add("Newest", minutesAgo: 1)
+        let middle = try await add("Middle", minutesAgo: 2)
+        let oldest = try await add("Oldest", minutesAgo: 3)
+        let recentlyDone = try await add("Done Recently", minutesAgo: 4, painted: [0, 1, 2])
+        let longAgoDone = try await add("Done Long Ago", minutesAgo: 5, painted: [0, 1, 2])
+        #expect(library.inProgress.map(\.id) == [newest.id, middle.id, oldest.id])
+        #expect(library.finished.map(\.id) == [recentlyDone.id, longAgoDone.id])
+
+        library.setFavorite(oldest.id, true)
+        library.setFavorite(longAgoDone.id, true)
+        #expect(library.inProgress.map(\.id) == [oldest.id, newest.id, middle.id])
+        #expect(library.finished.map(\.id) == [longAgoDone.id, recentlyDone.id])
+
+        // Two favorites keep the section's own order between them.
+        library.setFavorite(middle.id, true)
+        #expect(library.inProgress.map(\.id) == [middle.id, oldest.id, newest.id])
+
+        library.setFavorite(oldest.id, false)
+        library.setFavorite(middle.id, false)
+        #expect(library.inProgress.map(\.id) == [newest.id, middle.id, oldest.id])
+    }
+
+    @Test func galleryListsRespectTheQuery() async throws {
+        let library = makeLibrary()
+        let barn = try await library.create(draft(title: "Red Barn"))
+        let regatta = try await library.create(draft(title: "Regatta", painted: [0, 1, 2]))
+        let parrots = try await library.create(draft(title: "Parrots"))
+        library.setFavorite(regatta.id, true)
+        library.setFavorite(parrots.id, true)
+
+        #expect(Set(library.inProgress(matching: GalleryQuery()).map(\.id)) == [barn.id, parrots.id])
+        let favorites = GalleryQuery(filter: .favorites)
+        #expect(library.inProgress(matching: favorites).map(\.id) == [parrots.id])
+        #expect(library.finished(matching: favorites).map(\.id) == [regatta.id])
+        let search = GalleryQuery(filter: .all, search: "re")
+        #expect(library.inProgress(matching: search).map(\.id) == [barn.id])
+        #expect(library.finished(matching: search).map(\.id) == [regatta.id])
+        // The search narrows the filter's list.
+        let both = GalleryQuery(filter: .favorites, search: "re")
+        #expect(library.inProgress(matching: both).isEmpty)
+        #expect(library.finished(matching: both).map(\.id) == [regatta.id])
+    }
+
+    @Test func favoriteWriteFailuresAreRetried() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        faults.fail(.meta)
+        library.setFavorite(artwork.id, true)
+        await library.flush()
+        #expect(library.artwork(with: artwork.id)?.isFavorite == true)
+        #expect(library.writeFailures[artwork.id] != nil)
+
+        faults.heal(.meta)
+        library.retrySaving(artwork.id)
+        await library.flush()
+        #expect(library.writeFailures.isEmpty)
+        #expect(makeLibrary().artwork(with: artwork.id)?.isFavorite == true)
+    }
+
+    @Test func newerArtworksCannotBeFavorited() async throws {
+        let artwork = try await makeLibrary().create(draft())
+        let metaURL = ArtworkStore(root: root).url(.meta, of: artwork.id)
+        let meta = Data(#"{"id":"\#(artwork.id.uuidString)","format":99,"title":"Future","regionCount":3}"#.utf8)
+        try meta.write(to: metaURL)
+
+        let library = makeLibrary()
+        library.setFavorite(artwork.id, true)
+        await library.flush()
+        #expect(library.artwork(with: artwork.id)?.isFavorite == false)
+        #expect(try Data(contentsOf: metaURL) == meta)
     }
 
     // MARK: Helpers
