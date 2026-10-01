@@ -3,9 +3,9 @@ import Foundation
 
 /// Soft, musical feedback sounds, synthesized at launch (no audio assets).
 ///
-/// Every palette color owns a note of a pentatonic scale, so painting plays gentle
-/// kalimba-like melodies that can never clash. Uses the ambient session category: it mixes
-/// with the user's music and respects the silent switch.
+/// Painting plays one tune (`PaintingMelody`), a note per fill whatever the color, on a
+/// pentatonic scale so its kalimba-like notes can never clash. Uses the ambient session
+/// category: it mixes with the user's music and respects the silent switch.
 final class SoundPlayer {
     private let engine = AVAudioEngine()
     private let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
@@ -16,19 +16,20 @@ final class SoundPlayer {
     private var isSetUp = false
     private var lastNote: ContinuousClock.Instant?
     private let clock = ContinuousClock()
+    private var melody = PaintingMelody()
 
     /// C major pentatonic over two octaves from C4.
-    private static let scale: [Double] = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66]
+    static let scale: [Double] = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66]
 
     func prepare() { _ = setUpIfNeeded() }
 
-    /// The note for a palette color. `velocity` 0…1.
-    func paint(color: Int, velocity: Float) {
+    /// The tune's next note. `velocity` 0…1.
+    func paint(velocity: Float) {
         let now = clock.now
         if let last = lastNote, now - last < .milliseconds(40) { return }
         lastNote = now
         guard setUpIfNeeded() else { return }
-        play(notes[color % notes.count], volume: 0.18 + 0.22 * min(max(velocity, 0), 1))
+        play(notes[melody.next(at: now)], volume: 0.18 + 0.22 * min(max(velocity, 0), 1))
     }
 
     func reject() {
@@ -36,11 +37,12 @@ final class SoundPlayer {
         play(thud, volume: 0.35)
     }
 
-    /// A little rising arpeggio starting at the color's note.
-    func colorComplete(color: Int) {
+    /// A little rising arpeggio from the tune's latest note.
+    func colorComplete() {
         guard setUpIfNeeded() else { return }
+        let root = min(melody.latest, notes.count - 5)
         for (k, step) in [0, 2, 4].enumerated() {
-            play(notes[(color + step) % notes.count], volume: 0.3, delay: 0.12 + 0.085 * Double(k))
+            play(notes[root + step], volume: 0.3, delay: 0.12 + 0.085 * Double(k))
         }
     }
 

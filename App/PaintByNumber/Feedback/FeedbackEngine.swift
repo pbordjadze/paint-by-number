@@ -47,19 +47,19 @@ final class FeedbackEngine {
     private func handle(_ event: PaintEvent, in session: PaintingSession) {
         let haptic = hapticsEnabled, sound = soundsEnabled
         switch event {
-        case let .painted(regions, color):
+        case let .painted(regions, _):
             // Perceived size of what was painted, relative to the canvas.
             let area = regions.reduce(Float(0)) { $0 + session.template.regions[$1].area }
             let canvas = Float(max(1, session.template.width * session.template.height))
             let size = min(1, (area / canvas).squareRoot() * 6)
             if haptic { haptics.paint(strength: size, duration: fillDuration) }
-            if sound { sounds.paint(color: color, velocity: 0.35 + 0.65 * size) }
+            if sound { sounds.paint(velocity: 0.35 + 0.65 * size) }
         case .rejected:
             if haptic { haptics.reject() }
             if sound { sounds.reject() }
-        case let .colorCompleted(color):
+        case .colorCompleted:
             if haptic { haptics.colorComplete() }
-            if sound { sounds.colorComplete(color: color) }
+            if sound { sounds.colorComplete() }
         case .artworkCompleted:
             if haptic { haptics.celebrate() }
             if sound { sounds.celebrate() }

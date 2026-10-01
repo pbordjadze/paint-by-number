@@ -12,8 +12,8 @@ templates — entirely on-device — and makes painting them fluid and satisfyin
 - **Metal canvas**: resolution-independent vector rendering at 120 Hz, MSAA edges, SDF numbers
   that appear as you zoom, paint that spreads from your fingertip, native UIScrollView physics,
   Apple Pencil painting and hover.
-- **Tactile feedback**: Core Haptics patterns shaped to each fill; every color has its own note
-  of a pentatonic scale, so painting plays gentle melodies.
+- **Tactile feedback**: Core Haptics patterns shaped to each fill; each fill plays the next note
+  of one gentle pentatonic tune, so painting in any order plays the same melody.
 - **Liquid Glass UI**: gallery, a live create flow with before/after comparison, printable PDF
   templates, share images and time-lapse videos.
 - **Suggested settings**: every photo opens on settings chosen for it. The app measures the photo's
