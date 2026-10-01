@@ -153,8 +153,10 @@ final class CreateModel {
         }
     }
 
-    func load(imageData: Data) {
-        begin(defaultTitle: Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
+    /// `title` names the painting when the photo came with a name (an opened file); without
+    /// one, the date does.
+    func load(imageData: Data, title: String? = nil) {
+        begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
     }
 
     /// A photo that never arrived (the camera's shot couldn't be read): shown in place of the

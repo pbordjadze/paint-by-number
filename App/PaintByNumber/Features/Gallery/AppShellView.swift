@@ -17,6 +17,13 @@ struct AppShellView: View {
     @State private var isShowingSettings = false
     #endif
     @State private var droppedPhoto: Data?
+    @State private var droppedTitle: String?
+    /// A file opened from another app (share sheet, Files), waiting for the library and the
+    /// screen to be free for the create flow.
+    @State private var incomingImage: IncomingImage?
+    @State private var isReadingFile = false
+    /// Changes with every file opened, so a create flow already on screen restarts on it.
+    @State private var flowID = UUID()
     @State private var isDropTargeted = false
     @State private var didRestore = false
     /// A painting just created in the create flow, opened once the flow has closed.
@@ -45,24 +52,30 @@ struct AppShellView: View {
         }
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
+            droppedTitle = nil
             openPending()
         }) {
-            CreateFlowView(openingSample: launchSample, droppedPhoto: droppedPhoto) { artwork in
+            CreateFlowView(openingSample: launchSample, droppedPhoto: droppedPhoto, droppedTitle: droppedTitle) { artwork in
                 pendingOpen = artwork.id
                 isCreating = false
             }
+            .id(flowID)
             .environment(library)
         }
-        .sheet(isPresented: $isShowingSettings) {
+        .sheet(isPresented: $isShowingSettings, onDismiss: presentIncomingImage) {
             SettingsView()
                 .environment(library)
         }
         .onAppear(perform: restoreOpenArtwork)
+        // "Open in Paint by Numbers" from the share sheet or Files.
+        .onOpenURL(perform: openFile)
+        .onChange(of: library.placeholders.isEmpty) { presentIncomingImage() }
         // Metal setup off the main thread while the gallery shows, so the first painting opens instantly.
         .task {
             RenderContext.prewarm()
             #if DEBUG
             if ShellDemo.current?.isReadyOnAppear == true { DemoMode.markReady() }
+            if let file = DemoMode.openFileURL { openFile(file) }
             #endif
         }
         #if DEBUG
@@ -120,6 +133,42 @@ struct AppShellView: View {
         #else
         return nil
         #endif
+    }
+
+    /// Starts a painting from a file another app opened in this one. Only the first of several
+    /// files opens (one painting per create flow); the others' inbox copies are just deleted.
+    private func openFile(_ url: URL) {
+        guard url.isFileURL else { return }
+        guard !isReadingFile else {
+            Task { await IncomingFile.discard(url) }
+            return
+        }
+        isReadingFile = true
+        Task {
+            incomingImage = await IncomingFile.take(url)
+            presentIncomingImage()
+        }
+    }
+
+    /// Opens the create flow on the file once nothing stands in its way: on a cold launch the
+    /// first-launch samples are still being made, and a settings sheet has to close first. An
+    /// open painting is dismissed (it saves as it disappears) and a create flow already on
+    /// screen starts over on the new photo.
+    private func presentIncomingImage() {
+        guard let image = incomingImage, library.placeholders.isEmpty else { return }
+        guard !isShowingSettings else {
+            isShowingSettings = false
+            return
+        }
+        incomingImage = nil
+        isReadingFile = false
+        // A saved painting would otherwise reopen over this flow on a cold launch.
+        didRestore = true
+        path.removeAll()
+        droppedPhoto = image.data
+        droppedTitle = image.title
+        flowID = UUID()
+        isCreating = true
     }
 
     private func openPending() {

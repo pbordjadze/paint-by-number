@@ -13,6 +13,18 @@
         }
       }
     },
+    "Image" : {
+      "comment" : "Name of the document type the app declares for images, shown by the system when a photo is opened in Paint by Numbers from the share sheet or Files (CFBundleTypeName in Config/Info.plist)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image"
+          }
+        }
+      }
+    },
     "NSCameraUsageDescription" : {
       "comment" : "Shown in the system alert that asks permission to use the camera (Take Photo in the create flow)",
       "extractionState" : "manual",

@@ -137,6 +137,18 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   sit inside a ScrollView (UIKit can't arbitrate their pans across the process boundary: neither
   scrolls). It fills the page; compact windows switch Photos/Samples with a segmented control,
   wide windows put a scrolling samples column beside it. "Browse All…" presents the full picker.
+- Open in Paint by Numbers: images from the share sheet and Files arrive through an image document type
+  (`CFBundleDocumentTypes` in `Config/Info.plist`, `Alternate` rank, not opened in place, so the system
+  copies each file into `Documents/Inbox`) and `.onOpenURL` → `AppShellView.openFile`. `IncomingFile`
+  reads it off the main actor (security scope tried), deletes it only if it is inside the app's inbox,
+  and titles the painting after the file name; the create flow opens like a drop (`droppedPhoto`; an
+  unreadable file is an empty photo, so "Couldn't Open Photo" shows), after the library's first-launch
+  samples are done, the settings sheet is closed and an open painting is dismissed (it autosaves as it
+  goes); only the first of several files opens. A document type's name is localized in
+  `InfoPlist.xcstrings` under its own English text (`strings_check.py` checks it). No Share Extension:
+  it would be a hand-written `.appex` target in the pbxproj that can't open its containing app and
+  would hand the image over through an app group. Debug builds: `-openFile <path>` calls the same
+  handler at launch (`DemoMode.openFileURL`; scenario `create-from-file`).
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`).
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (source language English; no translations yet, so the catalog
