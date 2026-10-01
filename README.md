@@ -16,14 +16,29 @@ templates — entirely on-device — and makes painting them fluid and satisfyin
   of a pentatonic scale, so painting plays gentle melodies.
 - **Liquid Glass UI**: gallery, a live create flow with before/after comparison, printable PDF
   templates, share images and time-lapse videos.
+- **Suggested settings**: every photo opens on settings chosen for it. The app measures the photo's
+  palette, texture and subject, tries a few candidates in parallel and picks the best one for your
+  Painting Length (Quick, Relaxed, Detailed). The sliders stay; Reset to Suggested is one tap away.
+- **Playful color names**: every paint gets an evocative nickname ("Harbor Fog", "Apricot Jam"),
+  unique in its palette and different in every painting. A long press on a swatch shows the
+  nickname, the plain name and the hex code; VoiceOver and the printed color key read both names.
+- **Dark paper**: a deep warm-grey canvas with light lines and numbers for painting in the evening
+  (Light, Dark or Automatic); paint colors stay true.
+- **Open in Paint by Numbers**: send a photo from Photos, Files, Safari or Mail through the share
+  sheet and it opens straight in the create flow.
+- **Search and favorites**: find a painting by name, heart the ones you love; favorites sort first
+  and have their own filter.
+- **Time-lapse pacing**: replay a painting evenly, or as painted, with its bursts and pauses
+  compressed into the video.
 
 ## Privacy
 
 Photos are turned into templates entirely on the device. The app has no accounts, no analytics
 and no network code, so your photos and paintings stay on your iPhone or iPad unless you share
 them. It declares no tracking and no collected data in its privacy manifest
-(`App/PaintByNumber/Resources/PrivacyInfo.xcprivacy`); the only sensitive API it uses is
-`UserDefaults`, for its own settings. Third-party credits and licenses are in
+(`App/PaintByNumber/Resources/PrivacyInfo.xcprivacy`); the only required-reason APIs it uses
+are `UserDefaults`, for its own settings, and file timestamps, to clean up its own temporary
+exports. Third-party credits and licenses are in
 [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
 
 ## Project layout
@@ -31,7 +46,7 @@ them. It declares no tracking and no collected data in its privacy manifest
 | Path | What |
 | --- | --- |
 | `Sources/PaintCore` | Template pipeline (segmentation, vectorization, model, coding) |
-| `Sources/pbn` | Headless CLI: `pbn generate`, `pbn bench` |
+| `Sources/pbn` | Headless CLI: `pbn generate [--auto]`, `pbn suggest`, `pbn names`, `pbn bench` |
 | `Tests/PaintCoreTests` | Swift Testing suite for the pipeline |
 | `App/` | Xcode project: SwiftUI app, Metal canvas, feedback, export, tests |
 | `tools/` | Visual evaluation harness, icon generator |

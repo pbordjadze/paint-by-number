@@ -86,7 +86,7 @@ jobs:
   ipad:
     name: iPad — Debug build, screenshots, tests, Release check, benchmark
     runs-on: macos-26
-    timeout-minutes: 50
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2 }
@@ -141,8 +141,13 @@ jobs:
       - name: Pipeline benchmark (Apple silicon)
         if: always()
         run: |
-          # Only when the pipeline changed; app-only commits skip the 2-minute benchmark.
-          if git rev-parse -q --verify HEAD~1 >/dev/null && git diff --quiet HEAD~1 -- Sources Package.swift; then
+          # Only when PaintCore differs from the shipping branch (on the shipping branch itself:
+          # from the previous commit), so a feature branch's later app-only commits keep
+          # benchmarking its pipeline changes; app-only work skips the 2-minute benchmark.
+          BASE=HEAD~1
+          if [[ "$GITHUB_REF_NAME" != claude/paint-by-numbers-app ]] \
+            && git fetch -q --depth=1 origin claude/paint-by-numbers-app; then BASE=FETCH_HEAD; fi
+          if git rev-parse -q --verify "$BASE" >/dev/null && git diff --quiet "$BASE" -- Sources Package.swift; then
             echo "PaintCore unchanged; benchmark skipped" | tee out/bench.txt; exit 0
           fi
           swift build -c release --product pbn 2>&1 | tail -2
@@ -170,7 +175,7 @@ jobs:
       github.ref_name == 'claude/paint-by-numbers-app' || github.event.inputs.iphone == 'true'
       || contains(github.event.head_commit.message, '[iphone]')
     runs-on: macos-26
-    timeout-minutes: 50
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v5
       - name: Start simulator
