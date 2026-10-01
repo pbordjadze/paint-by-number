@@ -13,9 +13,16 @@ nonisolated enum ArtworkExporter {
 
         var errorDescription: String? {
             switch self {
-            case .renderFailed: "The picture couldn't be rendered."
-            case .photosAccessDenied: "Allow Paint by Numbers to add photos in Settings to save your painting."
-            case .timelapseFailed: "The time-lapse couldn’t be made."
+            case .renderFailed:
+                String(localized: "export.error.renderFailed", defaultValue: "The picture couldn't be rendered.",
+                       comment: "Error when a painting's picture can't be rendered for sharing or saving")
+            case .photosAccessDenied:
+                String(localized: "export.error.photosAccessDenied",
+                       defaultValue: "Allow Paint by Numbers to add photos in Settings to save your painting.",
+                       comment: "Error when saving to Photos is refused; tells the person to allow adding photos in the Settings app")
+            case .timelapseFailed:
+                String(localized: "export.error.timelapseFailed", defaultValue: "The time-lapse couldn’t be made.",
+                       comment: "Error when the time-lapse movie can't be created")
             }
         }
     }
@@ -88,12 +95,24 @@ nonisolated enum ArtworkExporter {
         try? FileManager.default.removeItem(at: folder)
     }
 
+    /// "Parrots Template": the printable PDF's name, in the share sheet and as its file name.
+    static func templateName(title: String) -> String {
+        String(localized: "export.templateName", defaultValue: "\(title) Template",
+               comment: "Name of a painting's printable template PDF; the argument is the painting's title")
+    }
+
+    /// "Parrots Time-lapse": the movie's file name.
+    static func timelapseName(title: String) -> String {
+        String(localized: "export.timelapseName", defaultValue: "\(title) Time-lapse",
+               comment: "File name of a painting's time-lapse movie; the argument is the painting's title")
+    }
+
     static func fileName(_ title: String) -> String {
         let cleaned = title
             .components(separatedBy: CharacterSet(charactersIn: "/\\:?%*|\"<>"))
             .joined(separator: "-")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return cleaned.isEmpty ? "Painting" : cleaned
+        return cleaned.isEmpty ? String(localized: "Painting") : cleaned
     }
 
     static func saveToPhotos(_ png: Data) async throws {
@@ -139,7 +158,7 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     @concurrent
     func export() async throws -> URL {
         let data = try ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper)
-        return try ArtworkExporter.temporaryFile(data, name: "\(artwork.title) Template", pathExtension: "pdf")
+        return try ArtworkExporter.temporaryFile(data, name: ArtworkExporter.templateName(title: artwork.title), pathExtension: "pdf")
     }
 }
 
@@ -170,7 +189,7 @@ nonisolated struct TimelapseRequest: Identifiable, Sendable {
             template = liveTemplate
             progress = liveProgress
         }
-        let url = try ArtworkExporter.temporaryURL(name: "\(title) Time-lapse", pathExtension: "mp4")
+        let url = try ArtworkExporter.temporaryURL(name: ArtworkExporter.timelapseName(title: title), pathExtension: "mp4")
         do {
             try await TimelapseFrameRenderer.export(
                 template: template, progress: progress, to: url, longSide: longSide, onProgress: onProgress)

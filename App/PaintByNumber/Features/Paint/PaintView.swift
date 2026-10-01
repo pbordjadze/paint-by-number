@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 import PaintCore
 import SwiftUI
@@ -272,7 +273,9 @@ struct PaintView: View {
     }
 
     private func progressGroup(fraction: Double, showsTitle: Bool, showsPercent: Bool) -> some View {
-        HStack(spacing: 8) {
+        // Whole percent, rounded down: 100 only once the last area is painted.
+        let percent = Int(fraction * 100)
+        return HStack(spacing: 8) {
             ZStack {
                 Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
                 Circle()
@@ -289,20 +292,20 @@ struct PaintView: View {
                     .fixedSize()
             }
             if showsPercent {
-                Text(verbatim: "\(Int(fraction * 100))%")
+                Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
                     .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .snappy, value: Int(fraction * 100))
+                    .animation(reduceMotion ? nil : .snappy, value: percent)
                     .lineLimit(1)
                     .fixedSize()
             }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title.isEmpty
-            ? Text("\(Int(fraction * 100)) percent painted")
-            : Text("\(title), \(Int(fraction * 100)) percent painted"))
+            ? PaintSpeech.percentPainted(percent)
+            : PaintSpeech.paintingProgress(title: title, percent: percent))
         .accessibilityShowsLargeContentViewer()
     }
 
@@ -453,9 +456,15 @@ private struct CompletionBar: View {
                 .symbolEffect(.bounce, value: session.isComplete)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Finished!").font(.headline)
-                Text(title.isEmpty ? "Every region is painted." : title)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Group {
+                    if title.isEmpty {
+                        Text("Every region is painted.")
+                    } else {
+                        Text(title)
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             }
             // The buttons keep their size on a phone; the caption truncates instead.
             .lineLimit(1)

@@ -1,3 +1,4 @@
+import Foundation
 import Photos
 import PhotosUI
 import SwiftUI
@@ -235,7 +236,8 @@ private struct SampleTile: View {
                 withAnimation(.easeOut(duration: 0.2)) { image = loaded }
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Sample: \(sample.title)")
+            .accessibilityLabel(String(localized: "create.sample.label", defaultValue: "Sample: \(sample.title)",
+                                       comment: "VoiceOver label of a sample photo's tile; the argument is the sample's name"))
             .accessibilityAddTraits(.isButton)
     }
 }

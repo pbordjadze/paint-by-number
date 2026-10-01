@@ -84,7 +84,7 @@ struct PhotoPeekButton: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("Photo"))
-            .accessibilityValue(Text(peek.isShown ? "Showing" : "Hidden"))
+            .accessibilityValue(peek.isShown ? Text("Showing") : Text("Hidden"))
             .accessibilityHint(Text("Touch and hold to compare with the photo. Tap to keep it shown."))
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { peek.setLatched(!peek.isLatched) }

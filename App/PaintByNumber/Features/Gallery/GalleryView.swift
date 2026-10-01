@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// The gallery: paintings in progress and finished ones, as an adaptive grid of cards.
@@ -66,7 +67,9 @@ struct GalleryView: View {
             Button("Rename") { library.rename(artwork.id, to: renameText) }
         }
         .confirmationDialog("Start this painting over?", isPresented: isPresent($restarting), titleVisibility: .visible, presenting: restarting) { artwork in
-            Button("Restart “\(artwork.title)”", role: .destructive) {
+            Button(String(localized: "gallery.restart.confirm", defaultValue: "Restart “\(artwork.title)”",
+                          comment: "Destructive button of the restart confirmation; the argument is the painting's title"),
+                   role: .destructive) {
                 Task { await library.restart(artwork.id) }
             }
         } message: { _ in
@@ -74,14 +77,20 @@ struct GalleryView: View {
         }
         .confirmationDialog("Delete this painting?", isPresented: isPresent($deleting), titleVisibility: .visible, presenting: deleting) { artwork in
             // Undoable for a few seconds afterwards (the toast's Undo).
-            Button("Delete “\(artwork.title)”", role: .destructive) { library.delete(artwork.id) }
+            Button(String(localized: "gallery.delete.confirm", defaultValue: "Delete “\(artwork.title)”",
+                          comment: "Destructive button of the delete confirmation; the argument is the painting's title"),
+                   role: .destructive) { library.delete(artwork.id) }
         } message: { artwork in
             if artwork.isComplete {
-                Text("“\(artwork.title)” is finished.")
+                Text(String(localized: "gallery.delete.message.finished", defaultValue: "“\(artwork.title)” is finished.",
+                            comment: "Delete confirmation message for a finished painting; the argument is its title"))
             } else if artwork.isStarted {
-                Text("“\(artwork.title)” is \(Double(ProgressCaption.percent(artwork)) / 100, format: .percent.precision(.fractionLength(0))) painted.")
+                let percent = ProgressCaption.percentText(artwork)
+                Text(String(localized: "gallery.delete.message.started", defaultValue: "“\(artwork.title)” is \(percent) painted.",
+                            comment: "Delete confirmation message for a painting in progress; the arguments are its title and the formatted percentage painted, e.g. 42%"))
             } else {
-                Text("“\(artwork.title)” hasn’t been started yet.")
+                Text(String(localized: "gallery.delete.message.notStarted", defaultValue: "“\(artwork.title)” hasn’t been started yet.",
+                            comment: "Delete confirmation message for a painting nobody has painted on; the argument is its title"))
             }
         }
         .sheet(item: $timelapse) { request in
@@ -161,7 +170,11 @@ struct GalleryView: View {
         }
         Button("Duplicate", systemImage: "plus.square.on.square") {
             Task {
-                do { try await library.duplicate(artwork.id) } catch { show("Couldn't duplicate the painting.", "exclamationmark.triangle") }
+                do {
+                    try await library.duplicate(artwork.id)
+                } catch {
+                    show(String(localized: "Couldn't duplicate the painting."), "exclamationmark.triangle")
+                }
             }
         }
         Divider()
@@ -169,14 +182,18 @@ struct GalleryView: View {
             item: PaintingImageFile(store: library.store, artwork: artwork),
             preview: SharePreview(artwork.title, image: previewImage(artwork))
         ) {
-            Label(artwork.isComplete ? "Share Painting" : "Share Progress", systemImage: "square.and.arrow.up")
+            if artwork.isComplete {
+                Label("Share Painting", systemImage: "square.and.arrow.up")
+            } else {
+                Label("Share Progress", systemImage: "square.and.arrow.up")
+            }
         }
         if artwork.isComplete {
             Button("Share Time-lapse", systemImage: "timelapse") { shareTimelapse(artwork) }
         }
         ShareLink(
             item: PrintableTemplateFile(store: library.store, artwork: artwork, paper: paper),
-            preview: SharePreview("\(artwork.title) Template", image: previewImage(artwork))
+            preview: SharePreview(ArtworkExporter.templateName(title: artwork.title), image: previewImage(artwork))
         ) {
             Label("Print Template…", systemImage: "printer")
         }
@@ -206,7 +223,7 @@ struct GalleryView: View {
             do {
                 let png = try await Background.run { try ArtworkExporter.paintingPNG(store: store, artwork: artwork) }
                 try await ArtworkExporter.saveToPhotos(png)
-                show("Saved to Photos", "checkmark.circle.fill")
+                show(String(localized: "Saved to Photos"), "checkmark.circle.fill")
             } catch {
                 show(error.localizedDescription, "exclamationmark.triangle")
             }
@@ -227,7 +244,11 @@ struct GalleryView: View {
     private var toasts: some View {
         VStack(spacing: 10) {
             if let failed = library.latestWriteFailure?.artwork {
-                Toast(text: "Couldn’t save “\(failed.title)”", systemImage: "exclamationmark.triangle") {
+                Toast(
+                    text: String(localized: "gallery.toast.saveFailed", defaultValue: "Couldn’t save “\(failed.title)”",
+                                 comment: "Toast when a painting's progress couldn't be written to disk; the argument is the painting's title"),
+                    systemImage: "exclamationmark.triangle"
+                ) {
                     Button("Retry") { library.retrySaving(failed.id) }
                         .fontWeight(.semibold)
                 }
@@ -236,7 +257,11 @@ struct GalleryView: View {
                 Toast(text: notice.text, systemImage: notice.systemImage)
             }
             if let deleted = library.recentlyDeleted {
-                Toast(text: "Deleted “\(deleted.title)”", systemImage: "trash") {
+                Toast(
+                    text: String(localized: "gallery.toast.deleted", defaultValue: "Deleted “\(deleted.title)”",
+                                 comment: "Toast after deleting a painting, next to an Undo button; the argument is the painting's title"),
+                    systemImage: "trash"
+                ) {
                     Button("Undo") { library.undoDelete() }
                         .fontWeight(.semibold)
                 }

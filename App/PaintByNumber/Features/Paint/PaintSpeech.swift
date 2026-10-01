@@ -23,9 +23,20 @@ nonisolated enum PaintSpeech {
     /// "finished" or "30 percent painted".
     static func colorProgress(painted: Int, total: Int) -> String {
         if total > 0 && painted >= total { return finished }
-        let value = Self.percent(painted: painted, total: total)
-        return String(localized: "paint.speech.percentPainted", defaultValue: "\(value) percent painted",
-                      comment: "VoiceOver value of a palette color: how much of it is painted")
+        return percentPainted(Self.percent(painted: painted, total: total))
+    }
+
+    /// "30 percent painted": a palette color's value, and the painting's progress.
+    static func percentPainted(_ percent: Int) -> String {
+        String(localized: "paint.speech.percentPainted", defaultValue: "\(percent) percent painted",
+               comment: "VoiceOver value of a palette color or of the painting: how much of it is painted, as a whole percentage")
+    }
+
+    /// "Parrots, 30 percent painted": the painting screen's progress badge when it shows the title.
+    static func paintingProgress(title: String, percent: Int) -> String {
+        let progress = percentPainted(percent)
+        return String(localized: "paint.speech.titleProgress", defaultValue: "\(title), \(progress)",
+                      comment: "VoiceOver label of the painting screen's progress badge: the painting's title, then how much of it is painted (the percentPainted text)")
     }
 
     /// The value of a finished color or painting.
