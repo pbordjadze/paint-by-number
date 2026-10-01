@@ -225,7 +225,10 @@ struct RegionMergingTests {
     @Test func rampBandsFuseUpToToleranceAndContoursStay() throws {
         let (classes0, colors, palette) = Self.rampScene()
         let w = 240, h = 30
-        for (importance, bandWidth, expectedRegions) in [(Float(1), Float(0), 5), (0, 40, 3)] {
+        // Ten bands 0.02 apart: at the near tolerance (0.045) they fuse in threes (spread
+        // 0.04), at the band tolerance (0.1) in sixes, and on the subject (0.0225) at most in
+        // pairs (which pairs depends on float ties among equal distances: 5 or 4 merges).
+        for (importance, bandWidth, expected) in [(Float(0), Float(0), 5...5), (0, 40, 3...3), (1, 40, 6...7)] {
             var classes = classes0
             var labelling = classes0
             var regions = RegionRuns(classes: classes, width: w, height: h)
@@ -233,18 +236,20 @@ struct RegionMergingTests {
             let merges = try BandMerging.apply(
                 classes: &classes, labelling: &labelling, regions: &regions, adjacency: &adjacency, colors: colors,
                 importance: [Float](repeating: importance, count: w * h), palette: palette,
-                metric: SIMD3(repeating: 1), tolerance: (near: 0.045, band: 0.1), bandWidth: bandWidth, contrast: 0.25)
-            // Closest pairs first, so bands fuse in threes (spread 0.04) at the near tolerance
-            // and in sixes (spread 0.1) at the band tolerance; the contour never fuses.
-            #expect(merges == 11 - expectedRegions)
-            #expect(regions.count == expectedRegions)
+                metric: SIMD3(repeating: 1), tolerance: (near: 0.045, nearImportant: 0.0225, band: 0.1),
+                bandWidth: bandWidth, contrast: 0.25)
+            // Closest pairs first; the contour never fuses.
+            #expect(expected.contains(regions.count))
+            #expect(merges == 11 - regions.count)
+            let bandsPerPaint = Dictionary(grouping: 0..<10) { classes[15 * w + 20 * $0] }.values.map(\.count)
+            #expect(bandsPerPaint.max()! <= (importance == 1 ? 2 : 6))
             #expect(regions.classOf.last == 10)
             #expect(classes[15 * w + 239] == 10 && classes[15 * w + 199] != 10)
             // Absorbed bands report the fused paint as their own, so the palette refit
             // centres the paint on the whole fused ramp.
             for x in 0..<200 { #expect(labelling[15 * w + x] == classes[15 * w + x]) }
             let paints = Set(classes[(15 * w)..<(16 * w)])
-            #expect(paints.count == expectedRegions)
+            #expect(paints.count == regions.count)
             for k in adjacency.pairs.indices {
                 let a = Int(adjacency.pairs[k] >> 32), b = Int(adjacency.pairs[k] & 0xFFFF_FFFF)
                 #expect(regions.classOf[a] != regions.classOf[b])

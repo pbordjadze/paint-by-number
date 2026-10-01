@@ -8,11 +8,12 @@ import Foundation
 /// barely changes across it (the pixel step is a small fraction of the paint difference),
 /// whereas a real contour carries most of that difference within a pixel or two. Neighbours
 /// separated by such weak boundaries are fused, closest paints first, as long as the paints
-/// of everything fused stay within a tolerance. Paints too close to tell apart in paint fuse
-/// anywhere; a wider tolerance applies to narrow bands (the rings of a bokeh highlight, the
-/// contour lines of a shaded forehead) and shrinks with importance, so a wide sky band or the
-/// modelling of the subject keeps its distinct tones. Fused regions are unions of regions, so
-/// every size and thickness guarantee holds.
+/// of everything fused stay within a tolerance. In the background, paints too close to tell
+/// apart in paint fuse anywhere and a wider tolerance applies to narrow bands (the rings of
+/// a bokeh highlight); a wide sky band keeps its distinct tones. Both tolerances shrink with
+/// importance to about one just-noticeable difference, so the modelling of the subject (the
+/// contour lines of a shaded cheek) keeps its tones. Fused regions are unions of regions,
+/// so every size and thickness guarantee holds.
 enum BandMerging {
 
     /// - Parameters:
@@ -20,9 +21,9 @@ enum BandMerging {
     ///     palette refit treats as a region's own colour; absorbed bands are rewritten to
     ///     the fused paint so the refit centres it on the whole ramp rather than one band.
     ///   - metric: Per-axis scale turning working colours into true OKLab.
-    ///   - tolerance: Largest OKLab spread of the paints fused into one region: `near` for
-    ///     paints too close to tell apart (anywhere), `band` for narrow bands at importance 0
-    ///     (falling to `near` at importance 1).
+    ///   - tolerance: Largest OKLab spread of the paints fused into one region at importance
+    ///     0: `near` (paints too close to tell apart) anywhere, `band` for narrow bands; both
+    ///     fall to `nearImportant` at importance 1.
     ///   - bandWidth: Mean width (area over half the perimeter, canvas units) up to which a
     ///     region counts as a narrow band.
     ///   - contrast: A boundary is weak when the mean colour step across it is below this
@@ -38,13 +39,13 @@ enum BandMerging {
         importance: [Float],
         palette: [SIMD3<Float>],
         metric: SIMD3<Float>,
-        tolerance: (near: Float, band: Float),
+        tolerance: (near: Float, nearImportant: Float, band: Float),
         bandWidth: Float,
         contrast: Float,
         cancel: CancellationCheck = .none
     ) throws -> Int {
         let n = regions.count
-        let maxTolerance = max(tolerance.near, tolerance.band)
+        let maxTolerance = max(tolerance.near, tolerance.nearImportant, tolerance.band)
         guard n > 1, maxTolerance > 0, !adjacency.pairs.isEmpty else { return 0 }
         let cls = regions.classOf
         let paints = palette.map { $0 * metric }
@@ -105,11 +106,9 @@ enum BandMerging {
         for e in edges {
             let a = find(Int(e.a)), b = find(Int(e.b))
             if a == b { continue }
-            var limit = tolerance.near
-            if min(width(a), width(b)) <= bandWidth {
-                let imp = Float((weight[a] + weight[b]) / Double(area[a] + area[b]))
-                limit = max(limit, lerp(tolerance.band, tolerance.near, imp))
-            }
+            let imp = Float((weight[a] + weight[b]) / Double(area[a] + area[b]))
+            let unimportant = min(width(a), width(b)) <= bandWidth ? tolerance.band : tolerance.near
+            let limit = lerp(unimportant, tolerance.nearImportant, imp)
             var joined = max(spread[a], spread[b])
             for x in members[a] {
                 for y in members[b] { joined = max(joined, distance(x, y)) }
