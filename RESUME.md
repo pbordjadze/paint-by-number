@@ -1,27 +1,28 @@
 # Resume notes: paint-by-number improvement program
 
-Paused on 2026-09-30 around 22:00 UTC because of the session usage limit. Nothing is running.
+Updated 2026-10-01. Wave 1 is finished and released as build 69 (e36797f). Nothing is running.
 
-## Branches (all on origin)
+## Where things stand
 
 | Branch | What it holds |
 | --- | --- |
-| claude/paint-by-numbers-app | Build 67 (ccbbabe), the last green build and what SideStore serves. Untouched until the integration branch is green. |
-| claude/wave1-merge | Integration branch at d7033ef: build 67 plus every wave-1 group merged (data safety, pipeline quality, regression gate, library picker, robustness, photo peek and tips, accessibility with its review fixes, ship hygiene, segmentation research). PaintCore builds, 98 tests pass, the quality gate passes (Linux CI green). The iPad app build does not compile yet: this was the first compile of the new app code. |
-| claude/wip-research-fix | Segmentation round-1 fixes, started. Last commit is a WIP snapshot ([skip ci]): run `git reset --soft HEAD~1` to continue. 56c8cda (markers: none) |
-| claude/wip-pq-fix | Pipeline-quality review fixes, started. Same WIP convention. 6acc2c6 (markers: App/PaintByNumber/Export/PDFExporter.swift App/PaintByNumberTests/RenderingTests.swift CLAUDE.md ) |
-| (none) | Localization: not started beyond a survey. clean at 90a77db (no work to save) |
+| claude/paint-by-numbers-app | e36797f: build 69, what SideStore serves. Build 68 (4cf3fe0) had an iPhone layout bug (the paint screen's top bar was wider than a 402 pt phone and pushed the whole screen off the right edge); 69 fixes it. |
+| claude/wave1-merge | Same commit as the app branch. All wave-1 groups merged, plus the segmentation fixes (iris-ring blocker fixed and checked on crops), the pipeline-quality fixes (PDF prints detailed templates on overlapping sheets), localization (string catalogs, tools/strings_check.py in CI, `*-long-text` scenarios), and the final-review fixes. CI green on iPad and iPhone; regression baseline regenerated once; pipelineVersion still 2. |
+| claude/wip-research-fix, claude/wip-pq-fix | Superseded: their work is merged. Safe to delete. |
 
-## Next steps, in order
+handoff/ holds the wave-1 review findings for reference.
 
-1. Fix the compile errors on claude/wave1-merge. A CI run for d7033ef was started at pause time; read it with `CI_BRANCH=claude/wave1-merge ci/fetch.sh <sha> <dir>` (errors.txt per device). Iterate until the iPad build and tests pass.
-2. Finish claude/wip-research-fix (findings in handoff/research.md: one blocker, the strip rule erases the red parrot's iris ring at 24 colours / detail 0.5; three majors) and claude/wip-pq-fix (handoff/pipeline-quality.md: the rasterizer's second number-size floor makes PDF numbers disagree with the canvas). Resolve the conflict markers listed above first.
-3. Localization per handoff/localization-brief.md, on top of the green integration branch.
-4. Merge everything into claude/wave1-merge, regenerate tools/baseline/regression.json once, and keep TemplateGenerator.pipelineVersion at 2 (unreleased).
-5. Whole-diff review, then push to claude/paint-by-numbers-app for the iPhone job and the build-68 IPA.
-6. After build 68: automatic generation settings, designed in docs/design/auto-settings.md on the integration branch.
+## Known gaps, not fixed
 
-Agent rules used for all continuation work: handoff/RULES.md (Opus 5.5 agents, one worktree each, no history rewrites).
+- Inline library picking on iPhone is not covered by CI any more: the system photo picker ignores synthesized taps on the iPhone simulator (recordings show the taps landing on its photos), so `testLibraryPhotoOpensPreviewAndCanBePickedAgain` and `testBrowseAllPresentsSystemPickerAndDismisses` skip there. The picker config changed in wave 1 (`photoLibrary: .shared()`, top accessory bar visible). Check on a real iPhone that tapping a photo opens the preview.
+- Segmentation review majors: freed paints are only partly re-spent at 150 colours (three-digit label room is the bigger cause of the shrinking palette); 24-colour bokeh banding unchanged (structure-weighted histogram tried and dropped).
+- Final-review minors left: sources under ~5 px on the short side can't hold a label (no minimum source size); nothing forces a pipelineVersion bump when output changes.
+- `-NSDoubleLocalizedStrings` shows raw placeholders in the first copy of doubled format strings (documented in CLAUDE.md; expected).
+
+## Next
+
+1. After build 69: automatic generation settings, designed in docs/design/auto-settings.md on the integration branch.
+2. CI tip: `[iphone]` in a pushed commit's message runs the iPhone job on any branch (sessions here can't use workflow_dispatch).
 
 ## Open decisions for the owner
 
