@@ -1,7 +1,8 @@
 name: CI
 
 # Every run publishes a report (STATUS.md, trimmed logs, compiler errors, test results,
-# screenshots, the pipeline quality regression under core/regression/) to the branch
+# screenshots, the pipeline quality regression under core/regression/, the string catalog
+# check under core/strings-check.log) to the branch
 # `ci-shots/<branch>`, readable with plain git (see ci/fetch.sh).
 # Each simulator gets its own VM: two booted simulators on one 3-core runner thrash. The
 # simulator boots in the background while the app builds.
@@ -65,6 +66,19 @@ jobs:
           python3 tools/regression.py --self-test
           python3 tools/regression.py --json out/regression/regression.json --sheets out/regression/sheets \
             | tee out/regression/regression.txt
+      - name: String catalog
+        # The app's sources and Localizable.xcstrings drifting apart only shows on a device, as a
+        # string that silently stays English; the macOS jobs have no Xcode extraction to catch it.
+        if: ${{ !cancelled() }}
+        shell: bash
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          set -o pipefail
+          command -v python3 > /dev/null || { apt-get update -qq && apt-get install -y -qq --no-install-recommends python3 > /dev/null; }
+          mkdir -p out
+          python3 tools/strings_check.py --self-test
+          python3 tools/strings_check.py | tee out/strings-check.log
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: core, path: out, if-no-files-found: ignore }
@@ -279,6 +293,7 @@ jobs:
             echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo "core: ${{ needs.core.result }}"
             if [ -f core/regression/regression.txt ]; then echo "regression: $(tail -n 1 core/regression/regression.txt)"; fi
+            if [ -f core/strings-check.log ]; then echo "strings: $(tail -n 1 core/strings-check.log)"; fi
             echo "ipad: ${{ needs.ipad.result }}"
             echo "iphone: ${{ needs.iphone.result }}"
             echo "ipa: ${{ needs.ipa.result }}"
