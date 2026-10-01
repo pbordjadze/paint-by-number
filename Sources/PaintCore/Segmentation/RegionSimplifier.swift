@@ -403,7 +403,7 @@ enum RegionSimplifier {
                 }
             }
         }
-        let steps = adjacency.boundarySteps(regions, colors: colors, metric: SIMD3(repeating: 1))
+        let steps = adjacency.boundarySteps(regions, colors: colors)
         try cancel.throwIfCancelled()
 
         // Neighbour lists of queued regions (merged lists of big ones are never read).

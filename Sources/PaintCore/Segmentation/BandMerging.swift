@@ -55,7 +55,7 @@ enum BandMerging {
             regions.accumulate(0.0) { sum, _, i in sum += Double(ib[i]) }
         }
         try cancel.throwIfCancelled()
-        let steps = adjacency.boundarySteps(regions, colors: colors, metric: metric)
+        let steps = adjacency.boundarySteps(regions, colors: colors)
         try cancel.throwIfCancelled()
 
         struct Link {
@@ -75,7 +75,10 @@ enum BandMerging {
             perimeter[a] += Int(length)
             perimeter[b] += Int(length)
             let d = distance(cls[a], cls[b])
-            guard d <= maxTolerance, steps[k] <= contrast * d * Float(length) else { continue }
+            guard d <= maxTolerance else { continue }
+            // Steps and the paint difference compared in the same (working) space.
+            let difference = ColorScience.distance(palette[Int(cls[a])], palette[Int(cls[b])])
+            guard steps[k] <= contrast * difference * Float(length) else { continue }
             edges.append((Int32(a), Int32(b), d))
         }
         guard !edges.isEmpty else { return 0 }

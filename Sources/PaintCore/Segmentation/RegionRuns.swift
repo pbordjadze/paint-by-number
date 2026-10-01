@@ -360,6 +360,9 @@ struct RegionAdjacency: Sendable {
     /// Region pairs `low << 32 | high`, ascending, each listed once.
     var pairs: [UInt64]
     var lengths: [Int32]
+    /// Colour steps summed over each pair's border (see `boundarySteps`), once measured;
+    /// merges regroup them with the lengths, a fresh labelling starts over.
+    var steps: [Float]?
 
     @inline(__always) static func key(_ a: UInt32, _ b: UInt32) -> UInt64 {
         a < b ? UInt64(a) << 32 | UInt64(b) : UInt64(b) << 32 | UInt64(a)
@@ -455,39 +458,49 @@ struct RegionAdjacency: Sendable {
 
     /// Adjacency after regions were grouped (`group[r]`: new region of old region r).
     func regrouped(_ group: [UInt32]) -> RegionAdjacency {
-        var entries: [(key: UInt64, length: Int32)] = []
+        var entries: [(key: UInt64, length: Int32, steps: Float)] = []
         entries.reserveCapacity(pairs.count)
         for k in pairs.indices {
             let a = group[Int(pairs[k] >> 32)], b = group[Int(pairs[k] & 0xFFFF_FFFF)]
-            if a != b { entries.append((Self.key(a, b), lengths[k])) }
+            if a != b { entries.append((Self.key(a, b), lengths[k], steps?[k] ?? 0)) }
         }
         entries.sort { $0.key < $1.key }
-        var out = RegionAdjacency(pairs: [], lengths: [])
+        var out = RegionAdjacency(pairs: [], lengths: [], steps: steps == nil ? nil : [])
         for e in entries {
             if let last = out.pairs.last, last == e.key {
                 out.lengths[out.lengths.count - 1] += e.length
+                out.steps?[out.lengths.count - 1] += e.steps
             } else {
                 out.pairs.append(e.key)
                 out.lengths.append(e.length)
+                out.steps?.append(e.steps)
             }
         }
         return out
     }
 
-    private init(pairs: [UInt64], lengths: [Int32]) {
+    private init(pairs: [UInt64], lengths: [Int32], steps: [Float]?) {
         self.pairs = pairs
         self.lengths = lengths
+        self.steps = steps
     }
 
     /// Colour step summed over each pair's shared border (in the order of `pairs`): the
-    /// distance, after scaling the axes by `metric`, between the two pixels of every 4-neighbour
-    /// pair on the border, so `boundarySteps / lengths` is the mean step across it. A real
-    /// contour carries most of the paint difference within a pixel or two; the boundary a
-    /// smooth ramp is sliced at barely changes colour.
-    func boundarySteps(_ runs: RegionRuns, colors: [SIMD4<Float>], metric: SIMD3<Float>) -> [Float] {
+    /// working-space distance between the two pixels of every 4-neighbour pair on the
+    /// border, so `boundarySteps / lengths` is the mean step across it. A real contour
+    /// carries most of the paint difference within a pixel or two; the boundary a smooth
+    /// ramp is sliced at barely changes colour. Measured once per labelling and kept in
+    /// `steps` through merges.
+    mutating func boundarySteps(_ runs: RegionRuns, colors: [SIMD4<Float>]) -> [Float] {
+        if let steps { return steps }
+        let measured = Self.measureSteps(pairs: pairs, runs: runs, colors: colors)
+        steps = measured
+        return measured
+    }
+
+    private static func measureSteps(pairs: [UInt64], runs: RegionRuns, colors: [SIMD4<Float>]) -> [Float] {
         let w = runs.width, h = runs.height, m = pairs.count
         guard m > 0, h > 0 else { return [] }
-        let scale = SIMD4(metric, 0)
         // Fixed row chunks, each summing into its own slice, added up in chunk order: the
         // floating-point result then does not depend on the number of cores.
         let chunkRows = 32
@@ -514,10 +527,14 @@ struct RegionAdjacency: Sendable {
                                                 let mid = (lo + hi) >> 1
                                                 if keys.value[mid] < key { lo = mid + 1 } else { hi = mid }
                                             }
+                                            // Runs and pairs describe the same labelling, so
+                                            // every border belongs to a listed pair.
+                                            precondition(lo < m && keys.value[lo] == key, "border of an unlisted region pair")
                                             return lo
                                         }
                                         @inline(__always) func step(_ i: Int, _ j: Int) -> Float {
-                                            let d = (c.value[i] - c.value[j]) * scale
+                                            var d = c.value[i] - c.value[j]
+                                            d.w = 0
                                             return (d * d).sum().squareRoot()
                                         }
                                         for y in rows {

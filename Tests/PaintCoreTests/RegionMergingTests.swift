@@ -127,28 +127,37 @@ struct RegionMergingTests {
             for x in 0..<w { classes[y * w + x] = coarse[(y / 5) * 14 + x / 5] }
         }
         let colors = (0..<(w * h)).map { _ in SIMD4(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), 0) }
-        let regions = RegionRuns(classes: classes, width: w, height: h)
-        let adjacency = RegionAdjacency(regions)
-        let metric = SIMD3<Float>(1, 0.5, 0.5)
-        let steps = adjacency.boundarySteps(regions, colors: colors, metric: metric)
-        #expect(steps.count == adjacency.pairs.count)
-        let labels = regions.labelMap()
-        var expected = [UInt64: Float]()
-        func add(_ i: Int, _ j: Int) {
-            let a = labels.storage[i], b = labels.storage[j]
-            guard a != b else { return }
-            let d = (colors[i] - colors[j]) * SIMD4(metric, 0)
-            expected[RegionAdjacency.key(a, b), default: 0] += (d * d).sum().squareRoot()
-        }
-        for y in 0..<h {
-            for x in 0..<w {
-                if x + 1 < w { add(y * w + x, y * w + x + 1) }
-                if y + 1 < h { add(y * w + x, (y + 1) * w + x) }
+        var regions = RegionRuns(classes: classes, width: w, height: h)
+        var adjacency = RegionAdjacency(regions)
+        func check(_ steps: [Float], _ regions: RegionRuns, _ adjacency: RegionAdjacency) {
+            #expect(steps.count == adjacency.pairs.count)
+            let labels = regions.labelMap()
+            var expected = [UInt64: Float]()
+            func add(_ i: Int, _ j: Int) {
+                let a = labels.storage[i], b = labels.storage[j]
+                guard a != b else { return }
+                var d = colors[i] - colors[j]
+                d.w = 0
+                expected[RegionAdjacency.key(a, b), default: 0] += (d * d).sum().squareRoot()
+            }
+            for y in 0..<h {
+                for x in 0..<w {
+                    if x + 1 < w { add(y * w + x, y * w + x + 1) }
+                    if y + 1 < h { add(y * w + x, (y + 1) * w + x) }
+                }
+            }
+            #expect(expected.count == adjacency.pairs.count)
+            for k in adjacency.pairs.indices {
+                #expect(abs(steps[k] - expected[adjacency.pairs[k]]!) < 1e-3 * max(1, expected[adjacency.pairs[k]]!))
             }
         }
-        for k in adjacency.pairs.indices {
-            #expect(abs(steps[k] - expected[adjacency.pairs[k]]!) < 1e-3 * max(1, expected[adjacency.pairs[k]]!))
-        }
+        check(adjacency.boundarySteps(regions, colors: colors), regions, adjacency)
+        // Merges regroup the measured sums instead of rescanning; they must still match.
+        var paint = regions.classOf
+        for r in paint.indices where paint[r] == 3 { paint[r] = 2 }
+        regions.merge(roots: (0..<regions.count).map { Int32($0) }, paint: paint, adjacency: &adjacency, classes: &classes)
+        #expect(adjacency.steps != nil)
+        check(adjacency.boundarySteps(regions, colors: colors), regions, adjacency)
     }
 
     // MARK: - Gradient bands
