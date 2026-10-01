@@ -307,16 +307,31 @@ struct PaintView: View {
         .padding(.horizontal, 14)
     }
 
+    /// The ring fills in paint: each color's painted share of the areas, in palette order.
+    private var paintedArcs: [(paint: Color, start: Double, end: Double)] {
+        let total = Double(max(session.progress.regionCount, 1))
+        var start = 0.0
+        return (0..<session.paletteCount).compactMap { color -> (paint: Color, start: Double, end: Double)? in
+            let painted = session.totalByColor[color] - session.remainingByColor[color]
+            guard painted > 0 else { return nil }
+            let end = start + Double(painted) / total
+            defer { start = end }
+            return (PaletteBar.paint(session.template, color), start, end)
+        }
+    }
+
     private func progressGroup(fraction: Double, showsTitle: Bool, showsPercent: Bool) -> some View {
         // Whole percent, rounded down: 100 only once the last area is painted.
         let percent = Int(fraction * 100)
         return HStack(spacing: 8) {
             ZStack {
                 Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
-                Circle()
-                    .trim(from: 0, to: fraction)
-                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
+                ForEach(Array(paintedArcs.enumerated()), id: \.offset) { _, arc in
+                    Circle()
+                        .trim(from: arc.start, to: arc.end)
+                        .stroke(arc.paint, style: StrokeStyle(lineWidth: 3))
+                        .rotationEffect(.degrees(-90))
+                }
             }
             .frame(width: 18, height: 18)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: fraction)
