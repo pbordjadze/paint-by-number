@@ -109,7 +109,11 @@ nonisolated enum PDFExporter {
         return smallest.map { CGFloat($0) }
     }
 
-    static func document(for t: Template, title: String, paper: Paper = .default(for: Locale.current.region)) -> Data {
+    /// `nicknames` (index-aligned with the palette, nil where a color has none) head the color key
+    /// entries, with the plain color name below them; without them the plain name heads each entry.
+    static func document(
+        for t: Template, title: String, paper: Paper = .default(for: Locale.current.region), nicknames: [String?] = []
+    ) -> Data {
         let data = NSMutableData()
         var box = pageBox(for: t, paper: paper)
         let info: [CFString: Any] = [kCGPDFContextTitle: title, kCGPDFContextCreator: "Paint by Numbers"]
@@ -176,7 +180,7 @@ nonisolated enum PDFExporter {
         }
         page(ctx, box) { content in
             let body = header(ctx, in: content, title: String(localized: "Color Key"), detail: title)
-            let used = legend(ctx, t, in: body)
+            let used = legend(ctx, t, nicknames: nicknames, in: body)
             let remaining = CGRect(x: body.minX, y: used.maxY + 24, width: body.width, height: body.maxY - used.maxY - 24)
             if remaining.height > 110 {
                 text(ctx, String(localized: "Reference"), font: font(.emphasizedSystem, 10), color: gray(0.35), at: CGPoint(x: remaining.minX, y: remaining.minY + 10))
@@ -275,14 +279,15 @@ nonisolated enum PDFExporter {
 
     /// The largest scale (1 down to 0.6), then the fewest columns (3–5, or 4–6 on a wide page),
     /// whose rows fit the page and whose widest entry (`widestEntry` at scale 1) fits a column.
-    /// When nothing fits, the smallest scale and most columns; long names then truncate.
-    static func keyLayout(count: Int, widestEntry: CGFloat, in rect: CGRect) -> KeyLayout {
+    /// When nothing fits, the smallest scale and most columns; long names then truncate. Entries
+    /// are `lines` lines tall: two (name, hex and areas), or three with a nickname above the plain name.
+    static func keyLayout(count: Int, widestEntry: CGFloat, lines: Int = 2, in rect: CGRect) -> KeyLayout {
         let base = rect.width > 600 ? 4 : 3
         func layout(scale: CGFloat, columns: Int) -> KeyLayout {
             KeyLayout(
                 columns: columns, scale: scale,
                 columnWidth: (rect.width - keyGap * CGFloat(columns - 1)) / CGFloat(columns),
-                rowHeight: 24 * scale, rows: max(1, (count + columns - 1) / columns), count: count)
+                rowHeight: (lines > 2 ? 32 : 24) * scale, rows: max(1, (count + columns - 1) / columns), count: count)
         }
         for scale: CGFloat in [1, 0.9, 0.8, 0.7, 0.6] {
             for columns in base...(base + 2) {
@@ -294,12 +299,18 @@ nonisolated enum PDFExporter {
     }
 
     /// The color key as a list: number, a dot of the paint and the color's name, with its hex
-    /// value and area count below. Returns the rect it used.
-    private static func legend(_ ctx: CGContext, _ t: Template, in rect: CGRect) -> CGRect {
-        let names = t.palette.map { ColorNameText.title($0.colorName) }
-        let nameFont = font(.emphasizedSystem, 8)
-        let widestName = names.map { width(of: $0, font: nameFont) }.max() ?? 0
-        let layout = keyLayout(count: t.palette.count, widestEntry: keyNameInset + widestName, in: rect)
+    /// value and area count below. A color with a nickname is headed by it, and its plain name
+    /// follows in secondary type. Returns the rect it used.
+    private static func legend(_ ctx: CGContext, _ t: Template, nicknames: [String?], in rect: CGRect) -> CGRect {
+        let shades = t.palette.map { ColorNameText.title($0.colorName) }
+        let given = t.palette.indices.map { $0 < nicknames.count ? nicknames[$0] : nil }
+        let heads = t.palette.indices.map { given[$0] ?? shades[$0] }
+        let nameFont = font(.emphasizedSystem, 8), detailFont = font(.system, 6)
+        let widestName = t.palette.indices.map {
+            max(width(of: heads[$0], font: nameFont), given[$0] == nil ? 0 : width(of: shades[$0], font: detailFont))
+        }.max() ?? 0
+        let lines = given.contains { $0 != nil } ? 3 : 2
+        let layout = keyLayout(count: t.palette.count, widestEntry: keyNameInset + widestName, lines: lines, in: rect)
         let s = layout.scale
         let counts = t.regionCountsByColor
         for (i, color) in t.palette.enumerated() {
@@ -317,13 +328,19 @@ nonisolated enum PDFExporter {
             ctx.strokeEllipse(in: dot)
             let textX = x + keyNameInset * s
             let textWidth = layout.columnWidth - keyNameInset * s
-            text(ctx, names[i], font: font(.emphasizedSystem, 8 * s), color: gray(0.12),
+            text(ctx, heads[i], font: font(.emphasizedSystem, 8 * s), color: gray(0.12),
                  at: CGPoint(x: textX, y: y + 10 * s), maxWidth: textWidth)
+            var detailY = y + 19 * s
+            if given[i] != nil {
+                text(ctx, shades[i], font: font(.system, 6 * s), color: gray(0.45),
+                     at: CGPoint(x: textX, y: detailY), maxWidth: textWidth)
+                detailY += 8 * s
+            }
             let hexText = hex(color.rgb), areasText = TemplateCounts.areas(counts[i])
             let detail = String(localized: "pdf.key.detail", defaultValue: "\(hexText) · \(areasText)",
                                 comment: "Second line of a color key entry; the arguments are the color's hex code and its number of areas")
             text(ctx, detail, font: font(.system, 6 * s), color: gray(0.5),
-                 at: CGPoint(x: textX, y: y + 19 * s), maxWidth: textWidth)
+                 at: CGPoint(x: textX, y: detailY), maxWidth: textWidth)
         }
         return CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: layout.height)
     }
@@ -384,7 +401,8 @@ nonisolated enum PDFExporter {
         ctx.restoreGState()
     }
 
-    private static func hex(_ rgb: SIMD3<Float>) -> String {
+    /// A color as "#AA5E59": the color key prints it and the swatch details show it.
+    static func hex(_ rgb: SIMD3<Float>) -> String {
         let c = (rgb.clamped(lowerBound: .zero, upperBound: SIMD3(repeating: 1)) * 255).rounded(.toNearestOrAwayFromZero)
         return String(format: "#%02X%02X%02X", Int(c.x), Int(c.y), Int(c.z))
     }

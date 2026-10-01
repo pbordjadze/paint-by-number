@@ -221,6 +221,10 @@
       "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
       "extractionState" : "manual"
     },
+    "Color Names" : {
+      "comment" : "Settings picker label: whether paints go by playful nicknames (“Harbor Fog”) or plain color names (“dark grayish blue”)",
+      "extractionState" : "manual"
+    },
     "colorName.chroma.grayish" : {
       "comment" : "Color name chroma modifier (a dull, desaturated color)",
       "extractionState" : "manual",
@@ -1317,6 +1321,10 @@
       "comment" : "Settings toggle for vibration feedback while painting",
       "extractionState" : "manual"
     },
+    "Hex" : {
+      "comment" : "Label of a row in a paint's details popover: the paint's hex color code, e.g. “#5A6B7C”",
+      "extractionState" : "manual"
+    },
     "Hidden" : {
       "comment" : "VoiceOver value of the Photo control while the photo is not shown over the painting",
       "extractionState" : "manual"
@@ -1365,6 +1373,10 @@
       "comment" : "Accessibility label of the painting screen's More (…) menu",
       "extractionState" : "manual"
     },
+    "Name" : {
+      "comment" : "Label of a row in a paint's details popover: the paint's playful nickname, e.g. “Harbor Fog”",
+      "extractionState" : "manual"
+    },
     "Needs a Newer Version" : {
       "comment" : "Title of the recovery screen for a painting made by a newer version of the app",
       "extractionState" : "manual"
@@ -1387,6 +1399,10 @@
     },
     "No Favorites" : {
       "comment" : "Title of the gallery's empty state when the Show menu is set to Favorites and no painting is a favorite",
+      "extractionState" : "manual"
+    },
+    "Number" : {
+      "comment" : "Label of a row in a paint's details popover: the paint's number",
       "extractionState" : "manual"
     },
     "Numbers" : {
@@ -1689,6 +1705,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld, %2$@"
+          }
+        }
+      }
+    },
+    "paint.speech.colorLabel.nickname" : {
+      "comment" : "VoiceOver label of a palette color that has a playful nickname: its number, the nickname, then its plain color name (e.g. “12, Harbor Fog, dark grayish blue”)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld, %2$@, %3$@"
           }
         }
       }
@@ -2017,6 +2045,14 @@
       "comment" : "Segment of the create flow that shows the photo library",
       "extractionState" : "manual"
     },
+    "Plain" : {
+      "comment" : "Option of the Color Names setting: paints go by plain color names, e.g. “dark grayish blue”",
+      "extractionState" : "manual"
+    },
+    "Playful" : {
+      "comment" : "Option of the Color Names setting: paints go by playful nicknames, e.g. “Harbor Fog”",
+      "extractionState" : "manual"
+    },
     "Preparing…" : {
       "comment" : "Caption on the gallery card of a painting that is still being prepared",
       "extractionState" : "manual"
@@ -2241,6 +2277,10 @@
         }
       }
     },
+    "Shade" : {
+      "comment" : "Label of a row in a paint's details popover: the paint's plain color name, e.g. “dark grayish blue”",
+      "extractionState" : "manual"
+    },
     "Share" : {
       "comment" : "Accessibility label of the share menu in the completion bar",
       "extractionState" : "manual"
@@ -2267,6 +2307,10 @@
     },
     "Show" : {
       "comment" : "Accessibility label of two controls: the segmented control that switches the create flow's comparison between the painting and its numbers, and the gallery's filter menu (All or Favorites)",
+      "extractionState" : "manual"
+    },
+    "Show Color Details" : {
+      "comment" : "VoiceOver action on a palette color: shows a popover with its number, name, shade and hex code",
       "extractionState" : "manual"
     },
     "Show Hint" : {

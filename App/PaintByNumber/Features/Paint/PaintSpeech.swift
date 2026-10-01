@@ -5,11 +5,16 @@ import UIKit
 /// What VoiceOver says on the painting screen. Pure, so the palette, the canvas, the chrome
 /// and the tests share one wording.
 nonisolated enum PaintSpeech {
-    /// "12, dark green": the number people see on the canvas, then the color's name.
-    static func colorLabel(number: Int, name: ColorName) -> String {
+    /// "12, dark green": the number people see on the canvas, then the color's name. With a
+    /// nickname it reads "12, Harbor Fog, dark grayish blue", so the structured name isn't lost.
+    static func colorLabel(number: Int, name: ColorName, nickname: String? = nil) -> String {
         let color = ColorNameText.string(name)
-        return String(localized: "paint.speech.colorLabel", defaultValue: "\(number), \(color)",
-                      comment: "VoiceOver label of a palette color: its number, then its name (e.g. “12, dark green”)")
+        guard let nickname else {
+            return String(localized: "paint.speech.colorLabel", defaultValue: "\(number), \(color)",
+                          comment: "VoiceOver label of a palette color: its number, then its name (e.g. “12, dark green”)")
+        }
+        return String(localized: "paint.speech.colorLabel.nickname", defaultValue: "\(number), \(nickname), \(color)",
+                      comment: "VoiceOver label of a palette color that has a playful nickname: its number, the nickname, then its plain color name (e.g. “12, Harbor Fog, dark grayish blue”)")
     }
 
     /// Whole percent painted; 0 only when nothing is painted and 100 only when everything is,
@@ -67,15 +72,15 @@ nonisolated enum PaintSpeech {
     }
 
     /// "Paints this area with 12, dark green."
-    static func areaHint(number: Int, name: ColorName) -> String {
-        let color = colorLabel(number: number, name: name)
+    static func areaHint(number: Int, name: ColorName, nickname: String? = nil) -> String {
+        let color = colorLabel(number: number, name: name, nickname: nickname)
         return String(localized: "paint.speech.areaHint", defaultValue: "Paints this area with \(color).",
                       comment: "VoiceOver hint of an unpainted area; the argument is the color label")
     }
 
     /// "No areas of 12, dark green in view".
-    static func noAreasInView(number: Int, name: ColorName) -> String {
-        let color = colorLabel(number: number, name: name)
+    static func noAreasInView(number: Int, name: ColorName, nickname: String? = nil) -> String {
+        let color = colorLabel(number: number, name: name, nickname: nickname)
         return String(localized: "paint.speech.noAreasInView", defaultValue: "No areas of \(color) in view",
                       comment: "VoiceOver value of the canvas when no area of the selected color is visible")
     }
@@ -94,15 +99,15 @@ nonisolated enum PaintSpeech {
     }
 
     /// "Color 12, dark green, finished".
-    static func colorFinished(number: Int, name: ColorName) -> String {
-        let color = colorLabel(number: number, name: name)
+    static func colorFinished(number: Int, name: ColorName, nickname: String? = nil) -> String {
+        let color = colorLabel(number: number, name: name, nickname: nickname)
         return String(localized: "paint.speech.colorFinished", defaultValue: "Color \(color), finished",
                       comment: "VoiceOver announcement when every area of a color is painted")
     }
 
     /// "Next color: 13, light blue".
-    static func nextColor(number: Int, name: ColorName) -> String {
-        let color = colorLabel(number: number, name: name)
+    static func nextColor(number: Int, name: ColorName, nickname: String? = nil) -> String {
+        let color = colorLabel(number: number, name: name, nickname: nickname)
         return String(localized: "paint.speech.nextColor", defaultValue: "Next color: \(color)",
                       comment: "VoiceOver announcement when the brush moves on to the next color")
     }

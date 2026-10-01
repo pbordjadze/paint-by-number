@@ -67,6 +67,8 @@ struct PaletteBar: View {
     var showsCurrentColor = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The color whose details popover is open (long-press on its swatch).
+    @State private var detailsColor: Int?
 
     init(
         session: PaintingSession, axis: Axis = .horizontal, lines: Int = 1, shakes: [Int: Int] = [:],
@@ -154,7 +156,10 @@ struct PaletteBar: View {
         let selected = session.selectedColor == index
         let darkInk = ColorScience.relativeLuminance(encoded: template.palette[index].rgb, space: template.colorSpace) > 0.36
         let name = session.colorNames[index]
+        let nickname = session.nickname(of: index)
         return Button {
+            // A long press that opened the details also ends in a release over the swatch.
+            guard detailsColor == nil else { return }
             if selected {
                 session.showHint()
             } else {
@@ -168,21 +173,64 @@ struct PaletteBar: View {
                 .modifier(Shake(amount: CGFloat(shakes[index] ?? 0)))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(PaintSpeech.colorLabel(number: index + 1, name: name))
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
+        .popover(isPresented: detailsBinding(index), arrowEdge: axis == .horizontal ? .bottom : .trailing) {
+            SwatchDetails(
+                number: index + 1, nickname: nickname, name: name, hex: PDFExporter.hex(template.palette[index].rgb))
+                .presentationCompactAdaptation(.popover)
+        }
+        .accessibilityLabel(PaintSpeech.colorLabel(number: index + 1, name: name, nickname: nickname))
         .accessibilityValue(PaintSpeech.colorProgress(painted: painted, total: total))
         .accessibilityHint(PaintSpeech.swatchHint(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityAction(named: Text("Show Color Details")) { detailsColor = index }
         // Over a bottom bar, beside a trailing one.
         .popoverTip(selected ? tip : nil, arrowEdge: axis == .horizontal ? .bottom : .trailing)
         .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
-            Text(ColorNameText.numbered(number: index + 1, name: name))
+            Text(ColorNameText.numbered(number: index + 1, name: name, nickname: nickname))
         }
+    }
+
+    private func detailsBinding(_ index: Int) -> Binding<Bool> {
+        Binding(get: { detailsColor == index }, set: { if !$0 && detailsColor == index { detailsColor = nil } })
     }
 }
 
-/// The selected color's number, paint and name ("12 · Dark green"), for people who can't tell
-/// the paints apart by eye. Renders nothing when no color is selected.
+/// What a long press on a swatch shows: the paint's number, nickname (when it has one), plain
+/// color name and hex code.
+private struct SwatchDetails: View {
+    let number: Int
+    let nickname: String?
+    let name: ColorName
+    let hex: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            row(Text("Number"), "\(number)", id: "number")
+            if let nickname { row(Text("Name"), nickname, id: "name") }
+            row(Text("Shade"), ColorNameText.title(name), id: "shade")
+            row(Text("Hex"), hex, id: "hex")
+        }
+        .padding(16)
+        .frame(minWidth: 240)
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityIdentifier("swatch-details")
+    }
+
+    private func row(_ title: Text, _ value: String, id: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            title.foregroundStyle(.secondary)
+            Spacer(minLength: 0)
+            Text(verbatim: value).fontWeight(.semibold).multilineTextAlignment(.trailing)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("swatch-details-\(id)")
+    }
+}
+
+/// The selected color's number, paint and name ("12 · Harbor Fog", or "12 · Dark green" under
+/// Plain names), for people who can't tell the paints apart by eye. Renders nothing when no color is selected.
 struct CurrentColorLabel: View {
     let session: PaintingSession
     let font: Font
@@ -190,12 +238,13 @@ struct CurrentColorLabel: View {
     var body: some View {
         if let color = session.selectedColor {
             let name = session.colorNames[color]
+            let nickname = session.nickname(of: color)
             HStack(spacing: 6) {
                 Circle()
                     .fill(PaletteBar.paint(session.template, color))
                     .frame(width: 10, height: 10)
                     .overlay(Circle().strokeBorder(Color.primary.opacity(0.25), lineWidth: 0.5))
-                Text(ColorNameText.numbered(number: color + 1, name: name))
+                Text(ColorNameText.numbered(number: color + 1, name: name, nickname: nickname))
                     .font(font)
                     .lineLimit(1)
                     // Translated names can run long; the caption's height is fixed.
@@ -204,7 +253,7 @@ struct CurrentColorLabel: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(String(localized: "paint.currentColor", defaultValue: "Current color",
                                        comment: "VoiceOver label of the selected color's name shown on screen"))
-            .accessibilityValue(PaintSpeech.colorLabel(number: color + 1, name: name))
+            .accessibilityValue(PaintSpeech.colorLabel(number: color + 1, name: name, nickname: nickname))
             .accessibilityIdentifier("current-color")
             // Text to read, not a control: no touch target to size.
             .accessibilityAddTraits(.isStaticText)

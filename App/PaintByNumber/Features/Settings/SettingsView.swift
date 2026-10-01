@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
+    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
     #if DEBUG
     @State private var path: [Destination] = ShellDemo.current == .settingsAcknowledgements ? [.acknowledgements] : []
     #else
@@ -27,6 +28,16 @@ struct SettingsView: View {
                 Section {
                     Toggle(isOn: $autoAdvance) {
                         SwiftUI.Label("Advance to Next Color", systemImage: "arrow.forward.circle")
+                    }
+                    // The nicknames are English: in other languages the plain names are all there is.
+                    if ColorNameText.nicknamesAvailable() {
+                        Picker(selection: $colorNames) {
+                            Text("Playful").tag(ColorNameStyle.playful)
+                            Text("Plain").tag(ColorNameStyle.plain)
+                        } label: {
+                            SwiftUI.Label("Color Names", systemImage: "textformat")
+                        }
+                        .accessibilityIdentifier("settings-color-names")
                     }
                 } header: {
                     // Not the "Painting" key: that one names a picture, this one the activity.

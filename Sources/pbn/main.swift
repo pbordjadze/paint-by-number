@@ -26,6 +26,9 @@ import ImageIO
 //       prints format and pipeline versions, validates a template's invariants, including
 //       every label's room for its number (single-digit minimum R, default
 //       LabelSizing.minimumRadius; R ≤ 0 skips that check)
+//   pbn names <template.pbnt> [--seed N]
+//       prints each palette color's nickname (seeded like the app's per-painting names; the
+//       default seed is generate's), structured name and hex
 
 struct Options {
     var positional: [String] = []
@@ -159,6 +162,9 @@ struct Metrics: Codable {
     var triangles: Int
     var meanDeltaE: Float
     var p95DeltaE: Float
+    /// `BandRings.count`: regions bounded mostly by weak (ramp) boundaries, the rings a
+    /// smooth gradient is posterized into.
+    var bandRings: Int
     var medianRegionArea: Float
     var regionsUnderRadius2: Int
     var regionsUnderRadius3: Int
@@ -200,6 +206,8 @@ struct Metrics: Codable {
     var auto: AutoStats?
     /// With --auto: the photo features the decision read.
     var analysis: PhotoAnalysis?
+    /// `ColorNickname.assign` with the generation seed; the stats' `colorNames` are the structured names.
+    var colorNicknames: [String]
 }
 
 /// `stats.json`'s `auto`: the chosen settings, every candidate with its score terms, and the
@@ -267,6 +275,7 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         edges: t.edges.count, points: t.points.count, triangles: t.mesh.indices.count / 3,
         meanDeltaE: errors.reduce(0, +) / Float(max(1, errors.count)),
         p95DeltaE: sortedErrors.isEmpty ? 0 : sortedErrors[Int(Float(sortedErrors.count - 1) * 0.95)],
+        bandRings: BandRings.count(out.segmentation, working: working),
         medianRegionArea: areas.isEmpty ? 0 : areas[areas.count / 2],
         regionsUnderRadius2: t.regions.filter { $0.inscribedRadius < 2 }.count,
         regionsUnderRadius3: t.regions.filter { $0.inscribedRadius < 3 }.count,
@@ -290,7 +299,8 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         labelRoomUnmet: out.vectorStats.labelRoomUnmet,
         valid: report.isValid,
         validation: report.description,
-        colorNames: t.palette.map(\.colorName.english))
+        colorNames: t.palette.map(\.colorName.english),
+        colorNicknames: ColorNickname.assign(t.palette, seed: settings.seed))
 }
 
 /// Measures the longest stretch of pipeline work between two cancellation checks, i.e. the
@@ -430,7 +440,7 @@ func flatSegmentation(_ image: RGBAImage) -> Segmentation {
 }
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|suggest|bench|trace|check ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|suggest|bench|trace|check|names ...") }
 let options = parse(args.dropFirst(2))
 
 switch args[1] {
@@ -543,6 +553,20 @@ case "check":
         print("format \(format), pipeline \(template.pipelineVersion)")
         let report = template.validate(minLabelRadius: options.minLabelRadius > 0 ? options.minLabelRadius : nil)
         print(report.isValid ? "valid" : "INVALID", report)
+    } catch { fail("cannot decode: \(error)") }
+
+case "names":
+    guard let path = options.positional.first, let data = FileManager.default.contents(atPath: path) else {
+        fail("usage: pbn names <template.pbnt> [--seed N]")
+    }
+    do {
+        let template = try Template(encoded: data)
+        let nicknames = ColorNickname.assign(template.palette, seed: options.settings.seed)
+        for (index, color) in template.palette.enumerated() {
+            let hex = color.rgb.indices.map { String(format: "%02X", Int((min(max(color.rgb[$0], 0), 1) * 255).rounded())) }.joined()
+            print(String(format: "%3d  %@  ·  %@  ·  #%@", index + 1, nicknames[index].padding(toLength: 18, withPad: " ", startingAt: 0),
+                         color.colorName.english, hex))
+        }
     } catch { fail("cannot decode: \(error)") }
 
 case "bench":

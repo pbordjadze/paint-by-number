@@ -35,6 +35,21 @@ struct PaintSpeechTests {
         }
     }
 
+    /// A nickname goes before the plain name, so VoiceOver gives both ("12, Harbor Fog, dark green").
+    @Test func labelsPutTheNicknameBeforeThePlainName() {
+        let darkGreen = ColorName(family: .green, lightness: .dark, chroma: .muted)
+        #expect(PaintSpeech.colorLabel(number: 12, name: darkGreen, nickname: "Fern Shadow") == "12, Fern Shadow, dark green")
+        #expect(PaintSpeech.colorLabel(number: 12, name: darkGreen, nickname: nil) == "12, dark green")
+        #expect(PaintSpeech.areaHint(number: 12, name: darkGreen, nickname: "Fern Shadow")
+                == "Paints this area with 12, Fern Shadow, dark green.")
+        #expect(PaintSpeech.colorFinished(number: 12, name: darkGreen, nickname: "Fern Shadow")
+                == "Color 12, Fern Shadow, dark green, finished")
+        #expect(PaintSpeech.nextColor(number: 13, name: darkGreen, nickname: "Fern Shadow")
+                == "Next color: 13, Fern Shadow, dark green")
+        #expect(PaintSpeech.noAreasInView(number: 12, name: darkGreen, nickname: "Fern Shadow")
+                == "No areas of 12, Fern Shadow, dark green in view")
+    }
+
     @Test func percentOnlyReachesTheEndsWhenTrue() {
         #expect(PaintSpeech.percent(painted: 0, total: 300) == 0)
         #expect(PaintSpeech.percent(painted: 1, total: 300) == 1)
@@ -81,6 +96,34 @@ struct PaintSpeechTests {
             }
         }
         #expect(ColorNameText.title(ColorName(family: .green, lightness: .dark, chroma: .muted)) == "Dark green")
+    }
+
+    /// The color shown on screen: its number, then the nickname when it has one, else the plain name.
+    @Test func numberedColorsShowTheNicknameInPlaceOfThePlainName() {
+        let darkGreen = ColorName(family: .green, lightness: .dark, chroma: .muted)
+        #expect(ColorNameText.numbered(number: 12, name: darkGreen) == "12 · Dark green")
+        #expect(ColorNameText.numbered(number: 12, name: darkGreen, nickname: "Fern Shadow") == "12 · Fern Shadow")
+    }
+
+    /// Nicknames are English data: any other app language shows the localized structured names.
+    @Test func nicknamesAreShownOnlyInEnglish() {
+        for code in ["en", "en-GB", "en-US", nil] as [String?] {
+            #expect(ColorNameText.nicknamesAvailable(languageCode: code), "\(code ?? "nil")")
+        }
+        for code in ["de", "fr", "ja", "zh-Hans", "pt-BR", "es-419"] {
+            #expect(!ColorNameText.nicknamesAvailable(languageCode: code), "\(code)")
+        }
+        let palette = (0..<6).map { PaletteColor(oklab: SIMD3(0.2 + Float($0) * 0.12, Float($0 % 2) * 0.05, 0.03), space: .sRGB) }
+        let english = ColorNameText.nicknames(for: palette, seed: 9, languageCode: "en")
+        #expect(english.count == palette.count && english.allSatisfy { $0 != nil })
+        #expect(english == ColorNameText.nicknames(for: palette, seed: 9, languageCode: "en-GB"))
+        #expect(ColorNameText.nicknames(for: palette, seed: 9, languageCode: "de") == Array(repeating: nil, count: palette.count))
+    }
+
+    /// A color the vocabulary can't name keeps its structured name: it has no nickname to show.
+    @Test func colorsWithoutAVocabularyNameHaveNoNickname() {
+        let far = PaletteColor(oklab: SIMD3(0.5, 0.6, 0.6), rgb: SIMD3(1, 0, 1))
+        #expect(ColorNameText.nicknames(for: [far], seed: 1, languageCode: "en") == [nil])
     }
 }
 

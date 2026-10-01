@@ -14,7 +14,9 @@ baseline tools/baseline/regression.json:
                    size (only when pbn reports `labelsBelowLegibleSize`)
   tolerance bands  mean ΔE at most baseline × 1.05; region count within ±15 %; template
                    bytes within ±20 %
-  informational    p95 ΔE, colors, regions under radius 3, min inscribed radius, timings,
+  informational    p95 ΔE, band rings (`bandRings`: regions a smooth gradient is posterized
+                   into; ±1 noise on the decoded input moves it by up to half, too much for a
+                   band), colors, regions under radius 3, min inscribed radius, timings,
                    whether the template is byte-identical to the baseline's
 
 and in the auto regime (AUTO_REGIME: `pbn generate --auto`, the settings Auto suggests at
@@ -63,7 +65,7 @@ AUTO_REGIME = {"auto": "relaxed"}
 
 # Metrics kept in the baseline: the banded ones plus informational ones worth a delta.
 BASELINE_KEYS = ["regions", "meanDeltaE", "p95DeltaE", "encodedBytes", "colors", "regionsUnderRadius3",
-                 "minInscribedRadius", "minPaletteDistance", "totalMs"]
+                 "minInscribedRadius", "minPaletteDistance", "totalMs", "bandRings"]
 
 # Tolerance bands versus the baseline: (metric, lowest ratio, highest ratio); None = unbounded.
 BANDS = [
@@ -241,8 +243,8 @@ def cell(value, ref=None, fmt="{:g}"):
 
 
 # ASCII only: the sheets' font has no Δ or ≥.
-COLUMNS = ["sample", "regions", "mean dE", "p95 dE", "bytes", "r<2", "r<3", "min r", "paint gap", "colors",
-           "ms", "template", "verdict"]
+COLUMNS = ["sample", "regions", "mean dE", "p95 dE", "rings", "bytes", "r<2", "r<3", "min r", "paint gap",
+           "colors", "ms", "template", "verdict"]
 
 
 AUTO_COLUMNS = ["sample", "choice", "baseline", "regions", "mean dE", "p95 dE", "bytes", "est min", "r<2",
@@ -296,6 +298,7 @@ def row(name, regime, result, base, failures):
         cell(result.get("regions"), base.get("regions"), "{:.0f}"),
         cell(result.get("meanDeltaE"), base.get("meanDeltaE"), "{:.4f}"),
         cell(result.get("p95DeltaE"), base.get("p95DeltaE"), "{:.4f}"),
+        cell(result.get("bandRings"), base.get("bandRings"), "{:.0f}"),
         cell(result.get("encodedBytes"), base.get("encodedBytes"), "{:.0f}"),
         cell(result.get("regionsUnderRadius2"), fmt="{:.0f}"),
         cell(result.get("regionsUnderRadius3"), base.get("regionsUnderRadius3"), "{:.0f}"),
@@ -507,8 +510,8 @@ def main(argv):
                              "  ".join(f"{c} {cells[c]}" for c in AUTO_COLUMNS[7:-1])]
                 else:
                     cells = dict(zip(COLUMNS, row(name, regime, results[k], base_cases.get(k), verdicts[k])))
-                    lines = ["  ".join(f"{c} {cells[c]}" for c in COLUMNS[1:6]),
-                             "  ".join(f"{c} {cells[c]}" for c in COLUMNS[6:-1])]
+                    lines = ["  ".join(f"{c} {cells[c]}" for c in COLUMNS[1:7]),
+                             "  ".join(f"{c} {cells[c]}" for c in COLUMNS[7:-1])]
                 write_sheet(os.path.join(options["--sheets"], regime_name(regime), name + ".jpg"),
                             f"{k}  ({results[k]['width']}x{results[k]['height']})  {cells['verdict']}",
                             lines, verdicts[k], out)
@@ -553,7 +556,7 @@ def self_test():
     floor = palette_floor(regime, {})
     base = {"regions": 1000, "meanDeltaE": 0.02, "p95DeltaE": 0.05, "encodedBytes": 2_000_000, "colors": 140,
             "regionsUnderRadius3": 50, "minInscribedRadius": 2.2, "minPaletteDistance": 0.0162, "totalMs": 400.0,
-            "templateSHA1": "a" * 40}
+            "bandRings": 100, "templateSHA1": "a" * 40}
     good = dict(base, regionsUnderRadius2=0, validation="valid edges 0", deterministic=True,
                 templateSHA1="a" * 40, width=1152, height=768, someFutureMetric=[1, 2])
     checks = 0
@@ -583,8 +586,9 @@ def self_test():
     expect({"encodedBytes": 2_420_000}, True)
     expect({"encodedBytes": 1_580_000}, True)
     # Informational metrics never fail.
-    expect({"totalMs": 4000.0, "p95DeltaE": 0.5, "colors": 20, "regionsUnderRadius3": 900,
+    expect({"totalMs": 4000.0, "p95DeltaE": 0.5, "colors": 20, "regionsUnderRadius3": 900, "bandRings": 400,
             "templateSHA1": "b" * 40}, False)
+    expect({"bandRings": None}, False)
     # Hard invariants.
     expect({"regionsUnderRadius2": 1}, True)
     expect({"minPaletteDistance": floor}, False)
@@ -629,9 +633,10 @@ def self_test():
     assert abs(palette_floor({"colors": 150}, {"minPaletteDistanceFloor": "x"}) - 0.016) < 1e-12
     checks += 7
     # Baseline-held metrics show their delta.
-    cells = dict(zip(COLUMNS, row("x", regime, dict(good, minInscribedRadius=2.09, colors=147,
+    cells = dict(zip(COLUMNS, row("x", regime, dict(good, minInscribedRadius=2.09, colors=147, bandRings=105,
                                                      minPaletteDistanceFloor=0.016), base, [])))
     assert cells["min r"] == "2.090 -5.0%" and cells["colors"] == "147 +5.0%", cells
+    assert cells["rings"] == "105 +5.0%", cells
     assert cells["paint gap"] == "0.0162 = >= 0.0160", cells
     checks += 1
     table([row("x", regime, good, base, [])])

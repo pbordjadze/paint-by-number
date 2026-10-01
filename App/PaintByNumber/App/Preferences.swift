@@ -10,6 +10,7 @@ enum SettingsKey {
     static let paperSize = "printPaperSize"
     static let timelapsePace = "timelapsePace"
     static let paperAppearance = "paperAppearance"
+    static let colorNames = "colorNameStyle"
 }
 
 /// A snapshot of the user's preferences, with their defaults.
@@ -23,6 +24,8 @@ struct Preferences: Equatable {
     var paper: PDFExporter.Paper
     /// The paper the painting canvas shows.
     var paperAppearance: PaperAppearance
+    /// Whether paints go by playful nicknames or their plain structured names.
+    var colorNames: ColorNameStyle
 
     init(defaults: UserDefaults = .standard) {
         haptics = defaults.object(forKey: SettingsKey.haptics) as? Bool ?? true
@@ -34,10 +37,12 @@ struct Preferences: Equatable {
             ?? .default(for: Locale.current.region)
         paperAppearance = defaults.string(forKey: SettingsKey.paperAppearance).flatMap(PaperAppearance.init(rawValue:))
             ?? .default
+        colorNames = defaults.string(forKey: SettingsKey.colorNames).flatMap(ColorNameStyle.init(rawValue:)) ?? .playful
     }
 
     func apply(to session: PaintingSession) {
         session.autoAdvance = autoAdvance
+        session.colorNameStyle = colorNames
     }
 }
 

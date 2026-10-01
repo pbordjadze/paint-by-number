@@ -42,9 +42,15 @@ nonisolated enum ArtworkExporter {
         return data
     }
 
-    static func templatePDF(store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper) throws -> Data {
+    /// The printable template. Its color key names the colors by their nicknames (the ones the
+    /// painting shows) unless `colorNames` is Plain.
+    static func templatePDF(
+        store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper, colorNames: ColorNameStyle = .playful
+    ) throws -> Data {
         let template = try store.readTemplate(artwork.id)
-        return PDFExporter.document(for: template, title: artwork.title, paper: paper)
+        let nicknames = colorNames == .playful
+            ? ColorNameText.nicknames(for: template.palette, seed: ColorNickname.seed(for: artwork.id)) : []
+        return PDFExporter.document(for: template, title: artwork.title, paper: paper, nicknames: nicknames)
     }
 
     /// Writes `data` to a uniquely placed temporary file named after the artwork.
@@ -148,6 +154,7 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     let store: ArtworkStore
     let artwork: Artwork
     let paper: PDFExporter.Paper
+    var colorNames: ColorNameStyle = .playful
 
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(exportedContentType: .pdf) { item in
@@ -157,7 +164,7 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
 
     @concurrent
     func export() async throws -> URL {
-        let data = try ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper)
+        let data = try ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper, colorNames: colorNames)
         return try ArtworkExporter.temporaryFile(data, name: ArtworkExporter.templateName(title: artwork.title), pathExtension: "pdf")
     }
 }
