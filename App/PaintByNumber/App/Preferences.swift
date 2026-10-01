@@ -9,6 +9,7 @@ enum SettingsKey {
     static let defaultColorCount = "defaultColorCount"
     static let paperSize = "printPaperSize"
     static let timelapsePace = "timelapsePace"
+    static let paperAppearance = "paperAppearance"
 }
 
 /// A snapshot of the user's preferences, with their defaults.
@@ -20,6 +21,8 @@ struct Preferences: Equatable {
     /// Colors a new painting starts with in the create flow.
     var defaultColorCount: Int
     var paper: PDFExporter.Paper
+    /// The paper the painting canvas shows.
+    var paperAppearance: PaperAppearance
 
     static let defaultColorCountValue = 24
 
@@ -31,6 +34,8 @@ struct Preferences: Equatable {
         defaultColorCount = min(max(colors, GenerationSettings.colorCountRange.lowerBound), GenerationSettings.colorCountRange.upperBound)
         paper = defaults.string(forKey: SettingsKey.paperSize).flatMap(PDFExporter.Paper.init(rawValue:))
             ?? .default(for: Locale.current.region)
+        paperAppearance = defaults.string(forKey: SettingsKey.paperAppearance).flatMap(PaperAppearance.init(rawValue:))
+            ?? .default
     }
 
     /// Settings a new painting starts from.

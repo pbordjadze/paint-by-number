@@ -9,6 +9,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.sounds) private var sounds = true
     @AppStorage(SettingsKey.defaultColorCount) private var defaultColorCount = Preferences.defaultColorCountValue
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
+    @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     #if DEBUG
     @State private var path: [Destination] = ShellDemo.current == .settingsAcknowledgements ? [.acknowledgements] : []
     #else
@@ -33,6 +34,19 @@ struct SettingsView: View {
                                 comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
                 } footer: {
                     Text("When you finish a color, the next one is picked up automatically.")
+                }
+
+                Section {
+                    Picker(selection: $paperAppearance) {
+                        ForEach(PaperAppearance.allCases) { appearance in
+                            Text(appearance.name).tag(appearance)
+                        }
+                    } label: {
+                        SwiftUI.Label("Paper", systemImage: "circle.lefthalf.filled")
+                    }
+                    .accessibilityIdentifier("paper-appearance")
+                } footer: {
+                    Text("Dark paper is easier on the eyes in a dark room.")
                 }
 
                 Section {

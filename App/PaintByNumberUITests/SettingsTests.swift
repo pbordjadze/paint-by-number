@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings › About: the app version and the acknowledgements.
+/// Settings › About: the app version and the acknowledgements; Settings › Paper.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -30,6 +30,30 @@ final class SettingsTests: XCTestCase {
             XCTAssertTrue(entry.exists, "Acknowledgements doesn't credit \(credit)")
         }
         attachScreenshot(of: app, named: "acknowledgements")
+    }
+
+    /// Settings › Paper offers Light, Dark and Automatic, starts on Light and keeps the choice.
+    @MainActor
+    func testPaperPickerChangesTheValue() throws {
+        let app = openSettings()
+        let picker = app.descendants(matching: .any)["paper-appearance"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 10), "Settings has no Paper picker")
+        XCTAssertTrue(describe(picker).contains("Light"), "Paper doesn't start on Light: \(describe(picker))")
+        picker.tap()
+        for choice in ["Light", "Dark", "Automatic"] {
+            XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Paper picker has no \(choice)")
+        }
+        app.buttons["Dark"].firstMatch.tap()
+        let chosen = NSPredicate(format: "label CONTAINS 'Dark' OR value CONTAINS 'Dark'")
+        let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5)
+        XCTAssertEqual(result, .completed, "Choosing Dark didn't change the picker: \(describe(picker))")
+        attachScreenshot(of: app, named: "settings-paper-dark")
+    }
+
+    /// The picker's label and value together: how a menu picker's row reads.
+    @MainActor
+    private func describe(_ element: XCUIElement) -> String {
+        "\(element.label) \(element.value as? String ?? "")"
     }
 
     /// Opens Settings the way a person does: from the gallery's toolbar.

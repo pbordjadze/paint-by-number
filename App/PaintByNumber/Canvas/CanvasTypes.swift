@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import simd
 
 /// Per-frame shader constants. Layout mirrors `FrameUniforms` in Shaders.metal (only 16-byte
 /// vectors, so Swift and MSL agree without padding rules).
@@ -16,6 +17,11 @@ nonisolated struct CanvasUniforms {
     var ink: SIMD4<Float> = .zero
     /// rgb: selected paint, a: 1 when a color is selected.
     var selected: SIMD4<Float> = .zero
+    /// rgb: the selected paint lifted until it reads on this paper (the paint itself on light
+    /// paper), used for the hatching, tint, hover and hint; a: the brightest the hatch ink gets.
+    var accent: SIMD4<Float> = .zero
+    /// rgb: rim drawn just outside the sheet, a: its opacity (0 = none).
+    var rim: SIMD4<Float> = .zero
     /// x: outline width (px), y: selected outline width (px), z: hatch strength, w: numbers visibility.
     var outline: SIMD4<Float> = .zero
     /// x…y: legibility fade range (font px), z: max font px, w: min font px of a bumped number.
@@ -34,6 +40,24 @@ nonisolated struct CanvasUniforms {
     var ids: SIMD4<Int32> = SIMD4(repeating: -1)
     /// x: source photo opacity (0 = hidden).
     var photo: SIMD4<Float> = .zero
+}
+
+extension CanvasUniforms {
+    /// The paper, backdrop and ink of `palette`. `shadowOpacity` and `outlineOpacity` are passed
+    /// in because frames scale them (offscreen renders drop the shadow, zoom thins the line art).
+    mutating func setChrome(_ palette: CanvasPalette, shadowOpacity: Float, outlineOpacity: Float) {
+        background = SIMD4(palette.background, 1)
+        paper = SIMD4(palette.paper, shadowOpacity)
+        ink = SIMD4(palette.ink, outlineOpacity)
+        rim = SIMD4(palette.rim, palette.rimOpacity)
+        accent.w = palette.hatchCeiling
+    }
+
+    /// Selects `paint` (linear P3), and derives its accent for `palette`'s paper.
+    mutating func select(_ paint: SIMD3<Float>, palette: CanvasPalette) {
+        selected = SIMD4(paint, 1)
+        accent = SIMD4(palette.accent(for: paint), palette.hatchCeiling)
+    }
 }
 
 /// Animated paint state of one region. Layout mirrors `RegionState` in Shaders.metal.
@@ -61,13 +85,55 @@ nonisolated struct GlyphInstance {
     var region: UInt32
 }
 
-/// Linear Display P3 colors of the canvas chrome, for light and dark appearance.
+/// Which paper the painting canvas shows (Settings › Paper).
+nonisolated enum PaperAppearance: String, Sendable, CaseIterable, Identifiable {
+    case light, dark
+    /// Dark paper while the system appearance is dark.
+    case automatic
+
+    var id: String { rawValue }
+
+    static let `default` = PaperAppearance.light
+
+    var name: String {
+        switch self {
+        case .light: String(localized: "paper.light", defaultValue: "Light",
+                            comment: "Choice of the Paper setting: the painting canvas is always light paper")
+        case .dark: String(localized: "paper.dark", defaultValue: "Dark",
+                           comment: "Choice of the Paper setting: the painting canvas is always dark paper")
+        case .automatic: String(localized: "paper.automatic", defaultValue: "Automatic",
+                                comment: "Choice of the Paper setting: the painting canvas uses dark paper when the device is in dark appearance")
+        }
+    }
+
+    func usesDarkPaper(interfaceIsDark: Bool) -> Bool {
+        switch self {
+        case .light: false
+        case .dark: true
+        case .automatic: interfaceIsDark
+        }
+    }
+}
+
+/// Linear Display P3 colors of the canvas chrome: light paper (with a lighter or darker
+/// backdrop for the light and dark system appearance) and dark paper. The defaults of the
+/// trailing fields describe light paper, which has no rim and keeps the selected paint as is.
 nonisolated struct CanvasPalette: Sendable {
     var background: SIMD3<Float>
     var paper: SIMD3<Float>
+    /// Outline and number ink.
     var ink: SIMD3<Float>
     var shadowOpacity: Float
     var outlineOpacity: Float
+    /// A thin sheet edge that stands in for the drop shadow, which is invisible on dark paper.
+    var rim: SIMD3<Float> = .zero
+    var rimOpacity: Float = 0
+    /// The least luminance the selected paint's accents (tint, hatching, hover, hint) get, so
+    /// they stay visible: dark paints are lightened towards white until they reach it.
+    var accentFloor: Float = 0
+    /// The most luminance the hatch ink gets: bright paints are darkened to it to stay visible
+    /// on light paper (Shaders.metal `highlightPaper`).
+    var hatchCeiling: Float = 0.4
 
     static let light = CanvasPalette(
         background: CanvasColor.linearP3(sRGB: SIMD3(0.949, 0.949, 0.965)),
@@ -75,13 +141,37 @@ nonisolated struct CanvasPalette: Sendable {
         ink: CanvasColor.linearP3(sRGB: SIMD3(0.20, 0.19, 0.18)),
         shadowOpacity: 0.16, outlineOpacity: 0.62)
 
+    /// Light paper on a dark backdrop (dark system appearance, Paper set to Light).
     static let dark = CanvasPalette(
         background: CanvasColor.linearP3(sRGB: SIMD3(0.075, 0.075, 0.082)),
         paper: CanvasColor.linearP3(sRGB: SIMD3(0.925, 0.918, 0.900)),
         ink: CanvasColor.linearP3(sRGB: SIMD3(0.17, 0.16, 0.15)),
         shadowOpacity: 0.55, outlineOpacity: 0.62)
 
+    /// A deep warm grey sheet with light ink, for painting in the evening.
+    static let darkPaper = CanvasPalette(
+        background: CanvasColor.linearP3(sRGB: SIMD3(0.06, 0.06, 0.065)),
+        paper: CanvasColor.linearP3(sRGB: SIMD3(0.13, 0.125, 0.12)),
+        ink: CanvasColor.linearP3(sRGB: SIMD3(0.78, 0.77, 0.75)),
+        shadowOpacity: 0, outlineOpacity: 0.5,
+        rim: CanvasColor.linearP3(sRGB: SIMD3(0.78, 0.77, 0.75)), rimOpacity: 0.3,
+        accentFloor: 0.35, hatchCeiling: 1)
+
     static func appearance(dark: Bool) -> CanvasPalette { dark ? .dark : .light }
+
+    /// The palette for the Paper preference under the system appearance.
+    static func resolve(_ paper: PaperAppearance, interfaceIsDark: Bool) -> CanvasPalette {
+        paper.usesDarkPaper(interfaceIsDark: interfaceIsDark) ? .darkPaper : appearance(dark: interfaceIsDark)
+    }
+
+    /// `paint` (linear P3) as an accent on this paper: unchanged on light paper, lightened on
+    /// dark paper until its luminance is at least `accentFloor`.
+    func accent(for paint: SIMD3<Float>) -> SIMD3<Float> {
+        let luminance = simd_dot(paint, SIMD3(0.2126, 0.7152, 0.0722))
+        guard accentFloor > 0, luminance < accentFloor else { return paint }
+        let towardsWhite = (accentFloor - luminance) / (1 - luminance)
+        return paint + (SIMD3(repeating: 1) - paint) * towardsWhite
+    }
 }
 
 nonisolated enum CanvasColor {

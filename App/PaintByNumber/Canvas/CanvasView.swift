@@ -67,6 +67,11 @@ final class CanvasView: UIView, PaintingCanvas {
     /// at once, finishing doesn't shine, the replay steps through the fills, and hints and
     /// wrong-paint numbers light up and fade instead of throbbing or popping.
     var reduceMotion = false
+    /// Settings › Paper: which paper the canvas shows. `automatic` follows the system appearance,
+    /// re-resolved on every trait change like the backdrop.
+    var paperAppearance = PaperAppearance.default {
+        didSet { if paperAppearance != oldValue { paperChanged() } }
+    }
 
     private let template: Template
     private let scene: CanvasScene?
@@ -192,6 +197,7 @@ final class CanvasView: UIView, PaintingCanvas {
         accessibilityCustomActions = accessibilityActionList
         accessibilityCustomRotors = [areasRotor]
         registerForTraitChanges([UITraitUserInterfaceStyle.self], action: #selector(appearanceChanged))
+        tracePaper()
         session.canvas = self
         session.onEvent { [weak self] event in self?.celebrate(event) }
     }
@@ -342,7 +348,27 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     @objc private func appearanceChanged() {
+        paperChanged()
+    }
+
+    /// The paper, backdrop and ink the next frame draws with.
+    var canvasPalette: CanvasPalette {
+        .resolve(paperAppearance, interfaceIsDark: traitCollection.userInterfaceStyle == .dark)
+    }
+
+    private func paperChanged() {
+        tracePaper()
         requestRender()
+    }
+
+    /// `-tracePaper YES`: the canvas's accessibility identifier names the paper it resolved,
+    /// so a UI test can see the preference reach the canvas.
+    private func tracePaper() {
+        #if DEBUG
+        guard DemoMode.tracesPaper else { return }
+        let dark = paperAppearance.usesDarkPaper(interfaceIsDark: traitCollection.userInterfaceStyle == .dark)
+        accessibilityIdentifier = dark ? "canvas-paper-dark" : "canvas-paper-light"
+        #endif
     }
 
     // MARK: Camera
@@ -555,7 +581,7 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         idleTicks = 0
         guard let renderer else { return }
-        let palette = CanvasPalette.appearance(dark: traitCollection.userInterfaceStyle == .dark)
+        let palette = canvasPalette
         let uniforms = makeUniforms(time: time, camera: camera, palette: palette)
         let content = RenderContext.Content(
             outlines: true, numbers: true, brush: brushPoint != nil,
@@ -585,9 +611,7 @@ final class CanvasView: UIView, PaintingCanvas {
 
     /// The shader constants a frame drawn now would get (tests).
     func frameUniforms() -> CanvasUniforms {
-        makeUniforms(
-            time: now(), camera: currentCamera(),
-            palette: CanvasPalette.appearance(dark: traitCollection.userInterfaceStyle == .dark))
+        makeUniforms(time: now(), camera: currentCamera(), palette: canvasPalette)
     }
 
     private func makeUniforms(time: Float, camera: Camera, palette: CanvasPalette) -> CanvasUniforms {
@@ -597,16 +621,16 @@ final class CanvasView: UIView, PaintingCanvas {
         u.viewport = SIMD4(
             Float(metalLayer.drawableSize.width), Float(metalLayer.drawableSize.height),
             Float(template.width), Float(template.height))
-        u.background = SIMD4(palette.background, 1)
-        u.paper = SIMD4(palette.paper, palette.shadowOpacity)
         // Line art gets finer and lighter when zoomed out, where regions are small on screen.
         let depth = Float(log2(max(camera.zoom / fitZoom, 1)))
         let widthPt = min(1.0, 0.5 + 0.22 * depth)
-        u.ink = SIMD4(palette.ink, palette.outlineOpacity * min(1, 0.7 + 0.15 * depth))
+        u.setChrome(
+            palette, shadowOpacity: palette.shadowOpacity,
+            outlineOpacity: palette.outlineOpacity * min(1, 0.7 + 0.15 * depth))
         // A replay shows the painting as it was made, without the brush's highlight.
         let selected = isReplaying ? nil : session.selectedColor
         if let selected, let scene, selected < scene.paletteLinear.count {
-            u.selected = SIMD4(scene.paletteLinear[selected], 1)
+            u.select(scene.paletteLinear[selected], palette: palette)
         }
         u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersVisibility(at: time))
         u.labels = SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s)

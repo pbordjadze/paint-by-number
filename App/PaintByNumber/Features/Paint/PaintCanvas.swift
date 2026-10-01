@@ -19,6 +19,7 @@ struct PaintCanvas: UIViewRepresentable {
     /// Space taken by floating chrome, in the canvas's own (full-screen) coordinates.
     var chromeInsets = EdgeInsets()
     var showsNumbers = true
+    var paperAppearance = PaperAppearance.default
     var initialCamera: CanvasCamera?
     var fillDurationScale: Float = 1
     var onPencilAction: ((PencilAction) -> Void)?
@@ -36,6 +37,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.fillDurationScale = fillDurationScale
         view.photoLoader = photoLoader
         view.reduceMotion = context.environment.accessibilityReduceMotion
+        view.paperAppearance = paperAppearance
         controller?.view = view
         // Deferred: state mustn't change while SwiftUI is making views.
         if !view.isRenderable, let onUnavailable { Task { onUnavailable() } }
@@ -49,6 +51,7 @@ struct PaintCanvas: UIViewRepresentable {
             bottom: chromeInsets.bottom, right: rtl ? chromeInsets.leading : chromeInsets.trailing)
         view.showsNumbers = showsNumbers
         view.reduceMotion = context.environment.accessibilityReduceMotion
+        view.paperAppearance = paperAppearance
         view.onPencilAction = onPencilAction
         // Loader and callbacks first: showing the photo may start loading it.
         view.photoLoader = photoLoader

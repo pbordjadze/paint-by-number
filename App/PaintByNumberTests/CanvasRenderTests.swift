@@ -4,6 +4,7 @@ import Foundation
 import Metal
 import PaintCore
 import Testing
+import UIKit
 @testable import PaintByNumber
 
 /// Renders the synthetic template offscreen with the canvas shaders and checks pixels.
@@ -12,7 +13,7 @@ struct CanvasRenderTests {
     static let template = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
 
     @Test func shaderStructLayoutsMatchMetal() {
-        #expect(MemoryLayout<CanvasUniforms>.stride == 224)
+        #expect(MemoryLayout<CanvasUniforms>.stride == 256)
         #expect(MemoryLayout<RegionState>.stride == 32)
         #expect(MemoryLayout<GlyphInstance>.stride == 24)
     }
@@ -210,7 +211,7 @@ struct CanvasRenderTests {
         u.outline = SIMD4(1.5, 3.2, 1, 1)
         u.labels = SIMD4(19.5, 25.5, 66, 48)
         u.numbers = SIMD4(0.5, 0.9, 0.05, 0)
-        u.selected = SIMD4(scene.paletteLinear[1], 1)
+        u.select(scene.paletteLinear[1], palette: .light)
         u.ids.x = 1
         let color = try #require(context.makeColorTarget(width: w, height: h))
         let outlines = try #require(context.makeOutlineTarget(width: w, height: h))
@@ -344,6 +345,84 @@ struct CanvasRenderTests {
         }
     }
 
+    /// Dark paper: the sheet and its numbers swap light for dark, the paint stays as it is, and
+    /// the selected color's tint and hatching still show (a dark paint on dark paper would not
+    /// without lifting).
+    @Test func darkPaperKeepsPaintAndLightensPaperNumbersAndHighlight() throws {
+        let t = Self.template
+        var progress = PaintProgress(regionCount: t.regions.count)
+        for r in t.regions.indices where r % 2 == 0 { progress.paint(r) }
+        var options = CanvasSnapshot.Options.preview
+        options.palette = .darkPaper
+        let image = try #require(CanvasSnapshot.render(template: t, progress: progress, size: size(t, 2), options: options))
+        record(image, "dark-paper")
+        let px = Pixels(image)
+        let paper = encoded(CanvasPalette.darkPaper.paper)
+        #expect(luma(paper) < 50)
+        var painted = 0, unpainted = 0
+        for (r, region) in t.regions.enumerated() {
+            guard let label = t.labels(ofRegion: r).first, label.radius >= 10 else { continue }
+            let cx = Int(label.position.x * 2), cy = Int(label.position.y * 2)
+            if r % 2 == 0 {
+                #expect(maxDifference(px[cx, cy], bytes(t.palette[Int(region.colorIndex)].rgb)) <= 3, "region \(r) should keep its paint")
+                painted += 1
+                continue
+            }
+            let reach = Int(label.radius * 2 * 0.6)
+            var darkest = 255, lightest = 0
+            for y in (cy - reach)...(cy + reach) {
+                for x in (cx - reach)...(cx + reach) {
+                    darkest = min(darkest, luma(px[x, y]))
+                    lightest = max(lightest, luma(px[x, y]))
+                }
+            }
+            #expect(abs(darkest - luma(paper)) <= 4, "region \(r) should be dark paper around its number")
+            #expect(lightest > luma(paper) + 80, "region \(r) should show a light number")
+            unpainted += 1
+        }
+        #expect(painted > 2 && unpainted > 2)
+
+        let darkestPaint = t.palette.indices.min { t.palette[$0].oklab.x < t.palette[$1].oklab.x }!
+        options.numbers = false
+        options.highlight = darkestPaint
+        let highlighted = try #require(CanvasSnapshot.render(template: t, progress: nil, size: size(t, 2), options: options))
+        record(highlighted, "dark-paper-highlight")
+        let hpx = Pixels(highlighted)
+        var checked = 0
+        for (r, region) in t.regions.enumerated() where Int(region.colorIndex) == darkestPaint {
+            guard let label = t.labels(ofRegion: r).first, label.radius >= 10 else { continue }
+            var sum = SIMD3<Int>(repeating: 0), n = 0
+            let cx = Int(label.position.x * 2), cy = Int(label.position.y * 2)
+            for y in (cy - 8)...(cy + 8) { for x in (cx - 8)...(cx + 8) { sum &+= hpx[x, y]; n += 1 } }
+            #expect(maxDifference(sum / n, paper) > 12, "region \(r) should be highlighted on dark paper")
+            checked += 1
+        }
+        #expect(checked > 0)
+    }
+
+    /// Dark paper has no drop shadow: a light rim just outside the sheet outlines it instead.
+    @Test func darkPaperDrawsARimInsteadOfAShadow() throws {
+        let t = Self.template
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: t, context: context))
+        let w = 600, h = 700
+        var u = CanvasSnapshot.uniforms(scene: scene, width: w, height: h, options: .painting)
+        u.setChrome(.darkPaper, shadowOpacity: 0, outlineOpacity: 0.5)
+        let margin = Float(44)
+        let content = RenderContext.Content(
+            outlines: false, numbers: false, shadowMargin: margin,
+            clear: MTLClearColor(red: Double(CanvasPalette.darkPaper.background.x), green: Double(CanvasPalette.darkPaper.background.y),
+                                 blue: Double(CanvasPalette.darkPaper.background.z), alpha: 1))
+        let shown = try #require(render(scene: scene, uniforms: u, content: content, width: w, height: h))
+        record(shown, "dark-paper-rim")
+        let px = Pixels(shown)
+        let left = Int(u.transform.x), midY = h / 2
+        let backdrop = encoded(CanvasPalette.darkPaper.background)
+        // The pixel row just outside the left edge is lighter than the backdrop; further out it is the backdrop.
+        #expect(luma(px[left - 1, midY]) > luma(backdrop) + 12, "no rim at the sheet's edge")
+        #expect(maxDifference(px[left - 8, midY], backdrop) <= 2, "the rim should be one pixel, with no shadow beyond it")
+    }
+
     // MARK: Helpers
 
     /// One offscreen frame with explicit uniforms and content (unpainted regions).
@@ -432,4 +511,102 @@ func maxDifference(_ a: SIMD3<Int>, _ b: SIMD3<Int>) -> Int {
 
 func luma(_ c: SIMD3<Int>) -> Int {
     (c.x * 2126 + c.y * 7152 + c.z * 722) / 10000
+}
+
+/// The canvas palettes: contrast, the accent on dark paper, and how the Paper preference and
+/// the system appearance pick one.
+@MainActor
+struct CanvasPaletteTests {
+    /// WCAG relative luminance of a linear Display P3 color.
+    private func luminance(_ c: SIMD3<Float>) -> Double {
+        0.2289746 * Double(c.x) + 0.6917385 * Double(c.y) + 0.0792869 * Double(c.z)
+    }
+
+    private func contrast(_ a: SIMD3<Float>, _ b: SIMD3<Float>) -> Double {
+        let (hi, lo) = (max(luminance(a), luminance(b)), min(luminance(a), luminance(b)))
+        return (hi + 0.05) / (lo + 0.05)
+    }
+
+    /// Ink (outlines, numbers) reads on its paper at 4.5:1 or better in every palette.
+    @Test(arguments: [("light", CanvasPalette.light), ("dark appearance", CanvasPalette.dark), ("dark paper", CanvasPalette.darkPaper)])
+    func inkContrastsWithPaper(name: String, palette: CanvasPalette) {
+        let ratio = contrast(palette.ink, palette.paper)
+        #expect(ratio >= 4.5, "\(name): \(ratio):1")
+    }
+
+    @Test func darkPaperIsADeepWarmGreyWithALightRim() {
+        let p = CanvasPalette.darkPaper
+        #expect(luminance(p.paper) < 0.03 && p.paper.x >= p.paper.z)
+        #expect(luminance(p.background) < luminance(p.paper))
+        #expect(p.shadowOpacity == 0 && p.rimOpacity > 0)
+        #expect(CanvasPalette.light.rimOpacity == 0 && CanvasPalette.dark.rimOpacity == 0)
+    }
+
+    /// Light paper keeps the selected paint as its accent, exactly: its frames are unchanged.
+    @Test func lightPaperAccentIsThePaintItself() {
+        let paints: [SIMD3<Float>] = [.zero, SIMD3(1, 1, 1), SIMD3(0.02, 0.01, 0.05), SIMD3(0.8, 0.1, 0.1), SIMD3(0.3, 0.6, 0.2)]
+        for palette in [CanvasPalette.light, .dark] {
+            for paint in paints { #expect(palette.accent(for: paint) == paint) }
+            var u = CanvasUniforms()
+            u.select(paints[2], palette: palette)
+            #expect(u.accent == SIMD4(paints[2], 0.4) && u.selected == SIMD4(paints[2], 1))
+        }
+    }
+
+    /// On dark paper a dark paint is lightened until it reads, a bright one is left alone.
+    @Test func darkPaperLightensDarkAccents() {
+        let palette = CanvasPalette.darkPaper
+        for paint in [SIMD3<Float>.zero, SIMD3(0.02, 0.01, 0.05), SIMD3(0.1, 0.02, 0.02)] {
+            let accent = palette.accent(for: paint)
+            #expect(luminance(accent) >= Double(palette.accentFloor) - 0.01, "\(paint) → \(accent)")
+            #expect(accent.min() >= 0 && accent.max() <= 1)
+        }
+        let yellow = SIMD3<Float>(0.9, 0.8, 0.1)
+        #expect(palette.accent(for: yellow) == yellow)
+        var u = CanvasUniforms()
+        u.select(.zero, palette: palette)
+        #expect(u.selected == SIMD4(0, 0, 0, 1) && u.accent.w == palette.hatchCeiling && u.accent.x > 0)
+    }
+
+    /// Thumbnails, share pictures and time-lapses are paper-themed whatever the canvas shows.
+    @Test func offscreenRendersStayOnLightPaper() throws {
+        for options in [CanvasSnapshot.Options.painting, .preview, .thumbnail] {
+            #expect(options.palette.paper == CanvasPalette.light.paper)
+        }
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: CanvasRenderTests.template, context: context))
+        let u = CanvasSnapshot.uniforms(scene: scene, width: 240, height: 320, options: .preview)
+        #expect(u.paper == SIMD4(CanvasPalette.light.paper, 0) && u.rim.w == 0)
+    }
+
+    @Test func paperPreferenceAndAppearancePickThePalette() {
+        for dark in [false, true] {
+            #expect(CanvasPalette.resolve(.dark, interfaceIsDark: dark).paper == CanvasPalette.darkPaper.paper)
+        }
+        #expect(CanvasPalette.resolve(.light, interfaceIsDark: false).paper == CanvasPalette.light.paper)
+        #expect(CanvasPalette.resolve(.light, interfaceIsDark: true).paper == CanvasPalette.dark.paper)
+        #expect(CanvasPalette.resolve(.automatic, interfaceIsDark: false).paper == CanvasPalette.light.paper)
+        #expect(CanvasPalette.resolve(.automatic, interfaceIsDark: true).paper == CanvasPalette.darkPaper.paper)
+        #expect(PaperAppearance.default == .light)
+        #expect(PaperAppearance.allCases.map(\.name) == ["Light", "Dark", "Automatic"])
+    }
+
+    /// The canvas resolves its paper from the preference and its own trait collection, so a
+    /// system appearance change reaches an Automatic canvas.
+    @Test func canvasResolvesPaperFromPreferenceAndTraits() {
+        let canvas = CanvasView(session: PaintingSession(template: CanvasRenderTests.template))
+        canvas.frame = CGRect(x: 0, y: 0, width: 390, height: 700)
+        canvas.layoutIfNeeded()
+        func paper(_ palette: CanvasPalette) -> SIMD4<Float> { SIMD4(palette.paper, palette.shadowOpacity) }
+        #expect(canvas.frameUniforms().paper == paper(.light))
+        canvas.paperAppearance = .dark
+        let dark = canvas.frameUniforms()
+        #expect(dark.paper == paper(.darkPaper) && dark.rim.w > 0 && dark.ink == SIMD4(CanvasPalette.darkPaper.ink, dark.ink.w))
+        canvas.paperAppearance = .automatic
+        #expect(canvas.frameUniforms().paper == paper(.light))
+        canvas.overrideUserInterfaceStyle = .dark
+        #expect(canvas.frameUniforms().paper == paper(.darkPaper))
+        canvas.paperAppearance = .light
+        #expect(canvas.frameUniforms().paper == paper(.dark))
+    }
 }

@@ -13,6 +13,7 @@ import simd
 /// - `paint-zoom`: zoomed ~4× into the canvas, numbers and highlight visible
 /// - `paint-complete`: finished painting (line art dissolved)
 /// - `paint-dark`: `paint-progress` for dark appearance
+/// - `paint-dark-paper`: `paint-progress` on dark paper (the Paper setting at Dark)
 /// - `paint-fill`: fills frozen mid-animation to inspect the paint front
 /// - `paint-hint`: the hint flies the camera to a region of the selected color
 /// - `paint-replay`: a finished painting mid-replay
@@ -119,6 +120,11 @@ private final class Demo {
         switch scenario {
         case "paint-progress", "paint-dark", "paint-ax", "paint-long-text":
             paint(fraction: 0.55)
+        case "paint-dark-paper":
+            paint(fraction: 0.55)
+            // Registered, not stored: it lasts for this launch, so the next scenario on the same
+            // simulator keeps the default light paper.
+            UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
         case "paint-ax-large":
             paint(fraction: 0.55)
             dynamicTypeSize = .accessibility5

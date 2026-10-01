@@ -37,6 +37,10 @@ enum DemoMode {
     /// has had, since a UI test can't read the value mid-hold (`press(forDuration:)` blocks).
     static let tracesPhotoPeek = UserDefaults.standard.bool(forKey: "tracePhotoPeek")
 
+    /// `-tracePaper YES`: the canvas's accessibility identifier names the paper it resolved
+    /// (`canvas-paper-light` or `canvas-paper-dark`), so a UI test can see the preference reach it.
+    static let tracesPaper = UserDefaults.standard.bool(forKey: "tracePaper")
+
     /// `tmp/demo-ready` in the app's data container. CI screenshots a scenario shortly after
     /// this file appears instead of sleeping for a worst-case delay (`ci/screenshots.sh`).
     static let readyMarker = FileManager.default.temporaryDirectory.appending(path: "demo-ready")

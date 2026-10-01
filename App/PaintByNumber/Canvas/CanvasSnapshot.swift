@@ -11,7 +11,8 @@ nonisolated enum CanvasSnapshot {
         var numbers: Bool
         /// Outline width in output pixels per canvas unit of scale (≥ 1 px is kept crisp).
         var outlineWidth: Float = 1.1
-        var dark = false
+        /// Light paper unless a test asks for another palette; exports never do.
+        var palette = CanvasPalette.light
         /// Palette index whose unpainted regions get the selection highlight.
         var highlight: Int?
 
@@ -84,20 +85,18 @@ nonisolated enum CanvasSnapshot {
     static func uniforms(scene: CanvasScene, width w: Int, height h: Int, options: Options) -> CanvasUniforms {
         let canvasW = scene.canvasSize.x, canvasH = scene.canvasSize.y
         let scale = min(Float(w) / canvasW, Float(h) / canvasH)
-        let palette = CanvasPalette.appearance(dark: options.dark)
+        let palette = options.palette
         var u = CanvasUniforms()
         u.transform = SIMD4((Float(w) - canvasW * scale) / 2, (Float(h) - canvasH * scale) / 2, scale, 1)
         u.viewport = SIMD4(Float(w), Float(h), canvasW, canvasH)
-        u.background = SIMD4(palette.background, 1)
-        u.paper = SIMD4(palette.paper, 0)
-        u.ink = SIMD4(palette.ink, palette.outlineOpacity)
+        u.setChrome(palette, shadowOpacity: 0, outlineOpacity: palette.outlineOpacity)
         let width = options.outlineWidth * max(scale, 0.25)
         u.outline = SIMD4(width, width, 0, options.numbers ? 1 : 0)
         u.labels = SIMD4(5, 7, .greatestFiniteMagnitude, 0)
         u.numbers = SIMD4(0.8, 0.9, 0.04, 0)
         u.time = SIMD4(0, -10_000, -10_000, -10_000)
         if let color = options.highlight, color >= 0, color < scene.paletteLinear.count {
-            u.selected = SIMD4(scene.paletteLinear[color], 1)
+            u.select(scene.paletteLinear[color], palette: palette)
             u.ids.x = Int32(color)
             u.outline.z = 1
         }
