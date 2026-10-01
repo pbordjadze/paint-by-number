@@ -2029,6 +2029,18 @@
       "comment" : "Gallery toolbar button, and the title of the Settings sheet",
       "extractionState" : "manual"
     },
+    "settings.section.painting" : {
+      "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting"
+          }
+        }
+      }
+    },
     "Share" : {
       "comment" : "Accessibility label of the share menu in the completion bar",
       "extractionState" : "manual"
@@ -2294,7 +2306,7 @@
       "extractionState" : "manual"
     },
     "Undo" : {
-      "comment" : "Accessibility label of the painting screen's undo button",
+      "comment" : "Undo button: the painting screen's undo button (its accessibility label), and the action of the gallery's toast after a painting is deleted",
       "extractionState" : "manual"
     },
     "Version" : {
