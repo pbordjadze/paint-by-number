@@ -56,6 +56,29 @@ final class SettingsTests: XCTestCase {
         "\(element.label) \(element.value as? String ?? "")"
     }
 
+    /// Color Names offers Playful and Plain, Playful by default.
+    @MainActor
+    func testColorNamesPickerOffersPlayfulAndPlain() throws {
+        let app = openSettings()
+        let picker = app.descendants(matching: .any)["settings-color-names"]
+        scroll(app, to: picker)
+        XCTAssertTrue(picker.exists, "Settings has no Color Names row")
+        XCTAssertEqual(picker.value as? String, "Playful")
+        picker.tap()
+        let plain = app.buttons["Plain"]
+        XCTAssertTrue(plain.waitForExistence(timeout: 10), "The picker has no Plain option")
+        XCTAssertTrue(app.buttons["Playful"].exists, "The picker has no Playful option")
+        plain.tap()
+        XCTAssertEqual(picker.value as? String, "Plain")
+        attachScreenshot(of: app, named: "settings-color-names")
+        // The choice is stored in the simulator's defaults: put it back for the other tests.
+        picker.tap()
+        let playful = app.buttons["Playful"]
+        XCTAssertTrue(playful.waitForExistence(timeout: 10))
+        playful.tap()
+        XCTAssertEqual(picker.value as? String, "Playful")
+    }
+
     /// Opens Settings the way a person does: from the gallery's toolbar.
     @MainActor
     private func openSettings() -> XCUIApplication {

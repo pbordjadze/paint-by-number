@@ -846,7 +846,7 @@ final class CanvasView: UIView, PaintingCanvas {
             activeUntil = max(activeUntil, time + 2)
         }
         if isAccessibilityPainting, let color = session.selectedColor {
-            Announcer.announce(PaintSpeech.nextColor(number: color + 1, name: session.colorNames[color]))
+            Announcer.announce(PaintSpeech.nextColor(number: color + 1, name: session.colorNames[color], nickname: session.nickname(of: color)))
         }
         accessibilityChanged()
         requestRender()
@@ -1030,7 +1030,7 @@ final class CanvasView: UIView, PaintingCanvas {
             return [configuredPlaceholder(frame: area)]
         }
         let number = color + 1
-        let hint = PaintSpeech.areaHint(number: number, name: session.colorNames[color])
+        let hint = PaintSpeech.areaHint(number: number, name: session.colorNames[color], nickname: session.nickname(of: color))
         var elements: [Int: CanvasAreaElement] = [:]
         let items = regions.map { r -> CanvasAreaElement in
             let element = areaElements[r] ?? CanvasAreaElement(region: r, container: self)
@@ -1067,7 +1067,7 @@ final class CanvasView: UIView, PaintingCanvas {
         if session.isComplete {
             element.accessibilityValue = PaintSpeech.finished
         } else if let color = session.selectedColor {
-            element.accessibilityValue = PaintSpeech.noAreasInView(number: color + 1, name: session.colorNames[color])
+            element.accessibilityValue = PaintSpeech.noAreasInView(number: color + 1, name: session.colorNames[color], nickname: session.nickname(of: color))
         } else {
             element.accessibilityValue = ""
         }

@@ -3,8 +3,9 @@ import XCTest
 
 /// What VoiceOver reads on the painting screen, and the screen at the largest text sizes.
 final class AccessibilityUITests: XCTestCase {
-    /// Swatches say their number and color name ("12, dark green") and how far they are painted;
-    /// the selected color's name is on screen for people who can't tell the paints apart.
+    /// Swatches say their number, nickname and plain color name ("12, Harbor Fog, dark grayish blue")
+    /// and how far they are painted; the selected color's name is on screen for people who can't
+    /// tell the paints apart by eye.
     @MainActor
     func testSwatchesSpeakNumberAndColorName() throws {
         let app = launch(["-demo", "paint-ax"])
@@ -12,7 +13,8 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertFalse(swatches.isEmpty)
         for swatch in swatches {
             let label = swatch.label
-            XCTAssertNotNil(label.range(of: #"^[0-9]+, [a-z]+( [a-z]+){0,3}$"#, options: .regularExpression), label)
+            XCTAssertNotNil(
+                label.range(of: #"^[0-9]+, [A-Z][A-Za-z]+( [A-Za-z]+)?(-[A-Za-z]+)?, [a-z]+( [a-z]+){0,3}$"#, options: .regularExpression), label)
             XCTAssertEqual(label.split(separator: ",").first.map(String.init), String(swatch.identifier.dropFirst("swatch-".count)))
             let value = swatch.value as? String ?? ""
             XCTAssertNotNil(value.range(of: #"^(finished|[0-9]{1,3} percent painted)$"#, options: .regularExpression), value)
@@ -23,6 +25,63 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertTrue(current.exists, "The selected color's name isn't on screen")
         XCTAssertEqual(current.value as? String, selected.first?.label)
         attachScreenshot(of: app, named: "paint-ax")
+    }
+
+    /// Under Plain color names the swatches read as before: number and structured name only.
+    @MainActor
+    func testPlainColorNamesDropTheNicknames() throws {
+        let app = launch(["-demo", "paint-names-plain"])
+        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
+        XCTAssertFalse(swatches.isEmpty)
+        for swatch in swatches {
+            XCTAssertNotNil(
+                swatch.label.range(of: #"^[0-9]+, [a-z]+( [a-z]+){0,3}$"#, options: .regularExpression), swatch.label)
+        }
+        let current = app.descendants(matching: .any)["current-color"]
+        XCTAssertTrue(current.exists, "The selected color's name isn't on screen")
+        XCTAssertEqual(current.value as? String, swatches.first(where: \.isSelected)?.label)
+        attachScreenshot(of: app, named: "paint-names-plain")
+    }
+
+    /// A long press on a swatch shows its number, nickname, shade and hex code, and leaves the
+    /// selected color alone.
+    @MainActor
+    func testLongPressShowsTheColorDetails() throws {
+        let app = launch(["-demo", "paint-ax"])
+        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
+        let window = app.windows.firstMatch.frame
+        let target = try XCTUnwrap(swatches.first { !$0.isSelected && window.contains($0.frame) })
+        let selectedBefore = swatches.first(where: \.isSelected)?.identifier
+        let parts = target.label.components(separatedBy: ", ")
+        XCTAssertEqual(parts.count, 3, target.label)
+        target.press(forDuration: 1)
+        let details = app.descendants(matching: .any)["swatch-details"]
+        XCTAssertTrue(details.waitForExistence(timeout: 10), "Long-pressing \(target.identifier) showed no details")
+        attachScreenshot(of: app, named: "paint-swatch-details")
+        let number = app.descendants(matching: .any)["swatch-details-number"]
+        XCTAssertTrue(number.label.contains(String(target.identifier.dropFirst("swatch-".count))), number.label)
+        XCTAssertTrue(app.descendants(matching: .any)["swatch-details-name"].label.contains(parts[1]))
+        XCTAssertTrue(app.descendants(matching: .any)["swatch-details-shade"].label.localizedCaseInsensitiveContains(parts[2]))
+        let hex = app.descendants(matching: .any)["swatch-details-hex"].label
+        XCTAssertNotNil(hex.range(of: #"#[0-9A-F]{6}$"#, options: .regularExpression), hex)
+        // Dismiss by tapping outside the popover: that touch only closes it.
+        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.5)).tap()
+        XCTAssertTrue(waitForDisappearance(of: details), "The details didn't close")
+        let selectedAfter = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-' AND selected == true")).firstMatch
+        XCTAssertEqual(selectedAfter.identifier, selectedBefore, "The long press changed the selected color")
+    }
+
+    /// Plain names have no nickname row.
+    @MainActor
+    func testPlainDetailsHaveNoNameRow() throws {
+        let app = launch(["-demo", "paint-names-plain"])
+        let swatch = app.buttons["swatch-1"]
+        XCTAssertTrue(swatch.waitForExistence(timeout: 10))
+        swatch.press(forDuration: 1)
+        XCTAssertTrue(app.descendants(matching: .any)["swatch-details"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.descendants(matching: .any)["swatch-details-name"].exists, "Plain names show a nickname")
+        XCTAssertTrue(app.descendants(matching: .any)["swatch-details-shade"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["swatch-details-hex"].exists)
     }
 
     /// The canvas offers the unpainted areas of the selected color to VoiceOver, top to bottom,
@@ -115,6 +174,12 @@ final class AccessibilityUITests: XCTestCase {
         for swatch in swatches {
             XCTAssertGreaterThanOrEqual(swatch.frame.width, 63, "\(swatch.identifier) didn't grow with the text size")
         }
+    }
+
+    @MainActor
+    private func waitForDisappearance(of element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
+        let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+        return XCTWaiter().wait(for: [gone], timeout: timeout) == .completed
     }
 
     @MainActor

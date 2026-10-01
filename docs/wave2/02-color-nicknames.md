@@ -54,10 +54,13 @@ public enum ColorNickname {
 
 1. For each paint, take the `k = 6` nearest anchors by OKLab distance (true OKLab, not the
    chroma-stretched working space), discarding any beyond ΔE 0.12 (fallback: the structured
-   name's English title; never empty).
+   name's English title; never empty) and, for the draw, any more than ΔE 0.02 (one just
+   noticeable difference) farther than the nearest. (Review: without that window a muted
+   paint's sixth anchor, often 0.04 away and of another hue, weighed nearly as much as an
+   exact match, so a warm gray went by "Morning Lake" one painting in ten.)
 2. Weight each by `exp(−d / 0.03)` and draw one with `SplitMix64(seed ^ index)`: the
    nearest anchors win most of the time, the same paint gets a different name in a different
-   painting, and a very close anchor is almost always chosen.
+   painting, and a name never evokes a visibly different color than a closer one would.
 3. Resolve duplicates in palette order: a paint whose draw is taken moves to its next
    candidate; if all are taken, take the structured name.
 4. Return the names in palette order.

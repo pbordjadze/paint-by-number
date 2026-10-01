@@ -181,7 +181,7 @@ struct ColorNamingTests {
 
     /// The six bundled samples' 24-color palettes ("<sample> <hex> <expected name>"), from
     /// `pbn` at `--colors 24`; the names were reviewed by eye against the swatches.
-    private static let samplePalettes = """
+    static let samplePalettes = """
         barn f77b5c light vivid red
         barn c66148 vivid red
         barn 8e4f3f red
