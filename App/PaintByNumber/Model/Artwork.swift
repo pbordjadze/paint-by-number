@@ -36,17 +36,26 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     /// Marked by the painter: favorites sort first in the gallery and have their own filter.
     /// Absent from older `meta.json` files, which decode as not favorite (no format bump).
     var isFavorite = false
+    /// Where `settings` came from: `SettingsOrigin` raw values ("suggested", "custom"); nil for
+    /// artworks made before Suggested settings, and kept as written so a value a newer app
+    /// adds survives an older one rewriting the file. The suggestion itself is not stored: it
+    /// is reproducible from the photo and the painting length.
+    var settingsOrigin: String?
+    /// The `PaintingLength` raw value the create flow aimed for; nil before Suggested settings.
+    var paintingLength: String?
 
     init(
         id: UUID = UUID(), title: String, createdAt: Date = .now, modifiedAt: Date? = nil,
-        template: Template, settings: GenerationSettings, progress: PaintProgress? = nil,
-        sampleName: String? = nil
+        template: Template, settings: GenerationSettings, settingsOrigin: SettingsOrigin? = nil,
+        paintingLength: PaintingLength? = nil, progress: PaintProgress? = nil, sampleName: String? = nil
     ) {
         self.id = id
         self.title = title
         self.createdAt = createdAt
         self.modifiedAt = modifiedAt ?? createdAt
         self.settings = settings
+        self.settingsOrigin = settingsOrigin?.rawValue
+        self.paintingLength = paintingLength?.rawValue
         width = template.width
         height = template.height
         colorCount = template.palette.count
@@ -96,7 +105,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, title, createdAt, modifiedAt, completedAt, settings, width, height
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
-        case pipelineVersion, isFavorite
+        case pipelineVersion, isFavorite, settingsOrigin, paintingLength
     }
 
     init(from decoder: any Decoder) throws {
@@ -124,6 +133,8 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             sampleName = try? c.decodeIfPresent(String.self, forKey: .sampleName)
             pipelineVersion = field(.pipelineVersion, 0)
             isFavorite = field(.isFavorite, false)
+            settingsOrigin = try? c.decodeIfPresent(String.self, forKey: .settingsOrigin)
+            paintingLength = try? c.decodeIfPresent(String.self, forKey: .paintingLength)
             return
         }
         id = try c.decode(UUID.self, forKey: .id)
@@ -142,10 +153,18 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         sampleName = try c.decodeIfPresent(String.self, forKey: .sampleName)
         pipelineVersion = try c.decodeIfPresent(Int.self, forKey: .pipelineVersion) ?? 0
         isFavorite = try c.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
+        settingsOrigin = try? c.decodeIfPresent(String.self, forKey: .settingsOrigin)
+        paintingLength = try? c.decodeIfPresent(String.self, forKey: .paintingLength)
         guard width > 0, height > 0, regionCount >= 0, paintedCount >= 0 else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "invalid artwork dimensions"))
         }
     }
+}
+
+/// Whether a painting's generation settings are the create flow's suggestion for its photo or
+/// the painter's own (a slider moved).
+nonisolated enum SettingsOrigin: String, Sendable {
+    case suggested, custom
 }
 
 /// Everything needed to add a new artwork to the library.
@@ -153,6 +172,10 @@ nonisolated struct ArtworkDraft: Sendable {
     var title: String
     var template: Template
     var settings: GenerationSettings
+    /// Nil for paintings made outside the create flow (first-launch samples, demos).
+    var settingsOrigin: SettingsOrigin?
+    /// The painting length the suggestion aimed for.
+    var paintingLength: PaintingLength?
     /// The source photo, stored downscaled for comparison and regeneration.
     var photo: CGImage?
     var sampleName: String?

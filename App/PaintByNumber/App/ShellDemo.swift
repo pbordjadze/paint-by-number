@@ -15,6 +15,11 @@ import Foundation
 /// - `create`, `create-dark`: the photo picker step of the create flow.
 /// - `create-samples`: the same step on its Samples pane (iPhone; iPad shows both).
 /// - `create-preview`, `create-preview-dark`: a sample generated, comparison at half.
+/// - `create-suggested`: the lighthouse sample on its suggested settings ("Suggested for this
+///   photo" chip).
+/// - `create-custom`, `create-custom-long-text`: the parrots sample after Detail moved off the
+///   suggestion (the chip offers Reset to Suggested); the second with every localized string
+///   twice as long.
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Numbers"): the create flow on that photo's preview, titled with the file's name. The file is
 ///   a bundled sample written to the temporary directory at launch (`DemoMode.openFileURL`).
@@ -31,7 +36,7 @@ import Foundation
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
          galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createPreview,
-         createFromFile, settings, settingsLongText, settingsAcknowledgements
+         createSuggested, createCustom, createFromFile, settings, settingsLongText, settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -48,6 +53,8 @@ enum ShellDemo: Equatable {
         case "create", "create-dark": .create
         case "create-samples": .createSamples
         case "create-preview", "create-preview-dark": .createPreview
+        case "create-suggested": .createSuggested
+        case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
         case "settings": .settings
         case "settings-long-text": .settingsLongText
@@ -73,11 +80,22 @@ enum ShellDemo: Equatable {
 
     var sharesTimelapse: Bool { self == .galleryTimelapse || self == .galleryTimelapseLongText }
 
-    var opensCreateFlow: Bool { self == .create || self == .createSamples || self == .createPreview }
+    var opensCreateFlow: Bool {
+        self == .create || self == .createSamples || self == .createPreview || self == .createSuggested || self == .createCustom
+    }
 
     var opensSettings: Bool { self == .settings || self == .settingsLongText || self == .settingsAcknowledgements }
 
-    var previewSample: Sample? { self == .createPreview ? Sample.named("parrots") : nil }
+    var previewSample: Sample? {
+        switch self {
+        case .createPreview, .createCustom: Sample.named("parrots")
+        case .createSuggested: Sample.named("lighthouse")
+        default: nil
+        }
+    }
+
+    /// The painter moves Detail once the suggestion is ready, so the settings become custom.
+    var movesASlider: Bool { self == .createCustom }
 
     /// How long `create` and `create-samples` give the library picker to load before they
     /// signal readiness: it runs out of process and reports nothing when its grid is up. The
@@ -113,8 +131,8 @@ enum ShellDemo: Equatable {
             }
         case .galleryTimelapse, .galleryTimelapseLongText:
             library.seed([Library.SeedItem(sample: Sample.all[1], painted: 1, photoMaxPixelSize: 560)])
-        case .create, .createSamples, .createPreview, .createFromFile, .galleryEmpty, .settings, .settingsLongText,
-             .settingsAcknowledgements:
+        case .create, .createSamples, .createPreview, .createSuggested, .createCustom, .createFromFile, .galleryEmpty,
+             .settings, .settingsLongText, .settingsAcknowledgements:
             break
         }
     }

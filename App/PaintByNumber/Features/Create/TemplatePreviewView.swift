@@ -65,7 +65,6 @@ struct TemplatePreviewView: View {
         // The title field names the painting; the bar says which step this is.
         .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: model.settings) { model.settingsChanged() }
         .alert("Couldn’t Create Painting", isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -82,7 +81,7 @@ struct TemplatePreviewView: View {
         // The stacked controls card, title row included.
         let stacked = Self.fittedArea(
             width: size.width - 2 * sidePadding,
-            height: size.height - pickerHeight - 398, aspect: photoAspect)
+            height: size.height - pickerHeight - 460, aspect: photoAspect)
         let beside = Self.fittedArea(
             width: size.width - 2 * sidePadding - panelWidth - 24,
             height: size.height - pickerHeight - 2 * sidePadding, aspect: photoAspect)
@@ -116,10 +115,12 @@ struct TemplatePreviewView: View {
         min(max((count - colorBounds.0) / (colorBounds.1 - colorBounds.0), 0), 1).squareRoot()
     }
 
-    /// Updates a setting, ignoring unchanged values: a slider re-asserting its value would
-    /// otherwise invalidate the model on every update.
+    /// Updates a setting the painter moved, ignoring unchanged values: a slider re-asserting
+    /// its value would otherwise invalidate the model on every update.
     private func update(_ keyPath: ReferenceWritableKeyPath<CreateModel, Double>, _ value: Double) {
-        if abs(model[keyPath: keyPath] - value) > 1e-9 { model[keyPath: keyPath] = value }
+        guard abs(model[keyPath: keyPath] - value) > 1e-9 else { return }
+        model[keyPath: keyPath] = value
+        model.settingsChanged()
     }
 
     // MARK: Canvas
@@ -165,13 +166,15 @@ struct TemplatePreviewView: View {
     private var status: some View {
         Group {
             switch model.phase {
-            case .loading, .analyzing:
+            case .loading, .analyzing, .suggesting:
                 StatusCapsule {
                     ProgressView().controlSize(.small)
                     if model.phase == .loading {
                         Text("Opening photo…")
-                    } else {
+                    } else if model.phase == .analyzing {
                         Text("Finding the subject…")
+                    } else {
+                        Text("Choosing settings…")
                     }
                 }
             case .generating where !model.isAdjusting:
@@ -201,17 +204,19 @@ struct TemplatePreviewView: View {
     private var controls: some View {
         VStack(alignment: .leading, spacing: 18) {
             titleField
+            originChip
             SettingSlider(
                 title: "Colors", value: Self.colorPosition(model.colorCount),
                 onChange: { update(\.colorCount, Self.colorCount(at: $0)) }, range: 0...1,
-                valueText: Int(model.colorCount.rounded()).formatted(), onEditing: model.setAdjusting)
+                valueText: Int(model.colorCount.rounded()).formatted(), isPending: model.isChoosingSettings,
+                onEditing: model.setAdjusting)
             SettingSlider(
                 title: "Detail", value: model.detail, onChange: { update(\.detail, $0) }, range: 0...1,
-                valueText: Self.detailWord(model.detail),
+                valueText: Self.detailWord(model.detail), isPending: model.isChoosingSettings,
                 onEditing: model.setAdjusting)
             SettingSlider(
                 title: "Smoothness", value: model.smoothness, onChange: { update(\.smoothness, $0) }, range: 0...1,
-                valueText: Self.smoothnessWord(model.smoothness),
+                valueText: Self.smoothnessWord(model.smoothness), isPending: model.isChoosingSettings,
                 onEditing: model.setAdjusting)
 
             Text(model.stats?.summary ?? " ")
@@ -234,11 +239,52 @@ struct TemplatePreviewView: View {
             }
             .buttonStyle(.glassProminent)
             .controlSize(.large)
-            .disabled(model.preview == nil || isStarting)
+            .disabled(model.preview == nil || model.isChoosingSettings || isStarting)
         }
         .padding(.horizontal, 22)
         .padding(.top, 22)
         .padding(.bottom, isSideBySide ? 22 : 8)
+    }
+
+    /// Where the settings came from: the suggestion for this photo, or the painter's own with
+    /// a way back to it. Its room is kept, empty, until there is a suggestion.
+    private var originChip: some View {
+        Group {
+            if model.settingsOrigin == .custom {
+                Button { model.resetToSuggested() } label: {
+                    HStack(spacing: 6) {
+                        Text("Custom")
+                            .foregroundStyle(.secondary)
+                        Text(verbatim: "·")
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                        SwiftUI.Label("Reset to Suggested", systemImage: "arrow.counterclockwise")
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .chipBackground(Theme.paper)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Reset to Suggested")
+                .accessibilityValue("Custom")
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(Theme.accent)
+                    Text("Suggested for this photo")
+                }
+                .chipBackground(Theme.accent.opacity(0.14))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(String(
+                    localized: "create.settingsOrigin.label", defaultValue: "Settings",
+                    comment: "VoiceOver label of the chip above the create sliders; its value says whether they are suggested for the photo or custom")))
+                .accessibilityValue("Suggested for this photo")
+            }
+        }
+        .accessibilityIdentifier("settings-origin")
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .opacity(model.settingsOrigin == nil ? 0 : 1)
+        .accessibilityHidden(model.settingsOrigin == nil)
+        .animation(.snappy, value: model.settingsOrigin)
     }
 
     /// Empty shows the default (the sample's name or the date) as the prompt, and the
@@ -328,6 +374,9 @@ private struct SettingSlider: View {
     let range: ClosedRange<Double>
     var step: Double?
     let valueText: String
+    /// The value is not chosen yet (Suggested settings are being chosen): shown as a
+    /// placeholder, and the slider waits.
+    var isPending = false
     var onEditing: (Bool) -> Void
 
     var body: some View {
@@ -343,6 +392,7 @@ private struct SettingSlider: View {
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     .animation(.snappy, value: valueText)
+                    .redacted(reason: isPending ? .placeholder : [])
             }
             Group {
                 if let step {
@@ -351,8 +401,24 @@ private struct SettingSlider: View {
                     Slider(value: value, in: range, onEditingChanged: onEditing)
                 }
             }
+            .disabled(isPending)
             .accessibilityLabel(title)
-            .accessibilityValue(valueText)
+            .accessibilityValue(isPending ? Text("Choosing settings…") : Text(valueText))
         }
+    }
+}
+
+private extension View {
+    /// The origin chip's shape: a capsule on one line, a rounded card when long text wraps.
+    func chipBackground(_ style: some ShapeStyle) -> some View {
+        font(.footnote.weight(.semibold))
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(style, in: .rect(cornerRadius: 15, style: .continuous))
+            // A comfortable target without making the chip itself taller.
+            .frame(minHeight: 44)
+            .contentShape(.rect)
     }
 }
