@@ -94,7 +94,7 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
     draw_palette(d, stats.get("palette", []), (2 * panel_w, 28 + panel_h, panel_w, panel_h),
                  names=stats.get("colorNames", []))
     caption = (f"{name}  {stats['width']}x{stats['height']}  colors={stats['colors']}  regions={stats['regions']}  "
-               f"dE={stats['meanDeltaE']:.4f}  r<2:{stats['regionsUnderRadius2']}  "
+               f"dE={stats['meanDeltaE']:.4f}  rings={stats.get('bandRings', '?')}  r<2:{stats['regionsUnderRadius2']}  "
                f"belowLegible:{stats.get('labelsBelowLegibleSize', '?')}  total={stats['totalMs']:.0f}ms")
     d.text((8, 6), caption, fill=(0, 0, 0), font=ImageFont.load_default(size=16))
     sheet.save(os.path.join(out, "sheet.png"))

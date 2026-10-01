@@ -2,6 +2,7 @@
   "about": "Quality baseline for tools/regression.py; regenerate with --update.",
   "cases": {
     "c12-d0/barn": {
+      "bandRings": 32,
       "colors": 12,
       "encodedBytes": 981053,
       "meanDeltaE": 0.04293816,
@@ -11,9 +12,10 @@
       "regions": 138,
       "regionsUnderRadius3": 0,
       "templateSHA1": "6d00bcebc572e5560bebd9aa8bf2705fd055c370",
-      "totalMs": 363.5
+      "totalMs": 434.6
     },
     "c12-d0/espresso": {
+      "bandRings": 32,
       "colors": 12,
       "encodedBytes": 537391,
       "meanDeltaE": 0.041459173,
@@ -23,9 +25,10 @@
       "regions": 91,
       "regionsUnderRadius3": 0,
       "templateSHA1": "9f6c6576e3694bb015bb76d01a1b4f62a37671a0",
-      "totalMs": 332.2
+      "totalMs": 280.5
     },
     "c12-d0/hibiscus": {
+      "bandRings": 36,
       "colors": 12,
       "encodedBytes": 927488,
       "meanDeltaE": 0.043525454,
@@ -35,9 +38,10 @@
       "regions": 191,
       "regionsUnderRadius3": 0,
       "templateSHA1": "13c364aa102aa3ee281621ce5f2c0371d709fb95",
-      "totalMs": 375.7
+      "totalMs": 363.8
     },
     "c12-d0/lighthouse": {
+      "bandRings": 6,
       "colors": 12,
       "encodedBytes": 887560,
       "meanDeltaE": 0.04290435,
@@ -47,9 +51,10 @@
       "regions": 168,
       "regionsUnderRadius3": 0,
       "templateSHA1": "555793b0b56f46deaf4f968ac7046b7fb3e91bee",
-      "totalMs": 388.7
+      "totalMs": 420.0
     },
     "c12-d0/parrots": {
+      "bandRings": 54,
       "colors": 12,
       "encodedBytes": 589190,
       "meanDeltaE": 0.04652945,
@@ -59,9 +64,10 @@
       "regions": 86,
       "regionsUnderRadius3": 0,
       "templateSHA1": "8be6b84a1955cd607c72b1465b3cd90e7a0ac451",
-      "totalMs": 334.8
+      "totalMs": 341.0
     },
     "c12-d0/regatta": {
+      "bandRings": 19,
       "colors": 12,
       "encodedBytes": 551615,
       "meanDeltaE": 0.03869918,
@@ -71,9 +77,10 @@
       "regions": 110,
       "regionsUnderRadius3": 0,
       "templateSHA1": "5f7ca30f586bdf72aa1d34891f418bad48b29851",
-      "totalMs": 378.2
+      "totalMs": 321.8
     },
     "c150-d1/barn": {
+      "bandRings": 29,
       "colors": 140,
       "encodedBytes": 2503176,
       "meanDeltaE": 0.029443257,
@@ -83,9 +90,10 @@
       "regions": 839,
       "regionsUnderRadius3": 1,
       "templateSHA1": "51591b1aae8adde0d39e8e833bf9ec4ee9dd0225",
-      "totalMs": 744.8
+      "totalMs": 709.6
     },
     "c150-d1/espresso": {
+      "bandRings": 44,
       "colors": 98,
       "encodedBytes": 1238040,
       "meanDeltaE": 0.028786924,
@@ -95,9 +103,10 @@
       "regions": 335,
       "regionsUnderRadius3": 6,
       "templateSHA1": "1fb7f411e93dee368baea2c05a7319cff9f2465e",
-      "totalMs": 488.5
+      "totalMs": 460.0
     },
     "c150-d1/hibiscus": {
+      "bandRings": 87,
       "colors": 127,
       "encodedBytes": 1711411,
       "meanDeltaE": 0.030558003,
@@ -107,9 +116,10 @@
       "regions": 695,
       "regionsUnderRadius3": 2,
       "templateSHA1": "a6b4df27fbd16d01e6bec5819f583eb2bf78fe00",
-      "totalMs": 872.4
+      "totalMs": 863.0
     },
     "c150-d1/lighthouse": {
+      "bandRings": 25,
       "colors": 127,
       "encodedBytes": 2126821,
       "meanDeltaE": 0.030647231,
@@ -119,9 +129,10 @@
       "regions": 804,
       "regionsUnderRadius3": 3,
       "templateSHA1": "bbfea0917dd38f54b9b6e89499d67cbb38745fde",
-      "totalMs": 804.8
+      "totalMs": 755.7
     },
     "c150-d1/parrots": {
+      "bandRings": 168,
       "colors": 128,
       "encodedBytes": 1615686,
       "meanDeltaE": 0.02572981,
@@ -131,9 +142,10 @@
       "regions": 381,
       "regionsUnderRadius3": 1,
       "templateSHA1": "6c4e50ecb42ac9b3f604d5b630ec52fef017a279",
-      "totalMs": 762.1
+      "totalMs": 763.3
     },
     "c150-d1/regatta": {
+      "bandRings": 33,
       "colors": 98,
       "encodedBytes": 1453826,
       "meanDeltaE": 0.023416447,
@@ -143,9 +155,10 @@
       "regions": 444,
       "regionsUnderRadius3": 2,
       "templateSHA1": "4a25bdadc1934c1fda636e5fc7db4119ae93f1ff",
-      "totalMs": 715.4
+      "totalMs": 764.9
     },
     "c24-d0.5/barn": {
+      "bandRings": 40,
       "colors": 24,
       "encodedBytes": 1699483,
       "meanDeltaE": 0.036873475,
@@ -155,9 +168,10 @@
       "regions": 391,
       "regionsUnderRadius3": 0,
       "templateSHA1": "3e5235f76a3500117d40426449744349a5d205bd",
-      "totalMs": 577.0
+      "totalMs": 450.3
     },
     "c24-d0.5/espresso": {
+      "bandRings": 41,
       "colors": 23,
       "encodedBytes": 874726,
       "meanDeltaE": 0.03305544,
@@ -167,9 +181,10 @@
       "regions": 184,
       "regionsUnderRadius3": 6,
       "templateSHA1": "b3af0a0e85e91642e6749a665018fb1bd76712f4",
-      "totalMs": 414.5
+      "totalMs": 307.6
     },
     "c24-d0.5/hibiscus": {
+      "bandRings": 63,
       "colors": 24,
       "encodedBytes": 1403442,
       "meanDeltaE": 0.034116566,
@@ -179,9 +194,10 @@
       "regions": 467,
       "regionsUnderRadius3": 2,
       "templateSHA1": "03975adeed9e10c63e98a9a5add1b7243f66aa97",
-      "totalMs": 497.8
+      "totalMs": 435.2
     },
     "c24-d0.5/lighthouse": {
+      "bandRings": 22,
       "colors": 24,
       "encodedBytes": 1658185,
       "meanDeltaE": 0.035659514,
@@ -191,9 +207,10 @@
       "regions": 563,
       "regionsUnderRadius3": 3,
       "templateSHA1": "33689219cb3e6b8f247e4d281bdebdb743b755d5",
-      "totalMs": 526.0
+      "totalMs": 471.1
     },
     "c24-d0.5/parrots": {
+      "bandRings": 107,
       "colors": 24,
       "encodedBytes": 1057993,
       "meanDeltaE": 0.03521635,
@@ -203,9 +220,10 @@
       "regions": 202,
       "regionsUnderRadius3": 2,
       "templateSHA1": "ab8d45b0c8e27d243b54249b3200a490f0eeb166",
-      "totalMs": 432.5
+      "totalMs": 388.3
     },
     "c24-d0.5/regatta": {
+      "bandRings": 32,
       "colors": 24,
       "encodedBytes": 991878,
       "meanDeltaE": 0.029049385,
@@ -215,7 +233,7 @@
       "regions": 239,
       "regionsUnderRadius3": 0,
       "templateSHA1": "c8ecd925948bb9418ecd38a3e87e8f780da61aa0",
-      "totalMs": 480.2
+      "totalMs": 423.7
     }
   },
   "regimes": {

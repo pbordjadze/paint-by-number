@@ -35,12 +35,14 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
   `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, label
   legibility — `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0, `minLabelRadius`,
-  `minLabelRoom`, `valid` — timings, palette and `colorNames`; the sheet's palette panel labels
-  each swatch with its name). The metrics are `pbn generate`'s `stats.json`, a stable interface
-  for regression tooling: add fields, never rename them. Look at the PNGs with the Read tool.
-  The sheet's second row shows the raw region raster, a 2× `boundaries.png` (1-px region
-  outlines, best for judging segmentation shapes) and the palette; `--importance-dir DIR` passes
-  `DIR/<name>.pgm` as the importance map (Vision stand-in).
+  `minLabelRoom`, `valid` — `bandRings` (`BandRings.count`: regions bounded mostly by weak,
+  ramp-like boundaries, the rings a gradient is posterized into), timings, palette and
+  `colorNames`; the sheet's palette panel labels each swatch with its name). The metrics are
+  `pbn generate`'s `stats.json`, a stable interface for regression tooling: add fields, never
+  rename them. Look at the PNGs with the Read tool. The sheet's second row shows the raw region
+  raster, a 2× `boundaries.png` (1-px region outlines, best for judging segmentation shapes) and
+  the palette; `--importance-dir DIR` passes `DIR/<name>.pgm` as the importance map (Vision
+  stand-in).
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
   corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
 - `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
@@ -58,7 +60,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   radius 2, palette distance ≥ the floor pbn reports (`GenerationSettings.minPaletteDistance`),
   and `labelsBelowLegibleSize == 0` once pbn's stats report that field. Bands versus
   `tools/baseline/regression.json`: mean ΔE ≤ baseline × 1.05, regions ±15 %, template bytes
-  ±20 %; timings are informational. Prints a table with deltas, exits 1 on any failure;
+  ±20 %; timings and `bandRings` are informational (±1 noise on the decoded input moves the
+  ring count by up to half). Prints a table with deltas, exits 1 on any failure;
   `--self-test` checks the rules themselves. Needs the release `pbn` and Pillow (no node: its
   sheets are source | painted raster | region outlines + palette).
 - **Whenever a change alters pipeline output, run `tools/regression.py --update` (it only writes
