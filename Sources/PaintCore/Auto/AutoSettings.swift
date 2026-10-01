@@ -325,6 +325,9 @@ public enum AutoSettings {
         }
 
         let center = try generate(candidates[0].settings)
+        // The generator's last check can precede a cancellation; a cancelled suggestion
+        // must not show its draft.
+        try check.throwIfCancelled()
         firstDraft?(center)
         candidates[0].score = try score(center, candidates[0].settings)
         try check.throwIfCancelled()
