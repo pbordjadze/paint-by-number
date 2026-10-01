@@ -15,6 +15,9 @@ import Foundation
 /// - `create`, `create-dark`: the photo picker step of the create flow.
 /// - `create-samples`: the same step on its Samples pane (iPhone; iPad shows both).
 /// - `create-preview`, `create-preview-dark`: a sample generated, comparison at half.
+/// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
+///   Numbers"): the create flow on that photo's preview, titled with the file's name. The file is
+///   a bundled sample written to the temporary directory at launch (`DemoMode.openFileURL`).
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
@@ -26,8 +29,8 @@ import Foundation
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
-         galleryDamaged, galleryTimelapse, create, createSamples, createPreview, settings, settingsLongText,
-         settingsAcknowledgements
+         galleryDamaged, galleryTimelapse, create, createSamples, createPreview, createFromFile, settings,
+         settingsLongText, settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -43,6 +46,7 @@ enum ShellDemo: Equatable {
         case "create", "create-dark": .create
         case "create-samples": .createSamples
         case "create-preview", "create-preview-dark": .createPreview
+        case "create-from-file": .createFromFile
         case "settings": .settings
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
@@ -105,7 +109,7 @@ enum ShellDemo: Equatable {
             }
         case .galleryTimelapse:
             library.seed([Library.SeedItem(sample: Sample.all[1], painted: 1, photoMaxPixelSize: 560)])
-        case .create, .createSamples, .createPreview, .galleryEmpty, .settings, .settingsLongText,
+        case .create, .createSamples, .createPreview, .createFromFile, .galleryEmpty, .settings, .settingsLongText,
              .settingsAcknowledgements:
             break
         }

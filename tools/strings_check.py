@@ -12,7 +12,9 @@ this script reads the Swift sources itself and fails when sources and catalog di
 * an explicit key's English default differs from the catalog's English value,
 * a catalog key is not used by any source,
 * a catalog entry is malformed (no comment, wrong placeholders, a plural without one/other, ...),
-* `InfoPlist.xcstrings` and the `INFOPLIST_KEY_*` build settings drifted apart,
+* `InfoPlist.xcstrings` drifted from the `INFOPLIST_KEY_*` build settings or from the document
+  type names in `Config/Info.plist` (the system localizes a `CFBundleTypeName` by looking up its
+  English text as the key),
 * a string that reads like prose is not routed through any localization form.
 
 Forms scanned (comments and string contents are skipped by a small Swift lexer):
@@ -38,6 +40,7 @@ SwiftUI and are not scanned: build such strings with form 2 or 3 first.
 
 import argparse
 import json
+import plistlib
 import re
 import sys
 from pathlib import Path
@@ -46,6 +49,7 @@ APP_SOURCES = "App/PaintByNumber"
 CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
 INFOPLIST_CATALOG = "App/PaintByNumber/Resources/InfoPlist.xcstrings"
 PROJECT = "App/PaintByNumber.xcodeproj/project.pbxproj"
+INFOPLIST_FILE = "App/Config/Info.plist"
 
 # Developer tooling compiled only into Debug builds: its text is never shown to a user.
 DEBUG_ONLY_FILES = {
@@ -679,27 +683,37 @@ def project_infoplist(text):
     return found
 
 
-def check_infoplist(catalog, project_text, findings, path=INFOPLIST_CATALOG):
-    declared = project_infoplist(project_text)
+def document_type_names(plist):
+    """The `CFBundleTypeName` of every document type Info.plist declares."""
+    return {t["CFBundleTypeName"] for t in plist.get("CFBundleDocumentTypes", []) if "CFBundleTypeName" in t}
+
+
+def check_infoplist(catalog, project_text, findings, path=INFOPLIST_CATALOG, plist=None):
+    settings = project_infoplist(project_text)
     strings = catalog.get("strings", {})
     if catalog.get("sourceLanguage") != "en" or catalog.get("version") != "1.0":
         findings.append(Finding(path, 0, 'sourceLanguage must be "en" and version "1.0"'))
-    for key, values in declared.items():
+    expected = {}
+    for key, values in settings.items():
         if len(values) != 1:
             findings.append(Finding(PROJECT, 0, f"INFOPLIST_KEY_{key} differs between build configurations"))
-            continue
+        else:
+            expected[key] = next(iter(values))
+    # A document type's name is localized under its own English text.
+    expected.update({name: name for name in document_type_names(plist or {})})
+    for key, english in expected.items():
         entry = strings.get(key)
         if entry is None:
             findings.append(Finding(path, 0, f'"{key}" is set in the project but missing from the catalog'))
             continue
         value = entry.get("localizations", {}).get("en", {}).get("stringUnit", {}).get("value")
-        if value != next(iter(values)):
-            findings.append(Finding(path, 0, f'"{key}": English "{value}" differs from the project setting "{next(iter(values))}"'))
+        if value != english:
+            findings.append(Finding(path, 0, f'"{key}": English "{value}" differs from the project setting "{english}"'))
         if not entry.get("comment", "").strip():
             findings.append(Finding(path, 0, f'"{key}": needs a comment'))
     for key in strings:
-        if key not in declared:
-            findings.append(Finding(path, 0, f'"{key}": no INFOPLIST_KEY_{key} build setting uses it'))
+        if key not in settings and key not in expected:
+            findings.append(Finding(path, 0, f'"{key}": no INFOPLIST_KEY_{key} build setting or document type name uses it'))
 
 
 # ----------------------------------------------------------------------------------------------
@@ -727,7 +741,9 @@ def run(root):
         findings.append(Finding(INFOPLIST_CATALOG, 0, "missing"))
     else:
         try:
-            check_infoplist(json.loads(info_path.read_text(encoding="utf-8")), (root / PROJECT).read_text(encoding="utf-8"), findings)
+            check_infoplist(
+                json.loads(info_path.read_text(encoding="utf-8")), (root / PROJECT).read_text(encoding="utf-8"), findings,
+                plist=plistlib.loads((root / INFOPLIST_FILE).read_bytes()))
         except json.JSONDecodeError as error:
             findings.append(Finding(INFOPLIST_CATALOG, error.lineno, f"invalid JSON: {error.msg}"))
     return findings, keys, len({u.key for u in usages})
@@ -825,6 +841,20 @@ def self_test():
     findings = []
     check_infoplist(catalog({"CFBundleDisplayName": entry("Other")}), project, findings)
     expect(len(findings) >= 2, "Info.plist drift not reported")
+    plist = {"CFBundleDocumentTypes": [{"CFBundleTypeName": "Image"}]}
+    base = {"CFBundleDisplayName": entry("App"), "NSCameraUsageDescription": entry("Why.")}
+    findings = []
+    check_infoplist(catalog({**base, "Image": entry("Image")}), project, findings, plist=plist)
+    expect(not findings, f"valid document type name rejected: {[str(f) for f in findings]}")
+    findings = []
+    check_infoplist(catalog(base), project, findings, plist=plist)
+    expect(any("Image" in str(f) and "missing" in str(f) for f in findings), "unlocalized document type name not reported")
+    findings = []
+    check_infoplist(catalog({**base, "Image": entry("Picture")}), project, findings, plist=plist)
+    expect(any("differs" in str(f) for f in findings), "document type name drift not reported")
+    findings = []
+    check_infoplist(catalog({**base, "Image": entry("Image")}), project, findings)
+    expect(any("no INFOPLIST_KEY_Image" in str(f) for f in findings), "stale document type entry not reported")
 
     for failure in failures:
         print("self-test FAILED:", failure)

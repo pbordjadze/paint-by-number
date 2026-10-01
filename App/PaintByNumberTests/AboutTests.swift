@@ -94,6 +94,24 @@ struct BundleMetadataTests {
     }
 }
 
+/// "Open in Paint by Numbers": the app declares itself an alternate viewer of images; files are
+/// copied into its inbox (`IncomingFile`), not opened in place.
+struct DocumentTypeTests {
+    private let info = Bundle.main.infoDictionary ?? [:]
+
+    @Test func appOpensImagesAsAnAlternateViewerOnACopy() throws {
+        let types = try #require(info["CFBundleDocumentTypes"] as? [[String: Any]])
+        let image = try #require(types.first)
+        #expect(types.count == 1)
+        #expect(image["CFBundleTypeName"] as? String == "Image")
+        #expect(image["CFBundleTypeRole"] as? String == "Viewer")
+        #expect(image["LSHandlerRank"] as? String == "Alternate")
+        #expect(image["LSItemContentTypes"] as? [String] == ["public.image"])
+        #expect(info["LSSupportsOpeningDocumentsInPlace"] as? Bool == false)
+        #expect(info["UISupportsDocumentBrowser"] == nil)
+    }
+}
+
 struct AppInfoTests {
     @Test func readsVersionAndBuildFromTheInfoDictionary() {
         let info = AppInfo(infoDictionary: ["CFBundleShortVersionString": "1.0.42", "CFBundleVersion": "42"])

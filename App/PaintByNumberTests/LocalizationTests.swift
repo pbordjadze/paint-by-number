@@ -117,13 +117,17 @@ struct LocalizationTests {
         }
     }
 
-    /// The names the system shows (Home Screen, permission alerts) come from `InfoPlist.xcstrings`,
-    /// which must agree with the build settings that fill Info.plist.
+    /// The names the system shows (Home Screen, permission alerts, the share sheet's document
+    /// type) come from `InfoPlist.xcstrings`, which must agree with the build settings and the
+    /// document types that fill Info.plist. A document type is localized under its own English name.
     @Test func infoPlistCatalogMatchesTheBundle() throws {
         let strings = try Self.catalog("InfoPlist")
-        #expect(Set(strings.keys) == ["CFBundleDisplayName", "NSCameraUsageDescription", "NSPhotoLibraryAddUsageDescription"])
+        #expect(Set(strings.keys) == ["CFBundleDisplayName", "Image", "NSCameraUsageDescription", "NSPhotoLibraryAddUsageDescription"])
+        let documentTypes = Bundle.main.object(forInfoDictionaryKey: "CFBundleDocumentTypes") as? [[String: Any]] ?? []
+        let typeNames = Set(documentTypes.compactMap { $0["CFBundleTypeName"] as? String })
+        #expect(typeNames == ["Image"])
         for (key, entry) in strings {
-            let bundled = Bundle.main.object(forInfoDictionaryKey: key) as? String
+            let bundled = typeNames.contains(key) ? key : Bundle.main.object(forInfoDictionaryKey: key) as? String
             #expect(bundled == Self.value(of: Self.english(entry)), "\(key): \(bundled ?? "nil")")
         }
     }

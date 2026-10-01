@@ -20,6 +20,19 @@ enum DemoMode {
     /// The app is hosting the unit tests: like a demo, it keeps no state between runs.
     static var isTestHost: Bool { ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil }
 
+    /// `-openFile <path>`: the file the app opens on launch, through the same handler as a file
+    /// opened from the share sheet. The `create-from-file` scenario, given none, opens a bundled
+    /// sample it writes to the temporary directory under a name of its own, so the title the
+    /// create flow derives from the file name is visible.
+    static let openFileURL: URL? = {
+        if let path = UserDefaults.standard.string(forKey: "openFile") { return URL(fileURLWithPath: path) }
+        guard scenario == "create-from-file", let sample = Sample.named("parrots")?.url else { return nil }
+        let copy = FileManager.default.temporaryDirectory.appending(path: "Morning Parrots.jpg")
+        try? FileManager.default.removeItem(at: copy)
+        do { try FileManager.default.copyItem(at: sample, to: copy) } catch { return nil }
+        return copy
+    }()
+
     /// `-tracePhotoPeek YES`: the Photo control's accessibility identifier lists every value it
     /// has had, since a UI test can't read the value mid-hold (`press(forDuration:)` blocks).
     static let tracesPhotoPeek = UserDefaults.standard.bool(forKey: "tracePhotoPeek")

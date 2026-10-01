@@ -6,6 +6,8 @@ struct CreateFlowView: View {
     var openingSample: Sample?
     /// A photo dropped on the gallery: the flow opens on its preview.
     var droppedPhoto: Data?
+    /// The dropped or opened file's name, when it has one.
+    var droppedTitle: String?
     var onStart: (Artwork) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -27,7 +29,7 @@ struct CreateFlowView: View {
             // is still being presented would stall the presentation).
             guard model.source == nil else { return }
             if let droppedPhoto {
-                model.load(imageData: droppedPhoto)
+                model.load(imageData: droppedPhoto, title: droppedTitle)
             } else if let openingSample {
                 model.load(sample: openingSample)
             }
@@ -40,7 +42,7 @@ struct CreateFlowView: View {
             DemoMode.markReady()
         }
         .onChange(of: model.isFinal) { _, isFinal in
-            if isFinal, openingSample != nil { DemoMode.markReady() }
+            if isFinal, openingSample != nil || ShellDemo.current == .createFromFile { DemoMode.markReady() }
         }
         #endif
         .onDisappear { model.cancelAll() }
