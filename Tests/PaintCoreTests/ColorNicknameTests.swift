@@ -13,6 +13,9 @@ struct ColorNicknameTests {
 
     private func paint(_ lab: SIMD3<Float>) -> PaletteColor { PaletteColor(oklab: lab, space: .sRGB) }
 
+    /// The bundled samples in `ColorNamingTests.samplePalettes`.
+    private static let samples = ["barn", "espresso", "hibiscus", "lighthouse", "parrots", "regatta"]
+
     /// The bundled samples' palettes (`ColorNamingTests`), by sample name.
     private func samplePalette(_ sample: String) -> [PaletteColor] {
         ColorNamingTests.samplePalettes.split(separator: "\n").compactMap { line in
@@ -151,8 +154,10 @@ struct ColorNicknameTests {
 
     /// A typical photo palette finds names close by, not just within the discard radius.
     @Test func samplePalettesHaveNearbyAnchors() {
-        for sample in ["parrots", "coffee", "chelsea"] {
-            for color in samplePalette(sample) {
+        for sample in Self.samples {
+            let palette = samplePalette(sample)
+            #expect(palette.count >= 23, "\(sample)")
+            for color in palette {
                 let nearest = ColorNickname.nearest(to: color.oklab)
                 #expect(nearest.count >= ColorNickname.poolSize, "\(sample) \(color.oklab)")
                 #expect((nearest.first?.distance ?? 1) < 0.07, "\(sample) \(color.oklab)")
@@ -226,20 +231,41 @@ struct ColorNicknameTests {
         #expect(ColorName(family: .navy, lightness: .dark, chroma: .vivid).englishTitle == "Navy")
     }
 
-    /// A paint right on an anchor with no close neighbours takes that anchor's name about half the
+    /// A paint right on an anchor with few close neighbours takes that anchor's name about half the
     /// time or more, and the other draws still vary.
     @Test func theNearestAnchorWinsMostOften() throws {
         /// Chance of the paint's own anchor being drawn: the less its neighbours weigh, the higher.
         func chance(_ entry: ColorNickname.Entry) -> Float {
-            let others = ColorNickname.nearest(to: entry.oklab).dropFirst().prefix(ColorNickname.poolSize - 1)
+            let others = ColorNickname.nearest(to: entry.oklab).prefix(ColorNickname.poolSize).dropFirst()
+                .filter { $0.distance <= ColorNickname.window }
             return 1 / (1 + others.reduce(0) { $0 + exp(-$1.distance / ColorNickname.falloff) })
         }
-        let anchor = try #require(ColorNickname.vocabulary.max { chance($0) < chance($1) })
+        let anchor = try #require(ColorNickname.vocabulary.filter { chance($0) < 1 }.max { chance($0) < chance($1) })
         let palette = [PaletteColor(oklab: anchor.oklab, space: .sRGB)]
         var wins = 0
         for seed in 0..<1000 where ColorNickname.assign(palette, seed: UInt64(seed)) == [anchor.name] { wins += 1 }
         #expect(wins >= 500, "\(anchor.name) won \(wins) of 1000")
         #expect(wins < 1000)
+    }
+
+    /// The draw stays within `window` of the nearest anchor (one paint per palette, so no name is
+    /// taken): a warm gray is never called "Morning Lake", a blue-gray 0.03 away, yet still varies.
+    @Test func drawsStayCloseToTheNearestAnchor() {
+        for sample in Self.samples {
+            for color in samplePalette(sample) {
+                let nearest = ColorNickname.nearest(to: color.oklab)
+                for seed in 0..<40 as Range<UInt64> {
+                    let name = ColorNickname.assign([color], seed: seed)[0]
+                    let pick = nearest.first { ColorNickname.vocabulary[$0.index].name == name }
+                    #expect(pick.map { $0.distance <= nearest[0].distance + ColorNickname.window } == true,
+                            "\(sample) \(color.oklab): \(name)")
+                }
+            }
+        }
+        let warmGray = paint(lab("B5AFAF"))
+        let names = Set((0..<300 as Range<UInt64>).map { ColorNickname.assign([warmGray], seed: $0)[0] })
+        #expect(!names.contains("Morning Lake"))
+        #expect(names.count >= 2, "\(names)")
     }
 
     @Test func seedFoldsAUUIDStably() throws {

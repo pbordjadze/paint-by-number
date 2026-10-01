@@ -22,8 +22,12 @@ public enum ColorNickname {
     public static let maximumDistance: Float = 0.12
     /// How many of the nearest anchors a paint's name is drawn from.
     public static let poolSize = 6
-    /// Draw weights fall off as `exp(-distance / falloff)`: the nearest anchors win most often
-    /// and a very close one almost always.
+    /// The draw only considers anchors at most this much (ΔE, about one just noticeable
+    /// difference) farther than the nearest one. Without it the sixth anchor of a muted paint,
+    /// often 0.04 away and of another hue, weighs nearly as much as an exact match (a warm gray
+    /// drew "Morning Lake", a blue-gray, one painting in ten).
+    static let window: Float = 0.02
+    /// Draw weights fall off as `exp(-distance / falloff)`: the nearest anchors win most often.
     static let falloff: Float = 0.03
     /// Anchors considered per paint, the draw pool first: when a paint's choices are taken by
     /// earlier paints it works down this list before it falls back to its structured name.
@@ -45,7 +49,8 @@ public enum ColorNickname {
     /// varied by `seed` (the painting's identity), deterministically.
     ///
     /// Each paint draws one of its `poolSize` nearest anchors (true OKLab distance, none beyond
-    /// `maximumDistance`) with weight `exp(-d / 0.03)` from `SplitMix64(seed ^ index)`. Paints
+    /// `maximumDistance`, none more than `window` farther than the nearest) with weight
+    /// `exp(-d / 0.03)` from `SplitMix64(seed ^ index)`. Paints
     /// are resolved in palette order: one whose draw is taken moves to its other candidates,
     /// nearest first, and one with none left (or none near) gets its structured name in English
     /// ("Dark grayish green"), so a result is never empty. Weights are rounded to integers
@@ -58,7 +63,8 @@ public enum ColorNickname {
             let candidates = nearest(to: color.oklab)
             var rng = SplitMix64(seed: seed ^ UInt64(index))
             var order = candidates.map(\.index)
-            if let drawn = draw(candidates.prefix(poolSize), using: &rng), let position = order.firstIndex(of: drawn) {
+            let pool = candidates.prefix(poolSize).filter { $0.distance <= candidates[0].distance + window }
+            if let drawn = draw(pool, using: &rng), let position = order.firstIndex(of: drawn) {
                 order.remove(at: position)
                 order.insert(drawn, at: 0)
             }
@@ -84,7 +90,7 @@ public enum ColorNickname {
         return Array(found.prefix(candidateLimit))
     }
 
-    private static func draw(_ pool: ArraySlice<(index: Int, distance: Float)>, using rng: inout SplitMix64) -> Int? {
+    private static func draw(_ pool: [(index: Int, distance: Float)], using rng: inout SplitMix64) -> Int? {
         let weights = pool.map { UInt64(max(1, (Double(exp(-$0.distance / falloff)) * 1_000_000).rounded())) }
         let total = weights.reduce(0, +)
         guard total > 0 else { return nil }

@@ -27,15 +27,12 @@ extension ColorNickname {
 191512 Tar Pit
 1C0F12 Licorice Twist
 080A12 Starless Night
-101319 Midnight Oil
 1E140E Dark Roast
 0E130F Pitch Pine
-17111A Cellar Door
 071016 Moonless Sea
 1D1020 Plum Ink
 111A13 Fern Shadow
 2A1B14 Cold Brew
-1C1410 Coffee Grounds
 202224 Cast Iron
 2B2D30 Wet Asphalt
 38383A Charcoal Smudge
@@ -43,14 +40,11 @@ extension ColorNickname {
 454B55 Thunderhead
 56514E Chimney Smoke
 48525B Slate Roof
-3F4042 Graphite Pencil
 3B3F44 Iron Gate
 4E5053 Anvil
 5B5D5E Flint
 4A4A4C Basalt Cliff
 5C6064 Rainy Cobbles
-78797A Pewter Mug
-2F2E2E Coal Dust
 7A756F Weathered Fence
 565A5C Shale
 5C5A57 Cinder Path
@@ -58,62 +52,35 @@ extension ColorNickname {
 7B7A77 Stone Wall
 8E8E8B River Pebble
 9A9A97 Concrete Slab
-9FA1A6 Dove Wing
 98A2A8 Harbor Fog
 B9BBBD Silver Spoon
 A3A8AB Tin Roof
-9DA3A6 Zinc Bucket
 8F9293 Nickel Plate
 6F767C Steel Beam
 C6C8CA Aluminum Foil
-D2DDE3 Window Frost
 C9CDD0 Cloudy Day
-9EA3A8 Overcast
 A59D92 Dusty Road
 D7D5D0 Sidewalk Chalk
 B3ADA4 Pebble Beach
 F4F7FA Snowdrift
-F2F2F0 Cotton Cloud
-F6F1E7 Milk Foam
 F1EBDD Fresh Linen
 EDEBE6 Salt Flat
-FAF8F4 Sugar Dust
-F2ECD8 Rice Paper
-E8E6E1 Chalk Dust
-E3E9EC Frosted Glass
 D7D2C8 Moth Wing
-F7F6EF Dandelion Fluff
 F8F1DE Meringue Peak
 FBF5E6 Whipped Cream
-EFE8D8 Eggshell
-EDEAE3 Pearl Button
-D9D2C5 Oyster Shell
 F2E8D0 Candle Wax
-F5F4F1 Goose Down
-F0ECE6 Lace Curtain
-F0F3F5 Cumulus
 F5F3EE Blank Canvas
 EDF0EC Sea Salt
-F8F8F6 Crisp Sheet
-EFEEEA Whitewash
 E6E0D4 Birch Bark
 F7EFEA Marshmallow
-F1EEEC Talc Dust
 DCE7E1 Duck Egg
 D8EBE2 Seafoam Spray
-D9ECF2 Ice Cube
 D4E6EE Glacier Melt
 FDFDFD Printer Paper
-E9E9EA Polished Marble
-DADCDF Quiet Fog
 BEC2C5 Rain Gutter
 AEB2B3 Galvanized Pail
 1A1B1E Piano Lacquer
 262B33 Nightfall
-EEF1EF Winter Linen
-E5E1D8 Almond Milk
-EFEBE0 Ricotta
-E2DED3 Oat Flour
 D8CBB2 Oat Milk
 D8C3A0 Sand Dune
 A99175 Wet Sand
@@ -129,7 +96,6 @@ E0C98B Straw Hat
 D4A872 Graham Cracker
 D9A55E Croissant
 D9B17A Pie Crust
-D9BE98 Peanut Shell
 D9C5AA Latte Foam
 B79C80 Cappuccino
 7B5239 Cocoa Powder
@@ -156,7 +122,6 @@ A0603A Cedar Chest
 7A5B3C Pine Cone
 9D7C4D Acorn Cap
 5A4636 Tree Bark
-3C2E26 Wet Bark
 3B2D20 Peat Moss
 4C3A2B Mud Pie
 3B2418 Coffee Bean
@@ -165,8 +130,6 @@ A0603A Cedar Chest
 5D4037 Truffle Dust
 4A2C20 Fudge Sauce
 8B5A2B Saddle Leather
-7E5A3C Worn Leather
-8C5E3C Leather Satchel
 A5441F Rust Bucket
 8A3324 Old Barn
 C46A47 Terracotta Pot
@@ -175,13 +138,11 @@ A24B3B Brick Wall
 B5654A Brick Dust
 9C5440 Kiln Brick
 C69B7B Adobe Wall
-B7683F Canyon Dusk
 B2603B Mesa Rock
 C8946A Sandstone
 B97A57 Desert Clay
 C0703F Copper Pipe
 A9683F Old Penny
-9C6B35 Bronze Medal
 C79C3E Polished Brass
 A7843C Antique Brass
 D9B23C Gold Leaf
@@ -191,10 +152,8 @@ F5C34D Candle Flame
 F2B84A Lantern Glow
 B8683A Copper Kettle
 6B4423 Boot Leather
-4E3A2A Stable Floor
 6E5A47 Old Saddlebag
 8A7358 Cork Board
-A89070 Dry Riverbank
 7D6B55 Sparrow Wing
 9B8A6E Tumbleweed
 5C4B3B Smoked Oak
@@ -204,7 +163,6 @@ C9A66B Hay Bale
 B8955A Barley Straw
 E8D5A5 Parchment Scroll
 EAD9B5 Old Lace
-D8C49A Manila Folder
 C4A77D Cardboard Box
 D0B488 Corn Husk
 C7AD8A Chai Latte
@@ -213,22 +171,16 @@ AA8E6C Thatched Roof
 704C30 Smokehouse
 64412A Dark Walnut
 E2C48D Cider Donut
-EBD4A3 Shortcake
 C41E3A Cherry Pie
 D3112B Maraschino
 E02020 Fire Engine
 C8281F Ladybug
-D23A2A Ripe Tomato
-D93A2B Poppy Field
 A8212F Strawberry Jam
 C8344A Wild Strawberry
 B0213E Raspberry Jam
 A31F34 Cranberry Juice
-8A1C2E Cranberry Bog
-A3203A Pomegranate
 6F2A35 Merlot
 7B1E2B Garnet
-5B1B2D Cocoa Cherry
 6E2230 Spiced Plum
 8A2236 Sour Cherry
 5E1A2A Currant Jelly
@@ -239,7 +191,6 @@ B5251E Chili Pepper
 D54B3B Boiled Lobster
 8B1A2B Theater Curtain
 D8566F Rose Petal
-D9607A Wild Rose
 65322E Rosewood
 F0C8CC Rose Quartz
 F5D6D6 Rose Water
@@ -268,7 +219,7 @@ BE3B33 Barn Roof
 9D2B2B Fire Brick
 B12A34 Red Currant
 E34A5F Strawberry Fizz
-DD5E7A Candy Floss
+DD5E7A Geranium
 F2A7B8 Sugared Petals
 F9CDD3 Peony Froth
 F6B8C6 Taffy Pull
@@ -296,7 +247,6 @@ FF6A13 Safety Cone
 F26B21 Pumpkin Patch
 EF7B1A Tangerine Zest
 F58A07 Marmalade
-F08A24 Orange Peel
 F29B38 Cantaloupe
 F3A15B Apricot Jam
 F7B26B Apricot Nectar
@@ -304,7 +254,6 @@ F8C291 Peach Cobbler
 F9D2A8 Melon Sorbet
 FBD9B5 Melon Cream
 F6C9A0 Sherbet Cone
-E9762B Carrot Top
 E56A1C Autumn Pumpkin
 D9531E Persimmon
 E8883A Sweet Potato
@@ -317,7 +266,6 @@ FBB040 Saffron Thread
 F6C65B Yellow Squash
 FACC2E Egg Yolk
 FFD21F Sunflower
-FFDA3A Lemon Zest
 FFE04D Canary
 FDE47F Buttercup
 FDEB9E Lemon Chiffon
@@ -327,9 +275,7 @@ F1D26A Mustard Seed
 E3B72E Dijon
 D8A31D Turmeric
 CFA018 Goldenrod
-E7C84A Corn Silk
 F4DC72 Lemon Meringue
-FCE883 Pollen
 EAC541 Daffodil
 F2D544 Dandelion
 FFD93B Rubber Duck
@@ -339,12 +285,11 @@ E8D98A Chamomile
 8A8A3A Olive Grove
 6B6B2E Olive Oil
 808040 Dried Oregano
-9A9A52 Sage Brush
+9A9A52 Pickle Brine
 8C9A6B Sage Leaf
 A3AE8A Eucalyptus
 B5BE9F Dusty Sage
 7D8F69 Lichen
-8E9A7A Pistachio Shell
 B7D07D Pistachio Gelato
 C5D68A Honeydew
 D8E8B4 Honeydew Mist
@@ -386,17 +331,17 @@ D3E85C Chartreuse Fizz
 5C6B34 Artichoke
 6B7B3A Cattail
 8A9B4F Lemon Balm
-9AAF5E Basil Leaf
+9AAF5E Matcha Latte
 7A9A3E Fresh Basil
 85A34A Parsley
 4C7A34 Rosemary Sprig
-A4B494 Celery Stalk
+A4B494 Thyme Sprig
 B6C9A0 Cabbage Leaf
 C8D8B0 Butter Lettuce
 A8C8A0 Spring Mint
 B5DCB5 Mint Syrup
 C8EBD0 Mint Chip
-D7F0DC Peppermint Tea
+D7F0DC Peppermint Cream
 98D8B3 Minty Breeze
 7FC8A0 Sea Glass
 8FCDB0 Sea Lettuce
@@ -413,19 +358,18 @@ B9DEC8 Jade Veil
 00B26B Parakeet
 00C070 Glowworm
 5FD38D Mint Sorbet
-2E8B57 Kelp Forest
+2E8B57 Garden Hose
 1D6B4F Kelp Bed
 0C5A45 Lagoon Depths
 0A4B3C Bottle Glass
 0E3B33 Pondweed
-0B2B26 Forest Floor
+0B2B26 Pine Thicket
 1B5E4B Spruce Shadow
-2F6F5E Eucalyptus Bark
 4E8A78 Verdigris
 6FA593 Weathered Copper
 86B5A5 Patina
 A3C6B8 Oxidized Dome
-7BA89B Sea Foam
+7BA89B Weeping Willow
 5B9A8B Tidal Pool
 3A8A7E Lagoon Edge
 2A7F7A Peacock Tail
@@ -444,13 +388,12 @@ C9F0EA Mint Frost
 50B5B8 Surf Wash
 2D9CA0 Plunge Pool
 087F8C Peacock Feather
-0A6970 Murky Lagoon
 0B4F55 Reef Shadow
 0C3E45 Abyss
 06323A Harbor Night
 D6EAF5 Morning Frost
 C8E1F2 Ice Pond
-B8D9EE Robin Egg
+B8D9EE Hydrangea Petal
 A6CFE8 Clear Sky
 8EC3E6 Summer Sky
 74B3E0 Kite Sky
@@ -459,7 +402,7 @@ A6CFE8 Clear Sky
 2A83CC Bluebird
 1C75BC Denim Jacket
 1A5FA8 Harbor Blue
-1D4F91 Diving Bell
+1D4F91 Fjord
 163F7A Sailor Stripe
 123163 Navy Peacoat
 0E2A55 Midnight Harbor
@@ -499,14 +442,14 @@ B4C7D6 Morning Haze
 3A34E8 Neon Indigo
 2C1FD6 Lapis Lazuli
 1B14B8 Sapphire Night
-221A9A Violet Dusk
+221A9A Indigo Vat
 2A2078 Velvet Ink
 2A2569 Pansy Night
 383083 Grape Hyacinth
 4A3F9A Iris Garden
 5E54B0 Wisteria Vine
 746CC4 Periwinkle
-8F89D3 Lilac Haze
+8F89D3 Bellflower
 A9A4DE Lavender Fields
 BDB8E6 Lavender Milk
 D2CEF0 Lilac Whisper
@@ -515,9 +458,9 @@ CFC3E8 Orchid Whisper
 B9A8DC Lilac Bush
 A18CCB Amethyst Geode
 8C74BE Grape Soda
-7A5FB0 Concord Grape
-694AA0 Plum Jam
-583A8C Aubergine
+7A5FB0 Crocus
+694AA0 Clematis
+583A8C Violet Hour
 4B2E7B Plum Velvet
 3D2468 Grape Jelly
 2E1A52 Night Plum
@@ -526,8 +469,8 @@ A18CCB Amethyst Geode
 3B1E5F Wine Grape
 522A76 Damson
 6A3A8A Heliotrope
-7C4B99 Fig Jam
-8E5CA8 Plum Blossom
+7C4B99 Wild Aster
+8E5CA8 Lupine
 A275BA Sweet Violet
 B890CC Orchid Bloom
 CBA9DC Lavender Sorbet
@@ -541,7 +484,7 @@ B09DBB Faded Lavender
 C5B7CE Foggy Lilac
 D5CCDB Mauve Smoke
 4A3A55 Smoky Plum
-372A44 Crow Feather
+372A44 Blackberry
 5D2A5E Elderberry
 7A2F6E Boysenberry
 9B3A86 Dragon Fruit
@@ -549,25 +492,23 @@ B8479C Fuchsia Bloom
 D45FB0 Orchid Pop
 E87AC4 Cyclamen
 F28DCE Bubblegum Orchid
-D6339A Camera Flash
+D6339A Azalea
 BE1E8C Electric Berry
 A0157A Raspberry Crush
 8A1068 Berry Compote
 6E0F55 Loganberry
 6A1B4D Mulberry
-010102 Event Horizon
+000000 Event Horizon
 02030A Deep Space
 04040A Inkpot
 030303 Cavern
-050403 Hollow Log
-070606 Coal Mine
 6E1BC1 Amethyst Crystal
 7B2FD6 Ultraviolet
 9550EA Phlox Bloom
 8A3FE0 Violet Flare
 A15CEE Petunia Bed
 5715E4 Electric Violet
-5441F5 Blue Raspberry
+5441F5 Iris Petal
 5B6CF0 Bluebell Wood
 7A2DEA Grape Gumball
 0F0AA8 Cobalt Night
@@ -580,7 +521,7 @@ F544AC Lollipop Swirl
 E488F5 Orchid Candy
 F571EA Bubble Orchid
 C168DF Wild Orchid
-1A8EF1 Swimming Hole
+1A8EF1 Azure Coast
 00A9F4 Lagoon Glow
 6CF238 Neon Lime
 4BEF74 Gumdrop
@@ -599,9 +540,8 @@ B16AFA Laser Lavender
 790DB6 Violet Storm
 3EF22D Lime Slushie
 37E447 Tree Frog
-33F5B0 Spearmint Fizz
 5F71FB Hyacinth Bloom
-FB2BF0 Pop Art
+FB2BF0 Glow Stick
 C61AE6 Cattleya Orchid
 C52DE5 Moth Orchid
 EFA066 Last Light
@@ -647,8 +587,7 @@ EFB2C8 Lotus Bloom
 4E5226 Bog Myrtle
 565A2C Moss Rock
 7C8434 Split Pea
-5C6B2E Hop Vine
-3B3A19 Pine Tar
+3B3A19 Tapenade
 80536D Berry Smoke
 4B190C Dried Chili
 7A2410 Rooibos Tea
@@ -656,5 +595,68 @@ EFB2C8 Lotus Bloom
 1F0B06 Roasted Cacao
 B59B22 Ochre Wall
 797A3D Fennel Seed
+472C4C Aubergine
+8E5A68 Fig Jam
+B0717F Dried Rose
+B5807F Tea Rose
+7B3F4A Mulled Wine
+9E4A5E Hibiscus Tea
+B8738A Pink Peppercorn
+A57B93 Heather Hill
+BC8584 Desert Rose
+A0736F Rooibos Latte
+E8696B Grapefruit
+C75B57 Guava Paste
+4F0D0B Oxblood
+3A1109 Molasses
+85692A Cumin Seed
+73591B Tarnished Brass
+B48A1E Honey Mustard
+444A20 Pond Moss
+33461B Laurel Hedge
+263214 Bramble
+84C463 Snap Pea
+9FC67F Green Grape
+B7BC7E Lemongrass
+DFF23E Tennis Ball
+FCFAC6 Lemon Sorbet
+62959A Agave
+5E8597 Blue Spruce
+3D6A86 Rainy Harbor
+719391 Eucalyptus Sprig
+5E7F6C Hosta
+566854 Mossy Stone
+B4AEAD Pumice
+C4B3B2 Cameo Brooch
+403D33 Bog Oak
+302A25 Burnt Cork
+AD5D55 Roof Tile
+8A5650 Cherrywood
+7A5752 Pecan Shell
+A1280F Cayenne
+C0AE48 Quince
+A99A44 Green Olive
+C8BA66 Pear Cider
+979D1A Gooseberry
+5E4720 Malt Vinegar
+94700F Brass Knocker
+8F763C Wicker Basket
+E5AE8D Apricot Cream
+C98466 Baked Clay
+FBA57A Melon Slice
+B496A8 Mallow
+657463 Bay Leaf
+4C7B84 Dragonfly
+E3C7C6 Pink Salt
+978959 Canvas Tent
+6B8698 Juniper Berry
+74180C Sumac
+D7CF7F Elderflower
+C3BD9F Oyster Mushroom
+51523C Dried Moss
+CB6245 Clay Court
+58242E Port Wine
+352D12 Potting Soil
+52393A Cocoa Nib
 """
 }
