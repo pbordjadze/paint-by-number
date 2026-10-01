@@ -36,6 +36,7 @@ struct PaintView: View {
     @Environment(\.sourcePhotoLoader) private var photoLoader
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
@@ -92,7 +93,8 @@ struct PaintView: View {
             PaintCanvas(
                 session: session, controller: controller,
                 chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
-                showsNumbers: showsNumbers, initialCamera: initialCamera, fillDurationScale: fillDurationScale,
+                showsNumbers: showsNumbers, paperAppearance: paperAppearance,
+                initialCamera: initialCamera, fillDurationScale: fillDurationScale,
                 onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true },
                 photoLoader: photoLoader, showsPhoto: peek.isShown,
                 onPhotoUnavailable: {

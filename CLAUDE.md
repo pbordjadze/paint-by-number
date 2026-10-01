@@ -97,6 +97,15 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `RenderContext.makePhotoTexture`), so it tracks zoom and pan exactly. Canvas touches hide a
   latched photo instead of painting. Launched with `-tracePhotoPeek YES`, the control's
   accessibility identifier lists its values so UI tests can check a hold.
+- Paper: Settings › Paper (`PaperAppearance`: light, dark, automatic; `SettingsKey.paperAppearance`)
+  reaches `CanvasView.paperAppearance`, which resolves a `CanvasPalette` (`.light`, `.dark` = light
+  paper on a dark backdrop, `.darkPaper`) from it and the trait collection every frame, and redraws
+  on a trait change. The chrome colors are uniforms (`CanvasUniforms.paper/ink/rim/accent`, set by
+  `setChrome`/`select`), so the shaders have one path and no paper, ink or accent literals (the
+  brush and the paint sheen keep theirs). `accent` is the selected paint lifted until it reads on
+  the paper (`CanvasPalette.accent(for:)`; the paint itself on light paper). Exports, thumbnails and
+  the time-lapse stay on light paper (`CanvasSnapshot.Options.palette`). `-tracePaper YES` makes the
+  canvas's accessibility identifier `canvas-paper-light|dark`; demo scenario `paint-dark-paper`.
 - Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
   and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
   Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the

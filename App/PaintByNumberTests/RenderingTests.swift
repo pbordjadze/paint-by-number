@@ -308,6 +308,24 @@ struct PreferencesTests {
         #expect(!session.autoAdvance)
     }
 
+    /// The Paper preference defaults to light, round-trips its raw values, and ignores
+    /// anything it doesn't know.
+    @Test func paperAppearanceDefaultsAndParses() throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        #expect(Preferences(defaults: defaults).paperAppearance == .light)
+        for appearance in PaperAppearance.allCases {
+            defaults.set(appearance.rawValue, forKey: SettingsKey.paperAppearance)
+            #expect(Preferences(defaults: defaults).paperAppearance == appearance)
+        }
+        defaults.set("sepia", forKey: SettingsKey.paperAppearance)
+        #expect(Preferences(defaults: defaults).paperAppearance == .light)
+        #expect(SettingsKey.paperAppearance == "paperAppearance")
+        #expect(Set(PaperAppearance.allCases.map(\.rawValue)) == ["light", "dark", "automatic"])
+    }
+
     @Test func createModelMapsSliders() {
         let model = CreateModel(initial: GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
         #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))

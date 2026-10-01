@@ -729,6 +729,10 @@
       "comment" : "Status shown while the template is first generated from the photo",
       "extractionState" : "manual"
     },
+    "Dark paper is easier on the eyes in a dark room." : {
+      "comment" : "Footer under the Paper picker in Settings",
+      "extractionState" : "manual"
+    },
     "Delete" : {
       "comment" : "Context menu item that deletes a painting from the gallery",
       "extractionState" : "manual"
@@ -1776,6 +1780,46 @@
     "Painting" : {
       "comment" : "Name of the painted layer in the create flow's picker and comparison caption; also the fallback title of a painting without one",
       "extractionState" : "manual"
+    },
+    "Paper" : {
+      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
+      "extractionState" : "manual"
+    },
+    "paper.automatic" : {
+      "comment" : "Choice of the Paper setting: the painting canvas uses dark paper when the device is in dark appearance",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic"
+          }
+        }
+      }
+    },
+    "paper.dark" : {
+      "comment" : "Choice of the Paper setting: the painting canvas is always dark paper",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark"
+          }
+        }
+      }
+    },
+    "paper.light" : {
+      "comment" : "Choice of the Paper setting: the painting canvas is always light paper",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light"
+          }
+        }
+      }
     },
     "pdf.key.detail" : {
       "comment" : "Second line of a color key entry; the arguments are the color's hex code and its number of areas",

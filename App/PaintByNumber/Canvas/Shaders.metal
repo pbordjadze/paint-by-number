@@ -13,6 +13,8 @@ struct FrameUniforms {
     float4 paper;       // rgb: unpainted paper, a: drop shadow opacity
     float4 ink;         // rgb: outline and number ink, a: outline opacity
     float4 selected;    // rgb: selected paint, a: 1 when a color is selected
+    float4 accent;      // rgb: selected paint lifted to read on this paper, a: brightest hatch ink luminance
+    float4 rim;         // rgb: rim just outside the sheet, a: its opacity (0 = none)
     float4 outline;     // x: width (px), y: selected width (px), z: hatch strength, w: numbers visibility
     float4 labels;      // x…y: legibility fade (font px), z: max font px, w: min font px of a bumped number
     float4 numbers;     // x: number opacity, y: selected-color number opacity, z: selected boldness, w: reduce motion
@@ -105,12 +107,12 @@ static float3 wetPaint(float3 paint, PaintSample ps) {
 /// Unpainted regions of the selected color: a light tint of the paint plus fine diagonal
 /// hatching in screen space that glides in when the color is picked, then rests.
 static float3 highlightPaper(float3 paper, float2 pt, constant FrameUniforms &u) {
-    float3 sel = u.selected.rgb;
+    float3 sel = u.accent.rgb;
     float since = max(u.time.x - u.time.y, 0.0);
     float intro = exp(-since * 2.5);
     float phase = 6.0 * (1.0 - exp(-since * 1.8));
     float lum = dot(sel, float3(0.2126, 0.7152, 0.0722));
-    float3 ink = lum > 0.4 ? sel * (0.4 / lum) : sel;
+    float3 ink = lum > u.accent.a ? sel * (u.accent.a / lum) : sel;
     float3 tint = mix(paper, sel, 0.14 + 0.12 * intro);
     const float period = 6.0;                       // points
     float w = (pt.x + pt.y) * 0.70710678 + phase;
@@ -165,7 +167,10 @@ fragment float4 paperFragment(RectOut in [[stage_in]], constant FrameUniforms &u
     float contact = 1.0 - smoothstep(-0.5 * pt, 2.5 * pt, boxDistance(p, center + float2(0.0, 0.75 * pt), halfSize));
     float shadow = u.paper.a * (0.6 * a * a + 0.4 * contact);
     float alpha = paper + (1.0 - paper) * shadow;
-    return float4(u.paper.rgb * paper, alpha);      // premultiplied; the shadow is black
+    // Dark paper has no visible shadow: a one-pixel light rim outside the edge outlines it.
+    float rim = u.rim.a * saturate(1.0 - abs(sd - 1.0)) * (1.0 - paper);
+    // Premultiplied; the shadow is black.
+    return float4(u.paper.rgb * paper + u.rim.rgb * rim, alpha + (1.0 - alpha) * rim);
 }
 
 // MARK: - Fills
@@ -204,10 +209,10 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
         base = highlightPaper(base, in.position.xy / u.transform.w, u);
     }
     if (int(r) == u.ids.y) {
-        base = mix(base, u.selected.rgb, 0.3);
+        base = mix(base, u.accent.rgb, 0.3);
     }
     if (int(r) == u.ids.z) {
-        base = mix(base, u.selected.rgb, 0.6 * pulse(now - u.time.z, u.numbers.w > 0.5));
+        base = mix(base, u.accent.rgb, 0.6 * pulse(now - u.time.z, u.numbers.w > 0.5));
     }
     float3 paint = wetPaint(info.rgb, ps);
     // A color (or the whole painting) was just finished: a glossy band sweeps across it.
