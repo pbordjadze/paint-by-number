@@ -4,9 +4,14 @@ import Foundation
 import PaintCore
 import simd
 
-/// Printable template: page 1 is the outline template with numbers (vector, crisp at any
-/// zoom), page 2 the color key (number, paint and name of every color) plus a small reference
-/// of the finished picture.
+/// Printable template: the outline template with numbers (vector, crisp at any zoom), then the
+/// color key (number, paint and name of every color) plus a small reference of the finished
+/// picture.
+///
+/// Numbers keep to their regions' room at every scale (`LabelSizing`), so a detailed
+/// template fitted to one page would print its smallest numbers at about 1 pt. Such a
+/// template is printed on several overlapping sheets instead (`Sheets`), after an overview
+/// page showing how they fit together.
 nonisolated enum PDFExporter {
     enum Paper: String, Sendable, CaseIterable, Identifiable {
         case letter, a4
@@ -35,25 +40,128 @@ nonisolated enum PDFExporter {
         }
     }
 
+    /// Smallest number printed (points); smaller digits blur into specks on paper.
+    static let minimumNumberSize: CGFloat = 2.6
+    /// How far neighbouring sheets overlap (points), room to tape them together. Numbers on
+    /// sheets are at most this wide, so each one is whole on at least one sheet.
+    static let sheetOverlap: CGFloat = 18
+
+    /// How the template is printed: on one page when its smallest number comes out at
+    /// `minimumNumberSize` or larger there, otherwise on a grid of overlapping sheets at a
+    /// scale that makes it so (a 150-color detail-1 template takes about four).
+    struct Sheets: Equatable, Sendable {
+        /// Points per canvas unit.
+        var scale: CGFloat
+        var columns: Int
+        var rows: Int
+        /// The largest part of the template one page shows (points): the page body.
+        var body: CGSize
+        /// The whole template at `scale` (points).
+        var printed: CGSize
+
+        var count: Int { columns * rows }
+        var isTiled: Bool { count > 1 }
+
+        /// The part of the printed template (points, origin top-left) sheet (`column`, `row`)
+        /// shows; neighbours share `sheetOverlap`.
+        func window(column: Int, row: Int) -> CGRect {
+            let x = CGFloat(column) * (body.width - PDFExporter.sheetOverlap)
+            let y = CGFloat(row) * (body.height - PDFExporter.sheetOverlap)
+            return CGRect(x: x, y: y, width: min(body.width, printed.width - x), height: min(body.height, printed.height - y))
+        }
+    }
+
+    static func sheets(for t: Template, paper: Paper) -> Sheets {
+        let body = bodyRect(pageBox(for: t, paper: paper)).size
+        let width = CGFloat(max(t.width, 1)), height = CGFloat(max(t.height, 1))
+        func make(scale: CGFloat, columns: Int, rows: Int) -> Sheets {
+            Sheets(scale: scale, columns: columns, rows: rows, body: body, printed: CGSize(width: width * scale, height: height * scale))
+        }
+        let fitted = min(body.width / width, body.height / height)
+        guard let smallest = smallestNumberSize(t), fitted * smallest < minimumNumberSize else {
+            return make(scale: fitted, columns: 1, rows: 1)
+        }
+        let needed = minimumNumberSize / smallest
+        // n sheets with overlap o cover n·(w − o) + o.
+        func count(_ extent: CGFloat, _ window: CGFloat) -> Int {
+            max(1, Int(((extent * needed - sheetOverlap) / (window - sheetOverlap)).rounded(.up)))
+        }
+        let columns = count(width, body.width), rows = count(height, body.height)
+        // Fill the grid: the scale only grows past `needed`, and no row or column is left empty.
+        let scale = min(
+            (CGFloat(columns) * (body.width - sheetOverlap) + sheetOverlap) / width,
+            (CGFloat(rows) * (body.height - sheetOverlap) + sheetOverlap) / height)
+        return make(scale: scale, columns: columns, rows: rows)
+    }
+
+    /// Size (canvas units) of the smallest number `TemplateRasterizer` prints, or nil
+    /// without labels.
+    static func smallestNumberSize(_ t: Template) -> CGFloat? {
+        let maximum = Float(TemplateRasterizer.Style.printable.maximumNumberFraction) * Float(max(t.width, t.height))
+        var smallest: Float?
+        for label in t.labels where Int(label.region) < t.regions.count {
+            let digits = LabelSizing.digitCount(colorIndex: t.regions[Int(label.region)].colorIndex)
+            let size = LabelSizing.fontSize(radius: label.radius, digits: digits, maximum: maximum)
+            smallest = min(smallest ?? size, size)
+        }
+        return smallest.map { CGFloat($0) }
+    }
+
     static func document(for t: Template, title: String, paper: Paper = .default(for: Locale.current.region)) -> Data {
         let data = NSMutableData()
-        let landscape = t.width > t.height
-        var box = CGRect(origin: .zero, size: landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size)
+        var box = pageBox(for: t, paper: paper)
         let info: [CFString: Any] = [kCGPDFContextTitle: title, kCGPDFContextCreator: "Paint by Numbers"]
         guard let consumer = CGDataConsumer(data: data as CFMutableData),
               let ctx = CGContext(consumer: consumer, mediaBox: &box, info as CFDictionary)
         else { return Data() }
 
         let stats = "\(t.palette.count) colors · \(t.regions.count.formatted()) areas"
-        page(ctx, box) { content in
-            let body = header(ctx, in: content, title: title, detail: stats)
-            let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
-            TemplateRasterizer.draw(
-                t, painted: nil, style: .printable, in: ctx, rect: rect,
-                rasterResolution: CGSize(width: t.width * 2, height: t.height * 2))
-            ctx.setStrokeColor(gray(0.75))
-            ctx.setLineWidth(0.5)
-            ctx.stroke(rect)
+        let rasterResolution = CGSize(width: t.width * 2, height: t.height * 2)
+        let sheets = Self.sheets(for: t, paper: paper)
+        if sheets.isTiled {
+            page(ctx, box) { content in
+                let body = header(ctx, in: content, title: title, detail: "\(stats) · \(sheets.count) sheets")
+                let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
+                // A map for putting the sheets together; the numbers are on the sheets.
+                var overview = TemplateRasterizer.Style.printable
+                overview.numbers = false
+                TemplateRasterizer.draw(t, painted: nil, style: overview, in: ctx, rect: rect, rasterResolution: rasterResolution)
+                sheetGrid(ctx, sheets, in: rect)
+            }
+            // Numbers no wider than the overlap: each is whole on some sheet.
+            var style = TemplateRasterizer.Style.printable
+            let widest = CGFloat(LabelSizing.digitCount(of: t.palette.count)) * CGFloat(LabelSizing.digitAdvance)
+            style.maximumNumberFraction = min(
+                style.maximumNumberFraction, sheetOverlap / (widest * sheets.scale * CGFloat(max(t.width, t.height))))
+            for row in 0..<sheets.rows {
+                for column in 0..<sheets.columns {
+                    let window = sheets.window(column: column, row: row)
+                    let detail = "Sheet \(row * sheets.columns + column + 1) of \(sheets.count) · row \(row + 1), column \(column + 1)"
+                    page(ctx, box) { content in
+                        let body = header(ctx, in: content, title: title, detail: detail)
+                        let visible = CGRect(origin: body.origin, size: window.size)
+                        let whole = CGRect(
+                            x: body.minX - window.minX, y: body.minY - window.minY,
+                            width: sheets.printed.width, height: sheets.printed.height)
+                        ctx.saveGState()
+                        ctx.clip(to: visible)
+                        TemplateRasterizer.draw(t, painted: nil, style: style, in: ctx, rect: whole, rasterResolution: rasterResolution)
+                        ctx.restoreGState()
+                        ctx.setStrokeColor(gray(0.75))
+                        ctx.setLineWidth(0.5)
+                        ctx.stroke(visible)
+                    }
+                }
+            }
+        } else {
+            page(ctx, box) { content in
+                let body = header(ctx, in: content, title: title, detail: stats)
+                let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
+                TemplateRasterizer.draw(t, painted: nil, style: .printable, in: ctx, rect: rect, rasterResolution: rasterResolution)
+                ctx.setStrokeColor(gray(0.75))
+                ctx.setLineWidth(0.5)
+                ctx.stroke(rect)
+            }
         }
         page(ctx, box) { content in
             let body = header(ctx, in: content, title: "Color Key", detail: title)
@@ -75,6 +183,22 @@ nonisolated enum PDFExporter {
     // MARK: Layout
 
     private static let margin: CGFloat = 36
+    private static let headerHeight: CGFloat = 36
+
+    /// The page, turned to landscape for wide templates.
+    private static func pageBox(for t: Template, paper: Paper) -> CGRect {
+        let landscape = t.width > t.height
+        return CGRect(origin: .zero, size: landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size)
+    }
+
+    /// The part of a page below its header, in page coordinates.
+    private static func bodyRect(_ box: CGRect) -> CGRect {
+        body(of: box.insetBy(dx: margin, dy: margin))
+    }
+
+    private static func body(of content: CGRect) -> CGRect {
+        CGRect(x: content.minX, y: content.minY + headerHeight, width: content.width, height: content.height - headerHeight)
+    }
 
     /// Runs `body` for one page with a y-down user space and the content rect inside margins.
     private static func page(_ ctx: CGContext, _ box: CGRect, _ body: (CGRect) -> Void) {
@@ -98,7 +222,28 @@ nonisolated enum PDFExporter {
         ctx.move(to: CGPoint(x: content.minX, y: content.minY + 24))
         ctx.addLine(to: CGPoint(x: content.maxX, y: content.minY + 24))
         ctx.strokePath()
-        return CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
+        return body(of: content)
+    }
+
+    /// Outlines each sheet's part of the template on the overview `rect`, with its number.
+    private static func sheetGrid(_ ctx: CGContext, _ sheets: Sheets, in rect: CGRect) {
+        let factor = rect.width / sheets.printed.width
+        ctx.setStrokeColor(gray(0.3, alpha: 0.8))
+        ctx.setLineWidth(0.75)
+        ctx.stroke(rect)
+        for row in 0..<sheets.rows {
+            for column in 0..<sheets.columns {
+                let window = sheets.window(column: column, row: row)
+                let frame = CGRect(
+                    x: rect.minX + window.minX * factor, y: rect.minY + window.minY * factor,
+                    width: window.width * factor, height: window.height * factor)
+                ctx.setStrokeColor(gray(0.3, alpha: 0.8))
+                ctx.stroke(frame.insetBy(dx: 1, dy: 1))
+                let size = min(28, frame.height * 0.3)
+                text(ctx, "\(row * sheets.columns + column + 1)", font: font(.emphasizedSystem, size), color: gray(0.3, alpha: 0.8),
+                     at: CGPoint(x: frame.midX, y: frame.midY + size * 0.35), alignment: .center)
+            }
+        }
     }
 
     /// How the color key's entries are laid out: `rows` per column, filled column by column.
@@ -177,7 +322,7 @@ nonisolated enum PDFExporter {
 
     // MARK: Text & color
 
-    private enum Alignment { case left, right }
+    private enum Alignment { case left, center, right }
 
     private static func font(_ type: CTFontUIFontType, _ size: CGFloat) -> CTFont {
         CTFontCreateUIFontForLanguage(type, size, nil) ?? CTFontCreateWithName("Helvetica" as CFString, size, nil)
@@ -213,7 +358,11 @@ nonisolated enum PDFExporter {
             run = truncated
             runWidth = CGFloat(CTLineGetTypographicBounds(run, nil, nil, nil))
         }
-        let x = alignment == .right ? point.x - runWidth : point.x
+        let x: CGFloat = switch alignment {
+        case .left: point.x
+        case .center: point.x - runWidth / 2
+        case .right: point.x - runWidth
+        }
         ctx.saveGState()
         ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         ctx.textPosition = CGPoint(x: x, y: point.y)

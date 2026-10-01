@@ -123,7 +123,8 @@ nonisolated struct PaintingImageFile: Transferable, Sendable {
     }
 }
 
-/// "Printable Template": a two-page PDF rendered when the share sheet asks for it.
+/// "Printable Template": a PDF (the template, on several sheets when it is detailed, then the
+/// color key) rendered when the share sheet asks for it.
 nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     let store: ArtworkStore
     let artwork: Artwork
