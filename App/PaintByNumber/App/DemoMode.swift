@@ -5,7 +5,9 @@ import Foundation
 ///
 ///     xcrun simctl launch <udid> com.pbordjadze.paintbynumber -demo paint-progress
 ///
-/// Scenario names are owned by the features that render them (see `RootView`).
+/// Scenario names are owned by the features that render them (see `RootView`). Scenarios named
+/// `*-long-text` are launched with `-NSDoubleLocalizedStrings YES` as well (`ci/screenshots.sh`):
+/// every localized string comes out twice as long, standing in for long translations.
 ///
 /// Debug builds only (CI screenshots and UI tests): the demo types are compiled out of Release
 /// builds, so a shipped app has no launch argument that swaps its content or library.

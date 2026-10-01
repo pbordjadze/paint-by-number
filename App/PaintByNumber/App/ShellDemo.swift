@@ -14,13 +14,18 @@ import Foundation
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
+/// - `gallery-long-text`, `settings-long-text`: `gallery` (with a deletion, so its Undo toast is up)
+///   and `settings` with every localized string twice as long: `ci/screenshots.sh` adds
+///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
+///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
-    case gallery, galleryEmpty, galleryOpen, galleryDamaged, galleryTimelapse, create, createSamples, createPreview,
-         settings, settingsAcknowledgements
+    case gallery, galleryLongText, galleryEmpty, galleryOpen, galleryDamaged, galleryTimelapse, create, createSamples,
+         createPreview, settings, settingsLongText, settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
         case "gallery", "gallery-dark": .gallery
+        case "gallery-long-text": .galleryLongText
         case "gallery-empty": .galleryEmpty
         case "gallery-open": .galleryOpen
         case "gallery-damaged": .galleryDamaged
@@ -29,6 +34,7 @@ enum ShellDemo: Equatable {
         case "create-samples": .createSamples
         case "create-preview", "create-preview-dark": .createPreview
         case "settings": .settings
+        case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
         default: nil
         }
@@ -36,7 +42,7 @@ enum ShellDemo: Equatable {
 
     var opensCreateFlow: Bool { self == .create || self == .createSamples || self == .createPreview }
 
-    var opensSettings: Bool { self == .settings || self == .settingsAcknowledgements }
+    var opensSettings: Bool { self == .settings || self == .settingsLongText || self == .settingsAcknowledgements }
 
     var previewSample: Sample? { self == .createPreview ? Sample.named("parrots") : nil }
 
@@ -49,13 +55,13 @@ enum ShellDemo: Equatable {
     func prepare(_ library: Library) {
         switch self {
         case .gallery:
-            let hour: TimeInterval = 3600
-            let items: [(Int, Double, TimeInterval)] = [
-                (0, 0.42, 1), (2, 0.68, 3), (3, 0.12, 26), (4, 0, 50), (1, 1, 5), (5, 1, 80),
-            ]
-            library.seed(items.map { sample, painted, hours in
-                Library.SeedItem(sample: Sample.all[sample], painted: painted, age: hours * hour, photoMaxPixelSize: 560)
-            }, completion: { _ in DemoMode.markReady() })
+            library.seed(Self.galleryItems, completion: { _ in DemoMode.markReady() })
+        case .galleryLongText:
+            library.seed(Self.galleryItems, completion: { _ in
+                // The newest deletion keeps its Undo toast up for `Library.undoWindow`, well past the screenshot.
+                if let id = library.finished.last?.id { library.delete(id) }
+                DemoMode.markReady()
+            })
         case .galleryOpen:
             library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .galleryDamaged:
@@ -68,8 +74,20 @@ enum ShellDemo: Equatable {
             }
         case .galleryTimelapse:
             library.seed([Library.SeedItem(sample: Sample.all[1], painted: 1, photoMaxPixelSize: 560)])
-        case .create, .createSamples, .createPreview, .galleryEmpty, .settings, .settingsAcknowledgements:
+        case .create, .createSamples, .createPreview, .galleryEmpty, .settings, .settingsLongText,
+             .settingsAcknowledgements:
             break
+        }
+    }
+
+    /// Six paintings at various stages: four in progress, two finished.
+    private static var galleryItems: [Library.SeedItem] {
+        let hour: TimeInterval = 3600
+        let items: [(Int, Double, TimeInterval)] = [
+            (0, 0.42, 1), (2, 0.68, 3), (3, 0.12, 26), (4, 0, 50), (1, 1, 5), (5, 1, 80),
+        ]
+        return items.map { sample, painted, hours in
+            Library.SeedItem(sample: Sample.all[sample], painted: painted, age: hours * hour, photoMaxPixelSize: 560)
         }
     }
 

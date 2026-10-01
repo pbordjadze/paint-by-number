@@ -291,8 +291,11 @@ struct Toast<Trailing: View>: View {
         HStack(spacing: 12) {
             Image(systemName: systemImage)
                 .foregroundStyle(.secondary)
+            // The action keeps its label however long the message is: the message gets what is left.
             Text(text)
-                .lineLimit(2)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .layoutPriority(-1)
             trailing
         }
         .font(.subheadline.weight(.medium))

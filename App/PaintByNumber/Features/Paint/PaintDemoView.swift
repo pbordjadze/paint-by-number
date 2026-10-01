@@ -23,6 +23,10 @@ import simd
 /// Photo-based scenarios have the photo loader, so the top bar is the one users see.
 /// - `paint-ax`: `paint-progress`, showing the selected color's name
 /// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
+/// - `paint-long-text`, `paint-complete-long-text`: `paint-progress` and `paint-complete` with a long
+///   title and every localized string twice as long (`ci/screenshots.sh` adds
+///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette
+///   caption and completion bar as translations would stress them
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -56,9 +60,11 @@ struct PaintDemoView: View {
             let base = synthetic ? String(scenario.dropLast("-mosaic".count)) : scenario
             var template: Template?
             if !synthetic { template = await Self.template(photo: "parrots") }
+            // Titles are the person's own words, which pseudo-localization doesn't lengthen.
+            let title = base.hasSuffix("-long-text")
+                ? "Two Parrots on a Branch in the Morning Light" : (template == nil ? "Mosaic" : "Parrots")
             demo = Demo(
-                scenario: base, template: template ?? SyntheticTemplate.make(), title: template == nil ? "Mosaic" : "Parrots",
-                isSynthetic: template == nil)
+                scenario: base, template: template ?? SyntheticTemplate.make(), title: title, isSynthetic: template == nil)
         }
     }
 
@@ -111,7 +117,7 @@ private final class Demo {
         }
 
         switch scenario {
-        case "paint-progress", "paint-dark", "paint-ax":
+        case "paint-progress", "paint-dark", "paint-ax", "paint-long-text":
             paint(fraction: 0.55)
         case "paint-ax-large":
             paint(fraction: 0.55)
@@ -126,7 +132,7 @@ private final class Demo {
             }
             let target = candidates.min { simd_distance(Self.center(t, $0), middle) < simd_distance(Self.center(t, $1), middle) }
             camera = CanvasCamera(zoom: 4, center: target.map { Self.center(t, $0) } ?? middle)
-        case "paint-complete":
+        case "paint-complete", "paint-complete-long-text":
             paint(fraction: 1)
         case "paint-replay":
             paint(fraction: 1)

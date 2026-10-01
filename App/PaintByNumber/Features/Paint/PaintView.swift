@@ -239,7 +239,9 @@ struct PaintView: View {
     }
 
     /// Progress, the title when it fits whole, and on regular widths the selected color's
-    /// name (compact widths show it above the palette instead).
+    /// name (compact widths show it above the palette instead). The name outranks the
+    /// percentage: when a long (translated) name doesn't fit beside the percentage, the last
+    /// variant keeps the ring and lets the name shrink to the room left.
     private var progressBadge: some View {
         let fraction = session.fractionComplete
         let showsColor = sizeClass == .regular && session.selectedColor != nil
@@ -247,17 +249,19 @@ struct PaintView: View {
             if showsColor {
                 if !title.isEmpty { badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: true) }
                 badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: true)
-                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: false, showsColor: true)
-            } else if !title.isEmpty {
-                badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: false)
+                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: false, showsColor: true, shrinksColor: true)
+            } else {
+                if !title.isEmpty { badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: false) }
+                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: false)
             }
-            badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: false)
         }
         .frame(height: Self.barHeight)
         .glassEffect(.regular, in: .capsule)
     }
 
-    private func badgeVariant(fraction: Double, showsTitle: Bool, showsPercent: Bool, showsColor: Bool) -> some View {
+    private func badgeVariant(
+        fraction: Double, showsTitle: Bool, showsPercent: Bool, showsColor: Bool, shrinksColor: Bool = false
+    ) -> some View {
         HStack(spacing: 10) {
             progressGroup(fraction: fraction, showsTitle: showsTitle, showsPercent: showsPercent)
             if showsColor {
@@ -265,8 +269,12 @@ struct PaintView: View {
                     .fill(Color.primary.opacity(0.15))
                     .frame(width: 1, height: 18)
                     .accessibilityHidden(true)
-                CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
-                    .fixedSize()
+                if shrinksColor {
+                    CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
+                } else {
+                    CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
+                        .fixedSize()
+                }
             }
         }
         .padding(.horizontal, 14)
@@ -466,8 +474,9 @@ private struct CompletionBar: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             }
-            // The buttons keep their size on a phone; the caption truncates instead.
+            // The buttons keep their size on a phone; the caption shrinks, then truncates.
             .lineLimit(1)
+            .minimumScaleFactor(0.7)
             Spacer(minLength: 0)
             Button(action: onReplay) {
                 GlassIconLabel(systemImage: "play.fill")

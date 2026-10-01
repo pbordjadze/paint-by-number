@@ -198,7 +198,8 @@ struct CurrentColorLabel: View {
                 Text(ColorNameText.numbered(number: color + 1, name: name))
                     .font(font)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    // Translated names can run long; the caption's height is fixed.
+                    .minimumScaleFactor(0.5)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(String(localized: "paint.currentColor", defaultValue: "Current color",

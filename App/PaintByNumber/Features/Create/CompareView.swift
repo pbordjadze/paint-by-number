@@ -124,6 +124,8 @@ struct CompareView: View {
     private func caption(_ text: String) -> some View {
         Text(text)
             .font(.rounded(.caption, weight: .semibold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
