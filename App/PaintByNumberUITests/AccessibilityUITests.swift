@@ -75,8 +75,11 @@ final class AccessibilityUITests: XCTestCase {
     @MainActor
     func testPlainDetailsHaveNoNameRow() throws {
         let app = launch(["-demo", "paint-names-plain"])
-        let swatch = app.buttons["swatch-1"]
-        XCTAssertTrue(swatch.waitForExistence(timeout: 10))
+        // Finished colors leave the palette: press one that is still on screen.
+        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'"))
+        XCTAssertTrue(swatches.firstMatch.waitForExistence(timeout: 10))
+        let window = app.windows.firstMatch.frame
+        let swatch = try XCTUnwrap(swatches.allElementsBoundByIndex.first { window.contains($0.frame) })
         swatch.press(forDuration: 1)
         XCTAssertTrue(app.descendants(matching: .any)["swatch-details"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.descendants(matching: .any)["swatch-details-name"].exists, "Plain names show a nickname")

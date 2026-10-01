@@ -215,6 +215,8 @@ private struct SwatchDetails: View {
         .padding(16)
         .frame(minWidth: 240)
         .fixedSize(horizontal: false, vertical: true)
+        // A container of its own: on a plain stack the identifier would replace each row's.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("swatch-details")
     }
 

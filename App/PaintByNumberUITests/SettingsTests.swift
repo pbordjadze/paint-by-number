@@ -63,20 +63,27 @@ final class SettingsTests: XCTestCase {
         let picker = app.descendants(matching: .any)["settings-color-names"]
         scroll(app, to: picker)
         XCTAssertTrue(picker.exists, "Settings has no Color Names row")
-        XCTAssertEqual(picker.value as? String, "Playful")
+        XCTAssertTrue(shows(picker, "Playful"), "Color Names doesn't start on Playful: \(describe(picker))")
         picker.tap()
         let plain = app.buttons["Plain"]
         XCTAssertTrue(plain.waitForExistence(timeout: 10), "The picker has no Plain option")
         XCTAssertTrue(app.buttons["Playful"].exists, "The picker has no Playful option")
         plain.tap()
-        XCTAssertEqual(picker.value as? String, "Plain")
+        XCTAssertTrue(shows(picker, "Plain"), "Choosing Plain didn't change the picker: \(describe(picker))")
         attachScreenshot(of: app, named: "settings-color-names")
         // The choice is stored in the simulator's defaults: put it back for the other tests.
         picker.tap()
         let playful = app.buttons["Playful"]
         XCTAssertTrue(playful.waitForExistence(timeout: 10))
         playful.tap()
-        XCTAssertEqual(picker.value as? String, "Playful")
+        XCTAssertTrue(shows(picker, "Playful"), "Choosing Playful didn't change the picker: \(describe(picker))")
+    }
+
+    /// Waits for a menu picker's row to read `choice` (in its label or its value, see `describe`).
+    @MainActor
+    private func shows(_ picker: XCUIElement, _ choice: String) -> Bool {
+        let chosen = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", choice, choice)
+        return XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5) == .completed
     }
 
     /// Opens Settings the way a person does: from the gallery's toolbar.
