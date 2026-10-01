@@ -47,7 +47,7 @@ description = (
     "Turn your photos into paint-by-numbers canvases, entirely on device, and paint them "
     "with a finger or Apple Pencil. Built for iPad, works on iPhone.")
 app = {
-    "name": info.get("CFBundleDisplayName", "Pipo"),
+    "name": info.get("CFBundleDisplayName", "Paint by Moonlight"),
     "bundleIdentifier": info["CFBundleIdentifier"],
     "developerName": repo.split("/")[0],
     "subtitle": "Photos into paint-by-numbers",
@@ -68,7 +68,7 @@ app = {
     },
 }
 source = {
-    "name": "Pipo (CI builds)",
+    "name": "Paint by Moonlight (CI builds)",
     "identifier": f"{info['CFBundleIdentifier']}.source",
     "subtitle": "Automatic builds of the main branch",
     "iconURL": icon_url,

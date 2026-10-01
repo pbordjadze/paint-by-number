@@ -128,7 +128,7 @@ struct SettingsView: View {
                 } header: {
                     Text("About")
                 } footer: {
-                    Text("Your photos and paintings stay on this device unless you share them. Pipo collects no data.")
+                    Text("Your photos and paintings stay on this device unless you share them. Paint by Moonlight collects no data.")
                 }
             }
             .navigationDestination(for: Destination.self) { destination in

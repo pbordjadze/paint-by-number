@@ -116,7 +116,7 @@ nonisolated enum PDFExporter {
     ) -> Data {
         let data = NSMutableData()
         var box = pageBox(for: t, paper: paper)
-        let info: [CFString: Any] = [kCGPDFContextTitle: title, kCGPDFContextCreator: "Pipo"]
+        let info: [CFString: Any] = [kCGPDFContextTitle: title, kCGPDFContextCreator: "Paint by Moonlight"]
         guard let consumer = CGDataConsumer(data: data as CFMutableData),
               let ctx = CGContext(consumer: consumer, mediaBox: &box, info as CFDictionary)
         else { return Data() }
@@ -223,7 +223,7 @@ nonisolated enum PDFExporter {
         ctx.scaleBy(x: 1, y: -1)
         let content = box.insetBy(dx: margin, dy: margin)
         body(content)
-        text(ctx, String(localized: "Pipo"), font: font(.system, 7.5), color: gray(0.6), at: CGPoint(x: content.minX, y: content.maxY + 16))
+        text(ctx, String(localized: "Paint by Moonlight"), font: font(.system, 7.5), color: gray(0.6), at: CGPoint(x: content.minX, y: content.maxY + 16))
         ctx.restoreGState()
         ctx.endPDFPage()
     }

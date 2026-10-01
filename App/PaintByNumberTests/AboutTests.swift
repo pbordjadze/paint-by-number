@@ -87,14 +87,14 @@ struct BundleMetadataTests {
     @Test func usageDescriptionsExplainWhyAndCoverOnlyWhatTheAppAsksFor() {
         for key in ["NSCameraUsageDescription", "NSPhotoLibraryAddUsageDescription"] {
             let text = info[key] as? String ?? ""
-            #expect(text.hasPrefix("Pipo ") && text.hasSuffix("."), "\(key): \(text)")
+            #expect(text.hasPrefix("Paint by Moonlight ") && text.hasSuffix("."), "\(key): \(text)")
         }
         // Photos are picked out of process and only added to (never read from) the library.
         #expect(info["NSPhotoLibraryUsageDescription"] == nil)
     }
 }
 
-/// "Open in Pipo": the app declares itself an alternate viewer of images; files are
+/// "Open in Paint by Moonlight": the app declares itself an alternate viewer of images; files are
 /// copied into its inbox (`IncomingFile`), not opened in place.
 struct DocumentTypeTests {
     private let info = Bundle.main.infoDictionary ?? [:]

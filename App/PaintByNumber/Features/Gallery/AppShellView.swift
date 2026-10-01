@@ -56,7 +56,7 @@ struct AppShellView: View {
                 } isTargeted: { isDropTargeted = $0 }
                 .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
                 .animation(.easeOut(duration: 0.2), value: isDropTargeted)
-                .navigationTitle("Pipo")
+                .navigationTitle("Paint by Moonlight")
                 .navigationSubtitle(subtitle)
                 .toolbar { toolbar }
                 .searchable(text: $search, prompt: Text("Search paintings"))
@@ -85,7 +85,7 @@ struct AppShellView: View {
             TimelapseExportSheet(request: request)
         }
         .onAppear(perform: restoreOpenArtwork)
-        // "Open in Pipo" from the share sheet or Files.
+        // "Open in Paint by Moonlight" from the share sheet or Files.
         .onOpenURL(perform: openFile)
         .onChange(of: library.placeholders.isEmpty) { presentIncomingImage() }
         // Metal setup off the main thread while the gallery shows, so the first painting opens instantly.

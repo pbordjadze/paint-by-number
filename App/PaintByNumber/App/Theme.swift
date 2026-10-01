@@ -1,9 +1,9 @@
 import SwiftUI
 import UIKit
 
-/// Shared visual language, the Pipo design system: native iOS with a darker, slightly witchy
-/// personality. Night surfaces (cool grey by day), New York for titles and numerals, Nightshade
-/// and antique gold. The asset catalog's colors carry the system's tokens.
+/// Shared visual language, the Paint by Moonlight design system (working name Pipo): native iOS
+/// with a darker, slightly witchy personality. Night surfaces (cool grey by day), New York for
+/// titles and numerals, Nightshade and antique gold. The asset catalog's colors carry its tokens.
 enum Theme {
     /// `surface-base`: screen background.
     static let paper = Color("Paper")

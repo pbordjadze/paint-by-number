@@ -116,9 +116,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   form them in `nonisolated` code or they trap at runtime under Swift 6.
 - Liquid Glass design language (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)`,
   `.glassProminent`), SF Symbols, Dynamic Type, dark mode, VoiceOver labels.
-- Identity: the app is called **Pipo** (display name, gallery title, permission texts, PDF footer;
-  the target, module and repository keep the PaintByNumber names), styled by the Pipo design system
-  (claude.ai/artifact/HRz1Lc9bkLACNvPKhctojF: README, tokens, icon and motifs). Native first: system
+- Identity: the app is called **Paint by Moonlight** (display name, gallery title, permission texts,
+  PDF footer; App Store subtitle "Turn any photo into a painting"). Pipo is only the working name:
+  it never appears in the product; the target, module and repository keep the PaintByNumber names.
+  Styled by its design system (claude.ai/artifact/HRz1Lc9bkLACNvPKhctojF: README, tokens, icon,
+  motifs). Native first: system
   controls stay system controls. `Theme` and the asset catalog carry its tokens: Paper =
   `surface-base` (`#F2F1F4` / `#141117`), Surface = `surface-elevated`, Outline, AccentColor = `tint`
   (Nightshade `#7B3F7E` by day, antique gold `#C9A24A` at night), `signature` (Nightshade in both,
@@ -227,7 +229,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   stored: `meta.json` records only `settingsOrigin` and `paintingLength` (tolerant strings), and
   regeneration reuses an artwork's recorded settings. Demo scenarios `create-suggested`,
   `create-custom`, `create-custom-long-text`.
-- Open in Pipo: images from the share sheet and Files arrive through an image document type
+- Open in Paint by Moonlight: images from the share sheet and Files arrive through an image document type
   (`CFBundleDocumentTypes` in `Config/Info.plist`, `Alternate` rank, not opened in place, so the system
   copies each file into `Documents/Inbox`) and `.onOpenURL` → `AppShellView.openFile`. `IncomingFile`
   reads it off the main actor (security scope tried), deletes it only if it is inside the app's inbox,

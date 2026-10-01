@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import PaintByNumber
 
-/// "Open in Pipo": the file handler behind `onOpenURL` (`IncomingFile`) and the
+/// "Open in Paint by Moonlight": the file handler behind `onOpenURL` (`IncomingFile`) and the
 /// create flow it feeds. The inbox is a temporary folder standing in for `Documents/Inbox`.
 @MainActor
 struct OpenURLTests {
