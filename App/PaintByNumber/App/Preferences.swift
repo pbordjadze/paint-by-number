@@ -55,24 +55,25 @@ nonisolated extension PaintingLength {
         case .quick: String(localized: "paintingLength.quick", defaultValue: "Quick",
                             comment: "Choice of the Painting Length setting: suggested settings aim for a short painting")
         case .relaxed: String(localized: "paintingLength.relaxed", defaultValue: "Relaxed",
-                              comment: "Choice of the Painting Length setting: suggested settings aim for about an hour of painting")
+                              comment: "Choice of the Painting Length setting: suggested settings aim for about half an hour of painting")
         case .detailed: String(localized: "paintingLength.detailed", defaultValue: "Detailed",
                                comment: "Choice of the Painting Length setting: suggested settings aim for a long, detailed painting")
         }
     }
 
-    /// The Settings footer under the picker: roughly the painting time the choice aims for
-    /// (`timeBand`).
+    /// The Settings footer under the picker: roughly the middle of the painting time the choice
+    /// aims for (`timeBand`: Quick 8–25 min, Relaxed 20–50, Detailed 40–120). A photo too small
+    /// or too plain to fill Relaxed's or Detailed's band ends below it, at any setting.
     var footer: String {
         switch self {
         case .quick: String(localized: "settings.paintingLength.footer.quick",
-                            defaultValue: "Suggested settings aim for about half an hour of painting.",
+                            defaultValue: "Suggested settings aim for about 15 minutes of painting.",
                             comment: "Footer under the Painting Length setting when Quick is chosen")
         case .relaxed: String(localized: "settings.paintingLength.footer.relaxed",
-                              defaultValue: "Suggested settings aim for about an hour of painting.",
+                              defaultValue: "Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings.",
                               comment: "Footer under the Painting Length setting when Relaxed is chosen")
         case .detailed: String(localized: "settings.paintingLength.footer.detailed",
-                               defaultValue: "Suggested settings aim for a few hours of painting.",
+                               defaultValue: "Suggested settings aim for about an hour of painting. Small or simple photos make shorter paintings.",
                                comment: "Footer under the Painting Length setting when Detailed is chosen")
         }
     }

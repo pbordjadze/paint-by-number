@@ -392,7 +392,7 @@ struct PreferencesTests {
         #expect(Preferences(defaults: defaults).paintingLength == .relaxed)
         #expect(SettingsKey.paintingLength == "paintingLength")
         #expect(Set(PaintingLength.allCases.map(\.rawValue)) == ["quick", "relaxed", "detailed"])
-        #expect(PaintingLength.relaxed.footer == "Suggested settings aim for about an hour of painting.")
+        #expect(PaintingLength.relaxed.footer == "Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings.")
 
         #expect(CreateModel(paintingLength: .quick).paintingLength == .quick)
     }
