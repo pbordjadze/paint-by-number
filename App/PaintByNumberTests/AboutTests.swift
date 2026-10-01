@@ -164,7 +164,7 @@ struct AcknowledgementsTests {
         let curveFitter = try String(contentsOf: vector.appending(path: "CurveFitter.swift"), encoding: .utf8)
         #expect(earcut.contains("mapbox/earcut") && earcut.contains("ISC"))
         #expect(polylabel.contains("mapbox/polylabel") && polylabel.contains("ISC"))
-        #expect(curveFitter.contains("Potrace: a polygon-based tracing algorithm") && !curveFitter.contains("GPL"))
+        #expect(curveFitter.contains("Selinger") && curveFitter.contains("polygon-based tracing algorithm") && !curveFitter.contains("GPL"))
     }
 
     /// `ACKNOWLEDGEMENTS.md` at the repository root repeats what Settings shows.
