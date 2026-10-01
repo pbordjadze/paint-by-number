@@ -158,7 +158,7 @@
       "extractionState" : "manual"
     },
     "All" : {
-      "comment" : "Choice in the gallery's Show menu that lists every painting",
+      "comment" : "Choice in the gallery's Show menu that lists every painting; also the menu's VoiceOver value while it is chosen",
       "extractionState" : "manual"
     },
     "All paint will be cleared." : {
@@ -874,7 +874,7 @@
       "extractionState" : "manual"
     },
     "Favorites" : {
-      "comment" : "Choice in the gallery's Show menu that lists only favorite paintings",
+      "comment" : "Choice in the gallery's Show menu that lists only favorite paintings; also the menu's VoiceOver value while it is chosen",
       "extractionState" : "manual"
     },
     "Feedback" : {

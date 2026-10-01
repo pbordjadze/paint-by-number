@@ -128,6 +128,8 @@ struct AppShellView: View {
                 Label("Show", systemImage: filter == .all
                       ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
             }
+            // The filled icon says a filter is on; VoiceOver hears which one.
+            .accessibilityValue(filter == .all ? Text("All") : Text("Favorites"))
             .disabled(library.artworks.isEmpty)
         }
         ToolbarItem(placement: .topBarTrailing) {
