@@ -120,6 +120,11 @@ struct AutoSettingsTests {
         #expect(even.importanceEntropy > 0.99)
         #expect(focused.importanceEntropy < even.importanceEntropy - 0.2)
         #expect(focused.subjectCoverage > 0.05 && even.subjectCoverage == 0)
+        // The fallback map (no Vision) has a floor everywhere; the entropy reads what rises
+        // above it, so a lone subject no longer rates as flat.
+        let fallback = try Self.analyze(disc)
+        #expect(fallback.importanceEntropy < 0.95)
+        #expect(fallback.importanceEntropy > focused.importanceEntropy)
     }
 
     @Test func hintsAreCopiedClampedAndQuantized() throws {
@@ -145,9 +150,11 @@ struct AutoSettingsTests {
 
     @Test func featuresAreQuantized() throws {
         let a = try Self.analyze(SegmentationTests.colorful(width: 300, height: 200))
-        let values = a.paletteCurve + [a.chromaticFraction, a.chromaSpread, a.structureDensity, a.textureFraction,
-                                       a.smoothFraction, a.noise, a.subjectCoverage, a.importanceEntropy]
+        let values = [a.chromaticFraction, a.chromaSpread, a.structureDensity, a.textureFraction, a.smoothFraction,
+                      a.subjectCoverage, a.importanceEntropy]
         for v in values { #expect(v == (v * 1000).rounded() / 1000) }
+        // The palette curve's slope and the noise level are read at 4 decimals.
+        for v in a.paletteCurve + [a.noise] { #expect(v == (v * 10000).rounded() / 10000) }
     }
 
     // MARK: - Candidates
@@ -170,6 +177,13 @@ struct AutoSettingsTests {
         let mono = AutoSettings.center(for: Self.analysis(chromatic: 0.05, spread: 0.01), preference: .detailed)
         let vivid = AutoSettings.center(for: Self.analysis(chromatic: 0.8, spread: 0.09), preference: .detailed)
         #expect(mono.colorCount < vivid.colorCount)
+        // The cut fades in: a photo with a few vivid parts loses fewer paints than a grey one,
+        // and none once a seventh of it is chromatic.
+        let colors = [0, 0.05, 0.1, 0.15, 0.3].map {
+            AutoSettings.center(for: Self.analysis(chromatic: Float($0)), preference: .detailed).colorCount
+        }
+        #expect(colors == colors.sorted() && colors[0] < colors[2] && colors[2] < colors[3])
+        #expect(colors[3] == colors[4])
     }
 
     @Test func longerPaintingsCenterHigher() {
@@ -215,10 +229,11 @@ struct AutoSettingsTests {
         let base = AutoSettings.center(for: a, preference: .relaxed)
         #expect(base.colorCount % 2 == 0)
         #expect(AutoSettings.center(for: Self.analysis(faces: 0.2), preference: .relaxed).colorCount > base.colorCount)
-        #expect(AutoSettings.center(for: Self.analysis(smooth: 0.6), preference: .relaxed).colorCount > base.colorCount)
+        // Ramps get no extra paints without gradient-aware allocation.
+        #expect(AutoSettings.center(for: Self.analysis(smooth: 0.6), preference: .relaxed).colorCount == base.colorCount)
         #expect(AutoSettings.center(for: Self.analysis(subject: 0.7), preference: .relaxed).detail > base.detail)
         #expect(AutoSettings.center(for: Self.analysis(texture: 0.5), preference: .relaxed).detail < base.detail)
-        #expect(AutoSettings.center(for: Self.analysis(source: 640), preference: .relaxed).detail < base.detail)
+        #expect(AutoSettings.center(for: Self.analysis(source: 640), preference: .relaxed).detail == base.detail)
         #expect(AutoSettings.center(for: Self.analysis(texture: 0.5), preference: .relaxed).smoothness > base.smoothness)
         #expect(AutoSettings.center(for: Self.analysis(noise: 0.01), preference: .relaxed).smoothness > base.smoothness)
         #expect(AutoSettings.center(for: Self.analysis(structure: 0.3), preference: .relaxed).smoothness < base.smoothness)
@@ -242,15 +257,15 @@ struct AutoSettingsTests {
         let t = output.template
         let working = Resample.area(image, width: t.width, height: t.height)
         let importance = AutoSettings.importance(for: working, map: nil)
-        // A canvas on which this many regions take about an hour (inside Relaxed's band), and
-        // one so large its estimate is far above the band.
+        // A canvas on which this many regions take about half an hour (inside Relaxed's band),
+        // and one so large its estimate is far above the band.
         let regions = Double(t.regions.count)
         func canvas(seconds: Double) -> (width: Int, height: Int) {
-            let ratio = pow(seconds / PaintingTime.estimate(regionCount: t.regions.count), 1 / AutoSettings.regionAreaExponent)
+            let ratio = pow(seconds / PaintingTime.estimate(regionCount: t.regions.count), 1 / AutoSettings.regionExponent(detail: 0.5))
             return (Int((Double(t.width) * ratio.squareRoot()).rounded()), Int((Double(t.height) * ratio.squareRoot()).rounded()))
         }
         let inside = AutoSettings.score(output, working: working, importance: importance, preference: .relaxed,
-                                        fullSize: canvas(seconds: 3600))
+                                        fullSize: canvas(seconds: 1800))
         let above = AutoSettings.score(output, working: working, importance: importance, preference: .relaxed,
                                        fullSize: canvas(seconds: 6 * 3600))
         #expect(regions > 0)
@@ -262,8 +277,47 @@ struct AutoSettingsTests {
         #expect(above.total > inside.total)
         // The same template is too small a painting for Detailed.
         let detailed = AutoSettings.score(output, working: working, importance: importance, preference: .detailed,
-                                          fullSize: canvas(seconds: 3600))
+                                          fullSize: canvas(seconds: 1800))
         #expect(detailed.bandPenalty > 0 && detailed.total > inside.total)
+        // Too short costs less than too long by the same factor: the photo may hold no more.
+        let band = PaintingLength.relaxed.timeBand
+        let short = AutoSettings.score(output, working: working, importance: importance, preference: .relaxed,
+                                       fullSize: canvas(seconds: band.lowerBound / 2))
+        let long = AutoSettings.score(output, working: working, importance: importance, preference: .relaxed,
+                                      fullSize: canvas(seconds: band.upperBound * 2))
+        #expect(short.bandPenalty > 0 && short.bandPenalty < long.bandPenalty / 2)
+    }
+
+    @Test func tiesGoToTheTimeNearestTheBandsMiddle() {
+        func candidate(total: Float, minutes: Double, regions: Int) -> AutoCandidate {
+            AutoCandidate(settings: GenerationSettings(), score: AutoScore(
+                fidelity: 0.04, fidelityP95: 0.1, regions: regions, tinyRegions: 0, bandRings: 0, minLabelRoom: 3,
+                estimatedSeconds: minutes * 60, bandPenalty: 0, total: total))
+        }
+        let short = candidate(total: 0.1000, minutes: 15, regions: 300)
+        let long = candidate(total: 0.1005, minutes: 60, regions: 1200)
+        let worse = candidate(total: 0.1100, minutes: 70, regions: 1400)
+        // A tie: Quick takes the shorter, Detailed the longer, whatever the order.
+        #expect(AutoSettings.winner(of: [short, long, worse], preference: .quick) == 0)
+        #expect(AutoSettings.winner(of: [short, long, worse], preference: .detailed) == 1)
+        #expect(AutoSettings.winner(of: [long, short], preference: .quick) == 1)
+        // Outside the tolerance the lower total wins.
+        #expect(AutoSettings.winner(of: [short, worse], preference: .detailed) == 0)
+    }
+
+    @Test func regionCountsGrowFasterWithDetail() {
+        #expect(AutoSettings.regionExponent(detail: 0) < AutoSettings.regionExponent(detail: 0.5))
+        #expect(AutoSettings.regionExponent(detail: 0.5) < AutoSettings.regionExponent(detail: 1))
+        #expect(AutoSettings.regionExponent(detail: 1) < 1 && AutoSettings.regionExponent(detail: 0) > 0)
+        #expect(AutoSettings.regionExponent(detail: 2) == AutoSettings.regionExponent(detail: 1))
+    }
+
+    @Test func timeBandsAreOrderedAndOverlap() {
+        let bands = PaintingLength.allCases.map(\.timeBand)
+        for (a, b) in zip(bands, bands.dropFirst()) {
+            #expect(a.lowerBound < b.lowerBound && a.upperBound < b.upperBound)
+            #expect(b.lowerBound < a.upperBound)
+        }
     }
 
     @Test func scoreMeasuresTheTemplate() throws {

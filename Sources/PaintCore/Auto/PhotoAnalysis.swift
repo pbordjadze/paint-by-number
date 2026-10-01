@@ -48,8 +48,8 @@ public struct SubjectHints: Sendable, Codable, Hashable {
 }
 
 /// Features of a photo that the candidate rule reads (`AutoSettings.analyze`). Every value is
-/// quantized to 3 decimals, so floating-point differences between devices cannot flip a
-/// decision.
+/// quantized (to 3 decimals; the palette curve and noise, whose small differences the rule
+/// reads, to 4), so floating-point differences between devices cannot flip a decision.
 public struct PhotoAnalysis: Sendable, Codable, Hashable {
     public var sourceWidth, sourceHeight: Int
     /// Weighted mean ΔE a k-paint palette reaches, for k in `paletteCurveKs` (8…64).
@@ -61,7 +61,7 @@ public struct PhotoAnalysis: Sendable, Codable, Hashable {
     public var smoothFraction: Float         // pixels inside gentle ramps (sky, skin, bokeh)
     public var noise: Float                  // high-frequency energy in flat areas
     public var subjectCoverage: Float        // importance > 0.6
-    public var importanceEntropy: Float      // 0 = one hotspot … 1 = flat
+    public var importanceEntropy: Float      // 0 = one hotspot … 1 = flat (share of the frame it covers)
     public var faceCoverage: Float           // from hints, 0 without
     public var animalCoverage: Float
     public var labels: [String: Float]
@@ -82,12 +82,14 @@ public enum PaintingLength: String, Sendable, Codable, CaseIterable {
         }
     }
 
-    /// The detail a suggestion starts from before the photo moves it.
+    /// The detail a suggestion starts from before the photo moves it. Detailed sits at 0.8:
+    /// at 0.7 the median large corpus photo's full template (about 950 areas, 48 minutes) sat
+    /// at the bottom of its band.
     public var detailCenter: Float {
         switch self {
         case .quick: 0.3
         case .relaxed: 0.5
-        case .detailed: 0.7
+        case .detailed: 0.8
         }
     }
 
@@ -98,12 +100,17 @@ public enum PaintingLength: String, Sendable, Codable, CaseIterable {
     }
 
     /// Painting time (seconds, `PaintingTime.estimate`) the scoring aims for; outside it a
-    /// candidate pays `AutoScore.bandPenalty`.
+    /// candidate pays `AutoScore.bandPenalty`. Calibrated on what the app generates: a
+    /// 12 MP photo is kept at 2048 px and segmented at 1100 + 1000 × detail px, where the
+    /// corpus's 35 large photos give a median of about 380 areas (19 minutes) at detail 0.3,
+    /// 680 (34) at 0.5 and 1350 (67) at 0.9, a busy one two to three times that; a 768-px
+    /// sample reaches 300–950 areas at any detail. The bands overlap so that a photo which
+    /// cannot fill one still lands near it.
     public var timeBand: ClosedRange<Double> {
         switch self {
-        case .quick: (10 * 60)...(45 * 60)
-        case .relaxed: (40 * 60)...(120 * 60)
-        case .detailed: (100 * 60)...(300 * 60)
+        case .quick: (8 * 60)...(25 * 60)
+        case .relaxed: (20 * 60)...(50 * 60)
+        case .detailed: (40 * 60)...(120 * 60)
         }
     }
 }

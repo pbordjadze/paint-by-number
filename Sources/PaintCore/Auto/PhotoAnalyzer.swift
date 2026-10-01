@@ -58,6 +58,12 @@ enum PhotoAnalyzer {
     static let subjectImportance: Float = 0.6
     /// Cells per side of the grid the importance entropy is measured on.
     static let entropyCells = 32
+    /// The palette curve keeps 4 decimals (0.0001 ΔE, a two-hundredth of a just-noticeable
+    /// difference): the color rule reads its slope, and at 3 decimals one quantum between
+    /// 8 and 12 paints was 0.00025 ΔE per paint against a 0.0004 threshold, so the knee
+    /// jumped between a few coarse values (tuned on the 69-photo corpus,
+    /// docs/wave2/log/auto-tuning.md).
+    static let curvePlaces = 4
 
     static func analyze(
         _ working: AutoWorking, source: (width: Int, height: Int), hints: SubjectHints?, cancel: CancellationCheck
@@ -187,26 +193,27 @@ enum PhotoAnalyzer {
         let hints = hints ?? SubjectHints()
         return PhotoAnalysis(
             sourceWidth: source.width, sourceHeight: source.height,
-            paletteCurve: curve.map(quantized),
+            paletteCurve: curve.map { quantized($0, places: curvePlaces) },
             chromaticFraction: quantized(Float(total[0] / count)),
             chromaSpread: quantized(Float(chromaVariance.squareRoot())),
             structureDensity: quantized(Float(total[4] / count)),
             textureFraction: quantized(Float(total[3] / count)),
             smoothFraction: quantized(Float(total[5] / count)),
-            noise: quantized(noise),
+            noise: quantized(noise, places: 4),
             subjectCoverage: quantized(Float(total[6] / count)),
             importanceEntropy: quantized(entropy(working.weights, width: w, height: h)),
             faceCoverage: quantized(min(hints.faces.reduce(0) { $0 + $1.clippedArea }, 1)),
             animalCoverage: quantized(min(hints.animals.reduce(0) { $0 + $1.clippedArea }, 1)),
-            labels: hints.labels.mapValues(quantized))
+            labels: hints.labels.mapValues { quantized($0) })
     }
 
-    /// Features are stored and compared at 3 decimals, so tiny floating-point differences
-    /// between devices cannot flip a decision.
+    /// Features are stored and compared at `places` decimals, so tiny floating-point
+    /// differences between devices cannot flip a decision.
     @inline(__always)
-    static func quantized(_ value: Float) -> Float {
+    static func quantized(_ value: Float, places: Int = 3) -> Float {
         guard value.isFinite else { return 0 }
-        return (value * 1000).rounded() / 1000
+        let scale = Float(pow(10, Double(places)))
+        return (value * scale).rounded() / scale
     }
 
     /// Weighted mean ΔE (true OKLab) of the palette histogram's samples to their nearest of k
@@ -242,23 +249,37 @@ enum PhotoAnalyzer {
         return errors
     }
 
-    /// Normalized Shannon entropy of the importance mass over a grid of cells: 1 when it is
-    /// spread evenly, toward 0 when it sits in one spot.
+    /// How widely the importance mass spreads over a grid of cells: the share of cells it
+    /// effectively covers (exp of its Shannon entropy over the cell count), 1 when it is
+    /// spread evenly, toward 0 when it sits in one spot. The mass is each cell's mean above
+    /// the least important cell's: every importance map has a floor (the fallback's is 0.2,
+    /// and its busy-or-central terms add at most 0.8), and counting the floor rated every
+    /// corpus photo 0.986–0.999 as normalized entropy. Normalized entropy without the floor
+    /// still only spanned 0.95–0.99 (a logarithm of 1024 cells); the covered share spreads
+    /// the same photos over 0.72–0.96.
     static func entropy(_ weights: [Float], width w: Int, height h: Int) -> Float {
         let cellsX = min(entropyCells, w), cellsY = min(entropyCells, h)
         guard cellsX * cellsY > 1 else { return 1 }
         var mass = [Double](repeating: 0, count: cellsX * cellsY)
+        var area = [Int](repeating: 0, count: cellsX * cellsY)
         for y in 0..<h {
             let cy = y * cellsY / h
-            for x in 0..<w { mass[cy * cellsX + x * cellsX / w] += Double(weights[y * w + x]) }
+            for x in 0..<w {
+                let cell = cy * cellsX + x * cellsX / w
+                mass[cell] += Double(weights[y * w + x])
+                area[cell] += 1
+            }
         }
+        for c in mass.indices { mass[c] /= Double(max(area[c], 1)) }
+        let floor = mass.min() ?? 0
+        for c in mass.indices { mass[c] -= floor }
         let total = mass.reduce(0, +)
-        guard total > 0 else { return 1 }
+        guard total > 1e-6 else { return 1 }
         var entropy = 0.0
         for m in mass where m > 0 {
             let q = m / total
             entropy -= q * log(q)
         }
-        return Float(entropy / log(Double(mass.count)))
+        return Float(exp(entropy) / Double(mass.count))
     }
 }
