@@ -90,6 +90,7 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+            -IDEBuildingContinueBuildingAfterErrors=YES \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
       - name: Wait for simulator
@@ -168,6 +169,7 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
+            -IDEBuildingContinueBuildingAfterErrors=YES \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
       - name: Wait for simulator

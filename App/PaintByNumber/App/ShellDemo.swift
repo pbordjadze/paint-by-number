@@ -59,7 +59,7 @@ enum ShellDemo: Equatable {
         case .galleryOpen:
             library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .galleryDamaged:
-            library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)]) {
+            library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)]) { _ in
                 // Synchronous on purpose: this runs in the same main-actor job that empties
                 // `placeholders`, so the file is damaged before SwiftUI's next update delivers
                 // the `onChange` that opens the painting (`AppShellView`).
