@@ -26,6 +26,9 @@ struct AppShellView: View {
     /// screen to be free for the create flow.
     @State private var incomingImage: IncomingImage?
     @State private var isReadingFile = false
+    /// The time-lapse a gallery card's menu is making. Its sheet is presented here, beside
+    /// the settings sheet, so a file that arrives meanwhile can close it before the create flow opens.
+    @State private var timelapse: TimelapseRequest?
     /// Changes with every file opened, so a create flow already on screen restarts on it.
     @State private var flowID = UUID()
     @State private var isDropTargeted = false
@@ -35,8 +38,15 @@ struct AppShellView: View {
     @SceneStorage("openArtwork") private var openArtwork = ""
 
     var body: some View {
+        // Read here, not only in the cover's content: a presentation runs its content with the
+        // state the last body pass read, and a body that never reads these isn't run again when
+        // they change with `isCreating`, so the flow would open without the photo (or keep its
+        // old identity).
+        let flowPhoto = droppedPhoto
+        let flowTitle = droppedTitle
+        let flowIdentity = flowID
         NavigationStack(path: $path) {
-            GalleryView(namespace: zoom, query: query) { isCreating = true }
+            GalleryView(namespace: zoom, query: query, timelapse: $timelapse) { isCreating = true }
                 // Photos dragged in from another app (Split View, Slide Over) start a painting.
                 .dropDestination(for: DroppedPhoto.self) { photos, _ in
                     guard let photo = photos.first, !isCreating else { return false }
@@ -60,16 +70,19 @@ struct AppShellView: View {
             droppedTitle = nil
             openPending()
         }) {
-            CreateFlowView(openingSample: launchSample, droppedPhoto: droppedPhoto, droppedTitle: droppedTitle) { artwork in
+            CreateFlowView(openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle) { artwork in
                 pendingOpen = artwork.id
                 isCreating = false
             }
-            .id(flowID)
+            .id(flowIdentity)
             .environment(library)
         }
         .sheet(isPresented: $isShowingSettings, onDismiss: presentIncomingImage) {
             SettingsView()
                 .environment(library)
+        }
+        .sheet(item: $timelapse, onDismiss: presentIncomingImage) { request in
+            TimelapseExportSheet(request: request)
         }
         .onAppear(perform: restoreOpenArtwork)
         // "Open in Paint by Numbers" from the share sheet or Files.
@@ -173,13 +186,15 @@ struct AppShellView: View {
     }
 
     /// Opens the create flow on the file once nothing stands in its way: on a cold launch the
-    /// first-launch samples are still being made, and a settings sheet has to close first. An
-    /// open painting is dismissed (it saves as it disappears) and a create flow already on
-    /// screen starts over on the new photo.
+    /// first-launch samples are still being made, and the settings or time-lapse sheet has to
+    /// close first (its `onDismiss` comes back here; dismissing the time-lapse sheet cancels its
+    /// render). An open painting is dismissed (it saves as it disappears) and a create flow
+    /// already on screen starts over on the new photo.
     private func presentIncomingImage() {
         guard let image = incomingImage, library.placeholders.isEmpty else { return }
-        guard !isShowingSettings else {
+        guard !isShowingSettings, timelapse == nil else {
             isShowingSettings = false
+            timelapse = nil
             return
         }
         incomingImage = nil

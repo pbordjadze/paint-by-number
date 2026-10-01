@@ -7,6 +7,8 @@ struct GalleryView: View {
     let namespace: Namespace.ID
     /// The Show filter and the search text: what the gallery lists.
     let query: GalleryQuery
+    /// The time-lapse being made; the app shell presents its sheet.
+    @Binding var timelapse: TimelapseRequest?
     var onCreate: () -> Void
 
     @Environment(Library.self) private var library
@@ -17,7 +19,6 @@ struct GalleryView: View {
     @State private var renameText = ""
     @State private var restarting: Artwork?
     @State private var deleting: Artwork?
-    @State private var timelapse: TimelapseRequest?
     @State private var notice: Notice?
 
     private struct Notice: Equatable {
@@ -101,9 +102,6 @@ struct GalleryView: View {
                 Text(String(localized: "gallery.delete.message.notStarted", defaultValue: "“\(artwork.title)” hasn’t been started yet.",
                             comment: "Delete confirmation message for a painting nobody has painted on; the argument is its title"))
             }
-        }
-        .sheet(item: $timelapse) { request in
-            TimelapseExportSheet(request: request)
         }
         #if DEBUG
         .task(id: library.finished.first?.id) {
