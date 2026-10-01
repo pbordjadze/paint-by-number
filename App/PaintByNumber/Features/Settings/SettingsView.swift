@@ -7,7 +7,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @AppStorage(SettingsKey.haptics) private var haptics = true
     @AppStorage(SettingsKey.sounds) private var sounds = true
-    @AppStorage(SettingsKey.defaultColorCount) private var defaultColorCount = Preferences.defaultColorCountValue
+    @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
@@ -86,26 +86,21 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    // Fine steps where each color matters, coarse ones for large palettes.
-                    Stepper {
-                        defaultColorCount = min(
-                            defaultColorCount + (defaultColorCount < 40 ? 2 : 10), GenerationSettings.colorCountRange.upperBound)
-                    } onDecrement: {
-                        defaultColorCount = max(
-                            defaultColorCount - (defaultColorCount <= 40 ? 2 : 10), GenerationSettings.colorCountRange.lowerBound)
-                    } label: {
-                        SwiftUI.Label {
-                            HStack {
-                                Text("Starting Colors")
-                                Spacer()
-                                Text(defaultColorCount, format: .number)
-                                    .monospacedDigit()
-                                    .foregroundStyle(.secondary)
-                            }
-                        } icon: {
-                            Image(systemName: "paintpalette")
+                    Picker(selection: $paintingLength) {
+                        ForEach(PaintingLength.allCases, id: \.self) { length in
+                            Text(length.name).tag(length)
                         }
+                    } label: {
+                        SwiftUI.Label("Painting Length", systemImage: "hourglass")
                     }
+                    .accessibilityIdentifier("painting-length")
+                } header: {
+                    Text("New Paintings")
+                } footer: {
+                    Text(paintingLength.footer)
+                }
+
+                Section {
                     Picker(selection: $paper) {
                         ForEach(PDFExporter.Paper.allCases) { paper in
                             Text(paper.name).tag(paper)
@@ -113,10 +108,8 @@ struct SettingsView: View {
                     } label: {
                         SwiftUI.Label("Printed Templates", systemImage: "printer")
                     }
-                } header: {
-                    Text("New Paintings")
                 } footer: {
-                    Text("The number of colors new paintings start with, and the paper size for printed templates.")
+                    Text("The paper size printed templates are laid out for.")
                 }
 
                 Section {

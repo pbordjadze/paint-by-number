@@ -143,6 +143,7 @@ final class Library {
     func create(_ draft: ArtworkDraft) async throws -> Artwork {
         let artwork = Artwork(
             title: draft.title, createdAt: draft.date, template: draft.template, settings: draft.settings,
+            settingsOrigin: draft.settingsOrigin, paintingLength: draft.paintingLength,
             progress: draft.progress, sampleName: draft.sampleName)
         let store = self.store
         try await Background.run {

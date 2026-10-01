@@ -317,18 +317,16 @@ struct PDFExporterTests {
 
 @MainActor
 struct PreferencesTests {
-    @Test func defaultsClampingAndSessionMapping() throws {
+    @Test func defaultsAndSessionMapping() throws {
         let suite = "PBNTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
 
         var preferences = Preferences(defaults: defaults)
         #expect(preferences.autoAdvance && preferences.haptics && preferences.sounds)
-        #expect(preferences.defaultColorCount == 24)
         #expect(preferences.colorNames == .playful)
 
         defaults.set(false, forKey: SettingsKey.autoAdvance)
-        defaults.set(999, forKey: SettingsKey.defaultColorCount)
         defaults.set("a4", forKey: SettingsKey.paperSize)
         defaults.set(false, forKey: "hapticsEnabled")
         defaults.set("plain", forKey: SettingsKey.colorNames)
@@ -336,9 +334,7 @@ struct PreferencesTests {
         #expect(preferences.colorNames == .plain)
         #expect(!preferences.autoAdvance)
         #expect(!preferences.haptics)
-        #expect(preferences.defaultColorCount == GenerationSettings.colorCountRange.upperBound)
         #expect(preferences.paper == .a4)
-        #expect(preferences.initialGenerationSettings.colorCount == GenerationSettings.colorCountRange.upperBound)
 
         let session = PaintingSession(template: Fixtures.stripes())
         #expect(session.autoAdvance && session.colorNameStyle == .playful)
@@ -378,8 +374,37 @@ struct PreferencesTests {
         #expect(Set(PaperAppearance.allCases.map(\.rawValue)) == ["light", "dark", "automatic"])
     }
 
+    /// Painting Length defaults to Relaxed, round-trips its raw values, ignores anything it
+    /// doesn't know, and is what the create flow aims for.
+    @Test func paintingLengthDefaultsAndPersists() throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        #expect(Preferences(defaults: defaults).paintingLength == .relaxed)
+        #expect(PaintingLength.default == .relaxed)
+        for length in PaintingLength.allCases {
+            defaults.set(length.rawValue, forKey: SettingsKey.paintingLength)
+            #expect(Preferences(defaults: defaults).paintingLength == length)
+            #expect(!length.name.isEmpty && !length.footer.isEmpty)
+        }
+        defaults.set("marathon", forKey: SettingsKey.paintingLength)
+        #expect(Preferences(defaults: defaults).paintingLength == .relaxed)
+        #expect(SettingsKey.paintingLength == "paintingLength")
+        #expect(Set(PaintingLength.allCases.map(\.rawValue)) == ["quick", "relaxed", "detailed"])
+        #expect(PaintingLength.relaxed.footer == "Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings.")
+
+        #expect(CreateModel(paintingLength: .quick).paintingLength == .quick)
+    }
+
     @Test func createModelMapsSliders() {
-        let model = CreateModel(initial: GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
+        let model = CreateModel()
+        // The sliders wait at the generator's defaults until a photo's suggestion moves them.
+        #expect(model.settings == GenerationSettings())
+        #expect(model.settingsOrigin == nil && model.decision == nil && !model.isChoosingSettings)
+        model.colorCount = 30
+        model.detail = 0.25
+        model.smoothness = 0.75
         #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
         model.colorCount = 11.6
         #expect(model.settings.colorCount == 12)
@@ -389,11 +414,11 @@ struct PreferencesTests {
     }
 
     @Test func formatsDurations() {
-        #expect(PaintingTime.approximate(10 * 60) == "~10 min")
-        #expect(PaintingTime.approximate(2 * 3600) == "~2 h")
-        #expect(PaintingTime.approximate(1.4 * 3600) == "~1.5 h")
-        #expect(PaintingTime.approximate(30 * 3600) == "~30 h")
-        #expect(PaintingTime.spent(125 * 60) == "2 h 5 min")
-        #expect(PaintingTime.spent(20) == "< 1 min")
+        #expect(PaintByNumber.PaintingTime.approximate(10 * 60) == "~10 min")
+        #expect(PaintByNumber.PaintingTime.approximate(2 * 3600) == "~2 h")
+        #expect(PaintByNumber.PaintingTime.approximate(1.4 * 3600) == "~1.5 h")
+        #expect(PaintByNumber.PaintingTime.approximate(30 * 3600) == "~30 h")
+        #expect(PaintByNumber.PaintingTime.spent(125 * 60) == "2 h 5 min")
+        #expect(PaintByNumber.PaintingTime.spent(20) == "< 1 min")
     }
 }

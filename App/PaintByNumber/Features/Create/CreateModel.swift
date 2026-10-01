@@ -6,9 +6,10 @@ import PaintCore
 import PhotosUI
 import SwiftUI
 
-/// Drives the create flow: holds the chosen photo and regenerates the template as the
-/// settings change — quick reduced-size drafts while a slider is being dragged, the full
-/// resolution once it settles — always discarding stale work.
+/// Drives the create flow: holds the chosen photo, chooses settings for it (Suggested
+/// settings: the first candidate shows as a draft at once, the winner swaps in), and
+/// regenerates the template as the settings change — quick reduced-size drafts while a slider
+/// is being dragged, the full resolution once it settles — always discarding stale work.
 @Observable
 final class CreateModel {
     struct Source {
@@ -24,7 +25,8 @@ final class CreateModel {
         let painting: CGImage
         /// Outlines with numbers, as the painting starts.
         let outlines: CGImage
-        let settings: GenerationSettings
+        /// Nil for a suggestion's first draft, shown before the settings are chosen.
+        let settings: GenerationSettings?
         /// Generated from the reduced photo while adjusting.
         let isDraft: Bool
     }
@@ -54,6 +56,8 @@ final class CreateModel {
         case loading
         /// Finding the subject (Vision) before the first generation.
         case analyzing
+        /// Choosing settings for the photo; its first candidate shows as a draft meanwhile.
+        case suggesting
         case generating
         case ready
         case failed(String)
@@ -86,6 +90,14 @@ final class CreateModel {
     /// 0…1 progress of the running full-resolution generation.
     private(set) var progress: Double = 0
     private(set) var isAdjusting = false
+    /// Whether the settings are the suggestion for this photo or the painter's own; nil until
+    /// a suggestion exists.
+    private(set) var settingsOrigin: SettingsOrigin?
+    /// The suggestion for the current photo, kept so Reset to Suggested restores it without
+    /// choosing again. Reproducible from the photo and the painting length, so never saved.
+    private(set) var decision: AutoDecision?
+    /// What suggestions aim for (Settings › Painting Length).
+    let paintingLength: PaintingLength
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
     /// The sample's name, or the date for a photo.
@@ -101,8 +113,9 @@ final class CreateModel {
     var detail: Double
     var smoothness: Double
 
-    /// Working long side of drafts (the generator upsamples small inputs up to 1.5×).
-    nonisolated static let draftLongSide = 640.0
+    /// Settings tried per photo: five where there are cores for them, three on smaller devices
+    /// so a suggestion stays within its time budget.
+    nonisolated static var maxCandidates: Int { ProcessInfo.processInfo.activeProcessorCount < 6 ? 3 : 5 }
 
     @ObservationIgnored private var importance: PaintCore.Grid<Float>?
     @ObservationIgnored private var draftImage: RGBAImage?
@@ -112,8 +125,13 @@ final class CreateModel {
     @ObservationIgnored private var draftToken = UUID()
     @ObservationIgnored private var draftPending = false
     @ObservationIgnored private var generation = 0
+    /// Identifies the photo being loaded, so a late first draft of an earlier one is dropped.
+    @ObservationIgnored private var loadID = 0
 
-    init(initial: GenerationSettings = Preferences().initialGenerationSettings) {
+    /// The sliders start at the generator's defaults; a photo moves them to its suggestion.
+    init(paintingLength: PaintingLength = Preferences().paintingLength) {
+        self.paintingLength = paintingLength
+        let initial = GenerationSettings()
         colorCount = Double(initial.colorCount)
         detail = Double(initial.detail)
         smoothness = Double(initial.smoothness)
@@ -125,7 +143,15 @@ final class CreateModel {
 
     var isWorking: Bool {
         switch phase {
-        case .loading, .analyzing, .generating: true
+        case .loading, .analyzing, .suggesting, .generating: true
+        default: false
+        }
+    }
+
+    /// The photo's settings are still being chosen: the sliders wait for them.
+    var isChoosingSettings: Bool {
+        switch phase {
+        case .loading, .analyzing, .suggesting: true
         default: false
         }
     }
@@ -166,6 +192,8 @@ final class CreateModel {
         source = nil
         preview = nil
         stats = nil
+        decision = nil
+        settingsOrigin = nil
         phase = .failed(error.localizedDescription)
     }
 
@@ -179,8 +207,13 @@ final class CreateModel {
         stats = nil
         importance = nil
         draftImage = nil
+        decision = nil
+        settingsOrigin = nil
         progress = 0
         phase = .loading
+        loadID += 1
+        let load = loadID
+        let preference = paintingLength
         loadTask = Task {
             do {
                 let decoded = try await decode()
@@ -191,12 +224,25 @@ final class CreateModel {
                 try Task.checkCancellation()
                 importance = prepared.importance
                 draftImage = prepared.draft
-                // A quick draft first so something appears at once, then the real thing.
-                // Runs as the cancellable full-resolution job so setting changes supersede it.
-                fullTask = Task {
-                    await generate(draft: true, settings: settings)
-                    guard !Task.isCancelled else { return }
-                    await generate(draft: false, settings: settings)
+                phase = .suggesting
+                let chosen: AutoDecision?
+                do {
+                    chosen = try await Self.suggest(
+                        prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
+                        maxCandidates: Self.maxCandidates, firstDraft: Self.firstDraftHandler(for: self, load: load))
+                } catch is CancellationError {
+                    throw CancellationError()
+                } catch {
+                    // Without a suggestion the photo still gets a template, on the sliders' settings.
+                    Log.create.error("Choosing settings failed: \(String(describing: error), privacy: .public)")
+                    chosen = nil
+                }
+                try Task.checkCancellation()
+                if let chosen {
+                    adopt(chosen)
+                } else {
+                    phase = .ready
+                    startGeneration(draftFirst: true)
                 }
             } catch is CancellationError {
             } catch {
@@ -208,9 +254,10 @@ final class CreateModel {
 
     // MARK: Adjusting
 
-    /// Call when any setting changed.
+    /// Call when the painter changed a setting: the settings become their own.
     func settingsChanged() {
-        guard source != nil, phase != .loading, phase != .analyzing else { return }
+        guard source != nil, !isChoosingSettings else { return }
+        if decision != nil { settingsOrigin = .custom }
         if isAdjusting {
             requestDraft()
         } else {
@@ -230,6 +277,14 @@ final class CreateModel {
         }
     }
 
+    /// Back to the suggestion's settings, without choosing again.
+    func resetToSuggested() {
+        guard let decision else { return }
+        apply(decision.settings)
+        settingsOrigin = .suggested
+        startGeneration(draftFirst: true)
+    }
+
     func cancelAll() {
         loadTask?.cancel()
         loadTask = nil
@@ -239,6 +294,8 @@ final class CreateModel {
 
     /// The full-resolution template for the current settings, generating it if needed.
     func makeDraft() async throws -> ArtworkDraft {
+        // Settings still being chosen are chosen first.
+        _ = await loadTask?.value
         guard let source else { throw CreateError.unreadable }
         let settings = self.settings
         if !isFinal {
@@ -248,8 +305,46 @@ final class CreateModel {
         }
         guard let preview, !preview.isDraft, preview.settings == settings else { throw CreateError.renderFailed }
         return ArtworkDraft(
-            title: resolvedTitle, template: preview.template, settings: settings,
-            photo: source.preview, sampleName: source.sampleName)
+            title: resolvedTitle, template: preview.template, settings: settings, settingsOrigin: settingsOrigin,
+            paintingLength: decision?.preference, photo: source.preview, sampleName: source.sampleName)
+    }
+
+    /// Moves the sliders to the suggestion and generates it: the winner as a draft first unless
+    /// it is the candidate already on screen, then at full resolution.
+    private func adopt(_ decision: AutoDecision) {
+        self.decision = decision
+        apply(decision.settings)
+        settingsOrigin = .suggested
+        phase = .generating
+        startGeneration(draftFirst: decision.winner != 0 || preview == nil)
+    }
+
+    private func apply(_ settings: GenerationSettings) {
+        colorCount = Double(settings.colorCount)
+        detail = Double(settings.detail)
+        smoothness = Double(settings.smoothness)
+    }
+
+    /// Generates the current settings as the cancellable full-resolution job, so setting
+    /// changes supersede it; a quick draft first makes something appear at once.
+    private func startGeneration(draftFirst: Bool) {
+        fullTask?.cancel()
+        stopDrafts()
+        let settings = self.settings
+        fullTask = Task {
+            if draftFirst {
+                await generate(draft: true, settings: settings)
+                guard !Task.isCancelled else { return }
+            }
+            await generate(draft: false, settings: settings)
+        }
+    }
+
+    /// A suggestion's first candidate, rendered: shown unless the photo changed or the
+    /// suggestion already finished.
+    private func showFirstDraft(_ draft: Preview, load: Int) {
+        guard load == loadID, phase == .suggesting, preview == nil else { return }
+        withAnimation(.easeInOut(duration: 0.18)) { preview = draft }
     }
 
     private func requestDraft() {
@@ -332,6 +427,7 @@ final class CreateModel {
 
     nonisolated struct Prepared: Sendable {
         var importance: PaintCore.Grid<Float>?
+        var hints: SubjectHints
         var draft: RGBAImage
     }
 
@@ -352,17 +448,44 @@ final class CreateModel {
         return Decoded(image: image, preview: preview)
     }
 
-    /// Subject importance (once per photo) and the reduced photo for drafts.
+    /// Subject importance and hints (once per photo) and the reduced photo for drafts and
+    /// suggestions.
     @concurrent
     private static func prepare(_ decoded: Decoded) async -> Prepared {
-        let importance = SubjectImportance.map(for: decoded.preview)
-        let image = decoded.image
-        let long = Double(max(image.width, image.height))
-        let scale = min(1, draftLongSide / 1.5 / long)
-        let draft = scale < 1
-            ? Resample.area(image, width: max(1, Int(Double(image.width) * scale)), height: max(1, Int(Double(image.height) * scale)))
-            : image
-        return Prepared(importance: importance, draft: draft)
+        let subject = SubjectImportance.analyze(decoded.preview)
+        return Prepared(importance: subject.map, hints: subject.hints, draft: AutoSettings.draftImage(from: decoded.image))
+    }
+
+    /// Chooses settings for the photo on its draft. `sourceSize` is the photo's own size: it
+    /// sets the canvas the painting time is estimated for.
+    @concurrent
+    private static func suggest(
+        _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength, maxCandidates: Int,
+        firstDraft: @escaping @Sendable (Preview) -> Void
+    ) async throws -> AutoDecision {
+        // A task's cancellation shows only on the thread running it; the flag reaches every
+        // candidate's thread at once.
+        let flag = CancellationFlag()
+        return try await withTaskCancellationHandler {
+            try AutoSettings.choose(
+                image: prepared.draft, sourceSize: sourceSize, importance: prepared.importance, hints: prepared.hints,
+                preference: preference, maxCandidates: maxCandidates, cancel: CancellationCheck { flag.isSet }
+            ) { output in
+                // Rendered here, before the other candidates run: it is what the painter waits for.
+                guard let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true) else { return }
+                firstDraft(preview)
+            }
+        } onCancel: {
+            flag.set()
+        }
+    }
+
+    /// Hands a first draft from the pipeline thread that rendered it to the main actor. Formed
+    /// here, outside the main actor, because it is called on that thread.
+    nonisolated private static func firstDraftHandler(for model: CreateModel, load: Int) -> @Sendable (Preview) -> Void {
+        { preview in
+            Task { @MainActor in model.showFirstDraft(preview, load: load) }
+        }
     }
 
     @concurrent
@@ -374,6 +497,10 @@ final class CreateModel {
             .generate(from: image, importance: importance, cancel: .task, progress: progress)
             .template
         try Task.checkCancellation()
+        return try makePreview(template, settings: settings, isDraft: isDraft)
+    }
+
+    nonisolated private static func makePreview(_ template: Template, settings: GenerationSettings?, isDraft: Bool) throws -> Preview {
         #if DEBUG
         // Debug builds (CI's simulator runs) check every final template's invariants,
         // legible numbers included.
@@ -392,4 +519,14 @@ final class CreateModel {
     private static func photoTitle() -> String {
         Date.now.formatted(.dateTime.month(.wide).day())
     }
+}
+
+/// Set once when a suggestion's task is cancelled; read by every candidate's thread.
+private nonisolated final class CancellationFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+
+    var isSet: Bool { lock.withLock { cancelled } }
+
+    func set() { lock.withLock { cancelled = true } }
 }

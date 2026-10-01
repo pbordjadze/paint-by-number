@@ -647,6 +647,40 @@ struct LibraryTests {
         #expect(old.format == Artwork.currentFormat)
     }
 
+    /// Where the settings came from and the painting length are recorded in `meta.json`; files
+    /// from before Suggested settings have neither, and a value this app doesn't know is kept.
+    @Test func settingsOriginAndPaintingLengthRoundTripThroughMeta() async throws {
+        let library = makeLibrary()
+        var item = draft()
+        item.settingsOrigin = .custom
+        item.paintingLength = .quick
+        let artwork = try await library.create(item)
+        #expect(artwork.settingsOrigin == "custom")
+        #expect(artwork.paintingLength == "quick")
+        await library.flush()
+        let reloaded = try #require(makeLibrary().artwork(with: artwork.id))
+        #expect(reloaded.settingsOrigin == "custom" && reloaded.paintingLength == "quick")
+        #expect(reloaded.format == Artwork.currentFormat)
+
+        let encoded = try JSONEncoder().encode(artwork)
+        var fields = try #require(try JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        #expect(fields.removeValue(forKey: "settingsOrigin") != nil)
+        #expect(fields.removeValue(forKey: "paintingLength") != nil)
+        let old = try JSONDecoder().decode(Artwork.self, from: JSONSerialization.data(withJSONObject: fields))
+        #expect(old.settingsOrigin == nil && old.paintingLength == nil)
+        #expect(old.settings == artwork.settings && old.format == Artwork.currentFormat)
+
+        fields["settingsOrigin"] = "tuned"
+        fields["paintingLength"] = "marathon"
+        let newer = try JSONDecoder().decode(Artwork.self, from: JSONSerialization.data(withJSONObject: fields))
+        let rewritten = try JSONDecoder().decode(Artwork.self, from: JSONEncoder().encode(newer))
+        #expect(rewritten.settingsOrigin == "tuned" && rewritten.paintingLength == "marathon")
+
+        // Paintings made outside the create flow (first-launch samples) record neither.
+        let plain = try await library.create(draft(title: "Plain"))
+        #expect(plain.settingsOrigin == nil && plain.paintingLength == nil)
+    }
+
     @Test func favoritesPersistAcrossAReload() async throws {
         let library = makeLibrary()
         let a = try await library.create(draft(title: "A"))

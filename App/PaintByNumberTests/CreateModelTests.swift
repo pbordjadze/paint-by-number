@@ -5,8 +5,108 @@ import Testing
 
 @MainActor
 struct CreateModelTests {
+    /// A photo opens on settings chosen for it: the first candidate shows as a draft while the
+    /// others are tried, then the winner is generated at full resolution.
+    @Test func suggestsSettingsShowingADraftBeforeTheDecision() async throws {
+        let model = CreateModel(paintingLength: .relaxed)
+        model.load(sample: try #require(Sample.named("parrots")))
+        var sawSuggesting = false, sawDraftBeforeDecision = false
+        try await waitUntil(polling: .milliseconds(5)) {
+            if model.phase == .suggesting {
+                sawSuggesting = true
+                #expect(model.isChoosingSettings)
+            }
+            if model.decision == nil, model.preview?.isDraft == true { sawDraftBeforeDecision = true }
+            return model.isFinal
+        }
+        #expect(sawSuggesting)
+        #expect(sawDraftBeforeDecision, "The first candidate wasn't shown before the decision")
+        let decision = try #require(model.decision)
+        #expect(model.phase == .ready)
+        #expect(model.settingsOrigin == .suggested)
+        #expect(model.settings == decision.settings)
+        #expect(model.preview?.settings == decision.settings)
+        #expect(decision.preference == .relaxed)
+        #expect((1...CreateModel.maxCandidates).contains(decision.candidates.count))
+        #expect(decision.candidates.allSatisfy { $0.score != nil })
+        #expect(PaintingLength.relaxed.colorBand.contains(decision.settings.colorCount))
+        // The analysis saw the photo's own size, not the draft's.
+        let source = try #require(model.source)
+        #expect(decision.analysis.sourceWidth == source.image.width && decision.analysis.sourceHeight == source.image.height)
+
+        let draft = try await model.makeDraft()
+        #expect(draft.settings == decision.settings)
+        #expect(draft.settingsOrigin == .suggested)
+        #expect(draft.paintingLength == .relaxed)
+    }
+
+    /// Moving a slider makes the settings the painter's own; Reset to Suggested brings the
+    /// decision's settings back without choosing again.
+    @Test func sliderChangeMakesSettingsCustomAndResetRestoresTheSuggestion() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("hibiscus")))
+        try await waitUntil { model.isFinal }
+        let decision = try #require(model.decision)
+        let suggested = model.settings
+
+        model.detail = suggested.detail < 0.75 ? Double(suggested.detail) + 0.25 : Double(suggested.detail) - 0.25
+        model.settingsChanged()
+        #expect(model.settingsOrigin == .custom)
+        try await waitUntil { model.isFinal }
+        #expect(model.settings != suggested)
+        let custom = try await model.makeDraft()
+        #expect(custom.settingsOrigin == .custom)
+        #expect(custom.settings.detail != suggested.detail)
+
+        model.resetToSuggested()
+        #expect(model.settingsOrigin == .suggested)
+        #expect(model.settings == suggested)
+        var choseAgain = false
+        try await waitUntil {
+            if model.phase == .suggesting { choseAgain = true }
+            return model.isFinal
+        }
+        #expect(!choseAgain, "Reset ran a new suggestion")
+        #expect(model.preview?.settings == suggested)
+        #expect(model.decision?.winner == decision.winner)
+        #expect(model.decision?.candidates.map(\.settings) == decision.candidates.map(\.settings))
+    }
+
+    /// Starting a painting while settings are still being chosen waits for them.
+    @Test func startingWhileChoosingUsesTheSuggestion() async throws {
+        let model = CreateModel(paintingLength: .quick)
+        model.load(sample: try #require(Sample.named("lighthouse")))
+        try await waitUntil { model.source != nil }
+        let draft = try await model.makeDraft()
+        let decision = try #require(model.decision)
+        #expect(decision.preference == .quick)
+        #expect(draft.settings == decision.settings)
+        #expect(draft.settingsOrigin == .suggested && draft.paintingLength == .quick)
+        #expect(PaintingLength.quick.colorBand.contains(draft.settings.colorCount))
+    }
+
+    /// Another photo, or closing the flow, stops a suggestion: nothing of it shows up later.
+    @Test func changingThePhotoCancelsTheSuggestion() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("regatta")))
+        try await waitUntil { model.phase == .suggesting }
+        model.load(sample: try #require(Sample.named("barn")))
+        #expect(model.decision == nil && model.preview == nil && model.settingsOrigin == nil)
+        try await waitUntil { model.isFinal }
+        #expect(model.source?.sampleName == "barn")
+        #expect(model.decision?.analysis.sourceWidth == model.source?.image.width)
+
+        model.load(sample: try #require(Sample.named("espresso")))
+        try await waitUntil { model.phase == .suggesting }
+        model.cancelAll()
+        let shown = model.preview?.id
+        try await Task.sleep(for: .seconds(3))
+        #expect(model.decision == nil && model.settingsOrigin == nil)
+        #expect(model.preview?.id == shown)
+    }
+
     @Test func generatesDraftThenFinalAndFollowsSettings() async throws {
-        let model = CreateModel(initial: GenerationSettings(colorCount: 12, detail: 0.3))
+        let model = CreateModel()
         model.load(sample: try #require(Sample.named("espresso")))
         try await waitUntil { model.isFinal }
         let first = try #require(model.preview)
@@ -20,13 +120,13 @@ struct CreateModelTests {
         model.setAdjusting(true)
         model.colorCount = 8
         model.settingsChanged()
-        try await waitUntil { model.preview?.isDraft == true && model.preview?.settings.colorCount == 8 }
-        #expect(model.preview.map { max($0.template.width, $0.template.height) } ?? 0 <= Int(CreateModel.draftLongSide) + 1)
+        try await waitUntil { model.preview?.isDraft == true && model.preview?.settings?.colorCount == 8 }
+        #expect(model.preview.map { max($0.template.width, $0.template.height) } ?? 0 <= Int(AutoSettings.draftLongSide) + 1)
 
         // …and the full resolution once it is released.
         model.setAdjusting(false)
         try await waitUntil { model.isFinal }
-        #expect(model.preview?.settings.colorCount == 8)
+        #expect(model.preview?.settings?.colorCount == 8)
 
         model.title = "  Morning Coffee "
         let draft = try await model.makeDraft()
@@ -34,27 +134,31 @@ struct CreateModelTests {
         #expect(draft.template.palette.count <= 8)
         #expect(draft.sampleName == "espresso")
         #expect(draft.photo != nil)
+        #expect(draft.settingsOrigin == .custom)
     }
 
     @Test func startingPaintingGeneratesTheFinalTemplateIfNeeded() async throws {
-        let model = CreateModel(initial: GenerationSettings(colorCount: 10, detail: 0.2))
+        let model = CreateModel()
         model.load(sample: try #require(Sample.named("regatta")))
-        try await waitUntil { model.preview != nil }
+        try await waitUntil { model.decision != nil }
         // Change the settings and immediately start: the draft must match the new settings.
         model.colorCount = 7
+        model.settingsChanged()
         let draft = try await model.makeDraft()
         #expect(draft.settings.colorCount == 7)
+        #expect(draft.settingsOrigin == .custom)
         #expect(model.isFinal)
     }
 
     @Test func cameraFailureSurfacesAnError() async throws {
-        let model = CreateModel(initial: GenerationSettings(colorCount: 10, detail: 0.2))
+        let model = CreateModel()
         model.load(sample: try #require(Sample.named("espresso")))
         try await waitUntil { model.source != nil }
         // The camera's shot couldn't be read: the earlier photo and its work are dropped.
         model.fail(.cameraCapture)
         #expect(model.phase == .failed(CreateModel.CreateError.cameraCapture.localizedDescription))
         #expect(model.source == nil && model.preview == nil && model.stats == nil)
+        #expect(model.decision == nil && model.settingsOrigin == nil)
         #expect(!model.isWorking)
         try await Task.sleep(for: .milliseconds(300))
         #expect(model.preview == nil)
@@ -80,7 +184,9 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
-    private func waitUntil(timeout: Duration = .seconds(120), _ condition: () -> Bool) async throws {
+    private func waitUntil(
+        timeout: Duration = .seconds(120), polling interval: Duration = .milliseconds(50), _ condition: () -> Bool
+    ) async throws {
         let clock = ContinuousClock()
         let deadline = clock.now + timeout
         while !condition() {
@@ -88,7 +194,7 @@ struct CreateModelTests {
                 Issue.record("Timed out waiting for the create model")
                 throw CancellationError()
             }
-            try await Task.sleep(for: .milliseconds(50))
+            try await Task.sleep(for: interval)
         }
     }
 }

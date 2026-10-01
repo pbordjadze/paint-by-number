@@ -6,7 +6,7 @@ enum SettingsKey {
     static let haptics = FeedbackEngine.Keys.haptics
     static let sounds = FeedbackEngine.Keys.sounds
     static let autoAdvance = "autoAdvanceColors"
-    static let defaultColorCount = "defaultColorCount"
+    static let paintingLength = "paintingLength"
     static let paperSize = "printPaperSize"
     static let timelapsePace = "timelapsePace"
     static let paperAppearance = "paperAppearance"
@@ -19,22 +19,20 @@ struct Preferences: Equatable {
     var sounds: Bool
     /// Select the next unfinished color when one is completed.
     var autoAdvance: Bool
-    /// Colors a new painting starts with in the create flow.
-    var defaultColorCount: Int
+    /// How long a painting Suggested settings aim for in the create flow.
+    var paintingLength: PaintingLength
     var paper: PDFExporter.Paper
     /// The paper the painting canvas shows.
     var paperAppearance: PaperAppearance
     /// Whether paints go by playful nicknames or their plain structured names.
     var colorNames: ColorNameStyle
 
-    static let defaultColorCountValue = 24
-
     init(defaults: UserDefaults = .standard) {
         haptics = defaults.object(forKey: SettingsKey.haptics) as? Bool ?? true
         sounds = defaults.object(forKey: SettingsKey.sounds) as? Bool ?? true
         autoAdvance = defaults.object(forKey: SettingsKey.autoAdvance) as? Bool ?? true
-        let colors = defaults.object(forKey: SettingsKey.defaultColorCount) as? Int ?? Self.defaultColorCountValue
-        defaultColorCount = min(max(colors, GenerationSettings.colorCountRange.lowerBound), GenerationSettings.colorCountRange.upperBound)
+        paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
+            ?? .default
         paper = defaults.string(forKey: SettingsKey.paperSize).flatMap(PDFExporter.Paper.init(rawValue:))
             ?? .default(for: Locale.current.region)
         paperAppearance = defaults.string(forKey: SettingsKey.paperAppearance).flatMap(PaperAppearance.init(rawValue:))
@@ -42,13 +40,42 @@ struct Preferences: Equatable {
         colorNames = defaults.string(forKey: SettingsKey.colorNames).flatMap(ColorNameStyle.init(rawValue:)) ?? .playful
     }
 
-    /// Settings a new painting starts from.
-    var initialGenerationSettings: GenerationSettings {
-        GenerationSettings(colorCount: defaultColorCount)
-    }
-
     func apply(to session: PaintingSession) {
         session.autoAdvance = autoAdvance
         session.colorNameStyle = colorNames
+    }
+}
+
+/// Settings › Painting Length: what Suggested settings aim for.
+nonisolated extension PaintingLength {
+    static let `default` = PaintingLength.relaxed
+
+    var name: String {
+        switch self {
+        case .quick: String(localized: "paintingLength.quick", defaultValue: "Quick",
+                            comment: "Choice of the Painting Length setting: suggested settings aim for a short painting")
+        case .relaxed: String(localized: "paintingLength.relaxed", defaultValue: "Relaxed",
+                              comment: "Choice of the Painting Length setting: suggested settings aim for about half an hour of painting")
+        case .detailed: String(localized: "paintingLength.detailed", defaultValue: "Detailed",
+                               comment: "Choice of the Painting Length setting: suggested settings aim for a long, detailed painting")
+        }
+    }
+
+    /// The Settings footer under the picker: what the choice typically gives (`timeBand`: Quick
+    /// 8–25 min, Relaxed 20–50, Detailed 40–120). Medians of large corpus photos under a Vision
+    /// stand-in map: 16, 26 and 42 minutes (`docs/wave2/log/auto-tuning.md`, round two). A photo
+    /// too small or too plain to fill Relaxed's or Detailed's band ends below it, at any setting.
+    var footer: String {
+        switch self {
+        case .quick: String(localized: "settings.paintingLength.footer.quick",
+                            defaultValue: "Suggested settings aim for about 15 minutes of painting.",
+                            comment: "Footer under the Painting Length setting when Quick is chosen")
+        case .relaxed: String(localized: "settings.paintingLength.footer.relaxed",
+                              defaultValue: "Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings.",
+                              comment: "Footer under the Painting Length setting when Relaxed is chosen")
+        case .detailed: String(localized: "settings.paintingLength.footer.detailed",
+                               defaultValue: "Suggested settings aim for 45 minutes or more of painting. Small or simple photos make shorter paintings.",
+                               comment: "Footer under the Painting Length setting when Detailed is chosen")
+        }
     }
 }

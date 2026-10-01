@@ -209,6 +209,10 @@
       "comment" : "Accessibility label of the inline photo library picker in the create flow",
       "extractionState" : "manual"
     },
+    "Choosing settings…" : {
+      "comment" : "Status shown over the create preview while settings are being chosen for the photo (Suggested settings); also the sliders' VoiceOver value meanwhile",
+      "extractionState" : "manual"
+    },
     "Close" : {
       "comment" : "Button that closes the current screen or sheet (painting screen, create flow, time-lapse sheet)",
       "extractionState" : "manual"
@@ -677,6 +681,18 @@
         }
       }
     },
+    "create.settingsOrigin.label" : {
+      "comment" : "VoiceOver label of the chip above the create sliders; its value says whether they are suggested for the photo or custom",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
     "create.smoothness.clean" : {
       "comment" : "Smoothness slider value: second step",
       "extractionState" : "manual",
@@ -739,6 +755,10 @@
     },
     "Creating template…" : {
       "comment" : "Status shown while the template is first generated from the photo",
+      "extractionState" : "manual"
+    },
+    "Custom" : {
+      "comment" : "Create flow chip above the sliders once a slider was moved: the settings are the painter's own, not the suggestion; also the chip's VoiceOver value",
       "extractionState" : "manual"
     },
     "Dark paper is easier on the eyes in a dark room." : {
@@ -1849,6 +1869,46 @@
       "comment" : "Name of the painted layer in the create flow's picker and comparison caption; also the fallback title of a painting without one",
       "extractionState" : "manual"
     },
+    "Painting Length" : {
+      "comment" : "Settings picker: how long a painting the suggested settings of new paintings aim for (Quick, Relaxed, Detailed)",
+      "extractionState" : "manual"
+    },
+    "paintingLength.detailed" : {
+      "comment" : "Choice of the Painting Length setting: suggested settings aim for a long, detailed painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detailed"
+          }
+        }
+      }
+    },
+    "paintingLength.quick" : {
+      "comment" : "Choice of the Painting Length setting: suggested settings aim for a short painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick"
+          }
+        }
+      }
+    },
+    "paintingLength.relaxed" : {
+      "comment" : "Choice of the Painting Length setting: suggested settings aim for about half an hour of painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relaxed"
+          }
+        }
+      }
+    },
     "Paper" : {
       "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
       "extractionState" : "manual"
@@ -2061,6 +2121,10 @@
       "comment" : "Menu item on the painting screen that replays the finished painting stroke by stroke",
       "extractionState" : "manual"
     },
+    "Reset to Suggested" : {
+      "comment" : "Create flow button in the chip above the sliders: moves the sliders back to the settings suggested for the photo",
+      "extractionState" : "manual"
+    },
     "Restart" : {
       "comment" : "Menu item and button that clear all paint of a painting",
       "extractionState" : "manual"
@@ -2165,6 +2229,42 @@
       "comment" : "Gallery toolbar button, and the title of the Settings sheet",
       "extractionState" : "manual"
     },
+    "settings.paintingLength.footer.detailed" : {
+      "comment" : "Footer under the Painting Length setting when Detailed is chosen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggested settings aim for 45 minutes or more of painting. Small or simple photos make shorter paintings."
+          }
+        }
+      }
+    },
+    "settings.paintingLength.footer.quick" : {
+      "comment" : "Footer under the Painting Length setting when Quick is chosen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggested settings aim for about 15 minutes of painting."
+          }
+        }
+      }
+    },
+    "settings.paintingLength.footer.relaxed" : {
+      "comment" : "Footer under the Painting Length setting when Relaxed is chosen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings."
+          }
+        }
+      }
+    },
     "settings.section.painting" : {
       "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color",
       "extractionState" : "manual",
@@ -2253,8 +2353,8 @@
       "comment" : "Title of the confirmation dialog for restarting a painting from the gallery",
       "extractionState" : "manual"
     },
-    "Starting Colors" : {
-      "comment" : "Settings stepper: the number of colors new paintings start with",
+    "Suggested for this photo" : {
+      "comment" : "Create flow chip above the sliders: the settings were chosen for this photo automatically; also the chip's VoiceOver value",
       "extractionState" : "manual"
     },
     "Take Photo" : {
@@ -2321,8 +2421,8 @@
         }
       }
     },
-    "The number of colors new paintings start with, and the paper size for printed templates." : {
-      "comment" : "Footer of the Settings section with the defaults for new paintings",
+    "The paper size printed templates are laid out for." : {
+      "comment" : "Footer under the Printed Templates paper size setting",
       "extractionState" : "manual"
     },
     "This device can’t draw the painting right now. Your progress is saved." : {

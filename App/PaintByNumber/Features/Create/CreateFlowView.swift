@@ -42,7 +42,14 @@ struct CreateFlowView: View {
             DemoMode.markReady()
         }
         .onChange(of: model.isFinal) { _, isFinal in
-            if isFinal, openingSample != nil || ShellDemo.current == .createFromFile { DemoMode.markReady() }
+            guard isFinal else { return }
+            if ShellDemo.current?.movesASlider == true, model.settingsOrigin == .suggested {
+                // As a painter would: Detail moved a step off the suggestion and released.
+                model.detail = model.detail < 0.75 ? model.detail + 0.25 : model.detail - 0.25
+                model.settingsChanged()
+                return
+            }
+            if openingSample != nil || ShellDemo.current == .createFromFile { DemoMode.markReady() }
         }
         #endif
         .onDisappear { model.cancelAll() }

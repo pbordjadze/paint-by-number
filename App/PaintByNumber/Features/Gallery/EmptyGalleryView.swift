@@ -19,7 +19,7 @@ struct EmptyGalleryView: View {
             }
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
-            .containerRelativeFrame(.horizontal) { length, _ in min(length - 64, 400) }
+            .containerRelativeFrame(.horizontal) { length, _ in max(0, min(length - 64, 400)) }
 
             Button(action: onCreate) {
                 Label("New Painting", systemImage: "plus")
