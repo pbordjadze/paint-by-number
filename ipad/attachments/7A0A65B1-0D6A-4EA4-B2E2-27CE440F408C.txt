@@ -1,0 +1,4 @@
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type StaticText
+    ↪︎Find: Elements matching predicate '"Suggested settings aim for about an hour of painting." IN identifiers'

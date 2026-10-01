@@ -1,0 +1,30 @@
+Failed to get matching snapshot: No matches found for Elements matching predicate '"swatch-1" IN identifiers' from input {(
+    Button, identifier: 'xmark', label: 'Close',
+    Button, identifier: 'Photo', label: 'Photo', value: Hidden,
+    Button, identifier: 'lightbulb', label: 'Hint',
+    Button, identifier: 'arrow.uturn.backward', label: 'Undo',
+    Button, label: 'More',
+    Button, identifier: 'canvas-area-172', label: 'Area 18', value: not painted, bottom,
+    Button, identifier: 'canvas-area-163', label: 'Area 18', value: not painted, botto...,
+    Button, identifier: 'canvas-area-169', label: 'Area 18', value: not painted, botto...,
+    Button, identifier: 'canvas-area-181', label: 'Area 18', value: not painted, bottom,
+    Button, identifier: 'canvas-area-183', label: 'Area 18', value: not painted, bottom,
+    Button, identifier: 'canvas-area-180', label: 'Area 18', value: not painted, botto...,
+    Button, identifier: 'canvas-area-189', label: 'Area 18', value: not painted, bottom,
+    Button,
+    Button, identifier: 'swatch-18', label: '18, teal', value: 22 percent painted, Selected,
+    Button, identifier: 'swatch-19', label: '19, white', value: 0 percent painted,
+    Button, identifier: 'swatch-20', label: '20, grayish pink', value: 0 percent painted,
+    Button, identifier: 'swatch-21', label: '21, gray', value: 0 percent painted,
+    Button, identifier: 'swatch-22', label: '22, gray', value: 0 percent painted,
+    Button, identifier: 'swatch-23', label: '23, dark gray', value: 0 percent painted,
+    Button, identifier: 'swatch-24', label: '24, very dark gray', value: 0 percent painted
+)}
+Possibly caused by runtime issues:
+Automation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {
+    "XC_kAXXCAttributeAutomationType" = 14;
+    "XC_kAXXCAttributeElementBaseType" = UIResponder;
+    "XC_kAXXCAttributeElementType" = "SwiftUI.AccessibilityNode";
+    "XC_kAXXCAttributeTraits" = 1108101562369;
+}
+See test report attachments for more detail.
