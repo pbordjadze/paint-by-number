@@ -126,7 +126,7 @@ public enum Vectorizer {
             regionMap: map)
         let stats = VectorStats(
             fallbackEdges: smoothing.repairs, labelRoomEdges: smoothing.labelRoomEdges,
-            labelRoomRegions: smoothing.labelRoomRegions)
+            labelRoomRegions: smoothing.labelRoomRegions, labelRoomUnmet: smoothing.labelRoomUnmet)
         return (template, stats)
     }
 }
@@ -139,11 +139,15 @@ public struct VectorStats: Sendable, Equatable {
     public var labelRoomEdges = 0
     /// Distinct regions whose label was short of its room at some point.
     public var labelRoomRegions = 0
+    /// Regions whose label still lacked its room when smoothing ended (always zero; a
+    /// nonzero count points at a broken guarantee in `EdgeSmoother.run`).
+    public var labelRoomUnmet = 0
 
-    public init(fallbackEdges: Int = 0, labelRoomEdges: Int = 0, labelRoomRegions: Int = 0) {
+    public init(fallbackEdges: Int = 0, labelRoomEdges: Int = 0, labelRoomRegions: Int = 0, labelRoomUnmet: Int = 0) {
         self.fallbackEdges = fallbackEdges
         self.labelRoomEdges = labelRoomEdges
         self.labelRoomRegions = labelRoomRegions
+        self.labelRoomUnmet = labelRoomUnmet
     }
 }
 

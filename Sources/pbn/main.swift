@@ -162,6 +162,9 @@ struct Metrics: Codable {
     var labelRoomEdges: Int
     /// Regions whose label needed such edges.
     var labelRoomRegions: Int
+    /// Regions whose label the smoother could not give its room (`VectorStats.labelRoomUnmet`);
+    /// 0 unless its guarantee broke.
+    var labelRoomUnmet: Int
     /// `Template.validate(minLabelRadius: LabelSizing.minimumRadius)` and its report.
     var valid: Bool
     var validation: String
@@ -222,6 +225,7 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         smoothingFallbackEdges: out.vectorStats.fallbackEdges,
         labelRoomEdges: out.vectorStats.labelRoomEdges,
         labelRoomRegions: out.vectorStats.labelRoomRegions,
+        labelRoomUnmet: out.vectorStats.labelRoomUnmet,
         valid: report.isValid,
         validation: report.description,
         colorNames: t.palette.map(\.colorName.english))
@@ -351,6 +355,7 @@ case "trace":
         "triangles": "\(t.mesh.indices.count / 3)", "labels": "\(t.labels.count)", "valid": "\(report.isValid)",
         "report": report.description, "fallbackEdges": "\(stats.fallbackEdges)",
         "labelRoomEdges": "\(stats.labelRoomEdges)", "labelRoomRegions": "\(stats.labelRoomRegions)",
+        "labelRoomUnmet": "\(stats.labelRoomUnmet)",
         "timings": best.sorted { $0.key < $1.key }.map { String(format: "%@=%.1f", $0.key, $0.value) }.joined(separator: " "),
     ]
     let encoder = JSONEncoder()

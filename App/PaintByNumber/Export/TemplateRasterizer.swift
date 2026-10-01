@@ -30,9 +30,6 @@ nonisolated enum TemplateRasterizer {
         var hidesOutlinesBetweenPainted = true
         var numbers = false
         var numberColor = SIMD4<Float>(0.38, 0.40, 0.43, 1)
-        /// Numbers are never drawn smaller than this (output pixels/points), even where that
-        /// overflows a tiny region: a number left out is a region nobody can paint.
-        var minimumNumberSize: CGFloat = 5
         /// Largest number as a fraction of the canvas' long side; big regions carry several
         /// labels of this size rather than one huge number.
         var maximumNumberFraction: CGFloat = 1.0 / 64
@@ -48,11 +45,12 @@ nonisolated enum TemplateRasterizer {
         /// Painted preview without any lines (create flow).
         static let painting = Style(paintAll: true, outlineWidth: 0)
         /// Outlines with numbers on paper, as the user will start painting it.
-        static let template = Style(outlineWidth: 1, numbers: true, minimumNumberSize: 4.5)
-        /// Printable template (PDF): hairlines and small numbers.
+        static let template = Style(outlineWidth: 1, numbers: true)
+        /// Printable template (PDF): hairlines and small numbers. `PDFExporter` picks a scale
+        /// at which the smallest number is still legible on paper.
         static let printable = Style(
             outlineWidth: 0.4, outlineColor: SIMD4(0.45, 0.47, 0.5, 1), numbers: true,
-            numberColor: SIMD4(0.35, 0.37, 0.4, 1), minimumNumberSize: 2.6)
+            numberColor: SIMD4(0.35, 0.37, 0.4, 1))
     }
 
     // MARK: Entry points
@@ -114,7 +112,7 @@ nonisolated enum TemplateRasterizer {
             drawVectorFills(t, painted: flags, style: style, in: ctx, scale: scale)
             if style.outlineWidth > 0 { drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale) }
         }
-        if style.numbers { drawNumbers(t, painted: flags, style: style, in: ctx, scale: scale) }
+        if style.numbers { drawNumbers(t, painted: flags, style: style, in: ctx) }
         ctx.restoreGState()
     }
 
@@ -190,11 +188,21 @@ nonisolated enum TemplateRasterizer {
     }
 
     private static func drawVectorOutlines(_ t: Template, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat) {
+        // A PDF sheet shows part of a large template: edges outside it would still bloat the file.
+        let visible = ctx.boundingBoxOfClipPath
         let path = CGMutablePath()
         for edge in t.edges where edge.right != BoundaryEdge.outside {
             if style.hidesOutlinesBetweenPainted && painted[Int(edge.left)] && painted[Int(edge.right)] { continue }
             let points = t.points(of: edge)
             guard let first = points.first else { continue }
+            var low = first, high = first
+            for p in points {
+                low = pointwiseMin(low, p)
+                high = pointwiseMax(high, p)
+            }
+            // Padded by a unit so straight edges get a box with area.
+            let box = CGRect(x: CGFloat(low.x) - 1, y: CGFloat(low.y) - 1, width: CGFloat(high.x - low.x) + 2, height: CGFloat(high.y - low.y) + 2)
+            guard visible.intersects(box) else { continue }
             path.move(to: CGPoint(first))
             for p in points.dropFirst() { path.addLine(to: CGPoint(p)) }
         }
@@ -272,7 +280,7 @@ nonisolated enum TemplateRasterizer {
     /// Reference size the number glyph runs are laid out at, then scaled per label.
     private static let referenceFontSize: CGFloat = 100
 
-    private static func drawNumbers(_ t: Template, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat) {
+    private static func drawNumbers(_ t: Template, painted: [Bool], style: Style, in ctx: CGContext) {
         let font = CTFontCreateUIFontForLanguage(.system, referenceFontSize, nil)
             ?? CTFontCreateWithName("Helvetica" as CFString, referenceFontSize, nil)
         let capHeight = CTFontGetCapHeight(font)
@@ -294,15 +302,17 @@ nonisolated enum TemplateRasterizer {
         // y-down user space: flip glyphs upright.
         ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         let maximumSize = style.maximumNumberFraction * CGFloat(max(t.width, t.height))
+        let visible = ctx.boundingBoxOfClipPath
         for label in t.labels {
             let region = Int(label.region)
             guard region < painted.count, !painted[region] else { continue }
             let number = Int(t.regions[region].colorIndex) + 1
-            let fitted = CGFloat(LabelSizing.fontSize(
-                radius: label.radius, digits: LabelSizing.digitCount(of: number), maximum: Float(maximumSize)))
-            // Never dropped: an unnumbered region can't be painted, so small outputs draw
-            // numbers at the legible floor even where that overflows a tiny region.
-            let size = max(fitted, style.minimumNumberSize / max(scale, 0.0001))
+            let digits = LabelSizing.digitCount(of: number)
+            // The shared rule at any output scale: a number keeps to its region's room. Output
+            // media make sure that is legible (`PDFExporter` prints large templates on sheets).
+            let size = CGFloat(LabelSizing.fontSize(radius: label.radius, digits: digits, maximum: Float(maximumSize)))
+            let reach = size * CGFloat(digits)
+            guard visible.insetBy(dx: -reach, dy: -reach).contains(CGPoint(label.position)) else { continue }
             let run = line(for: number)
             let s = size / referenceFontSize
             ctx.saveGState()
