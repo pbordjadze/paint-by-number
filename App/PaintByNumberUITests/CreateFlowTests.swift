@@ -89,6 +89,7 @@ final class CreateFlowTests: XCTestCase {
     /// be picked again (the selection is reset after each pick).
     @MainActor
     func testLibraryPhotoOpensPreviewAndCanBePickedAgain() throws {
+        try skipOnPhoneSimulator()
         let (app, picker) = launchToPicker("create")
         XCTAssertTrue(picker.exists, "No library picker")
 
@@ -146,6 +147,7 @@ final class CreateFlowTests: XCTestCase {
     /// "Browse All…" presents the full system picker, which dismisses back to the create flow.
     @MainActor
     func testBrowseAllPresentsSystemPickerAndDismisses() throws {
+        try skipOnPhoneSimulator()
         let (app, picker) = launchToPicker("create")
         XCTAssertTrue(picker.exists, "No library picker")
         let sheet = settledSheetDetector(app)
@@ -192,6 +194,14 @@ final class CreateFlowTests: XCTestCase {
     }
 
     // MARK: - Helpers
+
+    /// On the iPhone simulator the system photo picker ignores synthesized taps on its photos
+    /// and its sheet's Cancel (screen recordings show the taps landing on them; the same flows
+    /// pass on iPad). These paths are verified on iPad and on a device.
+    @MainActor
+    private func skipOnPhoneSimulator() throws {
+        try XCTSkipIf(!isPad, "The system photo picker ignores synthesized taps on the iPhone simulator")
+    }
 
     private var pickerPredicate: NSPredicate { NSPredicate(format: "identifier == 'library-picker'") }
 

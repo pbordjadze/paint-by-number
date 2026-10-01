@@ -60,6 +60,10 @@ final class GalleryActionsTests: XCTestCase {
     private func revealCard(_ title: String, in app: XCUIApplication) -> XCUIElement {
         let card = app.buttons[title].firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 120), "“\(title)” never appeared")
+        // Cards still being generated slide the others along as they land: a long press
+        // meanwhile can open a neighbour's menu.
+        let preparing = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Preparing'")).firstMatch
+        XCTAssertTrue(preparing.waitForNonExistence(timeout: 120), "The demo gallery never finished generating")
         for _ in 0..<6 where !card.isHittable { app.swipeUp() }
         if !card.isHittable {
             let tree = XCTAttachment(string: app.debugDescription)
