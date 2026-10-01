@@ -117,14 +117,19 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Liquid Glass design language (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)`,
   `.glassProminent`), SF Symbols, Dynamic Type, dark mode, VoiceOver labels.
 - Identity: the app is called **Pipo** (display name, gallery title, permission texts, PDF footer;
-  the target, module and repository keep the PaintByNumber names). `Theme` holds it: Paper
-  (parchment `#F4EFE6` / night `#141117`), Surface, `accent` (Nightshade `#7B3F7E` by day, antique
-  gold `#C9A24A` at night, so tinted text reads on both), `signature` (Nightshade in both, under the
-  white labels of `.glassProminent` buttons and tinted glass badges: give every new prominent button
-  `.tint(Theme.signature)`), `gold`, `outline` and the `Sparkle` shape. Titles and numerals use New
-  York: `Font.display(_:weight:)`, serif navigation titles (`Theme.styleNavigationTitles`), serif
-  swatch numerals and canvas digits (`DigitAtlas`); buttons and body text stay SF. The app icon is
-  the night landscape ("C · Landscape" of the design canvas), rendered from its SVG at 1024 px.
+  the target, module and repository keep the PaintByNumber names), styled by the Pipo design system
+  (claude.ai/artifact/HRz1Lc9bkLACNvPKhctojF: README, tokens, icon and motifs). Native first: system
+  controls stay system controls. `Theme` and the asset catalog carry its tokens: Paper =
+  `surface-base` (`#F2F1F4` / `#141117`), Surface = `surface-elevated`, Outline, AccentColor = `tint`
+  (Nightshade `#7B3F7E` by day, antique gold `#C9A24A` at night), `signature` (Nightshade in both,
+  under the labels of `.glassProminent` buttons and tinted glass badges: give every new prominent
+  button `.tint(Theme.signature)`), `gold` (stars, sparkles, crescent only) and the `Sparkle` shape.
+  The canvas sheet is the `paper` token (`#F4EFE6`) with `ink` lines in both appearances. Titles
+  and numerals use New York: `Font.display(_:weight:)`, serif navigation titles
+  (`Theme.styleNavigationTitles`), swatch numerals and canvas digits (`DigitAtlas`); buttons and body
+  text stay SF. The fill moment's two gold sparkles are `CAShapeLayer`s over the canvas
+  (`CanvasView.popSparkles`). The app icon is rendered from the system's `pipo-app-icon-v2.svg` at
+  1024 px (dark: the same art; tinted: its grayscale).
 - Key model types: `PaintingSession` (@Observable; painting rules, tap tolerance, drag-paint, undo,
   per-color progress, events) + `PaintProgress` (persisted). The Metal canvas conforms to
   `PaintingCanvas` and is driven by the session.
