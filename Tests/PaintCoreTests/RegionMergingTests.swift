@@ -24,6 +24,8 @@ struct RegionMergingTests {
         p.stripWidth = 8.1
         p.stripMixture = 0.4
         p.stripContrast = 0.7
+        p.stripEnclosure = 0.6
+        p.stripNeighbourArea = 1
         return p
     }
 
@@ -32,13 +34,16 @@ struct RegionMergingTests {
     /// Simplifies a paint map whose pixel colours are given per pixel; returns the paint of
     /// every pixel and the region count.
     static func simplify(
-        _ classes: [UInt32], colors: [SIMD3<Float>], width w: Int, height h: Int, palette: [SIMD3<Float>]
+        _ classes: [UInt32], colors: [SIMD3<Float>], width w: Int, height h: Int, palette: [SIMD3<Float>],
+        adjust: (inout SegmentationParameters) -> Void = { _ in }
     ) throws -> (classes: [UInt32], regions: Int) {
         var classes = classes
         let grid = Grid(width: w, height: h, storage: colors.map { SIMD4($0, 0) })
+        var p = parameters(width: w, height: h)
+        adjust(&p)
         let (regions, _) = try RegionSimplifier.simplify(
             classes: &classes, width: w, height: h, colors: grid, areaScale: [Float](repeating: 1, count: w * h),
-            palette: palette, parameters: parameters(width: w, height: h), cancel: .none)
+            palette: palette, parameters: p, cancel: .none)
         return (classes, regions.count)
     }
 
@@ -116,6 +121,43 @@ struct RegionMergingTests {
         #expect(result.classes.contains(2))
     }
 
+    /// A soft-edged grey ring 5 px wide around a dark disc (radius 11) on a pink field, like
+    /// the iris around a pupil: narrow, elongated, a mix of its neighbours' paints, with ramps
+    /// for borders. Paints 0 (disc), 1 (ring), 2 (field); colours blurred over ±2 px.
+    static func ringScene() -> (classes: [UInt32], colors: [SIMD3<Float>], palette: [SIMD3<Float>]) {
+        let w = 80, h = 80
+        let palette: [SIMD3<Float>] = [Self.grey(0.25), Self.grey(0.55), SIMD3(0.8, 0.06, 0.02)]
+        var classes = [UInt32](repeating: 0, count: w * h)
+        var colors = [SIMD3<Float>](repeating: .zero, count: w * h)
+        func ramp(_ r: Float, _ edge: Float) -> Float { min(max((r - edge + 2) / 4, 0), 1) }
+        for y in 0..<h {
+            for x in 0..<w {
+                let dx = Float(x) - 39.5, dy = Float(y) - 39.5
+                let r = (dx * dx + dy * dy).squareRoot()
+                classes[y * w + x] = r < 11 ? 0 : (r < 16 ? 1 : 2)
+                let inner = palette[0] + (palette[1] - palette[0]) * ramp(r, 11)
+                colors[y * w + x] = inner + (palette[2] - palette[1]) * ramp(r, 16)
+            }
+        }
+        return (classes, colors, palette)
+    }
+
+    @Test func ringAroundASmallFeatureIsNotAStrip() throws {
+        // Either guard keeps the ring (it wraps the disc, and the disc is smaller than the
+        // ring); with both off the very same ring passes every other strip test and merges.
+        let scene = Self.ringScene()
+        for (enclosure, neighbourArea, kept) in [(Float(0.6), Float(1), true), (9, 1, true), (0.6, 0, true), (9, 0, false)] {
+            let result = try Self.simplify(scene.classes, colors: scene.colors, width: 80, height: 80, palette: scene.palette) {
+                $0.minRadius = 2
+                $0.stripEnclosure = enclosure
+                $0.stripNeighbourArea = neighbourArea
+            }
+            #expect(result.classes.contains(1) == kept, "enclosure \(enclosure), neighbour area \(neighbourArea)")
+            #expect(result.classes[40 * 80 + 40] == 0)
+            #expect(result.regions == (kept ? 3 : 2))
+        }
+    }
+
     // MARK: - Boundary steps
 
     @Test func boundaryStepsMatchBruteForce() {
@@ -127,28 +169,37 @@ struct RegionMergingTests {
             for x in 0..<w { classes[y * w + x] = coarse[(y / 5) * 14 + x / 5] }
         }
         let colors = (0..<(w * h)).map { _ in SIMD4(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), 0) }
-        let regions = RegionRuns(classes: classes, width: w, height: h)
-        let adjacency = RegionAdjacency(regions)
-        let metric = SIMD3<Float>(1, 0.5, 0.5)
-        let steps = adjacency.boundarySteps(regions, colors: colors, metric: metric)
-        #expect(steps.count == adjacency.pairs.count)
-        let labels = regions.labelMap()
-        var expected = [UInt64: Float]()
-        func add(_ i: Int, _ j: Int) {
-            let a = labels.storage[i], b = labels.storage[j]
-            guard a != b else { return }
-            let d = (colors[i] - colors[j]) * SIMD4(metric, 0)
-            expected[RegionAdjacency.key(a, b), default: 0] += (d * d).sum().squareRoot()
-        }
-        for y in 0..<h {
-            for x in 0..<w {
-                if x + 1 < w { add(y * w + x, y * w + x + 1) }
-                if y + 1 < h { add(y * w + x, (y + 1) * w + x) }
+        var regions = RegionRuns(classes: classes, width: w, height: h)
+        var adjacency = RegionAdjacency(regions)
+        func check(_ steps: [Float], _ regions: RegionRuns, _ adjacency: RegionAdjacency) {
+            #expect(steps.count == adjacency.pairs.count)
+            let labels = regions.labelMap()
+            var expected = [UInt64: Float]()
+            func add(_ i: Int, _ j: Int) {
+                let a = labels.storage[i], b = labels.storage[j]
+                guard a != b else { return }
+                var d = colors[i] - colors[j]
+                d.w = 0
+                expected[RegionAdjacency.key(a, b), default: 0] += (d * d).sum().squareRoot()
+            }
+            for y in 0..<h {
+                for x in 0..<w {
+                    if x + 1 < w { add(y * w + x, y * w + x + 1) }
+                    if y + 1 < h { add(y * w + x, (y + 1) * w + x) }
+                }
+            }
+            #expect(expected.count == adjacency.pairs.count)
+            for k in adjacency.pairs.indices {
+                #expect(abs(steps[k] - expected[adjacency.pairs[k]]!) < 1e-3 * max(1, expected[adjacency.pairs[k]]!))
             }
         }
-        for k in adjacency.pairs.indices {
-            #expect(abs(steps[k] - expected[adjacency.pairs[k]]!) < 1e-3 * max(1, expected[adjacency.pairs[k]]!))
-        }
+        check(adjacency.boundarySteps(regions, colors: colors), regions, adjacency)
+        // Merges regroup the measured sums instead of rescanning; they must still match.
+        var paint = regions.classOf
+        for r in paint.indices where paint[r] == 3 { paint[r] = 2 }
+        regions.merge(roots: (0..<regions.count).map { Int32($0) }, paint: paint, adjacency: &adjacency, classes: &classes)
+        #expect(adjacency.steps != nil)
+        check(adjacency.boundarySteps(regions, colors: colors), regions, adjacency)
     }
 
     // MARK: - Gradient bands
@@ -174,7 +225,10 @@ struct RegionMergingTests {
     @Test func rampBandsFuseUpToToleranceAndContoursStay() throws {
         let (classes0, colors, palette) = Self.rampScene()
         let w = 240, h = 30
-        for (importance, bandWidth, expectedRegions) in [(Float(1), Float(0), 5), (0, 40, 3)] {
+        // Ten bands 0.02 apart: at the near tolerance (0.045) they fuse in threes (spread
+        // 0.04), at the band tolerance (0.1) in sixes, and on the subject (0.0225) at most in
+        // pairs (which pairs depends on float ties among equal distances: 5 or 4 merges).
+        for (importance, bandWidth, expected) in [(Float(0), Float(0), 5...5), (0, 40, 3...3), (1, 40, 6...7)] {
             var classes = classes0
             var labelling = classes0
             var regions = RegionRuns(classes: classes, width: w, height: h)
@@ -182,18 +236,20 @@ struct RegionMergingTests {
             let merges = try BandMerging.apply(
                 classes: &classes, labelling: &labelling, regions: &regions, adjacency: &adjacency, colors: colors,
                 importance: [Float](repeating: importance, count: w * h), palette: palette,
-                metric: SIMD3(repeating: 1), tolerance: (near: 0.045, band: 0.1), bandWidth: bandWidth, contrast: 0.25)
-            // Closest pairs first, so bands fuse in threes (spread 0.04) at the near tolerance
-            // and in sixes (spread 0.1) at the band tolerance; the contour never fuses.
-            #expect(merges == 11 - expectedRegions)
-            #expect(regions.count == expectedRegions)
+                metric: SIMD3(repeating: 1), tolerance: (near: 0.045, nearImportant: 0.0225, band: 0.1),
+                bandWidth: bandWidth, contrast: 0.25)
+            // Closest pairs first; the contour never fuses.
+            #expect(expected.contains(regions.count))
+            #expect(merges == 11 - regions.count)
+            let bandsPerPaint = Dictionary(grouping: 0..<10) { classes[15 * w + 20 * $0] }.values.map(\.count)
+            #expect(bandsPerPaint.max()! <= (importance == 1 ? 2 : 6))
             #expect(regions.classOf.last == 10)
             #expect(classes[15 * w + 239] == 10 && classes[15 * w + 199] != 10)
             // Absorbed bands report the fused paint as their own, so the palette refit
             // centres the paint on the whole fused ramp.
             for x in 0..<200 { #expect(labelling[15 * w + x] == classes[15 * w + x]) }
             let paints = Set(classes[(15 * w)..<(16 * w)])
-            #expect(paints.count == expectedRegions)
+            #expect(paints.count == regions.count)
             for k in adjacency.pairs.indices {
                 let a = Int(adjacency.pairs[k] >> 32), b = Int(adjacency.pairs[k] & 0xFFFF_FFFF)
                 #expect(regions.classOf[a] != regions.classOf[b])

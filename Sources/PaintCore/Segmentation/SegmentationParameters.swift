@@ -85,17 +85,25 @@ struct SegmentationParameters: Sendable {
     /// of its two dominant neighbours' paints of the line between those paints, and the mean
     /// colour step across each of those two borders is below `stripContrast` × the paint
     /// difference (an edge blurred over 4+ pixels; a sharp contour steps by the whole
-    /// difference within a pixel or two).
+    /// difference within a pixel or two). Both dominant neighbours must be open areas: one
+    /// that shares `stripEnclosure` or more of its whole outline (image edge included) with
+    /// the region is wrapped by it, and one smaller than `stripNeighbourArea` × the region's
+    /// area is the inside of a rim or a ring nest (a pupil inside its iris, an iris inside
+    /// its eye ring); rings are features, not blur.
     var stripCompactness: Float
     var stripWidth: Float
     var stripMixture: Float
     var stripContrast: Float
+    var stripEnclosure: Float
+    var stripNeighbourArea: Float
     /// Gradient bands (see `BandMerging`): the largest spread (OKLab) of paints fused into
-    /// one region across weak boundaries, for paints too close to tell apart (anywhere) and
-    /// for narrow bands in unimportant areas; the mean width up to which a region is a
-    /// narrow band; and the fraction of the paint difference the colour step across a
-    /// boundary must stay under to count as a ramp rather than a contour.
+    /// one region across weak boundaries in unimportant areas, for paints too close to tell
+    /// apart (anywhere) and for narrow bands, both falling to `bandNearImportantTolerance`
+    /// at importance 1; the mean width up to which a region is a narrow band; and the
+    /// fraction of the paint difference the colour step across a boundary must stay under
+    /// to count as a ramp rather than a contour.
     var bandNearTolerance: Float
+    var bandNearImportantTolerance: Float
     var bandTolerance: Float
     var bandWidth: Float
     var bandContrast: Float
@@ -159,12 +167,21 @@ struct SegmentationParameters: Sendable {
         stripWidth = 3 * minRadius
         stripMixture = 0.4
         stripContrast = 0.7
+        // A pupil cut by the eyelid still shares well over half its outline with the iris.
+        // The rings of the Parrots eye at 24 colours (a 68-px pupil inside a 183-px inner
+        // iris, a 249-px iris, a 342-px eye ring) are each smaller than the ring around them,
+        // while the blurred-edge strips along a beak run between regions many times
+        // their size.
+        stripEnclosure = 0.6
+        stripNeighbourArea = 1
         // Paints about two just-noticeable differences apart (below a large palette's
-        // spacing) fuse anywhere; the rings of a background ramp fuse up to clearly different
-        // shades. Bold templates fuse more gradation than fine ones, so the detail slider
-        // keeps its meaning. Bokeh rings are a few percent of the frame wide, a sky band far
-        // more.
+        // spacing) fuse anywhere in the background, and the rings of a background ramp up to
+        // clearly different shades; on the subject only paints about one apart, since its
+        // modelling is worth its regions and its colour error is the one people see. Bold
+        // templates fuse more gradation than fine ones, so the detail slider keeps its
+        // meaning. Bokeh rings are a few percent of the frame wide, a sky band far more.
         bandNearTolerance = 0.045 * lerp(1.3, 0.8, d)
+        bandNearImportantTolerance = 0.5 * bandNearTolerance
         bandTolerance = 0.1 * lerp(1.4, 0.7, d)
         bandWidth = side * 0.02
         bandContrast = 0.25

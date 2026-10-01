@@ -167,6 +167,59 @@ struct SegmentationTests {
         #expect(again.palette == s.palette)
     }
 
+    @Test func bandFusingKeepsThePaintBudget() throws {
+        // A smooth two-axis gradient above the colourful tiles: fusing the gradient's bands
+        // frees paints, which are re-spent, so a 150-colour request delivers about as many
+        // paints as without the band stage.
+        var image = Self.colorful(width: 480, height: 320)
+        for y in 0..<160 {
+            for x in 0..<480 {
+                let t = Float(x) / 480, u = Float(y) / 320
+                image[x, y] = SIMD4(UInt8(40 + 200 * t), UInt8(60 + 150 * u), UInt8(200 - 120 * t * u), 255)
+            }
+        }
+        let settings = GenerationSettings(colorCount: 150, detail: 1)
+        let p = SegmentationParameters(settings: settings, width: image.width, height: image.height)
+        var unfused = p
+        unfused.bandNearTolerance = 0
+        unfused.bandNearImportantTolerance = 0
+        unfused.bandTolerance = 0
+        func segment(_ p: SegmentationParameters) throws -> Segmentation {
+            try Segmenter.segment(image, importance: nil, parameters: p, cancel: .none, clock: StageClock(), progress: { _ in })
+        }
+        let fused = try segment(p), plain = try segment(unfused)
+        Self.checkInvariants(fused, settings: settings, minRadius: 2.7)
+        #expect(fused.regionCount < plain.regionCount)
+        #expect(fused.palette.count + plain.palette.count / 25 >= plain.palette.count)
+    }
+
+    @Test func freedPaintsAreRespent() throws {
+        // Two separate regions share paint 1 although their colours are far apart, and paint 2
+        // is unused (as after band fusing): the refit gives one of them the free paint, so
+        // both end up close to their own colour and no paint is lost.
+        let w = 60, h = 20
+        var classes = [UInt32](repeating: 0, count: w * h)
+        var lab = [SIMD4<Float>](repeating: .zero, count: w * h)
+        for y in 0..<h {
+            for x in 0..<w {
+                let band = x / 20
+                classes[y * w + x] = band == 1 ? 0 : 1
+                lab[y * w + x] = SIMD4([Float(0.15), 0.5, 0.95][band], 0, 0, 0)
+            }
+        }
+        var regions = RegionRuns(classes: classes, width: w, height: h)
+        var adjacency = RegionAdjacency(regions)
+        let palette = try PaletteRefiner.refine(
+            classes: &classes, regions: &regions, adjacency: &adjacency, lab: lab,
+            importance: [Float](repeating: 0.5, count: w * h), labelling: classes,
+            palette: [SIMD3(0.5, 0, 0), SIMD3(0.55, 0, 0), SIMD3(0.3, 0, 0)], minDistance: 0.04, chromaScale: 1.6,
+            iterations: 3)
+        #expect(palette.count == 3)
+        for (x, l) in [(10, Float(0.15)), (30, 0.5), (50, 0.95)] {
+            #expect(abs(palette[Int(classes[10 * w + x])].x - l) < 0.01)
+        }
+    }
+
     /// `GenerationSettings.minPaletteDistance` is the floor tools/regression.py holds templates
     /// to, so it must be the one segmentation enforces.
     @Test(arguments: [12, 24, 150])
@@ -204,6 +257,12 @@ struct SegmentationTests {
         let fine = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 1), importance: nowhere)
         Self.checkInvariants(bold, settings: boldSettings, minRadius: 3.5)
         #expect(bold.regionCount + 8 <= fine.regionCount)
+        // On the plain scene (no small features to drop) the detail slider must at least
+        // not run backwards beyond a region or two of noise.
+        let plain = Self.scene(width: 200, height: 150)
+        let plainBold = try Self.segment(plain, settings: boldSettings)
+        let plainFine = try Self.segment(plain, settings: GenerationSettings(colorCount: 16, detail: 1))
+        #expect(plainBold.regionCount <= plainFine.regionCount + 2)
     }
 
     @Test func importanceIsHonoured() throws {
