@@ -168,7 +168,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   (`paint-long-text`, `paint-complete-long-text`, `gallery-long-text`, `settings-long-text`) are
   launched by `ci/screenshots.sh` with `-NSDoubleLocalizedStrings YES`, which doubles every
   localized string; read their screenshots after UI text changes (bars scale or wrap their text,
-  no text sits in a fixed-width frame).
+  no text sits in a fixed-width frame). `LongTextTests` (UI tests) keeps the bars' controls, the
+  color name and the toast on screen under the same doubling.
 - Accessibility: `CanvasView` is a VoiceOver container (`CanvasAccessibility`): up to 40
   `canvas-area-<region>` buttons for the unpainted areas of the selected color in view (activating
   one paints it), a `canvas-placeholder` when none are, custom actions Paint next area / Zoom to
