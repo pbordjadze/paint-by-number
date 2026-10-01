@@ -338,21 +338,17 @@ private struct SheetDetector {
         }
     }
 
-    /// Enabled Cancel/Close buttons centred on screen, read from one snapshot of the tree:
-    /// resolving buttons one by one races the sheet's animation (a button listed a moment ago
-    /// can be gone when its frame is read, which fails the test outright).
+    /// Enabled Cancel/Close buttons centred on screen. Each is read through its own snapshot,
+    /// which throws when the button is gone: reading a listed button's properties directly
+    /// races the sheet's animation and fails the test outright ("no matches for element at
+    /// index 1"). A snapshot of the whole app didn't include the system picker's sheet on CI.
     private static func dismissFrames(in app: XCUIApplication) -> [CGRect] {
-        guard let root = try? app.snapshot() else { return [] }
-        var frames: [CGRect] = []
-        var pending: [any XCUIElementSnapshot] = [root]
-        while let element = pending.popLast() {
+        let screen = app.windows.firstMatch.frame
+        let buttons = app.buttons.matching(NSPredicate(format: "label IN {'Cancel', 'Close'}"))
+        return buttons.allElementsBoundByIndex.compactMap { button in
+            guard let element = try? button.snapshot(), element.isEnabled else { return nil }
             let frame = element.frame
-            if element.elementType == .button, element.label == "Cancel" || element.label == "Close",
-               element.isEnabled, !frame.isEmpty, root.frame.contains(CGPoint(x: frame.midX, y: frame.midY)) {
-                frames.append(frame)
-            }
-            pending.append(contentsOf: element.children.reversed())
+            return !frame.isEmpty && screen.contains(CGPoint(x: frame.midX, y: frame.midY)) ? frame : nil
         }
-        return frames
     }
 }

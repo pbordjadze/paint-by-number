@@ -28,8 +28,7 @@ struct TimelapseExportTests {
         let asset = AVURLAsset(url: url)
         let track = try #require(try await asset.loadTracks(withMediaType: .video).first)
         let reader = try AVAssetReader(asset: asset)
-        // Every sample decoded in order: the image generator's seek to the last timestamp
-        // returned blank paper on the simulator.
+        // Every sample decoded in order, so the first and last frames are exactly the movie's.
         let output = AVAssetReaderTrackOutput(
             track: track, outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA])
         reader.add(output)

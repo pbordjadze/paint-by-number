@@ -34,8 +34,14 @@ enum Fixtures {
         var rings: [Ring] = []
         var regions: [Region] = []
         var labels: [Label] = []
+        // The Metal canvas fills regions from the mesh: two triangles per stripe, positive area.
+        var mesh = FillMesh()
         for i in 0..<count {
             let x0 = Float(i * stripeWidth), x1 = Float((i + 1) * stripeWidth)
+            let first = UInt32(mesh.vertices.count)
+            mesh.vertices += [SIMD2(x0, 0), SIMD2(x1, 0), SIMD2(x1, h), SIMD2(x0, h)]
+            mesh.vertexRegion += Array(repeating: UInt32(i), count: 4)
+            mesh.indices += [first, first + 1, first + 2, first, first + 2, first + 3]
             let top = addEdge(SIMD2(x0, 0), SIMD2(x1, 0), left: UInt32(i), right: BoundaryEdge.outside)
             let bottom = addEdge(SIMD2(x1, h), SIMD2(x0, h), left: UInt32(i), right: BoundaryEdge.outside)
             let start = UInt32(ringEdges.count)
@@ -61,7 +67,7 @@ enum Fixtures {
         return Template(
             width: width, height: height, colorSpace: .sRGB, palette: palette, regions: regions,
             points: vector ? points : [], edges: vector ? edges : [], ringEdges: vector ? ringEdges : [],
-            rings: vector ? rings : [], labels: labels, mesh: FillMesh(),
+            rings: vector ? rings : [], labels: labels, mesh: vector ? mesh : FillMesh(),
             regionMap: RegionMap(width: width, height: height, storage: map))
     }
 
