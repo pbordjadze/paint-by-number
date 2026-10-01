@@ -41,7 +41,12 @@ final class CreateFlowTests: XCTestCase {
         let title = app.textFields["painting-title"]
         XCTAssertTrue(title.exists, "The preview has no title field")
         XCTAssertEqual(title.placeholderValue, "Parrots")
-        title.tap()
+        // The first tap can land while the preview is still settling: type only once focused.
+        let focused = NSPredicate(format: "hasKeyboardFocus == true")
+        for _ in 0..<3 where !focused.evaluate(with: title) {
+            title.tap()
+            _ = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: focused, object: title)], timeout: 3)
+        }
         title.typeText("Jungle Birds\n")
         XCTAssertEqual(title.value as? String, "Jungle Birds")
         let shot = XCTAttachment(screenshot: app.screenshot())
@@ -250,9 +255,10 @@ final class CreateFlowTests: XCTestCase {
     /// Taps the first library photo that is fully visible inside `area` (window coordinates).
     /// The picker runs out of process and its photos may report frames in its own coordinates
     /// (relative to `origin`, the picker's top-left corner in the window) rather than the
-    /// window's. A photo whose reported frame passes XCUITest's hit test is in window
-    /// coordinates; otherwise the picker-relative reading is used. Photos at the `excluding`
-    /// frames (as reported) belong to another picker and are skipped.
+    /// window's. For the inline picker (no `origin`) the grid's left edge tells which; for a
+    /// sheet, a photo that passes XCUITest's hit test is in window coordinates, otherwise the
+    /// picker-relative reading is used. Photos at the `excluding` frames (as reported) belong to
+    /// another picker and are skipped.
     @MainActor
     private func tapFirstPhoto(
         _ app: XCUIApplication, in area: CGRect, origin: CGPoint? = nil, excluding: [CGRect] = []
@@ -262,14 +268,23 @@ final class CreateFlowTests: XCTestCase {
             attachTree(app, named: "library-picker-tree")
             throw XCTSkip("The library picker's photos aren't reachable from the UI test")
         }
+        // Thumbnails only (the picker's bar may carry small glyphs with similar labels).
+        let thumbnails = photos.allElementsBoundByIndex.prefix(60)
+            .map { (element: $0, frame: $0.frame) }
+            .filter { $0.frame.width >= 40 && $0.frame.height >= 40 && !excluding.contains($0.frame) }
+        // When `area` is the picker itself, a grid in the picker's own coordinates starts at
+        // x ≈ 0, left of the picker in the window. (Hit testing misled here: on the phone the
+        // photos failed it in window coordinates, which sent the tap below the grid.)
+        let inlineRelative: Bool? = origin == nil
+            ? (thumbnails.map { $0.frame.minX }.min() ?? 0) < area.minX - 1 : nil
         let origin = origin ?? area.origin
         var target: CGRect?
-        for photo in photos.allElementsBoundByIndex.prefix(60) {
-            let frame = photo.frame
-            // Thumbnails only (the picker's bar may carry small glyphs with similar labels).
-            guard frame.width >= 40, frame.height >= 40, !excluding.contains(frame) else { continue }
+        for (photo, frame) in thumbnails {
             let relative = frame.offsetBy(dx: origin.x, dy: origin.y)
-            if area.contains(frame), photo.isHittable {
+            if let inlineRelative {
+                let candidate = inlineRelative ? relative : frame
+                if area.contains(candidate) { target = candidate }
+            } else if area.contains(frame), photo.isHittable {
                 target = frame
             } else if area.contains(relative) {
                 target = relative
@@ -331,11 +346,12 @@ private struct SheetDetector {
         existing = Self.dismissFrames(in: app)
     }
 
-    /// The frame of the sheet's dismiss button, nil while no sheet is up.
+    /// The frame of the sheet's dismiss button, nil while no sheet is up: the topmost new
+    /// one (the sheet's bar sits above the Close of its "Private Access" banner).
     var dismissFrame: CGRect? {
-        Self.dismissFrames(in: app).first { frame in
-            !existing.contains { $0.insetBy(dx: -2, dy: -2).contains(frame) }
-        }
+        Self.dismissFrames(in: app)
+            .filter { frame in !existing.contains { $0.insetBy(dx: -2, dy: -2).contains(frame) } }
+            .min { $0.minY < $1.minY }
     }
 
     /// Enabled Cancel/Close buttons centred on screen. Each is read through its own snapshot,

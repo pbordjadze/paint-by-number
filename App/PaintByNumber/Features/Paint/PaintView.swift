@@ -206,36 +206,46 @@ struct PaintView: View {
 
     // MARK: Top bar
 
-    /// Close, the progress badge, then Photo, Hint, Undo and More. The badge shrinks to its
-    /// ring before any control goes; only the narrowest windows (~320 pt) drop Hint, which the
-    /// selected swatch and the `h` key still offer.
+    /// Close, the progress badge, then Photo, Hint, Undo and More. The controls take their room
+    /// first and the badge picks the variant that fits the rest (down to its ring and
+    /// percentage); only when even that leaves too little (the narrowest windows) does Hint go,
+    /// which the selected swatch and the `h` key still offer. Nothing here may grow wider than
+    /// the window: the bar's width would widen the whole screen.
     private func topBar(width: CGFloat) -> some View {
-        let showsPhotoControl = photoLoader != nil
-        let buttons = (onClose == nil ? 0 : 1) + (showsPhotoControl ? 1 : 0) + 3
-        let showsHint = CGFloat(buttons) * 54 + 10 + 46 + 2 * Self.edge <= width
-        return GlassEffectContainer(spacing: 10) {
+        GlassEffectContainer(spacing: 10) {
             HStack(spacing: 10) {
                 if let onClose {
                     GlassIconButton(systemImage: "xmark", label: "Close", action: onClose)
                 }
                 progressBadge
-                Spacer(minLength: 0)
-                if showsPhotoControl {
-                    PhotoPeekButton(peek: $peek)
-                        .disabled(photoUnavailable)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                ViewThatFits(in: .horizontal) {
+                    trailingControls(showsHint: true)
+                    trailingControls(showsHint: false)
                 }
-                if showsHint {
-                    GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
-                        .disabled(session.isComplete)
-                }
-                GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
-                    .disabled(session.progress.paintedCount == 0)
-                moreMenu
+                .layoutPriority(1)
             }
+            .frame(maxWidth: max(0, width - 2 * Self.edge))
         }
         // The bar keeps its 44 pt height (the canvas insets assume it); larger text sizes
         // reach its controls through the Large Content Viewer.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
+
+    private func trailingControls(showsHint: Bool) -> some View {
+        HStack(spacing: 10) {
+            if photoLoader != nil {
+                PhotoPeekButton(peek: $peek)
+                    .disabled(photoUnavailable)
+            }
+            if showsHint {
+                GlassIconButton(systemImage: "lightbulb", label: "Hint") { controller.showHint() }
+                    .disabled(session.isComplete)
+            }
+            GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
+                .disabled(session.progress.paintedCount == 0)
+            moreMenu
+        }
     }
 
     /// Progress, the title when it fits whole, and on regular widths the selected color's
