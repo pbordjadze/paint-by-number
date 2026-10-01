@@ -33,12 +33,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `python3 tools/eval.py run <images...> --out <dir> [-- --colors 24 --detail 0.5]` — runs the
   pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
   `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, label
-  legibility — `labelsBelowLegibleSize` must be 0, `minLabelRadius`, `minLabelRoom`, `valid` —
-  timings, palette and `colorNames`; the sheet's palette panel labels each swatch with its
-  name). The metrics are `pbn generate`'s `stats.json`, a stable interface for regression
-  tooling: add fields, never rename them. Look at the PNGs with the Read tool. The sheet's second row shows the raw region raster, a 2×
-  `boundaries.png` (1-px region outlines, best for judging segmentation shapes) and the palette;
-  `--importance-dir DIR` passes `DIR/<name>.pgm` as the importance map (Vision stand-in).
+  legibility — `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0, `minLabelRadius`,
+  `minLabelRoom`, `valid` — timings, palette and `colorNames`; the sheet's palette panel labels
+  each swatch with its name). The metrics are `pbn generate`'s `stats.json`, a stable interface
+  for regression tooling: add fields, never rename them. Look at the PNGs with the Read tool.
+  The sheet's second row shows the raw region raster, a 2× `boundaries.png` (1-px region
+  outlines, best for judging segmentation shapes) and the palette; `--importance-dir DIR` passes
+  `DIR/<name>.pgm` as the importance map (Vision stand-in).
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
   corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
 - `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
@@ -245,6 +246,8 @@ Saved paintings must open in every later build. The format history is documented
   (thumbnails, PDF) and the Metal canvas all use it and never drop a number. The pipeline gives
   every label room for its digit count (raster `minRadius(digits:)`, vector `LabelRoom`), so no
   number is smaller than `LabelSizing.minimumFontSize`; `validate(minLabelRadius:)` checks it.
+  Print legibility is the PDF exporter's job, not a renderer floor: `PDFExporter.sheets` prints a
+  detailed template on overlapping sheets so the smallest number is at least 2.6 pt.
 - Canvas units = pixels of the working image; origin top-left, +y down.
 - Keep `PaintCore` free of Apple-only frameworks (guard any Accelerate/Metal use with
   `#if canImport(...)` and keep a portable path).

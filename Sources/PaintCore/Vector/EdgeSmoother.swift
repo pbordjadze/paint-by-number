@@ -60,6 +60,10 @@ struct SmoothingResult {
     /// labels needed it.
     var labelRoomEdges: Int
     var labelRoomRegions: Int
+    /// Labels still short of their room when no edge near them could step down any more.
+    /// Zero by construction (see `EdgeSmoother.run`); counted so a broken invariant shows up
+    /// in the stats rather than only as an invalid template.
+    var labelRoomUnmet: Int
     /// Labels of the final geometry; nil when no label room was requested.
     var poles: LabelPoles?
 }
@@ -139,6 +143,7 @@ struct EdgeSmoother {
         var needPole = [Bool](repeating: true, count: regionCount)
         var roomEdge = [Bool](repeating: false, count: edgeCount)
         var roomRegion = [Bool](repeating: false, count: regionCount)
+        var unmet = 0
         func step(_ list: [Int], shapes: inout [UInt8]) -> [Bool] {
             var changed = [Bool](repeating: false, count: edgeCount)
             for e in list {
@@ -176,7 +181,9 @@ struct EdgeSmoother {
                 shapes: RegionShapes(points: geo.points, edges: edges, topology: room.topology), cancel: cancel)
             needPole = [Bool](repeating: false, count: regionCount)
             var pick = [Bool](repeating: false, count: edgeCount)
+            var short = 0
             for r in 0..<regionCount where poles.radius[r] < room.minRadius[r] - Self.labelRoomSlack {
+                short += 1
                 roomRegion[r] = true
                 let seed = room.seeds[r]
                 let reach = Double(room.minRadius[r]) + 1
@@ -195,14 +202,18 @@ struct EdgeSmoother {
                 }
             }
             let demote = (0..<edgeCount).filter { pick[$0] }
-            // Never empty while a label is short (see above); the guard only rules out a spin.
-            if demote.isEmpty { break }
+            // Empty once every label has its room; never while one is short (see above), so
+            // `unmet` stays zero unless that argument breaks.
+            if demote.isEmpty {
+                unmet = short
+                break
+            }
             for e in demote { roomEdge[e] = true }
             dirty = step(demote, shapes: &shapes)
         }
         return SmoothingResult(
             geometry: geo, repairs: repairs, labelRoomEdges: roomEdge.count(where: { $0 }),
-            labelRoomRegions: roomRegion.count(where: { $0 }), poles: room == nil ? nil : poles)
+            labelRoomRegions: roomRegion.count(where: { $0 }), labelRoomUnmet: unmet, poles: room == nil ? nil : poles)
     }
 
     /// Tolerance of the label room check: a lattice polygon clears exactly the seed's lattice
