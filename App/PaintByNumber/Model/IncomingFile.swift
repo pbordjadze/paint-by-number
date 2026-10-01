@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-/// An image another app handed over through "Open in Paint by Numbers" (share sheet, Files).
+/// An image another app handed over through "Open in Pipo" (share sheet, Files).
 nonisolated struct IncomingImage: Sendable, Equatable {
     /// The file's bytes; empty when it couldn't be read, which the create flow reports as a
     /// photo that couldn't be opened, like any other undecodable file.

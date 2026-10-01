@@ -97,7 +97,7 @@ NON_UI_CALLS = {
 # text). Each needs a reason.
 ALLOWED_LITERALS = {
     # The PDF's "Creator" metadata names the app; it is not displayed text.
-    ("Export/PDFExporter.swift", "Paint by Numbers"),
+    ("Export/PDFExporter.swift", "Pipo"),
     # A label Xcode's GPU debugger shows for a Metal pass.
     ("Canvas/RenderContext.swift", "Outline coverage"),
     # Diagnostics of failed file decoding: logged, never shown (the person sees the recovery screen).

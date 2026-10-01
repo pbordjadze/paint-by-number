@@ -1,6 +1,6 @@
-# Paint by Numbers
+# Pipo
 
-A native iOS & iPadOS 26 app that turns your photos into beautiful paint-by-numbers
+Pipo is a native iOS & iPadOS 26 app that turns your photos into beautiful paint-by-numbers
 templates — entirely on-device — and makes painting them fluid and satisfying.
 
 ## Highlights
@@ -24,7 +24,7 @@ templates — entirely on-device — and makes painting them fluid and satisfyin
   nickname, the plain name and the hex code; VoiceOver and the printed color key read both names.
 - **Dark paper**: a deep warm-grey canvas with light lines and numbers for painting in the evening
   (Light, Dark or Automatic); paint colors stay true.
-- **Open in Paint by Numbers**: send a photo from Photos, Files, Safari or Mail through the share
+- **Open in Pipo**: send a photo from Photos, Files, Safari or Mail through the share
   sheet and it opens straight in the create flow.
 - **Search and favorites**: find a painting by name, heart the ones you love; favorites sort first
   and have their own filter.

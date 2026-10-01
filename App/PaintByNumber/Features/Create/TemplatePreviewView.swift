@@ -253,11 +253,12 @@ struct TemplatePreviewView: View {
                     if isStarting { ProgressView().tint(.white) }
                     Text("Start Painting")
                 }
-                .font(.rounded(.headline, weight: .semibold))
+                .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
             }
             .buttonStyle(.glassProminent)
+            .tint(Theme.signature)
             .controlSize(.large)
             .disabled(model.preview == nil || model.isChoosingSettings || isStarting)
         }
@@ -315,7 +316,7 @@ struct TemplatePreviewView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
             TextField("Title", text: $model.title, prompt: Text(model.defaultTitle))
-                .font(.rounded(.title3, weight: .semibold))
+                .font(.display(.title3, weight: .semibold))
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
                 .submitLabel(.done)
@@ -404,7 +405,7 @@ private struct SettingSlider: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
                 Text(title)
-                    .font(.rounded(.subheadline, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                 Spacer()
                 Text(valueText)
                     .font(.subheadline)

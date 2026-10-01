@@ -6,6 +6,7 @@ struct PaintByNumberApp: App {
 
     init() {
         PaintTips.configure()
+        Theme.styleNavigationTitles()
     }
 
     var body: some Scene {

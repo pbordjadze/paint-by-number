@@ -56,7 +56,7 @@ struct AppShellView: View {
                 } isTargeted: { isDropTargeted = $0 }
                 .overlay { if isDropTargeted { DropHighlight().transition(.opacity) } }
                 .animation(.easeOut(duration: 0.2), value: isDropTargeted)
-                .navigationTitle("Paint by Numbers")
+                .navigationTitle("Pipo")
                 .navigationSubtitle(subtitle)
                 .toolbar { toolbar }
                 .searchable(text: $search, prompt: Text("Search paintings"))
@@ -85,7 +85,7 @@ struct AppShellView: View {
             TimelapseExportSheet(request: request)
         }
         .onAppear(perform: restoreOpenArtwork)
-        // "Open in Paint by Numbers" from the share sheet or Files.
+        // "Open in Pipo" from the share sheet or Files.
         .onOpenURL(perform: openFile)
         .onChange(of: library.placeholders.isEmpty) { presentIncomingImage() }
         // Metal setup off the main thread while the gallery shows, so the first painting opens instantly.
@@ -135,6 +135,7 @@ struct AppShellView: View {
         ToolbarItem(placement: .topBarTrailing) {
             Button("New Painting", systemImage: "plus") { isCreating = true }
                 .buttonStyle(.glassProminent)
+                .tint(Theme.signature)
         }
     }
 
@@ -245,7 +246,7 @@ private struct DropHighlight: View {
             .background(Color.accentColor.opacity(0.06), in: .rect(cornerRadius: 28, style: .continuous))
             .overlay {
                 Label("Drop to Create a Painting", systemImage: "photo.badge.plus")
-                    .font(.rounded(.title3, weight: .semibold))
+                    .font(.display(.title3, weight: .semibold))
                     .padding(.horizontal, 22)
                     .padding(.vertical, 14)
                     .glassEffect(.regular, in: .capsule)

@@ -101,7 +101,7 @@ struct TimelapseExportSheet: View {
                     .accessibilityHidden(true)
                 VStack(spacing: 4) {
                     Text("Making Your Time-lapse")
-                        .font(.rounded(.title3, weight: .bold))
+                        .font(.display(.title3))
                     Text(model.request.title)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
@@ -197,6 +197,7 @@ struct TimelapseExportSheet: View {
                     .buttonStyle(.glass)
                 Button("Try Again") { attempt += 1 }
                     .buttonStyle(.glassProminent)
+                    .tint(Theme.signature)
             }
         }
     }

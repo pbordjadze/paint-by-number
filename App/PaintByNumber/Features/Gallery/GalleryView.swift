@@ -154,9 +154,9 @@ struct GalleryView: View {
     private func section<Content: View>(_ title: LocalizedStringKey, count: Int, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(title).font(.rounded(.title2, weight: .bold))
+                Text(title).font(.display(.title2))
                 Text(count, format: .number)
-                    .font(.rounded(.title3, weight: .semibold))
+                    .font(.display(.title3, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 4)

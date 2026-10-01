@@ -25,7 +25,7 @@ nonisolated struct DigitAtlas: Sendable {
     static func make(fontSize: Int = 64, spread: Int = 8, supersample: Int = 3) -> DigitAtlas? {
         let ss = supersample
         let size = CGFloat(fontSize * ss)
-        let font = roundedFont(size: size)
+        let font = numeralFont(size: size)
         var chars = Array("0123456789".utf16)
         var glyphs = [CGGlyph](repeating: 0, count: 10)
         guard CTFontGetGlyphsForCharacters(font, &chars, &glyphs, 10) else { return nil }
@@ -84,9 +84,9 @@ nonisolated struct DigitAtlas: Sendable {
 
     private static func roundUp(_ v: Int, to m: Int) -> Int { (v + m - 1) / m * m }
 
-    private static func roundedFont(size: CGFloat) -> CTFont {
-        let base = UIFont.systemFont(ofSize: size, weight: .semibold)
-        let descriptor = base.fontDescriptor.withDesign(.rounded) ?? base.fontDescriptor
+    private static func numeralFont(size: CGFloat) -> CTFont {
+        let base = UIFont.systemFont(ofSize: size, weight: .bold)
+        let descriptor = base.fontDescriptor.withDesign(.serif) ?? base.fontDescriptor
         return UIFont(descriptor: descriptor, size: size) as CTFont
     }
 

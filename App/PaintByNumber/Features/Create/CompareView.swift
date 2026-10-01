@@ -123,7 +123,7 @@ struct CompareView: View {
     /// White on a dark scrim: legible over any photo, light or dark.
     private func caption(_ text: String) -> some View {
         Text(text)
-            .font(.rounded(.caption, weight: .semibold))
+            .font(.caption.weight(.semibold))
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .foregroundStyle(.white)

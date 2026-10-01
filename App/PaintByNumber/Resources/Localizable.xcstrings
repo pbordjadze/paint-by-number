@@ -816,7 +816,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow Paint by Numbers to add photos in Settings to save your painting."
+            "value" : "Allow Pipo to add photos in Settings to save your painting."
           }
         }
       }
@@ -1108,7 +1108,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "“%@” was made with a newer version of Paint by Numbers. Update the app to keep painting it."
+            "value" : "“%@” was made with a newer version of Pipo. Update the app to keep painting it."
           }
         }
       }
@@ -1120,7 +1120,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This painting was made with a newer version of Paint by Numbers. Update the app to keep painting it."
+            "value" : "This painting was made with a newer version of Pipo. Update the app to keep painting it."
           }
         }
       }
@@ -1429,7 +1429,7 @@
       "comment" : "Paint menu title (iPad menu bar) and the name of the undo/redo action for painting an area",
       "extractionState" : "manual"
     },
-    "Paint by Numbers" : {
+    "Pipo" : {
       "comment" : "The app's name: the gallery's navigation title and the printed template's page footer",
       "extractionState" : "manual"
     },
@@ -1437,7 +1437,7 @@
       "comment" : "Title of a tip about painting many areas in one stroke",
       "extractionState" : "manual"
     },
-    "Paint something beautiful" : {
+    "Every painting starts with a photo" : {
       "comment" : "Headline of the empty gallery",
       "extractionState" : "manual"
     },
@@ -2573,7 +2573,7 @@
       "comment" : "Section title above the photo library picker on wide screens in the create flow",
       "extractionState" : "manual"
     },
-    "Your photos and paintings stay on this device unless you share them. Paint by Numbers collects no data." : {
+    "Your photos and paintings stay on this device unless you share them. Pipo collects no data." : {
       "comment" : "Footer of the About section in Settings: the privacy statement",
       "extractionState" : "manual"
     },

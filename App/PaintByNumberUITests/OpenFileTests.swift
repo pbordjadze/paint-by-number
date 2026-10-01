@@ -1,7 +1,7 @@
 import UIKit
 import XCTest
 
-/// "Open in Paint by Numbers": a file handed to the app opens the create flow on its preview,
+/// "Open in Pipo": a file handed to the app opens the create flow on its preview,
 /// titled with the file's name. Debug builds take the file from `-openFile <path>` and hand it
 /// to the handler `onOpenURL` calls; the `create-from-file` scenario supplies a file of its own.
 final class OpenFileTests: XCTestCase {

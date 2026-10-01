@@ -67,7 +67,7 @@ struct PhotoPeekButton: View {
             .opacity(isEnabled ? 1 : 0.35)
             .frame(width: 44, height: 44)
             // Not interactive glass: it would take the touches this control handles itself.
-            .glassEffect(peek.isShown ? Glass.regular.tint(Theme.accent) : Glass.regular, in: .circle)
+            .glassEffect(peek.isShown ? Glass.regular.tint(Theme.signature) : Glass.regular, in: .circle)
             .scaleEffect(isPressing && isEnabled ? 0.92 : 1)
             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isPressing)
             .contentShape(.circle)

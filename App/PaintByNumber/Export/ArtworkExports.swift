@@ -18,7 +18,7 @@ nonisolated enum ArtworkExporter {
                        comment: "Error when a painting's picture can't be rendered for sharing or saving")
             case .photosAccessDenied:
                 String(localized: "export.error.photosAccessDenied",
-                       defaultValue: "Allow Paint by Numbers to add photos in Settings to save your painting.",
+                       defaultValue: "Allow Pipo to add photos in Settings to save your painting.",
                        comment: "Error when saving to Photos is refused; tells the person to allow adding photos in the Settings app")
             case .timelapseFailed:
                 String(localized: "export.error.timelapseFailed", defaultValue: "The time-lapse couldn’t be made.",

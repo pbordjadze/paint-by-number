@@ -116,6 +116,15 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   form them in `nonisolated` code or they trap at runtime under Swift 6.
 - Liquid Glass design language (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)`,
   `.glassProminent`), SF Symbols, Dynamic Type, dark mode, VoiceOver labels.
+- Identity: the app is called **Pipo** (display name, gallery title, permission texts, PDF footer;
+  the target, module and repository keep the PaintByNumber names). `Theme` holds it: Paper
+  (parchment `#F4EFE6` / night `#141117`), Surface, `accent` (Nightshade `#7B3F7E` by day, antique
+  gold `#C9A24A` at night, so tinted text reads on both), `signature` (Nightshade in both, under the
+  white labels of `.glassProminent` buttons and tinted glass badges: give every new prominent button
+  `.tint(Theme.signature)`), `gold`, `outline` and the `Sparkle` shape. Titles and numerals use New
+  York: `Font.display(_:weight:)`, serif navigation titles (`Theme.styleNavigationTitles`), serif
+  swatch numerals and canvas digits (`DigitAtlas`); buttons and body text stay SF. The app icon is
+  the night landscape ("C · Landscape" of the design canvas), rendered from its SVG at 1024 px.
 - Key model types: `PaintingSession` (@Observable; painting rules, tap tolerance, drag-paint, undo,
   per-color progress, events) + `PaintProgress` (persisted). The Metal canvas conforms to
   `PaintingCanvas` and is driven by the session.
@@ -213,7 +222,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   stored: `meta.json` records only `settingsOrigin` and `paintingLength` (tolerant strings), and
   regeneration reuses an artwork's recorded settings. Demo scenarios `create-suggested`,
   `create-custom`, `create-custom-long-text`.
-- Open in Paint by Numbers: images from the share sheet and Files arrive through an image document type
+- Open in Pipo: images from the share sheet and Files arrive through an image document type
   (`CFBundleDocumentTypes` in `Config/Info.plist`, `Alternate` rank, not opened in place, so the system
   copies each file into `Documents/Inbox`) and `.onOpenURL` → `AppShellView.openFile`. `IncomingFile`
   reads it off the main actor (security scope tried), deletes it only if it is inside the app's inbox,

@@ -536,6 +536,7 @@ private struct CompletionBar: View {
                     Text("Done").lineLimit(1).fixedSize()
                 }
                 .buttonStyle(.glassProminent)
+                .tint(Theme.signature)
                 .fixedSize()
                 .accessibilityShowsLargeContentViewer()
             }

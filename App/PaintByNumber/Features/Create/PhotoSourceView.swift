@@ -194,7 +194,7 @@ private struct SectionTitle: View {
 
     var body: some View {
         Text(title)
-            .font(.rounded(.title3, weight: .bold))
+            .font(.display(.title3))
             .padding(.horizontal, 4)
             .accessibilityAddTraits(.isHeader)
     }
@@ -217,7 +217,7 @@ private struct SampleTile: View {
             }
             .overlay(alignment: .bottomLeading) {
                 Text(sample.title)
-                    .font(.rounded(.subheadline, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.35), radius: 4, y: 1)
                     .padding(12)

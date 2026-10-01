@@ -136,25 +136,25 @@ nonisolated struct CanvasPalette: Sendable {
     var hatchCeiling: Float = 0.4
 
     static let light = CanvasPalette(
-        background: CanvasColor.linearP3(sRGB: SIMD3(0.949, 0.949, 0.965)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.998, 0.994, 0.982)),
-        ink: CanvasColor.linearP3(sRGB: SIMD3(0.20, 0.19, 0.18)),
+        background: CanvasColor.linearP3(sRGB: SIMD3(0.933, 0.910, 0.867)),
+        paper: CanvasColor.linearP3(sRGB: SIMD3(0.984, 0.969, 0.937)),
+        ink: CanvasColor.linearP3(sRGB: SIMD3(0.118, 0.102, 0.133)),
         shadowOpacity: 0.16, outlineOpacity: 0.62)
 
     /// Light paper on a dark backdrop (dark system appearance, Paper set to Light).
     static let dark = CanvasPalette(
-        background: CanvasColor.linearP3(sRGB: SIMD3(0.075, 0.075, 0.082)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.925, 0.918, 0.900)),
-        ink: CanvasColor.linearP3(sRGB: SIMD3(0.17, 0.16, 0.15)),
+        background: CanvasColor.linearP3(sRGB: SIMD3(0.078, 0.067, 0.090)),
+        paper: CanvasColor.linearP3(sRGB: SIMD3(0.929, 0.902, 0.855)),
+        ink: CanvasColor.linearP3(sRGB: SIMD3(0.118, 0.102, 0.133)),
         shadowOpacity: 0.55, outlineOpacity: 0.62)
 
-    /// A deep warm grey sheet with light ink, for painting in the evening.
+    /// A deep warm grey sheet with a hint of violet and light ink, for painting in the evening.
     static let darkPaper = CanvasPalette(
-        background: CanvasColor.linearP3(sRGB: SIMD3(0.06, 0.06, 0.065)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.13, 0.125, 0.12)),
-        ink: CanvasColor.linearP3(sRGB: SIMD3(0.78, 0.77, 0.75)),
+        background: CanvasColor.linearP3(sRGB: SIMD3(0.055, 0.047, 0.063)),
+        paper: CanvasColor.linearP3(sRGB: SIMD3(0.137, 0.118, 0.133)),
+        ink: CanvasColor.linearP3(sRGB: SIMD3(0.812, 0.780, 0.827)),
         shadowOpacity: 0, outlineOpacity: 0.5,
-        rim: CanvasColor.linearP3(sRGB: SIMD3(0.78, 0.77, 0.75)), rimOpacity: 0.3,
+        rim: CanvasColor.linearP3(sRGB: SIMD3(0.812, 0.780, 0.827)), rimOpacity: 0.3,
         accentFloor: 0.35, hatchCeiling: 1)
 
     static func appearance(dark: Bool) -> CanvasPalette { dark ? .dark : .light }

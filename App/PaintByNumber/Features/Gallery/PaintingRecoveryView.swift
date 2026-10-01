@@ -38,6 +38,7 @@ struct PaintingRecoveryView: View {
                     if canRegenerate {
                         Button("Regenerate", systemImage: "arrow.clockwise", action: onRegenerate)
                             .buttonStyle(.glassProminent)
+                            .tint(Theme.signature)
                     }
                     if artwork != nil {
                         Button("Delete Painting", systemImage: "trash", role: .destructive, action: onDelete)
@@ -66,11 +67,11 @@ struct PaintingRecoveryView: View {
         case .needsNewerApp:
             if let paintingTitle = artwork?.title, !paintingTitle.isEmpty {
                 text = String(localized: "gallery.recovery.newer.titled",
-                              defaultValue: "“\(paintingTitle)” was made with a newer version of Paint by Numbers. Update the app to keep painting it.",
+                              defaultValue: "“\(paintingTitle)” was made with a newer version of Pipo. Update the app to keep painting it.",
                               comment: "Recovery screen text for a painting made by a newer app version; the argument is the painting's title")
             } else {
                 text = String(localized: "gallery.recovery.newer.untitled",
-                              defaultValue: "This painting was made with a newer version of Paint by Numbers. Update the app to keep painting it.",
+                              defaultValue: "This painting was made with a newer version of Pipo. Update the app to keep painting it.",
                               comment: "Recovery screen text for an untitled painting made by a newer app version")
             }
         case .damaged(canRegenerate: true) where artwork != nil:

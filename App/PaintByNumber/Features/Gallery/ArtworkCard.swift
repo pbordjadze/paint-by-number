@@ -30,7 +30,7 @@ struct ArtworkCard: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(artwork.title)
-                    .font(.rounded(.headline, weight: .semibold))
+                    .font(.display(.headline, weight: .semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 ProgressCaption(artwork: artwork)
@@ -121,10 +121,10 @@ struct ArtworkThumbnail: View {
 private struct FinishedBadge: View {
     var body: some View {
         Image(systemName: "checkmark")
-            .font(.system(size: 13, weight: .bold, design: .rounded))
+            .font(.system(size: 13, weight: .bold))
             .foregroundStyle(.white)
             .frame(width: 30, height: 30)
-            .glassEffect(.regular.tint(Theme.accent), in: .circle)
+            .glassEffect(.regular.tint(Theme.signature), in: .circle)
             .accessibilityHidden(true)
     }
 }
@@ -242,7 +242,7 @@ struct PlaceholderCard: View {
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(placeholder.sample.title)
-                    .font(.rounded(.headline, weight: .semibold))
+                    .font(.display(.headline, weight: .semibold))
                     .lineLimit(1)
                 Text("Preparing…")
                     .font(.subheadline)
