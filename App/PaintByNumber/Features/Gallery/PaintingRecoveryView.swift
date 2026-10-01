@@ -83,6 +83,10 @@ struct PaintingRecoveryView: View {
                               defaultValue: "Its file is damaged. Regenerate it from the original photo with the same settings.",
                               comment: "Recovery screen text for a damaged painting that can be regenerated from its photo")
             }
+        case .unreadable:
+            text = String(localized: "gallery.recovery.unreadable",
+                          defaultValue: "The painting couldn’t be read just now. Nothing was changed: go back and open it again.",
+                          comment: "Recovery screen text when a painting's files exist but couldn't be read (a passing storage error)")
         case .damaged:
             text = String(localized: "gallery.recovery.damaged.unavailable",
                           defaultValue: "Its file is damaged, and the original photo isn’t available to regenerate it.",

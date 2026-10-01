@@ -52,6 +52,9 @@ final class Library {
         case needsNewerApp
         /// The template is unreadable; `canRegenerate` if the photo it came from is available.
         case damaged(canRegenerate: Bool)
+        /// A file couldn't be read this time (an I/O or protection error, not damage); nothing
+        /// was changed, so opening it again may work.
+        case unreadable
     }
 
     nonisolated enum RegenerationError: Error, Equatable {
@@ -231,9 +234,11 @@ final class Library {
         copy.title = copyTitle(for: original.title)
         copy.createdAt = .now
         copy.modifiedAt = .now
-        let store = self.store, snapshot = copy
-        _ = await writes[id]?.value
-        try await Background.run { try store.duplicate(id, as: snapshot) }
+        let snapshot = copy
+        // In line with the original's writes, so none lands while its folder is being copied.
+        guard await enqueue(id, { try $0.duplicate(id, as: snapshot) }).value else {
+            throw CocoaError(.fileWriteUnknown)
+        }
         insert(snapshot)
         return snapshot
     }
@@ -278,7 +283,7 @@ final class Library {
     func retrySaving(_ id: UUID) {
         clearWriteFailure(id)
         guard let artwork = artwork(with: id) else { return }
-        if let unsaved = unsavedProgress[id] {
+        if let unsaved = unsavedProgress[id], unsaved.progress.regionCount == artwork.regionCount {
             persistProgress(unsaved.progress, of: artwork)
         } else if unsavedMeta.contains(id) {
             persistMeta(artwork)
@@ -359,8 +364,11 @@ final class Library {
             }
             do {
                 return (template, try store.readProgress(id, regionCount: template.regions.count))
-            } catch {
+            } catch is PaintProgress.CodingError {
                 throw OpenError.needsNewerApp
+            } catch {
+                Log.library.error("Progress of \(id.uuidString, privacy: .public) can't be read: \(String(describing: error), privacy: .public)")
+                throw OpenError.unreadable
             }
         }
 
@@ -425,8 +433,10 @@ final class Library {
             let saved: ArtworkStore.SavedProgress
             do {
                 saved = try store.readProgress(id, regionCount: old?.regions.count ?? 0)
-            } catch {
+            } catch is PaintProgress.CodingError {
                 throw OpenError.needsNewerApp
+            } catch {
+                throw OpenError.unreadable
             }
             let photo = try ArtworkFactory.sourcePhoto(of: artwork, in: store)
             let template = try ArtworkFactory.template(from: photo, settings: settings, progress: report)
@@ -448,6 +458,10 @@ final class Library {
             try store.replaceContents(of: snapshot, template: template, progress: progress, thumbnailPNG: thumbnail)
         }.value
         guard saved else { throw RegenerationError.saveFailed }
+        // The new contents include the newest progress and details: nothing older is left to retry.
+        unsavedProgress[id] = nil
+        unsavedMeta.remove(id)
+        clearWriteFailure(id)
         replace(updated)
         return PaintingDocument(template: template, progress: progress, notice: .regenerated(keptProgress: progress.paintedCount > 0))
     }

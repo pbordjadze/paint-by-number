@@ -133,11 +133,15 @@ nonisolated struct ArtworkStore: Sendable {
     }
 
     /// The saved progress, or a fresh one (with the `problem`) if the file is missing, damaged
-    /// or belongs to a different template. Throws only for progress written by a newer app
-    /// (`PaintProgress.CodingError.newerVersion`), which must be kept, not replaced.
+    /// or belongs to a different template. Throws for progress written by a newer app
+    /// (`PaintProgress.CodingError.newerVersion`) and for a file that exists but can't be read
+    /// right now: both must be kept, not replaced with fresh progress.
     func readProgress(_ id: UUID, regionCount: Int) throws -> SavedProgress {
         let fresh = PaintProgress(regionCount: regionCount)
-        guard let data = try? Data(contentsOf: url(.progress, of: id)) else {
+        let data: Data
+        do {
+            data = try Data(contentsOf: url(.progress, of: id))
+        } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
             return SavedProgress(progress: fresh, problem: .missing)
         }
         func mismatched(_ count: Int) -> SavedProgress {

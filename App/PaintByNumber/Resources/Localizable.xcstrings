@@ -1101,6 +1101,18 @@
         }
       }
     },
+    "gallery.recovery.unreadable" : {
+      "comment" : "Recovery screen text when a painting's files exist but couldn't be read (a passing storage error)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The painting couldn’t be read just now. Nothing was changed: go back and open it again."
+          }
+        }
+      }
+    },
     "gallery.restart.confirm" : {
       "comment" : "Destructive button of the restart confirmation; the argument is the painting's title",
       "extractionState" : "manual",

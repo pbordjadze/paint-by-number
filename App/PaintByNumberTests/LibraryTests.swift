@@ -186,6 +186,29 @@ struct LibraryTests {
         }
     }
 
+    /// Progress that exists but can't be read this time is not "missing": opening fails and
+    /// nothing is written over it, so the painted areas survive to the next attempt.
+    @Test func unreadableProgressIsKept() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(painted: [0, 2]))
+        let url = library.store.url(.progress, of: artwork.id)
+        let saved = try Data(contentsOf: url)
+        // A directory in the file's place reads with an error other than "no such file".
+        try FileManager.default.removeItem(at: url)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
+        await #expect(throws: Library.OpenError.unreadable) { try await library.loadForPainting(artwork.id) }
+        await library.flush()
+        var isDirectory: ObjCBool = false
+        #expect(FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue)
+        #expect(library.artwork(with: artwork.id)?.paintedCount == 2)
+
+        try FileManager.default.removeItem(at: url)
+        try saved.write(to: url)
+        let document = try await library.loadForPainting(artwork.id)
+        #expect(document.notice == nil)
+        #expect(document.progress.paintedCount == 2)
+    }
+
     @Test func newerTemplateNeedsNewerApp() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft())
