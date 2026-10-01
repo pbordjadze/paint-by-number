@@ -54,12 +54,19 @@ final class GalleryActionsTests: XCTestCase {
     }
 
     /// Waits for a card to be ready and scrolls it into view (the finished ones sit below the
-    /// fold on a phone).
+    /// fold on a phone). Cards are buttons; the placeholder shown while a painting is still
+    /// being generated is not, so it can't be mistaken for the card.
     @MainActor
     private func revealCard(_ title: String, in app: XCUIApplication) -> XCUIElement {
-        let card = app.descendants(matching: .any)[title]
+        let card = app.buttons[title].firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 120), "“\(title)” never appeared")
         for _ in 0..<6 where !card.isHittable { app.swipeUp() }
+        if !card.isHittable {
+            let tree = XCTAttachment(string: app.debugDescription)
+            tree.name = "gallery-tree"
+            tree.lifetime = .keepAlways
+            add(tree)
+        }
         XCTAssertTrue(card.isHittable, "“\(title)” couldn't be scrolled into view")
         return card
     }

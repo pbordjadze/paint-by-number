@@ -146,11 +146,11 @@ final class CreateFlowTests: XCTestCase {
         let (app, picker) = launchToPicker("create")
         XCTAssertTrue(picker.exists, "No library picker")
         let sheet = settledSheetDetector(app)
-        XCTAssertNil(sheet.dismissButton)
+        XCTAssertNil(sheet.dismissFrame)
 
         guard let cancel = openBrowseAll(app, sheet: sheet) else { return }
-        cancel.tap()
-        let dismissed = poll(timeout: 15) { sheet.dismissButton == nil }
+        tap(app, at: cancel)
+        let dismissed = poll(timeout: 15) { sheet.dismissFrame == nil }
         if !dismissed { attachTree(app, named: "browse-all-dismiss-tree") }
         XCTAssertTrue(dismissed, "The system picker didn't dismiss")
         XCTAssertTrue(picker.waitForExistence(timeout: 10))
@@ -171,7 +171,7 @@ final class CreateFlowTests: XCTestCase {
         // Cancel button sits at the sheet's leading edge, so mirroring its inset bounds an area
         // inside the sheet on both device classes (the sheet reaches at least as far down).
         let window = app.windows.firstMatch.frame
-        let bar = cancel.frame
+        let bar = cancel
         let inset = max(0, bar.minX - window.minX - 20)
         let sheetTop = max(window.minY, bar.minY - 12)
         let grid = CGRect(
@@ -185,7 +185,7 @@ final class CreateFlowTests: XCTestCase {
         attachScreenshot(app, named: "browse-all-picked")
         if !opened { attachTree(app, named: "browse-all-pick-tree") }
         XCTAssertTrue(opened, "Picking a photo in Browse All didn't open its preview")
-        XCTAssertTrue(poll(timeout: 15) { sheet.dismissButton == nil }, "The system picker stayed up after a pick")
+        XCTAssertTrue(poll(timeout: 15) { sheet.dismissFrame == nil }, "The system picker stayed up after a pick")
     }
 
     // MARK: - Helpers
@@ -232,14 +232,14 @@ final class CreateFlowTests: XCTestCase {
         return SheetDetector(app)
     }
 
-    /// Taps "Browse All…" and returns the presented sheet's dismiss button, or fails the test
-    /// (with diagnostics) and returns nil when no sheet appears.
+    /// Taps "Browse All…" and returns the frame of the presented sheet's dismiss button, or
+    /// fails the test (with diagnostics) and returns nil when no sheet appears.
     @MainActor
-    private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector) -> XCUIElement? {
+    private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector) -> CGRect? {
         app.buttons["Browse All…"].tap()
-        let shown = poll(timeout: 15) { sheet.dismissButton != nil }
+        let shown = poll(timeout: 15) { sheet.dismissFrame != nil }
         attachScreenshot(app, named: "browse-all")
-        guard shown, let cancel = sheet.dismissButton else {
+        guard shown, let cancel = sheet.dismissFrame else {
             attachTree(app, named: "browse-all-tree")
             XCTFail("Browse All didn't present the system picker")
             return nil
@@ -302,6 +302,12 @@ final class CreateFlowTests: XCTestCase {
         add(tree)
     }
 
+    /// Taps the middle of `frame` (window coordinates).
+    @MainActor
+    private func tap(_ app: XCUIApplication, at frame: CGRect) {
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.midY)).tap()
+    }
+
     @MainActor
     private func attachScreenshot(_ app: XCUIApplication, named name: String) {
         let shot = XCTAttachment(screenshot: app.screenshot())
@@ -311,25 +317,42 @@ final class CreateFlowTests: XCTestCase {
     }
 }
 
-/// Finds the system picker sheet by a hittable Cancel/Close button that wasn't on the page when
-/// the detector was made: the page keeps its own Close, the inline picker's bar may bring its
-/// own, and a modal sheet may hide the page from accessibility, so neither names nor counts
+/// Finds the system picker sheet by an on-screen Cancel/Close button that wasn't on the page
+/// when the detector was made: the page keeps its own Close, the inline picker's bar may bring
+/// its own, and a modal sheet may hide the page from accessibility, so neither names nor counts
 /// identify it. (On iPad the form sheet overlaps the inline picker, so position can't either.)
 @MainActor
 private struct SheetDetector {
-    private let buttons: XCUIElementQuery
+    private let app: XCUIApplication
     private let existing: [CGRect]
 
     init(_ app: XCUIApplication) {
-        let buttons = app.buttons.matching(NSPredicate(format: "label IN {'Cancel', 'Close'}"))
-        self.buttons = buttons
-        existing = buttons.allElementsBoundByIndex.map { $0.frame }
+        self.app = app
+        existing = Self.dismissFrames(in: app)
     }
 
-    var dismissButton: XCUIElement? {
-        buttons.allElementsBoundByIndex.first { button in
-            let frame = button.frame
-            return button.isHittable && !existing.contains { $0.insetBy(dx: -2, dy: -2).contains(frame) }
+    /// The frame of the sheet's dismiss button, nil while no sheet is up.
+    var dismissFrame: CGRect? {
+        Self.dismissFrames(in: app).first { frame in
+            !existing.contains { $0.insetBy(dx: -2, dy: -2).contains(frame) }
         }
+    }
+
+    /// Enabled Cancel/Close buttons centred on screen, read from one snapshot of the tree:
+    /// resolving buttons one by one races the sheet's animation (a button listed a moment ago
+    /// can be gone when its frame is read, which fails the test outright).
+    private static func dismissFrames(in app: XCUIApplication) -> [CGRect] {
+        guard let root = try? app.snapshot() else { return [] }
+        var frames: [CGRect] = []
+        var pending: [any XCUIElementSnapshot] = [root]
+        while let element = pending.popLast() {
+            let frame = element.frame
+            if element.elementType == .button, element.label == "Cancel" || element.label == "Close",
+               element.isEnabled, !frame.isEmpty, root.frame.contains(CGPoint(x: frame.midX, y: frame.midY)) {
+                frames.append(frame)
+            }
+            pending.append(contentsOf: element.children.reversed())
+        }
+        return frames
     }
 }

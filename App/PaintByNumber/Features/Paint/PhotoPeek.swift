@@ -101,7 +101,7 @@ struct PhotoPeekButton: View {
     /// `.disabled` doesn't stop a custom gesture, so a press is ignored here; a release
     /// always goes through so the photo can't stay stuck on.
     private func press(down: Bool) {
-        // Monotonic, and not a required-reason API (unlike ProcessInfo.systemUptime).
+        // Monotonic, and not one of the required-reason boot-time APIs.
         let time = CACurrentMediaTime()
         if down {
             guard isEnabled else { return }

@@ -68,7 +68,10 @@ final class PaintingNavigationTests: XCTestCase {
     @MainActor
     func testPaletteButtonSelects() throws {
         let app = openSeededPainting()
-        let swatch = app.buttons["swatch-14"]
+        // A painting opens with a color selected: take one that isn't.
+        let unselected = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-' AND selected == false"))
+        let identifier = try XCTUnwrap(unselected.allElementsBoundByIndex.last?.identifier, "Every swatch is selected")
+        let swatch = app.buttons[identifier]
         XCTAssertFalse(swatch.isSelected)
         swatch.tap()
         sleep(1)

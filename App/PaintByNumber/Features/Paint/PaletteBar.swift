@@ -204,7 +204,6 @@ struct CurrentColorLabel: View {
                                        comment: "VoiceOver label of the selected color's name shown on screen"))
             .accessibilityValue(PaintSpeech.colorLabel(number: color + 1, name: name))
             .accessibilityIdentifier("current-color")
-            .accessibilityShowsLargeContentViewer()
         }
     }
 }

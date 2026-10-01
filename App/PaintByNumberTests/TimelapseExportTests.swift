@@ -28,23 +28,27 @@ struct TimelapseExportTests {
         let asset = AVURLAsset(url: url)
         let track = try #require(try await asset.loadTracks(withMediaType: .video).first)
         let reader = try AVAssetReader(asset: asset)
-        let output = AVAssetReaderTrackOutput(track: track, outputSettings: nil)
+        // Every sample decoded in order: the image generator's seek to the last timestamp
+        // returned blank paper on the simulator.
+        let output = AVAssetReaderTrackOutput(
+            track: track, outputSettings: [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA])
         reader.add(output)
         #expect(reader.startReading())
         var samples = 0
-        while let buffer = output.copyNextSampleBuffer() { samples += CMSampleBufferGetNumSamples(buffer) }
+        var first: SIMD3<Int>?, last: SIMD3<Int>?
+        while let buffer = output.copyNextSampleBuffer() {
+            samples += CMSampleBufferGetNumSamples(buffer)
+            guard let image = CMSampleBufferGetImageBuffer(buffer) else { continue }
+            // The middle of the first (red) stripe.
+            let pixel = Self.rgb(image, x: CVPixelBufferGetWidth(image) / 6, y: CVPixelBufferGetHeight(image) / 2)
+            if first == nil { first = pixel }
+            last = pixel
+        }
+        #expect(reader.status == .completed)
         #expect(samples == schedule.frameCount)
-
-        let generator = AVAssetImageGenerator(asset: asset)
-        generator.requestedTimeToleranceBefore = .zero
-        generator.requestedTimeToleranceAfter = .zero
-        let first = PixelReader(try await generator.image(at: .zero).image)
-        let lastTime = CMTime(value: CMTimeValue(schedule.frameCount - 1), timescale: CMTimeScale(60))
-        let last = PixelReader(try await generator.image(at: lastTime).image)
-        // The middle of the first (red) stripe: paper at the start, paint at the end.
-        let paper = first[first.width / 6, first.height / 2]
+        // Paper at the start, paint at the end.
+        let paper = try #require(first), red = try #require(last)
         #expect(paper.x > 200 && paper.y > 200 && paper.z > 200, "first frame \(paper)")
-        let red = last[last.width / 6, last.height / 2]
         #expect(red.x > 180 && red.y < 90 && red.z < 90, "last frame \(red)")
     }
 
@@ -99,6 +103,15 @@ struct TimelapseExportTests {
         // Reached again from the sheet's disappearance: nothing left to do, nothing breaks.
         await model.finishSharing()
         #expect(model.phase == .ready(url))
+    }
+
+    /// RGB of a decoded 32BGRA frame at (x, y), origin top-left.
+    nonisolated private static func rgb(_ buffer: CVPixelBuffer, x: Int, y: Int) -> SIMD3<Int> {
+        CVPixelBufferLockBaseAddress(buffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
+        guard let base = CVPixelBufferGetBaseAddress(buffer) else { return .zero }
+        let pixel = base.advanced(by: y * CVPixelBufferGetBytesPerRow(buffer) + x * 4).assumingMemoryBound(to: UInt8.self)
+        return SIMD3(Int(pixel[2]), Int(pixel[1]), Int(pixel[0]))
     }
 
     nonisolated private static func fill(_ buffer: CVPixelBuffer) {
