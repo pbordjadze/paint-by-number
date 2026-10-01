@@ -179,3 +179,110 @@ count, which would drop the time-band objective.
 - `importanceEntropy` now spreads (0.72–0.96) but no rule reads it; on the device Vision's
   saliency and face maps will move `subjectCoverage` and the weights, which this tuning could
   only approximate with hints.
+
+## Round two (after the W1 review, `docs/wave2/log/w1-review.md`)
+
+Three majors fixed on `wt/w1c-auto-app`. Scratch: `/tmp/pbn-w1b/` (`maps/`, `m2/`,
+`noise/`, `simD/`, `accept/`).
+
+### 1. Region model and detail under Vision-like maps
+
+The round-one model and bands came from pbn's fallback importance map (mean 0.56–0.64), which
+rates busy texture important; the app passes Vision maps (0.25 base, attention 0.2–0.6, a
+0.75 foreground mask, faces/animals near 1), which protect far less of the frame. Stand-ins
+(`/tmp/pbn-w1b/mkmaps.py`): uniform 0.25 and 0.4, and a "vis" map per photo built like
+`SubjectImportance` (hand-placed subject ellipses for 36 photos, an attention blob for the rest,
+W3's hand-made maps for astronaut, chelsea, coffee/espresso, parrots/kodim23; means 0.36–0.63).
+CI's simulator counts (lighthouse 159 areas at 28 colours) sit at the uniform-0.25 end.
+
+- New feature `PhotoAnalysis.meanImportance` (mean importance weight; fallback 0.56–0.64, vis
+  0.36–0.63, uniform maps their value).
+- Growth refit on 1104 draft/full pairs (69 photos × 4 maps × detail 0.1/0.4/0.7/1 at 28
+  colours): exponent −0.18 + 0.42 × detail + 0.77 × mean importance (clamped 0…1). rms of the
+  log count 0.22 with per-map bias within ±0.04; the round-one model had rms 0.35 and biases
+  −0.36 (u25), −0.26 (u40), −0.18 (vis). Check at full size, `pbn generate --auto` Relaxed,
+  actual / estimated regions: vis median 0.99 (p10 0.75, p90 1.22), u25 1.01 (0.74, 1.22);
+  the review measured 0.64× / 0.75× for the old model.
+- Reachability (full templates, 28 colours, large photos, median minutes at detail 0.1/0.4/
+  0.7/1.0): fallback 12/25/49/81, vis 7/14/30/53, u25 4/8/17/35. So at like settings Vision maps
+  give about half the time, and the detail centers (0.3/0.5/0.8, tuned on the fallback) fell
+  short: before the change the median vis decision ran 16 / 21 / 33 min.
+- Detail center now rises one unit per unit of mean importance below 0.6
+  (`detailPerImportance`, `referenceImportance`): 30 minutes needs detail 0.5 under the
+  fallback, 0.7 under vis, about 0.9 under u25. Bands unchanged (the medians now land inside
+  them; no evidence to move them).
+
+Decisions (estimated minutes of the winner, median for 33 large / 36 small photos; below / in /
+above band out of 33 large):
+
+| map | Quick 8–25 | Relaxed 20–50 | Detailed 40–120 |
+| --- | --- | --- | --- |
+| fallback | 19 / 14 (2/27/4) | 33 / 16 (4/27/2) | 56 / 22 (6/27/0) |
+| vis | 16 / 10 (3/29/1) | 26 / 14 (6/27/0) | 42 / 17 (12/21/0) |
+| u25 | 13 / 9 (4/28/1) | 20 / 11 (17/15/1) | 30 / 12 (23/10/0) |
+
+The three lengths stay distinct under every map. Small photos still can't fill Relaxed or
+Detailed. Footers: Quick "about 15 minutes" and Relaxed "about half an hour" stay true (vis
+16 and 26); Detailed changed from "about an hour" to "45 minutes or more" (vis 42, fallback 56,
+u25 30) in `Preferences.swift` and the catalog (no test quotes it).
+
+### 2. Decision noise
+
+JPEG q92 re-save of 33 photos × 3 lengths (fallback map). Before: the winner's settings changed
+on 79/99, materially (colours > 15 %, detail or smoothness ≥ 0.1) on 56/99. Two sources:
+
+- The center itself moved materially on 17/99: the knee read the gain between neighbouring
+  curve points (separate k-means runs; regatta 26 → 35 paints), and steps at thresholds
+  (chroma spread 0.030 → 0.029 cost kodim05 6 of 40 paints). Now the knee is a power law
+  fitted to the whole curve (mean |change| 10 % → 2 %, same level, median ratio 0.99) and every
+  threshold of the rule is a ramp ±15 % around it. Center material changes: 0/99.
+- Neighbour vs center: a re-save moves (neighbour total − center total) by a median 0.003
+  (p90 0.010; colour error, p95 and the region estimate). The 0.001 tie window is replaced by
+  `tieMargin` 0.006: the center wins unless a neighbour beats it by more, or the center's
+  estimate runs over its band (then, as among tied neighbours, the time nearest the band's
+  middle wins). Material flips by margin: 0.001 54, 0.004 43, 0.005 23, 0.006 15, 0.008 12.
+
+After: winner settings changed on 52/99 (mostly ±2 colours from rounding to even, smoothness
+±0.01); **materially on 16/99** (before 56/99). Determinism unchanged: byte-identical under
+`taskset -c 0 / 0-1 / 0-3` (parrots, lynx, portrait-tunnel, hedgehog at Detailed with vis maps
+and hints).
+
+### 3. Monochrome cut on dark and hazy photos
+
+A pixel is chromatic when its chroma exceeds 0.04 × min(1, max(L / 0.5, 0.25)): dark pixels
+can't hold much absolute chroma. Chromatic fraction: night-moon 0.008 → 0.227 (no cut; 24
+colours, was 16–20), portrait-tunnel 0.109 → 0.183, kodim17 0.095 → 0.232; grey copies of
+night-moon, lynx and parrots still 0.000, snow-forest 0.000, snowy-road 0.017 (full cut kept).
+Smoke-haze was never cut (0.59 chromatic): its 18-colour winner was the 0.75× neighbour beating
+the center by 0.0045; under the margin the center (22 colours) wins and keeps the cool sky
+(full size, by eye). Night-moon at full size now keeps the lamp post, its glow and the tree
+line; its sky is a shade more neutral than 24/0.5's.
+
+### By eye (round-two decisions, fallback map)
+
+152 of 207 decisions changed materially from round one (most by the knee and the margin).
+Sheets viewed: cake, dog, kodim08, portrait-dress, kodim18, bernina-snow, guineapig,
+frontenac-night, hedgehog, tulips, night-moon, smoke-haze (both maps). Disagreements:
+
+| photo | length | winner | preferred | why |
+| --- | --- | --- | --- | --- |
+| hedgehog | Relaxed | #0 34c d0.43 (64 min) | #3 34c d0.23 (33 min) | the center is the best total even after its 0.009 over-band cost; looks the same |
+| kodim08 | Quick | #3 24c d0.44 (26 min) | #0 24c d0.24 (21 min) | #3 reads much better, but Quick and Relaxed then both run 26 min |
+
+### Acceptance (Relaxed, full size, fallback map, 69 photos; round one in brackets)
+
+- Spec criterion (equal or better ΔE at equal or fewer regions vs 24/0.5/0.5): 6/69 [14/69].
+- Worse on both: 5 [2]: bernina-snow, clouds, night-moon (0.0176 vs 0.0165 at 151 vs 143
+  areas; was 0.0195), kodim06, kodim11, each by ≤ 0.0011 ΔE.
+- Inside 20–50 min: 44/69 [41].
+- Equal painting time (24 colours, detail 0.3–0.9, interpolated at Auto's region count): 56/69
+  (81 %) [56/69]; median ΔE ratio 0.976 at 1.13× regions. 3 of the 13 misses are below the
+  curve's range (tulips, waterfall, papayas: Auto chose fewer areas than 24/0.3 makes).
+- The spec criterion fell because the margin keeps the center more often and the center now
+  aims at the band's middle (more regions where 24/0.5 is short); the review's verdict stands:
+  judge at equal time.
+
+Budget: `pbn suggest` Relaxed 415–430 ms on samples, 650–800 ms on 2048-px photos (first draft
+140–245 ms). `auto-parrots.json` regenerated (draft unchanged); `tools/baseline/auto.json`
+regenerated with `--update`; `tools/baseline/regression.json` kept byte-identical (its 18
+legacy cases are "same"; `--update` only rewrote timings, which were reverted).
