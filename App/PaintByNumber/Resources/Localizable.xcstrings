@@ -10,13 +10,13 @@
       "extractionState" : "manual"
     },
     "acknowledgements.codeFooter" : {
-      "comment" : "Footer under the Open-Source Code list in Acknowledgements; the argument is the GPL source notice",
+      "comment" : "Footer under the Open-Source Code list in Acknowledgements",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Swift ports of these libraries are part of the template engine. %@"
+            "value" : "Swift ports of these libraries are part of the template engine."
           }
         }
       }
@@ -125,18 +125,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tells texture from structure, so faces and edges keep their detail."
-          }
-        }
-      }
-    },
-    "acknowledgements.sourceNotice" : {
-      "comment" : "GPL source notice shown in Settings under Acknowledgements; the argument is the repository URL, which must stay in the text",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The curve fitting is a Swift translation of potrace and is used under the GNU General Public License. Its source, and that of the rest of the app, is published at %@."
           }
         }
       }

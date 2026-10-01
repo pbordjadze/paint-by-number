@@ -1,793 +1,759 @@
 import Foundation
 
-/// Fits smooth curves to stair-stepped lattice chains. A Swift translation of potrace 1.16
-/// (Copyright (C) 2001-2019 Peter Selinger, GPL-2.0-or-later; "Potrace: a polygon-based
-/// tracing algorithm", 2003), so it is a derivative work under the same license (see
-/// `ACKNOWLEDGEMENTS.md`), extended to open chains. potrace's stages:
+/// Fits a smooth curve to a lattice chain and flattens it into a `DenseCurve`.
 ///
-/// 1. find the longest *straight* sub-paths (a line exists that passes within half a
-///    pixel of every lattice point),
-/// 2. choose the polygon with the fewest segments (then least squared deviation) whose
-///    segments all follow straight sub-paths,
-/// 3. move each polygon vertex to the point near its lattice corner that best fits the
-///    two adjacent segments' least-squares lines (corrected for the bias of line fits
-///    along curves),
-/// 4. turn each vertex into either a sharp corner (when it sticks out far relative to its
-///    neighbours, `alphaMax`) or a cubic Bézier through the adjacent edge midpoints,
-/// 5. join runs of Béziers into fewer, longer ones where that stays within tolerance,
-///    which evens out curvature,
+/// An independent implementation of the method described in P. Selinger, "Potrace: a
+/// polygon-based tracing algorithm" (2003), written from the paper (not derived from
+/// potrace's source code) and extended to open chains with pinned ends. Stages:
 ///
-/// and flatten the result into a polyline.
+/// 1. Straight runs (§2.2.1): for every start vertex the longest straight subpath. With
+///    the start fixed, the paper's triplewise criterion is a cone of directions from it
+///    that narrows with every vertex, so a start costs one pass over its run; a run never
+///    outlasts the run of the next start by more than a step.
+/// 2. Optimal polygon (§2.2.2–2.2.4): a segment may join vertices i and j when the path
+///    from i − 1 to j + 1 is straight. The ends of the segments from i never decrease
+///    with i, so jumping as far as possible gives the fewest segments, and a vertex can
+///    only be the c-th vertex of a polygon with that many segments within an interval
+///    found by jumping forward and backward. The least summed penalty (constant time per
+///    segment from prefix sums) is then a shortest path through those intervals.
+/// 3. Vertex adjustment (§2.3.1): each vertex moves within its unit square to the point
+///    with the least squared distance to the least-squares lines of its two segments.
+/// 4. Corners and smoothing (§2.3.2–2.3.3): each vertex becomes a Bézier curve between
+///    the midpoints of its edges with the paper's α, clamped to 0.55…1, or a corner.
+/// 5. Curve optimization (§2.4): runs of curves of one convexity turning less than 179°
+///    are replaced by single curves enclosing the same area where every tangency check
+///    passes within 0.2; again fewest curves first, then least penalty.
+/// 6. Flattening: each cubic is split into enough uniform parameter steps that the
+///    polyline stays within `flattenTolerance` of it.
 ///
-/// Digitized straight lines of any slope come out perfectly straight, circles come out
-/// round and genuine corners stay crisp. Unlike potrace, open chains are supported: their
-/// end points (junctions shared with other edges) stay exactly where they are, so every
-/// edge can be fitted independently and still meet its neighbours.
-///
-/// Holds scratch buffers; create one per worker and reuse it across chains.
+/// Beyond the paper:
+/// - Open chains keep their end points fixed: they are polygon vertices that are never
+///   adjusted, straightness at an end is judged without the missing outer neighbour, and
+///   the curve leaves and enters them along straight half-edges, like corners. A chain
+///   whose ends coincide (a loop through a junction) uses the closed-path rules with its
+///   end as a forced vertex.
+/// - A closed path is searched from every start within the shortest segment reach of any
+///   vertex s: a segment passing over s could start at s instead, so every polygon has a
+///   vertex there, and the best of those searches is the optimal polygon.
+/// - A loop at most a pixel thick lies within max-distance 1/2 of its centre line, so
+///   nearly all of it counts as straight and its optimal polygon collapses into a lopsided
+///   triangle. Such loops (a triangle enclosing under ¾ of the loop) use their lattice
+///   corners as the polygon instead, which rounds bars and specks evenly.
+/// - A vertex becomes a corner only when α reaches `alphaMax` *and* the polygon turns
+///   there by at least `minCornerAngle`, so long sides meeting at a gentle bend stay smooth.
+/// - With `cornerRadius` > 0 corners are rounded by a cubic approximating the circular arc
+///   of that radius tangent to both edges, its tangent length capped by the half-edges.
+/// - A joined curve's area-matching α must keep it convex (α ≤ 1); joining stops extending
+///   a run at the first candidate that fails its checks. §2.2.3's penalty is computed with
+///   −2bxy, the sign its definition (length times deviation from the segment) gives.
 struct CurveFitter {
-    /// Vertices whose `alpha` reaches this become corners (potrace default: 1)…
-    var alphaMax: Double
-    /// …provided the polygon turns there by at least the angle with this cosine.
-    var cornerCos: Double
-    /// Corners are rounded off with fillets of this size (0: sharp), canvas units.
-    var cornerRadius: Double
-    /// Maximum distance between a Bézier and its flattened polyline, canvas units.
-    var flattenTolerance: Double
+    private let alphaMax: Double
+    private let minCornerTurn: Double
+    private let cornerRadius: Double
+    private let flattenTolerance: Double
 
+    /// Least α of a smooth vertex (§2.3.3): flatter curves look strange.
+    private static let lowestAlpha = 0.55
+    /// Tolerance of the curve optimization (§2.4).
+    private static let joinTolerance = 0.2
+    /// Joined curves turn by less than this (§2.4).
+    private static let maxJoinTurn = 179 * Double.pi / 180
+
+    // The path, relative to its first point. Cyclic paths are stored twice over so every
+    // wrapped range is contiguous; `moments` holds prefix sums of the stored points.
+    private var steps = 0
+    private var cyclic = false
+    private var origin = SIMD2<Double>.zero
     private var px: [Int] = [], py: [Int] = []
-    private var sx: [Double] = [], sy: [Double] = [], sxx: [Double] = [], sxy: [Double] = [], syy: [Double] = []
-    private var nc: [Int] = [], pivk: [Int] = [], lon: [Int] = []
-    private var clip0: [Int] = [], clip1: [Int] = [], seg0: [Int] = [], seg1: [Int] = []
-    private var prev: [Int] = [], pen: [Double] = []
-    private var po: [Int] = []
-    private var vx: [Double] = [], vy: [Double] = []
-    private var quads: [Quad] = []
-    private var lineCentre: [SIMD2<Double>] = [], lineDir: [SIMD2<Double>] = [], lineLength: [Double] = []
-    private var lineShift: [SIMD2<Double>] = []
-    // Curve segments: segment j runs from the end of segment j − 1 to `segEnd[j]`, either
-    // as a corner (straight to `segVertex[j]`, then to the end) or as a cubic Bézier.
-    private var segCorner: [Bool] = [], segVertex: [SIMD2<Double>] = [], segAlpha: [Double] = []
-    private var segC0: [SIMD2<Double>] = [], segC1: [SIMD2<Double>] = [], segEnd: [SIMD2<Double>] = []
-    private var convexity: [Int] = [], areaPrefix: [Double] = []
-    private var optPrev: [Int] = [], optLen: [Int] = [], optPen: [Double] = []
-    private var optC0: [SIMD2<Double>] = [], optC1: [SIMD2<Double>] = []
-    private var outCorner: [Bool] = [], outC0: [SIMD2<Double>] = [], outC1: [SIMD2<Double>] = []
-    private var outVertex: [SIMD2<Double>] = [], outEnd: [SIMD2<Double>] = []
+    private var direction: [UInt8] = []
+    private var moments: [Moments] = []
+    /// Per start vertex: steps of the longest straight subpath, and of the longest segment.
+    private var straight: [Int] = [], reach: [Int] = []
+    /// Per stored index j: the first vertex with a possible segment ending at j.
+    private var segmentStart: [Int] = []
+
+    private var ahead: [Int] = [], behind: [Int] = []
+    private var dpPenalty: [Double] = [], dpPrevious: [Int] = []
+    /// Polygon vertices as stored path indices, ascending.
+    private var candidate: [Int] = [], polygon: [Int] = []
+
+    private var lineNormal: [SIMD2<Double>] = [], lineOffset: [Double] = []
+    private var vertex: [SIMD2<Double>] = []
+    private var corner: [Bool] = [], alpha: [Double] = [], turn: [Double] = []
+    private var convexity: [Int8] = [], support: [Double] = []
+    private var joint: [SIMD2<Double>] = []
+
+    /// Emission order: vertices, and the joints around them (`knots[q]` before `order[q]`).
+    private var order: [Int] = [], knots: [SIMD2<Double>] = []
+    private var joinCount: [Int] = [], joinPenalty: [Double] = [], joinPrevious: [Int] = []
+    private var joinCurve: [Cubic] = []
+    private var chosen: [Int] = []
 
     init(alphaMax: Double, minCornerAngle: Double, cornerRadius: Double, flattenTolerance: Double) {
         self.alphaMax = alphaMax
-        self.cornerCos = cos(minCornerAngle * Double.pi / 180)
-        self.cornerRadius = cornerRadius
-        self.flattenTolerance = flattenTolerance
-    }
-
-    /// Symmetric 3×3 quadratic form: squared distance to a line, (x, y, 1) Q (x, y, 1)ᵀ with
-    /// Q = [[xx, xy, x1], [xy, yy, y1], [x1, y1, cc]].
-    private struct Quad {
-        var xx = 0.0, xy = 0.0, x1 = 0.0, yy = 0.0, y1 = 0.0, cc = 0.0
-
-        /// Adds v vᵀ / d for the line v·(x, y, 1) = 0.
-        mutating func add(_ v0: Double, _ v1: Double, _ v2: Double, _ d: Double) {
-            xx += v0 * v0 / d; xy += v0 * v1 / d; x1 += v0 * v2 / d
-            yy += v1 * v1 / d; y1 += v1 * v2 / d; cc += v2 * v2 / d
-        }
-
-        static func + (a: Quad, b: Quad) -> Quad {
-            Quad(xx: a.xx + b.xx, xy: a.xy + b.xy, x1: a.x1 + b.x1, yy: a.yy + b.yy, y1: a.y1 + b.y1, cc: a.cc + b.cc)
-        }
-
-        func eval(_ x: Double, _ y: Double) -> Double {
-            xx * x * x + 2 * xy * x * y + 2 * x1 * x + yy * y * y + 2 * y1 * y + cc
-        }
+        minCornerTurn = minCornerAngle * Double.pi / 180
+        self.cornerRadius = max(0, cornerRadius)
+        self.flattenTolerance = max(flattenTolerance, 1e-4)
     }
 
     // MARK: - Entry points
 
-    /// Fits an open chain of lattice points (`points.count >= 2`, unit steps). The output
-    /// starts and ends exactly at the chain's end points, which are pinned. Returns false
-    /// when the fit degenerates (the caller then uses a simpler fallback).
+    /// Fits a chain between two junctions. The output starts and ends exactly at the
+    /// chain's ends, both pinned; false when the fit degenerates.
     mutating func fitOpen(_ points: [SIMD2<Int32>], into out: inout DenseCurve) -> Bool {
         out.removeAll()
         let n = points.count - 1
-        load(points, count: n + 1)
-        let first = SIMD2(Double(points[0].x), Double(points[0].y))
-        let last = SIMD2(Double(points[n].x), Double(points[n].y))
-        calcLonOpen(n)
-        let m = bestPolygonOpen(n)
-        if m == 1 {
-            if first == last { return false }
-            out.append(first, pinned: true); out.append(last, pinned: true)
-            return true
+        guard n >= 1 else { return false }
+        let loop = points[0] == points[n]
+        guard !loop || n >= 4, load(points, cyclic: loop) else { return false }
+        findStraightRuns()
+        findReach()
+        fewestSegments(from: 0, to: n)
+        leastPenalty(from: 0, to: n)
+        polygon.removeAll(keepingCapacity: true)
+        polygon.append(contentsOf: candidate)
+        polygon.append(n)
+        var m = polygon.count - 1
+        if loop && m < 3 { return false }
+        let thin = loop && m == 3 && collapsed(polygon[0], polygon[1], polygon[2])
+        if thin {
+            useLatticeCorners(anchored: true)
+            m = polygon.count - 1
+        } else {
+            fitLines(m)
         }
-        if first == last && m < 3 { return false }
-        adjustVerticesOpen(n, m)
-        buildSegments(vertexCount: m + 1, open: true)
-        optimizeCurve(open: true)
-        out.append(first, pinned: true)
-        out.append(segEnd[0], pinned: false)
-        flattenOutput(from: segEnd[0], into: &out)
-        return true
+        vertex.removeAll(keepingCapacity: true)
+        vertex.append(.zero)
+        for k in stride(from: 1, to: m, by: 1) {
+            vertex.append(thin ? latticePoint(polygon[k]) : adjustedVertex(k, before: k - 1, after: k))
+        }
+        vertex.append(latticePoint(n))
+        prepareVertices(m + 1)
+        for k in stride(from: 1, to: m, by: 1) { analyze(k, previous: vertex[k - 1], next: vertex[k + 1]) }
+        for k in 0..<m { joint[k] = (vertex[k] + vertex[k + 1]) * 0.5 }
+
+        put(vertex[0], pinned: true, into: &out)
+        if m > 1 {
+            order.removeAll(keepingCapacity: true)
+            knots.removeAll(keepingCapacity: true)
+            for k in 1..<m { order.append(k) }
+            knots.append(contentsOf: joint[0..<m])
+            put(knots[0], pinned: false, into: &out)
+            emitPieces(into: &out)
+        }
+        put(vertex[m], pinned: true, into: &out)
+        return finish(&out, minimumCount: loop ? 4 : 2)
     }
 
-    /// Fits a closed chain (`points` ends with a repeat of its first point, at least four
-    /// unit steps). The output repeats its first point at the end; corners are pinned.
+    /// Fits a closed chain (its last point repeats the first). The output repeats its first
+    /// point as its last; false when the fit degenerates.
     mutating func fitClosed(_ points: [SIMD2<Int32>], into out: inout DenseCurve) -> Bool {
         out.removeAll()
         let n = points.count - 1
-        load(points, count: n)
-        var m = 0
-        if n >= 16 {
-            calcLonCyclic(n)
-            m = bestPolygonCyclic(n)
-        }
-        if m >= 3 {
-            adjustVerticesCyclic(n, m)
-        } else {
-            // Tiny loops: use every lattice turn as a vertex; the Béziers round them off.
-            m = turnPolygon(n)
-            if m < 3 { return false }
-        }
-        buildSegments(vertexCount: m, open: false)
-        optimizeCurve(open: false)
-        out.append(segEnd[0], pinned: false)
-        flattenOutput(from: segEnd[0], into: &out)
-        out.points[out.points.count - 1] = out.points[0]
-        return out.points.count >= 4
-    }
-
-    // MARK: - Setup
-
-    private mutating func load(_ points: [SIMD2<Int32>], count: Int) {
-        px.removeAll(keepingCapacity: true); py.removeAll(keepingCapacity: true)
-        for i in 0..<count { px.append(Int(points[i].x)); py.append(Int(points[i].y)) }
-        // Prefix sums relative to the first point keep the moments numerically tame.
-        let x0 = px[0], y0 = py[0]
-        sx.removeAll(keepingCapacity: true); sy.removeAll(keepingCapacity: true)
-        sxx.removeAll(keepingCapacity: true); sxy.removeAll(keepingCapacity: true); syy.removeAll(keepingCapacity: true)
-        sx.append(0); sy.append(0); sxx.append(0); sxy.append(0); syy.append(0)
-        for i in 0..<count {
-            let x = Double(px[i] - x0), y = Double(py[i] - y0)
-            sx.append(sx[i] + x); sy.append(sy[i] + y)
-            sxx.append(sxx[i] + x * x); sxy.append(sxy[i] + x * y); syy.append(syy[i] + y * y)
-        }
-        resize(&nc, count + 1); resize(&pivk, count + 1); resize(&lon, count + 1)
-        resize(&clip0, count + 1); resize(&clip1, count + 2); resize(&seg0, count + 2); resize(&seg1, count + 2)
-        resize(&prev, count + 2)
-        if pen.count < count + 2 { pen = [Double](repeating: 0, count: count + 2) }
-    }
-
-    private func resize(_ a: inout [Int], _ n: Int) {
-        if a.count < n { a = [Int](repeating: 0, count: n) }
-    }
-
-    // MARK: - Stage 1: straight sub-paths
-
-    @inline(__always) private static func xprod(_ ax: Int, _ ay: Int, _ bx: Int, _ by: Int) -> Int { ax * by - ay * bx }
-    @inline(__always) private static func sign(_ v: Int) -> Int { v > 0 ? 1 : (v < 0 ? -1 : 0) }
-    @inline(__always) private static func floordiv(_ a: Int, _ n: Int) -> Int { a >= 0 ? a / n : -1 - (-1 - a) / n }
-    @inline(__always) private static func mod(_ a: Int, _ n: Int) -> Int {
-        a >= n ? a % n : (a >= 0 ? a : n - 1 - (-1 - a) % n)
-    }
-    /// a <= b < c cyclically.
-    @inline(__always) private static func cyclic(_ a: Int, _ b: Int, _ c: Int) -> Bool {
-        a <= c ? (a <= b && b < c) : (a <= b || b < c)
-    }
-
-    /// Walks from `i` along direction-change corners, maintaining potrace's pair of
-    /// constraint vectors, and returns the furthest index reachable by a straight line.
-    /// `nextIndex(k)` is the next corner after `k` or nil at the end of an open path.
-    @inline(__always)
-    private func pivot(from i: Int, count n: Int, cyclicPath: Bool) -> Int {
-        var ct = SIMD4<Int>(repeating: 0)
-        let i1 = cyclicPath ? CurveFitter.mod(i + 1, n) : i + 1
-        ct[(3 + 3 * (px[i1] - px[i]) + (py[i1] - py[i])) / 2] += 1
-        var c0x = 0, c0y = 0, c1x = 0, c1y = 0
-        var k = nc[i], k1 = i
-        while true {
-            ct[(3 + 3 * CurveFitter.sign(px[k] - px[k1]) + CurveFitter.sign(py[k] - py[k1])) / 2] += 1
-            if ct[0] > 0 && ct[1] > 0 && ct[2] > 0 && ct[3] > 0 { return k1 }
-            let curx = px[k] - px[i], cury = py[k] - py[i]
-            if CurveFitter.xprod(c0x, c0y, curx, cury) < 0 || CurveFitter.xprod(c1x, c1y, curx, cury) > 0 { break }
-            if abs(curx) > 1 || abs(cury) > 1 {
-                var ox = curx + ((cury >= 0 && (cury > 0 || curx < 0)) ? 1 : -1)
-                var oy = cury + ((curx <= 0 && (curx < 0 || cury < 0)) ? 1 : -1)
-                if CurveFitter.xprod(c0x, c0y, ox, oy) >= 0 { c0x = ox; c0y = oy }
-                ox = curx + ((cury <= 0 && (cury < 0 || curx < 0)) ? 1 : -1)
-                oy = cury + ((curx >= 0 && (curx > 0 || cury < 0)) ? 1 : -1)
-                if CurveFitter.xprod(c1x, c1y, ox, oy) <= 0 { c1x = ox; c1y = oy }
+        guard n >= 4, points[0] == points[n], load(points, cyclic: true) else { return false }
+        findStraightRuns()
+        findReach()
+        var s = 0
+        for i in 1..<n where reach[i] < reach[s] { s = i }
+        var fewest = Int.max
+        for t in s...(s + reach[s]) { fewest = min(fewest, fewestSegments(from: t % n, to: t % n + n)) }
+        var bestPenalty = Double.infinity
+        for t in s...(s + reach[s]) where fewestSegments(from: t % n, to: t % n + n) == fewest {
+            let penalty = leastPenalty(from: t % n, to: t % n + n)
+            if penalty < bestPenalty {
+                bestPenalty = penalty
+                polygon.removeAll(keepingCapacity: true)
+                polygon.append(contentsOf: candidate)
             }
-            k1 = k
-            if cyclicPath {
-                k = nc[k1]
-                if !CurveFitter.cyclic(k, i, k1) { break }
+        }
+        var m = polygon.count
+        guard m >= 3 else { return false }
+        let thin = m == 3 && collapsed(polygon[0], polygon[1], polygon[2])
+        if thin {
+            useLatticeCorners(anchored: false)
+            m = polygon.count
+        }
+        polygon.append(polygon[0] + n)
+
+        vertex.removeAll(keepingCapacity: true)
+        if thin {
+            for k in 0..<m { vertex.append(latticePoint(polygon[k])) }
+        } else {
+            fitLines(m)
+            for k in 0..<m { vertex.append(adjustedVertex(k, before: (k + m - 1) % m, after: k)) }
+        }
+        prepareVertices(m)
+        for k in 0..<m { analyze(k, previous: vertex[(k + m - 1) % m], next: vertex[(k + 1) % m]) }
+        for k in 0..<m { joint[k] = (vertex[k] + vertex[(k + 1) % m]) * 0.5 }
+
+        order.removeAll(keepingCapacity: true)
+        knots.removeAll(keepingCapacity: true)
+        if let c = corner[0..<m].firstIndex(of: true) {
+            // Start at a corner so the output's first point is a pinned one.
+            for q in 1..<m { order.append((c + q) % m) }
+            for q in 0..<m { knots.append(joint[(c + q) % m]) }
+            let fillet = self.fillet(c, from: knots[m - 1], to: knots[0])
+            put(fillet?.z3 ?? vertex[c], pinned: true, into: &out)
+            put(knots[0], pinned: false, into: &out)
+            emitPieces(into: &out)
+            if let fillet {
+                put(fillet.z0, pinned: true, into: &out)
+                flatten(fillet, pinned: true, into: &out)
             } else {
-                if k1 >= n { return n }
-                k = nc[k1]
+                put(vertex[c], pinned: true, into: &out)
             }
-        }
-        // k1 satisfied the constraints and k violates them: find the last lattice point on
-        // the axis-aligned run k1 → k that still satisfies them.
-        let dkx = CurveFitter.sign(px[k] - px[k1]), dky = CurveFitter.sign(py[k] - py[k1])
-        let curx = px[k1] - px[i], cury = py[k1] - py[i]
-        let a = CurveFitter.xprod(c0x, c0y, curx, cury), b = CurveFitter.xprod(c0x, c0y, dkx, dky)
-        let c = CurveFitter.xprod(c1x, c1y, curx, cury), d = CurveFitter.xprod(c1x, c1y, dkx, dky)
-        let run = cyclicPath ? CurveFitter.mod(k - k1, n) : k - k1
-        var j = run
-        if b < 0 { j = min(j, CurveFitter.floordiv(a, -b)) }
-        if d > 0 { j = min(j, CurveFitter.floordiv(-c, d)) }
-        j = max(0, j)
-        return cyclicPath ? CurveFitter.mod(k1 + j, n) : k1 + j
-    }
-
-    private mutating func calcLonOpen(_ n: Int) {
-        var k = n
-        for i in stride(from: n - 1, through: 0, by: -1) {
-            if px[i] != px[k] && py[i] != py[k] { k = i + 1 }
-            nc[i] = k
-        }
-        for i in stride(from: n - 1, through: 0, by: -1) {
-            pivk[i] = min(n, max(i + 1, pivot(from: i, count: n, cyclicPath: false)))
-        }
-        lon[n - 1] = pivk[n - 1]
-        if n >= 2 {
-            for i in stride(from: n - 2, through: 0, by: -1) { lon[i] = min(pivk[i], lon[i + 1]) }
-        }
-    }
-
-    private mutating func calcLonCyclic(_ n: Int) {
-        var k = 0
-        for i in stride(from: n - 1, through: 0, by: -1) {
-            if px[i] != px[k] && py[i] != py[k] { k = i + 1 }
-            nc[i] = k
-        }
-        for i in stride(from: n - 1, through: 0, by: -1) {
-            pivk[i] = pivot(from: i, count: n, cyclicPath: true)
-        }
-        var j = pivk[n - 1]
-        lon[n - 1] = j
-        for i in stride(from: n - 2, through: 0, by: -1) {
-            if CurveFitter.cyclic(i + 1, pivk[i], j) { j = pivk[i] }
-            lon[i] = j
-        }
-        var i = n - 1
-        while i >= 0 && CurveFitter.cyclic(CurveFitter.mod(i + 1, n), j, lon[i]) {
-            lon[i] = j
-            i -= 1
-        }
-    }
-
-    // MARK: - Stage 2: optimal polygon
-
-    /// Penalty of the polygon segment i → j: root of the summed squared distances of the
-    /// lattice points in between from the segment, scaled by its length (potrace `penalty3`).
-    @inline(__always)
-    private func penalty(_ i: Int, _ jIn: Int, count n: Int) -> Double {
-        var j = jIn
-        var x: Double, y: Double, x2: Double, xy: Double, y2: Double, k: Double
-        if j >= n {
-            j -= n
-            x = sx[j + 1] - sx[i] + sx[n]; y = sy[j + 1] - sy[i] + sy[n]
-            x2 = sxx[j + 1] - sxx[i] + sxx[n]; xy = sxy[j + 1] - sxy[i] + sxy[n]; y2 = syy[j + 1] - syy[i] + syy[n]
-            k = Double(j + 1 - i + n)
         } else {
-            x = sx[j + 1] - sx[i]; y = sy[j + 1] - sy[i]
-            x2 = sxx[j + 1] - sxx[i]; xy = sxy[j + 1] - sxy[i]; y2 = syy[j + 1] - syy[i]
-            k = Double(j + 1 - i)
-        }
-        let pxm = Double(px[i] + px[j]) / 2 - Double(px[0])
-        let pym = Double(py[i] + py[j]) / 2 - Double(py[0])
-        let ey = Double(px[j] - px[i])
-        let ex = -Double(py[j] - py[i])
-        let a = (x2 - 2 * x * pxm) / k + pxm * pxm
-        let b = (xy - x * pym - y * pxm) / k + pxm * pym
-        let c = (y2 - 2 * y * pym) / k + pym * pym
-        return max(0, ex * ex * a + 2 * ex * ey * b + ey * ey * c).squareRoot()
-    }
-
-    /// Shortest-then-cheapest polygon from `clip0` (the furthest allowed next vertex of
-    /// each vertex). Returns the segment count; vertices land in `po[0...m]`.
-    private mutating func shortestPolygon(_ n: Int, _ pathLength: Int) -> Int {
-        var j = 1
-        for i in 0..<n {
-            while j <= clip0[i] { clip1[j] = i; j += 1 }
-        }
-        var i = 0
-        j = 0
-        while i < n { seg0[j] = i; i = clip0[i]; j += 1 }
-        seg0[j] = n
-        let m = j
-        i = n
-        for jj in stride(from: m, to: 0, by: -1) { seg1[jj] = i; i = clip1[i] }
-        seg1[0] = 0
-        pen[0] = 0
-        for jj in 1...m {
-            for ii in stride(from: seg1[jj], through: seg0[jj], by: 1) {
-                var best = -1.0
-                var k = seg0[jj - 1]
-                while k >= clip1[ii] {
-                    let p = penalty(k, ii, count: pathLength) + pen[k]
-                    if best < 0 || p < best { prev[ii] = k; best = p }
-                    k -= 1
-                }
-                pen[ii] = best
-            }
-        }
-        po.removeAll(keepingCapacity: true)
-        po.append(contentsOf: repeatElement(0, count: m + 1))
-        po[m] = n
-        i = n
-        var jj = m - 1
-        while i > 0 && jj >= 0 {
-            i = prev[i]
-            po[jj] = i
-            jj -= 1
-        }
-        return m
-    }
-
-    private mutating func bestPolygonOpen(_ n: Int) -> Int {
-        // Segment i → j is allowed when the lattice path i−1 … j+1 is straight, clipped at
-        // the pinned ends.
-        for i in 0..<n {
-            let a = max(i - 1, 0)
-            var c = lon[a] >= n ? n : lon[a] - 1
-            if c <= i { c = i + 1 }
-            clip0[i] = min(c, n)
-        }
-        return shortestPolygon(n, n + 1)
-    }
-
-    private mutating func bestPolygonCyclic(_ n: Int) -> Int {
-        for i in 0..<n {
-            var c = CurveFitter.mod(lon[CurveFitter.mod(i - 1, n)] - 1, n)
-            if c == i { c = CurveFitter.mod(i + 1, n) }
-            clip0[i] = c < i ? n : c
-        }
-        return shortestPolygon(n, n)
-    }
-
-    /// Polygon through every direction change of a closed lattice path.
-    private mutating func turnPolygon(_ n: Int) -> Int {
-        vx.removeAll(keepingCapacity: true); vy.removeAll(keepingCapacity: true)
-        for i in 0..<n {
-            let a = CurveFitter.mod(i - 1, n), b = CurveFitter.mod(i + 1, n)
-            let dx0 = px[i] - px[a], dy0 = py[i] - py[a], dx1 = px[b] - px[i], dy1 = py[b] - py[i]
-            if dx0 != dx1 || dy0 != dy1 {
-                vx.append(Double(px[i])); vy.append(Double(py[i]))
-            }
-        }
-        return vx.count
-    }
-
-    // MARK: - Stage 3: vertex adjustment
-
-    /// Centroid and principal direction of lattice points i…j (j may wrap for cyclic paths),
-    /// relative to the first path point.
-    @inline(__always)
-    private func pointSlope(_ iIn: Int, _ jIn: Int, count n: Int) -> (cx: Double, cy: Double, dx: Double, dy: Double) {
-        var i = iIn, j = jIn, r = 0
-        while j >= n { j -= n; r += 1 }
-        while i >= n { i -= n; r -= 1 }
-        while j < 0 { j += n; r -= 1 }
-        while i < 0 { i += n; r += 1 }
-        let rd = Double(r)
-        let x = sx[j + 1] - sx[i] + rd * sx[n], y = sy[j + 1] - sy[i] + rd * sy[n]
-        let x2 = sxx[j + 1] - sxx[i] + rd * sxx[n], xy = sxy[j + 1] - sxy[i] + rd * sxy[n]
-        let y2 = syy[j + 1] - syy[i] + rd * syy[n]
-        let k = Double(j + 1 - i + r * n)
-        var a = (x2 - x * x / k) / k
-        let b = (xy - x * y / k) / k
-        var c = (y2 - y * y / k) / k
-        let lambda2 = (a + c + ((a - c) * (a - c) + 4 * b * b).squareRoot()) / 2
-        a -= lambda2
-        c -= lambda2
-        var dx = 0.0, dy = 0.0
-        if abs(a) >= abs(c) {
-            let l = (a * a + b * b).squareRoot()
-            if l != 0 { dx = -b / l; dy = a / l }
-        } else {
-            let l = (c * c + b * b).squareRoot()
-            if l != 0 { dx = -c / l; dy = b / l }
-        }
-        return (x / k, y / k, dx, dy)
-    }
-
-    private func lineQuad(_ ctrX: Double, _ ctrY: Double, _ dirX: Double, _ dirY: Double) -> Quad {
-        var q = Quad()
-        let d = dirX * dirX + dirY * dirY
-        guard d != 0 else { return q }
-        q.add(dirY, -dirX, dirX * ctrY - dirY * ctrX, d)
-        return q
-    }
-
-    /// The point within the square of half-size `r` centred on (sxc, syc) minimizing Q.
-    private func minimize(_ qIn: Quad, _ sxc: Double, _ syc: Double, _ r: Double) -> (Double, Double) {
-        var q = qIn
-        var wx = 0.0, wy = 0.0
-        while true {
-            let det = q.xx * q.yy - q.xy * q.xy
-            if det != 0 {
-                wx = (-q.x1 * q.yy + q.y1 * q.xy) / det
-                wy = (q.x1 * q.xy - q.y1 * q.xx) / det
+            // Start where no curve could be joined across, if there is such a place.
+            var start = m - 1
+            for k in 0..<m where !joinable(k, (k + 1) % m) {
+                start = k
                 break
             }
-            // Parallel lines: add an orthogonal axis through the square's centre.
-            var v0: Double, v1: Double
-            if q.xx > q.yy {
-                v0 = -q.xy; v1 = q.xx
-            } else if q.yy != 0 {
-                v0 = -q.yy; v1 = q.xy
+            for q in 1...m { order.append((start + q) % m) }
+            for q in 0...m { knots.append(joint[(start + q) % m]) }
+            put(knots[0], pinned: false, into: &out)
+            emitPieces(into: &out)
+        }
+        return finish(&out, minimumCount: 4)
+    }
+
+    // MARK: - Path
+
+    private struct Moments {
+        var x: Int64 = 0, y: Int64 = 0, xx: Int64 = 0, xy: Int64 = 0, yy: Int64 = 0
+
+        static func - (a: Moments, b: Moments) -> Moments {
+            Moments(x: a.x - b.x, y: a.y - b.y, xx: a.xx - b.xx, xy: a.xy - b.xy, yy: a.yy - b.yy)
+        }
+    }
+
+    /// Stores the path relative to its first point; false unless every step is a unit step.
+    private mutating func load(_ points: [SIMD2<Int32>], cyclic: Bool) -> Bool {
+        let n = points.count - 1
+        steps = n
+        self.cyclic = cyclic
+        let o = points[0]
+        origin = SIMD2(Double(o.x), Double(o.y))
+        let stored = cyclic ? 2 * n : n + 1
+        px.removeAll(keepingCapacity: true)
+        py.removeAll(keepingCapacity: true)
+        direction.removeAll(keepingCapacity: true)
+        moments.removeAll(keepingCapacity: true)
+        var sum = Moments()
+        moments.append(sum)
+        for k in 0..<stored {
+            let p = points[k <= n ? k : k - n]
+            let x = Int(p.x) - Int(o.x), y = Int(p.y) - Int(o.y)
+            px.append(x)
+            py.append(y)
+            let x64 = Int64(x), y64 = Int64(y)
+            sum.x += x64
+            sum.y += y64
+            sum.xx += x64 * x64
+            sum.xy += x64 * y64
+            sum.yy += y64 * y64
+            moments.append(sum)
+        }
+        for k in 0..<(stored - 1) {
+            switch (px[k + 1] - px[k], py[k + 1] - py[k]) {
+            case (1, 0): direction.append(0)
+            case (0, 1): direction.append(1)
+            case (-1, 0): direction.append(2)
+            case (0, -1): direction.append(3)
+            default: return false
+            }
+        }
+        return true
+    }
+
+    private func latticePoint(_ i: Int) -> SIMD2<Double> { SIMD2(Double(px[i]), Double(py[i])) }
+
+    // MARK: - Straight runs (§2.2.1)
+
+    private mutating func findStraightRuns() {
+        let n = steps
+        reset(&straight, n, 0)
+        for i in stride(from: n - 1, through: 0, by: -1) {
+            // A straight path's subpaths are straight, so a run is at most one step longer
+            // than the run of the next start.
+            var cap = cyclic ? n - 1 : n - i
+            if i < n - 1 { cap = min(cap, straight[i + 1] + 1) }
+            straight[i] = straightRun(from: i, upTo: cap)
+        }
+        if cyclic {
+            // Second lap: carry the bound across the wrap.
+            straight[n - 1] = min(straight[n - 1], straight[0] + 1)
+            for i in stride(from: n - 2, through: 0, by: -1) { straight[i] = min(straight[i], straight[i + 1] + 1) }
+        }
+    }
+
+    /// Steps of the longest path from vertex i (at most `cap`) that uses at most three
+    /// directions and passes the triplewise test for every triple (i, j, k): the line
+    /// through v_i and v_k comes within max-distance 1 of v_j. For fixed i that confines
+    /// v_k − v_i to the cone from v_i over the squares of radius 1 around all earlier
+    /// v_j, kept as its two bounding directions.
+    private func straightRun(from i: Int, upTo cap: Int) -> Int {
+        let x0 = px[i], y0 = py[i]
+        var loX = 0, loY = 0, hiX = 0, hiY = 0
+        var seen: UInt8 = 0
+        var length = 0
+        while length < cap {
+            let k = i + length + 1
+            seen |= 1 << direction[k - 1]
+            if seen == 15 { break }
+            let wx = px[k] - x0, wy = py[k] - y0
+            if loX * wy - loY * wx < 0 || hiX * wy - hiY * wx > 0 { break }
+            length += 1
+            guard abs(wx) > 1 || abs(wy) > 1 else { continue }
+            // The square's corners at the clockwise and counter-clockwise extremes.
+            let lx = wx + (wy > 0 || (wy == 0 && wx < 0) ? 1 : -1)
+            let ly = wy + (wx < 0 || (wx == 0 && wy < 0) ? 1 : -1)
+            let ux = wx + (wy < 0 || (wy == 0 && wx < 0) ? 1 : -1)
+            let uy = wy + (wx < 0 || (wx == 0 && wy > 0) ? -1 : 1)
+            if (loX == 0 && loY == 0) || loX * ly - loY * lx > 0 { loX = lx; loY = ly }
+            if (hiX == 0 && hiY == 0) || hiX * uy - hiY * ux < 0 { hiX = ux; hiY = uy }
+            if loX * hiY - loY * hiX < 0 { break }
+        }
+        return length
+    }
+
+    // MARK: - Optimal polygon (§2.2.2–2.2.4)
+
+    /// Steps of the longest possible segment from each vertex: the path one vertex beyond
+    /// both of its ends must be straight (§2.2.2). Open ends have no vertex beyond them.
+    private mutating func findReach() {
+        let n = steps
+        reset(&reach, n, 0)
+        for i in 0..<n {
+            if cyclic {
+                reach[i] = min(n - 3, straight[i == 0 ? n - 1 : i - 1] - 2)
             } else {
-                v0 = 1; v1 = 0
-            }
-            q.add(v0, v1, -v1 * syc - v0 * sxc, v0 * v0 + v1 * v1)
-        }
-        if abs(wx - sxc) <= r && abs(wy - syc) <= r { return (wx, wy) }
-        // Minimum outside the square: search its boundary.
-        var best = q.eval(sxc, syc)
-        var bx = sxc, by = syc
-        if q.xx != 0 {
-            for z in 0..<2 {
-                let y = syc + (z == 0 ? -r : r)
-                let x = -(q.xy * y + q.x1) / q.xx
-                let cand = q.eval(x, y)
-                if abs(x - sxc) <= r && cand < best { best = cand; bx = x; by = y }
+                let s = max(0, i - 1)
+                let end = s + straight[s]
+                reach[i] = (end >= n ? n : end - 1) - i
             }
         }
-        if q.yy != 0 {
-            for z in 0..<2 {
-                let x = sxc + (z == 0 ? -r : r)
-                let y = -(q.xy * x + q.y1) / q.yy
-                let cand = q.eval(x, y)
-                if abs(y - syc) <= r && cand < best { best = cand; bx = x; by = y }
-            }
-        }
-        for l in 0..<2 {
-            for k in 0..<2 {
-                let x = sxc + (l == 0 ? -r : r), y = syc + (k == 0 ? -r : r)
-                let cand = q.eval(x, y)
-                if cand < best { best = cand; bx = x; by = y }
-            }
-        }
-        return (bx, by)
-    }
-
-    /// Records the least-squares line of polygon segment `s` (lattice points a…b), with its
-    /// direction oriented along the path.
-    private mutating func addLine(_ a: Int, _ b: Int, count n: Int, from ia: Int, to ib: Int) {
-        let ps = pointSlope(a, b, count: n)
-        var d = SIMD2(ps.dx, ps.dy)
-        let chord = SIMD2(Double(px[ib] - px[ia]), Double(py[ib] - py[ia]))
-        if (d * chord).sum() < 0 { d = -d }
-        lineCentre.append(SIMD2(ps.cx, ps.cy)); lineDir.append(d)
-        lineLength.append((chord * chord).sum().squareRoot())
-    }
-
-    /// A least-squares line through lattice points along a curved stretch lies inside the
-    /// curve's tangent by about κL²/24 (the mean sagitta over an arc of length L), and the
-    /// curve is later drawn tangent to it — so long polygon edges, such as the flat runs at
-    /// the extremes of a digitized circle, would come out flattened. Shift each line back
-    /// out where its neighbours show a smooth, consistently turning curve.
-    private mutating func correctCurvatureBias(cyclic: Bool) {
-        let m = lineDir.count
-        guard m >= 3 else { return }
-        let maxTurnCos = cos(Double.pi / 4)
-        lineShift.removeAll(keepingCapacity: true)
-        for s in 0..<m {
-            guard cyclic || (s > 0 && s < m - 1) else { lineShift.append(.zero); continue }
-            let a = lineDir[(s + m - 1) % m], b = lineDir[s], c = lineDir[(s + 1) % m]
-            let t1 = a.x * b.y - a.y * b.x, t2 = b.x * c.y - b.y * c.x
-            guard t1 * t2 > 0, (a * b).sum() > maxTurnCos, (b * c).sum() > maxTurnCos else {
-                lineShift.append(.zero)
-                continue
-            }
-            let theta = atan2(a.x * c.y - a.y * c.x, (a * c).sum())
-            let arc = 0.5 * lineLength[(s + m - 1) % m] + lineLength[s] + 0.5 * lineLength[(s + 1) % m]
-            let delta = min(0.5, abs(theta) / arc * lineLength[s] * lineLength[s] / 24)
-            let outward = theta > 0 ? SIMD2(b.y, -b.x) : SIMD2(-b.y, b.x)
-            lineShift.append(delta * outward)
-        }
-        for s in 0..<m { lineCentre[s] += lineShift[s] }
-    }
-
-    /// How far (per axis) a polygon vertex may move from its lattice corner. potrace uses
-    /// half a unit; along gently curving arcs the vertex that makes the curve tangent to the
-    /// true outline often lies further out, and clamping it flattens the curve there.
-    static let vertexReach = 1.0
-
-    private mutating func adjustVerticesOpen(_ n: Int, _ m: Int) {
-        let x0 = Double(px[0]), y0 = Double(py[0])
-        lineCentre.removeAll(keepingCapacity: true); lineDir.removeAll(keepingCapacity: true)
-        lineLength.removeAll(keepingCapacity: true)
-        for s in 0..<m { addLine(po[s], po[s + 1], count: n + 1, from: po[s], to: po[s + 1]) }
-        correctCurvatureBias(cyclic: false)
-        quads.removeAll(keepingCapacity: true)
-        for s in 0..<m { quads.append(lineQuad(lineCentre[s].x, lineCentre[s].y, lineDir[s].x, lineDir[s].y)) }
-        vx.removeAll(keepingCapacity: true); vy.removeAll(keepingCapacity: true)
-        vx.append(x0); vy.append(y0)
-        for i in 1..<m {
-            let q = quads[i - 1] + quads[i]
-            let (wx, wy) = minimize(q, Double(px[po[i]]) - x0, Double(py[po[i]]) - y0, CurveFitter.vertexReach)
-            vx.append(wx + x0); vy.append(wy + y0)
-        }
-        vx.append(Double(px[n])); vy.append(Double(py[n]))
-    }
-
-    private mutating func adjustVerticesCyclic(_ n: Int, _ m: Int) {
-        let x0 = Double(px[0]), y0 = Double(py[0])
-        lineCentre.removeAll(keepingCapacity: true); lineDir.removeAll(keepingCapacity: true)
-        lineLength.removeAll(keepingCapacity: true)
-        for i in 0..<m {
-            var j = po[(i + 1) % m]
-            j = CurveFitter.mod(j - po[i], n) + po[i]
-            addLine(po[i], j, count: n, from: po[i], to: po[(i + 1) % m])
-        }
-        correctCurvatureBias(cyclic: true)
-        quads.removeAll(keepingCapacity: true)
-        for s in 0..<m { quads.append(lineQuad(lineCentre[s].x, lineCentre[s].y, lineDir[s].x, lineDir[s].y)) }
-        vx.removeAll(keepingCapacity: true); vy.removeAll(keepingCapacity: true)
-        for i in 0..<m {
-            let j = (i + m - 1) % m
-            let q = quads[j] + quads[i]
-            let (wx, wy) = minimize(q, Double(px[po[i]]) - x0, Double(py[po[i]]) - y0, CurveFitter.vertexReach)
-            vx.append(wx + x0); vy.append(wy + y0)
+        let indices = cyclic ? 2 * n : n + 1
+        reset(&segmentStart, indices, 0)
+        var i = 0
+        for j in 1..<indices {
+            while i + reach[i >= n ? i - n : i] < j { i += 1 }
+            segmentStart[j] = i
         }
     }
 
-    // MARK: - Stage 4: corners and Béziers
+    @inline(__always)
+    private func reachEnd(_ i: Int, _ last: Int) -> Int {
+        min(last, i + reach[i >= steps ? i - steps : i])
+    }
 
-    @inline(__always) private func vertex(_ i: Int) -> SIMD2<Double> { SIMD2(vx[i], vy[i]) }
-
-    /// One curve segment per polygon vertex (potrace `smooth`): a corner when the vertex
-    /// sticks out far from the chord of its neighbours, else a Bézier from the midpoint of
-    /// the incoming polygon edge to the midpoint of the outgoing one. The end vertices of
-    /// open chains are pinned corners.
-    private mutating func buildSegments(vertexCount m: Int, open: Bool) {
-        segCorner.removeAll(keepingCapacity: true); segVertex.removeAll(keepingCapacity: true)
-        segAlpha.removeAll(keepingCapacity: true); segC0.removeAll(keepingCapacity: true)
-        segC1.removeAll(keepingCapacity: true); segEnd.removeAll(keepingCapacity: true)
-        func append(_ corner: Bool, _ v: SIMD2<Double>, _ alpha: Double, _ c0: SIMD2<Double>, _ c1: SIMD2<Double>, _ end: SIMD2<Double>) {
-            segCorner.append(corner); segVertex.append(v); segAlpha.append(alpha)
-            segC0.append(c0); segC1.append(c1); segEnd.append(end)
+    /// The fewest segments from stored index `first` to `last`; leaves in `ahead[c]` the
+    /// farthest vertex c segments reach. Every vertex up to `reachEnd(i)` can end a segment
+    /// from i, so jumping as far as possible is optimal.
+    @discardableResult
+    private mutating func fewestSegments(from first: Int, to last: Int) -> Int {
+        ahead.removeAll(keepingCapacity: true)
+        var i = first
+        ahead.append(i)
+        while i < last {
+            i = reachEnd(i, last)
+            ahead.append(i)
         }
-        for j in 0..<m {
-            let vj = vertex(j)
-            if open && (j == 0 || j == m - 1) {
-                append(true, vj, 4.0 / 3.0, vj, vj, j == 0 ? (vj + vertex(1)) * 0.5 : vj)
-                continue
-            }
-            let vi = vertex((j + m - 1) % m), vk = vertex((j + 1) % m)
-            let end = (vj + vk) * 0.5
-            let dk = vk - vi
-            let denom = abs(dk.x) + abs(dk.y)
-            var alpha = 4.0 / 3.0
-            if denom != 0 {
-                let dd = abs((vj.x - vi.x) * dk.y - dk.x * (vj.y - vi.y)) / denom
-                alpha = dd > 1 ? (1 - 1 / dd) / 0.75 : 0
-            }
-            // potrace's alpha alone flags a vertex once it sticks out ~4 px from the chord of
-            // its neighbours, which also happens along smooth arcs of any radius (their
-            // polygon edges grow with the radius); a corner must also turn sharply.
-            let din = vj - vi, dout = vk - vj
-            let turnCos = (din * dout).sum() / max(1e-12, ((din * din).sum() * (dout * dout).sum()).squareRoot())
-            if alpha >= alphaMax && turnCos <= cornerCos {
-                append(true, vj, alpha, vj, vj, end)
-            } else {
-                alpha = min(max(alpha, 0.55), 1)
-                append(false, vj, alpha, vi + (0.5 + 0.5 * alpha) * (vj - vi), vk + (0.5 + 0.5 * alpha) * (vj - vk), end)
-            }
+        return ahead.count - 1
+    }
+
+    /// Least summed penalty of the polygons with the fewest segments from `first` to `last`
+    /// (after `fewestSegments` for the same range); leaves the best one's vertices (`first`
+    /// included, `last` not) in `candidate`. On such a polygon the c-th vertex is one that
+    /// c segments reach and from which the remaining ones reach `last`: an interval per c.
+    @discardableResult
+    private mutating func leastPenalty(from first: Int, to last: Int) -> Double {
+        let count = ahead.count - 1
+        behind.removeAll(keepingCapacity: true)
+        var b = last
+        behind.append(b)
+        while b > first {
+            b = max(first, segmentStart[b])
+            behind.append(b)
         }
-    }
-
-    private static let optTolerance = 0.2
-    private static let cos179 = cos(179.0 * Double.pi / 180)
-
-    @inline(__always) private static func dpara(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>) -> Double {
-        (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y)
-    }
-    @inline(__always) private static func cprod(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>, _ p3: SIMD2<Double>) -> Double {
-        (p1.x - p0.x) * (p3.y - p2.y) - (p3.x - p2.x) * (p1.y - p0.y)
-    }
-    @inline(__always) private static func iprod(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>) -> Double {
-        (p1.x - p0.x) * (p2.x - p0.x) + (p1.y - p0.y) * (p2.y - p0.y)
-    }
-    @inline(__always) private static func iprod1(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>, _ p3: SIMD2<Double>) -> Double {
-        (p1.x - p0.x) * (p3.x - p2.x) + (p1.y - p0.y) * (p3.y - p2.y)
-    }
-    @inline(__always) private static func dist(_ a: SIMD2<Double>, _ b: SIMD2<Double>) -> Double {
-        let d = a - b
-        return (d * d).sum().squareRoot()
-    }
-    @inline(__always) private static func bezier(_ t: Double, _ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>, _ p3: SIMD2<Double>) -> SIMD2<Double> {
-        let s = 1 - t
-        return (s * s * s) * p0 + (3 * s * s * t) * p1 + (3 * s * t * t) * p2 + (t * t * t) * p3
-    }
-
-    /// Parameter in [0, 1] where the convex Bézier is tangent to q0→q1, or −1.
-    private static func tangent(_ p0: SIMD2<Double>, _ p1: SIMD2<Double>, _ p2: SIMD2<Double>, _ p3: SIMD2<Double>, _ q0: SIMD2<Double>, _ q1: SIMD2<Double>) -> Double {
-        let aa = cprod(p0, p1, q0, q1), bb = cprod(p1, p2, q0, q1), cc = cprod(p2, p3, q0, q1)
-        let a = aa - 2 * bb + cc, b = -2 * aa + 2 * bb, c = aa
-        let d = b * b - 4 * a * c
-        if a == 0 || d < 0 { return -1 }
-        let s = d.squareRoot()
-        let r1 = (-b + s) / (2 * a), r2 = (-b - s) / (2 * a)
-        if r1 >= 0 && r1 <= 1 { return r1 }
-        if r2 >= 0 && r2 <= 1 { return r2 }
-        return -1
-    }
-
-    /// Whether segments i+1 … j (indices modulo the segment count for closed curves) can be
-    /// replaced by one Bézier from the end of segment i to the end of segment j — same
-    /// convexity, no corner, less than 179° of total turn, within `optTolerance` of the
-    /// polygon edges and keeping the enclosed area (potrace `opti_penalty`).
-    private func optiPenalty(_ i: Int, _ j: Int, open: Bool) -> (pen: Double, c0: SIMD2<Double>, c1: SIMD2<Double>)? {
-        let m = segEnd.count
-        if i == j { return nil }
-        @inline(__always) func md(_ a: Int) -> Int { open ? a : a % m }
-        let v = segVertex
-        let i1 = md(i + 1)
-        let conv = convexity[i1]
-        if conv == 0 { return nil }
-        let d = CurveFitter.dist(v[i], v[i1])
-        var k = i1
-        while k != j {
-            let k1 = md(k + 1)
-            if convexity[k1] != conv { return nil }
-            let k2 = md(k + 2)
-            let turn = CurveFitter.cprod(v[i], v[i1], v[k1], v[k2])
-            if (turn > 0 ? 1 : (turn < 0 ? -1 : 0)) != conv { return nil }
-            if CurveFitter.iprod1(v[i], v[i1], v[k1], v[k2]) < d * CurveFitter.dist(v[k1], v[k2]) * CurveFitter.cos179 { return nil }
-            k = k1
-        }
-
-        let p0 = segEnd[i], p1 = v[i1], p2 = v[j], p3 = segEnd[j]
-        var area = areaPrefix[j] - areaPrefix[i] - CurveFitter.dpara(v[0], segEnd[i], segEnd[j]) / 2
-        if i >= j { area += areaPrefix[m] }
-        let a1 = CurveFitter.dpara(p0, p1, p2), a2 = CurveFitter.dpara(p0, p1, p3), a3 = CurveFitter.dpara(p0, p2, p3)
-        let a4 = a1 + a3 - a2
-        if a2 == a1 { return nil }
-        let t = a3 / (a3 - a4), s = a2 / (a2 - a1)
-        let triangle = a2 * t / 2
-        if triangle == 0 { return nil }
-        let alpha = 2 - (4 - area / triangle / 0.3).squareRoot()
-        guard alpha.isFinite else { return nil }
-        let c0 = p0 + (t * alpha) * (p1 - p0), c1 = p3 + (s * alpha) * (p2 - p3)
-
-        var pen = 0.0
-        k = i1
-        while k != j {
-            let k1 = md(k + 1)
-            let tt = CurveFitter.tangent(p0, c0, c1, p3, v[k], v[k1])
-            if tt < -0.5 { return nil }
-            let pt = CurveFitter.bezier(tt, p0, c0, c1, p3)
-            let dd = CurveFitter.dist(v[k], v[k1])
-            if dd == 0 { return nil }
-            let d1 = CurveFitter.dpara(v[k], v[k1], pt) / dd
-            if abs(d1) > CurveFitter.optTolerance { return nil }
-            if CurveFitter.iprod(v[k], v[k1], pt) < 0 || CurveFitter.iprod(v[k1], v[k], pt) < 0 { return nil }
-            pen += d1 * d1
-            k = k1
-        }
-        k = i
-        while k != j {
-            let k1 = md(k + 1)
-            let tt = CurveFitter.tangent(p0, c0, c1, p3, segEnd[k], segEnd[k1])
-            if tt < -0.5 { return nil }
-            let pt = CurveFitter.bezier(tt, p0, c0, c1, p3)
-            let dd = CurveFitter.dist(segEnd[k], segEnd[k1])
-            if dd == 0 { return nil }
-            var d1 = CurveFitter.dpara(segEnd[k], segEnd[k1], pt) / dd
-            var d2 = CurveFitter.dpara(segEnd[k], segEnd[k1], v[k1]) / dd * 0.75 * segAlpha[k1]
-            if d2 < 0 { d1 = -d1; d2 = -d2 }
-            if d1 < d2 - CurveFitter.optTolerance { return nil }
-            if d1 < d2 { pen += (d1 - d2) * (d1 - d2) }
-            k = k1
-        }
-        return (pen, c0, c1)
-    }
-
-    /// Joins runs of Bézier segments into fewer, longer ones (potrace `opticurve`): the
-    /// fewest segments, then the least penalty. This evens out curvature — circles become
-    /// round instead of rounded polygons. Results land in `out*`, covering segments 1…
-    /// (segment 0 stays as is: the start stub of open chains, the start point of loops).
-    private mutating func optimizeCurve(open: Bool) {
-        let m = segEnd.count
-        convexity.removeAll(keepingCapacity: true)
-        for i in 0..<m {
-            if segCorner[i] {
-                convexity.append(0)
-            } else {
-                let turn = CurveFitter.dpara(segVertex[(i + m - 1) % m], segVertex[i], segVertex[(i + 1) % m])
-                convexity.append(turn > 0 ? 1 : (turn < 0 ? -1 : 0))
-            }
-        }
-        areaPrefix.removeAll(keepingCapacity: true)
-        areaPrefix.append(0)
-        var area = 0.0
-        let p0 = segVertex[0]
-        for i in 0..<(open ? m - 1 : m) {
-            let i1 = (i + 1) % m
-            if !segCorner[i1] {
-                let alpha = segAlpha[i1]
-                area += 0.3 * alpha * (4 - alpha) * CurveFitter.dpara(segEnd[i], segVertex[i1], segEnd[i1]) / 2
-                area += CurveFitter.dpara(p0, segEnd[i], segEnd[i1]) / 2
-            }
-            areaPrefix.append(area)
-        }
-
-        let last = open ? m - 1 : m
-        if optPrev.count < last + 1 {
-            optPrev = [Int](repeating: 0, count: last + 1)
-            optLen = [Int](repeating: 0, count: last + 1)
-            optPen = [Double](repeating: 0, count: last + 1)
-            optC0 = [SIMD2<Double>](repeating: .zero, count: last + 1)
-            optC1 = [SIMD2<Double>](repeating: .zero, count: last + 1)
-        }
-        optPrev[0] = -1; optPen[0] = 0; optLen[0] = 0
-        if last >= 1 {
-            for j in 1...last {
-                optPrev[j] = j - 1; optPen[j] = optPen[j - 1]; optLen[j] = optLen[j - 1] + 1
-                var i = j - 2
-                while i >= 0 {
-                    guard let o = optiPenalty(i, open ? j : j % m, open: open) else { break }
-                    if optLen[j] > optLen[i] + 1 || (optLen[j] == optLen[i] + 1 && optPen[j] > optPen[i] + o.pen) {
-                        optPrev[j] = i; optPen[j] = optPen[i] + o.pen; optLen[j] = optLen[i] + 1
-                        optC0[j] = o.c0; optC1[j] = o.c1
+        reset(&dpPenalty, last - first + 1, .infinity)
+        reset(&dpPrevious, last - first + 1, 0)
+        dpPenalty[0] = 0
+        var previousLow = first, previousHigh = first
+        for c in 1...count {
+            let low = max(ahead[c - 1] + 1, behind[count - c])
+            let high = c == count ? last : min(ahead[c], behind[count - c - 1] - 1)
+            for j in low...high {
+                // segmentStart[j] is itself on level c − 1, so the range is never empty.
+                var best = Double.infinity, from = previousLow
+                for i in max(previousLow, segmentStart[j])...min(previousHigh, j - 1) {
+                    let p = dpPenalty[i - first] + penalty(i, j)
+                    if p < best {
+                        best = p
+                        from = i
                     }
-                    i -= 1
                 }
+                dpPenalty[j - first] = best
+                dpPrevious[j - first] = from
             }
+            previousLow = low
+            previousHigh = high
         }
-
-        outCorner.removeAll(keepingCapacity: true); outC0.removeAll(keepingCapacity: true)
-        outC1.removeAll(keepingCapacity: true); outVertex.removeAll(keepingCapacity: true)
-        outEnd.removeAll(keepingCapacity: true)
+        candidate.removeAll(keepingCapacity: true)
         var j = last
-        while j > 0 {
-            let jm = j % m
-            if optPrev[j] == j - 1 {
-                outCorner.append(segCorner[jm]); outC0.append(segC0[jm]); outC1.append(segC1[jm])
-                outVertex.append(segVertex[jm])
-            } else {
-                outCorner.append(false); outC0.append(optC0[j]); outC1.append(optC1[j]); outVertex.append(segVertex[jm])
-            }
-            outEnd.append(segEnd[jm])
-            j = optPrev[j]
+        while j > first {
+            j = dpPrevious[j - first]
+            candidate.append(j)
         }
-        outCorner.reverse(); outC0.reverse(); outC1.reverse(); outVertex.reverse(); outEnd.reverse()
+        candidate.reverse()
+        return dpPenalty[last - first]
     }
 
-    /// Appends the optimized curve, starting after `start` (already emitted).
-    private func flattenOutput(from start: SIMD2<Double>, into out: inout DenseCurve) {
-        var p0 = start
-        for s in 0..<outEnd.count {
-            let end = outEnd[s]
-            if outCorner[s] {
-                let v = outVertex[s]
-                let inLen = CurveFitter.dist(p0, v), outLen = CurveFitter.dist(v, end)
-                let d = min(cornerRadius, 0.9 * inLen, 0.9 * outLen)
-                if d > 0.05 {
-                    // Soften the corner with a fillet (a quadratic arc with its control
-                    // point on the corner), keeping both legs straight up to it.
-                    let a = v + (d / inLen) * (p0 - v), b = v + (d / outLen) * (end - v)
-                    let c0 = a + (2.0 / 3.0) * (v - a), c1 = b + (2.0 / 3.0) * (v - b)
-                    out.append(a, pinned: true)
-                    let steps = max(2, Int((0.75 * CurveFitter.dist(a - 2 * c0 + c1, .zero) / flattenTolerance).squareRoot().rounded(.up)))
-                    for k in 1..<steps { out.append(CurveFitter.bezier(Double(k) / Double(steps), a, c0, c1, b), pinned: false) }
-                    out.append(b, pinned: true)
-                } else {
-                    out.append(v, pinned: true)
-                }
-                out.append(end, pinned: false)
-            } else {
-                let c0 = outC0[s], c1 = outC1[s]
-                let d1 = p0 - 2 * c0 + c1, d2 = c0 - 2 * c1 + end
-                let dd = max((d1 * d1).sum(), (d2 * d2).sum()).squareRoot()
-                let steps = min(64, max(1, Int((0.75 * dd / flattenTolerance).squareRoot().rounded(.up))))
-                for k in 1...steps { out.append(CurveFitter.bezier(Double(k) / Double(steps), p0, c0, c1, end), pinned: false) }
-            }
-            p0 = end
+    /// §2.2.3: the segment's length times the standard deviation of the path points'
+    /// distances from it, from the prefix sums. Products are exact integers until the end.
+    private func penalty(_ i: Int, _ j: Int) -> Double {
+        let s = moments[j + 1] - moments[i]
+        let c = Int64(j - i + 1)
+        let xi = Int64(px[i]), yi = Int64(py[i]), xj = Int64(px[j]), yj = Int64(py[j])
+        let u = xi + xj, w = yi + yj
+        // 4c times the paper's a, b and c, about the segment's midpoint (u, w) / 2.
+        let a4 = 4 * s.xx - 4 * u * s.x + c * u * u
+        let b4 = 4 * s.xy - 2 * u * s.y - 2 * w * s.x + c * u * w
+        let c4 = 4 * s.yy - 4 * w * s.y + c * w * w
+        let dx = Double(xj - xi), dy = Double(yj - yi)
+        let v = (Double(c4) * dx * dx - 2 * Double(b4) * dx * dy + Double(a4) * dy * dy) / Double(4 * c)
+        return v > 0 ? v.squareRoot() : 0
+    }
+
+    /// Whether the triangle on stored indices a, b, c encloses less than ¾ of the loop.
+    private func collapsed(_ a: Int, _ b: Int, _ c: Int) -> Bool {
+        var loop = 0
+        for k in 0..<steps { loop += px[k] * py[k + 1] - py[k] * px[k + 1] }
+        let triangle = (px[b] - px[a]) * (py[c] - py[a]) - (py[b] - py[a]) * (px[c] - px[a])
+        return 4 * abs(triangle) < 3 * abs(loop)
+    }
+
+    /// Makes the loop's lattice corners the polygon (with its end, for a loop through a
+    /// junction).
+    private mutating func useLatticeCorners(anchored: Bool) {
+        polygon.removeAll(keepingCapacity: true)
+        if anchored { polygon.append(0) }
+        for k in (anchored ? 1 : 0)..<steps where direction[k == 0 ? steps - 1 : k - 1] != direction[k] {
+            polygon.append(k)
+        }
+        if anchored { polygon.append(steps) }
+    }
+
+    // MARK: - Vertex adjustment (§2.3.1)
+
+    /// Least-squares line of each polygon segment's path points, as unit normal and offset.
+    private mutating func fitLines(_ m: Int) {
+        lineNormal.removeAll(keepingCapacity: true)
+        lineOffset.removeAll(keepingCapacity: true)
+        for k in 0..<m {
+            let i = polygon[k], j = polygon[k + 1]
+            let s = moments[j + 1] - moments[i]
+            let c = Int64(j - i + 1)
+            // c² times the covariance matrix; its principal eigenvector is the direction.
+            let a = Double(c * s.xx - s.x * s.x), b = Double(c * s.xy - s.x * s.y), d = Double(c * s.yy - s.y * s.y)
+            let half = (a - d) / 2
+            let lambda = (a + d) / 2 + (half * half + b * b).squareRoot()
+            var dir = SIMD2(lambda - d, b)
+            let other = SIMD2(b, lambda - a)
+            if (other * other).sum() > (dir * dir).sum() { dir = other }
+            if (dir * dir).sum() == 0 { dir = latticePoint(j) - latticePoint(i) }
+            let normal = SIMD2(-dir.y, dir.x) / (dir * dir).sum().squareRoot()
+            let centroid = SIMD2(Double(s.x), Double(s.y)) / Double(c)
+            lineNormal.append(normal)
+            lineOffset.append((normal * centroid).sum())
         }
     }
+
+    /// The point within max-distance 1/2 of polygon vertex k that minimizes the summed
+    /// squared distances to the lines of segments `before` and `after`.
+    private func adjustedVertex(_ k: Int, before: Int, after: Int) -> SIMD2<Double> {
+        let v = latticePoint(polygon[k])
+        let n1 = lineNormal[before], n2 = lineNormal[after]
+        let e1 = lineOffset[before] - (n1 * v).sum(), e2 = lineOffset[after] - (n2 * v).sum()
+        // The squared distances about v: qᵀMq − 2r·q + const.
+        let m00 = n1.x * n1.x + n2.x * n2.x, m01 = n1.x * n1.y + n2.x * n2.y, m11 = n1.y * n1.y + n2.y * n2.y
+        let r = n1 * e1 + n2 * e2
+        let det = m00 * m11 - m01 * m01
+        let q: SIMD2<Double>
+        if det > 1e-9 {
+            q = SIMD2((m11 * r.x - m01 * r.y) / det, (m00 * r.y - m01 * r.x) / det)
+        } else {
+            // Parallel lines: the nearest point of the line midway between them.
+            let sign: Double = (n1 * n2).sum() < 0 ? -1 : 1
+            q = n1 * ((e1 + sign * e2) / 2)
+        }
+        if abs(q.x) <= 0.5 && abs(q.y) <= 0.5 { return v + q }
+        // Otherwise the minimum lies on the square's boundary: the best point of each side.
+        var best = SIMD2<Double>.zero, bestCost = Double.infinity
+        for side in 0..<4 {
+            let fixed = side & 1 == 0 ? -0.5 : 0.5
+            let c: SIMD2<Double>
+            if side < 2 {
+                c = SIMD2(fixed, m11 > 0 ? min(max((r.y - m01 * fixed) / m11, -0.5), 0.5) : 0)
+            } else {
+                c = SIMD2(m00 > 0 ? min(max((r.x - m01 * fixed) / m00, -0.5), 0.5) : 0, fixed)
+            }
+            let cost = m00 * c.x * c.x + 2 * m01 * c.x * c.y + m11 * c.y * c.y - 2 * (r * c).sum()
+            if cost < bestCost {
+                bestCost = cost
+                best = c
+            }
+        }
+        return v + best
+    }
+
+    // MARK: - Corners and smoothing (§2.3.2–2.3.3)
+
+    private mutating func prepareVertices(_ count: Int) {
+        reset(&corner, count, false)
+        reset(&alpha, count, 1)
+        reset(&turn, count, 0)
+        reset(&convexity, count, 0)
+        reset(&support, count, 0)
+        reset(&joint, count, .zero)
+    }
+
+    /// α of a vertex: the line parallel to the chord between its edge midpoints that
+    /// touches the unit square around it cuts the edges at γ of the way from the midpoints,
+    /// and α = 4γ/3 makes the curve tangent to that line.
+    private mutating func analyze(_ k: Int, previous: SIMD2<Double>, next: SIMD2<Double>) {
+        let a = vertex[k]
+        let u = a - previous, w = next - a
+        let turning = Self.cross(u, w)
+        turn[k] = atan2(abs(turning), (u * w).sum())
+        convexity[k] = turning > 0 ? 1 : turning < 0 ? -1 : 0
+        let b0 = (previous + a) * 0.5
+        let chord = (next - previous) * 0.5
+        let chordLength = (chord * chord).sum().squareRoot()
+        guard chordLength > 0 else {
+            corner[k] = true
+            return
+        }
+        let height = abs(Self.cross(chord, a - b0)) / chordLength
+        support[k] = (abs(chord.x) + abs(chord.y)) / (2 * chordLength)
+        let raw = height > 0 ? 4.0 / 3.0 * (1 - support[k] / height) : 0
+        corner[k] = raw >= alphaMax && turn[k] >= minCornerTurn
+        alpha[k] = min(max(raw, Self.lowestAlpha), 1)
+    }
+
+    /// Rounds corner k off with a cubic close to the circular arc of `cornerRadius` that is
+    /// tangent to both edges; nil for a sharp corner.
+    private func fillet(_ k: Int, from enter: SIMD2<Double>, to exit: SIMD2<Double>) -> Cubic? {
+        guard cornerRadius > 0 else { return nil }
+        let a = vertex[k], theta = turn[k]
+        let toEnter = enter - a, toExit = exit - a
+        let lengthIn = (toEnter * toEnter).sum().squareRoot(), lengthOut = (toExit * toExit).sum().squareRoot()
+        guard lengthIn > 0, lengthOut > 0, theta > 0 else { return nil }
+        let halfTangent = tan(theta / 2)
+        let tangentLength = min(cornerRadius * halfTangent, lengthIn, lengthOut)
+        guard tangentLength > 1e-9 else { return nil }
+        let p = a + toEnter * (tangentLength / lengthIn), q = a + toExit * (tangentLength / lengthOut)
+        // A cubic arc of angle θ has control arms 4/3·tan(θ/4) of its radius.
+        let arm = 4.0 / 3.0 * tan(theta / 4) / halfTangent
+        return Cubic(z0: p, z1: p + (a - p) * arm, z2: q + (a - q) * arm, z3: q)
+    }
+
+    /// Whether the curves of vertices k and l may be joined into one (§2.4).
+    private func joinable(_ k: Int, _ l: Int) -> Bool {
+        !corner[k] && !corner[l] && convexity[k] != 0 && convexity[k] == convexity[l]
+    }
+
+    // MARK: - Emission and curve optimization (§2.4)
+
+    /// Emits `order` from `knots[0]` (already emitted) to its last knot.
+    private mutating func emitPieces(into out: inout DenseCurve) {
+        var q = 0
+        while q < order.count {
+            let k = order[q]
+            if corner[k] {
+                if let fillet = fillet(k, from: knots[q], to: knots[q + 1]) {
+                    put(fillet.z0, pinned: true, into: &out)
+                    flatten(fillet, pinned: true, into: &out)
+                } else {
+                    put(vertex[k], pinned: true, into: &out)
+                }
+                put(knots[q + 1], pinned: false, into: &out)
+                q += 1
+            } else {
+                var r = q + 1
+                while r < order.count && joinable(order[r - 1], order[r]) { r += 1 }
+                emitSmoothRun(q, r, into: &out)
+                q = r
+            }
+        }
+    }
+
+    /// Emits the curves of `order[from..<to]`, joined into as few curves as the checks of
+    /// §2.4 allow, then by least penalty.
+    private mutating func emitSmoothRun(_ from: Int, _ to: Int, into out: inout DenseCurve) {
+        let count = to - from
+        reset(&joinCount, count + 1, Int.max)
+        reset(&joinPenalty, count + 1, .infinity)
+        reset(&joinPrevious, count + 1, 0)
+        reset(&joinCurve, count + 1, Cubic(z0: .zero, z1: .zero, z2: .zero, z3: .zero))
+        joinCount[0] = 0
+        joinPenalty[0] = 0
+        for i in 0..<count {
+            let k = order[from + i]
+            let z0 = knots[from + i], z3 = knots[from + i + 1], a = vertex[k]
+            let single = Cubic(z0: z0, z1: z0 + (a - z0) * alpha[k], z2: z3 + (a - z3) * alpha[k], z3: z3)
+            relax(i + 1, from: i, penalty: 0, single)
+            var turned = turn[k]
+            var j = i + 2
+            while j <= count {
+                turned += turn[order[from + j - 1]]
+                guard turned < Self.maxJoinTurn, let joined = join(from + i, from + j) else { break }
+                relax(j, from: i, penalty: joined.penalty, joined.curve)
+                j += 1
+            }
+        }
+        chosen.removeAll(keepingCapacity: true)
+        var j = count
+        while j > 0 {
+            chosen.append(j)
+            j = joinPrevious[j]
+        }
+        for end in chosen.reversed() { flatten(joinCurve[end], pinned: false, into: &out) }
+    }
+
+    private mutating func relax(_ j: Int, from i: Int, penalty: Double, _ curve: Cubic) {
+        let count = joinCount[i] + 1, total = joinPenalty[i] + penalty
+        guard count < joinCount[j] || (count == joinCount[j] && total < joinPenalty[j]) else { return }
+        joinCount[j] = count
+        joinPenalty[j] = total
+        joinPrevious[j] = i
+        joinCurve[j] = curve
+    }
+
+    /// One curve for the vertices `order[qa..<qb]`, from `knots[qa]` to `knots[qb]`: tangent
+    /// to the first and last edges, enclosing the same area against its chord as the curves
+    /// it replaces. Accepted when, within the tolerance, it touches every edge in between
+    /// (at a point projecting into the edge) and reaches every vertex's tangent line L.
+    private func join(_ qa: Int, _ qb: Int) -> (curve: Cubic, penalty: Double)? {
+        let z0 = knots[qa], z3 = knots[qb]
+        let t0 = vertex[order[qa]] - z0, t3 = z3 - vertex[order[qb - 1]]
+        let chord = z3 - z0
+        let den = Self.cross(t0, t3)
+        guard den != 0 else { return nil }
+        let lambda = Self.cross(chord, t3) / den, mu = Self.cross(t0, chord) / den
+        guard lambda > 0, mu > 0 else { return nil }
+        let o = z0 + t0 * lambda
+        let triangle = 0.5 * Self.cross(o - z0, chord)
+        // A curve with z1 = z0 + α(o − z0), z2 = z3 + α(o − z3) encloses 3/10·(4α − α²) of
+        // the triangle (z0, o, z3) against its chord (§2.3.2).
+        var area = 0.0
+        for q in qa..<qb {
+            let k = order[q], b0 = knots[q], b1 = knots[q + 1], a = alpha[k]
+            area += 0.5 * Self.cross(b0 - z0, b1 - z0)
+            area += 0.15 * (4 * a - a * a) * Self.cross(vertex[k] - b0, b1 - b0)
+        }
+        let ratio = 10.0 / 3.0 * area / triangle
+        guard ratio > 0, ratio <= 3 else { return nil }
+        let shape = 2 - (4 - ratio).squareRoot()
+        let curve = Cubic(z0: z0, z1: z0 + (o - z0) * shape, z2: z3 + (o - z3) * shape, z3: z3)
+        let tolerance = Self.joinTolerance
+        var penalty = 0.0
+        for q in qa..<qb {
+            let k = order[q], a = vertex[k], b0 = knots[q]
+            let e = knots[q + 1] - b0
+            guard let t = curve.parameter(along: e) else { return nil }
+            var normal = SIMD2(-e.y, e.x) / (e * e).sum().squareRoot()
+            if (normal * (a - b0)).sum() < 0 { normal = -normal }
+            let reached = (normal * (curve.point(t) - a)).sum() + support[k]
+            guard reached >= -tolerance else { return nil }
+            penalty += reached * reached
+            if q + 1 < qb {
+                let u = vertex[order[q + 1]] - a
+                let length2 = (u * u).sum()
+                guard length2 > 0, let s = curve.parameter(along: u) else { return nil }
+                let z = curve.point(s) - a
+                let along = (z * u).sum() / length2
+                let off = abs(Self.cross(u, z)) / length2.squareRoot()
+                guard along >= 0, along <= 1, off <= tolerance else { return nil }
+                penalty += off * off
+            }
+        }
+        return (curve, penalty)
+    }
+
+    // MARK: - Output
+
+    /// Appends the cubic's points after z0, within `flattenTolerance` of it: a uniform
+    /// step h keeps the chords within h²/8 · max|B''| ≤ ¾ h² · max second difference.
+    private func flatten(_ curve: Cubic, pinned: Bool, into out: inout DenseCurve) {
+        let d1 = curve.z0 - 2 * curve.z1 + curve.z2, d2 = curve.z1 - 2 * curve.z2 + curve.z3
+        let bend = max((d1 * d1).sum(), (d2 * d2).sum()).squareRoot()
+        let steps = (0.75 * bend / flattenTolerance).squareRoot().rounded(.up)
+        let pieces = steps.isFinite ? Int(min(max(steps, 1), 1024)) : 1
+        for i in stride(from: 1, to: pieces, by: 1) {
+            put(curve.point(Double(i) / Double(pieces)), pinned: pinned, into: &out)
+        }
+        put(curve.z3, pinned: pinned, into: &out)
+    }
+
+    @inline(__always)
+    private func put(_ p: SIMD2<Double>, pinned: Bool, into out: inout DenseCurve) {
+        out.append(origin + p, pinned: pinned)
+    }
+
+    private func finish(_ out: inout DenseCurve, minimumCount: Int) -> Bool {
+        guard out.points.count >= minimumCount, out.points.allSatisfy({ $0.x.isFinite && $0.y.isFinite }) else {
+            out.removeAll()
+            return false
+        }
+        return true
+    }
+
+    @inline(__always)
+    fileprivate static func cross(_ a: SIMD2<Double>, _ b: SIMD2<Double>) -> Double { a.x * b.y - a.y * b.x }
+}
+
+/// A cubic Bézier segment.
+private struct Cubic {
+    var z0, z1, z2, z3: SIMD2<Double>
+
+    func point(_ t: Double) -> SIMD2<Double> {
+        let s = 1 - t
+        return z0 * (s * s * s) + z1 * (3 * s * s * t) + z2 * (3 * s * t * t) + z3 * (t * t * t)
+    }
+
+    /// The parameter in [0, 1] where the tangent points along `u`, if any.
+    func parameter(along u: SIMD2<Double>) -> Double? {
+        let d0 = z1 - z0, d1 = z2 - z1, d2 = z3 - z2
+        let p = CurveFitter.cross(d0, u), q = CurveFitter.cross(d1, u), r = CurveFitter.cross(d2, u)
+        // cross(B'(t), u) / 3 = a t² + b t + c
+        let a = p - 2 * q + r, b = 2 * (q - p), c = p
+        let scale = max(abs(a), abs(b), abs(c))
+        guard scale > 0 else { return nil }
+        var first = Double.nan, second = Double.nan
+        if abs(a) <= 1e-12 * scale {
+            guard b != 0 else { return nil }
+            first = -c / b
+        } else {
+            let disc = b * b - 4 * a * c
+            guard disc >= 0 else { return nil }
+            let h = -0.5 * (b + (b < 0 ? -disc.squareRoot() : disc.squareRoot()))
+            first = h / a
+            if h != 0 { second = c / h }
+        }
+        for root in 0..<2 {
+            let t = root == 0 ? first : second
+            guard t >= -1e-9 && t <= 1 + 1e-9 else { continue }
+            let s = min(max(t, 0), 1)
+            let tangent = d0 * ((1 - s) * (1 - s)) + d1 * (2 * s * (1 - s)) + d2 * (s * s)
+            if (tangent * u).sum() > 0 { return s }
+        }
+        return nil
+    }
+}
+
+@inline(__always)
+private func reset<T>(_ array: inout [T], _ count: Int, _ value: T) {
+    array.removeAll(keepingCapacity: true)
+    array.append(contentsOf: repeatElement(value, count: count))
 }

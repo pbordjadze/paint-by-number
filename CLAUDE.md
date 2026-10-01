@@ -319,12 +319,12 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   (`Acknowledgements.swift`). Ported or adapted third-party code and the methods the pipeline
   implements are credited there and in `ACKNOWLEDGEMENTS.md` (`AboutTests` keeps the two in
   step): add an entry when adding either.
-- Licensing: `Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox); `Vector/CurveFitter.swift`
-  is a translation of potrace 1.16 and therefore GPL-2.0-or-later (Peter Selinger). Settings ›
-  Acknowledgements and `ACKNOWLEDGEMENTS.md` carry the full license texts and the GPL source
-  notice (the repository is public); keep them when touching the fitter. Distributing the app
-  (IPA, SideStore, and above all the App Store, which GPLv2 is generally held incompatible
-  with) needs that settled first: license the app GPL-compatibly or replace `CurveFitter`.
+- Licensing: `Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox); nothing else is
+  third-party code, and nothing is GPL. `Vector/CurveFitter.swift` is a clean-room implementation
+  of the method in Selinger's paper "Potrace: a polygon-based tracing algorithm" (2003), written
+  from the paper alone (provenance: `docs/cleanroom-curve-fitter.md`); it replaced a GPL
+  translation of potrace's source in pipeline version 3 and is credited as a method. Never consult
+  potrace's source, or any port of it, when changing the fitter: work from the paper.
 
 ## Saved data compatibility (never lose a painting)
 

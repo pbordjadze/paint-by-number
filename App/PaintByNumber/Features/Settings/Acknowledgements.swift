@@ -18,9 +18,6 @@ nonisolated struct Acknowledgement: Identifiable, Hashable, Sendable {
 /// Credits shown in Settings › Acknowledgements and repeated in `ACKNOWLEDGEMENTS.md`
 /// (`AboutTests` keeps the two in step).
 nonisolated enum Acknowledgements {
-    /// Where the source of the app, and with it the ported code below, is published.
-    static let sourceRepository = "https://github.com/pbordjadze/paint-by-number"
-
     /// Swift ports of open-source libraries (`Sources/PaintCore/Vector`).
     static let code: [Acknowledgement] = [
         Acknowledgement(
@@ -39,30 +36,13 @@ nonisolated enum Acknowledgements {
                 comment: "What a credited third-party method or library is used for in the template engine (Polylabel); shown in Settings under Acknowledgements"),
             copyright: "Copyright (c) 2016 Mapbox",
             license: .isc),
-        Acknowledgement(
-            name: "Potrace",
-            credit: "potrace 1.16 by Peter Selinger",
-            usage: String(
-                localized: "acknowledgements.potrace.usage", defaultValue: "Turns stair-stepped region outlines into smooth curves.",
-                comment: "What a credited third-party method or library is used for in the template engine (Potrace); shown in Settings under Acknowledgements"),
-            copyright: "Copyright (C) 2001-2019 Peter Selinger",
-            license: .gpl2OrLater),
     ]
 
-    /// What the GPL asks of anyone who receives the app: where the source of the potrace
-    /// translation, and of the app it is part of, can be had.
-    static var sourceNotice: String {
-        String(localized: "acknowledgements.sourceNotice",
-               defaultValue: "The curve fitting is a Swift translation of potrace and is used under the GNU General Public License. Its source, and that of the rest of the app, is published at \(sourceRepository).",
-               comment: "GPL source notice shown in Settings under Acknowledgements; the argument is the repository URL, which must stay in the text")
-    }
-
-    /// The footer under the open-source code credits: what the ports are, then the GPL notice.
+    /// The footer under the open-source code credits.
     static var codeFooter: String {
-        let notice = sourceNotice
-        return String(localized: "acknowledgements.codeFooter",
-                      defaultValue: "Swift ports of these libraries are part of the template engine. \(notice)",
-                      comment: "Footer under the Open-Source Code list in Acknowledgements; the argument is the GPL source notice")
+        String(localized: "acknowledgements.codeFooter",
+               defaultValue: "Swift ports of these libraries are part of the template engine.",
+               comment: "Footer under the Open-Source Code list in Acknowledgements")
     }
 
     /// Published methods the template engine implements.
@@ -97,6 +77,12 @@ nonisolated enum Acknowledgements {
             usage: String(
                 localized: "acknowledgements.kmeans.usage", defaultValue: "Picks well-spread starting colors for the palette.",
                 comment: "What a credited third-party method or library is used for in the template engine (k-means++); shown in Settings under Acknowledgements")),
+        Acknowledgement(
+            name: "Potrace",
+            credit: "Peter Selinger, \"Potrace: a polygon-based tracing algorithm\", 2003",
+            usage: String(
+                localized: "acknowledgements.potrace.usage", defaultValue: "Turns stair-stepped region outlines into smooth curves.",
+                comment: "What a credited third-party method or library is used for in the template engine (Potrace); shown in Settings under Acknowledgements")),
         Acknowledgement(
             name: "Douglas-Peucker",
             credit: "David Douglas and Thomas Peucker, \"Algorithms for the reduction of the number of points required to represent a digitized line or its caricature\", 1973",

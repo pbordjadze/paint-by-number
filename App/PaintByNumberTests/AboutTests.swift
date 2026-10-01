@@ -135,27 +135,18 @@ struct AcknowledgementsTests {
     private static let all = Acknowledgements.code + Acknowledgements.methods
 
     @Test func portedCodeIsCreditedWithItsLicense() throws {
-        #expect(Acknowledgements.code.map(\.name) == ["Earcut", "Polylabel", "Potrace"])
-        let mapbox = Acknowledgements.code.filter { $0.credit.contains("Mapbox") }
-        #expect(mapbox.map(\.name) == ["Earcut", "Polylabel"])
-        #expect(mapbox.allSatisfy { $0.license == .isc && $0.copyright?.contains("Mapbox") == true })
-        let potrace = try #require(Acknowledgements.code.first { $0.name == "Potrace" })
-        #expect(potrace.license == .gpl2OrLater)
-        #expect(potrace.copyright?.contains("Peter Selinger") == true)
+        #expect(Acknowledgements.code.map(\.name) == ["Earcut", "Polylabel"])
+        #expect(Acknowledgements.code.allSatisfy { $0.license == .isc && $0.copyright?.contains("Mapbox") == true })
+        // The curve fitter implements Selinger's paper and contains no potrace code: a method.
+        let potrace = try #require(Acknowledgements.methods.first { $0.name == "Potrace" })
+        #expect(potrace.credit.contains("Peter Selinger") && potrace.credit.contains("2003"))
         #expect(Acknowledgements.code.allSatisfy { $0.license != nil && $0.copyright != nil })
         #expect(Acknowledgements.methods.allSatisfy { $0.copyright == nil && $0.license == nil })
     }
 
     @Test func licenseTextsAreTheCompleteLicenses() {
         #expect(License.isc.text.hasPrefix("Permission to use, copy, modify, and/or distribute"))
-        #expect(License.gpl2OrLater.text.hasPrefix("GNU GENERAL PUBLIC LICENSE\nVersion 2, June 1991"))
-        #expect(License.gpl2OrLater.text.contains("END OF TERMS AND CONDITIONS"))
-        #expect(License.gpl2OrLater.text.contains("either version 2 of the License, or (at your option) any later version"))
-    }
-
-    @Test func gplSourceNoticeNamesTheRepositoryTheSourceIsPublishedAt() {
-        #expect(Acknowledgements.sourceNotice.contains(Acknowledgements.sourceRepository))
-        #expect(URL(string: Acknowledgements.sourceRepository)?.host() == "github.com")
+        #expect(License.isc.text.contains("THE SOFTWARE IS PROVIDED \"AS IS\""))
     }
 
     @Test func entriesAreCompleteAndUnique() {
@@ -173,7 +164,7 @@ struct AcknowledgementsTests {
         let curveFitter = try String(contentsOf: vector.appending(path: "CurveFitter.swift"), encoding: .utf8)
         #expect(earcut.contains("mapbox/earcut") && earcut.contains("ISC"))
         #expect(polylabel.contains("mapbox/polylabel") && polylabel.contains("ISC"))
-        #expect(curveFitter.contains("potrace 1.16") && curveFitter.contains("GPL-2.0-or-later"))
+        #expect(curveFitter.contains("Potrace: a polygon-based tracing algorithm") && !curveFitter.contains("GPL"))
     }
 
     /// `ACKNOWLEDGEMENTS.md` at the repository root repeats what Settings shows.
@@ -188,6 +179,5 @@ struct AcknowledgementsTests {
             #expect(text.contains(license.name), "ACKNOWLEDGEMENTS.md is missing the \(license.name) heading")
             #expect(text.contains(license.text), "ACKNOWLEDGEMENTS.md is missing the \(license.name) text")
         }
-        #expect(text.contains(Acknowledgements.sourceNotice), "ACKNOWLEDGEMENTS.md is missing the source notice")
     }
 }

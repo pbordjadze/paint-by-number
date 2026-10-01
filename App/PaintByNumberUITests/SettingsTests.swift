@@ -24,7 +24,7 @@ final class SettingsTests: XCTestCase {
         row.tap()
 
         XCTAssertTrue(app.navigationBars["Acknowledgements"].waitForExistence(timeout: 10))
-        for credit in ["mapbox/earcut", "mapbox/polylabel", "potrace 1.16"] {
+        for credit in ["mapbox/earcut", "mapbox/polylabel", "Peter Selinger"] {
             let entry = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", credit)).firstMatch
             scroll(app, to: entry)
             XCTAssertTrue(entry.exists, "Acknowledgements doesn't credit \(credit)")
