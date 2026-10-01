@@ -591,11 +591,19 @@ struct CanvasPaletteTests {
         #expect(PaperAppearance.allCases.map(\.name) == ["Light", "Dark", "Automatic"])
     }
 
-    /// The canvas resolves its paper from the preference and its own trait collection, so a
-    /// system appearance change reaches an Automatic canvas.
-    @Test func canvasResolvesPaperFromPreferenceAndTraits() {
+    /// The canvas resolves its paper from the preference and the trait collection it inherits
+    /// from its window, so a system appearance change reaches an Automatic canvas. A view
+    /// outside a window never sees an appearance change, hence the window, as in the app.
+    @Test func canvasResolvesPaperFromPreferenceAndTraits() throws {
         let canvas = CanvasView(session: PaintingSession(template: CanvasRenderTests.template))
-        canvas.frame = CGRect(x: 0, y: 0, width: 390, height: 700)
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: 0, y: 0, width: 390, height: 700)
+        window.overrideUserInterfaceStyle = .light
+        window.addSubview(canvas)
+        canvas.frame = window.bounds
+        window.isHidden = false
+        defer { window.isHidden = true }
         canvas.layoutIfNeeded()
         func paper(_ palette: CanvasPalette) -> SIMD4<Float> { SIMD4(palette.paper, palette.shadowOpacity) }
         #expect(canvas.frameUniforms().paper == paper(.light))
@@ -604,9 +612,14 @@ struct CanvasPaletteTests {
         #expect(dark.paper == paper(.darkPaper) && dark.rim.w > 0 && dark.ink == SIMD4(CanvasPalette.darkPaper.ink, dark.ink.w))
         canvas.paperAppearance = .automatic
         #expect(canvas.frameUniforms().paper == paper(.light))
-        canvas.overrideUserInterfaceStyle = .dark
+        window.overrideUserInterfaceStyle = .dark
+        canvas.updateTraitsIfNeeded()
+        #expect(canvas.traitCollection.userInterfaceStyle == .dark)
         #expect(canvas.frameUniforms().paper == paper(.darkPaper))
         canvas.paperAppearance = .light
         #expect(canvas.frameUniforms().paper == paper(.dark))
+        window.overrideUserInterfaceStyle = .light
+        canvas.updateTraitsIfNeeded()
+        #expect(canvas.frameUniforms().paper == paper(.light))
     }
 }
