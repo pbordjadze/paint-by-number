@@ -162,15 +162,18 @@ final class PaintingNavigationTests: XCTestCase {
     @MainActor
     func testCanvasTapHidesThePhoto() throws {
         let app = openSeededPainting()
+        // An unpainted area of the selected color, centred on its number: a tap there paints
+        // it, so the area's element would go away.
+        let area = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'canvas-area-'")).firstMatch
+        XCTAssertTrue(area.waitForExistence(timeout: 10), "The canvas offers no unpainted area")
+        let identifier = area.identifier, frame = area.frame
         let photo = app.buttons["Photo"]
         photo.tap()
         XCTAssertTrue(wait(for: photo, value: "Showing"), "A tap didn't keep the photo shown")
-        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
-        let before = badge.label
-        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)).tap()
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.midY)).tap()
         XCTAssertTrue(wait(for: photo, value: "Hidden"), "A canvas tap didn't hide the photo")
         sleep(1)
-        XCTAssertEqual(badge.label, before, "The tap that hid the photo also painted")
+        XCTAssertTrue(app.buttons[identifier].exists, "The tap that hid the photo also painted")
     }
 
     /// Hardware keyboard: `p` toggles the photo (Paint ▸ Show Photo).

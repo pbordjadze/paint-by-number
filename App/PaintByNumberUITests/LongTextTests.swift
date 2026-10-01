@@ -43,9 +43,10 @@ final class LongTextTests: XCTestCase {
         let app = launch("gallery-long-text")
         let toast = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Undo'")).firstMatch
         XCTAssertTrue(toast.waitForExistence(timeout: 150), "The gallery never showed the deletion's Undo toast")
-        sleep(1)
+        // Measured at once: the toast leaves when the undo window closes.
+        let frame = toast.frame
         attachScreenshot(of: app, named: "gallery-long-text")
-        XCTAssertTrue(app.windows.firstMatch.frame.contains(toast.frame), "The toast runs off the screen")
+        XCTAssertTrue(app.windows.firstMatch.frame.contains(frame), "The toast runs off the screen")
     }
 
     @MainActor

@@ -45,6 +45,9 @@ struct TemplatePreviewView: View {
                         .padding(.horizontal, sidePadding)
                         .padding(.top, 4)
                     controls
+                        // Not scrollable here, unlike the side panel: past this size the
+                        // controls would squeeze the preview away on a phone.
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                         .frame(maxWidth: 560)
                         .frame(maxWidth: .infinity)
                         .background {

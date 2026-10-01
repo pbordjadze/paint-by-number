@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 /// The gallery: paintings in progress and finished ones, as an adaptive grid of cards.
 struct GalleryView: View {
@@ -233,6 +234,7 @@ struct GalleryView: View {
     private func show(_ text: String, _ systemImage: String) {
         let next = Notice(text: text, systemImage: systemImage)
         notice = next
+        UIAccessibility.post(notification: .announcement, argument: text)
         Task {
             try? await Task.sleep(for: .seconds(2.5))
             if notice?.id == next.id { notice = nil }
@@ -244,11 +246,7 @@ struct GalleryView: View {
     private var toasts: some View {
         VStack(spacing: 10) {
             if let failed = library.latestWriteFailure?.artwork {
-                Toast(
-                    text: String(localized: "gallery.toast.saveFailed", defaultValue: "Couldn’t save “\(failed.title)”",
-                                 comment: "Toast when a painting's progress couldn't be written to disk; the argument is the painting's title"),
-                    systemImage: "exclamationmark.triangle"
-                ) {
+                Toast(text: saveFailedText(failed), systemImage: "exclamationmark.triangle") {
                     Button("Retry") { library.retrySaving(failed.id) }
                         .fontWeight(.semibold)
                 }
@@ -257,11 +255,7 @@ struct GalleryView: View {
                 Toast(text: notice.text, systemImage: notice.systemImage)
             }
             if let deleted = library.recentlyDeleted {
-                Toast(
-                    text: String(localized: "gallery.toast.deleted", defaultValue: "Deleted “\(deleted.title)”",
-                                 comment: "Toast after deleting a painting, next to an Undo button; the argument is the painting's title"),
-                    systemImage: "trash"
-                ) {
+                Toast(text: deletedText(deleted), systemImage: "trash") {
                     Button("Undo") { library.undoDelete() }
                         .fontWeight(.semibold)
                 }
@@ -272,6 +266,25 @@ struct GalleryView: View {
         .animation(.snappy, value: library.latestWriteFailure?.artwork.id)
         .animation(.snappy, value: library.recentlyDeleted?.id)
         .animation(.snappy, value: notice)
+        // VoiceOver users hear what the toasts show, and that their action is there to find.
+        .onChange(of: library.latestWriteFailure?.artwork.id) {
+            guard let failed = library.latestWriteFailure?.artwork else { return }
+            UIAccessibility.post(notification: .announcement, argument: saveFailedText(failed))
+        }
+        .onChange(of: library.recentlyDeleted?.id) {
+            guard let deleted = library.recentlyDeleted else { return }
+            UIAccessibility.post(notification: .announcement, argument: deletedText(deleted))
+        }
+    }
+
+    private func saveFailedText(_ artwork: Artwork) -> String {
+        String(localized: "gallery.toast.saveFailed", defaultValue: "Couldn’t save “\(artwork.title)”",
+               comment: "Toast when a painting's progress couldn't be written to disk; the argument is the painting's title")
+    }
+
+    private func deletedText(_ artwork: Artwork) -> String {
+        String(localized: "gallery.toast.deleted", defaultValue: "Deleted “\(artwork.title)”",
+               comment: "Toast after deleting a painting, next to an Undo button; the argument is the painting's title")
     }
 
     private func isPresent<T>(_ value: Binding<T?>) -> Binding<Bool> {
