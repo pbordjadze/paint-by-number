@@ -33,6 +33,9 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     var format: Int
     /// `Template.pipelineVersion` of the current template (0 = unknown).
     var pipelineVersion: Int
+    /// Marked by the painter: favorites sort first in the gallery and have their own filter.
+    /// Absent from older `meta.json` files, which decode as not favorite (no format bump).
+    var isFavorite = false
 
     init(
         id: UUID = UUID(), title: String, createdAt: Date = .now, modifiedAt: Date? = nil,
@@ -93,7 +96,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, title, createdAt, modifiedAt, completedAt, settings, width, height
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
-        case pipelineVersion
+        case pipelineVersion, isFavorite
     }
 
     init(from decoder: any Decoder) throws {
@@ -120,6 +123,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             thumbnailVersion = field(.thumbnailVersion, 0)
             sampleName = try? c.decodeIfPresent(String.self, forKey: .sampleName)
             pipelineVersion = field(.pipelineVersion, 0)
+            isFavorite = field(.isFavorite, false)
             return
         }
         id = try c.decode(UUID.self, forKey: .id)
@@ -137,6 +141,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         thumbnailVersion = try c.decodeIfPresent(Int.self, forKey: .thumbnailVersion) ?? 0
         sampleName = try c.decodeIfPresent(String.self, forKey: .sampleName)
         pipelineVersion = try c.decodeIfPresent(Int.self, forKey: .pipelineVersion) ?? 0
+        isFavorite = try c.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
         guard width > 0, height > 0, regionCount >= 0, paintedCount >= 0 else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "invalid artwork dimensions"))
         }

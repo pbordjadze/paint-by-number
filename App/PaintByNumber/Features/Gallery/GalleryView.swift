@@ -5,6 +5,8 @@ import UIKit
 /// The gallery: paintings in progress and finished ones, as an adaptive grid of cards.
 struct GalleryView: View {
     let namespace: Namespace.ID
+    /// The Show filter and the search text: what the gallery lists.
+    let query: GalleryQuery
     var onCreate: () -> Void
 
     @Environment(Library.self) private var library
@@ -27,14 +29,15 @@ struct GalleryView: View {
         ScrollView {
             if !library.isEmpty {
                 VStack(alignment: .leading, spacing: 36) {
-                    let active = library.inProgress
-                    if !active.isEmpty || !library.placeholders.isEmpty {
-                        section("In Progress", count: active.count + library.placeholders.count) {
-                            ForEach(library.placeholders) { PlaceholderCard(placeholder: $0) }
+                    let active = library.inProgress(matching: query)
+                    let preparing = shownPlaceholders
+                    if !active.isEmpty || !preparing.isEmpty {
+                        section("In Progress", count: active.count + preparing.count) {
+                            ForEach(preparing) { PlaceholderCard(placeholder: $0) }
                             ForEach(active) { card($0) }
                         }
                     }
-                    let finished = library.finished
+                    let finished = library.finished(matching: query)
                     if !finished.isEmpty {
                         section("Finished", count: finished.count) {
                             ForEach(finished) { card($0) }
@@ -54,11 +57,15 @@ struct GalleryView: View {
             if library.isEmpty {
                 EmptyGalleryView(onCreate: onCreate)
                     .transition(.opacity.combined(with: .scale(scale: 0.97)))
+            } else if isNarrowedToNothing {
+                narrowedEmptyState
+                    .transition(.opacity)
             }
         }
         .overlay(alignment: .bottom) { toasts }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
-        .animation(.snappy, value: library.artworks.map(\.id))
+        // Deleting, filtering, searching and (un)favoriting all move cards.
+        .animation(.snappy, value: shownIDs)
         .animation(.snappy, value: library.placeholders)
         .animation(.easeInOut(duration: 0.35), value: library.isEmpty)
         .alert("Rename Painting", isPresented: isPresent($renaming), presenting: renaming) { artwork in
@@ -105,6 +112,29 @@ struct GalleryView: View {
             }
         }
         #endif
+    }
+
+    // MARK: Query
+
+    /// Paintings still being prepared belong to no selection: they show only while nothing is narrowed.
+    private var shownPlaceholders: [Library.Placeholder] { query.isActive ? [] : library.placeholders }
+
+    private var shownIDs: [UUID] {
+        (library.inProgress(matching: query) + library.finished(matching: query)).map(\.id)
+    }
+
+    /// The library has paintings, but the filter or the search hides every one.
+    private var isNarrowedToNothing: Bool { shownIDs.isEmpty && shownPlaceholders.isEmpty }
+
+    @ViewBuilder
+    private var narrowedEmptyState: some View {
+        if query.isSearching {
+            ContentUnavailableView.search(text: query.search)
+        } else {
+            ContentUnavailableView(
+                "No Favorites", systemImage: "heart",
+                description: Text("Touch and hold a painting, then choose Favorite."))
+        }
     }
 
     // MARK: Layout
@@ -165,6 +195,12 @@ struct GalleryView: View {
 
     @ViewBuilder
     private func editingMenu(for artwork: Artwork) -> some View {
+        if artwork.isFavorite {
+            Button("Unfavorite", systemImage: "heart.slash") { library.setFavorite(artwork.id, false) }
+        } else {
+            Button("Favorite", systemImage: "heart") { library.setFavorite(artwork.id, true) }
+        }
+        Divider()
         Button("Rename", systemImage: "pencil") {
             renameText = artwork.title
             renaming = artwork

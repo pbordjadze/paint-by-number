@@ -117,10 +117,15 @@ final class Library {
 
     // MARK: Queries
 
-    var inProgress: [Artwork] { artworks.filter { !$0.isComplete } }
+    /// Favorites first, then newest change first.
+    var inProgress: [Artwork] { Self.favoritesFirst(artworks.filter { !$0.isComplete }) }
+    /// Favorites first, then most recently finished first.
     var finished: [Artwork] {
-        artworks.filter(\.isComplete).sorted { ($0.completedAt ?? $0.modifiedAt) > ($1.completedAt ?? $1.modifiedAt) }
+        Self.favoritesFirst(
+            artworks.filter(\.isComplete).sorted { ($0.completedAt ?? $0.modifiedAt) > ($1.completedAt ?? $1.modifiedAt) })
     }
+    func inProgress(matching query: GalleryQuery) -> [Artwork] { inProgress.filter(query.includes) }
+    func finished(matching query: GalleryQuery) -> [Artwork] { finished.filter(query.includes) }
     var isEmpty: Bool { artworks.isEmpty && placeholders.isEmpty }
 
     func artwork(with id: UUID) -> Artwork? { artworks.first { $0.id == id } }
@@ -219,6 +224,13 @@ final class Library {
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, var artwork = artwork(with: id), !artwork.needsNewerApp, artwork.title != trimmed else { return }
         artwork.title = trimmed
+        replace(artwork, resort: false)
+        persistMeta(artwork)
+    }
+
+    func setFavorite(_ id: UUID, _ favorite: Bool) {
+        guard var artwork = artwork(with: id), !artwork.needsNewerApp, artwork.isFavorite != favorite else { return }
+        artwork.isFavorite = favorite
         replace(artwork, resort: false)
         persistMeta(artwork)
     }
@@ -478,6 +490,11 @@ final class Library {
     }
 
     // MARK: Internals
+
+    /// A stable partition: each group keeps the order it came in.
+    private static func favoritesFirst(_ list: [Artwork]) -> [Artwork] {
+        list.filter(\.isFavorite) + list.filter { !$0.isFavorite }
+    }
 
     private static func newestFirst(_ a: Artwork, _ b: Artwork) -> Bool { a.modifiedAt > b.modifiedAt }
 

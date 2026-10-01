@@ -9,10 +9,14 @@ struct AppShellView: View {
     @Environment(Library.self) private var library
     @Namespace private var zoom
     @State private var path: [UUID] = []
+    /// The gallery's Show filter, remembered per window, and the text of its search field.
+    @SceneStorage("galleryFilter") private var filter: GalleryFilter = .all
     #if DEBUG
+    @State private var search = ShellDemo.current?.searchText ?? ""
     @State private var isCreating = ShellDemo.current?.opensCreateFlow ?? false
     @State private var isShowingSettings = ShellDemo.current?.opensSettings ?? false
     #else
+    @State private var search = ""
     @State private var isCreating = false
     @State private var isShowingSettings = false
     #endif
@@ -25,7 +29,7 @@ struct AppShellView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            GalleryView(namespace: zoom) { isCreating = true }
+            GalleryView(namespace: zoom, query: query) { isCreating = true }
                 // Photos dragged in from another app (Split View, Slide Over) start a painting.
                 .dropDestination(for: DroppedPhoto.self) { photos, _ in
                     guard let photo = photos.first, !isCreating else { return false }
@@ -38,6 +42,7 @@ struct AppShellView: View {
                 .navigationTitle("Paint by Numbers")
                 .navigationSubtitle(subtitle)
                 .toolbar { toolbar }
+                .searchable(text: $search, prompt: Text("Search paintings"))
                 .navigationDestination(for: UUID.self) { id in
                     ArtworkPaintingView(artworkID: id) { path.removeAll { $0 == id } }
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
@@ -66,6 +71,7 @@ struct AppShellView: View {
             #endif
         }
         #if DEBUG
+        .onAppear { if ShellDemo.current?.showsFavoritesOnly == true { filter = .favorites } }
         .onChange(of: library.artworks.first?.id) { _, id in
             // Demo: open the painting as soon as it is ready.
             if ShellDemo.current == .galleryOpen, path.isEmpty, let id { path = [id] }
@@ -86,14 +92,30 @@ struct AppShellView: View {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
         }
         ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                Picker("Show", selection: $filter) {
+                    Label("All", systemImage: "square.grid.2x2").tag(GalleryFilter.all)
+                    Label("Favorites", systemImage: "heart").tag(GalleryFilter.favorites)
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Label("Show", systemImage: filter == .all
+                      ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+            }
+            .disabled(library.artworks.isEmpty)
+        }
+        ToolbarItem(placement: .topBarTrailing) {
             Button("New Painting", systemImage: "plus") { isCreating = true }
                 .buttonStyle(.glassProminent)
         }
     }
 
+    private var query: GalleryQuery { GalleryQuery(filter: filter, search: search) }
+
+    /// Counts what the gallery shows, so a filter or a search is visible in the numbers.
     private var subtitle: String {
-        let active = library.inProgress.count + library.placeholders.count
-        let finished = library.finished.count
+        let active = library.inProgress(matching: query).count + (query.isActive ? 0 : library.placeholders.count)
+        let finished = library.finished(matching: query).count
         switch (active, finished) {
         case (0, 0):
             return ""

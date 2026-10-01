@@ -4,7 +4,13 @@ import Foundation
 /// Demo scenarios owned by the app shell (see `DemoMode`). Each uses a throwaway library
 /// seeded deterministically from the bundled samples.
 ///
-/// - `gallery`, `gallery-dark`: six paintings at various stages.
+/// - `gallery`, `gallery-dark`: six paintings at various stages, one of them a favorite.
+/// - `gallery-favorites`, `gallery-favorites-dark`: the same library with two favorites and the Show
+///   filter on Favorites.
+/// - `gallery-search`, `gallery-search-dark`: the same library with "re" typed in the search field
+///   (two results).
+/// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
+///   with every localized string twice as long.
 /// - `gallery-empty`: the empty state.
 /// - `create`, `create-dark`: the photo picker step of the create flow.
 /// - `create-samples`: the same step on its Samples pane (iPhone; iPad shows both).
@@ -19,12 +25,16 @@ import Foundation
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
-    case gallery, galleryLongText, galleryEmpty, galleryOpen, galleryDamaged, galleryTimelapse, create, createSamples,
-         createPreview, settings, settingsLongText, settingsAcknowledgements
+    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
+         galleryDamaged, galleryTimelapse, create, createSamples, createPreview, settings, settingsLongText,
+         settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
         case "gallery", "gallery-dark": .gallery
+        case "gallery-favorites", "gallery-favorites-dark": .galleryFavorites
+        case "gallery-search", "gallery-search-dark": .gallerySearch
+        case "gallery-no-favorites-long-text": .galleryNoFavorites
         case "gallery-long-text": .galleryLongText
         case "gallery-empty": .galleryEmpty
         case "gallery-open": .galleryOpen
@@ -40,6 +50,21 @@ enum ShellDemo: Equatable {
         }
     }()
 
+    /// The Show filter starts on Favorites.
+    var showsFavoritesOnly: Bool { self == .galleryFavorites || self == .galleryNoFavorites }
+
+    /// The bundled samples whose paintings are favorites.
+    private var favoriteSamples: [String] {
+        switch self {
+        case .gallery, .gallerySearch: ["lighthouse"]
+        case .galleryFavorites: ["lighthouse", "regatta"]
+        default: []
+        }
+    }
+
+    /// The search field starts with this text: it finds "Red Barn" and "Regatta".
+    var searchText: String? { self == .gallerySearch ? "re" : nil }
+
     var opensCreateFlow: Bool { self == .create || self == .createSamples || self == .createPreview }
 
     var opensSettings: Bool { self == .settings || self == .settingsLongText || self == .settingsAcknowledgements }
@@ -54,8 +79,14 @@ enum ShellDemo: Equatable {
 
     func prepare(_ library: Library) {
         switch self {
-        case .gallery:
-            library.seed(Self.galleryItems, completion: { _ in DemoMode.markReady() })
+        case .gallery, .galleryFavorites, .gallerySearch, .galleryNoFavorites:
+            let favorites = favoriteSamples
+            library.seed(Self.galleryItems, completion: { _ in
+                for artwork in library.artworks {
+                    if let sample = artwork.sampleName, favorites.contains(sample) { library.setFavorite(artwork.id, true) }
+                }
+                DemoMode.markReady()
+            })
         case .galleryLongText:
             library.seed(Self.galleryItems, completion: { _ in
                 // The newest deletion keeps its Undo toast up for `Library.undoWindow`, well past the screenshot.

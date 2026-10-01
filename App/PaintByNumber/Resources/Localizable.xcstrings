@@ -157,6 +157,10 @@
       "comment" : "Settings toggle: after finishing a color, the next color is picked automatically",
       "extractionState" : "manual"
     },
+    "All" : {
+      "comment" : "Choice in the gallery's Show menu that lists every painting",
+      "extractionState" : "manual"
+    },
     "All paint will be cleared." : {
       "comment" : "Message of the confirmation dialog for restarting the open painting",
       "extractionState" : "manual"
@@ -829,6 +833,14 @@
         }
       }
     },
+    "Favorite" : {
+      "comment" : "Context menu item that marks a painting as a favorite, so the gallery lists it first",
+      "extractionState" : "manual"
+    },
+    "Favorites" : {
+      "comment" : "Choice in the gallery's Show menu that lists only favorite paintings",
+      "extractionState" : "manual"
+    },
     "Feedback" : {
       "comment" : "Header of the Settings section for haptics and sounds",
       "extractionState" : "manual"
@@ -869,6 +881,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ painted"
+          }
+        }
+      }
+    },
+    "gallery.card.spoken.favorite" : {
+      "comment" : "VoiceOver value of a favorite painting's card; the argument is its progress, e.g. 42 percent painted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorite, %@"
           }
         }
       }
@@ -1327,6 +1351,10 @@
     },
     "Next Color" : {
       "comment" : "Paint menu item (iPad menu bar): select the next color",
+      "extractionState" : "manual"
+    },
+    "No Favorites" : {
+      "comment" : "Title of the gallery's empty state when the Show menu is set to Favorites and no painting is a favorite",
       "extractionState" : "manual"
     },
     "Numbers" : {
@@ -2037,6 +2065,10 @@
       "comment" : "Toast confirming a picture was saved to the photo library",
       "extractionState" : "manual"
     },
+    "Search paintings" : {
+      "comment" : "Placeholder of the gallery's search field",
+      "extractionState" : "manual"
+    },
     "Settings" : {
       "comment" : "Gallery toolbar button, and the title of the Settings sheet",
       "extractionState" : "manual"
@@ -2078,7 +2110,7 @@
       "extractionState" : "manual"
     },
     "Show" : {
-      "comment" : "Accessibility label of the segmented control that switches the create flow's comparison between the painting and its numbers",
+      "comment" : "Accessibility label of two controls: the segmented control that switches the create flow's comparison between the painting and its numbers, and the gallery's filter menu (All or Favorites)",
       "extractionState" : "manual"
     },
     "Show Hint" : {
@@ -2301,6 +2333,10 @@
       "comment" : "Placeholder of the text field for a painting's title (create flow, rename alert)",
       "extractionState" : "manual"
     },
+    "Touch and hold a painting, then choose Favorite." : {
+      "comment" : "Explanation under the No Favorites empty state of the gallery; Favorite is the context menu item's name",
+      "extractionState" : "manual"
+    },
     "Touch and hold to compare with the photo. Tap to keep it shown." : {
       "comment" : "VoiceOver hint of the Photo control on the painting screen",
       "extractionState" : "manual"
@@ -2319,6 +2355,10 @@
     },
     "Undo" : {
       "comment" : "Undo button: the painting screen's undo button (its accessibility label), and the action of the gallery's toast after a painting is deleted",
+      "extractionState" : "manual"
+    },
+    "Unfavorite" : {
+      "comment" : "Context menu item that removes a painting's favorite mark",
       "extractionState" : "manual"
     },
     "Version" : {
