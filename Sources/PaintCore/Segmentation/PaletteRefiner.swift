@@ -109,8 +109,8 @@ enum PaletteRefiner {
             for (i, j) in active.enumerated() { palette[j] = colors[i] }
         }
 
-        for _ in 0..<iterations {
-            refit()
+        /// Every region takes the paint closest to its mean; returns whether any changed.
+        func reassign() -> Bool {
             var changed = false
             for r in 0..<n {
                 let m = means[r]
@@ -125,7 +125,41 @@ enum PaletteRefiner {
             }
             used = [Bool](repeating: false, count: k)
             for r in 0..<n { used[cls[r]] = true }
-            if !changed { break }
+            return changed
+        }
+        func settle() {
+            for _ in 0..<iterations {
+                refit()
+                if !reassign() { break }
+            }
+        }
+        settle()
+
+        // Paints no region uses any more (a ramp's bands fused into one region, small regions
+        // recoloured onto a neighbour's paint) are re-spent where they buy the most: the
+        // regions whose colour is farthest from their paint, weighted like the palette
+        // search weighs its samples, each get one of their own if it is distinct from every
+        // paint in use. The user asked for this many paints, and a distinct tone on the
+        // subject is worth more than the shade of a ramp that gave the paint up.
+        for _ in 0..<3 {
+            var free = (0..<k).filter { !used[$0] }
+            guard !free.isEmpty else { break }
+            let error = (0..<n).map { r in
+                Float(weighted[r].w) * PaletteBuilder.penalty(PaletteBuilder.distanceSquared(means[r], palette[cls[r]]))
+            }
+            let order = (0..<n).sorted { error[$0] > error[$1] || (error[$0] == error[$1] && $0 < $1) }
+            var added = false
+            for r in order where !free.isEmpty && error[r] > 0 {
+                let m = means[r]
+                guard (0..<k).allSatisfy({ !used[$0] || separation.isDistinct(m, palette[$0]) }) else { continue }
+                let j = free.removeFirst()
+                palette[j] = m
+                used[j] = true
+                cls[r] = j
+                added = true
+            }
+            guard added else { break }
+            settle()
         }
         refit()
 

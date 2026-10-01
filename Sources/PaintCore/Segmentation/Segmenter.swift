@@ -29,13 +29,27 @@ public enum Segmenter {
         clock: StageClock,
         progress: (Float) -> Void
     ) throws -> Segmentation {
+        try segment(
+            image, importance: importance,
+            parameters: SegmentationParameters(settings: settings, width: image.width, height: image.height),
+            cancel: cancel, clock: clock, progress: progress)
+    }
+
+    /// The pipeline with explicit internal knobs (tests compare stages switched off).
+    static func segment(
+        _ image: RGBAImage,
+        importance: Grid<Float>?,
+        parameters p: SegmentationParameters,
+        cancel: CancellationCheck,
+        clock: StageClock,
+        progress: (Float) -> Void
+    ) throws -> Segmentation {
         let w = image.width, h = image.height
         guard w > 0, h > 0 else {
             return Segmentation(
                 labels: RegionMap(width: w, height: h, repeating: 0), regionColor: [], palette: [],
                 colorSpace: image.colorSpace)
         }
-        let p = SegmentationParameters(settings: settings, width: w, height: h)
 
         let lab = try clock.measure("segment.oklab") { try WorkingImage.okLab(image, chromaScale: p.chromaScale, cancel: cancel) }
         try cancel.throwIfCancelled()
