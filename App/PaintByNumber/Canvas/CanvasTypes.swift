@@ -42,7 +42,7 @@ nonisolated struct CanvasUniforms {
     var photo: SIMD4<Float> = .zero
 }
 
-extension CanvasUniforms {
+nonisolated extension CanvasUniforms {
     /// The paper, backdrop and ink of `palette`. `shadowOpacity` and `outlineOpacity` are passed
     /// in because frames scale them (offscreen renders drop the shadow, zoom thins the line art).
     mutating func setChrome(_ palette: CanvasPalette, shadowOpacity: Float, outlineOpacity: Float) {
