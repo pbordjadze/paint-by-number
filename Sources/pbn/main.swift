@@ -9,8 +9,16 @@ import ImageIO
 // report timings/metrics. Images are exchanged as PPM so no codecs are needed.
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--importance m.pgm]
+//       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
+//       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`)
+//   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
+//       [--out dir]
+//       runs Auto at the draft size, prints the candidate table and writes decision.json (into
+//       dir, else the current directory); with --out also the draft (draft.ppm), its working
+//       image and every candidate's painted preview and region outlines (tools/auto_sheet.py)
 //   pbn bench <in.ppm>... [--runs N] [--colors N] [--detail F] [--smooth F]
-//       also times a live preview, detail 1 on a large photo and the same with 150 colors
+//       also times a live preview, detail 1 on a large photo, the same with 150 colors and
+//       Auto's suggestion (Relaxed, 5 candidates)
 //   pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]
 //       vectorizes a flat-color image directly (each distinct color is a palette entry,
 //       each 4-connected component a region), bypassing segmentation
@@ -25,6 +33,11 @@ struct Options {
     var importance: String?
     var runs = 3
     var minLabelRadius = LabelSizing.minimumRadius
+    var auto = false
+    var length = PaintingLength.relaxed
+    var hints: String?
+    var candidates = 5
+    var out: String?
 }
 
 func parse(_ args: ArraySlice<String>) -> Options {
@@ -39,6 +52,14 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--importance": o.importance = it.next()
         case "--runs": o.runs = Int(it.next() ?? "") ?? o.runs
         case "--min-label-radius": o.minLabelRadius = Float(it.next() ?? "") ?? o.minLabelRadius
+        case "--auto": o.auto = true
+        case "--length":
+            let value = it.next() ?? ""
+            guard let length = PaintingLength(rawValue: value) else { fail("--length: quick, relaxed or detailed, not \(value)") }
+            o.length = length
+        case "--hints": o.hints = it.next()
+        case "--candidates": o.candidates = Int(it.next() ?? "") ?? o.candidates
+        case "--out": o.out = it.next()
         default: o.positional.append(a)
         }
     }
@@ -78,6 +99,12 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
     let img = loadImage(path)
     return Grid(width: img.width, height: img.height,
                 storage: (0..<(img.width * img.height)).map { Float(img.pixels[$0 * 4]) / 255 })
+}
+
+func loadHints(_ path: String?) -> SubjectHints? {
+    guard let path else { return nil }
+    guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
+    do { return try JSONDecoder().decode(SubjectHints.self, from: data) } catch { fail("cannot decode \(path): \(error)") }
 }
 
 /// Raster preview: each pixel painted with its region's palette color.
@@ -169,6 +196,41 @@ struct Metrics: Codable {
     var valid: Bool
     var validation: String
     var colorNames: [String]
+    /// With --auto: the decision and the bands it had to respect.
+    var auto: AutoStats?
+    /// With --auto: the photo features the decision read.
+    var analysis: PhotoAnalysis?
+}
+
+/// `stats.json`'s `auto`: the chosen settings, every candidate with its score terms, and the
+/// preference's bands (the regression gate checks the choice against them).
+struct AutoStats: Codable {
+    struct Bands: Codable {
+        var colors: [Int]
+        var detail: [Float]
+        var smoothness: [Float]
+        var minutes: [Double]
+    }
+    var preference: PaintingLength
+    var settings: GenerationSettings
+    var winner: Int
+    var candidates: [AutoCandidate]
+    var bands: Bands
+    var suggestMs: Double
+
+    init(_ decision: AutoDecision, milliseconds: Double) {
+        let p = decision.preference
+        preference = p
+        settings = decision.settings
+        winner = decision.winner
+        candidates = decision.candidates
+        bands = Bands(
+            colors: [p.colorBand.lowerBound, p.colorBand.upperBound],
+            detail: [p.detailBand.lowerBound, p.detailBand.upperBound],
+            smoothness: [AutoSettings.smoothnessBand.lowerBound, AutoSettings.smoothnessBand.upperBound],
+            minutes: [p.timeBand.lowerBound / 60, p.timeBand.upperBound / 60])
+        suggestMs = milliseconds
+    }
 }
 
 func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: GenerationSettings) -> Metrics {
@@ -270,6 +332,73 @@ final class CancellationProbe: @unchecked Sendable {
     }
 }
 
+func milliseconds(since start: ContinuousClock.Instant) -> Double {
+    let d = ContinuousClock.now - start
+    return Double(d.components.seconds) * 1000 + Double(d.components.attoseconds) * 1e-15
+}
+
+/// Remembers when something happened (milliseconds since its creation), from any thread.
+final class Lap: @unchecked Sendable {
+    private let lock = NSLock()
+    private let start = ContinuousClock.now
+    private var value = 0.0
+
+    func mark() { lock.withLock { value = pbn.milliseconds(since: start) } }
+    var milliseconds: Double { lock.withLock { value } }
+}
+
+/// Auto's decision for `image` (reduced to the draft size inside), and how long it took.
+func suggest(_ image: RGBAImage, importance: Grid<Float>?, options: Options,
+             firstDraft: (@Sendable (TemplateGenerator.Output) -> Void)? = nil) -> (AutoDecision, Double) {
+    let start = ContinuousClock.now
+    do {
+        let decision = try AutoSettings.choose(
+            image: image, importance: importance, hints: loadHints(options.hints), preference: options.length,
+            maxCandidates: options.candidates, cancel: .none, firstDraft: firstDraft)
+        return (decision, milliseconds(since: start))
+    } catch { fail("suggestion failed: \(error)") }
+}
+
+/// The candidate table `pbn suggest` prints: every score term, the winner starred.
+func candidateTable(_ decision: AutoDecision) -> String {
+    let a = decision.analysis
+    let curve = zip(AutoSettings.paletteCurveKs, a.paletteCurve).map { "\($0)→\($1)" }.joined(separator: " ")
+    var lines = [
+        "analysis: source \(a.sourceWidth)×\(a.sourceHeight)  palette curve (k→mean dE) \(curve)",
+        String(format: "  chromatic %.3f  chroma spread %.3f  structure %.3f  texture %.3f  smooth %.3f  noise %.3f",
+               a.chromaticFraction, a.chromaSpread, a.structureDensity, a.textureFraction, a.smoothFraction, a.noise),
+        String(format: "  subject %.3f  importance entropy %.3f  faces %.3f  animals %.3f",
+               a.subjectCoverage, a.importanceEntropy, a.faceCoverage, a.animalCoverage)
+            + (a.labels.isEmpty ? "" : "  labels " + a.labels.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }
+                .joined(separator: ", ")),
+        "    #  colors  detail  smooth  regions  est min  fidelity     p95  rings  tiny   room  band pen    total",
+    ]
+    for (i, c) in decision.candidates.enumerated() {
+        let mark = i == decision.winner ? "*" : " "
+        let head = String(format: "  %@ %d  %6d  %6.2f  %6.2f", mark, i, c.settings.colorCount, Double(c.settings.detail),
+                          Double(c.settings.smoothness))
+        guard let s = c.score else {
+            lines.append(head + "  (not run)")
+            continue
+        }
+        lines.append(head + String(
+            format: "  %7d  %7.0f  %8.4f  %6.4f  %5d  %4d  %5.2f  %8.4f  %7.4f", s.regions, s.estimatedSeconds / 60,
+            Double(s.fidelity), Double(s.fidelityP95), s.bandRings, s.tinyRegions, Double(s.minLabelRoom),
+            Double(s.bandPenalty), Double(s.total)))
+    }
+    lines.append("  " + AutoSettings.scoreFormula)
+    lines.append("  bands (\(decision.preference.rawValue)): colors \(decision.preference.colorBand), detail "
+        + "\(decision.preference.detailBand), smoothness \(AutoSettings.smoothnessBand), minutes "
+        + "\(Int(decision.preference.timeBand.lowerBound / 60))...\(Int(decision.preference.timeBand.upperBound / 60))")
+    return lines.joined(separator: "\n")
+}
+
+func jsonEncoder() -> JSONEncoder {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    return encoder
+}
+
 func writeSVGs(_ t: Template, to outDir: URL) throws {
     try SVGExport.render(t, options: .init(painted: true, outlines: false, numbers: false))
         .write(to: outDir.appendingPathComponent("painted.svg"), atomically: true, encoding: .utf8)
@@ -301,7 +430,7 @@ func flatSegmentation(_ image: RGBAImage) -> Segmentation {
 }
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|bench|trace|check ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|suggest|bench|trace|check ...") }
 let options = parse(args.dropFirst(2))
 
 switch args[1] {
@@ -310,17 +439,22 @@ case "generate":
     let image = loadImage(options.positional[0])
     let outDir = URL(fileURLWithPath: options.positional[1])
     try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
-    let generator = TemplateGenerator(settings: options.settings)
+    let importance = loadImportance(options.importance)
+    let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
+    let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
     let output: TemplateGenerator.Output
     do {
-        output = try generator.generate(from: image, importance: loadImportance(options.importance), cancel: .none)
+        output = try generator.generate(from: image, importance: importance, cancel: .none)
     } catch { fail("generation failed: \(error)") }
     let t = output.template
     let size = generator.settings.workingSize(sourceWidth: image.width, sourceHeight: image.height)
     let working = Resample.area(image, width: size.width, height: size.height)
-    let m = metrics(output, working: working, settings: generator.settings)
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    var m = metrics(output, working: working, settings: generator.settings)
+    if let (decision, ms) = decision {
+        m.auto = AutoStats(decision, milliseconds: ms)
+        m.analysis = decision.analysis
+    }
+    let encoder = jsonEncoder()
     try encoder.encode(m).write(to: outDir.appendingPathComponent("stats.json"))
     try t.encoded().write(to: outDir.appendingPathComponent("template.pbnt"))
     try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("raster.ppm"))
@@ -328,6 +462,40 @@ case "generate":
     try Netpbm.encodePPM(boundaryRaster(t)).write(to: outDir.appendingPathComponent("boundaries.ppm"))
     try writeSVGs(t, to: outDir)
     print(String(data: try encoder.encode(m), encoding: .utf8)!)
+
+case "suggest":
+    guard options.positional.count == 1 else {
+        fail("usage: pbn suggest <image> [--importance m.pgm] [--hints h.json] [--length L] [--candidates N] [--out dir]")
+    }
+    let path = options.positional[0]
+    let image = loadImage(path)
+    let importance = loadImportance(options.importance)
+    let firstDraft = Lap()
+    let (decision, ms) = suggest(image, importance: importance, options: options) { _ in firstDraft.mark() }
+    let draft = AutoSettings.draftImage(from: image)
+    let draftSize = decision.settings.workingSize(sourceWidth: draft.width, sourceHeight: draft.height)
+    print("\(path) — draft \(draft.width)×\(draft.height) (working \(draftSize.width)×\(draftSize.height)), "
+        + "\(decision.preference.rawValue), \(decision.candidates.count) candidates: "
+        + String(format: "%.0f ms (first draft %.0f ms)", ms, firstDraft.milliseconds))
+    print(candidateTable(decision))
+    let outDir = URL(fileURLWithPath: options.out ?? ".")
+    try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
+    try jsonEncoder().encode(decision).write(to: outDir.appendingPathComponent("decision.json"))
+    if options.out != nil {
+        // Previews for tools/auto_sheet.py: the pipeline is deterministic, so regenerating
+        // each candidate on the draft reproduces exactly what was scored.
+        try Netpbm.encodePPM(draft).write(to: outDir.appendingPathComponent("draft.ppm"))
+        try Netpbm.encodePPM(Resample.area(draft, width: draftSize.width, height: draftSize.height))
+            .write(to: outDir.appendingPathComponent("working.ppm"))
+        for (i, candidate) in decision.candidates.enumerated() {
+            let t: Template
+            do {
+                t = try TemplateGenerator(settings: candidate.settings).generate(from: draft, importance: importance, cancel: .none).template
+            } catch { fail("generation failed: \(error)") }
+            try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("candidate-\(i).ppm"))
+            try Netpbm.encodePPM(boundaryRaster(t)).write(to: outDir.appendingPathComponent("candidate-\(i)-boundaries.ppm"))
+        }
+    }
 
 case "trace":
     guard options.positional.count == 2 else { fail("usage: pbn trace <flat.ppm> <outdir> [--smooth F]") }
@@ -451,6 +619,28 @@ case "bench":
                 + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage
                 + String(format: "; median %.1f ms)", v.medianGap))
         }
+        // Auto's suggestion as the create flow runs it, and its analysis alone.
+        var auto = options
+        auto.length = .relaxed
+        auto.candidates = 5
+        var suggestMs: [Double] = [], analysisMs: [Double] = []
+        var decision: AutoDecision?
+        for _ in 0..<max(1, options.runs) {
+            let start = ContinuousClock.now
+            do {
+                _ = try AutoSettings.analyze(image, importance: nil, hints: nil, cancel: .none)
+            } catch { fail("\(error)") }
+            analysisMs.append(milliseconds(since: start))
+            let (d, ms) = suggest(image, importance: nil, options: auto)
+            suggestMs.append(ms)
+            decision = d
+        }
+        let draft = AutoSettings.draftImage(from: image)
+        let chosen = decision!.settings
+        print(String(format: "  %-28@ ", "suggest \(draft.width)×\(draft.height)" as NSString) + stat(suggestMs)
+            + String(format: "   analysis median %.1f ms; %d candidates → %d colors, detail %.2f, smoothness %.2f",
+                     analysisMs.sorted()[analysisMs.count / 2], decision!.candidates.count, chosen.colorCount,
+                     Double(chosen.detail), Double(chosen.smoothness)))
     }
 
 default:

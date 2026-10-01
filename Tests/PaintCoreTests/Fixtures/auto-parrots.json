@@ -1,0 +1,127 @@
+{
+  "analysis" : {
+    "animalCoverage" : 0,
+    "chromaSpread" : 0.051,
+    "chromaticFraction" : 0.633,
+    "faceCoverage" : 0,
+    "importanceEntropy" : 0.994,
+    "labels" : {
+
+    },
+    "noise" : 0.001,
+    "paletteCurve" : [
+      0.056,
+      0.046,
+      0.043,
+      0.034,
+      0.03,
+      0.026,
+      0.023
+    ],
+    "smoothFraction" : 0.258,
+    "sourceHeight" : 512,
+    "sourceWidth" : 768,
+    "structureDensity" : 0.065,
+    "subjectCoverage" : 0.413,
+    "textureFraction" : 0.056
+  },
+  "candidates" : [
+    {
+      "score" : {
+        "bandPenalty" : 0.060622767,
+        "bandRings" : 69,
+        "estimatedSeconds" : 798,
+        "fidelity" : 0.037558813,
+        "fidelityP95" : 0.10350001,
+        "minLabelRoom" : 2.8970137,
+        "regions" : 131,
+        "tinyRegions" : 0,
+        "total" : 0.16046593
+      },
+      "settings" : {
+        "colorCount" : 40,
+        "detail" : 0.4,
+        "seed" : 24301,
+        "smoothness" : 0.46
+      }
+    },
+    {
+      "score" : {
+        "bandPenalty" : 0.08755873,
+        "bandRings" : 57,
+        "estimatedSeconds" : 639,
+        "fidelity" : 0.039607592,
+        "fidelityP95" : 0.1115,
+        "minLabelRoom" : 3.0794802,
+        "regions" : 105,
+        "tinyRegions" : 0,
+        "total" : 0.19377348
+      },
+      "settings" : {
+        "colorCount" : 30,
+        "detail" : 0.4,
+        "seed" : 24301,
+        "smoothness" : 0.46
+      }
+    },
+    {
+      "score" : {
+        "bandPenalty" : 0.09403768,
+        "bandRings" : 58,
+        "estimatedSeconds" : 609,
+        "fidelity" : 0.04279983,
+        "fidelityP95" : 0.125,
+        "minLabelRoom" : 3.6013732,
+        "regions" : 100,
+        "tinyRegions" : 0,
+        "total" : 0.21093751
+      },
+      "settings" : {
+        "colorCount" : 40,
+        "detail" : 0.2,
+        "seed" : 24301,
+        "smoothness" : 0.46
+      }
+    },
+    {
+      "score" : {
+        "bandPenalty" : 0.05010325,
+        "bandRings" : 79,
+        "estimatedSeconds" : 882,
+        "fidelity" : 0.03794254,
+        "fidelityP95" : 0.109000005,
+        "minLabelRoom" : 2.6786315,
+        "regions" : 145,
+        "tinyRegions" : 3,
+        "total" : 0.15364924
+      },
+      "settings" : {
+        "colorCount" : 40,
+        "detail" : 0.6,
+        "seed" : 24301,
+        "smoothness" : 0.46
+      }
+    },
+    {
+      "score" : {
+        "bandPenalty" : 0.08274756,
+        "bandRings" : 62,
+        "estimatedSeconds" : 663,
+        "fidelity" : 0.042283405,
+        "fidelityP95" : 0.123,
+        "minLabelRoom" : 2.8935227,
+        "regions" : 109,
+        "tinyRegions" : 1,
+        "total" : 0.19799887
+      },
+      "settings" : {
+        "colorCount" : 30,
+        "detail" : 0.2,
+        "seed" : 24301,
+        "smoothness" : 0.46
+      }
+    }
+  ],
+  "preference" : "relaxed",
+  "winner" : 3
+}

@@ -163,8 +163,8 @@ nonisolated struct ArtworkDraft: Sendable {
 /// Human-friendly durations and estimates. The unit words come from the string catalog (their
 /// plural forms and order are a translator's call); only the arithmetic lives here.
 nonisolated enum PaintingTime {
-    /// Rough time to paint a template: a tap per area plus finding it (zoom, pan), ~3 s each.
-    static func estimate(regionCount: Int) -> TimeInterval { Double(regionCount) * 3 }
+    /// Rough time to paint a template: PaintCore's estimate, which Suggested settings aim with.
+    static func estimate(regionCount: Int) -> TimeInterval { PaintCore.PaintingTime.estimate(regionCount: regionCount) }
 
     /// "~40 min", "~1.5 h", "~12 h".
     static func approximate(_ seconds: TimeInterval) -> String {

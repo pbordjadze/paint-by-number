@@ -17,10 +17,18 @@ baseline tools/baseline/regression.json:
   informational    p95 ΔE, colors, regions under radius 3, min inscribed radius, timings,
                    whether the template is byte-identical to the baseline's
 
+and in the auto regime (AUTO_REGIME: `pbn generate --auto`, the settings Auto suggests at
+Relaxed) against tools/baseline/auto.json:
+
+  hard invariants  the ones above; the chosen colors, detail and smoothness lie inside the
+                   preference's bands pbn reports; the winner is one of the candidates
+  informational    the choice versus the baseline's (choices move when the pipeline does),
+                   regions, ΔE, bytes, estimated painting time against the time band, timings
+
 Prints a table with deltas and exits 1 on any failure (2 on a usage or setup error).
---update rewrites the baseline from this run (only if every hard invariant holds): do it
-when a pipeline change is intended, look at the sheets, and commit the baseline with the
-change. --sheets DIR writes DIR/<regime>/<sample>.jpg (source | painted | region outlines,
+--update rewrites both baselines from this run (only if every hard invariant holds): do it
+when a pipeline or Auto change is intended, look at the sheets, and commit the baselines with
+the change. --sheets DIR writes DIR/<regime>/<sample>.jpg (source | painted | region outlines,
 palette). --json FILE writes every metric and verdict. --out DIR keeps pbn's output.
 
 Requires the release pbn (tools/swift.sh build -c release --static-swift-stdlib, or set
@@ -41,6 +49,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PBN = os.environ.get("PBN", os.path.join(ROOT, ".build", "release", "pbn"))
 SAMPLES = os.path.join(ROOT, "App", "PaintByNumber", "Resources", "Samples")
 BASELINE = os.path.join(ROOT, "tools", "baseline", "regression.json")
+AUTO_BASELINE = os.path.join(ROOT, "tools", "baseline", "auto.json")
 
 # The app's default, its most intricate and its boldest settings.
 REGIMES = [
@@ -48,6 +57,9 @@ REGIMES = [
     {"colors": 150, "detail": 1.0},
     {"colors": 12, "detail": 0.0},
 ]
+
+# Auto: every sample at the settings it suggests for this painting length.
+AUTO_REGIME = {"auto": "relaxed"}
 
 # Metrics kept in the baseline: the banded ones plus informational ones worth a delta.
 BASELINE_KEYS = ["regions", "meanDeltaE", "p95DeltaE", "encodedBytes", "colors", "regionsUnderRadius3",
@@ -65,7 +77,16 @@ FLOAT_SLACK = 1e-6
 
 
 def regime_name(regime):
+    if "auto" in regime:
+        return f"auto-{regime['auto']}"
     return f"c{regime['colors']}-d{regime['detail']:g}"
+
+
+def chosen(result):
+    """Auto's chosen settings from pbn's stats (an empty dict when absent or malformed)."""
+    auto = result.get("auto")
+    settings = auto.get("settings") if isinstance(auto, dict) else None
+    return settings if isinstance(settings, dict) else {}
 
 
 def palette_floor(regime, result):
@@ -73,7 +94,10 @@ def palette_floor(regime, result):
     (GenerationSettings.minPaletteDistance) as minPaletteDistanceFloor; the formula mirrors it
     for a pbn that predates that field."""
     reported = number(result.get("minPaletteDistanceFloor"))
-    return reported if reported is not None else 0.04 * min(1.0, math.sqrt(24 / regime["colors"]))
+    if reported is not None:
+        return reported
+    colors = regime.get("colors") or number(chosen(result).get("colorCount")) or 24
+    return 0.04 * min(1.0, math.sqrt(24 / colors))
 
 
 def number(value):
@@ -137,7 +161,59 @@ def band_failures(result, base):
 
 
 def check_case(regime, result, base):
+    if "auto" in regime:
+        return invariant_failures(regime, result) + choice_failures(regime, result) + auto_baseline_failures(result, base)
     return invariant_failures(regime, result) + band_failures(result, base)
+
+
+def bounds(value):
+    """A [low, high] pair of numbers, else None."""
+    if isinstance(value, list) and len(value) == 2 and all(number(v) is not None for v in value):
+        return value
+    return None
+
+
+def choice_failures(regime, result):
+    """Auto's hard invariant: the suggested settings lie inside the bands of the preference
+    asked for (as pbn reports them), and they are the winning candidate's."""
+    if result.get("error"):
+        return []
+    auto = result.get("auto")
+    if not isinstance(auto, dict):
+        return ["pbn did not report an auto decision"]
+    if auto.get("preference") != regime["auto"]:
+        return [f"decision for {auto.get('preference')!r}, asked for {regime['auto']!r}"]
+    settings, bands = chosen(result), auto.get("bands") if isinstance(auto.get("bands"), dict) else {}
+    failures = []
+    for key, band in (("colorCount", "colors"), ("detail", "detail"), ("smoothness", "smoothness")):
+        value, limits = number(settings.get(key)), bounds(bands.get(band))
+        if value is None or limits is None:
+            failures.append(f"pbn did not report the chosen {key} and its band")
+        elif not limits[0] - FLOAT_SLACK <= value <= limits[1] + FLOAT_SLACK:
+            failures.append(f"chosen {key} {value:g} outside the {regime['auto']} band {limits[0]:g}..{limits[1]:g}")
+    winner, candidates = auto.get("winner"), auto.get("candidates")
+    if not isinstance(candidates, list) or isinstance(winner, bool) or not isinstance(winner, int) \
+            or not 0 <= winner < len(candidates):
+        failures.append(f"winner {winner!r} is not one of the candidates")
+    elif not isinstance(candidates[winner], dict) or candidates[winner].get("settings") != settings:
+        failures.append("the chosen settings are not the winning candidate's")
+    return failures
+
+
+def auto_baseline_failures(result, base):
+    """The auto regime compares with its baseline for information only; it just has to exist."""
+    if result.get("error") or base is not None:
+        return []
+    return ["no auto baseline entry (run tools/regression.py --update)"]
+
+
+def choice_text(settings):
+    if not settings:
+        return "-"
+    parts = [number(settings.get(k)) for k in ("colorCount", "detail", "smoothness")]
+    if any(p is None for p in parts):
+        return "?"
+    return f"{parts[0]:.0f}c d{parts[1]:g} s{parts[2]:g}"
 
 
 def stale_entries(baseline_cases, run_keys):
@@ -169,6 +245,46 @@ COLUMNS = ["sample", "regions", "mean dE", "p95 dE", "bytes", "r<2", "r<3", "min
            "ms", "template", "verdict"]
 
 
+AUTO_COLUMNS = ["sample", "choice", "baseline", "regions", "mean dE", "p95 dE", "bytes", "est min", "r<2",
+                "paint gap", "ms", "template", "verdict"]
+
+
+def auto_row(name, regime, result, base, failures):
+    base = base or {}
+    if result.get("error"):
+        return [name] + ["-"] * (len(AUTO_COLUMNS) - 2) + ["FAIL"]
+    choice = choice_text(chosen(result))
+    if not base:
+        was = "new"
+    else:
+        was = "same" if choice == choice_text(base.get("settings") or {}) else "was " + choice_text(base.get("settings"))
+    sha = result.get("templateSHA1")
+    template = "new" if not base.get("templateSHA1") else ("same" if sha == base.get("templateSHA1") else "changed")
+    auto = result.get("auto") if isinstance(result.get("auto"), dict) else {}
+    minutes = bounds((auto.get("bands") or {}).get("minutes") if isinstance(auto.get("bands"), dict) else None)
+    regions = number(result.get("regions"))
+    estimate = "-"
+    if regions is not None:
+        # PaintingTime.estimate: 3 s per region.
+        estimate = f"{regions * 3 / 60:.0f}"
+        if minutes is not None:
+            estimate += " <" if regions * 3 / 60 < minutes[0] else (" >" if regions * 3 / 60 > minutes[1] else "")
+    return [
+        name, choice, was,
+        cell(result.get("regions"), base.get("regions"), "{:.0f}"),
+        cell(result.get("meanDeltaE"), base.get("meanDeltaE"), "{:.4f}"),
+        cell(result.get("p95DeltaE"), base.get("p95DeltaE"), "{:.4f}"),
+        cell(result.get("encodedBytes"), base.get("encodedBytes"), "{:.0f}"),
+        estimate,
+        cell(result.get("regionsUnderRadius2"), fmt="{:.0f}"),
+        f"{cell(result.get('minPaletteDistance'), base.get('minPaletteDistance'), '{:.4f}')}"
+        f" >= {palette_floor(regime, result):.4f}",
+        cell(result.get("totalMs"), base.get("totalMs"), "{:.0f}"),
+        template,
+        "FAIL" if failures else "ok",
+    ]
+
+
 def row(name, regime, result, base, failures):
     base = base or {}
     if result.get("error"):
@@ -193,10 +309,10 @@ def row(name, regime, result, base, failures):
     ]
 
 
-def table(rows):
-    widths = [max(len(r[i]) for r in [COLUMNS] + rows) for i in range(len(COLUMNS))]
+def table(rows, columns=COLUMNS):
+    widths = [max(len(r[i]) for r in [columns] + rows) for i in range(len(columns))]
     line = lambda r: "  ".join(c.ljust(w) if i == 0 else c.rjust(w) for i, (c, w) in enumerate(zip(r, widths)))
-    return "\n".join([line(COLUMNS), line(["-" * w for w in widths])] + [line(r) for r in rows])
+    return "\n".join([line(columns), line(["-" * w for w in widths])] + [line(r) for r in rows])
 
 
 def totals(results, base_cases, keys):
@@ -221,7 +337,10 @@ def totals(results, base_cases, keys):
 def run_case(ppm, regime, out):
     """Generates `ppm` twice in `regime` (into out/ and out/repeat/), validates the
     template and returns the metrics with the run's findings."""
-    args = ["--colors", str(regime["colors"]), "--detail", str(regime["detail"])]
+    if "auto" in regime:
+        args = ["--auto", "--length", regime["auto"]]
+    else:
+        args = ["--colors", str(regime["colors"]), "--detail", str(regime["detail"])]
     templates = []
     for target in (out, os.path.join(out, "repeat")):
         res = subprocess.run([PBN, "generate", ppm, target] + args, capture_output=True, text=True)
@@ -249,6 +368,13 @@ def baseline_entry(result):
         if value is not None:
             entry[key] = round(value, 1) if key == "totalMs" else value
     entry["templateSHA1"] = result["templateSHA1"]
+    return entry
+
+
+def auto_baseline_entry(result):
+    entry = baseline_entry(result)
+    entry["settings"] = {k: chosen(result).get(k) for k in ("colorCount", "detail", "smoothness")}
+    entry["winner"] = result["auto"].get("winner")
     return entry
 
 
@@ -311,6 +437,15 @@ def main(argv):
         print(f"no usable baseline ({error}); every case will fail until --update", file=sys.stderr)
         baseline = {}
     base_cases = baseline.get("cases") if isinstance(baseline.get("cases"), dict) else {}
+    try:
+        with open(AUTO_BASELINE) as f:
+            auto_baseline = json.load(f)
+    except (OSError, ValueError) as error:
+        print(f"no usable auto baseline ({error}); every auto case will fail until --update", file=sys.stderr)
+        auto_baseline = {}
+    if isinstance(auto_baseline.get("cases"), dict):
+        base_cases.update(auto_baseline["cases"])
+    regimes = REGIMES + [AUTO_REGIME]
 
     work = options.get("--out") or tempfile.mkdtemp(prefix="pbn-regression-")
     try:
@@ -320,7 +455,7 @@ def main(argv):
             inputs[name] = os.path.join(work, "input", name + ".ppm")
             os.makedirs(os.path.dirname(inputs[name]), exist_ok=True)
             Image.open(os.path.join(SAMPLES, sample)).convert("RGB").save(inputs[name])
-        cases = [(regime, name) for regime in REGIMES for name in inputs]
+        cases = [(regime, name) for regime in regimes for name in inputs]
         key = lambda regime, name: f"{regime_name(regime)}/{name}"
         # Two at a time: pbn is itself parallel, and concurrent runs vary the scheduling
         # the determinism check sees.
@@ -330,18 +465,23 @@ def main(argv):
         results = {key(r, n): out for (r, n), out in zip(cases, outputs)}
 
         report, all_failures, verdicts = [], [], {}
-        for regime in REGIMES:
+        for regime in regimes:
             keys = [key(regime, name) for name in inputs]
+            auto = "auto" in regime
             rows = []
             for k in keys:
                 # A new baseline only has to satisfy the invariants.
-                failures = (invariant_failures(regime, results[k]) if update
-                            else check_case(regime, results[k], base_cases.get(k)))
+                if update:
+                    failures = invariant_failures(regime, results[k]) + (choice_failures(regime, results[k]) if auto else [])
+                else:
+                    failures = check_case(regime, results[k], base_cases.get(k))
                 verdicts[k] = failures
                 all_failures += [f"{k}: {f}" for f in failures]
-                rows.append(row(k.split("/")[1], regime, results[k], base_cases.get(k), failures))
-            report += [f"{regime_name(regime)}: {regime['colors']} colors, detail {regime['detail']:g}",
-                       table(rows)]
+                rows.append((auto_row if auto else row)(k.split("/")[1], regime, results[k], base_cases.get(k), failures))
+            title = (f"{regime_name(regime)}: the settings Auto suggests at {regime['auto'].capitalize()} (choices are "
+                     "informational; est min < or > the time band)" if auto
+                     else f"{regime_name(regime)}: {regime['colors']} colors, detail {regime['detail']:g}")
+            report += [title, table(rows, AUTO_COLUMNS if auto else COLUMNS)]
             if not any(results[k].get("error") for k in keys):
                 report.append(totals(results, base_cases, keys))
             report.append("")
@@ -361,28 +501,42 @@ def main(argv):
                 out = os.path.join(work, regime_name(regime), name)
                 if results[k].get("error"):
                     continue
-                cells = dict(zip(COLUMNS, row(name, regime, results[k], base_cases.get(k), verdicts[k])))
-                lines = ["  ".join(f"{c} {cells[c]}" for c in COLUMNS[1:6]),
-                         "  ".join(f"{c} {cells[c]}" for c in COLUMNS[6:-1])]
+                if "auto" in regime:
+                    cells = dict(zip(AUTO_COLUMNS, auto_row(name, regime, results[k], base_cases.get(k), verdicts[k])))
+                    lines = ["  ".join(f"{c} {cells[c]}" for c in AUTO_COLUMNS[1:7]),
+                             "  ".join(f"{c} {cells[c]}" for c in AUTO_COLUMNS[7:-1])]
+                else:
+                    cells = dict(zip(COLUMNS, row(name, regime, results[k], base_cases.get(k), verdicts[k])))
+                    lines = ["  ".join(f"{c} {cells[c]}" for c in COLUMNS[1:6]),
+                             "  ".join(f"{c} {cells[c]}" for c in COLUMNS[6:-1])]
                 write_sheet(os.path.join(options["--sheets"], regime_name(regime), name + ".jpg"),
                             f"{k}  ({results[k]['width']}x{results[k]['height']})  {cells['verdict']}",
                             lines, verdicts[k], out)
         if options.get("--json"):
             os.makedirs(os.path.dirname(os.path.abspath(options["--json"])), exist_ok=True)
             with open(options["--json"], "w") as f:
-                json.dump({"baseline": os.path.relpath(BASELINE, ROOT), "failures": all_failures,
+                json.dump({"baseline": os.path.relpath(BASELINE, ROOT), "autoBaseline": os.path.relpath(AUTO_BASELINE, ROOT),
+                       "failures": all_failures,
                            "cases": {k: {"metrics": {m: v for m, v in results[k].items() if m != "palette"},
                                          "baseline": base_cases.get(k), "failures": verdicts[k]}
                                      for k in results}}, f, indent=2, sort_keys=True)
         if update and not all_failures:
             os.makedirs(os.path.dirname(BASELINE), exist_ok=True)
+            auto_keys = {key(AUTO_REGIME, name) for name in inputs}
             with open(BASELINE, "w") as f:
                 json.dump({"about": "Quality baseline for tools/regression.py; regenerate with --update.",
                            "regimes": {regime_name(r): r for r in REGIMES},
-                           "cases": {k: baseline_entry(results[k]) for k in sorted(results)}},
+                           "cases": {k: baseline_entry(results[k]) for k in sorted(results) if k not in auto_keys}},
                           f, indent=2, sort_keys=True)
                 f.write("\n")
-            print(f"baseline written to {os.path.relpath(BASELINE, ROOT)}")
+            with open(AUTO_BASELINE, "w") as f:
+                json.dump({"about": "Settings Auto suggests per sample, for tools/regression.py's auto regime "
+                                    "(informational); regenerate with --update.",
+                           "regime": {regime_name(AUTO_REGIME): AUTO_REGIME},
+                           "cases": {k: auto_baseline_entry(results[k]) for k in sorted(auto_keys)}},
+                          f, indent=2, sort_keys=True)
+                f.write("\n")
+            print(f"baselines written to {os.path.relpath(BASELINE, ROOT)} and {os.path.relpath(AUTO_BASELINE, ROOT)}")
         elif update:
             print("baseline not written: the hard invariants must hold first")
         return 1 if all_failures else 0
@@ -484,6 +638,66 @@ def self_test():
     totals({"k": good}, {"k": base}, ["k"])
     totals({"k": good}, {}, ["k"])
     checks += 3
+    # The auto regime: the choice must lie inside the bands pbn reports; the rest is
+    # informational, but the baseline entry must exist.
+    auto_regime = {"auto": "relaxed"}
+    settings = {"colorCount": 24, "detail": 0.45, "smoothness": 0.5, "seed": 24301}
+    decision = {"preference": "relaxed", "settings": settings, "winner": 1,
+                "candidates": [{"settings": dict(settings, colorCount=18)}, {"settings": settings}],
+                "bands": {"colors": [8, 40], "detail": [0.15, 0.85], "smoothness": [0.25, 0.8], "minutes": [40, 120]}}
+    auto_good = dict(good, auto=decision, minPaletteDistance=0.045, minPaletteDistanceFloor=0.04)
+    auto_base = dict(base, settings={"colorCount": 24, "detail": 0.45, "smoothness": 0.5}, winner=1)
+
+    def expect_auto(changes, failing, base_entry=auto_base, auto_changes=None):
+        nonlocal checks
+        result = dict(auto_good, **changes)
+        if auto_changes is not None:
+            result["auto"] = dict(decision, **auto_changes)
+        failures = check_case(auto_regime, result, base_entry)
+        assert bool(failures) == failing, f"{changes} {auto_changes}: expected {'failure' if failing else 'pass'}, got {failures}"
+        auto_row("x", auto_regime, result, base_entry, failures)
+        if not result.get("error") and isinstance(result.get("auto"), dict):
+            auto_baseline_entry(result)
+        checks += 1
+        return failures
+
+    expect_auto({}, False)
+    # Informational: metrics and choices may move freely.
+    expect_auto({"regions": 5000, "meanDeltaE": 0.5, "encodedBytes": 1}, False)
+    expect_auto({}, False, base_entry=dict(auto_base, settings={"colorCount": 30, "detail": 0.6, "smoothness": 0.4}))
+    expect_auto({}, True, base_entry=None)
+    # Hard: the choice inside the bands, the winner's settings, the preference asked for.
+    expect_auto({}, True, auto_changes={"settings": dict(settings, colorCount=42),
+                                        "candidates": [{"settings": dict(settings, colorCount=42)}] * 2})
+    expect_auto({}, True, auto_changes={"settings": dict(settings, detail=0.9),
+                                        "candidates": [{"settings": dict(settings, detail=0.9)}] * 2})
+    expect_auto({}, True, auto_changes={"settings": dict(settings, smoothness=0.2),
+                                        "candidates": [{"settings": dict(settings, smoothness=0.2)}] * 2})
+    expect_auto({}, False, auto_changes={"settings": dict(settings, colorCount=40),
+                                         "candidates": [{"settings": dict(settings, colorCount=40)}] * 2})
+    expect_auto({}, True, auto_changes={"winner": 0})
+    expect_auto({}, True, auto_changes={"winner": 2})
+    expect_auto({}, True, auto_changes={"winner": True})
+    expect_auto({}, True, auto_changes={"preference": "quick"})
+    expect_auto({}, True, auto_changes={"bands": {"colors": [8], "detail": [0.15, 0.85], "smoothness": [0.25, 0.8]}})
+    expect_auto({}, True, auto_changes={"bands": "wide"})
+    expect_auto({}, True, auto_changes={"settings": {"colorCount": "many"}})
+    assert "auto decision" in expect_auto({"auto": None}, True)[0]
+    # The usual invariants hold in the auto regime too.
+    expect_auto({"regionsUnderRadius2": 1}, True)
+    expect_auto({"deterministic": False}, True)
+    assert expect_auto({"error": "suggestion failed: boom"}, True) == ["pbn: suggestion failed: boom"]
+    cells = dict(zip(AUTO_COLUMNS, auto_row("x", auto_regime, dict(auto_good, regions=1000), auto_base, [])))
+    assert cells["choice"] == "24c d0.45 s0.5" and cells["baseline"] == "same" and cells["est min"] == "50", cells
+    cells = dict(zip(AUTO_COLUMNS, auto_row("x", auto_regime, dict(auto_good, regions=100), dict(auto_base, settings={
+        "colorCount": 30, "detail": 0.6, "smoothness": 0.4}), [])))
+    assert cells["baseline"] == "was 30c d0.6 s0.4" and cells["est min"] == "5 <", cells
+    assert dict(zip(AUTO_COLUMNS, auto_row("x", auto_regime, auto_good, None, [])))["baseline"] == "new"
+    assert regime_name(auto_regime) == "auto-relaxed"
+    assert abs(palette_floor(auto_regime, {"auto": decision}) - 0.04) < 1e-12
+    assert abs(palette_floor(auto_regime, {}) - 0.04) < 1e-12
+    table([auto_row("x", auto_regime, auto_good, auto_base, [])], AUTO_COLUMNS)
+    checks += 5
     print(f"self-test passed ({checks} checks)")
 
 
