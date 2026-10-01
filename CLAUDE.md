@@ -261,7 +261,8 @@ Saved paintings must open in every later build. The format history is documented
    job also builds Release and runs `ci/check_release.sh` (privacy manifest present, no demo
    code); its problems land in `ipad/errors.txt` too. The
    iPhone job (the same on an iPhone 17 Pro, without the benchmark) runs on
-   `claude/paint-by-numbers-app` or via workflow_dispatch with `iphone: true`. Turnaround
+   `claude/paint-by-numbers-app`, via workflow_dispatch with `iphone: true`, or on any branch
+   when the pushed commit's message contains `[iphone]`. Turnaround
    ~15–20 min (longer if several branches are queued: only 5 macOS jobs run concurrently).
    Work on something else while it runs.
 3. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.

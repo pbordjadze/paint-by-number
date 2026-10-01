@@ -164,9 +164,11 @@ jobs:
 
   iphone:
     name: iPhone — Debug build, screenshots, tests
-    # Secondary device: on the main development branch, or when requested. (The iPad job
-    # covers the Release build and its check.)
-    if: github.ref_name == 'claude/paint-by-numbers-app' || github.event.inputs.iphone == 'true'
+    # Secondary device: on the main development branch, or when requested (workflow_dispatch,
+    # or `[iphone]` in the pushed commit's message). The iPad job covers the Release build.
+    if: >-
+      github.ref_name == 'claude/paint-by-numbers-app' || github.event.inputs.iphone == 'true'
+      || contains(github.event.head_commit.message, '[iphone]')
     runs-on: macos-26
     timeout-minutes: 50
     steps:
