@@ -19,12 +19,23 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     its doc comment, all tunables in `SegmentationParameters`)
   - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
   - `Export/` SVG (and later PDF helpers)
+  - `Auto/` Suggested settings: `AutoSettings.analyze` (photo → `PhotoAnalysis` features at the
+    draft size), `candidates` (a named rule: a center from the palette curve's knee and the
+    features, plus neighbours in colors × detail), `score` (importance-weighted ΔE, p95, rings,
+    crumbs, a price per paint and the distance of `PaintingTime.estimate` from the
+    `PaintingLength`'s time band) and `choose` (runs the candidates on the draft in parallel,
+    cancellable, calls `firstDraft` with the center, returns an `AutoDecision`). Every constant
+    carries what it was tuned on (`docs/wave2/log/auto-tuning.md`). Features are quantized (3
+    decimals; palette curve and noise 4) before the rule reads them, so a decision is reproducible
+    from the same pixels, importance, hints and length on every device; decisions are never stored.
+    Bands: Quick 8–25 min, Relaxed 20–50, Detailed 40–120 at 3 s per area; a draft's region count
+    is scaled to the full canvas by area^(0.29 + 0.42 × detail).
   - `TemplateGenerator.swift` entry point composing the stages, with `StageClock` timings
 - `App/` Xcode project (`PaintByNumber.xcodeproj`, synchronized folders — adding files needs no
   project edits) with the SwiftUI app, Metal renderer and UI tests.
 - `tools/` evaluation tooling (`swift.sh`, `eval.py`, `compare.py`, `regression.py` + its
-  committed `baseline/regression.json`, `svg2png.mjs`) and `strings_check.py` (string catalog
-  drift check, see Localization).
+  committed `baseline/regression.json` and `baseline/auto.json`, `auto_sheet.py`, `svg2png.mjs`)
+  and `strings_check.py` (string catalog drift check, see Localization).
 - `.github/workflows/` CI: Linux PaintCore tests + quality regression; macOS builds the app, runs
   tests, captures simulator screenshots.
 - `ACKNOWLEDGEMENTS.md` credits and license texts for the ported code and published methods (also shown in the app).
@@ -53,13 +64,24 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   prints the file's format and pipeline versions and runs `Template.validate()` (planarity, ring
   orientation, mesh coverage/watertightness, labels, and every label's room for its number:
   `--min-label-radius R`, default `LabelSizing.minimumRadius`, `0` skips it). `pbn bench
-  <ppm...>` times the pipeline, including a preview, detail 1 on a large photo and 150 colors
-  at detail 1.
+  <ppm...>` times the pipeline, including a preview, detail 1 on a large photo, 150 colors
+  at detail 1 and Auto's suggestion.
+- Suggested settings: `pbn suggest <image> [--importance m.pgm] [--hints h.json] [--length
+  quick|relaxed|detailed] [--candidates 5] [--out dir]` prints the candidate table (every score
+  term, the winner starred) and writes `decision.json`; with `--out` also every candidate's
+  preview for `tools/auto_sheet.py <dir>` (one sheet per photo, winner framed). `pbn generate
+  --auto [--length …] [--hints …]` generates at the suggestion (`stats.json` gains `auto` and
+  `analysis`; `eval.py run … -- --auto` captions the chosen settings). pbn has no Vision: without
+  `--importance` it uses the pipeline's fallback map, which rates busy texture important, so its
+  region counts run above the app's (with Vision maps, CI's simulator gave the lighthouse and
+  parrots samples a third to a half of pbn's areas at like settings).
 - Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
   documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
 - `tools/regression.py [--sheets DIR] [--json FILE]` — the quality gate CI runs on every push:
   the six bundled samples in three regimes (24 colors/detail 0.5, 150/1.0, 12/0.0), each
-  generated twice. Hard invariants: `pbn check` valid, byte-identical runs, no region under
+  generated twice, plus the `auto` regime (`pbn generate --auto`, Relaxed): its hard invariant is
+  that the choice lies inside the length's bands; the chosen settings and metrics are compared
+  with `tools/baseline/auto.json` for information only (choices move when the pipeline moves). Hard invariants: `pbn check` valid, byte-identical runs, no region under
   radius 2, palette distance ≥ the floor pbn reports (`GenerationSettings.minPaletteDistance`),
   and `labelsBelowLegibleSize == 0` once pbn's stats report that field. Bands versus
   `tools/baseline/regression.json`: mean ΔE ≤ baseline × 1.05, regions ±15 %, template bytes
@@ -69,7 +91,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   sheets are source | painted raster | region outlines + palette).
 - **Whenever a change alters pipeline output, run `tools/regression.py --update` (it only writes
   a baseline that satisfies the hard invariants), look at the `--sheets`, and commit
-  `tools/baseline/regression.json` together with the change**: CI fails once a metric leaves
+  `tools/baseline/regression.json` and `tools/baseline/auto.json` together with the change**: CI fails once a metric leaves
   its band, and a fresh baseline keeps the table's deltas meaningful. The `template
   same/changed` column is informational: it only means something where the templates come
   from an identical build and input decode (CI's pbn and Pillow differ from the host's). Use

@@ -105,7 +105,10 @@ public enum PaintingLength: String, Sendable, Codable, CaseIterable {
     /// corpus's 35 large photos give a median of about 380 areas (19 minutes) at detail 0.3,
     /// 680 (34) at 0.5 and 1350 (67) at 0.9, a busy one two to three times that; a 768-px
     /// sample reaches 300–950 areas at any detail. The bands overlap so that a photo which
-    /// cannot fill one still lands near it.
+    /// cannot fill one still lands near it. Those counts come from `pbn` with the pipeline's
+    /// fallback importance map; the app's Vision maps rate background texture lower and give a
+    /// third to a half as many areas at like settings, so in the app more photos fall short of
+    /// their band (the score measures the app's own drafts, so it still aims at the band).
     public var timeBand: ClosedRange<Double> {
         switch self {
         case .quick: (8 * 60)...(25 * 60)
