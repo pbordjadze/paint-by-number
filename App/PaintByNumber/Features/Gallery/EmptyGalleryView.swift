@@ -77,7 +77,7 @@ private struct Snapshot: View {
                 .clipShape(.rect(cornerRadius: 7, style: .continuous))
             HStack(spacing: 5) {
                 ForEach(Array(palette.enumerated()), id: \.offset) { index, color in
-                    Text("\(index + 1)")
+                    Text(verbatim: "\(index + 1)")
                         .font(.system(size: 8, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
                         .frame(width: 15, height: 15)

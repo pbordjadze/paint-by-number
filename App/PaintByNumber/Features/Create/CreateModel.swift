@@ -41,7 +41,11 @@ final class CreateModel {
         }
 
         var summary: String {
-            "\(colors) colors · \(areas.formatted()) areas · \(PaintingTime.approximate(estimate))"
+            let colorsText = TemplateCounts.colors(colors)
+            let areasText = TemplateCounts.areas(areas)
+            let timeText = PaintingTime.approximate(estimate)
+            return String(localized: "create.stats.summary", defaultValue: "\(colorsText) · \(areasText) · \(timeText)",
+                          comment: "Template summary under the create sliders; the arguments are the colors, areas and estimated painting time, e.g. 24 colors · 1,284 areas · ~1.5 h")
         }
     }
 
@@ -60,9 +64,16 @@ final class CreateModel {
 
         var errorDescription: String? {
             switch self {
-            case .unreadable: "This photo couldn’t be opened. Try another one."
-            case .renderFailed: "The template couldn’t be created. Try different settings."
-            case .cameraCapture: "The photo from the camera couldn’t be used. Try taking it again."
+            case .unreadable:
+                String(localized: "create.error.unreadable", defaultValue: "This photo couldn’t be opened. Try another one.",
+                       comment: "Error when a chosen photo can't be decoded")
+            case .renderFailed:
+                String(localized: "create.error.renderFailed", defaultValue: "The template couldn’t be created. Try different settings.",
+                       comment: "Error when the template can't be generated from the photo")
+            case .cameraCapture:
+                String(localized: "create.error.cameraCapture",
+                       defaultValue: "The photo from the camera couldn’t be used. Try taking it again.",
+                       comment: "Error when the photo just taken with the camera can't be used")
             }
         }
     }

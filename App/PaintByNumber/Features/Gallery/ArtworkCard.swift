@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// A gallery card: the painting as it stands, its title and progress.
@@ -140,14 +141,19 @@ struct ProgressCaption: View {
             } else if artwork.isComplete {
                 Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint)
                 if artwork.activeSeconds >= 60 {
-                    Text("Finished · \(PaintingTime.spent(artwork.activeSeconds))")
+                    let spent = PaintingTime.spent(artwork.activeSeconds)
+                    Text(String(localized: "gallery.card.finishedAfter", defaultValue: "Finished · \(spent)",
+                                comment: "Caption of a finished painting's card; the argument is the time spent painting, e.g. 2 h 14 min"))
                 } else {
                     Text("Finished")
                 }
             } else if artwork.isStarted {
                 ProgressRing(fraction: artwork.fractionComplete, lineWidth: 2.4)
                     .frame(width: 14, height: 14)
-                Text(verbatim: "\(Self.percent(artwork))% painted").monospacedDigit()
+                let percent = Self.percentText(artwork)
+                Text(String(localized: "gallery.card.percentPainted", defaultValue: "\(percent) painted",
+                            comment: "Caption of a painting card in progress; the argument is the formatted percentage painted, e.g. 42%"))
+                    .monospacedDigit()
             } else {
                 Image(systemName: "paintbrush.pointed").foregroundStyle(.tint)
                 Text("Ready to paint")
@@ -164,11 +170,26 @@ struct ProgressCaption: View {
         min(99, Int((artwork.fractionComplete * 100).rounded(.down)))
     }
 
+    /// "42%": `percent` as the locale writes it.
+    static func percentText(_ artwork: Artwork) -> String {
+        (Double(percent(artwork)) / 100).formatted(.percent.precision(.fractionLength(0)))
+    }
+
     static func spoken(_ artwork: Artwork) -> String {
-        if artwork.needsNewerApp { return "Needs a newer version of the app" }
-        if artwork.isComplete { return "Finished" }
-        if !artwork.isStarted { return "Not started, \(artwork.colorCount) colors" }
-        return "\(percent(artwork)) percent painted"
+        if artwork.needsNewerApp {
+            return String(localized: "gallery.card.spoken.needsUpdate", defaultValue: "Needs a newer version of the app",
+                          comment: "VoiceOver value of a painting made by a newer version of the app")
+        }
+        if artwork.isComplete {
+            return String(localized: "gallery.card.spoken.finished", defaultValue: "Finished",
+                          comment: "VoiceOver value of a finished painting's card")
+        }
+        if !artwork.isStarted {
+            let colorCount = artwork.colorCount
+            return String(localized: "gallery.card.spoken.notStarted", defaultValue: "Not started, \(colorCount) colors",
+                          comment: "VoiceOver value of a painting nobody has painted on; the argument is its number of colors")
+        }
+        return PaintSpeech.percentPainted(percent(artwork))
     }
 }
 

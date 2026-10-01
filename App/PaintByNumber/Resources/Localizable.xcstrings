@@ -1,0 +1,2346 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "About" : {
+      "comment" : "Header of the About section in Settings",
+      "extractionState" : "manual"
+    },
+    "Acknowledgements" : {
+      "comment" : "Settings row, and the title of the screen it opens, crediting the open-source code and published methods behind the template engine",
+      "extractionState" : "manual"
+    },
+    "acknowledgements.codeFooter" : {
+      "comment" : "Footer under the Open-Source Code list in Acknowledgements; the argument is the GPL source notice",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swift ports of these libraries are part of the template engine. %@"
+          }
+        }
+      }
+    },
+    "acknowledgements.distanceTransforms.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Distance transforms); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Measures how thick each region is, so every area is big enough to paint."
+          }
+        }
+      }
+    },
+    "acknowledgements.domainTransform.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Domain transform); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smooths texture into painterly patches while keeping contours sharp."
+          }
+        }
+      }
+    },
+    "acknowledgements.douglasPeucker.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Douglas-Peucker); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thins out curve points that do not change the shape."
+          }
+        }
+      }
+    },
+    "acknowledgements.earcut.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Earcut); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Triangulates each region's outline into the mesh the canvas paints."
+          }
+        }
+      }
+    },
+    "acknowledgements.kmeans.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (k-means++); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picks well-spread starting colors for the palette."
+          }
+        }
+      }
+    },
+    "acknowledgements.oklab.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (OKLab); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compares colors the way the eye does when choosing the palette."
+          }
+        }
+      }
+    },
+    "acknowledgements.polylabel.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Polylabel); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finds the point of a region farthest from its edges, where its number is placed."
+          }
+        }
+      }
+    },
+    "acknowledgements.potrace.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Potrace); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turns stair-stepped region outlines into smooth curves."
+          }
+        }
+      }
+    },
+    "acknowledgements.rtv.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Relative total variation); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tells texture from structure, so faces and edges keep their detail."
+          }
+        }
+      }
+    },
+    "acknowledgements.sourceNotice" : {
+      "comment" : "GPL source notice shown in Settings under Acknowledgements; the argument is the repository URL, which must stay in the text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The curve fitting is a Swift translation of potrace and is used under the GNU General Public License. Its source, and that of the rest of the app, is published at %@."
+          }
+        }
+      }
+    },
+    "acknowledgements.splitmix.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (SplitMix64); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Makes the same photo and settings always give the same template."
+          }
+        }
+      }
+    },
+    "Advance to Next Color" : {
+      "comment" : "Settings toggle: after finishing a color, the next color is picked automatically",
+      "extractionState" : "manual"
+    },
+    "All paint will be cleared." : {
+      "comment" : "Message of the confirmation dialog for restarting the open painting",
+      "extractionState" : "manual"
+    },
+    "Apple Pencil paints; use your fingers to pan and zoom." : {
+      "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
+      "extractionState" : "manual"
+    },
+    "Back to Gallery" : {
+      "comment" : "Button on the screen shown when a painting can't be opened or the canvas can't be drawn: returns to the gallery",
+      "extractionState" : "manual"
+    },
+    "Browse all photos and albums" : {
+      "comment" : "Pointer hover help of the Browse All button",
+      "extractionState" : "manual"
+    },
+    "Browse All…" : {
+      "comment" : "Toolbar button of the photo step in the create flow: opens the full system photo picker",
+      "extractionState" : "manual"
+    },
+    "Cancel" : {
+      "comment" : "Button that dismisses a dialog or stops rendering the time-lapse without doing anything",
+      "extractionState" : "manual"
+    },
+    "Can’t Find It?" : {
+      "comment" : "Title of a tip shown after several taps on areas of the wrong color",
+      "extractionState" : "manual"
+    },
+    "Can’t Open Painting" : {
+      "comment" : "Title of the recovery screen shown when a painting's file can't be read",
+      "extractionState" : "manual"
+    },
+    "Can’t Show the Canvas" : {
+      "comment" : "Title of the screen shown when the device can't draw the painting canvas (no Metal)",
+      "extractionState" : "manual"
+    },
+    "Choose a photo with a clear subject and good light. It becomes your canvas." : {
+      "comment" : "Instruction above the photo picker in the create flow",
+      "extractionState" : "manual"
+    },
+    "Choose Photo" : {
+      "comment" : "Accessibility label of the inline photo library picker in the create flow",
+      "extractionState" : "manual"
+    },
+    "Close" : {
+      "comment" : "Button that closes the current screen or sheet (painting screen, create flow, time-lapse sheet)",
+      "extractionState" : "manual"
+    },
+    "Color Key" : {
+      "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
+      "extractionState" : "manual"
+    },
+    "colorName.chroma.grayish" : {
+      "comment" : "Color name chroma modifier (a dull, desaturated color)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "grayish"
+          }
+        }
+      }
+    },
+    "colorName.chroma.vivid" : {
+      "comment" : "Color name chroma modifier (a strongly saturated color)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vivid"
+          }
+        }
+      }
+    },
+    "colorName.family.beige" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "beige"
+          }
+        }
+      }
+    },
+    "colorName.family.black" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "black"
+          }
+        }
+      }
+    },
+    "colorName.family.blue" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "blue"
+          }
+        }
+      }
+    },
+    "colorName.family.brown" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brown"
+          }
+        }
+      }
+    },
+    "colorName.family.gray" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "gray"
+          }
+        }
+      }
+    },
+    "colorName.family.green" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "green"
+          }
+        }
+      }
+    },
+    "colorName.family.magenta" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "magenta"
+          }
+        }
+      }
+    },
+    "colorName.family.navy" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "navy"
+          }
+        }
+      }
+    },
+    "colorName.family.olive" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "olive"
+          }
+        }
+      }
+    },
+    "colorName.family.orange" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "orange"
+          }
+        }
+      }
+    },
+    "colorName.family.pink" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pink"
+          }
+        }
+      }
+    },
+    "colorName.family.purple" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "purple"
+          }
+        }
+      }
+    },
+    "colorName.family.red" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "red"
+          }
+        }
+      }
+    },
+    "colorName.family.teal" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "teal"
+          }
+        }
+      }
+    },
+    "colorName.family.white" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "white"
+          }
+        }
+      }
+    },
+    "colorName.family.yellow" : {
+      "comment" : "Color name hue family",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "yellow"
+          }
+        }
+      }
+    },
+    "colorName.format.chroma-family" : {
+      "comment" : "Color name: chroma and hue family words, e.g. “vivid green”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "colorName.format.lightness-chroma-family" : {
+      "comment" : "Color name: lightness, chroma and hue family words, e.g. “dark grayish green”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "colorName.format.lightness-family" : {
+      "comment" : "Color name: lightness and hue family words, e.g. “dark green”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "colorName.format.numbered" : {
+      "comment" : "A palette color as shown on screen: its number, then its capitalized name, e.g. “12 · Dark green”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld · %2$@"
+          }
+        }
+      }
+    },
+    "colorName.lightness.dark" : {
+      "comment" : "Color name lightness modifier",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dark"
+          }
+        }
+      }
+    },
+    "colorName.lightness.light" : {
+      "comment" : "Color name lightness modifier",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "light"
+          }
+        }
+      }
+    },
+    "colorName.lightness.pale" : {
+      "comment" : "Color name lightness modifier",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pale"
+          }
+        }
+      }
+    },
+    "colorName.lightness.veryDark" : {
+      "comment" : "Color name lightness modifier",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "very dark"
+          }
+        }
+      }
+    },
+    "Colors" : {
+      "comment" : "Create flow: label of the slider for the number of colors in the palette",
+      "extractionState" : "manual"
+    },
+    "Comparison of photo and template" : {
+      "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its template",
+      "extractionState" : "manual"
+    },
+    "Couldn't duplicate the painting." : {
+      "comment" : "Toast shown when duplicating a painting from the gallery fails",
+      "extractionState" : "manual"
+    },
+    "Couldn’t Create Painting" : {
+      "comment" : "Title of the alert shown when saving a new painting from the create flow fails",
+      "extractionState" : "manual"
+    },
+    "Couldn’t Open Photo" : {
+      "comment" : "Title shown in the create flow when the chosen photo can't be opened",
+      "extractionState" : "manual"
+    },
+    "Couldn’t save progress" : {
+      "comment" : "Toast on the painting screen (and its VoiceOver announcement) when saving progress to disk failed",
+      "extractionState" : "manual"
+    },
+    "create.compare.value" : {
+      "comment" : "VoiceOver value of the before/after comparison: the whole percentage of the width showing the photo",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld percent photo"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld percent photo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "create.detail.detailed" : {
+      "comment" : "Detail slider value: third step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detailed"
+          }
+        }
+      }
+    },
+    "create.detail.intricate" : {
+      "comment" : "Detail slider value: the most, smallest areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intricate"
+          }
+        }
+      }
+    },
+    "create.detail.moderate" : {
+      "comment" : "Detail slider value: second step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moderate"
+          }
+        }
+      }
+    },
+    "create.detail.simple" : {
+      "comment" : "Detail slider value: the fewest, largest areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simple"
+          }
+        }
+      }
+    },
+    "create.error.cameraCapture" : {
+      "comment" : "Error when the photo just taken with the camera can't be used",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The photo from the camera couldn’t be used. Try taking it again."
+          }
+        }
+      }
+    },
+    "create.error.renderFailed" : {
+      "comment" : "Error when the template can't be generated from the photo",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The template couldn’t be created. Try different settings."
+          }
+        }
+      }
+    },
+    "create.error.unreadable" : {
+      "comment" : "Error when a chosen photo can't be decoded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This photo couldn’t be opened. Try another one."
+          }
+        }
+      }
+    },
+    "create.sample.label" : {
+      "comment" : "VoiceOver label of a sample photo's tile; the argument is the sample's name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sample: %@"
+          }
+        }
+      }
+    },
+    "create.smoothness.clean" : {
+      "comment" : "Smoothness slider value: second step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clean"
+          }
+        }
+      }
+    },
+    "create.smoothness.crisp" : {
+      "comment" : "Smoothness slider value: sharp, angular outlines",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crisp"
+          }
+        }
+      }
+    },
+    "create.smoothness.flowing" : {
+      "comment" : "Smoothness slider value: soft, flowing outlines",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flowing"
+          }
+        }
+      }
+    },
+    "create.smoothness.smooth" : {
+      "comment" : "Smoothness slider value: third step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smooth"
+          }
+        }
+      }
+    },
+    "create.stats.summary" : {
+      "comment" : "Template summary under the create sliders; the arguments are the colors, areas and estimated painting time, e.g. 24 colors · 1,284 areas · ~1.5 h",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "Creating template…" : {
+      "comment" : "Status shown while the template is first generated from the photo",
+      "extractionState" : "manual"
+    },
+    "Delete" : {
+      "comment" : "Context menu item that deletes a painting from the gallery",
+      "extractionState" : "manual"
+    },
+    "Delete Painting" : {
+      "comment" : "Button on the recovery screen that deletes the painting that can't be opened",
+      "extractionState" : "manual"
+    },
+    "Delete this painting?" : {
+      "comment" : "Title of the confirmation dialog for deleting a painting",
+      "extractionState" : "manual"
+    },
+    "Detail" : {
+      "comment" : "Create flow: label of the slider for how much detail the template has",
+      "extractionState" : "manual"
+    },
+    "Done" : {
+      "comment" : "Button that finishes the painting screen's completion bar, and the Settings sheet",
+      "extractionState" : "manual"
+    },
+    "Double-tap the canvas to zoom in on it. Pinch to zoom back out." : {
+      "comment" : "Message of a tip about zooming in on small areas",
+      "extractionState" : "manual"
+    },
+    "Drop to Create a Painting" : {
+      "comment" : "Shown over the gallery while a photo is dragged onto it",
+      "extractionState" : "manual"
+    },
+    "Duplicate" : {
+      "comment" : "Context menu item that makes a copy of a painting",
+      "extractionState" : "manual"
+    },
+    "Every painted area will be cleared." : {
+      "comment" : "Message of the confirmation dialog for restarting a painting from the gallery",
+      "extractionState" : "manual"
+    },
+    "Every region is painted." : {
+      "comment" : "Caption in the completion bar of a painting without a title",
+      "extractionState" : "manual"
+    },
+    "export.error.photosAccessDenied" : {
+      "comment" : "Error when saving to Photos is refused; tells the person to allow adding photos in the Settings app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Paint by Numbers to add photos in Settings to save your painting."
+          }
+        }
+      }
+    },
+    "export.error.renderFailed" : {
+      "comment" : "Error when a painting's picture can't be rendered for sharing or saving",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The picture couldn't be rendered."
+          }
+        }
+      }
+    },
+    "export.error.timelapseFailed" : {
+      "comment" : "Error when the time-lapse movie can't be created",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The time-lapse couldn’t be made."
+          }
+        }
+      }
+    },
+    "export.templateName" : {
+      "comment" : "Name of a painting's printable template PDF; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Template"
+          }
+        }
+      }
+    },
+    "export.timelapseName" : {
+      "comment" : "File name of a painting's time-lapse movie; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Time-lapse"
+          }
+        }
+      }
+    },
+    "Feedback" : {
+      "comment" : "Header of the Settings section for haptics and sounds",
+      "extractionState" : "manual"
+    },
+    "Finding the subject…" : {
+      "comment" : "Status shown while the photo's main subject is detected before generating the template",
+      "extractionState" : "manual"
+    },
+    "Finished" : {
+      "comment" : "Gallery section header, and caption on the card of a finished painting",
+      "extractionState" : "manual"
+    },
+    "Finished!" : {
+      "comment" : "Headline of the completion bar shown when every area of a painting is painted",
+      "extractionState" : "manual"
+    },
+    "Fit to Screen" : {
+      "comment" : "Menu item on the painting screen: zoom to show the whole painting",
+      "extractionState" : "manual"
+    },
+    "gallery.card.finishedAfter" : {
+      "comment" : "Caption of a finished painting's card; the argument is the time spent painting, e.g. 2 h 14 min",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished · %@"
+          }
+        }
+      }
+    },
+    "gallery.card.percentPainted" : {
+      "comment" : "Caption of a painting card in progress; the argument is the formatted percentage painted, e.g. 42%",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ painted"
+          }
+        }
+      }
+    },
+    "gallery.card.spoken.finished" : {
+      "comment" : "VoiceOver value of a finished painting's card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished"
+          }
+        }
+      }
+    },
+    "gallery.card.spoken.needsUpdate" : {
+      "comment" : "VoiceOver value of a painting made by a newer version of the app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs a newer version of the app"
+          }
+        }
+      }
+    },
+    "gallery.card.spoken.notStarted" : {
+      "comment" : "VoiceOver value of a painting nobody has painted on; the argument is its number of colors",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Not started, %lld color"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Not started, %lld colors"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.delete.confirm" : {
+      "comment" : "Destructive button of the delete confirmation; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete “%@”"
+          }
+        }
+      }
+    },
+    "gallery.delete.message.finished" : {
+      "comment" : "Delete confirmation message for a finished painting; the argument is its title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” is finished."
+          }
+        }
+      }
+    },
+    "gallery.delete.message.notStarted" : {
+      "comment" : "Delete confirmation message for a painting nobody has painted on; the argument is its title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” hasn’t been started yet."
+          }
+        }
+      }
+    },
+    "gallery.delete.message.started" : {
+      "comment" : "Delete confirmation message for a painting in progress; the arguments are its title and the formatted percentage painted, e.g. 42%",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%1$@” is %2$@ painted."
+          }
+        }
+      }
+    },
+    "gallery.notice.progressReset" : {
+      "comment" : "Toast when a painting's saved progress was unreadable and has been reset",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This painting’s saved progress couldn’t be read, so it starts fresh."
+          }
+        }
+      }
+    },
+    "gallery.notice.regenerated" : {
+      "comment" : "Toast after a damaged painting was regenerated from its photo without its painted areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting regenerated from the original photo."
+          }
+        }
+      }
+    },
+    "gallery.notice.regeneratedKept" : {
+      "comment" : "Toast after a damaged painting was regenerated and its painted areas carried over",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting regenerated. Your painted areas were kept."
+          }
+        }
+      }
+    },
+    "gallery.recovery.damaged.regenerable" : {
+      "comment" : "Recovery screen text for a damaged painting that can be regenerated from its photo",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its file is damaged. Regenerate it from the original photo with the same settings."
+          }
+        }
+      }
+    },
+    "gallery.recovery.damaged.regenerableFresh" : {
+      "comment" : "Recovery screen text for a damaged painting that has paint on it and can be regenerated from its photo",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its file is damaged. Regenerate it from the original photo with the same settings. Painted areas can’t be recovered, so it will start fresh."
+          }
+        }
+      }
+    },
+    "gallery.recovery.damaged.unavailable" : {
+      "comment" : "Recovery screen text for a damaged painting whose original photo is gone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its file is damaged, and the original photo isn’t available to regenerate it."
+          }
+        }
+      }
+    },
+    "gallery.recovery.newer.titled" : {
+      "comment" : "Recovery screen text for a painting made by a newer app version; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” was made with a newer version of Paint by Numbers. Update the app to keep painting it."
+          }
+        }
+      }
+    },
+    "gallery.recovery.newer.untitled" : {
+      "comment" : "Recovery screen text for an untitled painting made by a newer app version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This painting was made with a newer version of Paint by Numbers. Update the app to keep painting it."
+          }
+        }
+      }
+    },
+    "gallery.recovery.progressValue" : {
+      "comment" : "VoiceOver value of the regeneration progress bar: a whole percentage",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld percent"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld percent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.recovery.retry" : {
+      "comment" : "Recovery screen text added after a failed regeneration attempt",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regenerating didn’t work. Try again."
+          }
+        }
+      }
+    },
+    "gallery.restart.confirm" : {
+      "comment" : "Destructive button of the restart confirmation; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart “%@”"
+          }
+        }
+      }
+    },
+    "gallery.subtitle.both" : {
+      "comment" : "Gallery subtitle with both counts; the arguments are the in-progress part and the finished part",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "gallery.subtitle.count.finished" : {
+      "comment" : "Second part of the gallery subtitle: how many paintings are finished",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld finished"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld finished"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.subtitle.count.inProgress" : {
+      "comment" : "First part of the gallery subtitle: how many paintings are in progress",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld in progress"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld in progress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.subtitle.finished" : {
+      "comment" : "Gallery subtitle when every painting is finished; the argument is how many",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld finished painting"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld finished paintings"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.subtitle.inProgress" : {
+      "comment" : "Gallery subtitle when every painting is still in progress; the argument is how many",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld painting in progress"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld paintings in progress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.toast.deleted" : {
+      "comment" : "Toast after deleting a painting, next to an Undo button; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted “%@”"
+          }
+        }
+      }
+    },
+    "gallery.toast.saveFailed" : {
+      "comment" : "Toast when a painting's progress couldn't be written to disk; the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t save “%@”"
+          }
+        }
+      }
+    },
+    "Haptics" : {
+      "comment" : "Settings toggle for vibration feedback while painting",
+      "extractionState" : "manual"
+    },
+    "Hidden" : {
+      "comment" : "VoiceOver value of the Photo control while the photo is not shown over the painting",
+      "extractionState" : "manual"
+    },
+    "Hint" : {
+      "comment" : "Button on the painting screen that shows an area to paint next",
+      "extractionState" : "manual"
+    },
+    "In Progress" : {
+      "comment" : "Gallery section header for paintings that are not finished",
+      "extractionState" : "manual"
+    },
+    "library.copyTitle" : {
+      "comment" : "Title of a duplicated painting; the argument is the original's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Copy"
+          }
+        }
+      }
+    },
+    "library.copyTitle.numbered" : {
+      "comment" : "Title of a second or later duplicate of a painting; the arguments are the original's title and the copy number (2, 3, …)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ Copy %2$lld"
+          }
+        }
+      }
+    },
+    "Making Your Time-lapse" : {
+      "comment" : "Title of the sheet shown while a time-lapse movie is rendered",
+      "extractionState" : "manual"
+    },
+    "Methods" : {
+      "comment" : "Header of the list of published methods in Acknowledgements",
+      "extractionState" : "manual"
+    },
+    "More" : {
+      "comment" : "Accessibility label of the painting screen's More (…) menu",
+      "extractionState" : "manual"
+    },
+    "Needs a Newer Version" : {
+      "comment" : "Title of the recovery screen for a painting made by a newer version of the app",
+      "extractionState" : "manual"
+    },
+    "Needs app update" : {
+      "comment" : "Caption on the gallery card of a painting made by a newer version of the app",
+      "extractionState" : "manual"
+    },
+    "New Painting" : {
+      "comment" : "Button (and title of the create flow) that starts a new painting from a photo",
+      "extractionState" : "manual"
+    },
+    "New Paintings" : {
+      "comment" : "Header of the Settings section with the defaults for new paintings",
+      "extractionState" : "manual"
+    },
+    "Next Color" : {
+      "comment" : "Paint menu item (iPad menu bar): select the next color",
+      "extractionState" : "manual"
+    },
+    "Numbers" : {
+      "comment" : "Create flow: name of the layer showing the template with its numbers, in the picker and as the comparison caption",
+      "extractionState" : "manual"
+    },
+    "OK" : {
+      "comment" : "Button that dismisses an alert",
+      "extractionState" : "manual"
+    },
+    "Open-Source Code" : {
+      "comment" : "Header of the list of ported open-source libraries in Acknowledgements",
+      "extractionState" : "manual"
+    },
+    "Opening photo…" : {
+      "comment" : "Status shown while the chosen photo is loaded in the create flow",
+      "extractionState" : "manual"
+    },
+    "Paint" : {
+      "comment" : "Paint menu title (iPad menu bar) and the name of the undo/redo action for painting an area",
+      "extractionState" : "manual"
+    },
+    "Paint by Numbers" : {
+      "comment" : "The app's name: the gallery's navigation title and the printed template's page footer",
+      "extractionState" : "manual"
+    },
+    "Paint Several Areas" : {
+      "comment" : "Title of a tip about painting many areas in one stroke",
+      "extractionState" : "manual"
+    },
+    "Paint something beautiful" : {
+      "comment" : "Headline of the empty gallery",
+      "extractionState" : "manual"
+    },
+    "Paint with Apple Pencil" : {
+      "comment" : "Title of a tip shown the first time Apple Pencil is used",
+      "extractionState" : "manual"
+    },
+    "paint.action.hint" : {
+      "comment" : "VoiceOver action: show an unpainted area of the selected color near the view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hint"
+          }
+        }
+      }
+    },
+    "paint.action.paintNext" : {
+      "comment" : "VoiceOver action: paint the unpainted area nearest the middle of the view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint next area"
+          }
+        }
+      }
+    },
+    "paint.action.zoomNext" : {
+      "comment" : "VoiceOver action: move the view to the next unpainted area, in reading order",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom to next area"
+          }
+        }
+      }
+    },
+    "paint.action.zoomToFit" : {
+      "comment" : "VoiceOver action: show the whole painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom to fit"
+          }
+        }
+      }
+    },
+    "paint.canvas.hint" : {
+      "comment" : "VoiceOver hint of the canvas when no area to paint is in view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the actions to zoom to the next area."
+          }
+        }
+      }
+    },
+    "paint.canvas.label" : {
+      "comment" : "VoiceOver name of the canvas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting"
+          }
+        }
+      }
+    },
+    "paint.currentColor" : {
+      "comment" : "VoiceOver label of the selected color's name shown on screen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current color"
+          }
+        }
+      }
+    },
+    "paint.position.bottom" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bottom"
+          }
+        }
+      }
+    },
+    "paint.position.bottomLeft" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bottom left"
+          }
+        }
+      }
+    },
+    "paint.position.bottomRight" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bottom right"
+          }
+        }
+      }
+    },
+    "paint.position.center" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "center"
+          }
+        }
+      }
+    },
+    "paint.position.left" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "left"
+          }
+        }
+      }
+    },
+    "paint.position.right" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "right"
+          }
+        }
+      }
+    },
+    "paint.position.top" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "top"
+          }
+        }
+      }
+    },
+    "paint.position.topLeft" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "top left"
+          }
+        }
+      }
+    },
+    "paint.position.topRight" : {
+      "comment" : "Where an area sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "top right"
+          }
+        }
+      }
+    },
+    "paint.rotor.unpaintedAreas" : {
+      "comment" : "VoiceOver rotor that moves between the unpainted areas in view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpainted areas"
+          }
+        }
+      }
+    },
+    "paint.speech.areaHint" : {
+      "comment" : "VoiceOver hint of an unpainted area; the argument is the color label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paints this area with %@."
+          }
+        }
+      }
+    },
+    "paint.speech.areaLabel" : {
+      "comment" : "VoiceOver label of an unpainted area on the canvas: the number printed in it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Area %lld"
+          }
+        }
+      }
+    },
+    "paint.speech.areaValue" : {
+      "comment" : "VoiceOver value of an unpainted area: its state, then where it sits on the painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "not painted, %@"
+          }
+        }
+      }
+    },
+    "paint.speech.colorFinished" : {
+      "comment" : "VoiceOver announcement when every area of a color is painted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color %@, finished"
+          }
+        }
+      }
+    },
+    "paint.speech.colorLabel" : {
+      "comment" : "VoiceOver label of a palette color: its number, then its name (e.g. “12, dark green”)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld, %2$@"
+          }
+        }
+      }
+    },
+    "paint.speech.finished" : {
+      "comment" : "VoiceOver value of a palette color, or of the painting, whose areas are all painted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "finished"
+          }
+        }
+      }
+    },
+    "paint.speech.nextColor" : {
+      "comment" : "VoiceOver announcement when the brush moves on to the next color",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next color: %@"
+          }
+        }
+      }
+    },
+    "paint.speech.noAreasInView" : {
+      "comment" : "VoiceOver value of the canvas when no area of the selected color is visible",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No areas of %@ in view"
+          }
+        }
+      }
+    },
+    "paint.speech.pageScrolled" : {
+      "comment" : "VoiceOver announcement after scrolling the canvas by a page: the part of the painting now in the middle of the view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting, %@"
+          }
+        }
+      }
+    },
+    "paint.speech.painted" : {
+      "comment" : "VoiceOver announcement after painting an area: how many areas of the color remain",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Painted, %lld left"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Painted, %lld left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "paint.speech.paintingFinished" : {
+      "comment" : "VoiceOver announcement when the whole painting is done",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting finished"
+          }
+        }
+      }
+    },
+    "paint.speech.percentPainted" : {
+      "comment" : "VoiceOver value of a palette color or of the painting: how much of it is painted, as a whole percentage",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld percent painted"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld percent painted"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "paint.speech.swatchHint" : {
+      "comment" : "VoiceOver hint of a palette color",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selects this color"
+          }
+        }
+      }
+    },
+    "paint.speech.swatchHint.selected" : {
+      "comment" : "VoiceOver hint of the selected palette color (activating it shows a hint)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows where to paint next"
+          }
+        }
+      }
+    },
+    "paint.speech.titleProgress" : {
+      "comment" : "VoiceOver label of the painting screen's progress badge: the painting's title, then how much of it is painted (the percentPainted text)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "Painting" : {
+      "comment" : "Name of the painted layer in the create flow's picker and comparison caption; also the fallback title of a painting without one",
+      "extractionState" : "manual"
+    },
+    "pdf.key.detail" : {
+      "comment" : "Second line of a color key entry; the arguments are the color's hex code and its number of areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "pdf.paper.letter" : {
+      "comment" : "Name of the US Letter paper size, in Settings and the print options",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "US Letter"
+          }
+        }
+      }
+    },
+    "pdf.sheet.detail" : {
+      "comment" : "Header of one sheet of a template printed on several; the arguments are the sheet's number, the number of sheets, and its row and column in the grid of sheets",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sheet %1$lld of %2$lld · row %3$lld, column %4$lld"
+          }
+        }
+      }
+    },
+    "pdf.sheets" : {
+      "comment" : "How many sheets the template is printed on; the argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld sheet"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld sheets"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pdf.stats" : {
+      "comment" : "Header of the printable template's pages; the arguments are the number of colors and the number of areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "pdf.stats.withSheets" : {
+      "comment" : "Header of the overview page of a template printed on several sheets; the arguments are the colors and areas text and the number of sheets",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Photo" : {
+      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control",
+      "extractionState" : "manual"
+    },
+    "Photo Source" : {
+      "comment" : "Accessibility label of the segmented control that switches between the photo library and the samples",
+      "extractionState" : "manual"
+    },
+    "Photos" : {
+      "comment" : "Segment of the create flow that shows the photo library",
+      "extractionState" : "manual"
+    },
+    "Preparing…" : {
+      "comment" : "Caption on the gallery card of a painting that is still being prepared",
+      "extractionState" : "manual"
+    },
+    "Previous Color" : {
+      "comment" : "Paint menu item (iPad menu bar): select the previous color",
+      "extractionState" : "manual"
+    },
+    "Print Template…" : {
+      "comment" : "Context menu item that shares a printable PDF of the template",
+      "extractionState" : "manual"
+    },
+    "Printed Templates" : {
+      "comment" : "Settings picker label for the paper size used for printed templates",
+      "extractionState" : "manual"
+    },
+    "Published techniques the template engine builds on." : {
+      "comment" : "Footer under the list of published methods in Acknowledgements",
+      "extractionState" : "manual"
+    },
+    "Ready to paint" : {
+      "comment" : "Caption on the gallery card of a painting that has no paint yet",
+      "extractionState" : "manual"
+    },
+    "Ready to Share" : {
+      "comment" : "Status shown in the time-lapse sheet once the movie is ready to share",
+      "extractionState" : "manual"
+    },
+    "Reference" : {
+      "comment" : "Label of the small picture of the finished painting on the color key page of a printed template",
+      "extractionState" : "manual"
+    },
+    "Refining…" : {
+      "comment" : "Status shown while the template is regenerated at full quality after a settings change",
+      "extractionState" : "manual"
+    },
+    "Regenerate" : {
+      "comment" : "Button on the recovery screen that rebuilds a damaged painting from its original photo",
+      "extractionState" : "manual"
+    },
+    "Regenerating" : {
+      "comment" : "VoiceOver label of the regeneration progress bar on the recovery screen",
+      "extractionState" : "manual"
+    },
+    "Regenerating…" : {
+      "comment" : "Caption under the progress bar while a damaged painting is rebuilt",
+      "extractionState" : "manual"
+    },
+    "Rename" : {
+      "comment" : "Confirmation button of the rename alert, and the context menu item that opens it",
+      "extractionState" : "manual"
+    },
+    "Rename Painting" : {
+      "comment" : "Title of the alert for renaming a painting",
+      "extractionState" : "manual"
+    },
+    "Rendering frames" : {
+      "comment" : "Label of the progress bar while the time-lapse movie is rendered",
+      "extractionState" : "manual"
+    },
+    "Replay" : {
+      "comment" : "Accessibility label of the replay button in the completion bar",
+      "extractionState" : "manual"
+    },
+    "Replay Painting" : {
+      "comment" : "Menu item on the painting screen that replays the finished painting stroke by stroke",
+      "extractionState" : "manual"
+    },
+    "Restart" : {
+      "comment" : "Menu item and button that clear all paint of a painting",
+      "extractionState" : "manual"
+    },
+    "Restart this painting?" : {
+      "comment" : "Title of the confirmation dialog for restarting the open painting",
+      "extractionState" : "manual"
+    },
+    "Retry" : {
+      "comment" : "Button in a toast offering to try saving a painting again",
+      "extractionState" : "manual"
+    },
+    "sample.barn" : {
+      "comment" : "Name of a bundled sample photo, shown as its default painting title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Red Barn"
+          }
+        }
+      }
+    },
+    "sample.espresso" : {
+      "comment" : "Name of a bundled sample photo, shown as its default painting title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espresso"
+          }
+        }
+      }
+    },
+    "sample.hibiscus" : {
+      "comment" : "Name of a bundled sample photo, shown as its default painting title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hibiscus"
+          }
+        }
+      }
+    },
+    "sample.lighthouse" : {
+      "comment" : "Name of a bundled sample photo, shown as its default painting title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lighthouse"
+          }
+        }
+      }
+    },
+    "sample.parrots" : {
+      "comment" : "Name of a bundled sample photo, shown as its default painting title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parrots"
+          }
+        }
+      }
+    },
+    "sample.regatta" : {
+      "comment" : "Name of a bundled sample photo, shown as its default painting title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regatta"
+          }
+        }
+      }
+    },
+    "Samples" : {
+      "comment" : "Segment and section title for the bundled sample photos in the create flow",
+      "extractionState" : "manual"
+    },
+    "Save to Photos" : {
+      "comment" : "Context menu item that saves the painting as a picture in the photo library",
+      "extractionState" : "manual"
+    },
+    "Saved to Photos" : {
+      "comment" : "Toast confirming a picture was saved to the photo library",
+      "extractionState" : "manual"
+    },
+    "Settings" : {
+      "comment" : "Gallery toolbar button, and the title of the Settings sheet",
+      "extractionState" : "manual"
+    },
+    "settings.section.painting" : {
+      "comment" : "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting"
+          }
+        }
+      }
+    },
+    "Share" : {
+      "comment" : "Accessibility label of the share menu in the completion bar",
+      "extractionState" : "manual"
+    },
+    "Share Painting" : {
+      "comment" : "Context menu item that shares the finished painting as a picture",
+      "extractionState" : "manual"
+    },
+    "Share Picture" : {
+      "comment" : "Item of the completion bar's share menu: share the finished painting as a picture",
+      "extractionState" : "manual"
+    },
+    "Share Progress" : {
+      "comment" : "Context menu item that shares the painting as it stands, with unpainted areas sketched in",
+      "extractionState" : "manual"
+    },
+    "Share Time-lapse" : {
+      "comment" : "Item that makes a time-lapse movie of the painting and shares it",
+      "extractionState" : "manual"
+    },
+    "Short tips explain painting gestures as you go." : {
+      "comment" : "Footer of the Settings section for showing tips again",
+      "extractionState" : "manual"
+    },
+    "Show" : {
+      "comment" : "Accessibility label of the segmented control that switches the create flow's comparison between the painting and its numbers",
+      "extractionState" : "manual"
+    },
+    "Show Hint" : {
+      "comment" : "Paint menu item (iPad menu bar): show an area to paint next",
+      "extractionState" : "manual"
+    },
+    "Show Numbers" : {
+      "comment" : "Menu item and Paint menu item: show or hide the numbers on the canvas",
+      "extractionState" : "manual"
+    },
+    "Show Photo" : {
+      "comment" : "Paint menu item (iPad menu bar): show the original photo over the painting",
+      "extractionState" : "manual"
+    },
+    "Show Tips Again" : {
+      "comment" : "Settings button that makes the painting tips appear again",
+      "extractionState" : "manual"
+    },
+    "Showing" : {
+      "comment" : "VoiceOver value of the Photo control while the photo is shown over the painting",
+      "extractionState" : "manual"
+    },
+    "Showing the photo" : {
+      "comment" : "VoiceOver value of the canvas while the original photo is shown over it",
+      "extractionState" : "manual"
+    },
+    "Smoothness" : {
+      "comment" : "Create flow: label of the slider for how smooth the template's outlines are",
+      "extractionState" : "manual"
+    },
+    "Sounds" : {
+      "comment" : "Settings toggle for sound feedback while painting",
+      "extractionState" : "manual"
+    },
+    "Start Painting" : {
+      "comment" : "Button of the create flow that saves the template and opens it for painting",
+      "extractionState" : "manual"
+    },
+    "Start this painting over?" : {
+      "comment" : "Title of the confirmation dialog for restarting a painting from the gallery",
+      "extractionState" : "manual"
+    },
+    "Starting Colors" : {
+      "comment" : "Settings stepper: the number of colors new paintings start with",
+      "extractionState" : "manual"
+    },
+    "Take Photo" : {
+      "comment" : "Toolbar button of the create flow that opens the camera",
+      "extractionState" : "manual"
+    },
+    "Tap an area marked with this color’s number to fill it." : {
+      "comment" : "Message of the first tip on the painting screen",
+      "extractionState" : "manual"
+    },
+    "Tap the selected color again to be shown an area to paint." : {
+      "comment" : "Message of a tip about the hint feature",
+      "extractionState" : "manual"
+    },
+    "Tap to Paint" : {
+      "comment" : "Title of the first tip on the painting screen",
+      "extractionState" : "manual"
+    },
+    "template.areas" : {
+      "comment" : "How many areas (regions to paint) a template has; the argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld area"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld areas"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "template.colors" : {
+      "comment" : "How many colors a template has; the argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld color"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld colors"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "The number of colors new paintings start with, and the paper size for printed templates." : {
+      "comment" : "Footer of the Settings section with the defaults for new paintings",
+      "extractionState" : "manual"
+    },
+    "This device can’t draw the painting right now. Your progress is saved." : {
+      "comment" : "Message of the screen shown when the canvas can't be drawn",
+      "extractionState" : "manual"
+    },
+    "time.approximately" : {
+      "comment" : "An estimated duration, e.g. ~40 min; the argument is the duration text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "~%@"
+          }
+        }
+      }
+    },
+    "time.hours" : {
+      "comment" : "A duration in whole hours, e.g. 2 h; the argument is the number of hours",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld h"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld h"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "time.hours.fractional" : {
+      "comment" : "A duration in hours with a decimal, e.g. 1.5 h; the argument is the formatted number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ h"
+          }
+        }
+      }
+    },
+    "time.hoursAndMinutes" : {
+      "comment" : "A duration in hours and minutes, e.g. 2 h 14 min; the arguments are the hours text and the minutes text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "time.lessThanMinute" : {
+      "comment" : "Painting time shorter than one minute",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "< 1 min"
+          }
+        }
+      }
+    },
+    "time.minutes" : {
+      "comment" : "A duration in minutes, e.g. 35 min; the argument is the number of minutes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld min"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld min"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Tips Will Show Again" : {
+      "comment" : "Settings button label after Show Tips Again was tapped",
+      "extractionState" : "manual"
+    },
+    "Title" : {
+      "comment" : "Placeholder of the text field for a painting's title (create flow, rename alert)",
+      "extractionState" : "manual"
+    },
+    "Touch and hold to compare with the photo. Tap to keep it shown." : {
+      "comment" : "VoiceOver hint of the Photo control on the painting screen",
+      "extractionState" : "manual"
+    },
+    "Touch and hold, then drag across areas with this number to paint them in one stroke." : {
+      "comment" : "Message of a tip about painting several areas with one drag",
+      "extractionState" : "manual"
+    },
+    "Try Again" : {
+      "comment" : "Button in the time-lapse sheet after rendering failed",
+      "extractionState" : "manual"
+    },
+    "Turn any photo into a numbered canvas, then bring it to life one color at a time." : {
+      "comment" : "Subheadline of the empty gallery",
+      "extractionState" : "manual"
+    },
+    "Undo" : {
+      "comment" : "Undo button: the painting screen's undo button (its accessibility label), and the action of the gallery's toast after a painting is deleted",
+      "extractionState" : "manual"
+    },
+    "Version" : {
+      "comment" : "Settings row showing the app's version and build",
+      "extractionState" : "manual"
+    },
+    "When you finish a color, the next one is picked up automatically." : {
+      "comment" : "Footer under the Advance to Next Color setting",
+      "extractionState" : "manual"
+    },
+    "Your Photos" : {
+      "comment" : "Section title above the photo library picker on wide screens in the create flow",
+      "extractionState" : "manual"
+    },
+    "Your photos and paintings stay on this device unless you share them. Paint by Numbers collects no data." : {
+      "comment" : "Footer of the About section in Settings: the privacy statement",
+      "extractionState" : "manual"
+    },
+    "Zoom In" : {
+      "comment" : "Paint menu item (iPad menu bar): zoom in on the canvas",
+      "extractionState" : "manual"
+    },
+    "Zoom In on Small Areas" : {
+      "comment" : "Title of a tip about zooming in",
+      "extractionState" : "manual"
+    },
+    "Zoom Out" : {
+      "comment" : "Paint menu item (iPad menu bar): zoom out of the canvas",
+      "extractionState" : "manual"
+    },
+    "Zoom to Fit" : {
+      "comment" : "Paint menu item (iPad menu bar): show the whole painting",
+      "extractionState" : "manual"
+    }
+  },
+  "version" : "1.0"
+}

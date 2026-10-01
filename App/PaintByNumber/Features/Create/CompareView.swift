@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// Before/after: the photo on the leading side of a draggable divider, the template layer
@@ -7,12 +8,13 @@ struct CompareView: View {
     let after: CGImage?
     /// Identity of `after`; a change crossfades.
     let afterID: String
-    let afterLabel: LocalizedStringKey
+    /// Names the template layer on the trailing side (already localized).
+    let afterLabel: String
     let aspectRatio: CGFloat
     /// Fraction of the width showing the photo; purely presentational, so owned here.
     @State private var split: CGFloat
 
-    init(photo: CGImage?, after: CGImage?, afterID: String, afterLabel: LocalizedStringKey, aspectRatio: CGFloat, initialSplit: CGFloat = 0.5) {
+    init(photo: CGImage?, after: CGImage?, afterID: String, afterLabel: String, aspectRatio: CGFloat, initialSplit: CGFloat = 0.5) {
         self.photo = photo
         self.after = after
         self.afterID = afterID
@@ -67,7 +69,9 @@ struct CompareView: View {
         .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 10)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Comparison of photo and template")
-        .accessibilityValue("\(Int((split * 100).rounded())) percent photo")
+        .accessibilityValue(String(
+            localized: "create.compare.value", defaultValue: "\(Int((split * 100).rounded())) percent photo",
+            comment: "VoiceOver value of the before/after comparison: the whole percentage of the width showing the photo"))
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment: split = min(1, split + 0.1)
@@ -104,7 +108,7 @@ struct CompareView: View {
 
     private func labels(split: CGFloat) -> some View {
         HStack {
-            caption("Photo").opacity(split > 0.16 ? 1 : 0)
+            caption(String(localized: "Photo")).opacity(split > 0.16 ? 1 : 0)
             Spacer()
             caption(afterLabel).opacity(split < 0.84 ? 1 : 0)
         }
@@ -117,9 +121,11 @@ struct CompareView: View {
     // Not named `tag`: that would resolve `tag("Photo")` to `View.tag(_:)` on `self` and nest
     // the whole comparison inside its own overlay, recursing until the stack overflows.
     /// White on a dark scrim: legible over any photo, light or dark.
-    private func caption(_ text: LocalizedStringKey) -> some View {
+    private func caption(_ text: String) -> some View {
         Text(text)
             .font(.rounded(.caption, weight: .semibold))
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)

@@ -1,3 +1,4 @@
+import Foundation
 import PaintCore
 import SwiftUI
 import TipKit
@@ -175,7 +176,7 @@ struct PaletteBar: View {
         .popoverTip(selected ? tip : nil, arrowEdge: axis == .horizontal ? .bottom : .trailing)
         .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
-            Text(verbatim: "\(index + 1) · \(ColorNameText.title(name))")
+            Text(ColorNameText.numbered(number: index + 1, name: name))
         }
     }
 }
@@ -194,10 +195,11 @@ struct CurrentColorLabel: View {
                     .fill(PaletteBar.paint(session.template, color))
                     .frame(width: 10, height: 10)
                     .overlay(Circle().strokeBorder(Color.primary.opacity(0.25), lineWidth: 0.5))
-                Text(verbatim: "\(color + 1) · \(ColorNameText.title(name))")
+                Text(ColorNameText.numbered(number: color + 1, name: name))
                     .font(font)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    // Translated names can run long; the caption's height is fixed.
+                    .minimumScaleFactor(0.5)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(String(localized: "paint.currentColor", defaultValue: "Current color",

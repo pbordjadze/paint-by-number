@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import os
 import PaintCore
 import SwiftUI
@@ -67,7 +68,7 @@ struct ArtworkPaintingView: View {
                         .allowsHitTesting(false)
                 }
                 if saveFailed {
-                    Toast(text: "Couldn’t save progress", systemImage: "exclamationmark.triangle", edge: .top) {
+                    Toast(text: String(localized: "Couldn’t save progress"), systemImage: "exclamationmark.triangle", edge: .top) {
                         Button("Retry") { library.retrySaving(artworkID) }
                             .fontWeight(.semibold)
                     }
@@ -271,9 +272,18 @@ final class PaintingAutosaver {
 private extension OpenNotice {
     var text: String {
         switch self {
-        case .progressReset: "This painting’s saved progress couldn’t be read, so it starts fresh."
-        case .regenerated(keptProgress: true): "Painting regenerated. Your painted areas were kept."
-        case .regenerated(keptProgress: false): "Painting regenerated from the original photo."
+        case .progressReset:
+            String(localized: "gallery.notice.progressReset",
+                   defaultValue: "This painting’s saved progress couldn’t be read, so it starts fresh.",
+                   comment: "Toast when a painting's saved progress was unreadable and has been reset")
+        case .regenerated(keptProgress: true):
+            String(localized: "gallery.notice.regeneratedKept",
+                   defaultValue: "Painting regenerated. Your painted areas were kept.",
+                   comment: "Toast after a damaged painting was regenerated and its painted areas carried over")
+        case .regenerated(keptProgress: false):
+            String(localized: "gallery.notice.regenerated",
+                   defaultValue: "Painting regenerated from the original photo.",
+                   comment: "Toast after a damaged painting was regenerated from its photo without its painted areas")
         }
     }
 

@@ -1,4 +1,5 @@
 import CoreTransferable
+import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -94,10 +95,21 @@ struct AppShellView: View {
         let active = library.inProgress.count + library.placeholders.count
         let finished = library.finished.count
         switch (active, finished) {
-        case (0, 0): return ""
-        case (_, 0): return active == 1 ? "1 painting in progress" : "\(active) paintings in progress"
-        case (0, _): return finished == 1 ? "1 finished painting" : "\(finished) finished paintings"
-        default: return "\(active) in progress · \(finished) finished"
+        case (0, 0):
+            return ""
+        case (_, 0):
+            return String(localized: "gallery.subtitle.inProgress", defaultValue: "\(active) paintings in progress",
+                          comment: "Gallery subtitle when every painting is still in progress; the argument is how many")
+        case (0, _):
+            return String(localized: "gallery.subtitle.finished", defaultValue: "\(finished) finished paintings",
+                          comment: "Gallery subtitle when every painting is finished; the argument is how many")
+        default:
+            let activeText = String(localized: "gallery.subtitle.count.inProgress", defaultValue: "\(active) in progress",
+                                    comment: "First part of the gallery subtitle: how many paintings are in progress")
+            let finishedText = String(localized: "gallery.subtitle.count.finished", defaultValue: "\(finished) finished",
+                                      comment: "Second part of the gallery subtitle: how many paintings are finished")
+            return String(localized: "gallery.subtitle.both", defaultValue: "\(activeText) · \(finishedText)",
+                          comment: "Gallery subtitle with both counts; the arguments are the in-progress part and the finished part")
         }
     }
 

@@ -28,7 +28,9 @@ nonisolated enum PDFExporter {
 
         var name: String {
             switch self {
-            case .letter: "US Letter"
+            case .letter: String(localized: "pdf.paper.letter", defaultValue: "US Letter",
+                                 comment: "Name of the US Letter paper size, in Settings and the print options")
+            // The standard's own name in every language.
             case .a4: "A4"
             }
         }
@@ -115,12 +117,18 @@ nonisolated enum PDFExporter {
               let ctx = CGContext(consumer: consumer, mediaBox: &box, info as CFDictionary)
         else { return Data() }
 
-        let stats = "\(t.palette.count) colors · \(t.regions.count.formatted()) areas"
+        let colorsText = TemplateCounts.colors(t.palette.count), areasText = TemplateCounts.areas(t.regions.count)
+        let stats = String(localized: "pdf.stats", defaultValue: "\(colorsText) · \(areasText)",
+                           comment: "Header of the printable template's pages; the arguments are the number of colors and the number of areas")
         let rasterResolution = CGSize(width: t.width * 2, height: t.height * 2)
         let sheets = Self.sheets(for: t, paper: paper)
         if sheets.isTiled {
             page(ctx, box) { content in
-                let body = header(ctx, in: content, title: title, detail: "\(stats) · \(sheets.count) sheets")
+                let sheetsText = String(localized: "pdf.sheets", defaultValue: "\(sheets.count) sheets",
+                                        comment: "How many sheets the template is printed on; the argument is the count")
+                let overviewDetail = String(localized: "pdf.stats.withSheets", defaultValue: "\(stats) · \(sheetsText)",
+                                            comment: "Header of the overview page of a template printed on several sheets; the arguments are the colors and areas text and the number of sheets")
+                let body = header(ctx, in: content, title: title, detail: overviewDetail)
                 let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: body)
                 // A map for putting the sheets together; the numbers are on the sheets.
                 var overview = TemplateRasterizer.Style.printable
@@ -136,7 +144,10 @@ nonisolated enum PDFExporter {
             for row in 0..<sheets.rows {
                 for column in 0..<sheets.columns {
                     let window = sheets.window(column: column, row: row)
-                    let detail = "Sheet \(row * sheets.columns + column + 1) of \(sheets.count) · row \(row + 1), column \(column + 1)"
+                    let number = row * sheets.columns + column + 1, total = sheets.count
+                    let detail = String(localized: "pdf.sheet.detail",
+                                        defaultValue: "Sheet \(number) of \(total) · row \(row + 1), column \(column + 1)",
+                                        comment: "Header of one sheet of a template printed on several; the arguments are the sheet's number, the number of sheets, and its row and column in the grid of sheets")
                     page(ctx, box) { content in
                         let body = header(ctx, in: content, title: title, detail: detail)
                         let visible = CGRect(origin: body.origin, size: window.size)
@@ -164,11 +175,11 @@ nonisolated enum PDFExporter {
             }
         }
         page(ctx, box) { content in
-            let body = header(ctx, in: content, title: "Color Key", detail: title)
+            let body = header(ctx, in: content, title: String(localized: "Color Key"), detail: title)
             let used = legend(ctx, t, in: body)
             let remaining = CGRect(x: body.minX, y: used.maxY + 24, width: body.width, height: body.maxY - used.maxY - 24)
             if remaining.height > 110 {
-                text(ctx, "Reference", font: font(.emphasizedSystem, 10), color: gray(0.35), at: CGPoint(x: remaining.minX, y: remaining.minY + 10))
+                text(ctx, String(localized: "Reference"), font: font(.emphasizedSystem, 10), color: gray(0.35), at: CGPoint(x: remaining.minX, y: remaining.minY + 10))
                 let area = CGRect(x: remaining.minX, y: remaining.minY + 20, width: remaining.width, height: remaining.height - 20)
                 let rect = fit(aspect: CGFloat(t.width) / CGFloat(t.height), in: area)
                 TemplateRasterizer.draw(
@@ -208,7 +219,7 @@ nonisolated enum PDFExporter {
         ctx.scaleBy(x: 1, y: -1)
         let content = box.insetBy(dx: margin, dy: margin)
         body(content)
-        text(ctx, "Paint by Numbers", font: font(.system, 7.5), color: gray(0.6), at: CGPoint(x: content.minX, y: content.maxY + 16))
+        text(ctx, String(localized: "Paint by Numbers"), font: font(.system, 7.5), color: gray(0.6), at: CGPoint(x: content.minX, y: content.maxY + 16))
         ctx.restoreGState()
         ctx.endPDFPage()
     }
@@ -308,7 +319,10 @@ nonisolated enum PDFExporter {
             let textWidth = layout.columnWidth - keyNameInset * s
             text(ctx, names[i], font: font(.emphasizedSystem, 8 * s), color: gray(0.12),
                  at: CGPoint(x: textX, y: y + 10 * s), maxWidth: textWidth)
-            text(ctx, "\(hex(color.rgb)) · \(counts[i]) areas", font: font(.system, 6 * s), color: gray(0.5),
+            let hexText = hex(color.rgb), areasText = TemplateCounts.areas(counts[i])
+            let detail = String(localized: "pdf.key.detail", defaultValue: "\(hexText) · \(areasText)",
+                                comment: "Second line of a color key entry; the arguments are the color's hex code and its number of areas")
+            text(ctx, detail, font: font(.system, 6 * s), color: gray(0.5),
                  at: CGPoint(x: textX, y: y + 19 * s), maxWidth: textWidth)
         }
         return CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: layout.height)

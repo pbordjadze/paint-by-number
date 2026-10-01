@@ -5,7 +5,9 @@
 # deterministically and writes tmp/demo-ready in its container once the content is on
 # screen (`DemoMode.markReady`); the screenshot follows after a short settle. Without a
 # marker it is taken after the scenario's timeout: "<scenario>@<seconds>" (default 8 s).
-# Scenarios whose name contains "dark" are captured in dark appearance.
+# Scenarios whose name contains "dark" are captured in dark appearance. Scenarios whose name
+# contains "long-text" are launched with `-NSDoubleLocalizedStrings YES`, which doubles the length
+# of every localized string (pseudo-localization), to show what long translations would break.
 set -euo pipefail
 APP="$1"; OUT="$2"; KIND="$3"; UDID="$4"; shift 4
 SCENARIOS=("$@")
@@ -36,7 +38,9 @@ for entry in "${SCENARIOS[@]}"; do
   fi
   xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
   rm -f "$MARKER"
-  step "launch $scenario: $(xcrun simctl launch "$UDID" "$BUNDLE_ID" -demo "$scenario" 2>&1 | tr '\n' ' ')"
+  launch_args=(-demo "$scenario")
+  [[ "$scenario" == *long-text* ]] && launch_args+=(-NSDoubleLocalizedStrings YES)
+  step "launch $scenario: $(xcrun simctl launch "$UDID" "$BUNDLE_ID" "${launch_args[@]}" 2>&1 | tr '\n' ' ')"
   started=$SECONDS
   while [[ ! -f "$MARKER" && $((SECONDS - started)) -lt $delay ]]; do sleep 0.25; done
   if [[ -f "$MARKER" ]]; then

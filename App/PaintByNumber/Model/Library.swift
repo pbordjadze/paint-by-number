@@ -498,10 +498,12 @@ final class Library {
 
     private func copyTitle(for title: String) -> String {
         let titles = Set(artworks.map(\.title))
-        var candidate = "\(title) Copy"
+        var candidate = String(localized: "library.copyTitle", defaultValue: "\(title) Copy",
+                               comment: "Title of a duplicated painting; the argument is the original's title")
         var n = 2
         while titles.contains(candidate) {
-            candidate = "\(title) Copy \(n)"
+            candidate = String(localized: "library.copyTitle.numbered", defaultValue: "\(title) Copy \(n)",
+                               comment: "Title of a second or later duplicate of a painting; the arguments are the original's title and the copy number (2, 3, …)")
             n += 1
         }
         return candidate

@@ -1,3 +1,4 @@
+import Foundation
 import PaintCore
 import SwiftUI
 
@@ -134,7 +135,7 @@ struct TemplatePreviewView: View {
             if let source = model.source {
                 CompareView(
                     photo: source.preview, after: afterImage, afterID: afterID,
-                    afterLabel: layer == .painting ? "Painting" : "Numbers",
+                    afterLabel: layer == .painting ? String(localized: "Painting") : String(localized: "Numbers"),
                     aspectRatio: photoAspect)
                     .overlay(alignment: .bottom) {
                         status.padding(14)
@@ -164,13 +165,21 @@ struct TemplatePreviewView: View {
             case .loading, .analyzing:
                 StatusCapsule {
                     ProgressView().controlSize(.small)
-                    Text(model.phase == .loading ? "Opening photo…" : "Finding the subject…")
+                    if model.phase == .loading {
+                        Text("Opening photo…")
+                    } else {
+                        Text("Finding the subject…")
+                    }
                 }
             case .generating where !model.isAdjusting:
                 StatusCapsule {
                     ProgressView(value: model.progress)
                         .frame(width: 64)
-                    Text(model.preview == nil ? "Creating template…" : "Refining…")
+                    if model.preview == nil {
+                        Text("Creating template…")
+                    } else {
+                        Text("Refining…")
+                    }
                 }
             case .failed(let message):
                 StatusCapsule {
@@ -192,14 +201,14 @@ struct TemplatePreviewView: View {
             SettingSlider(
                 title: "Colors", value: Self.colorPosition(model.colorCount),
                 onChange: { update(\.colorCount, Self.colorCount(at: $0)) }, range: 0...1,
-                valueText: "\(Int(model.colorCount.rounded()))", onEditing: model.setAdjusting)
+                valueText: Int(model.colorCount.rounded()).formatted(), onEditing: model.setAdjusting)
             SettingSlider(
                 title: "Detail", value: model.detail, onChange: { update(\.detail, $0) }, range: 0...1,
-                valueText: Self.word(model.detail, ["Simple", "Moderate", "Detailed", "Intricate"]),
+                valueText: Self.detailWord(model.detail),
                 onEditing: model.setAdjusting)
             SettingSlider(
                 title: "Smoothness", value: model.smoothness, onChange: { update(\.smoothness, $0) }, range: 0...1,
-                valueText: Self.word(model.smoothness, ["Crisp", "Clean", "Smooth", "Flowing"]),
+                valueText: Self.smoothnessWord(model.smoothness),
                 onEditing: model.setAdjusting)
 
             Text(model.stats?.summary ?? " ")
@@ -264,8 +273,35 @@ struct TemplatePreviewView: View {
         }
     }
 
-    private static func word(_ value: Double, _ words: [String]) -> String {
-        words[min(words.count - 1, max(0, Int(value * Double(words.count))))]
+    /// Which of `count` equal steps of 0…1 `value` falls in.
+    private static func step(_ value: Double, of count: Int) -> Int {
+        min(count - 1, max(0, Int(value * Double(count))))
+    }
+
+    private static func detailWord(_ value: Double) -> String {
+        switch step(value, of: 4) {
+        case 0: String(localized: "create.detail.simple", defaultValue: "Simple",
+                       comment: "Detail slider value: the fewest, largest areas")
+        case 1: String(localized: "create.detail.moderate", defaultValue: "Moderate",
+                       comment: "Detail slider value: second step")
+        case 2: String(localized: "create.detail.detailed", defaultValue: "Detailed",
+                       comment: "Detail slider value: third step")
+        default: String(localized: "create.detail.intricate", defaultValue: "Intricate",
+                        comment: "Detail slider value: the most, smallest areas")
+        }
+    }
+
+    private static func smoothnessWord(_ value: Double) -> String {
+        switch step(value, of: 4) {
+        case 0: String(localized: "create.smoothness.crisp", defaultValue: "Crisp",
+                       comment: "Smoothness slider value: sharp, angular outlines")
+        case 1: String(localized: "create.smoothness.clean", defaultValue: "Clean",
+                       comment: "Smoothness slider value: second step")
+        case 2: String(localized: "create.smoothness.smooth", defaultValue: "Smooth",
+                       comment: "Smoothness slider value: third step")
+        default: String(localized: "create.smoothness.flowing", defaultValue: "Flowing",
+                        comment: "Smoothness slider value: soft, flowing outlines")
+        }
     }
 }
 

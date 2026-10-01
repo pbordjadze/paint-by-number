@@ -20,7 +20,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `App/` Xcode project (`PaintByNumber.xcodeproj`, synchronized folders — adding files needs no
   project edits) with the SwiftUI app, Metal renderer and UI tests.
 - `tools/` evaluation tooling (`swift.sh`, `eval.py`, `compare.py`, `regression.py` + its
-  committed `baseline/regression.json`, `svg2png.mjs`).
+  committed `baseline/regression.json`, `svg2png.mjs`) and `strings_check.py` (string catalog
+  drift check, see Localization).
 - `.github/workflows/` CI: Linux PaintCore tests + quality regression; macOS builds the app, runs
   tests, captures simulator screenshots.
 - `ACKNOWLEDGEMENTS.md` credits and license texts for the ported code and published methods (also shown in the app).
@@ -137,6 +138,38 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   scrolls). It fills the page; compact windows switch Photos/Samples with a segmented control,
   wide windows put a scrolling samples column beside it. "Browse All…" presents the full picker.
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`).
+- Localization: every user-facing string of the app target lives in
+  `Resources/Localizable.xcstrings` (source language English; no translations yet, so the catalog
+  is the translator hand-off) and the Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by
+  the `INFOPLIST_KEY_*` names). `PaintCore` and `pbn` stay English. Three code forms, and nothing
+  else: a SwiftUI literal with no interpolation (`Text("Done")`, `Button`, `Label`, `.navigationTitle`,
+  … ; the literal is the key), `String(localized: "key", defaultValue: "…\(x)…", comment: "…")` for
+  anything with an interpolation, a count or a non-SwiftUI destination (the dotted explicit keys; the
+  comment says where it shows and what the arguments are), and `String(localized: "literal")` for a
+  plain string. `Text(someString)` is verbatim in SwiftUI, so build such strings with the second or
+  third form first. Counts are catalog plurals (`one`/`other` variations with `%lld`; never an
+  `"s"` suffix); several arguments use numbered placeholders (`%1$@ %2$lld`); durations, percentages
+  and numbers go through `.formatted(...)` or `PaintingTime`'s catalog units, never string
+  concatenation; errors are `LocalizedError`. Neither a conditional nor `+` of literals goes inside a
+  SwiftUI literal position (write one call per literal). Helper views that take a `LocalizedStringKey`
+  are listed in `WRAPPERS` of the checker. Adding a string means adding its catalog entry (`"comment"`
+  and `"extractionState": "manual"` included; an explicit key also needs `localizations.en`, with
+  the plural forms for a count). `tools/strings_check.py` (Python 3, stdlib only; the Linux CI job
+  runs it with `--self-test`) reads the sources with a small Swift lexer and fails on a literal
+  missing from the catalog, an English value that differs from the code's `defaultValue`, a catalog
+  key no source uses, a malformed entry or plural, `InfoPlist.xcstrings` drifting from the build
+  settings, and prose-like literals that bypass localization (`ALLOWED_LITERALS` / `VERBATIM_FILES`
+  hold the justified exceptions: license texts, credit names). Xcode itself extracts nothing here:
+  `SWIFT_EMIT_LOC_STRINGS` is on for the app target, but entries are `manual`, so the catalog is
+  edited by hand and checked by the script; generated string symbols are off for the app
+  (`STRING_CATALOG_GENERATE_SYMBOLS = NO`: keys like "Finished" and "Finished!" would name the same
+  symbol, and the code reads keys as literals). `LocalizationTests` checks what ships (bundle lookup,
+  plurals, Info.plist). Layout under longer text: demo scenarios named `*-long-text`
+  (`paint-long-text`, `paint-complete-long-text`, `gallery-long-text`, `settings-long-text`) are
+  launched by `ci/screenshots.sh` with `-NSDoubleLocalizedStrings YES`, which doubles every
+  localized string; read their screenshots after UI text changes (bars scale or wrap their text,
+  no text sits in a fixed-width frame). `LongTextTests` (UI tests) keeps the bars' controls, the
+  color name and the toast on screen under the same doubling.
 - Accessibility: `CanvasView` is a VoiceOver container (`CanvasAccessibility`): up to 40
   `canvas-area-<region>` buttons for the unpainted areas of the selected color in view (activating
   one paints it), a `canvas-placeholder` when none are, custom actions Paint next area / Zoom to

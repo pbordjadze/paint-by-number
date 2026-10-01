@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 import PaintCore
 import SwiftUI
@@ -238,7 +239,9 @@ struct PaintView: View {
     }
 
     /// Progress, the title when it fits whole, and on regular widths the selected color's
-    /// name (compact widths show it above the palette instead).
+    /// name (compact widths show it above the palette instead). The name outranks the
+    /// percentage: when a long (translated) name doesn't fit beside the percentage, the last
+    /// variant keeps the ring and lets the name shrink to the room left.
     private var progressBadge: some View {
         let fraction = session.fractionComplete
         let showsColor = sizeClass == .regular && session.selectedColor != nil
@@ -246,17 +249,19 @@ struct PaintView: View {
             if showsColor {
                 if !title.isEmpty { badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: true) }
                 badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: true)
-                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: false, showsColor: true)
-            } else if !title.isEmpty {
-                badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: false)
+                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: false, showsColor: true, shrinksColor: true)
+            } else {
+                if !title.isEmpty { badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: false) }
+                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: false)
             }
-            badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: false)
         }
         .frame(height: Self.barHeight)
         .glassEffect(.regular, in: .capsule)
     }
 
-    private func badgeVariant(fraction: Double, showsTitle: Bool, showsPercent: Bool, showsColor: Bool) -> some View {
+    private func badgeVariant(
+        fraction: Double, showsTitle: Bool, showsPercent: Bool, showsColor: Bool, shrinksColor: Bool = false
+    ) -> some View {
         HStack(spacing: 10) {
             progressGroup(fraction: fraction, showsTitle: showsTitle, showsPercent: showsPercent)
             if showsColor {
@@ -264,15 +269,21 @@ struct PaintView: View {
                     .fill(Color.primary.opacity(0.15))
                     .frame(width: 1, height: 18)
                     .accessibilityHidden(true)
-                CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
-                    .fixedSize()
+                if shrinksColor {
+                    CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
+                } else {
+                    CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
+                        .fixedSize()
+                }
             }
         }
         .padding(.horizontal, 14)
     }
 
     private func progressGroup(fraction: Double, showsTitle: Bool, showsPercent: Bool) -> some View {
-        HStack(spacing: 8) {
+        // Whole percent, rounded down: 100 only once the last area is painted.
+        let percent = Int(fraction * 100)
+        return HStack(spacing: 8) {
             ZStack {
                 Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
                 Circle()
@@ -289,20 +300,20 @@ struct PaintView: View {
                     .fixedSize()
             }
             if showsPercent {
-                Text(verbatim: "\(Int(fraction * 100))%")
+                Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
                     .font(.subheadline.weight(.semibold))
                     .monospacedDigit()
                     .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
                     .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .snappy, value: Int(fraction * 100))
+                    .animation(reduceMotion ? nil : .snappy, value: percent)
                     .lineLimit(1)
                     .fixedSize()
             }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title.isEmpty
-            ? Text("\(Int(fraction * 100)) percent painted")
-            : Text("\(title), \(Int(fraction * 100)) percent painted"))
+            ? PaintSpeech.percentPainted(percent)
+            : PaintSpeech.paintingProgress(title: title, percent: percent))
         .accessibilityShowsLargeContentViewer()
     }
 
@@ -453,12 +464,19 @@ private struct CompletionBar: View {
                 .symbolEffect(.bounce, value: session.isComplete)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Finished!").font(.headline)
-                Text(title.isEmpty ? "Every region is painted." : title)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                Group {
+                    if title.isEmpty {
+                        Text("Every region is painted.")
+                    } else {
+                        Text(title)
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             }
-            // The buttons keep their size on a phone; the caption truncates instead.
+            // The buttons keep their size on a phone; the caption shrinks, then truncates.
             .lineLimit(1)
+            .minimumScaleFactor(0.7)
             Spacer(minLength: 0)
             Button(action: onReplay) {
                 GlassIconLabel(systemImage: "play.fill")

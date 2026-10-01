@@ -10,7 +10,7 @@ struct AcknowledgementsView: View {
             } header: {
                 Text("Open-Source Code")
             } footer: {
-                Text("Swift ports of these libraries are part of the template engine. \(Acknowledgements.sourceNotice)")
+                Text(Acknowledgements.codeFooter)
             }
 
             ForEach(License.allCases, id: \.self) { license in

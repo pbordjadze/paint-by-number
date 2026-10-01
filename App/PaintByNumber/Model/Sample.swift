@@ -10,12 +10,24 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
     var url: URL? { Bundle.main.url(forResource: id, withExtension: "jpg") }
 
     static let all: [Sample] = [
-        Sample(id: "parrots", title: "Parrots"),
-        Sample(id: "hibiscus", title: "Hibiscus"),
-        Sample(id: "lighthouse", title: "Lighthouse"),
-        Sample(id: "barn", title: "Red Barn"),
-        Sample(id: "espresso", title: "Espresso"),
-        Sample(id: "regatta", title: "Regatta"),
+        Sample(id: "parrots", title: String(
+            localized: "sample.parrots", defaultValue: "Parrots",
+            comment: "Name of a bundled sample photo, shown as its default painting title")),
+        Sample(id: "hibiscus", title: String(
+            localized: "sample.hibiscus", defaultValue: "Hibiscus",
+            comment: "Name of a bundled sample photo, shown as its default painting title")),
+        Sample(id: "lighthouse", title: String(
+            localized: "sample.lighthouse", defaultValue: "Lighthouse",
+            comment: "Name of a bundled sample photo, shown as its default painting title")),
+        Sample(id: "barn", title: String(
+            localized: "sample.barn", defaultValue: "Red Barn",
+            comment: "Name of a bundled sample photo, shown as its default painting title")),
+        Sample(id: "espresso", title: String(
+            localized: "sample.espresso", defaultValue: "Espresso",
+            comment: "Name of a bundled sample photo, shown as its default painting title")),
+        Sample(id: "regatta", title: String(
+            localized: "sample.regatta", defaultValue: "Regatta",
+            comment: "Name of a bundled sample photo, shown as its default painting title")),
     ]
 
     /// Prepared on first launch so the gallery starts with something to paint.

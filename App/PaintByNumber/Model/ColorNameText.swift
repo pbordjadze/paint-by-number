@@ -34,6 +34,13 @@ nonisolated enum ColorNameText {
         return String(first).localizedUppercase + text.dropFirst()
     }
 
+    /// "12 · Dark green": the number printed on the canvas, then the name, for text on screen.
+    static func numbered(number: Int, name: ColorName) -> String {
+        let title = Self.title(name)
+        return String(localized: "colorName.format.numbered", defaultValue: "\(number) · \(title)",
+                      comment: "A palette color as shown on screen: its number, then its capitalized name, e.g. “12 · Dark green”")
+    }
+
     private static func word(_ lightness: ColorName.Lightness) -> String? {
         switch lightness {
         case .veryDark:
