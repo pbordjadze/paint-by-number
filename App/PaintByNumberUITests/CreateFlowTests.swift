@@ -169,9 +169,19 @@ final class CreateFlowTests: XCTestCase {
         let (app, picker) = launchToPicker("create")
         XCTAssertTrue(picker.exists, "No library picker")
         let sheet = settledSheetDetector(app)
-        let inlinePhotos = app.images.matching(photoPredicate).allElementsBoundByIndex.map { $0.frame }
 
-        guard let cancel = openBrowseAll(app, sheet: sheet) else { return }
+        guard openBrowseAll(app, sheet: sheet) != nil else { return }
+        // The sheet can open on a blank "Loading…" page whose Close sits left of the loaded
+        // sheet's Cancel: wait for its photos, then read the bar of the sheet they are in.
+        let sheetPhotosShown = poll(timeout: 30) {
+            app.images.matching(photoPredicate).count > picker.images.matching(photoPredicate).count
+        }
+        if sheetPhotosShown { sleep(1) }
+        guard sheetPhotosShown, let cancel = sheet.dismissFrame else {
+            attachTree(app, named: "browse-all-loading-tree")
+            XCTFail("The system picker showed no photos")
+            return
+        }
         // The sheet's grid lies below its top bar. Sheets are centred horizontally, and the
         // Cancel button sits at the sheet's leading edge, so mirroring its inset bounds an area
         // inside the sheet on both device classes (the sheet reaches at least as far down).
@@ -183,7 +193,7 @@ final class CreateFlowTests: XCTestCase {
             x: window.minX + inset, y: bar.maxY + 8,
             width: window.width - 2 * inset, height: window.maxY - (sheetTop - window.minY) - bar.maxY - 8)
         try tapFirstPhoto(
-            app, in: grid, origin: CGPoint(x: window.minX + inset, y: sheetTop), excluding: inlinePhotos)
+            app, in: grid, origin: CGPoint(x: window.minX + inset, y: sheetTop), excluding: picker)
 
         let start = app.buttons["Start Painting"]
         let opened = start.waitForExistence(timeout: 60)
@@ -278,17 +288,19 @@ final class CreateFlowTests: XCTestCase {
     /// (relative to `origin`, the picker's top-left corner in the window) rather than the
     /// window's. For the inline picker (no `origin`) the grid's left edge tells which; for a
     /// sheet, a photo that passes XCUITest's hit test is in window coordinates, otherwise the
-    /// picker-relative reading is used. Photos at the `excluding` frames (as reported) belong to
-    /// another picker and are skipped.
+    /// picker-relative reading is used if it fits, else the reported frame. Photos of the
+    /// `excluding` picker are skipped, matched by the frames they report now: frames read
+    /// earlier miss once its grid has moved, and a missed one passed for a sheet photo.
     @MainActor
     private func tapFirstPhoto(
-        _ app: XCUIApplication, in area: CGRect, origin: CGPoint? = nil, excluding: [CGRect] = []
+        _ app: XCUIApplication, in area: CGRect, origin: CGPoint? = nil, excluding other: XCUIElement? = nil
     ) throws {
         let photos = app.images.matching(photoPredicate)
         guard photos.firstMatch.waitForExistence(timeout: 20) else {
             attachTree(app, named: "library-picker-tree")
             throw XCTSkip("The library picker's photos aren't reachable from the UI test")
         }
+        let excluding = other?.images.matching(photoPredicate).allElementsBoundByIndex.map { $0.frame } ?? []
         // Thumbnails only (the picker's bar may carry small glyphs with similar labels).
         let thumbnails = photos.allElementsBoundByIndex.prefix(60)
             .map { (element: $0, frame: $0.frame) }
@@ -309,6 +321,9 @@ final class CreateFlowTests: XCTestCase {
                 target = frame
             } else if area.contains(relative) {
                 target = relative
+            } else if area.contains(frame) {
+                // Hit testing can fail where the window frame is right (the iPad sheet's photos).
+                target = frame
             }
             if target != nil { break }
         }
