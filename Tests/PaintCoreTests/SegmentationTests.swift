@@ -257,6 +257,12 @@ struct SegmentationTests {
         let fine = try Self.segment(image, settings: GenerationSettings(colorCount: 16, detail: 1), importance: nowhere)
         Self.checkInvariants(bold, settings: boldSettings, minRadius: 3.5)
         #expect(bold.regionCount + 8 <= fine.regionCount)
+        // On the plain scene (no small features to drop) the detail slider must at least
+        // not run backwards beyond a region or two of noise.
+        let plain = Self.scene(width: 200, height: 150)
+        let plainBold = try Self.segment(plain, settings: boldSettings)
+        let plainFine = try Self.segment(plain, settings: GenerationSettings(colorCount: 16, detail: 1))
+        #expect(plainBold.regionCount <= plainFine.regionCount + 2)
     }
 
     @Test func importanceIsHonoured() throws {
