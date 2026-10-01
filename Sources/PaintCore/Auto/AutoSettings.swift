@@ -11,9 +11,10 @@ import Foundation
 ///    distance of its painting time from the preference's band. The lowest total wins.
 ///
 /// The rule is fixed and its inputs are the photo, its importance and hints and the
-/// preference, so the same photo always gets the same settings; decisions are reproducible
-/// and never stored. The constants are starting values, tuned by eye on contact sheets
-/// (`tools/auto_sheet.py`).
+/// preference, so the same pixels always get the same settings; decisions are reproducible
+/// and never stored. A re-encoded copy of a photo can get different ones: neighbouring
+/// candidates often score closer together than a re-encode moves them. The constants were
+/// tuned by eye on contact sheets (`tools/auto_sheet.py`, `docs/wave2/log/auto-tuning.md`).
 public enum AutoSettings {
     public static let paletteCurveKs = [8, 12, 16, 24, 32, 48, 64]
 

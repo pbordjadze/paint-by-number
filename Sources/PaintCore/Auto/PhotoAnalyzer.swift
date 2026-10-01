@@ -31,7 +31,8 @@ struct AutoWorking {
 
 /// Photo features for the candidate rule (`AutoSettings.analyze`). Thresholds are in the
 /// pipeline's working space (OKLab with chroma × `chromaScale`) and per working pixel; they
-/// are starting values (see `docs/wave2/01-suggested-settings.md`).
+/// are the spec's (`docs/wave2/01-suggested-settings.md`), kept through tuning
+/// (`docs/wave2/log/auto-tuning.md`) except where a constant says otherwise.
 enum PhotoAnalyzer {
     /// Paint-count curve: Lloyd iterations per k after k-means++ seeding.
     static let curveIterations = 10
