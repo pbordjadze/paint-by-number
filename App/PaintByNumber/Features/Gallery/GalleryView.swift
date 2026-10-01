@@ -100,7 +100,7 @@ struct GalleryView: View {
         #if DEBUG
         .task(id: library.finished.first?.id) {
             // Demo: share the finished painting's time-lapse once it is ready.
-            if ShellDemo.current == .galleryTimelapse, timelapse == nil, let artwork = library.finished.first {
+            if ShellDemo.current?.sharesTimelapse == true, timelapse == nil, let artwork = library.finished.first {
                 shareTimelapse(artwork)
             }
         }

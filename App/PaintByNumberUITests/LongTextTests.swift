@@ -49,6 +49,19 @@ final class LongTextTests: XCTestCase {
         XCTAssertTrue(app.windows.firstMatch.frame.contains(frame), "The toast runs off the screen")
     }
 
+    /// The time-lapse sheet keeps its title and Pace control on screen (the control becomes a menu
+    /// at accessibility sizes, so it is found by identifier, whichever form it takes).
+    @MainActor
+    func testTimelapseSheetKeepsItsPaceControl() {
+        let app = launch("gallery-timelapse-long-text")
+        let title = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Making Your Time-lapse'")).firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 150), "The time-lapse sheet never opened")
+        attachScreenshot(of: app, named: "gallery-timelapse-long-text")
+        let pace = app.descendants(matching: .any)["timelapse-pace"]
+        XCTAssertTrue(pace.exists, "The Pace control is missing")
+        XCTAssertTrue(app.windows.firstMatch.frame.contains(pace.frame), "The Pace control is cut off")
+    }
+
     @MainActor
     func testSettingsKeepsItsDoneButton() {
         let app = launch("settings-long-text")

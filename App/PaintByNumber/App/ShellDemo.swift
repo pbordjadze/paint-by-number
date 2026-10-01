@@ -14,13 +14,15 @@ import Foundation
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
-/// - `gallery-long-text`, `settings-long-text`: `gallery` (with a deletion, so its Undo toast is up)
-///   and `settings` with every localized string twice as long: `ci/screenshots.sh` adds
+/// - `gallery-long-text`, `gallery-timelapse-long-text`, `settings-long-text`: `gallery` (with a
+///   deletion, so its Undo toast is up), `gallery-timelapse` and `settings` with every localized
+///   string twice as long: `ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
-    case gallery, galleryLongText, galleryEmpty, galleryOpen, galleryDamaged, galleryTimelapse, create, createSamples,
-         createPreview, settings, settingsLongText, settingsAcknowledgements
+    case gallery, galleryLongText, galleryEmpty, galleryOpen, galleryDamaged, galleryTimelapse,
+         galleryTimelapseLongText, create, createSamples, createPreview, settings, settingsLongText,
+         settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -30,6 +32,7 @@ enum ShellDemo: Equatable {
         case "gallery-open": .galleryOpen
         case "gallery-damaged": .galleryDamaged
         case "gallery-timelapse": .galleryTimelapse
+        case "gallery-timelapse-long-text": .galleryTimelapseLongText
         case "create", "create-dark": .create
         case "create-samples": .createSamples
         case "create-preview", "create-preview-dark": .createPreview
@@ -39,6 +42,8 @@ enum ShellDemo: Equatable {
         default: nil
         }
     }()
+
+    var sharesTimelapse: Bool { self == .galleryTimelapse || self == .galleryTimelapseLongText }
 
     var opensCreateFlow: Bool { self == .create || self == .createSamples || self == .createPreview }
 
@@ -72,7 +77,7 @@ enum ShellDemo: Equatable {
                 guard let id = library.artworks.first?.id else { return }
                 try? Data("damaged".utf8).write(to: library.store.url(.template, of: id))
             }
-        case .galleryTimelapse:
+        case .galleryTimelapse, .galleryTimelapseLongText:
             library.seed([Library.SeedItem(sample: Sample.all[1], painted: 1, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createPreview, .galleryEmpty, .settings, .settingsLongText,
              .settingsAcknowledgements:

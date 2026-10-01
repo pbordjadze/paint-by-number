@@ -8,6 +8,7 @@ enum SettingsKey {
     static let autoAdvance = "autoAdvanceColors"
     static let defaultColorCount = "defaultColorCount"
     static let paperSize = "printPaperSize"
+    static let timelapsePace = "timelapsePace"
 }
 
 /// A snapshot of the user's preferences, with their defaults.

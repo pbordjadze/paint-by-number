@@ -103,6 +103,7 @@ nonisolated final class TimelapseFrameRenderer {
             // Metal refuses GPU work from a backgrounded app: fail rather than encode blank frames.
             guard commands.status == .completed else { throw RenderError.unavailable }
             // The pixels are Display P3; tag them so encoders and players keep the true paint colors.
+            // The transfer stays BT.709 (Apple's example for Metal buffers): nothing documents that HEVC accepts sRGB beside P3.
             CVBufferSetAttachment(buffer, kCVImageBufferColorPrimariesKey, kCVImageBufferColorPrimaries_P3_D65, .shouldPropagate)
             CVBufferSetAttachment(buffer, kCVImageBufferTransferFunctionKey, kCVImageBufferTransferFunction_ITU_R_709_2, .shouldPropagate)
             CVBufferSetAttachment(buffer, kCVImageBufferYCbCrMatrixKey, kCVImageBufferYCbCrMatrix_ITU_R_709_2, .shouldPropagate)
@@ -112,13 +113,16 @@ nonisolated final class TimelapseFrameRenderer {
     /// Exports the replay of `progress` as a movie at `url`.
     @concurrent
     static func export(
-        template: Template, progress: PaintProgress, to url: URL, longSide: Int = 1080,
+        template: Template, progress: PaintProgress, to url: URL, longSide: Int = 1080, pace: TimelapsePace = .even,
         onProgress: (@Sendable (Double) -> Void)? = nil
     ) async throws {
         guard let renderer = TimelapseFrameRenderer(template: template, progress: progress) else { throw RenderError.unavailable }
         let size = CanvasSnapshot.fittedSize(for: template, longSide: longSide)
+        var options = TimelapseExporter.Options(size: size)
+        options.pace = pace
         try await TimelapseExporter.export(
-            strokeCount: renderer.strokeCount, options: TimelapseExporter.Options(size: size), to: url, progress: onProgress
+            strokeCount: renderer.strokeCount, strokeTimes: progress.log.map(\.time), options: options, to: url,
+            progress: onProgress
         ) { index, strokes, fraction, buffer in
             try renderer.render(frame: index, strokes: strokes, fraction: fraction, into: buffer)
         }
