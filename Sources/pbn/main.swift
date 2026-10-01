@@ -132,6 +132,9 @@ struct Metrics: Codable {
     var triangles: Int
     var meanDeltaE: Float
     var p95DeltaE: Float
+    /// `BandRings.count`: regions bounded mostly by weak (ramp) boundaries, the rings a
+    /// smooth gradient is posterized into.
+    var bandRings: Int
     var medianRegionArea: Float
     var regionsUnderRadius2: Int
     var regionsUnderRadius3: Int
@@ -205,6 +208,7 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         edges: t.edges.count, points: t.points.count, triangles: t.mesh.indices.count / 3,
         meanDeltaE: errors.reduce(0, +) / Float(max(1, errors.count)),
         p95DeltaE: sortedErrors.isEmpty ? 0 : sortedErrors[Int(Float(sortedErrors.count - 1) * 0.95)],
+        bandRings: BandRings.count(out.segmentation, working: working),
         medianRegionArea: areas.isEmpty ? 0 : areas[areas.count / 2],
         regionsUnderRadius2: t.regions.filter { $0.inscribedRadius < 2 }.count,
         regionsUnderRadius3: t.regions.filter { $0.inscribedRadius < 3 }.count,
