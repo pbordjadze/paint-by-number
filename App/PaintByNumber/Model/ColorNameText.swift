@@ -35,10 +35,29 @@ nonisolated enum ColorNameText {
     }
 
     /// "12 · Dark green": the number printed on the canvas, then the name, for text on screen.
-    static func numbered(number: Int, name: ColorName) -> String {
-        let title = Self.title(name)
+    /// A `nickname` ("Harbor Fog") takes the name's place.
+    static func numbered(number: Int, name: ColorName, nickname: String? = nil) -> String {
+        let title = nickname ?? Self.title(name)
         return String(localized: "colorName.format.numbered", defaultValue: "\(number) · \(title)",
                       comment: "A palette color as shown on screen: its number, then its capitalized name, e.g. “12 · Dark green”")
+    }
+
+    /// Whether playful nicknames may be shown while the app runs in `languageCode` (the bundle's
+    /// preferred localization). The vocabulary is English data: in any other language the
+    /// localized structured name is shown instead, until a translated vocabulary exists.
+    static func nicknamesAvailable(languageCode: String? = Bundle.main.preferredLocalizations.first) -> Bool {
+        guard let languageCode else { return true }
+        return Locale.Language(identifier: languageCode).languageCode == .english
+    }
+
+    /// The palette's nicknames, index-aligned (`ColorNickname.assign` with `seed`): nil for a color
+    /// with no vocabulary name (it keeps its structured one) and for every color when
+    /// `languageCode` isn't English.
+    static func nicknames(
+        for palette: [PaletteColor], seed: UInt64, languageCode: String? = Bundle.main.preferredLocalizations.first
+    ) -> [String?] {
+        guard nicknamesAvailable(languageCode: languageCode) else { return palette.map { _ in nil } }
+        return ColorNickname.assign(palette, seed: seed).map { ColorNickname.isNickname($0) ? $0 : nil }
     }
 
     private static func word(_ lightness: ColorName.Lightness) -> String? {
@@ -93,4 +112,12 @@ nonisolated enum ColorNameText {
         case .pink: String(localized: "colorName.family.pink", defaultValue: "pink", comment: "Color name hue family")
         }
     }
+}
+
+/// Whether the paints go by their playful nicknames ("Harbor Fog") or only by their plain,
+/// structured names ("dark grayish blue"). Settings › Color Names.
+nonisolated enum ColorNameStyle: String, CaseIterable, Identifiable, Sendable {
+    case playful, plain
+
+    var id: String { rawValue }
 }

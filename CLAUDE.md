@@ -9,7 +9,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   (builds on Linux too). `Sources/pbn` — headless CLI. `Tests/PaintCoreTests` — Swift Testing
   (`Fixtures/` holds files written by past encoders, e.g. `template-v1.pbnt`).
   - `Foundation/` grids, color science (OKLab, Display P3), EDT, connected components, resampling,
-    color naming (`ColorName`: OKLab → structured name, e.g. "dark grayish green"; `english` for the CLI)
+    color naming (`ColorName`: OKLab → structured name, e.g. "dark grayish green"; `english` for the CLI),
+    `ColorNickname` (playful names like "Harbor Fog": the hex-anchored table in
+    `ColorNicknameVocabulary.swift`, whose doc comment is the style guide `ColorNicknameTests` lints;
+    `assign(_:seed:)` picks one per paint, unique in the palette and varied by seed)
   - `Model/` `Template` (the product of the pipeline) + versioned binary coding, `GenerationSettings`,
     `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map)
   - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
@@ -35,8 +38,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
   `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, label
   legibility — `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0, `minLabelRadius`,
-  `minLabelRoom`, `valid` — timings, palette and `colorNames`; the sheet's palette panel labels
-  each swatch with its name). The metrics are `pbn generate`'s `stats.json`, a stable interface
+  `minLabelRoom`, `valid` — timings, palette, `colorNames` and `colorNicknames`; the sheet's
+  palette panel labels each swatch with its nickname and name). The metrics are `pbn generate`'s `stats.json`, a stable interface
   for regression tooling: add fields, never rename them. Look at the PNGs with the Read tool.
   The sheet's second row shows the raw region raster, a 2× `boundaries.png` (1-px region
   outlines, best for judging segmentation shapes) and the palette; `--importance-dir DIR` passes
@@ -91,6 +94,14 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu, three-finger undo); the Pencil paints while
   fingers navigate (and only navigate under "Only Draw with Apple Pencil"). The app is single
   window: one live `PaintingSession` per painting.
+- Color names: each paint goes by a nickname ("Harbor Fog") from `ColorNickname.assign`, seeded by
+  the artwork id folded to 64 bits (`ColorNickname.seed(for:)`, XOR of the UUID's halves), so a
+  painting's names never change; `PaintingSession.colorNicknames`/`nickname(of:)` (nil under Settings ›
+  Color Names › Plain, and for every color unless the app runs in English: the vocabulary is English
+  data, `ColorNameText.nicknamesAvailable`) feed the palette caption, current-color, VoiceOver
+  ("12, Harbor Fog, dark grayish blue"), the swatch's long-press popover (number, name, shade, hex)
+  and the PDF key. Nicknames reach the UI as variables shown verbatim, never as literals, so the
+  string checker needs no exceptions; `pbn names <template.pbnt> [--seed N]` prints a palette's.
 - Photo peek: `PhotoPeek`/`PhotoPeekButton` (hold to peek, tap to latch, `p` in the Paint menu)
   drive `CanvasView.showsPhoto`. The canvas loads the photo once through `sourcePhotoLoader`
   (bounded by the canvas size) and draws it in the canvas pass (`photoFragment`,

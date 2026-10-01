@@ -23,6 +23,7 @@ import simd
 /// Photo-based scenarios have the photo loader, so the top bar is the one users see.
 /// - `paint-ax`: `paint-progress`, showing the selected color's name
 /// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
+/// - `paint-names-plain`: `paint-progress` under Settings › Color Names › Plain (structured names only)
 /// - `paint-long-text`, `paint-complete-long-text`: `paint-progress` and `paint-complete` with a long
 ///   title and every localized string twice as long (`ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette
@@ -119,6 +120,9 @@ private final class Demo {
         switch scenario {
         case "paint-progress", "paint-dark", "paint-ax", "paint-long-text":
             paint(fraction: 0.55)
+        case "paint-names-plain":
+            paint(fraction: 0.55)
+            session.colorNameStyle = .plain
         case "paint-ax-large":
             paint(fraction: 0.55)
             dynamicTypeSize = .accessibility5

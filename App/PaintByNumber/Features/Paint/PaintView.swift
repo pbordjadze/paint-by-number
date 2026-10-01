@@ -608,7 +608,7 @@ final class PaintChromeState {
                 }
             case let .colorCompleted(color):
                 if let session {
-                    Announcer.announce(PaintSpeech.colorFinished(number: color + 1, name: session.colorNames[color]))
+                    Announcer.announce(PaintSpeech.colorFinished(number: color + 1, name: session.colorNames[color], nickname: session.nickname(of: color)))
                 }
             case .artworkCompleted:
                 Announcer.announce(PaintSpeech.paintingFinished)

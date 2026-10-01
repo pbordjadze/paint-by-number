@@ -543,6 +543,31 @@ struct PaintingSessionTests {
             #expect(session.colorNames[i] == color.colorName)
         }
     }
+
+    /// A painting's nicknames come from its seed alone: reopening it (a new session, any progress)
+    /// names the colors the same, and another painting of the same photo differs.
+    @Test func nicknamesFollowThePaintingsSeed() throws {
+        let id = try #require(UUID(uuidString: "5F3B7A1E-0C2D-4E8F-9A6B-1D4C7E2F8A30"))
+        let seed = ColorNickname.seed(for: id)
+        let session = PaintingSession(template: template, nicknameSeed: seed)
+        #expect(session.colorNicknames.count == session.paletteCount)
+        #expect(session.colorNicknames.allSatisfy { $0 != nil })
+        let reopened = try PaintingSession(
+            template: template, progress: PaintProgress(regionCount: template.regions.count), nicknameSeed: seed)
+        #expect(reopened.colorNicknames == session.colorNicknames)
+        #expect(Set(session.colorNicknames.compactMap { $0 }).count == session.paletteCount)
+        let other = PaintingSession(template: template, nicknameSeed: seed ^ 0xFFFF)
+        #expect(other.colorNicknames != session.colorNicknames)
+    }
+
+    @Test func plainStyleHidesTheNicknames() {
+        let session = PaintingSession(template: template, nicknameSeed: 7)
+        #expect(session.colorNameStyle == .playful)
+        #expect(session.nickname(of: 0) == session.colorNicknames[0])
+        #expect(session.nickname(of: 0) != nil)
+        session.colorNameStyle = .plain
+        #expect((0..<session.paletteCount).allSatisfy { session.nickname(of: $0) == nil })
+    }
 }
 
 @MainActor

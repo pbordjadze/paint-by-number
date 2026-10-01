@@ -1,4 +1,5 @@
 import Foundation
+import PaintCore
 import Testing
 @testable import PaintByNumber
 
@@ -52,6 +53,23 @@ struct LocalizationTests {
         #expect(ArtworkExporter.timelapseName(title: "Parrots") == "Parrots Time-lapse")
         #expect(Sample.all.map(\.title) == ["Parrots", "Hibiscus", "Lighthouse", "Red Barn", "Espresso", "Regatta"])
         #expect(PDFExporter.Paper.letter.name == "US Letter")
+        #expect(PaintSpeech.colorLabel(
+            number: 12, name: ColorName(family: .blue, lightness: .dark, chroma: .grayish), nickname: "Harbor Fog")
+                == "12, Harbor Fog, dark grayish blue")
+    }
+
+    /// The nickname label resolves through the catalog, and a locale that isn't English shows the
+    /// structured name: no nickname reaches the label.
+    @Test func nonEnglishLocalesShowTheStructuredName() throws {
+        let palette = [PaletteColor(oklab: SIMD3(0.5, -0.03, -0.03), space: .sRGB)]
+        let name = palette[0].colorName
+        let german = try #require(ColorNameText.nicknames(for: palette, seed: 1, languageCode: "de").first)
+        #expect(german == nil)
+        #expect(PaintSpeech.colorLabel(number: 3, name: name, nickname: german) == "3, \(name.english)")
+        #expect(ColorNameText.numbered(number: 3, name: name, nickname: german) == "3 · \(name.englishTitle)")
+        let english = try #require(ColorNameText.nicknames(for: palette, seed: 1, languageCode: "en").first)
+        #expect(english != nil)
+        #expect(ColorNameText.numbered(number: 3, name: name, nickname: english) == "3 · \(english!)")
     }
 
     /// Catalog plurals, not hand-built suffixes: one and other differ, and each reads right.

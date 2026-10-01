@@ -9,6 +9,7 @@ struct GalleryView: View {
 
     @Environment(Library.self) private var library
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
+    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
     @State private var width: CGFloat = 0
     @State private var renaming: Artwork?
     @State private var renameText = ""
@@ -193,7 +194,7 @@ struct GalleryView: View {
             Button("Share Time-lapse", systemImage: "timelapse") { shareTimelapse(artwork) }
         }
         ShareLink(
-            item: PrintableTemplateFile(store: library.store, artwork: artwork, paper: paper),
+            item: PrintableTemplateFile(store: library.store, artwork: artwork, paper: paper, colorNames: colorNames),
             preview: SharePreview(ArtworkExporter.templateName(title: artwork.title), image: previewImage(artwork))
         ) {
             Label("Print Template…", systemImage: "printer")

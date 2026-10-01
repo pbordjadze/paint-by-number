@@ -15,6 +15,7 @@ struct ArtworkPaintingView: View {
     @Environment(Library.self) private var library
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
+    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
     @State private var autosaver: PaintingAutosaver?
     @State private var failure: Library.OpenError?
     @State private var regeneration: Task<Void, Never>?
@@ -89,6 +90,7 @@ struct ArtworkPaintingView: View {
             if phase != .active { autosaver?.saveNow(refreshThumbnail: true) }
         }
         .onChange(of: autoAdvance) { _, value in autosaver?.session.autoAdvance = value }
+        .onChange(of: colorNames) { _, value in autosaver?.session.colorNameStyle = value }
         .onDisappear {
             regeneration?.cancel()
             autosaver?.saveNow(refreshThumbnail: true)
@@ -110,7 +112,8 @@ struct ArtworkPaintingView: View {
     private func present(_ document: PaintingDocument) {
         let session: PaintingSession
         do {
-            session = try PaintingSession(template: document.template, progress: document.progress)
+            session = try PaintingSession(
+                template: document.template, progress: document.progress, nicknameSeed: ColorNickname.seed(for: artworkID))
         } catch {
             // The library hands out matching progress; this guards against a bug, not a file.
             Log.library.error("Opening \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")

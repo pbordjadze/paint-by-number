@@ -31,7 +31,8 @@ def svg_to_png(svg, png, width=None):
 
 def draw_palette(draw, palette, box, cols=6, names=()):
     """Numbered swatches of `palette` (hex strings) laid out in `box` = (x, y, width, height);
-    `names` (one per swatch, optional) are written under the numbers when the cells are tall enough."""
+    `names` (one per swatch, optional; "\n" starts a second line) are written under the numbers when the
+    cells are tall enough, each line shrunk to fit its cell."""
     if not palette:
         return
     x, y, width, height = box
@@ -39,7 +40,6 @@ def draw_palette(draw, palette, box, cols=6, names=()):
     cw, ch = width // cols, min(height // rows, 60)
     font = ImageFont.load_default(size=max(10, min(ch // 2, 18)))
     name_size = max(9, ch // 4)
-    name_font = ImageFont.load_default(size=name_size)
     for i, hx in enumerate(palette):
         x0, y0 = x + (i % cols) * cw, y + (i // cols) * ch
         rgb = tuple(int(hx[k:k + 2], 16) for k in (0, 2, 4))
@@ -48,7 +48,23 @@ def draw_palette(draw, palette, box, cols=6, names=()):
         ink = (0, 0, 0) if lum > 128 else (255, 255, 255)
         draw.text((x0 + 8, y0 + 6), str(i + 1), fill=ink, font=font)
         if ch >= 36 and i < len(names):
-            draw.text((x0 + 8, y0 + ch - 6 - name_size), names[i], fill=ink, font=name_font)
+            lines = names[i].split("\n")
+            size = name_size if len(lines) == 1 else max(8, ch // 5)
+            for k, line in enumerate(lines):
+                line_size = size
+                name_font = ImageFont.load_default(size=line_size)
+                while line_size > 7 and draw.textlength(line, font=name_font) > cw - 12:
+                    line_size -= 1
+                    name_font = ImageFont.load_default(size=line_size)
+                y_line = y0 + ch - 4 - (len(lines) - k) * (size + 1)
+                draw.text((x0 + 8, y_line), line, fill=ink, font=name_font)
+
+
+def palette_names(stats):
+    """Swatch labels: the nickname, then the structured name below it ("Harbor Fog" / "dark grayish blue")."""
+    plain = stats.get("colorNames", [])
+    nicknames = stats.get("colorNicknames", [])
+    return [f"{nicknames[i]}\n{name}" if i < len(nicknames) else name for i, name in enumerate(plain)]
 
 
 def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
@@ -92,7 +108,7 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
         sheet.paste(boundaries.resize((panel_w, panel_h), Image.LANCZOS), (panel_w, 28 + panel_h))
     d = ImageDraw.Draw(sheet)
     draw_palette(d, stats.get("palette", []), (2 * panel_w, 28 + panel_h, panel_w, panel_h),
-                 names=stats.get("colorNames", []))
+                 names=palette_names(stats))
     caption = (f"{name}  {stats['width']}x{stats['height']}  colors={stats['colors']}  regions={stats['regions']}  "
                f"dE={stats['meanDeltaE']:.4f}  r<2:{stats['regionsUnderRadius2']}  "
                f"belowLegible:{stats.get('labelsBelowLegibleSize', '?')}  total={stats['totalMs']:.0f}ms")

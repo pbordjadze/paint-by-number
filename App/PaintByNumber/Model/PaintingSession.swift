@@ -45,6 +45,11 @@ final class PaintingSession {
     let totalByColor: [Int]
     /// Names of the palette colors, index-aligned with `template.palette`.
     let colorNames: [ColorName]
+    /// Playful nicknames of the palette colors, index-aligned (nil where the color has none or the
+    /// app doesn't run in English), fixed for the painting by `nicknameSeed`.
+    let colorNicknames: [String?]
+    /// How the colors are named on screen and by VoiceOver: by nickname, or plainly (Settings).
+    var colorNameStyle: ColorNameStyle = .playful
     /// Increments on every progress change; cheap to observe for autosave/thumbnails.
     private(set) var revision = 0
 
@@ -63,25 +68,27 @@ final class PaintingSession {
         let progressRegions: Int
     }
 
-    /// A fresh painting of `template`.
-    convenience init(template: Template) {
-        self.init(checked: template, progress: PaintProgress(regionCount: template.regions.count))
+    /// A fresh painting of `template`. `nicknameSeed` (the artwork's `ColorNickname.seed(for:)`)
+    /// picks the colors' nicknames, so a painting's names never change.
+    convenience init(template: Template, nicknameSeed: UInt64 = 0) {
+        self.init(checked: template, progress: PaintProgress(regionCount: template.regions.count), nicknameSeed: nicknameSeed)
     }
 
     /// Resumes saved progress; throws instead of trapping when it does not fit the template.
-    convenience init(template: Template, progress: PaintProgress) throws {
+    convenience init(template: Template, progress: PaintProgress, nicknameSeed: UInt64 = 0) throws {
         guard progress.regionCount == template.regions.count else {
             throw ProgressMismatch(templateRegions: template.regions.count, progressRegions: progress.regionCount)
         }
-        self.init(checked: template, progress: progress)
+        self.init(checked: template, progress: progress, nicknameSeed: nicknameSeed)
     }
 
-    private init(checked template: Template, progress: PaintProgress) {
+    private init(checked template: Template, progress: PaintProgress, nicknameSeed: UInt64) {
         self.template = template
         self.progress = progress
         let totals = template.regionCountsByColor
         totalByColor = totals
         colorNames = template.palette.map(\.colorName)
+        colorNicknames = ColorNameText.nicknames(for: template.palette, seed: nicknameSeed)
         var remaining = totals
         for (i, region) in template.regions.enumerated() where progress.isPainted(i) {
             remaining[Int(region.colorIndex)] -= 1
@@ -91,6 +98,12 @@ final class PaintingSession {
     }
 
     // MARK: Queries
+
+    /// The nickname `color` goes by now: nil under Plain names, where the vocabulary has none for it,
+    /// and when the app doesn't run in English (its structured name is shown then).
+    func nickname(of color: Int) -> String? {
+        colorNameStyle == .playful ? colorNicknames[color] : nil
+    }
 
     var paletteCount: Int { template.palette.count }
     var fractionComplete: Double {

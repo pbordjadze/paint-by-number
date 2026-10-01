@@ -8,6 +8,7 @@ enum SettingsKey {
     static let autoAdvance = "autoAdvanceColors"
     static let defaultColorCount = "defaultColorCount"
     static let paperSize = "printPaperSize"
+    static let colorNames = "colorNameStyle"
 }
 
 /// A snapshot of the user's preferences, with their defaults.
@@ -19,6 +20,8 @@ struct Preferences: Equatable {
     /// Colors a new painting starts with in the create flow.
     var defaultColorCount: Int
     var paper: PDFExporter.Paper
+    /// Whether paints go by playful nicknames or their plain structured names.
+    var colorNames: ColorNameStyle
 
     static let defaultColorCountValue = 24
 
@@ -30,6 +33,7 @@ struct Preferences: Equatable {
         defaultColorCount = min(max(colors, GenerationSettings.colorCountRange.lowerBound), GenerationSettings.colorCountRange.upperBound)
         paper = defaults.string(forKey: SettingsKey.paperSize).flatMap(PDFExporter.Paper.init(rawValue:))
             ?? .default(for: Locale.current.region)
+        colorNames = defaults.string(forKey: SettingsKey.colorNames).flatMap(ColorNameStyle.init(rawValue:)) ?? .playful
     }
 
     /// Settings a new painting starts from.
@@ -39,5 +43,6 @@ struct Preferences: Equatable {
 
     func apply(to session: PaintingSession) {
         session.autoAdvance = autoAdvance
+        session.colorNameStyle = colorNames
     }
 }

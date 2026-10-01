@@ -196,6 +196,41 @@ struct PDFExporterTests {
         #expect(key.contains("Vivid red"))
     }
 
+    /// With nicknames the key names each color by its nickname, then its plain name, then the hex
+    /// code; colors without one keep the plain name as their heading.
+    @Test func colorKeyShowsNicknameShadeAndHex() throws {
+        let t = Fixtures.stripes()
+        let nicknames: [String?] = ["Poppy Field", nil, "Harbor Fog"]
+        let data = PDFExporter.document(for: t, title: "Stripes", paper: .letter, nicknames: nicknames)
+        let key = try #require(PDFDocument(data: data)?.page(at: 1)?.string)
+        for (color, nickname) in zip(t.palette, nicknames) {
+            let shade = ColorNameText.title(color.colorName)
+            #expect(key.contains(shade), "\(shade) missing from the key: \(key)")
+            #expect(key.contains(PDFExporter.hex(color.rgb)), "hex missing from the key: \(key)")
+            if let nickname { #expect(key.contains(nickname), "\(nickname) missing from the key: \(key)") }
+        }
+        // Heading, then the plain name below it.
+        let order = [key.range(of: "Poppy Field")?.lowerBound, key.range(of: ColorNameText.title(t.palette[0].colorName))?.lowerBound]
+        #expect(order[0] != nil && order[1] != nil && order[0]! < order[1]!)
+        Attachment.record(data, named: "stripes-nicknames.pdf")
+    }
+
+    /// Entries with a nickname are three lines tall: the key still fits every page up to 150 colors.
+    @Test func threeLineKeyFitsUpTo150Colors() {
+        for paper in PDFExporter.Paper.allCases {
+            for landscape in [false, true] {
+                let size = landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size
+                let content = CGRect(origin: .zero, size: size).insetBy(dx: 36, dy: 36)
+                let body = CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
+                for count in [1, 24, 100, 150] {
+                    let layout = PDFExporter.keyLayout(count: count, widestEntry: 150, lines: 3, in: body)
+                    #expect(layout.height <= body.height, "\(paper) landscape \(landscape), \(count) colors")
+                    #expect(layout.rowHeight == 32 * layout.scale)
+                }
+            }
+        }
+    }
+
     /// The key fits its page for every palette size the app makes (up to 150 colors).
     @Test func keyLayoutFitsUpTo150Colors() {
         for paper in PDFExporter.Paper.allCases {
@@ -290,12 +325,15 @@ struct PreferencesTests {
         var preferences = Preferences(defaults: defaults)
         #expect(preferences.autoAdvance && preferences.haptics && preferences.sounds)
         #expect(preferences.defaultColorCount == 24)
+        #expect(preferences.colorNames == .playful)
 
         defaults.set(false, forKey: SettingsKey.autoAdvance)
         defaults.set(999, forKey: SettingsKey.defaultColorCount)
         defaults.set("a4", forKey: SettingsKey.paperSize)
         defaults.set(false, forKey: "hapticsEnabled")
+        defaults.set("plain", forKey: SettingsKey.colorNames)
         preferences = Preferences(defaults: defaults)
+        #expect(preferences.colorNames == .plain)
         #expect(!preferences.autoAdvance)
         #expect(!preferences.haptics)
         #expect(preferences.defaultColorCount == GenerationSettings.colorCountRange.upperBound)
@@ -303,9 +341,23 @@ struct PreferencesTests {
         #expect(preferences.initialGenerationSettings.colorCount == GenerationSettings.colorCountRange.upperBound)
 
         let session = PaintingSession(template: Fixtures.stripes())
-        #expect(session.autoAdvance)
+        #expect(session.autoAdvance && session.colorNameStyle == .playful)
         preferences.apply(to: session)
-        #expect(!session.autoAdvance)
+        #expect(!session.autoAdvance && session.colorNameStyle == .plain)
+    }
+
+    /// An unknown stored value is the default, not a crash or a third style.
+    @Test func colorNameStyleFallsBackToPlayful() throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        for stored in ["", "shouty", "Playful"] {
+            defaults.set(stored, forKey: SettingsKey.colorNames)
+            #expect(Preferences(defaults: defaults).colorNames == .playful, "\(stored)")
+        }
+        defaults.set("playful", forKey: SettingsKey.colorNames)
+        #expect(Preferences(defaults: defaults).colorNames == .playful)
+        #expect(ColorNameStyle.allCases == [.playful, .plain])
     }
 
     @Test func createModelMapsSliders() {
