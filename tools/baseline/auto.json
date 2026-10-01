@@ -1,0 +1,118 @@
+{
+  "about": "Settings Auto suggests per sample, for tools/regression.py's auto regime (informational); regenerate with --update.",
+  "cases": {
+    "auto-relaxed/barn": {
+      "colors": 36,
+      "encodedBytes": 1837098,
+      "meanDeltaE": 0.034051277,
+      "minInscribedRadius": 2.7401843,
+      "minPaletteDistance": 0.032996394,
+      "p95DeltaE": 0.08536841,
+      "regions": 475,
+      "regionsUnderRadius3": 1,
+      "settings": {
+        "colorCount": 36,
+        "detail": 0.55,
+        "smoothness": 0.55
+      },
+      "templateSHA1": "4d9d9445864bbc19d39d35c9975ec978d60445ee",
+      "totalMs": 505.1,
+      "winner": 2
+    },
+    "auto-relaxed/espresso": {
+      "colors": 33,
+      "encodedBytes": 965004,
+      "meanDeltaE": 0.033249833,
+      "minInscribedRadius": 2.4739487,
+      "minPaletteDistance": 0.033975445,
+      "p95DeltaE": 0.09554054,
+      "regions": 228,
+      "regionsUnderRadius3": 7,
+      "settings": {
+        "colorCount": 34,
+        "detail": 0.6,
+        "smoothness": 0.44
+      },
+      "templateSHA1": "e22407b4739c636fab6789d6fff4ec3b4be54f53",
+      "totalMs": 224.2,
+      "winner": 4
+    },
+    "auto-relaxed/hibiscus": {
+      "colors": 32,
+      "encodedBytes": 1592724,
+      "meanDeltaE": 0.032531496,
+      "minInscribedRadius": 2.4288557,
+      "minPaletteDistance": 0.03502241,
+      "p95DeltaE": 0.108326584,
+      "regions": 570,
+      "regionsUnderRadius3": 8,
+      "settings": {
+        "colorCount": 32,
+        "detail": 0.75,
+        "smoothness": 0.45
+      },
+      "templateSHA1": "56c8154ba73cea7f399919b25fce861856f350fa",
+      "totalMs": 454.7,
+      "winner": 4
+    },
+    "auto-relaxed/lighthouse": {
+      "colors": 26,
+      "encodedBytes": 1708817,
+      "meanDeltaE": 0.032934565,
+      "minInscribedRadius": 2.8440778,
+      "minPaletteDistance": 0.038853854,
+      "p95DeltaE": 0.11018389,
+      "regions": 588,
+      "regionsUnderRadius3": 3,
+      "settings": {
+        "colorCount": 26,
+        "detail": 0.6,
+        "smoothness": 0.57
+      },
+      "templateSHA1": "42a0904375580c01416afb200ff9ea16269bc4c9",
+      "totalMs": 399.7,
+      "winner": 4
+    },
+    "auto-relaxed/parrots": {
+      "colors": 40,
+      "encodedBytes": 1185248,
+      "meanDeltaE": 0.03154427,
+      "minInscribedRadius": 2.8710237,
+      "minPaletteDistance": 0.033013225,
+      "p95DeltaE": 0.074173234,
+      "regions": 244,
+      "regionsUnderRadius3": 4,
+      "settings": {
+        "colorCount": 40,
+        "detail": 0.6,
+        "smoothness": 0.46
+      },
+      "templateSHA1": "d4de331aefa4235179509e79f7558508a8ec6f17",
+      "totalMs": 426.2,
+      "winner": 3
+    },
+    "auto-relaxed/regatta": {
+      "colors": 18,
+      "encodedBytes": 918402,
+      "meanDeltaE": 0.028617473,
+      "minInscribedRadius": 3.297,
+      "minPaletteDistance": 0.05472391,
+      "p95DeltaE": 0.07996347,
+      "regions": 206,
+      "regionsUnderRadius3": 0,
+      "settings": {
+        "colorCount": 18,
+        "detail": 0.4,
+        "smoothness": 0.49
+      },
+      "templateSHA1": "d64c33f5602c6d8d07a7a360f29b5c51b23e1074",
+      "totalMs": 247.0,
+      "winner": 0
+    }
+  },
+  "regime": {
+    "auto-relaxed": {
+      "auto": "relaxed"
+    }
+  }
+}

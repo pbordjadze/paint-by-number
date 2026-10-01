@@ -3,6 +3,8 @@
 
     tools/eval.py run IMAGE... --out DIR [--sheet-width 2400] [--importance-dir DIR] [-- pbn generate options]
 
+`-- --auto [--length L]` generates at the settings Auto suggests; the caption shows them.
+
 For every image: converts to PPM, runs `pbn generate`, rasterizes the SVG outputs with
 resvg, and writes a contact sheet `DIR/<name>/sheet.png` (source | painted | template)
 plus `DIR/summary.json` and an overview grid `DIR/overview.png`. With --importance-dir,
@@ -96,6 +98,10 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
     caption = (f"{name}  {stats['width']}x{stats['height']}  colors={stats['colors']}  regions={stats['regions']}  "
                f"dE={stats['meanDeltaE']:.4f}  r<2:{stats['regionsUnderRadius2']}  "
                f"belowLegible:{stats.get('labelsBelowLegibleSize', '?')}  total={stats['totalMs']:.0f}ms")
+    if stats.get("auto"):
+        chosen = stats["auto"]["settings"]
+        caption += (f"  auto {stats['auto']['preference']}: {chosen['colorCount']} colors, detail {chosen['detail']:g}, "
+                    f"smooth {chosen['smoothness']:g} (#{stats['auto']['winner']})")
     d.text((8, 6), caption, fill=(0, 0, 0), font=ImageFont.load_default(size=16))
     sheet.save(os.path.join(out, "sheet.png"))
     return name, stats
