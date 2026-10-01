@@ -54,7 +54,7 @@ struct AutoSettingsTests {
         PhotoAnalysis(
             sourceWidth: source, sourceHeight: source * 3 / 4, paletteCurve: curve, chromaticFraction: chromatic,
             chromaSpread: spread, structureDensity: structure, textureFraction: texture, smoothFraction: smooth, noise: noise,
-            subjectCoverage: subject, importanceEntropy: 0.9, faceCoverage: faces, animalCoverage: 0, labels: [:])
+            subjectCoverage: subject, importanceEntropy: 0.9, meanImportance: 0.5, faceCoverage: faces, animalCoverage: 0, labels: [:])
     }
 
     static func json<T: Encodable>(_ value: T) throws -> Data {
@@ -240,11 +240,14 @@ struct AutoSettingsTests {
     }
 
     @Test func kneeFindsWhereAnotherPaintStopsPaying() {
-        // Gains per paint: 0.004, 0.002, 0.001, 0.0005, 0.0002, … → crosses 0.0004 between the
-        // midpoints 28 and 40.
+        // A power law through this curve loses 0.0004 per paint at about 39 paints.
         let curve: [Float] = [0.1, 0.084, 0.076, 0.068, 0.064, 0.0608, 0.0592]
         let knee = AutoSettings.knee(curve)
-        #expect(knee > 28 && knee < 40)
+        #expect(knee > 37 && knee < 41)
+        // One point off by 3 % (each point is its own k-means run) barely moves it.
+        var bumped = curve
+        bumped[4] *= 1.03
+        #expect(abs(AutoSettings.knee(bumped) / knee - 1) < 0.05)
         #expect(AutoSettings.knee([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]) == 8)
         #expect(AutoSettings.knee([0.5, 0.45, 0.4, 0.3, 0.2, 0.1, 0.05]) == 64)
     }
@@ -261,7 +264,7 @@ struct AutoSettingsTests {
         // and one so large its estimate is far above the band.
         let regions = Double(t.regions.count)
         func canvas(seconds: Double) -> (width: Int, height: Int) {
-            let ratio = pow(seconds / PaintingTime.estimate(regionCount: t.regions.count), 1 / AutoSettings.regionExponent(detail: 0.5))
+            let ratio = pow(seconds / PaintingTime.estimate(regionCount: t.regions.count), 1 / AutoSettings.regionExponent(detail: 0.5, meanImportance: AutoSettings.meanImportance(importance)))
             return (Int((Double(t.width) * ratio.squareRoot()).rounded()), Int((Double(t.height) * ratio.squareRoot()).rounded()))
         }
         let inside = AutoSettings.score(output, working: working, importance: importance, preference: .relaxed,
@@ -288,28 +291,47 @@ struct AutoSettingsTests {
         #expect(short.bandPenalty > 0 && short.bandPenalty < long.bandPenalty / 2)
     }
 
-    @Test func tiesGoToTheTimeNearestTheBandsMiddle() {
-        func candidate(total: Float, minutes: Double, regions: Int) -> AutoCandidate {
+    @Test func theCenterWinsTiesAndOtherTiesGoToTheBandsMiddle() {
+        func candidate(total: Float, minutes: Double) -> AutoCandidate {
             AutoCandidate(settings: GenerationSettings(), score: AutoScore(
-                fidelity: 0.04, fidelityP95: 0.1, regions: regions, tinyRegions: 0, bandRings: 0, minLabelRoom: 3,
-                estimatedSeconds: minutes * 60, bandPenalty: 0, total: total))
+                fidelity: 0.04, fidelityP95: 0.1, regions: Int(minutes * 20), tinyRegions: 0, bandRings: 0,
+                minLabelRoom: 3, estimatedSeconds: minutes * 60, bandPenalty: 0, total: total))
         }
-        let short = candidate(total: 0.1000, minutes: 15, regions: 300)
-        let long = candidate(total: 0.1005, minutes: 60, regions: 1200)
-        let worse = candidate(total: 0.1100, minutes: 70, regions: 1400)
-        // A tie: Quick takes the shorter, Detailed the longer, whatever the order.
-        #expect(AutoSettings.winner(of: [short, long, worse], preference: .quick) == 0)
-        #expect(AutoSettings.winner(of: [short, long, worse], preference: .detailed) == 1)
-        #expect(AutoSettings.winner(of: [long, short], preference: .quick) == 1)
-        // Outside the tolerance the lower total wins.
-        #expect(AutoSettings.winner(of: [short, worse], preference: .detailed) == 0)
+        let margin = AutoSettings.tieMargin
+        let center = candidate(total: 0.1000, minutes: 30)
+        // Neighbours better by less than the margin don't move the center…
+        let close = candidate(total: 0.1000 - 0.9 * margin, minutes: 60)
+        #expect(AutoSettings.winner(of: [center, close], preference: .detailed) == 0)
+        // …one better by more does; neighbours tied with it go to the band's middle.
+        let short = candidate(total: 0.1000 - 2 * margin, minutes: 15)
+        let long = candidate(total: 0.1000 - 1.5 * margin, minutes: 60)
+        #expect(AutoSettings.winner(of: [center, short, long], preference: .quick) == 1)
+        #expect(AutoSettings.winner(of: [center, short, long], preference: .detailed) == 2)
+        #expect(AutoSettings.winner(of: [center, long, short], preference: .quick) == 2)
+        // A center that runs over its band keeps no tie.
+        let overlong = candidate(total: 0.1000, minutes: 70)
+        let shorter = candidate(total: 0.1000 - 0.5 * margin, minutes: 40)
+        #expect(AutoSettings.winner(of: [center, shorter], preference: .relaxed) == 0)
+        #expect(AutoSettings.winner(of: [overlong, shorter], preference: .relaxed) == 1)
+        // Outside the margin the lower total wins.
+        let worse = candidate(total: 0.1000 - 0.5 * margin, minutes: 60)
+        #expect(AutoSettings.winner(of: [center, short, worse], preference: .detailed) == 1)
     }
 
-    @Test func regionCountsGrowFasterWithDetail() {
-        #expect(AutoSettings.regionExponent(detail: 0) < AutoSettings.regionExponent(detail: 0.5))
-        #expect(AutoSettings.regionExponent(detail: 0.5) < AutoSettings.regionExponent(detail: 1))
-        #expect(AutoSettings.regionExponent(detail: 1) < 1 && AutoSettings.regionExponent(detail: 0) > 0)
-        #expect(AutoSettings.regionExponent(detail: 2) == AutoSettings.regionExponent(detail: 1))
+    @Test func thresholdsFadeIn() {
+        #expect(AutoSettings.ramp(0.025, at: 0.03) == 0 && AutoSettings.ramp(0.036, at: 0.03) == 1)
+        #expect(abs(AutoSettings.ramp(0.03, at: 0.03) - 0.5) < 1e-5)
+        let a = AutoSettings.ramp(0.029, at: 0.03), b = AutoSettings.ramp(0.031, at: 0.03)
+        #expect(a > 0 && a < b && b < 1)
+    }
+
+    @Test func regionCountsGrowFasterWithDetailAndImportance() {
+        func e(_ d: Float, _ m: Float) -> Double { AutoSettings.regionExponent(detail: d, meanImportance: m) }
+        #expect(e(0, 0.5) < e(0.5, 0.5) && e(0.5, 0.5) < e(1, 0.5))
+        #expect(e(0.5, 0.25) < e(0.5, 0.4) && e(0.5, 0.4) < e(0.5, 0.6))
+        #expect(e(0, 0) == 0 && e(1, 1) == 1)
+        #expect(e(2, 0.5) == e(1, 0.5))
+        #expect(AutoSettings.meanImportance([0.2, 0.4, 0.6]) == 0.4)
     }
 
     @Test func timeBandsAreOrderedAndOverlap() {
@@ -398,7 +420,7 @@ struct AutoSettingsTests {
             #expect(decision.candidates.indices.contains(decision.winner))
             #expect(Self.inside(decision.settings, preference))
             let best = decision.candidates.compactMap { $0.score?.total }.min()!
-            #expect(decision.candidates[decision.winner].score!.total <= best + AutoSettings.tieTolerance)
+            #expect(decision.candidates[decision.winner].score!.total <= best + AutoSettings.tieMargin)
         }
     }
 

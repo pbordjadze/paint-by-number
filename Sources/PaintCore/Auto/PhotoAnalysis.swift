@@ -54,7 +54,7 @@ public struct PhotoAnalysis: Sendable, Codable, Hashable {
     public var sourceWidth, sourceHeight: Int
     /// Weighted mean ΔE a k-paint palette reaches, for k in `paletteCurveKs` (8…64).
     public var paletteCurve: [Float]
-    public var chromaticFraction: Float      // pixels with chroma > 0.04
+    public var chromaticFraction: Float      // pixels with chroma > 0.04 (less below lightness 0.5)
     public var chromaSpread: Float           // std of chroma
     public var structureDensity: Float       // busy pixels whose gradient is coherent (contours)
     public var textureFraction: Float        // busy but incoherent pixels
@@ -62,6 +62,7 @@ public struct PhotoAnalysis: Sendable, Codable, Hashable {
     public var noise: Float                  // high-frequency energy in flat areas
     public var subjectCoverage: Float        // importance > 0.6
     public var importanceEntropy: Float      // 0 = one hotspot … 1 = flat (share of the frame it covers)
+    public var meanImportance: Float         // mean importance weight: how much of the frame the map protects
     public var faceCoverage: Float           // from hints, 0 without
     public var animalCoverage: Float
     public var labels: [String: Float]
@@ -106,9 +107,11 @@ public enum PaintingLength: String, Sendable, Codable, CaseIterable {
     /// 680 (34) at 0.5 and 1350 (67) at 0.9, a busy one two to three times that; a 768-px
     /// sample reaches 300–950 areas at any detail. The bands overlap so that a photo which
     /// cannot fill one still lands near it. Those counts come from `pbn` with the pipeline's
-    /// fallback importance map; the app's Vision maps rate background texture lower and give a
-    /// third to a half as many areas at like settings, so in the app more photos fall short of
-    /// their band (the score measures the app's own drafts, so it still aims at the band).
+    /// fallback importance map; Vision maps rate background texture lower and give about half
+    /// as many areas at like settings, which the detail center and the region model follow
+    /// through the map's mean importance (`AutoSettings.detailPerImportance`,
+    /// `regionAreaExponent`). Under a Vision stand-in map the median large corpus photo's
+    /// suggestion runs 16, 26 and 42 minutes for Quick, Relaxed and Detailed.
     public var timeBand: ClosedRange<Double> {
         switch self {
         case .quick: (8 * 60)...(25 * 60)

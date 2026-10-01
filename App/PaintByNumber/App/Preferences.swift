@@ -61,9 +61,10 @@ nonisolated extension PaintingLength {
         }
     }
 
-    /// The Settings footer under the picker: roughly the middle of the painting time the choice
-    /// aims for (`timeBand`: Quick 8–25 min, Relaxed 20–50, Detailed 40–120). A photo too small
-    /// or too plain to fill Relaxed's or Detailed's band ends below it, at any setting.
+    /// The Settings footer under the picker: what the choice typically gives (`timeBand`: Quick
+    /// 8–25 min, Relaxed 20–50, Detailed 40–120). Medians of large corpus photos under a Vision
+    /// stand-in map: 16, 26 and 42 minutes (`docs/wave2/log/auto-tuning.md`, round two). A photo
+    /// too small or too plain to fill Relaxed's or Detailed's band ends below it, at any setting.
     var footer: String {
         switch self {
         case .quick: String(localized: "settings.paintingLength.footer.quick",
@@ -73,7 +74,7 @@ nonisolated extension PaintingLength {
                               defaultValue: "Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings.",
                               comment: "Footer under the Painting Length setting when Relaxed is chosen")
         case .detailed: String(localized: "settings.paintingLength.footer.detailed",
-                               defaultValue: "Suggested settings aim for about an hour of painting. Small or simple photos make shorter paintings.",
+                               defaultValue: "Suggested settings aim for 45 minutes or more of painting. Small or simple photos make shorter paintings.",
                                comment: "Footer under the Painting Length setting when Detailed is chosen")
         }
     }

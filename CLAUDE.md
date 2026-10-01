@@ -28,8 +28,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     carries what it was tuned on (`docs/wave2/log/auto-tuning.md`). Features are quantized (3
     decimals; palette curve and noise 4) before the rule reads them, so a decision is reproducible
     from the same pixels, importance, hints and length on every device; decisions are never stored.
-    Bands: Quick 8–25 min, Relaxed 20–50, Detailed 40–120 at 3 s per area; a draft's region count
-    is scaled to the full canvas by area^(0.29 + 0.42 × detail).
+    The rule's thresholds are ramps and the knee a power-law fit, and the center wins any score
+    within `tieMargin` (0.006, measured JPEG re-encode noise) unless it runs over its band, so a
+    re-saved photo rarely gets materially different settings (16 of 99 decisions). Bands: Quick
+    8–25 min, Relaxed 20–50, Detailed 40–120 at 3 s per area; a draft's region count is scaled to
+    the full canvas by area^(−0.18 + 0.42 × detail + 0.77 × mean importance), and the detail
+    center rises one unit per unit of mean importance below 0.6, so Vision maps (which protect
+    less of the frame than pbn's fallback) still reach the band.
   - `TemplateGenerator.swift` entry point composing the stages, with `StageClock` timings
 - `App/` Xcode project (`PaintByNumber.xcodeproj`, synchronized folders — adding files needs no
   project edits) with the SwiftUI app, Metal renderer and UI tests.
@@ -72,9 +77,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   preview for `tools/auto_sheet.py <dir>` (one sheet per photo, winner framed). `pbn generate
   --auto [--length …] [--hints …]` generates at the suggestion (`stats.json` gains `auto` and
   `analysis`; `eval.py run … -- --auto` captions the chosen settings). pbn has no Vision: without
-  `--importance` it uses the pipeline's fallback map, which rates busy texture important, so its
-  region counts run above the app's (with Vision maps, CI's simulator gave the lighthouse and
-  parrots samples a third to a half of pbn's areas at like settings).
+  `--importance` it uses the pipeline's fallback map, which rates busy texture important, so at
+  like settings its region counts run above the app's (CI's simulator gave the lighthouse and
+  parrots samples a third to a half of pbn's areas); Auto reads the map's mean importance, so its
+  suggestions follow (Vision stand-in maps for tuning: `docs/wave2/log/auto-tuning.md`).
 - Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
   documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
 - `tools/regression.py [--sheets DIR] [--json FILE]` — the quality gate CI runs on every push:

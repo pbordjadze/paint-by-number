@@ -36,8 +36,15 @@ struct AutoWorking {
 enum PhotoAnalyzer {
     /// Paint-count curve: Lloyd iterations per k after k-means++ seeding.
     static let curveIterations = 10
-    /// A pixel is chromatic above this chroma (true OKLab).
+    /// A pixel is chromatic above this chroma (true OKLab), scaled down with lightness below
+    /// `chromaticLightness` (to at most `chromaticFloor` of it): a dark pixel can't hold much
+    /// absolute chroma, so a fixed 0.04 rated a night photo with an orange lamp and a blue
+    /// sky (mean lightness 0.2) 0.008 chromatic and the monochrome cut took its colours; with
+    /// the relative test it reads 0.23. Grey copies of colour photos still read 0, and so do
+    /// near-black pixels' chroma noise (the floor).
     static let chromaticChroma: Float = 0.04
+    static let chromaticLightness: Float = 0.5
+    static let chromaticFloor: Float = 0.25
     /// Busy pixels: the summed mean step magnitude of both axes over the analysis structure
     /// window is above this (about one just-noticeable difference per pixel and axis: foliage,
     /// gravel, fur, contours; not JPEG noise on a flat wall). Texture is busy pixels with less
@@ -85,7 +92,7 @@ enum PhotoAnalyzer {
 
         // Per-pixel features, summed over fixed chunks in chunk order (the result does not
         // depend on the number of cores); the noise histogram counts are integers.
-        let lanes = 7
+        let lanes = 8
         let noiseBins = 2000, noiseBin: Float = 0.0002
         let chunk = 16_384
         let chunks = (n + chunk - 1) / chunk
@@ -124,7 +131,8 @@ enum PhotoAnalyzer {
                                                 let x = i % w, y = i / w
                                                 let v = lab.value[i]
                                                 let chroma = (v.y * v.y + v.z * v.z).squareRoot() / chromaScale
-                                                if chroma > chromaticChroma { acc[0] += 1 }
+                                                let lightness = min(1, max(v.x / chromaticLightness, chromaticFloor))
+                                                if chroma > chromaticChroma * lightness { acc[0] += 1 }
                                                 acc[1] += Double(chroma)
                                                 acc[2] += Double(chroma * chroma)
                                                 var a = hor.value[i], b = ver.value[i]
@@ -146,6 +154,7 @@ enum PhotoAnalyzer {
                                                     }
                                                 }
                                                 if weight.value[i] > subjectImportance { acc[6] += 1 }
+                                                acc[7] += Double(weight.value[i])
                                                 // Noise: the Laplacian of lightness where the photo is flat or
                                                 // gently sloped at a scale of a few pixels (texture slopes there).
                                                 if x > 0, y > 0, x < w - 1, y < h - 1,
@@ -203,6 +212,7 @@ enum PhotoAnalyzer {
             noise: quantized(noise, places: 4),
             subjectCoverage: quantized(Float(total[6] / count)),
             importanceEntropy: quantized(entropy(working.weights, width: w, height: h)),
+            meanImportance: quantized(Float(total[7] / count)),
             faceCoverage: quantized(min(hints.faces.reduce(0) { $0 + $1.clippedArea }, 1)),
             animalCoverage: quantized(min(hints.animals.reduce(0) { $0 + $1.clippedArea }, 1)),
             labels: hints.labels.mapValues { quantized($0) })

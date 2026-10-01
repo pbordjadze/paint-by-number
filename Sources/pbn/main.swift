@@ -375,10 +375,10 @@ func candidateTable(_ decision: AutoDecision) -> String {
     let curve = zip(AutoSettings.paletteCurveKs, a.paletteCurve).map { "\($0)→\($1)" }.joined(separator: " ")
     var lines = [
         "analysis: source \(a.sourceWidth)×\(a.sourceHeight)  palette curve (k→mean dE) \(curve)",
-        String(format: "  chromatic %.3f  chroma spread %.3f  structure %.3f  texture %.3f  smooth %.3f  noise %.3f",
+        String(format: "  chromatic %.3f  chroma spread %.3f  structure %.3f  texture %.3f  smooth %.3f  noise %.4f",
                a.chromaticFraction, a.chromaSpread, a.structureDensity, a.textureFraction, a.smoothFraction, a.noise),
-        String(format: "  subject %.3f  importance entropy %.3f  faces %.3f  animals %.3f",
-               a.subjectCoverage, a.importanceEntropy, a.faceCoverage, a.animalCoverage)
+        String(format: "  subject %.3f  importance mean %.3f  entropy %.3f  faces %.3f  animals %.3f",
+               a.subjectCoverage, a.meanImportance, a.importanceEntropy, a.faceCoverage, a.animalCoverage)
             + (a.labels.isEmpty ? "" : "  labels " + a.labels.sorted { $0.key < $1.key }.map { "\($0.key) \($0.value)" }
                 .joined(separator: ", ")),
         "    #  colors  detail  smooth  regions  est min  fidelity     p95  rings  tiny   room  band pen    total",

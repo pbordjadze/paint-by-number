@@ -12,9 +12,11 @@ import Foundation
 ///
 /// The rule is fixed and its inputs are the photo, its importance and hints and the
 /// preference, so the same pixels always get the same settings; decisions are reproducible
-/// and never stored. A re-encoded copy of a photo can get different ones: neighbouring
-/// candidates often score closer together than a re-encode moves them. The constants were
-/// tuned by eye on contact sheets (`tools/auto_sheet.py`, `docs/wave2/log/auto-tuning.md`).
+/// and never stored. A re-encoded copy of a photo moves the scores a little, so the rule's
+/// thresholds are ramps, the knee is a fitted curve and a neighbour must beat the center by
+/// more than that (`tieMargin`); a JPEG re-save still changes about one suggestion in six
+/// materially. The constants were tuned by eye on contact sheets (`tools/auto_sheet.py`,
+/// `docs/wave2/log/auto-tuning.md`).
 public enum AutoSettings {
     public static let paletteCurveKs = [8, 12, 16, 24, 32, 48, 64]
 
@@ -58,7 +60,9 @@ public enum AutoSettings {
     static let faceColors: Float = 4
     /// Colourful photos (chroma spread in the top third of the corpus: Kodak 01–24, which
     /// includes the six samples, and scikit-image's astronaut, chelsea, coffee and rocket)
-    /// get a quarter more paints.
+    /// get a quarter more paints. Like every threshold of the rule it is a ramp
+    /// (`ramp(_:at:)`), not a step: a re-saved photo whose spread fell from 0.030 to 0.029 lost
+    /// 6 of its 40 paints to the step.
     static let colorfulSpread: Float = 0.03
     static let colorfulFactor: Float = 1.25
     /// Monochrome and sepia photos need fewer: the palette curve of a grey photo keeps
@@ -78,6 +82,15 @@ public enum AutoSettings {
     static let fillingSubjectDetail: Float = 0.15
     static let busyTexture: Float = 0.35
     static let busyTextureDetail: Float = -0.15
+    /// A map that protects less of the frame gets more detail, so the painting keeps its
+    /// length: the bands and detail centers were tuned on the pipeline's fallback map (mean
+    /// importance about 0.6), and at like settings a Vision-like map (0.25 base, mean about
+    /// 0.4) gives about half the areas (`regionAreaExponent`). On the corpus's full templates
+    /// at 28 colours a large photo's median reached 30 minutes at detail 0.5 under the
+    /// fallback, 0.7 under the Vision stand-in and about 0.9 under a uniform 0.25 map: about
+    /// one unit of detail per unit of mean importance.
+    static let referenceImportance: Float = 0.6
+    static let detailPerImportance: Float = 1
     /// Smoothness: texture and noise soften; strong structure (the top third of the
     /// corpus, as for `colorfulSpread`) stays crisp.
     static let smoothnessBase: Float = 0.4
@@ -124,8 +137,8 @@ public enum AutoSettings {
     /// The center of the candidates (see the rule on the constants above).
     static func center(for a: PhotoAnalysis, preference: PaintingLength) -> GenerationSettings {
         var colors = Float(clamp(Int(knee(a.paletteCurve).rounded()), preference.colorBand))
-        if a.faceCoverage > faceCoverage { colors += faceColors }
-        if a.chromaSpread >= colorfulSpread { colors *= colorfulFactor }
+        colors += faceColors * ramp(a.faceCoverage, at: faceCoverage)
+        colors *= 1 + (colorfulFactor - 1) * ramp(a.chromaSpread, at: colorfulSpread)
         colors *= monochromeFactor + (1 - monochromeFactor) * min(a.chromaticFraction / monochromeFraction, 1)
         // Ramps get no extra paints (the spec's +2 per tenth of the frame in ramps beyond 30 %
         // was meant for W3's gradient-aware allocation, which did not land): on the corpus's
@@ -134,12 +147,13 @@ public enum AutoSettings {
         // neighbours already offer more paints where they pay.
 
         var detail = preference.detailCenter
-        if a.subjectCoverage > fillingSubject { detail += fillingSubjectDetail }
-        if a.textureFraction > busyTexture { detail += busyTextureDetail }
+        detail += fillingSubjectDetail * ramp(a.subjectCoverage, at: fillingSubject)
+        detail += busyTextureDetail * ramp(a.textureFraction, at: busyTexture)
+        detail += detailPerImportance * (referenceImportance - a.meanImportance)
 
         var smoothness = smoothnessBase + smoothnessPerTexture * a.textureFraction
             + smoothnessForNoise * min(a.noise / noiseReference, 1)
-        if a.structureDensity >= structuredDensity { smoothness += structuredSmoothness }
+        smoothness += structuredSmoothness * ramp(a.structureDensity, at: structuredDensity)
 
         return GenerationSettings(
             colorCount: clamp(evenColors(colors), preference.colorBand),
@@ -147,23 +161,29 @@ public enum AutoSettings {
             smoothness: hundredths(min(max(smoothness, smoothnessBand.lowerBound), smoothnessBand.upperBound)))
     }
 
-    /// The smallest paint count at which the palette curve's gain per added paint falls below
-    /// `marginalGain`, interpolated between the gains of consecutive sampled ks (each
-    /// assigned to the middle of its interval); the largest k when it never does.
+    /// The paint count at which one more paint lowers the palette curve's mean ΔE by
+    /// `marginalGain`, on a power law `error = A · k^−b` fitted to the whole curve (least
+    /// squares in log–log): `k = (A·b / marginalGain)^(1 / (b + 1))`, within 8…64. Each point
+    /// of the curve is its own k-means run, so reading the gain between neighbouring points
+    /// (the first rule) moved the knee by a tenth on average when a photo was re-saved as JPEG
+    /// q92, up to 26 → 35 paints; the fit moves it by 2 % on the same 33 photos, at the same
+    /// level (median ratio 0.99).
     static func knee(_ curve: [Float]) -> Float {
-        let ks = paletteCurveKs.map(Float.init)
-        guard curve.count == ks.count else { return ks[ks.count / 2] }
-        var previous: (k: Float, gain: Float)?
-        for i in 0..<(ks.count - 1) {
-            let gain = (curve[i] - curve[i + 1]) / (ks[i + 1] - ks[i])
-            let middle = (ks[i] + ks[i + 1]) / 2
-            if gain < marginalGain {
-                guard let previous else { return ks[0] }
-                return previous.k + (previous.gain - marginalGain) / (previous.gain - gain) * (middle - previous.k)
-            }
-            previous = (middle, gain)
+        let ks = paletteCurveKs.map(Double.init)
+        let range = Float(ks[0])...Float(ks[ks.count - 1])
+        guard curve.count == ks.count else { return Float(ks[ks.count / 2]) }
+        let xs = ks.map { log($0) }, ys = curve.map { log(max(Double($0), 1e-4)) }
+        let mx = xs.reduce(0, +) / Double(xs.count), my = ys.reduce(0, +) / Double(ys.count)
+        var sxy = 0.0, sxx = 0.0
+        for (x, y) in zip(xs, ys) {
+            sxy += (x - mx) * (y - my)
+            sxx += (x - mx) * (x - mx)
         }
-        return ks[ks.count - 1]
+        let b = -sxy / sxx
+        guard b > 1e-6 else { return range.lowerBound }
+        let a = exp(my + b * mx)
+        let k = pow(a * b / Double(marginalGain), 1 / (b + 1))
+        return clamp(Float(k), range)
     }
 
     // MARK: - Scoring
@@ -192,27 +212,39 @@ public enum AutoSettings {
     /// weight still prefers the longer of two candidates, but no longer lets 6 more regions
     /// outweigh 0.004 ΔE (at 0.05 Detailed chose 20 colours over Relaxed's 26).
     static let belowBandWeight: Float = 0.01
-    /// Totals this close are a tie, which the painting time nearest the middle of the band
-    /// wins (geometric mean of its edges). At 0.002 the tie took 10 paints over 18 on a
-    /// Relaxed guinea pig and 28 over 38 on a Detailed building, though the score preferred
-    /// the latter; and the spec's tie-break, fewer regions, made a Detailed painting shorter
-    /// than the same photo's Relaxed one.
-    static let tieTolerance: Float = 0.001
-    /// Region counts grow with the canvas as area^(a + b × detail), not in proportion:
-    /// minimum areas are fractions of the canvas but label room is in pixels, and the more
-    /// detail asks for, the more the draft's pixel floor holds back. Least squares over 69
-    /// photos (the six samples, Kodak 01–24, four scikit-image photos, 35 photos at the
-    /// app's 2048-px source size) at 16 and 40 colours and detail 0.1–0.9, drafts against
-    /// full templates: rms error of the log count 0.22 (a photo's estimate is typically
-    /// within a quarter), against 0.29 for a fixed 0.6.
-    static let regionAreaExponent: (base: Double, perDetail: Double) = (0.29, 0.42)
+    /// Scores within this of the best are a tie, because a photo's re-encode moves them that
+    /// much: a JPEG q92 re-save of 33 corpus photos (99 decisions) changed the difference
+    /// between a neighbour's total and the center's by a median 0.003 (p90 0.010), from the
+    /// colour error, its 95th percentile and the region estimate together. The center (the
+    /// rule's prior) wins every tie; when a neighbour beats it by more, the tied neighbours go
+    /// to the painting time nearest the middle of the band (geometric mean of its edges), as
+    /// they do when the center's own estimate runs over the band (busy grass, tulips and
+    /// river stones then kept a 60–70-minute Relaxed center over a shorter neighbour).
+    /// Re-saved photos whose suggestion changed materially (colours by more than 15 %, detail
+    /// or smoothness by 0.1 or more), out of 99: 54 with a 0.001 window, 43 at 0.004, 15 at
+    /// 0.006, 12 at 0.008; 0.006 keeps neighbours that win clearly (22 of the 99), and 16 with
+    /// the over-band exception.
+    static let tieMargin: Float = 0.006
+    /// Region counts grow with the canvas as area^(a + b × detail + c × mean importance),
+    /// not in proportion: minimum areas are fractions of the canvas but label room is in
+    /// pixels, so the count grows only where the pixel floors hold the draft back: the more
+    /// detail asks for, and the more of the frame the importance map protects (unimportant
+    /// areas need larger regions, `SegmentationParameters.areaScale`). Least squares over
+    /// 1104 draft/full pairs: the 69 corpus photos at 28 colours and detail 0.1, 0.4, 0.7 and
+    /// 1, each under four maps: the pipeline's fallback (mean 0.6, what `pbn` uses without a
+    /// map), uniform 0.25 and 0.4, and a Vision stand-in built like `SubjectImportance`'s
+    /// (0.25 base, an attention blob, a 0.75 subject mask and faces near 1; W3's hand-made
+    /// maps for four photos; mean 0.36–0.63). rms error of the log count 0.22 with no bias
+    /// by map (±0.04), against 0.35 for the detail-only fit (0.29 + 0.42 × detail, tuned on
+    /// fallback maps), which overestimated a uniform-0.25 map's count 1.4-fold.
+    static let regionAreaExponent: (base: Double, perDetail: Double, perImportance: Double) = (-0.18, 0.42, 0.77)
 
     /// How `total` is made of the score's terms, for reports.
     public static var scoreFormula: String {
         "total = fidelity + \(p95Weight) × p95 + \(ringWeight) × rings/regions + \(tinyWeight) × tiny/regions"
             + " + \(paintWeight) × paints"
             + " + \(bandPenaltyWeight) × ln(time / band top)² above the band (\(belowBandWeight) × … below it);"
-            + " ties within \(tieTolerance) → time nearest the band's middle"
+            + " ties within \(tieMargin) → the center unless it runs over the band, else the time nearest the band's middle"
     }
 
     /// The pipeline's importance weights for a working image (the map `score` expects): the
@@ -254,7 +286,7 @@ public enum AutoSettings {
         var estimatedRegions = Double(regions)
         if let fullSize, n > 0 {
             let ratio = Double(fullSize.width * fullSize.height) / Double(n)
-            estimatedRegions *= pow(ratio, regionExponent(detail: detail))
+            estimatedRegions *= pow(ratio, regionExponent(detail: detail, meanImportance: meanImportance(weights)))
         }
         let seconds = PaintingTime.estimate(regionCount: Int(estimatedRegions.rounded()))
         let band = preference.timeBand
@@ -273,9 +305,27 @@ public enum AutoSettings {
     }
 
     /// The exponent of the canvas area ratio that turns a draft's region count into the full
-    /// template's (`regionAreaExponent`).
-    static func regionExponent(detail: Float) -> Double {
-        regionAreaExponent.base + regionAreaExponent.perDetail * Double(min(max(detail, 0), 1))
+    /// template's (`regionAreaExponent`), within 0…1.
+    static func regionExponent(detail: Float, meanImportance: Float) -> Double {
+        let e = regionAreaExponent
+        let value = e.base + e.perDetail * Double(min(max(detail, 0), 1))
+            + e.perImportance * Double(min(max(meanImportance, 0), 1))
+        return min(max(value, 0), 1)
+    }
+
+    /// Mean of importance weights, to hundredths (summed in fixed chunks, in order).
+    static func meanImportance(_ weights: [Float]) -> Float {
+        guard !weights.isEmpty else { return 0.5 }
+        let chunk = 16_384
+        var total = 0.0
+        var start = 0
+        while start < weights.count {
+            var sum: Float = 0
+            for i in start..<min(start + chunk, weights.count) { sum += weights[i] }
+            total += Double(sum)
+            start += chunk
+        }
+        return (Float(total / Double(weights.count)) * 100).rounded() / 100
     }
 
     /// Importance-weighted mean and 95th percentile of the true-OKLab distance between every
@@ -392,23 +442,34 @@ public enum AutoSettings {
             winner: winner(of: candidates, preference: preference))
     }
 
-    /// The lowest total; totals within `tieTolerance` of it go to the estimated painting time
-    /// nearest the middle of the preference's band (on a log scale), then to the earlier
-    /// candidate.
+    /// The lowest total, with `tieMargin`: the center when its total is within the margin of
+    /// the best and its painting time doesn't run over the band; otherwise, of the candidates
+    /// within the margin, the estimated painting time nearest the middle of the preference's
+    /// band (on a log scale), then the earlier candidate.
     static func winner(of candidates: [AutoCandidate], preference: PaintingLength) -> Int {
         let totals = candidates.map { $0.score?.total ?? .infinity }
         guard let best = totals.min(), best.isFinite else { return 0 }
         let band = preference.timeBand
+        if totals[0] <= best + tieMargin, candidates[0].score!.estimatedSeconds <= band.upperBound { return 0 }
         let middle = (band.lowerBound * band.upperBound).squareRoot()
         func distance(_ i: Int) -> Double { abs(log(max(candidates[i].score!.estimatedSeconds, 1) / middle)) }
         var winner = -1
-        for i in candidates.indices where totals[i] <= best + tieTolerance {
+        for i in candidates.indices where totals[i] <= best + tieMargin {
             if winner < 0 || distance(i) < distance(winner) { winner = i }
         }
         return winner
     }
 
     // MARK: - Helpers
+
+    /// 0 below `threshold` − `rampWidth`/2, 1 above `threshold` + `rampWidth`/2, linear in
+    /// between (relative to the threshold): the rule's thresholds fade in, so a feature that a
+    /// re-encode nudges across one moves the center a little instead of a whole step.
+    static let rampWidth: Float = 0.3
+    @inline(__always) static func ramp(_ value: Float, at threshold: Float) -> Float {
+        let half = rampWidth / 2 * threshold
+        return min(max((value - threshold + half) / (2 * half), 0), 1)
+    }
 
     @inline(__always) static func evenColors(_ value: Float) -> Int { 2 * Int((value / 2).rounded()) }
     @inline(__always) static func hundredths(_ value: Float) -> Float { (value * 100).rounded() / 100 }
