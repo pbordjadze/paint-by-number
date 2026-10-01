@@ -103,6 +103,10 @@ final class CanvasView: UIView, PaintingCanvas {
     private var replayTask: Task<Void, Never>?
     private var isReplaying = false
     private var shineColor = -1
+    /// The fill moment's gold sparkles: a few layers over the canvas, reused in turn.
+    private var sparkleLayers: [CAShapeLayer] = []
+    private var nextSparkle = 0
+    private var lastSparkles: CFTimeInterval = 0
     private var photoTexture: (any MTLTexture)?
     private var photoTask: Task<Void, Never>?
     private var photoFrom: Float = 0
@@ -815,9 +819,57 @@ final class CanvasView: UIView, PaintingCanvas {
             longest = max(longest, duration)
         }
         if animated { FeedbackEngine.shared.fillDuration = TimeInterval(longest) }
+        if animate, regions.count == 1 { popSparkles(at: regions[0], after: longest) }
         activeUntil = max(activeUntil, time + longest + 0.75)
         if hoverRegion >= 0 && session.isPainted(hoverRegion) { hoverRegion = -1 }
         requestRender()
+    }
+
+    /// Two gold sparkles pop at the region's edge (on its label's free circle, which touches the
+    /// outline) as the paint lands, then fade. Not during a fast stroke, nor where the region is
+    /// too small on screen for them to read.
+    private func popSparkles(at region: Int, after delay: Float) {
+        guard let label = template.labels(ofRegion: region).max(by: { $0.radius < $1.radius }) else { return }
+        let reach = CGFloat(label.radius) * currentCamera().zoom
+        let start = CACurrentMediaTime()
+        guard reach >= 10, start - lastSparkles > 0.3 else { return }
+        lastSparkles = start
+        if sparkleLayers.isEmpty {
+            sparkleLayers = (0..<4).map { _ in
+                let sparkle = CAShapeLayer()
+                sparkle.fillColor = UIColor(red: 0.788, green: 0.635, blue: 0.290, alpha: 1).cgColor
+                sparkle.opacity = 0
+                sparkle.zPosition = 10
+                layer.addSublayer(sparkle)
+                return sparkle
+            }
+        }
+        let centre = viewPoint(forCanvas: label.position)
+        let size = min(22, max(10, reach * 0.45))
+        for (k, angle) in [-0.7, 2.3].enumerated() {
+            let sparkle = sparkleLayers[nextSparkle]
+            nextSparkle = (nextSparkle + 1) % sparkleLayers.count
+            let side = size * (k == 0 ? 1 : 0.7)
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            sparkle.bounds = CGRect(x: 0, y: 0, width: side, height: side)
+            sparkle.path = Sparkle.cgPath(in: sparkle.bounds)
+            sparkle.position = CGPoint(x: centre.x + reach * CGFloat(cos(angle)), y: centre.y + reach * CGFloat(sin(angle)))
+            sparkle.opacity = 0
+            CATransaction.commit()
+            let pop = CAKeyframeAnimation(keyPath: "transform.scale")
+            pop.values = [0.2, 1.15, 0.85]
+            pop.keyTimes = [0, 0.35, 1]
+            let fade = CAKeyframeAnimation(keyPath: "opacity")
+            fade.values = [0, 1, 1, 0]
+            fade.keyTimes = [0, 0.2, 0.55, 1]
+            let group = CAAnimationGroup()
+            group.animations = [pop, fade]
+            group.duration = 0.7
+            group.beginTime = start + Double(delay) * 0.8 + Double(k) * 0.08
+            group.fillMode = .backwards
+            sparkle.add(group, forKey: "sparkle")
+        }
     }
 
     func session(_ session: PaintingSession, didUnpaint regions: [Int]) {

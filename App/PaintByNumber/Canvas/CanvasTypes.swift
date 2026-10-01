@@ -136,15 +136,15 @@ nonisolated struct CanvasPalette: Sendable {
     var hatchCeiling: Float = 0.4
 
     static let light = CanvasPalette(
-        background: CanvasColor.linearP3(sRGB: SIMD3(0.933, 0.910, 0.867)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.984, 0.969, 0.937)),
+        background: CanvasColor.linearP3(sRGB: SIMD3(0.949, 0.945, 0.957)),
+        paper: CanvasColor.linearP3(sRGB: SIMD3(0.957, 0.937, 0.902)),
         ink: CanvasColor.linearP3(sRGB: SIMD3(0.118, 0.102, 0.133)),
         shadowOpacity: 0.16, outlineOpacity: 0.62)
 
     /// Light paper on a dark backdrop (dark system appearance, Paper set to Light).
     static let dark = CanvasPalette(
         background: CanvasColor.linearP3(sRGB: SIMD3(0.078, 0.067, 0.090)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.929, 0.902, 0.855)),
+        paper: CanvasColor.linearP3(sRGB: SIMD3(0.957, 0.937, 0.902)),
         ink: CanvasColor.linearP3(sRGB: SIMD3(0.118, 0.102, 0.133)),
         shadowOpacity: 0.55, outlineOpacity: 0.62)
 

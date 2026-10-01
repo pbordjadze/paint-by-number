@@ -1,22 +1,27 @@
 import SwiftUI
 import UIKit
 
-/// Shared visual language, the Pipo identity: parchment by day and violet night after dark,
-/// raised surfaces, New York for titles and numerals, Nightshade and antique gold.
+/// Shared visual language, the Pipo design system: native iOS with a darker, slightly witchy
+/// personality. Night surfaces (cool grey by day), New York for titles and numerals, Nightshade
+/// and antique gold. The asset catalog's colors carry the system's tokens.
 enum Theme {
+    /// `surface-base`: screen background.
     static let paper = Color("Paper")
+    /// `surface-elevated`: cards, sheets, grouped rows.
     static let surface = Color("Surface")
-    static let cardRadius: CGFloat = 22
+    /// `radius-lg`: media cards.
+    static let cardRadius: CGFloat = 20
     static let hairline = Color.primary.opacity(0.08)
-    /// Text and symbol tint: Nightshade on parchment, antique gold at night (Nightshade
-    /// would be too dark to read there).
+    /// `tint`: Nightshade by day, antique gold at night (Nightshade would be too dark to read
+    /// there).
     static let accent = Color("AccentColor")
-    /// Nightshade in both appearances, under white labels: prominent buttons and badges.
+    /// `nightshade`, the signature, in both appearances: under the labels of primary buttons
+    /// and tinted badges.
     static let signature = Color(red: 0.482, green: 0.247, blue: 0.494)
-    /// The antique gold of the identity's moon and sparkles.
+    /// `pot-3-gold`, the only color of stars, sparkles and the crescent.
     static let gold = Color(red: 0.788, green: 0.635, blue: 0.290)
-    /// Line work of unpainted outlines.
-    static let outline = Color(red: 0.431, green: 0.408, blue: 0.455)
+    /// `outline`: line work of unpainted outlines, hairlines.
+    static let outline = Color("Outline")
 
     /// Navigation titles in New York, like the identity's headings.
     static func styleNavigationTitles() {
@@ -40,15 +45,17 @@ extension Font {
     }
 }
 
-/// The identity's four-point sparkle. `pinch` is how far the control points sit off the
-/// centre, as a fraction of the half-size: 0 gives needle-thin arms.
+/// The design system's four-point sparkle (Motifs/sparkle.svg). `pinch` is how far the
+/// control points sit off the centre, as a fraction of the half-size: 0 gives needle-thin arms.
 nonisolated struct Sparkle: Shape {
     var pinch: CGFloat = 0.133
 
-    func path(in rect: CGRect) -> Path {
+    func path(in rect: CGRect) -> Path { Path(Self.cgPath(in: rect, pinch: pinch)) }
+
+    static func cgPath(in rect: CGRect, pinch: CGFloat = 0.133) -> CGPath {
         let c = CGPoint(x: rect.midX, y: rect.midY)
         let kx = rect.width / 2 * pinch, ky = rect.height / 2 * pinch
-        var p = Path()
+        let p = CGMutablePath()
         p.move(to: CGPoint(x: c.x, y: rect.minY))
         p.addQuadCurve(to: CGPoint(x: rect.maxX, y: c.y), control: CGPoint(x: c.x + kx, y: c.y - ky))
         p.addQuadCurve(to: CGPoint(x: c.x, y: rect.maxY), control: CGPoint(x: c.x + kx, y: c.y + ky))
