@@ -52,11 +52,11 @@ nonisolated enum SubjectImportance {
     /// OS versions don't move a suggestion.
     static func hints(faces: [CGRect], animals: [CGRect], labels: [(identifier: String, confidence: Float)]) -> SubjectHints {
         func hundredths(_ value: Double) -> Float { Float((value * 100).rounded() / 100) }
-        func normalized(_ rects: [CGRect]) -> [NormalizedRect] {
-            rects.compactMap { box -> NormalizedRect? in
+        func normalized(_ rects: [CGRect]) -> [PaintCore.NormalizedRect] {
+            rects.compactMap { box -> PaintCore.NormalizedRect? in
                 let clipped = box.intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
                 guard !clipped.isNull else { return nil }
-                let rect = NormalizedRect(
+                let rect = PaintCore.NormalizedRect(
                     x: hundredths(clipped.minX), y: hundredths(1 - clipped.maxY),
                     width: hundredths(clipped.width), height: hundredths(clipped.height))
                 return rect.width > 0 && rect.height > 0 ? rect : nil

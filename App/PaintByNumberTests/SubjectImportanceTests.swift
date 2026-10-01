@@ -25,7 +25,7 @@ struct SubjectImportanceTests {
                 (identifier: "kitchen_utensil", confidence: 0.95),
             ])
 
-        func expect(_ rect: NormalizedRect, _ x: Float, _ y: Float, _ width: Float, _ height: Float,
+        func expect(_ rect: PaintCore.NormalizedRect, _ x: Float, _ y: Float, _ width: Float, _ height: Float,
                     sourceLocation: SourceLocation = #_sourceLocation) {
             for (value, expected) in [(rect.x, x), (rect.y, y), (rect.width, width), (rect.height, height)] {
                 #expect(abs(value - expected) < 1e-5, "\(rect)", sourceLocation: sourceLocation)
