@@ -135,6 +135,14 @@ struct AutoSettingsTests {
         #expect(none.faceCoverage == 0 && none.animalCoverage == 0 && none.labels.isEmpty)
     }
 
+    @Test func hintsDecodeWithMissingLists() throws {
+        let faces = try JSONDecoder().decode(SubjectHints.self, from: Data(#"{"faces": [{"x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}]}"#.utf8))
+        #expect(faces == SubjectHints(faces: [NormalizedRect(x: 0.1, y: 0.2, width: 0.3, height: 0.4)]))
+        #expect(try JSONDecoder().decode(SubjectHints.self, from: Data("{}".utf8)) == SubjectHints())
+        let full = SubjectHints(animals: [NormalizedRect(x: 0, y: 0, width: 1, height: 1)], labels: ["pet": 0.9])
+        #expect(try JSONDecoder().decode(SubjectHints.self, from: Self.json(full)) == full)
+    }
+
     @Test func featuresAreQuantized() throws {
         let a = try Self.analyze(SegmentationTests.colorful(width: 300, height: 200))
         let values = a.paletteCurve + [a.chromaticFraction, a.chromaSpread, a.structureDensity, a.textureFraction,

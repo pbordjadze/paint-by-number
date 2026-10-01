@@ -37,6 +37,14 @@ public struct SubjectHints: Sendable, Codable, Hashable {
         self.animals = animals
         self.labels = labels
     }
+
+    /// Missing lists decode as empty: hand-written hints for tooling name only what a photo has.
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        faces = try c.decodeIfPresent([NormalizedRect].self, forKey: .faces) ?? []
+        animals = try c.decodeIfPresent([NormalizedRect].self, forKey: .animals) ?? []
+        labels = try c.decodeIfPresent([String: Float].self, forKey: .labels) ?? [:]
+    }
 }
 
 /// Features of a photo that the candidate rule reads (`AutoSettings.analyze`). Every value is
