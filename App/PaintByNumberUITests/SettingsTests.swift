@@ -59,7 +59,10 @@ final class SettingsTests: XCTestCase {
         scroll(app, to: picker)
         XCTAssertTrue(picker.exists, "Settings has no Painting Length picker")
         XCTAssertTrue(describe(picker).contains("Relaxed"), "Painting Length doesn't start on Relaxed: \(describe(picker))")
-        XCTAssertTrue(app.staticTexts["Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings."].waitForExistence(timeout: 5))
+        // The footer sits below the picker: a list only builds the rows it has scrolled to.
+        let footer = app.staticTexts["painting-length-footer"]
+        scroll(app, to: footer)
+        XCTAssertTrue(footer.label.hasPrefix("Suggested settings aim for about half an hour"), "Relaxed footer: \(footer.label)")
         picker.tap()
         for choice in ["Quick", "Relaxed", "Detailed"] {
             XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Painting Length picker has no \(choice)")
@@ -68,7 +71,10 @@ final class SettingsTests: XCTestCase {
         let chosen = NSPredicate(format: "label CONTAINS 'Quick' OR value CONTAINS 'Quick'")
         let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5)
         XCTAssertEqual(result, .completed, "Choosing Quick didn't change the picker: \(describe(picker))")
-        XCTAssertTrue(app.staticTexts["Suggested settings aim for about 15 minutes of painting."].waitForExistence(timeout: 5))
+        let quickFooter = NSPredicate(format: "label == 'Suggested settings aim for about 15 minutes of painting.'")
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: quickFooter, object: footer)], timeout: 5), .completed,
+            "Quick footer: \(footer.label)")
         attachScreenshot(of: app, named: "settings-painting-length-quick")
 
         // Back to the default, so later create-flow tests and screenshots aim for Relaxed.

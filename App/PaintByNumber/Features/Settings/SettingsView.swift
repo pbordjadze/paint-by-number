@@ -98,6 +98,7 @@ struct SettingsView: View {
                     Text("New Paintings")
                 } footer: {
                     Text(paintingLength.footer)
+                        .accessibilityIdentifier("painting-length-footer")
                 }
 
                 Section {
