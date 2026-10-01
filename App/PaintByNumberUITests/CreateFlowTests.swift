@@ -43,10 +43,14 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertEqual(title.placeholderValue, "Parrots")
         // The first tap can land while the preview is still settling: type only once focused.
         let focused = NSPredicate(format: "hasKeyboardFocus == true")
+        let unfocusedFrame = title.frame
         for _ in 0..<3 where !focused.evaluate(with: title) {
             title.tap()
             _ = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: focused, object: title)], timeout: 3)
         }
+        // The keyboard shrinks the view; the layout must not switch (stacked ↔ side by side).
+        XCTAssertEqual(title.frame.minX, unfocusedFrame.minX, accuracy: 1, "The preview changed layout when the keyboard showed")
+        XCTAssertEqual(title.frame.width, unfocusedFrame.width, accuracy: 1, "The preview changed layout when the keyboard showed")
         title.typeText("Jungle Birds\n")
         XCTAssertEqual(title.value as? String, "Jungle Birds")
         let shot = XCTAttachment(screenshot: app.screenshot())

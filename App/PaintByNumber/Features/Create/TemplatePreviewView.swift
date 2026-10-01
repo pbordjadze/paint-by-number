@@ -14,6 +14,10 @@ struct TemplatePreviewView: View {
     }
 
     @State private var size: CGSize = .zero
+    /// `size` with the keyboard's room given back: what the layout is chosen for.
+    @State private var roomSize: CGSize = .zero
+    /// The layout chosen when title editing began, for that window width: kept until it ends.
+    @State private var editingLayout: (width: CGFloat, sideBySide: Bool)?
     @State private var layer: Layer = .painting
     @State private var isStarting = false
     @State private var startError: String?
@@ -62,6 +66,14 @@ struct TemplatePreviewView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+        .background {
+            Color.clear
+                .ignoresSafeArea(.keyboard)
+                .onGeometryChange(for: CGSize.self) { $0.size } action: { roomSize = $0 }
+        }
+        .onChange(of: titleFocused) { _, focused in
+            editingLayout = focused ? (size.width, chosenLayout) : nil
+        }
         // The title field names the painting; the bar says which step this is.
         .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
@@ -74,17 +86,25 @@ struct TemplatePreviewView: View {
 
     /// Canvas beside the controls when that shows the photo larger than stacking them: landscape
     /// windows, and portrait photos on iPad. The controls' size is estimated rather than measured
-    /// because measuring it would feed back into the choice of layout.
+    /// because measuring it would feed back into the choice of layout. The choice ignores the
+    /// keyboard (`roomSize`) and holds while the title is edited: switching layouts then would
+    /// rebuild the title field and drop its focus, and the keyboard with it.
     private var isSideBySide: Bool {
-        guard size.width > 0, size.height > 0 else { return false }
+        if let editingLayout, editingLayout.width == size.width { return editingLayout.sideBySide }
+        return chosenLayout
+    }
+
+    private var chosenLayout: Bool {
+        let room = roomSize.width > 0 && roomSize.height > 0 ? roomSize : size
+        guard room.width.isFinite, room.height.isFinite, room.width > 0, room.height > 0 else { return false }
         let pickerHeight: CGFloat = 60
-        // The stacked controls card, title row included.
+        // The stacked controls card: title row, settings chip, three sliders, summary, Start.
         let stacked = Self.fittedArea(
-            width: size.width - 2 * sidePadding,
-            height: size.height - pickerHeight - 460, aspect: photoAspect)
+            width: room.width - 2 * sidePadding,
+            height: room.height - pickerHeight - 460, aspect: photoAspect)
         let beside = Self.fittedArea(
-            width: size.width - 2 * sidePadding - panelWidth - 24,
-            height: size.height - pickerHeight - 2 * sidePadding, aspect: photoAspect)
+            width: room.width - 2 * sidePadding - panelWidth - 24,
+            height: room.height - pickerHeight - 2 * sidePadding, aspect: photoAspect)
         return beside > stacked
     }
 
@@ -92,12 +112,12 @@ struct TemplatePreviewView: View {
     private var panelWidth: CGFloat { size.width > 900 ? 360 : 320 }
 
     private var photoAspect: CGFloat {
-        guard let image = model.source?.image, image.height > 0 else { return 4 / 3 }
+        guard let image = model.source?.image, image.width > 0, image.height > 0 else { return 4 / 3 }
         return CGFloat(image.width) / CGFloat(image.height)
     }
 
     private static func fittedArea(width: CGFloat, height: CGFloat, aspect: CGFloat) -> CGFloat {
-        guard width > 0, height > 0 else { return 0 }
+        guard width > 0, height > 0, width.isFinite, height.isFinite else { return 0 }
         let fittedWidth = min(width, height * aspect)
         return fittedWidth * fittedWidth / aspect
     }

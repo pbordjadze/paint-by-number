@@ -25,8 +25,8 @@ struct CompareView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let width = geo.size.width
-            let x = width * (after == nil ? 1 : split)
+            let width = max(0, geo.size.width)
+            let x = min(max(width * (after == nil ? 1 : split), 0), width)
             ZStack(alignment: .topLeading) {
                 ZStack {
                     if let after {
