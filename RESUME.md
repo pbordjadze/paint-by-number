@@ -1,12 +1,13 @@
 # Resume notes: paint-by-number improvement program
 
-Updated 2026-10-01. Wave 1 is finished and released as build 69 (e36797f). Nothing is running.
+Updated 2026-10-01. Wave 1 is finished and released as 1.0.84 (e36797f). Nothing is running. (Builds are numbered
+by CI run: 1.0.67 was the last pre-wave build, 1.0.79 the first wave-1 release.)
 
 ## Where things stand
 
 | Branch | What it holds |
 | --- | --- |
-| claude/paint-by-numbers-app | e36797f: build 69, what SideStore serves. Build 68 (4cf3fe0) had an iPhone layout bug (the paint screen's top bar was wider than a 402 pt phone and pushed the whole screen off the right edge); 69 fixes it. |
+| claude/paint-by-numbers-app | e36797f: 1.0.84, what SideStore serves. 1.0.79 (4cf3fe0) had an iPhone layout bug (the paint screen's top bar was wider than a 402 pt phone and pushed the whole screen off the right edge); 1.0.84 fixes it. |
 | claude/wave1-merge | Same commit as the app branch. All wave-1 groups merged, plus the segmentation fixes (iris-ring blocker fixed and checked on crops), the pipeline-quality fixes (PDF prints detailed templates on overlapping sheets), localization (string catalogs, tools/strings_check.py in CI, `*-long-text` scenarios), and the final-review fixes. CI green on iPad and iPhone; regression baseline regenerated once; pipelineVersion still 2. |
 | claude/wip-research-fix, claude/wip-pq-fix | Superseded: their work is merged. Safe to delete. |
 
@@ -21,7 +22,7 @@ handoff/ holds the wave-1 review findings for reference.
 
 ## Next
 
-1. After build 69: automatic generation settings, designed in docs/design/auto-settings.md on the integration branch.
+1. Next: automatic generation settings, designed in docs/design/auto-settings.md on the integration branch.
 2. CI tip: `[iphone]` in a pushed commit's message runs the iPhone job on any branch (sessions here can't use workflow_dispatch).
 
 ## Open decisions for the owner
