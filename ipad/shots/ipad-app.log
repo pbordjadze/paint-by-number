@@ -1,0 +1,363 @@
+31:2026-10-01 22:36:29.167 Df PaintByNumber[18041:da4d] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103929960>
+238:2026-10-01 22:36:37.253 Df PaintByNumber[18164:dc25] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10593d920>
+429:2026-10-01 22:36:38.786 E  PaintByNumber[18164:dc25] (libCoreFSCache.dylib) fopen failed for data file: errno = 2 (No such file or directory)
+447:2026-10-01 22:36:39.866 Df PaintByNumber[18164:dc35] [com.apple.xpc:connection] [0x10b4ac000] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+448:2026-10-01 22:36:39.866 Df PaintByNumber[18164:dc35] [com.apple.xpc:connection] [0x10b4ac000] invalidated after a failed init
+607:2026-10-01 22:36:40.889 Df PaintByNumber[18164:dc2d] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+673:2026-10-01 22:36:41.054 Df PaintByNumber[18164:dc2d] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+705:2026-10-01 22:36:41.084 Df PaintByNumber[18164:dc36] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+737:2026-10-01 22:36:41.108 Df PaintByNumber[18164:dc31] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+811:2026-10-01 22:36:46.585 Df PaintByNumber[18708:e1bb] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10153e600>
+981:2026-10-01 22:36:48.625 Df PaintByNumber[18708:e1cd] [com.apple.xpc:connection] [0x107740140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+982:2026-10-01 22:36:48.625 Df PaintByNumber[18708:e1cd] [com.apple.xpc:connection] [0x107740140] invalidated after a failed init
+1137:2026-10-01 22:36:49.328 Df PaintByNumber[18708:e1cd] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+1169:2026-10-01 22:36:49.407 Df PaintByNumber[18708:e1c6] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+1201:2026-10-01 22:36:49.427 Df PaintByNumber[18708:e1c6] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+1233:2026-10-01 22:36:49.453 Df PaintByNumber[18708:e1cd] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+1265:2026-10-01 22:36:49.466 Df PaintByNumber[18708:e1cd] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+1316:2026-10-01 22:36:54.703 Df PaintByNumber[19235:e68e] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10413d920>
+1515:2026-10-01 22:36:56.784 Df PaintByNumber[19235:e699] [com.apple.xpc:connection] [0x10a3c8140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+1516:2026-10-01 22:36:56.784 Df PaintByNumber[19235:e699] [com.apple.xpc:connection] [0x10a3c8140] invalidated after a failed init
+1673:2026-10-01 22:36:57.374 Df PaintByNumber[19235:e693] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+1705:2026-10-01 22:36:57.444 Df PaintByNumber[19235:e693] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+1737:2026-10-01 22:36:57.478 Df PaintByNumber[19235:e692] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+1769:2026-10-01 22:36:57.495 Df PaintByNumber[19235:e693] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+1801:2026-10-01 22:36:57.516 Df PaintByNumber[19235:e693] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+1853:2026-10-01 22:37:02.265 Df PaintByNumber[19316:e7cf] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105d3d800>
+2046:2026-10-01 22:37:04.299 Df PaintByNumber[19316:e7db] [com.apple.xpc:connection] [0x105db1e00] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+2047:2026-10-01 22:37:04.308 Df PaintByNumber[19316:e7db] [com.apple.xpc:connection] [0x105db1e00] invalidated after a failed init
+2203:2026-10-01 22:37:05.054 Df PaintByNumber[19316:e7d7] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+2235:2026-10-01 22:37:05.139 Df PaintByNumber[19316:e7d8] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+2267:2026-10-01 22:37:05.177 Df PaintByNumber[19316:e7d7] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+2299:2026-10-01 22:37:05.206 Df PaintByNumber[19316:e7d7] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+2331:2026-10-01 22:37:05.239 Df PaintByNumber[19316:e7d7] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+2366:2026-10-01 22:37:08.252 E  PaintByNumber[19316:e7cf] (libCoreFSCache.dylib) fopen failed for data file: errno = 2 (No such file or directory)
+2426:2026-10-01 22:37:12.332 Df PaintByNumber[19819:ecbe] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10193d900>
+2617:2026-10-01 22:37:14.242 Df PaintByNumber[19819:eccd] [com.apple.xpc:connection] [0x107b5c140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+2618:2026-10-01 22:37:14.252 Df PaintByNumber[19819:eccd] [com.apple.xpc:connection] [0x107b5c140] invalidated after a failed init
+2778:2026-10-01 22:37:14.933 Df PaintByNumber[19819:ecca] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+2810:2026-10-01 22:37:15.000 Df PaintByNumber[19819:ecca] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+2842:2026-10-01 22:37:15.024 Df PaintByNumber[19819:ecca] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+2874:2026-10-01 22:37:15.047 Df PaintByNumber[19819:eccc] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+2906:2026-10-01 22:37:15.069 Df PaintByNumber[19819:eccd] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+2957:2026-10-01 22:37:20.449 Df PaintByNumber[20036:eeee] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10113d8e0>
+3150:2026-10-01 22:37:23.097 Df PaintByNumber[20036:eef6] [com.apple.xpc:connection] [0x106f7c140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+3151:2026-10-01 22:37:23.097 Df PaintByNumber[20036:eef6] [com.apple.xpc:connection] [0x106f7c140] invalidated after a failed init
+3307:2026-10-01 22:37:23.716 Df PaintByNumber[20036:eef9] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+3339:2026-10-01 22:37:23.785 Df PaintByNumber[20036:eef6] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+3371:2026-10-01 22:37:23.810 Df PaintByNumber[20036:eef9] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+3403:2026-10-01 22:37:23.825 Df PaintByNumber[20036:eef6] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+3435:2026-10-01 22:37:23.841 Df PaintByNumber[20036:eef5] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+3495:2026-10-01 22:37:36.633 Df PaintByNumber[20405:f30b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10553d8c0>
+3691:2026-10-01 22:37:38.613 Df PaintByNumber[20405:f317] [com.apple.xpc:connection] [0x114c40140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+3692:2026-10-01 22:37:38.620 Df PaintByNumber[20405:f317] [com.apple.xpc:connection] [0x114c40140] invalidated after a failed init
+3851:2026-10-01 22:37:39.309 Df PaintByNumber[20405:f313] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+3883:2026-10-01 22:37:39.403 Df PaintByNumber[20405:f317] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+3915:2026-10-01 22:37:39.444 Df PaintByNumber[20405:f313] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+3947:2026-10-01 22:37:39.479 Df PaintByNumber[20405:f313] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+3979:2026-10-01 22:37:39.592 Df PaintByNumber[20405:f313] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+4063:2026-10-01 22:37:51.312 Df PaintByNumber[20742:f696] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105d3d620>
+4278:2026-10-01 22:37:53.218 Df PaintByNumber[20742:f69c] [com.apple.xpc:connection] [0x10a394000] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+4279:2026-10-01 22:37:53.218 Df PaintByNumber[20742:f69c] [com.apple.xpc:connection] [0x10a394000] invalidated after a failed init
+4438:2026-10-01 22:37:53.969 Df PaintByNumber[20742:f69c] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+4470:2026-10-01 22:37:54.030 Df PaintByNumber[20742:f69c] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+4502:2026-10-01 22:37:54.063 Df PaintByNumber[20742:f69c] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+4534:2026-10-01 22:37:54.113 Df PaintByNumber[20742:f6aa] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+4566:2026-10-01 22:37:54.149 Df PaintByNumber[20742:f6aa] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+4627:2026-10-01 22:38:02.304 Df PaintByNumber[20874:f884] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10153d500>
+4828:2026-10-01 22:38:04.082 Df PaintByNumber[20874:f888] [com.apple.xpc:connection] [0x1015bae40] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+4829:2026-10-01 22:38:04.082 Df PaintByNumber[20874:f888] [com.apple.xpc:connection] [0x1015bae40] invalidated after a failed init
+4987:2026-10-01 22:38:04.775 Df PaintByNumber[20874:f888] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+5019:2026-10-01 22:38:04.945 Df PaintByNumber[20874:f887] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+5051:2026-10-01 22:38:04.966 Df PaintByNumber[20874:f88d] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+5083:2026-10-01 22:38:04.991 Df PaintByNumber[20874:f88d] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+5115:2026-10-01 22:38:05.023 Df PaintByNumber[20874:f88d] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+5166:2026-10-01 22:38:24.604 Df PaintByNumber[21476:fe73] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d3d680>
+5364:2026-10-01 22:38:26.478 Df PaintByNumber[21476:fe81] [com.apple.xpc:connection] [0x109f98140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+5365:2026-10-01 22:38:26.487 Df PaintByNumber[21476:fe81] [com.apple.xpc:connection] [0x109f98140] invalidated after a failed init
+5525:2026-10-01 22:38:27.553 Df PaintByNumber[21476:fe91] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+5557:2026-10-01 22:38:27.611 Df PaintByNumber[21476:fe85] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+5589:2026-10-01 22:38:27.645 Df PaintByNumber[21476:fe85] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+5621:2026-10-01 22:38:27.681 Df PaintByNumber[21476:fe85] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+5653:2026-10-01 22:38:27.715 Df PaintByNumber[21476:fe81] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+5711:2026-10-01 22:38:33.709 Df PaintByNumber[21910:102be] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10113df60>
+5905:2026-10-01 22:38:35.407 Df PaintByNumber[21910:102c7] [com.apple.xpc:connection] [0x106870140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+5907:2026-10-01 22:38:35.422 Df PaintByNumber[21910:102c7] [com.apple.xpc:connection] [0x106870140] invalidated after a failed init
+6065:2026-10-01 22:38:36.190 Df PaintByNumber[21910:102c7] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+6129:2026-10-01 22:38:36.307 Df PaintByNumber[21910:102c5] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+6160:2026-10-01 22:38:36.320 Df PaintByNumber[21910:102c5] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+6191:2026-10-01 22:38:36.336 Df PaintByNumber[21910:102ca] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+6290:2026-10-01 22:38:42.777 Df PaintByNumber[21998:1040f] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10553d980>
+6491:2026-10-01 22:38:44.595 Df PaintByNumber[21998:1041a] [com.apple.xpc:connection] [0x10b340140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+6492:2026-10-01 22:38:44.603 Df PaintByNumber[21998:1041a] [com.apple.xpc:connection] [0x10b340140] invalidated after a failed init
+6651:2026-10-01 22:38:45.189 Df PaintByNumber[21998:10416] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+6683:2026-10-01 22:38:45.240 Df PaintByNumber[21998:1041a] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+6715:2026-10-01 22:38:45.280 Df PaintByNumber[21998:1041a] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+6747:2026-10-01 22:38:45.313 Df PaintByNumber[21998:10415] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+6779:2026-10-01 22:38:45.336 Df PaintByNumber[21998:1041a] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+6829:2026-10-01 22:38:50.344 Df PaintByNumber[22267:106c4] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10593d940>
+7075:2026-10-01 22:38:52.376 Df PaintByNumber[22267:106ce] [com.apple.xpc:connection] [0x10b744000] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+7076:2026-10-01 22:38:52.376 Df PaintByNumber[22267:106ce] [com.apple.xpc:connection] [0x10b744000] invalidated after a failed init
+7189:2026-10-01 22:38:52.979 Df PaintByNumber[22267:106d0] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+7221:2026-10-01 22:38:53.051 Df PaintByNumber[22267:106d2] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+7253:2026-10-01 22:38:53.078 Df PaintByNumber[22267:106d2] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+7285:2026-10-01 22:38:53.096 Df PaintByNumber[22267:106d2] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+7317:2026-10-01 22:38:53.125 Df PaintByNumber[22267:106d2] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+7371:2026-10-01 22:38:57.906 Df PaintByNumber[22712:10b12] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10613d8a0>
+7574:2026-10-01 22:38:59.842 Df PaintByNumber[22712:10b19] [com.apple.xpc:connection] [0x10bf58000] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+7575:2026-10-01 22:38:59.844 Df PaintByNumber[22712:10b19] [com.apple.xpc:connection] [0x10bf58000] invalidated after a failed init
+7730:2026-10-01 22:39:00.562 Df PaintByNumber[22712:10b16] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+7762:2026-10-01 22:39:00.616 Df PaintByNumber[22712:10b16] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+7794:2026-10-01 22:39:00.637 Df PaintByNumber[22712:10b16] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+7826:2026-10-01 22:39:00.656 Df PaintByNumber[22712:10b16] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+7858:2026-10-01 22:39:00.684 Df PaintByNumber[22712:10b15] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+7907:2026-10-01 22:39:06.373 Df PaintByNumber[22751:10c7e] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d3d640>
+8114:2026-10-01 22:39:08.204 Df PaintByNumber[22751:10c81] [com.apple.xpc:connection] [0x109764140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+8115:2026-10-01 22:39:08.204 Df PaintByNumber[22751:10c81] [com.apple.xpc:connection] [0x109764140] invalidated after a failed init
+8270:2026-10-01 22:39:08.775 Df PaintByNumber[22751:10c84] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+8302:2026-10-01 22:39:08.837 Df PaintByNumber[22751:10c81] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+8334:2026-10-01 22:39:08.875 Df PaintByNumber[22751:10c86] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+8366:2026-10-01 22:39:08.891 Df PaintByNumber[22751:10c86] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+8398:2026-10-01 22:39:08.904 Df PaintByNumber[22751:10c84] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+8457:2026-10-01 22:39:14.297 Df PaintByNumber[23279:111b0] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105d3db20>
+8699:2026-10-01 22:39:16.333 Df PaintByNumber[23279:111bc] [com.apple.xpc:connection] [0x105dcabc0] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+8700:2026-10-01 22:39:16.333 Df PaintByNumber[23279:111bc] [com.apple.xpc:connection] [0x105dcabc0] invalidated after a failed init
+8809:2026-10-01 22:39:16.937 Df PaintByNumber[23279:111bd] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+8841:2026-10-01 22:39:17.076 Df PaintByNumber[23279:111c7] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+8873:2026-10-01 22:39:17.114 Df PaintByNumber[23279:111c7] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+8905:2026-10-01 22:39:17.145 Df PaintByNumber[23279:111bd] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+8937:2026-10-01 22:39:17.173 Df PaintByNumber[23279:111bd] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+9001:2026-10-01 22:39:22.104 Df PaintByNumber[23475:113f0] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10152df20>
+9223:2026-10-01 22:39:52.118 Df PaintByNumber[24513:11e27] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10412dbc0>
+9449:2026-10-01 22:40:13.958 Df PaintByNumber[25088:123ba] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d2dc40>
+9666:2026-10-01 22:40:32.173 Df PaintByNumber[25426:1278b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d2d7a0>
+9887:2026-10-01 22:40:50.973 Df PaintByNumber[26060:12d67] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10552db60>
+10112:2026-10-01 22:41:08.090 Df PaintByNumber[26357:130f5] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10392db20>
+10335:2026-10-01 22:41:26.065 Df PaintByNumber[27343:13a3b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10392d840>
+10551:2026-10-01 22:41:39.935 Df PaintByNumber[27961:13fe7] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10193d980>
+10779:2026-10-01 22:41:45.966 Df PaintByNumber[28116:1418d] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10592db20>
+10972:2026-10-01 22:41:50.172 Df PaintByNumber[28116:14197] [com.apple.xpc:connection] [0x114455180] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+10973:2026-10-01 22:41:50.172 Df PaintByNumber[28116:14197] [com.apple.xpc:connection] [0x114455180] invalidated after a failed init
+11135:2026-10-01 22:41:51.912 Df PaintByNumber[28116:14198] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+11167:2026-10-01 22:41:51.991 Df PaintByNumber[28116:14198] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(1), rhs: Value<Swift.Bool>(false))) status changed to: failed
+11200:2026-10-01 22:41:52.022 Df PaintByNumber[28116:14194] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+11232:2026-10-01 22:41:52.045 Df PaintByNumber[28116:14194] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+11264:2026-10-01 22:41:52.087 Df PaintByNumber[28116:14198] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+11320:2026-10-01 22:41:55.610 Df PaintByNumber[28193:142f0] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10592dac0>
+11514:2026-10-01 22:41:58.359 E  PaintByNumber[28193:142f0] [com.pbordjadze.paintbynumber:library] Opening E7A62113-DB07-4B14-A3F8-8A2CB41C115D failed: damaged(canRegenerate: true)
+11546:2026-10-01 22:42:02.932 Df PaintByNumber[28612:146ab] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105d2d4c0>
+11780:2026-10-01 22:42:11.282 Df PaintByNumber[28893:14951] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10352d920>
+12006:2026-10-01 22:42:23.217 Df PaintByNumber[29152:14c1f] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10612da20>
+12220:2026-10-01 22:42:49.409 Df PaintByNumber[29909:15381] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10593d4c0>
+12424:2026-10-01 22:42:55.372 Df PaintByNumber[30069:1557c] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10553d680>
+12825:2026-10-01 22:43:12.130 Df PaintByNumber[30594:15b44] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10553d840>
+13210:2026-10-01 22:43:21.989 Df PaintByNumber[30860:15e11] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10153d820>
+13445:2026-10-01 22:43:38.298 Df PaintByNumber[31271:1628e] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10353d900>
+13670:2026-10-01 22:43:49.732 Df PaintByNumber[31649:16654] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10393d8a0>
+13915:2026-10-01 22:44:09.318 Df PaintByNumber[32653:1701a] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d3e300>
+14093:2026-10-01 22:44:22.589 Df PaintByNumber[33287:17645] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10593d600>
+14319:2026-10-01 22:44:37.269 Df PaintByNumber[33600:1796a] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10393d940>
+14537:2026-10-01 22:44:48.671 Df PaintByNumber[34168:17ec0] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d3d860>
+14763:2026-10-01 22:44:55.679 Df PaintByNumber[34369:180ab] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10193d720>
+14979:2026-10-01 22:45:02.652 Df PaintByNumber[34400:1813b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10553d8e0>
+----- tail -----
+2026-10-01 22:45:02.637 Df PaintByNumber[34400:1814d] [com.apple.runningboard:process] Removing all cached process handles
+2026-10-01 22:45:02.637 Df PaintByNumber[34400:1814d] [com.apple.runningboard:connection] Creating connection to com.apple.runningboard
+2026-10-01 22:45:02.641 Df PaintByNumber[34400:1814d] [com.apple.xpc:connection] [0x1055b8000] activating connection: mach=true listener=false peer=false name=com.apple.runningboard
+2026-10-01 22:45:02.641 Df PaintByNumber[34400:1814e] [com.apple.runningboard:connection] Sending handshake request attempt #1 to server
+2026-10-01 22:45:02.646 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Deactivation reason added: 10; deactivation reasons: 0 -> 1024; animating application lifecycle event: 0
+2026-10-01 22:45:02.646 Df PaintByNumber[34400:1813b] [com.apple.BoardServices:Injection] activating monitor for service com.apple.frontboard.open
+2026-10-01 22:45:02.647 Df PaintByNumber[34400:1813b] [com.apple.BoardServices:Injection] activating monitor for service com.apple.frontboard.workspace-service
+2026-10-01 22:45:02.647 Df PaintByNumber[34400:1813b] [com.apple.FrontBoard:Common] FBSWorkspace registering source: com.apple.frontboard.systemappservices
+2026-10-01 22:45:02.648 Df PaintByNumber[34400:1814e] [com.apple.runningboard:connection] Handshake succeeded
+2026-10-01 22:45:02.648 Df PaintByNumber[34400:1814e] [com.apple.runningboard:connection] Identity resolved as app<com.pbordjadze.paintbynumber((null))>
+2026-10-01 22:45:02.649 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:02.650 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x1054a23c0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 1505 (elapsed = 0).
+2026-10-01 22:45:02.650 Df PaintByNumber[34400:1813b] [com.apple.FrontBoard:Common] FBSWorkspace connected to endpoint : <BSServiceConnectionEndpoint: 0x10553d6e0; target: com.apple.frontboard.systemappservices; service: com.apple.frontboard.workspace-service>
+2026-10-01 22:45:02.650 Df PaintByNumber[34400:1813b] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x1054c8820 com.apple.frontboard.systemappservices> attempting immediate handshake from activate
+2026-10-01 22:45:02.650 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UIApplicationSceneKeyboardSettings on FBSSceneSettings
+2026-10-01 22:45:02.651 Df PaintByNumber[34400:1813b] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x1054c8820 com.apple.frontboard.systemappservices> sent handshake
+2026-10-01 22:45:02.652 Df PaintByNumber[34400:1813b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x10553d8e0>
+2026-10-01 22:45:02.652 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneOcclusionSettings> on FBSSceneSettings
+2026-10-01 22:45:02.653 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneInterfaceProtectionSettings> on FBSSceneSettings
+2026-10-01 22:45:02.653 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneLayoutPreferencesHostSettingsExtension on FBSSceneSettings
+2026-10-01 22:45:02.653 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneSafeAreaSettingsExtension on FBSSceneSettings
+2026-10-01 22:45:02.654 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneLayoutPreferenceClientSettingsExtension on FBSSceneClientSettings
+2026-10-01 22:45:02.655 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UIHomeAffordanceHostSceneSettings> on FBSSceneSettings
+2026-10-01 22:45:02.655 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISystemShellSceneHostingEnvironmentSettings on FBSSceneSettings
+2026-10-01 22:45:02.656 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneRenderingEnvironmentSettings on FBSSceneSettings
+2026-10-01 22:45:02.657 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneRenderingEnvironmentClientSettings> on FBSSceneClientSettings
+2026-10-01 22:45:02.657 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneTransitioningHostSettings> on FBSSceneSettings
+2026-10-01 22:45:02.658 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneFocusSystemSettings> on FBSSceneSettings
+2026-10-01 22:45:02.658 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneOrientationSettingsExtension on FBSSceneSettings
+2026-10-01 22:45:02.660 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneOrientationClientSettingsExtension on FBSSceneClientSettings
+2026-10-01 22:45:02.660 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneWindowingControlClientSettings on FBSSceneClientSettings
+2026-10-01 22:45:02.661 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingContentSizePreferenceClientSettings> on FBSSceneClientSettings
+2026-10-01 22:45:02.661 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneHostingTraitCollectionPropagationSettings on FBSSceneSettings
+2026-10-01 22:45:02.662 Df PaintByNumber[34400:1813b] [com.apple.dt.xctest:Default] Registering for test daemon availability notify post.
+2026-10-01 22:45:02.662 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingSheetPresentationSettings> on FBSSceneSettings
+2026-10-01 22:45:02.662 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingSheetPresentationClientSettings> on FBSSceneClientSettings
+2026-10-01 22:45:02.662 Df PaintByNumber[34400:1813b] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-10-01 22:45:02.663 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingEventDeferringSettings> on FBSSceneSettings
+2026-10-01 22:45:02.663 Df PaintByNumber[34400:1813b] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-10-01 22:45:02.663 Df PaintByNumber[34400:1813b] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-10-01 22:45:02.666 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIKit__UITypedKeyValueSceneSettings> on FBSSceneSettings
+2026-10-01 22:45:02.668 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Deactivation reason added: 11; deactivation reasons: 1024 -> 3072; animating application lifecycle event: 0
+2026-10-01 22:45:02.670 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIKit__UITypedKeyValueSceneSettings> on FBSSceneClientSettings
+2026-10-01 22:45:02.671 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingViewControllerPreferencePropagationClientSettings> on FBSSceneClientSettings
+2026-10-01 22:45:02.672 Df PaintByNumber[34400:1814d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneZoomTransitionSettings> on FBSSceneSettings
+2026-10-01 22:45:02.673 Df PaintByNumber[34400:1814f] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneSettingsCore on FBSSceneSettings
+2026-10-01 22:45:02.675 Df PaintByNumber[34400:1814f] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneClientSettingsCore on FBSSceneClientSettings
+2026-10-01 22:45:02.677 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Deactivation reason removed: 10; deactivation reasons: 3072 -> 2048; animating application lifecycle event: 0
+2026-10-01 22:45:02.679 Df PaintByNumber[34400:1813b] [com.apple.UIKit:EventBus] Event Timing Profile for Touch: not found, path="/System/Library/EventTimingProfiles/Sim.Touch.plist"
+2026-10-01 22:45:02.679 Df PaintByNumber[34400:1813b] [com.apple.UIKit:EventBus] Event Timing Profile for Pencil: not found, path="/System/Library/EventTimingProfiles/Sim.Pencil.plist"
+2026-10-01 22:45:02.680 Df PaintByNumber[34400:1813b] [com.apple.UIKit:UpdateScheduler] Selected display: name=LCD (PurpleMain), id=1
+2026-10-01 22:45:02.681 Df PaintByNumber[34400:1814f] [com.apple.FrontBoard:SceneExtension] UIMutableApplicationSceneSettings setting counterpart class: UIApplicationSceneSettings
+2026-10-01 22:45:02.682 Df PaintByNumber[34400:1814f] [com.apple.FrontBoard:SceneExtension] UIMutableApplicationSceneClientSettings setting counterpart class: UIApplicationSceneClientSettings
+2026-10-01 22:45:02.682 Df PaintByNumber[34400:1814f] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneTransitionContextCore on FBSSceneTransitionContext
+2026-10-01 22:45:02.686 Df PaintByNumber[34400:1813b] [com.apple.xpc:connection] [0x1055b9180] activating connection: mach=true listener=false peer=false name=com.apple.lsd.mapdb
+2026-10-01 22:45:02.690 A  PaintByNumber[34400:18153] (RunningBoardServices) didChangeInheritances
+2026-10-01 22:45:02.690 A  PaintByNumber[34400:1814e] (CoreFoundation) Loading Preferences From User Session CFPrefsD
+2026-10-01 22:45:02.858 Df PaintByNumber[34400:1813b] [com.apple.BoardServices:XPCErrors] [C:2] Alloc com.apple.backboard.hid-services.xpc
+2026-10-01 22:45:02.858 Df PaintByNumber[34400:1813b] [com.apple.xpc:connection] [0x1055b9540] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-10-01 22:45:02.862 Df PaintByNumber[34400:1813b] [com.apple.app_launch_measurement:ApplicationLaunch] alm_acquire_pageins_recording_assertion: acquired pageins recording assertion!
+2026-10-01 22:45:02.868 Df PaintByNumber[34400:1813b] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: Persistent SceneSession Map Update, expirationHandler: <__NSGlobalBlock__: 0x1e78c84e8>
+2026-10-01 22:45:02.868 Df PaintByNumber[34400:1813b] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:02.868 Df PaintByNumber[34400:1813b] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:02.869 Df PaintByNumber[34400:1813b] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x105715c00>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 1505 (elapsed = 0).
+2026-10-01 22:45:02.870 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Deactivation reason added: 5; deactivation reasons: 2048 -> 2080; animating application lifecycle event: 1
+2026-10-01 22:45:02.871 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Should send trait collection or coordinate space update, interface style 1 -> 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:02.875 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:02.876 Df PaintByNumber[34400:1813b] [com.apple.UIKit:HomeAffordanceObservation] Initializing: <_UIHomeAffordanceSceneNotifier: 0x1057396c0>; with scene: <UIWindowScene: 0x104e78a60>
+2026-10-01 22:45:02.876 Df PaintByNumber[34400:1813b] [com.apple.BacklightServices:scenes] 0x10543a130 setDelegate:<0x105439200 _UIBacklightEnvironment> hasDelegate:YES for environment:sceneID:com.pbordjadze.paintbynumber-default
+2026-10-01 22:45:02.878 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:02.879 Df PaintByNumber[34400:1813b] [com.apple.UIKit:EventDeferring] [0x105739730] Initialized with scene: <UIWindowScene: 0x104e78a60>; behavior: <_UIEventDeferringBehavior_iOS: 0x10575eac0>; availableForProcess: 1, systemShellManagesKeyboardFocus: 1
+2026-10-01 22:45:02.885 Df PaintByNumber[34400:1813b] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x105701f20; process scope; status: target> was:none
+2026-10-01 22:45:02.886 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Setting default evaluation strategy for UIUserInterfaceIdiomPad to LastOneWins
+2026-10-01 22:45:02.886 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Scene target of keyboard event deferring environment did change: 1; scene: UIWindowScene: 0x104e78a60; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default
+2026-10-01 22:45:02.887 Df PaintByNumber[34400:1813b] [com.apple.UIKit:UIFocus] Focus system enabled
+2026-10-01 22:45:02.890 Df PaintByNumber[34400:1813b] [com.apple.UIKit:UIFocus] Failed to update focus with context <UIFocusUpdateContext: 0x1054c95e0; previouslyFocusedItem: (nil); nextFocusedItem: (nil); focusHeading: None>. No additional info available.
+2026-10-01 22:45:02.890 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:02.890 Df PaintByNumber[34400:1813b] [com.apple.UIKit:EventDeferring] [0x105739730] Scene target of event deferring environments did update: scene: 0x104e78a60; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-10-01 22:45:02.891 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x104e78a60; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default
+2026-10-01 22:45:02.891 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Stack[KeyWindow] 0x10543a280: Taking no further action for migration from LastOneWins -> SystemShellManaged as there are no scenes
+2026-10-01 22:45:02.891 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Setting default evaluation strategy for UIUserInterfaceIdiomPad to SystemShellManaged
+2026-10-01 22:45:02.892 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Key window needs update: 0; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x104e78a60; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x0; reason: UIWindowScene: 0x104e78a60: Window scene became target of keyboard environment
+2026-10-01 22:45:02.893 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:02.894 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:02.898 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:02.960 Df PaintByNumber[34400:1814d] [com.apple.BackBoard:EventDelivery] BKSHIDEventObserver - connection activation
+2026-10-01 22:45:02.990 Df PaintByNumber[34400:1814e] [com.apple.BackBoard:EventDelivery] BKSHIDEventDeliveryManager - connection activation
+2026-10-01 22:45:03.022 Df PaintByNumber[34400:1813b] [com.apple.UIKit:PointerLockState] preferredPointerLockStatus updated: scene: <UIWindowScene: 0x104e78a60; role: UIWindowSceneSessionRoleApplication; persistentIdentifier: 1E39CC38-35D5-422F-8D02-10487DE03A88; activationState: UISceneActivationStateUnattached>; viewController: <_TtGC7SwiftUI19UIHostingControllerGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__: 0x1056d4000>; preferredPointerLockStatus: _UIPointerLockStatusUnlocked
+2026-10-01 22:45:03.040 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Key window API is scene-level: YES
+2026-10-01 22:45:03.040 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] UIWindowScene: 0x104e78a60: Window became key in scene: UIWindow: 0x10567c400; contextId: 0x2F0707F3: reason: UIWindowScene: 0x104e78a60: Window requested to become key in scene: 0x10567c400
+2026-10-01 22:45:03.040 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Key window needs update: 1; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x104e78a60; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x10567c400; reason: UIWindowScene: 0x104e78a60: Window requested to become key in scene: 0x10567c400
+2026-10-01 22:45:03.040 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Window did become application key: UIWindow: 0x10567c400; contextId: 0x2F0707F3; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default
+2026-10-01 22:45:03.041 Df PaintByNumber[34400:1813b] [com.apple.UIKit:EventDeferring] [0x105739730] Begin local event deferring requested for token: 0x105700000; environments: 1; reason: UIWindowScene: 0x104e78a60: Begin event deferring in keyboardFocus for window: 0x10567c400
+2026-10-01 22:45:03.044 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:03.048 Df PaintByNumber[34400:1813b] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-default  persistentID: 1E39CC38-35D5-422F-8D02-10487DE03A88
+2026-10-01 22:45:03.049 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Ignoring already applied deactivation reason: 5; deactivation reasons: 2080
+2026-10-01 22:45:03.049 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Deactivation reason added: 12; deactivation reasons: 2080 -> 6176; animating application lifecycle event: 1
+2026-10-01 22:45:03.050 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Deactivation reason removed: 11; deactivation reasons: 6176 -> 4128; animating application lifecycle event: 1
+2026-10-01 22:45:03.050 Df PaintByNumber[34400:1813b] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneIntelligenceSupportSettings> on FBSSceneSettings
+2026-10-01 22:45:03.054 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:03.060 A  PaintByNumber[34400:1813b] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-10-01 22:45:03.098 Df PaintByNumber[34400:18153] [com.apple.UIIntelligenceSupport:xpc] establishing connection to agent
+2026-10-01 22:45:03.098 Df PaintByNumber[34400:18153] [com.apple.xpc:session] [0x1055dad00] Session created.
+2026-10-01 22:45:03.098 Df PaintByNumber[34400:18153] [com.apple.xpc:session] [0x1055dad00] Session created from connection [0x109534c80]
+2026-10-01 22:45:03.098 Df PaintByNumber[34400:18153] [com.apple.xpc:connection] [0x109534c80] activating connection: mach=true listener=false peer=false name=com.apple.uiintelligencesupport.agent
+2026-10-01 22:45:03.098 Df PaintByNumber[34400:18153] [com.apple.xpc:session] [0x1055dad00] Session activated
+2026-10-01 22:45:03.099 Df PaintByNumber[34400:1814e] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x105701f20; token: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default; status: ancestor> was:target
+2026-10-01 22:45:03.166 Df PaintByNumber[34400:18153] [com.apple.BoardServices:XPCErrors] [C:3] Alloc com.apple.PointerUI.pointeruid.service
+2026-10-01 22:45:03.166 Df PaintByNumber[34400:18153] [com.apple.xpc:connection] [0x1095366c0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-10-01 22:45:03.214 Df PaintByNumber[34400:1814b] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Adding persistent store, expirationHandler: <__NSMallocBlock__: 0x10955e310>
+2026-10-01 22:45:03.216 Df PaintByNumber[34400:1814b] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.216 Df PaintByNumber[34400:1814b] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.216 Df PaintByNumber[34400:1814b] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x1054a3dc0>: taskID = 3, taskName = CoreData: Adding persistent store, creationTime = 1505 (elapsed = 0).
+2026-10-01 22:45:03.227 Df PaintByNumber[34400:1814b] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 3
+2026-10-01 22:45:03.227 Df PaintByNumber[34400:1814b] [com.apple.UIKit:BackgroundTask] Ending task with identifier 3 and description: <_UIBackgroundTaskInfo: 0x1054a3dc0>: taskID = 3, taskName = CoreData: Adding persistent store, creationTime = 1505 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x10955e040>
+2026-10-01 22:45:03.227 Df PaintByNumber[34400:1814b] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x1055d8050> (used by background task with identifier 3: <_UIBackgroundTaskInfo: 0x1054a3dc0>: taskID = 3, taskName = CoreData: Adding persistent store, creationTime = 1505 (elapsed = 0))
+2026-10-01 22:45:03.231 Df PaintByNumber[34400:1814d] [com.apple.TipKit:TipKit • Datastore] MiniTipsDatastore(id: com.apple.tipkit.shared) did load at: /Users/runner/Library/Developer/CoreSimulator/Devices/A2011F14-88A1-46AA-999A-FD6FEDCD870B/data/Containers/Data/Application/3A90B384-4179-47AF-A4E1-CDCCA7E408ED/Library/Application Support/.tipkit
+2026-10-01 22:45:03.234 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x105797b40>
+2026-10-01 22:45:03.234 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.235 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.235 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 4, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0).
+2026-10-01 22:45:03.241 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 4
+2026-10-01 22:45:03.241 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending task with identifier 4 and description: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 4, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x105797cf0>
+2026-10-01 22:45:03.253 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x1055d8050> (used by background task with identifier 4: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 4, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0))
+2026-10-01 22:45:03.261 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x105797d50>
+2026-10-01 22:45:03.262 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.262 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.262 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 5, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0).
+2026-10-01 22:45:03.265 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 5
+2026-10-01 22:45:03.266 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending task with identifier 5 and description: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 5, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x105795b60>
+2026-10-01 22:45:03.266 A  PaintByNumber[34400:1813b] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-10-01 22:45:03.266 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x1055d8050> (used by background task with identifier 5: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 5, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0))
+2026-10-01 22:45:03.272 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x105797ea0>
+2026-10-01 22:45:03.272 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.272 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.272 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 6, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0).
+2026-10-01 22:45:03.277 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 6
+2026-10-01 22:45:03.277 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending task with identifier 6 and description: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 6, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x105796c40>
+2026-10-01 22:45:03.277 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x1055d8050> (used by background task with identifier 6: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 6, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0))
+2026-10-01 22:45:03.279 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x10955e760>
+2026-10-01 22:45:03.279 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.280 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.280 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 7, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0).
+2026-10-01 22:45:03.281 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 7
+2026-10-01 22:45:03.281 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending task with identifier 7 and description: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 7, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x10955ff60>
+2026-10-01 22:45:03.281 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x1055d8050> (used by background task with identifier 7: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 7, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0))
+2026-10-01 22:45:03.283 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x1057304b0>
+2026-10-01 22:45:03.283 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.283 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x1055d8050>
+2026-10-01 22:45:03.284 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 8, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0).
+2026-10-01 22:45:03.284 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 8
+2026-10-01 22:45:03.284 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending task with identifier 8 and description: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 8, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x1056db210>
+2026-10-01 22:45:03.284 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x1055d8050> (used by background task with identifier 8: <_UIBackgroundTaskInfo: 0x1096a0880>: taskID = 8, taskName = CoreData: Executing write request, creationTime = 1505 (elapsed = 0))
+2026-10-01 22:45:03.285 Df PaintByNumber[34400:1814d] [com.apple.TipKit:TipKit • Datastore] MiniTipsDatastore removing existing TipKit records
+2026-10-01 22:45:03.324 Df PaintByNumber[34400:1813b] [PrototypeTools:domain] Not observing PTDefaults on customer install.
+2026-10-01 22:45:03.379 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 2
+2026-10-01 22:45:03.379 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Ending task with identifier 2 and description: <_UIBackgroundTaskInfo: 0x105715c00>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 1505 (elapsed = 1), _expireHandler: <__NSGlobalBlock__: 0x1e78c84e8>
+2026-10-01 22:45:03.379 Df PaintByNumber[34400:1814d] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x1055d8050> (used by background task with identifier 2: <_UIBackgroundTaskInfo: 0x105715c00>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 1505 (elapsed = 1))
+2026-10-01 22:45:03.413 Df PaintByNumber[34400:1814d] [com.apple.calls.callkit:Default] Call host has no calls
+2026-10-01 22:45:03.590 Df PaintByNumber[34400:1813b] [com.apple.UIKit:PointerLockState] preferredPointerLockStatus updated: scene: <UIWindowScene: 0x104e78a60; role: UIWindowSceneSessionRoleApplication; persistentIdentifier: 1E39CC38-35D5-422F-8D02-10487DE03A88; activationState: UISceneActivationStateForegroundInactive>; viewController: <_TtGC7SwiftUI29PresentationHostingControllerVS_7AnyView_: 0x105712300>; preferredPointerLockStatus: _UIPointerLockStatusUnlocked
+2026-10-01 22:45:03.590 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Orientation] <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88) Scene updated orientation preferences: none -> ( Pu Ll Lr Pd )
+2026-10-01 22:45:03.609 Df PaintByNumber[34400:1814d] [com.apple.xpc:connection] [0x10a7052c0] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-10-01 22:45:03.610 Df PaintByNumber[34400:1814d] [com.apple.xpc:connection] [0x10a705a40] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-10-01 22:45:03.610 Df PaintByNumber[34400:1814d] [com.apple.xpc:connection] [0x10a705f40] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-10-01 22:45:03.691 Df PaintByNumber[34400:18151] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 1
+2026-10-01 22:45:03.691 Df PaintByNumber[34400:18151] [com.apple.UIKit:BackgroundTask] Ending task with identifier 1 and description: <_UIBackgroundTaskInfo: 0x1054a23c0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 1505 (elapsed = 1), _expireHandler: (null)
+2026-10-01 22:45:03.692 Df PaintByNumber[34400:18151] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x1055d8050> (used by background task with identifier 1: <_UIBackgroundTaskInfo: 0x1054a23c0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 1505 (elapsed = 1))
+2026-10-01 22:45:03.692 Df PaintByNumber[34400:18151] [com.apple.UIKit:BackgroundTask] Will invalidate assertion: <BKSProcessAssertion: 0x1055d8050> for task identifier: 1
+2026-10-01 22:45:03.761 Df PaintByNumber[34400:1813b] [com.apple.renderbox:misc] RBDevice: initialized bg state: false
+2026-10-01 22:45:03.761 Df PaintByNumber[34400:1813b] [com.apple.xpc:connection] [0x114179f40] activating connection: mach=true listener=false peer=false name=com.apple.IOSurface.Remote
+2026-10-01 22:45:03.809 Df PaintByNumber[34400:1813b] [com.apple.UIKit:UIFocus] Deferring focus update to item <UISearchBarTextField: 0x1056d5e00>. No additional info available.
+2026-10-01 22:45:03.812 Df PaintByNumber[34400:1813b] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:1 [C7015EFE-4697-44E7-ADF2-C43EED0CE615] (reporting strategy default)>
+2026-10-01 22:45:03.812 Df PaintByNumber[34400:1813b] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:2 [DFD7FAF3-1744-4DC6-91B2-C2A876143EC2] (reporting strategy default)>
+2026-10-01 22:45:03.812 Df PaintByNumber[34400:1813b] [com.apple.network:activity] Set activity <nw_activity 50:1 [C7015EFE-4697-44E7-ADF2-C43EED0CE615] (reporting strategy default)> as the global parent
+2026-10-01 22:45:03.813 A  PaintByNumber[34400:1814b] (RunningBoardServices) didChangeInheritances
+2026-10-01 22:45:03.844 A  PaintByNumber[34400:1814b] (RunningBoardServices) didChangeInheritances
+2026-10-01 22:45:03.946 A  PaintByNumber[34400:1814f] (RunningBoardServices) didChangeInheritances
+2026-10-01 22:45:04.300 Df PaintByNumber[34400:1813b] [com.apple.UIKit:EventDeferring] [0x105739730] Scene target of event deferring environments did update: scene: 0x104e78a60; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-10-01 22:45:04.300 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x104e78a60; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default
+2026-10-01 22:45:04.302 Df PaintByNumber[34400:1813b] [com.apple.Accessibility:AXCommon] Read Per-App on Init: Smart invert = (null)
+2026-10-01 22:45:04.341 Df PaintByNumber[34400:1813b] [com.apple.UIKit:UpdateScheduler] Target list changed: <CADisplay:LCD PurpleMain>
+2026-10-01 22:45:04.379 Df PaintByNumber[34400:1813b] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-default  persistentID: 1E39CC38-35D5-422F-8D02-10487DE03A88
+2026-10-01 22:45:04.379 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:04.380 Df PaintByNumber[34400:1813b] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x104e78a60> (1E39CC38-35D5-422F-8D02-10487DE03A88)
+2026-10-01 22:45:04.381 Df PaintByNumber[34400:1813b] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-default  persistentID: 1E39CC38-35D5-422F-8D02-10487DE03A88
+2026-10-01 22:45:04.382 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Deactivation reason removed: 12; deactivation reasons: 4128 -> 32; animating application lifecycle event: 1
+2026-10-01 22:45:04.382 Df PaintByNumber[34400:1813b] [com.apple.KeyboardArbiter:Client] Send setDeactivating: N (-DeactivationReason:SuspendedEventsOnly)
+2026-10-01 22:45:04.384 Df PaintByNumber[34400:1813b] [com.apple.UIKit:Application] Deactivation reason removed: 5; deactivation reasons: 32 -> 0; animating application lifecycle event: 0
+2026-10-01 22:45:04.391 Df PaintByNumber[34400:1813b] [com.apple.KeyboardArbiter:Client] startConnection
+2026-10-01 22:45:04.392 Df PaintByNumber[34400:1813b] [com.apple.xpc:connection] [0x114d1e1c0] activating connection: mach=true listener=false peer=false name=com.apple.UIKit.KeyboardManagement.hosted
+2026-10-01 22:45:04.473 Df PaintByNumber[34400:1813b] [com.apple.KeyboardArbiter:Client] handleKeyboardChange: set currentKeyboard:N (wasKeyboard:N)
+2026-10-01 22:45:04.474 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyboardSceneDelegate] forceReloadInputViews
+2026-10-01 22:45:04.475 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyboardSceneDelegate] Reloading input views for key-window scene responder: <(null): 0x0; > force:Y
+2026-10-01 22:45:04.476 Df PaintByNumber[34400:1813b] [com.apple.UIKit:KeyboardArbiterClientLog] isWritingToolsHandlingKeyboardTracking:Y (WT ready:Y, Arbiter ready:Y)
+2026-10-01 22:45:04.519 Df PaintByNumber[34400:1813b] [com.apple.network:activity] <nw_activity 50:1 [C7015EFE-4697-44E7-ADF2-C43EED0CE615] (global parent) (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 2706ms
+2026-10-01 22:45:04.519 Df PaintByNumber[34400:1813b] [com.apple.network:activity] <nw_activity 50:2 [DFD7FAF3-1744-4DC6-91B2-C2A876143EC2] (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 2706ms
+2026-10-01 22:45:04.519 Df PaintByNumber[34400:1813b] [com.apple.network:activity] Unsetting the global parent activity <nw_activity 50:1 [C7015EFE-4697-44E7-ADF2-C43EED0CE615] (global parent) (reporting strategy default) complete (reason success)>
+2026-10-01 22:45:04.519 Df PaintByNumber[34400:1813b] [com.apple.network:activity] Unset the global parent activity
+2026-10-01 22:45:04.519 Df PaintByNumber[34400:1813b] [com.apple.app_launch_measurement:ApplicationLaunch] alm_release_pageins_recording_assertion: releasing pageins recording assertion
+2026-10-01 22:45:05.050 Df PaintByNumber[34400:1813b] [com.apple.UIKit:UIFocus] Failed to update focus with context <UIFocusUpdateContext: 0x114c9e620; previouslyFocusedItem: (nil); nextFocusedItem: (nil); focusHeading: None>. No additional info available.
