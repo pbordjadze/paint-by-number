@@ -131,8 +131,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   Retry toast, and the next successful save clears it. Thumbnail and trash writes only log.
   Tests make writes fail through `ArtworkStore.writeFaults` (`WriteFaults`).
 - Sharing: the time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress,
-  Cancel, Try Again) and is handed to `ActivityShareSheet`, which reports when the share sheet
-  closes so the movie is deleted (also when the sheet is dismissed). Every export lives in
+  Cancel, Try Again; its Pace control, `timelapsePace`, picks Even or As painted, which
+  `TimelapseSchedule` maps from the strokes' recorded times: pauses clamp to 2 s, all-zero times
+  fall back to Even, the frame count never changes; another pace restarts the render) and is
+  handed to `ActivityShareSheet`, which reports when the share sheet closes so the movie is deleted (also when the sheet is dismissed). Every export lives in
   `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture/template `ShareLink`s can't report
   completion, so they rely on the launch purge and the sweep of exports older than ten
   minutes that each new export runs (`ArtworkExporter.staleExportAge`).
@@ -186,8 +188,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   (`STRING_CATALOG_GENERATE_SYMBOLS = NO`: keys like "Finished" and "Finished!" would name the same
   symbol, and the code reads keys as literals). `LocalizationTests` checks what ships (bundle lookup,
   plurals, Info.plist). Layout under longer text: demo scenarios named `*-long-text`
-  (`paint-long-text`, `paint-complete-long-text`, `gallery-long-text`, `settings-long-text`) are
-  launched by `ci/screenshots.sh` with `-NSDoubleLocalizedStrings YES`, which doubles every
+  (`paint-long-text`, `paint-complete-long-text`, `gallery-long-text`, `gallery-timelapse-long-text`,
+  `settings-long-text`) are launched by `ci/screenshots.sh` with `-NSDoubleLocalizedStrings YES`, which doubles every
   localized string; read their screenshots after UI text changes (bars scale or wrap their text,
   no text sits in a fixed-width frame). Foundation doubles format strings before substituting, so
   the first copy shows raw placeholders (`1$lld · 2$@`, `@ painted`): expected, length is what

@@ -169,6 +169,10 @@
       "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
       "extractionState" : "manual"
     },
+    "As painted" : {
+      "comment" : "Time-lapse pace option: the video keeps the rhythm the painting was painted in, compressed (bursts of painting and the pauses between them); a short label for a two-segment control",
+      "extractionState" : "manual"
+    },
     "Back to Gallery" : {
       "comment" : "Button on the screen shown when a painting can't be opened or the canvas can't be drawn: returns to the gallery",
       "extractionState" : "manual"
@@ -763,6 +767,10 @@
     },
     "Duplicate" : {
       "comment" : "Context menu item that makes a copy of a painting",
+      "extractionState" : "manual"
+    },
+    "Even" : {
+      "comment" : "Time-lapse pace option: the strokes are spread evenly through the video, whatever the painter's rhythm was",
       "extractionState" : "manual"
     },
     "Every painted area will be cleared." : {
@@ -1371,6 +1379,10 @@
     },
     "Opening photo…" : {
       "comment" : "Status shown while the chosen photo is loaded in the create flow",
+      "extractionState" : "manual"
+    },
+    "Pace" : {
+      "comment" : "Caption above the time-lapse sheet's control that picks how the painting is replayed (the speed and rhythm of the video); also its accessibility label",
       "extractionState" : "manual"
     },
     "Paint" : {

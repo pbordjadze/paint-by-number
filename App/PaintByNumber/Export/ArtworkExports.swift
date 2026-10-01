@@ -179,7 +179,7 @@ nonisolated struct TimelapseRequest: Identifiable, Sendable {
     /// Renders the movie into its own export folder. On failure or cancellation (checked every
     /// frame) the folder and the partial movie are removed.
     @concurrent
-    func render(longSide: Int = 1080, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> URL {
+    func render(longSide: Int = 1080, pace: TimelapsePace = .even, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> URL {
         let template: Template, progress: PaintProgress
         switch source {
         case let .saved(store, artwork):
@@ -192,7 +192,7 @@ nonisolated struct TimelapseRequest: Identifiable, Sendable {
         let url = try ArtworkExporter.temporaryURL(name: ArtworkExporter.timelapseName(title: title), pathExtension: "mp4")
         do {
             try await TimelapseFrameRenderer.export(
-                template: template, progress: progress, to: url, longSide: longSide, onProgress: onProgress)
+                template: template, progress: progress, to: url, longSide: longSide, pace: pace, onProgress: onProgress)
         } catch {
             ArtworkExporter.removeExport(at: url)
             throw error
