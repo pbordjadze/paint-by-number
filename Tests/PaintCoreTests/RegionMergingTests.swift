@@ -24,6 +24,8 @@ struct RegionMergingTests {
         p.stripWidth = 8.1
         p.stripMixture = 0.4
         p.stripContrast = 0.7
+        p.stripEnclosure = 0.6
+        p.stripNeighbourArea = 1
         return p
     }
 
@@ -32,13 +34,16 @@ struct RegionMergingTests {
     /// Simplifies a paint map whose pixel colours are given per pixel; returns the paint of
     /// every pixel and the region count.
     static func simplify(
-        _ classes: [UInt32], colors: [SIMD3<Float>], width w: Int, height h: Int, palette: [SIMD3<Float>]
+        _ classes: [UInt32], colors: [SIMD3<Float>], width w: Int, height h: Int, palette: [SIMD3<Float>],
+        adjust: (inout SegmentationParameters) -> Void = { _ in }
     ) throws -> (classes: [UInt32], regions: Int) {
         var classes = classes
         let grid = Grid(width: w, height: h, storage: colors.map { SIMD4($0, 0) })
+        var p = parameters(width: w, height: h)
+        adjust(&p)
         let (regions, _) = try RegionSimplifier.simplify(
             classes: &classes, width: w, height: h, colors: grid, areaScale: [Float](repeating: 1, count: w * h),
-            palette: palette, parameters: parameters(width: w, height: h), cancel: .none)
+            palette: palette, parameters: p, cancel: .none)
         return (classes, regions.count)
     }
 
@@ -114,6 +119,43 @@ struct RegionMergingTests {
         let result = try Self.simplify(scene.classes, colors: scene.colors, width: 90, height: 120, palette: palette)
         #expect(result.regions == 3)
         #expect(result.classes.contains(2))
+    }
+
+    /// A soft-edged grey ring 5 px wide around a dark disc (radius 11) on a pink field, like
+    /// the iris around a pupil: narrow, elongated, a mix of its neighbours' paints, with ramps
+    /// for borders. Paints 0 (disc), 1 (ring), 2 (field); colours blurred over ±2 px.
+    static func ringScene() -> (classes: [UInt32], colors: [SIMD3<Float>], palette: [SIMD3<Float>]) {
+        let w = 80, h = 80
+        let palette: [SIMD3<Float>] = [Self.grey(0.25), Self.grey(0.55), SIMD3(0.8, 0.06, 0.02)]
+        var classes = [UInt32](repeating: 0, count: w * h)
+        var colors = [SIMD3<Float>](repeating: .zero, count: w * h)
+        func ramp(_ r: Float, _ edge: Float) -> Float { min(max((r - edge + 2) / 4, 0), 1) }
+        for y in 0..<h {
+            for x in 0..<w {
+                let dx = Float(x) - 39.5, dy = Float(y) - 39.5
+                let r = (dx * dx + dy * dy).squareRoot()
+                classes[y * w + x] = r < 11 ? 0 : (r < 16 ? 1 : 2)
+                let inner = palette[0] + (palette[1] - palette[0]) * ramp(r, 11)
+                colors[y * w + x] = inner + (palette[2] - palette[1]) * ramp(r, 16)
+            }
+        }
+        return (classes, colors, palette)
+    }
+
+    @Test func ringAroundASmallFeatureIsNotAStrip() throws {
+        // Either guard keeps the ring (it wraps the disc, and the disc is smaller than the
+        // ring); with both off the very same ring passes every other strip test and merges.
+        let scene = Self.ringScene()
+        for (enclosure, neighbourArea, kept) in [(Float(0.6), Float(1), true), (9, 1, true), (0.6, 0, true), (9, 0, false)] {
+            let result = try Self.simplify(scene.classes, colors: scene.colors, width: 80, height: 80, palette: scene.palette) {
+                $0.minRadius = 2
+                $0.stripEnclosure = enclosure
+                $0.stripNeighbourArea = neighbourArea
+            }
+            #expect(result.classes.contains(1) == kept, "enclosure \(enclosure), neighbour area \(neighbourArea)")
+            #expect(result.classes[40 * 80 + 40] == 0)
+            #expect(result.regions == (kept ? 3 : 2))
+        }
     }
 
     // MARK: - Boundary steps

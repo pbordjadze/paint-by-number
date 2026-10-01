@@ -349,11 +349,15 @@ enum RegionSimplifier {
     ///
     /// Transition strips: a photo's edges are blurred over a few pixels, and where two paints
     /// meet, the blur's intermediate colours often fall nearest a third paint, which then
-    /// forms a strip a few pixels wide along the whole edge. Such a strip is elongated and
-    /// narrow, its mean colour is a mix of its two dominant neighbours' paints (it lies close
-    /// to the line between them) and its boundaries are ramps rather than contours; a real
-    /// thin feature (a twig, a whisker, an iris ring) fails one of those. Strips merge
-    /// whatever their area.
+    /// forms a strip a few pixels wide along the whole edge. A region counts as such a strip
+    /// only when it is elongated and narrow; its two dominant neighbours (the longest borders,
+    /// together most of its outline) are open, i.e. neither is mostly wrapped by it nor
+    /// smaller than it; its mean colour is a mix of their two paints (close to the line
+    /// between them); and both of those borders are ramps rather than contours. So sharp-
+    /// edged thin features (a pole, a twig), thin features of their own colour (a whisker
+    /// between two greys) and the rings of an eye (pupil, iris, eye ring: each a soft-edged
+    /// mix of its neighbours, but each around something smaller) are not strips. Strips
+    /// merge whatever their area.
     static func mergeRound(
         _ regions: inout RegionRuns,
         adjacency: inout RegionAdjacency,
@@ -372,12 +376,22 @@ enum RegionSimplifier {
         if let wide { for r in 0..<n { thin[r] = !wide[r] } }
         var area = regions.area
         // Perimeter as the sum of shared borders (the image edge does not count, which only
-        // makes regions along it look more compact and wider).
+        // makes regions along it look more compact and wider); the edge pixels separately,
+        // for the whole outline where that matters.
         var perimeter = [Int32](repeating: 0, count: n)
         for k in adjacency.pairs.indices {
             let length = adjacency.lengths[k]
             perimeter[Int(adjacency.pairs[k] >> 32)] += length
             perimeter[Int(adjacency.pairs[k] & 0xFFFF_FFFF)] += length
+        }
+        var edge = [Int32](repeating: 0, count: n)
+        for y in 0..<regions.height {
+            for k in regions.rowStart[y]..<regions.rowStart[y + 1] {
+                let r = Int(regions.label[k])
+                if y == 0 || y == regions.height - 1 { edge[r] += regions.end[k] - regions.start[k] }
+                if regions.start[k] == 0 { edge[r] += 1 }
+                if Int(regions.end[k]) == regions.width { edge[r] += 1 }
+            }
         }
         // Shape alone: elongated (compactness 16·area/perimeter², 1 for a square) and narrower
         // than a strip (mean width 2·area/perimeter); the necessary half of the strip test.
@@ -469,6 +483,15 @@ enum RegionSimplifier {
             let a = neighbours[first], b = neighbours[second]
             let pm = Float(perimeter[r])
             guard Float(b.length) >= 0.15 * pm, Float(a.length + b.length) >= 0.5 * pm else { return false }
+            // A strip runs between two open areas that extend beyond it. A region that owns
+            // most of a neighbour's outline wraps it (an iris around its pupil), and one whose
+            // neighbour is smaller than itself is a rim around a small feature or one ring of
+            // a nest (pupil, iris, eye ring): a feature of its own, whatever its colour.
+            for l in [a, b] {
+                let t = Int(l.region)
+                if Float(l.length) >= p.stripEnclosure * Float(perimeter[t] + edge[t]) { return false }
+                if Float(area[t]) < p.stripNeighbourArea * Float(area[r]) { return false }
+            }
             let pa = palette[Int(cls[Int(a.region)])], pb = palette[Int(cls[Int(b.region)])]
             let ab = pb - pa
             let ab2 = (ab * ab).sum()
@@ -544,6 +567,7 @@ enum RegionSimplifier {
             parent[other] = Int32(root)
             area[root] = area[r] + area[target]
             perimeter[root] = perimeter[r] + perimeter[target] - 2 * best.length
+            edge[root] = edge[r] + edge[target]
             sums[root] = sums[r] + sums[target]
             cls[root] = cls[target]
             thin[root] = false  // re-checked by the next round's inscribed-disc test

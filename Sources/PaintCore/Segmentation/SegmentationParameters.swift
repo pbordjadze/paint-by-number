@@ -80,11 +80,17 @@ struct SegmentationParameters: Sendable {
     /// of its two dominant neighbours' paints of the line between those paints, and the mean
     /// colour step across each of those two borders is below `stripContrast` × the paint
     /// difference (an edge blurred over 4+ pixels; a sharp contour steps by the whole
-    /// difference within a pixel or two).
+    /// difference within a pixel or two). Both dominant neighbours must be open areas: one
+    /// that shares `stripEnclosure` or more of its whole outline (image edge included) with
+    /// the region is wrapped by it, and one smaller than `stripNeighbourArea` × the region's
+    /// area is the inside of a rim or a ring nest (a pupil inside its iris, an iris inside
+    /// its eye ring); rings are features, not blur.
     var stripCompactness: Float
     var stripWidth: Float
     var stripMixture: Float
     var stripContrast: Float
+    var stripEnclosure: Float
+    var stripNeighbourArea: Float
     /// Gradient bands (see `BandMerging`): the largest spread (OKLab) of paints fused into
     /// one region across weak boundaries, for paints too close to tell apart (anywhere) and
     /// for narrow bands in unimportant areas; the mean width up to which a region is a
@@ -156,6 +162,13 @@ struct SegmentationParameters: Sendable {
         stripContrast = 0.7
         // Paints about two just-noticeable differences apart (below a large palette's
         // spacing) fuse anywhere; the rings of a background ramp fuse up to clearly different
+        // A pupil cut by the eyelid still shares well over half its outline with the iris.
+        // The rings of the Parrots eye at 24 colours (a 68-px pupil inside a 183-px inner
+        // iris, a 249-px iris, a 342-px eye ring) are each smaller than the ring around them,
+        // while the blurred-edge strips along a beak run between regions many times
+        // their size.
+        stripEnclosure = 0.6
+        stripNeighbourArea = 1
         // shades. Bold templates fuse more gradation than fine ones, so the detail slider
         // keeps its meaning. Bokeh rings are a few percent of the frame wide, a sky band far
         // more.
