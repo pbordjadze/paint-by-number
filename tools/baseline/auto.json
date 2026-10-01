@@ -4,9 +4,9 @@
     "auto-relaxed/barn": {
       "bandRings": 51,
       "colors": 31,
-      "encodedBytes": 2036482,
+      "encodedBytes": 2027858,
       "meanDeltaE": 0.033757336,
-      "minInscribedRadius": 2.93251,
+      "minInscribedRadius": 2.9405484,
       "minPaletteDistance": 0.03502242,
       "p95DeltaE": 0.084257096,
       "regions": 482,
@@ -16,35 +16,35 @@
         "detail": 0.54,
         "smoothness": 0.55
       },
-      "templateSHA1": "bf0f1c93b60ab1c56a6bd36c6c3c65509279de9e",
-      "totalMs": 331.5,
+      "templateSHA1": "5f8dd16fe6c84fea15864c2a9e3cc1583a51340c",
+      "totalMs": 336.4,
       "winner": 0
     },
     "auto-relaxed/espresso": {
       "bandRings": 44,
       "colors": 34,
-      "encodedBytes": 942499,
+      "encodedBytes": 939699,
       "meanDeltaE": 0.032486856,
-      "minInscribedRadius": 2.601833,
+      "minInscribedRadius": 2.6014917,
       "minPaletteDistance": 0.033019416,
       "p95DeltaE": 0.09500823,
       "regions": 198,
-      "regionsUnderRadius3": 4,
+      "regionsUnderRadius3": 5,
       "settings": {
         "colorCount": 36,
         "detail": 0.53,
         "smoothness": 0.44
       },
-      "templateSHA1": "a77ca21be9dd5c0b09cd65bff6ef229748a428ee",
-      "totalMs": 215.4,
+      "templateSHA1": "3dc4e5b825f74a10832b969f1546f932c5589fa6",
+      "totalMs": 172.0,
       "winner": 0
     },
     "auto-relaxed/hibiscus": {
       "bandRings": 71,
       "colors": 30,
-      "encodedBytes": 1417938,
+      "encodedBytes": 1416946,
       "meanDeltaE": 0.03375969,
-      "minInscribedRadius": 2.681793,
+      "minInscribedRadius": 2.6815767,
       "minPaletteDistance": 0.036170997,
       "p95DeltaE": 0.1078836,
       "regions": 506,
@@ -54,14 +54,14 @@
         "detail": 0.59,
         "smoothness": 0.45
       },
-      "templateSHA1": "e0b7653eb6fce8307794d847a29ebbd0cb084c1d",
-      "totalMs": 526.3,
+      "templateSHA1": "4b3a3ca73cb36bb656be204ec557c7c68c3e51b4",
+      "totalMs": 422.7,
       "winner": 0
     },
     "auto-relaxed/lighthouse": {
       "bandRings": 18,
       "colors": 26,
-      "encodedBytes": 1754808,
+      "encodedBytes": 1750776,
       "meanDeltaE": 0.033591993,
       "minInscribedRadius": 2.791061,
       "minPaletteDistance": 0.038848553,
@@ -73,14 +73,14 @@
         "detail": 0.57,
         "smoothness": 0.55
       },
-      "templateSHA1": "a12fb2114af886dd39fa732c5a51b28acd18a13e",
-      "totalMs": 365.5,
+      "templateSHA1": "cf265f846a45d9cca1ead4edb7c1e641fba1a226",
+      "totalMs": 390.0,
       "winner": 0
     },
     "auto-relaxed/parrots": {
       "bandRings": 124,
       "colors": 39,
-      "encodedBytes": 1196062,
+      "encodedBytes": 1189006,
       "meanDeltaE": 0.030864688,
       "minInscribedRadius": 2.757188,
       "minPaletteDistance": 0.038688943,
@@ -92,14 +92,14 @@
         "detail": 0.52,
         "smoothness": 0.47
       },
-      "templateSHA1": "b7b5ccf57ad116f67ae6307caae14fd7a79037fa",
-      "totalMs": 371.0,
+      "templateSHA1": "ccdd8613cd5792a9091d4dac7a8c06a6945f7875",
+      "totalMs": 488.5,
       "winner": 0
     },
     "auto-relaxed/regatta": {
       "bandRings": 35,
       "colors": 26,
-      "encodedBytes": 1075683,
+      "encodedBytes": 1070771,
       "meanDeltaE": 0.02646049,
       "minInscribedRadius": 2.8174555,
       "minPaletteDistance": 0.03885389,
@@ -111,8 +111,8 @@
         "detail": 0.54,
         "smoothness": 0.5
       },
-      "templateSHA1": "dc3fd0f6ceaf6f2966d6fe98b1db7f0a15d3345c",
-      "totalMs": 291.7,
+      "templateSHA1": "8aa2b1128d2a32da954a9284bc42e7f7bad4f9a3",
+      "totalMs": 373.6,
       "winner": 0
     }
   },

@@ -63,7 +63,7 @@ the paper's own definition (the printed +2bxy appears to be a typo for −2bxy).
 ## Result at integration
 
 Package tests (160) pass; `tools/regression.py` passes all 24 cases with mean ΔE and region counts
-unchanged, template bytes −0.1 to −0.8 % and no smoothing fallbacks; vectorize timings on par.
+unchanged, template bytes −0.1 to −0.8 % and no smoothing fallbacks; timings within noise.
 Saved paintings are unaffected: templates store their geometry, and pipeline version 3 marks the
 ones the new fitter drew.
 
