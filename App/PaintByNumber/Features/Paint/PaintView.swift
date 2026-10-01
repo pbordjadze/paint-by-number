@@ -206,24 +206,21 @@ struct PaintView: View {
 
     // MARK: Top bar
 
-    /// Close, the progress badge, then Photo, Hint, Undo and More. The controls take their room
-    /// first and the badge picks the variant that fits the rest (down to its ring and
-    /// percentage); only when even that leaves too little (the narrowest windows) does Hint go,
-    /// which the selected swatch and the `h` key still offer. Nothing here may grow wider than
-    /// the window: the bar's width would widen the whole screen.
+    /// Close, the progress badge, then Photo, Hint, Undo and More, as the first of these that
+    /// fits: each badge variant (largest first, down to its ring and percentage) with every
+    /// control, then the smallest badge without Hint, which the selected swatch and the `h` key
+    /// still offer (the narrowest windows). Nothing here may grow wider than the window: the
+    /// bar's width would widen the whole screen.
     private func topBar(width: CGFloat) -> some View {
-        GlassEffectContainer(spacing: 10) {
-            HStack(spacing: 10) {
-                if let onClose {
-                    GlassIconButton(systemImage: "xmark", label: "Close", action: onClose)
+        let badges = badgeVariants
+        return GlassEffectContainer(spacing: 10) {
+            ViewThatFits(in: .horizontal) {
+                ForEach(badges, id: \.self) { badge in
+                    topBarRow(badge: badge, showsHint: true)
                 }
-                progressBadge
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                ViewThatFits(in: .horizontal) {
-                    trailingControls(showsHint: true)
-                    trailingControls(showsHint: false)
+                if let smallest = badges.last {
+                    topBarRow(badge: smallest, showsHint: false)
                 }
-                .layoutPriority(1)
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
         }
@@ -232,8 +229,15 @@ struct PaintView: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    private func trailingControls(showsHint: Bool) -> some View {
-        HStack(spacing: 10) {
+    private func topBarRow(badge: BadgeVariant, showsHint: Bool) -> some View {
+        // 8 pt apart: the buttons' glass sits inside their frames, so the shapes stay further
+        // apart than the container's 10 pt and don't merge; six controls fit a 402 pt phone.
+        HStack(spacing: 8) {
+            if let onClose {
+                GlassIconButton(systemImage: "xmark", label: "Close", action: onClose)
+            }
+            progressBadge(badge)
+                .frame(maxWidth: .infinity, alignment: .leading)
             if photoLoader != nil {
                 PhotoPeekButton(peek: $peek)
                     .disabled(photoUnavailable)
@@ -248,25 +252,35 @@ struct PaintView: View {
         }
     }
 
-    /// Progress, the title when it fits whole, and on regular widths the selected color's
-    /// name (compact widths show it above the palette instead). The name outranks the
-    /// percentage: when a long (translated) name doesn't fit beside the percentage, the last
-    /// variant keeps the ring and lets the name shrink to the room left.
-    private var progressBadge: some View {
-        let fraction = session.fractionComplete
+    /// What the progress badge shows: the ring, plus any of the title (when it fits whole),
+    /// the percentage and, on regular widths, the selected color's name (compact widths show
+    /// it above the palette instead).
+    nonisolated private struct BadgeVariant: Hashable {
+        var showsTitle = false
+        var showsPercent = true
+        var showsColor = false
+        /// The name may shrink to the room left (its ideal width is kept small so this
+        /// variant is chosen before Hint goes).
+        var shrinksColor = false
+    }
+
+    /// Largest first. The name outranks the percentage: when a long (translated) name doesn't
+    /// fit beside the percentage, the last variant keeps the ring and lets the name shrink.
+    private var badgeVariants: [BadgeVariant] {
         let showsColor = sizeClass == .regular && session.selectedColor != nil
-        return ViewThatFits(in: .horizontal) {
-            if showsColor {
-                if !title.isEmpty { badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: true) }
-                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: true)
-                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: false, showsColor: true, shrinksColor: true)
-            } else {
-                if !title.isEmpty { badgeVariant(fraction: fraction, showsTitle: true, showsPercent: true, showsColor: false) }
-                badgeVariant(fraction: fraction, showsTitle: false, showsPercent: true, showsColor: false)
-            }
-        }
-        .frame(height: Self.barHeight)
-        .glassEffect(.regular, in: .capsule)
+        var variants: [BadgeVariant] = []
+        if !title.isEmpty { variants.append(BadgeVariant(showsTitle: true, showsColor: showsColor)) }
+        variants.append(BadgeVariant(showsColor: showsColor))
+        if showsColor { variants.append(BadgeVariant(showsPercent: false, showsColor: true, shrinksColor: true)) }
+        return variants
+    }
+
+    private func progressBadge(_ variant: BadgeVariant) -> some View {
+        badgeVariant(
+            fraction: session.fractionComplete, showsTitle: variant.showsTitle, showsPercent: variant.showsPercent,
+            showsColor: variant.showsColor, shrinksColor: variant.shrinksColor)
+            .frame(height: Self.barHeight)
+            .glassEffect(.regular, in: .capsule)
     }
 
     private func badgeVariant(
@@ -281,6 +295,7 @@ struct PaintView: View {
                     .accessibilityHidden(true)
                 if shrinksColor {
                     CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
+                        .frame(idealWidth: 60, alignment: .leading)
                 } else {
                     CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
                         .fixedSize()

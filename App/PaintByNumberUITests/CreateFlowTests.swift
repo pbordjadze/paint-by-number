@@ -92,9 +92,8 @@ final class CreateFlowTests: XCTestCase {
         let (app, picker) = launchToPicker("create")
         XCTAssertTrue(picker.exists, "No library picker")
 
-        try tapFirstPhoto(app, in: picker.frame)
         let start = app.buttons["Start Painting"]
-        let opened = start.waitForExistence(timeout: 60)
+        let opened = try pickFirstInlinePhoto(app, picker: picker, opens: start)
         attachScreenshot(app, named: "library-photo-picked")
         XCTAssertTrue(opened, "Picking a library photo didn't open its preview")
         guard opened else { return }
@@ -110,8 +109,7 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(returned, "Back didn't return to the photo step")
         XCTAssertTrue(picker.waitForExistence(timeout: 20))
 
-        try tapFirstPhoto(app, in: picker.frame)
-        let reopened = start.waitForExistence(timeout: 60)
+        let reopened = try pickFirstInlinePhoto(app, picker: picker, opens: start)
         attachScreenshot(app, named: "library-photo-picked-again")
         XCTAssertTrue(reopened, "The same photo couldn't be picked a second time")
     }
@@ -243,6 +241,8 @@ final class CreateFlowTests: XCTestCase {
     private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector) -> CGRect? {
         app.buttons["Browse All…"].tap()
         let shown = poll(timeout: 15) { sheet.dismissFrame != nil }
+        // Read again once the sheet has slid into place: a frame read mid-animation misses.
+        if shown { sleep(1) }
         attachScreenshot(app, named: "browse-all")
         guard shown, let cancel = sheet.dismissFrame else {
             attachTree(app, named: "browse-all-tree")
@@ -250,6 +250,17 @@ final class CreateFlowTests: XCTestCase {
             return nil
         }
         return cancel
+    }
+
+    /// Picks the inline picker's first photo and waits for `opens`. On a phone the picker's
+    /// accessibility tree can lag its screen (it listed a banner that wasn't showing), so when
+    /// the tap by reported frames opens nothing, it taps where the first photo sits.
+    @MainActor
+    private func pickFirstInlinePhoto(_ app: XCUIApplication, picker: XCUIElement, opens: XCUIElement) throws -> Bool {
+        try tapFirstPhoto(app, in: picker.frame)
+        if opens.waitForExistence(timeout: 15) { return true }
+        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.25)).tap()
+        return opens.waitForExistence(timeout: 60)
     }
 
     /// Taps the first library photo that is fully visible inside `area` (window coordinates).
