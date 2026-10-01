@@ -50,6 +50,38 @@ final class SettingsTests: XCTestCase {
         attachScreenshot(of: app, named: "settings-paper-dark")
     }
 
+    /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps
+    /// the choice and says what it aims for.
+    @MainActor
+    func testPaintingLengthPickerChangesTheValue() throws {
+        let app = openSettings()
+        let picker = app.descendants(matching: .any)["painting-length"]
+        scroll(app, to: picker)
+        XCTAssertTrue(picker.exists, "Settings has no Painting Length picker")
+        XCTAssertTrue(describe(picker).contains("Relaxed"), "Painting Length doesn't start on Relaxed: \(describe(picker))")
+        XCTAssertTrue(app.staticTexts["Suggested settings aim for about an hour of painting."].waitForExistence(timeout: 5))
+        picker.tap()
+        for choice in ["Quick", "Relaxed", "Detailed"] {
+            XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Painting Length picker has no \(choice)")
+        }
+        app.buttons["Quick"].firstMatch.tap()
+        let chosen = NSPredicate(format: "label CONTAINS 'Quick' OR value CONTAINS 'Quick'")
+        let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5)
+        XCTAssertEqual(result, .completed, "Choosing Quick didn't change the picker: \(describe(picker))")
+        XCTAssertTrue(app.staticTexts["Suggested settings aim for about half an hour of painting."].waitForExistence(timeout: 5))
+        attachScreenshot(of: app, named: "settings-painting-length-quick")
+
+        // Back to the default, so later create-flow tests and screenshots aim for Relaxed.
+        picker.tap()
+        XCTAssertTrue(app.buttons["Relaxed"].waitForExistence(timeout: 5))
+        app.buttons["Relaxed"].firstMatch.tap()
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [XCTNSPredicateExpectation(
+                predicate: NSPredicate(format: "label CONTAINS 'Relaxed' OR value CONTAINS 'Relaxed'"), object: picker)],
+                timeout: 5),
+            .completed)
+    }
+
     /// The picker's label and value together: how a menu picker's row reads.
     @MainActor
     private func describe(_ element: XCUIElement) -> String {

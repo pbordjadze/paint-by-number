@@ -60,6 +60,50 @@ final class CreateFlowTests: XCTestCase {
             "The painting didn't open with the typed title")
     }
 
+    /// A sample opens on settings suggested for it; moving Detail makes them custom, and
+    /// Reset to Suggested brings the slider back.
+    @MainActor
+    func testSuggestedSettingsChipAndReset() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "create-preview"]
+        app.launch()
+
+        let start = app.buttons["Start Painting"]
+        XCTAssertTrue(start.waitForExistence(timeout: 30))
+        // Start waits for the suggestion.
+        expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
+        waitForExpectations(timeout: 90)
+
+        let chip = app.descendants(matching: .any)["settings-origin"]
+        XCTAssertTrue(chip.waitForExistence(timeout: 10), "The preview has no settings chip")
+        XCTAssertEqual(chip.value as? String, "Suggested for this photo")
+        XCTAssertEqual(chip.label, "Settings")
+
+        let detail = app.sliders["Detail"]
+        XCTAssertTrue(detail.exists, "No Detail slider")
+        XCTAssertTrue(detail.isEnabled, "The Detail slider still waits for the suggestion")
+        let suggested = try XCTUnwrap(detail.value as? String)
+        // Far from the suggestion, so the slider's word changes.
+        let target: CGFloat = ["Simple", "Moderate"].contains(suggested) ? 0.95 : 0.05
+        detail.adjust(toNormalizedSliderPosition: target)
+
+        let reset = app.buttons["settings-origin"]
+        XCTAssertTrue(reset.waitForExistence(timeout: 10), "Moving Detail didn't offer Reset to Suggested")
+        XCTAssertEqual(reset.label, "Reset to Suggested")
+        XCTAssertEqual(reset.value as? String, "Custom")
+        XCTAssertNotEqual(detail.value as? String, suggested)
+        attachScreenshot(app, named: "create-custom-settings")
+
+        reset.tap()
+        let restored = NSPredicate(format: "value == %@", suggested)
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: restored, object: detail)], timeout: 10), .completed,
+            "Reset didn't bring Detail back to \(suggested)")
+        XCTAssertEqual(chip.value as? String, "Suggested for this photo")
+        XCTAssertFalse(reset.exists, "Reset is still offered after resetting")
+        attachScreenshot(app, named: "create-suggested-settings")
+    }
+
     /// The inline picker is the page's primary content and no scroll view contains it: its pan
     /// runs out of process and can't be arbitrated against an in-process ancestor's pan.
     @MainActor

@@ -172,7 +172,7 @@ nonisolated struct ArtworkDraft: Sendable {
     var title: String
     var template: Template
     var settings: GenerationSettings
-    /// Nil for paintings made outside the create flow (first-launch samples, demos).
+    /// Nil when nothing was suggested (first-launch samples, demos).
     var settingsOrigin: SettingsOrigin?
     /// The painting length the suggestion aimed for.
     var paintingLength: PaintingLength?

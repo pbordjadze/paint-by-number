@@ -79,6 +79,18 @@ final class LongTextTests: XCTestCase {
         XCTAssertTrue(app.windows.firstMatch.frame.contains(pace.frame), "The Pace control is cut off")
     }
 
+    /// The create flow's settings chip keeps Reset to Suggested whole and tappable.
+    @MainActor
+    func testCreateSettingsChipKeepsReset() {
+        let app = launch("create-custom-long-text")
+        let reset = app.buttons["settings-origin"]
+        XCTAssertTrue(reset.waitForExistence(timeout: 150), "The create flow never offered Reset to Suggested")
+        sleep(1)
+        attachScreenshot(of: app, named: "create-custom-long-text")
+        XCTAssertTrue(reset.isHittable, "Reset to Suggested can't be tapped")
+        XCTAssertTrue(app.windows.firstMatch.frame.contains(reset.frame), "Reset to Suggested is cut off")
+    }
+
     @MainActor
     func testSettingsKeepsItsDoneButton() {
         let app = launch("settings-long-text")

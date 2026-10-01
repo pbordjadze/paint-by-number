@@ -157,6 +157,20 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   sit inside a ScrollView (UIKit can't arbitrate their pans across the process boundary: neither
   scrolls). It fills the page; compact windows switch Photos/Samples with a segmented control,
   wide windows put a scrolling samples column beside it. "Browse All…" presents the full picker.
+- Suggested settings in the create flow (`CreateModel`): every photo (picker, camera, sample, drop,
+  opened file) goes loading → analyzing (`SubjectImportance.analyze`: importance map plus
+  `SubjectHints` — faces, animals, allowlisted scene labels, quantized to hundredths — in one Vision
+  pass) → suggesting (`AutoSettings.choose` on the draft image, `sourceSize` = the photo's size,
+  `maxCandidates` 3 below 6 cores; its first candidate shows as a draft at once, sliders and Start
+  wait) → the winner's draft (unless it is that candidate) and its full resolution. A new photo or
+  closing the flow cancels it (a `withTaskCancellationHandler` flag reaches every candidate's
+  thread). `settingsOrigin` is `.suggested` until the painter moves a slider (`.custom`; the view
+  reports moves through `settingsChanged()`, the model's own slider updates don't); the chip in
+  `TemplatePreviewView` offers Reset to Suggested, which restores the kept `AutoDecision` without
+  choosing again. Decisions are reproducible from the photo and the painting length and never
+  stored: `meta.json` records only `settingsOrigin` and `paintingLength` (tolerant strings), and
+  regeneration reuses an artwork's recorded settings. Demo scenarios `create-suggested`,
+  `create-custom`, `create-custom-long-text`.
 - Open in Paint by Numbers: images from the share sheet and Files arrive through an image document type
   (`CFBundleDocumentTypes` in `Config/Info.plist`, `Alternate` rank, not opened in place, so the system
   copies each file into `Documents/Inbox`) and `.onOpenURL` → `AppShellView.openFile`. `IncomingFile`
@@ -169,7 +183,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   it would be a hand-written `.appex` target in the pbxproj that can't open its containing app and
   would hand the image over through an app group. Debug builds: `-openFile <path>` calls the same
   handler at launch (`DemoMode.openFileURL`; scenario `create-from-file`).
-- Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`).
+- Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`). Settings › Painting Length
+  (Quick, Relaxed by default, Detailed; `Preferences.paintingLength`) is what suggestions aim for;
+  nothing starts from fixed settings any more (the old Starting Colors value is never read).
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (source language English; no translations yet, so the catalog
   is the translator hand-off) and the Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by

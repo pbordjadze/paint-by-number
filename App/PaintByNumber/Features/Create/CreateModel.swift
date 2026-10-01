@@ -463,13 +463,20 @@ final class CreateModel {
         _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength, maxCandidates: Int,
         firstDraft: @escaping @Sendable (Preview) -> Void
     ) async throws -> AutoDecision {
-        try AutoSettings.choose(
-            image: prepared.draft, sourceSize: sourceSize, importance: prepared.importance, hints: prepared.hints,
-            preference: preference, maxCandidates: maxCandidates, cancel: .task
-        ) { output in
-            // Rendered here, before the other candidates run: it is what the painter waits for.
-            guard let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true) else { return }
-            firstDraft(preview)
+        // A task's cancellation shows only on the thread running it; the flag reaches every
+        // candidate's thread at once.
+        let flag = CancellationFlag()
+        return try await withTaskCancellationHandler {
+            try AutoSettings.choose(
+                image: prepared.draft, sourceSize: sourceSize, importance: prepared.importance, hints: prepared.hints,
+                preference: preference, maxCandidates: maxCandidates, cancel: CancellationCheck { flag.isSet }
+            ) { output in
+                // Rendered here, before the other candidates run: it is what the painter waits for.
+                guard let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true) else { return }
+                firstDraft(preview)
+            }
+        } onCancel: {
+            flag.set()
         }
     }
 
@@ -512,4 +519,14 @@ final class CreateModel {
     private static func photoTitle() -> String {
         Date.now.formatted(.dateTime.month(.wide).day())
     }
+}
+
+/// Set once when a suggestion's task is cancelled; read by every candidate's thread.
+private nonisolated final class CancellationFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+
+    var isSet: Bool { lock.withLock { cancelled } }
+
+    func set() { lock.withLock { cancelled = true } }
 }
