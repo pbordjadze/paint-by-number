@@ -111,7 +111,7 @@ struct PaintSpeechTests {
             #expect(ColorNameText.nicknamesAvailable(languageCode: code), "\(code ?? "nil")")
         }
         for code in ["de", "fr", "ja", "zh-Hans", "pt-BR", "es-419"] {
-            #expect(!ColorNameText.nicknamesAvailable(languageCode: code), code)
+            #expect(!ColorNameText.nicknamesAvailable(languageCode: code), "\(code)")
         }
         let palette = (0..<6).map { PaletteColor(oklab: SIMD3(0.2 + Float($0) * 0.12, Float($0 % 2) * 0.05, 0.03), space: .sRGB) }
         let english = ColorNameText.nicknames(for: palette, seed: 9, languageCode: "en")
