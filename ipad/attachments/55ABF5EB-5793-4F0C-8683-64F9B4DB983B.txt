@@ -1,0 +1,152 @@
+Attributes: Application, 0x116256300, pid: 36875, label: 'Paint by Numbers'
+Element subtree:
+ →Application, 0x116256300, pid: 36875, label: 'Paint by Numbers'
+    Window (Main), 0x116256e40, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116256080, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x116255900, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x116255400, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x1162561c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+              Other, 0x116255a40, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x116745b80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  NavigationBar, 0x116745180, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Numbers'
+                    Button, 0x116747980, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+                    Button, 0x116744000, {{982.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+                    StaticText, 0x1167448c0, {{20.0, 89.5}, {278.5, 41.0}}, label: 'Paint by Numbers'
+                  Other, 0x116746800, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x116746580, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      Other, 0x116747e80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                        Other, 0x116bfabc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                          ScrollView, 0x116bf9540, {{516.0, 0.0}, {0.0, 1376.0}}
+                            Other, 0x116bf8140, {{516.0, 138.0}, {0.0, 0.0}}
+                          Image, 0x116bf8000, {{311.6, 530.3}, {241.0, 181.8}}
+                          Image, 0x116bf8280, {{479.4, 530.3}, {241.0, 181.8}}
+                          Image, 0x116331f40, {{406.5, 528.0}, {219.0, 146.0}}
+                          StaticText, 0x116333c00, {{483.8, 684.0}, {4.5, 10.0}}, label: '1'
+                          StaticText, 0x116330a00, {{503.2, 684.0}, {5.5, 10.0}}, label: '2'
+                          StaticText, 0x116330780, {{523.0, 684.0}, {6.0, 10.0}}, label: '3'
+                          StaticText, 0x116333980, {{543.0, 684.0}, {6.0, 10.0}}, label: '4'
+                          StaticText, 0x116333340, {{349.0, 763.8}, {334.0, 33.5}}, label: 'Paint something beautiful'
+                          StaticText, 0x116333700, {{320.5, 807.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+                          Button, 0x1163317c0, {{421.5, 884.0}, {189.5, 60.5}}, label: 'New Painting'
+                            Image, 0x1163312c0, {{453.5, 906.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add'
+                            StaticText, 0x116330000, {{421.5, 884.0}, {189.5, 60.5}}, label: 'New Painting'
+                  Other, 0x1163303c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x116331540, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116333d40, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x116332940, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x116330f00, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x116330b40, {{0.0, 0.0}, {1032.0, 1376.0}}
+              NavigationBar, 0x116330dc0, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+                Button, 0x1163335c0, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close'
+                StaticText, 0x1163330c0, {{463.5, 43.5}, {104.5, 21.0}}, label: 'New Painting'
+                Button, 0x116331400, {{981.0, 36.0}, {37.0, 36.0}}, label: 'Browse All…'
+              Other, 0x116330140, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x116330c80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  Other, 0x116331e00, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x116333200, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      StaticText, 0x116333480, {{36.0, 90.0}, {521.5, 18.0}}, label: 'Choose a photo with a clear subject and good light. It becomes your canvas.'
+                      StaticText, 0x116332800, {{36.0, 122.0}, {114.0, 24.0}}, label: 'Your Photos'
+                      Other, 0x116332a80, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker'
+                        Other, 0x116333840, {{32.0, 158.0}, {566.5, 1174.0}}
+                          Other, 0x116331900, {{32.0, 158.0}, {566.5, 1174.0}}
+                            Other, 0x116330280, {{32.0, 158.0}, {566.5, 1174.0}}
+                              Other, 0x116332e40, {{32.0, 158.0}, {566.5, 1174.0}}
+                                Other, 0x116333e80, {{32.0, 158.0}, {566.5, 1174.0}}
+                                  Other, 0x116330640, {{32.0, 158.0}, {566.5, 1174.0}}
+                                    Other, 0x116330500, {{32.0, 158.0}, {566.5, 1174.0}}
+                                      Other, 0x116331040, {{32.0, 158.0}, {566.5, 1174.0}}
+                                        Other, 0x116331180, {{32.0, 158.0}, {566.5, 1174.0}}
+                                          Other, 0x116c15cc0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                            Other, 0x116c14280, {{32.0, 158.0}, {566.5, 1174.0}}
+                                              Other, 0x116c15f40, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                Other, 0x116c15b80, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                  Other, 0x116c14500, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                    Other, 0x116c15e00, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                      Other, 0x116c15a40, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                        Other, 0x116c14000, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                          NavigationBar, 0x116c15900, {{32.0, 168.0}, {566.5, 62.0}}, identifier: 'Photos'
+                                                            SegmentedControl, 0x116c14f00, {{220.0, 166.0}, {190.0, 48.0}}, label: 'Photos'
+                                                              Button, 0x116c16080, {{220.0, 166.0}, {95.0, 48.0}}, label: 'Photos', Selected
+                                                              Button, 0x116c15180, {{315.0, 166.0}, {95.0, 48.0}}, label: 'Collections'
+                                                          Other, 0x116c157c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                            Other, 0x116c15040, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                              Other, 0x116c15680, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                Other, 0x116c14140, {{32.0, 158.0}, {566.5, 1174.0}}, label: 'Photos'
+                                                                  Other, 0x116c14a00, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                    ScrollView, 0x116c148c0, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'photosView_content_scroll_view'
+                                                                      Other, 0x116c14b40, {{32.0, 230.0}, {566.5, 520.0}}, identifier: 'photos_layout'
+                                                                        Other, 0x116c16300, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                        Other, 0x116c14c80, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                        Other, 0x116c161c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                        Other, 0x116c15400, {{32.0, 230.0}, {566.5, 142.5}}, identifier: 'PXGSingleViewLayout-Group'
+                                                                          Other, 0x116c15540, {{32.0, 230.0}, {566.5, 142.5}}, identifier: 'PXGSingleViewContainerView_AX', label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Numbers” can only access the items you select.'
+                                                                            Image, 0x116c152c0, {{64.0, 240.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                            Button, 0x116c14780, {{546.5, 238.0}, {30.0, 22.0}}, label: 'Close'
+                                                                            Button, 0x116bdea80, {{114.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                              StaticText, 0x116bdebc0, {{114.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                        Other, 0x116bded00, {{32.0, 230.0}, {566.5, 142.5}}, label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Numbers” can only access the items you select.'
+                                                                          Image, 0x116bdee40, {{64.0, 240.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                          Button, 0x116bdef80, {{546.5, 238.0}, {30.0, 22.0}}, label: 'Close'
+                                                                          Button, 0x116bdf0c0, {{114.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                            StaticText, 0x116bdf480, {{114.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                        Other, 0x116bdf5c0, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'photos_sectioned_layout'
+                                                                          Other, 0x116bdf700, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXAssetsSectionLayout-Group'
+                                                                            Other, 0x116bdf840, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXZoomablePhotosLayout-Group'
+                                                                              Other, 0x116bdf980, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXGZoomLayout-Group'
+                                                                                Other, 0x116bdfac0, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXGDecoratingLayout-Group'
+                                                                                  Other, 0x116bdfc00, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXGGridLayout-Group', label: 'Photo, March 30, 2018, 7:14 PM, Photo, August 08, 2012, 9:55 PM, Photo, August 08, 2012, 9:29 PM, Photo, August 08, 2012, 6:52 PM, Photo, March 13, 2011, 12:17 AM, Photo, October 09, 2009, 9:09 PM'
+                                                                                    Image, 0x116bdfd40, {{32.0, 372.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 30, 2018, 7:14 PM'
+                                                                                    Image, 0x116bdf200, {{221.3, 372.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:55 PM'
+                                                                                    Image, 0x116bdf340, {{410.7, 372.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:29 PM'
+                                                                                    Image, 0x116bdfe80, {{32.0, 562.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 6:52 PM'
+                                                                                    Image, 0x116aa7980, {{221.3, 562.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 13, 2011, 12:17 AM'
+                                                                                    Image, 0x116aa66c0, {{410.7, 562.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, October 09, 2009, 9:09 PM'
+                                                                              Other, 0x116aa6800, {{0.0, 214.5}, {566.5, 0.0}}, identifier: 'PXZoomableInlineHeadersLayout-Group'
+                                                                        Other, 0x116aa7840, {{565.5, 230.0}, {30.0, 1102.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                          Other, 0x116aa6580, {{592.5, 1106.5}, {3.0, 424.5}}
+                                                                        Other, 0x116bc9040, {{32.0, 1299.0}, {566.5, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                          Other, 0x116bcb980, {{35.0, 1326.0}, {1026.0, 3.0}}
+                                                                      Other, 0x116bcbe80, {{565.5, 230.0}, {30.0, 1102.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                        Other, 0x116bc92c0, {{592.5, 1106.5}, {3.0, 424.5}}
+                                                                      Other, 0x116bc9400, {{32.0, 1299.0}, {566.5, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                        Other, 0x116bc9540, {{35.0, 1326.0}, {1026.0, 3.0}}
+                                                          Other, 0x116bc9680, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                            Other, 0x116bc9a40, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                    Other, 0x116bcb840, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                      Other, 0x116bcbd40, {{32.0, 158.0}, {566.5, 1174.0}}
+                              Other, 0x116bc97c0, {{0.0, 0.0}, {0.0, 0.0}}
+                      StaticText, 0x116bc9f40, {{626.4, 122.0}, {81.5, 24.0}}, label: 'Samples'
+                      ScrollView, 0x116bca080, {{622.5, 158.0}, {377.5, 1174.0}}
+                        Other, 0x116bcbac0, {{622.5, 158.0}, {377.5, 452.0}}
+                          Other, 0x116bcbc00, {{626.5, 162.0}, {369.5, 428.0}}
+                            Button, 0x116bca300, {{626.5, 162.0}, {178.0, 133.5}}, label: 'Sample: Parrots'
+                              Image, 0x116bca1c0, {{615.5, 162.0}, {200.0, 133.5}}
+                              StaticText, 0x116bc9e00, {{626.5, 162.0}, {178.0, 133.5}}, label: 'Parrots'
+                            Button, 0x116bc9cc0, {{818.5, 162.0}, {177.5, 133.5}}, label: 'Sample: Hibiscus'
+                              Image, 0x116bc9b80, {{807.0, 162.0}, {200.5, 133.5}}
+                              StaticText, 0x116bc9180, {{818.5, 162.0}, {177.5, 133.5}}, label: 'Hibiscus'
+                            Button, 0x116bca940, {{626.5, 309.5}, {178.0, 133.0}}, label: 'Sample: Lighthouse'
+                              Image, 0x116bcaa80, {{616.0, 309.5}, {199.0, 133.0}}
+                              StaticText, 0x116bcae40, {{626.5, 309.5}, {178.0, 133.0}}, label: 'Lighthouse'
+                            Button, 0x116bcaf80, {{818.5, 309.5}, {177.5, 133.0}}, label: 'Sample: Red Barn'
+                              Image, 0x116bcb5c0, {{807.5, 309.5}, {199.5, 133.0}}
+                              StaticText, 0x116bcb200, {{818.5, 309.5}, {177.5, 133.0}}, label: 'Red Barn'
+                            Button, 0x116bcb340, {{626.5, 456.5}, {178.0, 133.5}}, label: 'Sample: Espresso'
+                              Image, 0x116bcad00, {{615.5, 456.5}, {200.0, 133.5}}
+                              StaticText, 0x116bca800, {{626.5, 456.5}, {178.0, 133.5}}, label: 'Espresso'
+                            Button, 0x116bcabc0, {{818.5, 456.5}, {177.5, 133.5}}, label: 'Sample: Regatta'
+                              Image, 0x116bcb0c0, {{818.5, 390.0}, {177.5, 266.5}}
+                              StaticText, 0x116bcb480, {{818.5, 456.5}, {177.5, 133.5}}, label: 'Regatta'
+                        Other, 0x116bca440, {{967.0, 158.0}, {30.0, 1174.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                          Other, 0x116bca6c0, {{994.0, 1322.0}, {3.0, 7.0}}
+                        Other, 0x116bc9900, {{967.0, 158.0}, {30.0, 1174.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                          Other, 0x116bca580, {{994.0, 1322.0}, {3.0, 7.0}}
+              Other, 0x116bcb700, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x116b04000, {{0.0, 0.0}, {1032.0, 1376.0}}
+Path to element:
+ →Application, 0x116256300, pid: 36875, label: 'Paint by Numbers'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x116b04140, pid: 36875, label: 'Paint by Numbers'
+  }

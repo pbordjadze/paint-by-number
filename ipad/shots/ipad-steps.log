@@ -1,0 +1,93 @@
+----- tail -----
+08:34:25 ipad: booted
+08:34:47 ipad: installed
+08:34:58 ipad: launch pipeline: com.pbordjadze.paintbynumber: 10390 
+08:34:58 ipad: pipeline ready after 0 s
+08:35:02 ipad: captured pipeline
+08:35:07 ipad: launch paint: com.pbordjadze.paintbynumber: 10475 
+08:35:10 ipad: paint ready after 2 s
+08:35:14 ipad: captured paint
+08:35:19 ipad: launch paint-progress: com.pbordjadze.paintbynumber: 10908 
+08:35:20 ipad: paint-progress ready after 1 s
+08:35:24 ipad: captured paint-progress
+08:35:26 ipad: launch paint-zoom: com.pbordjadze.paintbynumber: 11118 
+08:35:29 ipad: paint-zoom ready after 1 s
+08:35:32 ipad: captured paint-zoom
+08:35:38 ipad: launch paint-complete: com.pbordjadze.paintbynumber: 11262 
+08:35:38 ipad: paint-complete ready after 0 s
+08:35:43 ipad: captured paint-complete
+08:35:54 ipad: launch paint-dark: com.pbordjadze.paintbynumber: 12175 
+08:35:57 ipad: paint-dark ready after 3 s
+08:36:01 ipad: captured paint-dark
+08:36:08 ipad: launch paint-fill: com.pbordjadze.paintbynumber: 12628 
+08:36:10 ipad: paint-fill ready after 2 s
+08:36:14 ipad: captured paint-fill
+08:36:17 ipad: launch paint-hint: com.pbordjadze.paintbynumber: 12829 
+08:36:20 ipad: paint-hint ready after 3 s
+08:36:23 ipad: captured paint-hint
+08:36:26 ipad: launch paint-replay: com.pbordjadze.paintbynumber: 13057 
+08:36:30 ipad: paint-replay ready after 4 s
+08:36:34 ipad: captured paint-replay
+08:36:37 ipad: launch paint-photo: com.pbordjadze.paintbynumber: 13497 
+08:36:39 ipad: paint-photo ready after 2 s
+08:36:42 ipad: captured paint-photo
+08:36:45 ipad: launch paint-tip: com.pbordjadze.paintbynumber: 13564 
+08:36:47 ipad: paint-tip ready after 2 s
+08:36:50 ipad: captured paint-tip
+08:36:53 ipad: launch paint-ax: com.pbordjadze.paintbynumber: 14190 
+08:36:54 ipad: paint-ax ready after 1 s
+08:36:58 ipad: captured paint-ax
+08:37:05 ipad: launch paint-ax-large: com.pbordjadze.paintbynumber: 14456 
+08:37:06 ipad: paint-ax-large ready after 0 s
+08:37:08 ipad: captured paint-ax-large
+08:37:12 ipad: launch paint-long-text: com.pbordjadze.paintbynumber: 15036 
+08:37:13 ipad: paint-long-text ready after 1 s
+08:37:16 ipad: captured paint-long-text
+08:37:19 ipad: launch paint-complete-long-text: com.pbordjadze.paintbynumber: 15271 
+08:37:20 ipad: paint-complete-long-text ready after 1 s
+08:37:24 ipad: captured paint-complete-long-text
+08:37:27 ipad: launch gallery: com.pbordjadze.paintbynumber: 15393 
+08:37:42 ipad: gallery ready after 15 s
+08:37:48 ipad: captured gallery
+08:38:01 ipad: launch gallery-dark: com.pbordjadze.paintbynumber: 15981 
+08:38:06 ipad: gallery-dark ready after 5 s
+08:38:09 ipad: captured gallery-dark
+08:38:14 ipad: launch gallery-empty: com.pbordjadze.paintbynumber: 16578 
+08:38:15 ipad: gallery-empty ready after 1 s
+08:38:18 ipad: captured gallery-empty
+08:38:21 ipad: launch gallery-open: com.pbordjadze.paintbynumber: 16825 
+08:38:24 ipad: gallery-open ready after 3 s
+08:38:29 ipad: captured gallery-open
+08:38:32 ipad: launch gallery-damaged: com.pbordjadze.paintbynumber: 17267 
+08:38:33 ipad: gallery-damaged ready after 1 s
+08:38:35 ipad: captured gallery-damaged
+08:38:37 ipad: launch gallery-timelapse: com.pbordjadze.paintbynumber: 17745 
+08:38:40 ipad: gallery-timelapse ready after 3 s
+08:38:43 ipad: captured gallery-timelapse
+08:38:45 ipad: launch gallery-long-text: com.pbordjadze.paintbynumber: 17789 
+08:38:59 ipad: gallery-long-text ready after 14 s
+08:39:04 ipad: captured gallery-long-text
+08:39:08 ipad: launch paint-unavailable: com.pbordjadze.paintbynumber: 18388 
+08:39:08 ipad: paint-unavailable ready after 0 s
+08:39:11 ipad: captured paint-unavailable
+08:39:15 ipad: launch create: com.pbordjadze.paintbynumber: 18492 
+08:39:19 ipad: create ready after 4 s
+08:39:34 ipad: captured create
+08:39:39 ipad: launch create-samples: com.pbordjadze.paintbynumber: 19180 
+08:39:46 ipad: create-samples ready after 7 s
+08:39:50 ipad: captured create-samples
+08:39:56 ipad: launch create-preview: com.pbordjadze.paintbynumber: 19789 
+08:39:58 ipad: create-preview ready after 2 s
+08:40:01 ipad: captured create-preview
+08:40:06 ipad: launch create-preview-dark: com.pbordjadze.paintbynumber: 20290 
+08:40:11 ipad: create-preview-dark ready after 5 s
+08:40:15 ipad: captured create-preview-dark
+08:40:19 ipad: launch settings: com.pbordjadze.paintbynumber: 20365 
+08:40:21 ipad: settings ready after 2 s
+08:40:24 ipad: captured settings
+08:40:27 ipad: launch settings-long-text: com.pbordjadze.paintbynumber: 20865 
+08:40:27 ipad: settings-long-text ready after 0 s
+08:40:30 ipad: captured settings-long-text
+08:40:33 ipad: launch settings-acknowledgements: com.pbordjadze.paintbynumber: 21059 
+08:40:34 ipad: settings-acknowledgements ready after 1 s
+08:40:36 ipad: captured settings-acknowledgements
