@@ -1,0 +1,228 @@
+App/PaintByNumber/Resources/Samples/barn.jpg — 1152×768, 440 regions, longest stretch without a cancellation check 52.9 ms (ending 286 ms into the run, in segment.refine; median over runs 36.6 ms)
+  resample median      6.6 ms   min      5.9 ms
+  segment.oklab median     13.2 ms   min      8.9 ms
+  segment.structure median     24.7 ms   min     24.5 ms
+  segment.importance median     10.2 ms   min      8.6 ms
+  segment.smooth median     54.4 ms   min     23.6 ms
+  segment.palette median      9.1 ms   min      6.9 ms
+  segment.assign.nearest median      8.5 ms   min      6.4 ms
+  segment.assign.icm median     20.4 ms   min     18.3 ms
+  segment.assign median     26.9 ms   min     26.8 ms
+  segment.texture median      9.0 ms   min      4.5 ms
+  segment.regions.thin median     25.1 ms   min     22.8 ms
+  segment.regions.label median      6.2 ms   min      5.6 ms
+  segment.regions.adjacency median      3.2 ms   min      2.4 ms
+  segment.regions.merge median     27.0 ms   min     18.0 ms
+  segment.regions.smooth median      5.2 ms   min      5.2 ms
+  segment.regions.disc median      7.7 ms   min      5.1 ms
+  segment.regions median     75.5 ms   min     73.1 ms
+  segment.bands median      2.8 ms   min      2.6 ms
+  segment.consolidate median      2.7 ms   min      2.2 ms
+  segment.refine median      4.4 ms   min      4.2 ms
+  segment.legible median     14.1 ms   min     10.5 ms
+  segment.finalize median      0.3 ms   min      0.3 ms
+  segment median    328.8 ms   min    201.7 ms
+  vectorize.graph median      6.9 ms   min      5.8 ms
+  vectorize.rings median      0.4 ms   min      0.3 ms
+  vectorize.edt median     14.8 ms   min      9.4 ms
+  vectorize.raster median      1.4 ms   min      1.3 ms
+  vectorize.room median      0.2 ms   min      0.1 ms
+  vectorize.smooth median     25.1 ms   min     18.2 ms
+  vectorize.fill median      6.9 ms   min      6.1 ms
+  vectorize.labels median      2.5 ms   min      2.1 ms
+  vectorize median     73.3 ms   min     50.6 ms
+  total median    423.1 ms   min    273.7 ms
+  preview 700×466 median    123.7 ms   min     85.5 ms   worst gap 152.9 ms (in vectorize.smooth; median 11.5 ms)
+  detail 1 2100×1400 median    680.2 ms   min    646.8 ms   worst gap 76.1 ms (in segment.regions.merge; median 30.9 ms)
+  150 colors, detail 1 2100×1400 median    965.9 ms   min    883.5 ms   worst gap 64.0 ms (in segment.assign.nearest; median 57.6 ms)
+  suggest 426×284 median    450.5 ms   min    431.5 ms   analysis median 23.8 ms; 5 candidates → 32 colors, detail 0.54, smoothness 0.55
+App/PaintByNumber/Resources/Samples/espresso.jpg — 900×600, 182 regions, longest stretch without a cancellation check 26.1 ms (ending 124 ms into the run, in vectorize.smooth; median over runs 10.8 ms)
+  resample median      2.1 ms   min      1.7 ms
+  segment.oklab median      3.0 ms   min      2.7 ms
+  segment.structure median      7.0 ms   min      5.9 ms
+  segment.importance median      4.5 ms   min      4.4 ms
+  segment.smooth median     14.9 ms   min     12.8 ms
+  segment.palette median      3.1 ms   min      3.0 ms
+  segment.assign.nearest median      2.1 ms   min      2.0 ms
+  segment.assign.icm median      6.5 ms   min      6.1 ms
+  segment.assign median      8.5 ms   min      8.2 ms
+  segment.texture median      2.3 ms   min      2.1 ms
+  segment.regions.thin median      9.0 ms   min      8.6 ms
+  segment.regions.label median      2.5 ms   min      2.2 ms
+  segment.regions.adjacency median      1.2 ms   min      1.2 ms
+  segment.regions.merge median      7.2 ms   min      7.2 ms
+  segment.regions.smooth median      2.5 ms   min      2.2 ms
+  segment.regions.disc median      1.4 ms   min      1.3 ms
+  segment.regions median     23.8 ms   min     23.7 ms
+  segment.bands median      1.1 ms   min      1.1 ms
+  segment.consolidate median      0.9 ms   min      0.9 ms
+  segment.refine median      1.9 ms   min      1.8 ms
+  segment.legible median      5.6 ms   min      5.2 ms
+  segment.finalize median      0.2 ms   min      0.2 ms
+  segment median     82.6 ms   min     72.4 ms
+  vectorize.graph median      1.7 ms   min      1.7 ms
+  vectorize.rings median      0.1 ms   min      0.1 ms
+  vectorize.edt median      3.8 ms   min      3.4 ms
+  vectorize.raster median      0.6 ms   min      0.5 ms
+  vectorize.room median      0.0 ms   min      0.0 ms
+  vectorize.smooth median      5.6 ms   min      5.3 ms
+  vectorize.fill median      2.2 ms   min      2.0 ms
+  vectorize.labels median      0.9 ms   min      0.9 ms
+  vectorize median     14.9 ms   min     14.0 ms
+  total median    108.1 ms   min     90.2 ms
+  preview 700×466 median     73.7 ms   min     71.4 ms   worst gap 9.4 ms (in segment.assign.icm; median 8.0 ms)
+  detail 1 2100×1400 median    611.4 ms   min    449.3 ms   worst gap 27.7 ms (in segment.assign.icm; median 22.6 ms)
+  150 colors, detail 1 2100×1400 median    827.1 ms   min    785.9 ms   worst gap 295.4 ms (in segment.regions.thin; median 41.6 ms)
+  suggest 426×284 median    659.7 ms   min    517.3 ms   analysis median 27.2 ms; 5 candidates → 34 colors, detail 0.53, smoothness 0.44
+App/PaintByNumber/Resources/Samples/hibiscus.jpg — 1152×768, 435 regions, longest stretch without a cancellation check 32.8 ms (ending 99 ms into the run, in segment.smooth; median over runs 14.2 ms)
+  resample median      4.6 ms   min      3.9 ms
+  segment.oklab median      9.3 ms   min      8.7 ms
+  segment.structure median     22.9 ms   min     18.0 ms
+  segment.importance median     10.7 ms   min      9.8 ms
+  segment.smooth median     36.3 ms   min     34.2 ms
+  segment.palette median      6.8 ms   min      5.9 ms
+  segment.assign.nearest median      7.6 ms   min      6.8 ms
+  segment.assign.icm median     19.1 ms   min     17.0 ms
+  segment.assign median     26.7 ms   min     23.8 ms
+  segment.texture median      4.2 ms   min      4.1 ms
+  segment.regions.thin median     25.1 ms   min     21.1 ms
+  segment.regions.label median      6.2 ms   min      4.9 ms
+  segment.regions.adjacency median      2.7 ms   min      2.5 ms
+  segment.regions.merge median     17.9 ms   min     13.9 ms
+  segment.regions.smooth median      8.6 ms   min      4.8 ms
+  segment.regions.disc median      3.5 ms   min      3.2 ms
+  segment.regions median     70.2 ms   min     51.2 ms
+  segment.bands median      2.6 ms   min      2.2 ms
+  segment.consolidate median     14.2 ms   min      2.1 ms
+  segment.refine median      3.7 ms   min      3.4 ms
+  segment.legible median     10.6 ms   min     10.5 ms
+  segment.finalize median      0.3 ms   min      0.3 ms
+  segment median    204.2 ms   min    197.6 ms
+  vectorize.graph median      2.9 ms   min      2.4 ms
+  vectorize.rings median      0.2 ms   min      0.2 ms
+  vectorize.edt median      7.9 ms   min      6.7 ms
+  vectorize.raster median      1.3 ms   min      1.3 ms
+  vectorize.room median      0.1 ms   min      0.1 ms
+  vectorize.smooth median     12.1 ms   min     12.1 ms
+  vectorize.fill median      3.8 ms   min      3.4 ms
+  vectorize.labels median      2.2 ms   min      2.1 ms
+  vectorize median     31.1 ms   min     29.2 ms
+  total median    239.2 ms   min    232.1 ms
+  preview 700×466 median    113.1 ms   min    109.6 ms   worst gap 23.6 ms (in segment.texture; median 9.1 ms)
+  detail 1 2100×1400 median    932.5 ms   min    891.8 ms   worst gap 145.6 ms (in segment.regions; median 38.0 ms)
+  150 colors, detail 1 2100×1400 median   1347.5 ms   min   1312.9 ms   worst gap 41.4 ms (in segment.assign.nearest; median 36.2 ms)
+  suggest 426×284 median    851.2 ms   min    607.8 ms   analysis median 41.0 ms; 5 candidates → 30 colors, detail 0.59, smoothness 0.45
+App/PaintByNumber/Resources/Samples/lighthouse.jpg — 1152×768, 495 regions, longest stretch without a cancellation check 18.8 ms (ending 112 ms into the run, in segment.assign.icm; median over runs 17.0 ms)
+  resample median      3.3 ms   min      3.0 ms
+  segment.oklab median      6.5 ms   min      3.9 ms
+  segment.structure median     22.8 ms   min     14.0 ms
+  segment.importance median      7.8 ms   min      6.0 ms
+  segment.smooth median     39.0 ms   min     25.0 ms
+  segment.palette median      6.4 ms   min      5.5 ms
+  segment.assign.nearest median      6.6 ms   min      6.4 ms
+  segment.assign.icm median     34.0 ms   min     31.2 ms
+  segment.assign median     52.5 ms   min     37.6 ms
+  segment.texture median      5.1 ms   min      3.3 ms
+  segment.regions.thin median     36.0 ms   min     27.0 ms
+  segment.regions.label median      4.4 ms   min      3.9 ms
+  segment.regions.adjacency median      3.1 ms   min      2.5 ms
+  segment.regions.merge median     32.3 ms   min     25.0 ms
+  segment.regions.smooth median      6.0 ms   min      4.1 ms
+  segment.regions.disc median      2.9 ms   min      2.7 ms
+  segment.regions median     82.8 ms   min     80.9 ms
+  segment.bands median      2.3 ms   min      2.2 ms
+  segment.consolidate median      2.1 ms   min      1.8 ms
+  segment.refine median      3.3 ms   min      2.7 ms
+  segment.legible median      9.8 ms   min      7.6 ms
+  segment.finalize median      0.3 ms   min      0.2 ms
+  segment median    241.1 ms   min    209.6 ms
+  vectorize.graph median      3.2 ms   min      2.5 ms
+  vectorize.rings median      0.3 ms   min      0.2 ms
+  vectorize.edt median      6.6 ms   min      5.6 ms
+  vectorize.raster median      1.0 ms   min      0.9 ms
+  vectorize.room median      0.1 ms   min      0.1 ms
+  vectorize.smooth median     10.7 ms   min     10.2 ms
+  vectorize.fill median      3.3 ms   min      3.1 ms
+  vectorize.labels median      2.2 ms   min      2.1 ms
+  vectorize median     27.4 ms   min     27.1 ms
+  total median    280.2 ms   min    240.1 ms
+  preview 700×466 median    136.3 ms   min    114.7 ms   worst gap 19.3 ms (in segment.smooth; median 12.6 ms)
+  detail 1 2100×1400 median    751.8 ms   min    692.4 ms   worst gap 30.9 ms (in segment.regions.merge; median 28.7 ms)
+  150 colors, detail 1 2100×1400 median   1212.8 ms   min   1138.9 ms   worst gap 33.8 ms (in segment.refine; median 33.3 ms)
+  suggest 426×284 median    528.6 ms   min    482.4 ms   analysis median 38.4 ms; 5 candidates → 26 colors, detail 0.57, smoothness 0.55
+App/PaintByNumber/Resources/Samples/parrots.jpg — 1152×768, 206 regions, longest stretch without a cancellation check 12.5 ms (ending 109 ms into the run, in segment.palette; median over runs 11.7 ms)
+  resample median      4.8 ms   min      3.7 ms
+  segment.oklab median      6.2 ms   min      5.2 ms
+  segment.structure median     17.3 ms   min     15.9 ms
+  segment.importance median      9.2 ms   min      8.7 ms
+  segment.smooth median     43.6 ms   min     32.6 ms
+  segment.palette median     17.3 ms   min     15.0 ms
+  segment.assign.nearest median      6.5 ms   min      5.5 ms
+  segment.assign.icm median     12.8 ms   min      8.1 ms
+  segment.assign median     20.0 ms   min     13.6 ms
+  segment.texture median      9.0 ms   min      5.4 ms
+  segment.regions.thin median     14.4 ms   min     14.2 ms
+  segment.regions.label median      4.6 ms   min      4.3 ms
+  segment.regions.adjacency median      2.2 ms   min      1.7 ms
+  segment.regions.merge median      8.3 ms   min      7.0 ms
+  segment.regions.smooth median      4.7 ms   min      4.0 ms
+  segment.regions.disc median      4.0 ms   min      2.8 ms
+  segment.regions median     40.0 ms   min     34.8 ms
+  segment.bands median      2.7 ms   min      2.3 ms
+  segment.consolidate median      2.2 ms   min      2.2 ms
+  segment.refine median      6.5 ms   min      3.1 ms
+  segment.legible median     11.5 ms   min      6.7 ms
+  segment.finalize median      0.3 ms   min      0.3 ms
+  segment median    188.1 ms   min    187.0 ms
+  vectorize.graph median      3.0 ms   min      2.6 ms
+  vectorize.rings median      0.1 ms   min      0.1 ms
+  vectorize.edt median      8.6 ms   min      6.3 ms
+  vectorize.raster median      1.0 ms   min      1.0 ms
+  vectorize.room median      0.1 ms   min      0.1 ms
+  vectorize.smooth median     10.2 ms   min     10.0 ms
+  vectorize.fill median      3.0 ms   min      2.2 ms
+  vectorize.labels median      2.4 ms   min      1.9 ms
+  vectorize median     32.4 ms   min     28.8 ms
+  total median    225.7 ms   min    220.6 ms
+  preview 700×466 median     69.6 ms   min     57.0 ms   worst gap 7.6 ms (in segment.palette; median 4.7 ms)
+  detail 1 2100×1400 median    373.1 ms   min    358.7 ms   worst gap 13.3 ms (in segment.regions; median 10.1 ms)
+  150 colors, detail 1 2100×1400 median    596.1 ms   min    595.9 ms   worst gap 42.3 ms (in segment.assign.nearest; median 32.2 ms)
+  suggest 426×284 median    444.6 ms   min    400.2 ms   analysis median 34.4 ms; 5 candidates → 40 colors, detail 0.52, smoothness 0.47
+App/PaintByNumber/Resources/Samples/regatta.jpg — 768×1152, 238 regions, longest stretch without a cancellation check 15.7 ms (ending 97 ms into the run, in segment.regions; median over runs 8.7 ms)
+  resample median      4.6 ms   min      2.5 ms
+  segment.oklab median      3.5 ms   min      3.2 ms
+  segment.structure median     12.3 ms   min     10.8 ms
+  segment.importance median      7.3 ms   min      5.4 ms
+  segment.smooth median     24.7 ms   min     17.8 ms
+  segment.palette median      7.2 ms   min      4.7 ms
+  segment.assign.nearest median      5.2 ms   min      3.5 ms
+  segment.assign.icm median      9.3 ms   min      8.4 ms
+  segment.assign median     14.4 ms   min     11.9 ms
+  segment.texture median      6.8 ms   min      3.3 ms
+  segment.regions.thin median     15.1 ms   min     11.3 ms
+  segment.regions.label median      3.6 ms   min      2.9 ms
+  segment.regions.adjacency median      1.8 ms   min      1.3 ms
+  segment.regions.merge median      7.9 ms   min      6.9 ms
+  segment.regions.smooth median      3.1 ms   min      2.8 ms
+  segment.regions.disc median      3.0 ms   min      2.6 ms
+  segment.regions median     49.2 ms   min     28.3 ms
+  segment.bands median      2.4 ms   min      2.2 ms
+  segment.consolidate median      2.4 ms   min      2.1 ms
+  segment.refine median      4.0 ms   min      3.2 ms
+  segment.legible median      6.5 ms   min      6.1 ms
+  segment.finalize median      0.2 ms   min      0.2 ms
+  segment median    140.1 ms   min    127.0 ms
+  vectorize.graph median      2.7 ms   min      2.6 ms
+  vectorize.rings median      0.1 ms   min      0.1 ms
+  vectorize.edt median      5.1 ms   min      4.8 ms
+  vectorize.raster median      0.7 ms   min      0.7 ms
+  vectorize.room median      0.0 ms   min      0.0 ms
+  vectorize.smooth median      6.8 ms   min      6.4 ms
+  vectorize.fill median      2.4 ms   min      2.3 ms
+  vectorize.labels median      2.3 ms   min      2.2 ms
+  vectorize median     20.2 ms   min     19.5 ms
+  total median    162.1 ms   min    154.0 ms
+  preview 466×700 median     69.7 ms   min     61.2 ms   worst gap 10.7 ms (in segment.smooth; median 5.4 ms)
+  detail 1 1400×2100 median    636.7 ms   min    624.9 ms   worst gap 25.4 ms (in vectorize.smooth; median 20.4 ms)
+  150 colors, detail 1 1400×2100 median    684.4 ms   min    652.3 ms   worst gap 28.9 ms (in segment.refine; median 22.9 ms)
+  suggest 284×426 median    401.2 ms   min    360.5 ms   analysis median 27.0 ms; 5 candidates → 26 colors, detail 0.54, smoothness 0.50

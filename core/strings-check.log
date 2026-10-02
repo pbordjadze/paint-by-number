@@ -1,0 +1,3 @@
+----- tail -----
+App/LineAppearance.swift:31: "three zooms" reads like user-facing text but is not localized; use String(localized:) / a SwiftUI literal, or add it to ALLOWED_LITERALS with a reason
+strings_check: 1 problem(s)
