@@ -51,7 +51,8 @@ struct LocalizationTests {
         #expect(PaintSpeech.paintingProgress(title: "Parrots", percent: 30) == "Parrots, 30 percent painted")
         #expect(ArtworkExporter.templateName(title: "Parrots") == "Parrots Template")
         #expect(ArtworkExporter.timelapseName(title: "Parrots") == "Parrots Time-lapse")
-        #expect(Sample.all.map(\.title) == ["Parrots", "Hibiscus", "Lighthouse", "Red Barn", "Espresso", "Regatta"])
+        // The library's titles resolve to their records' (`SampleLibraryTests`).
+        #expect(Sample.retired.map(\.title) == ["Parrots", "Hibiscus", "Lighthouse", "Red Barn", "Espresso", "Regatta"])
         #expect(PDFExporter.Paper.letter.name == "US Letter")
         #expect(PaintSpeech.colorLabel(
             number: 12, name: ColorName(family: .blue, lightness: .dark, chroma: .grayish), nickname: "Harbor Fog")

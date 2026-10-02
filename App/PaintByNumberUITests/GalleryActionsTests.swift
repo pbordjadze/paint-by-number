@@ -137,11 +137,12 @@ final class GalleryActionsTests: XCTestCase {
         XCTAssertFalse(app.buttons["Hibiscus"].firstMatch.exists, "Hibiscus is not a favorite")
     }
 
-    /// The demo gallery: six paintings, generated in the background at launch.
+    /// The demo gallery: six paintings, generated in the background at launch. They are the
+    /// retired samples' (`-demoRetiredSamples`), whose titles don't move with the library's curation.
     @MainActor
     private func launchGallery(_ scenario: String = "gallery") -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", scenario]
+        app.launchArguments = ["-demo", scenario, "-demoRetiredSamples", "YES"]
         app.launch()
         return app
     }

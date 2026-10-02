@@ -8,7 +8,8 @@ import UIKit
 ///
 /// The inline picker is the page's primary content and fills the remaining height. Compact
 /// windows switch between it and the samples with a segmented control; wide windows show the
-/// samples in a scrolling column beside it. "Browse All…" presents the full system picker.
+/// samples in a scrolling column beside it, in two sections: paintings, then photographs.
+/// "Browse All…" presents the full system picker.
 struct PhotoSourceView: View {
     enum Pane: Hashable { case photos, samples }
 
@@ -22,6 +23,8 @@ struct PhotoSourceView: View {
     @State private var isBrowsingAll = false
     @State private var isShowingCamera = false
     @State private var width: CGFloat = 0
+    /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
+    @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
 
     init(model: CreateModel, initialPane: Pane = .photos, onClose: @escaping () -> Void, onPicked: @escaping () -> Void) {
         self.model = model
@@ -160,25 +163,64 @@ struct PhotoSourceView: View {
     private var samplesPane: some View {
         VStack(alignment: .leading, spacing: 12) {
             if isWide { SectionTitle("Samples") }
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 14)], spacing: 14) {
-                    ForEach(Sample.all) { sample in
-                        Button {
-                            model.load(sample: sample)
-                            onPicked()
-                        } label: {
-                            SampleTile(sample: sample)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        ForEach(Sample.Kind.allCases, id: \.self) { kind in
+                            let samples = Sample.all(of: kind)
+                            if !samples.isEmpty { samplesSection(kind, samples: samples) }
                         }
-                        .buttonStyle(PressableCardStyle())
                     }
+                    // Room for the press scale and hover lift inside the scroll view's clip.
+                    .padding(4)
+                    .padding(.bottom, 16)
                 }
-                // Room for the press scale and hover lift inside the scroll view's clip.
-                .padding(4)
-                .padding(.bottom, 16)
+                .scrollBounceBehavior(.basedOnSize)
+                #if DEBUG
+                .onChange(of: isWide, initial: true) {
+                    // Again when the width arrives: the pane first lays out compact.
+                    if let kind = ShellDemo.current?.samplesSection { proxy.scrollTo(kind, anchor: .top) }
+                }
+                #endif
             }
-            .scrollBounceBehavior(.basedOnSize)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    private func samplesSection(_ kind: Sample.Kind, samples: [Sample]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionTitle(kind)
+                .id(kind)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: tileWidth), spacing: 14)], spacing: 14) {
+                ForEach(samples) { sample in
+                    Button {
+                        model.load(sample: sample)
+                        onPicked()
+                    } label: {
+                        SampleTile(sample: sample)
+                    }
+                    .buttonStyle(PressableCardStyle())
+                }
+            }
+        }
+    }
+
+    /// Under the wide layout's "Samples" the sections are subheadings; compact windows, where
+    /// the segmented control names the pane, give them the title size.
+    @ViewBuilder
+    private func sectionTitle(_ kind: Sample.Kind) -> some View {
+        let style: Font.TextStyle = isWide ? .headline : .title3
+        switch kind {
+        case .painting: SectionTitle("Paintings", style: style)
+        case .photograph: SectionTitle("Photographs", style: style)
+        }
+    }
+
+    /// The grid's minimum tile width, never wider than the column (the press-scale padding
+    /// taken off), so a tile scaled up for a large text size still fits.
+    private var tileWidth: CGFloat {
+        let column = (isWide ? samplesWidth : width - 2 * horizontalPadding) - 8
+        return column > 0 ? min(tileMinimumWidth, column) : tileMinimumWidth
     }
 
     /// Shared by the inline picker and Browse All.
@@ -190,11 +232,15 @@ struct PhotoSourceView: View {
 
 private struct SectionTitle: View {
     let title: LocalizedStringKey
-    init(_ title: LocalizedStringKey) { self.title = title }
+    let style: Font.TextStyle
+    init(_ title: LocalizedStringKey, style: Font.TextStyle = .title3) {
+        self.title = title
+        self.style = style
+    }
 
     var body: some View {
         Text(title)
-            .font(.display(.title3))
+            .font(.display(style))
             .padding(.horizontal, 4)
             .accessibilityAddTraits(.isHeader)
     }
@@ -216,8 +262,7 @@ private struct SampleTile: View {
                 }
             }
             .overlay(alignment: .bottomLeading) {
-                Text(sample.title)
-                    .font(.subheadline.weight(.semibold))
+                caption
                     .foregroundStyle(.white)
                     .shadow(color: .black.opacity(0.35), radius: 4, y: 1)
                     .padding(12)
@@ -236,8 +281,46 @@ private struct SampleTile: View {
                 withAnimation(.easeOut(duration: 0.2)) { image = loaded }
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(String(localized: "create.sample.label", defaultValue: "Sample: \(sample.title)",
-                                       comment: "VoiceOver label of a sample photo's tile; the argument is the sample's name"))
+            .accessibilityLabel(accessibilityLabel)
             .accessibilityAddTraits(.isButton)
+    }
+
+    /// The title, and under a painting's its painter when the tile has room for both: long
+    /// text and large sizes drop the painter first, then truncate the title.
+    private var caption: some View {
+        ViewThatFits(in: .vertical) {
+            if let painter {
+                VStack(alignment: .leading, spacing: 2) {
+                    title
+                    Text(painter)
+                        .font(.caption.weight(.medium))
+                        .lineLimit(1)
+                        .opacity(0.9)
+                }
+            }
+            title
+        }
+    }
+
+    private var title: some View {
+        Text(sample.title)
+            .font(.subheadline.weight(.semibold))
+            .lineLimit(2)
+    }
+
+    /// A painting's creator, shown under its title: the painter is part of how people know a
+    /// painting, a photographer rarely is. VoiceOver hears the creator of both.
+    private var painter: String? {
+        guard let provenance = sample.provenance, provenance.kind == .painting else { return nil }
+        return provenance.creator
+    }
+
+    private var accessibilityLabel: String {
+        guard let creator = sample.provenance?.creator else {
+            return String(localized: "create.sample.label", defaultValue: "Sample: \(sample.title)",
+                          comment: "VoiceOver label of a sample picture's tile when nobody is credited for it; the argument is its title")
+        }
+        return String(localized: "create.sample.labelWithCreator", defaultValue: "Sample: \(sample.title), \(creator)",
+                      comment: "VoiceOver label of a sample picture's tile; the arguments are its title and who made it, e.g. “Sample: The Great Wave, Katsushika Hokusai”")
     }
 }

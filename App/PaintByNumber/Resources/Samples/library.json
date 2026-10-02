@@ -1,0 +1,16 @@
+[
+  { "id": "great-wave", "kind": "painting",
+    "title": "The Great Wave", "creator": "Katsushika Hokusai", "year": "c. 1830–32",
+    "credit": "The Metropolitan Museum of Art, H. O. Havemeyer Collection, Bequest of Mrs. H. O. Havemeyer, 1929",
+    "license": "CC0 / Public domain", "source": "https://www.metmuseum.org/art/collection/search/45434",
+    "image": "https://images.metmuseum.org/CRDImages/as/original/DP130155.jpg",
+    "evidence": "\"isPublicDomain\": true (The Met Collection API, object 45434)", "retrieved": "2026-10-02",
+    "crop": "none; resized to 2048 px", "sha256": "faca07341b1cdca38a4521e3cf27a6a3328bd4e5a0f164b7da52fa464c150e51" },
+  { "id": "earthrise", "kind": "photograph",
+    "title": "Earthrise", "creator": "William Anders, NASA", "year": "1968",
+    "credit": "NASA, Apollo 8 (AS08-14-2383)",
+    "license": "Public domain (NASA)", "source": "https://images.nasa.gov/details/as08-14-2383",
+    "image": "https://images-assets.nasa.gov/image/as08-14-2383/as08-14-2383~orig.jpg",
+    "evidence": "NASA Images API: center \"JSC\"; NASA media usage guidelines: NASA content is generally not subject to copyright in the United States", "retrieved": "2026-10-02",
+    "crop": "none; resized to 2048 px", "sha256": "d5acf7290269293f54c655663bd74e915af77fcc599b5a4955d63437ec103dad" }
+]

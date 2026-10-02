@@ -2,20 +2,25 @@
 import Foundation
 
 /// Demo scenarios owned by the app shell (see `DemoMode`). Each uses a throwaway library
-/// seeded deterministically from the bundled samples.
+/// seeded deterministically from the bundled pictures (`pictures`): the ones a viewer judges
+/// the app by show the curated library, the rest the retired samples.
 ///
-/// - `gallery`, `gallery-dark`: six paintings at various stages, one of them a favorite.
-/// - `gallery-favorites`, `gallery-favorites-dark`: the same library with two favorites and the Show
-///   filter on Favorites.
-/// - `gallery-search`, `gallery-search-dark`: the same library with "re" typed in the search field
-///   (two results).
+/// - `gallery`, `gallery-dark`: the library's first six pictures (all of them while it holds
+///   fewer) painted to various stages, the third a favorite.
+/// - `gallery-favorites`, `gallery-favorites-dark`: six retired samples' paintings with two
+///   favorites and the Show filter on Favorites.
+/// - `gallery-search`, `gallery-search-dark`: the same paintings with "re" typed in the search
+///   field (two results).
 /// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
 ///   with every localized string twice as long.
 /// - `gallery-empty`: the empty state.
 /// - `create`, `create-dark`: the photo picker step of the create flow.
-/// - `create-samples`: the same step on its Samples pane (iPhone; iPad shows both).
-/// - `create-preview`, `create-preview-dark`: a sample generated, comparison at half.
-/// - `create-suggested`: the lighthouse sample on its suggested settings ("Suggested for this
+/// - `create-samples`, `create-samples-long-text`: the same step on its Samples pane (iPhone;
+///   iPad shows both); the second with every localized string twice as long.
+/// - `create-samples-paintings`, `create-samples-photographs`: the Samples pane scrolled to its
+///   Paintings or Photographs section.
+/// - `create-preview`, `create-preview-dark`: the painting starter generated, comparison at half.
+/// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
 /// - `create-custom`, `create-custom-long-text`: the parrots sample after Detail moved off the
 ///   suggestion (the chip offers Reset to Suggested); the second with every localized string
@@ -28,15 +33,16 @@ import Foundation
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
-/// - `gallery-long-text`, `gallery-timelapse-long-text`, `settings-long-text`: `gallery` (with a
-///   deletion, so its Undo toast is up), `gallery-timelapse` and `settings` with every localized
-///   string twice as long: `ci/screenshots.sh` adds
+/// - `gallery-long-text`, `gallery-timelapse-long-text`, `settings-long-text`: the retired
+///   samples' gallery (with a deletion, so its Undo toast is up), `gallery-timelapse` and
+///   `settings` with every localized string twice as long: `ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
-         galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createPreview,
-         createSuggested, createCustom, createFromFile, settings, settingsLongText, settingsAcknowledgements
+         galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+         createSamplesPhotographs, createPreview, createSuggested, createCustom, createFromFile, settings,
+         settingsLongText, settingsAcknowledgements
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -51,7 +57,9 @@ enum ShellDemo: Equatable {
         case "gallery-timelapse": .galleryTimelapse
         case "gallery-timelapse-long-text": .galleryTimelapseLongText
         case "create", "create-dark": .create
-        case "create-samples": .createSamples
+        case "create-samples", "create-samples-long-text": .createSamples
+        case "create-samples-paintings": .createSamplesPaintings
+        case "create-samples-photographs": .createSamplesPhotographs
         case "create-preview", "create-preview-dark": .createPreview
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
@@ -66,13 +74,26 @@ enum ShellDemo: Equatable {
     /// The Show filter starts on Favorites.
     var showsFavoritesOnly: Bool { self == .galleryFavorites || self == .galleryNoFavorites }
 
-    /// The bundled samples whose paintings are favorites.
+    /// Whether the scenario shows the curated library: the ones a viewer judges the app by do,
+    /// by position (`Sample.all`, `Sample.starters`), so curating the library needs no edit
+    /// here. The rest, and UI tests that name paintings (`-demoRetiredSamples YES`), keep the
+    /// retired samples, whose titles and templates never change.
+    private var showsLibrary: Bool {
+        (self == .gallery || self == .createPreview || self == .createSuggested) && !DemoMode.usesRetiredSamples
+    }
+
+    /// The pictures the gallery scenarios paint, by position.
+    private var pictures: [Sample] { showsLibrary ? Sample.all : Sample.retired }
+
+    /// The pictures whose paintings are favorites, by position in `pictures` (of the retired
+    /// samples: Lighthouse, and Regatta).
     private var favoriteSamples: [String] {
-        switch self {
-        case .gallery, .gallerySearch: ["lighthouse"]
-        case .galleryFavorites: ["lighthouse", "regatta"]
+        let positions: [Int] = switch self {
+        case .gallery, .gallerySearch: [2]
+        case .galleryFavorites: [2, 5]
         default: []
         }
+        return positions.filter { $0 < pictures.count }.map { pictures[$0].id }
     }
 
     /// The search field starts with this text: it finds "Red Barn" and "Regatta".
@@ -81,15 +102,29 @@ enum ShellDemo: Equatable {
     var sharesTimelapse: Bool { self == .galleryTimelapse || self == .galleryTimelapseLongText }
 
     var opensCreateFlow: Bool {
-        self == .create || self == .createSamples || self == .createPreview || self == .createSuggested || self == .createCustom
+        self == .create || opensSamples || self == .createPreview || self == .createSuggested || self == .createCustom
+    }
+
+    /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).
+    var opensSamples: Bool { self == .createSamples || self == .createSamplesPaintings || self == .createSamplesPhotographs }
+
+    /// The Samples pane starts scrolled to this section.
+    var samplesSection: Sample.Kind? {
+        switch self {
+        case .createSamplesPaintings: .painting
+        case .createSamplesPhotographs: .photograph
+        default: nil
+        }
     }
 
     var opensSettings: Bool { self == .settings || self == .settingsLongText || self == .settingsAcknowledgements }
 
     var previewSample: Sample? {
         switch self {
-        case .createPreview, .createCustom: Sample.named("parrots")
-        case .createSuggested: Sample.named("lighthouse")
+        // The library's painting and photograph starters.
+        case .createPreview: showsLibrary ? Sample.starters.first : Sample.named("parrots")
+        case .createSuggested: showsLibrary ? Sample.starters.last : Sample.named("lighthouse")
+        case .createCustom: Sample.named("parrots")
         default: nil
         }
     }
@@ -97,32 +132,33 @@ enum ShellDemo: Equatable {
     /// The painter moves Detail once the suggestion is ready, so the settings become custom.
     var movesASlider: Bool { self == .createCustom }
 
-    /// How long `create` and `create-samples` give the library picker to load before they
-    /// signal readiness: it runs out of process and reports nothing when its grid is up. The
-    /// value is empirical: raise it if CI's `create` screenshots show the picker still loading
-    /// (`*-steps.log` gives each scenario's time to readiness, launch included).
+    /// How long `create` and the `create-samples` scenarios give the library picker (and the
+    /// sample tiles) to load before they signal readiness: the picker runs out of process and
+    /// reports nothing when its grid is up. The value is empirical: raise it if CI's `create`
+    /// screenshots show the picker still loading (`*-steps.log` gives each scenario's time to
+    /// readiness, launch included).
     static let pickerLoadAllowance: Duration = .seconds(3)
 
     func prepare(_ library: Library) {
         switch self {
         case .gallery, .galleryFavorites, .gallerySearch, .galleryNoFavorites:
             let favorites = favoriteSamples
-            library.seed(Self.galleryItems, completion: { _ in
+            library.seed(galleryItems, completion: { _ in
                 for artwork in library.artworks {
                     if let sample = artwork.sampleName, favorites.contains(sample) { library.setFavorite(artwork.id, true) }
                 }
                 DemoMode.markReady()
             })
         case .galleryLongText:
-            library.seed(Self.galleryItems, completion: { _ in
+            library.seed(galleryItems, completion: { _ in
                 // The newest deletion keeps its Undo toast up for `Library.undoWindow`, well past the screenshot.
                 if let id = library.finished.last?.id { library.delete(id) }
                 DemoMode.markReady()
             })
         case .galleryOpen:
-            library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)])
+            library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
         case .galleryDamaged:
-            library.seed([Library.SeedItem(sample: Sample.all[0], painted: 0.42, photoMaxPixelSize: 560)]) { _ in
+            library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)]) { _ in
                 // Synchronous on purpose: this runs in the same main-actor job that empties
                 // `placeholders`, so the file is damaged before SwiftUI's next update delivers
                 // the `onChange` that opens the painting (`AppShellView`).
@@ -130,21 +166,22 @@ enum ShellDemo: Equatable {
                 try? Data("damaged".utf8).write(to: library.store.url(.template, of: id))
             }
         case .galleryTimelapse, .galleryTimelapseLongText:
-            library.seed([Library.SeedItem(sample: Sample.all[1], painted: 1, photoMaxPixelSize: 560)])
-        case .create, .createSamples, .createPreview, .createSuggested, .createCustom, .createFromFile, .galleryEmpty,
-             .settings, .settingsLongText, .settingsAcknowledgements:
+            library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
+        case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
+             .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings, .settingsLongText,
+             .settingsAcknowledgements:
             break
         }
     }
 
-    /// Six paintings at various stages: four in progress, two finished.
-    private static var galleryItems: [Library.SeedItem] {
+    /// The first six pictures painted to various stages: four in progress, two finished
+    /// (with two pictures, one of each).
+    private var galleryItems: [Library.SeedItem] {
         let hour: TimeInterval = 3600
-        let items: [(Int, Double, TimeInterval)] = [
-            (0, 0.42, 1), (2, 0.68, 3), (3, 0.12, 26), (4, 0, 50), (1, 1, 5), (5, 1, 80),
-        ]
-        return items.map { sample, painted, hours in
-            Library.SeedItem(sample: Sample.all[sample], painted: painted, age: hours * hour, photoMaxPixelSize: 560)
+        // By position: the fraction painted, and the hours since it was last painted.
+        let stages: [(painted: Double, hours: TimeInterval)] = [(0.42, 1), (1, 5), (0.68, 3), (0.12, 26), (0, 50), (1, 80)]
+        return zip(pictures, stages).map { sample, stage in
+            Library.SeedItem(sample: sample, painted: stage.painted, age: stage.hours * hour, photoMaxPixelSize: 560)
         }
     }
 

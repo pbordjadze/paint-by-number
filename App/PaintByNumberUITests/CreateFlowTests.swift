@@ -26,11 +26,11 @@ final class CreateFlowTests: XCTestCase {
     }
 
     /// The preview's title field offers the sample's name and names the painting with what
-    /// was typed.
+    /// was typed. (On a retired sample, whose title doesn't move with the library's curation.)
     @MainActor
     func testTitleNamesThePainting() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create-preview"]
+        app.launchArguments = ["-demo", "create-preview", "-demoRetiredSamples", "YES"]
         app.launch()
 
         let start = app.buttons["Start Painting"]
@@ -123,7 +123,7 @@ final class CreateFlowTests: XCTestCase {
             XCTAssertFalse(sourceControl(app).exists, "Wide windows show photos and samples side by side")
             let share = picker.frame.width / window.width
             XCTAssertTrue((0.5...0.68).contains(share), "The picker takes \(share) of the width")
-            let sample = app.buttons["Sample: Parrots"]
+            let sample = firstSample(app)
             XCTAssertTrue(sample.exists)
             XCTAssertGreaterThanOrEqual(sample.frame.minX, picker.frame.maxX, "Samples should sit beside the picker")
         } else {
@@ -163,7 +163,8 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(reopened, "The same photo couldn't be picked a second time")
     }
 
-    /// Samples (behind a segment on compact widths, beside the picker on wide ones) open their preview.
+    /// Samples (behind a segment on compact widths, beside the picker on wide ones) sit in a
+    /// Paintings and a Photographs section, tell VoiceOver who made them, and open their preview.
     @MainActor
     func testSamplesOpenPreview() throws {
         let (app, picker) = launchToPicker("create")
@@ -175,9 +176,16 @@ final class CreateFlowTests: XCTestCase {
             samples.tap()
             XCTAssertTrue(samples.isSelected)
         }
-        let parrots = app.buttons["Sample: Parrots"]
-        XCTAssertTrue(parrots.waitForExistence(timeout: 10))
-        XCTAssertTrue(parrots.isHittable)
+        let first = firstSample(app)
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertTrue(first.isHittable)
+        for section in ["Paintings", "Photographs"] {
+            XCTAssertTrue(app.staticTexts[section].exists, "The samples have no \(section) section")
+        }
+        let paintings = app.staticTexts["Paintings"]
+        XCTAssertGreaterThan(first.frame.minY, paintings.frame.maxY, "The first sample isn't under the Paintings title")
+        // "Sample: <title>, <creator>"
+        XCTAssertTrue(first.label.dropFirst("Sample: ".count).contains(", "), "The sample's label doesn't name its creator: \(first.label)")
         attachScreenshot(app, named: "samples")
 
         if !isPad {
@@ -186,10 +194,30 @@ final class CreateFlowTests: XCTestCase {
             XCTAssertTrue(picker.waitForExistence(timeout: 10))
             XCTAssertEqual(picker.frame.height, pickerHeight, accuracy: 1)
             samples.tap()
-            XCTAssertTrue(parrots.waitForExistence(timeout: 10))
+            XCTAssertTrue(first.waitForExistence(timeout: 10))
         }
-        parrots.tap()
+        first.tap()
         XCTAssertTrue(app.buttons["Start Painting"].waitForExistence(timeout: 60), "Picking a sample didn't open its preview")
+    }
+
+    /// At the largest text size the sample tiles widen for their captions (one column) but stay
+    /// inside the window.
+    @MainActor
+    func testSampleTilesFitAtTheLargestTextSize() throws {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-demo", "create-samples", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL",
+        ]
+        app.launch()
+        let ok = app.buttons["OK"]
+        if ok.waitForExistence(timeout: 5) { ok.tap() }
+        let first = firstSample(app)
+        XCTAssertTrue(first.waitForExistence(timeout: 20), "The Samples pane shows no sample")
+        sleep(1)
+        attachScreenshot(app, named: "samples-largest-text")
+        let window = app.windows.firstMatch.frame
+        XCTAssertGreaterThanOrEqual(first.frame.minX, window.minX - 1, "The first sample runs off the screen")
+        XCTAssertLessThanOrEqual(first.frame.maxX, window.maxX + 1, "The first sample runs off the screen")
     }
 
     /// "Browse All…" presents the full system picker, which dismisses back to the create flow.
@@ -291,6 +319,12 @@ final class CreateFlowTests: XCTestCase {
     @MainActor
     private func sourceControl(_ app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: "photo-source").firstMatch
+    }
+
+    /// The first sample tile, the library's first painting, whatever the library's curation.
+    @MainActor
+    private func firstSample(_ app: XCUIApplication) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sample: '")).firstMatch
     }
 
     /// A sheet detector made once the inline picker has loaded (its photos are up, or it had

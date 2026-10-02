@@ -37,7 +37,7 @@ struct CreateFlowView: View {
         #if DEBUG
         .task {
             // A cancelled wait must not signal readiness.
-            guard ShellDemo.current == .create || ShellDemo.current == .createSamples else { return }
+            guard ShellDemo.current == .create || ShellDemo.current?.opensSamples == true else { return }
             do { try await Task.sleep(for: ShellDemo.pickerLoadAllowance) } catch { return }
             DemoMode.markReady()
         }
@@ -71,10 +71,10 @@ struct CreateFlowView: View {
         }
     }
 
-    /// The `create-samples` demo opens on the Samples pane; everything else starts on Photos.
+    /// The `create-samples` demos open on the Samples pane; everything else starts on Photos.
     private var initialPane: PhotoSourceView.Pane {
         #if DEBUG
-        if ShellDemo.current == .createSamples { return .samples }
+        if ShellDemo.current?.opensSamples == true { return .samples }
         #endif
         return .photos
     }

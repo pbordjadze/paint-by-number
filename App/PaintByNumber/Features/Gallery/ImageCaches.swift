@@ -131,10 +131,11 @@ final class ThumbnailCache {
     }
 }
 
-/// Downscaled bundled sample photos for tiles and placeholders.
+/// Downscaled bundled sample pictures for tiles and placeholders.
 final class SampleImages {
     static let shared = SampleImages()
-    /// The six samples at both sizes the app asks for (400 and 640 px) with room to spare.
+    /// About a dozen 640 px tiles, more than the Samples pane shows at once: the library holds
+    /// dozens of pictures, so tiles scrolled far away decode again instead of staying in memory.
     static let costLimit = 16 << 20
 
     private let images = ImageCache<String>(costLimit: SampleImages.costLimit)

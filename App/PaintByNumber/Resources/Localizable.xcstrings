@@ -658,13 +658,25 @@
       }
     },
     "create.sample.label" : {
-      "comment" : "VoiceOver label of a sample photo's tile; the argument is the sample's name",
+      "comment" : "VoiceOver label of a sample picture's tile when nobody is credited for it; the argument is its title",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sample: %@"
+          }
+        }
+      }
+    },
+    "create.sample.labelWithCreator" : {
+      "comment" : "VoiceOver label of a sample picture's tile; the arguments are its title and who made it, e.g. “Sample: The Great Wave, Katsushika Hokusai”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sample: %1$@, %2$@"
           }
         }
       }
@@ -1897,6 +1909,10 @@
         }
       }
     },
+    "Paintings" : {
+      "comment" : "Section title in the create flow's Samples pane: the bundled paintings and prints",
+      "extractionState" : "manual"
+    },
     "Paper" : {
       "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
       "extractionState" : "manual"
@@ -2029,6 +2045,10 @@
       "comment" : "Accessibility label of the segmented control that switches between the photo library and the samples",
       "extractionState" : "manual"
     },
+    "Photographs" : {
+      "comment" : "Section title in the create flow's Samples pane: the bundled photographs",
+      "extractionState" : "manual"
+    },
     "Photos" : {
       "comment" : "Segment of the create flow that shows the photo library",
       "extractionState" : "manual"
@@ -2137,6 +2157,18 @@
         }
       }
     },
+    "sample.earthrise" : {
+      "comment" : "Title of a bundled picture: the Apollo 8 photograph of the Earth rising over the Moon's horizon, known as Earthrise. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earthrise"
+          }
+        }
+      }
+    },
     "sample.espresso" : {
       "comment" : "Name of a bundled sample photo, shown as its default painting title",
       "extractionState" : "manual",
@@ -2145,6 +2177,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Espresso"
+          }
+        }
+      }
+    },
+    "sample.great-wave" : {
+      "comment" : "Title of a bundled picture: Katsushika Hokusai's woodblock print Under the Wave off Kanagawa, known as The Great Wave. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Great Wave"
           }
         }
       }
@@ -2198,7 +2242,7 @@
       }
     },
     "Samples" : {
-      "comment" : "Segment and section title for the bundled sample photos in the create flow",
+      "comment" : "Segment and section title for the bundled sample pictures (paintings and photographs) in the create flow",
       "extractionState" : "manual"
     },
     "Save to Photos" : {

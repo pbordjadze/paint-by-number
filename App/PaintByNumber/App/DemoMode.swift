@@ -41,6 +41,11 @@ enum DemoMode {
     /// (`canvas-paper-light` or `canvas-paper-dark`), so a UI test can see the preference reach it.
     static let tracesPaper = UserDefaults.standard.bool(forKey: "tracePaper")
 
+    /// `-demoRetiredSamples YES`: the scenarios that show the curated picture library (`gallery`,
+    /// `create-preview`, `create-suggested`) show the retired samples instead, for UI tests that
+    /// name paintings by their titles: those stay put whatever the library's curation.
+    static let usesRetiredSamples = UserDefaults.standard.bool(forKey: "demoRetiredSamples")
+
     /// `tmp/demo-ready` in the app's data container. CI screenshots a scenario shortly after
     /// this file appears instead of sleeping for a worst-case delay (`ci/screenshots.sh`).
     static let readyMarker = FileManager.default.temporaryDirectory.appending(path: "demo-ready")
