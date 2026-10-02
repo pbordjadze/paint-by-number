@@ -37,6 +37,7 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
     let preview: AdvancedSettingsModel.Preview
     let showsPainted: Bool
     let paperAppearance: PaperAppearance
+    let lineAppearance: LineAppearance
     let controller: PreviewCanvasController
     var onZoomChange: (CGFloat) -> Void
     var onUnavailable: () -> Void
@@ -64,6 +65,7 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
         view.initialCamera = controller.camera(forWidth: template.width, height: template.height)
         view.chromeInsets = UIEdgeInsets(top: Self.overlayInset, left: 0, bottom: Self.overlayInset, right: 0)
         view.paperAppearance = paperAppearance
+        view.lineAppearance = lineAppearance
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.onZoomChange = onZoomChange
         // The card is one VoiceOver element of its own; the canvas's areas and actions are for painting.
@@ -78,6 +80,8 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
 
     func updateUIView(_ view: CanvasView, context: Context) {
         view.paperAppearance = paperAppearance
+        // Drawing only: the open canvas redraws at once.
+        view.lineAppearance = lineAppearance
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.onZoomChange = onZoomChange
         let coordinator = context.coordinator
@@ -148,7 +152,8 @@ struct AdvancedPreviewCard: View {
                     } else {
                         AdvancedPreviewCanvas(
                             preview: preview, showsPainted: showsPainted, paperAppearance: paperAppearance,
-                            controller: controller, onZoomChange: onZoomChange, onUnavailable: { canvasUnavailable = true })
+                            lineAppearance: model.appearance, controller: controller, onZoomChange: onZoomChange,
+                            onUnavailable: { canvasUnavailable = true })
                     }
                 }
                 .id(preview.id)

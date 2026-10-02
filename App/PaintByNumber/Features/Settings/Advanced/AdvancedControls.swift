@@ -464,6 +464,7 @@ struct LineAppearanceSection: View {
                 }
             }
             presets
+                .id("advanced-appearance")
             ZoomStrip(appearance: model.appearance, layer: layer, zoom: zoom, onSelect: onZoom)
                 .padding(.vertical, 4)
             layerPicker

@@ -147,9 +147,11 @@ final class AdvancedSettingsModel {
 
     // MARK: Internals
 
-    /// The picture, prepared once: the draft photo, its importance map and the settings
-    /// Suggested settings choose for it, which the advanced settings go on top of.
+    /// The picture, prepared once: the photo (layered line art's edge map is made from it, once,
+    /// by `LineArtInputs`), the draft, its importance map and the settings Suggested settings
+    /// choose for it, which the advanced settings go on top of.
     nonisolated struct Base: Sendable {
+        let photo: CGImage
         let draft: RGBAImage
         let importance: PaintCore.Grid<Float>?
         let settings: GenerationSettings
@@ -457,14 +459,16 @@ final class AdvancedSettingsModel {
             throw CreateModel.CreateError.renderFailed
         }
         let scale = score.estimatedSeconds / PaintingTime.estimate(regionCount: score.regions)
-        let base = Base(draft: draft, importance: subject.map, settings: decision.settings, areaScale: scale)
+        let base = Base(photo: photo, draft: draft, importance: subject.map, settings: decision.settings, areaScale: scale)
         return (base, Preview(key: .defaults, template: template, stats: AdvancedStats(template, areaScale: scale)))
     }
 
     @concurrent
     private static func render(_ key: GenerationKey, base: Base) async throws -> Preview {
+        // As the create flow does: computed once per photo and cached; nil for classic lines.
+        let input = try await LineArtInputs.forGeneration(of: base.photo, settings: key.lineArt, cached: true)
         let template = try TemplateGenerator(settings: key.settings(on: base.settings))
-            .generate(from: base.draft, importance: base.importance, cancel: .task)
+            .generate(from: base.draft, importance: base.importance, lineArt: input, cancel: .task)
             .template
         try Task.checkCancellation()
         return Preview(key: key, template: template, stats: AdvancedStats(template, areaScale: base.areaScale))

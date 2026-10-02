@@ -209,8 +209,17 @@ struct AdvancedSettingsTests {
         #expect(baseline.areas >= model.preview?.template.regions.count ?? .max, "Draft areas weren't grown to the full painting")
         #expect(model.effects.values.allSatisfy { $0 == .atDefault })
 
-        model.lineArt.style = .layered
+        // Twice the smallest area: fewer areas than the defaults', and that is its effect.
         model.set(.minimumCellSize, to: 2)
+        try await waitUntil { model.isIdle && model.preview?.key == model.currentKey }
+        #expect((model.statsDelta?.areas ?? 0) < 0, "The preview's areas didn't go down from the defaults'")
+        if case .measured(let delta) = model.effects[.minimumCellSize] {
+            #expect(delta.areas < 0, "Twice the smallest area didn't lower the areas: \(delta)")
+        } else {
+            Issue.record("Smallest Area's effect wasn't measured: \(String(describing: model.effects[.minimumCellSize]))")
+        }
+
+        model.lineArt.style = .layered
         try await waitUntil { model.isIdle && model.preview?.key == model.currentKey }
         #expect(!model.isUpdating)
         for control in [AdvancedControl.style, .minimumCellSize] {
@@ -220,11 +229,6 @@ struct AdvancedSettingsTests {
             }
         }
         #expect(model.effects[.smoothing] == .atDefault)
-        // Twice the smallest area leaves fewer areas than the same settings at 1×.
-        if case .measured(let delta) = model.effects[.minimumCellSize] {
-            #expect(delta.areas < 0, "Twice the smallest area didn't lower the areas: \(delta)")
-        }
-        #expect((model.statsDelta?.areas ?? 0) < 0, "The preview's areas didn't go down from the defaults'")
 
         // Back to the defaults: their preview was kept, so it shows at once.
         #expect(model.preview?.key != .defaults)
