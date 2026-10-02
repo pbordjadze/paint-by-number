@@ -10,7 +10,12 @@ import ImageIO
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--importance m.pgm]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
-//       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`)
+//       [--line-style classic|layered --edges map.pgm [--eyes eyes.json] [--line-art key=value]...]
+//       [--tuning key=value]...
+//       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
+//       layered line art splits the cells along the edge map's lines (stats.json gains
+//       `lineArt`); eyes.json is an array of closed polygons of [x, y] normalized to the photo;
+//       --line-art sets a LineArtSettings field and --tuning a PipelineTuning factor by name
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into
@@ -25,7 +30,8 @@ import ImageIO
 //   pbn check <template.pbnt> [--min-label-radius R]
 //       prints format and pipeline versions, validates a template's invariants, including
 //       every label's room for its number (single-digit minimum R, default
-//       LabelSizing.minimumRadius; R ≤ 0 skips that check)
+//       LabelSizing.minimumRadius; R ≤ 0 skips that check) and layered line data, whose
+//       edges per layer and interior strokes it counts
 //   pbn names <template.pbnt> [--seed N]
 //       prints each palette color's nickname (seeded like the app's per-painting names; the
 //       default seed is generate's), structured name and hex
@@ -41,6 +47,59 @@ struct Options {
     var hints: String?
     var candidates = 5
     var out: String?
+    var edges: String?
+    var eyes: String?
+}
+
+/// `--line-art` and `--tuning` fields by name.
+enum Fields {
+    static var lineArtFloats: [String: WritableKeyPath<LineArtSettings, Float>] {
+        ["outlineThreshold": \.outlineThreshold, "detailThreshold": \.detailThreshold, "textureThreshold": \.textureThreshold,
+         "minimumStrokeLength": \.minimumStrokeLength, "gapBridging": \.gapBridging, "lineSmoothing": \.lineSmoothing]
+    }
+    static var lineArtBools: [String: WritableKeyPath<LineArtSettings, Bool>] {
+        ["keepColorEdges": \.keepColorEdges, "outlineEyes": \.outlineEyes]
+    }
+    static var tuning: [String: WritableKeyPath<PipelineTuning, Float>] {
+        ["smoothing": \.smoothing, "textureFlattening": \.textureFlattening, "minimumCellSize": \.minimumCellSize,
+         "subjectEmphasis": \.subjectEmphasis, "accentColors": \.accentColors, "colorfulness": \.colorfulness]
+    }
+}
+
+func keyValue(_ flag: String, _ argument: String?) -> (String, String) {
+    guard let argument, let eq = argument.firstIndex(of: "=") else { fail("\(flag): key=value, not \(argument ?? "nothing")") }
+    return (String(argument[..<eq]), String(argument[argument.index(after: eq)...]))
+}
+
+func setLineArt(_ s: inout LineArtSettings, _ argument: String?) {
+    let (key, value) = keyValue("--line-art", argument)
+    if let path = Fields.lineArtFloats[key] {
+        guard let v = Float(value) else { fail("--line-art \(key): a number, not \(value)") }
+        s[keyPath: path] = v
+    } else if let path = Fields.lineArtBools[key] {
+        guard let v = Bool(value) else { fail("--line-art \(key): true or false, not \(value)") }
+        s[keyPath: path] = v
+    } else if key == "style" {
+        guard let v = LineArtSettings.Style(rawValue: value) else { fail("--line-art style: classic or layered, not \(value)") }
+        s.style = v
+    } else if key == "samePaint" {
+        guard let v = LineArtSettings.SamePaint(rawValue: value) else {
+            fail("--line-art samePaint: " + LineArtSettings.SamePaint.allCases.map(\.rawValue).joined(separator: ", ") + ", not \(value)")
+        }
+        s.samePaint = v
+    } else {
+        let keys = (Array(Fields.lineArtFloats.keys) + Array(Fields.lineArtBools.keys) + ["style", "samePaint"]).sorted()
+        fail("--line-art: unknown field \(key) (known: \(keys.joined(separator: ", ")))")
+    }
+}
+
+func setTuning(_ t: inout PipelineTuning, _ argument: String?) {
+    let (key, value) = keyValue("--tuning", argument)
+    guard let path = Fields.tuning[key] else {
+        fail("--tuning: unknown factor \(key) (known: \(Fields.tuning.keys.sorted().joined(separator: ", ")))")
+    }
+    guard let v = Float(value) else { fail("--tuning \(key): a number, not \(value)") }
+    t[keyPath: path] = v
 }
 
 func parse(_ args: ArraySlice<String>) -> Options {
@@ -63,6 +122,14 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--hints": o.hints = it.next()
         case "--candidates": o.candidates = Int(it.next() ?? "") ?? o.candidates
         case "--out": o.out = it.next()
+        case "--edges": o.edges = it.next()
+        case "--eyes": o.eyes = it.next()
+        case "--line-style":
+            let value = it.next() ?? ""
+            guard let style = LineArtSettings.Style(rawValue: value) else { fail("--line-style: classic or layered, not \(value)") }
+            o.settings.lineArt.style = style
+        case "--line-art": setLineArt(&o.settings.lineArt, it.next())
+        case "--tuning": setTuning(&o.settings.tuning, it.next())
         default: o.positional.append(a)
         }
     }
@@ -102,6 +169,29 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
     let img = loadImage(path)
     return Grid(width: img.width, height: img.height,
                 storage: (0..<(img.width * img.height)).map { Float(img.pixels[$0 * 4]) / 255 })
+}
+
+/// The edge map and eyes layered line art draws from (`--edges`, `--eyes`).
+func loadLineArt(_ options: Options) -> LineArtInput? {
+    guard let path = options.edges else {
+        if options.settings.lineArt.style == .layered { fail("--line-style layered needs --edges map.pgm") }
+        return nil
+    }
+    let img = loadImage(path)
+    let edges = EdgeMap(width: img.width, height: img.height, values: (0..<(img.width * img.height)).map { img.pixels[$0 * 4] })
+    var eyes: [[SIMD2<Float>]] = []
+    if let eyesPath = options.eyes {
+        guard let data = FileManager.default.contents(atPath: eyesPath) else { fail("cannot read \(eyesPath)") }
+        do {
+            eyes = try JSONDecoder().decode([[[Float]]].self, from: data).map { poly in
+                poly.map { p in
+                    guard p.count == 2 else { fail("\(eyesPath): points are [x, y]") }
+                    return SIMD2(p[0], p[1])
+                }
+            }
+        } catch { fail("cannot decode \(eyesPath): \(error)") }
+    }
+    return LineArtInput(edges: edges, eyes: eyes)
 }
 
 func loadHints(_ path: String?) -> SubjectHints? {
@@ -208,6 +298,50 @@ struct Metrics: Codable {
     var analysis: PhotoAnalysis?
     /// `ColorNickname.assign` with the generation seed; the stats' `colorNames` are the structured names.
     var colorNicknames: [String]
+    /// Layered templates: what line art did and how the template's lines divide into layers.
+    var lineArt: LineArtReport?
+    /// Non-default `PipelineTuning` factors the template was generated with.
+    var tuning: PipelineTuning?
+}
+
+/// `stats.json`'s `lineArt`.
+struct LineArtReport: Codable {
+    var settings: LineArtSettings
+    /// Size of the edge map read.
+    var edgeMap: [Int]
+    var stats: LineArtStats
+    /// Template edges per layer: outline, detail, texture, color.
+    var edgesPerLayer: [Int]
+    /// Their length (canvas units) per layer.
+    var edgeLengthPerLayer: [Float]
+    var interiorStrokes: Int
+    var interiorPoints: Int
+    /// Cells against the segmentation's regions (a classic template at the same settings).
+    var cellsVsClassic: Float
+
+    init?(_ out: TemplateGenerator.Output, settings: LineArtSettings, input: LineArtInput?) {
+        guard let stats = out.lineArtStats, let lines = out.template.lineArt, let input else { return nil }
+        let t = out.template
+        self.settings = settings
+        edgeMap = [input.edges.width, input.edges.height]
+        self.stats = stats
+        var count = [0, 0, 0, 0]
+        var length: [Float] = [0, 0, 0, 0]
+        for (k, e) in t.edges.enumerated() {
+            let l = Int(min(lines.edgeLayers[k], 3))
+            count[l] += 1
+            let p = t.points(of: e)
+            for i in p.indices.dropFirst() {
+                let d = p[i] - p[i - 1]
+                length[l] += (d * d).sum().squareRoot()
+            }
+        }
+        edgesPerLayer = count
+        edgeLengthPerLayer = length.map { ($0 * 10).rounded() / 10 }
+        interiorStrokes = lines.strokes.count
+        interiorPoints = lines.strokePoints.count
+        cellsVsClassic = Float(t.regions.count) / Float(max(stats.segmentationRegions, 1))
+    }
 }
 
 /// `stats.json`'s `auto`: the chosen settings, every candidate with its score terms, and the
@@ -450,16 +584,22 @@ case "generate":
     let outDir = URL(fileURLWithPath: options.positional[1])
     try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
     let importance = loadImportance(options.importance)
+    let lineArtInput = loadLineArt(options)
     let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
-    let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
+    var settings = decision?.0.settings ?? options.settings
+    settings.lineArt = options.settings.lineArt
+    settings.tuning = options.settings.tuning
+    let generator = TemplateGenerator(settings: settings)
     let output: TemplateGenerator.Output
     do {
-        output = try generator.generate(from: image, importance: importance, cancel: .none)
+        output = try generator.generate(from: image, importance: importance, lineArt: lineArtInput, cancel: .none)
     } catch { fail("generation failed: \(error)") }
     let t = output.template
     let size = generator.settings.workingSize(sourceWidth: image.width, sourceHeight: image.height)
     let working = Resample.area(image, width: size.width, height: size.height)
     var m = metrics(output, working: working, settings: generator.settings)
+    m.lineArt = LineArtReport(output, settings: generator.settings.lineArt, input: lineArtInput)
+    m.tuning = generator.settings.tuning.isDefault ? nil : generator.settings.tuning
     if let (decision, ms) = decision {
         m.auto = AutoStats(decision, milliseconds: ms)
         m.analysis = decision.analysis
@@ -551,6 +691,12 @@ case "check":
         // Decoding succeeded, so the 8-byte header is there.
         let format = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 4, as: UInt32.self) }
         print("format \(format), pipeline \(template.pipelineVersion)")
+        if let lines = template.lineArt {
+            let names = ["outline", "detail", "texture", "color"]
+            let counts = names.indices.map { l in lines.edgeLayers.filter { Int($0) == l }.count }
+            print("layered lines: edges " + zip(names, counts).map { "\($0) \($1)" }.joined(separator: ", ")
+                + "; \(lines.strokes.count) interior strokes (\(lines.strokePoints.count) points)")
+        }
         let report = template.validate(minLabelRadius: options.minLabelRadius > 0 ? options.minLabelRadius : nil)
         print(report.isValid ? "valid" : "INVALID", report)
     } catch { fail("cannot decode: \(error)") }

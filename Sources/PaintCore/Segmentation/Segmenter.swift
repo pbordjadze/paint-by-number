@@ -44,11 +44,27 @@ public enum Segmenter {
         clock: StageClock,
         progress: (Float) -> Void
     ) throws -> Segmentation {
+        try segmentWithImportance(image, importance: importance, parameters: p, cancel: cancel, clock: clock, progress: progress)
+            .segmentation
+    }
+
+    /// `segment`, also returning the importance weights it worked with (0...1 per working
+    /// pixel: the given map resampled, or the fallback estimate), which layered line art
+    /// reuses.
+    static func segmentWithImportance(
+        _ image: RGBAImage,
+        importance: Grid<Float>?,
+        parameters p: SegmentationParameters,
+        cancel: CancellationCheck,
+        clock: StageClock,
+        progress: (Float) -> Void
+    ) throws -> (segmentation: Segmentation, importance: [Float]) {
         let w = image.width, h = image.height
         guard w > 0, h > 0 else {
-            return Segmentation(
+            let empty = Segmentation(
                 labels: RegionMap(width: w, height: h, repeating: 0), regionColor: [], palette: [],
                 colorSpace: image.colorSpace)
+            return (empty, [])
         }
 
         let lab = try clock.measure("segment.oklab") { try WorkingImage.okLab(image, chromaScale: p.chromaScale, cancel: cancel) }
@@ -150,11 +166,12 @@ public enum Segmenter {
         try cancel.throwIfCancelled()
         let labels = clock.measure("segment.finalize") { regions.labelMap() }
         progress(1)
-        return Segmentation(
+        let segmentation = Segmentation(
             labels: labels,
             regionColor: regions.classOf,
             palette: finalPalette.map { PaletteColor(oklab: $0, space: image.colorSpace) },
             colorSpace: image.colorSpace)
+        return (segmentation, weights)
     }
 }
 
