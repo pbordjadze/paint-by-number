@@ -27,6 +27,17 @@ import Foundation
 /// payload shorter than the fields a reader knows, or a known chunk appearing twice, is
 /// corrupt. Chunks defined so far:
 /// - `GENR`: `UInt32 pipelineVersion` (see `Template.pipelineVersion`).
+/// - `LINE` (optional; layered templates only, see `Template.lineArt`):
+///   ```
+///   UInt32 edgeCount            equal to the template's edge count
+///   edgeCount × UInt8 layer     LineLayer raw value per edge
+///   edgeCount × UInt8 weight
+///   UInt32 pointCount
+///   pointCount × (Float32 x, Float32 y)    interior stroke vertices, inside the canvas
+///   UInt32 strokeCount
+///   strokeCount × (UInt32 pointStart, UInt32 pointCount, UInt8 layer, UInt8 weight, UInt32 region)
+///   ```
+///   Readers without it draw every edge alike, which is the classic look of the same cells.
 ///
 /// **Safety.** PaintCore is compiled with `-Ounchecked`, so the decoder checks every count
 /// against the bytes left before allocating, and every span, reference and coordinate in
@@ -54,6 +65,7 @@ extension Template {
 
     enum Chunk {
         static let generator: UInt32 = 0x524E_4547  // "GENR"
+        static let lines: UInt32 = 0x454E_494C  // "LINE"
         static let requiredFlag: UInt32 = 1
         /// Tag, flags and length.
         static let headerSize = 12
@@ -74,7 +86,8 @@ extension Template {
 
         var generator = BinaryWriter()
         generator.write(pipelineVersion)
-        let chunks: [(tag: UInt32, flags: UInt32, payload: Data)] = [(Chunk.generator, 0, generator.data)]
+        var chunks: [(tag: UInt32, flags: UInt32, payload: Data)] = [(Chunk.generator, 0, generator.data)]
+        if let lineArt { chunks.append((Chunk.lines, 0, lineArt.encoded())) }
         w.write(UInt32(chunks.count))
         for chunk in chunks {
             w.write(chunk.tag)
@@ -252,6 +265,14 @@ extension Template {
                 guard seen.insert(tag).inserted else { throw CodingError.corrupt("duplicate chunk") }
                 guard let version = try? payload.read(UInt32.self) else { throw CodingError.corrupt(Chunk.name(tag)) }
                 pipelineVersion = version
+            case Chunk.lines:
+                guard seen.insert(tag).inserted else { throw CodingError.corrupt("duplicate chunk") }
+                do {
+                    lineArt = try TemplateLineArt(&payload, edgeCount: edges.count)
+                } catch let error as CodingError {
+                    if case .corrupt = error { throw error }
+                    throw CodingError.corrupt(Chunk.name(tag))
+                }
             default:
                 if flags & Chunk.requiredFlag != 0 { throw CodingError.requiredExtension(tag) }
             }
@@ -304,6 +325,54 @@ extension Template {
         else { throw corrupt("mesh vertex region") }
         let vertexCount = mesh.vertices.count
         guard mesh.indices.count % 3 == 0, mesh.indices.allSatisfy({ Int($0) < vertexCount }) else { throw corrupt("mesh index") }
+
+        if let lineArt {
+            let layers = UInt8(LineLayer.allCases.count)
+            guard lineArt.edgeLayers.count == edges.count, lineArt.edgeWeights.count == edges.count,
+                  lineArt.edgeLayers.allSatisfy({ $0 < layers })
+            else { throw corrupt("line edges") }
+            guard lineArt.strokePoints.allSatisfy(inCanvas) else { throw corrupt("line point") }
+            for stroke in lineArt.strokes {
+                guard stroke.pointCount >= 2, Int(stroke.pointStart) + Int(stroke.pointCount) <= lineArt.strokePoints.count,
+                      stroke.layer < layers, Int(stroke.region) < regions.count
+                else { throw corrupt("line stroke") }
+            }
+        }
+    }
+}
+
+extension TemplateLineArt {
+    /// The `LINE` chunk's payload.
+    func encoded() -> Data {
+        var w = BinaryWriter()
+        w.write(UInt32(edgeLayers.count))
+        w.write(bytes: Data(edgeLayers))
+        w.write(bytes: Data(edgeWeights))
+        w.writeArray(strokePoints)
+        w.write(UInt32(strokes.count))
+        for s in strokes {
+            w.write(s.pointStart); w.write(s.pointCount); w.write(s.layer); w.write(s.weight); w.write(s.region)
+        }
+        return w.data
+    }
+
+    /// Reads a `LINE` payload (trailing fields of a later writer are ignored). Spans and
+    /// values are checked by `Template.validateReferences`.
+    init(_ r: inout BinaryReader, edgeCount: Int) throws {
+        let count = try r.readCount(elementSize: 2)
+        guard count == edgeCount else { throw Template.CodingError.corrupt("LINE edge count") }
+        edgeLayers = Array(try r.readBytes(count))
+        edgeWeights = Array(try r.readBytes(count))
+        strokePoints = try r.readArray()
+        let strokeCount = try r.readCount(elementSize: 14)
+        var strokes: [InteriorStroke] = []
+        strokes.reserveCapacity(strokeCount)
+        for _ in 0..<strokeCount {
+            strokes.append(InteriorStroke(
+                pointStart: try r.read(UInt32.self), pointCount: try r.read(UInt32.self),
+                layer: try r.read(UInt8.self), weight: try r.read(UInt8.self), region: try r.read(UInt32.self)))
+        }
+        self.strokes = strokes
     }
 }
 
