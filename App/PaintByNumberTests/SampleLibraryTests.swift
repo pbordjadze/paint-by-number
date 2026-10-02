@@ -138,9 +138,19 @@ struct SampleRegenerationTests {
     let root = Fixtures.temporaryDirectory()
 
     @Test func paintingsWithoutAStoredPhotoRegenerateFromTheBundledPicture() async throws {
-        let library = Library(store: ArtworkStore(root: root))
-        var artworks: [Artwork] = []
+        // Regeneration finds a painting's photo by its `sampleName`; every bundled picture
+        // resolves (SampleLibraryTests checks the files themselves).
         for sample in Sample.retired + Sample.all {
+            #expect(Sample.named(sample.id)?.url != nil, "\(sample.id) doesn't resolve to a bundled file")
+        }
+        // Stored artworks for two retired samples and a library picture: storing one per picture
+        // (44 and counting) would load the parallel test run enough to push its timing tests
+        // over their budgets.
+        let library = Library(store: ArtworkStore(root: root))
+        let picture = try #require(Sample.all.first)
+        let espressoSample = try #require(Sample.named("espresso"))
+        var artworks: [Artwork] = []
+        for sample in [Sample.retired[0], espressoSample, picture] {
             artworks.append(try await library.create(ArtworkDraft(
                 title: sample.title, template: Fixtures.stripes(), settings: GenerationSettings(colorCount: 12),
                 photo: nil, sampleName: sample.id, progress: nil)))
@@ -148,13 +158,6 @@ struct SampleRegenerationTests {
         for artwork in artworks {
             #expect(!library.store.hasSource(artwork.id))
             #expect(ArtworkFactory.canRegenerate(artwork, store: library.store), "\(artwork.title) can't regenerate")
-        }
-        // The photo itself loads for a retired sample and a library picture (every bundled file
-        // is checked by SampleLibraryTests; loading all of them here would starve the parallel
-        // test run's timing tests).
-        let picture = try #require(Sample.all.first)
-        for name in [Sample.retired[0].id, picture.id] {
-            let artwork = try #require(artworks.first { $0.sampleName == name })
             let photo = try ArtworkFactory.sourcePhoto(of: artwork, in: library.store)
             #expect(photo.width > 0 && photo.height > 0)
         }
