@@ -1,7 +1,7 @@
 import XCTest
 
-/// Settings › Advanced: it opens from Settings on its preview's numbers, and a setting moves,
-/// shows its effect and goes back to its default.
+/// Settings › Advanced: it opens from Settings on its preview's numbers, and a slider changes
+/// those numbers, shows its effect and goes back to its default.
 final class AdvancedSettingsUITests: XCTestCase {
     /// The Advanced row (marked Experimental) opens the screen; the preview's picture is
     /// prepared and its numbers appear.
@@ -35,10 +35,11 @@ final class AdvancedSettingsUITests: XCTestCase {
         attachScreenshot(of: app, named: "advanced-from-settings")
     }
 
-    /// A multiplier moves one VoiceOver step at a time, its effect is measured, the Pipeline
-    /// section offers Reset, and Reset All (confirmed) puts it back to 1×.
+    /// Smallest Area moves one VoiceOver step at a time; the preview regenerates with fewer
+    /// areas than the defaults' and the setting's effect is measured; the Pipeline section
+    /// offers Reset, and Reset All (confirmed) puts everything back.
     @MainActor
-    func testASettingShowsItsEffectAndResets() throws {
+    func testASliderChangesThePreviewsNumbersAndResets() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "settings-advanced"]
         app.launch()
@@ -58,14 +59,19 @@ final class AdvancedSettingsUITests: XCTestCase {
         reveal(control, in: list, up: false)
         XCTAssertTrue(control.exists, "Pipeline has no Smallest Area slider")
         XCTAssertTrue(value(of: control).hasPrefix("1×"), "Smallest Area doesn't start at 1×: \(value(of: control))")
-        control.increment()
-        control.increment()
-        let moved = NSPredicate(format: "NOT (value BEGINSWITH '1×')")
-        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: moved, object: control)], timeout: 5), .completed,
-                       "Two steps didn't move Smallest Area: \(value(of: control))")
-        let measured = NSPredicate(format: "value CONTAINS 'area' OR value CONTAINS 'No change'")
+        XCTAssertTrue(value(of: areas).contains("Default"), "The areas don't start at the defaults: \(value(of: areas))")
+        // Four quarter doublings: twice the smallest area.
+        for _ in 0..<4 { control.increment() }
+        let doubled = NSPredicate(format: "value BEGINSWITH '2×'")
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: doubled, object: control)], timeout: 5), .completed,
+                       "Four steps didn't take Smallest Area to 2×: \(value(of: control))")
+        // Larger smallest areas: fewer of them than at the defaults.
+        let fewer = NSPredicate(format: "value CONTAINS %@", "−")
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: fewer, object: areas)], timeout: 90), .completed,
+                       "The preview's areas didn't go down: \(value(of: areas))")
+        let measured = NSPredicate(format: "value CONTAINS %@", "−")
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: measured, object: control)], timeout: 90), .completed,
-                       "Smallest Area's effect was never measured: \(value(of: control))")
+                       "Smallest Area's effect was never measured as fewer areas: \(value(of: control))")
         XCTAssertTrue(app.buttons["advanced-reset-pipeline"].waitForExistence(timeout: 5), "Pipeline offers no Reset")
         attachScreenshot(of: app, named: "advanced-changed")
 
@@ -77,6 +83,10 @@ final class AdvancedSettingsUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: reset, object: control)], timeout: 5), .completed,
                        "Reset All didn't put Smallest Area back: \(value(of: control))")
         XCTAssertFalse(app.buttons["advanced-reset-pipeline"].exists, "Pipeline still offers Reset at its defaults")
+        // The defaults' preview was kept: their numbers are back at once.
+        let back = NSPredicate(format: "value CONTAINS 'Default'")
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: back, object: areas)], timeout: 10), .completed,
+                       "The areas didn't go back to the defaults': \(value(of: areas))")
     }
 
     @MainActor

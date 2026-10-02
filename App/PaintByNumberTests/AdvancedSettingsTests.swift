@@ -67,7 +67,11 @@ struct AdvancedSettingsTests {
 
         let threshold = try #require(AdvancedControl.outlineThreshold.slider)
         #expect(close(threshold.value(at: threshold.position(of: 0.42)), 0.42))
-        #expect(close(threshold.value(0.42, adjustedBy: 1), 0.47))
+        // VoiceOver steps land on the step grid, so they never drift.
+        #expect(close(threshold.value(0.42, adjustedBy: 1), 0.45))
+        var stepped = 1.0
+        for _ in 0..<4 { stepped = multiplier.value(stepped, adjustedBy: 1) }
+        #expect(stepped == 2, "Four quarter doublings from 1× aren't 2×: \(stepped)")
         #expect(threshold.text(0.6) == 0.6.formatted(.percent.precision(.fractionLength(0))))
 
         let length = try #require(AdvancedControl.minimumStrokeLength.slider)
@@ -216,6 +220,11 @@ struct AdvancedSettingsTests {
             }
         }
         #expect(model.effects[.smoothing] == .atDefault)
+        // Twice the smallest area leaves fewer areas than the same settings at 1×.
+        if case .measured(let delta) = model.effects[.minimumCellSize] {
+            #expect(delta.areas < 0, "Twice the smallest area didn't lower the areas: \(delta)")
+        }
+        #expect((model.statsDelta?.areas ?? 0) < 0, "The preview's areas didn't go down from the defaults'")
 
         // Back to the defaults: their preview was kept, so it shows at once.
         #expect(model.preview?.key != .defaults)

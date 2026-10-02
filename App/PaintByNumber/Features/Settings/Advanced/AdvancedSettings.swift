@@ -174,10 +174,12 @@ nonisolated struct SliderSpec: Sendable {
         return clamped((unscaled(lo + (hi - lo) * p) / quantum).rounded() * quantum)
     }
 
-    /// `value` moved by `steps` VoiceOver adjustments.
+    /// `value` moved by `steps` VoiceOver adjustments, which land on multiples of the step
+    /// (on a logarithmic slider, of the step in log₂ units: 1×, 1.19×, 1.41×, 1.68×, 2×), so
+    /// rounding never makes them drift.
     func value(_ value: Double, adjustedBy steps: Int) -> Double {
-        let moved = unscaled(scaled(value) + accessibilityStep * Double(steps))
-        return clamped((moved / quantum).rounded() * quantum)
+        let index = (scaled(value) / accessibilityStep).rounded() + Double(steps)
+        return clamped((unscaled(index * accessibilityStep) / quantum).rounded() * quantum)
     }
 
     private func clamped(_ value: Double) -> Double { min(max(value, range.lowerBound), range.upperBound) }
