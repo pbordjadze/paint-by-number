@@ -42,8 +42,12 @@ HF_HOME=$S/lineart/hf venv/bin/python -c "
 from huggingface_hub import hf_hub_download
 for f in ['sk_model.pth', 'sk_model2.pth', 'table5_pidinet.pth', 'ControlNetHED.pth', 'netG.pth']:
     hf_hub_download('lllyasviel/Annotators', f)
-hf_hub_download('fal-ai/teed', '5_model.pth')"
+hf_hub_download('fal-ai/teed', '5_model.pth')
+hf_hub_download('opencv/face_detection_yunet', 'face_detection_yunet_2023mar.onnx')"
 ```
+
+YuNet (MIT) is the face detector of the importance proxy; without it the proxy falls back
+to saliency and the center prior.
 
 ## Inputs
 
@@ -66,15 +70,19 @@ Options: `--families flowdog,xdog,boundaries,learned_lineart_fine,...` (default 
 `--force-raw` (recompute cached maps). Raw maps are cached in `<out>/_cache/<family>.npy`
 with their runtime and peak memory, so re-tuning the cleanup is fast.
 
+The `<family>` names: `flowdog`, `xdog`, `boundaries`, `learned_lineart_fine`,
+`learned_lineart_coarse`, `learned_pidinet`, `learned_hed`, `learned_teed`,
+`learned_lineart_anime`; `<detail>`: `sparse`, `medium`, `rich`.
+
 Per option `<out>/<family>-<detail>/`: `raw.png`, `strokes.json`, `walls.png` (the stage-2
 contract: 8-connected 1 px centerlines, uint8 0/255, working size), `ink.png`,
 `ink_tapered.png`, `ink_colored.png`, `ink_uniform.png` (RGBA, 2x), `lines_alone.png`
 (+ `_tapered`, `_colored`: ink on paper `#F4EFE6`, 2x) and `metrics.json`. Per picture:
-`importance.png`, `strong_edges.png` (the edges recall is measured against) and
-`summary.json`.
+`importance.png` (+ `importance.json`, the faces found), `strong_edges.png` (the edges
+recall is measured against) and `summary.json`.
 
-All ten dev pictures, three at a time (~4 min after the raw maps are cached; the detectors
-add ~1 min per picture the first time):
+All ten dev pictures, three at a time (~9 min on 4 shared cores once the raw maps are
+cached; computing the nine raw maps adds ~1-2 min per picture the first time):
 
 ```sh
 printf "%s\n" parrots kodim04 kodim23 great-wave lighthouse barn espresso hibiscus regatta kodim03 |
@@ -89,9 +97,9 @@ Determinism: `python lines_learned.py <pic-dir> <model> --check-determinism` run
 twice and compares; rerunning `run_lines.py` into a second directory gives byte-identical
 files (checked, see results.md).
 
-## Runtimes (this machine, 4 cores, 1152 x 768)
+## Runtimes (4 shared cores, 1152 x 768)
 
-Raw maps: flow DoG ~6 s, XDoG ~0.4 s, boundaries ~0.5 s; learned (inference only, plus ~3 s
-to load each model): TEED ~0.5 s, HED ~2.3 s, lineart anime ~2.6 s, lineart coarse/fine
-~3.7-6.6 s, PiDiNet ~8 s. Cleanup ~0.5-1 s and rendering of the four ink variants ~1-2 s per
-option.
+Raw maps: flow DoG 6-8 s, XDoG 0.2 s, boundaries 0.3-0.8 s; learned (inference, plus ~3 s to
+load each model): TEED 0.5-2 s, HED 2-6 s, lineart anime 1-5 s, lineart coarse/fine 3.4-11 s,
+PiDiNet 5-19 s. Cleanup 0.5-2 s and rendering the four ink variants 0.8-3 s per option. The
+spread comes from another agent's batch sharing the machine; see results.md.

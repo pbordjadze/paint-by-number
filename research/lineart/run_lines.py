@@ -12,8 +12,8 @@ raster.ppm). Per option `<family>-<detail>` it writes into <out-dir>/<option>/:
   ink.png           RGBA 2x: weighted ink; ink_tapered.png, ink_colored.png, ink_uniform.png
   lines_alone.png   ink.png on paper #F4EFE6 (panel 1); lines_alone_tapered.png and
                     lines_alone_colored.png for the variants
-  metrics.json      ink coverage, strokes, mean length, fragments, strong-edge recall,
-                    edge precision, runtimes, peak memory
+  metrics.json      ink coverage, strokes, mean length, fragments, strong-edge recall
+                    (2 and 4 px), edge precision, runtimes, peak memory
 Raw maps are cached in <out-dir>/_cache/<family>.npy (+ .json with runtime and memory), so
 re-tuning the cleanup does not rerun the detectors (--force-raw recomputes them).
 Also written: importance.png (+ importance.json: the faces found), strong_edges.png and
