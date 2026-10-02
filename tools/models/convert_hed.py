@@ -2,11 +2,17 @@
 """Converts ControlNet's HED edge detector to the app's Core ML model, reproducibly.
 
     python tools/models/convert_hed.py [--weights ControlNetHED.pth] [--out DIR] [--remake-fixture]
+    python tools/models/convert_hed.py --map <in.ppm> <out.pgm> [--compare <app.pgm>]
 
 Writes App/PaintByNumber/Resources/Models/HED.mlpackage (what `EdgeDetector` runs) and the
 simulator test's reference map App/PaintByNumberTests/HEDFixture.pgm, computed with PyTorch
 from the committed input App/PaintByNumberTests/HEDFixture.ppm exactly the way the layered-lines
 research computed its maps (`research/lineart/lines_learned.py`, model `hed`).
+
+--map writes the 8-bit edge map of an image already at its map size (≤ 1152 px; `pbn
+generate`'s working.ppm, or the model input the app's tests attach) as `pbn generate --edges`
+reads it, the same levels the app computes; --compare also reports how far an app-made map is
+from it.
 
 Source. `ControlNetHED.pth` from the Hugging Face repository lllyasviel/Annotators, revision
 982e7edaec38759d914a963c48c4726685de7d96, 29,444,406 bytes, sha256 SOURCE_SHA256 below (checked
@@ -153,7 +159,11 @@ def quantize(p):
     return np.clip(np.floor(p.astype(np.float64) * 255 + 0.5), 0, 255).astype(np.uint8)
 
 
-def read_ppm(path):
+def read_pgm(path):
+    return read_ppm(path, magic=b"P5")
+
+
+def read_ppm(path, magic=b"P6"):
     with open(path, "rb") as f:
         data = f.read()
     tokens, i = [], 0
@@ -169,9 +179,11 @@ def read_ppm(path):
             j += 1
         tokens.append(data[i:j])
         i = j
-    assert tokens[0] == b"P6" and tokens[3] == b"255", f"{path}: expected an 8-bit binary PPM"
+    assert tokens[0] == magic and tokens[3] == b"255", f"{path}: expected an 8-bit binary {magic.decode()} file"
     w, h = int(tokens[1]), int(tokens[2])
-    return np.frombuffer(data[i + 1:i + 1 + w * h * 3], np.uint8).reshape(h, w, 3)
+    channels = 3 if magic == b"P6" else 1
+    pixels = np.frombuffer(data[i + 1:i + 1 + w * h * channels], np.uint8)
+    return pixels.reshape(h, w, 3) if channels == 3 else pixels.reshape(h, w)
 
 
 def write_netpbm(path, array):
@@ -297,6 +309,8 @@ def main(argv):
     ap.add_argument("--weights", help=f"{FILENAME} (default: download {REPO_ID}@{REVISION[:12]})")
     ap.add_argument("--out", default=DEFAULT_OUT)
     ap.add_argument("--remake-fixture", action="store_true")
+    ap.add_argument("--map", nargs=2, metavar=("IN_PPM", "OUT_PGM"), help="only write the edge map of IN_PPM")
+    ap.add_argument("--compare", metavar="APP_PGM", help="with --map: compare an app-made map with it")
     args = ap.parse_args(argv)
 
     weights = args.weights
@@ -309,6 +323,16 @@ def main(argv):
     print(f"weights {weights}\n  sha256 {digest} (matches)")
 
     net = load_network(weights)
+    if args.map:
+        q = quantize(research_map(net, read_ppm(args.map[0])))
+        write_netpbm(args.map[1], q)
+        print(f"edge map {args.map[1]}: {q.shape[1]}x{q.shape[0]}")
+        if args.compare:
+            app = read_pgm(args.compare)
+            d = np.abs(app.astype(int) - q.astype(int))
+            print(f"app map {args.compare}: largest difference {d.max()} levels, "
+                  f"{int((d > 0).sum())} of {d.size} pixels differ, mean {d.mean():.4f}")
+        return
     if args.remake_fixture:
         remake_fixture()
     rgb = read_ppm(FIXTURE_INPUT)
