@@ -7,47 +7,23 @@ struct LineArtTests {
 
     // MARK: - A synthetic scene
 
-    /// 128×96: flat sky over flat ground (horizon at y = 48), a dark red disc and a yellow square.
-    static func photo() -> RGBAImage {
-        let w = 128, h = 96
-        var px = [UInt8](repeating: 255, count: w * h * 4)
-        for y in 0..<h {
-            for x in 0..<w {
-                var c: (UInt8, UInt8, UInt8) = y < 48 ? (150, 190, 230) : (90, 150, 70)
-                let dx = Float(x) - 40, dy = Float(y) - 48
-                if dx * dx + dy * dy <= 18 * 18 { c = (140, 30, 40) }
-                if x >= 80 && x < 112 && y >= 30 && y < 62 { c = (240, 200, 40) }
-                let i = (y * w + x) * 4
-                px[i] = c.0; px[i + 1] = c.1; px[i + 2] = c.2
-            }
-        }
-        return RGBAImage(width: w, height: h, pixels: px)
+    static func fixture(_ name: String) -> Data {
+        let url = Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Fixtures")!
+        return try! Data(contentsOf: url)
     }
 
-    /// Lines like a learned detector draws them (soft, a few pixels wide): strong around the
-    /// disc and the square, the horizon, a detail line across the ground (same paint on both
-    /// sides) and a faint texture line down the sky (likewise).
+    /// `Fixtures/layered-photo.ppm`, 128×96: flat sky (150, 190, 230) over flat ground
+    /// (90, 150, 70), the horizon at y = 48, a dark red disc (140, 30, 40) of radius 18 around
+    /// (40, 48) and a yellow square (240, 200, 40) over x 80..<112, y 30..<62.
+    static func photo() -> RGBAImage { try! Netpbm.read(fixture("layered-photo.ppm")) }
+
+    /// `Fixtures/layered-edges.pgm`, the photo's lines as a learned detector draws them (soft:
+    /// a Gaussian profile, σ = 2 px): 0.95 around the disc and the square, 0.9 along the
+    /// horizon where it is visible, 0.62 across the ground at y = 80 (same paint on both
+    /// sides) and 0.42 down the sky at x = 60 (likewise). Values are rounded to 8 bits.
     static func edges() -> EdgeMap {
-        let w = 128, h = 96
-        var v = [Float](repeating: 0, count: w * h)
-        func line(_ strength: Float, _ distance: (Float, Float) -> Float) {
-            for y in 0..<h {
-                for x in 0..<w {
-                    let d = distance(Float(x) + 0.5, Float(y) + 0.5)
-                    v[y * w + x] = max(v[y * w + x], strength * exp(-d * d / (2 * 2 * 2)))
-                }
-            }
-        }
-        line(0.95) { x, y in abs(((x - 40.5) * (x - 40.5) + (y - 48.5) * (y - 48.5)).squareRoot() - 18.5) }
-        line(0.95) { x, y in
-            let dx = max(80 - x, 0, x - 112), dy = max(30 - y, 0, y - 62)
-            let outside = (dx * dx + dy * dy).squareRoot()
-            return outside > 0 ? outside : min(x - 80, 112 - x, y - 30, 62 - y)
-        }
-        line(0.9) { x, y in (x >= 58 && x <= 80) || x <= 22 || x >= 112 ? abs(y - 48) : 99 }
-        line(0.62) { _, y in abs(y - 80) }
-        line(0.42) { x, y in y < 48 ? abs(x - 60) : 99 }
-        return EdgeMap(width: w, height: h, values: v.map { UInt8(min(max($0, 0), 1) * 255 + 0.5) })
+        let image = try! Netpbm.read(fixture("layered-edges.pgm"))
+        return EdgeMap(width: image.width, height: image.height, values: (0..<(image.width * image.height)).map { image.pixels[$0 * 4] })
     }
 
     static func settings(_ change: (inout LineArtSettings) -> Void = { _ in }) -> GenerationSettings {
@@ -161,6 +137,22 @@ struct LineArtTests {
         #expect(off.template == without.template)
     }
 
+    @Test func anEyeTooSmallForANumberIsStillDrawn() throws {
+        // A diamond 3 units across inside the square: no room for a number, so its cell joins
+        // the square and the contour is drawn inside it, closed.
+        let c = SIMD2<Float>(96 / 128, 46 / 96)
+        let rx: Float = 1 / 128, ry: Float = 1 / 96
+        let eye: [SIMD2<Float>] = [SIMD2(c.x - rx, c.y), SIMD2(c.x, c.y - ry), SIMD2(c.x + rx, c.y), SIMD2(c.x, c.y + ry)]
+        let t = try Self.generate(eyes: [eye]).template
+        let lines = try #require(t.lineArt)
+        let stroke = try #require(lines.strokes.first { $0.layer == LineLayer.outline.rawValue })
+        let first = lines.strokePoints[Int(stroke.pointStart)]
+        let last = lines.strokePoints[Int(stroke.pointStart + stroke.pointCount) - 1]
+        #expect(first == last)
+        #expect(t.region(at: first) == Int(stroke.region))
+        #expect(t.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+    }
+
     @Test func mergingCloseColorsGivesFewerCells() throws {
         // A soft gradient band across the ground makes paint-only boundaries.
         var image = Self.photo()
@@ -226,6 +218,83 @@ struct LineArtTests {
         #expect(layer == [2, 0, 0, 0, 0, 0, 1, 1, 2, 2, 2, 2, LineLayering.none, LineLayering.none, LineLayering.none])
     }
 
+    @Test func crowdedLinesAreDetailUnlessLong() {
+        // On a 1500-unit canvas: a short, strong stroke is an outline where nothing crowds it
+        // and detail where lines crowd; a long one stays an outline either way.
+        let w = 1500, h = 100
+        func stroke(length: Int) -> StrokeGraph.Stroke {
+            StrokeGraph.Stroke(
+                points: (0..<length).map { SIMD2(Float(10 + $0), 50) }, strength: [Float](repeating: 0.95, count: length),
+                closed: false, free: (true, true), links: [])
+        }
+        let calm = [Float](repeating: 0, count: w * h), crowded = [Float](repeating: 1, count: w * h)
+        let thresholds: [Float] = [0.85, 0.5, 0.3]
+        func layers(_ s: StrokeGraph.Stroke, _ clutter: [Float]) -> Set<UInt8> {
+            Set(LineLayering.layered([s], thresholds: thresholds, clutter: clutter, width: w).flatMap(\.layer))
+        }
+        #expect(layers(stroke(length: 60), calm) == [LineLayer.outline.rawValue])
+        #expect(layers(stroke(length: 60), crowded) == [LineLayer.detail.rawValue])
+        #expect(layers(stroke(length: 200), crowded) == [LineLayer.outline.rawValue])
+        // Half crowded: the threshold is halfway to 1, so 0.95 still makes an outline.
+        let half = [Float](repeating: 0.5, count: w * h)
+        #expect(layers(stroke(length: 60), half) == [LineLayer.outline.rawValue])
+    }
+
+    @Test func clutterCountsCrowdedLinesOnly() throws {
+        // A 1500-unit canvas (crowding is measured relative to the canvas size): a lone line on
+        // the left, lines 6 units apart on the right, 30 apart in the middle.
+        let w = 1500, h = 200
+        var mask = [Bool](repeating: false, count: w * h)
+        for y in 0..<h { mask[y * w + 100] = true }
+        for x in stride(from: 400, to: 800, by: 30) { for y in 0..<h { mask[y * w + x] = true } }
+        for x in stride(from: 1000, to: 1400, by: 6) { for y in 0..<h { mask[y * w + x] = true } }
+        let clutter = try LineDetection.clutter(mask, width: w, height: h, cancel: .none)
+        #expect(clutter[100 * w + 100] == 0)
+        #expect(clutter[100 * w + 610] < 0.05)
+        #expect(clutter[100 * w + 1200] > 0.9)
+    }
+
+    @Test func linesAroundEyesAreStronger() {
+        let w = 200, h = 100
+        // A texture line passing just above an eye, and another far from it.
+        func line(_ y: Float) -> DrawnLine {
+            DrawnLine(points: (0..<180).map { SIMD2(Float(10 + $0), y) }, strength: [Float](repeating: 0.35, count: 180),
+                      layer: [UInt8](repeating: LineLayer.texture.rawValue, count: 180), closed: false,
+                      free: (true, true), links: [], eye: false)
+        }
+        let eye: [SIMD2<Float>] = [SIMD2(90, 50), SIMD2(100, 44), SIMD2(110, 50), SIMD2(100, 56)]
+        let out = LineLayering.addEyes([line(40), line(90)], eyes: [eye], width: w, height: h)
+        #expect(out.count == 3)
+        let near = out[0], far = out[1]
+        #expect(near.layer[90] == LineLayer.detail.rawValue)
+        #expect(near.layer[0] == LineLayer.texture.rawValue)
+        #expect(far.layer.allSatisfy { $0 == LineLayer.texture.rawValue })
+        #expect(out[2].eye && out[2].closed && out[2].layer.allSatisfy { $0 == LineLayer.outline.rawValue })
+    }
+
+    @Test func layeredGenerationCancels() throws {
+        // Cancelled after every number of checks up to the last: always a CancellationError.
+        final class Counter: @unchecked Sendable {
+            let lock = NSLock()
+            var value = 0
+            func next() -> Int { lock.withLock { value += 1; return value } }
+        }
+        let total = Counter()
+        _ = try TemplateGenerator(settings: Self.settings()).generate(
+            from: Self.photo(), lineArt: LineArtInput(edges: Self.edges()),
+            cancel: CancellationCheck { _ = total.next(); return false })
+        let checks = total.value
+        #expect(checks > 20)
+        for after in stride(from: 0, to: checks, by: max(1, checks / 25)) {
+            let counter = Counter()
+            #expect(throws: CancellationError.self, "after \(after)") {
+                try TemplateGenerator(settings: Self.settings()).generate(
+                    from: Self.photo(), lineArt: LineArtInput(edges: Self.edges()),
+                    cancel: CancellationCheck { counter.next() > after })
+            }
+        }
+    }
+
     @Test func thinningLeavesOnePixelLines() {
         let w = 40, h = 20
         var mask = [Bool](repeating: false, count: w * h)
@@ -260,6 +329,36 @@ struct LineArtTests {
     }
 
     // MARK: - Coding
+
+    /// `Fixtures/template-v2-lines.pbnt` was written by the LINE encoder of commit 7ae42a1 with
+    /// `pbn generate Fixtures/layered-photo.ppm <dir> --colors 8 --line-style layered --edges
+    /// Fixtures/layered-edges.pgm --line-art outlineThreshold=0.8 --line-art detailThreshold=0.5
+    /// --line-art textureThreshold=0.3 --line-art minimumStrokeLength=10 --line-art gapBridging=6`:
+    /// the v1 payload, then a GENR and a LINE chunk (12 edges: 7 outline, 1 detail, 4 color; one
+    /// texture stroke of 6 points inside the joined sky). It pins the LINE layout: never
+    /// regenerate it.
+    @Test func decodesLayeredFixture() throws {
+        let data = Self.fixture("template-v2-lines.pbnt")
+        #expect(data.count == 11152)
+        #expect(data[4..<8] == Data([2, 0, 0, 0]))
+        let t = try Template(encoded: data)
+        #expect(t.width == 192 && t.height == 144)
+        #expect(t.regions.count == 5 && t.edges.count == 12 && t.points.count == 165 && t.palette.count == 4)
+        #expect(t.pipelineVersion == 3)
+        let lines = try #require(t.lineArt)
+        #expect(lines.edgeLayers == [0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 1, 3])
+        #expect(lines.edgeWeights == [218, 230, 230, 228, 228, 215, 217, 0, 0, 0, 147, 0])
+        #expect(lines.strokePoints.count == 6)
+        #expect(lines.strokes == [InteriorStroke(pointStart: 0, pointCount: 6, layer: 2, weight: 103, region: 0)])
+        let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
+        #expect(report.isValid, "\(report)")
+        // The chunk section: GENR then LINE (98 bytes), optional.
+        let tags = try Self.chunks(data, payloadEnd: 11022)
+        #expect(tags.map(\.0) == [Template.Chunk.generator, Template.Chunk.lines])
+        #expect(tags.allSatisfy { $0.1 == 0 })
+        // Re-encoding writes the same bytes.
+        #expect(t.encoded() == data)
+    }
 
     @Test func roundTripsLineArt() throws {
         let t = try Self.generate().template

@@ -14,11 +14,23 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     `ColorNicknameVocabulary.swift`, whose doc comment is the style guide `ColorNicknameTests` lints;
     `assign(_:seed:)` picks one per paint, unique in the palette and varied by seed)
   - `Model/` `Template` (the product of the pipeline) + versioned binary coding, `GenerationSettings`,
-    `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map)
+    `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map),
+    `LineArtSettings` (classic or layered lines and their knobs; defaults and why on its init) and
+    `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs, applied in its
+    init: a factor of exactly 1 leaves every knob bit for bit, so classic output never moves)
+  - `LineArt/` layered line art (`LayeredLines.apply`; stages in its doc comment): an 8-bit
+    `EdgeMap` (the app's HED, or `pbn --edges`) and eye polygons → ridges, hysteresis and thinning
+    (`LineDetection`), traced and cleaned strokes (`StrokeGraph`), a `LineLayer` per point by
+    hysteresis along the stroke, the outline threshold rising toward 1 where lines crowd except on
+    long contours (`LineLayering`), the segmentation split along the lines (`CellMap`: cells keep
+    their paint and hold their number; small ones merge, same-paint ones join per `SamePaint`),
+    then after the vectorizer each edge's layer and weight and the lines inside cells
+    (`InteriorStroke`s) as `Template.lineArt`. Layered settings without an edge map generate the
+    classic template; same edge map and settings give the same bytes on any core count.
   - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
     its doc comment, all tunables in `SegmentationParameters`)
   - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
-  - `Export/` SVG (and later PDF helpers)
+  - `Export/` SVG (layered templates draw a group per `LineLayer`, faintest first; and later PDF helpers)
   - `Auto/` Suggested settings: `AutoSettings.analyze` (photo → `PhotoAnalysis` features at the
     draft size), `candidates` (a named rule: a center from the palette curve's knee and the
     features, plus neighbours in colors × detail), `score` (importance-weighted ΔE, p95, rings,
@@ -36,6 +48,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     center rises one unit per unit of mean importance below 0.6, so Vision maps (which protect
     less of the frame than pbn's fallback) still reach the band.
   - `TemplateGenerator.swift` entry point composing the stages, with `StageClock` timings
+    (`generate(from:importance:lineArt:…)`; `Output.lineArtStats` for layered templates)
 - `App/` Xcode project (`PaintByNumber.xcodeproj`, synchronized folders — adding files needs no
   project edits) with the SwiftUI app, Metal renderer and UI tests.
 - `tools/` evaluation tooling (`swift.sh`, `eval.py`, `compare.py`, `regression.py` + its
@@ -61,16 +74,28 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   fields, never rename them. Look at the PNGs with the Read tool. The sheet's second row shows the
   raw region raster, a 2× `boundaries.png` (1-px region outlines, best for judging segmentation
   shapes) and the palette; `--importance-dir DIR` passes `DIR/<name>.pgm` as the importance map
-  (Vision stand-in).
+  (Vision stand-in); `--edges-dir DIR [--eyes-dir DIR]` passes `DIR/<name>.pgm` as the edge map
+  (and `<name>.json` as eyes) and generates layered templates (the caption adds cells against the
+  classic regions and edges per layer).
 - Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
   corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
 - `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
   distinct color) — ideal for judging curve quality on synthetic shapes. `pbn check <t.pbnt>`
   prints the file's format and pipeline versions and runs `Template.validate()` (planarity, ring
   orientation, mesh coverage/watertightness, labels, and every label's room for its number:
-  `--min-label-radius R`, default `LabelSizing.minimumRadius`, `0` skips it). `pbn bench
+  `--min-label-radius R`, default `LabelSizing.minimumRadius`, `0` skips it; layered line data
+  too, with its edges per layer and interior strokes counted). `pbn bench
   <ppm...>` times the pipeline, including a preview, detail 1 on a large photo, 150 colors
-  at detail 1 and Auto's suggestion.
+  at detail 1 and Auto's suggestion (`--edges map.pgm`: also layered line art, stage by stage).
+- Layered line art: `pbn generate <in.ppm> <out> --line-style layered --edges map.pgm [--eyes
+  eyes.json] [--line-art key=value]… [--tuning key=value]…` (eyes: closed polygons of `[x, y]`
+  normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names);
+  `stats.json` gains `lineArt` (settings, `LineArtStats`, edges and length per layer, interior
+  strokes, `cellsVsClassic`) and `tuning` when not default. Edge maps for evaluation come from the
+  research's HED (`research/lineart/lines_learned.py` on `claude/lineart-research`) quantized to
+  8-bit PGM; the app runs the same model at ≤ 1152 px, so evaluate with maps at that size. The
+  regression gate covers classic output only; `LineArtTests` and the `template-v2-lines.pbnt`
+  fixture cover layered generation and coding.
 - Suggested settings: `pbn suggest <image> [--importance m.pgm] [--hints h.json] [--length
   quick|relaxed|detailed] [--candidates 5] [--out dir]` prints the candidate table (every score
   term, the winner starred) and writes `decision.json`; with `--out` also every candidate's
@@ -401,8 +426,9 @@ Saved paintings must open in every later build. The format history is documented
 `Template.formatVersion` and in `Model/TemplateCoding.swift`.
 
 - Never change how an existing template format is read: `readPayloadV1` is frozen, and
-  `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` must keep decoding (they
-  are never regenerated). Add a fixture file and decode test for every new `formatVersion`.
+  `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` / `template-v2-lines.pbnt`
+  (the optional `LINE` chunk of layered templates) must keep decoding (they are never
+  regenerated). Add a fixture file and decode test for every new `formatVersion` or chunk.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
   ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base

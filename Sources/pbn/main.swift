@@ -21,9 +21,10 @@ import ImageIO
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into
 //       dir, else the current directory); with --out also the draft (draft.ppm), its working
 //       image and every candidate's painted preview and region outlines (tools/auto_sheet.py)
-//   pbn bench <in.ppm>... [--runs N] [--colors N] [--detail F] [--smooth F]
+//   pbn bench <in.ppm>... [--runs N] [--colors N] [--detail F] [--smooth F] [--edges map.pgm]
 //       also times a live preview, detail 1 on a large photo, the same with 150 colors and
-//       Auto's suggestion (Relaxed, 5 candidates)
+//       Auto's suggestion (Relaxed, 5 candidates); with --edges also layered line art (its
+//       stages listed), the map resampled to each photo
 //   pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]
 //       vectorizes a flat-color image directly (each distinct color is a palette entry,
 //       each 4-connected component a region), bypassing segmentation
@@ -498,7 +499,8 @@ func suggest(_ image: RGBAImage, importance: Grid<Float>?, options: Options,
     do {
         let decision = try AutoSettings.choose(
             image: image, importance: importance, hints: loadHints(options.hints), preference: options.length,
-            maxCandidates: options.candidates, cancel: .none, firstDraft: firstDraft)
+            maxCandidates: options.candidates, lineArt: options.settings.lineArt, tuning: options.settings.tuning,
+            cancel: .none, firstDraft: firstDraft)
         return (decision, milliseconds(since: start))
     } catch { fail("suggestion failed: \(error)") }
 }
@@ -586,10 +588,8 @@ case "generate":
     let importance = loadImportance(options.importance)
     let lineArtInput = loadLineArt(options)
     let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
-    var settings = decision?.0.settings ?? options.settings
-    settings.lineArt = options.settings.lineArt
-    settings.tuning = options.settings.tuning
-    let generator = TemplateGenerator(settings: settings)
+    // Auto's decision carries the line art and tuning asked for.
+    let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
     let output: TemplateGenerator.Output
     do {
         output = try generator.generate(from: image, importance: importance, lineArt: lineArtInput, cancel: .none)
@@ -720,7 +720,7 @@ case "bench":
     /// Runs the generator `runs` times; per-stage timings, region count, worst gap and the
     /// median of the per-run worst gaps (a lone outlier on a busy machine is a scheduling
     /// hiccup; a high median is a stretch of work that needs another check).
-    func measure(_ image: RGBAImage, _ settings: GenerationSettings, runs: Int) -> (
+    func measure(_ image: RGBAImage, _ settings: GenerationSettings, runs: Int, lineArt: LineArtInput? = nil) -> (
         totals: [String: [Double]], order: [String], regions: Int, size: String,
         gap: (gap: Double, end: Double), stage: String, medianGap: Double
     ) {
@@ -735,7 +735,7 @@ case "bench":
         for _ in 0..<runs {
             let probe = CancellationProbe()
             let out: TemplateGenerator.Output
-            do { out = try generator.generate(from: image, cancel: probe.check) } catch { fail("\(error)") }
+            do { out = try generator.generate(from: image, lineArt: lineArt, cancel: probe.check) } catch { fail("\(error)") }
             regionCount = out.template.regions.count
             size = "\(out.template.width)×\(out.template.height)"
             let gap = probe.finish()
@@ -788,6 +788,16 @@ case "bench":
             print(String(format: "  %-28@ ", "\(label) \(v.size)" as NSString) + stat(v.totals["total"]!)
                 + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage
                 + String(format: "; median %.1f ms)", v.medianGap))
+        }
+        if let input = loadLineArt(options) {
+            var layered = options.settings
+            layered.lineArt.style = .layered
+            let v = measure(image, layered, runs: options.runs, lineArt: input)
+            print(String(format: "  %-28@ ", "layered \(v.size), \(v.regions) cells" as NSString) + stat(v.totals["total"]!)
+                + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage + ")")
+            for name in v.order where name.hasPrefix("lineArt") {
+                print(String(format: "    %-26@ ", name as NSString) + stat(v.totals[name]!))
+            }
         }
         // Auto's suggestion as the create flow runs it, and its analysis alone.
         var auto = options
