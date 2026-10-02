@@ -293,6 +293,26 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`). Settings › Painting Length
   (Quick, Relaxed by default, Detailed; `Preferences.paintingLength`) is what suggestions aim for;
   nothing starts from fixed settings any more (the old Starting Colors value is never read).
+- Settings › Advanced (Experimental; `Features/Settings/Advanced/`): `LineArtSettings`,
+  `LineAppearance` and `PipelineTuning` for testers, stored as they change (`Preferences.store`;
+  values equal to the defaults are removed, so better defaults reach them). Pushed inside the
+  settings sheet in compact widths, a full-screen cover in regular ones (the sheet is a small card
+  there). `AdvancedSettingsModel` prepares the chosen picture once (a library picture or the most
+  recent photo, `SettingsKey.advancedPreviewPicture`): decoded like the create flow, Vision
+  importance, `AutoSettings.choose` with one candidate at the draft size, whose template is the
+  defaults' preview and whose estimate scales draft areas to the full painting. Settings that
+  change templates (`GenerationKey`: canonical, classic keys drop the layered fields) queue a
+  generation: debounced, coalesced while a slider moves, the last preview kept until the next,
+  every template kept in a small LRU. Each changed setting's effect (`AdvancedControl`) is the
+  preview's `AdvancedStats` against the same key with that setting reset, generated once the
+  painter pauses. The preview is the real `CanvasView` (`AdvancedPreviewCanvas`: no paint
+  selected, so touches only navigate; Painted paints every area; a new template opens at the old
+  one's camera); `TemplateRasterizer` stands in without Metal. Sliders are single adjustable
+  VoiceOver elements stepping by `SliderSpec.accessibilityStep`, with a detent and haptic at
+  the default. Copy Settings / Share with a Note hand over `AdvancedReport` (the JSON reproduces
+  the preview of a library picture). Demo scenarios `settings-advanced` (+ `-dark`,
+  `-long-text`), `settings-advanced-layered` (Line Appearance, 2×) and `settings-advanced-tuned`
+  (Pipeline, effects measured) register their settings instead of storing them.
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (source language English; no translations yet, so the catalog
   is the translator hand-off) and the Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by
@@ -321,7 +341,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   symbol, and the code reads keys as literals). `LocalizationTests` checks what ships (bundle lookup,
   plurals, Info.plist). Layout under longer text: demo scenarios named `*-long-text`
   (`paint-long-text`, `paint-complete-long-text`, `gallery-long-text`, `gallery-timelapse-long-text`,
-  `settings-long-text`) are launched by `ci/screenshots.sh` with `-NSDoubleLocalizedStrings YES`, which doubles every
+  `settings-long-text`, `settings-advanced-long-text`) are launched by `ci/screenshots.sh` with `-NSDoubleLocalizedStrings YES`, which doubles every
   localized string; read their screenshots after UI text changes (bars scale or wrap their text,
   no text sits in a fixed-width frame). Foundation doubles format strings before substituting, so
   the first copy shows raw placeholders (`1$lld · 2$@`, `@ painted`): expected, length is what
