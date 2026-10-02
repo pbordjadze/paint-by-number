@@ -1,0 +1,548 @@
+[
+ {
+  "picture": "great-wave",
+  "title": "The Great Wave",
+  "stresses": "A Japanese print: already line and flat color, the ceiling for this idea.",
+  "options": [
+   {
+    "option": "flowdog-medium",
+    "method": "c1",
+    "label": "Flow DoG \u00b7 pen sketch",
+    "note": "Long flowing strokes; claws of foam and the boats read cleanly.",
+    "metrics": "805 strokes \u00b7 877 regions (420 today) \u00b7 3 slivers \u00b7 blind: yes, 96%"
+   },
+   {
+    "option": "learned_lineart_fine-medium",
+    "method": "c1",
+    "label": "Informative Drawings, fine \u00b7 learned line art",
+    "note": "Closest to an illustrator; fine foam detail without mesh.",
+    "metrics": "953 strokes \u00b7 928 regions (420 today) \u00b7 11 slivers \u00b7 blind: yes, 95%"
+   },
+   {
+    "option": "learned_teed-medium",
+    "method": "c1",
+    "label": "TEED \u00b7 tiny learned edges",
+    "note": "Most complete, a little busier in the foam.",
+    "metrics": "1113 strokes \u00b7 975 regions (420 today) \u00b7 6 slivers \u00b7 blind: yes, 95%"
+   },
+   {
+    "option": "learned_hed-medium",
+    "method": "c1",
+    "label": "HED \u00b7 learned edges",
+    "note": "Bold outer contours, lighter interior.",
+    "metrics": "524 strokes \u00b7 683 regions (420 today) \u00b7 1 slivers"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_pidinet-medium",
+    "method": "c1",
+    "label": "PiDiNet"
+   },
+   {
+    "option": "learned_lineart_coarse-medium",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-medium",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "xdog-medium",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-medium",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ },
+ {
+  "picture": "milkmaid",
+  "title": "The Milkmaid",
+  "stresses": "A face and hands: does the drawing keep the features?",
+  "options": [
+   {
+    "option": "learned_teed-sparse",
+    "method": "c1",
+    "label": "TEED \u00b7 tiny learned edges",
+    "note": "Face, eyes, hands and jug all drawn; reads as Vermeer at a glance.",
+    "metrics": "212 strokes \u00b7 594 regions (486 today) \u00b7 3 slivers \u00b7 blind: yes, 93%"
+   },
+   {
+    "option": "learned_hed-sparse",
+    "method": "c1",
+    "label": "HED \u00b7 learned edges",
+    "note": "Clean figure, jug and apron folds; the face only hinted.",
+    "metrics": "88 strokes \u00b7 542 regions (486 today) \u00b7 0 slivers \u00b7 blind: yes, 88%"
+   },
+   {
+    "option": "learned_pidinet-sparse",
+    "method": "c1",
+    "label": "PiDiNet \u00b7 learned edges, minimal",
+    "note": "Fewest strokes, very calm; the face is left blank.",
+    "metrics": "57 strokes \u00b7 541 regions (486 today) \u00b7 0 slivers \u00b7 blind: yes, 85%"
+   },
+   {
+    "option": "flowdog-sparse",
+    "method": "c1",
+    "label": "Flow DoG \u00b7 pen sketch",
+    "note": "Sketchy pen look; table still life gets busy.",
+    "metrics": "168 strokes \u00b7 584 regions (486 today) \u00b7 0 slivers"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_lineart_fine-sparse",
+    "method": "c1",
+    "label": "Informative Drawings, fine"
+   },
+   {
+    "option": "learned_lineart_coarse-sparse",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-sparse",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "xdog-sparse",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-sparse",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ },
+ {
+  "picture": "wheat-field",
+  "title": "Wheat Field with Cypresses",
+  "stresses": "An impressionist canvas: there are no lines to find.",
+  "options": [
+   {
+    "option": "learned_pidinet-sparse",
+    "method": "c1",
+    "label": "PiDiNet \u00b7 learned edges, minimal",
+    "note": "The calmest: cypress, hills and a few cloud curls.",
+    "metrics": "47 strokes \u00b7 663 regions (643 today) \u00b7 0 slivers"
+   },
+   {
+    "option": "learned_hed-sparse",
+    "method": "c1",
+    "label": "HED \u00b7 learned edges",
+    "note": "More clouds, still readable as the painting.",
+    "metrics": "240 strokes \u00b7 779 regions (643 today) \u00b7 0 slivers"
+   },
+   {
+    "option": "flowdog-sparse",
+    "method": "c1",
+    "label": "Flow DoG \u00b7 pen sketch",
+    "note": "Follows the brush swirls; closest to Van Gogh's own rhythm, but busy.",
+    "metrics": "621 strokes \u00b7 1086 regions (643 today) \u00b7 0 slivers"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_teed-sparse",
+    "method": "c1",
+    "label": "TEED"
+   },
+   {
+    "option": "learned_lineart_fine-sparse",
+    "method": "c1",
+    "label": "Informative Drawings, fine"
+   },
+   {
+    "option": "learned_lineart_coarse-sparse",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-sparse",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "xdog-sparse",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-sparse",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ },
+ {
+  "picture": "cezanne-apples",
+  "title": "Still Life with Apples and Pears",
+  "stresses": "A still life: round forms and a table edge.",
+  "options": [
+   {
+    "option": "learned_pidinet-medium",
+    "method": "c1",
+    "label": "PiDiNet \u00b7 learned edges, minimal",
+    "note": "Fruit as clean round shapes; reads as a still life.",
+    "metrics": "81 strokes \u00b7 585 regions (538 today) \u00b7 1 slivers \u00b7 blind: yes, 70%"
+   },
+   {
+    "option": "learned_hed-medium",
+    "method": "c1",
+    "label": "HED \u00b7 learned edges",
+    "note": "Adds the dish and table edge.",
+    "metrics": "160 strokes \u00b7 640 regions (538 today) \u00b7 0 slivers \u00b7 blind: yes, 70%"
+   },
+   {
+    "option": "flowdog-medium",
+    "method": "c1",
+    "label": "Flow DoG \u00b7 pen sketch",
+    "note": "Draws the cloth folds; busier.",
+    "metrics": "95 strokes \u00b7 554 regions (538 today) \u00b7 1 slivers"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_teed-medium",
+    "method": "c1",
+    "label": "TEED"
+   },
+   {
+    "option": "learned_lineart_fine-medium",
+    "method": "c1",
+    "label": "Informative Drawings, fine"
+   },
+   {
+    "option": "learned_lineart_coarse-medium",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-medium",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "xdog-medium",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-medium",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ },
+ {
+  "picture": "delicate-arch",
+  "title": "Delicate Arch",
+  "stresses": "A landscape photo with a sky gradient.",
+  "options": [
+   {
+    "option": "learned_hed-medium",
+    "method": "c1",
+    "label": "HED \u00b7 learned edges",
+    "note": "Clean arch silhouette and ridge; the sky becomes one gradient.",
+    "metrics": "175 strokes \u00b7 689 regions (618 today) \u00b7 2 slivers \u00b7 blind: yes, 90%"
+   },
+   {
+    "option": "learned_pidinet-medium",
+    "method": "c1",
+    "label": "PiDiNet \u00b7 learned edges, minimal",
+    "note": "Simplest; arch and horizon only.",
+    "metrics": "90 strokes \u00b7 679 regions (618 today) \u00b7 0 slivers \u00b7 blind: yes, 88%"
+   },
+   {
+    "option": "learned_teed-medium",
+    "method": "c1",
+    "label": "TEED \u00b7 tiny learned edges",
+    "note": "Adds the rock texture as strokes.",
+    "metrics": "939 strokes \u00b7 1055 regions (618 today) \u00b7 4 slivers \u00b7 blind: partly, 90%"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_lineart_fine-medium",
+    "method": "c1",
+    "label": "Informative Drawings, fine"
+   },
+   {
+    "option": "learned_lineart_coarse-medium",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-medium",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "flowdog-medium",
+    "method": "c1",
+    "label": "Flow DoG"
+   },
+   {
+    "option": "xdog-medium",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-medium",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ },
+ {
+  "picture": "red-fox",
+  "title": "Red Fox in Snow",
+  "stresses": "Fur on white: a soft silhouette.",
+  "options": [
+   {
+    "option": "learned_pidinet-medium",
+    "method": "c1",
+    "label": "PiDiNet \u00b7 learned edges, minimal",
+    "note": "Full silhouette with back and tail; reads as a fox.",
+    "metrics": "48 strokes \u00b7 270 regions (234 today) \u00b7 0 slivers"
+   },
+   {
+    "option": "learned_teed-medium",
+    "method": "c1",
+    "label": "TEED \u00b7 tiny learned edges",
+    "note": "Silhouette plus fur strokes; livelier and busier.",
+    "metrics": "207 strokes \u00b7 380 regions (234 today) \u00b7 0 slivers"
+   },
+   {
+    "option": "learned_lineart_fine-medium",
+    "method": "c1",
+    "label": "Informative Drawings, fine \u00b7 learned line art",
+    "note": "Fur texture everywhere; the face gets crowded.",
+    "metrics": "362 strokes \u00b7 488 regions (234 today) \u00b7 3 slivers"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_hed-medium",
+    "method": "c1",
+    "label": "HED"
+   },
+   {
+    "option": "learned_lineart_coarse-medium",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-medium",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "flowdog-medium",
+    "method": "c1",
+    "label": "Flow DoG"
+   },
+   {
+    "option": "xdog-medium",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-medium",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ },
+ {
+  "picture": "lassen-lupine",
+  "title": "Lupine at Lassen Peak",
+  "stresses": "Busy texture: a flower field.",
+  "options": [
+   {
+    "option": "learned_pidinet-sparse",
+    "method": "c1",
+    "label": "PiDiNet \u00b7 learned edges, minimal",
+    "note": "Ridge and tree line only; the flowers become color.",
+    "metrics": "61 strokes \u00b7 851 regions (815 today) \u00b7 0 slivers"
+   },
+   {
+    "option": "learned_hed-sparse",
+    "method": "c1",
+    "label": "HED \u00b7 learned edges",
+    "note": "More shrubs drawn; still no flowers.",
+    "metrics": "174 strokes \u00b7 951 regions (815 today) \u00b7 2 slivers"
+   },
+   {
+    "option": "learned_teed-sparse",
+    "method": "c1",
+    "label": "TEED \u00b7 tiny learned edges",
+    "note": "Most strokes; scribbly in the foreground.",
+    "metrics": "483 strokes \u00b7 1127 regions (815 today) \u00b7 2 slivers \u00b7 blind: partly, 40%"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_lineart_fine-sparse",
+    "method": "c1",
+    "label": "Informative Drawings, fine"
+   },
+   {
+    "option": "learned_lineart_coarse-sparse",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-sparse",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "flowdog-sparse",
+    "method": "c1",
+    "label": "Flow DoG"
+   },
+   {
+    "option": "xdog-sparse",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-sparse",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ },
+ {
+  "picture": "santa-fe-freight",
+  "title": "Freight Train, New Mexico",
+  "stresses": "A large soft sky gradient over a graphic subject.",
+  "options": [
+   {
+    "option": "learned_teed-medium",
+    "method": "c1",
+    "label": "TEED \u00b7 tiny learned edges",
+    "note": "Gantry, ladder and locomotive crisp; the banded sky turns into one gradient.",
+    "metrics": "495 strokes \u00b7 574 regions (322 today) \u00b7 6 slivers \u00b7 blind: partly, 60%"
+   },
+   {
+    "option": "learned_hed-medium",
+    "method": "c1",
+    "label": "HED \u00b7 learned edges",
+    "note": "Bolder, simpler gantry.",
+    "metrics": "264 strokes \u00b7 451 regions (322 today) \u00b7 3 slivers \u00b7 blind: yes, 55%"
+   },
+   {
+    "option": "flowdog-medium",
+    "method": "c1",
+    "label": "Flow DoG \u00b7 pen sketch",
+    "note": "Pen-like, a little sketchier on the engine.",
+    "metrics": "327 strokes \u00b7 527 regions (322 today) \u00b7 5 slivers \u00b7 blind: yes, 65%"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_pidinet-medium",
+    "method": "c1",
+    "label": "PiDiNet"
+   },
+   {
+    "option": "learned_lineart_fine-medium",
+    "method": "c1",
+    "label": "Informative Drawings, fine"
+   },
+   {
+    "option": "learned_lineart_coarse-medium",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-medium",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "xdog-medium",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-medium",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ },
+ {
+  "picture": "hawksbill-turtle",
+  "title": "Hawksbill Sea Turtle",
+  "stresses": "An animal with a strong pattern.",
+  "options": [
+   {
+    "option": "learned_pidinet-medium",
+    "method": "c1",
+    "label": "PiDiNet \u00b7 learned edges, minimal",
+    "note": "Shell plates as clean lines: an illustrator's turtle.",
+    "metrics": "108 strokes \u00b7 1011 regions (950 today) \u00b7 0 slivers \u00b7 blind: yes, 96%"
+   },
+   {
+    "option": "learned_hed-medium",
+    "method": "c1",
+    "label": "HED \u00b7 learned edges",
+    "note": "Plates plus some pattern; most legible in the blind test.",
+    "metrics": "285 strokes \u00b7 1054 regions (950 today) \u00b7 6 slivers \u00b7 blind: yes, 95%"
+   },
+   {
+    "option": "learned_teed-medium",
+    "method": "c1",
+    "label": "TEED \u00b7 tiny learned edges",
+    "note": "Draws the whole shell pattern; rich but busy.",
+    "metrics": "1242 strokes \u00b7 1608 regions (950 today) \u00b7 35 slivers \u00b7 blind: partly, 92%"
+   },
+   {
+    "option": "flowdog-medium",
+    "method": "c1",
+    "label": "Flow DoG \u00b7 pen sketch",
+    "note": "Pattern as pen hatching.",
+    "metrics": "662 strokes \u00b7 1399 regions (950 today) \u00b7 5 slivers"
+   }
+  ],
+  "more": [
+   {
+    "option": "learned_lineart_fine-medium",
+    "method": "c1",
+    "label": "Informative Drawings, fine"
+   },
+   {
+    "option": "learned_lineart_coarse-medium",
+    "method": "c1",
+    "label": "Informative Drawings, coarse"
+   },
+   {
+    "option": "learned_lineart_anime-medium",
+    "method": "c1",
+    "label": "Anime2Sketch"
+   },
+   {
+    "option": "xdog-medium",
+    "method": "c1",
+    "label": "XDoG"
+   },
+   {
+    "option": "boundaries-medium",
+    "method": "c1",
+    "label": "Curated boundaries"
+   }
+  ]
+ }
+]

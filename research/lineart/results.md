@@ -1,5 +1,57 @@
 # Line-art research: results
 
+## Overall verdict (orchestrator, after both stages and the blind check)
+
+**The idea works; the drawing is the open question.** Splitting pbn's regions by a drawing's
+lines (C1, `results_color.md`) and blending only across unlined boundaries turns banded skies
+back into gradients while every line stays crisp; the finished pieces read as illustrations
+rather than posterized photos (clearest on Freight Train, Delicate Arch, the Great Wave). C2,
+segmenting inside each enclosed area, drops small details and is ten times slower: C1 is kept.
+
+**Family to develop: HED** (Apache-2.0, 29 MB, 2-6 s at ~1150 px on 4 CPU cores). **TEED** if
+the model must be tiny (58 k parameters, 0.2 MB, MIT; dataset terms unverified; 0.5-2 s).
+PiDiNet looks calmest but is probably research-only. Flow DoG and Informative Drawings (fine)
+draw the Great Wave best, i.e. prints, where any family does well.
+
+**Blind legibility** (a fresh agent saw only the "lines alone" panels, 36 drawings, four per test
+picture; `narrowing/`): "reads as a drawing" yes / partly / no and mean confidence of naming the
+subject:
+
+| Family | yes · partly · no | confidence |
+| --- | --- | --- |
+| HED | 5 · 3 · 0 | 68 % |
+| PiDiNet | 5 · 3 · 0 | 65 % |
+| TEED | 2 · 6 · 1 | 68 % |
+| Informative Drawings, fine | 1 · 2 · 0 | 92 % (prints, photos with clear subjects only) |
+| Flow DoG | 2 · 0 · 0 | 80 % (Great Wave, Freight Train) |
+| XDoG | 0 · 1 · 0 | 93 % (Great Wave only) |
+| Curated boundaries | 0 · 4 · 1 | 61 % |
+
+Per picture, the subject was named with high confidence for the Great Wave (93-96 %), the
+Milkmaid (85-93 %), the turtle (92-96 %) and Delicate Arch (88-90 %); poorly for the
+fox (40-60 %, read as a puppy at sparse detail in all four drawings; medium detail restores the
+silhouette), Lassen lupine (35-45 %, no family draws the flower field) and Wheat Field (25-65 %).
+
+**Where every family fails:** impressionist canvases (no lines to find, brushwork gets inked);
+soft silhouettes on white at sparse detail; flower fields and foliage (the finished piece is
+blotches). TEED inks shading and fur; Flow DoG misses equal-brightness color edges; XDoG lines sit
+off the edges; Anime2Sketch draws almost nothing on photos; curated boundaries have no hierarchy.
+
+**Shown to the owner** (`narrowing/shown_to_owner.json`, the morning page): three or four options
+per test picture, different families where comparably good, C1 colouring; every other family
+under "more variants". The owner's picks and notes live in the morning page's database
+(collections `lineart`, `notes`, `swaps`, `decisions`), readable with ArtifactData.
+
+**Production would need:** the chosen model in Core ML; its edge map quantized to 8 bits before
+cleanup (HED and TEED differ in the 7th decimal with the thread count) so templates stay
+byte-identical; the cleanup, the region split and a lined/unlined flag per boundary in PaintCore;
+ink over paint, fading dotted guides and the line-respecting blur in the app; and a fallback to
+today's template for pictures with no lines to find.
+
+**Next round:** start from the owner's picks; tune detail per kind of picture (sparse for faces,
+medium for prints and photos); try HED united with pbn's strongest boundaries so soft
+silhouettes keep their outline; time the Core ML model on device and test determinism.
+
 ## Stage 1: the drawing
 
 Everything below can be rerun with the commands in `README.md`. Outputs for the ten dev

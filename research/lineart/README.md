@@ -1,8 +1,9 @@
-# Line-art research (zen mode): stage 1, the drawing
+# Line-art research (zen mode)
 
 Exploration only (the spec is `docs/overnight/lineart.md`). Python scripts that turn a picture
 into line art at `pbn`'s working resolution, four families competing on one shared cleanup.
-Nothing here touches `Sources/`, `App/` or the regression baselines. Findings: `results.md`.
+Nothing here touches `Sources/`, `App/` or the regression baselines. Findings: `results.md`
+(the overall verdict and stage 1) and `results_color.md` (stage 2, color inside the lines).
 
 | File | What |
 | --- | --- |
@@ -15,8 +16,12 @@ Nothing here touches `Sources/`, `App/` or the regression baselines. Findings: `
 | `run_lines.py` | the driver: every family x detail level for one picture |
 | `lines_sheet.py` | contact sheets of the options, for looking |
 
-Stage 2 (`color_*.py`, `panels.py`, `run_color.py`) reads each option's `walls.png` and
-`ink.png`.
+| `color_common.py`, `color_split.py`, `color_segment.py` | stage 2: C1 (pbn's regions split by the lines, the method kept) and C2 (segmentation inside each enclosed area) |
+| `panels.py`, `run_color.py`, `color_report.py`, `panel_sheet.py` | stage 2: the painting plan and finished panels, the driver, the numbers, sheets |
+| `color_test_picks.json` | which options stage 2 ran per test picture |
+| `narrowing/` | the blind legibility check (key, answers) and the options shown to the owner |
+
+Stage 2 reads each option's `walls.png` and `ink.png`; see `results_color.md` § Reproducing.
 
 ## Setup from scratch
 
@@ -103,3 +108,28 @@ Raw maps: flow DoG 6-8 s, XDoG 0.2 s, boundaries 0.3-0.8 s; learned (inference, 
 load each model): TEED 0.5-2 s, HED 2-6 s, lineart anime 1-5 s, lineart coarse/fine 3.4-11 s,
 PiDiNet 5-19 s. Cleanup 0.5-2 s and rendering the four ink variants 0.8-3 s per option. The
 spread comes from another agent's batch sharing the machine; see results.md.
+
+## The test set (nine pictures of the new library)
+
+The pictures are the shipped library JPEGs on `claude/library-v2`
+(`App/PaintByNumber/Resources/Samples/<id>.jpg`): great-wave, milkmaid, wheat-field,
+cezanne-apples, delicate-arch, red-fox, lassen-lupine, santa-fe-freight, hawksbill-turtle.
+Each becomes a picture directory the same way as the dev set:
+
+```sh
+python3 -c "from PIL import Image; Image.open('<id>.jpg').convert('RGB').save('$S/lineart/inputs/<id>.ppm')"
+.build/release/pbn generate $S/lineart/inputs/<id>.ppm $S/lineart/inputs/<id> --auto --length relaxed
+HF_HOME=$S/lineart/hf $S/venv/bin/python run_lines.py $S/lineart/inputs/<id> --out $S/lineart/out/<id>
+python run_color.py --batch $S/lineart/out --picks color_test_picks.json --flat --jobs 2
+```
+
+About 5-7 minutes per picture for stage 1 (the nine models) and 1-2 minutes for stage 2 on the
+4 shared cores here.
+
+## The blind legibility check
+
+`narrowing/legibility_selection.json` lists the 36 drawings judged (four per test picture),
+`legibility_key.json` maps the anonymous file names back to them, `legibility_answers.json` is
+what a fresh agent said when shown only the "lines alone" panels (subject, confidence, whether it
+reads as a drawing). Rebuild the anonymous set by shuffling the selection with
+`random.Random(7)` and saving each option's `lines_alone.png` at 1100 px as `d01.jpg`...
