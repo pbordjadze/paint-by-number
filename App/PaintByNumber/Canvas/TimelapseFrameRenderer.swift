@@ -51,6 +51,9 @@ nonisolated final class TimelapseFrameRenderer {
         self.origins = origins
         self.radii = radii
         self.stateBuffers = stateBuffers
+        var options = options
+        // Read once, not for every frame.
+        if scene.isLayered && options.lineAppearance == nil { options.lineAppearance = .stored() }
         self.options = options
         CVMetalTextureCacheCreate(nil, nil, context.device, nil, &cache)
     }

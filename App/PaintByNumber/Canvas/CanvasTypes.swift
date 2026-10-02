@@ -40,6 +40,13 @@ nonisolated struct CanvasUniforms {
     var ids: SIMD4<Int32> = SIMD4(repeating: -1)
     /// x: source photo opacity (0 = hidden).
     var photo: SIMD4<Float> = .zero
+    /// Ink opacity per `LineLayer` (x outline, y detail, z texture, w color). Classic templates
+    /// draw every line in layer x, which is `ink.w` (`setLines`).
+    var lineAlpha: SIMD4<Float> = .zero
+    /// Line width (px) per layer; classic templates draw every line `outline.x` wide.
+    var lineWidth: SIMD4<Float> = .zero
+    /// x: 1 when lines are weighted by their edge's strength (`LineStyle.weighted`).
+    var lineMode: SIMD4<Float> = .zero
 }
 
 nonisolated extension CanvasUniforms {
@@ -57,6 +64,15 @@ nonisolated extension CanvasUniforms {
     mutating func select(_ paint: SIMD3<Float>, palette: CanvasPalette) {
         selected = SIMD4(paint, 1)
         accent = SIMD4(palette.accent(for: paint), palette.hatchCeiling)
+    }
+
+    /// Each layer's opacity and width: `style`'s factors on the classic line this frame draws
+    /// (opacity `ink.w`, `outline.x` wide), so set it after `setChrome` and `outline`.
+    /// `.classic` gives every layer exactly the classic line.
+    mutating func setLines(_ style: LineStyle) {
+        lineAlpha = ink.w * style.opacity
+        lineWidth = outline.x * style.width
+        lineMode = SIMD4(style.weighted ? 1 : 0, 0, 0, 0)
     }
 }
 

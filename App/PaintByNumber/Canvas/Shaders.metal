@@ -23,6 +23,9 @@ struct FrameUniforms {
     float4 shine;       // x: start of a light sweep over finished paint, y: its color (-1 = all)
     int4   ids;         // x: selected color, y: hovered region, z: pulsing region, w: bumped region
     float4 photo;       // x: source photo opacity
+    float4 lineAlpha;   // ink opacity per line layer (x outline, y detail, z texture, w color)
+    float4 lineWidth;   // line width (px) per layer
+    float4 lineMode;    // x: 1 when lines are weighted by their edge's strength
 };
 
 // Must match `RegionState` (CanvasTypes.swift).
@@ -232,6 +235,11 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
 
 // Pass 1: capsule segments expanded in screen space write ink opacity into an R16F target
 // with MAX blending, so overlapping caps and joints never double-darken.
+//
+// A segment belongs to a line: a boundary edge, or a stroke drawn inside a cell (layered line
+// art, after the edges, with its region on both sides). Each line draws with its layer's opacity
+// and width, the width scaled by the line's weight when lines are weighted; classic templates
+// put every line in layer 0, which is the classic line.
 
 struct OutlineOut {
     float4 position [[position]];
@@ -244,26 +252,36 @@ vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
                                 uint iid [[instance_id]],
                                 const device float2 *points [[buffer(0)]],
                                 const device uint2 *segments [[buffer(1)]],
-                                const device uint2 *edgeRegions [[buffer(2)]],
+                                const device uint2 *lineRegions [[buffer(2)]],
                                 const device RegionState *states [[buffer(3)]],
                                 const device float4 *regionColors [[buffer(4)]],
-                                constant FrameUniforms &u [[buffer(5)]]) {
+                                constant FrameUniforms &u [[buffer(5)]],
+                                const device float2 *lineStyles [[buffer(6)]]) {
     OutlineOut o;
     uint2 seg = segments[iid];
-    uint2 nb = edgeRegions[seg.y];
+    uint2 nb = lineRegions[seg.y];
+    float2 style = lineStyles[seg.y];       // x: layer, y: weight (width factor)
+    uint layer = min(uint(style.x + 0.5), 3u);
     float now = u.time.x;
     float left = paintedAmount(states[nb.x], now);
     float right = nb.y == kOutside ? 1.0 : paintedAmount(states[nb.y], now);
-    // Edges between two painted regions dissolve: finished areas read as a painting.
+    // Edges between two painted regions dissolve: finished areas read as a painting. A stroke
+    // inside a cell dissolves with its cell.
     float visible = 1.0 - min(left, right);
-    bool hasSelection = u.selected.a > 0.5;
+    // The selected color's unpainted cells are outlined boldly, at least as strongly as a classic
+    // selected line whatever the layer of their boundary, so every cell to paint stands out. A
+    // stroke inside a cell is drawing, not a boundary: it keeps its layer's look.
+    bool boundary = nb.x != nb.y;
+    bool hasSelection = u.selected.a > 0.5 && boundary;     // strokes never take the selected look
     bool selLeft = hasSelection && int(regionColors[nb.x].w + 0.5) == u.ids.x && left < 1.0;
     bool selRight = hasSelection && nb.y != kOutside && int(regionColors[nb.y].w + 0.5) == u.ids.x && right < 1.0;
     bool selected = selLeft || selRight;
-    float width = selected ? u.outline.y : u.outline.x;
+    float lineWidth = u.lineWidth[layer] * mix(1.0, style.y, u.lineMode.x);
+    float lineAlpha = u.lineAlpha[layer];
+    float width = selected ? max(u.outline.y, lineWidth) : lineWidth;
     // Thinner than a pixel: keep one pixel and fade instead, so lines never shimmer.
     float drawn = max(width, 1.0);
-    float alpha = u.ink.a * visible * (width / drawn) * (selected ? 1.3 : 1.0);
+    float alpha = (selected ? max(lineAlpha, u.ink.a) : lineAlpha) * visible * (width / drawn) * (selected ? 1.3 : 1.0);
     float hw = 0.5 * drawn;
 
     float2 a = toPixels(points[seg.x], u);

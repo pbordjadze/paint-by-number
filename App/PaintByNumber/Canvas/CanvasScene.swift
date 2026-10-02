@@ -5,6 +5,9 @@ import PaintCore
 /// Immutable GPU resources of one template: fill mesh, outline segments, number glyphs and
 /// per-region colors. Built once when a canvas opens (a few flat copies — the template is
 /// already laid out for upload) and shared by every frame and offscreen render.
+///
+/// The outline segments are `OutlineGeometry`'s: boundary edges, then for layered line art the
+/// strokes inside cells, every line with its layer and weight.
 nonisolated final class CanvasScene: @unchecked Sendable {
     let canvasSize: SIMD2<Float>
     let regionCount: Int
@@ -14,10 +17,13 @@ nonisolated final class CanvasScene: @unchecked Sendable {
     let indices: any MTLBuffer          // uint32 triangle list
     let indexCount: Int
 
-    let points: any MTLBuffer           // float2 boundary polyline points
-    let segments: any MTLBuffer         // uint2 (first point, edge) per segment
-    let edgeRegions: any MTLBuffer      // uint2 (left, right) per edge
+    let points: any MTLBuffer           // float2 boundary polyline points, then stroke points
+    let segments: any MTLBuffer         // uint2 (first point, line) per segment
+    let lineRegions: any MTLBuffer      // uint2 (left, right) per line (edge, then stroke)
+    let lineStyles: any MTLBuffer       // float2 (layer, weight) per line
     let segmentCount: Int
+    /// The template's line art draws in layers (`CanvasUniforms.setLines` with a `LineAppearance`).
+    let isLayered: Bool
 
     let glyphs: any MTLBuffer
     let glyphCount: Int
@@ -42,16 +48,7 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         let palette = t.palette.map { CanvasColor.linearP3($0, space: t.colorSpace) }
         paletteLinear = palette
         let colors = t.regions.map { SIMD4(palette[Int($0.colorIndex)], Float($0.colorIndex)) }
-
-        var segs: [SIMD2<UInt32>] = []
-        segs.reserveCapacity(max(0, t.points.count - t.edges.count))
-        var neighbours: [SIMD2<UInt32>] = []
-        neighbours.reserveCapacity(t.edges.count)
-        for (e, edge) in t.edges.enumerated() {
-            neighbours.append(SIMD2(edge.left, edge.right))
-            guard edge.pointCount >= 2 else { continue }
-            for k in 0..<(edge.pointCount - 1) { segs.append(SIMD2(edge.pointStart + k, UInt32(e))) }
-        }
+        let lines = OutlineGeometry(t)
 
         // Numbers: size each run by the shared `LabelSizing` rule (the same as thumbnails, PDFs
         // and SVG), capped so huge regions don't shout, then emit one instance per digit
@@ -85,9 +82,10 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         guard let positions = CanvasScene.buffer(t.mesh.vertices, device),
               let vertexRegions = CanvasScene.buffer(t.mesh.vertexRegion, device),
               let indices = CanvasScene.buffer(t.mesh.indices, device),
-              let points = CanvasScene.buffer(t.points, device),
-              let segments = CanvasScene.buffer(segs, device),
-              let edgeRegions = CanvasScene.buffer(neighbours, device),
+              let points = CanvasScene.buffer(lines.points, device),
+              let segments = CanvasScene.buffer(lines.segments, device),
+              let lineRegions = CanvasScene.buffer(lines.lineRegions, device),
+              let lineStyles = CanvasScene.buffer(lines.lineStyles, device),
               let glyphs = CanvasScene.buffer(glyphList, device),
               let digitRects = CanvasScene.buffer(atlas.rects, device),
               let digitUVs = CanvasScene.buffer(atlas.uvs, device),
@@ -99,8 +97,10 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         indexCount = t.mesh.indices.count
         self.points = points
         self.segments = segments
-        self.edgeRegions = edgeRegions
-        segmentCount = segs.count
+        self.lineRegions = lineRegions
+        self.lineStyles = lineStyles
+        segmentCount = lines.segments.count
+        isLayered = lines.isLayered
         self.glyphs = glyphs
         glyphCount = glyphList.count
         self.digitRects = digitRects

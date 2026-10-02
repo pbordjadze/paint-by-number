@@ -230,10 +230,11 @@ nonisolated final class RenderContext: @unchecked Sendable {
                 enc.setRenderPipelineState(outlinePipeline)
                 enc.setVertexBuffer(scene.points, offset: 0, index: 0)
                 enc.setVertexBuffer(scene.segments, offset: 0, index: 1)
-                enc.setVertexBuffer(scene.edgeRegions, offset: 0, index: 2)
+                enc.setVertexBuffer(scene.lineRegions, offset: 0, index: 2)
                 enc.setVertexBuffer(states, offset: 0, index: 3)
                 enc.setVertexBuffer(scene.regionColors, offset: 0, index: 4)
                 enc.setVertexBytes(&u, length: uniformSize, index: 5)
+                enc.setVertexBuffer(scene.lineStyles, offset: 0, index: 6)
                 enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: scene.segmentCount)
                 enc.endEncoding()
             }
