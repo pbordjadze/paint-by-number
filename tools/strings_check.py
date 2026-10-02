@@ -103,6 +103,8 @@ ALLOWED_LITERALS = {
     # Diagnostics of failed file decoding: logged, never shown (the person sees the recovery screen).
     ("Model/Artwork.swift", "invalid artwork dimensions"),
     ("Model/ArtworkStore.swift", "template decompression"),
+    # A malformed stored Line Appearance layer: decoding falls back to its default, never shown.
+    ("App/LineAppearance.swift", "three zooms"),
 }
 # Files whose text is shown verbatim in every language: license texts, and credits (names,
 # copyright lines and paper citations). Their localizable sentences still go through the forms.

@@ -157,6 +157,1438 @@
       "comment" : "Settings toggle: after finishing a color, the next color is picked automatically",
       "extractionState" : "manual"
     },
+    "Advanced" : {
+      "comment" : "Settings row, and the title of the screen it opens, with line art, line appearance and pipeline settings and a live preview",
+      "extractionState" : "manual"
+    },
+    "advanced.appearance.clearAlways" : {
+      "comment" : "Settings › Advanced › Line Appearance: the selected layer's lines read clearly with the whole picture in view",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear in the full view"
+          }
+        }
+      }
+    },
+    "advanced.appearance.clearFrom" : {
+      "comment" : "Settings › Advanced › Line Appearance: the zoom from which the selected layer's lines read clearly; the argument is a zoom such as 2.4×",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear from about %@"
+          }
+        }
+      }
+    },
+    "advanced.appearance.faint" : {
+      "comment" : "Settings › Advanced › Line Appearance: the selected layer's lines stay faint at the closest zoom the editor sets",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faint even at 4×"
+          }
+        }
+      }
+    },
+    "advanced.appearance.hidden" : {
+      "comment" : "Settings › Advanced › Line Appearance: the selected layer's lines are never visible",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hidden at every zoom"
+          }
+        }
+      }
+    },
+    "advanced.appearance.layer" : {
+      "comment" : "Settings › Advanced › Line Appearance: label of the choice of which layer the sliders below edit",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layer"
+          }
+        }
+      }
+    },
+    "advanced.appearance.opacity" : {
+      "comment" : "Settings › Advanced › Line Appearance: heading of a layer's opacity at each zoom",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opacity"
+          }
+        }
+      }
+    },
+    "advanced.appearance.opacityAt" : {
+      "comment" : "Settings › Advanced › Line Appearance: VoiceOver label of a slider; the arguments are the layer, e.g. Texture, and the zoom, e.g. 2×",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ opacity at %2$@"
+          }
+        }
+      }
+    },
+    "advanced.appearance.tile" : {
+      "comment" : "Settings › Advanced › Line Appearance: VoiceOver label of a drawing of every layer at a zoom; the argument is the zoom, e.g. 2×",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines at %@"
+          }
+        }
+      }
+    },
+    "advanced.appearance.tile.hint" : {
+      "comment" : "Settings › Advanced › Line Appearance: VoiceOver hint of a drawing of every layer at a zoom",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zooms the preview to this level."
+          }
+        }
+      }
+    },
+    "advanced.appearance.weighted" : {
+      "comment" : "Settings › Advanced › Line Appearance: switch that draws stronger edges heavier within each layer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight by Edge Strength"
+          }
+        }
+      }
+    },
+    "advanced.appearance.weighted.summary" : {
+      "comment" : "Settings › Advanced › Line Appearance: explanation under the Weight by Edge Strength switch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draws stronger edges heavier within each layer. Off draws a layer’s lines alike."
+          }
+        }
+      }
+    },
+    "advanced.appearance.width" : {
+      "comment" : "Settings › Advanced › Line Appearance: heading of a layer's line width at each zoom, relative to a classic line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Width"
+          }
+        }
+      }
+    },
+    "advanced.appearance.widthAt" : {
+      "comment" : "Settings › Advanced › Line Appearance: VoiceOver label of a slider; the arguments are the layer, e.g. Texture, and the zoom, e.g. 2×",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ width at %2$@"
+          }
+        }
+      }
+    },
+    "advanced.control.accentColors" : {
+      "comment" : "Settings › Advanced › Pipeline: multiplier on how readily small, distinctive colors get their own paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accent Colors"
+          }
+        }
+      }
+    },
+    "advanced.control.accentColors.summary" : {
+      "comment" : "Settings › Advanced › Pipeline: explanation under the Accent Colors slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How readily small, distinctive colors get a paint of their own."
+          }
+        }
+      }
+    },
+    "advanced.control.colorfulness" : {
+      "comment" : "Settings › Advanced › Pipeline: multiplier on how much hue counts against lightness when telling paints apart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colorfulness"
+          }
+        }
+      }
+    },
+    "advanced.control.colorfulness.summary" : {
+      "comment" : "Settings › Advanced › Pipeline: explanation under the Colorfulness slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How much hue counts against lightness when paints are told apart."
+          }
+        }
+      }
+    },
+    "advanced.control.detailThreshold" : {
+      "comment" : "Settings › Advanced › Line Art: slider for the edge strength from which a line is a detail line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail From"
+          }
+        }
+      }
+    },
+    "advanced.control.detailThreshold.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Detail From slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weaker edges, down to this strength, become detail lines: lighter when zoomed out."
+          }
+        }
+      }
+    },
+    "advanced.control.gapBridging" : {
+      "comment" : "Settings › Advanced › Line Art: slider for how far apart line ends may be and still be joined",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gap Closing"
+          }
+        }
+      }
+    },
+    "advanced.control.gapBridging.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Gap Closing slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line ends closer than this are joined, closing small gaps in outlines."
+          }
+        }
+      }
+    },
+    "advanced.control.keepColorEdges" : {
+      "comment" : "Settings › Advanced › Line Art: switch that keeps boundaries where only the paint changes as faint lines",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Color Edges"
+          }
+        }
+      }
+    },
+    "advanced.control.keepColorEdges.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Keep Color Edges switch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeps boundaries where only the paint changes, like banded skies, as faint lines. Off merges close paints for a calmer plan."
+          }
+        }
+      }
+    },
+    "advanced.control.lineSmoothing" : {
+      "comment" : "Settings › Advanced › Line Art: slider for how much lines are smoothed into curves",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line Smoothing"
+          }
+        }
+      }
+    },
+    "advanced.control.lineSmoothing.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Line Smoothing slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Higher smooths lines into flowing curves; lower follows the drawing closely."
+          }
+        }
+      }
+    },
+    "advanced.control.minimumCellSize" : {
+      "comment" : "Settings › Advanced › Pipeline: multiplier on the smallest area a template keeps",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smallest Area"
+          }
+        }
+      }
+    },
+    "advanced.control.minimumCellSize.summary" : {
+      "comment" : "Settings › Advanced › Pipeline: explanation under the Smallest Area slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The smallest area a template keeps. Higher gives fewer, larger areas."
+          }
+        }
+      }
+    },
+    "advanced.control.minimumStrokeLength" : {
+      "comment" : "Settings › Advanced › Line Art: slider for the length below which lines are left out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortest Line"
+          }
+        }
+      }
+    },
+    "advanced.control.minimumStrokeLength.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Shortest Line slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines shorter than this are left out, so specks don’t turn into areas."
+          }
+        }
+      }
+    },
+    "advanced.control.outlineEyes" : {
+      "comment" : "Settings › Advanced › Line Art: switch that draws detected eyes as outlines",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outline Eyes"
+          }
+        }
+      }
+    },
+    "advanced.control.outlineEyes.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Outline Eyes switch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draws the eyes of faces in the picture as outlines, however soft they are."
+          }
+        }
+      }
+    },
+    "advanced.control.outlineThreshold" : {
+      "comment" : "Settings › Advanced › Line Art: slider for the edge strength from which a line is an outline",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outlines From"
+          }
+        }
+      }
+    },
+    "advanced.control.outlineThreshold.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Outlines From slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edges at least this strong become outlines, always drawn at full strength."
+          }
+        }
+      }
+    },
+    "advanced.control.samePaint" : {
+      "comment" : "Settings › Advanced › Line Art: choice of what happens where a line runs between two areas of the same paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same Paint Across a Line"
+          }
+        }
+      }
+    },
+    "advanced.control.samePaint.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation of the Same Paint Across a Line choice",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whether a line between two areas of the same paint keeps them apart."
+          }
+        }
+      }
+    },
+    "advanced.control.smoothing" : {
+      "comment" : "Settings › Advanced › Pipeline: multiplier on how much the photo is smoothed before paints are picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoothing"
+          }
+        }
+      }
+    },
+    "advanced.control.smoothing.summary" : {
+      "comment" : "Settings › Advanced › Pipeline: explanation under the Smoothing slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How much the photo is smoothed before paints are picked. Higher melts texture into flat areas."
+          }
+        }
+      }
+    },
+    "advanced.control.style" : {
+      "comment" : "Settings › Advanced › Line Art: name of the choice between Classic and Layered lines",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line Style"
+          }
+        }
+      }
+    },
+    "advanced.control.style.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Line Style choice",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How the template’s lines are made."
+          }
+        }
+      }
+    },
+    "advanced.control.subjectEmphasis" : {
+      "comment" : "Settings › Advanced › Pipeline: multiplier on how strongly the subject gets more paints and detail",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subject Emphasis"
+          }
+        }
+      }
+    },
+    "advanced.control.subjectEmphasis.summary" : {
+      "comment" : "Settings › Advanced › Pipeline: explanation under the Subject Emphasis slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How strongly faces, animals and the subject get extra paints and detail."
+          }
+        }
+      }
+    },
+    "advanced.control.textureFlattening" : {
+      "comment" : "Settings › Advanced › Pipeline: multiplier on how much fine texture is smoothed away",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texture Flattening"
+          }
+        }
+      }
+    },
+    "advanced.control.textureFlattening.summary" : {
+      "comment" : "Settings › Advanced › Pipeline: explanation under the Texture Flattening slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How much fine texture, like grass or fabric, is smoothed away while edges stay."
+          }
+        }
+      }
+    },
+    "advanced.control.textureThreshold" : {
+      "comment" : "Settings › Advanced › Line Art: slider for the edge strength from which a line is drawn at all (as texture)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texture From"
+          }
+        }
+      }
+    },
+    "advanced.control.textureThreshold.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Texture From slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The faintest edges drawn at all. Lower draws more texture lines."
+          }
+        }
+      }
+    },
+    "advanced.control.value" : {
+      "comment" : "Settings › Advanced: VoiceOver value of a setting; the arguments are its value and its effect, e.g. 2×, −340 areas · about 17 min shorter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "advanced.delta.minus" : {
+      "comment" : "Settings › Advanced: a decrease from the default settings, e.g. −85 or −5 min; the argument is the amount",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "−%@"
+          }
+        }
+      }
+    },
+    "advanced.delta.plus" : {
+      "comment" : "Settings › Advanced: an increase over the default settings, e.g. +212 or +10 min; the argument is the amount",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%@"
+          }
+        }
+      }
+    },
+    "advanced.effect.areas.fewer" : {
+      "comment" : "Settings › Advanced: a setting's effect, fewer areas to paint; the argument is how many fewer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld area"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld areas"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advanced.effect.areas.more" : {
+      "comment" : "Settings › Advanced: a setting's effect, more areas to paint; the argument is how many more",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld area"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld areas"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advanced.effect.colors.fewer" : {
+      "comment" : "Settings › Advanced: a setting's effect, fewer paints; the argument is how many fewer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld color"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld colors"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advanced.effect.colors.more" : {
+      "comment" : "Settings › Advanced: a setting's effect, more paints; the argument is how many more",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld color"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld colors"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advanced.effect.default" : {
+      "comment" : "Settings › Advanced: under a setting that is at its default value",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At its default"
+          }
+        }
+      }
+    },
+    "advanced.effect.join" : {
+      "comment" : "Settings › Advanced: joins the parts of a setting's effect, e.g. +212 areas · about 10 min longer; the arguments are the text so far and the next part",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "advanced.effect.lines.fewer" : {
+      "comment" : "Settings › Advanced: a setting's effect, fewer drawn lines; the argument is how many fewer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld line"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "−%lld lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advanced.effect.lines.more" : {
+      "comment" : "Settings › Advanced: a setting's effect, more drawn lines; the argument is how many more",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld line"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advanced.effect.longer" : {
+      "comment" : "Settings › Advanced: a setting's effect on the estimated painting time; the argument is a duration such as 10 min",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "about %@ longer"
+          }
+        }
+      }
+    },
+    "advanced.effect.measuring" : {
+      "comment" : "Settings › Advanced: under a changed setting while its effect on the preview is being worked out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Measuring…"
+          }
+        }
+      }
+    },
+    "advanced.effect.none" : {
+      "comment" : "Settings › Advanced: a changed setting that leaves the preview's areas and colors as they were",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No change to areas or colors"
+          }
+        }
+      }
+    },
+    "advanced.effect.shorter" : {
+      "comment" : "Settings › Advanced: a setting's effect on the estimated painting time; the argument is a duration such as 10 min",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "about %@ shorter"
+          }
+        }
+      }
+    },
+    "advanced.estimateNote" : {
+      "comment" : "Settings › Advanced: note on the preview's numbers (areas, colors, painting time)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The preview is a quick, smaller version of the picture; its numbers are estimated for the full painting."
+          }
+        }
+      }
+    },
+    "advanced.layer.color" : {
+      "comment" : "Settings › Advanced: the layer of boundaries where only the paint changes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color Edges"
+          }
+        }
+      }
+    },
+    "advanced.layer.detail" : {
+      "comment" : "Settings › Advanced: the layer of weaker lines, lighter when zoomed out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detail"
+          }
+        }
+      }
+    },
+    "advanced.layer.outline" : {
+      "comment" : "Settings › Advanced: the layer of the strongest lines, always at full strength",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outlines"
+          }
+        }
+      }
+    },
+    "advanced.layer.texture" : {
+      "comment" : "Settings › Advanced: the layer of the faintest drawn lines",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texture"
+          }
+        }
+      }
+    },
+    "advanced.preset.custom" : {
+      "comment" : "Settings › Advanced › Line Appearance: the layers' values match no preset; in shared settings text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom"
+          }
+        }
+      }
+    },
+    "advanced.preset.custom.summary" : {
+      "comment" : "Settings › Advanced › Line Appearance: under the presets when the layers match none of them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your own values for each layer."
+          }
+        }
+      }
+    },
+    "advanced.preset.even" : {
+      "comment" : "Settings › Advanced › Line Appearance: preset where every line is drawn alike",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Even"
+          }
+        }
+      }
+    },
+    "advanced.preset.even.summary" : {
+      "comment" : "Settings › Advanced › Line Appearance: what the Even preset does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every line is drawn alike, like Classic."
+          }
+        }
+      }
+    },
+    "advanced.preset.fade" : {
+      "comment" : "Settings › Advanced › Line Appearance: preset where fainter lines fade in as you zoom",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fade"
+          }
+        }
+      }
+    },
+    "advanced.preset.fade.summary" : {
+      "comment" : "Settings › Advanced › Line Appearance: what the Fade preset does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fainter lines fade in as you zoom."
+          }
+        }
+      }
+    },
+    "advanced.preset.grow" : {
+      "comment" : "Settings › Advanced › Line Appearance: preset where fainter lines grow thicker as you zoom",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grow"
+          }
+        }
+      }
+    },
+    "advanced.preset.grow.summary" : {
+      "comment" : "Settings › Advanced › Line Appearance: what the Grow preset does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fainter lines start thin and grow as you zoom."
+          }
+        }
+      }
+    },
+    "advanced.preview.hint" : {
+      "comment" : "Settings › Advanced: VoiceOver hint of the preview canvas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe up or down to zoom."
+          }
+        }
+      }
+    },
+    "advanced.preview.label" : {
+      "comment" : "Settings › Advanced: VoiceOver label of the preview canvas; the argument is the picture's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview of %@"
+          }
+        }
+      }
+    },
+    "advanced.preview.painted" : {
+      "comment" : "Settings › Advanced: preview choice showing every area painted, as a finished painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painted"
+          }
+        }
+      }
+    },
+    "advanced.preview.template" : {
+      "comment" : "Settings › Advanced: preview choice showing the template's lines and numbers, as a painting starts",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Template"
+          }
+        }
+      }
+    },
+    "advanced.preview.value" : {
+      "comment" : "Settings › Advanced: VoiceOver value of the preview canvas; the arguments are Template or Painted, and the zoom such as 2×",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, zoom %2$@"
+          }
+        }
+      }
+    },
+    "advanced.preview.zoom" : {
+      "comment" : "Settings › Advanced: VoiceOver label of the preview's zoom levels (1×, 2×, 4×)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom"
+          }
+        }
+      }
+    },
+    "advanced.report.allDefault" : {
+      "comment" : "Line of the shared Advanced settings text when nothing was changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every setting is at its default."
+          }
+        }
+      }
+    },
+    "advanced.report.change" : {
+      "comment" : "Settings › Advanced: one changed setting in shared settings text, e.g. Smallest Area 2×; the arguments are the setting's name and its value",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "advanced.report.changes" : {
+      "comment" : "Line of the shared Advanced settings text listing the changed settings; the argument is a list such as Line Style Layered and Smallest Area 2×",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changed: %@"
+          }
+        }
+      }
+    },
+    "advanced.report.numbers" : {
+      "comment" : "Settings › Advanced: the preview's numbers in shared settings text, e.g. 24 colors · 1,284 areas · ~1 h; the arguments are the colors, areas and painting time",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "advanced.report.numbersWithChange" : {
+      "comment" : "Settings › Advanced: the preview's numbers and their change from the default settings in shared settings text; the arguments are the numbers and the change, e.g. +212 areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ (%2$@ from the defaults)"
+          }
+        }
+      }
+    },
+    "advanced.report.picture" : {
+      "comment" : "Line of the shared Advanced settings text: the picture the preview showed; the argument is its title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture: %@"
+          }
+        }
+      }
+    },
+    "advanced.report.preview" : {
+      "comment" : "Line of the shared Advanced settings text: the preview's numbers; the argument is e.g. 24 colors · 1,284 areas · ~1 h, +212 areas from the defaults",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview: %@"
+          }
+        }
+      }
+    },
+    "advanced.report.title" : {
+      "comment" : "First line of the settings text Settings › Advanced copies or shares for feedback; the argument is the app version, e.g. 1.0.42 (42)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint by Moonlight %@: Advanced settings"
+          }
+        }
+      }
+    },
+    "advanced.samePaint.joinAllButOutlines" : {
+      "comment" : "Settings › Advanced › Line Art: Same Paint Across a Line option, only outlines split areas of one paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join Across Detail"
+          }
+        }
+      }
+    },
+    "advanced.samePaint.joinAllButOutlines.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Join Across Detail option does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only outlines split areas of one paint; detail and texture lines are drawn inside them."
+          }
+        }
+      }
+    },
+    "advanced.samePaint.joinTexture" : {
+      "comment" : "Settings › Advanced › Line Art: Same Paint Across a Line option, areas split only by texture lines are joined",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join Across Texture"
+          }
+        }
+      }
+    },
+    "advanced.samePaint.joinTexture.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Join Across Texture option does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Areas of one paint split only by texture lines become one area; the line is still drawn."
+          }
+        }
+      }
+    },
+    "advanced.samePaint.split" : {
+      "comment" : "Settings › Advanced › Line Art: Same Paint Across a Line option, every line separates areas",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always Split"
+          }
+        }
+      }
+    },
+    "advanced.samePaint.split.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Always Split option does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every line separates areas, even where both sides take the same paint."
+          }
+        }
+      }
+    },
+    "advanced.section.appearance" : {
+      "comment" : "Settings › Advanced: header of the section on how layered lines are drawn at each zoom",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line Appearance"
+          }
+        }
+      }
+    },
+    "advanced.section.feedback" : {
+      "comment" : "Settings › Advanced: header of the section for sending the settings to the developer and resetting them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback"
+          }
+        }
+      }
+    },
+    "advanced.section.lineArt" : {
+      "comment" : "Settings › Advanced: header of the section on how a template's lines are made",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line Art"
+          }
+        }
+      }
+    },
+    "advanced.section.pipeline" : {
+      "comment" : "Settings › Advanced: header of the section of multipliers on the template generator's own settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pipeline"
+          }
+        }
+      }
+    },
+    "advanced.stat.areas" : {
+      "comment" : "Settings › Advanced: label of the preview's estimated number of areas to paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Areas"
+          }
+        }
+      }
+    },
+    "advanced.stat.colors" : {
+      "comment" : "Settings › Advanced: label of the preview's number of paints",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colors"
+          }
+        }
+      }
+    },
+    "advanced.stat.default" : {
+      "comment" : "Settings › Advanced: under a preview number when every setting is at its default",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default"
+          }
+        }
+      }
+    },
+    "advanced.stat.same" : {
+      "comment" : "Settings › Advanced: under a preview number the changed settings leave as it is at the defaults",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Same as default"
+          }
+        }
+      }
+    },
+    "advanced.stat.time" : {
+      "comment" : "Settings › Advanced: label of the preview's estimated painting time",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting Time"
+          }
+        }
+      }
+    },
+    "advanced.stat.value" : {
+      "comment" : "Settings › Advanced: VoiceOver value of a preview number; the arguments are the number and its change from the defaults, e.g. 1,243, +212",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "advanced.style.classic" : {
+      "comment" : "Settings › Advanced › Line Art: the original line style, every boundary one even line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Classic"
+          }
+        }
+      }
+    },
+    "advanced.style.classic.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Classic line style does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every boundary between areas is the same even line."
+          }
+        }
+      }
+    },
+    "advanced.style.layered" : {
+      "comment" : "Settings › Advanced › Line Art: the line style that follows a drawing of the picture, with lines in layers that fade in as you zoom",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layered"
+          }
+        }
+      }
+    },
+    "advanced.style.layered.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Layered line style does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines follow a drawing of the picture: outlines stay strong, finer lines come in as you zoom."
+          }
+        }
+      }
+    },
+    "advanced.value.multiplier" : {
+      "comment" : "Settings › Advanced: a multiplier or zoom, e.g. 1.5×; the argument is the formatted number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@×"
+          }
+        }
+      }
+    },
+    "advanced.value.off" : {
+      "comment" : "Settings › Advanced: value of a switch that is off, in shared settings text and VoiceOver",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "advanced.value.on" : {
+      "comment" : "Settings › Advanced: value of a switch that is on, in shared settings text and VoiceOver",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        }
+      }
+    },
+    "advanced.value.pixels" : {
+      "comment" : "Settings › Advanced: a length in pixels, e.g. 8 px; the argument is the number of pixels",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld px"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld px"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "advanced.zoom" : {
+      "comment" : "Settings › Advanced: a zoom level of the preview, relative to the whole picture in view, e.g. 2×; the argument is the level",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld×"
+          }
+        }
+      }
+    },
     "All" : {
       "comment" : "Choice in the gallery's Show menu that lists every painting; also the menu's VoiceOver value while it is chosen",
       "extractionState" : "manual"
@@ -186,7 +1618,7 @@
       "extractionState" : "manual"
     },
     "Cancel" : {
-      "comment" : "Button that dismisses a dialog or stops rendering the time-lapse without doing anything",
+      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, or closes Settings › Advanced › Share with a Note without doing anything",
       "extractionState" : "manual"
     },
     "Can’t Find It?" : {
@@ -545,6 +1977,18 @@
       "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its template",
       "extractionState" : "manual"
     },
+    "Copied" : {
+      "comment" : "Settings › Advanced: the Copy Settings button for two seconds after the settings were copied",
+      "extractionState" : "manual"
+    },
+    "Copies include the picture, the preview’s numbers and every setting, so what you saw can be made again." : {
+      "comment" : "Settings › Advanced: footer of the Feedback section",
+      "extractionState" : "manual"
+    },
+    "Copy Settings" : {
+      "comment" : "Settings › Advanced: button that copies the settings, the picture and the preview's numbers as text",
+      "extractionState" : "manual"
+    },
     "Couldn't duplicate the painting." : {
       "comment" : "Toast shown when duplicating a painting from the gallery fails",
       "extractionState" : "manual"
@@ -555,6 +1999,10 @@
     },
     "Couldn’t Open Photo" : {
       "comment" : "Title shown in the create flow when the chosen photo can't be opened",
+      "extractionState" : "manual"
+    },
+    "Couldn’t Open Picture" : {
+      "comment" : "Settings › Advanced: shown in place of the preview when its picture can't be read",
       "extractionState" : "manual"
     },
     "Couldn’t save progress" : {
@@ -794,11 +2242,15 @@
       "extractionState" : "manual"
     },
     "Done" : {
-      "comment" : "Button that finishes the painting screen's completion bar, and the Settings sheet",
+      "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet, and Settings › Advanced where it covers the whole window (iPad)",
       "extractionState" : "manual"
     },
     "Double-tap the canvas to zoom in on it. Pinch to zoom back out." : {
       "comment" : "Message of a tip about zooming in on small areas",
+      "extractionState" : "manual"
+    },
+    "Drawing only: changes show at once and apply to every layered painting, including the ones you have." : {
+      "comment" : "Settings › Advanced › Line Appearance: footer of the section",
       "extractionState" : "manual"
     },
     "Drop to Create a Painting" : {
@@ -807,6 +2259,10 @@
     },
     "Duplicate" : {
       "comment" : "Context menu item that makes a copy of a painting",
+      "extractionState" : "manual"
+    },
+    "Each multiplies what the generator works out for the picture; 1× leaves it as it is." : {
+      "comment" : "Settings › Advanced › Pipeline: footer of the section of multipliers",
       "extractionState" : "manual"
     },
     "Even" : {
@@ -819,6 +2275,10 @@
     },
     "Every region is painted." : {
       "comment" : "Caption in the completion bar of a painting without a title",
+      "extractionState" : "manual"
+    },
+    "Experimental" : {
+      "comment" : "Badge on the Settings › Advanced row, and the subtitle of that screen: its settings are for testers and may change",
       "extractionState" : "manual"
     },
     "export.error.photosAccessDenied" : {
@@ -880,6 +2340,10 @@
           }
         }
       }
+    },
+    "Faint" : {
+      "comment" : "Settings › Advanced › Line Art: the weak end of the edge-strength scale in the Sensitivity drawing",
+      "extractionState" : "manual"
     },
     "Favorite" : {
       "comment" : "Context menu item that marks a painting as a favorite, so the gallery lists it first",
@@ -1345,8 +2809,20 @@
       "comment" : "Button on the painting screen that shows an area to paint next",
       "extractionState" : "manual"
     },
+    "How strong an edge must be to become each kind of line. Lower values draw more lines." : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Sensitivity heading",
+      "extractionState" : "manual"
+    },
     "In Progress" : {
       "comment" : "Gallery section header for paintings that are not finished",
+      "extractionState" : "manual"
+    },
+    "Included" : {
+      "comment" : "Settings › Advanced › Share with a Note: header of the settings text that is shared with the note",
+      "extractionState" : "manual"
+    },
+    "Layered lines are drawn this way. Choose Layered above to see it in the preview." : {
+      "comment" : "Settings › Advanced › Line Appearance: note at the top of the section while the line style is Classic",
       "extractionState" : "manual"
     },
     "library.copyTitle" : {
@@ -1372,6 +2848,18 @@
           }
         }
       }
+    },
+    "Line Art and Pipeline settings apply to new paintings. Line Appearance changes how every layered painting is drawn." : {
+      "comment" : "Settings › Advanced: note at the top of the settings, saying what they apply to",
+      "extractionState" : "manual"
+    },
+    "Line art, line appearance and the pipeline go back to their defaults." : {
+      "comment" : "Settings › Advanced: message of the Reset All confirmation",
+      "extractionState" : "manual"
+    },
+    "Line art, line appearance and the template pipeline, with a live preview. For testers: these settings may change between versions." : {
+      "comment" : "Footer under the Advanced row in Settings",
+      "extractionState" : "manual"
     },
     "Making Your Time-lapse" : {
       "comment" : "Title of the sheet shown while a time-lapse movie is rendered",
@@ -1413,6 +2901,10 @@
       "comment" : "Title of the gallery's empty state when the Show menu is set to Favorites and no painting is a favorite",
       "extractionState" : "manual"
     },
+    "Note" : {
+      "comment" : "Settings › Advanced › Share with a Note: header of the note field",
+      "extractionState" : "manual"
+    },
     "Number" : {
       "comment" : "Label of a row in a paint's details popover: the paint's number",
       "extractionState" : "manual"
@@ -1433,6 +2925,10 @@
       "comment" : "Status shown while the chosen photo is loaded in the create flow",
       "extractionState" : "manual"
     },
+    "Opening Picture…" : {
+      "comment" : "Settings › Advanced: progress shown over the preview while a newly chosen picture is prepared",
+      "extractionState" : "manual"
+    },
     "Pace" : {
       "comment" : "Caption above the time-lapse sheet's control that picks how the painting is replayed (the speed and rhythm of the video); also its accessibility label",
       "extractionState" : "manual"
@@ -1443,6 +2939,10 @@
     },
     "Paint by Moonlight" : {
       "comment" : "The app's name: the gallery's navigation title and the printed template's page footer",
+      "extractionState" : "manual"
+    },
+    "Paint by Moonlight Feedback" : {
+      "comment" : "Settings › Advanced › Share with a Note: subject of the shared settings text (e.g. of an email)",
       "extractionState" : "manual"
     },
     "Paint Several Areas" : {
@@ -1922,7 +3422,7 @@
       }
     },
     "Paintings" : {
-      "comment" : "Section title in the create flow's Samples pane: the bundled paintings and prints",
+      "comment" : "Section title in the create flow's Samples pane, and in the picture menu of Settings › Advanced's preview: the bundled paintings and prints",
       "extractionState" : "manual"
     },
     "Paper" : {
@@ -2058,11 +3558,15 @@
       "extractionState" : "manual"
     },
     "Photographs" : {
-      "comment" : "Section title in the create flow's Samples pane: the bundled photographs",
+      "comment" : "Section title in the create flow's Samples pane, and in the picture menu of Settings › Advanced's preview: the bundled photographs",
       "extractionState" : "manual"
     },
     "Photos" : {
       "comment" : "Segment of the create flow that shows the photo library",
+      "extractionState" : "manual"
+    },
+    "Picture" : {
+      "comment" : "Settings › Advanced: VoiceOver label of the menu choosing the picture the preview shows; its value is the picture's title",
       "extractionState" : "manual"
     },
     "Pictures" : {
@@ -2143,6 +3647,26 @@
     },
     "Replay Painting" : {
       "comment" : "Menu item on the painting screen that replays the finished painting stroke by stroke",
+      "extractionState" : "manual"
+    },
+    "Reset" : {
+      "comment" : "Settings › Advanced: button in a section header that puts the section's settings back to their defaults",
+      "extractionState" : "manual"
+    },
+    "Reset All" : {
+      "comment" : "Settings › Advanced: destructive button of the confirmation that puts every advanced setting back to its default",
+      "extractionState" : "manual"
+    },
+    "Reset All Advanced Settings?" : {
+      "comment" : "Settings › Advanced: title of the confirmation before every advanced setting goes back to its default",
+      "extractionState" : "manual"
+    },
+    "Reset All Settings" : {
+      "comment" : "Settings › Advanced: button that puts every advanced setting back to its default (asks first)",
+      "extractionState" : "manual"
+    },
+    "Reset to Default" : {
+      "comment" : "Settings › Advanced: VoiceOver action of a changed setting that puts it back to its default",
       "extractionState" : "manual"
     },
     "Reset to Suggested" : {
@@ -2777,6 +4301,10 @@
       "comment" : "Placeholder of the gallery's search field",
       "extractionState" : "manual"
     },
+    "Sensitivity" : {
+      "comment" : "Settings › Advanced › Line Art: heading of the drawing of how the three thresholds split edge strength into kinds of line",
+      "extractionState" : "manual"
+    },
     "Settings" : {
       "comment" : "Gallery toolbar button, and the title of the Settings sheet",
       "extractionState" : "manual"
@@ -2834,7 +4362,7 @@
       "extractionState" : "manual"
     },
     "Share" : {
-      "comment" : "Accessibility label of the share menu in the completion bar",
+      "comment" : "Accessibility label of the share menu in the completion bar, and the button that shares the settings text in Settings › Advanced › Share with a Note",
       "extractionState" : "manual"
     },
     "Share Painting" : {
@@ -2849,8 +4377,16 @@
       "comment" : "Context menu item that shares the painting as it stands, with unpainted areas sketched in",
       "extractionState" : "manual"
     },
+    "Share Settings" : {
+      "comment" : "Settings › Advanced › Share with a Note: title of the sheet",
+      "extractionState" : "manual"
+    },
     "Share Time-lapse" : {
       "comment" : "Item that makes a time-lapse movie of the painting and shares it",
+      "extractionState" : "manual"
+    },
+    "Share with a Note…" : {
+      "comment" : "Settings › Advanced: button that opens a sheet to write a note and share it with the settings",
       "extractionState" : "manual"
     },
     "Short tips explain painting gestures as you go." : {
@@ -2858,7 +4394,7 @@
       "extractionState" : "manual"
     },
     "Show" : {
-      "comment" : "Accessibility label of two controls: the segmented control that switches the create flow's comparison between the painting and its numbers, and the gallery's filter menu (All or Favorites)",
+      "comment" : "Accessibility label of three controls: the segmented control that switches the create flow's comparison between the painting and its numbers, the gallery's filter menu (All or Favorites), and Settings › Advanced's choice between the preview's template and its painted picture",
       "extractionState" : "manual"
     },
     "Show Color Details" : {
@@ -2903,6 +4439,10 @@
     },
     "Start this painting over?" : {
       "comment" : "Title of the confirmation dialog for restarting a painting from the gallery",
+      "extractionState" : "manual"
+    },
+    "Strong" : {
+      "comment" : "Settings › Advanced › Line Art: the strong end of the edge-strength scale in the Sensitivity drawing",
       "extractionState" : "manual"
     },
     "Suggested for this photo" : {
@@ -3113,8 +4653,20 @@
       "comment" : "Context menu item that removes a painting's favorite mark",
       "extractionState" : "manual"
     },
+    "Updating…" : {
+      "comment" : "Settings › Advanced: progress shown over the preview while it is generated again for changed settings",
+      "extractionState" : "manual"
+    },
     "Version" : {
       "comment" : "Settings row showing the app's version and build",
+      "extractionState" : "manual"
+    },
+    "What did you notice?" : {
+      "comment" : "Settings › Advanced › Share with a Note: placeholder of the note field",
+      "extractionState" : "manual"
+    },
+    "What looked right or wrong, and where in the picture." : {
+      "comment" : "Settings › Advanced › Share with a Note: footer under the note field",
       "extractionState" : "manual"
     },
     "When you finish a color, the next one is picked up automatically." : {
@@ -3123,6 +4675,10 @@
     },
     "With thanks to the museums and archives that share these pictures." : {
       "comment" : "Footer under the Pictures list in Acknowledgements",
+      "extractionState" : "manual"
+    },
+    "Your Photo" : {
+      "comment" : "Settings › Advanced: section of the preview's picture menu holding the painter's most recent photo",
       "extractionState" : "manual"
     },
     "Your Photos" : {

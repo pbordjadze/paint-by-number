@@ -16,6 +16,8 @@ enum SettingsKey {
     static let lineArt = "advancedLineArt"
     static let pipelineTuning = "advancedPipelineTuning"
     static let lineAppearance = "advancedLineAppearance"
+    /// The picture Settings › Advanced previews (`AdvancedSettingsModel.Picture.storageValue`).
+    static let advancedPreviewPicture = "advancedPreviewPicture"
 }
 
 /// A snapshot of the user's preferences, with their defaults.
