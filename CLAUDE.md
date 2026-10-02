@@ -227,7 +227,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   (`Sample.all` follows the file; reorder there, not in Swift), and a record per picture (`id` =
   the file name `<id>.jpg`, `kind` painting|photograph, English `title`, `creator`, `year`,
   `credit`, `license`, `source`, `image`, `evidence`, `retrieved`, `crop`, `sha256` of the shipped
-  file; format in `docs/overnight/library.md`). The app decodes it at runtime: creator, year,
+  file; optional `work_title`, the source's own title where `title` shortens it, and
+  `evidence_url`; format in `docs/overnight/library.md`). It holds 25 paintings and 19
+  photographs (21.5 MB), each re-verified from its source by an independent license audit
+  before it shipped. The app decodes it at runtime: creator, year,
   credit and license are proper names and facts shown verbatim, so they stay in the audited
   record instead of a Swift copy that could drift from it (and would need `VERBATIM_FILES`).
   Titles are translatable, so they live in Swift: `Sample.title(of:)` holds one

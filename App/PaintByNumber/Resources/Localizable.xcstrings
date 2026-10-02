@@ -2161,6 +2161,30 @@
       "comment" : "Button in a toast offering to try saving a painting again",
       "extractionState" : "manual"
     },
+    "sample.atlantic-puffins" : {
+      "comment" : "Title of a bundled photograph: Atlantic puffins on a rocky ledge (U.S. Fish and Wildlife Service). Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atlantic Puffins"
+          }
+        }
+      }
+    },
+    "sample.bald-eagle" : {
+      "comment" : "Title of a bundled photograph: a close-up of a bald eagle's head. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bald Eagle"
+          }
+        }
+      }
+    },
     "sample.barn" : {
       "comment" : "Name of a bundled sample photo, shown as its default painting title",
       "extractionState" : "manual",
@@ -2169,6 +2193,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Red Barn"
+          }
+        }
+      }
+    },
+    "sample.bermuda-garden" : {
+      "comment" : "Title of a bundled picture: Winslow Homer's 1899 watercolor of a flower garden and a white-roofed bungalow in Bermuda. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flower Garden and Bungalow, Bermuda"
+          }
+        }
+      }
+    },
+    "sample.bison-in-snow" : {
+      "comment" : "Title of a bundled photograph: an American bison pushing through deep snow. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bison in Snow"
+          }
+        }
+      }
+    },
+    "sample.blue-marble" : {
+      "comment" : "Title of a bundled photograph: the Apollo 17 photograph of the whole Earth, known as The Blue Marble. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Blue Marble"
+          }
+        }
+      }
+    },
+    "sample.catskill-barn" : {
+      "comment" : "Title of a bundled photograph: John Collier's 1943 color photograph of a weathered barn in the Catskill Mountains. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barn in the Catskills"
+          }
+        }
+      }
+    },
+    "sample.cezanne-apples" : {
+      "comment" : "Title of a bundled painting: Paul Cézanne's still life of apples and pears on a table. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still Life with Apples and Pears"
+          }
+        }
+      }
+    },
+    "sample.cranes" : {
+      "comment" : "Title of a bundled picture: Kamisaka Sekka's woodblock print of two cranes among pine branches. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cranes"
+          }
+        }
+      }
+    },
+    "sample.dancing-fox" : {
+      "comment" : "Title of a bundled picture: Ohara Koson's woodblock print of a fox dancing with a lotus leaf on its head. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dancing Fox"
+          }
+        }
+      }
+    },
+    "sample.delicate-arch" : {
+      "comment" : "Title of a bundled photograph: the sandstone arch in Arches National Park, Utah, at sunset (photograph by Neal Herbert, National Park Service). Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delicate Arch"
           }
         }
       }
@@ -2197,6 +2317,30 @@
         }
       }
     },
+    "sample.fukagawa-eagle" : {
+      "comment" : "Title of a bundled picture: Utagawa Hiroshige's woodblock print of an eagle soaring over the snowy Jūmantsubo plain at Fukagawa Susaki, Edo. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jūmantsubo Plain at Fukagawa Susaki"
+          }
+        }
+      }
+    },
+    "sample.grand-prismatic" : {
+      "comment" : "Title of a bundled photograph: an aerial view of Grand Prismatic Spring, a multicolored hot spring in Yellowstone National Park. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grand Prismatic Spring"
+          }
+        }
+      }
+    },
     "sample.great-wave" : {
       "comment" : "Title of a bundled picture: Katsushika Hokusai's woodblock print Under the Wave off Kanagawa, known as The Great Wave. Shown on its sample tile, in Acknowledgements and as its painting's default title",
       "extractionState" : "manual",
@@ -2205,6 +2349,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The Great Wave"
+          }
+        }
+      }
+    },
+    "sample.haeckel-medusae" : {
+      "comment" : "Title of a bundled picture: Ernst Haeckel's 1904 scientific illustration of jellyfish from Kunstformen der Natur. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jellyfish"
+          }
+        }
+      }
+    },
+    "sample.hawksbill-turtle" : {
+      "comment" : "Title of a bundled photograph: a hawksbill sea turtle swimming over a reef (photograph by Caroline S. Rogers). Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hawksbill Sea Turtle"
           }
         }
       }
@@ -2221,6 +2389,54 @@
         }
       }
     },
+    "sample.horseshoe-bend" : {
+      "comment" : "Title of a bundled photograph: the Colorado River's horseshoe-shaped bend near Page, Arizona. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horseshoe Bend"
+          }
+        }
+      }
+    },
+    "sample.hummingbird" : {
+      "comment" : "Title of a bundled photograph: a hummingbird drinking from a pink beeplant flower. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hummingbird and Beeplant"
+          }
+        }
+      }
+    },
+    "sample.irises" : {
+      "comment" : "Title of a bundled painting: Vincent van Gogh's 1890 still life of blue irises in a vase. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Irises"
+          }
+        }
+      }
+    },
+    "sample.lassen-lupine" : {
+      "comment" : "Title of a bundled photograph: purple lupine flowers below Lassen Peak, California. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lupine at Lassen Peak"
+          }
+        }
+      }
+    },
     "sample.lighthouse" : {
       "comment" : "Name of a bundled sample photo, shown as its default painting title",
       "extractionState" : "manual",
@@ -2229,6 +2445,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lighthouse"
+          }
+        }
+      }
+    },
+    "sample.milkmaid" : {
+      "comment" : "Title of a bundled painting: Johannes Vermeer's painting of a kitchen maid pouring milk, known as The Milkmaid. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Milkmaid"
+          }
+        }
+      }
+    },
+    "sample.monarch-coneflower" : {
+      "comment" : "Title of a bundled photograph: a monarch butterfly on a purple coneflower. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Monarch on Coneflower"
+          }
+        }
+      }
+    },
+    "sample.morning-glories" : {
+      "comment" : "Title of a bundled picture: Suzuki Kiitsu's folding screen of blue morning glories on gold leaf. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Morning Glories"
+          }
+        }
+      }
+    },
+    "sample.nassau-surf" : {
+      "comment" : "Title of a bundled picture: Winslow Homer's 1899 watercolor of breaking surf on the shore at Nassau, Bahamas. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shore and Surf, Nassau"
+          }
+        }
+      }
+    },
+    "sample.oleanders" : {
+      "comment" : "Title of a bundled painting: Vincent van Gogh's 1888 still life of pink oleanders in a jug beside two books. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oleanders"
+          }
+        }
+      }
+    },
+    "sample.oriental-poppies" : {
+      "comment" : "Title of a bundled picture: Alphonse Mucha's Art Nouveau design of oriental poppies. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oriental Poppies"
+          }
+        }
+      }
+    },
+    "sample.outskirts-paris" : {
+      "comment" : "Title of a bundled painting: Henri Rousseau's painting of houses and a canal on the outskirts of Paris. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outskirts of Paris"
+          }
+        }
+      }
+    },
+    "sample.oxbow-bend" : {
+      "comment" : "Title of a bundled photograph: autumn view of aspens reflected in the Snake River at Oxbow Bend, Grand Teton National Park. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oxbow Bend in Autumn"
+          }
+        }
+      }
+    },
+    "sample.paris-street" : {
+      "comment" : "Title of a bundled painting: Gustave Caillebotte's 1877 painting of people with umbrellas on a rainy Paris street. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paris Street; Rainy Day"
           }
         }
       }
@@ -2245,6 +2569,78 @@
         }
       }
     },
+    "sample.plum-park" : {
+      "comment" : "Title of a bundled picture: Utagawa Hiroshige's woodblock print of plum trees in blossom at Kameido Shrine, Tokyo. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plum Garden at Kameido"
+          }
+        }
+      }
+    },
+    "sample.pourville" : {
+      "comment" : "Title of a bundled painting: Claude Monet's 1882 painting of a chalk cliff over a calm sea at Pourville, France. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Low Tide at Pourville"
+          }
+        }
+      }
+    },
+    "sample.red-fox" : {
+      "comment" : "Title of a bundled photograph: a red fox hunting in the snow in Yellowstone National Park (photograph by Neal Herbert, National Park Service). Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Red Fox in Snow"
+          }
+        }
+      }
+    },
+    "sample.red-fuji" : {
+      "comment" : "Title of a bundled picture: Katsushika Hokusai's woodblock print South Wind, Clear Sky, known as Red Fuji. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Red Fuji"
+          }
+        }
+      }
+    },
+    "sample.redoute-rose" : {
+      "comment" : "Title of a bundled picture: Pierre-Joseph Redouté's botanical engraving of the Frankfort rose (Rosa turbinata). Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frankfort Rose"
+          }
+        }
+      }
+    },
+    "sample.reef-fish" : {
+      "comment" : "Title of a bundled photograph: a school of fish over a coral reef in Biscayne National Park. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reef Fish"
+          }
+        }
+      }
+    },
     "sample.regatta" : {
       "comment" : "Name of a bundled sample photo, shown as its default painting title",
       "extractionState" : "manual",
@@ -2253,6 +2649,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Regatta"
+          }
+        }
+      }
+    },
+    "sample.sainte-victoire" : {
+      "comment" : "Title of a bundled painting: Paul Cézanne's painting of the mountain Sainte-Victoire in Provence. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mont Sainte-Victoire"
+          }
+        }
+      }
+    },
+    "sample.santa-fe-freight" : {
+      "comment" : "Title of a bundled photograph: Jack Delano's 1943 color photograph of a steam freight train in New Mexico. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Freight Train, New Mexico"
+          }
+        }
+      }
+    },
+    "sample.snap-the-whip" : {
+      "comment" : "Title of a bundled painting: Winslow Homer's 1872 painting of boys playing the game snap-the-whip outside a schoolhouse. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snap the Whip"
+          }
+        }
+      }
+    },
+    "sample.south-manitou-lighthouse" : {
+      "comment" : "Title of a bundled photograph: the lighthouse on South Manitou Island, Lake Michigan. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "South Manitou Island Lighthouse"
+          }
+        }
+      }
+    },
+    "sample.sudden-shower" : {
+      "comment" : "Title of a bundled picture: Utagawa Hiroshige's woodblock print of people crossing the Shin-Ōhashi bridge in a sudden rain shower. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sudden Shower over Shin-Ōhashi"
+          }
+        }
+      }
+    },
+    "sample.wheat-field" : {
+      "comment" : "Title of a bundled painting: Vincent van Gogh's 1889 painting of a wheat field with dark cypress trees under a swirling sky. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wheat Field with Cypresses"
+          }
+        }
+      }
+    },
+    "sample.willow-bough" : {
+      "comment" : "Title of a bundled picture: William Morris's 1887 wallpaper pattern of willow leaves. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Willow Bough"
+          }
+        }
+      }
+    },
+    "sample.wisteria" : {
+      "comment" : "Title of a bundled picture: Kamisaka Sekka's woodblock print of hanging wisteria blossoms and leaves. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wisteria"
+          }
+        }
+      }
+    },
+    "sample.wood-duck" : {
+      "comment" : "Title of a bundled photograph: a male wood duck swimming. Shown on its sample tile, in Acknowledgements and as its painting's default title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wood Duck"
           }
         }
       }
