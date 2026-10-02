@@ -20,6 +20,10 @@ enum LineDetection {
     /// Gaussian scales of the response smoothing (working pixels) and of the Hessian (map pixels).
     static let responseSigma: Float = 0.8
     static let ridgeSigma: Float = 1.5
+    /// Least downward curvature across a ridge (response units per pixel², at the Hessian's
+    /// scale); a faint soft line (strength 0.05, a few pixels wide) curves at least twenty
+    /// times as much at any map scale.
+    static let minimumCurvature: Float = 1e-4
     /// Hysteresis: candidates above this fraction of the seed threshold join a line.
     static let lowFraction: Float = 0.5
     /// Importance scaling of the extraction thresholds: × (1 + gain) at importance 0 down to
@@ -104,7 +108,8 @@ enum LineDetection {
                             let a = hxx[i], b = hyy[i], c = hxy[i]
                             let disc = ((a - b) * (a - b) + 4 * c * c).squareRoot()
                             let lam = 0.5 * (a + b - disc)
-                            guard lam < 0 else { continue }
+                            // A plateau (a saturated map) curves by rounding error only.
+                            guard lam < -minimumCurvature else { continue }
                             var vx: Float, vy: Float
                             if abs(a - lam) < abs(b - lam) { vx = lam - b; vy = c } else { vx = c; vy = lam - a }
                             let n = (vx * vx + vy * vy).squareRoot()
@@ -161,6 +166,24 @@ enum LineDetection {
         try cancel.throwIfCancelled()
         Thinning.thin(&mask, width: w, height: h)
         return mask
+    }
+}
+
+extension LineDetection {
+    /// Window (working pixels at a 1500-px canvas; it scales with the canvas) over which line
+    /// density is measured, and the centerline pixels per pixel from which lines count as
+    /// crowded there (lines about 16 px apart); clutter is 1 at twice that. A lone line
+    /// crosses a window once, under the onset at any window size.
+    static let clutterWindow: Float = 31
+    static let clutterDensity: Float = 0.06
+
+    /// How crowded the centerlines of `mask` are around each pixel, 0...1.
+    static func clutter(_ mask: [Bool], width w: Int, height h: Int, cancel: CancellationCheck) throws -> [Float] {
+        let radius = max(1, Int((clutterWindow * Float(max(w, h)) / 1500 / 2).rounded()))
+        let onset = clutterDensity * clutterWindow / Float(2 * radius + 1)
+        let density = try BoxBlur.apply(mask.map { $0 ? 1 : 0 }, width: w, height: h, radius: radius, passes: 1, cancel: cancel)
+        let crowded = density.map { min(max($0 / onset - 1, 0), 1) }
+        return try BoxBlur.apply(crowded, width: w, height: h, radius: max(1, radius / 2), passes: 2, cancel: cancel)
     }
 }
 

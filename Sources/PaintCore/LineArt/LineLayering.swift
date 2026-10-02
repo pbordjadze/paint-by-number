@@ -77,14 +77,18 @@ enum LineLayering {
 
     /// `LineLayer` raw value per point, or `none`. `arc`: arc length at each point; `closing`:
     /// the length of a closed line's last segment, back to its first point.
-    static func classify(_ strength: [Float], arc: [Float], closed: Bool, closing: Float = 0, thresholds: [Float]) -> [UInt8] {
-        let n = strength.count
+    /// `outlineStrength`, when given, replaces `strength` for the outline layer.
+    static func classify(
+        _ given: [Float], outlineStrength: [Float]? = nil, arc: [Float], closed: Bool, closing: Float = 0, thresholds: [Float]
+    ) -> [UInt8] {
+        let n = given.count
         var layer = [UInt8](repeating: none, count: n)
         guard n > 0 else { return layer }
         let total = arc[n - 1] + (closed ? closing : 0)
         // Arc length from point a to point b going forward (wrapping on closed lines).
         func span(_ a: Int, _ b: Int) -> Float { b >= a ? arc[b] - arc[a] : total - arc[a] + arc[b] }
         for (l, high) in thresholds.enumerated().reversed() {
+            let strength = l == 0 ? (outlineStrength ?? given) : given
             let low = lowFraction[l] * high
             // Runs above `low`; on a closed line start after a point below it (if any).
             let start = closed ? ((strength.firstIndex { $0 < low }).map { ($0 + 1) % n } ?? 0) : 0
@@ -111,6 +115,31 @@ enum LineLayering {
             }
         }
         return layer
+    }
+
+    /// Index ranges of the runs of `value` (a closed line's run may wrap: indices past the end
+    /// continue from the start).
+    static func runs(of value: UInt8, in layer: [UInt8], closed: Bool) -> [ClosedRange<Int>] {
+        let n = layer.count
+        guard let gap = layer.firstIndex(where: { $0 != value }) else { return n > 0 ? [0...(n - 1)] : [] }
+        let start = closed ? gap : 0
+        var out: [ClosedRange<Int>] = []
+        var k = 0
+        while k < n {
+            guard layer[(start + k) % n] == value else { k += 1; continue }
+            var end = k
+            while end + 1 < n && layer[(start + end + 1) % n] == value { end += 1 }
+            out.append((start + k)...(start + end))
+            k = end + 1
+        }
+        return out
+    }
+
+    /// Arc length of a run from `runs(of:in:closed:)`.
+    static func span(_ run: ClosedRange<Int>, arc: [Float], closing: Float) -> Float {
+        let n = arc.count, total = arc[n - 1] + closing
+        let a = run.lowerBound % n, b = run.upperBound % n
+        return run.upperBound < n ? arc[b] - arc[a] : total - arc[a] + arc[b]
     }
 
     /// Runs of equal values shorter than `minimumRun` take the value of their longer
@@ -157,15 +186,40 @@ enum LineLayering {
         }
     }
 
+    /// An outline stretch this long (canvas units on a 1500-unit canvas; it scales with the
+    /// canvas) is an object's contour, whatever crowds around it (see `layered`).
+    static let longOutline: Float = 150
+
     /// Strokes → drawn lines with layers; stretches below the texture layer are cut out.
-    static func layered(_ strokes: [StrokeGraph.Stroke], thresholds: [Float]) -> [DrawnLine] {
+    /// `clutter`: 0...1 per working pixel (`LineDetection.clutter`). Where centerlines crowd
+    /// (texture: a shell's pattern, rock strata, a truss) the outline threshold rises toward 1
+    /// with the clutter (all the way where it is full), so a busy area's strongest lines stay
+    /// detail while lone contours, and long ones (`longOutline`), stay outlines; a lower
+    /// threshold still brings outlines back where lines crowd less.
+    static func layered(_ strokes: [StrokeGraph.Stroke], thresholds: [Float], clutter: [Float], width w: Int) -> [DrawnLine] {
         var out: [DrawnLine] = []
+        let h = clutter.count / max(w, 1)
+        let long = longOutline * Float(max(w, h)) / 1500
         for s in strokes {
             var line = DrawnLine(
                 points: s.points, strength: s.strength, layer: [], closed: s.closed, free: s.free, links: s.links, eye: false)
             let arc = line.arcLength
             let closing = s.closed ? simdLength(s.points[0] - s.points[s.points.count - 1]) : 0
-            var layer = classify(s.strength, arc: arc, closed: s.closed, closing: closing, thresholds: thresholds)
+            // Scaled so that it reaches the threshold t where the strength reaches t + (1 − t)·clutter.
+            let t = max(thresholds[0], 1e-3)
+            let outlineStrength = s.points.indices.map { k -> Float in
+                let p = s.points[k]
+                let x = min(max(Int(p.x.rounded()), 0), w - 1), y = min(max(Int(p.y.rounded()), 0), h - 1)
+                return s.strength[k] * t / (t + (1 - t) * clutter[y * w + x])
+            }
+            var layer = classify(
+                s.strength, outlineStrength: outlineStrength, arc: arc, closed: s.closed, closing: closing, thresholds: thresholds)
+            // Long outline stretches by strength alone stay outlines.
+            let plain = classify(s.strength, arc: arc, closed: s.closed, closing: closing, thresholds: thresholds)
+            for run in runs(of: LineLayer.outline.rawValue, in: plain, closed: s.closed)
+            where span(run, arc: arc, closing: closing) >= long {
+                for k in run { layer[k % layer.count] = LineLayer.outline.rawValue }
+            }
             line.layer = layer
             clean(&layer, arc: arc, closed: s.closed)
             line.layer = layer
@@ -221,15 +275,29 @@ enum LineLayering {
         return mask
     }
 
-    /// An eye is its contour and iris: other lines inside an eye are cleared, and the eye's
-    /// polygons join as closed outlines at full strength.
+    /// Around an eye (its bounds grown by this fraction of their size on every side: lids,
+    /// lashes, brows) lines are drawn one layer stronger.
+    static let eyeSurround: Float = 0.6
+
+    /// An eye is its contour and iris: other lines inside an eye are cleared, lines around it
+    /// are promoted a layer, and the eye's polygons join as closed outlines at full strength.
     static func addEyes(_ lines: [DrawnLine], eyes polygons: [[SIMD2<Float>]], width w: Int, height h: Int) -> [DrawnLine] {
         guard !polygons.isEmpty else { return lines }
         let inside = fill(polygons, width: w, height: h)
         // Erode by one pixel so lines meeting the contour keep their ends on it.
         let interior = Morphology.square(inside, width: w, height: h, any: false)
+        let surrounds = polygons.map { poly -> (SIMD2<Float>, SIMD2<Float>) in
+            var lo = poly[0], hi = poly[0]
+            for p in poly { lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p) }
+            let grow = (hi - lo) * eyeSurround
+            return (lo - grow, hi + grow)
+        }
         var out: [DrawnLine] = []
-        for line in lines {
+        for var line in lines {
+            for (k, p) in line.points.enumerated()
+            where line.layer[k] > LineLayer.outline.rawValue && surrounds.contains(where: { all(p .>= $0.0) && all(p .<= $0.1) }) {
+                line.layer[k] -= 1
+            }
             let keep = line.points.map { p -> Bool in
                 let x = min(max(Int(p.x.rounded()), 0), w - 1), y = min(max(Int(p.y.rounded()), 0), h - 1)
                 return !interior[y * w + x]

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Visual + quantitative evaluation harness for the template pipeline.
 
-    tools/eval.py run IMAGE... --out DIR [--sheet-width 2400] [--importance-dir DIR] [-- pbn generate options]
+    tools/eval.py run IMAGE... --out DIR [--sheet-width 2400] [--importance-dir DIR]
+        [--edges-dir DIR [--eyes-dir DIR]] [-- pbn generate options]
 
 `-- --auto [--length L]` generates at the settings Auto suggests; the caption shows them.
 
@@ -9,6 +10,13 @@ For every image: converts to PPM, runs `pbn generate`, rasterizes the SVG output
 resvg, and writes a contact sheet `DIR/<name>/sheet.png` (source | painted | template)
 plus `DIR/summary.json` and an overview grid `DIR/overview.png`. With --importance-dir,
 `<name>.pgm` in that directory (if present) is passed to pbn as the importance map.
+
+Layered line art: --edges-dir passes `<name>.pgm` from that directory as the edge map
+(`--edges`) and generates layered templates (`--line-style layered`, unless the pbn options
+set a style); --eyes-dir passes `<name>.json` (closed polygons normalized to the photo) as
+`--eyes`. Other line-art settings go through as pbn options (`-- --line-art samePaint=split`).
+The template panel draws each layer in its group; the caption adds cells against the classic
+regions and the edges per layer.
 
 Requires a static release build of pbn:  tools/swift.sh build -c release --static-swift-stdlib
 (or set PBN=/path/to/pbn, e.g. a saved baseline binary for before/after comparisons)
@@ -69,7 +77,7 @@ def palette_names(stats):
     return [f"{nicknames[i]}\n{name}" if i < len(nicknames) else name for i, name in enumerate(plain)]
 
 
-def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
+def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, edges_dir=None, eyes_dir=None):
     name = os.path.splitext(os.path.basename(image_path))[0]
     out = os.path.join(out_root, name)
     os.makedirs(out, exist_ok=True)
@@ -78,6 +86,12 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
     extra = []
     if importance_dir and os.path.exists(os.path.join(importance_dir, name + ".pgm")):
         extra = ["--importance", os.path.join(importance_dir, name + ".pgm")]
+    if edges_dir and os.path.exists(os.path.join(edges_dir, name + ".pgm")):
+        extra += ["--edges", os.path.join(edges_dir, name + ".pgm")]
+        if "--line-style" not in pbn_args:
+            extra += ["--line-style", "layered"]
+        if eyes_dir and os.path.exists(os.path.join(eyes_dir, name + ".json")):
+            extra += ["--eyes", os.path.join(eyes_dir, name + ".json")]
     res = subprocess.run([PBN, "generate", ppm, out] + pbn_args + extra, capture_output=True, text=True)
     if res.returncode != 0:
         print(f"[{name}] FAILED\n{res.stderr}", file=sys.stderr)
@@ -114,6 +128,10 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None):
     caption = (f"{name}  {stats['width']}x{stats['height']}  colors={stats['colors']}  regions={stats['regions']}  "
                f"dE={stats['meanDeltaE']:.4f}  rings={stats.get('bandRings', '?')}  r<2:{stats['regionsUnderRadius2']}  "
                f"belowLegible:{stats.get('labelsBelowLegibleSize', '?')}  total={stats['totalMs']:.0f}ms")
+    if stats.get("lineArt"):
+        line_art = stats["lineArt"]
+        caption += (f"  layered: x{line_art['cellsVsClassic']:.2f} classic, edges outline/detail/texture/color "
+                    f"{'/'.join(str(n) for n in line_art['edgesPerLayer'])}, {line_art['interiorStrokes']} inside cells")
     if stats.get("auto"):
         chosen = stats["auto"]["settings"]
         caption += (f"  auto {stats['auto']['preference']}: {chosen['colorCount']} colors, detail {chosen['detail']:g}, "
@@ -135,7 +153,7 @@ def main():
         argv, pbn_args = argv[:i], argv[i + 1:]
     out_root = "out"
     sheet_width = 2400
-    importance_dir = None
+    importance_dir = edges_dir = eyes_dir = None
     images = []
     it = iter(argv)
     for a in it:
@@ -145,11 +163,16 @@ def main():
             sheet_width = int(next(it))
         elif a == "--importance-dir":
             importance_dir = next(it)
+        elif a == "--edges-dir":
+            edges_dir = next(it)
+        elif a == "--eyes-dir":
+            eyes_dir = next(it)
         else:
             images.append(a)
     os.makedirs(out_root, exist_ok=True)
     with ThreadPoolExecutor(max_workers=2) as pool:
-        results = list(pool.map(lambda p: process(p, out_root, pbn_args, sheet_width, importance_dir), images))
+        results = list(pool.map(
+            lambda p: process(p, out_root, pbn_args, sheet_width, importance_dir, edges_dir, eyes_dir), images))
     summary = {name: stats for name, stats in results if stats}
     json.dump(summary, open(os.path.join(out_root, "summary.json"), "w"), indent=2)
 
