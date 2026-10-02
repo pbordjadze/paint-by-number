@@ -1,0 +1,138 @@
+----- tail -----
+15:39:09 iphone: booted
+15:39:34 iphone: installed
+15:39:45 iphone: launch pipeline: com.pbordjadze.paintbynumber: 13729 
+15:39:47 iphone: pipeline ready after 1 s
+15:39:53 iphone: captured pipeline
+15:39:55 iphone: launch paint: com.pbordjadze.paintbynumber: 14181 
+15:39:59 iphone: paint ready after 4 s
+15:40:03 iphone: captured paint
+15:40:06 iphone: launch paint-progress: com.pbordjadze.paintbynumber: 14452 
+15:40:07 iphone: paint-progress ready after 1 s
+15:40:11 iphone: captured paint-progress
+15:40:13 iphone: launch paint-zoom: com.pbordjadze.paintbynumber: 14815 
+15:40:16 iphone: paint-zoom ready after 3 s
+15:40:20 iphone: captured paint-zoom
+15:40:24 iphone: launch paint-complete: com.pbordjadze.paintbynumber: 14883 
+15:40:27 iphone: paint-complete ready after 3 s
+15:40:32 iphone: captured paint-complete
+15:40:40 iphone: launch paint-dark: com.pbordjadze.paintbynumber: 15264 
+15:40:40 iphone: paint-dark ready after 0 s
+15:40:44 iphone: captured paint-dark
+15:40:46 iphone: launch paint-dark-paper: com.pbordjadze.paintbynumber: 15505 
+15:41:01 iphone: paint-dark-paper ready after 12 s
+15:41:10 iphone: captured paint-dark-paper
+15:41:16 iphone: launch paint-fill: com.pbordjadze.paintbynumber: 16593 
+15:41:23 iphone: paint-fill ready after 7 s
+15:41:31 iphone: captured paint-fill
+15:41:33 iphone: launch paint-hint: com.pbordjadze.paintbynumber: 16940 
+15:41:37 iphone: paint-hint ready after 4 s
+15:41:41 iphone: captured paint-hint
+15:41:49 iphone: launch paint-replay: com.pbordjadze.paintbynumber: 17314 
+15:42:02 iphone: paint-replay ready after 13 s
+15:42:13 iphone: captured paint-replay
+15:42:17 iphone: launch paint-photo: com.pbordjadze.paintbynumber: 18112 
+15:42:20 iphone: paint-photo ready after 2 s
+15:42:26 iphone: captured paint-photo
+15:42:30 iphone: launch paint-tip: com.pbordjadze.paintbynumber: 18873 
+15:42:32 iphone: paint-tip ready after 2 s
+15:42:37 iphone: captured paint-tip
+15:42:40 iphone: launch paint-ax: com.pbordjadze.paintbynumber: 19117 
+15:42:41 iphone: paint-ax ready after 1 s
+15:42:45 iphone: captured paint-ax
+15:42:47 iphone: launch paint-ax-large: com.pbordjadze.paintbynumber: 19418 
+15:42:49 iphone: paint-ax-large ready after 2 s
+15:42:51 iphone: captured paint-ax-large
+15:42:53 iphone: launch paint-names-plain: com.pbordjadze.paintbynumber: 19774 
+15:42:55 iphone: paint-names-plain ready after 2 s
+15:42:58 iphone: captured paint-names-plain
+15:43:00 iphone: launch paint-long-text: com.pbordjadze.paintbynumber: 19823 
+15:43:02 iphone: paint-long-text ready after 2 s
+15:43:04 iphone: captured paint-long-text
+15:43:06 iphone: launch paint-complete-long-text: com.pbordjadze.paintbynumber: 20439 
+15:43:08 iphone: paint-complete-long-text ready after 2 s
+15:43:11 iphone: captured paint-complete-long-text
+15:43:13 iphone: launch gallery: com.pbordjadze.paintbynumber: 20484 
+15:43:29 iphone: gallery ready after 16 s
+15:43:32 iphone: captured gallery
+15:43:36 iphone: launch gallery-dark: com.pbordjadze.paintbynumber: 21224 
+15:43:49 iphone: gallery-dark ready after 12 s
+15:43:53 iphone: captured gallery-dark
+15:44:00 iphone: launch gallery-favorites: com.pbordjadze.paintbynumber: 22024 
+15:44:08 iphone: gallery-favorites ready after 8 s
+15:44:13 iphone: captured gallery-favorites
+15:44:17 iphone: launch gallery-favorites-dark: com.pbordjadze.paintbynumber: 22443 
+15:44:28 iphone: gallery-favorites-dark ready after 10 s
+15:44:31 iphone: captured gallery-favorites-dark
+15:44:35 iphone: launch gallery-search: com.pbordjadze.paintbynumber: 23064 
+15:44:45 iphone: gallery-search ready after 10 s
+15:44:49 iphone: captured gallery-search
+15:44:52 iphone: launch gallery-search-dark: com.pbordjadze.paintbynumber: 23775 
+15:45:03 iphone: gallery-search-dark ready after 11 s
+15:45:06 iphone: captured gallery-search-dark
+15:45:12 iphone: launch gallery-no-favorites-long-text: com.pbordjadze.paintbynumber: 24544 
+15:45:20 iphone: gallery-no-favorites-long-text ready after 8 s
+15:45:23 iphone: captured gallery-no-favorites-long-text
+15:45:24 iphone: launch gallery-empty: com.pbordjadze.paintbynumber: 24988 
+15:45:25 iphone: gallery-empty ready after 1 s
+15:45:27 iphone: captured gallery-empty
+15:45:28 iphone: launch gallery-open: com.pbordjadze.paintbynumber: 25030 
+15:45:32 iphone: gallery-open ready after 4 s
+15:45:35 iphone: captured gallery-open
+15:45:37 iphone: launch gallery-damaged: com.pbordjadze.paintbynumber: 25489 
+15:45:41 iphone: gallery-damaged ready after 4 s
+15:45:43 iphone: captured gallery-damaged
+15:45:45 iphone: launch gallery-timelapse: com.pbordjadze.paintbynumber: 25786 
+15:45:51 iphone: gallery-timelapse ready after 6 s
+15:45:54 iphone: captured gallery-timelapse
+15:45:56 iphone: launch gallery-timelapse-long-text: com.pbordjadze.paintbynumber: 26128 
+15:45:59 iphone: gallery-timelapse-long-text ready after 1 s
+15:46:03 iphone: captured gallery-timelapse-long-text
+15:46:05 iphone: launch gallery-long-text: com.pbordjadze.paintbynumber: 26560 
+15:46:19 iphone: gallery-long-text ready after 14 s
+15:46:22 iphone: captured gallery-long-text
+15:46:25 iphone: launch paint-unavailable: com.pbordjadze.paintbynumber: 27103 
+15:46:25 iphone: paint-unavailable ready after 0 s
+15:46:28 iphone: captured paint-unavailable
+15:46:30 iphone: launch create: com.pbordjadze.paintbynumber: 27592 
+15:46:34 iphone: create ready after 4 s
+15:46:43 iphone: captured create
+15:46:47 iphone: launch create-samples: com.pbordjadze.paintbynumber: 28253 
+15:46:52 iphone: create-samples ready after 5 s
+15:46:56 iphone: captured create-samples
+15:46:58 iphone: launch create-samples-paintings: com.pbordjadze.paintbynumber: 28592 
+15:47:03 iphone: create-samples-paintings ready after 5 s
+15:47:07 iphone: captured create-samples-paintings
+15:47:09 iphone: launch create-samples-photographs: com.pbordjadze.paintbynumber: 28995 
+15:47:13 iphone: create-samples-photographs ready after 4 s
+15:47:16 iphone: captured create-samples-photographs
+15:47:18 iphone: launch create-samples-long-text: com.pbordjadze.paintbynumber: 29406 
+15:47:23 iphone: create-samples-long-text ready after 5 s
+15:47:27 iphone: captured create-samples-long-text
+15:47:29 iphone: launch create-preview: com.pbordjadze.paintbynumber: 29696 
+15:47:36 iphone: create-preview ready after 7 s
+15:47:42 iphone: captured create-preview
+15:47:46 iphone: launch create-preview-dark: com.pbordjadze.paintbynumber: 30283 
+15:47:54 iphone: create-preview-dark ready after 8 s
+15:47:59 iphone: captured create-preview-dark
+15:48:06 iphone: launch create-suggested: com.pbordjadze.paintbynumber: 31356 
+15:48:12 iphone: create-suggested ready after 6 s
+15:48:15 iphone: captured create-suggested
+15:48:17 iphone: launch create-custom: com.pbordjadze.paintbynumber: 31508 
+15:48:23 iphone: create-custom ready after 6 s
+15:48:26 iphone: captured create-custom
+15:48:27 iphone: launch create-custom-long-text: com.pbordjadze.paintbynumber: 31832 
+15:48:34 iphone: create-custom-long-text ready after 6 s
+15:48:36 iphone: captured create-custom-long-text
+15:48:38 iphone: launch create-from-file: com.pbordjadze.paintbynumber: 32319 
+15:48:43 iphone: create-from-file ready after 5 s
+15:48:46 iphone: captured create-from-file
+15:48:48 iphone: launch settings: com.pbordjadze.paintbynumber: 32384 
+15:48:48 iphone: settings ready after 0 s
+15:48:51 iphone: captured settings
+15:48:53 iphone: launch settings-long-text: com.pbordjadze.paintbynumber: 32680 
+15:48:53 iphone: settings-long-text ready after 0 s
+15:48:56 iphone: captured settings-long-text
+15:48:58 iphone: launch settings-acknowledgements: com.pbordjadze.paintbynumber: 33033 
+15:48:59 iphone: settings-acknowledgements ready after 1 s
+15:49:01 iphone: captured settings-acknowledgements
