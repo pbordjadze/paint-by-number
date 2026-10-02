@@ -10,7 +10,7 @@ nonisolated struct LineStyle: Equatable, Sendable {
     var opacity: SIMD4<Float>
     /// Width per layer, relative to the classic line's.
     var width: SIMD4<Float>
-    /// Lines within a layer are drawn heavier or lighter by their edge's strength (`LayeredLines.weights`).
+    /// Lines within a layer are drawn heavier or lighter by their edge's strength (`DrawableLineArt.weights`).
     var weighted: Bool
 
     /// Every line alike, as classic templates draw them.
@@ -53,7 +53,7 @@ nonisolated struct LineStyle: Equatable, Sendable {
 /// per boundary edge, and the interior strokes that fit. Renderers never index with unchecked
 /// line data (PaintCore's decoder checks files too; this keeps a malformed template drawable as
 /// classic instead of trapping).
-nonisolated struct LayeredLines: Sendable {
+nonisolated struct DrawableLineArt: Sendable {
     /// Layer (`LineLayer` raw value) per `Template.edges` entry.
     let edgeLayers: [UInt8]
     /// Width factor per edge from its weight (`weights(layers:strengths:)`).
@@ -141,7 +141,7 @@ nonisolated struct OutlineGeometry {
     let isLayered: Bool
 
     init(_ t: Template) {
-        let lines = LayeredLines(t)
+        let lines = DrawableLineArt(t)
         let strokes = lines?.strokes ?? []
         var segs: [SIMD2<UInt32>] = []
         segs.reserveCapacity(max(0, t.points.count - t.edges.count) + (lines?.strokePoints.count ?? 0))

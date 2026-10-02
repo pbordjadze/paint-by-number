@@ -46,12 +46,15 @@ nonisolated struct LineAppearance: Codable, Equatable, Sendable {
     var weighted: Bool
 
     /// The owner's picks from the layered-lines report: lines fade in by opacity at even weight,
-    /// with outlines lighter and thinner than the research's.
+    /// with outlines lighter and thinner than the research's (which drew them in solid ink about
+    /// 2.8 times as wide as a classic line). Outlines take the full ink a classic line reaches
+    /// zoomed in, a third wider, so the drawing reads at 1× where classic lines are lighter;
+    /// the other layers are faint at 1× and come in by 4×.
     static let `default` = LineAppearance(
-        outline: Layer(opacity: [0.85, 0.9, 0.95], width: [1.15, 1.2, 1.25]),
-        detail: Layer(opacity: [0.45, 0.8, 0.9], width: [0.9, 1, 1.05]),
-        texture: Layer(opacity: [0.2, 0.5, 0.8], width: [0.75, 0.85, 0.95]),
-        color: Layer(opacity: [0.12, 0.3, 0.5], width: [0.7, 0.8, 0.9]),
+        outline: Layer(opacity: [1, 1, 1], width: [1.3, 1.3, 1.35]),
+        detail: Layer(opacity: [0.5, 0.8, 0.9], width: [0.95, 1, 1.05]),
+        texture: Layer(opacity: [0.25, 0.55, 0.8], width: [0.8, 0.85, 0.95]),
+        color: Layer(opacity: [0.15, 0.35, 0.55], width: [0.75, 0.8, 0.9]),
         weighted: false)
 
     subscript(layer: LineLayer) -> Layer {

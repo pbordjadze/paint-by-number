@@ -478,18 +478,15 @@ nonisolated private struct Builder {
 // MARK: - Layered line art
 
 nonisolated extension SyntheticTemplate {
-    /// `t` with made-up layered line art, for demo scenarios and tests of the layered renderers
-    /// (the layered pipeline needs an edge detector). Edges are layered by the paint contrast
-    /// across them: outlines along the strongest 30 % of the boundary length, then detail (30 %),
-    /// texture (25 %) and color, with the canvas border as color; each weighs its contrast.
-    /// Interior strokes come from `strokes`, a template of the same picture at a finer setting:
-    /// its boundaries that run well inside one of `t`'s cells. Without it, every third cell with
-    /// room gets a short wavy stroke below its number.
-    static func layered(_ t: Template, strokes source: Template? = nil) -> Template {
-        func paint(_ region: UInt32, in t: Template) -> SIMD3<Float> { t.palette[Int(t.regions[Int(region)].colorIndex)].oklab }
-        func contrast(_ e: BoundaryEdge, in t: Template) -> Float {
+    /// The mosaic with made-up layered line art, for the `-mosaic` variants of the layered demo
+    /// scenarios: edges layered by the paint contrast across them (outlines along the strongest
+    /// 30 % of the boundary length, then detail 30 %, texture 25 % and color, the canvas border
+    /// color), each weighing its contrast, and in every third cell with room a short wavy
+    /// stroke below its number.
+    static func layered(_ t: Template) -> Template {
+        func contrast(_ e: BoundaryEdge) -> Float {
             guard e.right != BoundaryEdge.outside else { return 0 }
-            let d = paint(e.left, in: t) - paint(e.right, in: t)
+            let d = t.palette[Int(t.regions[Int(e.left)].colorIndex)].oklab - t.palette[Int(t.regions[Int(e.right)].colorIndex)].oklab
             return (d * d).sum().squareRoot()
         }
         func length(_ p: ArraySlice<SIMD2<Float>>) -> Float {
@@ -498,9 +495,8 @@ nonisolated extension SyntheticTemplate {
                 return sum + (d * d).sum().squareRoot()
             }
         }
-        let deltas = t.edges.map { contrast($0, in: t) }
+        let deltas = t.edges.map(contrast)
         let strongest = max(deltas.max() ?? 0, 1e-6)
-        func weight(_ delta: Float) -> UInt8 { UInt8(min(255, (delta / strongest * 255).rounded())) }
         var layers = [UInt8](repeating: LineLayer.color.rawValue, count: t.edges.count)
         let inner = t.edges.indices.filter { t.edges[$0].right != BoundaryEdge.outside }
         let lengths = t.edges.map { length(t.points(of: $0)) }
@@ -512,60 +508,68 @@ nonisolated extension SyntheticTemplate {
             layers[e] = layer.rawValue
             covered += lengths[e]
         }
-
         var points: [SIMD2<Float>] = []
         var strokes: [InteriorStroke] = []
-        func addStroke(_ run: [SIMD2<Float>], region: Int, layer: LineLayer, weight: UInt8) {
-            let q = Template.coordinateQuantum
+        let q = Template.coordinateQuantum
+        for label in t.labels where label.radius >= 12 && label.region % 3 == 0 {
+            let r = label.radius, c = label.position + SIMD2(0, 0.6 * r)
             strokes.append(InteriorStroke(
-                pointStart: UInt32(points.count), pointCount: UInt32(run.count), layer: layer.rawValue, weight: weight,
-                region: UInt32(region)))
-            points.append(contentsOf: run.map { ($0 / q).rounded(.toNearestOrEven) * q })
-        }
-        if let source {
-            // A point is well inside a cell when every pixel within 2 units of it belongs to the cell.
-            let map = t.regionMap
-            func cell(at p: SIMD2<Float>) -> Int? {
-                let x = Int(p.x), y = Int(p.y)
-                guard x >= 2, y >= 2, x < t.width - 2, y < t.height - 2 else { return nil }
-                let r = map[x, y]
-                for dy in -2...2 { for dx in -2...2 where map[x + dx, y + dy] != r { return nil } }
-                return Int(r)
-            }
-            let scale = SIMD2(Float(t.width) / Float(source.width), Float(t.height) / Float(source.height))
-            let sourceStrongest = max(source.edges.map { contrast($0, in: source) }.max() ?? 0, 1e-6)
-            for edge in source.edges where edge.right != BoundaryEdge.outside {
-                let delta = contrast(edge, in: source)
-                let layer: LineLayer = delta > 0.5 * sourceStrongest ? .detail : .texture
-                let w = UInt8(min(255, (delta / sourceStrongest * 255).rounded()))
-                var run: [SIMD2<Float>] = [], runCell = -1
-                func flush() {
-                    if run.count >= 3, length(run[...]) >= 6 { addStroke(run, region: runCell, layer: layer, weight: w) }
-                    run.removeAll(keepingCapacity: true)
-                }
-                for p in source.points(of: edge) {
-                    let q = p * scale
-                    guard let c = cell(at: q) else { flush(); continue }
-                    if c != runCell { flush(); runCell = c }
-                    run.append(q)
-                }
-                flush()
-            }
-        } else {
-            for label in t.labels where label.radius >= 12 && label.region % 3 == 0 {
-                let r = label.radius, c = label.position + SIMD2(0, 0.6 * r)
-                let run = (0...8).map { k -> SIMD2<Float> in
-                    let s = Float(k) / 8
-                    return c + SIMD2((s - 0.5) * r, 0.12 * r * sin(s * 2 * .pi))
-                }
-                addStroke(run, region: Int(label.region), layer: label.region % 2 == 0 ? .texture : .detail, weight: 128)
+                pointStart: UInt32(points.count), pointCount: 9, layer: (label.region % 2 == 0 ? LineLayer.texture : .detail).rawValue,
+                weight: 128, region: label.region))
+            for k in 0...8 {
+                let s = Float(k) / 8
+                let p = c + SIMD2((s - 0.5) * r, 0.12 * r * sin(s * 2 * .pi))
+                points.append((p / q).rounded(.toNearestOrEven) * q)
             }
         }
-
         var layered = t
         layered.lineArt = TemplateLineArt(
-            edgeLayers: layers, edgeWeights: deltas.map(weight), strokePoints: points, strokes: strokes)
+            edgeLayers: layers, edgeWeights: deltas.map { UInt8(min(255, ($0 / strongest * 255).rounded())) },
+            strokePoints: points, strokes: strokes)
         return layered
+    }
+
+    /// A stand-in for the app's learned edge detector in demo scenarios and tests: the photo's
+    /// OKLab gradient magnitude after a light blur (sigma 1.2 px), normalized at its 99th
+    /// percentile with a gentle lift (power 0.8). It finds the outlines HED finds, and more
+    /// texture; pass a photo of about 640 px (the generator resamples any size).
+    static func edgeMap(for image: RGBAImage) -> EdgeMap {
+        let w = image.width, h = image.height
+        let lab = ColorScience.okLabImage(from: image).storage
+        let radius = 4
+        let kernel: [Float] = {
+            let k = (-radius...radius).map { exp(-Float($0 * $0) / (2 * 1.2 * 1.2)) }
+            let sum = k.reduce(0, +)
+            return k.map { $0 / sum }
+        }()
+        var magnitude = [Float](repeating: 0, count: w * h)
+        for channel in 0..<3 {
+            var row = [Float](repeating: 0, count: w * h), blurred = row
+            for y in 0..<h {
+                for x in 0..<w {
+                    var v: Float = 0
+                    for (k, weight) in kernel.enumerated() { v += weight * lab[y * w + min(max(x + k - radius, 0), w - 1)][channel] }
+                    row[y * w + x] = v
+                }
+            }
+            for y in 0..<h {
+                for x in 0..<w {
+                    var v: Float = 0
+                    for (k, weight) in kernel.enumerated() { v += weight * row[min(max(y + k - radius, 0), h - 1) * w + x] }
+                    blurred[y * w + x] = v
+                }
+            }
+            for y in 1..<max(h - 1, 1) {
+                for x in 1..<max(w - 1, 1) {
+                    let gx = blurred[y * w + x + 1] - blurred[y * w + x - 1]
+                    let gy = blurred[(y + 1) * w + x] - blurred[(y - 1) * w + x]
+                    magnitude[y * w + x] += gx * gx + gy * gy
+                }
+            }
+        }
+        magnitude = magnitude.map { $0.squareRoot() }
+        let reference = max(magnitude.sorted()[min(magnitude.count - 1, magnitude.count * 99 / 100)], 1e-6)
+        return EdgeMap(width: w, height: h, values: magnitude.map { UInt8((pow(min($0 / reference, 1), 0.8) * 255).rounded()) })
     }
 }
 #endif

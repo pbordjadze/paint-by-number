@@ -173,7 +173,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   (factor of the classic width) at 1×/2×/4× (1 = fitted). `LineStyle` turns it into factors of a
   renderer's classic line (the canvas divides by its zoom ramp `classicStrength`; pictures draw their
   classic line at full ink); `.classic` (every factor 1) keeps classic frames and pictures exactly as
-  they were, `.print` prints every layer in PDFs. `LayeredLines` checks the line data (bad strokes are
+  they were, `.print` prints every layer in PDFs. `DrawableLineArt` checks the line data (bad strokes are
   dropped, counts that don't match the edges draw as classic) and `OutlineGeometry` gives the canvas a
   line per edge, then per stroke with its cell on both sides, each with (layer, weight); the outline
   shader reads `CanvasUniforms.lineAlpha/lineWidth/lineMode`. `weighted` scales a line's width by its
@@ -184,8 +184,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   Pictures show the 1× look: `CanvasSnapshot.Options.lineAppearance`/`lineZoom` (nil = stored; the
   time-lapse reads it once per export) and `TemplateRasterizer.Style.lines` (`.screen(appearance?,
   zoom:)`, faintest layer first relative to the style's line; `.print` for `.printable`). Demo scenarios
-  `paint-layered`, `-progress`, `-zoom2`, `-zoomed`, `-dark-paper`: `SyntheticTemplate.layered` (a real
-  template with layers by paint contrast, strokes from the same photo at more colors; `-mosaic` works).
+  `paint-layered`, `-progress`, `-zoom2`, `-zoomed`, `-dark-paper`: the freight train through the real
+  layered pipeline, with `SyntheticTemplate.edgeMap` (blurred OKLab gradient, DEBUG) standing in for the
+  learned detector; `-mosaic` uses `SyntheticTemplate.layered` (layers by paint contrast).
 - Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
   and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
   Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the

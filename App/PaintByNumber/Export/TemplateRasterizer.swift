@@ -123,7 +123,7 @@ nonisolated enum TemplateRasterizer {
         } else {
             drawVectorFills(t, painted: flags, style: style, in: ctx, scale: scale)
             if style.outlineWidth > 0 {
-                if let lines = LayeredLines(t) {
+                if let lines = DrawableLineArt(t) {
                     drawLayeredOutlines(t, lines: lines, look: lineStyle(style), painted: flags, style: style, in: ctx, scale: scale)
                 } else {
                     drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale)
@@ -234,7 +234,7 @@ nonisolated enum TemplateRasterizer {
     /// top where they meet. Lines between painted regions and strokes inside painted cells go
     /// with `hidesOutlinesBetweenPainted`, as on the canvas.
     private static func drawLayeredOutlines(
-        _ t: Template, lines: LayeredLines, look: LineStyle, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat
+        _ t: Template, lines: DrawableLineArt, look: LineStyle, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat
     ) {
         let visible = ctx.boundingBoxOfClipPath
         // One path per layer, and per tenth of the layer's width when lines are weighted.

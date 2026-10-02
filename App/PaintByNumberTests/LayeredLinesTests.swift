@@ -101,7 +101,7 @@ struct LayeredLinesTests {
     @Test func weightsFollowStrengthWithinEachLayer() {
         let layers: [UInt8] = [0, 0, 0, 1, 1, 2, 3, 3]
         let strengths: [UInt8] = [100, 200, 255, 10, 30, 90, 0, 0]
-        let w = LayeredLines.weights(layers: layers, strengths: strengths)
+        let w = DrawableLineArt.weights(layers: layers, strengths: strengths)
         // Layer 0's mean is 185: 100 → 0.6 (clamped from 0.54), 200 → 1.08, 255 → 1.38.
         #expect(w[0] == 0.6 && abs(w[1] - 200 / 185) < 1e-5 && abs(w[2] - 255 / 185) < 1e-5)
         #expect(w[3] == 0.6 && w[4] == 1.4)         // mean 20: 0.5 and 1.5, clamped
@@ -129,7 +129,7 @@ struct LayeredLinesTests {
         #expect(g.isLayered)
         #expect(g.points == t.points + art.strokePoints)
         #expect(g.lineRegions.count == t.edges.count + art.strokes.count)
-        let weights = LayeredLines.weights(
+        let weights = DrawableLineArt.weights(
             layers: art.edgeLayers + art.strokes.map(\.layer), strengths: art.edgeWeights + art.strokes.map(\.weight))
         for (e, edge) in t.edges.enumerated() {
             #expect(g.lineRegions[e] == SIMD2(edge.left, edge.right))
@@ -156,13 +156,13 @@ struct LayeredLinesTests {
         art.strokes.append(InteriorStroke(pointStart: 0, pointCount: 2, layer: 1, weight: 9, region: UInt32(t.regions.count)))
         art.edgeLayers[0] = 9
         t.lineArt = art
-        let lines = LayeredLines(t)
+        let lines = DrawableLineArt(t)
         #expect(lines?.strokes.count == good)
         #expect(lines?.edgeLayers[0] == LineLayer.color.rawValue)
         // Line data that doesn't match the edges draws the template as classic.
         art.edgeWeights.removeLast()
         t.lineArt = art
-        #expect(LayeredLines(t) == nil && !OutlineGeometry(t).isLayered)
+        #expect(DrawableLineArt(t) == nil && !OutlineGeometry(t).isLayered)
     }
 
     // MARK: Uniforms
@@ -383,11 +383,17 @@ struct LayeredLinesTests {
     /// Pictures of a layered painting, for the eye: canvas renders at the 1×, 2× and 4× looks,
     /// the gallery thumbnail, the share picture and the printed template.
     @Test func layeredPicturesForReview() throws {
-        let base = try Fixtures.sample(colors: 18, detail: 0.4)
-        let finer = try Fixtures.sample(colors: 36, detail: 0.4)
-        let t = SyntheticTemplate.layered(base, strokes: finer)
+        let url = try #require(Bundle.main.url(forResource: "parrots", withExtension: "jpg"))
+        let photo = try PhotoLoader.load(url: url, maxPixelSize: 640)
+        var settings = GenerationSettings(colorCount: 18, detail: 0.4)
+        settings.lineArt.style = .layered
+        let t = try TemplateGenerator(settings: settings)
+            .generate(from: photo, lineArt: LineArtInput(edges: SyntheticTemplate.edgeMap(for: photo)), cancel: .none).template
         let art = try #require(t.lineArt)
-        #expect(art.strokes.count > 0 && LayeredLines(t)?.strokes.count == art.strokes.count)
+        // The pipeline's line data is what the renderers draw, all of it.
+        let lines = try #require(DrawableLineArt(t))
+        #expect(lines.strokes.count == art.strokes.count && lines.edgeLayers == art.edgeLayers)
+        #expect(Set(art.edgeLayers).count > 2)
         let size = CanvasSnapshot.fittedSize(for: t, longSide: 1600)
         for zoom: Float in [1, 2, 4] {
             var options = CanvasSnapshot.Options.preview
@@ -407,8 +413,18 @@ struct LayeredLinesTests {
         let preview = try #require(TemplateRasterizer.pngData(t, style: template, maxPixelSize: 1600))
         Attachment.record(preview, named: "layered-parrots-template.png")
         let pdf = PDFExporter.document(for: t, title: "Parrots", paper: .a4)
-        #expect(pdf.starts(with: Data("%PDF".utf8)))
         Attachment.record(pdf, named: "layered-parrots.pdf")
+        let document = try #require(CGDataProvider(data: pdf as CFData).flatMap { CGPDFDocument($0) })
+        let page = try #require(document.page(at: 1))
+        let box = page.getBoxRect(.mediaBox)
+        let ctx = try #require(CGContext(
+            data: nil, width: Int(box.width * 3), height: Int(box.height * 3), bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: box.width * 3, height: box.height * 3))
+        ctx.scaleBy(x: 3, y: 3)
+        ctx.drawPDFPage(page)
+        record(try #require(ctx.makeImage()), "layered-parrots-pdf-page1")
     }
 
     // MARK: Helpers

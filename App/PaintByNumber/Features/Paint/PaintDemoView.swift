@@ -30,8 +30,8 @@ import simd
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette
 ///   caption and completion bar as translations would stress them
 ///
-/// Layered line art, on a picture with made-up layers (`SyntheticTemplate.layered`) and the
-/// default Line Appearance:
+/// Layered line art from the real pipeline (the stand-in edge map `SyntheticTemplate.edgeMap`
+/// for the learned detector; `-mosaic`: `SyntheticTemplate.layered`) at the default Line Appearance:
 /// - `paint-layered`: fresh canvas, fit to screen (the 1× look: outlines, faint texture)
 /// - `paint-layered-progress`: ~45 % painted, the color in progress selected (painted lines
 ///   dissolve, the selected color's cells are outlined boldly whatever their layer)
@@ -97,21 +97,27 @@ struct PaintDemoView: View {
     }
 
     @concurrent
-    private static func template(photo: String, settings: GenerationSettings = GenerationSettings()) async -> Template? {
+    private static func template(photo: String) async -> Template? {
         guard let url = Bundle.main.url(forResource: photo, withExtension: "jpg"),
               let image = try? PhotoLoader.load(url: url, maxPixelSize: 2048),
-              let output = try? TemplateGenerator(settings: settings).generate(from: image)
+              let output = try? TemplateGenerator().generate(from: image)
         else { return nil }
         return output.template.mesh.indices.isEmpty ? nil : output.template
     }
 
-    /// The photo's template with made-up layered lines; the same photo at twice the colors gives
-    /// the strokes inside its cells.
+    /// The photo's layered template from the real pipeline, with the stand-in edge map
+    /// (`SyntheticTemplate.edgeMap`) in place of the learned detector.
     @concurrent
     private static func layeredTemplate(photo: String) async -> Template? {
-        guard let base = await Self.template(photo: photo) else { return nil }
-        let finer = await Self.template(photo: photo, settings: GenerationSettings(colorCount: 48))
-        return SyntheticTemplate.layered(base, strokes: finer)
+        var settings = GenerationSettings()
+        settings.lineArt.style = .layered
+        guard let url = Bundle.main.url(forResource: photo, withExtension: "jpg"),
+              let image = try? PhotoLoader.load(url: url, maxPixelSize: 2048),
+              let small = try? PhotoLoader.load(url: url, maxPixelSize: 640),
+              let output = try? TemplateGenerator(settings: settings)
+                .generate(from: image, lineArt: LineArtInput(edges: SyntheticTemplate.edgeMap(for: small)))
+        else { return nil }
+        return output.template.lineArt == nil || output.template.mesh.indices.isEmpty ? nil : output.template
     }
 }
 
