@@ -8,7 +8,8 @@ import simd
 /// images, create-flow previews and PDF pages. No Metal, safe off the main actor.
 ///
 /// Uses the template's vector geometry when present (crisp at any size, vector in PDFs)
-/// and otherwise samples the raster region map.
+/// and otherwise samples the raster region map. Layered line art draws each layer with its
+/// `LineStyle` relative to the style's outline (faintest layer first), interior strokes included.
 nonisolated enum TemplateRasterizer {
     struct Style: Sendable {
         enum Unpainted: Sendable, Equatable {
@@ -17,6 +18,15 @@ nonisolated enum TemplateRasterizer {
             /// A pale grey at the region's final lightness, like a pencil study of the
             /// picture, so partly painted thumbnails stay recognizable.
             case sketch
+        }
+
+        /// How a layered template's lines draw (classic templates draw every line alike).
+        enum Lines: Sendable, Equatable {
+            /// As the canvas shows them at `zoom` (1 = fitted), with `appearance`, or with the
+            /// one Settings › Advanced stored when nil.
+            case screen(LineAppearance?, zoom: Float)
+            /// Every layer visible on paper (`LineStyle.print`).
+            case print
         }
 
         var unpainted: Unpainted = .paper
@@ -34,6 +44,8 @@ nonisolated enum TemplateRasterizer {
         /// labels of this size rather than one huge number.
         var maximumNumberFraction: CGFloat = 1.0 / 64
         var paper = SIMD3<Float>(1, 1, 1)
+        /// Pictures show layered lines as the fitted canvas does.
+        var lines = Lines.screen(nil, zoom: 1)
 
         /// Gallery thumbnails: painted regions in color, the rest a faint sketch.
         static let thumbnail = Style(
@@ -47,10 +59,10 @@ nonisolated enum TemplateRasterizer {
         /// Outlines with numbers on paper, as the user will start painting it.
         static let template = Style(outlineWidth: 1, numbers: true)
         /// Printable template (PDF): hairlines and small numbers. `PDFExporter` picks a scale
-        /// at which the smallest number is still legible on paper.
+        /// at which the smallest number is still legible on paper. Every line layer prints.
         static let printable = Style(
             outlineWidth: 0.4, outlineColor: SIMD4(0.45, 0.47, 0.5, 1), numbers: true,
-            numberColor: SIMD4(0.35, 0.37, 0.4, 1))
+            numberColor: SIMD4(0.35, 0.37, 0.4, 1), lines: .print)
     }
 
     // MARK: Entry points
@@ -110,7 +122,13 @@ nonisolated enum TemplateRasterizer {
             drawRegionMap(t, painted: flags, style: style, in: ctx, resolution: deviceSize)
         } else {
             drawVectorFills(t, painted: flags, style: style, in: ctx, scale: scale)
-            if style.outlineWidth > 0 { drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale) }
+            if style.outlineWidth > 0 {
+                if let lines = LayeredLines(t) {
+                    drawLayeredOutlines(t, lines: lines, look: lineStyle(style), painted: flags, style: style, in: ctx, scale: scale)
+                } else {
+                    drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale)
+                }
+            }
         }
         if style.numbers { drawNumbers(t, painted: flags, style: style, in: ctx) }
         ctx.restoreGState()
@@ -193,18 +211,7 @@ nonisolated enum TemplateRasterizer {
         let path = CGMutablePath()
         for edge in t.edges where edge.right != BoundaryEdge.outside {
             if style.hidesOutlinesBetweenPainted && painted[Int(edge.left)] && painted[Int(edge.right)] { continue }
-            let points = t.points(of: edge)
-            guard let first = points.first else { continue }
-            var low = first, high = first
-            for p in points {
-                low = pointwiseMin(low, p)
-                high = pointwiseMax(high, p)
-            }
-            // Padded by a unit so straight edges get a box with area.
-            let box = CGRect(x: CGFloat(low.x) - 1, y: CGFloat(low.y) - 1, width: CGFloat(high.x - low.x) + 2, height: CGFloat(high.y - low.y) + 2)
-            guard visible.intersects(box) else { continue }
-            path.move(to: CGPoint(first))
-            for p in points.dropFirst() { path.addLine(to: CGPoint(p)) }
+            addPolyline(t.points(of: edge), to: path, within: visible)
         }
         ctx.setStrokeColor(cgColor(style.outlineColor, space: t.colorSpace))
         ctx.setLineWidth(style.outlineWidth / max(scale, 0.0001))
@@ -212,6 +219,73 @@ nonisolated enum TemplateRasterizer {
         ctx.setLineCap(.round)
         ctx.addPath(path)
         ctx.strokePath()
+    }
+
+    /// The line style a layered template draws with under `style`.
+    static func lineStyle(_ style: Style) -> LineStyle {
+        switch style.lines {
+        case let .screen(appearance, zoom): LineStyle(appearance ?? .stored(), zoom: zoom)
+        case .print: .print
+        }
+    }
+
+    /// Layered line art: each layer's lines in the style's outline color at the layer's opacity
+    /// and width (`look`'s factors on the style's), faintest layer first so stronger lines lie on
+    /// top where they meet. Lines between painted regions and strokes inside painted cells go
+    /// with `hidesOutlinesBetweenPainted`, as on the canvas.
+    private static func drawLayeredOutlines(
+        _ t: Template, lines: LayeredLines, look: LineStyle, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat
+    ) {
+        let visible = ctx.boundingBoxOfClipPath
+        // One path per layer, and per tenth of the layer's width when lines are weighted.
+        var paths: [Int: CGMutablePath] = [:]
+        func add(_ points: ArraySlice<SIMD2<Float>>, layer: UInt8, weight: Float) {
+            let step = look.weighted ? Int((weight * 10).rounded()) : 10
+            let key = Int(layer) * 100 + step
+            let path = paths[key] ?? CGMutablePath()
+            addPolyline(points, to: path, within: visible)
+            paths[key] = path
+        }
+        for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside {
+            if style.hidesOutlinesBetweenPainted && painted[Int(edge.left)] && painted[Int(edge.right)] { continue }
+            add(t.points(of: edge), layer: lines.edgeLayers[e], weight: lines.edgeWeights[e])
+        }
+        for (s, stroke) in lines.strokes.enumerated() {
+            if style.hidesOutlinesBetweenPainted && painted[Int(stroke.region)] { continue }
+            add(lines.points(of: stroke), layer: stroke.layer, weight: lines.strokeWeights[s])
+        }
+        let color = style.outlineColor
+        ctx.saveGState()
+        ctx.setLineJoin(.round)
+        ctx.setLineCap(.round)
+        // Descending keys: color lines first, outlines last.
+        for key in paths.keys.sorted(by: >) {
+            guard let path = paths[key], !path.isEmpty else { continue }
+            let layer = key / 100, factor = CGFloat(key % 100) / 10
+            let opacity = min(1, color.w * look.opacity[layer])
+            let width = style.outlineWidth * CGFloat(look.width[layer]) * factor
+            guard opacity > 0.002, width > 0 else { continue }
+            ctx.setStrokeColor(cgColor(SIMD4(color.x, color.y, color.z, opacity), space: t.colorSpace))
+            ctx.setLineWidth(width / max(scale, 0.0001))
+            ctx.addPath(path)
+            ctx.strokePath()
+        }
+        ctx.restoreGState()
+    }
+
+    /// Appends an open polyline to `path` unless it lies outside `visible`.
+    private static func addPolyline(_ points: ArraySlice<SIMD2<Float>>, to path: CGMutablePath, within visible: CGRect) {
+        guard let first = points.first else { return }
+        var low = first, high = first
+        for p in points {
+            low = pointwiseMin(low, p)
+            high = pointwiseMax(high, p)
+        }
+        // Padded by a unit so straight edges get a box with area.
+        let box = CGRect(x: CGFloat(low.x) - 1, y: CGFloat(low.y) - 1, width: CGFloat(high.x - low.x) + 2, height: CGFloat(high.y - low.y) + 2)
+        guard visible.intersects(box) else { return }
+        path.move(to: CGPoint(first))
+        for p in points.dropFirst() { path.addLine(to: CGPoint(p)) }
     }
 
     // MARK: Region-map fallback

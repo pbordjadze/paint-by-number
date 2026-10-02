@@ -7,8 +7,10 @@ import PaintCore
 ///
 /// Each `LineLayer` has an opacity and a width at three zooms, where 1 is the painting fitted
 /// to the canvas; values in between interpolate on log₂ of the zoom and hold beyond 1× and 4×.
-/// Widths multiply the classic outline width at that zoom, so 1 draws a line exactly as heavy
-/// as a classic template's.
+/// Opacities are fractions of the paper's full ink, the darkest a classic line gets (zoomed in;
+/// fitted, classic lines draw at 0.7 of it). Widths multiply the classic outline width at that
+/// zoom, so 1 draws a line exactly as heavy as a classic template's. Renderers apply it through
+/// `LineStyle`; pictures (thumbnails, share images) show the 1× look.
 nonisolated struct LineAppearance: Codable, Equatable, Sendable {
     struct Layer: Codable, Equatable, Sendable {
         /// Opacity at 1×, 2× and 4×.

@@ -474,4 +474,98 @@ nonisolated private struct Builder {
         }
     }
 }
+
+// MARK: - Layered line art
+
+nonisolated extension SyntheticTemplate {
+    /// `t` with made-up layered line art, for demo scenarios and tests of the layered renderers
+    /// (the layered pipeline needs an edge detector). Edges are layered by the paint contrast
+    /// across them: outlines along the strongest 30 % of the boundary length, then detail (30 %),
+    /// texture (25 %) and color, with the canvas border as color; each weighs its contrast.
+    /// Interior strokes come from `strokes`, a template of the same picture at a finer setting:
+    /// its boundaries that run well inside one of `t`'s cells. Without it, every third cell with
+    /// room gets a short wavy stroke below its number.
+    static func layered(_ t: Template, strokes source: Template? = nil) -> Template {
+        func paint(_ region: UInt32, in t: Template) -> SIMD3<Float> { t.palette[Int(t.regions[Int(region)].colorIndex)].oklab }
+        func contrast(_ e: BoundaryEdge, in t: Template) -> Float {
+            guard e.right != BoundaryEdge.outside else { return 0 }
+            let d = paint(e.left, in: t) - paint(e.right, in: t)
+            return (d * d).sum().squareRoot()
+        }
+        func length(_ p: ArraySlice<SIMD2<Float>>) -> Float {
+            zip(p, p.dropFirst()).reduce(0) { sum, pair in
+                let d = pair.1 - pair.0
+                return sum + (d * d).sum().squareRoot()
+            }
+        }
+        let deltas = t.edges.map { contrast($0, in: t) }
+        let strongest = max(deltas.max() ?? 0, 1e-6)
+        func weight(_ delta: Float) -> UInt8 { UInt8(min(255, (delta / strongest * 255).rounded())) }
+        var layers = [UInt8](repeating: LineLayer.color.rawValue, count: t.edges.count)
+        let inner = t.edges.indices.filter { t.edges[$0].right != BoundaryEdge.outside }
+        let lengths = t.edges.map { length(t.points(of: $0)) }
+        let total = max(inner.reduce(0) { $0 + lengths[$1] }, 1e-6)
+        var covered: Float = 0
+        for e in inner.sorted(by: { (deltas[$0], $1) > (deltas[$1], $0) }) {
+            let share = covered / total
+            let layer: LineLayer = share < 0.3 ? .outline : share < 0.6 ? .detail : share < 0.85 ? .texture : .color
+            layers[e] = layer.rawValue
+            covered += lengths[e]
+        }
+
+        var points: [SIMD2<Float>] = []
+        var strokes: [InteriorStroke] = []
+        func addStroke(_ run: [SIMD2<Float>], region: Int, layer: LineLayer, weight: UInt8) {
+            let q = Template.coordinateQuantum
+            strokes.append(InteriorStroke(
+                pointStart: UInt32(points.count), pointCount: UInt32(run.count), layer: layer.rawValue, weight: weight,
+                region: UInt32(region)))
+            points.append(contentsOf: run.map { ($0 / q).rounded() * q })
+        }
+        if let source {
+            // A point is well inside a cell when every pixel within 2 units of it belongs to the cell.
+            let map = t.regionMap
+            func cell(at p: SIMD2<Float>) -> Int? {
+                let x = Int(p.x), y = Int(p.y)
+                guard x >= 2, y >= 2, x < t.width - 2, y < t.height - 2 else { return nil }
+                let r = map[x, y]
+                for dy in -2...2 { for dx in -2...2 where map[x + dx, y + dy] != r { return nil } }
+                return Int(r)
+            }
+            let scale = SIMD2(Float(t.width) / Float(source.width), Float(t.height) / Float(source.height))
+            let sourceStrongest = max(source.edges.map { contrast($0, in: source) }.max() ?? 0, 1e-6)
+            for edge in source.edges where edge.right != BoundaryEdge.outside {
+                let delta = contrast(edge, in: source)
+                let layer: LineLayer = delta > 0.5 * sourceStrongest ? .detail : .texture
+                let w = UInt8(min(255, (delta / sourceStrongest * 255).rounded()))
+                var run: [SIMD2<Float>] = [], runCell = -1
+                func flush() {
+                    if run.count >= 3, length(run[...]) >= 6 { addStroke(run, region: runCell, layer: layer, weight: w) }
+                    run.removeAll(keepingCapacity: true)
+                }
+                for p in source.points(of: edge) {
+                    let q = p * scale
+                    guard let c = cell(at: q) else { flush(); continue }
+                    if c != runCell { flush(); runCell = c }
+                    run.append(q)
+                }
+                flush()
+            }
+        } else {
+            for label in t.labels where label.radius >= 12 && label.region % 3 == 0 {
+                let r = label.radius, c = label.position + SIMD2(0, 0.6 * r)
+                let run = (0...8).map { k -> SIMD2<Float> in
+                    let s = Float(k) / 8
+                    return c + SIMD2((s - 0.5) * r, 0.12 * r * sin(s * 2 * .pi))
+                }
+                addStroke(run, region: Int(label.region), layer: label.region % 2 == 0 ? .texture : .detail, weight: 128)
+            }
+        }
+
+        var layered = t
+        layered.lineArt = TemplateLineArt(
+            edgeLayers: layers, edgeWeights: deltas.map(weight), strokePoints: points, strokes: strokes)
+        return layered
+    }
+}
 #endif

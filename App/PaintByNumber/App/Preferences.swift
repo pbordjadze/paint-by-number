@@ -15,7 +15,7 @@ enum SettingsKey {
     /// how layered lines are drawn.
     static let lineArt = "advancedLineArt"
     static let pipelineTuning = "advancedPipelineTuning"
-    static let lineAppearance = "advancedLineAppearance"
+    nonisolated static let lineAppearance = "advancedLineAppearance"
 }
 
 /// A snapshot of the user's preferences, with their defaults.
