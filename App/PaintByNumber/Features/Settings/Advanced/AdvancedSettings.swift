@@ -257,7 +257,7 @@ nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Senda
     var layers: [LineAppearance.Layer] {
         switch self {
         case .fade:
-            LineLayer.allCases.map { LineAppearance.default[layer: $0] }
+            LineLayer.allCases.map { LineAppearance.default[$0] }
         case .grow:
             [
                 LineAppearance.Layer(opacity: [0.85, 0.9, 0.95], width: [1, 1.15, 1.3]),
@@ -273,13 +273,13 @@ nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Senda
     /// `appearance` with this preset's layers.
     func applied(to appearance: LineAppearance) -> LineAppearance {
         var result = appearance
-        for (layer, values) in zip(LineLayer.allCases, layers) { result[layer: layer] = values }
+        for (layer, values) in zip(LineLayer.allCases, layers) { result[layer] = values }
         return result
     }
 
     /// The preset whose layers `appearance` has, if any.
     static func matching(_ appearance: LineAppearance) -> LineAppearancePreset? {
-        allCases.first { preset in zip(LineLayer.allCases, preset.layers).allSatisfy { appearance[layer: $0] == $1 } }
+        allCases.first { preset in zip(LineLayer.allCases, preset.layers).allSatisfy { appearance[$0] == $1 } }
     }
 }
 

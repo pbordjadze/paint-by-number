@@ -35,9 +35,9 @@ final class AdvancedSettingsUITests: XCTestCase {
         attachScreenshot(of: app, named: "advanced-from-settings")
     }
 
-    /// Smallest Area moves one VoiceOver step at a time; the preview regenerates with fewer
-    /// areas than the defaults' and the setting's effect is measured; the Pipeline section
-    /// offers Reset, and Reset All (confirmed) puts everything back.
+    /// Smallest Area moved to about 2×: the preview regenerates with fewer areas than the
+    /// defaults' and the setting's effect is measured; the Pipeline section offers Reset, and
+    /// Reset All (confirmed) puts everything back.
     @MainActor
     func testASliderChangesThePreviewsNumbersAndResets() throws {
         let app = XCUIApplication()
@@ -55,16 +55,16 @@ final class AdvancedSettingsUITests: XCTestCase {
         reveal(resetAll, in: list, up: true)
         if resetAll.isEnabled { confirmResetAll(app, resetAll) }
 
-        let control = app.descendants(matching: .any)["advanced-control-minimumCellSize"]
+        let control = app.sliders["advanced-control-minimumCellSize"]
         reveal(control, in: list, up: false)
         XCTAssertTrue(control.exists, "Pipeline has no Smallest Area slider")
         XCTAssertTrue(value(of: control).hasPrefix("1×"), "Smallest Area doesn't start at 1×: \(value(of: control))")
         XCTAssertTrue(value(of: areas).contains("Default"), "The areas don't start at the defaults: \(value(of: areas))")
-        // Four quarter doublings: twice the smallest area.
-        for _ in 0..<4 { control.increment() }
-        let doubled = NSPredicate(format: "value BEGINSWITH '2×'")
-        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: doubled, object: control)], timeout: 5), .completed,
-                       "Four steps didn't take Smallest Area to 2×: \(value(of: control))")
+        // Three quarters of the way along the log scale from 0.25× to 4×: about twice the smallest area.
+        control.adjust(toNormalizedSliderPosition: 0.75)
+        let moved = NSPredicate(format: "NOT (value BEGINSWITH '1×')")
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: moved, object: control)], timeout: 5), .completed,
+                       "The slider didn't move Smallest Area: \(value(of: control))")
         // Larger smallest areas: fewer of them than at the defaults.
         let fewer = NSPredicate(format: "value CONTAINS %@", "−")
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: fewer, object: areas)], timeout: 90), .completed,

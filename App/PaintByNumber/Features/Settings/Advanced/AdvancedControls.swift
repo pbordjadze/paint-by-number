@@ -92,7 +92,7 @@ struct EffectLine: View {
 }
 
 /// A setting on a slider: its name, value, a line on what it does and its effect. VoiceOver
-/// reads it as one adjustable element that moves by the setting's own step.
+/// reads the slider alone, with all of that, moving by the setting's own step.
 struct AdvancedSlider: View {
     let title: String
     var summary: String?
@@ -133,36 +133,40 @@ struct AdvancedSlider: View {
                     .foregroundStyle(isChanged ? Theme.accent : Color.secondary)
                     .contentTransition(.numericText())
             }
+            .accessibilityHidden(true)
             Slider(value: position, in: 0...1)
-            if let summary {
-                Text(summary)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                .accessibilityLabel(Text(title))
+                .accessibilityValue(Text(accessibilityValue))
+                .accessibilityHint(Text(summary ?? ""))
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: set(spec.value(value, adjustedBy: 1))
+                    case .decrement: set(spec.value(value, adjustedBy: -1))
+                    @unknown default: break
+                    }
+                }
+                .accessibilityActions {
+                    if isChanged, let onReset {
+                        Button("Reset to Default", action: onReset)
+                    }
+                }
+                .accessibilityIdentifier(identifier)
+            Group {
+                if let summary {
+                    Text(summary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if let effect {
+                    EffectLine(effect: effect)
+                }
             }
-            if let effect {
-                EffectLine(effect: effect)
-            }
+            // The slider's hint and value say these.
+            .accessibilityHidden(true)
         }
         .padding(.vertical, 4)
         .animation(.snappy(duration: 0.2), value: isChanged)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(title))
-        .accessibilityValue(Text(accessibilityValue))
-        .accessibilityHint(Text(summary ?? ""))
-        .accessibilityAdjustableAction { direction in
-            switch direction {
-            case .increment: set(spec.value(value, adjustedBy: 1))
-            case .decrement: set(spec.value(value, adjustedBy: -1))
-            @unknown default: break
-            }
-        }
-        .accessibilityActions {
-            if isChanged, let onReset {
-                Button("Reset to Default", action: onReset)
-            }
-        }
-        .accessibilityIdentifier(identifier)
     }
 
     private var accessibilityValue: String {
@@ -525,7 +529,7 @@ struct LineAppearanceSection: View {
                 layerChoices.pickerStyle(.menu)
             }
             SwiftUI.Label {
-                Text(AdvancedText.clarity(of: model.appearance[layer: layer]))
+                Text(AdvancedText.clarity(of: model.appearance[layer]))
                     .contentTransition(.opacity)
             } icon: {
                 Image(systemName: "eye")
@@ -578,8 +582,8 @@ struct LineAppearanceSection: View {
     /// A layer's opacity or width at the three zooms.
     private func values(_ property: Property) -> some View {
         let isOpacity = property == .opacity
-        let defaults = property.values(of: LineAppearance.default[layer: layer])
-        let current = property.values(of: model.appearance[layer: layer])
+        let defaults = property.values(of: LineAppearance.default[layer])
+        let current = property.values(of: model.appearance[layer])
         return VStack(alignment: .leading, spacing: 2) {
             Text(property.title)
                 .font(.subheadline.weight(.semibold))
@@ -598,7 +602,7 @@ struct LineAppearanceSection: View {
                                  comment: "Settings › Advanced › Line Appearance: VoiceOver label of a slider; the arguments are the layer, e.g. Texture, and the zoom, e.g. 2×"),
                     identifier: "advanced-appearance-\(isOpacity ? "opacity" : "width")-\(index)"
                 ) { value in
-                    property.set(Float(value), at: index, in: &model.appearance[layer: layer])
+                    property.set(Float(value), at: index, in: &model.appearance[layer])
                 }
             }
         }
@@ -622,25 +626,26 @@ private struct CompactSlider: View {
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 26, alignment: .leading)
+                .accessibilityHidden(true)
             Slider(value: Binding(get: { spec.position(of: value) }, set: { set(spec.value(at: $0)) }), in: 0...1)
+                .accessibilityLabel(Text(accessibilityLabel))
+                .accessibilityValue(Text(spec.text(value)))
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: set(spec.value(value, adjustedBy: 1))
+                    case .decrement: set(spec.value(value, adjustedBy: -1))
+                    @unknown default: break
+                    }
+                }
+                .accessibilityIdentifier(identifier)
             Text(spec.text(value))
                 .font(.footnote)
                 .monospacedDigit()
                 .foregroundStyle(value == spec.defaultValue ? Color.secondary : Theme.accent)
                 .contentTransition(.numericText())
                 .frame(minWidth: 48, alignment: .trailing)
+                .accessibilityHidden(true)
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(accessibilityLabel))
-        .accessibilityValue(Text(spec.text(value)))
-        .accessibilityAdjustableAction { direction in
-            switch direction {
-            case .increment: set(spec.value(value, adjustedBy: 1))
-            case .decrement: set(spec.value(value, adjustedBy: -1))
-            @unknown default: break
-            }
-        }
-        .accessibilityIdentifier(identifier)
     }
 
     private func set(_ newValue: Double) {
@@ -707,7 +712,7 @@ private struct ZoomStrip: View {
         let layers = LineLayer.allCases
         let row = size.height / CGFloat(layers.count)
         for (position, layer) in layers.enumerated() {
-            let values = appearance[layer: layer]
+            let values = appearance[layer]
             let y = row * (CGFloat(position) + 0.5)
             if layer == marked {
                 context.fill(Path(CGRect(x: 0, y: y - row / 2, width: size.width, height: row)), with: .color(mark))
