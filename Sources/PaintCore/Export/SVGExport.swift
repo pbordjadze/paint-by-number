@@ -19,6 +19,12 @@ public enum SVGExport {
         /// several numbers of this size rather than one huge one. Numbers are sized by
         /// `LabelSizing` and never dropped: none is smaller than `LabelSizing.minimumFontSize`.
         public var maxNumberSize: Float = 1.0 / 64
+        /// Layered templates (`Template.lineArt`): each `LineLayer` is a group (`lines-outline`,
+        /// `lines-detail`, `lines-texture`, `lines-color`, drawn faintest first) of its edges and
+        /// interior strokes in `lineColor`, at its style's opacity and width (a factor on the
+        /// outline width), indexed by `LineLayer` raw value.
+        public var layerStyles: [LayerStyle] = SVGExport.defaultLayerStyles
+        public var lineColor: String = "#2b2530"
 
         public init(painted: Bool = false, outlines: Bool = true, numbers: Bool = true) {
             self.painted = painted
@@ -26,6 +32,22 @@ public enum SVGExport {
             self.numbers = numbers
         }
     }
+
+    public struct LayerStyle: Sendable, Equatable {
+        public var opacity: Float
+        public var width: Float
+
+        public init(opacity: Float, width: Float) {
+            self.opacity = opacity
+            self.width = width
+        }
+    }
+
+    /// The app's default line appearance with the painting fitted to the screen.
+    public static let defaultLayerStyles = [
+        LayerStyle(opacity: 0.85, width: 1.15), LayerStyle(opacity: 0.45, width: 0.9),
+        LayerStyle(opacity: 0.2, width: 0.75), LayerStyle(opacity: 0.12, width: 0.7),
+    ]
 
     public static func render(_ t: Template, options: Options = Options()) -> String {
         var s = ""
@@ -52,7 +74,30 @@ public enum SVGExport {
             s += "</g>\n"
         }
 
-        if options.outlines && !t.edges.isEmpty {
+        if options.outlines, let lines = t.lineArt, lines.edgeLayers.count == t.edges.count {
+            let width = options.strokeWidth ?? max(0.5, Float(max(t.width, t.height)) / 1900)
+            let names = ["outline", "detail", "texture", "color"]
+            for layer in LineLayer.allCases.reversed() {
+                let style = options.layerStyles.indices.contains(Int(layer.rawValue))
+                    ? options.layerStyles[Int(layer.rawValue)] : LayerStyle(opacity: 1, width: 1)
+                var d = ""
+                for (k, e) in t.edges.enumerated() where lines.edgeLayers[k] == layer.rawValue {
+                    let pts = t.points(of: e)
+                    guard let first = pts.first else { continue }
+                    d += "M" + fmt(first)
+                    for p in pts.dropFirst() { d += "L" + fmt(p) }
+                }
+                for stroke in lines.strokes where stroke.layer == layer.rawValue {
+                    let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
+                    guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
+                    d += "M" + fmt(lines.strokePoints[start])
+                    for p in lines.strokePoints[(start + 1)..<end] { d += "L" + fmt(p) }
+                }
+                guard !d.isEmpty else { continue }
+                s += "<g id=\"lines-\(names[Int(layer.rawValue)])\" opacity=\"\(fmt(style.opacity))\">"
+                s += "<path d=\"\(d)\" fill=\"none\" stroke=\"\(options.lineColor)\" stroke-width=\"\(fmt(width * style.width))\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></g>\n"
+            }
+        } else if options.outlines && !t.edges.isEmpty {
             let width = options.strokeWidth ?? max(0.5, Float(max(t.width, t.height)) / 1900)
             var d = ""
             for e in t.edges {

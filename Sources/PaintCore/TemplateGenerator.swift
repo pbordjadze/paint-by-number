@@ -18,6 +18,8 @@ public struct TemplateGenerator: Sendable {
         public var segmentation: Segmentation
         /// What vectorizing had to give up (fallback edges; see `VectorStats`).
         public var vectorStats: VectorStats
+        /// What layered line art did; nil for classic templates.
+        public var lineArtStats: LineArtStats?
         public var timings: [StageClock.Timing]
         public var totalSeconds: Double { timings.filter { !$0.name.contains(".") }.reduce(0) { $0 + $1.seconds } }
     }
@@ -47,21 +49,42 @@ public struct TemplateGenerator: Sendable {
         try cancel.throwIfCancelled()
         progress?(0.1)
 
-        let segmentation = try clock.measure("segment") {
-            try Segmenter.segment(
-                working, importance: importance, settings: settings, cancel: cancel, clock: clock,
-                progress: { progress?(0.1 + 0.6 * $0) })
+        // Layered line art needs its edge map; without one the template is classic.
+        let layered = settings.lineArt.style == .layered ? lineArt : nil
+        let segmentEnd: Float = layered == nil ? 0.7 : 0.6
+        let parameters = SegmentationParameters(settings: settings, width: working.width, height: working.height)
+        var (segmentation, weights) = try clock.measure("segment") {
+            try Segmenter.segmentWithImportance(
+                working, importance: importance, parameters: parameters, cancel: cancel, clock: clock,
+                progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) })
         }
         try cancel.throwIfCancelled()
-        progress?(0.7)
+        progress?(segmentEnd)
+
+        var plan: LayeredLines.Plan?
+        if let layered {
+            let result = try clock.measure("lineArt") {
+                try LayeredLines.apply(
+                    segmentation, input: layered, importance: weights, settings: settings, cancel: cancel, clock: clock)
+            }
+            segmentation = result.segmentation
+            plan = result
+            try cancel.throwIfCancelled()
+            progress?(0.7)
+        }
+        weights = []
 
         var vector = try clock.measure("vectorize") {
             try Vectorizer.vectorizeWithStats(segmentation, settings: settings, cancel: cancel, clock: clock)
         }
         vector.template.pipelineVersion = Self.pipelineVersion
+        if let plan {
+            vector.template.lineArt = clock.measure("lineArt.annotate") { LayeredLines.annotate(vector.template, plan: plan) }
+        }
         progress?(1)
         return Output(
-            template: vector.template, segmentation: segmentation, vectorStats: vector.stats, timings: clock.timings)
+            template: vector.template, segmentation: segmentation, vectorStats: vector.stats,
+            lineArtStats: plan?.stats, timings: clock.timings)
     }
 }
 
