@@ -99,9 +99,7 @@ final class CreateModel {
     /// What suggestions aim for (Settings › Painting Length).
     let paintingLength: PaintingLength
     /// Line art and pipeline tuning the painting is made with (Settings › Advanced), on top of
-    /// the suggested or slider settings. Suggestions choose colors, detail and smoothness with
-    /// classic, untuned candidates (`AutoSettings.choose` takes neither yet); `settings` adds
-    /// these to whatever was chosen.
+    /// the suggested or slider settings: every candidate of a suggestion carries them.
     let lineArt: LineArtSettings
     let tuning: PipelineTuning
     /// What layered line art draws from, computed once per photo; nil for classic line art.
@@ -231,7 +229,7 @@ final class CreateModel {
         loadID += 1
         let load = loadID
         let preference = paintingLength
-        let lineArt = self.lineArt
+        let lineArt = self.lineArt, tuning = self.tuning
         loadTask = Task {
             do {
                 let decoded = try await decode()
@@ -248,7 +246,8 @@ final class CreateModel {
                 do {
                     chosen = try await Self.suggest(
                         prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
-                        maxCandidates: Self.maxCandidates, firstDraft: Self.firstDraftHandler(for: self, load: load))
+                        lineArt: lineArt, tuning: tuning, maxCandidates: Self.maxCandidates,
+                        firstDraft: Self.firstDraftHandler(for: self, load: load))
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch {
@@ -329,15 +328,15 @@ final class CreateModel {
     }
 
     /// Moves the sliders to the suggestion and generates it: the winner as a draft first unless
-    /// it is the candidate already on screen (drawn as it will be: classic and untuned), then at
-    /// full resolution.
+    /// it is the candidate already on screen and drawn as it will be (suggestion drafts have no
+    /// edge map, so layered line art is drafted again), then at full resolution.
     private func adopt(_ decision: AutoDecision) {
         self.decision = decision
         apply(decision.settings)
         settingsOrigin = .suggested
         phase = .generating
-        let shownAsWillBe = decision.winner == 0 && preview != nil && lineArt.style == .classic && tuning.isDefault
-        startGeneration(draftFirst: !shownAsWillBe)
+        let shownAsItWillBe = decision.winner == 0 && preview != nil && lineArt.style == .classic
+        startGeneration(draftFirst: !shownAsItWillBe)
     }
 
     private func apply(_ settings: GenerationSettings) {
@@ -485,7 +484,8 @@ final class CreateModel {
     /// sets the canvas the painting time is estimated for.
     @concurrent
     private static func suggest(
-        _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength, maxCandidates: Int,
+        _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength,
+        lineArt: LineArtSettings, tuning: PipelineTuning, maxCandidates: Int,
         firstDraft: @escaping @Sendable (Preview) -> Void
     ) async throws -> AutoDecision {
         // A task's cancellation shows only on the thread running it; the flag reaches every
@@ -494,7 +494,8 @@ final class CreateModel {
         return try await withTaskCancellationHandler {
             try AutoSettings.choose(
                 image: prepared.draft, sourceSize: sourceSize, importance: prepared.importance, hints: prepared.hints,
-                preference: preference, maxCandidates: maxCandidates, cancel: CancellationCheck { flag.isSet }
+                preference: preference, maxCandidates: maxCandidates, lineArt: lineArt, tuning: tuning,
+                cancel: CancellationCheck { flag.isSet }
             ) { output in
                 // Rendered here, before the other candidates run: it is what the painter waits for.
                 guard let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true) else { return }

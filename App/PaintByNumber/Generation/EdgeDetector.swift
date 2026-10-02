@@ -30,7 +30,7 @@ nonisolated enum EdgeDetector {
 
     /// The edge map of `image` (any color space; drawn into sRGB), at the image's own size or
     /// scaled down so its long side is at most `maxLongSide` (clamped to `maximumLongSide`).
-    /// Synchronous and CPU-heavy (about a second at 1152 px): call it off the main actor.
+    /// Synchronous and CPU-heavy (a VGG-16 pass, seconds at 1152 px): call it off the main actor.
     /// Throws `CancellationError` when the current task is cancelled (checked between steps).
     static func edgeMap(for image: CGImage, maxLongSide: Int = 1152) throws -> EdgeMap {
         try edgeMap(for: PhotoLoader.rgbaImage(from: image, colorSpace: .sRGB), maxLongSide: maxLongSide, cancel: .task)

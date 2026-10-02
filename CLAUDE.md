@@ -331,9 +331,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `forGeneration(of:settings:cached:)` turns a model failure into nil (a layered template then comes
   out classic). New paintings get `Preferences.lineArt`/`.tuning` on top of the suggested or slider
   settings: `CreateModel(lineArt:tuning:)` computes the inputs once per photo in the analyzing
-  phase, beside Vision, and hands them to the generator; its `settings` add the line art and tuning
-  to what Auto chose (Auto's candidates are still classic and untuned: `AutoSettings.choose` has no
-  pass-through for them yet, so the winner is drafted again when they differ).
+  phase, beside Vision, and hands them to the generator; `AutoSettings.choose(lineArt:tuning:)`
+  gives every candidate the line art and tuning (its drafts get no edge map, so a layered winner is
+  drafted again with it).
   `ArtworkFactory.template` (regeneration, samples) computes the inputs per template. `meta.json`
   records them in `settings`. Tests: the model against a PyTorch-made map
   (`App/PaintByNumberTests/HEDFixture.ppm` → `.pgm`, written by the conversion script; ≤ 2 levels

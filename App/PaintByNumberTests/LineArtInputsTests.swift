@@ -2,6 +2,7 @@ import CoreGraphics
 import Foundation
 import PaintCore
 import Testing
+import Vision
 @testable import PaintByNumber
 
 /// Files of this test bundle (`HEDFixture.*`, `FaceFixture.jpg`).
@@ -104,7 +105,8 @@ struct EyeFinderTests {
     @Test func findsBothEyesOfAFaceWithTheirIrises() throws {
         let image = try #require(ImageCodec.image(at: TestBundle.url("FaceFixture", "jpg")))
         let eyes = EyeFinder.eyes(in: image)
-        Attachment.record(Data(eyes.map { "\($0)" }.joined(separator: "\n").utf8), named: "face-fixture-eyes.txt")
+        Attachment.record(Data((eyes.map { "\($0)" } + [Self.visionReport(image)]).joined(separator: "\n").utf8),
+                          named: "face-fixture-eyes.txt")
         try #require(eyes.count == 4, "Expected two contours and two irises, got \(eyes.count) polygons")
         func centroid(_ polygon: [SIMD2<Float>]) -> SIMD2<Float> { polygon.reduce(.zero, +) / Float(polygon.count) }
         let contours = Array(eyes[0..<2]), irises = Array(eyes[2..<4])
@@ -131,6 +133,35 @@ struct EyeFinderTests {
             #expect(point.x * 4096 == (point.x * 4096).rounded() && point.y * 4096 == (point.y * 4096).rounded())
         }
         #expect(EyeFinder.eyes(in: image) == eyes, "Two runs found different eyes")
+    }
+
+    /// What Vision itself reports for the fixture: faces, and the left eye's landmarks with and
+    /// without the faces handed in, so a failure shows which step went wrong.
+    private static func visionReport(_ image: CGImage) -> String {
+        let handler = VNImageRequestHandler(cgImage: image, options: [:])
+        let size = CGSize(width: image.width, height: image.height)
+        var lines: [String] = []
+        let rectangles = VNDetectFaceRectanglesRequest()
+        try? handler.perform([rectangles])
+        for face in rectangles.results ?? [] { lines.append("face \(face.boundingBox) confidence \(face.confidence)") }
+        for (name, input) in [("alone", [VNFaceObservation]?.none), ("given faces", rectangles.results)] {
+            for constellation in [VNRequestFaceLandmarksConstellation.constellation65Points, .constellation76Points] {
+                let request = VNDetectFaceLandmarksRequest()
+                request.constellation = constellation
+                request.inputFaceObservations = input
+                do { try handler.perform([request]) } catch { lines.append("landmarks \(name) \(constellation.rawValue): \(error)") }
+                for face in request.results ?? [] {
+                    let eye = face.landmarks?.leftEye
+                    lines.append("""
+                        landmarks \(name) \(constellation.rawValue) rev \(request.revision): box \(face.boundingBox), \
+                        eye \(eye?.pointCount ?? 0) normalized \(eye?.normalizedPoints.prefix(3) ?? []) \
+                        image \(eye?.pointsInImage(imageSize: size).prefix(3) ?? []), \
+                        pupil \(face.landmarks?.leftPupil?.pointsInImage(imageSize: size) ?? [])
+                        """)
+                }
+            }
+        }
+        return lines.joined(separator: "\n")
     }
 
     @Test func aPictureWithoutFacesHasNoEyes() throws {
@@ -188,7 +219,7 @@ struct LineArtInputsTests {
 
     private static func photo(_ name: String = "red-fox") throws -> CGImage {
         let url = try #require(Bundle.main.url(forResource: name, withExtension: "jpg"))
-        let photo = try PhotoLoader.load(url: url, maxPixelSize: 1600)
+        let photo = try PhotoLoader.load(url: url, maxPixelSize: 640)
         return try #require(PhotoLoader.cgImage(from: photo))
     }
 
@@ -206,7 +237,8 @@ struct LineArtInputsTests {
         var start = clock.now
         let first = try #require(try await LineArtInputs.make(for: image, settings: Self.layered))
         let computing = clock.now - start
-        #expect(first.edges.width == 1152 && first.edges.height == 768)
+        // A photo under the model's size keeps its own.
+        #expect(first.edges.width == image.width && first.edges.height == image.height)
         #expect(first.eyes.isEmpty, "A fox has no human face")
         start = clock.now
         let second = try await LineArtInputs.make(for: image, settings: Self.layered)
@@ -225,21 +257,18 @@ struct LineArtInputsTests {
         await #expect(throws: CancellationError.self) { try await request.value }
         // Nothing failed is kept: the next request computes the inputs.
         let input = try await LineArtInputs.make(for: image, settings: Self.layered)
-        #expect(input?.edges.width == 1152)
+        #expect(input?.edges.width == image.width)
     }
 
-    /// Advanced settings come on top of the suggestion and reach the draft, its template and
-    /// the saved artwork's meta.json; layered line art computes its inputs once for the photo.
+    /// Advanced settings reach every candidate, the chosen settings, the draft, its template
+    /// and the saved artwork's meta.json; layered line art computes its inputs once for the photo.
     @Test func createFlowCarriesAdvancedSettingsIntoTheArtwork() async throws {
         let model = CreateModel(paintingLength: .quick, lineArt: Self.layered, tuning: Self.tuning)
         model.load(sample: try #require(Sample.named("red-fox")))
         let draft = try await model.makeDraft()
         let decision = try #require(model.decision)
-        // The suggestion chooses colors, detail and smoothness.
-        var chosen = decision.settings
-        chosen.lineArt = Self.layered
-        chosen.tuning = Self.tuning
-        #expect(model.settings == chosen.normalized)
+        #expect(decision.candidates.allSatisfy { $0.settings.lineArt == Self.layered && $0.settings.tuning == Self.tuning })
+        #expect(model.settings == decision.settings)
         #expect(model.settingsOrigin == .suggested)
         let input = try #require(model.lineArtInput)
         #expect(max(input.edges.width, input.edges.height) == EdgeDetector.maximumLongSide)
