@@ -3,7 +3,11 @@ import PaintCore
 import SwiftUI
 
 struct SettingsView: View {
+    /// Settings › Advanced opens over the whole window (in regular widths, where this sheet is a
+    /// small card) instead of inside the sheet.
+    let advancedFullScreen: Bool
     @Environment(\.dismiss) private var dismiss
+    @Environment(Library.self) private var library
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @AppStorage(SettingsKey.haptics) private var haptics = true
     @AppStorage(SettingsKey.sounds) private var sounds = true
@@ -11,16 +15,24 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
-    #if DEBUG
-    @State private var path: [Destination] = ShellDemo.current == .settingsAcknowledgements ? [.acknowledgements] : []
-    #else
     @State private var path: [Destination] = []
-    #endif
+    @State private var isShowingAdvanced = false
 
     private let appInfo = AppInfo()
 
-    private enum Destination: Hashable { case acknowledgements }
+    private enum Destination: Hashable { case acknowledgements, advanced }
     @State private var tipsReset = false
+
+    init(advancedFullScreen: Bool = false) {
+        self.advancedFullScreen = advancedFullScreen
+        #if DEBUG
+        switch ShellDemo.current {
+        case .settingsAcknowledgements?: _path = State(initialValue: [.acknowledgements])
+        case let demo? where demo.opensAdvanced && !advancedFullScreen: _path = State(initialValue: [.advanced])
+        default: break
+        }
+        #endif
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -114,6 +126,18 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    if advancedFullScreen {
+                        Button { isShowingAdvanced = true } label: { advancedRow }
+                            .accessibilityIdentifier("settings-advanced")
+                    } else {
+                        NavigationLink(value: Destination.advanced) { advancedRow }
+                            .accessibilityIdentifier("settings-advanced")
+                    }
+                } footer: {
+                    Text("Line art, line appearance and the template pipeline, with a live preview. For testers: these settings may change between versions.")
+                }
+
+                Section {
                     LabeledContent {
                         Text(appInfo.summary)
                     } label: {
@@ -134,6 +158,7 @@ struct SettingsView: View {
             .navigationDestination(for: Destination.self) { destination in
                 switch destination {
                 case .acknowledgements: AcknowledgementsView()
+                case .advanced: AdvancedSettingsView(library: library, picture: advancedPicture)
                 }
             }
             .navigationTitle("Settings")
@@ -146,5 +171,53 @@ struct SettingsView: View {
         }
         .presentationDetents([.large])
         .tint(Theme.accent)
+        .fullScreenCover(isPresented: $isShowingAdvanced) {
+            NavigationStack {
+                AdvancedSettingsView(library: library, picture: advancedPicture) { isShowingAdvanced = false }
+            }
+            .tint(Theme.accent)
+        }
+        #if DEBUG
+        .task {
+            guard advancedFullScreen, ShellDemo.current?.opensAdvanced == true else { return }
+            // Once the settings sheet is up: a cover can't be presented while it is still arriving.
+            try? await Task.sleep(for: .milliseconds(600))
+            isShowingAdvanced = true
+        }
+        #endif
+    }
+
+    /// Advanced, marked Experimental, in the look of a row that opens a screen.
+    private var advancedRow: some View {
+        HStack(spacing: 8) {
+            SwiftUI.Label {
+                Text("Advanced")
+                    .foregroundStyle(.primary)
+            } icon: {
+                Image(systemName: "slider.horizontal.3")
+            }
+            Spacer(minLength: 8)
+            Text("Experimental")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Theme.accent.opacity(0.14), in: .capsule)
+            if advancedFullScreen {
+                Image(systemName: "chevron.forward")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .contentShape(.rect)
+    }
+
+    /// The picture a demo scenario previews; nil leaves the choice to the screen.
+    private var advancedPicture: AdvancedSettingsModel.Picture? {
+        #if DEBUG
+        return ShellDemo.current?.advancedPicture.map { .sample($0) }
+        #else
+        return nil
+        #endif
     }
 }

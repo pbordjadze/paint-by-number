@@ -63,6 +63,8 @@ final class CanvasView: UIView, PaintingCanvas {
     var onDismissPhoto: (() -> Void)?
     /// A double-tap zoomed the canvas.
     var onZoomStep: (() -> Void)?
+    /// The zoom relative to the fitted canvas changed (pinch, double tap, camera moves).
+    var onZoomChange: ((CGFloat) -> Void)?
     /// Set from SwiftUI's `accessibilityReduceMotion`: camera moves jump, fills and undos land
     /// at once, finishing doesn't shine, the replay steps through the fills, and hints and
     /// wrong-paint numbers light up and fade instead of throbbing or popping.
@@ -429,6 +431,7 @@ final class CanvasView: UIView, PaintingCanvas {
         // Runs every animation frame: invalidate only, the settle announces the new layout.
         accessibilityChanged(post: false)
         requestRender()
+        onZoomChange?(relativeZoom)
     }
 
     private func animateCamera(zoom: CGFloat, offset: CGPoint, duration: CFTimeInterval) {
@@ -505,6 +508,18 @@ final class CanvasView: UIView, PaintingCanvas {
     var visibleCenter: SIMD2<Float> {
         let avail = bounds.inset(by: chromeInsets)
         return canvasPoint(forView: CGPoint(x: avail.midX, y: avail.midY))
+    }
+
+    /// Zoom relative to the fitted canvas: 1 shows the whole painting.
+    var relativeZoom: CGFloat { fitZoom > 0 ? scrollView.zoomScale / fitZoom : 1 }
+
+    /// Where the camera looks, so a canvas of another template of the same size can open there.
+    var camera: CanvasCamera { CanvasCamera(zoom: relativeZoom, center: visibleCenter) }
+
+    /// Animates to `relative` times the fitted zoom, about the middle of the visible area.
+    func zoom(toRelative relative: CGFloat) {
+        guard scrollView.zoomScale > 0 else { return }
+        zoom(by: relative * fitZoom / scrollView.zoomScale)
     }
 
     func zoomToFit(animated: Bool = true) {
@@ -994,6 +1009,8 @@ final class CanvasView: UIView, PaintingCanvas {
                 onDismissPhoto?()
                 return
             }
+            // No paint on the brush (a finished painting, the Advanced settings preview): no brush.
+            guard session.selectedColor != nil else { return }
             FeedbackEngine.shared.selectionChanged()
             brushPoint = g.location(in: self)
             dragLast = p
@@ -1307,6 +1324,7 @@ extension CanvasView: UIScrollViewDelegate {
         if !isApplyingCamera { scrollView.contentInset = insets(forZoom: scrollView.zoomScale) }
         accessibilityChanged(post: false)
         requestRender()
+        onZoomChange?(relativeZoom)
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {

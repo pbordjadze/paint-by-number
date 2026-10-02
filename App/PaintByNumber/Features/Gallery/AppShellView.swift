@@ -7,6 +7,7 @@ import UniformTypeIdentifiers
 /// settings.
 struct AppShellView: View {
     @Environment(Library.self) private var library
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Namespace private var zoom
     @State private var path: [UUID] = []
     /// The gallery's Show filter, remembered per window, and the text of its search field.
@@ -78,7 +79,7 @@ struct AppShellView: View {
             .environment(library)
         }
         .sheet(isPresented: $isShowingSettings, onDismiss: presentIncomingImage) {
-            SettingsView()
+            SettingsView(advancedFullScreen: horizontalSizeClass == .regular)
                 .environment(library)
         }
         .sheet(item: $timelapse, onDismiss: presentIncomingImage) { request in

@@ -1,5 +1,7 @@
 #if DEBUG
+import CoreGraphics
 import Foundation
+import PaintCore
 
 /// Demo scenarios owned by the app shell (see `DemoMode`). Each uses a throwaway library
 /// seeded deterministically from the bundled pictures (`pictures`): the ones a viewer judges
@@ -30,6 +32,13 @@ import Foundation
 ///   a bundled sample written to the temporary directory at launch (`DemoMode.openFileURL`).
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
+/// - `settings-advanced`, `settings-advanced-dark`, `settings-advanced-long-text`: Settings ›
+///   Advanced at the default settings, previewing The Great Wave (pushed inside the sheet on
+///   iPhone, over the whole window on iPad); the last with every localized string twice as long.
+/// - `settings-advanced-layered`: the same with Layered lines, previewing the freight train at
+///   2×, scrolled to Line Appearance.
+/// - `settings-advanced-tuned`: the same with three pipeline multipliers moved, previewing the
+///   red fox, scrolled to Pipeline with every effect measured.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -42,7 +51,7 @@ enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
          galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createSuggested, createCustom, createFromFile, settings,
-         settingsLongText, settingsAcknowledgements
+         settingsLongText, settingsAcknowledgements, settingsAdvanced, settingsAdvancedLayered, settingsAdvancedTuned
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -67,6 +76,9 @@ enum ShellDemo: Equatable {
         case "settings": .settings
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
+        case "settings-advanced", "settings-advanced-dark", "settings-advanced-long-text": .settingsAdvanced
+        case "settings-advanced-layered": .settingsAdvancedLayered
+        case "settings-advanced-tuned": .settingsAdvancedTuned
         default: nil
         }
     }()
@@ -117,7 +129,33 @@ enum ShellDemo: Equatable {
         }
     }
 
-    var opensSettings: Bool { self == .settings || self == .settingsLongText || self == .settingsAcknowledgements }
+    var opensSettings: Bool {
+        self == .settings || self == .settingsLongText || self == .settingsAcknowledgements || opensAdvanced
+    }
+
+    var opensAdvanced: Bool { self == .settingsAdvanced || self == .settingsAdvancedLayered || self == .settingsAdvancedTuned }
+
+    /// The library picture Settings › Advanced previews.
+    var advancedPicture: String? {
+        switch self {
+        case .settingsAdvanced: "great-wave"
+        case .settingsAdvancedLayered: "santa-fe-freight"
+        case .settingsAdvancedTuned: "red-fox"
+        default: nil
+        }
+    }
+
+    /// The row Settings › Advanced scrolls to once its preview is ready.
+    var advancedScrollAnchor: String? {
+        switch self {
+        case .settingsAdvancedLayered: "advanced-appearance"
+        case .settingsAdvancedTuned: "advanced-pipeline"
+        default: nil
+        }
+    }
+
+    /// The zoom the preview moves to once it is ready.
+    var advancedZoom: CGFloat? { self == .settingsAdvancedLayered ? 2 : nil }
 
     var previewSample: Sample? {
         switch self {
@@ -167,11 +205,22 @@ enum ShellDemo: Equatable {
             }
         case .galleryTimelapse, .galleryTimelapseLongText:
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
+        case .settingsAdvancedLayered:
+            register(LineArtSettings(style: .layered), forKey: SettingsKey.lineArt)
+        case .settingsAdvancedTuned:
+            register(PipelineTuning(smoothing: 1.5, minimumCellSize: 2, accentColors: 0.5), forKey: SettingsKey.pipelineTuning)
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings, .settingsLongText,
-             .settingsAcknowledgements:
+             .settingsAcknowledgements, .settingsAdvanced:
             break
         }
+    }
+
+    /// Registered, not stored: the setting lasts for this launch, so the next scenario on the
+    /// same simulator starts from the defaults.
+    private func register<T: Encodable>(_ value: T, forKey key: String) {
+        guard let data = try? JSONEncoder().encode(value) else { return }
+        UserDefaults.standard.register(defaults: [key: data])
     }
 
     /// The first six pictures painted to various stages: four in progress, two finished
@@ -187,6 +236,6 @@ enum ShellDemo: Equatable {
 
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded).
-    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings }
+    var isReadyOnAppear: Bool { self == .galleryEmpty || (opensSettings && !opensAdvanced) }
 }
 #endif
