@@ -53,6 +53,8 @@ struct LocalizationTests {
         #expect(ArtworkExporter.timelapseName(title: "Parrots") == "Parrots Time-lapse")
         // The library's titles resolve to their records' (`SampleLibraryTests`).
         #expect(Sample.retired.map(\.title) == ["Parrots", "Hibiscus", "Lighthouse", "Red Barn", "Espresso", "Regatta"])
+        let hokusai = Sample.Provenance(kind: .painting, creator: "Katsushika Hokusai", year: "c. 1830–32", credit: "", license: "")
+        #expect(Acknowledgements.byline(hokusai) == "Katsushika Hokusai, c. 1830–32")
         #expect(PDFExporter.Paper.letter.name == "US Letter")
         #expect(PaintSpeech.colorLabel(
             number: 12, name: ColorName(family: .blue, lightness: .dark, chroma: .grayish), nickname: "Harbor Fog")

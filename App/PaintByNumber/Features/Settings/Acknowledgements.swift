@@ -16,8 +16,15 @@ nonisolated struct Acknowledgement: Identifiable, Hashable, Sendable {
 }
 
 /// Credits shown in Settings › Acknowledgements and repeated in `ACKNOWLEDGEMENTS.md`
-/// (`AboutTests` keeps the two in step).
+/// (`AboutTests` keeps the two in step): the sample pictures (`Sample.all`, as `library.json`
+/// records them), then the template engine's code and methods.
 nonisolated enum Acknowledgements {
+    /// "Katsushika Hokusai, c. 1830–32": who made a picture, and when.
+    static func byline(_ provenance: Sample.Provenance) -> String {
+        String(localized: "acknowledgements.picture.byline", defaultValue: "\(provenance.creator), \(provenance.year)",
+               comment: "A credited picture's maker and date in Acknowledgements, as its source gives them; the arguments are the creator and the year, e.g. “Katsushika Hokusai, c. 1830–32”")
+    }
+
     /// Swift ports of open-source libraries (`Sources/PaintCore/Vector`).
     static let code: [Acknowledgement] = [
         Acknowledgement(

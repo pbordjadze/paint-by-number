@@ -167,6 +167,32 @@ struct AcknowledgementsTests {
         #expect(curveFitter.contains("Selinger") && curveFitter.contains("polygon-based tracing algorithm") && !curveFitter.contains("GPL"))
     }
 
+    /// Every picture the Samples pane offers is credited, in Settings (`Sample.all` with its
+    /// `library.json` record) and in `ACKNOWLEDGEMENTS.md`'s Pictures section: the same pictures
+    /// in the same order, each with its creator, year, credit and license. The retired samples,
+    /// whose provenance was never recorded, are in neither.
+    @Test func picturesAreCreditedInTheAppAndTheFile() throws {
+        #expect(!Sample.all.isEmpty)
+        let text = try String(contentsOf: repositoryRoot.appending(path: "ACKNOWLEDGEMENTS.md"), encoding: .utf8)
+        let section = try #require(
+            text.components(separatedBy: "\n## Pictures\n").dropFirst().first?.components(separatedBy: "\n## ").first,
+            "ACKNOWLEDGEMENTS.md has no Pictures section")
+        // The section's pictures: a "### <title>" heading each, with its lines up to the next.
+        let entries = Array(section.components(separatedBy: "\n### ").dropFirst())
+        let titles = entries.map { entry in String(entry.prefix { $0 != "\n" }) }
+        #expect(titles == Sample.all.map(\.title), "ACKNOWLEDGEMENTS.md credits \(titles)")
+        for (sample, entry) in zip(Sample.all, entries) {
+            let provenance = try #require(sample.provenance, "\(sample.id) has no credit")
+            for field in [provenance.creator, provenance.year, provenance.credit, provenance.license] {
+                #expect(!field.trimmingCharacters(in: .whitespaces).isEmpty, "\(sample.id) has an empty credit field")
+            }
+            for line in [Acknowledgements.byline(provenance), provenance.credit, provenance.license] {
+                #expect(entry.contains("\n\(line)\n"), "ACKNOWLEDGEMENTS.md's \(sample.title) is missing: \(line)")
+            }
+        }
+        #expect(Sample.retired.allSatisfy { $0.provenance == nil && !Sample.all.contains($0) })
+    }
+
     /// `ACKNOWLEDGEMENTS.md` at the repository root repeats what Settings shows.
     @Test func acknowledgementsFileMatchesTheApp() throws {
         let text = try String(contentsOf: repositoryRoot.appending(path: "ACKNOWLEDGEMENTS.md"), encoding: .utf8)

@@ -6,7 +6,7 @@
       "extractionState" : "manual"
     },
     "Acknowledgements" : {
-      "comment" : "Settings row, and the title of the screen it opens, crediting the open-source code and published methods behind the template engine",
+      "comment" : "Settings row, and the title of the screen it opens, crediting the sample pictures and the open-source code and published methods behind the template engine",
       "extractionState" : "manual"
     },
     "acknowledgements.codeFooter" : {
@@ -89,6 +89,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compares colors the way the eye does when choosing the palette."
+          }
+        }
+      }
+    },
+    "acknowledgements.picture.byline" : {
+      "comment" : "A credited picture's maker and date in Acknowledgements, as its source gives them; the arguments are the creator and the year, e.g. “Katsushika Hokusai, c. 1830–32”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
           }
         }
       }
@@ -2053,6 +2065,10 @@
       "comment" : "Segment of the create flow that shows the photo library",
       "extractionState" : "manual"
     },
+    "Pictures" : {
+      "comment" : "Header of the list crediting the bundled sample pictures (title, creator, collection, license) in Acknowledgements",
+      "extractionState" : "manual"
+    },
     "Plain" : {
       "comment" : "Option of the Color Names setting: paints go by plain color names, e.g. “dark grayish blue”",
       "extractionState" : "manual"
@@ -2599,6 +2615,10 @@
     },
     "When you finish a color, the next one is picked up automatically." : {
       "comment" : "Footer under the Advance to Next Color setting",
+      "extractionState" : "manual"
+    },
+    "With thanks to the museums and archives that share these pictures." : {
+      "comment" : "Footer under the Pictures list in Acknowledgements",
       "extractionState" : "manual"
     },
     "Your Photos" : {

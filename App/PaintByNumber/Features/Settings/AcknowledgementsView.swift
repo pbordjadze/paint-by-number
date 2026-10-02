@@ -1,10 +1,20 @@
 import SwiftUI
 
-/// Settings › Acknowledgements: the open-source code and published methods behind the
-/// template engine, with the licenses the ported code is used under.
+/// Settings › Acknowledgements: the sample pictures and where they come from, then the
+/// open-source code and published methods behind the template engine, with the licenses the
+/// ported code is used under.
 struct AcknowledgementsView: View {
     var body: some View {
         Form {
+            // The retired samples have no provenance record: they are neither offered nor listed.
+            Section {
+                ForEach(Sample.all) { PictureRow(sample: $0) }
+            } header: {
+                Text("Pictures")
+            } footer: {
+                Text("With thanks to the museums and archives that share these pictures.")
+            }
+
             Section {
                 ForEach(Acknowledgements.code) { AcknowledgementRow(item: $0) }
             } header: {
@@ -54,6 +64,31 @@ private struct AcknowledgementRow: View {
             }
             if let license = item.license {
                 Text(license.name)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// A sample picture's credit: its title, who made it and when, the collection the file comes
+/// from and its license, the facts shown verbatim as `library.json` records them.
+private struct PictureRow: View {
+    let sample: Sample
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(sample.title)
+                .font(.headline)
+            if let provenance = sample.provenance {
+                Text(Acknowledgements.byline(provenance))
+                    .font(.subheadline)
+                Text(provenance.credit)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Text(provenance.license)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }

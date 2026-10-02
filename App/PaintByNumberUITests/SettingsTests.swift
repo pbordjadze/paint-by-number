@@ -15,6 +15,7 @@ final class SettingsTests: XCTestCase {
             "The version row doesn't read like \"1.0 (1)\": \(text)")
     }
 
+    /// Acknowledgements opens on the sample pictures' credits; the algorithm ports follow them.
     @MainActor
     func testAcknowledgementsListTheAlgorithmPorts() throws {
         let app = openSettings()
@@ -24,9 +25,12 @@ final class SettingsTests: XCTestCase {
         row.tap()
 
         XCTAssertTrue(app.navigationBars["Acknowledgements"].waitForExistence(timeout: 10))
+        let pictures = app.descendants(matching: .any).matching(NSPredicate(format: "label ==[c] 'Pictures'")).firstMatch
+        XCTAssertTrue(pictures.waitForExistence(timeout: 5), "Acknowledgements doesn't open on the Pictures section")
         for credit in ["mapbox/earcut", "mapbox/polylabel", "Peter Selinger"] {
             let entry = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", credit)).firstMatch
-            scroll(app, to: entry)
+            // Past every picture's credit.
+            scroll(app, to: entry, maxSwipes: 30)
             XCTAssertTrue(entry.exists, "Acknowledgements doesn't credit \(credit)")
         }
         attachScreenshot(of: app, named: "acknowledgements")
@@ -139,9 +143,9 @@ final class SettingsTests: XCTestCase {
 
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view.
     @MainActor
-    private func scroll(_ app: XCUIApplication, to element: XCUIElement) {
+    private func scroll(_ app: XCUIApplication, to element: XCUIElement, maxSwipes: Int = 6) {
         var swipes = 0
-        while !element.waitForExistence(timeout: 1) && swipes < 6 {
+        while !element.waitForExistence(timeout: 1) && swipes < maxSwipes {
             app.swipeUp()
             swipes += 1
         }

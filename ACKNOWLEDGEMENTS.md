@@ -4,6 +4,28 @@ Paint by Moonlight builds on the work below. It is also shown in the app under
 Settings › About › Acknowledgements. Everything runs on the device; none of it sends your
 photos anywhere.
 
+## Pictures
+
+The paintings and photographs offered as samples, with thanks to the museums and archives that
+share them. Each one's record, with the source of the file and the evidence of its license, is
+in `App/PaintByNumber/Resources/Samples/library.json`.
+
+### The Great Wave
+
+Katsushika Hokusai, c. 1830–32
+
+The Metropolitan Museum of Art, H. O. Havemeyer Collection, Bequest of Mrs. H. O. Havemeyer, 1929
+
+CC0 / Public domain
+
+### Earthrise
+
+William Anders, NASA, 1968
+
+NASA, Apollo 8 (AS08-14-2383)
+
+Public domain (NASA)
+
 ## Open-source code
 
 Swift ports of these libraries (`Sources/PaintCore/Vector`) are part of the template engine.
