@@ -3,7 +3,8 @@
 Exploration only (the spec is `docs/overnight/lineart.md`). Python scripts that turn a picture
 into line art at `pbn`'s working resolution, four families competing on one shared cleanup.
 Nothing here touches `Sources/`, `App/` or the regression baselines. Findings: `results.md`
-(the overall verdict and stage 1) and `results_color.md` (stage 2, color inside the lines).
+(the overall verdict and stage 1), `results_color.md` (stage 2, color inside the lines) and
+`results_layers.md` (round 3, layered cells: one set of cells, lines that draw by zoom).
 
 | File | What |
 | --- | --- |
@@ -20,6 +21,10 @@ Nothing here touches `Sources/`, `App/` or the regression baselines. Findings: `
 | `panels.py`, `run_color.py`, `color_report.py`, `panel_sheet.py` | stage 2: the painting plan and finished panels, the driver, the numbers, sheets |
 | `color_test_picks.json` | which options stage 2 ran per test picture |
 | `narrowing/` | the blind legibility check (key, answers) and the options shown to the owner |
+| `layers.py` | round 3: layered cells (top / mid / inner / color lines, C1 cells, numbers with a legible zoom), SVG, renders, manifest |
+| `subject.py`, `eyes.py` | round 3: the subject silhouette (BiRefNet, MIT) and eye boxes (OWLv2, Apache-2.0; YuNet landmarks for faces), stand-ins for Vision |
+| `svg_render.mjs`, `svg_check.cjs` | round 3: batch SVG rasterizing with resvg (renders), opening the SVGs in Chromium (check) |
+| `layers_notes.json` | round 3: the one-sentence notes per picture and variant that go into the manifest |
 
 Stage 2 reads each option's `walls.png` and `ink.png`; see `results_color.md` § Reproducing.
 
@@ -133,3 +138,36 @@ About 5-7 minutes per picture for stage 1 (the nine models) and 1-2 minutes for 
 what a fresh agent said when shown only the "lines alone" panels (subject, confidence, whether it
 reads as a drawing). Rebuild the anonymous set by shuffling the selection with
 `random.Random(7)` and saving each option's `lines_alone.png` at 1100 px as `d01.jpg`...
+
+## Layered cells (round 3)
+
+`layers.py` builds, per picture, four variants of one model: cells bounded by lines, every line
+on a cell boundary, each line in a layer (`top`, `mid`, `inner`, `color`) that sets how strongly
+it draws at a zoom. It reads stage 1's cached raw maps (`$S/lineart/out/<pic>/_cache/learned_hed.npy`,
+`learned_teed.npy`) and `importance.png` / `importance.json`, and pbn's picture directory.
+
+Extra setup (the round-1 venv plus):
+
+```sh
+venv/bin/pip install "transformers>=4.45"        # 5.18.0 used; it pins huggingface_hub to 1.33
+HF_HOME=$S/lineart/hf venv/bin/python -c "
+from huggingface_hub import hf_hub_download, snapshot_download
+hf_hub_download('onnx-community/BiRefNet-ONNX', 'onnx/model.onnx')     # 973 MB, MIT
+snapshot_download('google/owlv2-base-patch16-ensemble')                # Apache-2.0"
+```
+
+Run (the subject mask, ~50 s, and the eye search, ~1-3 min, are cached per picture as
+`_subject.png` / `_eyes.json`; then ~45 s per variant):
+
+```sh
+cd research/lineart
+S=$S HF_HOME=$S/lineart/hf $S/venv/bin/python layers.py santa-fe-freight hawksbill-turtle red-fox --jobs 2
+S=$S $S/venv/bin/python layers.py --manifest          # writes and validates $S/lineart/layers/manifest.json
+NODE_PATH=/opt/node22/lib/node_modules node svg_check.cjs /tmp/shots $S/lineart/layers/*/recommended/lines.svg
+```
+
+Options: `--variants recommended,no-closure,hed-layers,merged-color`; `LAYERS_DEBUG=1` also
+writes `$S/lineart/layers/_look/<pic>-<variant>-dbg{1,2,4}.png`, every layer in its own colour
+(top black, mid blue, inner green, color orange). Renders need node 22 with `@resvg/resvg-js`
+in `$S/node` (as stage 2) and Source Serif 4 in `$S/fonts`. Outputs and the manifest format:
+`results_layers.md`.
