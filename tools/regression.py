@@ -4,8 +4,8 @@
     tools/regression.py [--update] [--sheets DIR] [--json FILE] [--out DIR]
     tools/regression.py --self-test
 
-Generates every bundled sample (App/PaintByNumber/Resources/Samples/*.jpg) in each regime
-of REGIMES with the release pbn, twice, and checks the results against the committed
+Generates the photos of SAMPLE_NAMES (App/PaintByNumber/Resources/Samples/<name>.jpg) in each
+regime of REGIMES with the release pbn, twice, and checks the results against the committed
 baseline tools/baseline/regression.json:
 
   hard invariants  pbn succeeds; `pbn check` validates the template; the two runs give
@@ -50,6 +50,10 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PBN = os.environ.get("PBN", os.path.join(ROOT, ".build", "release", "pbn"))
 SAMPLES = os.path.join(ROOT, "App", "PaintByNumber", "Resources", "Samples")
+# The app's six former samples (`Sample.retired`), pinned by name: the curated picture library
+# beside them changes with curation, which must neither move the baselines nor multiply CI's
+# time. The benchmark step in .github/workflows/ci.yml lists the same files.
+SAMPLE_NAMES = ["barn", "espresso", "hibiscus", "lighthouse", "parrots", "regatta"]
 BASELINE = os.path.join(ROOT, "tools", "baseline", "regression.json")
 AUTO_BASELINE = os.path.join(ROOT, "tools", "baseline", "auto.json")
 
@@ -432,7 +436,11 @@ def main(argv):
         print("Pillow is required (pip install pillow, or apt install python3-pil)", file=sys.stderr)
         sys.exit(2)
 
-    samples = sorted(f for f in os.listdir(SAMPLES) if f.endswith(".jpg"))
+    samples = [name + ".jpg" for name in SAMPLE_NAMES]
+    missing = [s for s in samples if not os.path.isfile(os.path.join(SAMPLES, s))]
+    if missing:
+        print(f"missing from {SAMPLES}: {', '.join(missing)}", file=sys.stderr)
+        sys.exit(2)
     try:
         with open(BASELINE) as f:
             baseline = json.load(f)

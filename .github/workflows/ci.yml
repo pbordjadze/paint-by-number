@@ -151,7 +151,11 @@ jobs:
             echo "PaintCore unchanged; benchmark skipped" | tee out/bench.txt; exit 0
           fi
           swift build -c release --product pbn 2>&1 | tail -2
-          .build/release/pbn bench App/PaintByNumber/Resources/Samples/*.jpg --runs 3 | tee out/bench.txt
+          # The six former samples, as in tools/regression.py (SAMPLE_NAMES): the curated
+          # picture library beside them would make the timings incomparable and the step long.
+          S=App/PaintByNumber/Resources/Samples
+          .build/release/pbn bench $S/barn.jpg $S/espresso.jpg $S/hibiscus.jpg $S/lighthouse.jpg \
+            $S/parrots.jpg $S/regatta.jpg --runs 3 | tee out/bench.txt
       - name: Collect diagnostics
         if: always()
         run: |
