@@ -27,11 +27,14 @@ public struct TemplateGenerator: Sendable {
     ///   - image: Source photo, any size (it is area-resampled to the working size).
     ///   - importance: Optional per-pixel saliency in 0...1 at any resolution (e.g. a
     ///     subject mask from Vision). Important areas receive more colors and detail.
+    ///   - lineArt: The edge map (and eyes) layered line art draws from. Ignored by classic
+    ///     settings; layered settings without it generate a classic template.
     ///   - cancel: Polled between and within stages.
     ///   - progress: Called with a rough 0...1 completion fraction.
     public func generate(
         from image: RGBAImage,
         importance: Grid<Float>? = nil,
+        lineArt: LineArtInput? = nil,
         cancel: CancellationCheck = .task,
         progress: (@Sendable (Float) -> Void)? = nil
     ) throws -> Output {

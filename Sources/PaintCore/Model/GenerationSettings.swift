@@ -8,12 +8,37 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     public var smoothness: Float
     /// Seed for any stochastic step, so identical inputs give identical templates.
     public var seed: UInt64
+    /// Classic or layered lines, and how layered lines are found.
+    public var lineArt: LineArtSettings
+    /// Expert multipliers on the segmentation's derived knobs (default: none).
+    public var tuning: PipelineTuning
 
-    public init(colorCount: Int = 24, detail: Float = 0.5, smoothness: Float = 0.5, seed: UInt64 = 0x5eed) {
+    public init(
+        colorCount: Int = 24, detail: Float = 0.5, smoothness: Float = 0.5, seed: UInt64 = 0x5eed,
+        lineArt: LineArtSettings = LineArtSettings(), tuning: PipelineTuning = PipelineTuning()
+    ) {
         self.colorCount = colorCount
         self.detail = detail
         self.smoothness = smoothness
         self.seed = seed
+        self.lineArt = lineArt
+        self.tuning = tuning
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case colorCount, detail, smoothness, seed, lineArt, tuning
+    }
+
+    /// The four original fields are required as before; the later ones default, so settings
+    /// saved before they existed (every artwork's `meta.json`) still decode.
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        colorCount = try c.decode(Int.self, forKey: .colorCount)
+        detail = try c.decode(Float.self, forKey: .detail)
+        smoothness = try c.decode(Float.self, forKey: .smoothness)
+        seed = try c.decode(UInt64.self, forKey: .seed)
+        lineArt = (try? c.decodeIfPresent(LineArtSettings.self, forKey: .lineArt)) ?? LineArtSettings()
+        tuning = (try? c.decodeIfPresent(PipelineTuning.self, forKey: .tuning)) ?? PipelineTuning()
     }
 
     public static let colorCountRange = 6...150
@@ -33,6 +58,8 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
         s.colorCount = min(max(colorCount, Self.colorCountRange.lowerBound), Self.colorCountRange.upperBound)
         s.detail = min(max(detail, 0), 1)
         s.smoothness = min(max(smoothness, 0), 1)
+        s.lineArt = lineArt.normalized
+        s.tuning = tuning.normalized
         return s
     }
 

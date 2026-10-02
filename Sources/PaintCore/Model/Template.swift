@@ -57,17 +57,73 @@ public struct Template: Sendable, Equatable {
     /// (format-1 files, templates built outside the generator such as `pbn trace`).
     public var pipelineVersion: UInt32
 
+    /// Layered line art (`LineArtSettings.Style.layered`): a layer and weight per boundary edge,
+    /// and the lines drawn inside cells. `nil` for classic templates, which draw every edge alike.
+    public var lineArt: TemplateLineArt?
+
     public init(
         width: Int, height: Int, colorSpace: RGBColorSpace,
         palette: [PaletteColor], regions: [Region],
         points: [SIMD2<Float>], edges: [BoundaryEdge], ringEdges: [EdgeRef], rings: [Ring],
-        labels: [Label], mesh: FillMesh, regionMap: RegionMap, pipelineVersion: UInt32 = 0
+        labels: [Label], mesh: FillMesh, regionMap: RegionMap, pipelineVersion: UInt32 = 0,
+        lineArt: TemplateLineArt? = nil
     ) {
         self.width = width; self.height = height; self.colorSpace = colorSpace
         self.palette = palette; self.regions = regions
         self.points = points; self.edges = edges; self.ringEdges = ringEdges; self.rings = rings
         self.labels = labels; self.mesh = mesh; self.regionMap = regionMap
         self.pipelineVersion = pipelineVersion
+        self.lineArt = lineArt
+    }
+}
+
+/// The strength class of a line in layered line art; renderers draw each with its own
+/// opacity and width for the current zoom.
+public enum LineLayer: UInt8, Sendable, CaseIterable {
+    /// Strong edges and eyes: always at full strength.
+    case outline = 0
+    /// Weaker edges: lighter zoomed out.
+    case detail = 1
+    /// The weakest drawn edges: faint zoomed out, full when zoomed in.
+    case texture = 2
+    /// A boundary where only the paint changes and nothing is drawn (banded skies, shading).
+    case color = 3
+}
+
+/// Line data of a layered template.
+public struct TemplateLineArt: Sendable, Equatable {
+    /// `LineLayer` raw value per `Template.edges` entry.
+    public var edgeLayers: [UInt8]
+    /// Strength per edge (0...255), for renderers that weight lines within a layer.
+    public var edgeWeights: [UInt8]
+    /// Shared vertices of `strokes`, inside the canvas and on `Template.coordinateQuantum`.
+    public var strokePoints: [SIMD2<Float>]
+    /// Lines drawn inside a cell (same paint on both sides, see `LineArtSettings.SamePaint`).
+    public var strokes: [InteriorStroke]
+
+    public init(edgeLayers: [UInt8], edgeWeights: [UInt8], strokePoints: [SIMD2<Float>] = [], strokes: [InteriorStroke] = []) {
+        self.edgeLayers = edgeLayers
+        self.edgeWeights = edgeWeights
+        self.strokePoints = strokePoints
+        self.strokes = strokes
+    }
+}
+
+/// An open polyline drawn inside one region.
+public struct InteriorStroke: Sendable, Hashable {
+    /// Span into `TemplateLineArt.strokePoints` (at least 2 points).
+    public var pointStart: UInt32
+    public var pointCount: UInt32
+    /// `LineLayer` raw value.
+    public var layer: UInt8
+    /// Strength, 0...255.
+    public var weight: UInt8
+    /// The region the stroke lies in.
+    public var region: UInt32
+
+    public init(pointStart: UInt32, pointCount: UInt32, layer: UInt8, weight: UInt8, region: UInt32) {
+        self.pointStart = pointStart; self.pointCount = pointCount
+        self.layer = layer; self.weight = weight; self.region = region
     }
 }
 

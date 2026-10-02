@@ -11,6 +11,11 @@ enum SettingsKey {
     static let timelapsePace = "timelapsePace"
     static let paperAppearance = "paperAppearance"
     static let colorNames = "colorNameStyle"
+    /// Settings › Advanced (JSON data): line art and pipeline tuning for new paintings, and
+    /// how layered lines are drawn.
+    static let lineArt = "advancedLineArt"
+    static let pipelineTuning = "advancedPipelineTuning"
+    static let lineAppearance = "advancedLineAppearance"
 }
 
 /// A snapshot of the user's preferences, with their defaults.
@@ -26,6 +31,12 @@ struct Preferences: Equatable {
     var paperAppearance: PaperAppearance
     /// Whether paints go by playful nicknames or their plain structured names.
     var colorNames: ColorNameStyle
+    /// Line art new paintings are generated with (Settings › Advanced).
+    var lineArt: LineArtSettings
+    /// Expert pipeline multipliers new paintings are generated with (Settings › Advanced).
+    var tuning: PipelineTuning
+    /// How layered lines are drawn at each zoom (Settings › Advanced).
+    var lineAppearance: LineAppearance
 
     init(defaults: UserDefaults = .standard) {
         haptics = defaults.object(forKey: SettingsKey.haptics) as? Bool ?? true
@@ -38,6 +49,19 @@ struct Preferences: Equatable {
         paperAppearance = defaults.string(forKey: SettingsKey.paperAppearance).flatMap(PaperAppearance.init(rawValue:))
             ?? .default
         colorNames = defaults.string(forKey: SettingsKey.colorNames).flatMap(ColorNameStyle.init(rawValue:)) ?? .playful
+        lineArt = Self.decoded(LineArtSettings.self, defaults, SettingsKey.lineArt) ?? LineArtSettings()
+        tuning = Self.decoded(PipelineTuning.self, defaults, SettingsKey.pipelineTuning) ?? PipelineTuning()
+        lineAppearance = Self.decoded(LineAppearance.self, defaults, SettingsKey.lineAppearance) ?? .default
+    }
+
+    /// A JSON-encoded setting, or nil when absent or unreadable (the caller's default applies).
+    private static func decoded<T: Decodable>(_ type: T.Type, _ defaults: UserDefaults, _ key: String) -> T? {
+        defaults.data(forKey: key).flatMap { try? JSONDecoder().decode(T.self, from: $0) }
+    }
+
+    /// Stores a JSON-encoded setting (Settings › Advanced writes its three groups this way).
+    static func store<T: Encodable>(_ value: T, forKey key: String, in defaults: UserDefaults = .standard) {
+        if let data = try? JSONEncoder().encode(value) { defaults.set(data, forKey: key) }
     }
 
     func apply(to session: PaintingSession) {
