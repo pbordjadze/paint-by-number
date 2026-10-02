@@ -239,6 +239,36 @@ struct AutoSettingsTests {
         #expect(AutoSettings.center(for: Self.analysis(structure: 0.3), preference: .relaxed).smoothness < base.smoothness)
     }
 
+    /// The rule picks colors, detail and smoothness; line art, tuning and seed come from the
+    /// base settings (Settings › Advanced), in every candidate and in the decision.
+    @Test func candidatesCarryTheBaseSettings() throws {
+        let a = Self.analysis()
+        let base = GenerationSettings(
+            colorCount: 99, detail: 0.9, smoothness: 0.1, seed: 42,
+            lineArt: LineArtSettings(style: .layered, outlineThreshold: 0.7, samePaint: .split),
+            tuning: PipelineTuning(smoothing: 2, accentColors: 0.5))
+        let plain = AutoSettings.candidates(for: a, preference: .relaxed, maxCandidates: 5)
+        let carried = AutoSettings.candidates(for: a, preference: .relaxed, maxCandidates: 5, base: base)
+        #expect(carried.count == plain.count)
+        for (p, c) in zip(plain, carried) {
+            #expect(c.settings.colorCount == p.settings.colorCount && c.settings.detail == p.settings.detail)
+            #expect(c.settings.smoothness == p.settings.smoothness)
+            #expect(c.settings.lineArt == base.lineArt && c.settings.tuning == base.tuning && c.settings.seed == base.seed)
+        }
+        // Without a base, candidates are the rule's settings on the defaults, as before.
+        #expect(plain.allSatisfy {
+            $0.settings.lineArt == LineArtSettings() && $0.settings.tuning == PipelineTuning() && $0.settings.seed == GenerationSettings().seed
+        })
+
+        let image = SegmentationTests.scene(width: 240, height: 160)
+        let edges = EdgeMap(width: 24, height: 16, values: [UInt8](repeating: 0, count: 24 * 16))
+        let decision = try AutoSettings.choose(
+            image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3, base: base,
+            lineArt: LineArtInput(edges: edges), cancel: .none, firstDraft: nil)
+        #expect(decision.candidates.allSatisfy { $0.settings.lineArt == base.lineArt && $0.settings.tuning == base.tuning })
+        #expect(decision.settings.seed == base.seed)
+    }
+
     @Test func kneeFindsWhereAnotherPaintStopsPaying() {
         // A power law through this curve loses 0.0004 per paint at about 39 paints.
         let curve: [Float] = [0.1, 0.084, 0.076, 0.068, 0.064, 0.0608, 0.0592]

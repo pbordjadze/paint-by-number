@@ -98,6 +98,12 @@ final class CreateModel {
     private(set) var decision: AutoDecision?
     /// What suggestions aim for (Settings › Painting Length).
     let paintingLength: PaintingLength
+    /// Line art and pipeline tuning the painting is made with (Settings › Advanced), on top of
+    /// the suggested or slider settings.
+    let lineArt: LineArtSettings
+    let tuning: PipelineTuning
+    /// What layered line art draws from, computed once per photo; nil for classic line art.
+    @ObservationIgnored private(set) var lineArtInput: LineArtInput?
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
     /// The sample's name, or the date for a photo.
@@ -129,8 +135,13 @@ final class CreateModel {
     @ObservationIgnored private var loadID = 0
 
     /// The sliders start at the generator's defaults; a photo moves them to its suggestion.
-    init(paintingLength: PaintingLength = Preferences().paintingLength) {
+    init(
+        paintingLength: PaintingLength = Preferences().paintingLength,
+        lineArt: LineArtSettings = Preferences().lineArt, tuning: PipelineTuning = Preferences().tuning
+    ) {
         self.paintingLength = paintingLength
+        self.lineArt = lineArt.normalized
+        self.tuning = tuning.normalized
         let initial = GenerationSettings()
         colorCount = Double(initial.colorCount)
         detail = Double(initial.detail)
@@ -138,7 +149,10 @@ final class CreateModel {
     }
 
     var settings: GenerationSettings {
-        GenerationSettings(colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness)).normalized
+        GenerationSettings(
+            colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness),
+            lineArt: lineArt, tuning: tuning
+        ).normalized
     }
 
     var isWorking: Bool {
@@ -206,6 +220,7 @@ final class CreateModel {
         preview = nil
         stats = nil
         importance = nil
+        lineArtInput = nil
         draftImage = nil
         decision = nil
         settingsOrigin = nil
@@ -214,21 +229,23 @@ final class CreateModel {
         loadID += 1
         let load = loadID
         let preference = paintingLength
+        let base = GenerationSettings(lineArt: lineArt, tuning: tuning)
         loadTask = Task {
             do {
                 let decoded = try await decode()
                 try Task.checkCancellation()
                 source = Source(image: decoded.image, preview: decoded.preview, sampleName: sampleName)
                 phase = .analyzing
-                let prepared = await Self.prepare(decoded)
+                let prepared = try await Self.prepare(decoded, lineArt: base.lineArt)
                 try Task.checkCancellation()
                 importance = prepared.importance
+                lineArtInput = prepared.lineArt
                 draftImage = prepared.draft
                 phase = .suggesting
                 let chosen: AutoDecision?
                 do {
                     chosen = try await Self.suggest(
-                        prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
+                        prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference, base: base,
                         maxCandidates: Self.maxCandidates, firstDraft: Self.firstDraftHandler(for: self, load: load))
                 } catch is CancellationError {
                     throw CancellationError()
@@ -404,7 +421,8 @@ final class CreateModel {
         }
         do {
             let result = try await Self.render(
-                input, importance: importance, settings: settings, isDraft: draft, progress: draft ? nil : report)
+                input, importance: importance, lineArt: lineArtInput, settings: settings, isDraft: draft,
+                progress: draft ? nil : report)
             try Task.checkCancellation()
             withAnimation(.easeInOut(duration: draft ? 0.18 : 0.35)) {
                 preview = result
@@ -429,6 +447,7 @@ final class CreateModel {
         var importance: PaintCore.Grid<Float>?
         var hints: SubjectHints
         var draft: RGBAImage
+        var lineArt: LineArtInput?
     }
 
     @concurrent
@@ -448,20 +467,22 @@ final class CreateModel {
         return Decoded(image: image, preview: preview)
     }
 
-    /// Subject importance and hints (once per photo) and the reduced photo for drafts and
-    /// suggestions.
+    /// Subject importance and hints, and for layered line art the edge map and eyes (once per
+    /// photo, side by side), and the reduced photo for drafts and suggestions.
     @concurrent
-    private static func prepare(_ decoded: Decoded) async -> Prepared {
+    private static func prepare(_ decoded: Decoded, lineArt: LineArtSettings) async throws -> Prepared {
+        async let input = LineArtInputs.forGeneration(of: decoded.preview, settings: lineArt, cached: true)
         let subject = SubjectImportance.analyze(decoded.preview)
-        return Prepared(importance: subject.map, hints: subject.hints, draft: AutoSettings.draftImage(from: decoded.image))
+        let draft = AutoSettings.draftImage(from: decoded.image)
+        return Prepared(importance: subject.map, hints: subject.hints, draft: draft, lineArt: try await input)
     }
 
     /// Chooses settings for the photo on its draft. `sourceSize` is the photo's own size: it
     /// sets the canvas the painting time is estimated for.
     @concurrent
     private static func suggest(
-        _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength, maxCandidates: Int,
-        firstDraft: @escaping @Sendable (Preview) -> Void
+        _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength, base: GenerationSettings,
+        maxCandidates: Int, firstDraft: @escaping @Sendable (Preview) -> Void
     ) async throws -> AutoDecision {
         // A task's cancellation shows only on the thread running it; the flag reaches every
         // candidate's thread at once.
@@ -469,7 +490,8 @@ final class CreateModel {
         return try await withTaskCancellationHandler {
             try AutoSettings.choose(
                 image: prepared.draft, sourceSize: sourceSize, importance: prepared.importance, hints: prepared.hints,
-                preference: preference, maxCandidates: maxCandidates, cancel: CancellationCheck { flag.isSet }
+                preference: preference, maxCandidates: maxCandidates, base: base, lineArt: prepared.lineArt,
+                cancel: CancellationCheck { flag.isSet }
             ) { output in
                 // Rendered here, before the other candidates run: it is what the painter waits for.
                 guard let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true) else { return }
@@ -490,11 +512,11 @@ final class CreateModel {
 
     @concurrent
     private static func render(
-        _ image: RGBAImage, importance: PaintCore.Grid<Float>?, settings: GenerationSettings, isDraft: Bool,
-        progress: (@Sendable (Float) -> Void)?
+        _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, settings: GenerationSettings,
+        isDraft: Bool, progress: (@Sendable (Float) -> Void)?
     ) async throws -> Preview {
         let template = try TemplateGenerator(settings: settings)
-            .generate(from: image, importance: importance, cancel: .task, progress: progress)
+            .generate(from: image, importance: importance, lineArt: lineArt, cancel: .task, progress: progress)
             .template
         try Task.checkCancellation()
         return try makePreview(template, settings: settings, isDraft: isDraft)
