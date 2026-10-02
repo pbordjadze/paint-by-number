@@ -42,8 +42,6 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
     var onZoomChange: (CGFloat) -> Void
     var onUnavailable: () -> Void
 
-    /// Room for the overlays above and below the painting, in points.
-    static let overlayInset: CGFloat = 30
 
     final class Coordinator {
         var session: PaintingSession?
@@ -63,7 +61,8 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
         session.select(color: nil)
         let view = CanvasView(session: session)
         view.initialCamera = controller.camera(forWidth: template.width, height: template.height)
-        view.chromeInsets = UIEdgeInsets(top: Self.overlayInset, left: 0, bottom: Self.overlayInset, right: 0)
+        view.chromeInsets = UIEdgeInsets(
+            top: AdvancedPreviewCard.overlayInset, left: 0, bottom: AdvancedPreviewCard.overlayInset, right: 0)
         view.paperAppearance = paperAppearance
         view.lineAppearance = lineAppearance
         view.reduceMotion = context.environment.accessibilityReduceMotion
@@ -114,7 +113,7 @@ private struct AdvancedRasterPreview: View {
                 Image(decorative: image, scale: 1)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .padding(.vertical, AdvancedPreviewCanvas.overlayInset + 16)
+                    .padding(.vertical, AdvancedPreviewCard.overlayInset + 16)
                     .padding(.horizontal, 16)
             }
         }
@@ -130,6 +129,9 @@ private struct AdvancedRasterPreview: View {
 /// The preview card: the canvas with the picture menu, a quiet progress cue, Template /
 /// Painted and the zoom levels floating over it.
 struct AdvancedPreviewCard: View {
+    /// Room for the overlays above and below the painting, in points.
+    static let overlayInset: CGFloat = 30
+
     @Bindable var model: AdvancedSettingsModel
     @Binding var showsPainted: Bool
     let zoom: CGFloat
