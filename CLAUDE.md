@@ -293,21 +293,23 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   handler at launch (`DemoMode.openFileURL`; scenario `create-from-file`).
 - Layered line art inputs (`Generation/`): `EdgeDetector.edgeMap(for:maxLongSide:)` runs
   `Resources/Models/HED.mlpackage` (ControlNet's HED, `ControlNetHED.pth` from Hugging Face
-  `lllyasviel/Annotators`, Apache-2.0, sha256 and conversion in `tools/models/convert_hed.py`;
-  29 MB of float16 weights computed in float32) on the photo drawn into sRGB and area-resampled
-  to ≤ 1152 px, reflect-padded to a multiple of 16; the edge probability is rounded to 8 bits
-  (`EdgeMap`). `.cpuOnly` keeps maps the same across devices, up to a level where a value sits on a
-  rounding boundary (the Neural Engine and GPU compute in reduced precision that differs by chip); the target has `COREML_CODEGEN_LANGUAGE = None` and loads `HED.mlmodelc` by URL.
-  `EyeFinder.eyes(in:)`: Vision face landmarks → per eye a smoothed contour and an iris (a circle
-  around the pupil, 0.2 × the eye's width, clipped to the lids), closed polygons normalized to the
-  photo, contours then irises, quantized to 1/4096. `LineArtInputs.make(for:settings:)` (nil for
-  classic) caches both per `CGImage` instance (two photos; shared computation, cancelled when all
-  its waiters are); `forGeneration(of:settings:cached:)` turns a model failure into nil (a layered
-  template then comes out classic). New paintings get `Preferences.lineArt`/`.tuning` on top of
-  the suggested or slider settings: `CreateModel(lineArt:tuning:)` computes the inputs once per
-  photo in the analyzing phase, beside Vision, and hands them to `AutoSettings.choose(base:lineArt:)`
-  (every candidate carries `base`'s line art, tuning and seed) and the generator;
-  `ArtworkFactory.template` (regeneration, samples) computes them per template. `meta.json`
+  `lllyasviel/Annotators`, Apache-2.0, sha256 and conversion in `tools/models/convert_hed.py`; 29 MB
+  of float16 weights computed in float32) on the photo drawn into sRGB and area-resampled to ≤ 1152
+  px, reflect-padded to a multiple of 16; the edge probability is rounded to 8 bits (`EdgeMap`).
+  `.cpuOnly` keeps maps the same across devices, up to a level where a value sits on a rounding
+  boundary (the Neural Engine and GPU compute in reduced precision that differs by chip); the target
+  has `COREML_CODEGEN_LANGUAGE = None` and loads `HED.mlmodelc` by URL. `EyeFinder.eyes(in:)`:
+  Vision face landmarks → per eye a smoothed contour and an iris (a circle around the pupil, 0.2 ×
+  the eye's width, clipped to the lids), closed polygons normalized to the photo, contours then
+  irises, quantized to 1/4096. `LineArtInputs.make(for:settings:)` (nil for classic) caches both per
+  `CGImage` instance (two photos; shared computation, cancelled when all its waiters are);
+  `forGeneration(of:settings:cached:)` turns a model failure into nil (a layered template then comes
+  out classic). New paintings get `Preferences.lineArt`/`.tuning` on top of the suggested or slider
+  settings: `CreateModel(lineArt:tuning:)` computes the inputs once per photo in the analyzing
+  phase, beside Vision, and hands them to the generator; its `settings` add the line art and tuning
+  to what Auto chose (Auto's candidates are still classic and untuned: `AutoSettings.choose` has no
+  pass-through for them yet, so the winner is drafted again when they differ).
+  `ArtworkFactory.template` (regeneration, samples) computes the inputs per template. `meta.json`
   records them in `settings`. Tests: the model against a PyTorch-made map
   (`App/PaintByNumberTests/HEDFixture.ppm` → `.pgm`, written by the conversion script; ≤ 2 levels
   apart), eyes on `FaceFixture.jpg` (NASA's 1962 portrait of John Glenn).

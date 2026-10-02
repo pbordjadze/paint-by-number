@@ -99,7 +99,9 @@ final class CreateModel {
     /// What suggestions aim for (Settings › Painting Length).
     let paintingLength: PaintingLength
     /// Line art and pipeline tuning the painting is made with (Settings › Advanced), on top of
-    /// the suggested or slider settings.
+    /// the suggested or slider settings. Suggestions choose colors, detail and smoothness with
+    /// classic, untuned candidates (`AutoSettings.choose` takes neither yet); `settings` adds
+    /// these to whatever was chosen.
     let lineArt: LineArtSettings
     let tuning: PipelineTuning
     /// What layered line art draws from, computed once per photo; nil for classic line art.
@@ -229,14 +231,14 @@ final class CreateModel {
         loadID += 1
         let load = loadID
         let preference = paintingLength
-        let base = GenerationSettings(lineArt: lineArt, tuning: tuning)
+        let lineArt = self.lineArt
         loadTask = Task {
             do {
                 let decoded = try await decode()
                 try Task.checkCancellation()
                 source = Source(image: decoded.image, preview: decoded.preview, sampleName: sampleName)
                 phase = .analyzing
-                let prepared = try await Self.prepare(decoded, lineArt: base.lineArt)
+                let prepared = try await Self.prepare(decoded, lineArt: lineArt)
                 try Task.checkCancellation()
                 importance = prepared.importance
                 lineArtInput = prepared.lineArt
@@ -245,7 +247,7 @@ final class CreateModel {
                 let chosen: AutoDecision?
                 do {
                     chosen = try await Self.suggest(
-                        prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference, base: base,
+                        prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
                         maxCandidates: Self.maxCandidates, firstDraft: Self.firstDraftHandler(for: self, load: load))
                 } catch is CancellationError {
                     throw CancellationError()
@@ -327,13 +329,15 @@ final class CreateModel {
     }
 
     /// Moves the sliders to the suggestion and generates it: the winner as a draft first unless
-    /// it is the candidate already on screen, then at full resolution.
+    /// it is the candidate already on screen (drawn as it will be: classic and untuned), then at
+    /// full resolution.
     private func adopt(_ decision: AutoDecision) {
         self.decision = decision
         apply(decision.settings)
         settingsOrigin = .suggested
         phase = .generating
-        startGeneration(draftFirst: decision.winner != 0 || preview == nil)
+        let shownAsWillBe = decision.winner == 0 && preview != nil && lineArt.style == .classic && tuning.isDefault
+        startGeneration(draftFirst: !shownAsWillBe)
     }
 
     private func apply(_ settings: GenerationSettings) {
@@ -481,8 +485,8 @@ final class CreateModel {
     /// sets the canvas the painting time is estimated for.
     @concurrent
     private static func suggest(
-        _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength, base: GenerationSettings,
-        maxCandidates: Int, firstDraft: @escaping @Sendable (Preview) -> Void
+        _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength, maxCandidates: Int,
+        firstDraft: @escaping @Sendable (Preview) -> Void
     ) async throws -> AutoDecision {
         // A task's cancellation shows only on the thread running it; the flag reaches every
         // candidate's thread at once.
@@ -490,8 +494,7 @@ final class CreateModel {
         return try await withTaskCancellationHandler {
             try AutoSettings.choose(
                 image: prepared.draft, sourceSize: sourceSize, importance: prepared.importance, hints: prepared.hints,
-                preference: preference, maxCandidates: maxCandidates, base: base, lineArt: prepared.lineArt,
-                cancel: CancellationCheck { flag.isSet }
+                preference: preference, maxCandidates: maxCandidates, cancel: CancellationCheck { flag.isSet }
             ) { output in
                 // Rendered here, before the other candidates run: it is what the painter waits for.
                 guard let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true) else { return }

@@ -114,17 +114,9 @@ public enum AutoSettings {
     /// The prior: a center and up to `maxCandidates` settings around it, deterministic. The
     /// center comes first, then the four single-axis moves (fewer colors, more colors, less
     /// detail, more detail), then the diagonals; every candidate lies inside the preference's
-    /// bands, and duplicates left by clamping to them are skipped. The rule chooses colors,
-    /// detail and smoothness; every other field (line art, tuning, seed) is `base`'s.
-    public static func candidates(
-        for analysis: PhotoAnalysis, preference: PaintingLength, maxCandidates: Int,
-        base: GenerationSettings = GenerationSettings()
-    ) -> [AutoCandidate] {
-        var center = base
-        let rule = Self.center(for: analysis, preference: preference)
-        center.colorCount = rule.colorCount
-        center.detail = rule.detail
-        center.smoothness = rule.smoothness
+    /// bands, and duplicates left by clamping to them are skipped.
+    public static func candidates(for analysis: PhotoAnalysis, preference: PaintingLength, maxCandidates: Int) -> [AutoCandidate] {
+        let center = center(for: analysis, preference: preference)
         let colorBand = preference.colorBand, detailBand = preference.detailBand
         func colors(_ value: Float) -> Int { clamp(evenColors(value), colorBand) }
         func detail(_ value: Float) -> Float { clamp(hundredths(value), detailBand) }
@@ -399,12 +391,9 @@ public enum AutoSettings {
     /// sets the analysis's source size and the canvas the painting time is estimated for.
     /// Candidates run at most as many at a time as there are cores, each with its own
     /// parallel pipeline. Deterministic for the same image, importance, hints and preference.
-    /// Every candidate carries `base`'s line art, tuning and seed (see `candidates`) and is
-    /// generated with `lineArt`, the inputs layered line art draws from.
     public static func choose(
         image: RGBAImage, sourceSize: (width: Int, height: Int)? = nil, importance: Grid<Float>?, hints: SubjectHints?,
-        preference: PaintingLength, maxCandidates: Int, base: GenerationSettings = GenerationSettings(),
-        lineArt: LineArtInput? = nil, cancel: CancellationCheck,
+        preference: PaintingLength, maxCandidates: Int, cancel: CancellationCheck,
         firstDraft: (@Sendable (TemplateGenerator.Output) -> Void)?
     ) throws -> AutoDecision {
         // Checks only see task cancellation on the calling thread; once it sees one, the
@@ -416,10 +405,10 @@ public enum AutoSettings {
         let draft = draftImage(from: image)
         let shared = try AutoWorking(draft: draft, settings: GenerationSettings(), importance: importance, cancel: check)
         let analysis = try PhotoAnalyzer.analyze(shared, source: source, hints: hints, cancel: check)
-        var candidates = Self.candidates(for: analysis, preference: preference, maxCandidates: maxCandidates, base: base)
+        var candidates = Self.candidates(for: analysis, preference: preference, maxCandidates: maxCandidates)
 
         func generate(_ settings: GenerationSettings) throws -> TemplateGenerator.Output {
-            try TemplateGenerator(settings: settings).generate(from: draft, importance: importance, lineArt: lineArt, cancel: check)
+            try TemplateGenerator(settings: settings).generate(from: draft, importance: importance, cancel: check)
         }
         func score(_ output: TemplateGenerator.Output, _ settings: GenerationSettings) throws -> AutoScore {
             let size = settings.workingSize(sourceWidth: draft.width, sourceHeight: draft.height)

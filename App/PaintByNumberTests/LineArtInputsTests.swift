@@ -228,18 +228,24 @@ struct LineArtInputsTests {
         #expect(input?.edges.width == 1152)
     }
 
-    /// Advanced settings reach every candidate, the chosen settings, the draft and the saved
-    /// artwork's meta.json; layered line art computes its inputs once for the photo.
+    /// Advanced settings come on top of the suggestion and reach the draft, its template and
+    /// the saved artwork's meta.json; layered line art computes its inputs once for the photo.
     @Test func createFlowCarriesAdvancedSettingsIntoTheArtwork() async throws {
         let model = CreateModel(paintingLength: .quick, lineArt: Self.layered, tuning: Self.tuning)
         model.load(sample: try #require(Sample.named("red-fox")))
         let draft = try await model.makeDraft()
         let decision = try #require(model.decision)
-        #expect(decision.candidates.allSatisfy { $0.settings.lineArt == Self.layered && $0.settings.tuning == Self.tuning })
-        #expect(model.settings == decision.settings)
+        // The suggestion chooses colors, detail and smoothness.
+        var chosen = decision.settings
+        chosen.lineArt = Self.layered
+        chosen.tuning = Self.tuning
+        #expect(model.settings == chosen.normalized)
+        #expect(model.settingsOrigin == .suggested)
         let input = try #require(model.lineArtInput)
         #expect(max(input.edges.width, input.edges.height) == EdgeDetector.maximumLongSide)
+        #expect(draft.settings == model.settings)
         #expect(draft.settings.lineArt == Self.layered && draft.settings.tuning == Self.tuning)
+        #expect(draft.template.lineArt != nil, "The layered painting's template has no line art")
 
         let root = Fixtures.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
@@ -259,9 +265,11 @@ struct LineArtInputsTests {
         #expect(model.lineArtInput == nil)
         #expect(draft.settings.lineArt == LineArtSettings() && draft.settings.tuning == PipelineTuning())
         #expect(model.decision?.settings == draft.settings)
+        #expect(draft.template.lineArt == nil)
     }
 
-    /// Regeneration uses the settings it is given, layered ones included, and records them.
+    /// Regeneration uses the settings it is given, layered ones included (from the stored photo's
+    /// edge map), and records them.
     @Test func regenerationRecordsLayeredSettings() async throws {
         let root = Fixtures.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
@@ -273,6 +281,7 @@ struct LineArtInputsTests {
         let settings = GenerationSettings(colorCount: 12, detail: 0, lineArt: Self.layered, tuning: Self.tuning)
         let document = try await library.regenerate(artwork: artwork.id, settings: settings)
         #expect(document.template.regions.count > 0)
+        #expect(document.template.lineArt != nil, "Regenerating with layered settings drew no line art")
         #expect(library.artwork(with: artwork.id)?.settings == settings)
         #expect(try library.store.readMeta(artwork.id).settings == settings)
     }
