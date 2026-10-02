@@ -584,8 +584,6 @@ struct Heap<Element> {
 
     init(_ less: @escaping (Element, Element) -> Bool) { self.less = less }
 
-    var isEmpty: Bool { items.isEmpty }
-
     mutating func push(_ e: Element) {
         items.append(e)
         var i = items.count - 1

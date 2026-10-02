@@ -137,6 +137,22 @@ struct LineArtTests {
         #expect(off.template == without.template)
     }
 
+    @Test func anEyeTooSmallForANumberIsStillDrawn() throws {
+        // A diamond 3 units across inside the square: no room for a number, so its cell joins
+        // the square and the contour is drawn inside it, closed.
+        let c = SIMD2<Float>(96 / 128, 46 / 96)
+        let rx: Float = 1 / 128, ry: Float = 1 / 96
+        let eye: [SIMD2<Float>] = [SIMD2(c.x - rx, c.y), SIMD2(c.x, c.y - ry), SIMD2(c.x + rx, c.y), SIMD2(c.x, c.y + ry)]
+        let t = try Self.generate(eyes: [eye]).template
+        let lines = try #require(t.lineArt)
+        let stroke = try #require(lines.strokes.first { $0.layer == LineLayer.outline.rawValue })
+        let first = lines.strokePoints[Int(stroke.pointStart)]
+        let last = lines.strokePoints[Int(stroke.pointStart + stroke.pointCount) - 1]
+        #expect(first == last)
+        #expect(t.region(at: first) == Int(stroke.region))
+        #expect(t.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+    }
+
     @Test func mergingCloseColorsGivesFewerCells() throws {
         // A soft gradient band across the ground makes paint-only boundaries.
         var image = Self.photo()

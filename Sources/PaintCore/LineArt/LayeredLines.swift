@@ -10,10 +10,11 @@ import Foundation
 ///    `minimumStrokeLength`), gaps up to `gapBridging` bridged, ends led into the frame, and
 ///    joined into strokes smoothed by `lineSmoothing` (`StrokeGraph`).
 /// 3. `layer`: per point, hysteresis along the stroke against the outline, detail and
-///    texture thresholds; stretches below texture are cut out. Eyes (`outlineEyes`) replace
-///    the lines inside them with their contours and irises as outlines. Free ends reach for
-///    the nearest line, paint boundary or frame (`gapBridging` × 1.6 / 1.2 / 1 by layer), so
-///    open strokes close cells.
+///    texture thresholds, the outline threshold rising where lines crowd (`LineLayering`);
+///    stretches below texture are cut out. Eyes (`outlineEyes`) replace the lines inside them
+///    with their contours and irises as outlines and promote the lines around them. Free ends
+///    reach for the nearest line, paint boundary or frame (`gapBridging` × 1.6 / 1.2 / 1 by
+///    layer), so open strokes close cells.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
 ///    paints are within two palette steps.
@@ -25,7 +26,9 @@ import Foundation
 /// After vectorizing, `annotate` gives each boundary edge the layer of the line along it
 /// (`color` where only the paint changes) and a weight.
 ///
-/// Deterministic: everything is sequential or per-pixel, with fixed tie-breaks.
+/// Deterministic: everything is sequential, per pixel, or integer counts summed across
+/// bands, with fixed tie-breaks, so the same edge map and settings give the same template on
+/// any number of cores.
 enum LayeredLines {
     /// Stretches of line further than this (canvas units) from every cell boundary do not
     /// bound a cell; runs shorter than `trimMinimum` follow their neighbours.
@@ -249,7 +252,9 @@ enum LayeredLines {
         var strokes: [InteriorStroke] = []
         let q = Template.coordinateQuantum
         for (line, region) in plan.interiorLines {
-            let keep = Self.simplify(line.points, epsilon: 0.3)
+            // A closed line (an eye inside one cell) ends where it starts.
+            var keep = Self.simplify(line.points, epsilon: 0.3)
+            if line.closed, let first = keep.first { keep.append(first) }
             guard keep.count >= 2 else { continue }
             let start = UInt32(points.count)
             for i in keep {

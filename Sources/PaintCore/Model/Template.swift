@@ -109,7 +109,8 @@ public struct TemplateLineArt: Sendable, Equatable {
     }
 }
 
-/// An open polyline drawn inside one region.
+/// A polyline drawn inside one region (one that closes on itself, such as an eye's contour
+/// inside a single cell, repeats its first point at the end).
 public struct InteriorStroke: Sendable, Hashable {
     /// Span into `TemplateLineArt.strokePoints` (at least 2 points).
     public var pointStart: UInt32
