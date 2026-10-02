@@ -115,27 +115,30 @@ struct SegmentationParameters: Sendable {
     /// areas (scaled down by texture density and importance).
     var consolidationTolerance: Float
 
+    /// `GenerationSettings.tuning` multiplies the knobs it names (`PipelineTuning`); a factor
+    /// of exactly 1 leaves every value bit for bit as derived.
     init(settings: GenerationSettings, width: Int, height: Int) {
         let s = settings.normalized
         let d = s.detail, sm = s.smoothness
+        let t = s.tuning
         let area = Float(width * height)
         let side = area.squareRoot()
 
         colorCount = s.colorCount
         seed = s.seed
-        chromaScale = 1.6
+        chromaScale = 1.6 * t.colorfulness
 
-        smoothSpatial = side * 0.008 * lerp(1.4, 0.7, d) * lerp(0.7, 1.3, sm)
+        smoothSpatial = side * 0.008 * lerp(1.4, 0.7, d) * lerp(0.7, 1.3, sm) * t.smoothing
         smoothRange = 0.06 * lerp(0.7, 1.4, sm)
         smoothIterations = 3
-        textureFlattening = lerp(0.6, 1, sm)
+        textureFlattening = lerp(0.6, 1, sm) * t.textureFlattening
         structureRadius = max(1, Int((side * 0.0025).rounded()))
         structureExponent = 3
-        importanceSharpening = 1
+        importanceSharpening = 1 * t.subjectEmphasis
 
         histogramGamma = 0.6
         paletteRestarts = 3
-        paletteSaliency = 1
+        paletteSaliency = 1 * t.accentColors
         minPaletteDistance = s.minPaletteDistance
         refineIterations = 3
 
@@ -144,14 +147,14 @@ struct SegmentationParameters: Sendable {
         icmIterations = 3
 
         // Log-interpolated fraction of the canvas: detail 0 → 1/3000, 1 → 1/60000.
-        minArea = max(area * exp(lerp(log(1 / 3000), log(1 / 60000), d)), 12)
+        minArea = max(area * exp(lerp(log(1 / 3000), log(1 / 60000), d)), 12) * t.minimumCellSize
         // interiorDistance is quantized (2.5, 2.74, 3.33, 3.5, …). 2.74 asks for a 5-px spot
         // with some diagonal extent, so the vectorizer's polygon still holds a label disc of
         // `LabelSizing.minimumRadius`; 3.5 asks for a 7-px spot.
         minRadius = lerp(3.5, 2.7, min(1, 2 * d))
         // Bold templates also require every part to be ~5 px wide; otherwise 3 px (cross).
         openingRadiusSquared = d < 0.25 ? 4 : 1
-        importanceStrength = 3
+        importanceStrength = 3 * t.subjectEmphasis
         textureStrength = 4
         mergeShareWeight = 0.04
         // Full weight from about six just-noticeable differences; at no contrast a crumb needs

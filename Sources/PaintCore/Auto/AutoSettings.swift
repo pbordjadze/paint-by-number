@@ -391,9 +391,14 @@ public enum AutoSettings {
     /// sets the analysis's source size and the canvas the painting time is estimated for.
     /// Candidates run at most as many at a time as there are cores, each with its own
     /// parallel pipeline. Deterministic for the same image, importance, hints and preference.
+    ///
+    /// `lineArt` and `tuning` (Settings › Advanced), when given, are carried by every candidate,
+    /// so the decision's settings have them. The tuning changes the drafts and so the scores;
+    /// line art does not (drafts get no edge map, so they are classic).
     public static func choose(
         image: RGBAImage, sourceSize: (width: Int, height: Int)? = nil, importance: Grid<Float>?, hints: SubjectHints?,
-        preference: PaintingLength, maxCandidates: Int, cancel: CancellationCheck,
+        preference: PaintingLength, maxCandidates: Int, lineArt: LineArtSettings? = nil, tuning: PipelineTuning? = nil,
+        cancel: CancellationCheck,
         firstDraft: (@Sendable (TemplateGenerator.Output) -> Void)?
     ) throws -> AutoDecision {
         // Checks only see task cancellation on the calling thread; once it sees one, the
@@ -406,6 +411,10 @@ public enum AutoSettings {
         let shared = try AutoWorking(draft: draft, settings: GenerationSettings(), importance: importance, cancel: check)
         let analysis = try PhotoAnalyzer.analyze(shared, source: source, hints: hints, cancel: check)
         var candidates = Self.candidates(for: analysis, preference: preference, maxCandidates: maxCandidates)
+        for i in candidates.indices {
+            if let lineArt { candidates[i].settings.lineArt = lineArt }
+            if let tuning { candidates[i].settings.tuning = tuning }
+        }
 
         func generate(_ settings: GenerationSettings) throws -> TemplateGenerator.Output {
             try TemplateGenerator(settings: settings).generate(from: draft, importance: importance, cancel: check)

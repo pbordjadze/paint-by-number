@@ -22,15 +22,22 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     }
 
     public var style: Style
-    /// Edge strength (0...1 of the detector's output) from which a line is an outline.
+    /// Edge strength (0...1 of the detector's output) from which a line is an outline. A line
+    /// keeps its layer along a stretch that stays above 60 % of the threshold once it has held
+    /// the threshold for a few pixels. Where lines crowd (a shell's pattern, rock strata, a
+    /// truss) the threshold rises toward 1, except for long contours, so busy texture stays
+    /// detail. HED saturates near 1 on most contours, hence the high default.
     public var outlineThreshold: Float
-    /// Edge strength from which a line is detail.
+    /// Edge strength from which a line is detail (stretches above half of it, once reached).
     public var detailThreshold: Float
-    /// Edge strength from which a line is drawn at all (as texture).
+    /// Edge strength from which a line is drawn at all, as texture (stretches above half of
+    /// it, once reached); slightly lower on the subject, higher in the background.
     public var textureThreshold: Float
     /// Lines shorter than this (canvas units) are dropped.
     public var minimumStrokeLength: Float
-    /// Line ends closer than this (canvas units) are joined, closing small gaps.
+    /// Line ends closer than this (canvas units) are joined, closing small gaps; a free end
+    /// also reaches this far (outlines 1.6×, detail 1.2×) for the nearest line, paint
+    /// boundary or frame, so an open stroke still closes a cell.
     public var gapBridging: Float
     /// 0 = lines follow the edge map's pixels … 1 = smooth, flowing curves.
     public var lineSmoothing: Float
@@ -38,12 +45,17 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     /// Keep the boundaries where only the paint changes (banded skies, soft shading) as
     /// faint lines. Off merges cells whose paints are close, for calmer plans.
     public var keepColorEdges: Bool
-    /// Draw detected eyes as outlines (their contours and irises), whatever their contrast.
+    /// Draw detected eyes as outlines (their contours and irises), whatever their contrast;
+    /// lines around an eye draw one layer stronger.
     public var outlineEyes: Bool
 
+    /// The defaults are the research's HED thresholds (`research/lineart/results_layers.md`),
+    /// outlines a little higher and thinned where lines crowd, as the owner found the
+    /// research's outlines too strong; texture lines join same-paint cells and color cells
+    /// stay ("we want more colors").
     public init(
         style: Style = .classic,
-        outlineThreshold: Float = 0.8, detailThreshold: Float = 0.5, textureThreshold: Float = 0.3,
+        outlineThreshold: Float = 0.85, detailThreshold: Float = 0.5, textureThreshold: Float = 0.3,
         minimumStrokeLength: Float = 18, gapBridging: Float = 9, lineSmoothing: Float = 0.5,
         samePaint: SamePaint = .joinTexture, keepColorEdges: Bool = true, outlineEyes: Bool = true
     ) {

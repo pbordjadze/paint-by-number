@@ -79,7 +79,10 @@ public struct TemplateGenerator: Sendable {
         }
         vector.template.pipelineVersion = Self.pipelineVersion
         if let plan {
-            vector.template.lineArt = clock.measure("lineArt.annotate") { LayeredLines.annotate(vector.template, plan: plan) }
+            try cancel.throwIfCancelled()
+            vector.template.lineArt = try clock.measure("lineArt.annotate") {
+                try LayeredLines.annotate(vector.template, plan: plan, cancel: cancel)
+            }
         }
         progress?(1)
         return Output(
