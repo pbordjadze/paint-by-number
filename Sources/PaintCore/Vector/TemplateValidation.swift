@@ -22,10 +22,15 @@ extension Template {
         public var minLabelRoom: Float = .infinity
         /// |Σ region areas − canvas area|.
         public var canvasAreaError: Double = 0
+        /// Problems with layered line data (`Template.lineArt`): layer or weight counts unlike
+        /// the edges', unknown layers, interior strokes with a bad span, a point outside the
+        /// canvas, or a point away from the stroke's region. Nil for classic templates.
+        public var badLines: [String]?
 
         public var isValid: Bool {
             invalidEdges.isEmpty && badRingRegions.isEmpty && badMeshRegions.isEmpty && badLabelRegions.isEmpty
                 && crampedLabelRegions.isEmpty && canvasAreaError <= 1e-3 * Double(max(1, canvasArea))
+                && (badLines ?? []).isEmpty
         }
         var canvasArea: Int = 0
 
@@ -33,6 +38,7 @@ extension Template {
             var text = "edges \(invalidEdges.count) rings \(badRingRegions.count) mesh \(badMeshRegions.count) "
                 + "labels \(badLabelRegions.count) canvasAreaError \(canvasAreaError) cramped \(crampedLabelRegions.count)"
             if minLabelRoom.isFinite { text += " minLabelRoom " + String(format: "%.3f", Double(minLabelRoom)) }
+            if let badLines { text += " lines \(badLines.count)" + (badLines.isEmpty ? "" : " (\(badLines.prefix(3).joined(separator: "; ")))") }
             return text
         }
     }
@@ -119,7 +125,46 @@ extension Template {
             if !roomOK { report.crampedLabelRegions.append(r) }
         }
         report.canvasAreaError = abs(totalArea - Double(width * height))
+        if let lineArt { report.badLines = validateLines(lineArt) }
         return report
+    }
+
+    /// See `ValidationReport.badLines`. An interior stroke's points must lie in its region's
+    /// pixels or touch them (its ends meet the boundary lines it runs between).
+    func validateLines(_ lines: TemplateLineArt) -> [String] {
+        var problems: [String] = []
+        let layers = UInt8(LineLayer.allCases.count)
+        if lines.edgeLayers.count != edges.count || lines.edgeWeights.count != edges.count {
+            problems.append("\(lines.edgeLayers.count) layers and \(lines.edgeWeights.count) weights for \(edges.count) edges")
+        }
+        if let bad = lines.edgeLayers.firstIndex(where: { $0 >= layers }) { problems.append("edge \(bad) layer") }
+        let w = Float(width), h = Float(height)
+        for (k, stroke) in lines.strokes.enumerated() {
+            let start = Int(stroke.pointStart), count = Int(stroke.pointCount)
+            guard count >= 2, start + count <= lines.strokePoints.count, stroke.layer < layers, Int(stroke.region) < regions.count else {
+                problems.append("stroke \(k) span, layer or region")
+                continue
+            }
+            for p in lines.strokePoints[start..<(start + count)] {
+                guard p.x >= 0 && p.x <= w && p.y >= 0 && p.y <= h else {
+                    problems.append("stroke \(k) point outside the canvas")
+                    break
+                }
+                let px = Int(p.x.rounded(.down)), py = Int(p.y.rounded(.down))
+                var touches = false
+                for y in max(0, py - 1)...min(height - 1, py + 1) where !touches {
+                    for x in max(0, px - 1)...min(width - 1, px + 1) where regionMap[x, y] == stroke.region {
+                        touches = true
+                        break
+                    }
+                }
+                if !touches {
+                    problems.append("stroke \(k) leaves region \(stroke.region)")
+                    break
+                }
+            }
+        }
+        return problems
     }
 
     /// Distance from `p` to the nearest point of any ring.

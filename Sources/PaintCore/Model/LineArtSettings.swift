@@ -43,8 +43,8 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
 
     public init(
         style: Style = .classic,
-        outlineThreshold: Float = 0.6, detailThreshold: Float = 0.35, textureThreshold: Float = 0.18,
-        minimumStrokeLength: Float = 8, gapBridging: Float = 4, lineSmoothing: Float = 0.5,
+        outlineThreshold: Float = 0.8, detailThreshold: Float = 0.5, textureThreshold: Float = 0.3,
+        minimumStrokeLength: Float = 18, gapBridging: Float = 9, lineSmoothing: Float = 0.5,
         samePaint: SamePaint = .joinTexture, keepColorEdges: Bool = true, outlineEyes: Bool = true
     ) {
         self.style = style
