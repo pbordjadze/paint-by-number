@@ -1,0 +1,357 @@
+Attributes: Application, 0x113ee4500, pid: 48262, label: 'Paint by Moonlight'
+Element subtree:
+ →Application, 0x113ee4500, pid: 48262, label: 'Paint by Moonlight'
+    Window (Main), 0x113ee4640, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x113ee4780, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x113ee48c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x113ee4a00, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x113ee4b40, {{0.0, 0.0}, {1032.0, 1376.0}}
+              Other, 0x113ee4c80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x113ee4dc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  NavigationBar, 0x113ee4f00, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight'
+                    Button, 0x113ee5040, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+                    Button, 0x113ee5180, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled
+                    Button, 0x113ee52c0, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+                    SearchField, 0x113ee5400, {{778.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings'
+                      Image, 0x113ee5540, {{790.0, 44.5}, {20.5, 18.5}}, identifier: 'magnifyingglass', label: 'Search'
+                    StaticText, 0x113ee5680, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight'
+                  Other, 0x113ee57c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x113ee5900, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      Other, 0x113ee5a40, {{0.0, 0.0}, {1032.0, 1376.0}}
+                        Other, 0x113ee5b80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                          ScrollView, 0x113ee5cc0, {{516.0, 0.0}, {0.0, 1376.0}}
+                            Other, 0x113ee5e00, {{516.0, 138.0}, {0.0, 0.0}}
+                          Other, 0x113ee5f40, {{381.0, 504.0}, {270.0, 198.0}}
+                          StaticText, 0x113ee6080, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo'
+                          StaticText, 0x113ee61c0, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+                          Button, 0x113ee6300, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+                            Image, 0x113ee6440, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add'
+                            StaticText, 0x113ee6580, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+                  Other, 0x113ee66c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x113ee6800, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x113ee6940, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x113ee6a80, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x113ee6bc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x113ee6d00, {{0.0, 0.0}, {1032.0, 1376.0}}
+              NavigationBar, 0x113ee6e40, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+                Button, 0x113ee6f80, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close'
+                StaticText, 0x113ee70c0, {{460.5, 43.5}, {111.0, 21.0}}, label: 'New Painting'
+                Button, 0x113ee7200, {{981.0, 36.0}, {37.0, 36.0}}, label: 'Browse All…'
+              Other, 0x113ee7340, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x113ee7480, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  Other, 0x113ee75c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x113ee7700, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      StaticText, 0x113ee7840, {{36.0, 90.0}, {521.5, 18.0}}, label: 'Choose a photo with a clear subject and good light. It becomes your canvas.'
+                      StaticText, 0x113ee7980, {{36.0, 122.0}, {121.5, 24.0}}, label: 'Your Photos'
+                      Other, 0x113ee7ac0, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker'
+                        Other, 0x113ee7c00, {{32.0, 158.0}, {566.5, 1174.0}}
+                          Other, 0x113ee7d40, {{32.0, 158.0}, {566.5, 1174.0}}
+                            Other, 0x113ee7e80, {{32.0, 158.0}, {566.5, 1174.0}}
+                              Other, 0x113d99900, {{32.0, 158.0}, {566.5, 1174.0}}
+                                Other, 0x113d99680, {{32.0, 158.0}, {566.5, 1174.0}}
+                                  Other, 0x113d997c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                    Other, 0x113d98000, {{32.0, 158.0}, {566.5, 1174.0}}
+                                      Other, 0x113d98140, {{32.0, 158.0}, {566.5, 1174.0}}
+                                        Other, 0x113d98b40, {{32.0, 158.0}, {566.5, 1174.0}}
+                                          Other, 0x113d98c80, {{32.0, 158.0}, {566.5, 1174.0}}
+                                            Other, 0x113d98dc0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                              Other, 0x113d98f00, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                Other, 0x113d99040, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                  Other, 0x113d99180, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                    Other, 0x113d992c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                      Other, 0x113d99400, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                        Other, 0x113d99540, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                          NavigationBar, 0x113d98280, {{32.0, 168.0}, {566.5, 62.0}}, identifier: 'Photos'
+                                                            SegmentedControl, 0x113d983c0, {{220.0, 166.0}, {190.0, 48.0}}, label: 'Photos'
+                                                              Button, 0x113d98500, {{220.0, 166.0}, {95.0, 48.0}}, label: 'Photos', Selected
+                                                              Button, 0x113d98640, {{315.0, 166.0}, {95.0, 48.0}}, label: 'Collections'
+                                                          Other, 0x113d98780, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                            Other, 0x113d988c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                              Other, 0x113d98a00, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                Other, 0x113d99a40, {{32.0, 158.0}, {566.5, 1174.0}}, label: 'Photos'
+                                                                  Other, 0x113c483c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                    ScrollView, 0x113c48500, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'photosView_content_scroll_view'
+                                                                      Other, 0x113c48640, {{32.0, 230.0}, {566.5, 520.0}}, identifier: 'photos_layout'
+                                                                        Other, 0x113c48780, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                        Other, 0x113c488c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                        Other, 0x113c48a00, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                                        Other, 0x113c48b40, {{32.0, 230.0}, {566.5, 142.5}}, identifier: 'PXGSingleViewLayout-Group'
+                                                                          Other, 0x113c48c80, {{32.0, 230.0}, {566.5, 142.5}}, identifier: 'PXGSingleViewContainerView_AX', label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.'
+                                                                            Image, 0x113c48dc0, {{64.0, 240.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                            Button, 0x113c48f00, {{546.5, 238.0}, {30.0, 22.0}}, label: 'Close'
+                                                                            Button, 0x113c49040, {{114.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                              StaticText, 0x113c49180, {{114.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                        Other, 0x113c49540, {{32.0, 230.0}, {566.5, 142.5}}, label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.'
+                                                                          Image, 0x113c49680, {{64.0, 240.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                          Button, 0x113c497c0, {{546.5, 238.0}, {30.0, 22.0}}, label: 'Close'
+                                                                          Button, 0x113c49900, {{114.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                            StaticText, 0x113c49a40, {{114.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                        Other, 0x113c49b80, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'photos_sectioned_layout'
+                                                                          Other, 0x113c49cc0, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXAssetsSectionLayout-Group'
+                                                                            Other, 0x113c49e00, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXZoomablePhotosLayout-Group'
+                                                                              Other, 0x113c49f40, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXGZoomLayout-Group'
+                                                                                Other, 0x113c4a080, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXGDecoratingLayout-Group'
+                                                                                  Other, 0x113c4a1c0, {{32.0, 372.5}, {566.5, 377.5}}, identifier: 'PXGGridLayout-Group', label: 'Photo, March 30, 2018, 7:14 PM, Photo, August 08, 2012, 9:55 PM, Photo, August 08, 2012, 9:29 PM, Photo, August 08, 2012, 6:52 PM, Photo, March 13, 2011, 12:17 AM, Photo, October 09, 2009, 9:09 PM'
+                                                                                    Image, 0x113c4a300, {{32.0, 372.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 30, 2018, 7:14 PM'
+                                                                                    Image, 0x113c4a440, {{221.3, 372.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:55 PM'
+                                                                                    Image, 0x113c4a580, {{410.7, 372.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:29 PM'
+                                                                                    Image, 0x113c4abc0, {{32.0, 562.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 6:52 PM'
+                                                                                    Image, 0x113c4ad00, {{221.3, 562.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 13, 2011, 12:17 AM'
+                                                                                    Image, 0x113c4ae40, {{410.7, 562.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, October 09, 2009, 9:09 PM'
+                                                                              Other, 0x113c4af80, {{0.0, 214.5}, {566.5, 0.0}}, identifier: 'PXZoomableInlineHeadersLayout-Group'
+                                                                        Other, 0x113c4b0c0, {{565.5, 230.0}, {30.0, 1102.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                          Other, 0x113c4b200, {{592.5, 1106.5}, {3.0, 424.5}}
+                                                                        Other, 0x113c4b340, {{32.0, 1299.0}, {566.5, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                          Other, 0x113c4b840, {{35.0, 1326.0}, {1026.0, 3.0}}
+                                                                      Other, 0x113c4b980, {{565.5, 230.0}, {30.0, 1102.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                        Other, 0x113c4bd40, {{592.5, 1106.5}, {3.0, 424.5}}
+                                                                      Other, 0x113c4be80, {{32.0, 1299.0}, {566.5, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                        Other, 0x113c4bc00, {{35.0, 1326.0}, {1026.0, 3.0}}
+                                                          Other, 0x113c4bac0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                            Other, 0x113c4b700, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                    Other, 0x113c4b5c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                                      Other, 0x113c4b480, {{32.0, 158.0}, {566.5, 1174.0}}
+                              Other, 0x113c4a6c0, {{32.0, 158.0}, {566.5, 1174.0}}
+                                Other, 0x113c4a800, {{32.0, 158.0}, {566.5, 1174.0}}
+                                  Other, 0x113c4aa80, {{32.0, 158.0}, {566.5, 1174.0}}
+                              Other, 0x113c4a940, {{0.0, 0.0}, {0.0, 0.0}}
+                      StaticText, 0x113cbb200, {{626.4, 122.0}, {84.5, 24.0}}, label: 'Samples'
+                      ScrollView, 0x113cbb340, {{622.5, 158.0}, {377.5, 1174.0}}
+                        Other, 0x113cbb480, {{622.5, 158.0}, {377.5, 452.0}}
+                          Other, 0x113cbb5c0, {{626.5, 162.0}, {369.5, 428.0}}
+                            Button, 0x113cbb700, {{626.5, 162.0}, {178.0, 133.5}}, label: 'Sample: Parrots'
+                              Image, 0x113cbb840, {{615.5, 162.0}, {200.0, 133.5}}
+                              StaticText, 0x113cbb980, {{626.5, 162.0}, {178.0, 133.5}}, label: 'Parrots'
+                            Button, 0x113cbbac0, {{818.5, 162.0}, {177.5, 133.5}}, label: 'Sample: Hibiscus'
+                              Image, 0x113cbbc00, {{807.0, 162.0}, {200.5, 133.5}}
+                              StaticText, 0x113cbbd40, {{818.5, 162.0}, {177.5, 133.5}}, label: 'Hibiscus'
+                            Button, 0x113cbbe80, {{626.5, 309.5}, {178.0, 133.0}}, label: 'Sample: Lighthouse'
+                              Image, 0x113bda580, {{616.0, 309.5}, {199.0, 133.0}}
+                              StaticText, 0x113bda800, {{626.5, 309.5}, {178.0, 133.0}}, label: 'Lighthouse'
+                            Button, 0x113bda1c0, {{818.5, 309.5}, {177.5, 133.0}}, label: 'Sample: Red Barn'
+                              Image, 0x113bd8f00, {{807.5, 309.5}, {199.5, 133.0}}
+                              StaticText, 0x113bd88c0, {{818.5, 309.5}, {177.5, 133.0}}, label: 'Red Barn'
+                            Button, 0x113e743c0, {{626.5, 456.5}, {178.0, 133.5}}, label: 'Sample: Espresso'
+                              Image, 0x113e75540, {{615.5, 456.5}, {200.0, 133.5}}
+                              StaticText, 0x113e9f200, {{626.5, 456.5}, {178.0, 133.5}}, label: 'Espresso'
+                            Button, 0x113e9f0c0, {{818.5, 456.5}, {177.5, 133.5}}, label: 'Sample: Regatta'
+                              Image, 0x113e9ef80, {{818.5, 390.0}, {177.5, 266.5}}
+                              StaticText, 0x113c7c000, {{818.5, 456.5}, {177.5, 133.5}}, label: 'Regatta'
+                        Other, 0x113c7c140, {{967.0, 158.0}, {30.0, 1174.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                          Other, 0x113c7c280, {{994.0, 1322.0}, {3.0, 7.0}}
+                        Other, 0x113c7c3c0, {{967.0, 158.0}, {30.0, 1174.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                          Other, 0x113c7c500, {{994.0, 1322.0}, {3.0, 7.0}}
+              Other, 0x113c7c640, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x113c7c780, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x113c7c8c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x113c7ca00, {{-1032.0, -1376.0}, {3096.0, 4128.0}}, identifier: 'PopoverDismissRegion', label: 'dismiss popup'
+        Other, 0x113c7cb40, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x113c7cc80, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x113c7cdc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+              Other, 0x113c7cf00, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x113c7d040, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  Other, 0x113c7d180, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x113c7d2c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      Other, 0x113c7d400, {{0.0, 0.0}, {1032.0, 1376.0}}
+                        Other, 0x113c7d540, {{0.0, 0.0}, {1032.0, 1376.0}}
+                          Other, 0x113c7d680, {{0.0, 0.0}, {1032.0, 1376.0}}
+                            Other, 0x113c7d7c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                              Other, 0x113c7d900, {{0.0, 0.0}, {1032.0, 1376.0}}
+                                Other, 0x113c7da40, {{0.0, 0.0}, {1032.0, 1376.0}}
+                                  Other, 0x113c7db80, {{159.0, 368.0}, {714.0, 640.0}}
+                                    Image, 0x113c7dcc0, {{9.0, 218.0}, {1014.0, 940.0}}
+                                    Other, 0x113c7de00, {{159.0, 368.0}, {714.0, 640.0}}
+                                      Other, 0x113c7df40, {{159.0, 368.0}, {714.0, 640.0}}
+                                        Other, 0x113c7e080, {{159.0, 368.0}, {714.0, 640.0}}
+                                          Other, 0x113c7e1c0, {{159.0, 368.0}, {714.0, 640.0}}
+                                            Other, 0x113c7e300, {{159.0, 368.0}, {714.0, 640.0}}
+                                              Other, 0x113c7e440, {{159.0, 368.0}, {714.0, 640.0}}
+                                                Other, 0x113c7e580, {{159.0, 368.0}, {714.0, 640.0}}
+                                                  Other, 0x113c7e6c0, {{159.0, 368.0}, {714.0, 640.0}}
+                                                    Other, 0x113c7e800, {{159.0, 368.0}, {714.0, 640.0}}
+                                                      Other, 0x113c7e940, {{169.0, 378.0}, {240.0, 620.0}}
+                                                        Other, 0x113c7ea80, {{169.0, 378.0}, {240.0, 620.0}}
+                                                          Other, 0x113c7ebc0, {{169.0, 378.0}, {240.0, 620.0}}
+                                                            NavigationBar, 0x113c7ed00, {{169.0, 378.0}, {240.0, 54.0}}, identifier: 'PUSidebarView'
+                                                              Button, 0x113c7ee40, {{173.0, 382.0}, {46.5, 36.0}}, identifier: 'Cancel', label: 'Cancel'
+                                                            Other, 0x113c7ef80, {{169.0, 378.0}, {240.0, 620.0}}
+                                                              Other, 0x113c7f0c0, {{169.0, 378.0}, {240.0, 620.0}}
+                                                                Other, 0x113c7f200, {{169.0, 378.0}, {240.0, 620.0}}
+                                                                  CollectionView, 0x113c7f340, {{169.0, 378.0}, {240.0, 620.0}}, identifier: 'PhotosSidebarScrollView'
+                                                                    Other, 0x113c7f480, {{153.0, -728.0}, {272.0, 1258.0}}
+                                                                    Other, 0x113c7f5c0, {{169.0, 378.0}, {240.0, 620.0}}
+                                                                      Other, 0x113c7f700, {{169.0, 378.0}, {240.0, 108.8}}
+                                                                    Other, 0x113c7f840, {{169.0, 378.0}, {240.0, 620.0}}
+                                                                    Cell, 0x113c7f980, {{185.0, 432.0}, {208.0, 44.0}}, identifier: 'PXPickerAllPhotosVirtualCollection', label: 'Photos', Selected
+                                                                      Other, 0x113c7fac0, {{185.0, 432.0}, {208.0, 44.0}}
+                                                                        Other, 0x113c7fc00, {{185.0, 432.0}, {208.0, 44.0}}
+                                                                          Other, 0x113c7fd40, {{185.0, 432.0}, {208.0, 44.0}}
+                                                                      Other, 0x113c7fe80, {{185.0, 432.0}, {208.0, 44.0}}
+                                                                        Image, 0x113cbc000, {{201.0, 442.5}, {28.0, 23.0}}, identifier: 'photo.on.rectangle', label: 'photo.on.rectangle'
+                                                                        StaticText, 0x113cbc140, {{239.0, 444.0}, {55.0, 20.5}}, label: 'Photos'
+                                                                    Cell, 0x113cbc280, {{185.0, 476.0}, {208.0, 44.0}}, identifier: 'collections', label: 'Collections'
+                                                                      Other, 0x113cbc3c0, {{185.0, 476.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cbc500, {{185.0, 476.0}, {208.0, 44.0}}
+                                                                        Image, 0x113cbc640, {{201.5, 484.0}, {27.0, 28.0}}, identifier: 'rectangle.stack', label: 'rectangle.stack'
+                                                                        StaticText, 0x113cbc780, {{239.0, 488.0}, {85.5, 20.5}}, label: 'Collections'
+                                                                    Other, 0x113cbc8c0, {{153.0, 530.0}, {272.0, 274.0}}
+                                                                    Cell, 0x113cbca00, {{185.0, 530.0}, {208.0, 44.0}}, identifier: 'PXBookmarksVirtualCollectionList', label: 'Pinned'
+                                                                      Other, 0x113cbcb40, {{185.0, 530.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cbcc80, {{185.0, 530.0}, {178.0, 44.0}}
+                                                                        StaticText, 0x113cbcdc0, {{201.0, 542.0}, {54.0, 20.5}}, label: 'Pinned'
+                                                                      Other, 0x113cbcf00, {{348.0, 530.0}, {44.0, 44.0}}, identifier: 'PXBookmarksVirtualCollectionList', label: 'Pinned'
+                                                                        Image, 0x113cbd040, {{363.2, 546.8}, {14.0, 10.5}}, identifier: 'chevron.forward', label: 'Forward'
+                                                                      Other, 0x113cbd180, {{348.0, 530.0}, {44.0, 44.0}}, identifier: 'PXBookmarksVirtualCollectionList', label: 'Pinned'
+                                                                        Image, 0x113cbd2c0, {{363.2, 546.8}, {14.0, 10.5}}, identifier: 'chevron.forward', label: 'Forward'
+                                                                    Cell, 0x113cbd400, {{185.0, 574.0}, {208.0, 44.0}}, identifier: 'smartAlbumFavorites', label: 'Favorites'
+                                                                      Other, 0x113cbd540, {{185.0, 574.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cbd680, {{185.0, 574.0}, {208.0, 44.0}}
+                                                                        Image, 0x113cbd7c0, {{201.5, 584.5}, {27.0, 23.5}}, identifier: 'heart', label: 'love'
+                                                                        StaticText, 0x113cbd900, {{239.0, 586.0}, {69.5, 20.5}}, label: 'Favorites'
+                                                                    Cell, 0x113cbda40, {{185.0, 618.0}, {208.0, 44.0}}, identifier: 'recentlySaved', label: 'Recently Saved'
+                                                                      Other, 0x113cbdb80, {{185.0, 618.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cbdcc0, {{185.0, 618.0}, {208.0, 44.0}}
+                                                                        Image, 0x113cbde00, {{202.5, 626.0}, {25.0, 28.0}}, identifier: 'square.and.arrow.down.badge.clock', label: 'square.and.arrow.down.badge.clock'
+                                                                        StaticText, 0x113cbdf40, {{239.0, 630.0}, {118.0, 20.5}}, label: 'Recently Saved'
+                                                                    Cell, 0x113cbe080, {{185.0, 662.0}, {208.0, 44.0}}, identifier: 'smartAlbumVideos', label: 'Videos'
+                                                                      Other, 0x113cbe1c0, {{185.0, 662.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cbe300, {{185.0, 662.0}, {208.0, 44.0}}
+                                                                        Image, 0x113cbe440, {{201.0, 674.0}, {28.0, 20.0}}, identifier: 'video', label: 'video'
+                                                                        StaticText, 0x113cbe580, {{239.0, 674.0}, {52.5, 20.5}}, label: 'Videos'
+                                                                    Cell, 0x113cbe6c0, {{185.0, 706.0}, {208.0, 44.0}}, identifier: 'smartAlbumScreenshots', label: 'Screenshots'
+                                                                      Other, 0x113cbe800, {{185.0, 706.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cbe940, {{185.0, 706.0}, {208.0, 44.0}}
+                                                                        Image, 0x113cbea80, {{202.0, 715.5}, {26.0, 25.0}}, identifier: 'camera.viewfinder', label: 'screenshot'
+                                                                        StaticText, 0x113cbebc0, {{239.0, 718.0}, {95.5, 20.5}}, label: 'Screenshots'
+                                                                    Cell, 0x113cbed00, {{185.0, 750.0}, {208.0, 44.0}}, identifier: 'bookmarks.PXPeopleVirtualCollection', label: 'People & Pets'
+                                                                      Other, 0x113cbee40, {{185.0, 750.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cbef80, {{185.0, 750.0}, {208.0, 44.0}}
+                                                                        Image, 0x113cbf0c0, {{202.0, 759.0}, {26.0, 26.0}}, identifier: 'person.crop.circle', label: 'account'
+                                                                        StaticText, 0x113cbf200, {{239.0, 762.0}, {106.0, 20.5}}, label: 'People & Pets'
+                                                                    Other, 0x113cbf340, {{153.0, 804.0}, {272.0, 54.0}}
+                                                                    Cell, 0x113cbf480, {{185.0, 804.0}, {208.0, 44.0}}, identifier: 'CAC0C712-E05B-40EC-95EA-28B43C205F60/L0/020', label: 'Albums'
+                                                                      Other, 0x113cbf5c0, {{185.0, 804.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cbf700, {{185.0, 804.0}, {178.0, 44.0}}
+                                                                        StaticText, 0x113cbf840, {{201.0, 816.0}, {59.5, 20.5}}, label: 'Albums'
+                                                                      Other, 0x113cbf980, {{348.0, 804.0}, {44.0, 44.0}}, identifier: 'CAC0C712-E05B-40EC-95EA-28B43C205F60/L0/020', label: 'Albums'
+                                                                        Image, 0x113cbfac0, {{365.0, 819.0}, {10.5, 14.0}}, identifier: 'chevron.forward', label: 'Forward'
+                                                                      Other, 0x113cbfc00, {{348.0, 804.0}, {44.0, 44.0}}, identifier: 'CAC0C712-E05B-40EC-95EA-28B43C205F60/L0/020', label: 'Albums'
+                                                                        Image, 0x113cbfd40, {{365.0, 819.0}, {10.5, 14.0}}, identifier: 'chevron.forward', label: 'Forward'
+                                                                    Other, 0x113cbfe80, {{153.0, 858.0}, {272.0, 1214.0}}
+                                                                    Other, 0x113cb4000, {{185.0, 847.0}, {208.0, 1.0}}
+                                                                      Other, 0x113cb4140, {{185.0, 847.0}, {208.0, 1.0}}
+                                                                    Cell, 0x113cb4280, {{185.0, 858.0}, {208.0, 44.0}}, identifier: 'listItem.utilities', label: 'Utilities'
+                                                                      Other, 0x113cb43c0, {{185.0, 858.0}, {208.0, 44.0}}
+                                                                      Other, 0x113cb4500, {{185.0, 858.0}, {178.0, 44.0}}
+                                                                        StaticText, 0x113cb4640, {{201.0, 870.0}, {59.0, 20.5}}, label: 'Utilities'
+                                                                      Other, 0x113cb4780, {{348.0, 858.0}, {44.0, 44.0}}, identifier: 'listItem.utilities', label: 'Utilities'
+                                                                        Image, 0x113cb48c0, {{365.0, 873.0}, {10.5, 14.0}}, identifier: 'chevron.forward', label: 'Forward'
+                                                                      Other, 0x113cb4a00, {{348.0, 858.0}, {44.0, 44.0}}, identifier: 'listItem.utilities', label: 'Utilities'
+                                                                        Image, 0x113cb4b40, {{365.0, 873.0}, {10.5, 14.0}}, identifier: 'chevron.forward', label: 'Forward'
+                                                                    Other, 0x113cb4c80, {{185.0, 901.0}, {208.0, 1.0}}
+                                                                      Other, 0x113cb4dc0, {{185.0, 901.0}, {208.0, 1.0}}
+                                                                    Other, 0x113cb4f00, {{376.0, 432.0}, {30.0, 544.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                      Other, 0x113cb5040, {{403.0, 1561.0}, {3.0, 148.0}}
+                                                                    Other, 0x113cb5180, {{191.0, 965.0}, {196.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                      Other, 0x113cb52c0, {{194.0, 992.0}, {190.0, 3.0}}
+                                                                    Other, 0x113cb5400, {{376.0, 432.0}, {30.0, 544.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                      Other, 0x113cb5540, {{403.0, 1561.0}, {3.0, 148.0}}
+                                                                    Other, 0x113cb5680, {{191.0, 965.0}, {196.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                      Other, 0x113cb57c0, {{194.0, 992.0}, {190.0, 3.0}}
+                                                            Other, 0x113cb5900, {{169.0, 378.0}, {240.0, 620.0}}
+                                                              Other, 0x113cb5a40, {{169.0, 378.0}, {240.0, 620.0}}
+                                                        Other, 0x113cb5b80, {{169.0, 378.0}, {240.0, 620.0}}
+                                                          Other, 0x113cb5cc0, {{169.0, 378.0}, {240.0, 620.0}}
+                                                            Other, 0x113cb5e00, {{169.0, 378.0}, {240.0, 620.0}}
+                                                              Other, 0x113cb5f40, {{169.0, 378.0}, {240.0, 620.0}}
+                                                                Other, 0x113cb6080, {{169.0, 378.0}, {240.0, 620.0}}
+                                                                  Other, 0x113cb61c0, {{169.0, 378.0}, {240.0, 1356.0}}
+                                                              Other, 0x113cb6300, {{169.0, 378.0}, {240.0, 620.0}}
+                                                                Other, 0x113cb6440, {{169.0, 378.0}, {240.0, 1356.0}}
+                                                      Other, 0x113cb6580, {{159.0, 368.0}, {714.0, 640.0}}
+                                                        Other, 0x113cb66c0, {{159.0, 368.0}, {714.0, 640.0}}
+                                                          NavigationBar, 0x113cb6800, {{159.0, 378.0}, {714.0, 62.0}}, identifier: 'Photos'
+                                                            StaticText, 0x113cb6940, {{429.0, 389.5}, {56.0, 21.0}}, label: 'Photos'
+                                                            Other, 0x113cb6a80, {{595.0, 382.0}, {264.0, 36.0}}
+                                                              Other, 0x113cb6bc0, {{595.0, 382.0}, {264.0, 36.0}}
+                                                                Image, 0x113cb6d00, {{605.0, 392.0}, {16.5, 16.5}}, identifier: 'magnifyingglass', label: 'Search'
+                                                                StaticText, 0x113cb6e40, {{631.5, 389.8}, {155.0, 20.5}}, label: 'Search your library…'
+                                                                ScrollView, 0x113cb6f80, {{627.5, 388.5}, {223.5, 23.5}}
+                                                                  Other, 0x113cb70c0, {{627.5, 388.5}, {223.5, 23.5}}
+                                                                    TextView, 0x113cb7200, {{627.5, 388.5}, {223.5, 23.5}}
+                                                                      Other, 0x113cb7340, {{818.0, 398.5}, {30.0, 3.5}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                        Other, 0x113cb7480, {{845.0, 373.0}, {3.0, 36.0}}
+                                                                      Other, 0x113cb75c0, {{627.5, 397.2}, {213.5, 11.8}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                        Other, 0x113cb7700, {{630.5, 406.0}, {217.5, 3.0}}
+                                                          Other, 0x113cb7840, {{159.0, 368.0}, {714.0, 640.0}}
+                                                            Other, 0x113cb7980, {{159.0, 368.0}, {714.0, 640.0}}
+                                                              Other, 0x113cb7ac0, {{159.0, 368.0}, {714.0, 640.0}}
+                                                                Other, 0x113cb7c00, {{159.0, 368.0}, {714.0, 640.0}}, label: 'Photos'
+                                                                  Other, 0x113cb7d40, {{159.0, 368.0}, {714.0, 640.0}}
+                                                                    ScrollView, 0x113cb7e80, {{159.0, 368.0}, {714.0, 640.0}}, identifier: 'photosView_content_scroll_view'
+                                                                      Other, 0x113d1c000, {{159.0, 440.0}, {714.0, 343.0}}, identifier: 'photos_layout'
+                                                                        Other, 0x113d1c140, {{159.0, 368.0}, {714.0, 640.0}}
+                                                                        Other, 0x113d1c280, {{159.0, 368.0}, {714.0, 640.0}}
+                                                                        Other, 0x113d1c3c0, {{159.0, 368.0}, {714.0, 640.0}}
+                                                                        Other, 0x113d1c500, {{159.0, 440.0}, {714.0, 162.5}}, identifier: 'PXGSingleViewLayout-Group'
+                                                                          Other, 0x113d1c640, {{159.0, 440.0}, {714.0, 162.5}}, identifier: 'PXGSingleViewContainerView_AX', label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.'
+                                                                            Image, 0x113d1c780, {{441.0, 450.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                            Button, 0x113d1c8c0, {{821.0, 448.0}, {30.0, 22.0}}, label: 'Close'
+                                                                            Button, 0x113d1ca00, {{491.0, 558.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                              StaticText, 0x113d1cb40, {{491.0, 558.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                        Other, 0x113d1cc80, {{159.0, 440.0}, {714.0, 162.5}}, label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.'
+                                                                          Image, 0x113d1cdc0, {{441.0, 450.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                          Button, 0x113d1cf00, {{821.0, 448.0}, {30.0, 22.0}}, label: 'Close'
+                                                                          Button, 0x113d1d040, {{491.0, 558.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                            StaticText, 0x113d1d180, {{491.0, 558.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                        Other, 0x113d1d2c0, {{159.0, 602.5}, {714.0, 180.5}}, identifier: 'photos_sectioned_layout'
+                                                                          Other, 0x113d1d400, {{159.0, 602.5}, {714.0, 180.5}}, identifier: 'PXAssetsSectionLayout-Group'
+                                                                            Other, 0x113d1d540, {{159.0, 602.5}, {714.0, 180.5}}, identifier: 'PXZoomablePhotosLayout-Group'
+                                                                              Other, 0x113d1d680, {{159.0, 602.5}, {714.0, 180.5}}, identifier: 'PXGZoomLayout-Group'
+                                                                                Other, 0x113d1d7c0, {{159.0, 602.5}, {714.0, 180.5}}, identifier: 'PXGDecoratingLayout-Group'
+                                                                                  Other, 0x113d1d900, {{159.0, 602.5}, {714.0, 180.5}}, identifier: 'PXGGridLayout-Group', label: 'Photo, March 30, 2018, 7:14 PM, Photo, August 08, 2012, 9:55 PM, Photo, August 08, 2012, 9:29 PM, Photo, August 08, 2012, 6:52 PM, Photo, March 13, 2011, 12:17 AM, Photo, October 09, 2009, 9:09 PM'
+                                                                                    Image, 0x113d1da40, {{419.0, 602.5}, {89.6, 89.5}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 30, 2018, 7:14 PM'
+                                                                                    Image, 0x113d1db80, {{510.1, 602.5}, {89.6, 89.5}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:55 PM'
+                                                                                    Image, 0x113d1dcc0, {{601.2, 602.5}, {89.6, 89.5}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:29 PM'
+                                                                                    Image, 0x113d1de00, {{692.3, 602.5}, {89.6, 89.5}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 6:52 PM'
+                                                                                    Image, 0x113d1df40, {{783.4, 602.5}, {89.6, 89.5}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 13, 2011, 12:17 AM'
+                                                                                    Image, 0x113d1e080, {{419.0, 693.5}, {89.6, 89.5}}, identifier: 'PXGGridLayout-Info', label: 'Photo, October 09, 2009, 9:09 PM'
+                                                                              Other, 0x113d1e1c0, {{159.0, 602.5}, {714.0, 0.0}}, identifier: 'PXZoomableInlineHeadersLayout-Group'
+                                                                        Other, 0x113d1e300, {{840.0, 440.0}, {30.0, 504.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                          Other, 0x113d1e440, {{867.0, 604.0}, {3.0, 337.0}}
+                                                                        Other, 0x113d1e580, {{409.0, 911.0}, {432.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                          Other, 0x113d1e6c0, {{412.0, 938.0}, {426.0, 3.0}}
+                                                                      Other, 0x113d1e800, {{840.0, 440.0}, {30.0, 504.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                        Other, 0x113d1e940, {{867.0, 604.0}, {3.0, 337.0}}
+                                                                      Other, 0x113d1ea80, {{409.0, 911.0}, {432.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                        Other, 0x113d1ebc0, {{412.0, 938.0}, {426.0, 3.0}}
+                                                          Other, 0x113d1ed00, {{159.0, 368.0}, {714.0, 640.0}}
+                                                            Other, 0x113d1ee40, {{159.0, 368.0}, {714.0, 640.0}}
+                                                              Toolbar, 0x113d1ef80, {{409.0, 944.0}, {464.0, 64.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                                                                Other, 0x113d1f0c0, {{429.0, 954.0}, {434.0, 44.0}}
+                                                                  Other, 0x113d1f200, {{429.0, 954.0}, {434.0, 44.0}}
+                                                                    Other, 0x113d1f340, {{429.0, 954.0}, {0.0, 0.0}}
+                                                                      Other, 0x113d1f480, {{429.0, 954.0}, {44.0, 44.0}}
+                                                                        Other, 0x113d1f5c0, {{429.0, 954.0}, {44.0, 44.0}}
+                                                                          Other, 0x113d1f700, {{433.0, 958.0}, {36.0, 36.0}}
+                                                                            Other, 0x113d1f840, {{433.0, 958.0}, {36.0, 36.0}}
+                                                                              Button, 0x113d1f980, {{433.0, 958.0}, {36.0, 36.0}}, identifier: 'Sort and Filter', label: 'Sort and Filter'
+                                                                  Other, 0x113d1fac0, {{429.0, 954.0}, {434.0, 44.0}}
+                                                                    Other, 0x113d1fc00, {{429.0, 954.0}, {0.0, 0.0}}
+                                                                      Other, 0x113d1fd40, {{561.5, 954.0}, {169.5, 44.0}}
+                                                                        Other, 0x113d1fe80, {{561.5, 954.0}, {169.5, 44.0}}
+                                                                          Other, 0x113cc4000, {{565.5, 967.0}, {161.5, 18.0}}
+                                                                            Other, 0x113cc4140, {{565.5, 967.0}, {161.5, 18.0}}
+                                                                              Other, 0x113cc4280, {{565.5, 967.0}, {161.5, 18.0}}
+                                                                                Other, 0x113cc43c0, {{565.5, 967.0}, {161.5, 18.0}}
+                                                                                  StaticText, 0x113cc4500, {{565.5, 967.0}, {161.5, 18.0}}, label: ' Location Is Included'
+                                                    Other, 0x113cc4640, {{159.0, 368.0}, {714.0, 640.0}}
+                                                      Other, 0x113cc4780, {{159.0, 368.0}, {714.0, 640.0}}
+                              Other, 0x113cc48c0, {{0.0, 0.0}, {0.0, 0.0}}
+Path to element:
+ →Application, 0x113ee4500, pid: 48262, label: 'Paint by Moonlight'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x113cc4a00, pid: 48262, label: 'Paint by Moonlight'
+  }
