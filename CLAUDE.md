@@ -84,7 +84,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
   documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
 - `tools/regression.py [--sheets DIR] [--json FILE]` — the quality gate CI runs on every push:
-  the six bundled samples in three regimes (24 colors/detail 0.5, 150/1.0, 12/0.0), each
+  the six retired samples, pinned by name (`SAMPLE_NAMES`; CI's `pbn bench` step lists the same
+  files), never the picture library beside them, whose curation must move neither the baselines
+  nor CI's time; in three regimes (24 colors/detail 0.5, 150/1.0, 12/0.0), each
   generated twice, plus the `auto` regime (`pbn generate --auto`, Relaxed): its hard invariant is
   that the choice lies inside the length's bands; the chosen settings and metrics are compared
   with `tools/baseline/auto.json` for information only (choices move when the pipeline moves). Hard invariants: `pbn check` valid, byte-identical runs, no region under
@@ -205,8 +207,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture/template `ShareLink`s can't report
   completion, so they rely on the launch purge and the sweep of exports older than ten
   minutes that each new export runs (`ArtworkExporter.staleExportAge`).
-- Image caches (`ImageCache`): LRU by decoded bytes (thumbnails 48 MB, samples 16 MB), emptied on
-  memory warnings; gallery tiles decode thumbnails at their own pixel size.
+- Image caches (`ImageCache`): LRU by decoded bytes (thumbnails 48 MB, samples 16 MB: about a
+  dozen 640 px tiles, so a long library's far tiles decode again), emptied on memory warnings;
+  gallery tiles decode thumbnails at their own pixel size.
 - Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`), radius capped at
   `PaintingSession.maxBrushRadius` canvas units (a cost bound never reached on current devices).
 - Rendering without Metal: `Export/TemplateRasterizer` (CoreGraphics; vector geometry, falls back to
@@ -215,6 +218,48 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   sit inside a ScrollView (UIKit can't arbitrate their pans across the process boundary: neither
   scrolls). It fills the page; compact windows switch Photos/Samples with a segmented control,
   wide windows put a scrolling samples column beside it. "Browse All…" presents the full picker.
+  The samples come in two sections, Paintings then Photographs (`Sample.all(of:)`); a painting's
+  tile shows its creator under the title while there is room (`ViewThatFits`: long text and large
+  sizes drop the creator, then truncate the title), every tile's VoiceOver label names the
+  creator, and tiles widen with Dynamic Type (`@ScaledMetric`, capped at the column).
+- Picture library (`Resources/Samples/`, `Model/Sample.swift`): public-domain paintings and
+  photographs. `library.json` is its single source of truth: which pictures ship, in which order
+  (`Sample.all` follows the file; reorder there, not in Swift), and a record per picture (`id` =
+  the file name `<id>.jpg`, `kind` painting|photograph, English `title`, `creator`, `year`,
+  `credit`, `license`, `source`, `image`, `evidence`, `retrieved`, `crop`, `sha256` of the shipped
+  file; format in `docs/overnight/library.md`). The app decodes it at runtime: creator, year,
+  credit and license are proper names and facts shown verbatim, so they stay in the audited
+  record instead of a Swift copy that could drift from it (and would need `VERBATIM_FILES`).
+  Titles are translatable, so they live in Swift: `Sample.title(of:)` holds one
+  `String(localized: "sample.<id>", …)` per picture (its comment names the work for
+  translators); a record without one isn't offered. `Sample.starters` names the two pictures
+  (a painting and a photograph) prepared on first launch. License rules (hard; reject on any
+  doubt): paintings and prints by creators dead by 1955, made before 1931, from a source that
+  releases the file as CC0 or public domain (The Met, AIC, NGA, Rijksmuseum, Cleveland,
+  Smithsonian, …); photographs CC0, by the US federal government (NASA credited alone, NOAA,
+  NPS, USFWS, USGS, LoC) or published before 1931; never Italian state museums, Unsplash/Pexels/
+  Pixabay/Flickr licenses, aggregator "PD" claims or AI pictures; `evidence` quotes the source's
+  own license statement. `SampleLibraryTests` fails when file, titles and JPEGs disagree (every
+  record offered in order with the catalog title equal to its `title`, complete fields, checksum,
+  long edge 1024–2048 px, starters a painting and a photograph); `AboutTests` keeps the Pictures
+  credits of Settings › Acknowledgements and `ACKNOWLEDGEMENTS.md` in step. **Adding a picture**:
+  (1) `Resources/Samples/<id>.jpg` (2048 px long edge, sRGB, metadata stripped; the whole library
+  ≤ 25 MB); (2) its record in `library.json` at its place in the order; (3) a `case "<id>":` in
+  `Sample.title(of:)`; (4) the `sample.<id>` catalog entry (`comment`, `"extractionState":
+  "manual"`, `localizations.en` = the record's `title`); (5) its `### <title>` entry at the same
+  place in `ACKNOWLEDGEMENTS.md`'s Pictures section ("creator, year", credit and license lines).
+  Removing one undoes the same five; synchronized folders need no project edit. The **retired
+  samples** (`Sample.retired`: parrots, hibiscus, lighthouse, barn, espresso, regatta, the photos
+  the app first shipped) stay bundled for good: saved artworks name them by `sampleName`, and
+  regeneration falls back to the bundled photo when an artwork has no `source.jpg`
+  (`Sample.named` resolves offered and retired ids; `SampleRegenerationTests`). Nothing records
+  their provenance, so they are never offered or credited; they are the regression and benchmark
+  corpus, the paint demos' photo and the fixtures of tests. Demos: the scenarios a viewer judges
+  the app by (`gallery`, `create-preview`, `create-suggested`, the Samples pane) show the library
+  by position (the first six of `Sample.all`, `Sample.starters`), so curation needs no demo edit;
+  the rest keep the retired samples, and UI tests that name paintings launch with
+  `-demoRetiredSamples YES`. `create-samples-paintings`/`-photographs` scroll the pane to a
+  section, `create-samples-long-text` doubles its strings.
 - Suggested settings in the create flow (`CreateModel`): every photo (picker, camera, sample, drop,
   opened file) goes loading → analyzing (`SubjectImportance.analyze`: importance map plus
   `SubjectHints` — faces, animals, allowlisted scene labels, quantized to hundredths — in one Vision
@@ -316,9 +361,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category are in
   `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings.
 - Settings › About shows the bundle version/build (`AppInfo`) and Acknowledgements
-  (`Acknowledgements.swift`). Ported or adapted third-party code and the methods the pipeline
-  implements are credited there and in `ACKNOWLEDGEMENTS.md` (`AboutTests` keeps the two in
-  step): add an entry when adding either.
+  (`Acknowledgements.swift`). It opens on the Pictures section (every offered picture with
+  its `library.json` record: title, "creator, year", credit, license). Ported or adapted
+  third-party code and the methods the pipeline implements are credited there and in
+  `ACKNOWLEDGEMENTS.md` (`AboutTests` keeps the two in step): add an entry when adding either.
 - Licensing: `Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox); nothing else is
   third-party code, and nothing is GPL. `Vector/CurveFitter.swift` is a clean-room implementation
   of the method in Selinger's paper "Potrace: a polygon-based tracing algorithm" (2003), written
