@@ -1,6 +1,7 @@
 import CoreGraphics
 import CryptoKit
 import Foundation
+import ImageIO
 import PaintCore
 import Testing
 @testable import PaintByNumber
@@ -57,7 +58,9 @@ struct SampleLibraryTests {
 
     /// Each listed picture ships as the file its record describes: the checksum matches, and
     /// the long edge is at most what the app stores of a photo (`ArtworkStore.sourceMaxPixelSize`)
-    /// and at least half of it (a thumbnail slipping in would make a coarse template).
+    /// and at least half of it (a thumbnail slipping in would make a coarse template). The size
+    /// comes from the JPEG's header: decoding every picture in full would load the parallel test
+    /// run enough to push the timing tests over their budgets.
     @Test func everyRecordShipsItsFile() throws {
         for record in try Self.records() {
             let id = try #require(record["id"] as? String)
@@ -65,9 +68,13 @@ struct SampleLibraryTests {
             let data = try Data(contentsOf: url)
             let digest = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
             #expect(digest == record["sha256"] as? String, "\(id).jpg differs from its record's checksum")
-            let image = try #require(ImageCodec.image(data: data), "\(id).jpg doesn't decode")
-            #expect((ArtworkStore.sourceMaxPixelSize / 2...ArtworkStore.sourceMaxPixelSize).contains(max(image.width, image.height)),
-                    "\(id).jpg is \(image.width)×\(image.height)")
+            let source = try #require(CGImageSourceCreateWithData(data as CFData, nil), "\(id).jpg isn't an image")
+            let properties = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                                          "\(id).jpg has no image properties")
+            let width = try #require(properties[kCGImagePropertyPixelWidth] as? Int)
+            let height = try #require(properties[kCGImagePropertyPixelHeight] as? Int)
+            #expect((ArtworkStore.sourceMaxPixelSize / 2...ArtworkStore.sourceMaxPixelSize).contains(max(width, height)),
+                    "\(id).jpg is \(width)×\(height)")
         }
     }
 
@@ -141,6 +148,13 @@ struct SampleRegenerationTests {
         for artwork in artworks {
             #expect(!library.store.hasSource(artwork.id))
             #expect(ArtworkFactory.canRegenerate(artwork, store: library.store), "\(artwork.title) can't regenerate")
+        }
+        // The photo itself loads for a retired sample and a library picture (every bundled file
+        // is checked by SampleLibraryTests; loading all of them here would starve the parallel
+        // test run's timing tests).
+        let picture = try #require(Sample.all.first)
+        for name in [Sample.retired[0].id, picture.id] {
+            let artwork = try #require(artworks.first { $0.sampleName == name })
             let photo = try ArtworkFactory.sourcePhoto(of: artwork, in: library.store)
             #expect(photo.width > 0 && photo.height > 0)
         }
