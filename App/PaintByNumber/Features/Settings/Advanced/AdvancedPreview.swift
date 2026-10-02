@@ -66,6 +66,8 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
         view.paperAppearance = paperAppearance
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.onZoomChange = onZoomChange
+        // The card is one VoiceOver element of its own; the canvas's areas and actions are for painting.
+        view.accessibilityElementsHidden = true
         context.coordinator.session = session
         context.coordinator.showsPainted = showsPainted
         controller.view = view
