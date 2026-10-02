@@ -280,7 +280,7 @@ nonisolated enum ArtworkFactory {
         guard let url = sample.url else { throw FactoryError.missingSample }
         let photo = try PhotoLoader.load(url: url, maxPixelSize: photoMaxPixelSize)
         let image = PhotoLoader.cgImage(from: photo)
-        let template = try self.template(from: photo, image: image, settings: settings, progress: nil)
+        let template = try await self.template(from: photo, image: image, settings: settings, progress: nil)
         var progress: PaintProgress?
         if let paintedFraction {
             var painted = self.progress(painting: paintedFraction, of: template)
@@ -294,19 +294,24 @@ nonisolated enum ArtworkFactory {
     }
 
     /// The template of `photo`, generated the way the create flow does it: subject importance
-    /// from Vision (when available) guides colors and detail. Polls task cancellation.
+    /// from Vision (when available) guides colors and detail, and layered line art draws from
+    /// the photo's edge map and eyes. Polls task cancellation.
+    @concurrent
     static func template(
         from photo: RGBAImage, settings: GenerationSettings, progress: (@Sendable (Float) -> Void)?
-    ) throws -> Template {
-        try template(from: photo, image: PhotoLoader.cgImage(from: photo), settings: settings, progress: progress)
+    ) async throws -> Template {
+        try await template(from: photo, image: PhotoLoader.cgImage(from: photo), settings: settings, progress: progress)
     }
 
+    @concurrent
     private static func template(
         from photo: RGBAImage, image: CGImage?, settings: GenerationSettings, progress: (@Sendable (Float) -> Void)?
-    ) throws -> Template {
+    ) async throws -> Template {
         let importance = image.flatMap(SubjectImportance.map(for:))
+        // Computed for this one template: the photo needn't take a place in the cache.
+        let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
         return try TemplateGenerator(settings: settings)
-            .generate(from: photo, importance: importance, cancel: .task, progress: progress)
+            .generate(from: photo, importance: importance, lineArt: lineArt, cancel: .task, progress: progress)
             .template
     }
 
