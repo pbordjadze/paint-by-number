@@ -63,7 +63,7 @@ enum LayeredLines {
         let mapScale = Float(max(w, h)) / Float(max(input.edges.width, input.edges.height))
         let unit = max(mapScale, 1)
 
-        let mask = try clock.measure("lineArt.detect") { () throws -> (mask: [Bool], strength: [Float]) in
+        let mask = try clock.measure("lineArt.detect") { () throws -> (mask: [Bool], strength: [Float], clutter: [Float]) in
             let strength = LineDetection.strength(input.edges, width: w, height: h)
             try cancel.throwIfCancelled()
             let ridges = try LineDetection.ridges(strength, width: w, height: h, scale: mapScale, cancel: cancel)
@@ -71,7 +71,8 @@ enum LayeredLines {
             let mask = try LineDetection.lines(
                 ridge: ridges.ridge, smooth: ridges.smooth, importance: importance, width: w, height: h,
                 threshold: s.textureThreshold, cancel: cancel)
-            return (mask, ridges.smooth)
+            let clutter = try LineDetection.clutter(mask, width: w, height: h, cancel: cancel)
+            return (mask, ridges.smooth, clutter)
         }
         try cancel.throwIfCancelled()
 
@@ -91,7 +92,7 @@ enum LayeredLines {
 
         let lines = clock.measure("lineArt.layer") { () -> [DrawnLine] in
             let thresholds = [s.outlineThreshold, s.detailThreshold, s.textureThreshold]
-            var lines = LineLayering.layered(strokes, thresholds: thresholds)
+            var lines = LineLayering.layered(strokes, thresholds: thresholds, clutter: mask.clutter, width: w)
             if s.outlineEyes {
                 let eyes = LineLayering.eyePolygons(input.eyes, width: w, height: h)
                 stats.eyes = eyes.count
@@ -110,24 +111,34 @@ enum LayeredLines {
         let params = SegmentationParameters(settings: settings, width: w, height: h)
         let need: (UInt32) -> Float = { params.minRadius(digits: LabelSizing.digitCount(colorIndex: $0)) }
         let walls = LineLayering.walls(lines, width: w, height: h)
-        var cells = clock.measure("lineArt.cells") { () -> CellMap in
-            let paint = segmentation.labels.storage.map { segmentation.regionColor[Int($0)] }
-            var cells = CellMap.split(paint: paint, walls: walls)
+        var cells = try clock.measure("lineArt.cells") { () throws -> CellMap in
+            var cells = try clock.measure("lineArt.cells.split") { () throws -> CellMap in
+                let paint = segmentation.labels.storage.map { segmentation.regionColor[Int($0)] }
+                return try CellMap.split(paint: paint, walls: walls, cancel: cancel)
+            }
             stats.cellsSplit = cells.count
-            stats.smallMerged = cells.mergeSmallWithinAreas(need: need, palette: palette)
-            cells.assignWalls()
+            stats.smallMerged = try clock.measure("lineArt.cells.small") {
+                try cells.mergeSmallWithinAreas(need: need, palette: palette, cancel: cancel)
+            }
+            try cancel.throwIfCancelled()
+            clock.measure("lineArt.cells.walls") { cells.assignWalls() }
             let near = CellMap.near(walls.layer, width: w, height: h)
-            stats.tinyMerged = cells.mergeTiny(need: need, palette: palette, near: near)
+            stats.tinyMerged = try clock.measure("lineArt.cells.tiny") {
+                try cells.mergeTiny(need: need, palette: palette, near: near, cancel: cancel)
+            }
             if !s.keepColorEdges {
                 let tolerance = mergeSteps * Self.paletteStep(palette)
-                stats.closeColorsMerged = cells.mergeCloseColors(tolerance: tolerance, palette: palette, near: near)
+                stats.closeColorsMerged = try clock.measure("lineArt.cells.colors") {
+                    try cells.mergeCloseColors(tolerance: tolerance, palette: palette, near: near, cancel: cancel)
+                }
             }
             return cells
         }
         try cancel.throwIfCancelled()
 
-        let trimmed = clock.measure("lineArt.trim") { () -> [DrawnLine] in
+        let trimmed = try clock.measure("lineArt.trim") { () throws -> [DrawnLine] in
             let distance = Self.boundaryDistance(cells.label, width: w, height: h)
+            try cancel.throwIfCancelled()
             return lines.flatMap { line -> [DrawnLine] in
                 guard !line.eye else { return [line] }
                 return line.pieces(keeping: Self.near(line, distance: distance, width: w), freeCuts: true)
@@ -135,21 +146,25 @@ enum LayeredLines {
         }
         try cancel.throwIfCancelled()
 
-        let finalCells = clock.measure("lineArt.join") { () -> CellMap in
+        let finalCells = try clock.measure("lineArt.join") { () throws -> CellMap in
             stats.cellsBeforeJoin = cells.count
             if s.samePaint != .split {
                 let drawn = LineLayering.walls(trimmed, width: w, height: h)
                 let near = CellMap.near(drawn.layer, width: w, height: h)
+                try cancel.throwIfCancelled()
                 let blocking = s.samePaint == .joinTexture ? [true, true, false] : [true, false, false]
                 stats.samePaintJoins = cells.joinSamePaint(near: near, blocking: blocking)
+                try cancel.throwIfCancelled()
             }
             // Joins only unite neighbours, so cells stay connected; the loop is a safeguard
             // for wall assignment leaving a stray pixel.
             while !cells.renumber() {
-                _ = cells.mergeTiny(need: need, palette: palette, near: CellMap.near(walls.layer, width: w, height: h))
+                _ = try cells.mergeTiny(
+                    need: need, palette: palette, near: CellMap.near(walls.layer, width: w, height: h), cancel: cancel)
             }
             return cells
         }
+        try cancel.throwIfCancelled()
         var final = finalCells
         let kept = final.compactPalette(paletteCount: segmentation.palette.count)
         let split = Segmentation(
@@ -161,6 +176,7 @@ enum LayeredLines {
         // Which stretches still bound cells after the joins, and which now run inside one.
         var boundary: [DrawnLine] = [], interior: [(DrawnLine, Int)] = []
         let distance = Self.boundaryDistance(final.label, width: w, height: h)
+        try cancel.throwIfCancelled()
         for line in trimmed {
             let flags = Self.near(line, distance: distance, width: w)
             boundary += line.pieces(keeping: flags, freeCuts: true)
@@ -177,14 +193,18 @@ enum LayeredLines {
 
     /// Each edge's layer (the line along most of it; `color` where none is) and weight (the
     /// line's strength, or for color edges the paint difference), and the interior strokes.
-    static func annotate(_ t: Template, plan: Plan) -> TemplateLineArt {
+    static func annotate(_ t: Template, plan: Plan, cancel: CancellationCheck) throws -> TemplateLineArt {
         let w = t.width, h = t.height
         let walls = LineLayering.walls(plan.boundaryLines, width: w, height: h)
         let r2 = annotateNear * annotateNear
-        let distances = (0..<3).map { l in
-            DistanceTransform.squaredEDT(width: w, height: h) { walls.layer[$0] == UInt8(l) }.storage
+        var distances: [[Float]] = []
+        for l in 0..<3 {
+            try cancel.throwIfCancelled()
+            distances.append(DistanceTransform.squaredEDT(width: w, height: h) { walls.layer[$0] == UInt8(l) }.storage)
         }
+        try cancel.throwIfCancelled()
         let strength = Self.maxFilter(walls.strength, width: w, height: h, radius: Int(annotateNear.rounded(.up)))
+        try cancel.throwIfCancelled()
         var layers = [UInt8](repeating: LineLayer.color.rawValue, count: t.edges.count)
         var weights = [UInt8](repeating: 0, count: t.edges.count)
         for (k, e) in t.edges.enumerated() {
@@ -331,23 +351,29 @@ enum LayeredLines {
 
     /// Square max filter of `radius` (separable).
     static func maxFilter(_ values: [UInt8], width w: Int, height h: Int, radius r: Int) -> [UInt8] {
-        var tmp = values
-        for y in 0..<h {
-            for x in 0..<w {
-                var m: UInt8 = 0
-                for xx in max(0, x - r)...min(w - 1, x + r) { m = max(m, values[y * w + xx]) }
-                tmp[y * w + x] = m
+        func pass(_ src: [UInt8], horizontal: Bool) -> [UInt8] {
+            var dst = [UInt8](repeating: 0, count: w * h)
+            src.withUnsafeBufferPointer { sb in
+                dst.withUnsafeMutableBufferPointer { db in
+                    let s = UncheckedSendable(sb.baseAddress!), d = UncheckedSendable(db.baseAddress!)
+                    Parallel.forEachBand(h, minimumBandSize: 16) { rows in
+                        for y in rows {
+                            for x in 0..<w {
+                                var m: UInt8 = 0
+                                if horizontal {
+                                    for xx in max(0, x - r)...min(w - 1, x + r) { m = max(m, s.value[y * w + xx]) }
+                                } else {
+                                    for yy in max(0, y - r)...min(h - 1, y + r) { m = max(m, s.value[yy * w + x]) }
+                                }
+                                d.value[y * w + x] = m
+                            }
+                        }
+                    }
+                }
             }
+            return dst
         }
-        var out = tmp
-        for y in 0..<h {
-            for x in 0..<w {
-                var m: UInt8 = 0
-                for yy in max(0, y - r)...min(h - 1, y + r) { m = max(m, tmp[yy * w + x]) }
-                out[y * w + x] = m
-            }
-        }
-        return out
+        return pass(pass(values, horizontal: true), horizontal: false)
     }
 
     /// Douglas–Peucker: indices of the points kept (the ends always; closed lines keep their

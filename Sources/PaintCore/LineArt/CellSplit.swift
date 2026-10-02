@@ -40,12 +40,13 @@ struct CellMap {
 
     // MARK: - Split
 
-    static func split(paint: [UInt32], walls: LineLayering.Walls) -> CellMap {
+    static func split(paint: [UInt32], walls: LineLayering.Walls, cancel: CancellationCheck) throws -> CellMap {
         let w = walls.width, h = walls.height, n = w * h
         let wallValue = UInt32.max
         var color = [UInt32](uninitializedCount: n)
         for i in 0..<n { color[i] = walls.isWall(i) ? wallValue : paint[i] }
-        snapThinNearWalls(&color, width: w, height: h, wallValue: wallValue)
+        try snapThinNearWalls(&color, width: w, height: h, wallValue: wallValue, cancel: cancel)
+        try cancel.throwIfCancelled()
         let components = ConnectedComponents.label(Grid(width: w, height: h, storage: color))
         var cellOf = [Int32](repeating: -1, count: components.count)
         var cellColor: [UInt32] = []
@@ -61,7 +62,9 @@ struct CellMap {
     /// lie within `snapBand` of a wall are handed to the paints around them, growing ring by
     /// ring over 4-neighbours that are not walls (the most frequent paint wins, then the
     /// lowest); pixels nothing reaches keep their paint.
-    static func snapThinNearWalls(_ color: inout [UInt32], width w: Int, height h: Int, wallValue: UInt32) {
+    static func snapThinNearWalls(
+        _ color: inout [UInt32], width w: Int, height h: Int, wallValue: UInt32, cancel: CancellationCheck
+    ) throws {
         let n = w * h
         let disc: [(Int, Int)] = (-2...2).flatMap { dy in (-2...2).compactMap { dx in
             (abs(dy) == 2 && dx != 0) ? nil : (dx, dy)
@@ -86,7 +89,9 @@ struct CellMap {
                 }
             }
         }
+        try cancel.throwIfCancelled()
         let wallDistance = DistanceTransform.squaredEDT(width: w, height: h) { src[$0] == wallValue }
+        try cancel.throwIfCancelled()
         let band2 = snapBand * snapBand
         let hole = UInt32.max - 1
         var out = src
@@ -106,22 +111,18 @@ struct CellMap {
             }
         }
         guard holes > 0 else { return }
+        try cancel.throwIfCancelled()
         var pending = (0..<n).filter { out[$0] == hole }
         for _ in 0..<64 where !pending.isEmpty {
             var updates: [(Int, UInt32)] = []
             for i in pending {
                 let y = i / w, x = i - y * w
-                var values: [UInt32] = []
-                if y > 0 { values.append(out[i - w]) }
-                if y < h - 1 { values.append(out[i + w]) }
-                if x > 0 { values.append(out[i - 1]) }
-                if x < w - 1 { values.append(out[i + 1]) }
-                var best = hole, bestCount = 0
-                for v in values where v != hole && v != wallValue {
-                    let c = values.filter { $0 == v }.count
-                    if c > bestCount || (c == bestCount && v < best) { best = v; bestCount = c }
-                }
-                if bestCount > 0 { updates.append((i, best)) }
+                // Holes and walls both count as nothing here (walls are the larger value).
+                func value(_ j: Int) -> UInt32 { out[j] == wallValue ? hole : out[j] }
+                let best = Self.majority(
+                    y > 0 ? value(i - w) : hole, y < h - 1 ? value(i + w) : hole,
+                    x > 0 ? value(i - 1) : hole, x < w - 1 ? value(i + 1) : hole, none: hole)
+                if best != hole { updates.append((i, best)) }
             }
             if updates.isEmpty { break }
             for (i, v) in updates { out[i] = v }
@@ -129,6 +130,18 @@ struct CellMap {
         }
         for i in pending { out[i] = src[i] }
         color = out
+    }
+
+    /// The most frequent of four values other than `none`, the lowest on ties; `none` if all are.
+    @inline(__always)
+    static func majority<T: Comparable>(_ a: T, _ b: T, _ c: T, _ d: T, none: T) -> T {
+        let v = (a, b, c, d)
+        var best = none, bestCount = 0
+        for x in [v.0, v.1, v.2, v.3] where x != none {
+            let n = (v.0 == x ? 1 : 0) + (v.1 == x ? 1 : 0) + (v.2 == x ? 1 : 0) + (v.3 == x ? 1 : 0)
+            if n > bestCount || (n == bestCount && x < best) { best = x; bestCount = n }
+        }
+        return best
     }
 
     // MARK: - Measures
@@ -192,23 +205,65 @@ struct CellMap {
     /// the strongest line within a pixel of each border step (`near`: `LineLayer` raw value
     /// per pixel, 255 for none). Keys are `low << 32 | high`.
     func pairs(near: [UInt8]) -> [UInt64: Pair] {
-        var out: [UInt64: Pair] = [:]
-        @inline(__always) func add(_ i: Int, _ j: Int) {
-            let a = label[i], b = label[j]
-            guard a >= 0, b >= 0, a != b else { return }
-            let key = UInt64(UInt32(min(a, b))) << 32 | UInt64(UInt32(max(a, b)))
-            let l = Int(min(min(near[i], near[j]), 3))
-            out[key, default: Pair()].border += 1
-            out[key]!.lines[l] += 1
+        let w = width, h = height
+        // Bands of rows count their own pairs; the counts add up in any order.
+        let bands = label.withUnsafeBufferPointer { lb in
+            near.withUnsafeBufferPointer { nb in
+                let l = UncheckedSendable(lb.baseAddress!), nr = UncheckedSendable(nb.baseAddress!)
+                return Parallel.mapBands(h, minimumBandSize: 32) { rows -> [UInt64: Pair] in
+                    var out: [UInt64: Pair] = [:]
+                    @inline(__always) func add(_ i: Int, _ j: Int) {
+                        let a = l.value[i], b = l.value[j]
+                        guard a >= 0, b >= 0, a != b else { return }
+                        let key = UInt64(UInt32(min(a, b))) << 32 | UInt64(UInt32(max(a, b)))
+                        let layer = Int(min(min(nr.value[i], nr.value[j]), 3))
+                        out[key, default: Pair()].border += 1
+                        out[key]!.lines[layer] += 1
+                    }
+                    for y in rows {
+                        for x in 0..<w {
+                            let i = y * w + x
+                            if x + 1 < w { add(i, i + 1) }
+                            if y + 1 < h { add(i, i + w) }
+                        }
+                    }
+                    return out
+                }
+            }
         }
-        for y in 0..<height {
-            for x in 0..<width {
-                let i = y * width + x
-                if x + 1 < width { add(i, i + 1) }
-                if y + 1 < height { add(i, i + width) }
+        var out = bands.first ?? [:]
+        for band in bands.dropFirst() {
+            for (key, pair) in band {
+                out[key, default: Pair()].border += pair.border
+                out[key]!.lines &+= pair.lines
             }
         }
         return out
+    }
+
+    /// The cells next to `cell` (4-adjacent pixels inside `bounds`, grown by one pixel), with
+    /// their border and lines, in cell order.
+    func neighbours(of cell: Int, bounds: PixelBounds, near: [UInt8]) -> [(cell: Int, pair: Pair)] {
+        var found: [Int: Pair] = [:]
+        let c = Int32(cell)
+        let x0 = max(Int(bounds.minX) - 1, 0), x1 = min(Int(bounds.maxX) + 1, width)
+        let y0 = max(Int(bounds.minY) - 1, 0), y1 = min(Int(bounds.maxY) + 1, height)
+        @inline(__always) func add(_ i: Int, _ j: Int) {
+            let a = label[i], b = label[j]
+            guard (a == c) != (b == c), a >= 0, b >= 0 else { return }
+            let other = Int(a == c ? b : a)
+            let layer = Int(min(min(near[i], near[j]), 3))
+            found[other, default: Pair()].border += 1
+            found[other]!.lines[layer] += 1
+        }
+        for y in y0..<y1 {
+            for x in x0..<x1 {
+                let i = y * width + x
+                if x + 1 < x1 { add(i, i + 1) }
+                if y + 1 < y1 { add(i, i + width) }
+            }
+        }
+        return found.keys.sorted().map { ($0, found[$0]!) }
     }
 
     /// The strongest line class that runs along a fair share of a border (3: none).
@@ -243,8 +298,9 @@ struct CellMap {
     // MARK: - Merges
 
     /// Applies `target` (each cell's representative, roots map to themselves) and renumbers
-    /// the surviving cells in order.
-    mutating func merge(_ target: [Int]) {
+    /// the surviving cells in order. Returns each old cell's new number.
+    @discardableResult
+    mutating func merge(_ target: [Int]) -> [Int32] {
         func root(_ k: Int) -> Int {
             var r = k
             while target[r] != r { r = target[r] }
@@ -257,25 +313,32 @@ struct CellMap {
             colors.append(color[k])
         }
         let lut = (0..<count).map { newID[root($0)] }
-        for i in label.indices where label[i] >= 0 { label[i] = lut[Int(label[i])] }
+        label.withUnsafeMutableBufferPointer { buf in
+            let l = UncheckedSendable(buf.baseAddress!)
+            Parallel.forEachBand(buf.count, minimumBandSize: 65_536) { range in
+                for i in range where l.value[i] >= 0 { l.value[i] = lut[Int(l.value[i])] }
+            }
+        }
         color = colors
+        return lut
     }
 
     /// Step 3: cells too small for their number merge into a neighbour in their enclosed
     /// area (walls unassigned, so never across a line), smallest room first. The neighbour
     /// maximizes border length / (paint difference + 0.03); a merged cell's room is measured
     /// again when it still falls short.
-    mutating func mergeSmallWithinAreas(need: (UInt32) -> Float, palette: [SIMD3<Float>]) -> Int {
+    mutating func mergeSmallWithinAreas(need: (UInt32) -> Float, palette: [SIMD3<Float>], cancel: CancellationCheck) throws -> Int {
         var room = rooms()
-        let (area, boundsOf) = extents()
-        _ = area
-        var bounds = boundsOf
+        try cancel.throwIfCancelled()
+        var bounds = extents().bounds
+        try cancel.throwIfCancelled()
         var adjacency = [[Int: Int32]](repeating: [:], count: count)
         for (key, pair) in pairs(near: [UInt8](repeating: LineLayering.none, count: width * height)) {
             let a = Int(key >> 32), b = Int(key & 0xFFFF_FFFF)
             adjacency[a][b] = pair.border
             adjacency[b][a] = pair.border
         }
+        try cancel.throwIfCancelled()
         var parent = Array(0..<count)
         var heap = Heap<(Float, Int)> { $0.0 != $1.0 ? $0.0 < $1.0 : $0.1 < $1.1 }
         for k in 0..<count where room[k] < need(color[k]) { heap.push((room[k], k)) }
@@ -285,7 +348,10 @@ struct CellMap {
             while parent[r] != r { r = parent[r] }
             return r
         }
+        var pops = 0
         while let (r, k) = heap.pop() {
+            pops += 1
+            if pops % 256 == 0 { try cancel.throwIfCancelled() }
             guard parent[k] == k, r == room[k], room[k] < need(color[k]) else { continue }
             let neighbours = adjacency[k]
             guard !neighbours.isEmpty else { continue }
@@ -324,17 +390,10 @@ struct CellMap {
             var updates: [(Int, Int32)] = []
             for i in pending {
                 let y = i / w, x = i - y * w
-                var values: [Int32] = []
-                if y > 0 { values.append(label[i - w]) }
-                if y < h - 1 { values.append(label[i + w]) }
-                if x > 0 { values.append(label[i - 1]) }
-                if x < w - 1 { values.append(label[i + 1]) }
-                var best: Int32 = -1, bestCount = 0
-                for v in values where v >= 0 {
-                    let c = values.filter { $0 == v }.count
-                    if c > bestCount || (c == bestCount && v < best) { best = v; bestCount = c }
-                }
-                if bestCount > 0 { updates.append((i, best)) }
+                let up: Int32 = y > 0 ? label[i - w] : -1, down: Int32 = y < h - 1 ? label[i + w] : -1
+                let left: Int32 = x > 0 ? label[i - 1] : -1, right: Int32 = x < w - 1 ? label[i + 1] : -1
+                let best = Self.majority(up, down, left, right, none: -1)
+                if best >= 0 { updates.append((i, best)) }
             }
             // A canvas made only of walls has no cell to grow from.
             if updates.isEmpty { break }
@@ -345,31 +404,29 @@ struct CellMap {
 
     /// Step 5 (walls assigned): cells still too small for their number merge across a line,
     /// into the same paint when a neighbour has it (across the weakest line, then the longest
-    /// border), else into the closest paint. Repeats until every cell holds its number.
+    /// border), else into the closest paint. Repeats until every cell holds its number. A
+    /// union is never smaller than its parts, so after the first full measure only groups
+    /// made of short cells are measured again.
     mutating func mergeTiny(
-        need: (UInt32) -> Float, palette: [SIMD3<Float>], near: [UInt8], keep: (Int) -> Bool = { _ in false }
-    ) -> Int {
+        need: (UInt32) -> Float, palette: [SIMD3<Float>], near: [UInt8], cancel: CancellationCheck
+    ) throws -> Int {
         var merges = 0
-        while true {
-            let room = rooms()
-            let tiny = (0..<count).filter { room[$0] < need(color[$0]) }
-                .sorted { room[$0] != room[$1] ? room[$0] < room[$1] : $0 < $1 }
-            guard !tiny.isEmpty else { return merges }
-            var neighbours = [[(cell: Int, pair: Pair)]](repeating: [], count: count)
-            for (key, pair) in pairs(near: near).sorted(by: { $0.key < $1.key }) {
-                let a = Int(key >> 32), b = Int(key & 0xFFFF_FFFF)
-                neighbours[a].append((b, pair))
-                neighbours[b].append((a, pair))
-            }
+        var room = rooms()
+        try cancel.throwIfCancelled()
+        var bounds = extents().bounds
+        var tiny = (0..<count).filter { room[$0] < need(color[$0]) }
+        while !tiny.isEmpty {
+            try cancel.throwIfCancelled()
+            tiny.sort { room[$0] != room[$1] ? room[$0] < room[$1] : $0 < $1 }
             var target = Array(0..<count)
             func root(_ k: Int) -> Int {
                 var r = k
                 while target[r] != r { r = target[r] }
                 return r
             }
-            var progress = false
+            var short = Set<Int>()
             for k in tiny {
-                let options = neighbours[k]
+                let options = neighbours(of: k, bounds: bounds[k], near: near)
                 guard !options.isEmpty else { continue }
                 let ck = palette[Int(color[k])]
                 let same = options.filter { color[$0.cell] == color[k] }
@@ -384,23 +441,47 @@ struct CellMap {
                     return a.cell < b.cell
                 }!
                 let t = root(best.cell)
-                if t != k {
-                    target[k] = t
-                    merges += 1
-                    progress = true
-                }
+                guard t != k else { continue }
+                target[k] = t
+                merges += 1
             }
-            guard progress else { return merges }
-            merge(target)
+            for k in tiny where target[k] != k { short.insert(root(k)) }
+            guard !short.isEmpty else { return merges }
+            // Carry rooms (a lower bound for unions) and bounds to the new numbering.
+            let old = count
+            var newRoom = [Float](repeating: 0, count: 0), newBounds = [PixelBounds]()
+            for k in 0..<old where target[k] == k {
+                newRoom.append(room[k])
+                newBounds.append(bounds[k])
+            }
+            let lut = merge(target)
+            for k in 0..<old where target[k] != k {
+                let n = Int(lut[k])
+                newRoom[n] = max(newRoom[n], room[k])
+                newBounds[n].formUnion(bounds[k])
+            }
+            room = newRoom
+            bounds = newBounds
+            tiny = []
+            for r in short.sorted() {
+                let n = Int(lut[r])
+                guard room[n] < need(color[n]) else { continue }
+                room[n] = self.room(bounds: bounds[n]) { $0 == Int32(n) }
+                if room[n] < need(color[n]) { tiny.append(n) }
+            }
         }
+        return merges
     }
 
     /// `keepColorEdges` off: neighbouring cells with no line between them whose paints are
     /// within `tolerance` merge (the larger cell keeps its paint; each merge is checked
     /// against the paints the groups have, so colours don't drift along a chain).
-    mutating func mergeCloseColors(tolerance: Float, palette: [SIMD3<Float>], near: [UInt8]) -> Int {
+    mutating func mergeCloseColors(
+        tolerance: Float, palette: [SIMD3<Float>], near: [UInt8], cancel: CancellationCheck
+    ) throws -> Int {
         var total = 0
         for _ in 0..<12 {
+            try cancel.throwIfCancelled()
             var area = extents().area
             let candidates = pairs(near: near).compactMap { key, pair -> (Float, Int, Int)? in
                 guard Self.separation(pair) == 3 else { return nil }
