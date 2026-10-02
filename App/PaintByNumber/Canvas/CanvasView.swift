@@ -74,6 +74,11 @@ final class CanvasView: UIView, PaintingCanvas {
     var paperAppearance = PaperAppearance.default {
         didSet { if paperAppearance != oldValue { paperChanged() } }
     }
+    /// Settings › Advanced › Line Appearance: how a layered template's lines draw at each zoom.
+    /// The next frame uses it, so a change shows at once; classic templates ignore it.
+    var lineAppearance = LineAppearance.default {
+        didSet { if lineAppearance != oldValue, scene?.isLayered == true { requestRender() } }
+    }
 
     private let template: Template
     private let scene: CanvasScene?
@@ -642,16 +647,19 @@ final class CanvasView: UIView, PaintingCanvas {
             Float(template.width), Float(template.height))
         // Line art gets finer and lighter when zoomed out, where regions are small on screen.
         let depth = Float(log2(max(camera.zoom / fitZoom, 1)))
-        let widthPt = min(1.0, 0.5 + 0.22 * depth)
+        let widthPt = LineStyle.classicWidthPoints(depth: depth)
         u.setChrome(
             palette, shadowOpacity: palette.shadowOpacity,
-            outlineOpacity: palette.outlineOpacity * min(1, 0.7 + 0.15 * depth))
+            outlineOpacity: palette.outlineOpacity * LineStyle.classicStrength(depth: depth))
         // A replay shows the painting as it was made, without the brush's highlight.
         let selected = isReplaying ? nil : session.selectedColor
         if let selected, let scene, selected < scene.paletteLinear.count {
             u.select(scene.paletteLinear[selected], palette: palette)
         }
         u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersVisibility(at: time))
+        u.setLines(scene?.isLayered == true
+            ? LineStyle(lineAppearance, zoom: Float(camera.zoom / fitZoom), classicStrength: LineStyle.classicStrength(depth: depth))
+            : .classic)
         u.labels = SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s)
         u.numbers = SIMD4(0.5, 0.9, 0.05, reduceMotion ? 1 : 0)
         u.time = SIMD4(time, selectionTime, pulseStart, bumpStart)

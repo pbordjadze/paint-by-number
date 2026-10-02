@@ -34,11 +34,12 @@ nonisolated enum PhotoLoader {
         return try rgbaImage(from: image)
     }
 
-    /// Renders any CGImage into an 8-bit Display P3 RGBA buffer (unpremultiplied).
-    static func rgbaImage(from image: CGImage) throws -> RGBAImage {
+    /// Renders any CGImage into an 8-bit RGBA buffer (unpremultiplied), in Display P3 unless
+    /// asked for sRGB (the edge detector's training space).
+    static func rgbaImage(from image: CGImage, colorSpace: RGBColorSpace = .displayP3) throws -> RGBAImage {
         let w = image.width, h = image.height
         var pixels = [UInt8](repeating: 0, count: w * h * 4)
-        let space = CGColorSpace(name: CGColorSpace.displayP3)!
+        let space = CGColorSpace(name: colorSpace == .displayP3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB)!
         let ok = pixels.withUnsafeMutableBytes { raw -> Bool in
             guard let ctx = CGContext(
                 data: raw.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
@@ -59,7 +60,7 @@ nonisolated enum PhotoLoader {
                 pixels[i + 2] = UInt8(min(255, Float(pixels[i + 2]) * s + 0.5))
             }
         }
-        return RGBAImage(width: w, height: h, pixels: pixels, colorSpace: .displayP3)
+        return RGBAImage(width: w, height: h, pixels: pixels, colorSpace: colorSpace)
     }
 
     /// Wraps an `RGBAImage` as a CGImage (for previews and export).

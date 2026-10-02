@@ -29,6 +29,15 @@ import simd
 ///   title and every localized string twice as long (`ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette
 ///   caption and completion bar as translations would stress them
+///
+/// Layered line art from the real pipeline (the stand-in edge map `SyntheticTemplate.edgeMap`
+/// for the learned detector; `-mosaic`: `SyntheticTemplate.layered`) at the default Line Appearance:
+/// - `paint-layered`: fresh canvas, fit to screen (the 1× look: outlines, faint texture)
+/// - `paint-layered-progress`: ~45 % painted, the color in progress selected (painted lines
+///   dissolve, the selected color's cells are outlined boldly whatever their layer)
+/// - `paint-layered-zoom2`, `paint-layered-zoomed`: zoomed 2× and 4× into the drawing, the
+///   fainter layers coming in
+/// - `paint-layered-dark-paper`: `paint-layered-progress` on dark paper
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -44,9 +53,9 @@ struct PaintDemoView: View {
                 PaintView(
                     session: demo.session, title: demo.title, onClose: {},
                     initialCamera: demo.camera, fillDurationScale: demo.fillDurationScale, showsPhoto: demo.showsPhoto)
-                    .environment(\.sourcePhotoLoader, demo.isSynthetic ? nil : SourcePhotoLoader(load: { size in
-                        await Self.photo(maxPixelSize: size)
-                    }))
+                    .environment(\.sourcePhotoLoader, demo.photo.map { name in
+                        SourcePhotoLoader(load: { size in await Self.photo(name, maxPixelSize: size) })
+                    })
                     .environment(\.dynamicTypeSize, demo.dynamicTypeSize ?? systemTypeSize)
                     .task {
                         await demo.run()
@@ -60,20 +69,30 @@ struct PaintDemoView: View {
         .task {
             let synthetic = scenario.hasSuffix("-mosaic")
             let base = synthetic ? String(scenario.dropLast("-mosaic".count)) : scenario
+            let layered = base.hasPrefix("paint-layered")
+            let photo = layered ? "santa-fe-freight" : "parrots"
             var template: Template?
-            if !synthetic { template = await Self.template(photo: "parrots") }
+            if synthetic {
+                template = nil
+            } else if layered {
+                template = await Self.layeredTemplate(photo: photo)
+            } else {
+                template = await Self.template(photo: photo)
+            }
             // Titles are the person's own words, which pseudo-localization doesn't lengthen.
             let title = base.hasSuffix("-long-text")
-                ? "Two Parrots on a Branch in the Morning Light" : (template == nil ? "Mosaic" : "Parrots")
+                ? "Two Parrots on a Branch in the Morning Light"
+                : (template == nil ? "Mosaic" : (layered ? "Freight Train" : "Parrots"))
+            let mosaic = layered ? SyntheticTemplate.layered(SyntheticTemplate.make()) : SyntheticTemplate.make()
             demo = Demo(
-                scenario: base, template: template ?? SyntheticTemplate.make(), title: title, isSynthetic: template == nil)
+                scenario: base, template: template ?? mosaic, title: title, photo: template == nil ? nil : photo)
         }
     }
 
     /// The photo the demo template is generated from, so the overlay lines up for real.
     @concurrent
-    private static func photo(maxPixelSize: Int?) async -> CGImage? {
-        guard let url = Bundle.main.url(forResource: "parrots", withExtension: "jpg") else { return nil }
+    private static func photo(_ name: String, maxPixelSize: Int?) async -> CGImage? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "jpg") else { return nil }
         return ImageCodec.image(at: url, maxPixelSize: maxPixelSize)
     }
 
@@ -85,13 +104,29 @@ struct PaintDemoView: View {
         else { return nil }
         return output.template.mesh.indices.isEmpty ? nil : output.template
     }
+
+    /// The photo's layered template from the real pipeline, with the stand-in edge map
+    /// (`SyntheticTemplate.edgeMap`) in place of the learned detector.
+    @concurrent
+    private static func layeredTemplate(photo: String) async -> Template? {
+        var settings = GenerationSettings()
+        settings.lineArt.style = .layered
+        guard let url = Bundle.main.url(forResource: photo, withExtension: "jpg"),
+              let image = try? PhotoLoader.load(url: url, maxPixelSize: 2048),
+              let small = try? PhotoLoader.load(url: url, maxPixelSize: 640),
+              let output = try? TemplateGenerator(settings: settings)
+                .generate(from: image, lineArt: LineArtInput(edges: SyntheticTemplate.edgeMap(for: small)))
+        else { return nil }
+        return output.template.lineArt == nil || output.template.mesh.indices.isEmpty ? nil : output.template
+    }
 }
 
 @MainActor
 private final class Demo {
     let session: PaintingSession
     let title: String
-    let isSynthetic: Bool
+    /// The bundled photo the template was made from; nil for the synthetic mosaic.
+    let photo: String?
     var camera: CanvasCamera?
     var fillDurationScale: Float = 1
     var showsPhoto = false
@@ -99,10 +134,10 @@ private final class Demo {
     var dynamicTypeSize: DynamicTypeSize?
     private let scenario: String
 
-    init(scenario: String, template t: Template, title: String, isSynthetic: Bool) {
+    init(scenario: String, template t: Template, title: String, photo: String?) {
         self.scenario = scenario
         self.title = title
-        self.isSynthetic = isSynthetic
+        self.photo = photo
         session = PaintingSession(template: t)
 
         // Paint colors in palette order (how people tend to work), each color top to bottom.
@@ -157,9 +192,33 @@ private final class Demo {
         case "paint-photo":
             paint(fraction: 0.4)
             showsPhoto = true
+        case "paint-layered-progress":
+            paint(fraction: 0.45)
+        case "paint-layered-dark-paper":
+            paint(fraction: 0.45)
+            UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
+        case "paint-layered-zoom2", "paint-layered-zoomed":
+            paint(fraction: 0.2)
+            camera = CanvasCamera(zoom: scenario == "paint-layered-zoom2" ? 2 : 4, center: Self.busiest(t))
         default:
             break
         }
+    }
+
+    /// The middle of the busiest of 8 × 8 tiles (most line points, strokes included), where
+    /// zooming in shows the layers.
+    private static func busiest(_ t: Template) -> SIMD2<Float> {
+        let n = 8
+        var counts = [Int](repeating: 0, count: n * n)
+        func add(_ p: SIMD2<Float>) {
+            let i = min(n - 1, max(0, Int(p.x / Float(t.width) * Float(n))))
+            let j = min(n - 1, max(0, Int(p.y / Float(t.height) * Float(n))))
+            counts[j * n + i] += 1
+        }
+        t.points.forEach(add)
+        t.lineArt?.strokePoints.forEach(add)
+        let best = counts.indices.max { counts[$0] < counts[$1] } ?? 0
+        return SIMD2((Float(best % n) + 0.5) * Float(t.width), (Float(best / n) + 0.5) * Float(t.height)) / Float(n)
     }
 
     /// Scenario actions that need the canvas on screen.

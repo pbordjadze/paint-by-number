@@ -86,12 +86,13 @@ KEY_TYPE_DECLARATIONS = {
     "Features/Create/TemplatePreviewView.swift": 1,
     "Features/Create/PhotoSourceView.swift": 2,
 }
-# Calls that never carry user-facing text: logging, assertions, file and asset names.
+# Calls that never carry user-facing text: logging, assertions, decoding diagnostics, file and
+# asset names.
 NON_UI_CALLS = {
     "error", "notice", "info", "debug", "warning", "fault", "trace", "critical", "Logger", "assertionFailure",
     "fatalError", "precondition", "preconditionFailure", "assert", "print", "NSPredicate", "appending",
     "UserDefaults", "Color", "Image", "URL", "forResource", "url", "CTFontCreateWithName", "contentsOfDirectory",
-    "UIImage", "Bundle",
+    "UIImage", "Bundle", "dataCorruptedError",
 }
 # Strings that read like prose but are not shown to people: (file relative to the app sources,
 # text). Each needs a reason.
@@ -103,7 +104,7 @@ ALLOWED_LITERALS = {
     # Diagnostics of failed file decoding: logged, never shown (the person sees the recovery screen).
     ("Model/Artwork.swift", "invalid artwork dimensions"),
     ("Model/ArtworkStore.swift", "template decompression"),
-    # A malformed stored Line Appearance layer: decoding falls back to its default, never shown.
+    # A malformed stored Line Appearance: the decoder falls back to the default, nothing is shown.
     ("App/LineAppearance.swift", "three zooms"),
 }
 # Files whose text is shown verbatim in every language: license texts, and credits (names,

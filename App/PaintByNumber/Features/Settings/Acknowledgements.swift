@@ -7,9 +7,10 @@ nonisolated struct Acknowledgement: Identifiable, Hashable, Sendable {
     let credit: String
     /// What the app uses it for.
     let usage: String
-    /// The copyright line of ported code; nil for published methods.
+    /// The copyright line of ported code; nil for published methods and for models whose
+    /// source states none.
     var copyright: String?
-    /// The license ported code is distributed under; nil for published methods.
+    /// The license ported code or model weights are distributed under; nil for published methods.
     var license: License?
 
     var id: String { name }
@@ -17,7 +18,7 @@ nonisolated struct Acknowledgement: Identifiable, Hashable, Sendable {
 
 /// Credits shown in Settings › Acknowledgements and repeated in `ACKNOWLEDGEMENTS.md`
 /// (`AboutTests` keeps the two in step): the sample pictures (`Sample.all`, as `library.json`
-/// records them), then the template engine's code and methods.
+/// records them), then the template engine's code, models and methods.
 nonisolated enum Acknowledgements {
     /// "Katsushika Hokusai, c. 1830–32": who made a picture, and when.
     static func byline(_ provenance: Sample.Provenance) -> String {
@@ -50,6 +51,24 @@ nonisolated enum Acknowledgements {
         String(localized: "acknowledgements.codeFooter",
                defaultValue: "Swift ports of these libraries are part of the template engine.",
                comment: "Footer under the Open-Source Code list in Acknowledgements")
+    }
+
+    /// Machine-learning models bundled with the app (`Resources/Models`), with their weights' license.
+    static let models: [Acknowledgement] = [
+        Acknowledgement(
+            name: "ControlNet HED",
+            credit: "Lvmin Zhang (lllyasviel), ControlNet: ControlNetHED.pth from lllyasviel/Annotators",
+            usage: String(
+                localized: "acknowledgements.hedModel.usage", defaultValue: "Finds the lines of a photo for layered line art.",
+                comment: "What a credited machine-learning model is used for (ControlNet's HED edge detector); shown in Settings under Acknowledgements"),
+            license: .apache2),
+    ]
+
+    /// The footer under the model credits.
+    static var modelsFooter: String {
+        String(localized: "acknowledgements.modelsFooter",
+               defaultValue: "Machine-learning models that run on your device.",
+               comment: "Footer under the Models list in Acknowledgements")
     }
 
     /// Published methods the template engine implements.
@@ -96,6 +115,12 @@ nonisolated enum Acknowledgements {
             usage: String(
                 localized: "acknowledgements.douglasPeucker.usage", defaultValue: "Thins out curve points that do not change the shape.",
                 comment: "What a credited third-party method or library is used for in the template engine (Douglas-Peucker); shown in Settings under Acknowledgements")),
+        Acknowledgement(
+            name: "Holistically-nested edge detection",
+            credit: "Saining Xie and Zhuowen Tu, \"Holistically-Nested Edge Detection\", 2015",
+            usage: String(
+                localized: "acknowledgements.hed.usage", defaultValue: "Combines edges found at five scales into one map of a photo's lines.",
+                comment: "What a credited third-party method or library is used for in the template engine (Holistically-nested edge detection); shown in Settings under Acknowledgements")),
         Acknowledgement(
             name: "SplitMix64",
             credit: "Guy Steele, Doug Lea and Christine Flood, \"Fast Splittable Pseudorandom Number Generators\", 2014",

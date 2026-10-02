@@ -132,7 +132,7 @@ struct AppInfoTests {
 }
 
 struct AcknowledgementsTests {
-    private static let all = Acknowledgements.code + Acknowledgements.methods
+    private static let all = Acknowledgements.code + Acknowledgements.models + Acknowledgements.methods
 
     @Test func portedCodeIsCreditedWithItsLicense() throws {
         #expect(Acknowledgements.code.map(\.name) == ["Earcut", "Polylabel"])
@@ -147,6 +147,23 @@ struct AcknowledgementsTests {
     @Test func licenseTextsAreTheCompleteLicenses() {
         #expect(License.isc.text.hasPrefix("Permission to use, copy, modify, and/or distribute"))
         #expect(License.isc.text.contains("THE SOFTWARE IS PROVIDED \"AS IS\""))
+        #expect(License.apache2.text.hasPrefix("TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION"))
+        for section in 1...9 { #expect(License.apache2.text.contains("\n\n\(section). "), "Apache 2.0 section \(section)") }
+        #expect(License.apache2.text.hasSuffix("END OF TERMS AND CONDITIONS"))
+    }
+
+    /// The bundled HED model: ControlNet's Apache-2.0 weights, credited with their license, and
+    /// the method (Xie & Tu) among the methods. The conversion script records the weights'
+    /// origin and checksum, and the model itself is in the bundle.
+    @Test func bundledModelsAreCreditedWithTheirLicense() throws {
+        #expect(Acknowledgements.models.map(\.name) == ["ControlNet HED"])
+        let hed = try #require(Acknowledgements.models.first)
+        #expect(hed.license == .apache2 && hed.credit.contains("lllyasviel") && hed.credit.contains("ControlNetHED.pth"))
+        let method = try #require(Acknowledgements.methods.first { $0.name == "Holistically-nested edge detection" })
+        #expect(method.credit.contains("Saining Xie and Zhuowen Tu") && method.credit.contains("2015"))
+        let script = try String(contentsOf: repositoryRoot.appending(path: "tools/models/convert_hed.py"), encoding: .utf8)
+        #expect(script.contains("lllyasviel/Annotators") && script.contains("Apache") && script.contains("SOURCE_SHA256 = \""))
+        #expect(Bundle.main.url(forResource: "HED", withExtension: "mlmodelc") != nil, "HED.mlmodelc isn't in the app bundle")
     }
 
     @Test func entriesAreCompleteAndUnique() {

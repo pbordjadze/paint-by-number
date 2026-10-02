@@ -15,6 +15,10 @@ nonisolated enum CanvasSnapshot {
         var palette = CanvasPalette.light
         /// Palette index whose unpainted regions get the selection highlight.
         var highlight: Int?
+        /// How a layered template's lines draw; nil = the one Settings › Advanced stored.
+        var lineAppearance: LineAppearance?
+        /// The zoom whose line look to draw (1 = the painting fitted, as images show it).
+        var lineZoom: Float = 1
 
         /// The artwork as painted so far: unpainted regions stay paper, no line art.
         static let painting = Options(outlines: false, numbers: false)
@@ -92,6 +96,7 @@ nonisolated enum CanvasSnapshot {
         u.setChrome(palette, shadowOpacity: 0, outlineOpacity: palette.outlineOpacity)
         let width = options.outlineWidth * max(scale, 0.25)
         u.outline = SIMD4(width, width, 0, options.numbers ? 1 : 0)
+        u.setLines(scene.isLayered ? LineStyle(options.lineAppearance ?? .stored(), zoom: options.lineZoom) : .classic)
         u.labels = SIMD4(5, 7, .greatestFiniteMagnitude, 0)
         u.numbers = SIMD4(0.8, 0.9, 0.04, 0)
         u.time = SIMD4(0, -10_000, -10_000, -10_000)

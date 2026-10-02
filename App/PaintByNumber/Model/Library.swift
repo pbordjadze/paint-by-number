@@ -433,7 +433,7 @@ final class Library {
             }
         }
         let store = self.store
-        let (template, progress, thumbnail) = try await Background.run { () throws -> (Template, PaintProgress, Data?) in
+        let (old, savedProgress, photo) = try await Background.run { () throws -> (Template?, ArtworkStore.SavedProgress, RGBAImage) in
             let old: Template?
             do {
                 old = try store.readTemplate(id)
@@ -451,13 +451,15 @@ final class Library {
             } catch {
                 throw OpenError.unreadable
             }
-            let photo = try ArtworkFactory.sourcePhoto(of: artwork, in: store)
-            let template = try ArtworkFactory.template(from: photo, settings: settings, progress: report)
-            let progress = old.map { saved.progress.remapped(from: $0, to: template) }
+            return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store))
+        }
+        let template = try await ArtworkFactory.template(from: photo, settings: settings, progress: report)
+        let (progress, thumbnail) = await Background.run { () -> (PaintProgress, Data?) in
+            let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
                 ?? PaintProgress(regionCount: template.regions.count)
             let thumbnail = TemplateRasterizer.pngData(
                 template, painted: progress.painted, style: .thumbnail, maxPixelSize: ArtworkStore.thumbnailMaxPixelSize)
-            return (template, progress, thumbnail)
+            return (progress, thumbnail)
         }
         try Task.checkCancellation()
 

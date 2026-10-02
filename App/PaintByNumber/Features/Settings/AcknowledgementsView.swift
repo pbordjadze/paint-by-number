@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// Settings › Acknowledgements: the sample pictures and where they come from, then the
-/// open-source code and published methods behind the template engine, with the licenses the
-/// ported code is used under.
+/// open-source code, machine-learning models and published methods behind the template
+/// engine, with the licenses the ported code and model weights are used under.
 struct AcknowledgementsView: View {
     var body: some View {
         Form {
@@ -21,6 +21,14 @@ struct AcknowledgementsView: View {
                 Text("Open-Source Code")
             } footer: {
                 Text(Acknowledgements.codeFooter)
+            }
+
+            Section {
+                ForEach(Acknowledgements.models) { AcknowledgementRow(item: $0) }
+            } header: {
+                Text("Models")
+            } footer: {
+                Text(Acknowledgements.modelsFooter)
             }
 
             ForEach(License.allCases, id: \.self) { license in

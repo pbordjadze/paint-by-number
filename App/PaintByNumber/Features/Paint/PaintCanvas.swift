@@ -20,6 +20,8 @@ struct PaintCanvas: UIViewRepresentable {
     var chromeInsets = EdgeInsets()
     var showsNumbers = true
     var paperAppearance = PaperAppearance.default
+    /// How layered line art draws at each zoom (Settings › Advanced); classic templates ignore it.
+    var lineAppearance = LineAppearance.default
     var initialCamera: CanvasCamera?
     var fillDurationScale: Float = 1
     var onPencilAction: ((PencilAction) -> Void)?
@@ -38,6 +40,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.photoLoader = photoLoader
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.paperAppearance = paperAppearance
+        view.lineAppearance = lineAppearance
         controller?.view = view
         // Deferred: state mustn't change while SwiftUI is making views.
         if !view.isRenderable, let onUnavailable { Task { onUnavailable() } }
@@ -52,6 +55,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.showsNumbers = showsNumbers
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.paperAppearance = paperAppearance
+        view.lineAppearance = lineAppearance
         view.onPencilAction = onPencilAction
         // Loader and callbacks first: showing the photo may start loading it.
         view.photoLoader = photoLoader

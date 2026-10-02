@@ -69,6 +69,30 @@
         }
       }
     },
+    "acknowledgements.hed.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Holistically-nested edge detection); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Combines edges found at five scales into one map of a photo's lines."
+          }
+        }
+      }
+    },
+    "acknowledgements.hedModel.usage" : {
+      "comment" : "What a credited machine-learning model is used for (ControlNet's HED edge detector); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finds the lines of a photo for layered line art."
+          }
+        }
+      }
+    },
     "acknowledgements.kmeans.usage" : {
       "comment" : "What a credited third-party method or library is used for in the template engine (k-means++); shown in Settings under Acknowledgements",
       "extractionState" : "manual",
@@ -77,6 +101,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Picks well-spread starting colors for the palette."
+          }
+        }
+      }
+    },
+    "acknowledgements.modelsFooter" : {
+      "comment" : "Footer under the Models list in Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Machine-learning models that run on your device."
           }
         }
       }
@@ -2867,6 +2903,10 @@
     },
     "Methods" : {
       "comment" : "Header of the list of published methods in Acknowledgements",
+      "extractionState" : "manual"
+    },
+    "Models" : {
+      "comment" : "Header of the list of bundled machine-learning models in Acknowledgements",
       "extractionState" : "manual"
     },
     "More" : {

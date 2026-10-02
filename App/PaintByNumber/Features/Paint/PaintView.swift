@@ -37,6 +37,8 @@ struct PaintView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
+    /// Settings › Advanced writes it while a painting may be open: the canvas follows at once.
+    @AppStorage(SettingsKey.lineAppearance) private var storedLineAppearance: Data?
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
@@ -94,6 +96,7 @@ struct PaintView: View {
                 session: session, controller: controller,
                 chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
                 showsNumbers: showsNumbers, paperAppearance: paperAppearance,
+                lineAppearance: LineAppearance.decoded(storedLineAppearance),
                 initialCamera: initialCamera, fillDurationScale: fillDurationScale,
                 onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true },
                 photoLoader: photoLoader, showsPhoto: peek.isShown,

@@ -177,26 +177,55 @@ struct PaintingSessionTests {
     }
 
     /// Zoomed far out, the finger covers a large part of the canvas; a drag across it must
-    /// still keep up. The budget is loose because tests run in a Debug build; stamping the
-    /// disc every canvas unit, as drags used to, takes well over ten times as long here.
+    /// still keep up: a stroke costs what its brush sweeps. Each of these 300-unit strokes
+    /// scans 2.8 times the pixels of a single stamp of the (capped) brush; stamping the disc
+    /// every canvas unit, as drags used to, scans 304 stamps' worth.
+    ///
+    /// So each stroke is timed against a stamp of the same brush taken just before it, on a
+    /// second session, not against a wall-clock budget: this Debug-build test shares the CPU
+    /// with the rest of the parallel run. The zigzag took 1.0 to 1.4 s in four CI runs and has
+    /// gone past a 1.5 s budget under load (1.57 s, 1.69 s), but load slows a stroke and the
+    /// stamp beside it alike: the median of the 40 ratios stayed between 2.4 and 3.0, single
+    /// pairs reaching 6.7, and the median ignores a pause that hits one of a pair only. Its
+    /// bound of 10 is far from both that and the old 300.
     @Test func zoomedOutDragIsFast() throws {
         let big = SyntheticTemplate.make(.init(width: 2048, height: 1536, columns: 24, rows: 18, seed: 11))
         let session = PaintingSession(template: big)
+        let stamps = PaintingSession(template: big)
         let start = SIMD2<Float>(100, 400)
         let color = session.colorOf(try #require(big.region(at: start)))
-        session.select(color: color)
-        session.autoAdvance = false
+        for painting in [session, stamps] {
+            painting.select(color: color)
+            painting.autoAdvance = false
+        }
         // A zigzag of 40 strokes of about 300 units across the canvas.
         let points = (0...40).map { i -> SIMD2<Float> in
             SIMD2(100 + Float(i) * 46, i % 2 == 0 ? 400 : 700)
         }
         let clock = ContinuousClock()
-        let started = clock.now
+        var ratios: [Double] = []
+        var strokeTime = Duration.zero, stampTime = Duration.zero
         session.beginStroke()
-        for (a, b) in zip(points, points.dropFirst()) { session.drag(from: a, to: b, radius: 200) }
+        for (a, b) in zip(points, points.dropFirst()) {
+            let t0 = clock.now
+            stamps.drag(from: a, to: a, radius: 200)
+            let t1 = clock.now
+            session.drag(from: a, to: b, radius: 200)
+            let t2 = clock.now
+            ratios.append((t2 - t1) / (t1 - t0))
+            stampTime += t1 - t0
+            strokeTime += t2 - t1
+        }
         session.endStroke()
-        let elapsed = clock.now - started
-        #expect(elapsed < .milliseconds(1500), "\(elapsed)")
+        ratios.sort()
+        let median = ratios[ratios.count / 2]
+        func rounded(_ ratio: Double) -> String { String(format: "%.2f", ratio) }
+        let report = """
+            stroke ÷ stamp: median \(rounded(median)) (\(rounded(ratios[0])) to \(rounded(ratios[ratios.count - 1]))); \
+            40 strokes \(strokeTime), 40 stamps \(stampTime)
+            """
+        Attachment.record(Data(report.utf8), named: "zoomed-out-drag-timings.txt")
+        #expect(median < 10, "\(report)")
 
         for (a, b) in zip(points, points.dropFirst()) {
             for step in 0...40 {

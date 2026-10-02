@@ -76,8 +76,8 @@ final class PaintingNavigationTests: XCTestCase {
         let swatch = app.buttons[identifier]
         XCTAssertFalse(swatch.isSelected)
         swatch.tap()
-        sleep(1)
-        XCTAssertTrue(swatch.isSelected, "Tapping a swatch didn't select it")
+        let selected = wait(for: swatch, toMatch: NSPredicate(format: "selected == true"))
+        XCTAssertTrue(selected, "Tapping a swatch didn't select it")
     }
 
     /// Hardware keyboard: `]` selects the next color; a fill is undone with ⌘Z and redone
@@ -153,10 +153,8 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(photo.exists, "The painting has no Photo control")
         XCTAssertEqual(photo.identifier, "Hidden")
         photo.press(forDuration: 1.2)
-        let traced = XCTNSPredicateExpectation(
-            predicate: NSPredicate(format: "identifier == 'Hidden,Showing,Hidden'"), object: photo)
-        let result = XCTWaiter.wait(for: [traced], timeout: 3)
-        XCTAssertEqual(result, .completed, "Holding didn't show the photo only while held: \(photo.identifier)")
+        let traced = wait(for: photo, toMatch: NSPredicate(format: "identifier == 'Hidden,Showing,Hidden'"))
+        XCTAssertTrue(traced, "Holding didn't show the photo only while held: \(photo.identifier)")
         XCTAssertEqual(photo.value as? String, "Hidden")
     }
 
@@ -190,10 +188,23 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(wait(for: photo, value: "Hidden"), "p didn't hide the photo")
     }
 
+    /// How long a check waits for the state an action leads to. The CI's iPad simulator can
+    /// stall for seconds: a photo shown by a tap once took 5 s to appear (a 560 px image) and
+    /// the control didn't read "Showing" within a 3 s wait; a tapped swatch once wasn't
+    /// selected a second later, the screen unchanged to the end of the test. Every state waited
+    /// for here persists once reached, so a long wait only absorbs such stalls: a wrong state
+    /// still fails.
+    private static let stateTimeout: TimeInterval = 15
+
     @MainActor
-    private func wait(for element: XCUIElement, value: String, timeout: TimeInterval = 3) -> Bool {
-        let expectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: element)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    private func wait(for element: XCUIElement, value: String) -> Bool {
+        wait(for: element, toMatch: NSPredicate(format: "value == %@", value))
+    }
+
+    @MainActor
+    private func wait(for element: XCUIElement, toMatch predicate: NSPredicate) -> Bool {
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter.wait(for: [expectation], timeout: Self.stateTimeout) == .completed
     }
 
     /// The middle half of the screen, clear of the status bar and the chrome.
