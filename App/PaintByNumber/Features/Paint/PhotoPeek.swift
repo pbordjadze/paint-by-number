@@ -1,5 +1,4 @@
 import Foundation
-import QuartzCore
 import SwiftUI
 
 /// When the painting screen shows the source photo over the canvas. Holding the Photo
@@ -74,8 +73,8 @@ struct PhotoPeekButton: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .updating($isPressing) { _, pressing, _ in pressing = true }
-                    .onChanged { _ in press(down: true) }
-                    .onEnded { _ in press(down: false) })
+                    .onChanged { press(down: true, at: $0.time) }
+                    .onEnded { press(down: false, at: $0.time) })
             // Gesture state resets when the system cancels the touch, which never calls onEnded.
             // It also resets on a normal release, so the cancel waits for the current update:
             // by then a release's onEnded has run and the cancel finds nothing pressed.
@@ -100,9 +99,11 @@ struct PhotoPeekButton: View {
 
     /// `.disabled` doesn't stop a custom gesture, so a press is ignored here; a release
     /// always goes through so the photo can't stay stuck on.
-    private func press(down: Bool) {
-        // Monotonic, and not one of the required-reason boot-time APIs.
-        let time = CACurrentMediaTime()
+    ///
+    /// Times are the touches' own event times, not when these handlers run: a busy main thread
+    /// (the photo loading as the press begins) must not stretch a quick tap into a hold.
+    private func press(down: Bool, at date: Date) {
+        let time = date.timeIntervalSinceReferenceDate
         if down {
             guard isEnabled else { return }
             peek.pressBegan(at: time)
