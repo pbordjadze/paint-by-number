@@ -29,7 +29,8 @@ from scipy import ndimage as ndi
 from color_common import (PAPER, Option, Picture, digit_count, domain_transform, font_size, min_radius,
                           oklab_to_srgb8, rooms)
 
-SCRATCH = "/tmp/claude-0/-home-user-paint-by-number/861bb375-0f52-519e-91ca-dcf515297999/scratchpad"
+# The scratch directory of README.md (`$S`): fonts/ and node/ live there.
+SCRATCH = os.environ.get("S", os.getcwd())
 FONT_PATH = os.environ.get("PANEL_FONT", os.path.join(SCRATCH, "fonts", "SourceSerif4-Regular.ttf"))
 FALLBACK_FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
 NODE = os.environ.get("PANEL_NODE", "/opt/node22/bin/node")
