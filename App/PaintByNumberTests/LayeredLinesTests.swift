@@ -45,8 +45,8 @@ struct LayeredLinesTests {
         #expect(LineAppearance.interpolate(values, zoom: 1) == 0.2)
         #expect(LineAppearance.interpolate(values, zoom: 2) == 0.5)
         #expect(LineAppearance.interpolate(values, zoom: 4) == 0.8)
-        #expect(abs(LineAppearance.interpolate(values, zoom: 2.0.squareRoot()) - 0.35) < 1e-5)
-        #expect(abs(LineAppearance.interpolate(values, zoom: 8.0.squareRoot()) - 0.65) < 1e-5)
+        #expect(abs(LineAppearance.interpolate(values, zoom: Float(2).squareRoot()) - 0.35) < 1e-5)
+        #expect(abs(LineAppearance.interpolate(values, zoom: Float(8).squareRoot()) - 0.65) < 1e-5)
         #expect(LineAppearance.interpolate(values, zoom: 0.5) == 0.2)
         #expect(LineAppearance.interpolate(values, zoom: 16) == 0.8)
         let texture = LineAppearance.default.texture

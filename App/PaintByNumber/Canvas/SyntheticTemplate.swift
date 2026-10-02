@@ -520,7 +520,7 @@ nonisolated extension SyntheticTemplate {
             strokes.append(InteriorStroke(
                 pointStart: UInt32(points.count), pointCount: UInt32(run.count), layer: layer.rawValue, weight: weight,
                 region: UInt32(region)))
-            points.append(contentsOf: run.map { ($0 / q).rounded() * q })
+            points.append(contentsOf: run.map { ($0 / q).rounded(.toNearestOrEven) * q })
         }
         if let source {
             // A point is well inside a cell when every pixel within 2 units of it belongs to the cell.
