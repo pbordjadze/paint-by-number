@@ -4,62 +4,71 @@
   "recommended": "Gantry, locomotive and poles are crisp full-strength outlines; the sky is a few faint colour cells at 1x that blend into one gradient in the finished view (555 cells, today 322).",
   "no-closure": "Nearly the same as recommended: HED already closes the gantry and the train, so only a few railing and rail outlines drop to fainter layers.",
   "hed-layers": "Like recommended, with HED's weak edges as the innermost layer instead of TEED: a little less texture on the locomotive and the ground (578 cells).",
-  "merged-color": "The sky's bands merge into three cells (320 cells, today 322): the cleanest plan, but the finished sky turns into three flat bands instead of a gradient."
+  "merged-color": "The sky's bands merge into three cells (320 cells, today 322): the cleanest plan, but the finished sky turns into three flat bands instead of a gradient.",
+  "joined": "383 cells (today 322, recommended 555): the same drawing, but lines that split one paint (gantry members, ground texture) now run inside a cell, so some enclosed-looking shapes have no number of their own."
  },
  "hawksbill-turtle": {
   "_picture": "Busy pattern inside a clear outline; tests whether texture can stay faint at 1x and come in on zoom.",
   "recommended": "Outline and scutes at full strength, HED's pattern grey, TEED's shell texture faint at 1x and full by 4x; the busiest plan (1267 cells, today 950).",
   "no-closure": "Almost identical: HED already outlines the turtle against the water, so closure adds little on this picture.",
   "hed-layers": "HED's weak edges replace TEED as the inner layer: a calmer shell with fewer tiny cells (1050), the detail the owner liked at 1x without TEED's web at 4x.",
-  "merged-color": "The shell's close browns merge (802 cells, fewer than today) and the finished shell loses part of its tonal variation; the drawn pattern stays."
+  "merged-color": "The shell's close browns merge (802 cells, fewer than today) and the finished shell loses part of its tonal variation; the drawn pattern stays.",
+  "joined": "816 cells, fewer than today's 950: the shell's TEED web stays drawn but most of its little shapes share one number with their neighbours, so it reads as a pattern drawn over cells rather than as cells."
  },
  "red-fox": {
   "_picture": "Soft white fur on snow: tests closure (the whole outline) and the eyes at 1x.",
   "recommended": "The whole fox is outlined at full strength, white fur on snow included (the BiRefNet silhouette), and both eyes are small closed almonds, the left one with its pupil, so they read as eyes at 1x; the fur is faint cell texture (374 cells, today 234).",
   "no-closure": "Without the silhouette the white back, tail and chest have no full-strength outline: at 1x the fox's left half fades into the snow, which is what closure buys.",
   "hed-layers": "Close to recommended with fewer fur strokes when zoomed in (325 cells).",
-  "merged-color": "Only 153 cells (today 234) and a calm plan, but the orange back merges into beige and the finished fur turns flat and blotchy."
+  "merged-color": "Only 153 cells (today 234) and a calm plan, but the orange back merges into beige and the finished fur turns flat and blotchy.",
+  "joined": "252 cells (today 234): the same drawing with fewer numbers; fur strokes inside the body now cross cells instead of bounding them, while the outline and the eyes still close theirs."
  },
  "great-wave": {
   "_picture": "A print whose lines already exist: tests whether the layers keep the ink copy readable at 1x.",
   "recommended": "A full ink copy: wave, foam claws, boats and Fuji at full strength, the clouds faint; 934 cells (today 420), because the drawing splits pbn's large foam and wave areas.",
   "no-closure": "Practically the same drawing (the print is lines already), minus a few silhouette stretches along the wave crest.",
   "hed-layers": "Similar, with fewer inner foam strokes (902 cells).",
-  "merged-color": "747 cells: the sky and the sea lose their faint tonal cells, so the finished sky is a flat cream, closest to the print's flat colour."
+  "merged-color": "747 cells: the sky and the sea lose their faint tonal cells, so the finished sky is a flat cream, closest to the print's flat colour.",
+  "joined": "533 cells (today 420): many foam loops are drawn but carry no number because they share the surrounding paint, the plainest example of a line running inside a cell."
  },
  "milkmaid": {
   "_picture": "A painting with a face: tests 'things still need to be cells' and the face and eyes.",
   "recommended": "The figure reads as cells: cap, face, collar, bodice, sleeves and jug are closed full-strength outlines, her downcast eye a small closed lid, and the wall faint colour cells that blend into a smooth gradient (861 cells, today 486).",
   "no-closure": "Nearly identical: HED already closes most of the figure; the silhouette adds a few stretches of her outline.",
   "hed-layers": "Calmer inside the figure (733 cells): HED's weak edges replace TEED's folds as the inner layer.",
-  "merged-color": "419 cells (fewer than today): a cleaner plan, but the wall and the apron lose their shading and the finished painting turns flat."
+  "merged-color": "419 cells (fewer than today): a cleaner plan, but the wall and the apron lose their shading and the finished painting turns flat.",
+  "joined": "506 cells (today 486): the figure keeps its closed outlines; folds and wall texture now cross cells, which brings the count back to today's."
  },
  "wheat-field": {
   "_picture": "An impressionist canvas with no subject, the hardest case for lines; also the owner's line-weight question (soft clouds, bold cypress).",
   "recommended": "The drawing follows the brushwork: cypress, hills and cloud swirls are drawn, cloud edges only somewhat lighter than the cypress, and it is the busiest plan here (1955 cells, 3x today).",
   "no-closure": "The same in practice: no subject was found (the mask covered 94 % of the canvas), so closure adds only a few gap bridges.",
   "hed-layers": "Even busier (2198 cells): HED's weak edges find more brushwork than TEED does.",
-  "merged-color": "882 cells: the sky's tonal cells merge so the swirls stand out; the finished piece becomes a flat, cel-shaded Van Gogh."
+  "merged-color": "882 cells: the sky's tonal cells merge so the swirls stand out; the finished piece becomes a flat, cel-shaded Van Gogh.",
+  "joined": "846 cells (1.32x today, recommended 3x): the brushwork stays drawn but most strokes now cross cells; still the busiest picture."
  },
  "cezanne-apples": {
   "_picture": "A still life with clear objects: closed fruit outlines and soft modelling.",
   "recommended": "Every fruit is a closed outline (the BiRefNet mask finds the apples and pears) and the table and wall are faint cells; the finished fruit keep their soft modelling (765 cells, today 538).",
   "no-closure": "Fruit outlines get small gaps where HED misses an edge; otherwise the same.",
   "hed-layers": "Very close to recommended (767 cells).",
-  "merged-color": "Only 248 cells, under half of today: the fruit keep their outlines but lose their modelling and the table turns one flat colour, the clearest view of what faint colour cells carry."
+  "merged-color": "Only 248 cells, under half of today: the fruit keep their outlines but lose their modelling and the table turns one flat colour, the clearest view of what faint colour cells carry.",
+  "joined": "569 cells (today 538): the outlines still close every fruit; the modelling strokes inside a fruit cross its cells."
  },
  "delicate-arch": {
   "_picture": "A landscape with one subject and a soft sky.",
   "recommended": "The arch is one closed outline against a sky of faint colour cells that blend into a gradient; TEED adds the rock's texture when zoomed in (992 cells, today 618).",
   "no-closure": "Nearly the same: HED already outlines the arch; the silhouette fills a few gaps along its top.",
   "hed-layers": "721 cells: without TEED the rock texture goes and the arch reads as smooth stone, the calmest version.",
-  "merged-color": "489 cells: the sky merges into a few flat bands and the snowy plateau keeps its blotches."
+  "merged-color": "489 cells: the sky merges into a few flat bands and the snowy plateau keeps its blotches.",
+  "joined": "617 cells, today's count (618): TEED's rock texture stays drawn across the arch, whose cells keep one number per paint."
  },
  "lassen-lupine": {
   "_picture": "The flower-field stress case, no subject.",
   "recommended": "Mountain, tree line and rocks are clear, but the flower field becomes a dense web of lines and cells (1661 cells, twice today) and the finished meadow is a painterly blur.",
   "no-closure": "The same: no subject was found, so only a few gap bridges differ.",
   "hed-layers": "A slightly calmer meadow (1507 cells).",
-  "merged-color": "1041 cells: the meadow's colour cells merge but the drawn web stays."
+  "merged-color": "1041 cells: the meadow's colour cells merge but the drawn web stays.",
+  "joined": "926 cells (today 815): the meadow's web stays drawn but crosses cells, so most flower shapes have no number of their own."
  }
 }

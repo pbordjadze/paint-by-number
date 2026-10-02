@@ -23,7 +23,9 @@ Pipeline per picture and variant:
     across the line (or vanish when all ink). Then no cell stays below its number's size:
     the rest merge into their most similar neighbour, except cells inside an eye box.
     `merged-color` then merges neighbouring cells of one enclosed area whose paints are
-    within MERGE_STEPS palette steps (the larger cell keeps its paint).
+    within MERGE_STEPS palette steps (the larger cell keeps its paint). `joined` instead
+    joins neighbouring cells with the same paint unless a top line separates them; its mid,
+    inner and colour lines stay drawn, so they may run inside a cell (join_same_paint).
  4. Lines are trimmed to where they bound two different cells (no line inside a cell), and
     the cell boundaries no drawing line covers are traced as `color` lines.
  5. Numbers: LabelSizing at each cell's pole (plus pbn-style extras over big cells), with the
@@ -101,6 +103,8 @@ VARIANTS = {
                        inner=["hed_inner"], merge_color=False),
     "merged-color": dict(label="Merged colours", top=["hed_top", "pbn_strong", "silhouette"], mid=["hed_mid"],
                          inner=["teed_inner"], merge_color=True),
+    "joined": dict(label="Joined same paint", top=["hed_top", "pbn_strong", "silhouette"], mid=["hed_mid"],
+                   inner=["teed_inner"], merge_color=False, join_across=("mid", "inner", "color")),
 }
 DEDUP = 3.5
 DEDUP_BY = {"silhouette": 5.0}   # the mask's edge sits a few px off HED's line on fur
@@ -121,6 +125,7 @@ EYE_ALMOND = 0.20          # the eye: paint this much darker (OKLab L) than the 
 EYE_PUPIL = 0.35           # the pupil: darker still
 EYE_ELLIPSE = 1.1          # the eye is clipped to the ellipse inscribed in its box, grown this much
 MERGE_STEPS = 2.0
+JOIN_BLOCK = 4             # `joined`: a top line along this many px of a shared border keeps cells apart
 # Finished view: stage 2's line-respecting blur, wider: colour boundaries up to
 # FINISH_FREE_STEPS palette steps blend freely (every object edge is a drawn line, a hard
 # barrier, so colour boundaries are only bands and shading), FINISH_SIGMA working px where
@@ -770,6 +775,73 @@ def _apply_lut(lab, open_lab, color, lut):
     return lab, open_lab, color[used]
 
 
+def join_same_paint(I, cells, lines: list, join_across) -> tuple[SimpleNamespace, dict]:
+    """`joined`: neighbouring cells with the same paint become one cell (one number) unless a
+    line of a layer outside ``join_across`` separates them (for `joined`: a top line). A pair
+    counts as separated when such a line runs along JOIN_BLOCK px or more of its shared border
+    (anything shorter is a junction); joins go longest shared border first and never unite two groups holding a
+    separated pair, so no outline ever ends up inside a cell. The lines are kept as they are:
+    where a cell was joined, its mid, inner or colour line now runs inside it."""
+    lab, color = cells.lab, cells.color
+    n = len(color)
+    block = rasterize([L for L in lines if L.layer not in join_across], I.h, I.w)
+    near = ndi.distance_transform_edt(~block) <= 1.5 if block.any() else np.zeros_like(block)
+    keys, flags = [], []
+    for a, b, na, nb in ((lab[:, :-1], lab[:, 1:], near[:, :-1], near[:, 1:]),
+                         (lab[:-1, :], lab[1:, :], near[:-1, :], near[1:, :])):
+        m = a != b
+        lo, hi = np.minimum(a[m], b[m]).astype(np.int64), np.maximum(a[m], b[m]).astype(np.int64)
+        keys.append(lo * n + hi)
+        flags.append(na[m] | nb[m])
+    keys, flags = np.concatenate(keys), np.concatenate(flags)
+    uk, total = np.unique(keys, return_counts=True)
+    blocked = np.zeros(len(uk), np.int64)
+    bk, bc = np.unique(keys[flags], return_counts=True)
+    blocked[np.searchsorted(uk, bk)] = bc
+    lo, hi = uk // n, uk % n
+    same = color[lo] == color[hi]
+    sep = same & (blocked >= JOIN_BLOCK)
+    parent = np.arange(n)
+    apart = {k: set() for k in range(n)}
+    for a, b in zip(lo[sep].tolist(), hi[sep].tolist()):
+        apart[a].add(b)
+        apart[b].add(a)
+    order = np.argsort(-total[same & ~sep], kind="stable")
+    cand = list(zip(lo[same & ~sep][order].tolist(), hi[same & ~sep][order].tolist()))
+    joins = 0
+    for a, b in cand:
+        ra, rb = _root(parent, a), _root(parent, b)
+        if ra == rb or any(_root(parent, x) == rb for x in apart[ra]):
+            continue
+        if len(apart[rb]) > len(apart[ra]):
+            ra, rb = rb, ra
+        parent[rb] = ra
+        apart[ra] |= apart[rb]
+        joins += 1
+    lut = np.array([_root(parent, k) for k in range(n)])
+    used = np.unique(lut)
+    remap = -np.ones(n, np.int64)
+    remap[used] = np.arange(len(used))
+    full = remap[lut]
+    out = SimpleNamespace(lab=full[lab].astype(np.int32), color=color[used], ink=cells.ink,
+                          absorbed=cells.absorbed,
+                          open_lab=np.where(cells.open_lab >= 0, full[np.maximum(cells.open_lab, 0)], -1))
+    return out, {"pairsJoined": joins, "regionsBefore": int(n), "separatedSamePaintPairs": int(sep.sum())}
+
+
+def inside_cells(lines: list, cells) -> dict:
+    """Length of line, per layer, whose two sides lie in the same cell (a line inside a cell)."""
+    out = {k: 0.0 for k in LAYERS}
+    for L in lines:
+        if len(L.pts) < 2:
+            continue
+        nrm = st._normals(L.pts, L.closed)
+        a = sample(cells.lab, L.pts + 1.5 * nrm)
+        b = sample(cells.lab, L.pts - 1.5 * nrm)
+        out[L.layer] += length(L) * float(np.mean(a == b))
+    return {k: round(v, 1) for k, v in out.items()}
+
+
 # ---------------------------------------------------------------------------------------------
 # Trimming and colour lines
 
@@ -1044,6 +1116,16 @@ def run_variant(I, src: dict, vname: str) -> dict:
     allines = kept + clines
     for L in allines:
         L.w = weigh(L, I, cells)
+    jstats = None
+    if spec.get("join_across"):
+        prejoin = cells
+        cells, jstats = join_same_paint(I, prejoin, allines, spec["join_across"])
+        # the alternative: mid lines also keep cells apart (join across inner and colour only)
+        alt, _ = join_same_paint(I, prejoin, allines, tuple(k for k in spec["join_across"] if k != "mid"))
+        jstats["regionsIfMidAlsoSplits"] = int(len(alt.color))
+        jstats["lineLengthInsideCells"] = inside_cells(allines, cells)
+        # the same measure before joining: sampling near junctions and line ends counts ~2 %
+        jstats["lineLengthInsideCellsBeforeJoin"] = inside_cells(allines, prejoin)
     nums = numbers(cells, I.w, I.h)
     t_cells = time.time() - t0
     base = {k: CSS_WIDTH[k] * I.w / PHONE_CSS for k in LAYERS}
@@ -1093,6 +1175,8 @@ def run_variant(I, src: dict, vname: str) -> dict:
                     "finishedAndFlat": round(t_finish, 2),
                     "sources": {k[:-8]: v for k, v in src.items() if k.endswith("_seconds")}}
     m["variant"] = vname
+    if jstats:
+        m["joined"] = jstats
     json.dump(m, open(os.path.join(vdir, "metrics.json"), "w"), indent=1)
     return m
 
@@ -1222,7 +1306,8 @@ def manifest(notes_path: str = os.path.join(HERE, "layers_notes.json")) -> dict:
                 "renders": {f"z{z}": f"{name}/{v}/z{z}.jpg" for z in (1, 2, 4)},
                 "metrics": {k: m[k] for k in ("regions", "todayRegions", "regionsVsToday", "samePaintSplits", "strokesPerLayer",
                                               "lineShare", "cellsByStrongestBoundaryLayer", "cellsBelowNumberSize",
-                                              "smallestCellRoom", "numbers", "seconds")},
+                                              "smallestCellRoom", "numbers", "seconds")} | (
+                    {"joined": m["joined"]} if "joined" in m else {}),
             })
         pics.append(entry)
     man = {"render_presets": {k: {kk: vv for kk, vv in p.items()} for k, p in PRESETS.items()},

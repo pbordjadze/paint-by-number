@@ -141,7 +141,7 @@ reads as a drawing). Rebuild the anonymous set by shuffling the selection with
 
 ## Layered cells (round 3)
 
-`layers.py` builds, per picture, four variants of one model: cells bounded by lines, every line
+`layers.py` builds, per picture, five variants of one model: cells bounded by lines, every line
 on a cell boundary, each line in a layer (`top`, `mid`, `inner`, `color`) that sets how strongly
 it draws at a zoom. It reads stage 1's cached raw maps (`$S/lineart/out/<pic>/_cache/learned_hed.npy`,
 `learned_teed.npy`) and `importance.png` / `importance.json`, and pbn's picture directory.
@@ -166,7 +166,7 @@ S=$S $S/venv/bin/python layers.py --manifest          # writes and validates $S/
 NODE_PATH=/opt/node22/lib/node_modules node svg_check.cjs /tmp/shots $S/lineart/layers/*/recommended/lines.svg
 ```
 
-Options: `--variants recommended,no-closure,hed-layers,merged-color`; `LAYERS_DEBUG=1` also
+Options: `--variants recommended,no-closure,hed-layers,merged-color,joined`; `LAYERS_DEBUG=1` also
 writes `$S/lineart/layers/_look/<pic>-<variant>-dbg{1,2,4}.png`, every layer in its own colour
 (top black, mid blue, inner green, color orange). Renders need node 22 with `@resvg/resvg-js`
 in `$S/node` (as stage 2) and Source Serif 4 in `$S/fonts`. Outputs and the manifest format:

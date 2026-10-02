@@ -10,8 +10,10 @@ darkest paint draws both eyes as closed almonds that read as eyes at 1x. The fin
 blended more widely, turns the train's banded sky into a real gradient. **The cost is cells:**
 1.33-3.0x today's (median 1.72x for `recommended`). Nearly all of the increase is cells that
 exist only because a drawn line divides one paint (`samePaintSplits`). Without those, every
-picture is back at 0.8-1.0x today's count. That trade-off is the main decision for the owner
-(see Recommendations).
+picture is back at 0.8-1.0x today's count. That trade-off is the main decision for the owner. A fifth variant, `joined`, shows the
+alternative: same-paint cells joined across mid, inner and colour lines, with the lines still
+drawn. It lands at 0.86-1.32x today's cells, median 1.08x (see Joined same paint and
+Recommendations).
 
 Outputs: `$S/lineart/layers/<pic>/<variant>/` and `$S/lineart/layers/manifest.json` (all paths
 in this document are relative to `$S/lineart/layers/`; `$S` is the session scratchpad).
@@ -167,12 +169,13 @@ Per variant `<pic>/<variant>/`:
   - drawn length kept after trimming;
   - cell-rule counts, smallest room, numbers per zoom, subject and eye info, seconds.
 
-`manifest.json` follows the requested format. Additions:
+`manifest.json` follows the requested format, with five variants per picture (`joined` last).
+Additions:
 
 - `render_notes` (units, colours);
 - `"weighted"` and `"label"` per preset;
 - `"note"` per picture;
-- each variant's metrics carry `samePaintSplits`.
+- each variant's metrics carry `samePaintSplits` (`joined`'s also carry `joined`).
 
 **Render presets.** Opacity and width multiplier at zoom 1 / 2 / 4, log-linear between. The
 drawn width is stroke-width x multiplier, i.e. width x multiplier x zoom x 390 / W CSS px on
@@ -188,7 +191,7 @@ screen.
 `_look/presets_red-fox_recommended_z1.jpg` and `_look/presets_hawksbill-turtle_recommended_z2.jpg`
 show the three presets stacked (top to bottom: fade, grow, fade-uniform).
 
-Validation: every file listed in the manifest exists and loads. All 36 `lines.svg` open in
+Validation: every file listed in the manifest exists and loads. All 45 `lines.svg` open in
 Chromium (390 px viewport, DPR 3) with all five groups present and top paths of nonzero length.
 `layers.py --manifest` checks the files; `svg_check.cjs` does the browser check.
 
@@ -257,6 +260,50 @@ pictures:
     orange back merges into beige, and Cézanne's fruit lose their modelling. The faint colour
     cells are what carry the finished view's gradients.
 
+### Joined same paint (`joined`, added at the orchestrator's request)
+
+`recommended`, except that neighbouring cells with the same paint become one cell, with one
+number, unless a top line separates them. A pair counts as separated when a top line runs along
+4 px or more of its shared border; anything shorter is a junction. Joins go longest border
+first and never unite two groups that hold a separated pair, so no outline ends up inside a cell
+(top length inside cells: +0 px on every picture). Mid, inner and colour lines are drawn exactly
+as in `recommended`: where cells were joined, those lines now run inside a cell. That is the
+question this variant puts to the owner. `flat.jpg` and `finished.jpg` match `recommended`
+(the paint is the same everywhere); `lines.svg` and the renders differ only in their numbers.
+
+| picture | today | recommended | joined | joined, mid lines also split |
+|---|---:|---:|---:|---:|
+| santa-fe-freight | 322 | 555 | 383 (1.19x) | 456 (1.42x) |
+| hawksbill-turtle | 950 | 1267 | 816 (0.86x) | 897 (0.94x) |
+| red-fox | 234 | 374 | 252 (1.08x) | 294 (1.26x) |
+| great-wave | 420 | 934 | 533 (1.27x) | 746 (1.78x) |
+| milkmaid | 486 | 861 | 506 (1.04x) | 640 (1.32x) |
+| wheat-field | 643 | 1955 | 846 (1.32x) | 1494 (2.32x) |
+| cezanne-apples | 538 | 765 | 569 (1.06x) | 657 (1.22x) |
+| delicate-arch | 618 | 992 | 617 (1.00x) | 675 (1.09x) |
+| lassen-lupine | 815 | 1661 | 926 (1.14x) | 1257 (1.54x) |
+| **median** | | 1.72x | **1.08x** | 1.32x |
+
+- **Line inside cells.** 10-32 % of the mid layer's length and 22-41 % of the inner layer's now
+  runs inside a cell (`metrics.joined.lineLengthInsideCells`, against the ~2 % the same
+  sampling counts before joining).
+- **What remains.** The cells left over the `samePaintSplits` count (17-214) are same paint on
+  both sides of an outline, which is intended.
+- **How it looks.** The drawing is unchanged. Many closed-looking shapes lose their own number
+  because they share the surrounding paint:
+  - the Great Wave's foam loops (`great-wave/joined/z4.jpg` vs `recommended/z4.jpg`);
+  - the turtle's shell web (`hawksbill-turtle/joined/z4.jpg`);
+  - the lupine's flower shapes.
+
+  On subjects with clear outlines it is barely visible: the fox, Cézanne, the Milkmaid and the
+  arch keep every outline closed, at about today's count.
+- **Joining across inner and colour lines only** (mid lines also split; the counts are in
+  `metrics.joined.regionsIfMidAlsoSplits`, no renders) is **not clearly better**. It keeps
+  1.32x the cells. At 2x and above, inner lines draw as strongly as mid lines, so a cell crossed
+  by an inner line looks just as split as one crossed by a mid line. The difference shows only
+  at 1x, where a mid line inside a cell (opacity 0.55) suggests a boundary more than an inner
+  one (0.25). It is a midpoint, not a fix.
+
 ### The fox: outline and eyes
 
 - **Outline.** The whole silhouette is traced at full strength
@@ -304,13 +351,15 @@ pictures:
 ## Recommendations for the owner's taste decisions
 
 1. **Same-paint splits.** This is the decision that matters most:
-   - **(a)** keep them, as built: the same number on both sides of a line, 1.3-3x cells;
+   - **(a)** keep them, as built (`recommended`): the same number on both sides of a line,
+     1.3-3x cells;
    - **(b)** drop a mid or inner line wherever the paint is the same on both sides: about
      today's cell count, but the turtle's shell texture and the fox's fur strokes go;
-   - **(c)** allow those lines inside a cell as pure drawing: breaks "every line bounds cells"
-     but keeps both.
+   - **(c)** allow those lines inside a cell as pure drawing (`joined`): 1.08x median, and
+     keeps both, but breaks "every line bounds cells" for mid, inner and colour lines.
 
-   Show `red-fox` and `hawksbill-turtle` `recommended` next to today with the cell counts.
+   Show `recommended` and `joined` side by side at z4 on `great-wave` and `hawksbill-turtle`
+   (where they differ most) and at z1 on `red-fox` (where they barely differ).
 2. **Faint colour cells (`recommended` vs `merged-color`).** They are what makes the finished
    piece a gradient, and at 1x opacity 0.15 they read as a light pencil texture. My
    recommendation is to keep them. The decisive comparison is `santa-fe-freight` and
