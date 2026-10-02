@@ -188,7 +188,8 @@ struct LineArtInputsTests {
 
     private static func photo(_ name: String = "red-fox") throws -> CGImage {
         let url = try #require(Bundle.main.url(forResource: name, withExtension: "jpg"))
-        return try #require(PhotoLoader.cgImage(from: PhotoLoader.load(url: url, maxPixelSize: 1600)))
+        let photo = try PhotoLoader.load(url: url, maxPixelSize: 1600)
+        return try #require(PhotoLoader.cgImage(from: photo))
     }
 
     @Test func classicLineArtNeedsNoInputs() async throws {
@@ -213,7 +214,8 @@ struct LineArtInputsTests {
         #expect(second == first)
         #expect(cached * 5 < computing, "The second request took \(cached), the first \(computing)")
         // The same photo by another instance is another photo to the cache, with the same inputs.
-        #expect(try await LineArtInputs.compute(for: Self.photo()) == first)
+        let again = try await LineArtInputs.compute(for: Self.photo())
+        #expect(again == first)
     }
 
     @Test func aCancelledRequestStopsTheComputation() async throws {

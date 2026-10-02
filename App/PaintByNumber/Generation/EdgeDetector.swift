@@ -12,8 +12,9 @@ import PaintCore
 /// images), reflect-padded at the bottom and right to the network's stride, the edge
 /// probability cropped back and rounded to the nearest of 256 levels. The model runs on the CPU
 /// only (`.cpuOnly`) in float32: the Neural Engine and GPU compute in reduced precision that
-/// differs between chips, and the 8-bit rounding absorbs what is left, so a photo gets the same
-/// map on every device.
+/// differs between chips, and the 8-bit rounding absorbs the float32 noise that is left, so a
+/// photo gets the same map on every device (but where a value lies within that noise of a
+/// rounding boundary, which moves it by one level).
 nonisolated enum EdgeDetector {
     enum DetectorError: Error {
         /// `HED.mlmodelc` isn't in the app bundle.

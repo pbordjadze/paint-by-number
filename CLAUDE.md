@@ -296,8 +296,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `lllyasviel/Annotators`, Apache-2.0, sha256 and conversion in `tools/models/convert_hed.py`;
   29 MB of float16 weights computed in float32) on the photo drawn into sRGB and area-resampled
   to ≤ 1152 px, reflect-padded to a multiple of 16; the edge probability is rounded to 8 bits
-  (`EdgeMap`). `.cpuOnly` keeps maps identical across devices (the Neural Engine and GPU round
-  differently); the target has `COREML_CODEGEN_LANGUAGE = None` and loads `HED.mlmodelc` by URL.
+  (`EdgeMap`). `.cpuOnly` keeps maps the same across devices, up to a level where a value sits on a
+  rounding boundary (the Neural Engine and GPU compute in reduced precision that differs by chip); the target has `COREML_CODEGEN_LANGUAGE = None` and loads `HED.mlmodelc` by URL.
   `EyeFinder.eyes(in:)`: Vision face landmarks → per eye a smoothed contour and an iris (a circle
   around the pupil, 0.2 × the eye's width, clipped to the lids), closed polygons normalized to the
   photo, contours then irises, quantized to 1/4096. `LineArtInputs.make(for:settings:)` (nil for
