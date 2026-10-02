@@ -183,7 +183,7 @@ struct PaintingSessionTests {
     ///
     /// So each stroke is timed against a stamp of the same brush taken just before it, on a
     /// second session, not against a wall-clock budget: this Debug-build test shares the CPU
-    /// with the rest of the parallel run. The zigzag takes 1.1 to 1.2 s on the CI simulators and
+    /// with the rest of the parallel run. The zigzag takes about 1.1 s on the CI simulators and
     /// went past a 1.5 s budget under load (1.57 s, 1.69 s), but load slows a stroke and the
     /// stamp beside it alike. The median of the 40 ratios (2.6 to 3.0 there, single pairs up to
     /// 5.7) ignores a pause that hits one of a pair only; its bound of 10 is far from both that
