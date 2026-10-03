@@ -1,0 +1,80 @@
+{
+  "name": "Paint by Moonlight (CI builds)",
+  "identifier": "com.pbordjadze.paintbynumber.source",
+  "subtitle": "Automatic builds of the main branch",
+  "iconURL": "https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/icon.png",
+  "website": "https://github.com/pbordjadze/paint-by-number",
+  "tintColor": "#F04F5D",
+  "apps": [
+    {
+      "name": "Paint by Moonlight",
+      "bundleIdentifier": "com.pbordjadze.paintbynumber",
+      "developerName": "pbordjadze",
+      "subtitle": "Photos into paint-by-numbers",
+      "localizedDescription": "Turn your photos into paint-by-numbers canvases, entirely on device, and paint them with a finger or Apple Pencil. Built for iPad, works on iPhone.",
+      "iconURL": "https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/icon.png",
+      "tintColor": "#F04F5D",
+      "category": "entertainment",
+      "versions": [
+        {
+          "version": "1.0.161",
+          "buildVersion": "161",
+          "date": "2026-10-03T14:11:12Z",
+          "localizedDescription": "Palette: choose its rows and order, or arrange a painting's colors by hand [iphone]",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-161/PaintByNumber.ipa",
+          "size": 51791830,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.157",
+          "buildVersion": "157",
+          "date": "2026-10-03T08:36:25Z",
+          "localizedDescription": "Advanced: the preview card looks at the model while on screen too [iphone]",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-157/PaintByNumber.ipa",
+          "size": 51742668,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.150",
+          "buildVersion": "150",
+          "date": "2026-10-03T01:18:15Z",
+          "localizedDescription": "Merge claude/layered-ui: layered previews in Settings \u203a Advanced [iphone]",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-150/PaintByNumber.ipa",
+          "size": 51728409,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.140",
+          "buildVersion": "140",
+          "date": "2026-10-02T22:48:42Z",
+          "localizedDescription": "Drag timing test: record four runs' timings as observations [iphone]",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-140/PaintByNumber.ipa",
+          "size": 24118437,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.121",
+          "buildVersion": "121",
+          "date": "2026-10-02T17:51:31Z",
+          "localizedDescription": "Regeneration test stores three artworks, not one per picture [iphone]",
+          "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-121/PaintByNumber.ipa",
+          "size": 24118435,
+          "minOSVersion": "26.0"
+        }
+      ],
+      "version": "1.0.161",
+      "versionDate": "2026-10-03T14:11:12Z",
+      "versionDescription": "Palette: choose its rows and order, or arrange a painting's colors by hand [iphone]",
+      "downloadURL": "https://github.com/pbordjadze/paint-by-number/releases/download/build-161/PaintByNumber.ipa",
+      "size": 51791830,
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSCameraUsageDescription": "Paint by Moonlight uses the camera to take a photo you can turn into a paint-by-numbers picture. The photo stays on your device.",
+          "NSPhotoLibraryAddUsageDescription": "Paint by Moonlight saves a finished painting to your photo library when you choose Save to Photos."
+        }
+      }
+    }
+  ],
+  "news": []
+}
