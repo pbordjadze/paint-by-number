@@ -39,6 +39,11 @@ struct PaintView: View {
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     /// Settings › Advanced writes it while a painting may be open: the canvas follows at once.
     @AppStorage(SettingsKey.lineAppearance) private var storedLineAppearance: Data?
+    @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
+    @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
+    /// This painting's custom palette arrangement (`PaletteOrder.custom`), once loaded.
+    @State private var customOrder: [Int]?
+    @State private var arrangesPalette = false
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
@@ -75,6 +80,18 @@ struct PaintView: View {
             RenderContext.prewarm()
         }
         .onChange(of: undoManager) { _, manager in chrome.undoManager = manager }
+        .task(id: ObjectIdentifier(session)) {
+            customOrder = PaletteOrder.storedCustom(seed: session.nicknameSeed, count: session.paletteCount)
+        }
+        // Picking the next color follows the palette as it is laid out.
+        .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
+        .sheet(isPresented: $arrangesPalette) {
+            PaletteArrangeSheet(session: session, order: colorOrder) { arranged in
+                PaletteOrder.storeCustom(arranged, seed: session.nicknameSeed)
+                customOrder = arranged
+                paletteOrder = .custom
+            }
+        }
         .onDisappear { undoManager?.removeAllActions(withTarget: session) }
         .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
             Button("Restart", role: .destructive) {
@@ -164,13 +181,34 @@ struct PaintView: View {
         if sizeClass == .regular && size.width > size.height {
             let length = size.height - Self.sidePaletteTop - Self.edge
             return PaletteLayout(
-                side: true, lines: metrics.lines(count: count, length: length, maxLines: 2), caption: false,
-                metrics: metrics)
+                side: true,
+                lines: paletteLines(count: count, length: length, automatic: 2, room: size.width * 0.4, metrics: metrics),
+                caption: false, metrics: metrics)
         }
         let length = size.width - 2 * Self.edge
+        let caption = sizeClass != .regular
         return PaletteLayout(
-            side: false, lines: metrics.lines(count: count, length: length, maxLines: sizeClass == .regular ? 3 : 1),
-            caption: sizeClass != .regular, metrics: metrics)
+            side: false,
+            lines: paletteLines(
+                count: count, length: length, automatic: sizeClass == .regular ? 3 : 1,
+                room: size.height * 0.45 - (caption ? metrics.captionHeight : 0), metrics: metrics),
+            caption: caption, metrics: metrics)
+    }
+
+    /// The palette's lines for `count` swatches `length` points long, under the Rows setting:
+    /// Auto allows `automatic` lines, and no choice makes the bar thicker than `room` points.
+    private func paletteLines(count: Int, length: CGFloat, automatic: Int, room: CGFloat, metrics: PaletteMetrics) -> Int {
+        let fit = Int((room - 2 * PaletteMetrics.padding + PaletteMetrics.spacing) / metrics.pitch)
+        let most = max(1, min(paletteRows.maxLines(automatic: automatic), fit))
+        if paletteRows.isFixed { return max(1, min(most, count)) }
+        return metrics.lines(count: count, length: length, maxLines: most)
+    }
+
+    /// Every color of the palette in its order on screen (finished ones too).
+    private var colorOrder: [Int] {
+        paletteOrder.arrange(
+            Array(0..<session.paletteCount), palette: session.template.palette, remaining: session.remainingByColor,
+            custom: customOrder)
     }
 
     /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
@@ -366,6 +404,7 @@ struct PaintView: View {
         Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
+            if !session.isComplete { paletteMenu }
             if session.isComplete {
                 Button { controller.replay() } label: { Label("Replay Painting", systemImage: "play") }
             }
@@ -382,6 +421,32 @@ struct PaintView: View {
         .accessibilityShowsLargeContentViewer { Label("More", systemImage: "ellipsis") }
     }
 
+    /// More › Palette: its rows and order, and arranging this painting's colors by hand.
+    private var paletteMenu: some View {
+        Menu {
+            Picker(selection: $paletteRows) {
+                ForEach(PaletteRows.allCases) { rows in
+                    Text(rows.name).tag(rows)
+                }
+            } label: {
+                Label("Rows", systemImage: "square.grid.3x2")
+            }
+            .pickerStyle(.menu)
+            Picker(selection: $paletteOrder) {
+                ForEach(PaletteOrder.allCases) { order in
+                    Text(order.name).tag(order)
+                }
+            } label: {
+                Label("Order", systemImage: "arrow.up.arrow.down")
+            }
+            .pickerStyle(.menu)
+            Button { arrangesPalette = true } label: { Label("Arrange Colors…", systemImage: "hand.draw") }
+        } label: {
+            Label("Palette", systemImage: "paintpalette")
+        }
+        .accessibilityIdentifier("palette-menu")
+    }
+
     // MARK: Bottom
 
     @ViewBuilder
@@ -395,7 +460,8 @@ struct PaintView: View {
         } else {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
-                shakes: chrome.shakes, tip: swatchTip, metrics: palette.metrics, showsCurrentColor: palette.caption)
+                shakes: chrome.shakes, tip: swatchTip, metrics: palette.metrics, showsCurrentColor: palette.caption,
+                order: paletteOrder, customOrder: customOrder)
         }
     }
 

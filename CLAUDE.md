@@ -164,7 +164,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   per-color progress, events) + `PaintProgress` (persisted). The Metal canvas conforms to
   `PaintingCanvas` and is driven by the session.
 - iPad first: `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns (trailing
-  edge of wide windows) so every color shows at once; `PaintCommands` is the Paint menu (iPadOS
+  edge of wide windows) so every color shows at once; Settings › Palette and More › Palette choose
+  its lines (`PaletteRows`: Auto, 1–6, All at Once; never thicker than 45 % of the height, 40 % of
+  the width beside) and order (`PaletteOrder`: number, rainbow, lightness, areas left, or Custom,
+  arranged per painting in `PaletteArrangeSheet` and kept under its nickname seed), and picking
+  the next color follows that order (`PaintingSession.colorOrder`; demo `paint-palette`); `PaintCommands` is the Paint menu (iPadOS
   menu bar, single-key shortcuts) fed by the focused `PaintingFocus`; fills are registered with
   the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu, three-finger undo); the Pencil paints while
   fingers navigate (and only navigate under "Only Draw with Apple Pencil"). The app is single

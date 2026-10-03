@@ -25,6 +25,7 @@ import simd
 /// - `paint-ax`: `paint-progress`, showing the selected color's name
 /// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
 /// - `paint-names-plain`: `paint-progress` under Settings › Color Names › Plain (structured names only)
+/// - `paint-palette`: ~30 % painted, the palette in four rows in rainbow order (Settings › Palette)
 /// - `paint-long-text`, `paint-complete-long-text`: `paint-progress` and `paint-complete` with a long
 ///   title and every localized string twice as long (`ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette
@@ -164,6 +165,12 @@ private final class Demo {
         case "paint-names-plain":
             paint(fraction: 0.55)
             session.colorNameStyle = .plain
+        case "paint-palette":
+            paint(fraction: 0.3)
+            // Registered, not stored, like the paper above.
+            UserDefaults.standard.register(defaults: [
+                SettingsKey.paletteRows: PaletteRows.four.rawValue, SettingsKey.paletteOrder: PaletteOrder.rainbow.rawValue,
+            ])
         case "paint-ax-large":
             paint(fraction: 0.55)
             dynamicTypeSize = .accessibility5

@@ -1901,6 +1901,14 @@
       "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
       "extractionState" : "manual"
     },
+    "Arrange Colors" : {
+      "comment" : "Title of the sheet where the painting's colors are dragged into an order of one's own",
+      "extractionState" : "manual"
+    },
+    "Arrange Colors…" : {
+      "comment" : "More › Palette item that opens a list for dragging the painting's colors into an order of one's own",
+      "extractionState" : "manual"
+    },
     "As painted" : {
       "comment" : "Time-lapse pace option: the video keeps the rhythm the painting was painted in, compressed (bursts of painting and the pauses between them); a short label for a two-segment control",
       "extractionState" : "manual"
@@ -1931,6 +1939,10 @@
     },
     "Can’t Show the Canvas" : {
       "comment" : "Title of the screen shown when the device can't draw the painting canvas (no Metal)",
+      "extractionState" : "manual"
+    },
+    "Change these while painting from More › Palette, where Arrange Colors puts a painting’s colors in your own order." : {
+      "comment" : "Settings › Palette: footer under the Rows and Order pickers",
       "extractionState" : "manual"
     },
     "Choose a photo with a clear subject and good light. It becomes your canvas." : {
@@ -2547,6 +2559,10 @@
     },
     "Double-tap the canvas to zoom in on it. Pinch to zoom back out." : {
       "comment" : "Message of a tip about zooming in on small areas",
+      "extractionState" : "manual"
+    },
+    "Drag colors into the order you like. This painting’s palette keeps it as its Custom order." : {
+      "comment" : "Arrange Colors: footer under the list of the painting's colors",
       "extractionState" : "manual"
     },
     "Drawing only: changes show at once and apply to every layered painting, including the ones you have." : {
@@ -3241,6 +3257,10 @@
       "comment" : "Settings › Advanced: progress shown over the preview while a newly chosen picture is prepared",
       "extractionState" : "manual"
     },
+    "Order" : {
+      "comment" : "Picker in the painting screen's More › Palette menu and in Settings › Palette: the order of the palette's swatches",
+      "extractionState" : "manual"
+    },
     "Pace" : {
       "comment" : "Caption above the time-lapse sheet's control that picks how the painting is replayed (the speed and rhythm of the video); also its accessibility label",
       "extractionState" : "manual"
@@ -3737,6 +3757,142 @@
       "comment" : "Section title in the create flow's Samples pane, and in the picture menu of Settings › Advanced's preview: the bundled paintings and prints",
       "extractionState" : "manual"
     },
+    "Palette" : {
+      "comment" : "Submenu of the painting screen's More menu with the palette's rows and order",
+      "extractionState" : "manual"
+    },
+    "palette.order.custom" : {
+      "comment" : "Palette Order choice: the order the painter arranged for this painting by hand",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom"
+          }
+        }
+      }
+    },
+    "palette.order.darkToLight" : {
+      "comment" : "Palette Order choice: darkest paint first",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark to Light"
+          }
+        }
+      }
+    },
+    "palette.order.lightToDark" : {
+      "comment" : "Palette Order choice: lightest paint first",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light to Dark"
+          }
+        }
+      }
+    },
+    "palette.order.mostLeft" : {
+      "comment" : "Palette Order choice: colors with the most areas left to paint first",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most Left First"
+          }
+        }
+      }
+    },
+    "palette.order.nearlyDone" : {
+      "comment" : "Palette Order choice: colors with the fewest areas left to paint first",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearly Done First"
+          }
+        }
+      }
+    },
+    "palette.order.number" : {
+      "comment" : "Palette Order choice: swatches in the order of their numbers",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By Number"
+          }
+        }
+      }
+    },
+    "palette.order.rainbow" : {
+      "comment" : "Palette Order choice: swatches by hue, red through violet, then grays",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rainbow"
+          }
+        }
+      }
+    },
+    "palette.rows.all" : {
+      "comment" : "Palette Rows choice: as many rows as it takes to show every color without scrolling",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All at Once"
+          }
+        }
+      }
+    },
+    "palette.rows.auto" : {
+      "comment" : "Palette Rows choice: as many rows as fit the screen (three on iPad, one on iPhone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        }
+      }
+    },
+    "palette.rows.count" : {
+      "comment" : "Palette Rows choice: a fixed number of rows of swatches (columns beside a landscape iPad); the argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Row"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Rows"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Paper" : {
       "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
       "extractionState" : "manual"
@@ -3995,6 +4151,10 @@
     },
     "Retry" : {
       "comment" : "Button in a toast offering to try saving a painting again",
+      "extractionState" : "manual"
+    },
+    "Rows" : {
+      "comment" : "Picker in the painting screen's More › Palette menu and in Settings › Palette: how many rows of swatches the palette wraps into",
       "extractionState" : "manual"
     },
     "sample.atlantic-puffins" : {
@@ -4669,6 +4829,18 @@
         }
       }
     },
+    "settings.section.palette" : {
+      "comment" : "Header of the Settings section on how the painting screen's palette of swatches is laid out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palette"
+          }
+        }
+      }
+    },
     "Shade" : {
       "comment" : "Label of a row in a paint's details popover: the paint's plain color name, e.g. “dark grayish blue”",
       "extractionState" : "manual"
@@ -4739,6 +4911,10 @@
     },
     "Smoothness" : {
       "comment" : "Create flow: label of the slider for how smooth the template's outlines are",
+      "extractionState" : "manual"
+    },
+    "Sort By" : {
+      "comment" : "Arrange Colors: menu that orders the list by number, rainbow, lightness or areas left, to start from",
       "extractionState" : "manual"
     },
     "Sounds" : {
