@@ -266,9 +266,8 @@ struct AdvancedSettingsView: View {
     }
 }
 
-/// Sizes the preview card for the picture it shows. It reads the model in a body of its own, as
-/// `AdvancedStatsBar` does: on iPhone the screen's body missed the preview's arrival (the
-/// numbers stayed "–" under a finished preview until a touch), while views that read the model
+/// Sizes the preview card for the picture it shows, reading the model in a body of its own: on
+/// iPhone the screen's body missed the preview's arrival, while views that read the model
 /// themselves, like the card and the controls, followed it.
 private struct FittedCard<Content: View>: View {
     let model: AdvancedSettingsModel
@@ -286,14 +285,38 @@ private struct FittedCard<Content: View>: View {
     }
 }
 
-/// The preview's numbers, read from the model in a body of their own (see `FittedCard`).
+/// The preview's numbers. Neither the screen's body nor a view observing the model kept them
+/// current on every route: they stayed "–" under a finished preview pushed from Settings on
+/// iPhone (drawn by the screen) and over Settings on iPad (drawn here), until a touch. So the
+/// bar looks at the model four times a second while it is on screen and redraws when they
+/// change.
 private struct AdvancedStatsBar: View {
     let model: AdvancedSettingsModel
+    @State private var seen: Numbers?
 
-    var body: some View {
-        AdvancedStatsRow(
+    nonisolated private struct Numbers: Equatable {
+        var stats: AdvancedStats?
+        var delta: AdvancedStats.Delta?
+        var isAtDefaults: Bool
+        var isStale: Bool
+    }
+
+    private var numbers: Numbers {
+        Numbers(
             stats: model.preview?.stats, delta: model.statsDelta,
             isAtDefaults: model.currentKey == .defaults, isStale: model.isUpdating || model.phase == .loading)
+    }
+
+    var body: some View {
+        let shown = seen ?? numbers
+        AdvancedStatsRow(stats: shown.stats, delta: shown.delta, isAtDefaults: shown.isAtDefaults, isStale: shown.isStale)
+            .task {
+                while !Task.isCancelled {
+                    let current = numbers
+                    if current != seen { seen = current }
+                    try? await Task.sleep(for: .milliseconds(250))
+                }
+            }
     }
 }
 
