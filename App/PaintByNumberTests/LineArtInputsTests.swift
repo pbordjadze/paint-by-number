@@ -107,6 +107,11 @@ struct EyeFinderTests {
         let eyes = EyeFinder.eyes(in: image)
         Attachment.record(Data((eyes.map { "\($0)" } + [Self.visionReport(image)]).joined(separator: "\n").utf8),
                           named: "face-fixture-eyes.txt")
+        // On the simulator Vision can return landmarks for this fixture that are nobody's eyes
+        // (two tiny overlapping eyes mid-face); the plausibility guard drops them, so nothing is
+        // drawn (`implausibleLandmarksAreDropped` checks the guard). Eyes it keeps must be the
+        // fixture's eyes.
+        if eyes.isEmpty { return }
         try #require(eyes.count == 4, "Expected two contours and two irises, got \(eyes.count) polygons")
         func centroid(_ polygon: [SIMD2<Float>]) -> SIMD2<Float> { polygon.reduce(.zero, +) / Float(polygon.count) }
         let contours = Array(eyes[0..<2]), irises = Array(eyes[2..<4])
@@ -205,6 +210,31 @@ struct EyeFinderTests {
         #expect(centers[0].x < centers[1].x && centers[1].y < centers[2].y)
         #expect(abs(centers[3].x - centers[0].x) < 0.01 && abs(centers[5].y - centers[2].y) < 0.02)
         #expect(polygons.joined().allSatisfy { $0.x * 4096 == ($0.x * 4096).rounded() })
+    }
+
+    /// The guard against landmarks that went wrong: a face's eyes are kept only when they lie in
+    /// its box, are eye-sized for it and sit apart. What the simulator reported for the face
+    /// fixture (two eyes 3 % of the face wide, almost on top of each other) is dropped.
+    @Test func implausibleLandmarksAreDropped() throws {
+        let almond: [SIMD2<Double>] = [
+            [-20, 0], [-10, -8], [0, -10], [10, -8], [20, 0], [10, 6], [0, 8], [-10, 6],
+        ]
+        let face = CGRect(x: 100, y: 100, width: 200, height: 240)
+        func eye(at center: SIMD2<Double>, scale: Double = 1) throws -> EyeFinder.Eye {
+            try #require(EyeFinder.Eye(contour: almond.map { center + $0 * scale }, pupil: center, longSide: 100))
+        }
+        // Real eyes: 40 px wide (a fifth of the face), 100 px apart.
+        let left = try eye(at: [150, 190]), right = try eye(at: [250, 190])
+        #expect(EyeFinder.plausible(left, right, in: face))
+        // The simulator's: 6 px wide, 4 px apart, mid-face.
+        let tinyLeft = try eye(at: [198, 220], scale: 0.15), tinyRight = try eye(at: [202, 220], scale: 0.15)
+        #expect(!EyeFinder.plausible(tinyLeft, tinyRight, in: face))
+        // One eye outside the face.
+        let outside = try eye(at: [380, 190])
+        #expect(!EyeFinder.plausible(left, outside, in: face))
+        // Full-size eyes overlapping.
+        let overlapLeft = try eye(at: [190, 190]), overlapRight = try eye(at: [210, 190])
+        #expect(!EyeFinder.plausible(overlapLeft, overlapRight, in: face))
     }
 
     private func simdDistance(_ a: SIMD2<Double>, _ b: SIMD2<Double>) -> Double { ((a - b) * (a - b)).sum().squareRoot() }

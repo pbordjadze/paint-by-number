@@ -24,6 +24,16 @@ nonisolated enum EyeFinder {
     static let minimumVisibleIris = 0.15
     /// Faces Vision is less sure of than this are skipped.
     static let minimumFaceConfidence: Float = 0.5
+    /// A face's eyes are outlined only when they look like that face's eyes, so landmarks that
+    /// went wrong (the simulator returns two tiny overlapping eyes mid-face) never draw: every
+    /// contour point inside the face box grown by `faceMargin` of its size on each side, each eye
+    /// `eyeWidthPerFace` of the box's width (an eye opening is about a fifth of a face), centers
+    /// `separationPerFace` of it apart (about two eye widths) and at least
+    /// `minimumSeparationPerEyeWidth` eye widths apart (eyes don't overlap).
+    static let faceMargin = 0.1
+    static let eyeWidthPerFace: ClosedRange<Double> = 0.1...0.4
+    static let separationPerFace: ClosedRange<Double> = 0.25...0.75
+    static let minimumSeparationPerEyeWidth = 1.2
     /// Points per contour segment after smoothing, and per iris circle.
     static let contourSubdivisions = 4
     static let irisPoints = 32
@@ -48,40 +58,64 @@ nonisolated enum EyeFinder {
             return []
         }
         let size = CGSize(width: image.width, height: image.height)
+        let longSide = Double(max(image.width, image.height))
+        // Vision's image points and boxes have their origin at the bottom left.
+        func flipped(_ p: CGPoint) -> SIMD2<Double> { SIMD2(Double(p.x), Double(size.height) - Double(p.y)) }
         var found: [Eye] = []
         for face in request.results ?? [] {
             guard let landmarks = face.landmarks else { continue }
-            for (eyeRegion, pupilRegion) in [(landmarks.leftEye, landmarks.leftPupil), (landmarks.rightEye, landmarks.rightPupil)] {
-                guard let contourRegion = eyeRegion else { continue }
-                // Vision's image points have their origin at the bottom left.
-                func flipped(_ p: CGPoint) -> SIMD2<Double> { SIMD2(Double(p.x), Double(size.height) - Double(p.y)) }
-                let points = contourRegion.pointsInImage(imageSize: size).map(flipped)
-                let center = pupilRegion?.pointsInImage(imageSize: size).first.map(flipped)
-                if let eye = Eye(contour: points, pupil: center, longSide: Double(max(image.width, image.height))) {
-                    found.append(eye)
-                }
+            func eye(_ region: VNFaceLandmarkRegion2D?, _ pupil: VNFaceLandmarkRegion2D?) -> Eye? {
+                guard let region else { return nil }
+                let center = pupil?.pointsInImage(imageSize: size).first.map(flipped)
+                return Eye(contour: region.pointsInImage(imageSize: size).map(flipped), pupil: center, longSide: longSide)
             }
+            let box = face.boundingBox
+            let faceBox = CGRect(
+                x: box.minX * size.width, y: (1 - box.maxY) * size.height,
+                width: box.width * size.width, height: box.height * size.height)
+            guard let left = eye(landmarks.leftEye, landmarks.leftPupil), let right = eye(landmarks.rightEye, landmarks.rightPupil),
+                  plausible(left, right, in: faceBox)
+            else { continue }
+            found += [left, right]
         }
         return polygons(of: found, width: Double(image.width), height: Double(image.height))
+    }
+
+    /// Whether two eyes look like the eyes of the face in `face` (photo pixels, origin top-left);
+    /// see `faceMargin`.
+    static func plausible(_ a: Eye, _ b: Eye, in face: CGRect) -> Bool {
+        let faceWidth = Double(face.width)
+        guard faceWidth > 0, face.height > 0 else { return false }
+        let grown = face.insetBy(dx: -face.width * faceMargin, dy: -face.height * faceMargin)
+        for point in a.contour + b.contour where !grown.contains(CGPoint(x: point.x, y: point.y)) { return false }
+        guard eyeWidthPerFace.contains(a.width / faceWidth), eyeWidthPerFace.contains(b.width / faceWidth) else { return false }
+        let separation = simd_distance(a.middle, b.middle)
+        return separationPerFace.contains(separation / faceWidth)
+            && separation >= minimumSeparationPerEyeWidth * max(a.width, b.width)
     }
 
     /// One eye in photo pixels (origin top-left).
     nonisolated struct Eye {
         var contour: [SIMD2<Double>]
         var iris: [SIMD2<Double>]?
+        /// Corner to corner, and the mean of Vision's contour points.
+        var width: Double
+        var middle: SIMD2<Double>
 
         /// Nil when the contour is degenerate or the eye too small to outline.
         init?(contour points: [SIMD2<Double>], pupil: SIMD2<Double>?, longSide: Double) {
             guard points.count >= 3 else { return nil }
-            var width = 0.0
+            var span = 0.0
             for a in points {
-                for b in points { width = max(width, simd_distance(a, b)) }
+                for b in points { span = max(span, simd_distance(a, b)) }
             }
-            guard width >= EyeFinder.minimumEyeWidth * longSide else { return nil }
+            guard span >= EyeFinder.minimumEyeWidth * longSide else { return nil }
+            width = span
             contour = EyeFinder.smoothed(points)
             let mean: SIMD2<Double> = points.reduce(SIMD2<Double>.zero, +) / Double(points.count)
+            middle = mean
             let center = pupil ?? mean
-            let radius = EyeFinder.irisRadiusPerEyeWidth * width
+            let radius = EyeFinder.irisRadiusPerEyeWidth * span
             let circle = (0..<EyeFinder.irisPoints).map { i -> SIMD2<Double> in
                 let angle = 2 * Double.pi * Double(i) / Double(EyeFinder.irisPoints)
                 let direction = SIMD2<Double>(cos(angle), sin(angle))
