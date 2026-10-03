@@ -129,6 +129,7 @@ struct AdvancedSettingsView: View {
                 lineArtSection
                 LineAppearanceSection(model: model, zoom: zoom) { level in controller.zoom(to: CGFloat(level)) }
                 pipelineSection
+                PaintingEffectsSections()
                 feedbackSection
             }
             .accessibilityIdentifier("advanced-controls")

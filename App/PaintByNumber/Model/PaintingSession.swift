@@ -59,6 +59,11 @@ final class PaintingSession {
     @ObservationIgnored private let clock = ContinuousClock()
     /// Automatically select the next unfinished color when one is completed.
     @ObservationIgnored var autoAdvance = true
+    /// The palette's order on screen (`PaletteOrder`), which picking the next color follows;
+    /// nil goes by number.
+    @ObservationIgnored var colorOrder: [Int]?
+    /// Fixes the colors' nicknames, and keys the painting's custom palette order.
+    let nicknameSeed: UInt64
     /// Fills of the stroke in progress (nil between strokes).
     @ObservationIgnored private var strokeFills: [Int]?
 
@@ -89,6 +94,7 @@ final class PaintingSession {
         totalByColor = totals
         colorNames = template.palette.map(\.colorName)
         colorNicknames = ColorNameText.nicknames(for: template.palette, seed: nicknameSeed)
+        self.nicknameSeed = nicknameSeed
         var remaining = totals
         for (i, region) in template.regions.enumerated() where progress.isPainted(i) {
             remaining[Int(region.colorIndex)] -= 1
@@ -262,10 +268,14 @@ final class PaintingSession {
         }
     }
 
+    /// The next color with areas left after `color`, in the palette's order (`colorOrder`),
+    /// coming round from the start.
     func nextIncompleteColor(after color: Int) -> Int? {
-        let n = paletteCount
+        let order = colorOrder.flatMap { $0.count == paletteCount ? $0 : nil } ?? Array(0..<paletteCount)
+        let n = order.count
+        let start = order.firstIndex(of: color) ?? 0
         for k in 1...n {
-            let c = (color + k) % n
+            let c = order[(start + k) % n]
             if remainingByColor[c] > 0 { return c }
         }
         return nil

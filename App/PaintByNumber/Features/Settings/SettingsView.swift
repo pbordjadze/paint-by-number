@@ -15,6 +15,8 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
+    @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
+    @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
     @State private var path: [Destination] = []
     @State private var isShowingAdvanced = false
 
@@ -57,6 +59,30 @@ struct SettingsView: View {
                                 comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
                 } footer: {
                     Text("When you finish a color, the next one is picked up automatically.")
+                }
+
+                Section {
+                    Picker(selection: $paletteRows) {
+                        ForEach(PaletteRows.allCases) { rows in
+                            Text(rows.name).tag(rows)
+                        }
+                    } label: {
+                        SwiftUI.Label("Rows", systemImage: "square.grid.3x2")
+                    }
+                    .accessibilityIdentifier("settings-palette-rows")
+                    Picker(selection: $paletteOrder) {
+                        ForEach(PaletteOrder.allCases) { order in
+                            Text(order.name).tag(order)
+                        }
+                    } label: {
+                        SwiftUI.Label("Order", systemImage: "arrow.up.arrow.down")
+                    }
+                    .accessibilityIdentifier("settings-palette-order")
+                } header: {
+                    Text(String(localized: "settings.section.palette", defaultValue: "Palette",
+                                comment: "Header of the Settings section on how the painting screen's palette of swatches is laid out"))
+                } footer: {
+                    Text("Change these while painting from More › Palette, where Arrange Colors puts a painting’s colors in your own order.")
                 }
 
                 Section {

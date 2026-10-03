@@ -1073,6 +1073,234 @@
         }
       }
     },
+    "advanced.paintingEffect.colorJingle" : {
+      "comment" : "Settings › Advanced: switch for the little tune played when every area of a color is painted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color Finished Jingle"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.colorJingle.summary" : {
+      "comment" : "Settings › Advanced: what the Color Finished Jingle switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A little rising tune when the last area of a color is painted."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.fillHaptics" : {
+      "comment" : "Settings › Advanced: switch for the vibration felt as paint lands",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill Haptics"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.fillHaptics.summary" : {
+      "comment" : "Settings › Advanced: what the Fill Haptics switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A swell you feel as paint lands, fuller for bigger areas."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.fillSparkles" : {
+      "comment" : "Settings › Advanced: switch for the two gold sparkles where an area is filled",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill Sparkles"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.fillSparkles.summary" : {
+      "comment" : "Settings › Advanced: what the Fill Sparkles switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two gold sparkles pop where an area is filled."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishFanfare" : {
+      "comment" : "Settings › Advanced: switch for the cascade of notes played when the whole painting is finished",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting Finished Fanfare"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishFanfare.summary" : {
+      "comment" : "Settings › Advanced: what the Painting Finished Fanfare switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A cascade of notes when the whole painting is done."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishHaptics" : {
+      "comment" : "Settings › Advanced: switch for the vibrations felt when a color or the painting is finished",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finishing Haptics"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishHaptics.summary" : {
+      "comment" : "Settings › Advanced: what the Finishing Haptics switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bright taps when a color is finished, a rising shimmer when the painting is."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishShine" : {
+      "comment" : "Settings › Advanced: switch for the gloss that sweeps a finished color or painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finishing Shine"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishShine.summary" : {
+      "comment" : "Settings › Advanced: what the Finishing Shine switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A gloss sweeps a color when it is finished, and the whole painting when it is done."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.paintNotes" : {
+      "comment" : "Settings › Advanced: switch for the musical note played each time paint lands",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting Notes"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.paintNotes.summary" : {
+      "comment" : "Settings › Advanced: what the Painting Notes switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A note of a gentle tune each time paint lands."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.try" : {
+      "comment" : "Settings › Advanced: VoiceOver label of the button that plays a sound or haptic once; the argument is its name, e.g. Color Finished Jingle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try %@"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.wrongColorHaptics" : {
+      "comment" : "Settings › Advanced: switch for the vibration felt when tapping an area that wants a different paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrong Color Haptics"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.wrongColorHaptics.summary" : {
+      "comment" : "Settings › Advanced: what the Wrong Color Haptics switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A soft double tap when an area wants a different paint."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.wrongColorSound" : {
+      "comment" : "Settings › Advanced: switch for the sound of tapping an area that wants a different paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrong Color Sound"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.wrongColorSound.summary" : {
+      "comment" : "Settings › Advanced: what the Wrong Color Sound switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A soft wooden knock when an area wants a different paint."
+          }
+        }
+      }
+    },
     "advanced.preset.custom" : {
       "comment" : "Settings › Advanced › Line Appearance: the layers' values match no preset; in shared settings text",
       "extractionState" : "manual",
@@ -1433,6 +1661,30 @@
         }
       }
     },
+    "advanced.section.flourishes" : {
+      "comment" : "Settings › Advanced: header of the section with switches for the canvas's sparkles and shine",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sparkles & Shine"
+          }
+        }
+      }
+    },
+    "advanced.section.haptics" : {
+      "comment" : "Settings › Advanced: header of the section with a switch for each haptic painting plays",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haptics"
+          }
+        }
+      }
+    },
     "advanced.section.lineArt" : {
       "comment" : "Settings › Advanced: header of the section on how a template's lines are made",
       "extractionState" : "manual",
@@ -1453,6 +1705,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pipeline"
+          }
+        }
+      }
+    },
+    "advanced.section.sounds" : {
+      "comment" : "Settings › Advanced: header of the section with a switch for each sound painting makes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sounds"
           }
         }
       }
@@ -1661,6 +1925,14 @@
       "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
       "extractionState" : "manual"
     },
+    "Arrange Colors" : {
+      "comment" : "Title of the sheet where the painting's colors are dragged into an order of one's own",
+      "extractionState" : "manual"
+    },
+    "Arrange Colors…" : {
+      "comment" : "More › Palette item that opens a list for dragging the painting's colors into an order of one's own",
+      "extractionState" : "manual"
+    },
     "As painted" : {
       "comment" : "Time-lapse pace option: the video keeps the rhythm the painting was painted in, compressed (bursts of painting and the pauses between them); a short label for a two-segment control",
       "extractionState" : "manual"
@@ -1691,6 +1963,10 @@
     },
     "Can’t Show the Canvas" : {
       "comment" : "Title of the screen shown when the device can't draw the painting canvas (no Metal)",
+      "extractionState" : "manual"
+    },
+    "Change these while painting from More › Palette, where Arrange Colors puts a painting’s colors in your own order." : {
+      "comment" : "Settings › Palette: footer under the Rows and Order pickers",
       "extractionState" : "manual"
     },
     "Choose a photo with a clear subject and good light. It becomes your canvas." : {
@@ -2313,6 +2589,10 @@
       "comment" : "Message of a tip about zooming in on small areas",
       "extractionState" : "manual"
     },
+    "Drag colors into the order you like. This painting’s palette keeps it as its Custom order." : {
+      "comment" : "Arrange Colors: footer under the list of the painting's colors",
+      "extractionState" : "manual"
+    },
     "Drawing only: changes show at once and apply to every layered painting, including the ones you have." : {
       "comment" : "Settings › Advanced › Line Appearance: footer of the section",
       "extractionState" : "manual"
@@ -2861,6 +3141,10 @@
       "comment" : "Settings toggle for vibration feedback while painting",
       "extractionState" : "manual"
     },
+    "Haptics are off in Settings, so none of these play." : {
+      "comment" : "Settings › Advanced: footer under the Haptics switches while Haptics is off in Settings",
+      "extractionState" : "manual"
+    },
     "Hex" : {
       "comment" : "Label of a row in a paint's details popover: the paint's hex color code, e.g. “#5A6B7C”",
       "extractionState" : "manual"
@@ -2953,6 +3237,10 @@
       "comment" : "Caption on the gallery card of a painting made by a newer version of the app",
       "extractionState" : "manual"
     },
+    "Neither shows while Reduce Motion is on." : {
+      "comment" : "Settings › Advanced: footer under the Fill Sparkles and Finishing Shine switches",
+      "extractionState" : "manual"
+    },
     "New Painting" : {
       "comment" : "Button (and title of the create flow) that starts a new painting from a photo",
       "extractionState" : "manual"
@@ -2995,6 +3283,10 @@
     },
     "Opening Picture…" : {
       "comment" : "Settings › Advanced: progress shown over the preview while a newly chosen picture is prepared",
+      "extractionState" : "manual"
+    },
+    "Order" : {
+      "comment" : "Picker in the painting screen's More › Palette menu and in Settings › Palette: the order of the palette's swatches",
       "extractionState" : "manual"
     },
     "Pace" : {
@@ -3493,16 +3785,152 @@
       "comment" : "Section title in the create flow's Samples pane, and in the picture menu of Settings › Advanced's preview: the bundled paintings and prints",
       "extractionState" : "manual"
     },
+    "Palette" : {
+      "comment" : "Submenu of the painting screen's More menu with the palette's rows and order",
+      "extractionState" : "manual"
+    },
+    "palette.order.custom" : {
+      "comment" : "Palette Order choice: the order the painter arranged for this painting by hand",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom"
+          }
+        }
+      }
+    },
+    "palette.order.darkToLight" : {
+      "comment" : "Palette Order choice: darkest paint first",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark to Light"
+          }
+        }
+      }
+    },
+    "palette.order.lightToDark" : {
+      "comment" : "Palette Order choice: lightest paint first",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light to Dark"
+          }
+        }
+      }
+    },
+    "palette.order.mostLeft" : {
+      "comment" : "Palette Order choice: colors with the most areas left to paint first",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most Left First"
+          }
+        }
+      }
+    },
+    "palette.order.nearlyDone" : {
+      "comment" : "Palette Order choice: colors with the fewest areas left to paint first",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearly Done First"
+          }
+        }
+      }
+    },
+    "palette.order.number" : {
+      "comment" : "Palette Order choice: swatches in the order of their numbers",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By Number"
+          }
+        }
+      }
+    },
+    "palette.order.rainbow" : {
+      "comment" : "Palette Order choice: swatches by hue, red through violet, then grays",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rainbow"
+          }
+        }
+      }
+    },
+    "palette.rows.all" : {
+      "comment" : "Palette Rows choice: as many rows as it takes to show every color without scrolling",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All at Once"
+          }
+        }
+      }
+    },
+    "palette.rows.auto" : {
+      "comment" : "Palette Rows choice: as many rows as fit the screen (three on iPad, one on iPhone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        }
+      }
+    },
+    "palette.rows.count" : {
+      "comment" : "Palette Rows choice: a fixed number of rows of swatches (columns beside a landscape iPad); the argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Row"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Rows"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Paper" : {
+      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
+      "extractionState" : "manual"
+    },
     "Paste Settings" : {
       "comment" : "Settings › Advanced: row with the system Paste button, which takes the settings in copied text (from Copy Settings on another device, or a preset)",
       "extractionState" : "manual"
     },
     "Pasted" : {
       "comment" : "Settings › Advanced: shown in the Paste Settings row for a moment after pasted settings were taken on",
-      "extractionState" : "manual"
-    },
-    "Paper" : {
-      "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
       "extractionState" : "manual"
     },
     "paper.automatic" : {
@@ -3759,6 +4187,10 @@
     },
     "Retry" : {
       "comment" : "Button in a toast offering to try saving a painting again",
+      "extractionState" : "manual"
+    },
+    "Rows" : {
+      "comment" : "Picker in the painting screen's More › Palette menu and in Settings › Palette: how many rows of swatches the palette wraps into",
       "extractionState" : "manual"
     },
     "sample.atlantic-puffins" : {
@@ -4433,6 +4865,18 @@
         }
       }
     },
+    "settings.section.palette" : {
+      "comment" : "Header of the Settings section on how the painting screen's palette of swatches is laid out",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palette"
+          }
+        }
+      }
+    },
     "Shade" : {
       "comment" : "Label of a row in a paint's details popover: the paint's plain color name, e.g. “dark grayish blue”",
       "extractionState" : "manual"
@@ -4505,8 +4949,16 @@
       "comment" : "Create flow: label of the slider for how smooth the template's outlines are",
       "extractionState" : "manual"
     },
+    "Sort By" : {
+      "comment" : "Arrange Colors: menu that orders the list by number, rainbow, lightness or areas left, to start from",
+      "extractionState" : "manual"
+    },
     "Sounds" : {
       "comment" : "Settings toggle for sound feedback while painting",
+      "extractionState" : "manual"
+    },
+    "Sounds are off in Settings, so none of these play." : {
+      "comment" : "Settings › Advanced: footer under the Sounds switches while Sounds is off in Settings",
       "extractionState" : "manual"
     },
     "Start Painting" : {
@@ -4597,8 +5049,16 @@
       "comment" : "Footer under the Printed Templates paper size setting",
       "extractionState" : "manual"
     },
+    "They play in every painting as you paint." : {
+      "comment" : "Settings › Advanced: footer under the Sounds switches while Sounds is on in Settings",
+      "extractionState" : "manual"
+    },
     "This device can’t draw the painting right now. Your progress is saved." : {
       "comment" : "Message of the screen shown when the canvas can't be drawn",
+      "extractionState" : "manual"
+    },
+    "This device can’t play haptics." : {
+      "comment" : "Settings › Advanced: footer under the Haptics switches on a device without haptics, such as an iPad",
       "extractionState" : "manual"
     },
     "time.approximately" : {
@@ -4717,6 +5177,10 @@
       "comment" : "Message of a tip about painting several areas with one drag",
       "extractionState" : "manual"
     },
+    "Try" : {
+      "comment" : "Settings › Advanced: button under a sound or haptic switch that plays it once",
+      "extractionState" : "manual"
+    },
     "Try Again" : {
       "comment" : "Button in the time-lapse sheet after rendering failed",
       "extractionState" : "manual"
@@ -4755,6 +5219,10 @@
     },
     "With thanks to the museums and archives that share these pictures." : {
       "comment" : "Footer under the Pictures list in Acknowledgements",
+      "extractionState" : "manual"
+    },
+    "You feel them in every painting as you paint." : {
+      "comment" : "Settings › Advanced: footer under the Haptics switches while Haptics is on in Settings",
       "extractionState" : "manual"
     },
     "Your Photo" : {

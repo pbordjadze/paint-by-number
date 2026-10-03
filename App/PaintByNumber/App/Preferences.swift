@@ -11,6 +11,9 @@ enum SettingsKey {
     static let timelapsePace = "timelapsePace"
     static let paperAppearance = "paperAppearance"
     static let colorNames = "colorNameStyle"
+    /// The palette's lines (`PaletteRows`) and order (`PaletteOrder`).
+    static let paletteRows = "paletteRows"
+    static let paletteOrder = "paletteOrder"
     /// Settings › Advanced (JSON data): line art and pipeline tuning for new paintings, and
     /// how layered lines are drawn.
     static let lineArt = "advancedLineArt"

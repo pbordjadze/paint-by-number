@@ -51,7 +51,7 @@ nonisolated struct PaletteMetrics: Equatable, Sendable {
 
 /// The paint palette: circular swatches with their number and a progress ring per color;
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
-/// in palette order, and scroll when they still don't fit; the selected color is kept in view.
+/// in the chosen `order`, and scroll when they still don't fit; the selected color is kept in view.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
@@ -65,6 +65,9 @@ struct PaletteBar: View {
     /// Shows the selected color's number and name above the swatches, so the color can be
     /// told by name (horizontal bars only; wide layouts show it in the progress badge).
     var showsCurrentColor = false
+    var order: PaletteOrder = .number
+    /// The painting's custom arrangement, for `.custom`.
+    var customOrder: [Int]?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The color whose details popover is open (long-press on its swatch).
@@ -72,7 +75,8 @@ struct PaletteBar: View {
 
     init(
         session: PaintingSession, axis: Axis = .horizontal, lines: Int = 1, shakes: [Int: Int] = [:],
-        tip: (any Tip)? = nil, metrics: PaletteMetrics = .standard, showsCurrentColor: Bool = false
+        tip: (any Tip)? = nil, metrics: PaletteMetrics = .standard, showsCurrentColor: Bool = false,
+        order: PaletteOrder = .number, customOrder: [Int]? = nil
     ) {
         self.session = session
         self.axis = axis
@@ -81,6 +85,8 @@ struct PaletteBar: View {
         self.tip = tip
         self.metrics = metrics
         self.showsCurrentColor = showsCurrentColor
+        self.order = order
+        self.customOrder = customOrder
     }
 
     /// Colors still to paint (plus the selected one): finished colors leave the palette.
@@ -96,7 +102,9 @@ struct PaletteBar: View {
     }
 
     var body: some View {
-        let colors = Self.visibleColors(session)
+        let colors = order.arrange(
+            Self.visibleColors(session), palette: session.template.palette, remaining: session.remainingByColor,
+            custom: customOrder)
         let count = max(colors.count, 1)
         let lineCount = max(1, min(lines, count))
         let columns = max(1, axis == .horizontal ? (count + lineCount - 1) / lineCount : lineCount)

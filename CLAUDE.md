@@ -164,7 +164,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   per-color progress, events) + `PaintProgress` (persisted). The Metal canvas conforms to
   `PaintingCanvas` and is driven by the session.
 - iPad first: `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns (trailing
-  edge of wide windows) so every color shows at once; `PaintCommands` is the Paint menu (iPadOS
+  edge of wide windows) so every color shows at once; Settings › Palette and More › Palette choose
+  its lines (`PaletteRows`: Auto, 1–6, All at Once; never thicker than 45 % of the height, 40 % of
+  the width beside) and order (`PaletteOrder`: number, rainbow, lightness, areas left, or Custom,
+  arranged per painting in `PaletteArrangeSheet` and kept under its nickname seed), and picking
+  the next color follows that order (`PaintingSession.colorOrder`; demo `paint-palette`); `PaintCommands` is the Paint menu (iPadOS
   menu bar, single-key shortcuts) fed by the focused `PaintingFocus`; fills are registered with
   the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu, three-finger undo); the Pencil paints while
   fingers navigate (and only navigate under "Only Draw with Apple Pencil"). The app is single
@@ -390,7 +394,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   `docs/presets/` (`coloring-book.json`: closed cells, every line an outline that stays over the
   paint, measured in its README). Demo scenarios `settings-advanced` (+ `-dark`,
   `-long-text`), `settings-advanced-layered` (Line Appearance, 2×) and `settings-advanced-tuned`
-  (Pipeline, effects measured) register their settings instead of storing them.
+  (Pipeline, effects measured) register their settings instead of storing them. Its Sounds,
+  Haptics and Sparkles & Shine sections (`PaintingEffectsSections`) put each `PaintingEffect` (the
+  painting notes, the color finished jingle, the fanfare, the wrong-color sound, three haptics,
+  the fill sparkles, the finishing shine) on its own `@AppStorage` switch (absent means on), read
+  where it plays (`FeedbackEngine`, `CanvasView`) under Settings' Sounds and Haptics; Try buttons
+  play a sound or haptic once (`FeedbackEngine.preview`). Demo `settings-advanced-effects` (the
+  jingle off).
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (source language English; no translations yet, so the catalog
   is the translator hand-off) and the Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by

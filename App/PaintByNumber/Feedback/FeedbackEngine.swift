@@ -5,7 +5,7 @@ import PaintCore
 /// `PaintingSession` when its screen appears.
 ///
 /// Preferences (read live, set from Settings): `hapticsEnabled`, `soundsEnabled` (both
-/// default on).
+/// default on), and each sound and haptic's own switch (`PaintingEffect`, Settings › Advanced).
 final class FeedbackEngine {
     static let shared = FeedbackEngine()
 
@@ -44,27 +44,47 @@ final class FeedbackEngine {
         if hapticsEnabled { haptics.tick() }
     }
 
+    /// Whether this device can play haptics (iPads can't).
+    var supportsHaptics: Bool { haptics.isSupported }
+
+    /// Plays a sound or haptic once, whatever the switches say (Settings › Advanced's Try
+    /// buttons); flourishes drawn on the canvas play nothing here.
+    func preview(_ effect: PaintingEffect) {
+        switch effect {
+        case .paintNotes: sounds.paint(velocity: 0.7)
+        case .colorJingle: sounds.colorComplete()
+        case .finishFanfare: sounds.celebrate()
+        case .wrongColorSound: sounds.reject()
+        case .fillHaptics: haptics.paint(strength: 0.7, duration: fillDuration)
+        case .wrongColorHaptics: haptics.reject()
+        case .finishHaptics: haptics.colorComplete()
+        case .fillSparkles, .finishShine: break
+        }
+    }
+
     private func handle(_ event: PaintEvent, in session: PaintingSession) {
-        let haptic = hapticsEnabled, sound = soundsEnabled
+        let hapticsOn = hapticsEnabled, soundsOn = soundsEnabled
+        func haptic(_ effect: PaintingEffect) -> Bool { hapticsOn && effect.isEnabled() }
+        func sound(_ effect: PaintingEffect) -> Bool { soundsOn && effect.isEnabled() }
         switch event {
         case let .painted(regions, _):
             // Perceived size of what was painted, relative to the canvas.
             let area = regions.reduce(Float(0)) { $0 + session.template.regions[$1].area }
             let canvas = Float(max(1, session.template.width * session.template.height))
             let size = min(1, (area / canvas).squareRoot() * 6)
-            if haptic { haptics.paint(strength: size, duration: fillDuration) }
-            if sound { sounds.paint(velocity: 0.35 + 0.65 * size) }
+            if haptic(.fillHaptics) { haptics.paint(strength: size, duration: fillDuration) }
+            if sound(.paintNotes) { sounds.paint(velocity: 0.35 + 0.65 * size) }
         case .rejected:
-            if haptic { haptics.reject() }
-            if sound { sounds.reject() }
+            if haptic(.wrongColorHaptics) { haptics.reject() }
+            if sound(.wrongColorSound) { sounds.reject() }
         case .colorCompleted:
-            if haptic { haptics.colorComplete() }
-            if sound { sounds.colorComplete() }
+            if haptic(.finishHaptics) { haptics.colorComplete() }
+            if sound(.colorJingle) { sounds.colorComplete() }
         case .artworkCompleted:
-            if haptic { haptics.celebrate() }
-            if sound { sounds.celebrate() }
+            if haptic(.finishHaptics) { haptics.celebrate() }
+            if sound(.finishFanfare) { sounds.celebrate() }
         case .undone:
-            if haptic { haptics.tick() }
+            if hapticsOn { haptics.tick() }
         case .strokeEnded, .hintShown, .missedSmallArea:
             // A near miss follows the rejected buzz already felt; the hint moves the camera.
             break
