@@ -1,0 +1,27 @@
+Failed to tap "Unfavorite" Button: No matches found for Elements matching predicate '"Unfavorite" IN identifiers' from input {(
+    Button, identifier: 'xmark', label: 'Close',
+    Button, identifier: 'Photo', label: 'Photo', value: Hidden,
+    Button, identifier: 'lightbulb', label: 'Hint',
+    Button, identifier: 'arrow.uturn.backward', label: 'Undo',
+    Button, label: 'More',
+    Button, identifier: 'canvas-area-145', label: 'Area 17', value: not painted, botto...,
+    Button, identifier: 'canvas-area-140', label: 'Area 17', value: not painted, bottom,
+    Button, identifier: 'canvas-area-138', label: 'Area 17', value: not painted, bottom,
+    Button, identifier: 'canvas-area-156', label: 'Area 17', value: not painted, botto...,
+    Button, identifier: 'canvas-area-148', label: 'Area 17', value: not painted, bottom,
+    Button,
+    Button, identifier: 'swatch-17', label: '17, Field Mouse, gray', value: 17 percent painted, Selected,
+    Button, identifier: 'swatch-18', label: '18, Mossy Stone, gray', value: 0 percent painted,
+    Button, identifier: 'swatch-19', label: '19, Cinder Path, gray', value: 0 percent painted,
+    Button, identifier: 'swatch-20', label: '20, Slate Pencil, dark gray', value: 0 percent painted,
+    Button, identifier: 'swatch-21', label: '21, Charred Log, grayish brown', value: 0 percent painted,
+    Button, identifier: 'swatch-22', label: '22, Cast Iron, very dark gray', value: 0 percent painted
+)}
+Possibly caused by runtime issues:
+Automation type mismatch: computed Button from legacy attributes vs PopUpButton from modern attribute. Input attributes and values: {
+    "XC_kAXXCAttributeAutomationType" = 14;
+    "XC_kAXXCAttributeElementBaseType" = UIResponder;
+    "XC_kAXXCAttributeElementType" = "SwiftUI.AccessibilityNode";
+    "XC_kAXXCAttributeTraits" = 1108101562369;
+}
+See test report attachments for more detail.

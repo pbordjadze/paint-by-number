@@ -1,0 +1,5 @@
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Button
+    ↪︎Find: Elements matching predicate '"Lighthouse" IN identifiers'
+      ↪︎Find: First Match
