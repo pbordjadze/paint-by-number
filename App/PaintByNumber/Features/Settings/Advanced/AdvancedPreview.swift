@@ -143,8 +143,26 @@ struct AdvancedPreviewCard: View {
     @State private var canvasUnavailable = false
     @State private var showsCue = false
     @State private var width: CGFloat = 0
+    @State private var seen: Shown?
+
+    /// What the card shows of the model. Like the numbers (`AdvancedStatsBar`), the card once
+    /// stayed on its spinner under a finished preview, so it checks the model itself too.
+    private struct Shown: Equatable {
+        var preview: UUID?
+        var phase: AdvancedSettingsModel.Phase
+        var isUpdating: Bool
+        var appearance: LineAppearance
+        var title: String
+    }
+
+    private var shown: Shown {
+        Shown(preview: model.preview?.id, phase: model.phase, isUpdating: model.isUpdating,
+              appearance: model.appearance, title: model.pictureTitle)
+    }
 
     var body: some View {
+        // Read so that the checks below redraw the card when what it shows has changed.
+        let _ = seen
         ZStack {
             Color(uiColor: .secondarySystemGroupedBackground)
             if let preview = model.preview {
@@ -185,6 +203,13 @@ struct AdvancedPreviewCard: View {
                 guard !Task.isCancelled else { return }
             }
             withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { showsCue = isBusy }
+        }
+        .task {
+            while !Task.isCancelled {
+                let current = shown
+                if current != seen { seen = current }
+                try? await Task.sleep(for: .milliseconds(250))
+            }
         }
     }
 
