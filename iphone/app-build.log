@@ -1,0 +1,45 @@
+1:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:169:21: warning: main actor-isolated property 'identifier' can not be referenced from a nonisolated context
+11:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:170:31: warning: main actor-isolated property 'children' can not be referenced from a nonisolated context
+21:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:169:21: warning: main actor-isolated property 'identifier' can not be referenced from a nonisolated context
+31:/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:170:31: warning: main actor-isolated property 'children' can not be referenced from a nonisolated context
+----- tail -----
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:169:21: warning: main actor-isolated property 'identifier' can not be referenced from a nonisolated context
+        if snapshot.identifier == identifier { return snapshot }
+                    ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElementAttributes.h:35:32: note: property declared here
+@property (readonly) NSString *identifier;
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:167:25: note: add '@MainActor' to make static method 'element(_:in:)' part of global actor 'MainActor'
+    private static func element(_ identifier: String, in snapshot: (any XCUIElementSnapshot)?) -> (any XCUIElementSnapshot)? {
+                        ^
+    @MainActor 
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:170:31: warning: main actor-isolated property 'children' can not be referenced from a nonisolated context
+        for child in snapshot.children {
+                              ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElement.h:341:56: note: property declared here
+@property (readonly) NSArray<id<XCUIElementSnapshot>> *children;
+                                                       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:167:25: note: add '@MainActor' to make static method 'element(_:in:)' part of global actor 'MainActor'
+    private static func element(_ identifier: String, in snapshot: (any XCUIElementSnapshot)?) -> (any XCUIElementSnapshot)? {
+                        ^
+    @MainActor 
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:169:21: warning: main actor-isolated property 'identifier' can not be referenced from a nonisolated context
+        if snapshot.identifier == identifier { return snapshot }
+                    ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElementAttributes.h:35:32: note: property declared here
+@property (readonly) NSString *identifier;
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:167:25: note: add '@MainActor' to make static method 'element(_:in:)' part of global actor 'MainActor'
+    private static func element(_ identifier: String, in snapshot: (any XCUIElementSnapshot)?) -> (any XCUIElementSnapshot)? {
+                        ^
+    @MainActor 
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:170:31: warning: main actor-isolated property 'children' can not be referenced from a nonisolated context
+        for child in snapshot.children {
+                              ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElement.h:341:56: note: property declared here
+@property (readonly) NSArray<id<XCUIElementSnapshot>> *children;
+                                                       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AdvancedSettingsUITests.swift:167:25: note: add '@MainActor' to make static method 'element(_:in:)' part of global actor 'MainActor'
+    private static func element(_ identifier: String, in snapshot: (any XCUIElementSnapshot)?) -> (any XCUIElementSnapshot)? {
+                        ^
+    @MainActor 
