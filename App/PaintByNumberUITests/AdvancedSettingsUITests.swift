@@ -102,7 +102,11 @@ final class AdvancedSettingsUITests: XCTestCase {
         let low = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.75))
         let high = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.35))
         var drags = 0
-        while !isWellInside(element, list) && drags < maxDrags {
+        while drags < maxDrags {
+            // The list settles before the element is looked at: a row that has just left the
+            // screen exists one moment and has no frame to read the next.
+            RunLoop.current.run(until: Date().addingTimeInterval(0.35))
+            if isWellInside(element, list) { return }
             let (from, to) = up ? (low, high) : (high, low)
             from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
             drags += 1
