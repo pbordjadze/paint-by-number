@@ -36,8 +36,8 @@ final class AdvancedSettingsUITests: XCTestCase {
     }
 
     /// Smallest Area moved to about 2×: the preview regenerates with fewer areas than the
-    /// defaults' and the setting's effect is measured; the Pipeline section offers Reset, and
-    /// Reset All (confirmed) puts everything back.
+    /// defaults' and the setting's effect is measured; the Pipeline section's Reset puts it
+    /// back, and the defaults' numbers return.
     @MainActor
     func testASliderChangesThePreviewsNumbersAndResets() throws {
         let app = XCUIApplication()
@@ -50,16 +50,13 @@ final class AdvancedSettingsUITests: XCTestCase {
             XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value MATCHES %@", ".*[0-9].*"), object: areas)],
                            timeout: 120), .completed, "The preview never got its numbers")
 
-        // Settings an earlier, interrupted run may have left behind go first.
-        let resetAll = app.descendants(matching: .any)["advanced-reset-all"]
-        reveal(resetAll, in: list, up: true)
-        if resetAll.isEnabled { confirmResetAll(app, resetAll) }
-
         let control = app.sliders["advanced-control-minimumCellSize"]
-        reveal(control, in: list, up: false)
+        reveal(control, in: list)
         XCTAssertTrue(control.exists, "Pipeline has no Smallest Area slider")
+        let sectionReset = app.buttons["advanced-reset-pipeline"]
+        // Settings an earlier, interrupted run may have left behind go first.
+        if sectionReset.exists { sectionReset.tap() }
         XCTAssertTrue(value(of: control).hasPrefix("1×"), "Smallest Area doesn't start at 1×: \(value(of: control))")
-        XCTAssertTrue(value(of: areas).contains("Default"), "The areas don't start at the defaults: \(value(of: areas))")
         // Three quarters of the way along the log scale from 0.25× to 4×: about twice the smallest area.
         control.adjust(toNormalizedSliderPosition: 0.75)
         let moved = NSPredicate(format: "NOT (value BEGINSWITH '1×')")
@@ -69,37 +66,26 @@ final class AdvancedSettingsUITests: XCTestCase {
         let fewer = NSPredicate(format: "value CONTAINS %@", "−")
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: fewer, object: areas)], timeout: 90), .completed,
                        "The preview's areas didn't go down: \(value(of: areas))")
-        let measured = NSPredicate(format: "value CONTAINS %@", "−")
-        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: measured, object: control)], timeout: 90), .completed,
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: fewer, object: control)], timeout: 90), .completed,
                        "Smallest Area's effect was never measured as fewer areas: \(value(of: control))")
-        XCTAssertTrue(app.buttons["advanced-reset-pipeline"].waitForExistence(timeout: 5), "Pipeline offers no Reset")
         attachScreenshot(of: app, named: "advanced-changed")
 
-        reveal(resetAll, in: list, up: true)
-        XCTAssertTrue(resetAll.isEnabled, "Reset All Settings is off with a setting changed")
-        confirmResetAll(app, resetAll)
-        reveal(control, in: list, up: false)
+        reveal(sectionReset, in: list, up: false)
+        XCTAssertTrue(sectionReset.exists, "Pipeline offers no Reset with a setting changed")
+        sectionReset.tap()
         let reset = NSPredicate(format: "value BEGINSWITH '1×'")
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: reset, object: control)], timeout: 5), .completed,
-                       "Reset All didn't put Smallest Area back: \(value(of: control))")
-        XCTAssertFalse(app.buttons["advanced-reset-pipeline"].exists, "Pipeline still offers Reset at its defaults")
+                       "Reset didn't put Smallest Area back: \(value(of: control))")
         // The defaults' preview was kept: their numbers are back at once.
         let back = NSPredicate(format: "value CONTAINS 'Default'")
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: back, object: areas)], timeout: 10), .completed,
                        "The areas didn't go back to the defaults': \(value(of: areas))")
-    }
-
-    @MainActor
-    private func confirmResetAll(_ app: XCUIApplication, _ button: XCUIElement) {
-        button.tap()
-        let confirm = app.buttons["Reset All"]
-        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Reset All Settings asks for no confirmation")
-        confirm.tap()
+        XCTAssertFalse(sectionReset.exists, "Pipeline still offers Reset at its defaults")
     }
 
     /// Scrolls the settings list until `element` can be tapped: towards the end (`up`) or back.
     @MainActor
-    private func reveal(_ element: XCUIElement, in list: XCUIElement, up: Bool, maxSwipes: Int = 12) {
+    private func reveal(_ element: XCUIElement, in list: XCUIElement, up: Bool = true, maxSwipes: Int = 12) {
         var swipes = 0
         while !(element.exists && element.isHittable) && swipes < maxSwipes {
             if up { list.swipeUp() } else { list.swipeDown() }

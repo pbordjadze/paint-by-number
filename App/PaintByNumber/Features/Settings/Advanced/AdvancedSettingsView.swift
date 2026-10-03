@@ -32,13 +32,15 @@ struct AdvancedSettingsView: View {
             if isSideBySide {
                 HStack(spacing: 0) {
                     VStack(spacing: 12) {
+                        Spacer(minLength: 0)
                         card
-                            .frame(maxHeight: .infinity)
+                            .frame(height: sideCardHeight)
                         stats
                         Text(Self.estimateNote)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
+                        Spacer(minLength: 0)
                     }
                     .padding(20)
                     controls
@@ -83,8 +85,29 @@ struct AdvancedSettingsView: View {
     /// The preview beside the controls in wide windows (iPad, iPhone in landscape).
     private var isSideBySide: Bool { size.width >= 900 || (size.width >= 640 && size.width > size.height) }
     private var controlsWidth: CGFloat { min(440, max(360, size.width * 0.4)) }
-    /// Pinned on top, the preview takes about a third of the height, so the controls keep room.
-    private var compactCardHeight: CGFloat { min(max(size.height * 0.36, 210), 360) }
+    /// Pinned on top, the preview takes about a third of the height, so the controls keep room;
+    /// less when the picture is wide enough not to need it.
+    private var compactCardHeight: CGFloat {
+        min(max(size.height * 0.36, 210), 360, fittedCardHeight(width: size.width - 32))
+    }
+
+    /// Beside the controls, the card is as tall as the picture needs, within the column.
+    private var sideCardHeight: CGFloat {
+        let room = size.height - 220
+        return max(240, min(room, fittedCardHeight(width: size.width - controlsWidth - 40)))
+    }
+
+    /// A card `width` wide that shows the whole picture with the canvas's margins and the
+    /// overlays above and below it.
+    private func fittedCardHeight(width: CGFloat) -> CGFloat {
+        let aspect: CGFloat
+        if let template = model.preview?.template, template.width > 0, template.height > 0 {
+            aspect = CGFloat(template.width) / CGFloat(template.height)
+        } else {
+            aspect = 4 / 3
+        }
+        return max(0, width - 32) / aspect + 2 * (AdvancedPreviewCard.overlayInset + 16) + 8
+    }
 
     private static var estimateNote: String {
         String(localized: "advanced.estimateNote",

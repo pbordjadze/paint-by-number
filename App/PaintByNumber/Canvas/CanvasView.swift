@@ -513,8 +513,17 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Zoom relative to the fitted canvas: 1 shows the whole painting.
     var relativeZoom: CGFloat { fitZoom > 0 ? scrollView.zoomScale / fitZoom : 1 }
 
-    /// Where the camera looks, so a canvas of another template of the same size can open there.
-    var camera: CanvasCamera { CanvasCamera(zoom: relativeZoom, center: visibleCenter) }
+    /// Where the camera looks (where a camera move in flight is heading), so a canvas of another
+    /// template of the same size can open there.
+    var camera: CanvasCamera {
+        guard let a = cameraAnimation, fitZoom > 0, a.toZoom > 0 else {
+            return CanvasCamera(zoom: relativeZoom, center: visibleCenter)
+        }
+        // View point = zoomed canvas point − content offset.
+        let avail = bounds.inset(by: chromeInsets)
+        let center = SIMD2(Float((a.toOffset.x + avail.midX) / a.toZoom), Float((a.toOffset.y + avail.midY) / a.toZoom))
+        return CanvasCamera(zoom: a.toZoom / fitZoom, center: center)
+    }
 
     /// Animates to `relative` times the fitted zoom, about the middle of the visible area.
     func zoom(toRelative relative: CGFloat) {

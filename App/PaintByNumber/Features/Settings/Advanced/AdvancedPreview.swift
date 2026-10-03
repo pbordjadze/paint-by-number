@@ -37,12 +37,11 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
     let preview: AdvancedSettingsModel.Preview
     let showsPainted: Bool
     let paperAppearance: PaperAppearance
+    let lineAppearance: LineAppearance
     let controller: PreviewCanvasController
     var onZoomChange: (CGFloat) -> Void
     var onUnavailable: () -> Void
 
-    /// Room for the overlays above and below the painting, in points.
-    static let overlayInset: CGFloat = 30
 
     final class Coordinator {
         var session: PaintingSession?
@@ -62,10 +61,14 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
         session.select(color: nil)
         let view = CanvasView(session: session)
         view.initialCamera = controller.camera(forWidth: template.width, height: template.height)
-        view.chromeInsets = UIEdgeInsets(top: Self.overlayInset, left: 0, bottom: Self.overlayInset, right: 0)
+        view.chromeInsets = UIEdgeInsets(
+            top: AdvancedPreviewCard.overlayInset, left: 0, bottom: AdvancedPreviewCard.overlayInset, right: 0)
         view.paperAppearance = paperAppearance
+        view.lineAppearance = lineAppearance
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.onZoomChange = onZoomChange
+        // The card is one VoiceOver element of its own; the canvas's areas and actions are for painting.
+        view.accessibilityElementsHidden = true
         context.coordinator.session = session
         context.coordinator.showsPainted = showsPainted
         controller.view = view
@@ -76,6 +79,8 @@ private struct AdvancedPreviewCanvas: UIViewRepresentable {
 
     func updateUIView(_ view: CanvasView, context: Context) {
         view.paperAppearance = paperAppearance
+        // Drawing only: the open canvas redraws at once.
+        view.lineAppearance = lineAppearance
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.onZoomChange = onZoomChange
         let coordinator = context.coordinator
@@ -108,7 +113,7 @@ private struct AdvancedRasterPreview: View {
                 Image(decorative: image, scale: 1)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .padding(.vertical, AdvancedPreviewCanvas.overlayInset + 16)
+                    .padding(.vertical, AdvancedPreviewCard.overlayInset + 16)
                     .padding(.horizontal, 16)
             }
         }
@@ -124,6 +129,9 @@ private struct AdvancedRasterPreview: View {
 /// The preview card: the canvas with the picture menu, a quiet progress cue, Template /
 /// Painted and the zoom levels floating over it.
 struct AdvancedPreviewCard: View {
+    /// Room for the overlays above and below the painting, in points.
+    static let overlayInset: CGFloat = 30
+
     @Bindable var model: AdvancedSettingsModel
     @Binding var showsPainted: Bool
     let zoom: CGFloat
@@ -146,7 +154,8 @@ struct AdvancedPreviewCard: View {
                     } else {
                         AdvancedPreviewCanvas(
                             preview: preview, showsPainted: showsPainted, paperAppearance: paperAppearance,
-                            controller: controller, onZoomChange: onZoomChange, onUnavailable: { canvasUnavailable = true })
+                            lineAppearance: model.appearance, controller: controller, onZoomChange: onZoomChange,
+                            onUnavailable: { canvasUnavailable = true })
                     }
                 }
                 .id(preview.id)
