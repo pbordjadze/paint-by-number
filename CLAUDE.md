@@ -381,7 +381,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the default. Copy Settings / Share with a Note hand over `AdvancedReport` (the JSON reproduces
   the preview of a library picture). Demo scenarios `settings-advanced` (+ `-dark`,
   `-long-text`), `settings-advanced-layered` (Line Appearance, 2×) and `settings-advanced-tuned`
-  (Pipeline, effects measured) register their settings instead of storing them.
+  (Pipeline, effects measured) register their settings instead of storing them. Its Sounds,
+  Haptics and Sparkles & Shine sections (`PaintingEffectsSections`) put each `PaintingEffect` (the
+  painting notes, the color finished jingle, the fanfare, the wrong-color sound, three haptics,
+  the fill sparkles, the finishing shine) on its own `@AppStorage` switch (absent means on), read
+  where it plays (`FeedbackEngine`, `CanvasView`) under Settings' Sounds and Haptics; Try buttons
+  play a sound or haptic once (`FeedbackEngine.preview`). Demo `settings-advanced-effects` (the
+  jingle off).
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (source language English; no translations yet, so the catalog
   is the translator hand-off) and the Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by

@@ -10,6 +10,8 @@ final class HapticsPlayer {
     private var lastPaint: ContinuousClock.Instant?
     private let clock = ContinuousClock()
 
+    var isSupported: Bool { supported }
+
     /// Paint spreading over a region. `strength` 0…1 (bigger regions feel heavier),
     /// `duration` matches the fill animation.
     func paint(strength: Float, duration: TimeInterval) {

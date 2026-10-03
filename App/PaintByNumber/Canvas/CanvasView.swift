@@ -802,9 +802,9 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     /// Finishing a color sweeps a gloss over it once its last fill has landed; finishing the
-    /// painting sweeps the whole canvas (not under Reduce Motion).
+    /// painting sweeps the whole canvas (not under Reduce Motion, nor with its switch off).
     private func celebrate(_ event: PaintEvent) {
-        guard !reduceMotion else { return }
+        guard !reduceMotion, PaintingEffect.finishShine.isEnabled() else { return }
         let delay: Float
         switch event {
         case let .colorCompleted(color):
@@ -859,9 +859,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     /// Two gold sparkles pop at the region's edge (on its label's free circle, which touches the
     /// outline) as the paint lands, then fade. Not during a fast stroke, nor where the region is
-    /// too small on screen for them to read.
+    /// too small on screen for them to read, nor with their switch off.
     private func popSparkles(at region: Int, after delay: Float) {
-        guard let label = template.labels(ofRegion: region).max(by: { $0.radius < $1.radius }) else { return }
+        guard PaintingEffect.fillSparkles.isEnabled(), let label = template.labels(ofRegion: region).max(by: { $0.radius < $1.radius }) else { return }
         let reach = CGFloat(label.radius) * currentCamera().zoom
         let start = CACurrentMediaTime()
         guard reach >= 10, start - lastSparkles > 0.3 else { return }

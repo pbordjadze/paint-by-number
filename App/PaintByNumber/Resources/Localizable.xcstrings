@@ -1049,6 +1049,234 @@
         }
       }
     },
+    "advanced.paintingEffect.colorJingle" : {
+      "comment" : "Settings › Advanced: switch for the little tune played when every area of a color is painted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Color Finished Jingle"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.colorJingle.summary" : {
+      "comment" : "Settings › Advanced: what the Color Finished Jingle switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A little rising tune when the last area of a color is painted."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.fillHaptics" : {
+      "comment" : "Settings › Advanced: switch for the vibration felt as paint lands",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill Haptics"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.fillHaptics.summary" : {
+      "comment" : "Settings › Advanced: what the Fill Haptics switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A swell you feel as paint lands, fuller for bigger areas."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.fillSparkles" : {
+      "comment" : "Settings › Advanced: switch for the two gold sparkles where an area is filled",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fill Sparkles"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.fillSparkles.summary" : {
+      "comment" : "Settings › Advanced: what the Fill Sparkles switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two gold sparkles pop where an area is filled."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishFanfare" : {
+      "comment" : "Settings › Advanced: switch for the cascade of notes played when the whole painting is finished",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting Finished Fanfare"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishFanfare.summary" : {
+      "comment" : "Settings › Advanced: what the Painting Finished Fanfare switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A cascade of notes when the whole painting is done."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishHaptics" : {
+      "comment" : "Settings › Advanced: switch for the vibrations felt when a color or the painting is finished",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finishing Haptics"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishHaptics.summary" : {
+      "comment" : "Settings › Advanced: what the Finishing Haptics switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bright taps when a color is finished, a rising shimmer when the painting is."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishShine" : {
+      "comment" : "Settings › Advanced: switch for the gloss that sweeps a finished color or painting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finishing Shine"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.finishShine.summary" : {
+      "comment" : "Settings › Advanced: what the Finishing Shine switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A gloss sweeps a color when it is finished, and the whole painting when it is done."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.paintNotes" : {
+      "comment" : "Settings › Advanced: switch for the musical note played each time paint lands",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting Notes"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.paintNotes.summary" : {
+      "comment" : "Settings › Advanced: what the Painting Notes switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A note of a gentle tune each time paint lands."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.try" : {
+      "comment" : "Settings › Advanced: VoiceOver label of the button that plays a sound or haptic once; the argument is its name, e.g. Color Finished Jingle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try %@"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.wrongColorHaptics" : {
+      "comment" : "Settings › Advanced: switch for the vibration felt when tapping an area that wants a different paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrong Color Haptics"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.wrongColorHaptics.summary" : {
+      "comment" : "Settings › Advanced: what the Wrong Color Haptics switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A soft double tap when an area wants a different paint."
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.wrongColorSound" : {
+      "comment" : "Settings › Advanced: switch for the sound of tapping an area that wants a different paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrong Color Sound"
+          }
+        }
+      }
+    },
+    "advanced.paintingEffect.wrongColorSound.summary" : {
+      "comment" : "Settings › Advanced: what the Wrong Color Sound switch does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A soft wooden knock when an area wants a different paint."
+          }
+        }
+      }
+    },
     "advanced.preset.custom" : {
       "comment" : "Settings › Advanced › Line Appearance: the layers' values match no preset; in shared settings text",
       "extractionState" : "manual",
@@ -1409,6 +1637,30 @@
         }
       }
     },
+    "advanced.section.flourishes" : {
+      "comment" : "Settings › Advanced: header of the section with switches for the canvas's sparkles and shine",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sparkles & Shine"
+          }
+        }
+      }
+    },
+    "advanced.section.haptics" : {
+      "comment" : "Settings › Advanced: header of the section with a switch for each haptic painting plays",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haptics"
+          }
+        }
+      }
+    },
     "advanced.section.lineArt" : {
       "comment" : "Settings › Advanced: header of the section on how a template's lines are made",
       "extractionState" : "manual",
@@ -1429,6 +1681,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pipeline"
+          }
+        }
+      }
+    },
+    "advanced.section.sounds" : {
+      "comment" : "Settings › Advanced: header of the section with a switch for each sound painting makes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sounds"
           }
         }
       }
@@ -2833,6 +3097,10 @@
       "comment" : "Settings toggle for vibration feedback while painting",
       "extractionState" : "manual"
     },
+    "Haptics are off in Settings, so none of these play." : {
+      "comment" : "Settings › Advanced: footer under the Haptics switches while Haptics is off in Settings",
+      "extractionState" : "manual"
+    },
     "Hex" : {
       "comment" : "Label of a row in a paint's details popover: the paint's hex color code, e.g. “#5A6B7C”",
       "extractionState" : "manual"
@@ -2923,6 +3191,10 @@
     },
     "Needs app update" : {
       "comment" : "Caption on the gallery card of a painting made by a newer version of the app",
+      "extractionState" : "manual"
+    },
+    "Neither shows while Reduce Motion is on." : {
+      "comment" : "Settings › Advanced: footer under the Fill Sparkles and Finishing Shine switches",
       "extractionState" : "manual"
     },
     "New Painting" : {
@@ -4473,6 +4745,10 @@
       "comment" : "Settings toggle for sound feedback while painting",
       "extractionState" : "manual"
     },
+    "Sounds are off in Settings, so none of these play." : {
+      "comment" : "Settings › Advanced: footer under the Sounds switches while Sounds is off in Settings",
+      "extractionState" : "manual"
+    },
     "Start Painting" : {
       "comment" : "Button of the create flow that saves the template and opens it for painting",
       "extractionState" : "manual"
@@ -4557,8 +4833,16 @@
       "comment" : "Footer under the Printed Templates paper size setting",
       "extractionState" : "manual"
     },
+    "They play in every painting as you paint." : {
+      "comment" : "Settings › Advanced: footer under the Sounds switches while Sounds is on in Settings",
+      "extractionState" : "manual"
+    },
     "This device can’t draw the painting right now. Your progress is saved." : {
       "comment" : "Message of the screen shown when the canvas can't be drawn",
+      "extractionState" : "manual"
+    },
+    "This device can’t play haptics." : {
+      "comment" : "Settings › Advanced: footer under the Haptics switches on a device without haptics, such as an iPad",
       "extractionState" : "manual"
     },
     "time.approximately" : {
@@ -4677,6 +4961,10 @@
       "comment" : "Message of a tip about painting several areas with one drag",
       "extractionState" : "manual"
     },
+    "Try" : {
+      "comment" : "Settings › Advanced: button under a sound or haptic switch that plays it once",
+      "extractionState" : "manual"
+    },
     "Try Again" : {
       "comment" : "Button in the time-lapse sheet after rendering failed",
       "extractionState" : "manual"
@@ -4715,6 +5003,10 @@
     },
     "With thanks to the museums and archives that share these pictures." : {
       "comment" : "Footer under the Pictures list in Acknowledgements",
+      "extractionState" : "manual"
+    },
+    "You feel them in every painting as you paint." : {
+      "comment" : "Settings › Advanced: footer under the Haptics switches while Haptics is on in Settings",
       "extractionState" : "manual"
     },
     "Your Photo" : {

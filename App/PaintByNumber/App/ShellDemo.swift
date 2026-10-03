@@ -39,6 +39,8 @@ import PaintCore
 ///   2×, scrolled to Line Appearance.
 /// - `settings-advanced-tuned`: the same with three pipeline multipliers moved, previewing the
 ///   red fox, scrolled to Pipeline with every effect measured.
+/// - `settings-advanced-effects`: the same at the defaults, scrolled to Sounds & Effects with
+///   the color finished jingle switched off.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -51,7 +53,8 @@ enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
          galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createSuggested, createCustom, createFromFile, settings,
-         settingsLongText, settingsAcknowledgements, settingsAdvanced, settingsAdvancedLayered, settingsAdvancedTuned
+         settingsLongText, settingsAcknowledgements, settingsAdvanced, settingsAdvancedLayered, settingsAdvancedTuned,
+         settingsAdvancedEffects
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -79,6 +82,7 @@ enum ShellDemo: Equatable {
         case "settings-advanced", "settings-advanced-dark", "settings-advanced-long-text": .settingsAdvanced
         case "settings-advanced-layered": .settingsAdvancedLayered
         case "settings-advanced-tuned": .settingsAdvancedTuned
+        case "settings-advanced-effects": .settingsAdvancedEffects
         default: nil
         }
     }()
@@ -133,12 +137,15 @@ enum ShellDemo: Equatable {
         self == .settings || self == .settingsLongText || self == .settingsAcknowledgements || opensAdvanced
     }
 
-    var opensAdvanced: Bool { self == .settingsAdvanced || self == .settingsAdvancedLayered || self == .settingsAdvancedTuned }
+    var opensAdvanced: Bool {
+        self == .settingsAdvanced || self == .settingsAdvancedLayered || self == .settingsAdvancedTuned
+            || self == .settingsAdvancedEffects
+    }
 
     /// The library picture Settings › Advanced previews.
     var advancedPicture: String? {
         switch self {
-        case .settingsAdvanced: "great-wave"
+        case .settingsAdvanced, .settingsAdvancedEffects: "great-wave"
         case .settingsAdvancedLayered: "santa-fe-freight"
         case .settingsAdvancedTuned: "red-fox"
         default: nil
@@ -150,6 +157,7 @@ enum ShellDemo: Equatable {
         switch self {
         case .settingsAdvancedLayered: "advanced-appearance"
         case .settingsAdvancedTuned: "advanced-pipeline"
+        case .settingsAdvancedEffects: "advanced-effects"
         default: nil
         }
     }
@@ -209,6 +217,8 @@ enum ShellDemo: Equatable {
             register(LineArtSettings(style: .layered), forKey: SettingsKey.lineArt)
         case .settingsAdvancedTuned:
             register(PipelineTuning(smoothing: 1.5, minimumCellSize: 2, accentColors: 0.5), forKey: SettingsKey.pipelineTuning)
+        case .settingsAdvancedEffects:
+            UserDefaults.standard.register(defaults: [PaintingEffect.colorJingle.key: false])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings, .settingsLongText,
              .settingsAcknowledgements, .settingsAdvanced:
