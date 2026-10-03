@@ -390,11 +390,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the default. Copy Settings / Share with a Note hand over `AdvancedReport` (the JSON reproduces
   the preview of a library picture); Paste Settings (the system `PasteButton`, no permission prompt)
   reads it back through `AdvancedReport.settings(in:)`: the JSON object in the text, each of its three
-  groups optional and tolerant, clamped; groups it leaves out stay. Presets are such text:
-  `docs/presets/` (`coloring-book.json`: closed cells, every line an outline that stays over the
-  paint, measured in its README). Demo scenarios `settings-advanced` (+ `-dark`,
-  `-long-text`), `settings-advanced-layered` (Line Appearance, 2×) and `settings-advanced-tuned`
-  (Pipeline, effects measured) register their settings instead of storing them. Its Sounds,
+  groups optional and tolerant, clamped; groups it leaves out stay. The Presets row (`AdvancedPreset`:
+  Defaults, Coloring Book) sets all three groups at once, the one the settings match marked; a
+  preset's values live in Swift only (Coloring Book: closed cells, every line an outline that stays
+  over the paint, measured in `docs/presets/README.md`). Demo scenarios `settings-advanced` (+ `-dark`,
+  `-long-text`), `settings-advanced-layered` (Line Appearance, 2×), `settings-advanced-tuned`
+  (Pipeline, effects measured) and `settings-advanced-coloring-book` (the preset on the fox)
+  register their settings instead of storing them. Its Sounds,
   Haptics and Sparkles & Shine sections (`PaintingEffectsSections`) put each `PaintingEffect` (the
   painting notes, the color finished jingle, the fanfare, the wrong-color sound, three haptics,
   the fill sparkles, the finishing shine) on its own `@AppStorage` switch (absent means on), read

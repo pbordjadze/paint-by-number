@@ -126,6 +126,7 @@ struct AdvancedSettingsView: View {
         ScrollViewReader { proxy in
             Form {
                 introSection
+                presetsSection
                 lineArtSection
                 LineAppearanceSection(model: model, zoom: zoom) { level in controller.zoom(to: CGFloat(level)) }
                 pipelineSection
@@ -169,6 +170,18 @@ struct AdvancedSettingsView: View {
             if !isSideBySide {
                 Text(Self.estimateNote)
             }
+        }
+    }
+
+    private var presetsSection: some View {
+        Section {
+            AdvancedPresetRow(model: model)
+                .id("advanced-presets")
+        } header: {
+            Text(String(localized: "advanced.section.presets", defaultValue: "Presets",
+                        comment: "Settings › Advanced: header of the section whose presets set Line Art, Line Appearance and Pipeline at once"))
+        } footer: {
+            Text("A preset sets Line Art, Line Appearance and Pipeline at once; every setting can still be changed after.")
         }
     }
 

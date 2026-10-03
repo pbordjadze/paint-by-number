@@ -1,6 +1,10 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A preset sets Line Art, Line Appearance and Pipeline at once; every setting can still be changed after." : {
+      "comment" : "Settings › Advanced: footer under the Presets section",
+      "extractionState" : "manual"
+    },
     "About" : {
       "comment" : "Header of the About section in Settings",
       "extractionState" : "manual"
@@ -1301,6 +1305,30 @@
         }
       }
     },
+    "advanced.preset.coloringBook" : {
+      "comment" : "Settings › Advanced › Presets: the preset that makes closed, outlined cells whose lines stay over the paint, like a coloring book",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coloring Book"
+          }
+        }
+      }
+    },
+    "advanced.preset.coloringBook.summary" : {
+      "comment" : "Settings › Advanced › Presets: what the Coloring Book preset does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closed cells with solid outlines that stay over the paint, and nothing drawn inside a cell."
+          }
+        }
+      }
+    },
     "advanced.preset.custom" : {
       "comment" : "Settings › Advanced › Line Appearance: the layers' values match no preset; in shared settings text",
       "extractionState" : "manual",
@@ -1321,6 +1349,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your own values for each layer."
+          }
+        }
+      }
+    },
+    "advanced.preset.defaults" : {
+      "comment" : "Settings › Advanced › Presets: the preset of the app's own settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Defaults"
+          }
+        }
+      }
+    },
+    "advanced.preset.defaults.summary" : {
+      "comment" : "Settings › Advanced › Presets: what the Defaults preset is",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app’s own settings."
           }
         }
       }
@@ -1637,6 +1689,30 @@
         }
       }
     },
+    "advanced.presets.custom.summary" : {
+      "comment" : "Settings › Advanced › Presets: under the presets when the settings match none of them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your own mix of settings."
+          }
+        }
+      }
+    },
+    "advanced.presets.title" : {
+      "comment" : "Settings › Advanced: before the name of the preset the settings match, in shared settings text, e.g. Preset Coloring Book",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preset"
+          }
+        }
+      }
+    },
     "advanced.section.appearance" : {
       "comment" : "Settings › Advanced: header of the section on how layered lines are drawn at each zoom",
       "extractionState" : "manual",
@@ -1705,6 +1781,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pipeline"
+          }
+        }
+      }
+    },
+    "advanced.section.presets" : {
+      "comment" : "Settings › Advanced: header of the section whose presets set Line Art, Line Appearance and Pipeline at once",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Presets"
           }
         }
       }

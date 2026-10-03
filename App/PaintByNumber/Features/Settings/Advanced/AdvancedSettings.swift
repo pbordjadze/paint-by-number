@@ -290,6 +290,51 @@ nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Senda
     }
 }
 
+/// Starting points for the whole screen: Line Art, Line Appearance and Pipeline at once
+/// (Settings › Advanced › Presets). A preset is the single source of its values; Copy Settings
+/// with one active gives the text that pastes it into another build.
+nonisolated enum AdvancedPreset: String, CaseIterable, Identifiable, Sendable {
+    /// The app's own settings.
+    case defaults
+    /// The look of a coloring book: closed cells bounded by solid lines that stay over the
+    /// paint, nothing drawn inside a cell, the paints inside an outline divided only by color
+    /// edges. Every threshold at 0.6 makes each drawn line an outline (busy areas demote to
+    /// detail, drawn almost as strong); Always Split keeps every line a cell boundary; a longer
+    /// shortest line and gap closing close cells; 1.5× smoothing, texture flattening and
+    /// smallest area flatten the paint. Measured on ten pictures in `docs/presets/README.md`.
+    case coloringBook
+
+    var id: String { rawValue }
+
+    /// Every group the preset sets.
+    var settings: AdvancedReport.Imported {
+        switch self {
+        case .defaults:
+            AdvancedReport.Imported(lineArt: LineArtSettings(), tuning: PipelineTuning(), lineAppearance: .default)
+        case .coloringBook:
+            AdvancedReport.Imported(
+                lineArt: LineArtSettings(
+                    style: .layered, outlineThreshold: 0.6, detailThreshold: 0.6, textureThreshold: 0.6,
+                    minimumStrokeLength: 36, gapBridging: 16, lineSmoothing: 0.7, samePaint: .split),
+                tuning: PipelineTuning(smoothing: 1.5, textureFlattening: 1.5, minimumCellSize: 1.5),
+                lineAppearance: LineAppearance(
+                    outline: .init(opacity: [1, 1, 1], width: [1.3, 1.3, 1.35], painted: 1),
+                    detail: .init(opacity: [0.85, 0.9, 0.95], width: [1.1, 1.1, 1.15], painted: 0.85),
+                    texture: .init(opacity: [0.7, 0.8, 0.9], width: [1, 1, 1.05], painted: 0.7),
+                    color: .init(opacity: [0.35, 0.5, 0.65], width: [0.75, 0.8, 0.9], painted: 0),
+                    weighted: false))
+        }
+    }
+
+    /// The preset whose settings these are (as generation uses them), if any.
+    static func matching(lineArt: LineArtSettings, tuning: PipelineTuning, appearance: LineAppearance) -> AdvancedPreset? {
+        allCases.first { preset in
+            let s = preset.settings
+            return s.lineArt == lineArt.normalized && s.tuning == tuning.normalized && s.lineAppearance == appearance.normalized
+        }
+    }
+}
+
 /// The text Copy Settings and Share with a Note hand over: what the painter saw (picture,
 /// numbers, every setting that differs from its default, their note) and the settings as JSON,
 /// which reproduce the preview exactly for a library picture (generation is deterministic).

@@ -444,6 +444,64 @@ struct SensitivityBand: View {
     }
 }
 
+/// One choice of a presets row: a capsule, filled on the signature color while chosen.
+struct PresetCapsule: View {
+    let title: String
+    let summary: String
+    let isSelected: Bool
+    let identifier: String
+    var action: () -> Void
+
+    var body: some View {
+        Button {
+            guard !isSelected else { return }
+            FeedbackEngine.shared.selectionChanged()
+            withAnimation(.snappy) { action() }
+        } label: {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(isSelected ? Theme.signature : Color.primary.opacity(0.07), in: .capsule)
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text(summary))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityIdentifier(identifier)
+    }
+}
+
+/// Presets of the whole screen (`AdvancedPreset`), the one the settings match marked, with a
+/// line on what it does.
+struct AdvancedPresetRow: View {
+    let model: AdvancedSettingsModel
+
+    var body: some View {
+        let current = model.currentPreset
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                ForEach(AdvancedPreset.allCases) { preset in
+                    PresetCapsule(
+                        title: preset.name, summary: preset.summary, isSelected: current == preset,
+                        identifier: "advanced-preset-\(preset.rawValue)"
+                    ) { model.apply(preset) }
+                }
+            }
+            Text(current?.summary ?? String(
+                localized: "advanced.presets.custom.summary", defaultValue: "Your own mix of settings.",
+                comment: "Settings › Advanced › Presets: under the presets when the settings match none of them"))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 /// Line Appearance: presets, how each layer looks at 1×, 2× and 4×, and per layer the opacity
 /// and width at those zooms.
 struct LineAppearanceSection: View {
@@ -492,26 +550,10 @@ struct LineAppearanceSection: View {
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 ForEach(LineAppearancePreset.allCases) { preset in
-                    let selected = current == preset
-                    Button {
-                        guard !selected else { return }
-                        FeedbackEngine.shared.selectionChanged()
-                        withAnimation(.snappy) { model.apply(preset) }
-                    } label: {
-                        Text(preset.name)
-                            .font(.subheadline.weight(.semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .foregroundStyle(selected ? Color.white : Color.primary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(selected ? Theme.signature : Color.primary.opacity(0.07), in: .capsule)
-                            .contentShape(.capsule)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityHint(Text(preset.summary))
-                    .accessibilityAddTraits(selected ? .isSelected : [])
-                    .accessibilityIdentifier("advanced-preset-\(preset.rawValue)")
+                    PresetCapsule(
+                        title: preset.name, summary: preset.summary, isSelected: current == preset,
+                        identifier: "advanced-preset-\(preset.rawValue)"
+                    ) { model.apply(preset) }
                 }
             }
             Text(current?.summary ?? String(

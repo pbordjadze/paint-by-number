@@ -1,16 +1,13 @@
 # Advanced settings presets
 
-A preset is text that Settings › Advanced › Paste Settings reads: the JSON object that Copy
-Settings writes (`AdvancedReport.Snapshot`), or any object with some of its three groups,
-`lineArt`, `tuning` and `lineAppearance`. A group names only the fields it changes; the
-others keep their defaults. A group the text leaves out stays as the painter has it. Values
-beyond a setting's range are clamped.
+Settings › Advanced › Presets sets Line Art, Line Appearance and Pipeline at once
+(`AdvancedPreset`, the single source of each preset's values). Any other mix of settings
+travels as text: Copy Settings writes a JSON object (`AdvancedReport.Snapshot`), and Paste
+Settings reads one back: an object with some of the three groups, `lineArt`, `tuning` and
+`lineAppearance`, each naming only the fields it changes (the others keep their defaults), a
+group left out staying as the painter has it, values beyond a setting's range clamped.
 
-To import one on a device: copy the whole JSON file (or the lines between the braces), open
-Settings › Advanced, scroll to Feedback and tap Paste. The preview regenerates with the
-settings; Reset All Settings undoes it.
-
-## Coloring Book (`coloring-book.json`)
+## Coloring Book
 
 The look of a coloring-book app (Happy Color and the like): closed cells bounded by solid
 lines, no lines dangling inside a cell, the areas inside an outline divided only by their
@@ -27,7 +24,7 @@ portrait) with HED maps at the app's size and Suggested settings at Relaxed:
 | Shortest Line | 36 px | specks never become cells |
 | Gap Closing | 16 px | open strokes reach further for a line, paint boundary or the frame, so cells close |
 | Line Smoothing | 70 % | flowing curves |
-| Same Paint Across a Line | Always Split | every line bounds a cell; nothing is drawn inside one. Lines drawn inside cells went from 5–71 per picture at the defaults to 0–2 |
+| Same Paint Across a Line | Always Split | every line bounds a cell; nothing is drawn inside one. Lines drawn inside cells went from 5–71 per picture at the defaults to none (the pipeline also drops the 2–5 unit slivers trimming used to leave, pipeline version 4) |
 | Keep Color Edges | On | the paints inside an outline stay separate areas (faint color edges, no drawn line) |
 | Outline Eyes | On | eyes as closed outlines with an iris |
 | Smoothing, Texture Flattening, Smallest Area | 1.5× | flatter paint, fewer small color cells (a fifth to a quarter fewer areas) |

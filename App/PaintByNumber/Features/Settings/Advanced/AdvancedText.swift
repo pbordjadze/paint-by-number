@@ -17,6 +17,12 @@ nonisolated enum AdvancedText {
                comment: "Settings › Advanced › Line Appearance: switch that draws stronger edges heavier within each layer")
     }
 
+    /// The word before a preset's name in shared settings text ("Preset Coloring Book").
+    static var presetTitle: String {
+        String(localized: "advanced.presets.title", defaultValue: "Preset",
+               comment: "Settings › Advanced: before the name of the preset the settings match, in shared settings text, e.g. Preset Coloring Book")
+    }
+
     /// Line Appearance's slider for how much of a layer's lines stays once both sides are painted.
     static func paintedTitle(of layer: LineLayer) -> String {
         let name = layer.name
@@ -334,6 +340,27 @@ nonisolated extension LineLayer {
                               comment: "Settings › Advanced: the layer of the faintest drawn lines")
         case .color: String(localized: "advanced.layer.color", defaultValue: "Color Edges",
                             comment: "Settings › Advanced: the layer of boundaries where only the paint changes")
+        }
+    }
+}
+
+nonisolated extension AdvancedPreset {
+    var name: String {
+        switch self {
+        case .defaults: String(localized: "advanced.preset.defaults", defaultValue: "Defaults",
+                               comment: "Settings › Advanced › Presets: the preset of the app's own settings")
+        case .coloringBook: String(localized: "advanced.preset.coloringBook", defaultValue: "Coloring Book",
+                                   comment: "Settings › Advanced › Presets: the preset that makes closed, outlined cells whose lines stay over the paint, like a coloring book")
+        }
+    }
+
+    var summary: String {
+        switch self {
+        case .defaults: String(localized: "advanced.preset.defaults.summary", defaultValue: "The app’s own settings.",
+                               comment: "Settings › Advanced › Presets: what the Defaults preset is")
+        case .coloringBook: String(localized: "advanced.preset.coloringBook.summary",
+                                   defaultValue: "Closed cells with solid outlines that stay over the paint, and nothing drawn inside a cell.",
+                                   comment: "Settings › Advanced › Presets: what the Coloring Book preset does")
         }
     }
 }

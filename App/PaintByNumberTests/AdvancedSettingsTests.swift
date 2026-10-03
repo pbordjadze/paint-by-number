@@ -152,6 +152,36 @@ struct AdvancedSettingsTests {
         }
     }
 
+    /// A preset of the whole screen sets every group, is recognized until a setting moves,
+    /// survives its own normalization and the text Copy Settings writes for it.
+    @Test func presetsSetEveryGroupAndAreRecognized() throws {
+        let (defaults, suite) = try Self.makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"))
+        #expect(model.currentPreset == .defaults)
+        model.apply(.coloringBook)
+        let book = AdvancedPreset.coloringBook.settings
+        #expect(model.currentPreset == .coloringBook)
+        #expect(model.lineArt == book.lineArt && model.tuning == book.tuning && model.appearance == book.lineAppearance)
+        let stored = Preferences(defaults: defaults)
+        #expect(stored.lineArt == book.lineArt && stored.tuning == book.tuning && stored.lineAppearance == book.lineAppearance)
+        #expect(book.lineArt?.normalized == book.lineArt && book.tuning?.normalized == book.tuning
+                    && book.lineAppearance?.normalized == book.lineAppearance)
+        #expect(model.changes.first == "Preset Coloring Book")
+        let snapshot = try AdvancedReport.Snapshot(
+            app: "1.0 (1)", picture: "parrots", paintingLength: "relaxed", lineArt: #require(book.lineArt),
+            tuning: #require(book.tuning), lineAppearance: #require(book.lineAppearance), preview: nil, defaults: nil)
+        let text = AdvancedReport.text(snapshot: snapshot, pictureTitle: "Parrots", summary: nil, changes: model.changes, note: "")
+        #expect(AdvancedReport.settings(in: text) == book)
+
+        model.set(.minimumCellSize, to: 2)
+        #expect(model.currentPreset == nil)
+        #expect(model.changes.first != "Preset Coloring Book")
+        model.apply(.defaults)
+        #expect(model.currentPreset == .defaults && model.currentKey == .defaults && model.isAppearanceDefault)
+        #expect(model.changes.isEmpty)
+    }
+
     @Test func pastedSettingsApplyStoreAndReport() throws {
         let (defaults, suite) = try Self.makeDefaults()
         defer { defaults.removePersistentDomain(forName: suite) }

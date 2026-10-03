@@ -305,6 +305,11 @@ final class AdvancedSettingsModel {
 
     func apply(_ preset: LineAppearancePreset) { appearance = preset.applied(to: appearance) }
 
+    /// The preset of the whole screen the settings match, if any.
+    var currentPreset: AdvancedPreset? { AdvancedPreset.matching(lineArt: lineArt, tuning: tuning, appearance: appearance) }
+
+    func apply(_ preset: AdvancedPreset) { apply(preset.settings) }
+
     /// Takes on pasted settings (`AdvancedReport.settings(in:)`): every group the text had; the
     /// others stay as they are.
     func apply(_ imported: AdvancedReport.Imported) {
@@ -315,9 +320,13 @@ final class AdvancedSettingsModel {
 
     // MARK: Feedback
 
-    /// Every setting that differs from its default, worded ("Smallest Area 2×").
+    /// Every setting that differs from its default, worded ("Smallest Area 2×"), after the
+    /// preset they add up to, if any.
     var changes: [String] {
         var list: [String] = []
+        if let preset = currentPreset, preset != .defaults {
+            list.append(Self.change(AdvancedText.presetTitle, preset.name))
+        }
         for control in AdvancedControl.allCases where isChanged(control) && (!control.isLayeredOnly || lineArt.style == .layered) {
             list.append(Self.change(control.title, valueText(of: control)))
         }
