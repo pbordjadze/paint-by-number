@@ -427,6 +427,165 @@ struct LayeredLinesTests {
         record(try #require(ctx.makeImage()), "layered-parrots-pdf-page1")
     }
 
+    // MARK: Coloring book
+
+    /// The mosaic as a coloring book: the same lines, drawn as a drawing.
+    static let book: Template = {
+        var t = mosaic
+        t.lineArt!.style = .coloringBook
+        return t
+    }()
+
+    @Test func coloringBookAppearanceAndUniforms() throws {
+        // The weight is tolerant: missing or out of range falls back to 1.
+        var heavy = LineAppearance.default
+        heavy.coloringBookWeight = 1.5
+        let data = try JSONEncoder().encode(heavy)
+        #expect(LineAppearance.decoded(data) == heavy && heavy != .default)
+        #expect(LineAppearance.decoded(Data(#"{"coloringBookWeight": 9}"#.utf8)).coloringBookWeight == 1)
+        #expect(LineAppearance.decoded(Data("{}".utf8)) == .default)
+        // The canvas's book line: three times the classic line fitted, growing slower than the zoom.
+        #expect(ColoringBookLook.widthPoints(depth: 0, weight: 1) == 3 * LineStyle.classicWidthPoints(depth: 0))
+        #expect(ColoringBookLook.widthPoints(depth: 2, weight: 1) < 4 * ColoringBookLook.widthPoints(depth: 0, weight: 1))
+        #expect(ColoringBookLook.widthPoints(depth: 1, weight: 2) == 2 * ColoringBookLook.widthPoints(depth: 1, weight: 1))
+        // Uniforms: full ink on every drawn layer, none on color edges, one width, the book mode.
+        var u = CanvasUniforms()
+        u.ink.w = 0.5
+        u.setColoringBookLines(width: 4)
+        #expect(u.lineAlpha == SIMD4(1, 1, 1, 0) && u.lineWidth == SIMD4(4, 4, 4, 0) && u.lineMode == SIMD4(0, 1, 0, 0))
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: Self.book, context: context))
+        #expect(scene.isLayered && scene.lineArtStyle == .coloringBook)
+        #expect(try #require(CanvasScene(template: Self.mosaic, context: context)).lineArtStyle == .layered)
+        #expect(try #require(CanvasScene(template: CanvasRenderTests.template, context: context)).lineArtStyle == nil)
+        var options = CanvasSnapshot.Options.preview
+        options.lineAppearance = heavy
+        let s = CanvasSnapshot.uniforms(scene: scene, width: 240, height: 320, options: options)
+        #expect(s.lineMode.y == 1 && s.lineAlpha == SIMD4(1, 1, 1, 0))
+        #expect(abs(s.lineWidth.x - s.outline.x * ColoringBookLook.widthFactor * 1.5) < 1e-4)
+    }
+
+    /// The drawing is drawn in full ink on every drawn layer, color edges not at all; nothing
+    /// changes with a selection, and the drawing stays over painted cells.
+    @Test func coloringBookDrawsTheDrawingOverEverything() throws {
+        let t = Self.book
+        let art = try #require(t.lineArt)
+        let size = CGSize(width: t.width * 2, height: t.height * 2)
+        var options = CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: 1.5)
+        options.lineAppearance = .default
+        func render(_ options: CanvasSnapshot.Options, progress: PaintProgress? = nil) throws -> Pixels {
+            Pixels(try #require(CanvasSnapshot.render(template: t, progress: progress, size: size, options: options)))
+        }
+        let blank = try render(options)
+        record(try #require(CanvasSnapshot.render(template: t, progress: nil, size: size, options: options)), "book-mosaic")
+        let darkness = layerDarkness(blank, t, scale: 2)
+        let paper = luma(encoded(CanvasPalette.light.paper))
+        #expect(darkness[3] < 8, "color edges are not drawn: \(darkness)")
+        for layer in 0..<3 {
+            #expect(darkness[layer] > paper - 90, "layer \(layer) in full ink: \(darkness)")
+            #expect(abs(darkness[layer] - darkness[0]) < 8, "every drawn layer alike: \(darkness)")
+        }
+        // A selection hatches its cells (the hatch ink is far lighter than the line ink) but
+        // outlines nothing: no color edge of a selected cell gets a line.
+        let color = 1
+        var selecting = options
+        selecting.highlight = color
+        let selected = try render(selecting)
+        record(try #require(CanvasSnapshot.render(template: t, progress: nil, size: size, options: selecting)), "book-mosaic-selected")
+        var hatchedEdges = 0
+        for (e, edge) in t.edges.enumerated()
+        where edge.right != BoundaryEdge.outside && edge.pointCount >= 3 && art.edgeLayers[e] == LineLayer.color.rawValue
+            && [edge.left, edge.right].contains(where: { t.regions[Int($0)].colorIndex == UInt32(color) }) {
+            let p = t.points[Int(edge.pointStart + edge.pointCount / 2)]
+            #expect(darkest(selected, Int(p.x * 2), Int(p.y * 2)) > 100, "edge \(e) of a selected cell is outlined")
+            hatchedEdges += 1
+        }
+        #expect(hatchedEdges > 5)
+        let afterSelection = layerDarkness(selected, t, scale: 2)
+        for layer in 0..<3 { #expect(abs(afterSelection[layer] - darkness[layer]) < 8) }
+        // Painting everything leaves the drawing, strokes included, where it was.
+        var done = PaintProgress(regionCount: t.regions.count)
+        for r in t.regions.indices { done.paint(r) }
+        let painted = try render(options, progress: done)
+        let afterPaint = layerDarkness(painted, t, scale: 2)
+        for layer in 0..<3 { #expect(afterPaint[layer] > paper - 90, "layer \(layer) stays over the paint: \(afterPaint)") }
+        for stroke in art.strokes {
+            let p = art.strokePoints[Int(stroke.pointStart) + 1]
+            #expect(luma(painted[Int(p.x * 2), Int(p.y * 2)]) < paper - 60, "stroke in region \(stroke.region) stays")
+        }
+        // Without outlines asked for (the painting as painted so far), the drawing still shows.
+        var painting = CanvasSnapshot.Options.painting
+        painting.lineAppearance = .default
+        let picture = try render(painting, progress: done)
+        #expect(layerDarkness(picture, t, scale: 2)[0] > paper - 90)
+    }
+
+    @Test func coloringBookPicturesAndPrint() throws {
+        // Stripes: separator 1 is an outline, separator 2 a color boundary, a detail stroke runs
+        // down the middle of stripe 0.
+        var t = Fixtures.stripes(count: 3, stripeWidth: 40, height: 40)
+        var layers = Array(repeating: LineLayer.color.rawValue, count: t.edges.count)
+        layers[1] = LineLayer.outline.rawValue
+        t.lineArt = TemplateLineArt(
+            edgeLayers: layers, edgeWeights: Array(repeating: 128, count: t.edges.count),
+            strokePoints: [SIMD2(20, 6), SIMD2(20, 34)],
+            strokes: [InteriorStroke(pointStart: 0, pointCount: 2, layer: LineLayer.detail.rawValue, weight: 128, region: 0)],
+            style: .coloringBook)
+        func column(_ style: TemplateRasterizer.Style, _ x: Int, painted: [Bool]? = nil, y: Int = 30 * 4) throws -> Int {
+            let image = try #require(TemplateRasterizer.image(t, painted: painted, style: style, maxPixelSize: 480))
+            let pixels = PixelReader(image)
+            return ((x - 4)...(x + 4)).map { luma(pixels[$0, y]) }.min() ?? 255
+        }
+        // Every screen style: the outline and the stroke in full ink, the color edge invisible
+        // (no darker than the stripes beside it), painted or not; the painted preview (no lines)
+        // and the finished picture too.
+        for style in [TemplateRasterizer.Style.template, .thumbnail, .finished, .painting] {
+            var screen = style
+            screen.lines = .screen(.default, zoom: 1)
+            let outline = try column(screen, 160), color = try column(screen, 320), stroke = try column(screen, 80)
+            #expect(outline < 60 && stroke < 60, "\(style.outlineWidth): outline \(outline), stroke \(stroke)")
+            let beside = min(try column(screen, 296), try column(screen, 344))
+            #expect(color >= beside - 2, "no color edge: \(color) vs \(beside)")
+            let painted = try column(screen, 160, painted: [true, true, false]), paintedStroke = try column(screen, 80, painted: [true, true, false])
+            #expect(painted < 60 && paintedStroke < 60, "the drawing stays over the paint")
+        }
+        // Print: the drawing in full ink, and dotted guides along the color edge.
+        var print = TemplateRasterizer.Style.printable
+        print.outlineWidth = 3
+        let printed = try #require(TemplateRasterizer.image(t, style: print, maxPixelSize: 480))
+        let pixels = PixelReader(printed)
+        let outline = (156...164).map { luma(pixels[$0, 120]) }.min() ?? 255
+        #expect(outline < 60)
+        let guide = (0..<160).map { y in (316...324).map { luma(pixels[$0, y]) }.min() ?? 255 }
+        #expect(guide.min()! < 200 && guide.filter { $0 > 240 }.count > 10, "dotted: \(guide.min()!) with \(guide.filter { $0 > 240 }.count) gaps")
+        Attachment.record(try #require(ImageCodec.pngData(printed)), named: "book-stripes-print.png")
+    }
+
+    @Test func coloringBookPicturesForReview() throws {
+        let url = try #require(Bundle.main.url(forResource: "red-fox", withExtension: "jpg"))
+        let photo = try PhotoLoader.load(url: url, maxPixelSize: 640)
+        var settings = GenerationSettings(colorCount: 18, detail: 0.4)
+        settings.lineArt.style = .coloringBook
+        let t = try TemplateGenerator(settings: settings)
+            .generate(from: photo, lineArt: LineArtInput(edges: SyntheticTemplate.edgeMap(for: photo)), cancel: .none).template
+        #expect(t.lineArt?.style == .coloringBook)
+        let size = CanvasSnapshot.fittedSize(for: t, longSide: 1600)
+        var progress = PaintProgress(regionCount: t.regions.count)
+        for r in t.regions.indices where t.regions[r].colorIndex % 2 == 0 { progress.paint(r) }
+        var options = CanvasSnapshot.Options.preview
+        options.lineAppearance = .default
+        options.highlight = 1
+        record(try #require(CanvasSnapshot.render(template: t, progress: progress, size: size, options: options)), "book-fox-canvas")
+        var thumbnail = TemplateRasterizer.Style.thumbnail
+        thumbnail.lines = .screen(.default, zoom: 1)
+        Attachment.record(try #require(TemplateRasterizer.pngData(t, painted: progress.painted, style: thumbnail, maxPixelSize: 1024)), named: "book-fox-thumbnail.png")
+        var finished = TemplateRasterizer.Style.finished
+        finished.lines = .screen(.default, zoom: 1)
+        Attachment.record(try #require(TemplateRasterizer.pngData(t, style: finished, maxPixelSize: 1600)), named: "book-fox-finished.png")
+        let pdf = PDFExporter.document(for: t, title: "Red Fox", paper: .a4)
+        Attachment.record(pdf, named: "book-fox.pdf")
+    }
+
     // MARK: Helpers
 
     /// Mean darkness (paper luma minus the darkest pixel around an edge's middle point) of the

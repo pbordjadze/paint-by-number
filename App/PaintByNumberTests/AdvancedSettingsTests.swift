@@ -48,7 +48,23 @@ struct AdvancedSettingsTests {
         for control in AdvancedControl.lineArt {
             #expect(!control.isChanged(in: classicKey), "\(control) counts under classic lines")
         }
-        #expect(AdvancedControl.lineArt.filter { !$0.isLayeredOnly } == [.style])
+        #expect(AdvancedControl.lineArt.filter { !$0.needsEdgeMap } == [.style])
+        // A coloring book reads everything but the texture threshold, and joining across its
+        // (absent) texture lines is splitting.
+        var book = Self.changedArt
+        book.style = .coloringBook
+        let bookKey = GenerationKey(lineArt: book, tuning: PipelineTuning())
+        #expect(AdvancedControl.lineArt.filter { !$0.applies(to: .coloringBook) } == [.textureThreshold])
+        #expect(!AdvancedControl.textureThreshold.isChanged(in: bookKey))
+        for control in AdvancedControl.lineArt where control != .textureThreshold && control != .samePaint {
+            #expect(control.isChanged(in: bookKey), "\(control) under a coloring book")
+        }
+        var joined = LineArtSettings(style: .coloringBook, samePaint: .joinTexture)
+        let split = GenerationKey(lineArt: LineArtSettings(style: .coloringBook, samePaint: .split), tuning: PipelineTuning())
+        #expect(GenerationKey(lineArt: joined, tuning: PipelineTuning()) == split)
+        joined.samePaint = .joinAllButOutlines
+        #expect(GenerationKey(lineArt: joined, tuning: PipelineTuning()) != split)
+        #expect(AdvancedControl.style.value(lineArt: book, tuning: PipelineTuning()) == 2)
     }
 
     @Test func slidersMapValuesAndCatchTheDefault() throws {

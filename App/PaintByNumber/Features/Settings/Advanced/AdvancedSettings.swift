@@ -3,14 +3,24 @@ import PaintCore
 
 /// What a preview of Settings › Advanced is generated with: the two groups of settings that
 /// change templates, canonical, so that settings giving the same template share a key. Classic
-/// line art ignores every other line art setting, so classic keys carry the default ones.
+/// line art ignores every other line art setting, so classic keys carry the default ones; a
+/// coloring book ignores the texture threshold and has no texture lines to join across.
 nonisolated struct GenerationKey: Hashable, Sendable {
     let lineArt: LineArtSettings
     let tuning: PipelineTuning
 
     init(lineArt: LineArtSettings, tuning: PipelineTuning) {
-        let art = lineArt.normalized
-        self.lineArt = art.style == .classic ? LineArtSettings() : art
+        var art = lineArt.normalized
+        switch art.style {
+        case .classic:
+            art = LineArtSettings()
+        case .coloringBook:
+            art.textureThreshold = min(art.detailThreshold, LineArtSettings().textureThreshold)
+            if art.samePaint == .joinTexture { art.samePaint = .split }
+        case .layered:
+            break
+        }
+        self.lineArt = art
         self.tuning = tuning.normalized
     }
 
@@ -43,8 +53,16 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
         .smoothing, .textureFlattening, .minimumCellSize, .subjectEmphasis, .accentColors, .colorfulness,
     ]
 
-    /// Only layered line art reads it.
-    var isLayeredOnly: Bool { self != .style && Self.lineArt.contains(self) }
+    /// Only line art drawn from an edge map (layered, coloring book) reads it.
+    var needsEdgeMap: Bool { self != .style && Self.lineArt.contains(self) }
+
+    /// Whether templates of `style` read the setting: classic reads only the style, and a
+    /// coloring book draws nothing below detail, so it has no texture threshold.
+    func applies(to style: LineArtSettings.Style) -> Bool {
+        guard needsEdgeMap else { return true }
+        guard style.usesEdgeMap else { return false }
+        return !(style == .coloringBook && self == .textureThreshold)
+    }
 
     /// Puts this setting back to its default in `art` and `tuning`.
     func reset(_ art: inout LineArtSettings, _ tuning: inout PipelineTuning) {
@@ -83,7 +101,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     /// The setting as a number: choices by their position, switches 0 or 1.
     func value(lineArt art: LineArtSettings, tuning: PipelineTuning) -> Double {
         switch self {
-        case .style: art.style == .layered ? 1 : 0
+        case .style: Double(LineArtSettings.Style.allCases.firstIndex(of: art.style) ?? 0)
         case .outlineThreshold: Double(art.outlineThreshold)
         case .detailThreshold: Double(art.detailThreshold)
         case .textureThreshold: Double(art.textureThreshold)
@@ -129,7 +147,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     func valueText(lineArt art: LineArtSettings, tuning: PipelineTuning) -> String {
         switch self {
         case .style: art.style.name
-        case .samePaint: art.samePaint.name
+        case .samePaint: art.samePaint.name(in: art.style)
         case .keepColorEdges: AdvancedText.onOff(art.keepColorEdges)
         case .outlineEyes: AdvancedText.onOff(art.outlineEyes)
         default: slider?.text(value(lineArt: art, tuning: tuning)) ?? ""
@@ -242,8 +260,15 @@ nonisolated struct AdvancedStats: Equatable, Sendable {
     }
 }
 
+/// The Line Weight slider of a coloring book (`LineAppearance.coloringBookWeight`): half to
+/// twice the designed line, on a log scale with the default in the middle.
+nonisolated let coloringBookWeightSlider = SliderSpec(
+    range: Double(LineAppearance.coloringBookWeightRange.lowerBound)...Double(LineAppearance.coloringBookWeightRange.upperBound),
+    defaultValue: Double(LineAppearance.default.coloringBookWeight), logarithmic: true, quantum: 0.05, accessibilityStep: 0.25,
+    format: .multiplier)
+
 /// Quick starting points for Line Appearance: how the four layers' opacity and width change
-/// with zoom. Presets leave `weighted` alone.
+/// with zoom. Presets leave `weighted` and the coloring book's weight alone.
 nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Sendable {
     /// The owner's pick: fainter layers fade in by opacity, at even weight.
     case fade

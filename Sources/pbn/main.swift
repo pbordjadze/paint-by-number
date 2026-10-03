@@ -10,12 +10,13 @@ import ImageIO
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--importance m.pgm]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
-//       [--line-style classic|layered --edges map.pgm [--eyes eyes.json] [--line-art key=value]...]
+//       [--line-style classic|layered|coloringBook --edges map.pgm [--eyes eyes.json] [--line-art key=value]...]
 //       [--tuning key=value]...
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
-//       layered line art splits the cells along the edge map's lines (stats.json gains
-//       `lineArt`); eyes.json is an array of closed polygons of [x, y] normalized to the photo;
-//       --line-art sets a LineArtSettings field and --tuning a PipelineTuning factor by name
+//       layered and coloring-book line art split the cells along the edge map's lines
+//       (stats.json gains `lineArt`); eyes.json is an array of closed polygons of [x, y]
+//       normalized to the photo; --line-art sets a LineArtSettings field and --tuning a
+//       PipelineTuning factor by name
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into
@@ -23,16 +24,16 @@ import ImageIO
 //       image and every candidate's painted preview and region outlines (tools/auto_sheet.py)
 //   pbn bench <in.ppm>... [--runs N] [--colors N] [--detail F] [--smooth F] [--edges map.pgm]
 //       also times a live preview, detail 1 on a large photo, the same with 150 colors and
-//       Auto's suggestion (Relaxed, 5 candidates); with --edges also layered line art (its
-//       stages listed), the map resampled to each photo
+//       Auto's suggestion (Relaxed, 5 candidates); with --edges also layered and coloring-book
+//       line art (the layered stages listed), the map resampled to each photo
 //   pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]
 //       vectorizes a flat-color image directly (each distinct color is a palette entry,
 //       each 4-connected component a region), bypassing segmentation
 //   pbn check <template.pbnt> [--min-label-radius R]
 //       prints format and pipeline versions, validates a template's invariants, including
 //       every label's room for its number (single-digit minimum R, default
-//       LabelSizing.minimumRadius; R ≤ 0 skips that check) and layered line data, whose
-//       edges per layer and interior strokes it counts
+//       LabelSizing.minimumRadius; R ≤ 0 skips that check) and line data, whose style, edges
+//       per layer and interior strokes it prints
 //   pbn names <template.pbnt> [--seed N]
 //       prints each palette color's nickname (seeded like the app's per-painting names; the
 //       default seed is generate's), structured name and hex
@@ -67,6 +68,12 @@ enum Fields {
     }
 }
 
+/// "classic, layered or coloringBook", for error messages.
+let lineStyles: String = {
+    let names = LineArtSettings.Style.allCases.map(\.rawValue)
+    return names.dropLast().joined(separator: ", ") + " or " + names.last!
+}()
+
 func keyValue(_ flag: String, _ argument: String?) -> (String, String) {
     guard let argument, let eq = argument.firstIndex(of: "=") else { fail("\(flag): key=value, not \(argument ?? "nothing")") }
     return (String(argument[..<eq]), String(argument[argument.index(after: eq)...]))
@@ -81,7 +88,7 @@ func setLineArt(_ s: inout LineArtSettings, _ argument: String?) {
         guard let v = Bool(value) else { fail("--line-art \(key): true or false, not \(value)") }
         s[keyPath: path] = v
     } else if key == "style" {
-        guard let v = LineArtSettings.Style(rawValue: value) else { fail("--line-art style: classic or layered, not \(value)") }
+        guard let v = LineArtSettings.Style(rawValue: value) else { fail("--line-art style: \(lineStyles), not \(value)") }
         s.style = v
     } else if key == "samePaint" {
         guard let v = LineArtSettings.SamePaint(rawValue: value) else {
@@ -127,7 +134,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--eyes": o.eyes = it.next()
         case "--line-style":
             let value = it.next() ?? ""
-            guard let style = LineArtSettings.Style(rawValue: value) else { fail("--line-style: classic or layered, not \(value)") }
+            guard let style = LineArtSettings.Style(rawValue: value) else { fail("--line-style: \(lineStyles), not \(value)") }
             o.settings.lineArt.style = style
         case "--line-art": setLineArt(&o.settings.lineArt, it.next())
         case "--tuning": setTuning(&o.settings.tuning, it.next())
@@ -172,10 +179,11 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
                 storage: (0..<(img.width * img.height)).map { Float(img.pixels[$0 * 4]) / 255 })
 }
 
-/// The edge map and eyes layered line art draws from (`--edges`, `--eyes`).
+/// The edge map and eyes layered and coloring-book line art draw from (`--edges`, `--eyes`).
 func loadLineArt(_ options: Options) -> LineArtInput? {
     guard let path = options.edges else {
-        if options.settings.lineArt.style == .layered { fail("--line-style layered needs --edges map.pgm") }
+        let style = options.settings.lineArt.style
+        if style.usesEdgeMap { fail("--line-style \(style.rawValue) needs --edges map.pgm") }
         return nil
     }
     let img = loadImage(path)
@@ -694,7 +702,8 @@ case "check":
         if let lines = template.lineArt {
             let names = ["outline", "detail", "texture", "color"]
             let counts = names.indices.map { l in lines.edgeLayers.filter { Int($0) == l }.count }
-            print("layered lines: edges " + zip(names, counts).map { "\($0) \($1)" }.joined(separator: ", ")
+            let style = lines.style == .coloringBook ? "coloring book" : "layered"
+            print("\(style) lines: edges " + zip(names, counts).map { "\($0) \($1)" }.joined(separator: ", ")
                 + "; \(lines.strokes.count) interior strokes (\(lines.strokePoints.count) points)")
         }
         let report = template.validate(minLabelRadius: options.minLabelRadius > 0 ? options.minLabelRadius : nil)
@@ -790,13 +799,16 @@ case "bench":
                 + String(format: "; median %.1f ms)", v.medianGap))
         }
         if let input = loadLineArt(options) {
-            var layered = options.settings
-            layered.lineArt.style = .layered
-            let v = measure(image, layered, runs: options.runs, lineArt: input)
-            print(String(format: "  %-28@ ", "layered \(v.size), \(v.regions) cells" as NSString) + stat(v.totals["total"]!)
-                + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage + ")")
-            for name in v.order where name.hasPrefix("lineArt") {
-                print(String(format: "    %-26@ ", name as NSString) + stat(v.totals[name]!))
+            for style in [LineArtSettings.Style.layered, .coloringBook] {
+                var drawn = options.settings
+                drawn.lineArt.style = style
+                let v = measure(image, drawn, runs: options.runs, lineArt: input)
+                print(String(format: "  %-28@ ", "\(style.rawValue) \(v.size), \(v.regions) cells" as NSString) + stat(v.totals["total"]!)
+                    + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage + ")")
+                guard style == .layered else { continue }
+                for name in v.order where name.hasPrefix("lineArt") {
+                    print(String(format: "    %-26@ ", name as NSString) + stat(v.totals[name]!))
+                }
             }
         }
         // Auto's suggestion as the create flow runs it, and its analysis alone.

@@ -249,6 +249,12 @@ final class AdvancedSettingsModel {
 
     func valueText(of control: AdvancedControl) -> String { control.valueText(lineArt: lineArt, tuning: tuning) }
 
+    /// A coloring book's line weight (Line Appearance), as the slider shows it.
+    var coloringBookWeight: Double {
+        get { Double(appearance.coloringBookWeight) }
+        set { appearance.coloringBookWeight = Float(newValue) }
+    }
+
     func isChanged(_ control: AdvancedControl) -> Bool { value(of: control) != control.defaultValue }
 
     /// Sets a slider's setting. The three thresholds push each other along, so texture ≤
@@ -310,10 +316,12 @@ final class AdvancedSettingsModel {
     /// Every setting that differs from its default, worded ("Smallest Area 2×").
     var changes: [String] {
         var list: [String] = []
-        for control in AdvancedControl.allCases where isChanged(control) && (!control.isLayeredOnly || lineArt.style == .layered) {
-            list.append(Self.change(control.title, valueText(of: control)))
+        for control in AdvancedControl.allCases where isChanged(control) && control.applies(to: lineArt.style) {
+            list.append(Self.change(control.title(for: lineArt.style), valueText(of: control)))
         }
-        if !isAppearanceDefault {
+        var layers = appearance
+        layers.coloringBookWeight = LineAppearance.default.coloringBookWeight
+        if layers != .default {
             let title = String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
                                comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom")
             let value = LineAppearancePreset.matching(appearance)?.name
@@ -323,6 +331,9 @@ final class AdvancedSettingsModel {
             if appearance.weighted != LineAppearance.default.weighted {
                 list.append(Self.change(AdvancedText.weightTitle, AdvancedText.onOff(appearance.weighted)))
             }
+        }
+        if appearance.coloringBookWeight != LineAppearance.default.coloringBookWeight {
+            list.append(Self.change(AdvancedText.coloringBookWeightTitle, AdvancedText.multiplier(Double(appearance.coloringBookWeight))))
         }
         return list
     }

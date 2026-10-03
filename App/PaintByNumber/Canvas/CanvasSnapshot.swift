@@ -15,12 +15,14 @@ nonisolated enum CanvasSnapshot {
         var palette = CanvasPalette.light
         /// Palette index whose unpainted regions get the selection highlight.
         var highlight: Int?
-        /// How a layered template's lines draw; nil = the one Settings › Advanced stored.
+        /// How a layered template's lines draw, and how heavy a coloring book's are; nil = the
+        /// one Settings › Advanced stored.
         var lineAppearance: LineAppearance?
         /// The zoom whose line look to draw (1 = the painting fitted, as images show it).
         var lineZoom: Float = 1
 
-        /// The artwork as painted so far: unpainted regions stay paper, no line art.
+        /// The artwork as painted so far: unpainted regions stay paper, no line art (a coloring
+        /// book keeps its drawing: `outlines` is forced on for it by `render`).
         static let painting = Options(outlines: false, numbers: false)
         /// Line art and numbers (painted regions filled): a printable template.
         static let preview = Options(outlines: true, numbers: true)
@@ -59,11 +61,13 @@ nonisolated enum CanvasSnapshot {
               let commands = context.queue.makeCommandBuffer()
         else { return nil }
 
+        // A coloring book's drawing is part of the picture, lines or no lines.
+        let drawsLines = options.outlines || scene.lineArtStyle == .coloringBook
         context.encode(
             commands, scene: scene, states: stateBuffer, uniforms: u,
             targets: RenderContext.Targets(
                 color: color, multisample: context.makeMultisampleTarget(width: w, height: h), outlines: outlines),
-            content: RenderContext.Content(outlines: options.outlines, numbers: options.numbers))
+            content: RenderContext.Content(outlines: drawsLines, numbers: options.numbers))
         guard let blit = commands.makeBlitCommandEncoder() else { return nil }
         blit.copy(
             from: color, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
@@ -96,7 +100,15 @@ nonisolated enum CanvasSnapshot {
         u.setChrome(palette, shadowOpacity: 0, outlineOpacity: palette.outlineOpacity)
         let width = options.outlineWidth * max(scale, 0.25)
         u.outline = SIMD4(width, width, 0, options.numbers ? 1 : 0)
-        u.setLines(scene.isLayered ? LineStyle(options.lineAppearance ?? .stored(), zoom: options.lineZoom) : .classic)
+        switch scene.lineArtStyle {
+        case .layered:
+            u.setLines(LineStyle(options.lineAppearance ?? .stored(), zoom: options.lineZoom))
+        case .coloringBook:
+            let weight = (options.lineAppearance ?? .stored()).coloringBookWeight
+            u.setColoringBookLines(width: width * ColoringBookLook.widthFactor * weight)
+        case nil:
+            u.setLines(.classic)
+        }
         u.labels = SIMD4(5, 7, .greatestFiniteMagnitude, 0)
         u.numbers = SIMD4(0.8, 0.9, 0.04, 0)
         u.time = SIMD4(0, -10_000, -10_000, -10_000)

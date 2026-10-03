@@ -3,8 +3,8 @@ import Foundation
 import os
 import PaintCore
 
-/// What layered line art draws from, computed once per photo: the HED edge map
-/// (`EdgeDetector`) and the eyes (`EyeFinder`).
+/// What layered and coloring-book line art draw from, computed once per photo: the HED edge
+/// map (`EdgeDetector`) and the eyes (`EyeFinder`).
 ///
 /// Inputs are cached by the photo's identity (the same `CGImage` instance) for the last
 /// `cacheCapacity` photos, so the create flow's drafts, candidates and full resolution, and a
@@ -18,18 +18,18 @@ nonisolated enum LineArtInputs {
     /// The inputs `settings` need for `image`: nil for classic line art, which draws from the
     /// photo alone.
     static func make(for image: CGImage, settings: LineArtSettings) async throws -> LineArtInput? {
-        guard settings.style == .layered else { return nil }
+        guard settings.style.usesEdgeMap else { return nil }
         return try await cache.input(for: image)
     }
 
     /// The inputs for a template about to be generated: `make` (or `compute` when not
     /// `cached`, for a one-off template), except that a failure other than cancellation is
-    /// logged and gives nil, so a layered template comes out classic, as the generator
-    /// documents, rather than not at all. Nil for classic settings.
+    /// logged and gives nil, so a layered or coloring-book template comes out classic, as the
+    /// generator documents, rather than not at all. Nil for classic settings.
     static func forGeneration(of image: CGImage?, settings: LineArtSettings, cached: Bool) async throws -> LineArtInput? {
-        guard settings.style == .layered else { return nil }
+        guard settings.style.usesEdgeMap else { return nil }
         guard let image else {
-            Log.create.error("Layered line art without a photo image: generating classic lines")
+            Log.create.error("Line art without a photo image: generating classic lines")
             return nil
         }
         do {

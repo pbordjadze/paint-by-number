@@ -26,12 +26,34 @@ struct LineArtTests {
         return EdgeMap(width: image.width, height: image.height, values: (0..<(image.width * image.height)).map { image.pixels[$0 * 4] })
     }
 
+    /// `edges()` with a soft line (σ = 2 px, 0.9 at its centre) added from `a` to `b` (pixel
+    /// coordinates of the photo): a stretch of drawing that bounds no cell when it runs through
+    /// a flat area.
+    static func edges(adding a: SIMD2<Float>, to b: SIMD2<Float>) -> EdgeMap {
+        var map = edges()
+        let ab = b - a, length2 = max(simdLengthSquared(ab), 1e-6)
+        for y in 0..<map.height {
+            for x in 0..<map.width {
+                let p = SIMD2(Float(x), Float(y))
+                let t = min(max(simdDot(p - a, ab) / length2, 0), 1)
+                let d2 = simdLengthSquared(p - (a + ab * t))
+                let value = UInt8((0.9 * exp(-d2 / 8) * 255).rounded())
+                map.values[y * map.width + x] = max(map.values[y * map.width + x], value)
+            }
+        }
+        return map
+    }
+
     static func settings(_ change: (inout LineArtSettings) -> Void = { _ in }) -> GenerationSettings {
         var lineArt = LineArtSettings(
             style: .layered, outlineThreshold: 0.8, detailThreshold: 0.5, textureThreshold: 0.3,
             minimumStrokeLength: 10, gapBridging: 6, lineSmoothing: 0.5)
         change(&lineArt)
         return GenerationSettings(colorCount: 8, detail: 0.5, lineArt: lineArt)
+    }
+
+    static func book(_ change: (inout LineArtSettings) -> Void = { _ in }) -> GenerationSettings {
+        settings { $0.style = .coloringBook; change(&$0) }
     }
 
     static func generate(
@@ -80,9 +102,90 @@ struct LineArtTests {
         let given = try Self.generate(classic)
         #expect(given.template == plain.template)
         #expect(given.template.lineArt == nil && given.lineArtStats == nil)
-        // Layered settings without an edge map give the classic template too.
+        // Layered and coloring-book settings without an edge map give the classic template too.
+        #expect(!LineArtSettings.Style.classic.usesEdgeMap && LineArtSettings.Style.layered.usesEdgeMap
+            && LineArtSettings.Style.coloringBook.usesEdgeMap)
         let missing = try Self.generate(Self.settings(), input: false)
         #expect(missing.template == plain.template)
+        let missingBook = try Self.generate(Self.book(), input: false)
+        #expect(missingBook.template == plain.template)
+    }
+
+    // MARK: - Coloring book
+
+    /// A coloring book draws every line that is detail or stronger, keeps the stretches that
+    /// bound no cell as strokes (a drawing, not just cell boundaries), has no texture lines,
+    /// and says so in its template.
+    @Test func coloringBookIsADrawingOverTheCells() throws {
+        // A short, strong line in the open sky: it closes nothing.
+        let dangling = Self.edges(adding: SIMD2(12, 8), to: SIMD2(36, 14))
+        func generate(_ settings: GenerationSettings) throws -> TemplateGenerator.Output {
+            try TemplateGenerator(settings: settings).generate(
+                from: Self.photo(), lineArt: LineArtInput(edges: dangling), cancel: .none)
+        }
+        let layered = try generate(Self.settings()).template
+        let book = try generate(Self.book()).template
+        #expect(layered.lineArt?.style == .layered)
+        #expect(book.lineArt?.style == .coloringBook)
+        for t in [layered, book] {
+            let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
+            #expect(report.isValid, "\(report)")
+        }
+        // The dangling line is drawn in the book, in the sky's cell, and trimmed away in layered line art.
+        let sky = try #require(book.region(at: SIMD2<Float>(45, 15)))
+        func strokes(_ t: Template, near p: SIMD2<Float>) -> [InteriorStroke] {
+            let art = t.lineArt!
+            return art.strokes.filter { s in
+                let pts = art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]
+                return zip(pts, pts.dropFirst()).contains { a, b in
+                    let ab = b - a
+                    let t = min(max(simdDot(p - a, ab) / max(simdLengthSquared(ab), 1e-6), 0), 1)
+                    return simdLength(p - (a + ab * t)) < 6
+                }
+            }
+        }
+        let middle = SIMD2<Float>(24 * 1.5, 11 * 1.5)
+        let drawn = strokes(book, near: middle)
+        #expect(drawn.count == 1 && drawn.first?.region == UInt32(sky) && drawn.first?.layer == LineLayer.outline.rawValue)
+        #expect(strokes(layered, near: middle).isEmpty)
+        // No texture lines: nothing below the detail threshold is drawn, so the sky's faint
+        // line (0.42) is gone from the book, while the ground's detail line (0.62) still splits
+        // the ground, and the outlines are the same.
+        let lengths = Self.lengths(book)
+        #expect(lengths[2] == 0 && !book.lineArt!.strokes.contains { $0.layer == LineLayer.texture.rawValue })
+        #expect(lengths[1] > 150 && abs(lengths[0] - Self.lengths(layered)[0]) < 60, "\(lengths) vs \(Self.lengths(layered))")
+        #expect(book.regions.count > (book.regions.count - Int(book.lineArt!.edgeLayers.filter { $0 == 1 }.count)))
+        #expect(layered.lineArt!.strokes.contains { $0.layer == LineLayer.texture.rawValue })
+        let stats = try #require(generate(Self.book()).lineArtStats)
+        #expect(stats.interiorStrokes == book.lineArt!.strokes.count && stats.cells == book.regions.count)
+        // Every stroke is drawing of some length, inside its cell.
+        for s in book.lineArt!.strokes {
+            let pts = book.lineArt!.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]
+            let length = zip(pts, pts.dropFirst()).reduce(Float(0)) { $0 + simdLength($1.1 - $1.0) }
+            #expect(length >= LineLayering.minimumRun - 1, "a \(length)-unit stroke in cell \(s.region)")
+            #expect(book.region(at: pts[pts.startIndex + pts.count / 2]) == Int(s.region))
+        }
+    }
+
+    @Test func coloringBookSamePaintChoices() throws {
+        // No texture lines, so joining across them splits like Always Split; joining across
+        // detail unites the ground's two cells and draws the line inside.
+        let split = try Self.generate(Self.book { $0.samePaint = .split }).template
+        let texture = try Self.generate(Self.book { $0.samePaint = .joinTexture }).template
+        let all = try Self.generate(Self.book { $0.samePaint = .joinAllButOutlines }).template
+        #expect(texture == split)
+        #expect(all.regions.count < split.regions.count)
+        #expect(all.lineArt!.strokes.contains { $0.layer == LineLayer.detail.rawValue })
+        #expect(all.lineArt?.style == .coloringBook)
+        #expect(all.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+    }
+
+    @Test func coloringBookSVGIsOneDrawing() throws {
+        let book = try Self.generate(Self.book()).template
+        let svg = SVGExport.render(book, options: .init(painted: false, outlines: true, numbers: false))
+        #expect(svg.contains("id=\"lines-drawing\"") && !svg.contains("lines-color") && !svg.contains("lines-outline"))
+        let layered = SVGExport.render(try Self.generate().template, options: .init(painted: false, outlines: true, numbers: false))
+        #expect(layered.contains("id=\"lines-outline\"") && layered.contains("id=\"lines-color\"") && !layered.contains("lines-drawing"))
     }
 
     @Test func deterministic() throws {
@@ -372,6 +475,58 @@ struct LineArtTests {
         #expect(plain.lineArt == nil && plain.regions == t.regions)
     }
 
+    /// `Fixtures/template-v2-book.pbnt` was written by the LINE encoder of the commit adding
+    /// `TemplateLineArt.style`, with the layered fixture's command and `--line-style coloringBook`:
+    /// the same five cells and twelve edges in the same layers (the sky's faint line, below
+    /// detail, is not drawn at all, so there is no stroke), and the style byte after the
+    /// (empty) strokes. It pins that byte: never regenerate it.
+    @Test func decodesColoringBookFixture() throws {
+        let data = Self.fixture("template-v2-book.pbnt")
+        #expect(data.count == 10147)
+        #expect(data[4..<8] == Data([2, 0, 0, 0]))
+        let t = try Template(encoded: data)
+        #expect(t.width == 192 && t.height == 144)
+        #expect(t.regions.count == 5 && t.edges.count == 12 && t.palette.count == 4)
+        #expect(t.pipelineVersion == 3)
+        let lines = try #require(t.lineArt)
+        #expect(lines.style == .coloringBook)
+        #expect(lines.edgeLayers == [0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 1, 3])
+        #expect(lines.edgeWeights == [218, 230, 230, 228, 228, 215, 217, 0, 0, 0, 148, 0])
+        #expect(lines.strokes.isEmpty && lines.strokePoints.isEmpty)
+        // The chunk section: its count, GENR, then LINE (37 bytes: 4 + 12 + 12 + 4 + 4 + the style byte).
+        let tags = try Self.chunks(data, payloadEnd: data.count - 4 - 16 - 49)
+        #expect(tags.map(\.0) == [Template.Chunk.generator, Template.Chunk.lines])
+        #expect(tags.allSatisfy { $0.1 == 0 })
+        #expect(data.last == TemplateLineArt.Style.coloringBook.rawValue)
+        let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
+        #expect(report.isValid, "\(report)")
+        #expect(t.encoded() == data)
+    }
+
+    @Test func lineArtStyleIsAnOptionalTrailingByte() throws {
+        let book = try Self.generate(Self.book()).template
+        let art = try #require(book.lineArt)
+        #expect(art.style == .coloringBook)
+        #expect(try Template(encoded: book.encoded()) == book)
+        // Layered templates encode as they always did, without the byte.
+        var layered = art
+        layered.style = .layered
+        #expect(layered.encoded() == art.encoded().dropLast())
+        #expect(art.encoded().last == TemplateLineArt.Style.coloringBook.rawValue)
+        // The byte is read when present: a layered payload plus it is a coloring book, and a
+        // book payload without it (an older writer) or with a style this reader does not know
+        // (a later one) is layered.
+        var generator = BinaryWriter()
+        generator.write(book.pipelineVersion)
+        func decode(_ payload: Data) throws -> TemplateLineArt? {
+            try Template(encoded: Self.file(book, chunks: [(Template.Chunk.generator, 0, generator.data), (Template.Chunk.lines, 0, payload)])).lineArt
+        }
+        #expect(try decode(layered.encoded() + Data([1]))?.style == .coloringBook)
+        #expect(try decode(art.encoded().dropLast())?.style == .layered)
+        #expect(try decode(layered.encoded() + Data([9]))?.style == .layered)
+        #expect(try decode(art.encoded() + Data([5, 6]))?.style == .coloringBook)
+    }
+
     /// A file of `t`'s payload followed by `chunks`.
     static func file(_ t: Template, chunks: [(tag: UInt32, flags: UInt32, payload: Data)]) -> Data {
         var classic = t
@@ -413,9 +568,9 @@ struct LineArtTests {
         generator.write(t.pipelineVersion)
         let reordered = Self.file(t, chunks: [(Template.Chunk.lines, 0, t.lineArt!.encoded()), (Template.Chunk.generator, 0, generator.data)])
         #expect(try Template(encoded: reordered) == t)
-        // A later writer may append fields to the chunk.
+        // A later writer may append fields to the chunk (after the style byte, 0 for layered).
         let longer = Self.file(t, chunks: [(Template.Chunk.generator, 0, generator.data),
-                                           (Template.Chunk.lines, 0, t.lineArt!.encoded() + Data([1, 2, 3]))])
+                                           (Template.Chunk.lines, 0, t.lineArt!.encoded() + Data([0, 2, 3]))])
         #expect(try Template(encoded: longer) == t)
     }
 

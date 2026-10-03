@@ -197,6 +197,30 @@
       "comment" : "Settings row, and the title of the screen it opens, with line art, line appearance and pipeline settings and a live preview",
       "extractionState" : "manual"
     },
+    "advanced.appearance.bookWeight" : {
+      "comment" : "Settings › Advanced › Line Appearance: slider for how heavy a coloring book's lines are drawn",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line Weight"
+          }
+        }
+      }
+    },
+    "advanced.appearance.bookWeight.summary" : {
+      "comment" : "Settings › Advanced › Line Appearance: explanation under the Line Weight slider of a coloring book",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How heavy the drawing’s lines are, at every zoom. Coloring books draw every line alike, in full ink, over the paint."
+          }
+        }
+      }
+    },
     "advanced.appearance.clearAlways" : {
       "comment" : "Settings › Advanced › Line Appearance: the selected layer's lines read clearly with the whole picture in view",
       "extractionState" : "manual",
@@ -413,6 +437,18 @@
         }
       }
     },
+    "advanced.control.detailThreshold.book" : {
+      "comment" : "Settings › Advanced › Line Art, Coloring Book: slider for the edge strength from which a line is drawn",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines From"
+          }
+        }
+      }
+    },
     "advanced.control.detailThreshold.summary" : {
       "comment" : "Settings › Advanced › Line Art: explanation under the Detail From slider",
       "extractionState" : "manual",
@@ -421,6 +457,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weaker edges, down to this strength, become detail lines: lighter when zoomed out."
+          }
+        }
+      }
+    },
+    "advanced.control.detailThreshold.summary.book" : {
+      "comment" : "Settings › Advanced › Line Art, Coloring Book: explanation under the Lines From slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edges at least this strong are drawn; weaker ones are left out. Lower draws more lines."
           }
         }
       }
@@ -469,6 +517,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keeps boundaries where only the paint changes, like banded skies, as faint lines. Off merges close paints for a calmer plan."
+          }
+        }
+      }
+    },
+    "advanced.control.keepColorEdges.summary.book" : {
+      "comment" : "Settings › Advanced › Line Art, Coloring Book: explanation under the Keep Color Edges switch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeps the paints inside an outline as separate areas, told apart by their numbers. Off merges close paints for fewer areas."
           }
         }
       }
@@ -589,6 +649,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edges at least this strong become outlines, always drawn at full strength."
+          }
+        }
+      }
+    },
+    "advanced.control.outlineThreshold.summary.book" : {
+      "comment" : "Settings › Advanced › Line Art, Coloring Book: explanation under the Outlines From slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edges at least this strong are outlines, which reach further to close an area."
           }
         }
       }
@@ -1565,6 +1637,18 @@
         }
       }
     },
+    "advanced.samePaint.joinAllButOutlines.summary.book" : {
+      "comment" : "Settings › Advanced › Line Art, Coloring Book: what the Join Across Detail option does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only outlines split areas of one paint; other lines are drawn across them."
+          }
+        }
+      }
+    },
     "advanced.samePaint.joinTexture" : {
       "comment" : "Settings › Advanced › Line Art: Same Paint Across a Line option, areas split only by texture lines are joined",
       "extractionState" : "manual",
@@ -1789,6 +1873,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Every boundary between areas is the same even line."
+          }
+        }
+      }
+    },
+    "advanced.style.coloringBook" : {
+      "comment" : "Settings › Advanced › Line Art: the line style that draws the picture's outlines in thick ink, with the paints inside an outline told apart only by their numbers",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coloring Book"
+          }
+        }
+      }
+    },
+    "advanced.style.coloringBook.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Coloring Book line style does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A drawing in thick ink that stays over the paint. Inside an outline, only the numbers tell the paints apart."
           }
         }
       }
@@ -2565,6 +2673,10 @@
       "comment" : "Arrange Colors: footer under the list of the painting's colors",
       "extractionState" : "manual"
     },
+    "Drawing only: changes show at once and apply to every coloring-book painting, including the ones you have." : {
+      "comment" : "Settings › Advanced: footer of the Line Appearance section while the Coloring Book line style is chosen",
+      "extractionState" : "manual"
+    },
     "Drawing only: changes show at once and apply to every layered painting, including the ones you have." : {
       "comment" : "Settings › Advanced › Line Appearance: footer of the section",
       "extractionState" : "manual"
@@ -3129,6 +3241,10 @@
       "comment" : "Button on the painting screen that shows an area to paint next",
       "extractionState" : "manual"
     },
+    "How strong an edge must be to be drawn, and to be an outline. Lower values draw more lines." : {
+      "comment" : "Settings › Advanced › Line Art, Coloring Book: explanation under the Sensitivity heading, where the two thresholds cut edge strength",
+      "extractionState" : "manual"
+    },
     "How strong an edge must be to become each kind of line. Lower values draw more lines." : {
       "comment" : "Settings › Advanced › Line Art: explanation under the Sensitivity heading",
       "extractionState" : "manual"
@@ -3169,7 +3285,7 @@
         }
       }
     },
-    "Line Art and Pipeline settings apply to new paintings. Line Appearance changes how every layered painting is drawn." : {
+    "Line Art and Pipeline settings apply to new paintings. Line Appearance changes how every layered or coloring-book painting is drawn." : {
       "comment" : "Settings › Advanced: note at the top of the settings, saying what they apply to",
       "extractionState" : "manual"
     },

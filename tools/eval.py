@@ -13,10 +13,11 @@ plus `DIR/summary.json` and an overview grid `DIR/overview.png`. With --importan
 
 Layered line art: --edges-dir passes `<name>.pgm` from that directory as the edge map
 (`--edges`) and generates layered templates (`--line-style layered`, unless the pbn options
-set a style); --eyes-dir passes `<name>.json` (closed polygons normalized to the photo) as
-`--eyes`. Other line-art settings go through as pbn options (`-- --line-art samePaint=split`).
-The template panel draws each layer in its group; the caption adds cells against the classic
-regions and the edges per layer.
+set a style: `-- --line-style coloringBook` for coloring books); --eyes-dir passes
+`<name>.json` (closed polygons normalized to the photo) as `--eyes`. Other line-art settings
+go through as pbn options (`-- --line-art samePaint=split`). The template panel draws each
+layer in its group (a coloring book its drawing in heavy ink and no color edges); the caption
+adds the style, cells against the classic regions and the edges per layer.
 
 Requires a static release build of pbn:  tools/swift.sh build -c release --static-swift-stdlib
 (or set PBN=/path/to/pbn, e.g. a saved baseline binary for before/after comparisons)
@@ -130,7 +131,8 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, ed
                f"belowLegible:{stats.get('labelsBelowLegibleSize', '?')}  total={stats['totalMs']:.0f}ms")
     if stats.get("lineArt"):
         line_art = stats["lineArt"]
-        caption += (f"  layered: x{line_art['cellsVsClassic']:.2f} classic, edges outline/detail/texture/color "
+        style = line_art.get("settings", {}).get("style", "layered")
+        caption += (f"  {style}: x{line_art['cellsVsClassic']:.2f} classic, edges outline/detail/texture/color "
                     f"{'/'.join(str(n) for n in line_art['edgesPerLayer'])}, {line_art['interiorStrokes']} inside cells")
     if stats.get("auto"):
         chosen = stats["auto"]["settings"]

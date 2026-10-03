@@ -96,7 +96,7 @@ nonisolated final class TimelapseFrameRenderer {
             commands, scene: scene, states: stateBuffer, uniforms: u,
             targets: RenderContext.Targets(color: texture, multisample: multisample, outlines: outlines),
             content: RenderContext.Content(
-                outlines: options.outlines, numbers: options.numbers,
+                outlines: options.outlines || scene.lineArtStyle == .coloringBook, numbers: options.numbers,
                 clear: MTLClearColor(red: Double(background.x), green: Double(background.y), blue: Double(background.z), alpha: 1)))
         commands.commit()
         return {

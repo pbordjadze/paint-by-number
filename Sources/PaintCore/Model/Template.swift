@@ -57,8 +57,9 @@ public struct Template: Sendable, Equatable {
     /// (format-1 files, templates built outside the generator such as `pbn trace`).
     public var pipelineVersion: UInt32
 
-    /// Layered line art (`LineArtSettings.Style.layered`): a layer and weight per boundary edge,
-    /// and the lines drawn inside cells. `nil` for classic templates, which draw every edge alike.
+    /// Line art drawn from an edge map (`LineArtSettings.Style.layered` or `.coloringBook`): a
+    /// layer and weight per boundary edge, the lines drawn inside cells, and how it is drawn
+    /// (`TemplateLineArt.style`). `nil` for classic templates, which draw every edge alike.
     public var lineArt: TemplateLineArt?
 
     public init(
@@ -90,22 +91,46 @@ public enum LineLayer: UInt8, Sendable, CaseIterable {
     case color = 3
 }
 
-/// Line data of a layered template.
+/// Line data of a template made from an edge map: which edges are lines of the drawing, in
+/// which layer, and the lines drawn inside cells. `style` says how renderers draw it.
 public struct TemplateLineArt: Sendable, Equatable {
+    /// How a template's line art is drawn, in every renderer (canvas, pictures, print, SVG).
+    /// Stored with the template, so a painting looks the same whatever the settings are later.
+    public enum Style: UInt8, Sendable, CaseIterable {
+        /// Each layer with its own opacity and width at the current zoom (the app's
+        /// `LineAppearance`): outlines strong, fainter layers coming in as the painter zooms,
+        /// `color` edges faint. Lines between two painted cells dissolve, and the selected
+        /// color's unpainted cells are outlined boldly whatever their layer.
+        case layered = 0
+        /// A coloring book: every drawn layer (`outline`, `detail`, `texture`) alike, in full ink
+        /// and heavy at every zoom, over the paint for good; `color` edges are never drawn, so the
+        /// areas inside an outline are told apart only by their numbers and by the highlight of
+        /// the selected color, which is never outlined. On paper, where there is no highlight,
+        /// color edges print as faint dotted guides.
+        case coloringBook = 1
+    }
+
     /// `LineLayer` raw value per `Template.edges` entry.
     public var edgeLayers: [UInt8]
     /// Strength per edge (0...255), for renderers that weight lines within a layer.
     public var edgeWeights: [UInt8]
     /// Shared vertices of `strokes`, inside the canvas and on `Template.coordinateQuantum`.
     public var strokePoints: [SIMD2<Float>]
-    /// Lines drawn inside a cell (same paint on both sides, see `LineArtSettings.SamePaint`).
+    /// Lines drawn inside a cell: between two cells of the same paint that were joined (see
+    /// `LineArtSettings.SamePaint`), or in a coloring book any stretch of the drawing that bounds
+    /// no cell (a crease, a strand of fur).
     public var strokes: [InteriorStroke]
+    public var style: Style
 
-    public init(edgeLayers: [UInt8], edgeWeights: [UInt8], strokePoints: [SIMD2<Float>] = [], strokes: [InteriorStroke] = []) {
+    public init(
+        edgeLayers: [UInt8], edgeWeights: [UInt8], strokePoints: [SIMD2<Float>] = [], strokes: [InteriorStroke] = [],
+        style: Style = .layered
+    ) {
         self.edgeLayers = edgeLayers
         self.edgeWeights = edgeWeights
         self.strokePoints = strokePoints
         self.strokes = strokes
+        self.style = style
     }
 }
 
