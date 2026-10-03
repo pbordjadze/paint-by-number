@@ -417,15 +417,21 @@ struct AdvancedStatsRow: View {
     /// The numbers are behind the settings (a new preview is on its way).
     let isStale: Bool
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) { chips }
-            VStack(spacing: 8) { chips }
-        }
-        .opacity(isStale ? 0.55 : 1)
-        .animation(.easeInOut(duration: 0.2), value: isStale)
-        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        // Not a ViewThatFits of a row and a column: the numbers inside it stayed "–" under a
+        // finished preview when Advanced was opened from Settings.
+        let layout = isStacked ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+        layout { chips }
+            .opacity(isStale ? 0.55 : 1)
+            .animation(.easeInOut(duration: 0.2), value: isStale)
+            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
+
+    /// Side by side, unless text this large would crowd three chips across a narrow screen.
+    private var isStacked: Bool { horizontalSizeClass == .compact && dynamicTypeSize >= .xxLarge }
 
     @ViewBuilder
     private var chips: some View {
@@ -490,6 +496,7 @@ private struct StatChip: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
             Text(change ?? " ")
                 .font(.caption.weight(.semibold))
                 .monospacedDigit()
