@@ -57,8 +57,14 @@ final class AdvancedSettingsUITests: XCTestCase {
         // Settings an earlier, interrupted run may have left behind go first.
         if sectionReset.exists { sectionReset.tap() }
         XCTAssertTrue(value(of: control).hasPrefix("1×"), "Smallest Area doesn't start at 1×: \(value(of: control))")
-        // Three quarters of the way along the log scale from 0.25× to 4×: about twice the smallest area.
-        control.adjust(toNormalizedSliderPosition: 0.75)
+        // A touch on a list still coasting from the swipes only stops it, and the slider never
+        // sees the drag.
+        waitUntilStill(control)
+        // From the thumb at 1×, the middle of the log scale from 0.25× to 4×, to three quarters of
+        // the way along: about twice the smallest area. Not `adjust(toNormalizedSliderPosition:)`,
+        // which finds the thumb from a value read as a percentage ("1×" isn't one).
+        control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.2, thenDragTo: control.coordinate(withNormalizedOffset: CGVector(dx: 0.78, dy: 0.5)))
         let moved = NSPredicate(format: "NOT (value BEGINSWITH '1×')")
         XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: moved, object: control)], timeout: 5), .completed,
                        "The slider didn't move Smallest Area: \(value(of: control))")
@@ -90,6 +96,20 @@ final class AdvancedSettingsUITests: XCTestCase {
         while !(element.exists && element.isHittable) && swipes < maxSwipes {
             if up { list.swipeUp() } else { list.swipeDown() }
             swipes += 1
+        }
+    }
+
+    /// Waits (up to 3 s) until `element` stays put for a moment: the list has stopped scrolling.
+    @MainActor
+    private func waitUntilStill(_ element: XCUIElement) {
+        var last = element.frame
+        var still = 0
+        let deadline = Date().addingTimeInterval(3)
+        while still < 2 && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            let frame = element.frame
+            still = frame == last ? still + 1 : 0
+            last = frame
         }
     }
 
