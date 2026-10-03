@@ -59,17 +59,21 @@ final class AdvancedSettingsUITests: XCTestCase {
         XCTAssertTrue(value(of: control).hasPrefix("1×"), "Smallest Area doesn't start at 1×: \(value(of: control))")
         // From the thumb at 1×, the middle of the log scale from 0.25× to 4×, to three quarters of
         // the way along: about twice the smallest area. Not `adjust(toNormalizedSliderPosition:)`,
-        // which finds the thumb from a value read as a percentage ("1×" isn't one). A drag the
-        // simulator drops now and then (a touch on a list still settling only stops it) is
-        // tried once more.
+        // which finds the thumb from a value read as a percentage ("1×" isn't one). A dropped
+        // drag (on iPhone the slider can land in the list's bottom strip, by the home indicator,
+        // where the system takes the touch) is tried again with the list moved up a little.
         let moved = NSPredicate(format: "NOT (value BEGINSWITH '1×')")
         var attempts = 0
         repeat {
-            waitUntilStill(control)
+            if attempts > 0 {
+                nudge(list)
+                reveal(control, in: list, up: false)
+            }
+            settle()
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
                 .press(forDuration: 0.2, thenDragTo: control.coordinate(withNormalizedOffset: CGVector(dx: 0.78, dy: 0.5)))
             attempts += 1
-        } while XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: moved, object: control)], timeout: 5) != .completed && attempts < 2
+        } while XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: moved, object: control)], timeout: 5) != .completed && attempts < 3
         XCTAssertFalse(value(of: control).hasPrefix("1×"), "The slider didn't move Smallest Area: \(value(of: control))")
         // Larger smallest areas: fewer of them than at the defaults.
         let fewer = NSPredicate(format: "value CONTAINS %@", "−")
@@ -92,54 +96,37 @@ final class AdvancedSettingsUITests: XCTestCase {
         XCTAssertFalse(sectionReset.exists, "Pipeline still offers Reset at its defaults")
     }
 
-    /// Scrolls the settings list until `element` can be tapped well inside it: towards the end
-    /// (`up`) or back. Short drags held at the end, so the list never coasts past it (on iPhone
-    /// it is a third of the screen, and a swipe flung it past the Pipeline header), along the
-    /// leading margin, clear of slider thumbs. Hittable is not enough: a slider left in the
-    /// list's bottom strip, by the home indicator, got its drag taken by the system.
+    /// Scrolls the settings list until `element` can be tapped: towards the end (`up`) or back.
+    /// Short drags held at the end, so the list never coasts past it (on iPhone it is a third of
+    /// the screen, and a swipe flung it past the Pipeline header), along the leading margin,
+    /// clear of slider thumbs. The list settles after each drag before the element is looked
+    /// for; nothing reads a row's frame, which a row still on its way out of view has no more
+    /// (XCTest counts that as a failure).
     @MainActor
     private func reveal(_ element: XCUIElement, in list: XCUIElement, up: Bool = true, maxDrags: Int = 30) {
         let low = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.75))
         let high = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.35))
         var drags = 0
-        while drags < maxDrags {
-            if isWellInside(element, list) { return }
+        while !(element.exists && element.isHittable) && drags < maxDrags {
             let (from, to) = up ? (low, high) : (high, low)
             from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
+            settle()
             drags += 1
         }
     }
 
-    /// `element` can be tapped and, once the list has stopped, its middle lies in the list's
-    /// middle band (from 15 % down to 30 % up from the bottom), clear of the edges.
+    /// Moves the list's content up by a quarter of its height: out of the bottom strip.
     @MainActor
-    private func isWellInside(_ element: XCUIElement, _ list: XCUIElement) -> Bool {
-        guard element.exists, element.isHittable, let settled = settledFrame(of: element) else { return false }
-        let frame = list.frame
-        return (frame.minY + frame.height * 0.15...frame.maxY - frame.height * 0.3).contains(settled.midY)
+    private func nudge(_ list: XCUIElement) {
+        list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.6))
+            .press(forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.35)),
+                   withVelocity: .slow, thenHoldForDuration: 0.2)
+        settle()
     }
 
-    /// Waits (up to 3 s) until `element` stays put for a moment: the list has stopped scrolling.
+    /// Lets the list come to rest: a touch on a list still moving only stops it.
     @MainActor
-    private func waitUntilStill(_ element: XCUIElement) { _ = settledFrame(of: element) }
-
-    /// `element`'s frame once it has stayed put for half a second (the list has stopped
-    /// scrolling), or nil when it leaves the screen meanwhile: a row still coasting out of view
-    /// exists one moment and has no frame to read the next, which XCTest counts as a failure.
-    @MainActor
-    private func settledFrame(of element: XCUIElement) -> CGRect? {
-        var last: CGRect?
-        var still = 0
-        let deadline = Date().addingTimeInterval(3)
-        while still < 2 && Date() < deadline {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
-            guard element.exists else { return nil }
-            let frame = element.frame
-            still = frame == last ? still + 1 : 0
-            last = frame
-        }
-        return last
-    }
+    private func settle() { RunLoop.current.run(until: Date().addingTimeInterval(0.6)) }
 
     @MainActor
     private func value(of element: XCUIElement) -> String { element.value as? String ?? "" }
