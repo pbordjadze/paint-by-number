@@ -51,7 +51,7 @@ final class AdvancedSettingsUITests: XCTestCase {
                            timeout: 120), .completed, "The preview never got its numbers")
 
         let control = app.sliders["advanced-control-minimumCellSize"]
-        reveal(control, in: list)
+        reveal("advanced-control-minimumCellSize", in: list, of: app)
         XCTAssertTrue(control.exists, "Pipeline has no Smallest Area slider")
         let sectionReset = app.buttons["advanced-reset-pipeline"]
         // Settings an earlier, interrupted run may have left behind go first.
@@ -67,7 +67,7 @@ final class AdvancedSettingsUITests: XCTestCase {
         repeat {
             if attempts > 0 {
                 nudge(list)
-                reveal(control, in: list, up: false)
+                reveal("advanced-control-minimumCellSize", in: list, of: app)
             }
             settle()
             control.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
@@ -83,7 +83,7 @@ final class AdvancedSettingsUITests: XCTestCase {
                        "Smallest Area's effect was never measured as fewer areas: \(value(of: control))")
         attachScreenshot(of: app, named: "advanced-changed")
 
-        reveal(sectionReset, in: list, up: false)
+        reveal("advanced-reset-pipeline", in: list, of: app, up: false)
         XCTAssertTrue(sectionReset.exists, "Pipeline offers no Reset with a setting changed")
         sectionReset.tap()
         let reset = NSPredicate(format: "value BEGINSWITH '1×'")
@@ -96,23 +96,41 @@ final class AdvancedSettingsUITests: XCTestCase {
         XCTAssertFalse(sectionReset.exists, "Pipeline still offers Reset at its defaults")
     }
 
-    /// Scrolls the settings list until `element` can be tapped: towards the end (`up`) or back.
-    /// Short drags held at the end, so the list never coasts past it (on iPhone it is a third of
-    /// the screen, and a swipe flung it past the Pipeline header), along the leading margin,
-    /// clear of slider thumbs. The list settles after each drag before the element is looked
-    /// for; nothing reads a row's frame, which a row still on its way out of view has no more
-    /// (XCTest counts that as a failure).
+    /// Scrolls the settings list until the row with `identifier` sits in its middle band (from
+    /// 15 % down to 30 % up from the bottom, clear of the edges: a slider in the bottom strip, by
+    /// the home indicator, got its drag taken by the system). Short drags held at the end, so
+    /// the list never coasts past it (on iPhone it is a third of the screen, and a swipe flung
+    /// it past the Pipeline header), along the leading margin, clear of slider thumbs; towards
+    /// the row where the last snapshot saw it, else towards the end (`up`) or back. The row is
+    /// looked up in one frozen snapshot of the app: a row prefetched just outside the view
+    /// exists one moment and has no frame the next, and asking an element for that counts as a
+    /// failure, while a snapshot simply lacks it.
     @MainActor
-    private func reveal(_ element: XCUIElement, in list: XCUIElement, up: Bool = true, maxDrags: Int = 30) {
+    private func reveal(_ identifier: String, in list: XCUIElement, of app: XCUIApplication, up: Bool = true, maxDrags: Int = 30) {
         let low = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.75))
         let high = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.35))
+        let frame = list.frame
+        let band = (frame.minY + frame.height * 0.15)...(frame.maxY - frame.height * 0.3)
         var drags = 0
-        while !(element.exists && element.isHittable) && drags < maxDrags {
-            let (from, to) = up ? (low, high) : (high, low)
-            from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
+        while drags < maxDrags {
             settle()
+            let row = Self.frame(of: identifier, in: try? app.snapshot())
+            if let row, band.contains(row.midY) { return }
+            let towardsEnd = row.map { $0.midY > band.upperBound } ?? up
+            let (from, to) = towardsEnd ? (low, high) : (high, low)
+            from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
             drags += 1
         }
+    }
+
+    /// The frame of the first element with `identifier` in a snapshot, if it holds one.
+    private static func frame(of identifier: String, in snapshot: (any XCUIElementSnapshot)?) -> CGRect? {
+        guard let snapshot else { return nil }
+        if snapshot.identifier == identifier { return snapshot.frame }
+        for child in snapshot.children {
+            if let found = frame(of: identifier, in: child) { return found }
+        }
+        return nil
     }
 
     /// Moves the list's content up by a quarter of its height: out of the bottom strip.
