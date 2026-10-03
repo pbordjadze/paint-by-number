@@ -470,6 +470,7 @@ struct LineAppearanceSection: View {
             layerPicker
             values(.opacity)
             values(.width)
+            paintedRow
             AdvancedToggleRow(
                 title: AdvancedText.weightTitle,
                 summary: String(localized: "advanced.appearance.weighted.summary",
@@ -578,6 +579,20 @@ struct LineAppearanceSection: View {
             case .width: layer.width[index] = value
             }
         }
+    }
+
+    /// How much of the layer's lines stays once the areas on both sides are painted.
+    private var paintedRow: some View {
+        let layer = self.layer
+        let spec = SliderSpec(
+            range: 0...1, defaultValue: Double(LineAppearance.default[layer].painted), quantum: 0.01, accessibilityStep: 0.05,
+            format: .percent)
+        let value = Double(model.appearance[layer].painted)
+        return AdvancedSlider(
+            title: AdvancedText.paintedTitle(of: layer), summary: AdvancedText.paintedSummary, valueText: spec.text(value), spec: spec,
+            value: value, isChanged: value != spec.defaultValue, identifier: "advanced-appearance-painted",
+            onChange: { model.appearance[layer].painted = Float($0) },
+            onReset: { model.appearance[layer].painted = LineAppearance.default[layer].painted })
     }
 
     /// A layer's opacity or width at the three zooms.

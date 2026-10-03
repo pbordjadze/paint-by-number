@@ -17,6 +17,24 @@ nonisolated enum AdvancedText {
                comment: "Settings › Advanced › Line Appearance: switch that draws stronger edges heavier within each layer")
     }
 
+    /// Line Appearance's slider for how much of a layer's lines stays once both sides are painted.
+    static func paintedTitle(of layer: LineLayer) -> String {
+        let name = layer.name
+        return String(localized: "advanced.appearance.painted", defaultValue: "\(name) When Painted",
+                      comment: "Settings › Advanced › Line Appearance: slider for how much of a layer's lines stays once the areas on both sides are painted; the argument is the layer, e.g. Outlines")
+    }
+
+    static var paintedSummary: String {
+        String(localized: "advanced.appearance.painted.summary",
+               defaultValue: "How much of the layer’s lines stays once the areas on both sides are painted. None lets finished areas read as paint; all keeps the drawing over the painting, like a coloring book.",
+               comment: "Settings › Advanced › Line Appearance: explanation under the When Painted slider")
+    }
+
+    /// "60%": a fraction as the sliders show it.
+    static func percent(_ value: Float) -> String {
+        Double(value).formatted(.percent.precision(.fractionLength(0)))
+    }
+
     /// "8 px": a length in pixels of the image the template is made at.
     static func pixels(_ count: Int) -> String {
         String(localized: "advanced.value.pixels", defaultValue: "\(count) px",

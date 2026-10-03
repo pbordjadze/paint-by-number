@@ -104,18 +104,70 @@ struct AdvancedSettingsTests {
         #expect(layered.delta(from: stats).lines == nil, "Lines only compare between layered templates")
     }
 
-    @Test func presetsAreRecognizedAndKeepTheWeight() {
+    @Test func presetsAreRecognizedAndKeepTheWeightAndWhatStaysPainted() {
         #expect(LineAppearancePreset.matching(.default) == .fade)
         var weighted = LineAppearance.default
         weighted.weighted = true
+        weighted.outline.painted = 1
         for preset in LineAppearancePreset.allCases {
             let applied = preset.applied(to: weighted)
             #expect(LineAppearancePreset.matching(applied) == preset)
             #expect(applied.weighted, "\(preset) changed the weighting")
+            #expect(applied.outline.painted == 1, "\(preset) changed what stays when painted")
         }
         var custom = LineAppearance.default
         custom.texture.opacity[1] = 0.33
         #expect(LineAppearancePreset.matching(custom) == nil)
+    }
+
+    /// Paste Settings reads the copied text back, a preset that names only some fields, and
+    /// nothing from text without settings; values beyond a setting's range are clamped.
+    @Test func pastedTextYieldsItsSettings() throws {
+        var kept = LineAppearancePreset.grow.applied(to: .default)
+        kept.outline.painted = 1
+        let snapshot = AdvancedReport.Snapshot(
+            app: "1.0 (1)", picture: "parrots", paintingLength: "relaxed", lineArt: Self.changedArt,
+            tuning: Self.changedTuning, lineAppearance: kept, preview: nil, defaults: nil)
+        // The note comes before the JSON and may hold braces of its own.
+        let text = AdvancedReport.text(snapshot: snapshot, pictureTitle: "Parrots", summary: nil, changes: [], note: "a {note}")
+        let imported = try #require(AdvancedReport.settings(in: text))
+        #expect(imported == .init(lineArt: Self.changedArt, tuning: Self.changedTuning, lineAppearance: kept))
+
+        let preset = """
+            {"lineArt": {"style": "layered", "samePaint": "split"},
+             "lineAppearance": {"outline": {"opacity": [1, 1, 1], "width": [1.3, 1.3, 1.35], "painted": 1}}}
+            """
+        let partial = try #require(AdvancedReport.settings(in: preset))
+        #expect(partial.tuning == nil)
+        #expect(partial.lineArt == LineArtSettings(style: .layered, samePaint: .split))
+        #expect(partial.lineAppearance?.outline.painted == 1 && partial.lineAppearance?.detail == LineAppearance.default.detail)
+
+        let wild = try #require(AdvancedReport.settings(
+            in: #"{"tuning": {"smoothing": 99}, "lineAppearance": {"color": {"opacity": [2, 2, 2], "width": [0, 0, 0], "painted": -1}}}"#))
+        #expect(wild.tuning?.smoothing == PipelineTuning.range.upperBound)
+        #expect(wild.lineAppearance?.color == .init(opacity: [1, 1, 1], width: [0.2, 0.2, 0.2], painted: 0))
+
+        for text in ["Hello", "{}", #"{"picture": "parrots"}"#, #"{"lineArt": 5}"#, "{not json}"] {
+            #expect(AdvancedReport.settings(in: text) == nil, "settings found in \(text)")
+        }
+    }
+
+    @Test func pastedSettingsApplyStoreAndReport() throws {
+        let (defaults, suite) = try Self.makeDefaults()
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"))
+        var kept = LineAppearance.default
+        kept.outline.painted = 1
+        model.apply(AdvancedReport.Imported(lineArt: Self.changedArt, lineAppearance: kept))
+        #expect(model.lineArt == Self.changedArt && model.tuning.isDefault && model.appearance == kept)
+        let stored = Preferences(defaults: defaults)
+        #expect(stored.lineArt == Self.changedArt && stored.lineAppearance == kept)
+        // Lines kept when painted are reported per layer; the preset is still recognized.
+        #expect(model.changes.contains("Line Appearance Fade"))
+        #expect(model.changes.contains("Outlines When Painted 100%"))
+        // A later paste with one group leaves the others.
+        model.apply(AdvancedReport.Imported(tuning: Self.changedTuning))
+        #expect(model.lineArt == Self.changedArt && model.tuning == Self.changedTuning && model.appearance == kept)
     }
 
     @Test func layerClarityNamesTheZoomLinesReadFrom() {

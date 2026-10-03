@@ -47,6 +47,9 @@ nonisolated struct CanvasUniforms {
     var lineWidth: SIMD4<Float> = .zero
     /// x: 1 when lines are weighted by their edge's strength (`LineStyle.weighted`).
     var lineMode: SIMD4<Float> = .zero
+    /// The fraction of each layer's ink a line keeps between two painted cells
+    /// (`LineStyle.painted`); 0 dissolves it, as classic lines do.
+    var linePainted: SIMD4<Float> = .zero
 }
 
 nonisolated extension CanvasUniforms {
@@ -73,6 +76,7 @@ nonisolated extension CanvasUniforms {
         lineAlpha = ink.w * style.opacity
         lineWidth = outline.x * style.width
         lineMode = SIMD4(style.weighted ? 1 : 0, 0, 0, 0)
+        linePainted = style.painted
     }
 }
 

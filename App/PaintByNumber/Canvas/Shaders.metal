@@ -26,6 +26,7 @@ struct FrameUniforms {
     float4 lineAlpha;   // ink opacity per line layer (x outline, y detail, z texture, w color)
     float4 lineWidth;   // line width (px) per layer
     float4 lineMode;    // x: 1 when lines are weighted by their edge's strength
+    float4 linePainted; // fraction of each layer's ink a line keeps between two painted cells
 };
 
 // Must match `RegionState` (CanvasTypes.swift).
@@ -265,9 +266,10 @@ vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
     float now = u.time.x;
     float left = paintedAmount(states[nb.x], now);
     float right = nb.y == kOutside ? 1.0 : paintedAmount(states[nb.y], now);
-    // Edges between two painted regions dissolve: finished areas read as a painting. A stroke
-    // inside a cell dissolves with its cell.
-    float visible = 1.0 - min(left, right);
+    // Edges between two painted regions dissolve, so finished areas read as a painting, except
+    // for the fraction of its ink the layer keeps when painted (a drawing over the painting). A
+    // stroke inside a cell goes with its cell the same way.
+    float visible = 1.0 - min(left, right) * (1.0 - u.linePainted[layer]);
     // The selected color's unpainted cells are outlined boldly, at least as strongly as a classic
     // selected line whatever the layer of their boundary, so every cell to paint stands out. A
     // stroke inside a cell is drawing, not a boundary: it keeps its layer's look.

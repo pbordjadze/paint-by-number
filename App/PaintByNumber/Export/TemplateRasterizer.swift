@@ -232,27 +232,30 @@ nonisolated enum TemplateRasterizer {
     /// Layered line art: each layer's lines in the style's outline color at the layer's opacity
     /// and width (`look`'s factors on the style's), faintest layer first so stronger lines lie on
     /// top where they meet. Lines between painted regions and strokes inside painted cells go
-    /// with `hidesOutlinesBetweenPainted`, as on the canvas.
+    /// with `hidesOutlinesBetweenPainted`, as on the canvas, but for the fraction of their ink
+    /// their layer keeps when painted (`look.painted`).
     private static func drawLayeredOutlines(
         _ t: Template, lines: DrawableLineArt, look: LineStyle, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat
     ) {
         let visible = ctx.boundingBoxOfClipPath
-        // One path per layer, and per tenth of the layer's width when lines are weighted.
+        // One path per layer, per tenth of the layer's width when lines are weighted, and per
+        // whether the line is covered by paint on both sides.
         var paths: [Int: CGMutablePath] = [:]
-        func add(_ points: ArraySlice<SIMD2<Float>>, layer: UInt8, weight: Float) {
+        func add(_ points: ArraySlice<SIMD2<Float>>, layer: UInt8, weight: Float, covered: Bool) {
+            guard !covered || look.painted[Int(layer)] > 0 else { return }
             let step = look.weighted ? Int((weight * 10).rounded()) : 10
-            let key = Int(layer) * 100 + step
+            let key = (Int(layer) * 100 + step) * 2 + (covered ? 1 : 0)
             let path = paths[key] ?? CGMutablePath()
             addPolyline(points, to: path, within: visible)
             paths[key] = path
         }
         for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside {
-            if style.hidesOutlinesBetweenPainted && painted[Int(edge.left)] && painted[Int(edge.right)] { continue }
-            add(t.points(of: edge), layer: lines.edgeLayers[e], weight: lines.edgeWeights[e])
+            let covered = style.hidesOutlinesBetweenPainted && painted[Int(edge.left)] && painted[Int(edge.right)]
+            add(t.points(of: edge), layer: lines.edgeLayers[e], weight: lines.edgeWeights[e], covered: covered)
         }
         for (s, stroke) in lines.strokes.enumerated() {
-            if style.hidesOutlinesBetweenPainted && painted[Int(stroke.region)] { continue }
-            add(lines.points(of: stroke), layer: stroke.layer, weight: lines.strokeWeights[s])
+            let covered = style.hidesOutlinesBetweenPainted && painted[Int(stroke.region)]
+            add(lines.points(of: stroke), layer: stroke.layer, weight: lines.strokeWeights[s], covered: covered)
         }
         let color = style.outlineColor
         ctx.saveGState()
@@ -261,8 +264,8 @@ nonisolated enum TemplateRasterizer {
         // Descending keys: color lines first, outlines last.
         for key in paths.keys.sorted(by: >) {
             guard let path = paths[key], !path.isEmpty else { continue }
-            let layer = key / 100, factor = CGFloat(key % 100) / 10
-            let opacity = min(1, color.w * look.opacity[layer])
+            let covered = key % 2 == 1, layer = key / 200, factor = CGFloat(key / 2 % 100) / 10
+            let opacity = min(1, color.w * look.opacity[layer] * (covered ? look.painted[layer] : 1))
             let width = style.outlineWidth * CGFloat(look.width[layer]) * factor
             guard opacity > 0.002, width > 0 else { continue }
             ctx.setStrokeColor(cgColor(SIMD4(color.x, color.y, color.z, opacity), space: t.colorSpace))

@@ -10,6 +10,9 @@ nonisolated struct LineStyle: Equatable, Sendable {
     var opacity: SIMD4<Float>
     /// Width per layer, relative to the classic line's.
     var width: SIMD4<Float>
+    /// The fraction of a layer's opacity a line keeps between two painted cells (a stroke: in a
+    /// painted cell); 0 dissolves it, as classic lines do.
+    var painted: SIMD4<Float>
     /// Lines within a layer are drawn heavier or lighter by their edge's strength (`DrawableLineArt.weights`).
     var weighted: Bool
 
@@ -20,9 +23,10 @@ nonisolated struct LineStyle: Equatable, Sendable {
     /// heaviest and color boundaries the lightest; the screen's per-zoom fades don't apply.
     static let print = LineStyle(opacity: SIMD4(1, 0.85, 0.7, 0.55), width: SIMD4(1.5, 1.15, 0.9, 0.8), weighted: false)
 
-    init(opacity: SIMD4<Float>, width: SIMD4<Float>, weighted: Bool) {
+    init(opacity: SIMD4<Float>, width: SIMD4<Float>, painted: SIMD4<Float> = .zero, weighted: Bool) {
         self.opacity = opacity
         self.width = width
+        self.painted = painted
         self.weighted = weighted
     }
 
@@ -30,15 +34,16 @@ nonisolated struct LineStyle: Equatable, Sendable {
     /// `classicStrength` of the full ink. The appearance's opacities are fractions of the full
     /// ink, so they are divided by it: the canvas draws classic lines lighter zoomed out
     /// (`classicStrength(depth:)`), pictures draw them at their style's full ink (1). Its widths
-    /// already are factors of the classic width.
+    /// already are factors of the classic width, and its painted fractions are relative too.
     init(_ appearance: LineAppearance, zoom: Float, classicStrength strength: Float = 1) {
-        var opacity = SIMD4<Float>(repeating: 1), width = SIMD4<Float>(repeating: 1)
+        var opacity = SIMD4<Float>(repeating: 1), width = SIMD4<Float>(repeating: 1), painted = SIMD4<Float>.zero
         for layer in LineLayer.allCases {
             let i = Int(layer.rawValue)
             opacity[i] = max(0, appearance[layer].opacity(atZoom: zoom)) / max(strength, 1e-3)
             width[i] = max(0, appearance[layer].width(atZoom: zoom))
+            painted[i] = LineAppearance.clamped(appearance[layer].painted, to: 0...1)
         }
-        self.init(opacity: opacity, width: width, weighted: appearance.weighted)
+        self.init(opacity: opacity, width: width, painted: painted, weighted: appearance.weighted)
     }
 
     /// Classic line art's opacity as a fraction of the paper's full ink, `depth` zoom doublings

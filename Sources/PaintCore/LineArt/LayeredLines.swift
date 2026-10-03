@@ -21,8 +21,9 @@ import Foundation
 /// 5. `trim`: lines keep only the stretches that run along a cell boundary (a line dangling
 ///    inside a cell is not drawn); eyes are kept whole.
 /// 6. `join`: same-paint neighbours join per `samePaint` (by default across texture lines),
-///    and the lines that end up inside a cell become interior strokes. Paints no cell uses
-///    are dropped, cells renumbered.
+///    and the lines that end up inside a cell become interior strokes (stretches shorter than
+///    `LineLayering.minimumRun` are trimming leftovers, not drawing, and go). Paints no cell
+///    uses are dropped, cells renumbered.
 /// After vectorizing, `annotate` gives each boundary edge the layer of the line along it
 /// (`color` where only the paint changes) and a weight.
 ///
@@ -183,7 +184,10 @@ enum LayeredLines {
         for line in trimmed {
             let flags = Self.near(line, distance: distance, width: w)
             boundary += line.pieces(keeping: flags, freeCuts: true)
-            for piece in line.pieces(keeping: flags.map { !$0 }, freeCuts: true) {
+            // A piece shorter than the layering's minimum run is a boundary stretch's end
+            // point (every piece takes one point beyond its run) or the sliver a merged tiny
+            // cell left, not a line drawn inside the cell.
+            for piece in line.pieces(keeping: flags.map { !$0 }, freeCuts: true) where piece.length >= LineLayering.minimumRun {
                 interior += Self.byRegion(piece, labels: final.label, width: w, height: h)
             }
         }

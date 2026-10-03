@@ -15,6 +15,8 @@ struct AdvancedSettingsView: View {
     @State private var isSharing = false
     @State private var isConfirmingReset = false
     @State private var copied = false
+    @State private var pasted = false
+    @State private var pasteFailed = false
     #if DEBUG
     @State private var didPrepareDemo = false
     #endif
@@ -232,6 +234,7 @@ struct AdvancedSettingsView: View {
                 SwiftUI.Label("Share with a Note…", systemImage: "square.and.arrow.up")
             }
             .accessibilityIdentifier("advanced-share")
+            pasteRow
             Button(role: .destructive) {
                 isConfirmingReset = true
             } label: {
@@ -251,7 +254,45 @@ struct AdvancedSettingsView: View {
             Text(String(localized: "advanced.section.feedback", defaultValue: "Feedback",
                         comment: "Settings › Advanced: header of the section for sending the settings to the developer and resetting them"))
         } footer: {
-            Text("Copies include the picture, the preview’s numbers and every setting, so what you saw can be made again.")
+            Text("Copies include the picture, the preview’s numbers and every setting, so what you saw can be made again. Paste takes the settings in copied text, from another device or a preset.")
+        }
+    }
+
+    /// Paste Settings: the system paste button (no permission prompt) beside what it does. The
+    /// button is enabled while the clipboard holds text.
+    private var pasteRow: some View {
+        HStack(spacing: 12) {
+            if pasted {
+                SwiftUI.Label("Pasted", systemImage: "checkmark")
+            } else {
+                SwiftUI.Label("Paste Settings", systemImage: "doc.on.clipboard")
+            }
+            Spacer(minLength: 8)
+            PasteButton(payloadType: String.self) { texts in paste(texts) }
+                .labelStyle(.titleOnly)
+                .buttonBorderShape(.capsule)
+                .controlSize(.small)
+                .tint(Theme.signature)
+                .accessibilityIdentifier("advanced-paste")
+        }
+        .alert("Couldn’t Read Settings", isPresented: $pasteFailed) {} message: {
+            Text("The pasted text holds no Paint by Moonlight settings.")
+        }
+    }
+
+    private func paste(_ texts: [String]) {
+        guard let imported = texts.lazy.compactMap(AdvancedReport.settings(in:)).first else {
+            pasteFailed = true
+            return
+        }
+        FeedbackEngine.shared.selectionChanged()
+        withAnimation(.snappy) {
+            model.apply(imported)
+            pasted = true
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            withAnimation(.snappy) { pasted = false }
         }
     }
 

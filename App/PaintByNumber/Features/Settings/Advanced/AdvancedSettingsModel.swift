@@ -305,6 +305,14 @@ final class AdvancedSettingsModel {
 
     func apply(_ preset: LineAppearancePreset) { appearance = preset.applied(to: appearance) }
 
+    /// Takes on pasted settings (`AdvancedReport.settings(in:)`): every group the text had; the
+    /// others stay as they are.
+    func apply(_ imported: AdvancedReport.Imported) {
+        if let art = imported.lineArt { lineArt = art }
+        if let tune = imported.tuning { tuning = tune }
+        if let look = imported.lineAppearance { appearance = look }
+    }
+
     // MARK: Feedback
 
     /// Every setting that differs from its default, worded ("Smallest Area 2×").
@@ -322,6 +330,9 @@ final class AdvancedSettingsModel {
             list.append(Self.change(title, value))
             if appearance.weighted != LineAppearance.default.weighted {
                 list.append(Self.change(AdvancedText.weightTitle, AdvancedText.onOff(appearance.weighted)))
+            }
+            for layer in LineLayer.allCases where appearance[layer].painted != LineAppearance.default[layer].painted {
+                list.append(Self.change(AdvancedText.paintedTitle(of: layer), AdvancedText.percent(appearance[layer].painted)))
             }
         }
         return list

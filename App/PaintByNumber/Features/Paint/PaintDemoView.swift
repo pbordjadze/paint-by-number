@@ -38,6 +38,8 @@ import simd
 /// - `paint-layered-zoom2`, `paint-layered-zoomed`: zoomed 2× and 4× into the drawing, the
 ///   fainter layers coming in
 /// - `paint-layered-dark-paper`: `paint-layered-progress` on dark paper
+/// - `paint-layered-inked`: `paint-layered-progress` with a Line Appearance whose outlines stay
+///   over the paint (the coloring-book look: lines between painted cells keep their ink)
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -197,6 +199,14 @@ private final class Demo {
         case "paint-layered-dark-paper":
             paint(fraction: 0.45)
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
+        case "paint-layered-inked":
+            paint(fraction: 0.45)
+            var appearance = LineAppearance.default
+            appearance.outline.painted = 1
+            appearance.detail.painted = 0.5
+            if let data = try? JSONEncoder().encode(appearance) {
+                UserDefaults.standard.register(defaults: [SettingsKey.lineAppearance: data])
+            }
         case "paint-layered-zoom2", "paint-layered-zoomed":
             paint(fraction: 0.2)
             camera = CanvasCamera(zoom: scenario == "paint-layered-zoom2" ? 2 : 4, center: Self.busiest(t))

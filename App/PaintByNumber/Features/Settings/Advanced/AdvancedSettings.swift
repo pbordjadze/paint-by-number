@@ -243,7 +243,7 @@ nonisolated struct AdvancedStats: Equatable, Sendable {
 }
 
 /// Quick starting points for Line Appearance: how the four layers' opacity and width change
-/// with zoom. Presets leave `weighted` alone.
+/// with zoom. Presets leave `weighted` and what stays when painted alone.
 nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Sendable {
     /// The owner's pick: fainter layers fade in by opacity, at even weight.
     case fade
@@ -270,23 +270,77 @@ nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Senda
         }
     }
 
-    /// `appearance` with this preset's layers.
+    /// `appearance` with this preset's opacities and widths.
     func applied(to appearance: LineAppearance) -> LineAppearance {
         var result = appearance
-        for (layer, values) in zip(LineLayer.allCases, layers) { result[layer] = values }
+        for (layer, values) in zip(LineLayer.allCases, layers) {
+            result[layer].opacity = values.opacity
+            result[layer].width = values.width
+        }
         return result
     }
 
-    /// The preset whose layers `appearance` has, if any.
+    /// The preset whose opacities and widths `appearance` has, if any.
     static func matching(_ appearance: LineAppearance) -> LineAppearancePreset? {
-        allCases.first { preset in zip(LineLayer.allCases, preset.layers).allSatisfy { appearance[$0] == $1 } }
+        allCases.first { preset in
+            zip(LineLayer.allCases, preset.layers).allSatisfy {
+                appearance[$0].opacity == $1.opacity && appearance[$0].width == $1.width
+            }
+        }
     }
 }
 
 /// The text Copy Settings and Share with a Note hand over: what the painter saw (picture,
 /// numbers, every setting that differs from its default, their note) and the settings as JSON,
 /// which reproduce the preview exactly for a library picture (generation is deterministic).
+/// Paste Settings reads the same text back (`settings(in:)`), so settings travel between
+/// devices, and a preset is any text written like it (`docs/presets/`).
 nonisolated enum AdvancedReport {
+    /// The settings a pasted text holds: each group the text has, clamped to its range.
+    struct Imported: Equatable, Sendable {
+        var lineArt: LineArtSettings?
+        var tuning: PipelineTuning?
+        var lineAppearance: LineAppearance?
+
+        var isEmpty: Bool { lineArt == nil && tuning == nil && lineAppearance == nil }
+    }
+
+    /// The settings in `text`: the JSON object in it that holds any of the three groups, read
+    /// the way stored settings are (fields a build doesn't know fall back to their defaults),
+    /// clamped. Nil when there is none. Objects are tried from each `{` to the last `}`, so a
+    /// note before the JSON may hold braces.
+    static func settings(in text: String) -> Imported? {
+        guard let close = text.lastIndex(of: "}") else { return nil }
+        var start = text.startIndex
+        while let open = text[start..<close].firstIndex(of: "{") {
+            if let groups = try? JSONDecoder().decode(Groups.self, from: Data(text[open...close].utf8)) {
+                let imported = Imported(
+                    lineArt: groups.lineArt?.normalized, tuning: groups.tuning?.normalized,
+                    lineAppearance: groups.lineAppearance?.normalized)
+                return imported.isEmpty ? nil : imported
+            }
+            start = text.index(after: open)
+        }
+        return nil
+    }
+
+    /// The three groups of the snapshot, each optional and read leniently: a group that is not
+    /// an object counts as absent.
+    private struct Groups: Decodable {
+        var lineArt: LineArtSettings?
+        var tuning: PipelineTuning?
+        var lineAppearance: LineAppearance?
+
+        private enum CodingKeys: String, CodingKey { case lineArt, tuning, lineAppearance }
+
+        init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            lineArt = try? c.decodeIfPresent(LineArtSettings.self, forKey: .lineArt)
+            tuning = try? c.decodeIfPresent(PipelineTuning.self, forKey: .tuning)
+            lineAppearance = try? c.decodeIfPresent(LineAppearance.self, forKey: .lineAppearance)
+        }
+    }
+
     struct Snapshot: Codable, Equatable, Sendable {
         struct Numbers: Codable, Equatable, Sendable {
             var areas: Int

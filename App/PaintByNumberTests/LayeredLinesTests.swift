@@ -71,6 +71,12 @@ struct LayeredLinesTests {
         #expect(LineStyle.classicStrength(depth: 0) == 0.7 && abs(LineStyle.classicStrength(depth: 2) - 1) < 1e-6)
         #expect(LineStyle.classic.opacity == SIMD4(repeating: 1) && LineStyle.classic.width == SIMD4(repeating: 1))
         #expect(LineStyle(Self.neutral, zoom: 1) == .classic && LineStyle(Self.neutral, zoom: 4) == .classic)
+        // What stays when painted: nothing by default, in print, or for classic lines.
+        #expect(LineStyle(appearance, zoom: 2).painted == .zero && LineStyle.print.painted == .zero && LineStyle.classic.painted == .zero)
+        var kept = appearance
+        kept.outline.painted = 1
+        kept.color.painted = 0.5
+        #expect(LineStyle(kept, zoom: 2).painted == SIMD4(1, 0, 0, 0.5))
         // Fainter layers are fainter and finer by default, and come in as the painter zooms.
         let fitted = LineStyle(appearance, zoom: 1), deep = LineStyle(appearance, zoom: 4)
         for i in 1..<4 {
@@ -88,12 +94,16 @@ struct LayeredLinesTests {
         #expect(LineAppearance.stored(in: defaults) == .default)
         var custom = LineAppearance.default
         custom.texture.opacity = [0.4, 0.6, 1]
+        custom.outline.painted = 1
         custom.weighted = true
         try defaults.set(JSONEncoder().encode(custom), forKey: SettingsKey.lineAppearance)
         #expect(LineAppearance.stored(in: defaults) == custom)
         defaults.set(Data("not json".utf8), forKey: SettingsKey.lineAppearance)
         #expect(LineAppearance.stored(in: defaults) == .default)
         #expect(LineAppearance.decoded(nil) == .default)
+        // An appearance stored before lines could stay painted dissolves them.
+        let old = Data(#"{"outline": {"opacity": [1, 1, 1], "width": [1, 1, 1]}}"#.utf8)
+        #expect(LineAppearance.decoded(old).outline == .init(opacity: [1, 1, 1], width: [1, 1, 1], painted: 0))
     }
 
     // MARK: Line data and geometry
@@ -173,6 +183,7 @@ struct LayeredLinesTests {
         u.outline = SIMD4(1.25, 2.4, 1, 1)
         u.setLines(.classic)
         #expect(u.lineAlpha == SIMD4(repeating: 0.434) && u.lineWidth == SIMD4(repeating: 1.25) && u.lineMode == .zero)
+        #expect(u.linePainted == .zero)
 
         let context = try #require(RenderContext.shared)
         let classic = try #require(CanvasScene(template: CanvasRenderTests.template, context: context))
@@ -183,11 +194,14 @@ struct LayeredLinesTests {
         let layered = try #require(CanvasScene(template: Self.mosaic, context: context))
         #expect(layered.isLayered && layered.segmentCount > classic.segmentCount)
         var options = CanvasSnapshot.Options.preview
-        options.lineAppearance = .default
+        var kept = LineAppearance.default
+        kept.detail.painted = 0.4
+        options.lineAppearance = kept
         options.lineZoom = 2
         let l = CanvasSnapshot.uniforms(scene: layered, width: 240, height: 320, options: options)
-        let style = LineStyle(.default, zoom: 2)
+        let style = LineStyle(kept, zoom: 2)
         #expect(l.lineAlpha == l.ink.w * style.opacity && l.lineWidth == l.outline.x * style.width)
+        #expect(l.linePainted == SIMD4(0, 0.4, 0, 0))
     }
 
     // MARK: Canvas rendering (Metal)
@@ -251,6 +265,51 @@ struct LayeredLinesTests {
             let paint = bytes(t.palette[Int(t.regions[Int(stroke.region)].colorIndex)].rgb)
             #expect(maxDifference(painted[x, y], paint) <= 3, "stroke in region \(stroke.region) should dissolve with its cell")
         }
+    }
+
+    /// A layer that keeps its ink when painted draws over the paint: with everything painted
+    /// and outlines kept, outline edges and strokes still differ from the dissolved render,
+    /// while the other layers' edges have dissolved just the same.
+    @Test func keptLayersStayInkedOverThePaint() throws {
+        let t = Self.mosaic
+        let art = try #require(t.lineArt)
+        var options = CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: 1.5)
+        let size = CGSize(width: t.width * 2, height: t.height * 2)
+        var done = PaintProgress(regionCount: t.regions.count)
+        for r in t.regions.indices { done.paint(r) }
+        var kept = LineAppearance.default
+        kept.outline.painted = 1
+        options.lineAppearance = kept
+        let keptImage = try #require(CanvasSnapshot.render(template: t, progress: done, size: size, options: options))
+        record(keptImage, "layered-kept-painted")
+        options.lineAppearance = .default
+        let dissolved = Pixels(try #require(CanvasSnapshot.render(template: t, progress: done, size: size, options: options)))
+        let inked = Pixels(keptImage)
+        func differs(_ x: Int, _ y: Int) -> Bool {
+            (-1...1).contains { dy in (-1...1).contains { dx in maxDifference(inked[x + dx, y + dy], dissolved[x + dx, y + dy]) > 8 } }
+        }
+        var outlines = 0, outlinesInked = 0, others = 0, othersInked = 0
+        for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside && edge.pointCount >= 3 {
+            let p = t.points[Int(edge.pointStart + edge.pointCount / 2)]
+            let d = differs(Int(p.x * 2), Int(p.y * 2))
+            if art.edgeLayers[e] == LineLayer.outline.rawValue {
+                outlines += 1
+                if d { outlinesInked += 1 }
+            } else {
+                others += 1
+                if d { othersInked += 1 }
+            }
+        }
+        #expect(outlines > 5 && others > 15)
+        #expect(outlinesInked * 10 >= outlines * 8, "kept outlines over the paint: \(outlinesInked) of \(outlines)")
+        #expect(othersInked * 10 <= others * 2, "dissolved layers over the paint: \(othersInked) of \(others)")
+        // Strokes are outlines too: kept inside their painted cell.
+        var strokesInked = 0
+        for stroke in art.strokes {
+            let p = art.strokePoints[Int(stroke.pointStart) + 1]
+            if differs(Int(p.x * 2), Int(p.y * 2)) { strokesInked += 1 }
+        }
+        #expect(strokesInked * 10 >= art.strokes.count * 8, "kept strokes: \(strokesInked) of \(art.strokes.count)")
     }
 
     /// The selected color's unpainted cells are outlined boldly even where their boundary is
@@ -368,9 +427,14 @@ struct LayeredLinesTests {
         #expect(outline < color - 60, "outline \(outline) vs color line \(color)")
         #expect(color < 250, "the color line still shows: \(color)")
         #expect(stroke < color && stroke > outline, "the detail stroke sits between: \(stroke)")
-        // Painted: the stroke goes with its cell.
+        // Painted: the stroke goes with its cell, unless its layer keeps its ink when painted.
         let painted = PixelReader(try #require(TemplateRasterizer.image(t, painted: [true, false, false], style: screen, maxPixelSize: 480)))
         for x in 77...83 { #expect(painted[x, 120] == SIMD3(255, 0, 0)) }
+        var kept = LineAppearance.default
+        kept.detail.painted = 1
+        screen.lines = .screen(kept, zoom: 1)
+        let over = PixelReader(try #require(TemplateRasterizer.image(t, painted: [true, false, false], style: screen, maxPixelSize: 480)))
+        #expect((77...83).contains { maxDifference(over[$0, 120], SIMD3(255, 0, 0)) > 20 }, "the kept stroke should ink the painted stripe")
 
         var print = TemplateRasterizer.Style.printable
         print.outlineWidth = 4

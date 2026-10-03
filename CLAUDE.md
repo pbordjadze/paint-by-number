@@ -196,21 +196,26 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   its interior strokes inside their cells. `LineAppearance` (Settings › Advanced, JSON under
   `SettingsKey.lineAppearance`; `LineAppearance.stored()` reads it off the main actor) gives each layer
   an opacity (fraction of the paper's full ink, which classic lines reach zoomed in) and a width
-  (factor of the classic width) at 1×/2×/4× (1 = fitted). `LineStyle` turns it into factors of a
-  renderer's classic line (the canvas divides by its zoom ramp `classicStrength`; pictures draw their
-  classic line at full ink); `.classic` (every factor 1) keeps classic frames and pictures exactly as
-  they were, `.print` prints every layer in PDFs. `DrawableLineArt` checks the line data (bad strokes are
-  dropped, counts that don't match the edges draw as classic) and `OutlineGeometry` gives the canvas a
-  line per edge, then per stroke with its cell on both sides, each with (layer, weight); the outline
-  shader reads `CanvasUniforms.lineAlpha/lineWidth/lineMode`. `weighted` scales a line's width by its
+  (factor of the classic width) at 1×/2×/4× (1 = fitted), and a `painted` fraction: how much of its
+  lines stays once both sides are painted (0 by default, tolerant decoding). `LineStyle` turns it into
+  factors of a renderer's classic line (the canvas divides by its zoom ramp `classicStrength`; pictures
+  draw their classic line at full ink); `.classic` (every factor 1, nothing kept when painted) keeps
+  classic frames and pictures exactly as they were, `.print` prints every layer in PDFs.
+  `DrawableLineArt` checks the line data (bad strokes are dropped, counts that don't match the edges
+  draw as classic) and `OutlineGeometry` gives the canvas a line per edge, then per stroke with its
+  cell on both sides, each with (layer, weight); the outline shader reads
+  `CanvasUniforms.lineAlpha/lineWidth/lineMode/linePainted`. `weighted` scales a line's width by its
   strength over its layer's mean (0.6–1.4). Painted: lines between painted cells dissolve, strokes with
-  their cell. Selected: the selected color's unpainted cells keep at least the classic selected outline
+  their cell, but for their layer's `painted` fraction of their ink (the coloring-book look: outlines
+  kept over the paint; `TemplateRasterizer` draws such lines at that fraction where
+  `hidesOutlinesBetweenPainted` would drop them). Selected: the selected color's unpainted cells keep at least the classic selected outline
   whatever their layer; strokes inside them keep their layer's look. `PaintView` reads the preference
   with `@AppStorage`, so an open canvas follows a change at once (`PaintCanvas`/`CanvasView.lineAppearance`).
   Pictures show the 1× look: `CanvasSnapshot.Options.lineAppearance`/`lineZoom` (nil = stored; the
   time-lapse reads it once per export) and `TemplateRasterizer.Style.lines` (`.screen(appearance?,
   zoom:)`, faintest layer first relative to the style's line; `.print` for `.printable`). Demo scenarios
-  `paint-layered`, `-progress`, `-zoom2`, `-zoomed`, `-dark-paper`: the freight train through the real
+  `paint-layered`, `-progress`, `-zoom2`, `-zoomed`, `-dark-paper`, `-inked` (outlines kept when
+  painted): the freight train through the real
   layered pipeline, with `SyntheticTemplate.edgeMap` (blurred OKLab gradient, DEBUG) standing in for the
   learned detector; `-mosaic` uses `SyntheticTemplate.layered` (layers by paint contrast).
 - Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
@@ -379,7 +384,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   one's camera); `TemplateRasterizer` stands in without Metal. Sliders are single adjustable
   VoiceOver elements stepping by `SliderSpec.accessibilityStep`, with a detent and haptic at
   the default. Copy Settings / Share with a Note hand over `AdvancedReport` (the JSON reproduces
-  the preview of a library picture). Demo scenarios `settings-advanced` (+ `-dark`,
+  the preview of a library picture); Paste Settings (the system `PasteButton`, no permission prompt)
+  reads it back through `AdvancedReport.settings(in:)`: the JSON object in the text, each of its three
+  groups optional and tolerant, clamped; groups it leaves out stay. Presets are such text:
+  `docs/presets/` (`coloring-book.json`: closed cells, every line an outline that stays over the
+  paint, measured in its README). Demo scenarios `settings-advanced` (+ `-dark`,
   `-long-text`), `settings-advanced-layered` (Line Appearance, 2×) and `settings-advanced-tuned`
   (Pipeline, effects measured) register their settings instead of storing them.
 - Localization: every user-facing string of the app target lives in

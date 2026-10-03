@@ -281,6 +281,30 @@
         }
       }
     },
+    "advanced.appearance.painted" : {
+      "comment" : "Settings › Advanced › Line Appearance: slider for how much of a layer's lines stays once the areas on both sides are painted; the argument is the layer, e.g. Outlines",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ When Painted"
+          }
+        }
+      }
+    },
+    "advanced.appearance.painted.summary" : {
+      "comment" : "Settings › Advanced › Line Appearance: explanation under the When Painted slider",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How much of the layer’s lines stays once the areas on both sides are painted. None lets finished areas read as paint; all keeps the drawing over the painting, like a coloring book."
+          }
+        }
+      }
+    },
     "advanced.appearance.tile" : {
       "comment" : "Settings › Advanced › Line Appearance: VoiceOver label of a drawing of every layer at a zoom; the argument is the zoom, e.g. 2×",
       "extractionState" : "manual",
@@ -2017,7 +2041,7 @@
       "comment" : "Settings › Advanced: the Copy Settings button for two seconds after the settings were copied",
       "extractionState" : "manual"
     },
-    "Copies include the picture, the preview’s numbers and every setting, so what you saw can be made again." : {
+    "Copies include the picture, the preview’s numbers and every setting, so what you saw can be made again. Paste takes the settings in copied text, from another device or a preset." : {
       "comment" : "Settings › Advanced: footer of the Feedback section",
       "extractionState" : "manual"
     },
@@ -2031,6 +2055,10 @@
     },
     "Couldn’t Create Painting" : {
       "comment" : "Title of the alert shown when saving a new painting from the create flow fails",
+      "extractionState" : "manual"
+    },
+    "Couldn’t Read Settings" : {
+      "comment" : "Title of the alert shown when the text pasted into Settings › Advanced holds no settings",
       "extractionState" : "manual"
     },
     "Couldn’t Open Photo" : {
@@ -3465,6 +3493,14 @@
       "comment" : "Section title in the create flow's Samples pane, and in the picture menu of Settings › Advanced's preview: the bundled paintings and prints",
       "extractionState" : "manual"
     },
+    "Paste Settings" : {
+      "comment" : "Settings › Advanced: row with the system Paste button, which takes the settings in copied text (from Copy Settings on another device, or a preset)",
+      "extractionState" : "manual"
+    },
+    "Pasted" : {
+      "comment" : "Settings › Advanced: shown in the Paste Settings row for a moment after pasted settings were taken on",
+      "extractionState" : "manual"
+    },
     "Paper" : {
       "comment" : "Settings picker choosing the paper the painting canvas shows (light, dark or automatic)",
       "extractionState" : "manual"
@@ -4552,6 +4588,10 @@
           }
         }
       }
+    },
+    "The pasted text holds no Paint by Moonlight settings." : {
+      "comment" : "Message of the alert shown when the text pasted into Settings › Advanced holds no settings",
+      "extractionState" : "manual"
     },
     "The paper size printed templates are laid out for." : {
       "comment" : "Footer under the Printed Templates paper size setting",

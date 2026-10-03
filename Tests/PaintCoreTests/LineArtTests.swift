@@ -110,6 +110,16 @@ struct LineArtTests {
             let p = joined.lineArt!.strokePoints[Int(s.pointStart) + Int(s.pointCount) / 2]
             #expect(joined.region(at: p) == Int(s.region))
         }
+        // No stroke is a trimming leftover: a boundary stretch's end point or a merged tiny cell's
+        // sliver (shorter than the layering's minimum run, less the simplification's slack).
+        for t in [joined, split, all] {
+            let art = t.lineArt!
+            for s in art.strokes where !(s.pointCount > 2 && art.strokePoints[Int(s.pointStart)] == art.strokePoints[Int(s.pointStart + s.pointCount - 1)]) {
+                let pts = art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]
+                let length = zip(pts, pts.dropFirst()).reduce(Float(0)) { $0 + simdLength($1.1 - $1.0) }
+                #expect(length >= LineLayering.minimumRun - 1, "a \(length)-unit stroke inside cell \(s.region)")
+            }
+        }
     }
 
     @Test func eyesAreOutlined() throws {
