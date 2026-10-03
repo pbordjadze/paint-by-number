@@ -103,9 +103,6 @@ final class AdvancedSettingsUITests: XCTestCase {
         let high = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.35))
         var drags = 0
         while drags < maxDrags {
-            // The list settles before the element is looked at: a row that has just left the
-            // screen exists one moment and has no frame to read the next.
-            RunLoop.current.run(until: Date().addingTimeInterval(0.35))
             if isWellInside(element, list) { return }
             let (from, to) = up ? (low, high) : (high, low)
             from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
@@ -113,27 +110,35 @@ final class AdvancedSettingsUITests: XCTestCase {
         }
     }
 
-    /// `element` can be tapped and its middle lies in the list's middle band (from 15 % down to
-    /// 30 % up from the bottom), clear of the edges.
+    /// `element` can be tapped and, once the list has stopped, its middle lies in the list's
+    /// middle band (from 15 % down to 30 % up from the bottom), clear of the edges.
     @MainActor
     private func isWellInside(_ element: XCUIElement, _ list: XCUIElement) -> Bool {
-        guard element.exists, element.isHittable else { return false }
+        guard element.exists, element.isHittable, let settled = settledFrame(of: element) else { return false }
         let frame = list.frame
-        return (frame.minY + frame.height * 0.15...frame.maxY - frame.height * 0.3).contains(element.frame.midY)
+        return (frame.minY + frame.height * 0.15...frame.maxY - frame.height * 0.3).contains(settled.midY)
     }
 
     /// Waits (up to 3 s) until `element` stays put for a moment: the list has stopped scrolling.
     @MainActor
-    private func waitUntilStill(_ element: XCUIElement) {
-        var last = element.frame
+    private func waitUntilStill(_ element: XCUIElement) { _ = settledFrame(of: element) }
+
+    /// `element`'s frame once it has stayed put for half a second (the list has stopped
+    /// scrolling), or nil when it leaves the screen meanwhile: a row still coasting out of view
+    /// exists one moment and has no frame to read the next, which XCTest counts as a failure.
+    @MainActor
+    private func settledFrame(of element: XCUIElement) -> CGRect? {
+        var last: CGRect?
         var still = 0
         let deadline = Date().addingTimeInterval(3)
         while still < 2 && Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            guard element.exists else { return nil }
             let frame = element.frame
             still = frame == last ? still + 1 : 0
             last = frame
         }
+        return last
     }
 
     @MainActor
