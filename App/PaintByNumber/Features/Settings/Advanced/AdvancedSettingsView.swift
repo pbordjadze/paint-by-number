@@ -33,8 +33,7 @@ struct AdvancedSettingsView: View {
                 HStack(spacing: 0) {
                     VStack(spacing: 12) {
                         Spacer(minLength: 0)
-                        card
-                            .frame(height: sideCardHeight)
+                        FittedCard(model: model, height: { sideCardHeight(aspect: $0) }) { card }
                         stats
                         Text(Self.estimateNote)
                             .font(.footnote)
@@ -49,8 +48,7 @@ struct AdvancedSettingsView: View {
             } else {
                 VStack(spacing: 0) {
                     VStack(spacing: 10) {
-                        card
-                            .frame(height: compactCardHeight)
+                        FittedCard(model: model, height: { compactCardHeight(aspect: $0) }) { card }
                         stats
                     }
                     .padding(.horizontal, 16)
@@ -87,26 +85,20 @@ struct AdvancedSettingsView: View {
     private var controlsWidth: CGFloat { min(440, max(360, size.width * 0.4)) }
     /// Pinned on top, the preview takes about a third of the height, so the controls keep room;
     /// less when the picture is wide enough not to need it.
-    private var compactCardHeight: CGFloat {
-        min(max(size.height * 0.36, 210), 360, fittedCardHeight(width: size.width - 32))
+    private func compactCardHeight(aspect: CGFloat) -> CGFloat {
+        min(max(size.height * 0.36, 210), 360, fittedCardHeight(width: size.width - 32, aspect: aspect))
     }
 
     /// Beside the controls, the card is as tall as the picture needs, within the column.
-    private var sideCardHeight: CGFloat {
+    private func sideCardHeight(aspect: CGFloat) -> CGFloat {
         let room = size.height - 220
-        return max(240, min(room, fittedCardHeight(width: size.width - controlsWidth - 40)))
+        return max(240, min(room, fittedCardHeight(width: size.width - controlsWidth - 40, aspect: aspect)))
     }
 
-    /// A card `width` wide that shows the whole picture with the canvas's margins and the
-    /// overlays above and below it.
-    private func fittedCardHeight(width: CGFloat) -> CGFloat {
-        let aspect: CGFloat
-        if let template = model.preview?.template, template.width > 0, template.height > 0 {
-            aspect = CGFloat(template.width) / CGFloat(template.height)
-        } else {
-            aspect = 4 / 3
-        }
-        return max(0, width - 32) / aspect + 2 * (AdvancedPreviewCard.overlayInset + 16) + 8
+    /// A card `width` wide that shows the whole picture (`aspect` = width / height) with the
+    /// canvas's margins and the overlays above and below it.
+    private func fittedCardHeight(width: CGFloat, aspect: CGFloat) -> CGFloat {
+        max(0, width - 32) / aspect + 2 * (AdvancedPreviewCard.overlayInset + 16) + 8
     }
 
     private static var estimateNote: String {
@@ -124,11 +116,7 @@ struct AdvancedSettingsView: View {
             })
     }
 
-    private var stats: some View {
-        AdvancedStatsRow(
-            stats: model.preview?.stats, delta: model.statsDelta,
-            isAtDefaults: model.currentKey == .defaults, isStale: model.isUpdating || model.phase == .loading)
-    }
+    private var stats: some View { AdvancedStatsBar(model: model) }
 
     // MARK: Controls
 
@@ -275,6 +263,37 @@ struct AdvancedSettingsView: View {
             try? await Task.sleep(for: .seconds(2))
             withAnimation(.snappy) { copied = false }
         }
+    }
+}
+
+/// Sizes the preview card for the picture it shows. It reads the model in a body of its own, as
+/// `AdvancedStatsBar` does: on iPhone the screen's body missed the preview's arrival (the
+/// numbers stayed "–" under a finished preview until a touch), while views that read the model
+/// themselves, like the card and the controls, followed it.
+private struct FittedCard<Content: View>: View {
+    let model: AdvancedSettingsModel
+    /// The card's height for a picture of this aspect (width / height).
+    let height: (CGFloat) -> CGFloat
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        content.frame(height: height(aspect))
+    }
+
+    private var aspect: CGFloat {
+        guard let template = model.preview?.template, template.width > 0, template.height > 0 else { return 4 / 3 }
+        return CGFloat(template.width) / CGFloat(template.height)
+    }
+}
+
+/// The preview's numbers, read from the model in a body of their own (see `FittedCard`).
+private struct AdvancedStatsBar: View {
+    let model: AdvancedSettingsModel
+
+    var body: some View {
+        AdvancedStatsRow(
+            stats: model.preview?.stats, delta: model.statsDelta,
+            isAtDefaults: model.currentKey == .defaults, isStale: model.isUpdating || model.phase == .loading)
     }
 }
 

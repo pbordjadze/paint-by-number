@@ -57,8 +57,7 @@ final class AdvancedSettingsUITests: XCTestCase {
         // Settings an earlier, interrupted run may have left behind go first.
         if sectionReset.exists { sectionReset.tap() }
         XCTAssertTrue(value(of: control).hasPrefix("1×"), "Smallest Area doesn't start at 1×: \(value(of: control))")
-        // A touch on a list still coasting from the swipes only stops it, and the slider never
-        // sees the drag.
+        // A touch on a list still moving only stops it, and the slider never sees the drag.
         waitUntilStill(control)
         // From the thumb at 1×, the middle of the log scale from 0.25× to 4×, to three quarters of
         // the way along: about twice the smallest area. Not `adjust(toNormalizedSliderPosition:)`,
@@ -90,12 +89,18 @@ final class AdvancedSettingsUITests: XCTestCase {
     }
 
     /// Scrolls the settings list until `element` can be tapped: towards the end (`up`) or back.
+    /// Short drags held at the end, so the list never coasts past it (on iPhone it is a third of
+    /// the screen, and a swipe flung it past the Pipeline header), along the leading margin,
+    /// clear of slider thumbs.
     @MainActor
-    private func reveal(_ element: XCUIElement, in list: XCUIElement, up: Bool = true, maxSwipes: Int = 12) {
-        var swipes = 0
-        while !(element.exists && element.isHittable) && swipes < maxSwipes {
-            if up { list.swipeUp() } else { list.swipeDown() }
-            swipes += 1
+    private func reveal(_ element: XCUIElement, in list: XCUIElement, up: Bool = true, maxDrags: Int = 30) {
+        let low = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.75))
+        let high = list.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.35))
+        var drags = 0
+        while !(element.exists && element.isHittable) && drags < maxDrags {
+            let (from, to) = up ? (low, high) : (high, low)
+            from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
+            drags += 1
         }
     }
 
