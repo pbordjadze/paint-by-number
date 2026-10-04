@@ -37,9 +37,7 @@ struct RasterizerTests {
             for x in 50..<110 where pixels[x, y].x < 170 { ink += 1 }
         }
         #expect(ink > 40)
-        if let png = ImageCodec.pngData(image) {
-            Attachment.record(png, named: "stripes-template-\(vector ? "vector" : "raster").png")
-        }
+        record(image, "stripes-template-\(vector ? "vector" : "raster")")
     }
 
     @Test func numbersAreNeverDropped() throws {
@@ -80,9 +78,7 @@ struct RasterizerTests {
         }
         #expect(outside == 0)
         #expect(inside > 100)
-        if let png = ImageCodec.pngData(image) {
-            Attachment.record(png, named: "three-digit-number-\(printable ? "printable" : "template").png")
-        }
+        record(image, "three-digit-number-\(printable ? "printable" : "template")")
     }
 
     /// A number in a region with the minimum room stays inside that room at print scale, both
@@ -172,7 +168,7 @@ struct PDFExporterTests {
         Attachment.record(data, named: "parrots.pdf")
         for index in 1...document.numberOfPages {
             let page = try #require(document.page(at: index))
-            let image = try #require(render(page, scale: 2))
+            let image = try #require(Fixtures.rasterize(page, scale: 2))
             let pixels = PixelReader(image)
             // Something besides white paper was drawn.
             var ink = 0
@@ -180,7 +176,7 @@ struct PDFExporterTests {
                 for x in stride(from: 0, to: pixels.width, by: 4) where pixels[x, y].x < 200 { ink += 1 }
             }
             #expect(ink > 50)
-            if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "parrots-pdf-page\(index).png") }
+            record(image, "parrots-pdf-page\(index)")
         }
     }
 
@@ -285,7 +281,7 @@ struct PDFExporterTests {
         // Each sheet shows its part of the outlines: the separators at canvas x = 700 and 1400.
         for index in 2...(sheets.count + 1) {
             let page = try #require(document.page(at: index))
-            let image = try #require(render(page, scale: 2))
+            let image = try #require(Fixtures.rasterize(page, scale: 2))
             let pixels = PixelReader(image)
             var ink = 0
             // Inside the body (72...576 pt down, 36...756 pt across at 2 px/pt), clear of the
@@ -304,20 +300,6 @@ struct PDFExporterTests {
         #expect(PDFExporter.Paper.default(for: Locale.Region("US")) == .letter)
         #expect(PDFExporter.Paper.default(for: Locale.Region("DE")) == .a4)
         #expect(PDFExporter.Paper.default(for: nil) == .a4)
-    }
-
-    private func render(_ page: CGPDFPage, scale: CGFloat) -> CGImage? {
-        let box = page.getBoxRect(.mediaBox)
-        let width = Int(box.width * scale), height = Int(box.height * scale)
-        guard let ctx = CGContext(
-            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
-        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        ctx.scaleBy(x: scale, y: scale)
-        ctx.drawPDFPage(page)
-        return ctx.makeImage()
     }
 }
 

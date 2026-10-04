@@ -10,8 +10,6 @@ import UIKit
 /// Renders the synthetic template offscreen with the canvas shaders and checks pixels.
 /// Rendered PNGs are attached to the results for visual inspection.
 struct CanvasRenderTests {
-    static let template = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
-
     @Test func shaderStructLayoutsMatchMetal() {
         #expect(MemoryLayout<CanvasUniforms>.stride == 320)
         #expect(MemoryLayout<RegionState>.stride == 32)
@@ -19,7 +17,7 @@ struct CanvasRenderTests {
     }
 
     @Test func syntheticTemplateIsWatertight() {
-        let t = Self.template
+        let t = Fixtures.mosaic
         var total: Float = 0
         for r in t.regions {
             var area: Float = 0
@@ -41,7 +39,7 @@ struct CanvasRenderTests {
     }
 
     @Test func paintedRegionsShowTheirPaintAndTheRestIsPaper() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         var progress = PaintProgress(regionCount: t.regions.count)
         for r in t.regions.indices where r % 2 == 0 { progress.paint(r) }
         let image = try #require(CanvasSnapshot.render(template: t, progress: progress, size: size(t, 1), options: .painting))
@@ -60,7 +58,7 @@ struct CanvasRenderTests {
     }
 
     @Test func outlinesDarkenOpenBoundariesAndDissolveBetweenPaintedRegions() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         let options = CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: 1.5)
         let blank = try #require(CanvasSnapshot.render(template: t, progress: nil, size: size(t, 2), options: options))
         var done = PaintProgress(regionCount: t.regions.count)
@@ -85,7 +83,7 @@ struct CanvasRenderTests {
     }
 
     @Test func numbersAppearWhenLegibleAndVanishOncePainted() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         let blank = try #require(CanvasSnapshot.render(template: t, progress: nil, size: size(t, 2), options: .preview))
         var done = PaintProgress(regionCount: t.regions.count)
         for r in t.regions.indices { done.paint(r) }
@@ -116,7 +114,7 @@ struct CanvasRenderTests {
     }
 
     @Test func selectedColorIsHighlighted() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         // The darkest paint: its tint must be unmistakable.
         let color = t.palette.indices.min { t.palette[$0].oklab.x < t.palette[$1].oklab.x }!
         var options = CanvasSnapshot.Options.painting
@@ -141,7 +139,7 @@ struct CanvasRenderTests {
     }
 
     @Test func labelSizesFollowSharedRule() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         let context = try #require(RenderContext.shared)
         let scene = try #require(CanvasScene(template: t, context: context))
         let maxSize = 0.045 * Float(min(t.width, t.height))
@@ -241,7 +239,7 @@ struct CanvasRenderTests {
     /// The photo overlay fills exactly the canvas rect, the right way up, and blends with the
     /// canvas below at partial opacity.
     @Test func photoOverlayCoversTheCanvasExactly() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         let context = try #require(RenderContext.shared)
         let scene = try #require(CanvasScene(template: t, context: context))
         // Quadrants, top row first: red | green over blue | yellow.
@@ -302,7 +300,7 @@ struct CanvasRenderTests {
     }
 
     @Test func timelapseFramesReplayTheStrokeLog() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         var progress = PaintProgress(regionCount: t.regions.count)
         for r in t.regions.indices.reversed() { progress.paint(r) }
         let renderer = try #require(TimelapseFrameRenderer(template: t, progress: progress))
@@ -348,7 +346,7 @@ struct CanvasRenderTests {
     /// the selected color's tint and hatching still show (a dark paint on dark paper would not
     /// without lifting).
     @Test func darkPaperKeepsPaintAndLightensPaperNumbersAndHighlight() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         var progress = PaintProgress(regionCount: t.regions.count)
         for r in t.regions.indices where r % 2 == 0 { progress.paint(r) }
         var options = CanvasSnapshot.Options.preview
@@ -401,7 +399,7 @@ struct CanvasRenderTests {
 
     /// Dark paper has no drop shadow: a light rim just outside the sheet outlines it instead.
     @Test func darkPaperDrawsARimInsteadOfAShadow() throws {
-        let t = Self.template
+        let t = Fixtures.mosaic
         let context = try #require(RenderContext.shared)
         let scene = try #require(CanvasScene(template: t, context: context))
         let w = 600, h = 700
@@ -437,10 +435,6 @@ struct CanvasRenderTests {
 
     private func size(_ t: Template, _ scale: Int) -> CGSize {
         CGSize(width: t.width * scale, height: t.height * scale)
-    }
-
-    private func record(_ image: CGImage, _ name: String) {
-        if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "\(name).png") }
     }
 }
 
@@ -551,7 +545,7 @@ struct CanvasPaletteTests {
             #expect(options.palette.paper == CanvasPalette.light.paper)
         }
         let context = try #require(RenderContext.shared)
-        let scene = try #require(CanvasScene(template: CanvasRenderTests.template, context: context))
+        let scene = try #require(CanvasScene(template: Fixtures.mosaic, context: context))
         let u = CanvasSnapshot.uniforms(scene: scene, width: 240, height: 320, options: .preview)
         #expect(u.paper == SIMD4(CanvasPalette.light.paper, 0) && u.rim.w == 0)
     }
@@ -572,7 +566,7 @@ struct CanvasPaletteTests {
     /// from its window, so a system appearance change reaches an Automatic canvas. A view
     /// outside a window never sees an appearance change, hence the window, as in the app.
     @Test func canvasResolvesPaperFromPreferenceAndTraits() throws {
-        let canvas = CanvasView(session: PaintingSession(template: CanvasRenderTests.template))
+        let canvas = CanvasView(session: PaintingSession(template: Fixtures.mosaic))
         let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
         let window = UIWindow(windowScene: scene)
         window.frame = CGRect(x: 0, y: 0, width: 390, height: 700)

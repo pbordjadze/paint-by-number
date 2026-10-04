@@ -8,7 +8,7 @@ import UIKit
 
 @MainActor
 struct PaintingSessionTests {
-    let template = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
+    let template = Fixtures.mosaic
 
     private func label(_ region: Int) -> SIMD2<Float> { template.labels(ofRegion: region).first!.position }
 

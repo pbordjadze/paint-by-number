@@ -184,7 +184,7 @@ struct CanvasAccessibilityQueryTests {
 
 @MainActor
 struct CanvasViewAccessibilityTests {
-    let template = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
+    let template = Fixtures.mosaic
     static let chrome = UIEdgeInsets(top: 60, left: 0, bottom: 100, right: 0)
 
     private func makeCanvas(_ session: PaintingSession, camera: CanvasCamera? = nil) -> CanvasView {
@@ -459,7 +459,7 @@ struct CanvasViewAccessibilityTests {
             let state = try #require(canvas.regionState(r))
             #expect(state.duration == 0 && state.painted == 0)
         }
-        try await Task.sleep(for: .seconds(1))
+        try await waitUntil { canvas.regionState(painted[0])?.painted == 1 }
         for r in painted {
             let state = try #require(canvas.regionState(r))
             #expect(state.duration == 0 && state.painted == 1)

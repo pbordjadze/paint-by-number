@@ -13,7 +13,7 @@ struct LayeredLinesTests {
     /// The canvas tests' mosaic with every edge's layer set by its index (border edges too) and
     /// one outline-layer stroke inside each cell that has room: layers are known per edge.
     static let mosaic: Template = {
-        let t = CanvasRenderTests.template
+        let t = Fixtures.mosaic
         var layers: [UInt8] = [], weights: [UInt8] = []
         for e in t.edges.indices {
             layers.append(UInt8(e % 4))
@@ -120,7 +120,7 @@ struct LayeredLinesTests {
     }
 
     @Test func classicGeometryIsTheEdgesAsEver() {
-        let t = CanvasRenderTests.template
+        let t = Fixtures.mosaic
         let g = OutlineGeometry(t)
         #expect(g.lineArtStyle == nil && g.points == t.points)
         var segments: [SIMD2<UInt32>] = []
@@ -152,7 +152,7 @@ struct LayeredLinesTests {
             let segments = g.segments.filter { $0.y == UInt32(line) }
             #expect(segments.map(\.x) == (0..<(stroke.pointCount - 1)).map { UInt32(t.points.count) + stroke.pointStart + $0 })
         }
-        let classicSegments = OutlineGeometry(CanvasRenderTests.template).segments
+        let classicSegments = OutlineGeometry(Fixtures.mosaic).segments
         #expect(Array(g.segments.prefix(classicSegments.count)) == classicSegments)
     }
 
@@ -186,7 +186,7 @@ struct LayeredLinesTests {
         #expect(u.linePainted == .zero)
 
         let context = try #require(RenderContext.shared)
-        let classic = try #require(CanvasScene(template: CanvasRenderTests.template, context: context))
+        let classic = try #require(CanvasScene(template: Fixtures.mosaic, context: context))
         #expect(classic.lineArtStyle == nil)
         let c = CanvasSnapshot.uniforms(scene: classic, width: 240, height: 320, options: .preview)
         #expect(c.lineAlpha == SIMD4(repeating: c.ink.w) && c.lineWidth == SIMD4(repeating: c.outline.x))
@@ -212,7 +212,7 @@ struct LayeredLinesTests {
         var lineless = Self.mosaic.lineArt!
         lineless.strokes = []
         lineless.strokePoints = []
-        var layered = CanvasRenderTests.template
+        var layered = Fixtures.mosaic
         layered.lineArt = lineless
         let size = CGSize(width: 960, height: 1280)
         var options = CanvasSnapshot.Options(outlines: true, numbers: true)
@@ -220,7 +220,7 @@ struct LayeredLinesTests {
         options.highlight = 3
         var progress = PaintProgress(regionCount: layered.regions.count)
         for r in layered.regions.indices where r % 3 == 0 { progress.paint(r) }
-        let classicImage = try #require(CanvasSnapshot.render(template: CanvasRenderTests.template, progress: progress, size: size, options: options))
+        let classicImage = try #require(CanvasSnapshot.render(template: Fixtures.mosaic, progress: progress, size: size, options: options))
         let layeredImage = try #require(CanvasSnapshot.render(template: layered, progress: progress, size: size, options: options))
         let a = Pixels(classicImage), b = Pixels(layeredImage)
         var differing = 0
@@ -315,7 +315,7 @@ struct LayeredLinesTests {
     /// The selected color's unpainted cells are outlined boldly even where their boundary is
     /// the faintest layer.
     @Test func selectedCellsAreOutlinedWhateverTheLayer() throws {
-        var t = CanvasRenderTests.template
+        var t = Fixtures.mosaic
         t.lineArt = TemplateLineArt(
             edgeLayers: Array(repeating: LineLayer.color.rawValue, count: t.edges.count),
             edgeWeights: Array(repeating: 100, count: t.edges.count))
@@ -378,7 +378,7 @@ struct LayeredLinesTests {
         #expect(abs(d.lineWidth.z - d.outline.x * LineAppearance.default.texture.width[2]) < 1e-3)
 
         // Classic templates ignore it.
-        let classic = canvas(CanvasRenderTests.template)
+        let classic = canvas(Fixtures.mosaic)
         defer { classic.removeFromSuperview() }
         classic.lineAppearance = faint
         let c = classic.frameUniforms()
@@ -390,7 +390,7 @@ struct LayeredLinesTests {
     /// Classic pictures are untouched, and a layered template whose lines are all one layer at
     /// the neutral appearance draws exactly the classic picture.
     @Test func rasterizerDrawsNeutralLayersExactlyLikeClassic() throws {
-        let t = CanvasRenderTests.template
+        let t = Fixtures.mosaic
         var layered = t
         layered.lineArt = TemplateLineArt(
             edgeLayers: Array(repeating: LineLayer.detail.rawValue, count: t.edges.count),
@@ -480,15 +480,7 @@ struct LayeredLinesTests {
         Attachment.record(pdf, named: "layered-parrots.pdf")
         let document = try #require(CGDataProvider(data: pdf as CFData).flatMap { CGPDFDocument($0) })
         let page = try #require(document.page(at: 1))
-        let box = page.getBoxRect(.mediaBox)
-        let ctx = try #require(CGContext(
-            data: nil, width: Int(box.width * 3), height: Int(box.height * 3), bitsPerComponent: 8, bytesPerRow: 0,
-            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
-        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
-        ctx.fill(CGRect(x: 0, y: 0, width: box.width * 3, height: box.height * 3))
-        ctx.scaleBy(x: 3, y: 3)
-        ctx.drawPDFPage(page)
-        record(try #require(ctx.makeImage()), "layered-parrots-pdf-page1")
+        record(try #require(Fixtures.rasterize(page, scale: 3)), "layered-parrots-pdf-page1")
     }
 
     // MARK: Coloring book
@@ -521,7 +513,7 @@ struct LayeredLinesTests {
         let scene = try #require(CanvasScene(template: Self.book, context: context))
         #expect(scene.lineArtStyle == .coloringBook)
         #expect(try #require(CanvasScene(template: Self.mosaic, context: context)).lineArtStyle == .layered)
-        #expect(try #require(CanvasScene(template: CanvasRenderTests.template, context: context)).lineArtStyle == nil)
+        #expect(try #require(CanvasScene(template: Fixtures.mosaic, context: context)).lineArtStyle == nil)
         var options = CanvasSnapshot.Options.preview
         options.lineAppearance = heavy
         let s = CanvasSnapshot.uniforms(scene: scene, width: 240, height: 320, options: options)
@@ -671,9 +663,5 @@ struct LayeredLinesTests {
         var best = 255
         for dy in -1...1 { for dx in -1...1 { best = min(best, luma(px[x + dx, y + dy])) } }
         return best
-    }
-
-    private func record(_ image: CGImage, _ name: String) {
-        if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "\(name).png") }
     }
 }

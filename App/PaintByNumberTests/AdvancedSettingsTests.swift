@@ -396,16 +396,4 @@ struct AdvancedSettingsTests {
         let suite = "AdvancedSettingsTests-\(UUID().uuidString)"
         return (try #require(UserDefaults(suiteName: suite)), suite)
     }
-
-    private func waitUntil(timeout: Duration = .seconds(120), _ condition: () -> Bool) async throws {
-        let clock = ContinuousClock()
-        let deadline = clock.now + timeout
-        while !condition() {
-            guard clock.now < deadline else {
-                Issue.record("Timed out waiting for the Advanced settings model")
-                throw CancellationError()
-            }
-            try await Task.sleep(for: .milliseconds(50))
-        }
-    }
 }

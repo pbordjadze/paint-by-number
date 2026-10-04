@@ -2,11 +2,6 @@ import Foundation
 import Testing
 @testable import PaintByNumber
 
-/// The repository checkout the tests were built from (tests run on the build machine's
-/// simulator, which sees the host's files).
-private let repositoryRoot = URL(filePath: #filePath)
-    .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-
 struct PrivacyManifestTests {
     private static func manifest() throws -> [String: Any] {
         let url = try #require(Bundle.main.url(forResource: "PrivacyInfo", withExtension: "xcprivacy"))
@@ -58,7 +53,7 @@ struct PrivacyManifestTests {
         // (Sources/pbn is a separate command-line tool and is not part of the app).
         var text = ""
         for directory in ["App/PaintByNumber", "Sources/PaintCore"] {
-            let root = repositoryRoot.appending(path: directory, directoryHint: .isDirectory)
+            let root = Fixtures.repositoryRoot.appending(path: directory, directoryHint: .isDirectory)
             let enumerator = try #require(FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil))
             var found = false
             for case let url as URL in enumerator where url.pathExtension == "swift" {
@@ -163,7 +158,7 @@ struct AcknowledgementsTests {
         #expect(hed.license == .apache2 && hed.credit.contains("lllyasviel") && hed.credit.contains("ControlNetHED.pth"))
         let method = try #require(Acknowledgements.methods.first { $0.name == "Holistically-nested edge detection" })
         #expect(method.credit.contains("Saining Xie and Zhuowen Tu") && method.credit.contains("2015"))
-        let script = try String(contentsOf: repositoryRoot.appending(path: "tools/models/convert_hed.py"), encoding: .utf8)
+        let script = try String(contentsOf: Fixtures.repositoryRoot.appending(path: "tools/models/convert_hed.py"), encoding: .utf8)
         #expect(script.contains("lllyasviel/Annotators") && script.contains("Apache") && script.contains("SOURCE_SHA256 = \""))
         #expect(Bundle.main.url(forResource: "HED", withExtension: "mlmodelc") != nil, "HED.mlmodelc isn't in the app bundle")
         // The line-drawing model: Informative Drawings' MIT-licensed weights, its method among the methods.
@@ -171,7 +166,7 @@ struct AcknowledgementsTests {
         #expect(drawing.license == .mit && drawing.credit.contains("Caroline Chan") && drawing.credit.contains("sk_model.pth"))
         let drawingMethod = try #require(Acknowledgements.methods.first { $0.name == "Informative drawings" })
         #expect(drawingMethod.credit.contains("Chan") && drawingMethod.credit.contains("2022"))
-        let lineScript = try String(contentsOf: repositoryRoot.appending(path: "tools/models/convert_lineart.py"), encoding: .utf8)
+        let lineScript = try String(contentsOf: Fixtures.repositoryRoot.appending(path: "tools/models/convert_lineart.py"), encoding: .utf8)
         #expect(lineScript.contains("lllyasviel/Annotators") && lineScript.contains("MIT") && lineScript.contains("SOURCE_SHA256 = \""))
         #expect(Bundle.main.url(forResource: "LineArt", withExtension: "mlmodelc") != nil, "LineArt.mlmodelc isn't in the app bundle")
     }
@@ -185,7 +180,7 @@ struct AcknowledgementsTests {
 
     /// The ported sources still name the projects they come from and the licenses they are under.
     @Test func portedSourcesCiteTheirOrigin() throws {
-        let vector = repositoryRoot.appending(path: "Sources/PaintCore/Vector", directoryHint: .isDirectory)
+        let vector = Fixtures.repositoryRoot.appending(path: "Sources/PaintCore/Vector", directoryHint: .isDirectory)
         let earcut = try String(contentsOf: vector.appending(path: "Earcut.swift"), encoding: .utf8)
         let polylabel = try String(contentsOf: vector.appending(path: "PolyLabel.swift"), encoding: .utf8)
         let curveFitter = try String(contentsOf: vector.appending(path: "CurveFitter.swift"), encoding: .utf8)
@@ -200,7 +195,7 @@ struct AcknowledgementsTests {
     /// whose provenance was never recorded, are in neither.
     @Test func picturesAreCreditedInTheAppAndTheFile() throws {
         #expect(!Sample.all.isEmpty)
-        let text = try String(contentsOf: repositoryRoot.appending(path: "ACKNOWLEDGEMENTS.md"), encoding: .utf8)
+        let text = try String(contentsOf: Fixtures.repositoryRoot.appending(path: "ACKNOWLEDGEMENTS.md"), encoding: .utf8)
         let section = try #require(
             text.components(separatedBy: "\n## Pictures\n").dropFirst().first?.components(separatedBy: "\n## ").first,
             "ACKNOWLEDGEMENTS.md has no Pictures section")
@@ -222,7 +217,7 @@ struct AcknowledgementsTests {
 
     /// `ACKNOWLEDGEMENTS.md` at the repository root repeats what Settings shows.
     @Test func acknowledgementsFileMatchesTheApp() throws {
-        let text = try String(contentsOf: repositoryRoot.appending(path: "ACKNOWLEDGEMENTS.md"), encoding: .utf8)
+        let text = try String(contentsOf: Fixtures.repositoryRoot.appending(path: "ACKNOWLEDGEMENTS.md"), encoding: .utf8)
         for item in Self.all {
             for part in [item.name, item.credit, item.usage] + [item.copyright].compactMap({ $0 }) {
                 #expect(text.contains(part), "ACKNOWLEDGEMENTS.md is missing: \(part)")

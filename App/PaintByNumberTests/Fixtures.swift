@@ -1,9 +1,18 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import Testing
 @testable import PaintByNumber
 
 enum Fixtures {
+    /// The repository checkout the tests were built from (tests run on the build machine's
+    /// simulator, which sees the host's files).
+    static let repositoryRoot = URL(filePath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+
+    /// The canvas tests' synthetic mosaic: 480×640, 6×8 cells.
+    static let mosaic = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
+
     static let stripeColors: [SIMD3<Float>] = [SIMD3(1, 0, 0), SIMD3(0, 1, 0), SIMD3(0, 0, 1), SIMD3(1, 1, 0)]
 
     /// `count` vertical stripes (one region and palette color each, red/green/blue/yellow),
@@ -84,6 +93,43 @@ enum Fixtures {
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }
+
+    /// A PDF page drawn on white at `scale` pixels per point.
+    static func rasterize(_ page: CGPDFPage, scale: CGFloat) -> CGImage? {
+        let box = page.getBoxRect(.mediaBox)
+        let width = Int(box.width * scale), height = Int(box.height * scale)
+        guard let ctx = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.drawPDFPage(page)
+        return ctx.makeImage()
+    }
+}
+
+/// Polls `condition` until it holds; a timeout is recorded at the caller and ends the test.
+@MainActor
+func waitUntil(
+    timeout: Duration = .seconds(120), polling interval: Duration = .milliseconds(50),
+    sourceLocation: SourceLocation = #_sourceLocation, _ condition: () -> Bool
+) async throws {
+    let clock = ContinuousClock()
+    let deadline = clock.now + timeout
+    while !condition() {
+        guard clock.now < deadline else {
+            Issue.record("Timed out waiting for the condition", sourceLocation: sourceLocation)
+            throw CancellationError()
+        }
+        try await Task.sleep(for: interval)
+    }
+}
+
+/// Attaches `image` to the test's results as `<name>.png`.
+func record(_ image: CGImage, _ name: String) {
+    if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "\(name).png") }
 }
 
 /// Reads back pixels of a rendered image as 8-bit RGBA in the image's own color space.

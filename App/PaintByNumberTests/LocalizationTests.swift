@@ -3,11 +3,6 @@ import PaintCore
 import Testing
 @testable import PaintByNumber
 
-/// The repository checkout the tests were built from (tests run on the build machine's
-/// simulator, which sees the host's files).
-private let repositoryRoot = URL(filePath: #filePath)
-    .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-
 /// `Localizable.xcstrings` holds every user-facing string. `tools/strings_check.py` keeps it in
 /// step with the sources on CI's Linux job; these tests check what the app bundle ships and that
 /// the code reads it. They run in English, the catalog's source language.
@@ -15,7 +10,7 @@ struct LocalizationTests {
     private typealias Entry = [String: Any]
 
     private static func catalog(_ name: String) throws -> [String: Entry] {
-        let url = repositoryRoot.appending(path: "App/PaintByNumber/Resources/\(name).xcstrings")
+        let url = Fixtures.repositoryRoot.appending(path: "App/PaintByNumber/Resources/\(name).xcstrings")
         let root = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         #expect(root["sourceLanguage"] as? String == "en")
         return try #require(root["strings"] as? [String: Entry])

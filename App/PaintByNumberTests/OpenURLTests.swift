@@ -19,18 +19,6 @@ struct OpenURLTests {
         try Data(contentsOf: #require(Bundle.main.url(forResource: "parrots", withExtension: "jpg")))
     }
 
-    private func waitUntil(timeout: Duration = .seconds(120), _ condition: () -> Bool) async throws {
-        let clock = ContinuousClock()
-        let deadline = clock.now + timeout
-        while !condition() {
-            guard clock.now < deadline else {
-                Issue.record("Timed out waiting for the create model")
-                throw CancellationError()
-            }
-            try await Task.sleep(for: .milliseconds(50))
-        }
-    }
-
     @Test func aJPEGInTheInboxIsReadDeletedAndOpensTheCreateFlowUnderItsName() async throws {
         let (root, inbox) = makeFolders()
         defer { try? fm.removeItem(at: root) }

@@ -66,7 +66,7 @@ struct PaletteArrangementTests {
     }
 
     @Test func theNextColorFollowsThePalettesOrder() {
-        let template = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
+        let template = Fixtures.mosaic
         let session = PaintingSession(template: template, nicknameSeed: 42)
         #expect(session.nicknameSeed == 42)
         let count = session.paletteCount
