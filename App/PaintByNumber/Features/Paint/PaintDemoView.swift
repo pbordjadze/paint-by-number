@@ -129,16 +129,13 @@ struct PaintDemoView: View {
         var input: LineArtInput?
         if style == .coloringBook, let cgImage = PhotoLoader.cgImage(from: image) {
             input = try? await LineArtInputs.compute(for: cgImage)
-            Self.log.notice("demo \(photo, privacy: .public): edge detector \(input == nil ? "unavailable, using the stand-in map" : "ran", privacy: .public)")
+            Log.demo.notice("demo \(photo, privacy: .public): edge detector \(input == nil ? "unavailable, using the stand-in map" : "ran", privacy: .public)")
         }
         guard let output = try? TemplateGenerator(settings: settings)
             .generate(from: image, lineArt: input ?? LineArtInput(edges: SyntheticTemplate.edgeMap(for: small)))
         else { return nil }
         return output.template.lineArt == nil || output.template.mesh.indices.isEmpty ? nil : output.template
     }
-
-    /// Read from `@concurrent` work, so not on the main actor like the rest of the view.
-    nonisolated private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "demo")
 }
 
 @MainActor
@@ -261,7 +258,7 @@ private final class Demo {
             try? await Task.sleep(for: .seconds(1.5))
             session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
             let attached = session.canvas != nil
-            Self.log.notice("demo paint-hint: requested (canvas attached: \(attached, privacy: .public))")
+            Log.demo.notice("demo paint-hint: requested (canvas attached: \(attached, privacy: .public))")
             return
         }
         if scenario == "paint-photo" {
@@ -274,7 +271,7 @@ private final class Demo {
                 if opacity >= 0.999 { break }
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            Self.log.notice("demo paint-photo: photo opacity \(opacity, privacy: .public)")
+            Log.demo.notice("demo paint-photo: photo opacity \(opacity, privacy: .public)")
             return
         }
         if scenario == PaintTips.demoScenario {
@@ -310,11 +307,9 @@ private final class Demo {
             session.paint([r], from: Self.center(t, r), animated: true)
         }
         let canvas = session.canvas as? CanvasView
-        Self.log.notice(
+        Log.demo.notice(
             "demo paint-fill: painted \(Array(targets), privacy: .public) of color \(color, privacy: .public); frames \(canvas?.framesRendered ?? -1, privacy: .public)")
     }
-
-    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "demo")
 
     private static func center(_ t: Template, _ region: Int) -> SIMD2<Float> {
         t.labels(ofRegion: region).first?.position ?? .zero

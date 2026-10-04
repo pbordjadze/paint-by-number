@@ -191,8 +191,6 @@ final class AdvancedSettingsModel {
     /// until the new one's first template replaces it.
     @ObservationIgnored private var previewLoadID = -1
 
-    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "advanced")
-
     /// - Parameters:
     ///   - picture: The picture to preview; by default the one chosen last, else the painter's
     ///     most recent photo, else the library's first picture.
@@ -450,7 +448,7 @@ final class AdvancedSettingsModel {
             } catch {
                 guard id == loadID else { return }
                 loadTask = nil
-                Self.log.error("Preparing the preview failed: \(String(describing: error), privacy: .public)")
+                Log.advanced.error("Preparing the preview failed: \(String(describing: error), privacy: .public)")
                 phase = .failed(CreateModel.CreateError.unreadable.localizedDescription)
                 updateStatus()
             }
@@ -551,7 +549,7 @@ final class AdvancedSettingsModel {
                     record(preview, isReference: isReference)
                 case .failure(let error):
                     if error is CancellationError { continue }
-                    Self.log.error("Preview generation failed: \(String(describing: error), privacy: .public)")
+                    Log.advanced.error("Preview generation failed: \(String(describing: error), privacy: .public)")
                     failed.insert(key)
                     refreshEffects()
                 }

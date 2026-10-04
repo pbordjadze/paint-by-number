@@ -630,14 +630,13 @@ final class CanvasView: UIView, PaintingCanvas {
             skippedFrames = 0
         } else {
             skippedFrames += 1
-            if skippedFrames == 120 { Self.log.error("canvas: no frame produced for 120 ticks") }
+            if skippedFrames == 120 { Log.canvas.error("canvas: no frame produced for 120 ticks") }
         }
     }
 
     /// Frames presented so far (diagnostics and tests).
     private(set) var framesRendered = 0
     private var skippedFrames = 0
-    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "canvas")
 
     /// The paint state the shaders currently see for a region (tests).
     func regionState(_ region: Int) -> RegionState? { renderer?.states[region] }
@@ -732,7 +731,7 @@ final class CanvasView: UIView, PaintingCanvas {
             guard let self else { return }
             photoTask = nil
             guard let texture else {
-                Self.log.error("canvas: source photo unavailable")
+                Log.canvas.error("canvas: source photo unavailable")
                 onPhotoUnavailable?()
                 return
             }
