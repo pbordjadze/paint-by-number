@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Creates clean simulators and prints "<kind> <udid> <model> <runtime>" lines.
+# Prints one "<kind> <udid> <model> <runtime>" line per simulator wanted.
 #   ci/simulators.sh [iphone|ipad ...]   (default: both)
-# Picks the newest iOS runtime and the newest iPhone Pro / largest iPad Pro device types.
+# Picks the newest iOS runtime and the newest iPhone Pro / largest iPad Pro device types, and
+# uses the runner image's device of that type if it has one, else creates a PBN-<kind>.
 set -euo pipefail
 python3 - "$@" <<'PY'
 import json, subprocess, re, sys
