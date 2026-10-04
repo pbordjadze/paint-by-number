@@ -29,10 +29,7 @@ nonisolated final class TimelapseFrameRenderer {
         let states = [RegionState](repeating: .settled(painted: false), count: template.regions.count)
         var stateBuffers: [any MTLBuffer] = []
         for _ in 0..<TimelapseExporter.framesInFlight {
-            let buffer: (any MTLBuffer)? = states.isEmpty
-                ? context.device.makeBuffer(length: 16, options: .storageModeShared)
-                : context.device.makeBuffer(bytes: states, length: MemoryLayout<RegionState>.stride * states.count, options: .storageModeShared)
-            guard let buffer else { return nil }
+            guard let buffer = CanvasScene.buffer(states, context.device) else { return nil }
             stateBuffers.append(buffer)
         }
         self.context = context
@@ -88,7 +85,7 @@ nonisolated final class TimelapseFrameRenderer {
             commands, scene: scene, states: stateBuffer, uniforms: u,
             targets: RenderContext.Targets(color: texture, multisample: multisample, outlines: outlines),
             content: RenderContext.Content(
-                outlines: options.outlines || scene.lineArtStyle == .coloringBook, numbers: options.numbers,
+                outlines: options.drawsLines(for: scene), numbers: options.numbers,
                 clear: MTLClearColor(red: Double(background.x), green: Double(background.y), blue: Double(background.z), alpha: 1)))
         commands.commit()
         return {

@@ -22,12 +22,16 @@ nonisolated enum CanvasSnapshot {
         var lineZoom: Float = 1
 
         /// The artwork as painted so far: unpainted regions stay paper, no line art (a coloring
-        /// book keeps its drawing: `outlines` is forced on for it by `render`).
+        /// book keeps its drawing, `drawsLines(for:)`).
         static let painting = Options(outlines: false, numbers: false)
         /// Line art and numbers (painted regions filled): a printable template.
         static let preview = Options(outlines: true, numbers: true)
         /// Gallery tile: paint plus faint line art, no numbers.
         static let thumbnail = Options(outlines: true, numbers: false, outlineWidth: 0.8)
+
+        /// Whether `scene`'s line art is drawn: with `outlines`, and always for a coloring book,
+        /// whose drawing is part of the picture.
+        func drawsLines(for scene: CanvasScene) -> Bool { outlines || scene.lineArtStyle == .coloringBook }
     }
 
     /// Renders `template` with `progress` (nil = nothing painted) into an image of `size`
@@ -35,39 +39,38 @@ nonisolated enum CanvasSnapshot {
     static func render(template: Template, progress: PaintProgress?, size: CGSize, options: Options = .painting) -> CGImage? {
         guard let context = RenderContext.shared, let scene = CanvasScene(template: template, context: context) else { return nil }
         let painted = (0..<template.regions.count).map { progress?.isPainted($0) ?? false }
-        return render(scene: scene, template: template, painted: painted, size: size, options: options, context: context)
+        return render(scene: scene, painted: painted, size: size, options: options, context: context)
     }
 
-    static func render(
-        scene: CanvasScene, template: Template, painted: [Bool], size: CGSize, options: Options, context: RenderContext
-    ) -> CGImage? {
+    /// `scene` with the regions `painted` says (one flag per region), as `render(template:…)`.
+    static func render(scene: CanvasScene, painted: [Bool], size: CGSize, options: Options, context: RenderContext) -> CGImage? {
         let w = min(8192, max(1, Int(size.width.rounded()))), h = min(8192, max(1, Int(size.height.rounded())))
-        var states: [RegionState] = []
-        states.reserveCapacity(template.regions.count)
-        for i in template.regions.indices {
-            states.append(.settled(painted: painted[i]))
-        }
-        let u = uniforms(scene: scene, width: w, height: h, options: options)
+        return image(
+            scene: scene, states: painted.map(RegionState.settled(painted:)),
+            uniforms: uniforms(scene: scene, width: w, height: h, options: options),
+            content: RenderContext.Content(outlines: options.drawsLines(for: scene), numbers: options.numbers),
+            width: w, height: h, context: context)
+    }
 
+    /// One frame of `scene` with these region states, uniforms and passes, read back as a
+    /// Display P3 image of `w`×`h` pixels.
+    static func image(
+        scene: CanvasScene, states: [RegionState], uniforms: CanvasUniforms, content: RenderContext.Content,
+        width w: Int, height h: Int, context: RenderContext
+    ) -> CGImage? {
         let device = context.device
         let rowBytes = (w * 4 + 255) / 256 * 256
-        let stateBuffer: (any MTLBuffer)? = states.isEmpty
-            ? device.makeBuffer(length: 16, options: .storageModeShared)
-            : device.makeBuffer(bytes: states, length: MemoryLayout<RegionState>.stride * states.count, options: .storageModeShared)
-        guard let color = context.makeColorTarget(width: w, height: h),
+        guard let stateBuffer = CanvasScene.buffer(states, device),
+              let color = context.makeColorTarget(width: w, height: h),
               let outlines = context.makeOutlineTarget(width: w, height: h),
-              let stateBuffer,
               let readback = device.makeBuffer(length: rowBytes * h, options: .storageModeShared),
               let commands = context.queue.makeCommandBuffer()
         else { return nil }
-
-        // A coloring book's drawing is part of the picture, lines or no lines.
-        let drawsLines = options.outlines || scene.lineArtStyle == .coloringBook
         context.encode(
-            commands, scene: scene, states: stateBuffer, uniforms: u,
+            commands, scene: scene, states: stateBuffer, uniforms: uniforms,
             targets: RenderContext.Targets(
                 color: color, multisample: context.makeMultisampleTarget(width: w, height: h), outlines: outlines),
-            content: RenderContext.Content(outlines: drawsLines, numbers: options.numbers))
+            content: content)
         guard let blit = commands.makeBlitCommandEncoder() else { return nil }
         blit.copy(
             from: color, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),

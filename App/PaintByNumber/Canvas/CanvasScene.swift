@@ -111,7 +111,9 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         self.regionColors = regionColors
     }
 
-    private static func buffer<T>(_ array: [T], _ device: any MTLDevice) -> (any MTLBuffer)? {
+    /// A shared buffer holding `array`; 16 bytes when it is empty, since Metal makes no empty
+    /// buffers and every pass binds its buffers.
+    static func buffer<T>(_ array: [T], _ device: any MTLDevice) -> (any MTLBuffer)? {
         array.withUnsafeBytes { raw in
             guard let base = raw.baseAddress, raw.count > 0 else {
                 return device.makeBuffer(length: 16, options: .storageModeShared)

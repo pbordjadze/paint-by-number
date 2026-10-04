@@ -169,8 +169,7 @@ struct CanvasRenderTests {
         let painted = t.regions.indices.map(progress.isPainted)
         t0 = clock.now
         let image = try #require(CanvasSnapshot.render(
-            scene: scene, template: t, painted: painted, size: CGSize(width: 1800, height: 2400),
-            options: .preview, context: context))
+            scene: scene, painted: painted, size: CGSize(width: 1800, height: 2400), options: .preview, context: context))
         let render = clock.now - t0
         record(image, "large")
         let report = """
@@ -272,7 +271,7 @@ struct CanvasRenderTests {
         var u = CanvasSnapshot.uniforms(scene: scene, width: w, height: h, options: .painting)
         u.photo.x = 1
         let content = RenderContext.Content(outlines: false, numbers: false, photo: texture)
-        let shown = try #require(render(scene: scene, uniforms: u, content: content, width: w, height: h))
+        let shown = try #require(unpainted(scene, uniforms: u, content: content, width: w, height: h, context: context))
         record(shown, "photo-overlay")
         let px = Pixels(shown)
         let left = Double(u.transform.x), right = left + Double(u.transform.z) * Double(t.width)
@@ -296,7 +295,7 @@ struct CanvasRenderTests {
 
         // Half faded in: paint and photo mix in linear light.
         u.photo.x = 0.5
-        let half = try #require(render(scene: scene, uniforms: u, content: content, width: w, height: h))
+        let half = try #require(unpainted(scene, uniforms: u, content: content, width: w, height: h, context: context))
         let mixed = encoded(0.5 * red + 0.5 * CanvasPalette.light.paper)
         let (x, y) = centres[0]
         #expect(maxDifference(Pixels(half)[Int(x), y], mixed) <= 3, "\(Pixels(half)[Int(x), y]) vs \(mixed)")
@@ -413,7 +412,7 @@ struct CanvasRenderTests {
             outlines: false, numbers: false, shadowMargin: margin,
             clear: MTLClearColor(red: Double(CanvasPalette.darkPaper.background.x), green: Double(CanvasPalette.darkPaper.background.y),
                                  blue: Double(CanvasPalette.darkPaper.background.z), alpha: 1))
-        let shown = try #require(render(scene: scene, uniforms: u, content: content, width: w, height: h))
+        let shown = try #require(unpainted(scene, uniforms: u, content: content, width: w, height: h, context: context))
         record(shown, "dark-paper-rim")
         let px = Pixels(shown)
         let left = Int(u.transform.x), midY = h / 2
@@ -425,38 +424,15 @@ struct CanvasRenderTests {
 
     // MARK: Helpers
 
-    /// One offscreen frame with explicit uniforms and content (unpainted regions).
-    private func render(scene: CanvasScene, uniforms: CanvasUniforms, content: RenderContext.Content, width w: Int, height h: Int) -> CGImage? {
-        guard let context = RenderContext.shared else { return nil }
-        let device = context.device
-        let states = (0..<scene.regionCount).map { _ in RegionState.settled(painted: false) }
-        let rowBytes = (w * 4 + 255) / 256 * 256
-        guard let stateBuffer = device.makeBuffer(bytes: states, length: MemoryLayout<RegionState>.stride * max(states.count, 1), options: .storageModeShared),
-              let color = context.makeColorTarget(width: w, height: h),
-              let outlines = context.makeOutlineTarget(width: w, height: h),
-              let readback = device.makeBuffer(length: rowBytes * h, options: .storageModeShared),
-              let commands = context.queue.makeCommandBuffer()
-        else { return nil }
-        context.encode(
-            commands, scene: scene, states: stateBuffer, uniforms: uniforms,
-            targets: RenderContext.Targets(color: color, multisample: context.makeMultisampleTarget(width: w, height: h), outlines: outlines),
-            content: content)
-        guard let blit = commands.makeBlitCommandEncoder() else { return nil }
-        blit.copy(
-            from: color, sourceSlice: 0, sourceLevel: 0, sourceOrigin: MTLOrigin(x: 0, y: 0, z: 0),
-            sourceSize: MTLSize(width: w, height: h, depth: 1),
-            to: readback, destinationOffset: 0, destinationBytesPerRow: rowBytes, destinationBytesPerImage: rowBytes * h)
-        blit.endEncoding()
-        commands.commit()
-        commands.waitUntilCompleted()
-        guard commands.status == .completed,
-              let provider = CGDataProvider(data: Data(bytes: readback.contents(), count: rowBytes * h) as CFData),
-              let space = CGColorSpace(name: CGColorSpace.displayP3)
-        else { return nil }
-        return CGImage(
-            width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: rowBytes, space: space,
-            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue),
-            provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
+    /// One offscreen frame with explicit uniforms and content, nothing painted, through the
+    /// renderer's own offscreen core.
+    private func unpainted(
+        _ scene: CanvasScene, uniforms: CanvasUniforms, content: RenderContext.Content, width w: Int, height h: Int,
+        context: RenderContext
+    ) -> CGImage? {
+        CanvasSnapshot.image(
+            scene: scene, states: [RegionState](repeating: .settled(painted: false), count: scene.regionCount),
+            uniforms: uniforms, content: content, width: w, height: h, context: context)
     }
 
     private func size(_ t: Template, _ scale: Int) -> CGSize {
