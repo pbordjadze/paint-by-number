@@ -1,36 +1,40 @@
 # Paint by Moonlight
 
-Paint by Moonlight (working name Pipo) is a native iOS & iPadOS 26 app that turns your photos
-into beautiful paint-by-numbers templates — entirely on-device — and makes painting them fluid
-and satisfying.
+Paint by Moonlight is a native iOS & iPadOS 26 app that turns your photos into beautiful
+paint-by-numbers templates — entirely on-device — and makes painting them fluid and satisfying.
 
 ## Highlights
 
-- **On-device template engine** (`Sources/PaintCore`, pure Swift, no dependencies): edge-aware
-  smoothing and perceptual (OKLab) palette selection guided by Vision subject/face analysis,
-  region cleanup that guarantees every area is paintable, and a vectorizer that produces shared,
-  smoothed boundaries, a triangulated fill mesh and optimally placed numbers.
-- **Metal canvas**: resolution-independent vector rendering at 120 Hz, MSAA edges, SDF numbers
-  that appear as you zoom, paint that spreads from your fingertip, native UIScrollView physics,
-  Apple Pencil painting and hover.
-- **Tactile feedback**: Core Haptics patterns shaped to each fill; each fill plays the next note
-  of one gentle pentatonic tune, so painting in any order plays the same melody.
-- **Liquid Glass UI**: gallery, a live create flow with before/after comparison, printable PDF
-  templates, share images and time-lapse videos.
-- **Suggested settings**: every photo opens on settings chosen for it. The app measures the photo's
-  palette, texture and subject, tries a few candidates in parallel and picks the best one for your
-  Painting Length (Quick, Relaxed, Detailed). The sliders stay; Reset to Suggested is one tap away.
-- **Playful color names**: every paint gets an evocative nickname ("Harbor Fog", "Apricot Jam"),
-  unique in its palette and different in every painting. A long press on a swatch shows the
-  nickname, the plain name and the hex code; VoiceOver and the printed color key read both names.
-- **Dark paper**: a deep warm-grey canvas with light lines and numbers for painting in the evening
-  (Light, Dark or Automatic); paint colors stay true.
-- **Open in Paint by Moonlight**: send a photo from Photos, Files, Safari or Mail through the share
-  sheet and it opens straight in the create flow.
-- **Search and favorites**: find a painting by name, heart the ones you love; favorites sort first
-  and have their own filter.
-- **Time-lapse pacing**: replay a painting evenly, or as painted, with its bursts and pauses
-  compressed into the video.
+- **On-device template engine** (`Sources/PaintCore`, a pure-Swift package with no
+  dependencies): edge-aware smoothing and perceptual (OKLab) palette selection guided by an
+  importance map the app computes with Vision, region cleanup that keeps every area paintable
+  and numbered, and a vectorizer that produces shared, smoothed boundaries, a triangulated fill
+  mesh and well-placed numbers.
+- **Coloring-book line art**, the default look: two bundled Core ML models (HED contours and a
+  line-drawing network), with the eyes and subject silhouettes Vision finds, draw the picture.
+  The drawing stays in full ink over the paint from the first fill to the last, and the areas
+  inside an outline are told apart by their numbers
+  ([docs/coloring-book.md](docs/coloring-book.md)). Classic and layered lines, and the
+  pipeline's own knobs, are under Settings › Advanced.
+- **Suggested settings**: every photo opens on settings chosen for it. The app measures the
+  photo's palette, texture and subject, tries a few candidates in parallel and picks the best
+  one for your Painting Length (Quick, Relaxed, Detailed). The sliders stay; Reset to Suggested
+  is one tap away.
+- **Metal canvas and tactile feedback**: resolution-independent vector rendering at up to
+  120 Hz, MSAA edges, numbers that appear as you zoom, paint that spreads from your fingertip,
+  native scroll physics, Apple Pencil painting and hover; Core Haptics patterns shaped to each
+  fill, and each fill plays the next note of one gentle pentatonic tune.
+- **A picture library to start from**: curated public-domain paintings and photographs, each
+  credited in Settings › Acknowledgements and chosen by the rules in
+  [docs/picture-library.md](docs/picture-library.md).
+- **iPad first**: the palette wraps into rows or columns so every color shows at once, the
+  Paint menu has single-key shortcuts, undo works with ⌘Z and three fingers, and the Pencil
+  paints while fingers navigate.
+- **Gallery and sharing**: search and favorites, a live create flow with a before/after
+  comparison, printable PDF templates, share images, time-lapse videos (evenly paced or as
+  painted), and photos sent from the share sheet or Files open straight in the create flow.
+- **Details**: every paint gets a playful nickname ("Harbor Fog", "Apricot Jam") beside its
+  plain name, a dark paper for painting in the evening, and Liquid Glass throughout.
 
 ## Privacy
 
@@ -46,12 +50,14 @@ exports. Third-party credits and licenses are in
 
 | Path | What |
 | --- | --- |
-| `Sources/PaintCore` | Template pipeline (segmentation, vectorization, model, coding) |
-| `Sources/pbn` | Headless CLI: `pbn generate [--auto]`, `pbn suggest`, `pbn names`, `pbn bench` |
+| `Sources/PaintCore` | Template pipeline: segmentation, line art, vectorization, suggested settings, model and coding |
+| `Sources/pbn` | Headless CLI: `pbn generate [--auto]`, `suggest`, `trace`, `check`, `names`, `bench` |
 | `Tests/PaintCoreTests` | Swift Testing suite for the pipeline |
-| `App/` | Xcode project: SwiftUI app, Metal canvas, feedback, export, tests |
-| `tools/` | Visual evaluation harness, icon generator |
+| `Tests/Corpus` | The photos the quality gate and the benchmark run on (never shipped) |
+| `App/` | Xcode project: SwiftUI app, Metal canvas, Vision and Core ML inputs, export, unit and UI tests |
+| `tools/` | Evaluation harness, quality regression gate, string-catalog check, Core ML model converters |
 | `ci/`, `.github/workflows/` | macOS CI with simulator screenshots and a Release-build check |
+| `docs/` | Design notes, tuning logs and provenance records the code cites |
 
 ## Building
 
@@ -60,7 +66,9 @@ Open `App/PaintByNumber.xcodeproj` in Xcode 26 and run the `PaintByNumber` schem
 
 ```sh
 swift test
-swift run -c release pbn generate photo.jpg out/   # SVG + raster previews + metrics
+swift run -c release pbn generate photo.jpg out/   # previews + metrics; a .ppm off Apple platforms
 ```
+
+Without a local Swift toolchain, `tools/swift.sh` runs the same commands in Docker.
 
 See `CLAUDE.md` for development notes.
