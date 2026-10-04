@@ -18,22 +18,23 @@ func runGenerate(_ options: Options) throws {
     let t = output.template
     let size = generator.settings.workingSize(sourceWidth: image.width, sourceHeight: image.height)
     let working = Resample.area(image, width: size.width, height: size.height)
-    var m = metrics(output, working: working, settings: generator.settings)
+    let encoded = t.encoded()
+    var m = metrics(output, working: working, settings: generator.settings, encodedBytes: encoded.count)
     m.lineArt = LineArtReport(output, settings: generator.settings.lineArt, input: lineArtInput)
     m.tuning = generator.settings.tuning.isDefault ? nil : generator.settings.tuning
     if let (decision, ms) = decision {
         m.auto = AutoStats(decision, milliseconds: ms)
         m.analysis = decision.analysis
     }
-    let encoder = jsonEncoder()
-    try encoder.encode(m).write(to: outDir.appendingPathComponent("stats.json"))
-    try t.encoded().write(to: outDir.appendingPathComponent("template.pbnt"))
-    try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("raster.ppm"))
-    try Netpbm.encodePPM(working).write(to: outDir.appendingPathComponent("working.ppm"))
-    try Netpbm.encodePPM(boundaryRaster(t)).write(to: outDir.appendingPathComponent("boundaries.ppm"))
-    if t.lineArt != nil { try Netpbm.encodePPM(areasRaster(t)).write(to: outDir.appendingPathComponent("areas.ppm")) }
+    let json = try jsonEncoder().encode(m)
+    try json.write(to: outDir.appendingPathComponent("stats.json"))
+    try encoded.write(to: outDir.appendingPathComponent("template.pbnt"))
+    try writePPM(paintedRaster(t), "raster.ppm", in: outDir)
+    try writePPM(working, "working.ppm", in: outDir)
+    try writePPM(boundaryRaster(t), "boundaries.ppm", in: outDir)
+    if t.lineArt != nil { try writePPM(areasRaster(t, openings: m.lineArt?.openings ?? []), "areas.ppm", in: outDir) }
     try writeSVGs(t, selected: m.lineArt?.selectedColor, to: outDir)
-    print(String(data: try encoder.encode(m), encoding: .utf8)!)
+    print(String(data: json, encoding: .utf8)!)
 }
 
 func runSuggest(_ options: Options) throws {
@@ -57,29 +58,28 @@ func runSuggest(_ options: Options) throws {
     if options.out != nil {
         // Previews for tools/auto_sheet.py: the pipeline is deterministic, so regenerating
         // each candidate on the draft reproduces exactly what was scored.
-        try Netpbm.encodePPM(draft).write(to: outDir.appendingPathComponent("draft.ppm"))
-        try Netpbm.encodePPM(Resample.area(draft, width: draftSize.width, height: draftSize.height))
-            .write(to: outDir.appendingPathComponent("working.ppm"))
+        try writePPM(draft, "draft.ppm", in: outDir)
+        try writePPM(Resample.area(draft, width: draftSize.width, height: draftSize.height), "working.ppm", in: outDir)
         for (i, candidate) in decision.candidates.enumerated() {
             let t: Template
             do {
                 t = try TemplateGenerator(settings: candidate.settings).generate(from: draft, importance: importance, cancel: .none).template
             } catch { fail("generation failed: \(error)") }
-            try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("candidate-\(i).ppm"))
-            try Netpbm.encodePPM(boundaryRaster(t)).write(to: outDir.appendingPathComponent("candidate-\(i)-boundaries.ppm"))
+            try writePPM(paintedRaster(t), "candidate-\(i).ppm", in: outDir)
+            try writePPM(boundaryRaster(t), "candidate-\(i)-boundaries.ppm", in: outDir)
         }
     }
 }
 
 func runTrace(_ options: Options) throws {
-    guard options.positional.count == 2 else { fail("usage: pbn trace <flat.ppm> <outdir> [--smooth F]") }
+    guard options.positional.count == 2 else { fail("usage: pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]") }
     let image = loadImage(options.positional[0])
     let outDir = URL(fileURLWithPath: options.positional[1])
     try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories: true)
     let segmentation = flatSegmentation(image)
     var result: (template: Template, stats: VectorStats)?
     var best: [String: Double] = [:]
-    for _ in 0..<max(1, options.runs) {
+    for _ in 0..<options.runs {
         let clock = StageClock()
         do {
             result = try Vectorizer.vectorizeWithStats(segmentation, settings: options.settings, cancel: .none, clock: clock)
@@ -88,8 +88,8 @@ func runTrace(_ options: Options) throws {
     }
     let t = result!.template, stats = result!.stats
     try t.encoded().write(to: outDir.appendingPathComponent("template.pbnt"))
-    try Netpbm.encodePPM(image).write(to: outDir.appendingPathComponent("working.ppm"))
-    try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("raster.ppm"))
+    try writePPM(image, "working.ppm", in: outDir)
+    try writePPM(paintedRaster(t), "raster.ppm", in: outDir)
     try writeSVGs(t, to: outDir)
     let report = t.validate()
     let summary: [String: String] = [
@@ -100,9 +100,7 @@ func runTrace(_ options: Options) throws {
         "labelRoomUnmet": "\(stats.labelRoomUnmet)",
         "timings": best.sorted { $0.key < $1.key }.map { String(format: "%@=%.1f", $0.key, $0.value) }.joined(separator: " "),
     ]
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-    let json = try encoder.encode(summary)
+    let json = try jsonEncoder().encode(summary)
     try json.write(to: outDir.appendingPathComponent("trace.json"))
     print(String(data: json, encoding: .utf8)!)
 }
@@ -117,10 +115,10 @@ func runCheck(_ options: Options) throws {
         let format = data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: 4, as: UInt32.self) }
         print("format \(format), pipeline \(template.pipelineVersion)")
         if let lines = template.lineArt {
-            let names = ["outline", "detail", "texture", "color"]
-            let counts = names.indices.map { l in lines.edgeLayers.filter { Int($0) == l }.count }
+            let layers = LineLayer.allCases
+            let counts = layers.map { layer in lines.edgeLayers.filter { $0 == layer.rawValue }.count }
             let style = lines.style == .coloringBook ? "coloring book" : "layered"
-            print("\(style) lines: edges " + zip(names, counts).map { "\($0) \($1)" }.joined(separator: ", ")
+            print("\(style) lines: edges " + zip(layers, counts).map { "\($0) \($1)" }.joined(separator: ", ")
                 + "; \(lines.strokes.count) interior strokes (\(lines.strokePoints.count) points)")
         }
         let report = template.validate(minLabelRadius: options.minLabelRadius > 0 ? options.minLabelRadius : nil)

@@ -35,7 +35,7 @@ func runBench(_ options: Options) throws {
         if let input = loadLineArt(options) {
             for style in [LineArtSettings.Style.layered, .coloringBook] {
                 var drawn = options.settings
-                drawn.lineArt.style = style
+                drawn.lineArt = lineArtSettings(style, fields: options.lineArtFields)
                 let v = measure(image, drawn, runs: options.runs, lineArt: input)
                 print(String(format: "  %-28@ ", "\(style.rawValue) \(v.size), \(v.regions) cells" as NSString) + stat(v.totals["total"]!)
                     + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage + ")")
@@ -51,7 +51,7 @@ func runBench(_ options: Options) throws {
         auto.candidates = 5
         var suggestMs: [Double] = [], analysisMs: [Double] = []
         var decision: AutoDecision?
-        for _ in 0..<max(1, options.runs) {
+        for _ in 0..<options.runs {
             let start = ContinuousClock.now
             do {
                 _ = try AutoSettings.analyze(image, importance: nil, hints: nil, cancel: .none)

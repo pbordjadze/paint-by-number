@@ -1,12 +1,16 @@
 import Foundation
 import PaintCore
 
+/// A color's 8-bit channels, rounded to nearest and clamped to the gamut.
+func bytes(_ rgb: SIMD3<Float>) -> SIMD3<UInt8> {
+    let v = rgb.clamped(lowerBound: SIMD3(repeating: 0), upperBound: SIMD3(repeating: 1)) * 255
+    return SIMD3(UInt8(v.x.rounded()), UInt8(v.y.rounded()), UInt8(v.z.rounded()))
+}
+
 /// Raster preview: each pixel painted with its region's palette color.
 func paintedRaster(_ t: Template) -> RGBAImage {
     var px = [UInt8](repeating: 255, count: t.width * t.height * 4)
-    let colors = t.palette.map { c in
-        SIMD3<UInt8>(UInt8((c.rgb.x * 255).rounded()), UInt8((c.rgb.y * 255).rounded()), UInt8((c.rgb.z * 255).rounded()))
-    }
+    let colors = t.palette.map { bytes($0.rgb) }
     for i in 0..<(t.width * t.height) {
         let c = colors[Int(t.regions[Int(t.regionMap.storage[i])].colorIndex)]
         px[i * 4] = c.x; px[i * 4 + 1] = c.y; px[i * 4 + 2] = c.z
@@ -19,10 +23,7 @@ func paintedRaster(_ t: Template) -> RGBAImage {
 func boundaryRaster(_ t: Template) -> RGBAImage {
     let w = t.width, h = t.height, ow = w * 2, oh = h * 2
     var px = [UInt8](repeating: 255, count: ow * oh * 4)
-    let colors = t.palette.map { c -> SIMD3<UInt8> in
-        let soft = c.rgb * 0.7 + SIMD3(repeating: 0.3)
-        return SIMD3(UInt8((soft.x * 255).rounded()), UInt8((soft.y * 255).rounded()), UInt8((soft.z * 255).rounded()))
-    }
+    let colors = t.palette.map { bytes($0.rgb * 0.7 + SIMD3(repeating: 0.3)) }
     let map = t.regionMap
     for y in 0..<oh {
         let sy = y / 2
@@ -43,8 +44,9 @@ func boundaryRaster(_ t: Template) -> RGBAImage {
 
 /// Debug view of the areas a book's drawing encloses: every area in a color of its own (a
 /// hashed hue, light where the area is one cell), the drawn edges in ink. Where a silhouette
-/// is open, the background's color runs into the object.
-func areasRaster(_ t: Template) -> RGBAImage {
+/// is open, the background's color runs into the object, ringed in red at each of the
+/// report's `openings`.
+func areasRaster(_ t: Template, openings: [[Int]]) -> RGBAImage {
     let labels = LineArtReport.enclosedAreaLabels(t)
     let counts = LineArtReport.areas(t, labels: labels)
     let w = t.width, h = t.height
@@ -65,46 +67,34 @@ func areasRaster(_ t: Template) -> RGBAImage {
         case 4: rgb = SIMD3(u, p, v)
         default: rgb = SIMD3(v, p, q)
         }
-        return SIMD3(UInt8((rgb.x * 255).rounded()), UInt8((rgb.y * 255).rounded()), UInt8((rgb.z * 255).rounded()))
+        return bytes(rgb)
     }
     for i in 0..<(w * h) {
         let c = colors[labels[Int(t.regionMap.storage[i])]]
         px[i * 4] = c.x; px[i * 4 + 1] = c.y; px[i * 4 + 2] = c.z
     }
-    if let lines = t.lineArt, lines.edgeLayers.count == t.edges.count {
-        func plot(_ p: SIMD2<Float>) {
-            let x = Int(p.x.rounded()), y = Int(p.y.rounded())
-            guard x >= 0, y >= 0, x < w, y < h else { return }
+    forEachDrawnSegment(of: t) { a, b in
+        rasterize(from: a, to: b, width: w, height: h) { x, y in
             let o = (y * w + x) * 4
             px[o] = 30; px[o + 1] = 26; px[o + 2] = 34
         }
-        func segment(_ a: SIMD2<Float>, _ b: SIMD2<Float>) {
-            let d = b - a
-            let n = max(1, Int((d * d).sum().squareRoot().rounded(.up)))
-            for s in 0...n { plot(a + d * (Float(s) / Float(n))) }
-        }
-        for (k, e) in t.edges.enumerated() where lines.edgeLayers[k] != LineLayer.color.rawValue {
-            let pts = t.points(of: e)
-            for j in pts.indices.dropFirst() { segment(pts[j - 1], pts[j]) }
-        }
-        for stroke in lines.strokes {
-            let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
-            guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
-            for j in (start + 1)..<end { segment(lines.strokePoints[j - 1], lines.strokePoints[j]) }
-        }
-        // The openings (`LineArtReport.gaps`): a red ring around each.
-        for opening in LineArtReport.gaps(t).openings {
-            for dy in -14...14 {
-                for dx in -14...14 where abs(dx * dx + dy * dy - 12 * 12) <= 12 {
-                    let x = opening[0] + dx, y = opening[1] + dy
-                    guard x >= 0, y >= 0, x < w, y < h else { continue }
-                    let o = (y * w + x) * 4
-                    px[o] = 255; px[o + 1] = 0; px[o + 2] = 0
-                }
+    }
+    for opening in openings {
+        for dy in -14...14 {
+            for dx in -14...14 where abs(dx * dx + dy * dy - 12 * 12) <= 12 {
+                let x = opening[0] + dx, y = opening[1] + dy
+                guard x >= 0, y >= 0, x < w, y < h else { continue }
+                let o = (y * w + x) * 4
+                px[o] = 255; px[o + 1] = 0; px[o + 2] = 0
             }
         }
     }
     return RGBAImage(width: w, height: h, pixels: px, colorSpace: t.colorSpace)
+}
+
+/// `image` as `name` in `dir`.
+func writePPM(_ image: RGBAImage, _ name: String, in dir: URL) throws {
+    try Netpbm.encodePPM(image).write(to: dir.appendingPathComponent(name))
 }
 
 /// painted.svg, template.svg, painted-outlined.svg and, for a template with line art,

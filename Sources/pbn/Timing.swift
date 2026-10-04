@@ -33,16 +33,16 @@ final class CancellationProbe: @unchecked Sendable {
     func finish() -> (gap: Double, end: Double) {
         _ = check.isCancelled
         let w = lock.withLock { worst }
-        @inline(__always) func ms(_ d: Duration) -> Double {
-            Double(d.components.seconds) * 1000 + Double(d.components.attoseconds) * 1e-15
-        }
-        return (ms(w.gap), ms(w.end))
+        return (w.gap.milliseconds, w.end.milliseconds)
     }
 }
 
+extension Duration {
+    var milliseconds: Double { Double(components.seconds) * 1000 + Double(components.attoseconds) * 1e-15 }
+}
+
 func milliseconds(since start: ContinuousClock.Instant) -> Double {
-    let d = ContinuousClock.now - start
-    return Double(d.components.seconds) * 1000 + Double(d.components.attoseconds) * 1e-15
+    (ContinuousClock.now - start).milliseconds
 }
 
 /// Remembers when something happened (milliseconds since its creation), from any thread.

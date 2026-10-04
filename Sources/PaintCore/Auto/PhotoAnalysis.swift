@@ -4,7 +4,8 @@
 /// size, smooth fraction, importance entropy, animal coverage) are diagnostics for `pbn
 /// suggest` and the tuning sheets. Every value is quantized (to 3 decimals; the palette curve
 /// and noise, whose small differences the rule reads, to 4), so floating-point differences
-/// between devices cannot flip a decision.
+/// between devices cannot flip a decision. `pbn` encodes it into decision.json and stats.json,
+/// which tools read by property name: add properties, never rename them.
 public struct PhotoAnalysis: Sendable, Codable, Hashable {
     public var sourceWidth, sourceHeight: Int
     /// Weighted mean ΔE a k-paint palette reaches, for k in `paletteCurveKs` (8…64).
@@ -66,7 +67,8 @@ public struct AutoScore: Sendable, Codable, Hashable {
 
 /// The outcome of `AutoSettings.choose`: reproducible from the photo, its importance and
 /// hints, the preference, the line art and tuning and the candidate count, so it is never
-/// stored.
+/// stored. `pbn suggest` encodes it with its candidates and scores as decision.json, which
+/// tools/auto_sheet.py reads by property name: add properties, never rename them.
 public struct AutoDecision: Sendable, Codable {
     public var analysis: PhotoAnalysis
     public var preference: PaintingLength

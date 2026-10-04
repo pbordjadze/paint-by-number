@@ -28,11 +28,15 @@ func loadImage(_ path: String) -> RGBAImage {
     #endif
 }
 
+/// A map image's value per pixel, its red channel (a PGM decodes to equal channels).
+func redChannel(_ image: RGBAImage) -> [UInt8] {
+    (0..<(image.width * image.height)).map { image.pixels[$0 * 4] }
+}
+
 func loadImportance(_ path: String?) -> Grid<Float>? {
     guard let path else { return nil }
     let img = loadImage(path)
-    return Grid(width: img.width, height: img.height,
-                storage: (0..<(img.width * img.height)).map { Float(img.pixels[$0 * 4]) / 255 })
+    return Grid(width: img.width, height: img.height, storage: redChannel(img).map { Float($0) / 255 })
 }
 
 /// The edge map and eyes layered and coloring-book line art draw from: `--edges` (a contour
@@ -42,7 +46,7 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
 func loadLineArt(_ options: Options) -> LineArtInput? {
     func map(_ path: String) -> EdgeMap {
         let img = loadImage(path)
-        return EdgeMap(width: img.width, height: img.height, values: (0..<(img.width * img.height)).map { img.pixels[$0 * 4] })
+        return EdgeMap(width: img.width, height: img.height, values: redChannel(img))
     }
     let drawing = options.lines.map(map), contours = options.edges.map(map)
     guard let single = drawing ?? contours else {
@@ -70,7 +74,7 @@ func loadLineArt(_ options: Options) -> LineArtInput? {
         } else {
             // A mask (PGM or PPM, the red channel): inside at or above half.
             let img = loadImage(path)
-            let mask = (0..<(img.width * img.height)).map { img.pixels[$0 * 4] >= 128 }
+            let mask = redChannel(img).map { $0 >= 128 }
             objects = MaskContours.outlines(of: mask, width: img.width, height: img.height)
         }
     }

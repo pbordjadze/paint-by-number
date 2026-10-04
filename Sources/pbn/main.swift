@@ -1,10 +1,12 @@
 // Headless driver for the template pipeline: generate templates, render previews and
-// report timings/metrics. Images are exchanged as PPM so no codecs are needed.
+// report timings/metrics. Images are exchanged as PPM/PGM (on Apple platforms any ImageIO
+// format is read too).
 //
-//   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--importance m.pgm]
+//   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
 //       [--line-style classic|layered|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
 //        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--line-art key=value]...] [--tuning key=value]...
+//       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
 //       layered and coloring-book line art split the cells along the edge map's lines
 //       (stats.json gains `lineArt`, with the drawing's density, open ends and the areas it
@@ -19,9 +21,12 @@
 //       dir, else the current directory); with --out also the draft (draft.ppm), its working
 //       image and every candidate's painted preview and region outlines (tools/auto_sheet.py)
 //   pbn bench <in.ppm>... [--runs N] [--colors N] [--detail F] [--smooth F] [--edges map.pgm]
+//       [--lines drawing.pgm]
 //       also times a live preview, detail 1 on a large photo, the same with 150 colors and
-//       Auto's suggestion (Relaxed, 5 candidates); with --edges also layered and coloring-book
-//       line art (the layered stages listed), the map resampled to each photo
+//       Auto's suggestion (Relaxed, 5 candidates); with --edges and/or --lines (and generate's
+//       other line-art options) also layered and coloring-book line art, each style at its own
+//       defaults with the --line-art fields on top (the layered stages listed), the map
+//       resampled to each photo
 //   pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]
 //       vectorizes a flat-color image directly (each distinct color is a palette entry,
 //       each 4-connected component a region), bypassing segmentation

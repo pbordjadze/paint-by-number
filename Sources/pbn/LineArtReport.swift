@@ -55,7 +55,7 @@ struct LineArtReport: Codable {
         var count = [0, 0, 0, 0]
         var length: [Float] = [0, 0, 0, 0]
         for (k, e) in t.edges.enumerated() {
-            let l = Int(min(lines.edgeLayers[k], 3))
+            let l = Int(min(lines.edgeLayers[k], LineLayer.color.rawValue))
             count[l] += 1
             let p = t.points(of: e)
             for i in p.indices.dropFirst() {
@@ -80,7 +80,8 @@ struct LineArtReport: Codable {
             }
             if lines.strokePoints[start] != lines.strokePoints[end - 1] { openEnds += 2 }
         }
-        let drawn = length[0] + length[1] + length[2] + interior
+        func lengthOf(_ layer: LineLayer) -> Float { length[Int(layer.rawValue)] }
+        let drawn = lengthOf(.outline) + lengthOf(.detail) + lengthOf(.texture) + interior
         func round(_ v: Float, _ places: Float) -> Float { (v * places).rounded() / places }
         drawnLength = round(drawn, 10)
         inkDensity = round(drawn / Float(max(t.width * t.height, 1)) * 1000, 100)
@@ -107,24 +108,8 @@ struct LineArtReport: Codable {
     static func drawnMask(_ t: Template) -> [Bool] {
         let w = t.width, h = t.height
         var mask = [Bool](repeating: false, count: w * h)
-        guard let lines = t.lineArt, lines.edgeLayers.count == t.edges.count else { return mask }
-        func segment(_ a: SIMD2<Float>, _ b: SIMD2<Float>) {
-            let d = b - a
-            let n = max(1, Int((d * d).sum().squareRoot().rounded(.up)))
-            for s in 0...n {
-                let p = a + d * (Float(s) / Float(n))
-                let x = Int(p.x.rounded()), y = Int(p.y.rounded())
-                if x >= 0, y >= 0, x < w, y < h { mask[y * w + x] = true }
-            }
-        }
-        for (k, e) in t.edges.enumerated() where lines.edgeLayers[k] != LineLayer.color.rawValue {
-            let pts = t.points(of: e)
-            for j in pts.indices.dropFirst() { segment(pts[j - 1], pts[j]) }
-        }
-        for stroke in lines.strokes {
-            let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
-            guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
-            for j in (start + 1)..<end { segment(lines.strokePoints[j - 1], lines.strokePoints[j]) }
+        forEachDrawnSegment(of: t) { a, b in
+            rasterize(from: a, to: b, width: w, height: h) { x, y in mask[y * w + x] = true }
         }
         return mask
     }
@@ -197,8 +182,8 @@ struct LineArtReport: Codable {
         return (enclosed, openings)
     }
 
-    /// Per region, the area the drawn lines enclose it in (0-based, dense), or nil for a
-    /// template without line art.
+    /// Per region, the area the drawn lines enclose it in (0-based, dense); every region its
+    /// own area without line art.
     static func enclosedAreaLabels(_ t: Template) -> [Int] {
         areaLabels(t, joining: { $0 == LineLayer.color.rawValue })
     }
@@ -236,5 +221,33 @@ struct LineArtReport: Codable {
             area[label] += t.regions[i].area
         }
         return zip(cells, area).map { ($0, $1) }
+    }
+}
+
+/// Calls `body` with every drawn segment of `t` in canvas units: the edges of the layers that
+/// are drawn (not `color`), then the interior strokes. Nothing when the template has no line
+/// art or its layers don't match its edges.
+func forEachDrawnSegment(of t: Template, _ body: (SIMD2<Float>, SIMD2<Float>) -> Void) {
+    guard let lines = t.lineArt, lines.edgeLayers.count == t.edges.count else { return }
+    for (k, e) in t.edges.enumerated() where lines.edgeLayers[k] != LineLayer.color.rawValue {
+        let pts = t.points(of: e)
+        for j in pts.indices.dropFirst() { body(pts[j - 1], pts[j]) }
+    }
+    for stroke in lines.strokes {
+        let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
+        guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
+        for j in (start + 1)..<end { body(lines.strokePoints[j - 1], lines.strokePoints[j]) }
+    }
+}
+
+/// Calls `plot` with each pixel inside `width`×`height` that a segment passes through, stepping
+/// at most a pixel at a time.
+func rasterize(from a: SIMD2<Float>, to b: SIMD2<Float>, width: Int, height: Int, plot: (Int, Int) -> Void) {
+    let d = b - a
+    let n = max(1, Int((d * d).sum().squareRoot().rounded(.up)))
+    for s in 0...n {
+        let p = a + d * (Float(s) / Float(n))
+        let x = Int(p.x.rounded()), y = Int(p.y.rounded())
+        if x >= 0, y >= 0, x < width, y < height { plot(x, y) }
     }
 }

@@ -1,8 +1,11 @@
 import Foundation
 import PaintCore
 
-/// `pbn generate`'s stats.json. Field names are a stable interface for regression tooling:
-/// add fields, never rename or repurpose them. Validation runs outside the timed pipeline.
+/// `pbn generate`'s stats.json. tools/*.py read it and `pbn suggest`'s decision.json by key and
+/// the files pbn writes by name: add fields and files, never rename or repurpose them, nor the
+/// properties of the PaintCore types they embed (`GenerationSettings`, `LineArtSettings`,
+/// `PipelineTuning`, `LineArtStats`, `AutoDecision` with its candidates and scores,
+/// `PhotoAnalysis`). Validation runs outside the timed pipeline.
 struct Metrics: Codable {
     var width: Int
     var height: Int
@@ -59,7 +62,8 @@ struct Metrics: Codable {
     var analysis: PhotoAnalysis?
     /// `ColorNickname.assign` with the generation seed; the stats' `colorNames` are the structured names.
     var colorNicknames: [String]
-    /// Layered templates: what line art did and how the template's lines divide into layers.
+    /// Layered and coloring-book templates: what line art did and how the template's lines divide
+    /// into layers.
     var lineArt: LineArtReport?
     /// Non-default `PipelineTuning` factors the template was generated with.
     var tuning: PipelineTuning?
@@ -96,7 +100,7 @@ struct AutoStats: Codable {
     }
 }
 
-func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: GenerationSettings) -> Metrics {
+func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: GenerationSettings, encodedBytes: Int) -> Metrics {
     let t = out.template
     let lab = ColorScience.okLabImage(from: working)
     var errors = [Float](repeating: 0, count: t.width * t.height)
@@ -138,7 +142,7 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         minPaletteDistance: minPal.isFinite ? minPal : 0,
         minPaletteDistanceFloor: settings.minPaletteDistance,
         timingsMs: timings, totalMs: out.totalSeconds * 1000,
-        encodedBytes: t.encoded().count,
+        encodedBytes: encodedBytes,
         palette: t.palette.map(\.hexDigits),
         minLabelRadius: t.labels.map(\.radius).min() ?? 0,
         minLabelRoom: minLabelRoom.isFinite ? minLabelRoom : 0,
