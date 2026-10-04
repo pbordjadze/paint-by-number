@@ -7,17 +7,12 @@ struct TemplateCodingTests {
 
     // MARK: - Fixtures
 
-    static func fixture(_ name: String) throws -> Data {
-        let url = try #require(Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Fixtures"))
-        return try Data(contentsOf: url)
-    }
-
     /// `Fixtures/template-v1.pbnt` was written by the format-1 encoder at commit ccbbabe with
     /// `pbn trace Fixtures/shapes.ppm <dir>`: a 40×28 flat-color image (white background, a
     /// red square with a blue hole, two green squares touching diagonally, a yellow stripe
     /// along the bottom border). It pins the v1 layout: never regenerate it.
     @Test func decodesV1Fixture() throws {
-        let data = try Self.fixture("template-v1.pbnt")
+        let data = try TestFixtures.data("template-v1.pbnt")
         #expect(data.count == 5558)
         let t = try Template(encoded: data)
         #expect(t.width == 40 && t.height == 28)
@@ -31,7 +26,7 @@ struct TemplateCodingTests {
         #expect(report.isValid, "\(report)")
 
         // The region map is exactly the 4-connected components of the source's colors.
-        let image = try Netpbm.read(Self.fixture("shapes.ppm"))
+        let image = try Netpbm.read(TestFixtures.data("shapes.ppm"))
         var classOf: [UInt32: UInt32] = [:]
         var classes = [UInt32](repeating: 0, count: image.width * image.height)
         for i in classes.indices {
@@ -55,7 +50,7 @@ struct TemplateCodingTests {
     /// `encoded()`): the v1 payload followed by one `GENR` chunk. It pins the v2 layout, the
     /// first one with extension chunks: never regenerate it.
     @Test func decodesV2Fixture() throws {
-        let data = try Self.fixture("template-v2.pbnt"), v1 = try Self.fixture("template-v1.pbnt")
+        let data = try TestFixtures.data("template-v2.pbnt"), v1 = try TestFixtures.data("template-v1.pbnt")
         #expect(data.count == 5578)
         #expect(data[4..<8] == Data([2, 0, 0, 0]))
         // The payload is the v1 payload byte for byte, then 1 chunk: "GENR", flags 0, 4 bytes.
@@ -69,10 +64,10 @@ struct TemplateCodingTests {
         #expect(t.validate().isValid)
     }
 
-    static func v1Template() throws -> Template { try Template(encoded: fixture("template-v1.pbnt")) }
+    static func v1Template() throws -> Template { try Template(encoded: TestFixtures.data("template-v1.pbnt")) }
 
     /// The fixture's payload (everything after the 8-byte header).
-    static func payload() throws -> Data { try fixture("template-v1.pbnt").dropFirst(8) }
+    static func payload() throws -> Data { try TestFixtures.data("template-v1.pbnt").dropFirst(8) }
 
     /// A format-2 file from the fixture's payload, with the given chunk section.
     static func v2(chunkCount: UInt32? = nil, _ chunks: [(tag: UInt32, flags: UInt32, payload: Data)], trailing: Data = Data()) throws -> Data {
@@ -160,7 +155,7 @@ struct TemplateCodingTests {
     }
 
     @Test func versions() throws {
-        var data = try Self.fixture("template-v1.pbnt")
+        var data = try TestFixtures.data("template-v1.pbnt")
         data[4] = 3
         let newer = #expect(throws: Template.CodingError.self) { try Template(encoded: data) }
         #expect(newer == .newerFormat(3))
@@ -181,7 +176,7 @@ struct TemplateCodingTests {
     /// Every proper prefix of a file is rejected with a `CodingError` (never a trap).
     @Test func truncationAtEveryOffset() throws {
         for name in ["template-v1.pbnt", "template-v2.pbnt", "template-v2-lines.pbnt", "template-v2-book.pbnt"] {
-            let data = try Self.fixture(name)
+            let data = try TestFixtures.data(name)
             for length in 0..<data.count {
                 #expect(throws: Template.CodingError.self, "length \(length)") { try Template(encoded: data.prefix(length)) }
             }
@@ -201,10 +196,10 @@ struct TemplateCodingTests {
     func randomCorruption(_ source: String) throws {
         let data: Data
         switch source {
-        case "v1": data = try Self.fixture("template-v1.pbnt")
-        case "v2": data = try Self.fixture("template-v2.pbnt")
-        case "v2-lines": data = try Self.fixture("template-v2-lines.pbnt")
-        case "v2-book": data = try Self.fixture("template-v2-book.pbnt")
+        case "v1": data = try TestFixtures.data("template-v1.pbnt")
+        case "v2": data = try TestFixtures.data("template-v2.pbnt")
+        case "v2-lines": data = try TestFixtures.data("template-v2-lines.pbnt")
+        case "v2-book": data = try TestFixtures.data("template-v2-book.pbnt")
         default:
             let s = VectorizerTests.blobMap(width: 64, height: 48, colors: 6, cell: 8, noise: 0.01, seed: 5)
             data = try VectorizerTests.vectorize(s).encoded()
@@ -300,7 +295,7 @@ struct TemplateCodingTests {
 
     /// Counts larger than the file throw before anything is allocated.
     @Test func hugeCountsAreTruncated() throws {
-        let fixture = try Self.fixture("template-v1.pbnt"), t = try Self.v1Template()
+        let fixture = try TestFixtures.data("template-v1.pbnt"), t = try Self.v1Template()
         func patched(at offset: Int, _ values: UInt32...) -> Data {
             var data = fixture
             for (k, v) in values.enumerated() {

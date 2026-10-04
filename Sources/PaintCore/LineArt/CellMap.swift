@@ -14,6 +14,9 @@ import Foundation
 ///    the same paint when there is one (across the weakest line first), else into the
 ///    closest paint.
 ///
+/// `LayeredLines.apply` then runs the passes these steps leave out: `mergeCloseColors`
+/// (line-free neighbours with close paints), `joinSamePaint`, `renumber` and `compactPalette`.
+///
 /// Room is measured like the vectorizer's guarantee: the cell's largest
 /// `DistanceTransform.interiorDistance`, which must reach `SegmentationParameters.minRadius(digits:)`.
 struct CellMap {
@@ -33,7 +36,6 @@ struct CellMap {
         var lines = SIMD4<Int32>(repeating: 0)
     }
 
-    static let snapRadiusSquared = 4
     static let snapBand: Float = 2.5
     /// A same-paint pair is kept apart when a blocking line runs along this many border pixels.
     static let joinBlock: Int32 = 4
@@ -297,22 +299,25 @@ struct CellMap {
 
     // MARK: - Merges
 
+    /// The representative of cell `k` in a `target`/`parent` array (roots map to themselves),
+    /// found without compressing paths: the callers union by assigning into a plain array.
+    private static func root(_ k: Int, in parent: [Int]) -> Int {
+        var r = k
+        while parent[r] != r { r = parent[r] }
+        return r
+    }
+
     /// Applies `target` (each cell's representative, roots map to themselves) and renumbers
     /// the surviving cells in order. Returns each old cell's new number.
     @discardableResult
     mutating func merge(_ target: [Int]) -> [Int32] {
-        func root(_ k: Int) -> Int {
-            var r = k
-            while target[r] != r { r = target[r] }
-            return r
-        }
         var newID = [Int32](repeating: -1, count: count)
         var colors: [UInt32] = []
         for k in 0..<count where target[k] == k {
             newID[k] = Int32(colors.count)
             colors.append(color[k])
         }
-        let lut = (0..<count).map { newID[root($0)] }
+        let lut = (0..<count).map { newID[Self.root($0, in: target)] }
         label.withUnsafeMutableBufferPointer { buf in
             let l = UncheckedSendable(buf.baseAddress!)
             Parallel.forEachBand(buf.count, minimumBandSize: 65_536) { range in
@@ -340,25 +345,21 @@ struct CellMap {
         }
         try cancel.throwIfCancelled()
         var parent = Array(0..<count)
-        var heap = Heap<(Float, Int)> { $0.0 != $1.0 ? $0.0 < $1.0 : $0.1 < $1.1 }
-        for k in 0..<count where room[k] < need(color[k]) { heap.push((room[k], k)) }
+        var heap = MinHeap()
+        for k in 0..<count where room[k] < need(color[k]) { heap.push(room[k], Int32(k), 0) }
         var merges = 0
-        func root(_ k: Int) -> Int {
-            var r = k
-            while parent[r] != r { r = parent[r] }
-            return r
-        }
         var pops = 0
-        while let (r, k) = heap.pop() {
+        while let item = heap.pop() {
             pops += 1
             if pops % 256 == 0 { try cancel.throwIfCancelled() }
+            let r = item.key, k = Int(item.region)
             guard parent[k] == k, r == room[k], room[k] < need(color[k]) else { continue }
             let neighbours = adjacency[k]
             guard !neighbours.isEmpty else { continue }
             var best = -1
             var bestScore: Float = -1
             for b in neighbours.keys.sorted() {
-                let score = Float(neighbours[b]!) / (simdDistance(palette[Int(color[b])], palette[Int(color[k])]) + 0.03)
+                let score = Float(neighbours[b]!) / (ColorScience.distance(palette[Int(color[b])], palette[Int(color[k])]) + 0.03)
                 if score > bestScore { best = b; bestScore = score }
             }
             let t = best
@@ -373,8 +374,8 @@ struct CellMap {
             adjacency[k] = [:]
             merges += 1
             if room[t] < need(color[t]) {
-                room[t] = self.room(bounds: bounds[t]) { $0 >= 0 && root(Int($0)) == t }
-                heap.push((room[t], t))
+                room[t] = self.room(bounds: bounds[t]) { $0 >= 0 && Self.root(Int($0), in: parent) == t }
+                heap.push(room[t], Int32(t), 0)
             }
         }
         merge(parent)
@@ -419,11 +420,6 @@ struct CellMap {
             try cancel.throwIfCancelled()
             tiny.sort { room[$0] != room[$1] ? room[$0] < room[$1] : $0 < $1 }
             var target = Array(0..<count)
-            func root(_ k: Int) -> Int {
-                var r = k
-                while target[r] != r { r = target[r] }
-                return r
-            }
             var short = Set<Int>()
             for k in tiny {
                 let options = neighbours(of: k, bounds: bounds[k], near: near)
@@ -432,20 +428,20 @@ struct CellMap {
                 let same = options.filter { color[$0.cell] == color[k] }
                 let pool = same.isEmpty ? options : same
                 let best = pool.min { a, b in
-                    let da = same.isEmpty ? simdDistance(palette[Int(color[a.cell])], ck) : 0
-                    let db = same.isEmpty ? simdDistance(palette[Int(color[b.cell])], ck) : 0
+                    let da = same.isEmpty ? ColorScience.distance(palette[Int(color[a.cell])], ck) : 0
+                    let db = same.isEmpty ? ColorScience.distance(palette[Int(color[b.cell])], ck) : 0
                     if da != db { return da < db }
                     let sa = Self.separation(a.pair), sb = Self.separation(b.pair)
                     if sa != sb { return sa > sb }
                     if a.pair.border != b.pair.border { return a.pair.border > b.pair.border }
                     return a.cell < b.cell
                 }!
-                let t = root(best.cell)
+                let t = Self.root(best.cell, in: target)
                 guard t != k else { continue }
                 target[k] = t
                 merges += 1
             }
-            for k in tiny where target[k] != k { short.insert(root(k)) }
+            for k in tiny where target[k] != k { short.insert(Self.root(k, in: target)) }
             guard !short.isEmpty else { return merges }
             // Carry rooms (a lower bound for unions) and bounds to the new numbering.
             let old = count
@@ -486,19 +482,14 @@ struct CellMap {
             let candidates = pairs(near: near).compactMap { key, pair -> (Float, Int, Int)? in
                 guard Self.separation(pair) == 3 else { return nil }
                 let a = Int(key >> 32), b = Int(key & 0xFFFF_FFFF)
-                let d = simdDistance(palette[Int(color[a])], palette[Int(color[b])])
+                let d = ColorScience.distance(palette[Int(color[a])], palette[Int(color[b])])
                 return d <= tolerance ? (d, a, b) : nil
             }.sorted { $0.0 != $1.0 ? $0.0 < $1.0 : ($0.1 != $1.1 ? $0.1 < $1.1 : $0.2 < $1.2) }
             var target = Array(0..<count)
-            func root(_ k: Int) -> Int {
-                var r = k
-                while target[r] != r { r = target[r] }
-                return r
-            }
             var merged = 0
             for (_, a, b) in candidates {
-                let ra = root(a), rb = root(b)
-                guard ra != rb, simdDistance(palette[Int(color[ra])], palette[Int(color[rb])]) <= tolerance else { continue }
+                let ra = Self.root(a, in: target), rb = Self.root(b, in: target)
+                guard ra != rb, ColorScience.distance(palette[Int(color[ra])], palette[Int(color[rb])]) <= tolerance else { continue }
                 let (big, small) = area[ra] >= area[rb] ? (ra, rb) : (rb, ra)
                 target[small] = big
                 area[big] += area[small]
@@ -534,15 +525,10 @@ struct CellMap {
         }
         // Longest border first; the sort is stable over the key order.
         let order = candidates.indices.sorted { candidates[$0].border != candidates[$1].border ? candidates[$0].border > candidates[$1].border : $0 < $1 }
-        func root(_ k: Int) -> Int {
-            var r = k
-            while parent[r] != r { r = parent[r] }
-            return r
-        }
         var joins = 0
         for index in order {
-            var ra = root(candidates[index].a), rb = root(candidates[index].b)
-            guard ra != rb, !apart[ra].contains(where: { root($0) == rb }) else { continue }
+            var ra = Self.root(candidates[index].a, in: parent), rb = Self.root(candidates[index].b, in: parent)
+            guard ra != rb, !apart[ra].contains(where: { Self.root($0, in: parent) == rb }) else { continue }
             if apart[rb].count > apart[ra].count { swap(&ra, &rb) }
             parent[rb] = ra
             apart[ra].formUnion(apart[rb])
@@ -575,45 +561,4 @@ struct CellMap {
         color = color.map { newIndex[Int($0)] }
         return kept
     }
-}
-
-/// Binary min-heap with a caller-supplied order.
-struct Heap<Element> {
-    private var items: [Element] = []
-    private let less: (Element, Element) -> Bool
-
-    init(_ less: @escaping (Element, Element) -> Bool) { self.less = less }
-
-    mutating func push(_ e: Element) {
-        items.append(e)
-        var i = items.count - 1
-        while i > 0 {
-            let p = (i - 1) / 2
-            guard less(items[i], items[p]) else { break }
-            items.swapAt(i, p)
-            i = p
-        }
-    }
-
-    mutating func pop() -> Element? {
-        guard !items.isEmpty else { return nil }
-        items.swapAt(0, items.count - 1)
-        let top = items.removeLast()
-        var i = 0
-        while true {
-            let l = 2 * i + 1, r = l + 1
-            var m = i
-            if l < items.count && less(items[l], items[m]) { m = l }
-            if r < items.count && less(items[r], items[m]) { m = r }
-            if m == i { break }
-            items.swapAt(i, m)
-            i = m
-        }
-        return top
-    }
-}
-
-@inline(__always) func simdDistance(_ a: SIMD3<Float>, _ b: SIMD3<Float>) -> Float {
-    let d = a - b
-    return (d * d).sum().squareRoot()
 }

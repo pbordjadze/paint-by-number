@@ -77,7 +77,7 @@ struct PipelineTuningTests {
 
     @Test func minimumCellSizeChangesTheTemplate() throws {
         // The Parrots draft (Auto's fixture): enough texture for small regions.
-        let image = try Netpbm.read(LineArtTests.fixture("auto-parrots-draft.ppm"))
+        let image = try Netpbm.read(TestFixtures.data("auto-parrots-draft.ppm"))
         func regions(_ factor: Float) throws -> Int {
             var settings = GenerationSettings(colorCount: 24, detail: 0.5)
             settings.tuning.minimumCellSize = factor

@@ -91,4 +91,23 @@ public struct LineArtInput: Sendable, Equatable {
         self.objects = objects
         self.contours = contours
     }
+
+    /// The input `detector` draws from when both maps exist: the drawing over the contours with
+    /// the contours deciding the outlines, or either map alone deciding everything. The app's
+    /// detector setting and `pbn --line-art detector=` both go through here.
+    public init(
+        drawing: EdgeMap, contours: EdgeMap, detector: LineArtSettings.Detector,
+        eyes: [[SIMD2<Float>]] = [], objects: [[SIMD2<Float>]] = [], contourWeight: Float = EdgeMap.contourWeight
+    ) {
+        switch detector {
+        case .drawingAndContours:
+            self.init(
+                edges: EdgeMap.combined(drawing: drawing, contours: contours, contourWeight: contourWeight),
+                eyes: eyes, objects: objects, contours: contours)
+        case .drawing:
+            self.init(edges: drawing, eyes: eyes, objects: objects)
+        case .contours:
+            self.init(edges: contours, eyes: eyes, objects: objects)
+        }
+    }
 }

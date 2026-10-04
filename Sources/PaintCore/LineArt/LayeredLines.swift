@@ -123,12 +123,12 @@ enum LayeredLines {
             var lines = LineLayering.layered(
                 strokes, thresholds: thresholds, clutter: mask.clutter, width: w, contours: contourStrength)
             if s.outlineEyes {
-                let eyes = LineLayering.eyePolygons(input.eyes, width: w, height: h)
+                let eyes = LineLayering.pixelPolygons(input.eyes, width: w, height: h)
                 stats.eyes = eyes.count
                 lines = LineLayering.addEyes(lines, eyes: eyes, width: w, height: h)
             }
             if s.outlineObjects {
-                let objects = LineLayering.eyePolygons(input.objects, width: w, height: h)
+                let objects = LineLayering.pixelPolygons(input.objects, width: w, height: h)
                 stats.objects = objects.count
                 let added = LineLayering.addObjects(lines, objects: objects, width: w, height: h)
                 stats.objectStretches = added.count
@@ -282,7 +282,7 @@ enum LayeredLines {
             } else if e.right != BoundaryEdge.outside {
                 let a = t.palette[Int(t.regions[Int(e.left)].colorIndex)].oklab
                 let b = t.palette[Int(t.regions[Int(e.right)].colorIndex)].oklab
-                weights[k] = UInt8((min(simdDistance(a, b) / colorWeightReference, 1) * 255).rounded())
+                weights[k] = UInt8((min(ColorScience.distance(a, b) / colorWeightReference, 1) * 255).rounded())
             }
         }
 
@@ -335,10 +335,7 @@ enum LayeredLines {
     /// their neighbours: short gaps inside the line close, short pieces go).
     static func near(_ line: DrawnLine, distance: [Float], width w: Int) -> [Bool] {
         let h = distance.count / w
-        var keep = line.points.map { p -> Bool in
-            let x = min(max(Int(p.x.rounded()), 0), w - 1), y = min(max(Int(p.y.rounded()), 0), h - 1)
-            return distance[y * w + x] <= trimNear * trimNear
-        }
+        var keep = line.points.map { distance[LineLayering.pixelIndex(of: $0, width: w, height: h)] <= trimNear * trimNear }
         let arc = line.arcLength
         let n = keep.count
         for flag in [false, true] {
@@ -359,9 +356,7 @@ enum LayeredLines {
 
     /// Splits a line running inside cells where the cell under it changes.
     static func byRegion(_ line: DrawnLine, labels: [Int32], width w: Int, height h: Int) -> [(DrawnLine, Int)] {
-        let region = line.points.map { p -> Int32 in
-            labels[min(max(Int(p.y.rounded()), 0), h - 1) * w + min(max(Int(p.x.rounded()), 0), w - 1)]
-        }
+        let region = line.points.map { labels[LineLayering.pixelIndex(of: $0, width: w, height: h)] }
         var out: [(DrawnLine, Int)] = []
         var i = 0
         while i < region.count {
@@ -385,7 +380,7 @@ enum LayeredLines {
     static func paletteStep(_ palette: [SIMD3<Float>]) -> Float {
         guard palette.count > 1 else { return 0 }
         var nearest = palette.indices.map { i in
-            palette.indices.filter { $0 != i }.map { simdDistance(palette[i], palette[$0]) }.min()!
+            palette.indices.filter { $0 != i }.map { ColorScience.distance(palette[i], palette[$0]) }.min()!
         }
         nearest.sort()
         let n = nearest.count
@@ -446,53 +441,5 @@ enum LayeredLines {
             }
         }
         return (0..<n).filter { keep[$0] }
-    }
-}
-
-/// What layered line art did (`pbn`'s `stats.json` `lineArt` section). Lengths in canvas units.
-public struct LineArtStats: Sendable, Codable, Equatable {
-    /// Regions of the color segmentation the lines split (a classic template's regions).
-    public var segmentationRegions = 0
-    /// Lines after tracing, layering, eyes and closing.
-    public var strokes = 0
-    /// Eyes outlined.
-    public var eyes = 0
-    /// Subjects whose silhouettes were given, and the stretches of them drawn where the
-    /// drawing left a silhouette open.
-    public var objects = 0
-    public var objectStretches = 0
-    /// Free ends extended to a line, paint boundary or the frame.
-    public var endsClosed = 0
-    /// Cells right after splitting the segmentation along the lines.
-    public var cellsSplit = 0
-    /// Cells too small for their number merged inside their enclosed area.
-    public var smallMerged = 0
-    /// Cells too small for their number merged across a line.
-    public var tinyMerged = 0
-    /// Line-free neighbours merged for close paints (`keepColorEdges` off).
-    public var closeColorsMerged = 0
-    public var cellsBeforeJoin = 0
-    /// Same-paint neighbours joined (`samePaint`).
-    public var samePaintJoins = 0
-    /// Cells of the template.
-    public var cells = 0
-    /// Paints no cell used any more.
-    public var paintsDropped = 0
-    /// Drawn line along cell boundaries per layer (outline, detail, texture).
-    public var boundaryLength: [Float] = [0, 0, 0]
-    /// Drawn line inside cells per layer.
-    public var interiorLength: [Float] = [0, 0, 0]
-    public var interiorStrokes = 0
-
-    public init() {}
-
-    mutating func add(_ line: DrawnLine, interior: Bool) {
-        guard line.points.count > 1 else { return }
-        for k in 1..<line.points.count {
-            let l = Int(min(line.layer[k - 1], 2))
-            let d = simdLength(line.points[k] - line.points[k - 1])
-            if interior { interiorLength[l] += d } else { boundaryLength[l] += d }
-        }
-        if interior { interiorStrokes += 1 }
     }
 }

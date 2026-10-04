@@ -40,24 +40,15 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
 /// (`EdgeMap.combined`, the contours alone then deciding the outlines, `--contour-weight` the
 /// weight), unless `--line-art detector=drawing|contours` keeps one of them; and `--eyes`.
 func loadLineArt(_ options: Options) -> LineArtInput? {
-    guard options.edges != nil || options.lines != nil else {
-        let style = options.settings.lineArt.style
-        if style.usesEdgeMap { fail("--line-style \(style.rawValue) needs --edges map.pgm and/or --lines drawing.pgm") }
-        return nil
-    }
     func map(_ path: String) -> EdgeMap {
         let img = loadImage(path)
         return EdgeMap(width: img.width, height: img.height, values: (0..<(img.width * img.height)).map { img.pixels[$0 * 4] })
     }
-    let edges: EdgeMap
-    var outlines: EdgeMap?
-    switch (options.lines.map(map), options.edges.map(map), options.settings.lineArt.detector) {
-    case let (drawing?, contours?, .drawingAndContours):
-        edges = EdgeMap.combined(drawing: drawing, contours: contours, contourWeight: options.contourWeight)
-        outlines = contours
-    case let (drawing?, _, .drawing), let (drawing?, nil, _): edges = drawing
-    case let (_, contours?, .contours), let (nil, contours?, _): edges = contours
-    case (nil, nil, _): fatalError()
+    let drawing = options.lines.map(map), contours = options.edges.map(map)
+    guard let single = drawing ?? contours else {
+        let style = options.settings.lineArt.style
+        if style.usesEdgeMap { fail("--line-style \(style.rawValue) needs --edges map.pgm and/or --lines drawing.pgm") }
+        return nil
     }
     /// Closed polygons of [x, y] normalized to the photo, from a JSON file.
     func polygons(_ path: String) -> [[SIMD2<Float>]] {
@@ -83,7 +74,13 @@ func loadLineArt(_ options: Options) -> LineArtInput? {
             objects = MaskContours.outlines(of: mask, width: img.width, height: img.height)
         }
     }
-    return LineArtInput(edges: edges, eyes: eyes, objects: objects, contours: outlines)
+    if let drawing, let contours {
+        return LineArtInput(
+            drawing: drawing, contours: contours, detector: options.settings.lineArt.detector, eyes: eyes, objects: objects,
+            contourWeight: options.contourWeight)
+    }
+    // One map is drawn as it is, whatever the detector says.
+    return LineArtInput(edges: single, eyes: eyes, objects: objects)
 }
 
 func loadHints(_ path: String?) -> SubjectHints? {

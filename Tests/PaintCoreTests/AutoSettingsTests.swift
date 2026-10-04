@@ -396,17 +396,10 @@ struct AutoSettingsTests {
 
     // MARK: - Choosing
 
-    final class Counter: @unchecked Sendable {
-        private let lock = NSLock()
-        private var value = 0
-        var count: Int { lock.withLock { value } }
-        func increment() { lock.withLock { value += 1 } }
-    }
-
     @Test func choosePicksAWinnerInsideTheBandsAfterOneFirstDraft() throws {
         let image = TestScenes.scene(width: 360, height: 240)
         for preference in PaintingLength.allCases {
-            let drafts = Counter()
+            let drafts = LockedCounter()
             let decision = try AutoSettings.choose(
                 image: image, importance: nil, hints: nil, preference: preference, maxCandidates: 5, cancel: .none,
                 firstDraft: { output in
@@ -438,7 +431,7 @@ struct AutoSettingsTests {
     @Test func chooseStopsWhenCancelled() throws {
         let image = TestScenes.scene(width: 360, height: 240)
         // Cancelled during the remaining candidates: the first draft still arrived once.
-        let drafts = Counter()
+        let drafts = LockedCounter()
         #expect(throws: CancellationError.self) {
             try AutoSettings.choose(
                 image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 5,
@@ -446,7 +439,7 @@ struct AutoSettingsTests {
         }
         #expect(drafts.count == 1)
         // Cancelled from the start: nothing runs.
-        let none = Counter()
+        let none = LockedCounter()
         #expect(throws: CancellationError.self) {
             try AutoSettings.choose(
                 image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 5,
@@ -455,7 +448,7 @@ struct AutoSettingsTests {
         #expect(none.count == 0)
         // Cancelled after a few checks, wherever that lands.
         for after in [3, 20, 60] {
-            let checks = Counter()
+            let checks = LockedCounter()
             do {
                 _ = try AutoSettings.choose(
                     image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 5,
@@ -490,12 +483,8 @@ struct AutoSettingsTests {
     /// Settings, winner and analysis must match exactly; scores to 1e-4, since libm differs
     /// between platforms.
     @Test func parrotsDecisionIsPinned() throws {
-        func fixture(_ name: String) throws -> Data {
-            let url = try #require(Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Fixtures"))
-            return try Data(contentsOf: url)
-        }
-        let pinned = try JSONDecoder().decode(AutoDecision.self, from: fixture("auto-parrots.json"))
-        let draft = try Netpbm.read(fixture("auto-parrots-draft.ppm"))
+        let pinned = try JSONDecoder().decode(AutoDecision.self, from: TestFixtures.data("auto-parrots.json"))
+        let draft = try Netpbm.read(TestFixtures.data("auto-parrots-draft.ppm"))
         // The fixture was written by pbn, whose templates are classic unless told otherwise.
         let decision = try AutoSettings.choose(
             image: draft, sourceSize: (pinned.analysis.sourceWidth, pinned.analysis.sourceHeight), importance: nil,

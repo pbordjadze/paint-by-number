@@ -7,22 +7,17 @@ struct LineArtTests {
 
     // MARK: - A synthetic scene
 
-    static func fixture(_ name: String) -> Data {
-        let url = Bundle.module.url(forResource: name, withExtension: nil, subdirectory: "Fixtures")!
-        return try! Data(contentsOf: url)
-    }
-
     /// `Fixtures/layered-photo.ppm`, 128×96: flat sky (150, 190, 230) over flat ground
     /// (90, 150, 70), the horizon at y = 48, a dark red disc (140, 30, 40) of radius 18 around
     /// (40, 48) and a yellow square (240, 200, 40) over x 80..<112, y 30..<62.
-    static func photo() -> RGBAImage { try! Netpbm.read(fixture("layered-photo.ppm")) }
+    static func photo() -> RGBAImage { try! Netpbm.read(TestFixtures.data("layered-photo.ppm")) }
 
     /// `Fixtures/layered-edges.pgm`, the photo's lines as a learned detector draws them (soft:
     /// a Gaussian profile, σ = 2 px): 0.95 around the disc and the square, 0.9 along the
     /// horizon where it is visible, 0.62 across the ground at y = 80 (same paint on both
     /// sides) and 0.42 down the sky at x = 60 (likewise). Values are rounded to 8 bits.
     static func edges() -> EdgeMap {
-        let image = try! Netpbm.read(fixture("layered-edges.pgm"))
+        let image = try! Netpbm.read(TestFixtures.data("layered-edges.pgm"))
         return EdgeMap(width: image.width, height: image.height, values: (0..<(image.width * image.height)).map { image.pixels[$0 * 4] })
     }
 
@@ -63,6 +58,14 @@ struct LineArtTests {
             from: photo(), lineArt: input ? LineArtInput(edges: edges(), eyes: eyes) : nil, cancel: .none)
     }
 
+    /// Generation from a given photo and line-art input (nil: the settings alone).
+    static func generate(
+        _ settings: GenerationSettings, photo: RGBAImage = Self.photo(), input: LineArtInput?,
+        cancel: CancellationCheck = .none
+    ) throws -> TemplateGenerator.Output {
+        try TemplateGenerator(settings: settings).generate(from: photo, lineArt: input, cancel: cancel)
+    }
+
     /// Length of edges per layer (outline, detail, texture, color).
     static func lengths(_ t: Template) -> [Float] {
         var out: [Float] = [0, 0, 0, 0]
@@ -80,8 +83,7 @@ struct LineArtTests {
         let t = out.template
         let lines = try #require(t.lineArt)
         #expect(lines.edgeLayers.count == t.edges.count && lines.edgeWeights.count == t.edges.count)
-        let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
-        #expect(report.isValid, "\(report)")
+        let report = expectValid(t)
         #expect(report.badLines == [])
         #expect(out.vectorStats.labelRoomUnmet == 0)
         let length = Self.lengths(t)
@@ -123,17 +125,13 @@ struct LineArtTests {
         // A short, strong line in the open sky: it closes nothing.
         let dangling = Self.edges(adding: SIMD2(12, 8), to: SIMD2(36, 14))
         func generate(_ settings: GenerationSettings) throws -> TemplateGenerator.Output {
-            try TemplateGenerator(settings: settings).generate(
-                from: Self.photo(), lineArt: LineArtInput(edges: dangling), cancel: .none)
+            try Self.generate(settings, input: LineArtInput(edges: dangling))
         }
         let layered = try generate(Self.settings()).template
         let book = try generate(Self.book()).template
         #expect(layered.lineArt?.style == .layered)
         #expect(book.lineArt?.style == .coloringBook)
-        for t in [layered, book] {
-            let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
-            #expect(report.isValid, "\(report)")
-        }
+        for t in [layered, book] { expectValid(t) }
         // The dangling line is drawn in the book, in the sky's cell, and trimmed away in layered line art.
         let sky = try #require(book.region(at: SIMD2<Float>(45, 15)))
         func strokes(_ t: Template, near p: SIMD2<Float>) -> [InteriorStroke] {
@@ -157,7 +155,6 @@ struct LineArtTests {
         let lengths = Self.lengths(book)
         #expect(lengths[2] == 0 && !book.lineArt!.strokes.contains { $0.layer == LineLayer.texture.rawValue })
         #expect(lengths[1] > 150 && abs(lengths[0] - Self.lengths(layered)[0]) < 60, "\(lengths) vs \(Self.lengths(layered))")
-        #expect(book.regions.count > (book.regions.count - Int(book.lineArt!.edgeLayers.filter { $0 == 1 }.count)))
         #expect(layered.lineArt!.strokes.contains { $0.layer == LineLayer.texture.rawValue })
         let stats = try #require(generate(Self.book()).lineArtStats)
         #expect(stats.interiorStrokes == book.lineArt!.strokes.count && stats.cells == book.regions.count)
@@ -180,7 +177,7 @@ struct LineArtTests {
         #expect(all.regions.count < split.regions.count)
         #expect(all.lineArt!.strokes.contains { $0.layer == LineLayer.detail.rawValue })
         #expect(all.lineArt?.style == .coloringBook)
-        #expect(all.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        expectValid(all)
     }
 
     @Test func coloringBookSVGIsOneDrawing() throws {
@@ -212,8 +209,8 @@ struct LineArtTests {
 
     @Test func subjectsCloseTheirSilhouettes() throws {
         func generate(objects: [[SIMD2<Float>]], on: Bool = true) throws -> Template {
-            try TemplateGenerator(settings: Self.settings { $0.outlineObjects = on }).generate(
-                from: Self.photo(), lineArt: LineArtInput(edges: Self.edges(), objects: objects), cancel: .none).template
+            try Self.generate(
+                Self.settings { $0.outlineObjects = on }, input: LineArtInput(edges: Self.edges(), objects: objects)).template
         }
         let plain = try Self.generate().template
         let outline = Int(LineLayer.outline.rawValue)
@@ -223,7 +220,7 @@ struct LineArtTests {
         let boxed = try generate(objects: [box])
         #expect(boxed.regions.count > plain.regions.count)
         #expect(Self.lengths(boxed)[outline] > Self.lengths(plain)[outline] + 100)
-        #expect(boxed.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        expectValid(boxed)
         // The disc's own silhouette runs along its drawn contour: nothing is added.
         let disc = (0..<64).map { k -> SIMD2<Float> in
             let a = Float(k) / 64 * 2 * .pi
@@ -274,8 +271,7 @@ struct LineArtTests {
         // disc, square and horizon become detail); with the ground's 0.62 line raised to full
         // strength in the contours, that line is an outline though the drawing has it faint.
         func generate(contours: EdgeMap) throws -> Template {
-            try TemplateGenerator(settings: Self.settings()).generate(
-                from: Self.photo(), lineArt: LineArtInput(edges: Self.edges(), contours: contours), cancel: .none).template
+            try Self.generate(Self.settings(), input: LineArtInput(edges: Self.edges(), contours: contours)).template
         }
         let plain = try Self.generate().template
         var faint = Self.edges()
@@ -313,10 +309,7 @@ struct LineArtTests {
         // Joining across detail lines too also unites the ground's two cells.
         #expect(all.regions.count < joined.regions.count)
         #expect(all.lineArt!.strokes.contains { $0.layer == LineLayer.detail.rawValue })
-        for t in [joined, split, all] {
-            let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
-            #expect(report.isValid, "\(report)")
-        }
+        for t in [joined, split, all] { expectValid(t) }
         // Interior strokes lie inside their cell, whose paint is on both sides.
         for s in joined.lineArt!.strokes {
             let p = joined.lineArt!.strokePoints[Int(s.pointStart) + Int(s.pointCount) / 2]
@@ -343,8 +336,7 @@ struct LineArtTests {
         let without = try Self.generate()
         #expect(with.lineArtStats?.eyes == 1)
         #expect(with.template.regions.count > without.template.regions.count)
-        let report = with.template.validate(minLabelRadius: LabelSizing.minimumRadius)
-        #expect(report.isValid, "\(report)")
+        expectValid(with.template)
         // The diamond is drawn as an outline: outline edges run around its centre.
         let t = with.template
         let centre = SIMD2<Float>(c.x * Float(t.width), c.y * Float(t.height))
@@ -372,7 +364,7 @@ struct LineArtTests {
         let last = lines.strokePoints[Int(stroke.pointStart + stroke.pointCount) - 1]
         #expect(first == last)
         #expect(t.region(at: first) == Int(stroke.region))
-        #expect(t.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        expectValid(t)
     }
 
     @Test func mergingCloseColorsGivesFewerCells() throws {
@@ -388,12 +380,11 @@ struct LineArtTests {
         func run(_ keep: Bool) throws -> Template {
             var s = Self.settings { $0.keepColorEdges = keep }
             s.colorCount = 16
-            return try TemplateGenerator(settings: s).generate(
-                from: image, lineArt: LineArtInput(edges: Self.edges()), cancel: .none).template
+            return try Self.generate(s, photo: image, input: LineArtInput(edges: Self.edges())).template
         }
         let kept = try run(true), merged = try run(false)
         #expect(merged.regions.count < kept.regions.count)
-        #expect(merged.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        expectValid(merged)
     }
 
     @Test func edgeMapAtAnotherResolution() throws {
@@ -407,9 +398,9 @@ struct LineArtTests {
                 half[y * 64 + x] = UInt8((a + b + 2) / 4)
             }
         }
-        let t = try TemplateGenerator(settings: Self.settings()).generate(
-            from: Self.photo(), lineArt: LineArtInput(edges: EdgeMap(width: 64, height: 48, values: half)), cancel: .none).template
-        #expect(t.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        let t = try Self.generate(
+            Self.settings(), input: LineArtInput(edges: EdgeMap(width: 64, height: 48, values: half))).template
+        expectValid(t)
         #expect(Self.lengths(t)[0] > 300)
     }
 
@@ -418,12 +409,11 @@ struct LineArtTests {
         var classic = Self.settings()
         classic.lineArt.style = .classic
         let plain = try TemplateGenerator(settings: classic).generate(from: Self.photo(), cancel: .none).template
-        let t = try TemplateGenerator(settings: Self.settings()).generate(
-            from: Self.photo(), lineArt: LineArtInput(edges: blank), cancel: .none).template
+        let t = try Self.generate(Self.settings(), input: LineArtInput(edges: blank)).template
         #expect(t.regions.count == plain.regions.count)
         #expect(t.lineArt!.edgeLayers.allSatisfy { $0 == LineLayer.color.rawValue })
         #expect(t.lineArt!.strokes.isEmpty)
-        #expect(t.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        expectValid(t)
     }
 
     // MARK: - Maps
@@ -446,6 +436,24 @@ struct LineArtTests {
         // Resampling up and down keeps a flat map flat and its levels inside the range.
         let flat = EdgeMap(width: 3, height: 3, values: [UInt8](repeating: 77, count: 9))
         #expect(flat.resampled(width: 7, height: 5).values.allSatisfy { $0 == 77 })
+    }
+
+    /// The detector says which of the two maps a generation reads: the drawing over the
+    /// contours with the contours deciding the outlines, or either alone, deciding everything.
+    @Test func detectorPicksWhatTheInputReads() {
+        let drawing = EdgeMap(width: 4, height: 2, values: [0, 200, 40, 0, 255, 0, 0, 10])
+        let contours = EdgeMap(width: 4, height: 2, values: [100, 100, 100, 100, 0, 255, 60, 60])
+        let eyes: [[SIMD2<Float>]] = [[SIMD2(0.1, 0.1), SIMD2(0.4, 0.1), SIMD2(0.4, 0.4)]]
+        let objects: [[SIMD2<Float>]] = [[SIMD2(0.5, 0.5), SIMD2(0.9, 0.5), SIMD2(0.9, 0.9)]]
+        func input(_ detector: LineArtSettings.Detector, weight: Float = EdgeMap.contourWeight) -> LineArtInput {
+            LineArtInput(
+                drawing: drawing, contours: contours, detector: detector, eyes: eyes, objects: objects, contourWeight: weight)
+        }
+        #expect(input(.drawingAndContours) == LineArtInput(
+            edges: EdgeMap.combined(drawing: drawing, contours: contours), eyes: eyes, objects: objects, contours: contours))
+        #expect(input(.drawingAndContours, weight: 1).edges == EdgeMap.combined(drawing: drawing, contours: contours, contourWeight: 1))
+        #expect(input(.drawing) == LineArtInput(edges: drawing, eyes: eyes, objects: objects))
+        #expect(input(.contours) == LineArtInput(edges: contours, eyes: eyes, objects: objects))
     }
 
     // MARK: - Stages
@@ -517,24 +525,16 @@ struct LineArtTests {
     }
 
     @Test func layeredGenerationCancels() throws {
-        // Cancelled after every number of checks up to the last: always a CancellationError.
-        final class Counter: @unchecked Sendable {
-            let lock = NSLock()
-            var value = 0
-            func next() -> Int { lock.withLock { value += 1; return value } }
-        }
-        let total = Counter()
-        _ = try TemplateGenerator(settings: Self.settings()).generate(
-            from: Self.photo(), lineArt: LineArtInput(edges: Self.edges()),
-            cancel: CancellationCheck { _ = total.next(); return false })
-        let checks = total.value
+        // Cancelled at about 25 evenly spaced check counts up to the last: always a CancellationError.
+        let input = LineArtInput(edges: Self.edges())
+        let total = LockedCounter()
+        _ = try Self.generate(Self.settings(), input: input, cancel: CancellationCheck { total.increment(); return false })
+        let checks = total.count
         #expect(checks > 20)
         for after in stride(from: 0, to: checks, by: max(1, checks / 25)) {
-            let counter = Counter()
+            let counter = LockedCounter()
             #expect(throws: CancellationError.self, "after \(after)") {
-                try TemplateGenerator(settings: Self.settings()).generate(
-                    from: Self.photo(), lineArt: LineArtInput(edges: Self.edges()),
-                    cancel: CancellationCheck { counter.next() > after })
+                try Self.generate(Self.settings(), input: input, cancel: CancellationCheck { counter.increment() > after })
             }
         }
     }
@@ -572,221 +572,7 @@ struct LineArtTests {
         #expect(strokes[0].free == (true, true))
     }
 
-    // MARK: - Coding
-
-    /// `Fixtures/template-v2-lines.pbnt` was written by the LINE encoder of commit 7ae42a1 with
-    /// `pbn generate Fixtures/layered-photo.ppm <dir> --colors 8 --line-style layered --edges
-    /// Fixtures/layered-edges.pgm --line-art outlineThreshold=0.8 --line-art detailThreshold=0.5
-    /// --line-art textureThreshold=0.3 --line-art minimumStrokeLength=10 --line-art gapBridging=6`:
-    /// the v1 payload, then a GENR and a LINE chunk (12 edges: 7 outline, 1 detail, 4 color; one
-    /// texture stroke of 6 points inside the joined sky). It pins the LINE layout: never
-    /// regenerate it.
-    @Test func decodesLayeredFixture() throws {
-        let data = Self.fixture("template-v2-lines.pbnt")
-        #expect(data.count == 11152)
-        #expect(data[4..<8] == Data([2, 0, 0, 0]))
-        let t = try Template(encoded: data)
-        #expect(t.width == 192 && t.height == 144)
-        #expect(t.regions.count == 5 && t.edges.count == 12 && t.points.count == 165 && t.palette.count == 4)
-        #expect(t.pipelineVersion == 3)
-        let lines = try #require(t.lineArt)
-        #expect(lines.edgeLayers == [0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 1, 3])
-        #expect(lines.edgeWeights == [218, 230, 230, 228, 228, 215, 217, 0, 0, 0, 147, 0])
-        #expect(lines.strokePoints.count == 6)
-        #expect(lines.strokes == [InteriorStroke(pointStart: 0, pointCount: 6, layer: 2, weight: 103, region: 0)])
-        let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
-        #expect(report.isValid, "\(report)")
-        // The chunk section: GENR then LINE (98 bytes), optional.
-        let tags = try Self.chunks(data, payloadEnd: 11022)
-        #expect(tags.map(\.0) == [Template.Chunk.generator, Template.Chunk.lines])
-        #expect(tags.allSatisfy { $0.1 == 0 })
-        // Re-encoding writes the same bytes.
-        #expect(t.encoded() == data)
-    }
-
-    @Test func roundTripsLineArt() throws {
-        let t = try Self.generate().template
-        let decoded = try Template(encoded: t.encoded())
-        #expect(decoded == t)
-        #expect(decoded.lineArt == t.lineArt)
-        // Without the chunk (an older writer, or classic) the same cells decode, drawn alike.
-        var classic = t
-        classic.lineArt = nil
-        let plain = try Template(encoded: classic.encoded())
-        #expect(plain.lineArt == nil && plain.regions == t.regions)
-    }
-
-    /// `Fixtures/template-v2-book.pbnt` was written by the LINE encoder of the commit adding
-    /// `TemplateLineArt.style`, with the layered fixture's command and `--line-style coloringBook`:
-    /// the same five cells and twelve edges in the same layers (the sky's faint line, below
-    /// detail, is not drawn at all, so there is no stroke), and the style byte after the
-    /// (empty) strokes. It pins that byte: never regenerate it.
-    @Test func decodesColoringBookFixture() throws {
-        let data = Self.fixture("template-v2-book.pbnt")
-        #expect(data.count == 10147)
-        #expect(data[4..<8] == Data([2, 0, 0, 0]))
-        let t = try Template(encoded: data)
-        #expect(t.width == 192 && t.height == 144)
-        #expect(t.regions.count == 5 && t.edges.count == 12 && t.palette.count == 4)
-        #expect(t.pipelineVersion == 3)
-        let lines = try #require(t.lineArt)
-        #expect(lines.style == .coloringBook)
-        #expect(lines.edgeLayers == [0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 1, 3])
-        #expect(lines.edgeWeights == [218, 230, 230, 228, 228, 215, 217, 0, 0, 0, 148, 0])
-        #expect(lines.strokes.isEmpty && lines.strokePoints.isEmpty)
-        // The chunk section: its count, GENR, then LINE (37 bytes: 4 + 12 + 12 + 4 + 4 + the style byte).
-        let tags = try Self.chunks(data, payloadEnd: data.count - 4 - 16 - 49)
-        #expect(tags.map(\.0) == [Template.Chunk.generator, Template.Chunk.lines])
-        #expect(tags.allSatisfy { $0.1 == 0 })
-        #expect(data.last == TemplateLineArt.Style.coloringBook.rawValue)
-        let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
-        #expect(report.isValid, "\(report)")
-        #expect(t.encoded() == data)
-    }
-
-    @Test func lineArtStyleIsAnOptionalTrailingByte() throws {
-        let book = try Self.generate(Self.book()).template
-        let art = try #require(book.lineArt)
-        #expect(art.style == .coloringBook)
-        #expect(try Template(encoded: book.encoded()) == book)
-        // Layered templates encode as they always did, without the byte.
-        var layered = art
-        layered.style = .layered
-        #expect(layered.encoded() == art.encoded().dropLast())
-        #expect(art.encoded().last == TemplateLineArt.Style.coloringBook.rawValue)
-        // The byte is read when present: a layered payload plus it is a coloring book, and a
-        // book payload without it (an older writer) or with a style this reader does not know
-        // (a later one) is layered.
-        var generator = BinaryWriter()
-        generator.write(book.pipelineVersion)
-        func decode(_ payload: Data) throws -> TemplateLineArt? {
-            try Template(encoded: Self.file(book, chunks: [(Template.Chunk.generator, 0, generator.data), (Template.Chunk.lines, 0, payload)])).lineArt
-        }
-        #expect(try decode(layered.encoded() + Data([1]))?.style == .coloringBook)
-        #expect(try decode(art.encoded().dropLast())?.style == .layered)
-        #expect(try decode(layered.encoded() + Data([9]))?.style == .layered)
-        #expect(try decode(art.encoded() + Data([5, 6]))?.style == .coloringBook)
-    }
-
-    /// A file of `t`'s payload followed by `chunks`.
-    static func file(_ t: Template, chunks: [(tag: UInt32, flags: UInt32, payload: Data)]) -> Data {
-        var classic = t
-        classic.lineArt = nil
-        // The classic encoding ends with its one chunk (GENR: 12-byte header, 4-byte payload).
-        let encoded = classic.encoded()
-        var w = BinaryWriter()
-        w.write(bytes: encoded.prefix(encoded.count - 4 - 16))
-        w.write(UInt32(chunks.count))
-        for c in chunks {
-            w.write(c.tag); w.write(c.flags); w.write(UInt32(c.payload.count)); w.write(bytes: c.payload)
-        }
-        return w.data
-    }
-
-    /// The (tag, flags) of every chunk of a layered file.
-    static func chunks(_ data: Data, payloadEnd: Int) throws -> [(UInt32, UInt32)] {
-        var r = BinaryReader(data[payloadEnd...])
-        var tags: [(UInt32, UInt32)] = []
-        for _ in 0..<(try r.read(UInt32.self)) {
-            let tag = try r.read(UInt32.self), flags = try r.read(UInt32.self)
-            _ = try r.readBytes(Int(try r.read(UInt32.self)))
-            tags.append((tag, flags))
-        }
-        #expect(r.isAtEnd)
-        return tags
-    }
-
-    @Test func lineChunkIsOptional() throws {
-        // The chunk is flagged optional, so readers that don't know it skip it.
-        let t = try Self.generate().template
-        var classic = t
-        classic.lineArt = nil
-        let tags = try Self.chunks(t.encoded(), payloadEnd: classic.encoded().count - 4 - 16)
-        #expect(tags.map(\.0) == [Template.Chunk.generator, Template.Chunk.lines])
-        #expect(tags.allSatisfy { $0.1 & Template.Chunk.requiredFlag == 0 })
-        // Written with the other chunks in any order, it reads the same.
-        var generator = BinaryWriter()
-        generator.write(t.pipelineVersion)
-        let reordered = Self.file(t, chunks: [(Template.Chunk.lines, 0, t.lineArt!.encoded()), (Template.Chunk.generator, 0, generator.data)])
-        #expect(try Template(encoded: reordered) == t)
-        // A later writer may append fields to the chunk (after the style byte, 0 for layered).
-        let longer = Self.file(t, chunks: [(Template.Chunk.generator, 0, generator.data),
-                                           (Template.Chunk.lines, 0, t.lineArt!.encoded() + Data([0, 2, 3]))])
-        #expect(try Template(encoded: longer) == t)
-    }
-
-    @Test func truncatedLayeredFilesAreRejected() throws {
-        let data = try Self.generate().template.encoded()
-        // The chunk section is at the end; every prefix from the payload's end on is short.
-        for length in stride(from: 0, to: data.count, by: max(1, data.count / 4000)) {
-            #expect(throws: Template.CodingError.self, "length \(length)") { try Template(encoded: data.prefix(length)) }
-        }
-        let tail = data.count - 400
-        for length in tail..<data.count {
-            #expect(throws: Template.CodingError.self, "length \(length)") { try Template(encoded: data.prefix(length)) }
-        }
-    }
-
-    @Test func randomCorruptionOfLineData() throws {
-        let data = try Self.generate().template.encoded()
-        var rng = SplitMix64(seed: 0x11E5)
-        var decoded = 0
-        let tail = 600
-        for _ in 0..<2000 {
-            var bytes = data
-            for _ in 0..<(1 + Int(rng.next() % 3)) {
-                // Mostly in the chunk section, where the line data is.
-                let i = data.count - 1 - Int(rng.next() % UInt64(tail))
-                if rng.next() % 2 == 0 { bytes[i] ^= UInt8(1) << (rng.next() % 8) } else { bytes[i] = UInt8(truncatingIfNeeded: rng.next()) }
-            }
-            do {
-                let t = try Template(encoded: bytes)
-                decoded += 1
-                TemplateCodingTests.exercise(t)
-            } catch is Template.CodingError {
-            } catch {
-                Issue.record("unexpected error \(error)")
-            }
-        }
-        #expect(decoded > 0 && decoded < 2000)
-    }
-
-    @Test func craftedLineReferencesAreCorrupt() throws {
-        let base = try Self.generate().template
-        let lines = try #require(base.lineArt)
-        try #require(!lines.strokes.isEmpty)
-        let mutations: [(String, (inout TemplateLineArt) -> Void)] = [
-            ("layer count", { $0.edgeLayers.removeLast() }),
-            ("weight count", { $0.edgeWeights.append(0) }),
-            ("unknown layer", { $0.edgeLayers[0] = 4 }),
-            ("stroke layer", { $0.strokes[0].layer = 200 }),
-            ("stroke region", { $0.strokes[0].region = UInt32(base.regions.count) }),
-            ("stroke start", { $0.strokes[0].pointStart = .max }),
-            ("stroke span wraps", { $0.strokes[0].pointStart = .max; $0.strokes[0].pointCount = 3 }),
-            ("stroke one point", { $0.strokes[0].pointCount = 1 }),
-            ("stroke past points", { $0.strokes[0].pointCount = UInt32($0.strokePoints.count) + 1 }),
-            ("point NaN", { $0.strokePoints[0] = SIMD2(.nan, 1) }),
-            ("point outside", { $0.strokePoints[0].x = Float(base.width) + 1 }),
-            ("point negative", { $0.strokePoints[0].y = -0.5 }),
-        ]
-        for (name, mutate) in mutations {
-            var t = base
-            mutate(&t.lineArt!)
-            let error = #expect(throws: Template.CodingError.self, "\(name)") { try Template(encoded: t.encoded()) }
-            if case .corrupt = error {} else { Issue.record("\(name): \(String(describing: error))") }
-            #expect(error?.requiresNewerReader == false, "\(name)")
-        }
-        // A duplicate chunk, or one for another number of edges, is corrupt too.
-        let duplicate = Self.file(base, chunks: [(Template.Chunk.lines, 0, lines.encoded()), (Template.Chunk.lines, 0, lines.encoded())])
-        #expect(throws: Template.CodingError.corrupt("duplicate chunk")) { try Template(encoded: duplicate) }
-        var fewer = lines
-        fewer.edgeLayers.removeLast()
-        fewer.edgeWeights.removeLast()
-        let mismatch = Self.file(base, chunks: [(Template.Chunk.lines, 0, fewer.encoded())])
-        #expect(throws: Template.CodingError.corrupt("LINE edge count")) { try Template(encoded: mismatch) }
-        let short = Self.file(base, chunks: [(Template.Chunk.lines, 0, lines.encoded().dropLast(3))])
-        #expect(throws: Template.CodingError.corrupt("LINE")) { try Template(encoded: short) }
-    }
+    // MARK: - Validation
 
     @Test func validationReportsBadLineData() throws {
         var t = try Self.generate().template

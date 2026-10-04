@@ -1,65 +1,5 @@
 import Foundation
 
-/// A drawn line of layered line art, in pixel coordinates (pixel centres at integers).
-struct DrawnLine {
-    var points: [SIMD2<Float>]
-    /// Edge strength per point, 0...1.
-    var strength: [Float]
-    /// `LineLayer` raw value per point (outline, detail or texture).
-    var layer: [UInt8]
-    var closed: Bool
-    /// Open ends attached to nothing (candidates for closing).
-    var free: (Bool, Bool)
-    /// Wall-only seals: point index → junction position the line passed through.
-    var links: [(index: Int, to: SIMD2<Float>)]
-    /// An eye's contour or iris: kept whatever happens to the cells around it.
-    var eye: Bool
-
-    var length: Float { StrokeGraph.length(points, closed: closed) }
-
-    /// Arc length at each point.
-    var arcLength: [Float] {
-        var a = [Float](repeating: 0, count: points.count)
-        for i in points.indices.dropFirst() { a[i] = a[i - 1] + simdLength(points[i] - points[i - 1]) }
-        return a
-    }
-
-    /// The pieces where `keep` is true. Neighbouring pieces share their cut point; links
-    /// inside a piece stay with it.
-    func pieces(keeping keep: [Bool], freeCuts: Bool) -> [DrawnLine] {
-        if keep.allSatisfy({ $0 }) { return [self] }
-        guard keep.contains(true) else { return [] }
-        var pts = points, str = strength, lay = layer, flags = keep
-        var shifted = links
-        if closed {
-            // Start at the first dropped point and run once around, back to it.
-            let s = keep.firstIndex(of: false)!
-            func rotate<T>(_ a: [T]) -> [T] { Array(a[s...]) + Array(a[..<s]) + [a[s]] }
-            pts = rotate(points); str = rotate(strength); lay = rotate(layer); flags = rotate(keep)
-            shifted = links.map { ((($0.index - s) % points.count + points.count) % points.count, $0.to) }
-        }
-        var out: [DrawnLine] = []
-        let n = pts.count
-        var i = 0
-        while i < n {
-            guard flags[i] else { i += 1; continue }
-            var j = i
-            while j + 1 < n && flags[j + 1] { j += 1 }
-            let a = max(i - 1, 0), b = min(j + 1, n - 1)
-            if b > a {
-                let startFree = a == 0 && !closed ? free.0 : freeCuts
-                let endFree = b == n - 1 && !closed ? free.1 : freeCuts
-                out.append(DrawnLine(
-                    points: Array(pts[a...b]), strength: Array(str[a...b]), layer: Array(lay[a...b]), closed: false,
-                    free: (startFree, endFree),
-                    links: shifted.filter { $0.index >= a && $0.index <= b }.map { ($0.index - a, $0.to) }, eye: eye))
-            }
-            i = j + 1
-        }
-        return out
-    }
-}
-
 /// Lines → layers, eyes, walls and closed ends.
 enum LineLayering {
     /// Hysteresis along a line per layer: a stretch above `lowFraction` × the layer's
@@ -74,6 +14,12 @@ enum LineLayering {
     static let minimumRun: Float = 6
     /// Not drawn: below the texture layer's hysteresis.
     static let none: UInt8 = 255
+
+    /// The pixel nearest to `p`, clamped to the canvas.
+    @inline(__always)
+    static func pixelIndex(of p: SIMD2<Float>, width w: Int, height h: Int) -> Int {
+        min(max(Int(p.y.rounded()), 0), h - 1) * w + min(max(Int(p.x.rounded()), 0), w - 1)
+    }
 
     /// `LineLayer` raw value per point, or `none`. `arc`: arc length at each point; `closing`:
     /// the length of a closed line's last segment, back to its first point.
@@ -210,9 +156,7 @@ enum LineLayering {
                 points: s.points, strength: s.strength, layer: [], closed: s.closed, free: s.free, links: s.links, eye: false)
             let arc = line.arcLength
             let closing = s.closed ? simdLength(s.points[0] - s.points[s.points.count - 1]) : 0
-            let pixel = s.points.map { p -> Int in
-                min(max(Int(p.y.rounded()), 0), h - 1) * w + min(max(Int(p.x.rounded()), 0), w - 1)
-            }
+            let pixel = s.points.map { pixelIndex(of: $0, width: w, height: h) }
             let contour = contours.map { field in pixel.map { field[$0] } } ?? s.strength
             // Scaled so that it reaches the threshold t where the strength reaches t + (1 − t)·clutter.
             let t = max(thresholds[0], 1e-3)
@@ -227,7 +171,6 @@ enum LineLayering {
             where span(run, arc: arc, closing: closing) >= long {
                 for k in run { layer[k % layer.count] = LineLayer.outline.rawValue }
             }
-            line.layer = layer
             clean(&layer, arc: arc, closed: s.closed)
             line.layer = layer
             out += line.pieces(keeping: layer.map { $0 != none }, freeCuts: false)
@@ -235,12 +178,12 @@ enum LineLayering {
         return out
     }
 
-    // MARK: - Eyes
+    // MARK: - Polygons
 
-    /// Eye polygons (normalized to the photo) in pixel coordinates, densified to about one
-    /// point per pixel.
-    static func eyePolygons(_ eyes: [[SIMD2<Float>]], width w: Int, height h: Int) -> [[SIMD2<Float>]] {
-        eyes.compactMap { poly in
+    /// Closed polygons normalized to the photo (eyes, subject silhouettes) in pixel
+    /// coordinates, densified to about one point per pixel.
+    static func pixelPolygons(_ polygons: [[SIMD2<Float>]], width w: Int, height h: Int) -> [[SIMD2<Float>]] {
+        polygons.compactMap { poly in
             let pts = poly.filter { $0.x.isFinite && $0.y.isFinite }.map {
                 SIMD2(min(max($0.x, 0), 1) * Float(w) - 0.5, min(max($0.y, 0), 1) * Float(h) - 0.5)
             }
@@ -282,6 +225,8 @@ enum LineLayering {
         return mask
     }
 
+    // MARK: - Eyes
+
     /// Around an eye (its bounds grown by this fraction of their size on every side: lids,
     /// lashes, brows) lines are drawn one layer stronger.
     static let eyeSurround: Float = 0.6
@@ -305,18 +250,10 @@ enum LineLayering {
             where line.layer[k] > LineLayer.outline.rawValue && surrounds.contains(where: { all(p .>= $0.0) && all(p .<= $0.1) }) {
                 line.layer[k] -= 1
             }
-            let keep = line.points.map { p -> Bool in
-                let x = min(max(Int(p.x.rounded()), 0), w - 1), y = min(max(Int(p.y.rounded()), 0), h - 1)
-                return !interior[y * w + x]
-            }
+            let keep = line.points.map { !interior[pixelIndex(of: $0, width: w, height: h)] }
             out += line.pieces(keeping: keep, freeCuts: false)
         }
-        for poly in polygons {
-            out.append(DrawnLine(
-                points: poly, strength: [Float](repeating: 1, count: poly.count),
-                layer: [UInt8](repeating: LineLayer.outline.rawValue, count: poly.count), closed: true,
-                free: (false, false), links: [], eye: true))
-        }
+        for poly in polygons { out.append(DrawnLine.closedOutline(poly, eye: true)) }
         return out
     }
 
@@ -330,7 +267,7 @@ enum LineLayering {
     /// mask's wobble, not a gap in the drawing.
     static let objectMinimumStretch: Float = 24
 
-    /// The subjects' silhouettes (`LineArtInput.objects`, as `eyePolygons` makes them) fill the
+    /// The subjects' silhouettes (`LineArtInput.objects`, as `pixelPolygons` makes them) fill the
     /// gaps in the drawing: the stretches of each polygon farther than `objectNear` from every
     /// drawn line become outlines at full strength, free at both ends so that `closeFreeEnds`
     /// leads them into the lines they stop short of. A silhouette no line runs along at all
@@ -343,14 +280,8 @@ enum LineLayering {
         let distance = DistanceTransform.squaredEDT(width: w, height: h) { walls.isWall($0) }.storage
         var out: [DrawnLine] = []
         for poly in polygons {
-            let far = poly.map { p -> Bool in
-                let x = min(max(Int(p.x.rounded()), 0), w - 1), y = min(max(Int(p.y.rounded()), 0), h - 1)
-                return distance[y * w + x] > near * near
-            }
-            let line = DrawnLine(
-                points: poly, strength: [Float](repeating: 1, count: poly.count),
-                layer: [UInt8](repeating: LineLayer.outline.rawValue, count: poly.count), closed: true,
-                free: (false, false), links: [], eye: false)
+            let far = poly.map { distance[pixelIndex(of: $0, width: w, height: h)] > near * near }
+            let line = DrawnLine.closedOutline(poly, eye: false)
             for var piece in line.pieces(keeping: far, freeCuts: true) where piece.length >= minimum {
                 if !piece.closed { piece.free = (true, true) }
                 out.append(piece)

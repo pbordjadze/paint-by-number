@@ -197,7 +197,7 @@ struct StrokeGraph {
         }
     }
 
-    static func length(_ p: [SIMD2<Float>], closed: Bool = false) -> Float {
+    static func length(_ p: [SIMD2<Float>], closed: Bool) -> Float {
         guard p.count > 1 else { return 0 }
         var total: Float = 0
         for i in 1..<p.count { total += simdLength(p[i] - p[i - 1]) }
@@ -629,7 +629,3 @@ struct PointIndex {
         }
     }
 }
-
-@inline(__always) func simdDot(_ a: SIMD2<Float>, _ b: SIMD2<Float>) -> Float { a.x * b.x + a.y * b.y }
-@inline(__always) func simdLengthSquared(_ a: SIMD2<Float>) -> Float { a.x * a.x + a.y * a.y }
-@inline(__always) func simdLength(_ a: SIMD2<Float>) -> Float { simdLengthSquared(a).squareRoot() }
