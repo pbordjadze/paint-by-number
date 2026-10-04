@@ -142,8 +142,7 @@ final class AccessibilityUITests: XCTestCase {
         }
         let other = try XCTUnwrap(visible.first { !$0.isSelected })
         other.tap()
-        sleep(1)
-        XCTAssertTrue(other.isSelected, "Tapping a swatch didn't select it")
+        XCTAssertTrue(waitUntil(timeout: 15) { other.isSelected }, "Tapping a swatch didn't select it")
     }
 
     /// The finished painting's bar keeps Done and Replay whole at accessibility sizes.

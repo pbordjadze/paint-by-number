@@ -357,7 +357,8 @@ final class CreateFlowTests: XCTestCase {
     /// Picks the inline picker's first photo and waits for `opens`. A tap that opens nothing is
     /// kept as a screenshot and tree (a selection badge without a preview says it reached the
     /// picker) and tried once more at the same point: a picker inset from the window's left and
-    /// top edge took its first seconds to take taps on iPhone, which the layout now avoids.
+    /// top edge takes its first seconds to accept taps on iPhone; the edge-to-edge layout avoids
+    /// that, and the retry stays as a safety net.
     @MainActor
     private func pickFirstInlinePhoto(_ app: XCUIApplication, picker: XCUIElement, opens: XCUIElement) throws -> Bool {
         let point = try tapFirstPhoto(app, in: picker.frame)

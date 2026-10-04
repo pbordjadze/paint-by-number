@@ -43,8 +43,7 @@ final class PaintingNavigationTests: XCTestCase {
         let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
         let before = badge.label
         for _ in 0..<3 { app.buttons["Undo"].tap() }
-        sleep(1)
-        XCTAssertNotEqual(badge.label, before, "Undo didn't take anything back")
+        XCTAssertTrue(wait(for: badge, toMatch: NSPredicate(format: "label != %@", before)), "Undo didn't take anything back")
     }
 
     /// The Hint button flies the camera to an unpainted area.
@@ -88,7 +87,7 @@ final class PaintingNavigationTests: XCTestCase {
 
         let before = selected()
         app.typeKey("]", modifierFlags: [])
-        sleep(1)
+        _ = waitUntil(timeout: Self.stateTimeout) { !selected().subtracting(before).isEmpty }
         let newlySelected = try XCTUnwrap(selected().subtracting(before).first, "] didn't select another color")
         let swatch = swatches[newlySelected]
 

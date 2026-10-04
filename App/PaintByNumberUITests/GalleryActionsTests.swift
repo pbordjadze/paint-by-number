@@ -25,7 +25,7 @@ final class GalleryActionsTests: XCTestCase {
     }
 
     @MainActor
-    func testTimelapseShowsProgressAndCancels() {
+    func testTimelapseShowsProgressAndCancels() throws {
         let app = launchGallery()
         let card = revealCard("Hibiscus", in: app)
         card.press(forDuration: 1.5)
@@ -39,7 +39,7 @@ final class GalleryActionsTests: XCTestCase {
         attachScreenshot(of: app, named: "timelapse-progress")
         // The simulator may finish the movie first; then the share sheet is up instead.
         let cancel = app.buttons["Cancel"]
-        guard cancel.exists, cancel.isHittable else { return }
+        guard cancel.exists, cancel.isHittable else { throw XCTSkip("The movie was ready before Cancel could be tapped") }
         cancel.tap()
         XCTAssertTrue(title.waitForNonExistence(timeout: 5), "Cancel didn't close the progress sheet")
         XCTAssertTrue(card.exists)
