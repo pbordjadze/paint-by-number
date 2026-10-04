@@ -9,9 +9,13 @@ group left out staying as the painter has it, values beyond a setting's range cl
 
 ## Coloring Book
 
-The look of a coloring-book app (Happy Color and the like): closed cells bounded by solid
-lines, no lines dangling inside a cell, the areas inside an outline divided only by their
-paints, and the drawing kept over the paint once a cell is filled.
+The look of a coloring-book app (Happy Color and the like): a drawing in solid ink that stays
+over the paint from the first fill to the last, the areas inside an outline told apart by their
+numbers rather than by lines, no specks. The Coloring Book line style
+(`LineArtSettings.Style.coloringBook`, `docs/coloring-book.md`) is what draws that way: every
+line it keeps is drawn alike, in full ink, the paint boundaries inside an outline never, and a
+selected color's cells are hatched, not outlined. The preset puts the style at the settings the
+owner's own books used (the style's own defaults are the layered ones).
 
 What each setting does for that, measured on ten pictures (the freight train, the Milkmaid,
 the turtle, the fox, the lighthouse, the parrots, the arch, the duck, the Paris street and a
@@ -19,16 +23,21 @@ portrait) with HED maps at the app's size and Suggested settings at Relaxed:
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| Line Style | Layered | lines follow the drawing, not every paint boundary |
-| Outlines, Detail and Texture From | 60 % each | one class of line: every drawn edge is an outline (busy areas demote to Detail, drawn almost as strong). No faint texture lines, so no small texture cells. 50 % draws about a tenth more lines, 70 % a sixth fewer; 60 % keeps the structure (the fox's ears and legs, the Milkmaid's sleeves) and drops the brushwork |
-| Shortest Line | 36 px | specks never become cells |
+| Line Style | Coloring Book | the drawing alone is drawn, over the paint; no color edges, no selected outline |
+| Lines From, Detail From | 60 % each | one class of line: every drawn edge is an outline (busy areas demote to Detail, drawn alike in a book). 50 % draws about a tenth more lines, 70 % a sixth fewer; 60 % keeps the structure (the fox's ears and legs, the Milkmaid's sleeves) and drops the brushwork. A book has no texture lines, so Texture From is hidden |
+| Shortest Line | 36 px | specks never become lines or cells |
 | Gap Closing | 16 px | open strokes reach further for a line, paint boundary or the frame, so cells close |
 | Line Smoothing | 70 % | flowing curves |
-| Same Paint Across a Line | Always Split | every line bounds a cell; nothing is drawn inside one. Lines drawn inside cells went from 5–71 per picture at the defaults to none (the pipeline also drops the 2–5 unit slivers trimming used to leave, pipeline version 4) |
-| Keep Color Edges | On | the paints inside an outline stay separate areas (faint color edges, no drawn line) |
+| Same Paint Across a Line | default | a book has no texture lines to join across, so every line splits same-paint cells |
+| Keep Color Edges | On | the paints inside an outline stay separate areas (numbered, never drawn) |
 | Outline Eyes | On | eyes as closed outlines with an iris |
 | Smoothing, Texture Flattening, Smallest Area | 1.5× | flatter paint, fewer small color cells (a fifth to a quarter fewer areas) |
-| Line Appearance | Outlines 100 % kept when painted, Detail 85 %, Texture 70 %, Color Edges 0 % | the drawing stays over the painting; the paint divisions inside a cell dissolve as they are painted. Color edges draw at 35 % in the full view so every cell reads as closed before painting |
+| Line Appearance | default | a book reads only Line Weight (1×) |
 
-Lines kept when painted is the per-layer *When Painted* slider of Line Appearance; the
-default (0 %) dissolves every line between painted cells, as classic templates do.
+The preset is recognized as long as the settings generate the same template and draw the
+same lines (`GenerationKey`): a setting the style ignores can sit anywhere.
+
+Layered line art has the related per-layer *When Painted* slider of Line Appearance: how much
+of a layer's lines stays once both sides are painted (0 % by default, dissolving every line
+between painted cells as classic templates do). It gives a layered painting kept outlines
+without the book's other rules.

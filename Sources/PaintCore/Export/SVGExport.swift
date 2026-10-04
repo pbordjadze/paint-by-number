@@ -22,9 +22,12 @@ public enum SVGExport {
         /// Layered templates (`Template.lineArt`): each `LineLayer` is a group (`lines-outline`,
         /// `lines-detail`, `lines-texture`, `lines-color`, drawn faintest first) of its edges and
         /// interior strokes in `lineColor`, at its style's opacity and width (a factor on the
-        /// outline width), indexed by `LineLayer` raw value.
+        /// outline width), indexed by `LineLayer` raw value. A coloring book draws its drawn
+        /// layers alike as one group (`lines-drawing`) in solid `lineColor`, `coloringBookWidth`
+        /// times the outline width, and no color edges, as the app does.
         public var layerStyles: [LayerStyle] = SVGExport.defaultLayerStyles
         public var lineColor: String = "#2b2530"
+        public var coloringBookWidth: Float = SVGExport.coloringBookWidth
 
         public init(painted: Bool = false, outlines: Bool = true, numbers: Bool = true) {
             self.painted = painted
@@ -48,6 +51,11 @@ public enum SVGExport {
         LayerStyle(opacity: 0.85, width: 1.15), LayerStyle(opacity: 0.45, width: 0.9),
         LayerStyle(opacity: 0.2, width: 0.75), LayerStyle(opacity: 0.12, width: 0.7),
     ]
+    /// A coloring book's line, as a factor on the outline width: the app draws it three times
+    /// as heavy as a classic line with the painting fitted to the screen.
+    public static let coloringBookWidth: Float = 3
+
+    static let layerNames = ["outline", "detail", "texture", "color"]
 
     public static func render(_ t: Template, options: Options = Options()) -> String {
         var s = ""
@@ -76,26 +84,37 @@ public enum SVGExport {
 
         if options.outlines, let lines = t.lineArt, lines.edgeLayers.count == t.edges.count {
             let width = options.strokeWidth ?? max(0.5, Float(max(t.width, t.height)) / 1900)
-            let names = ["outline", "detail", "texture", "color"]
-            for layer in LineLayer.allCases.reversed() {
-                let style = options.layerStyles.indices.contains(Int(layer.rawValue))
-                    ? options.layerStyles[Int(layer.rawValue)] : LayerStyle(opacity: 1, width: 1)
+            // The groups drawn, faintest first: every layer on its own, or a coloring book's drawn
+            // layers together.
+            let groups: [(name: String, layers: [UInt8], style: LayerStyle)]
+            switch lines.style {
+            case .layered:
+                groups = LineLayer.allCases.reversed().map { layer in
+                    let style = options.layerStyles.indices.contains(Int(layer.rawValue))
+                        ? options.layerStyles[Int(layer.rawValue)] : LayerStyle(opacity: 1, width: 1)
+                    return (layerNames[Int(layer.rawValue)], [layer.rawValue], style)
+                }
+            case .coloringBook:
+                let drawn = LineLayer.allCases.filter { $0 != .color }.map(\.rawValue)
+                groups = [("drawing", drawn, LayerStyle(opacity: 1, width: options.coloringBookWidth))]
+            }
+            for group in groups {
                 var d = ""
-                for (k, e) in t.edges.enumerated() where lines.edgeLayers[k] == layer.rawValue {
+                for (k, e) in t.edges.enumerated() where group.layers.contains(lines.edgeLayers[k]) {
                     let pts = t.points(of: e)
                     guard let first = pts.first else { continue }
                     d += "M" + fmt(first)
                     for p in pts.dropFirst() { d += "L" + fmt(p) }
                 }
-                for stroke in lines.strokes where stroke.layer == layer.rawValue {
+                for stroke in lines.strokes where group.layers.contains(stroke.layer) {
                     let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
                     guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
                     d += "M" + fmt(lines.strokePoints[start])
                     for p in lines.strokePoints[(start + 1)..<end] { d += "L" + fmt(p) }
                 }
                 guard !d.isEmpty else { continue }
-                s += "<g id=\"lines-\(names[Int(layer.rawValue)])\" opacity=\"\(fmt(style.opacity))\">"
-                s += "<path d=\"\(d)\" fill=\"none\" stroke=\"\(options.lineColor)\" stroke-width=\"\(fmt(width * style.width))\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></g>\n"
+                s += "<g id=\"lines-\(group.name)\" opacity=\"\(fmt(group.style.opacity))\">"
+                s += "<path d=\"\(d)\" fill=\"none\" stroke=\"\(options.lineColor)\" stroke-width=\"\(fmt(width * group.style.width))\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></g>\n"
             }
         } else if options.outlines && !t.edges.isEmpty {
             let width = options.strokeWidth ?? max(0.5, Float(max(t.width, t.height)) / 1900)

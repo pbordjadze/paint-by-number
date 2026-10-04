@@ -4,11 +4,27 @@
 /// the regions along a drawing found by a learned edge detector (the app's HED model, or an
 /// edge map handed to `pbn`), so every line still bounds a cell, and gives each line a
 /// `LineLayer` by the strength of its edge: renderers draw outlines at full strength and let
-/// fainter layers come in as the painter zooms. Everything here is generation input: changing
-/// it changes the template. How the layers are drawn is the app's `LineAppearance`.
+/// fainter layers come in as the painter zooms. `coloringBook` splits the regions along the
+/// same drawing but is a coloring book: the drawing alone is drawn, in full ink at every zoom,
+/// the paint boundaries inside an outline are never lines (the areas inside it are told apart
+/// by their numbers, and by the highlight of the selected color), and the drawing stays over
+/// the paint (`TemplateLineArt.Style`). Everything here is generation input: changing it
+/// changes the template. How the layers are drawn is the app's `LineAppearance`.
 public struct LineArtSettings: Sendable, Hashable, Codable {
     public enum Style: String, Sendable, Codable, CaseIterable {
-        case classic, layered
+        case classic, layered, coloringBook
+
+        /// Whether templates of this style are made from an edge map (and eyes): all but classic.
+        public var usesEdgeMap: Bool { self != .classic }
+
+        /// The line art a template of this style carries; nil for classic templates.
+        public var templateStyle: TemplateLineArt.Style? {
+            switch self {
+            case .classic: nil
+            case .layered: .layered
+            case .coloringBook: .coloringBook
+            }
+        }
     }
 
     /// What happens where a drawn line runs between two cells of the same paint.
@@ -16,6 +32,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         /// Every line splits: the two sides are separate cells with the same number.
         case split
         /// Cells separated only by texture lines are one cell; the line is still drawn inside it.
+        /// A coloring book has no texture lines, so this splits like `split` there.
         case joinTexture
         /// Only outlines split same-paint cells; detail and texture lines are drawn inside cells.
         case joinAllButOutlines
@@ -31,7 +48,8 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     /// Edge strength from which a line is detail (stretches above half of it, once reached).
     public var detailThreshold: Float
     /// Edge strength from which a line is drawn at all, as texture (stretches above half of
-    /// it, once reached); slightly lower on the subject, higher in the background.
+    /// it, once reached); slightly lower on the subject, higher in the background. A coloring
+    /// book draws nothing below `detailThreshold` and ignores it.
     public var textureThreshold: Float
     /// Lines shorter than this (canvas units) are dropped.
     public var minimumStrokeLength: Float

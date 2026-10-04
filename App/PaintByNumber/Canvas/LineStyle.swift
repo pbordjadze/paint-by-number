@@ -54,6 +54,31 @@ nonisolated struct LineStyle: Equatable, Sendable {
     static func classicWidthPoints(depth: Float) -> Float { min(1.0, 0.5 + 0.22 * depth) }
 }
 
+/// How a coloring book draws (`TemplateLineArt.Style.coloringBook`), the same in every renderer:
+/// every drawn layer alike, in the paper's full ink, heavy at every zoom, never dissolving under
+/// the paint; color edges (the paints inside an outline) never drawn, and the selected color's
+/// cells never outlined, since the fill's highlight shows them. Only the weight is the painter's
+/// (`LineAppearance.coloringBookWeight`).
+nonisolated enum ColoringBookLook {
+    /// A book line in pictures (thumbnails, share images, print), as a factor on the picture's
+    /// classic line: three times as heavy, the canvas's ratio with the painting fitted.
+    static let widthFactor: Float = 3
+
+    /// The canvas's book line (points), `depth` zoom doublings in: 1.5 pt fitted (three times
+    /// the classic line there), growing with the zoom but far slower than the drawing, so zoomed
+    /// in it reads as a pen line, not a band. Times `weight`.
+    static func widthPoints(depth: Float, weight: Float) -> Float { (1.5 + 0.7 * max(depth, 0)) * weight }
+
+    /// The ink pictures draw the book with: the canvas sheet's ink, encoded sRGB.
+    static let ink = SIMD4<Float>(0.118, 0.102, 0.133, 1)
+
+    /// On paper there is no highlight to show a color's cells, so a printed book draws its color
+    /// edges as dotted guides: this fraction of the print style's outline opacity, dots this many
+    /// line widths apart.
+    static let printedGuideOpacity: Float = 0.7
+    static let printedGuideSpacing: CGFloat = 2.5
+}
+
 /// A template's line art checked against the template, ready to draw: a layer and width factor
 /// per boundary edge, and the interior strokes that fit. Renderers never index with unchecked
 /// line data (PaintCore's decoder checks files too; this keeps a malformed template drawable as
@@ -68,6 +93,8 @@ nonisolated struct DrawableLineArt: Sendable {
     /// Width factor per entry of `strokes`.
     let strokeWeights: [Float]
     let strokePoints: [SIMD2<Float>]
+    /// How the lines are drawn (`TemplateLineArt.style`).
+    let style: TemplateLineArt.Style
 
     /// nil for classic templates, and for line art that doesn't match the template's edges.
     init?(_ t: Template) {
@@ -88,7 +115,12 @@ nonisolated struct DrawableLineArt: Sendable {
         self.strokes = strokes
         strokeWeights = Array(factors.dropFirst(layers.count))
         strokePoints = art.strokePoints
+        style = art.style
     }
+
+    /// Whether a line of `layer` is part of the drawing (a coloring book draws these alike and
+    /// nothing else).
+    static func isDrawn(_ layer: UInt8) -> Bool { layer != LineLayer.color.rawValue }
 
     func points(of stroke: InteriorStroke) -> ArraySlice<SIMD2<Float>> {
         strokePoints[Int(stroke.pointStart)..<Int(stroke.pointStart + stroke.pointCount)]
@@ -142,8 +174,10 @@ nonisolated struct OutlineGeometry {
     let lineRegions: [SIMD2<UInt32>]
     /// (layer, width factor) per line.
     let lineStyles: [SIMD2<Float>]
-    /// True when the template's line art is drawn in layers.
+    /// True when the template has line art (drawn in layers, or as a coloring book).
     let isLayered: Bool
+    /// How the template's line art is drawn; nil for classic templates.
+    let lineArtStyle: TemplateLineArt.Style?
 
     init(_ t: Template) {
         let lines = DrawableLineArt(t)
@@ -176,5 +210,6 @@ nonisolated struct OutlineGeometry {
         lineRegions = regions
         lineStyles = styles
         isLayered = lines != nil
+        lineArtStyle = lines?.style
     }
 }

@@ -45,7 +45,9 @@ nonisolated struct CanvasUniforms {
     var lineAlpha: SIMD4<Float> = .zero
     /// Line width (px) per layer; classic templates draw every line `outline.x` wide.
     var lineWidth: SIMD4<Float> = .zero
-    /// x: 1 when lines are weighted by their edge's strength (`LineStyle.weighted`).
+    /// x: 1 when lines are weighted by their edge's strength (`LineStyle.weighted`); y: 1 for a
+    /// coloring book (`setColoringBookLines`: lines never dissolve under paint and the selected
+    /// color's cells get no outline).
     var lineMode: SIMD4<Float> = .zero
     /// The fraction of each layer's ink a line keeps between two painted cells
     /// (`LineStyle.painted`); 0 dissolves it, as classic lines do.
@@ -77,6 +79,16 @@ nonisolated extension CanvasUniforms {
         lineWidth = outline.x * style.width
         lineMode = SIMD4(style.weighted ? 1 : 0, 0, 0, 0)
         linePainted = style.painted
+    }
+
+    /// A coloring book's lines (`ColoringBookLook`): every drawn layer `width` px wide in the
+    /// full ink, color edges not drawn, every line kept whole over the paint, and the shader's
+    /// book mode.
+    mutating func setColoringBookLines(width: Float) {
+        lineAlpha = SIMD4(1, 1, 1, 0)
+        lineWidth = SIMD4(width, width, width, 0)
+        lineMode = SIMD4(0, 1, 0, 0)
+        linePainted = SIMD4(repeating: 1)
     }
 }
 

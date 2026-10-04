@@ -15,7 +15,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     `assign(_:seed:)` picks one per paint, unique in the palette and varied by seed)
   - `Model/` `Template` (the product of the pipeline) + versioned binary coding, `GenerationSettings`,
     `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map),
-    `LineArtSettings` (classic or layered lines and their knobs; defaults and why on its init) and
+    `LineArtSettings` (classic, layered or coloring-book lines and their knobs; defaults and why on its init) and
     `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs, applied in its
     init: a factor of exactly 1 leaves every knob bit for bit, so classic output never moves)
   - `LineArt/` layered line art (`LayeredLines.apply`; stages in its doc comment): an 8-bit
@@ -26,7 +26,14 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     their paint and hold their number; small ones merge, same-paint ones join per `SamePaint`),
     then after the vectorizer each edge's layer and weight and the lines inside cells
     (`InteriorStroke`s) as `Template.lineArt`. Layered settings without an edge map generate the
-    classic template; same edge map and settings give the same bytes on any core count.
+    classic template; same edge map and settings give the same bytes on any core count. The
+    **coloring book** style (`LineArtSettings.Style.coloringBook`, `TemplateLineArt.Style`;
+    `docs/coloring-book.md`) is the same pipeline with the drawing as the only lines: nothing
+    below the detail threshold is extracted (no texture layer, `textureThreshold` unused, so
+    `samePaint = .joinTexture` splits), every line is kept whether or not it bounds a cell
+    (stretches inside a cell of `LineLayering.minimumRun` or more become interior strokes), and
+    the template's style tells every renderer to draw the drawn layers alike in full ink over
+    the paint, never the color edges and never a selected cell's outline.
   - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
     its doc comment, all tunables in `SegmentationParameters`)
   - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
@@ -88,15 +95,18 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   too, with its edges per layer and interior strokes counted). `pbn bench
   <ppm...>` times the pipeline, including a preview, detail 1 on a large photo, 150 colors
   at detail 1 and Auto's suggestion (`--edges map.pgm`: also layered line art, stage by stage).
-- Layered line art: `pbn generate <in.ppm> <out> --line-style layered --edges map.pgm [--eyes
-  eyes.json] [--line-art key=value]… [--tuning key=value]…` (eyes: closed polygons of `[x, y]`
-  normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names);
+- Layered line art: `pbn generate <in.ppm> <out> --line-style layered|coloringBook --edges map.pgm
+  [--eyes eyes.json] [--line-art key=value]… [--tuning key=value]…` (eyes: closed polygons of
+  `[x, y]` normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names);
   `stats.json` gains `lineArt` (settings, `LineArtStats`, edges and length per layer, interior
   strokes, `cellsVsClassic`) and `tuning` when not default. Edge maps for evaluation come from the
   research's HED (`research/lineart/lines_learned.py` on `claude/lineart-research`) quantized to
-  8-bit PGM; the app runs the same model at ≤ 1152 px, so evaluate with maps at that size. The
-  regression gate covers classic output only; `LineArtTests` and the `template-v2-lines.pbnt`
-  fixture cover layered generation and coding.
+  8-bit PGM; the app runs the same model at ≤ 1152 px, so evaluate with maps at that size (the
+  weights load without the `controlnet_aux` package by copying its network class next to
+  `tools/models/convert_hed.py`'s `research_map` and `quantize`). The regression gate covers
+  classic output only; `LineArtTests` and the `template-v2-lines.pbnt` / `template-v2-book.pbnt`
+  fixtures cover layered and coloring-book generation and coding. A coloring book's SVG draws
+  its drawing as one `lines-drawing` group, three times the outline width, and no color edges.
 - Suggested settings: `pbn suggest <image> [--importance m.pgm] [--hints h.json] [--length
   quick|relaxed|detailed] [--candidates 5] [--out dir]` prints the candidate table (every score
   term, the winner starred) and writes `decision.json`; with `--out` also every candidate's
@@ -222,6 +232,21 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   painted): the freight train through the real
   layered pipeline, with `SyntheticTemplate.edgeMap` (blurred OKLab gradient, DEBUG) standing in for the
   learned detector; `-mosaic` uses `SyntheticTemplate.layered` (layers by paint contrast).
+- Coloring books (drawing): a template whose `lineArt.style` is `.coloringBook` is drawn the same way
+  everywhere (`ColoringBookLook`, `docs/coloring-book.md`): every drawn layer alike in the paper's full
+  ink, color edges never, the drawing never dissolving under paint and nothing outlined for being
+  selected (the fill's hatch shows the selected color's cells), so the painter colors by the outer
+  boundaries and the numbers. The canvas line is 1.5 pt fitted and 0.7 pt more per zoom doubling
+  (`widthPoints`), pictures draw it three times their classic line (`widthFactor`), both times
+  `LineAppearance.coloringBookWeight` (Settings › Advanced › Line Appearance › Line Weight, the only
+  appearance setting a book reads; tolerant decoding, 0.5–2). `CanvasScene.lineArtStyle` picks
+  `CanvasUniforms.setColoringBookLines` (`lineMode.y` in the outline shader) over `setLines`;
+  `CanvasSnapshot` and the time-lapse draw the drawing even with `outlines` off, and
+  `TemplateRasterizer` draws it in every style (`drawBookOutlines`; the painted preview and the
+  finished picture included), with dotted color-edge guides first in `.print`, since paper has no
+  hatch. Demo scenarios `paint-book`, `-progress`, `-zoomed`, `-dark-paper` (the red fox through the
+  real pipeline with the real detector, `LineArtInputs.compute`, the stand-in map when it is
+  unavailable) and `settings-advanced-book`.
 - Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
   and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
   Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the
@@ -373,7 +398,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   nothing starts from fixed settings any more (the old Starting Colors value is never read).
 - Settings › Advanced (Experimental; `Features/Settings/Advanced/`): `LineArtSettings`,
   `LineAppearance` and `PipelineTuning` for testers, stored as they change (`Preferences.store`;
-  values equal to the defaults are removed, so better defaults reach them). Pushed inside the
+  values equal to the defaults are removed, so better defaults reach them). Line Style offers
+  Classic, Layered and Coloring Book (`LineStyleRow`, a swatch each); under the book,
+  `AdvancedControl.applies(to:)` hides Texture From, Detail From reads Lines From, the same-paint
+  picker shows Always Split for `.joinTexture` (`SamePaintRow`), `GenerationKey` canonicalizes
+  both (so previews are shared) and Line Appearance shows only Line Weight. Pushed inside the
   settings sheet in compact widths, a full-screen cover in regular ones (the sheet is a small card
   there). `AdvancedSettingsModel` prepares the chosen picture once (a library picture or the most
   recent photo, `SettingsKey.advancedPreviewPicture`): decoded like the create flow, Vision
@@ -391,12 +420,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the preview of a library picture); Paste Settings (the system `PasteButton`, no permission prompt)
   reads it back through `AdvancedReport.settings(in:)`: the JSON object in the text, each of its three
   groups optional and tolerant, clamped; groups it leaves out stay. The Presets row (`AdvancedPreset`:
-  Defaults, Coloring Book) sets all three groups at once, the one the settings match marked; a
-  preset's values live in Swift only (Coloring Book: closed cells, every line an outline that stays
-  over the paint, measured in `docs/presets/README.md`). Demo scenarios `settings-advanced` (+ `-dark`,
-  `-long-text`), `settings-advanced-layered` (Line Appearance, 2×), `settings-advanced-tuned`
-  (Pipeline, effects measured) and `settings-advanced-coloring-book` (the preset on the fox)
-  register their settings instead of storing them. Its Sounds,
+  Defaults, Coloring Book) sets all three groups at once, the one the settings match marked (matched
+  as generation uses them, by `GenerationKey`, so a setting the style ignores doesn't count); a
+  preset's values live in Swift only (Coloring Book: the coloring-book style at the owner's
+  thresholds and line lengths, measured in `docs/presets/README.md`). Demo scenarios
+  `settings-advanced` (+ `-dark`, `-long-text`), `settings-advanced-layered` (Line Appearance, 2×),
+  `settings-advanced-tuned` (Pipeline, effects measured) and `settings-advanced-coloring-book` (the
+  preset on the fox) register their settings instead of storing them. Its Sounds,
   Haptics and Sparkles & Shine sections (`PaintingEffectsSections`) put each `PaintingEffect` (the
   painting notes, the color finished jingle, the fanfare, the wrong-color sound, three haptics,
   the fill sparkles, the finishing shine) on its own `@AppStorage` switch (absent means on), read
@@ -494,8 +524,10 @@ Saved paintings must open in every later build. The format history is documented
 
 - Never change how an existing template format is read: `readPayloadV1` is frozen, and
   `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` / `template-v2-lines.pbnt`
-  (the optional `LINE` chunk of layered templates) must keep decoding (they are never
-  regenerated). Add a fixture file and decode test for every new `formatVersion` or chunk.
+  (the optional `LINE` chunk of layered templates) / `template-v2-book.pbnt` (the chunk's
+  trailing style byte, written only for coloring books) must keep decoding (they are never
+  regenerated). Add a fixture file and decode test for every new `formatVersion`, chunk or
+  trailing field.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
   ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base

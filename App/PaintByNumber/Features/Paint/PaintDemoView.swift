@@ -40,7 +40,15 @@ import simd
 ///   fainter layers coming in
 /// - `paint-layered-dark-paper`: `paint-layered-progress` on dark paper
 /// - `paint-layered-inked`: `paint-layered-progress` with a Line Appearance whose outlines stay
-///   over the paint (the coloring-book look: lines between painted cells keep their ink)
+///   over the paint (lines between painted cells keep their ink)
+///
+/// A coloring book of the red fox from the real pipeline, with the real edge detector (the
+/// stand-in map when the model is unavailable):
+/// - `paint-book`: fresh canvas, fit to screen (the drawing in thick ink, nothing else)
+/// - `paint-book-progress`: ~45 % painted, the color in progress selected (the drawing stays
+///   over the paint; the selected color's cells are hatched, not outlined)
+/// - `paint-book-zoomed`: zoomed 4× into the busiest part, a color selected
+/// - `paint-book-dark-paper`: `paint-book-progress` on dark paper
 struct PaintDemoView: View {
     let scenario: String
     @State private var demo: Demo?
@@ -72,20 +80,20 @@ struct PaintDemoView: View {
         .task {
             let synthetic = scenario.hasSuffix("-mosaic")
             let base = synthetic ? String(scenario.dropLast("-mosaic".count)) : scenario
-            let layered = base.hasPrefix("paint-layered")
-            let photo = layered ? "santa-fe-freight" : "parrots"
+            let layered = base.hasPrefix("paint-layered"), book = base.hasPrefix("paint-book")
+            let photo = layered ? "santa-fe-freight" : book ? "red-fox" : "parrots"
             var template: Template?
             if synthetic {
                 template = nil
-            } else if layered {
-                template = await Self.layeredTemplate(photo: photo)
+            } else if layered || book {
+                template = await Self.drawnTemplate(photo: photo, style: book ? .coloringBook : .layered)
             } else {
                 template = await Self.template(photo: photo)
             }
             // Titles are the person's own words, which pseudo-localization doesn't lengthen.
             let title = base.hasSuffix("-long-text")
                 ? "Two Parrots on a Branch in the Morning Light"
-                : (template == nil ? "Mosaic" : (layered ? "Freight Train" : "Parrots"))
+                : (template == nil ? "Mosaic" : (layered ? "Freight Train" : book ? "Red Fox" : "Parrots"))
             let mosaic = layered ? SyntheticTemplate.layered(SyntheticTemplate.make()) : SyntheticTemplate.make()
             demo = Demo(
                 scenario: base, template: template ?? mosaic, title: title, photo: template == nil ? nil : photo)
@@ -108,20 +116,31 @@ struct PaintDemoView: View {
         return output.template.mesh.indices.isEmpty ? nil : output.template
     }
 
-    /// The photo's layered template from the real pipeline, with the stand-in edge map
-    /// (`SyntheticTemplate.edgeMap`) in place of the learned detector.
+    /// The photo's layered or coloring-book template from the real pipeline. Layered demos keep
+    /// the stand-in edge map (`SyntheticTemplate.edgeMap`) their screenshots were judged with;
+    /// a coloring book draws from the real detector (`LineArtInputs.compute`), falling back to
+    /// the stand-in when the model is unavailable.
     @concurrent
-    private static func layeredTemplate(photo: String) async -> Template? {
+    private static func drawnTemplate(photo: String, style: LineArtSettings.Style) async -> Template? {
         var settings = GenerationSettings()
-        settings.lineArt.style = .layered
+        settings.lineArt.style = style
         guard let url = Bundle.main.url(forResource: photo, withExtension: "jpg"),
               let image = try? PhotoLoader.load(url: url, maxPixelSize: 2048),
-              let small = try? PhotoLoader.load(url: url, maxPixelSize: 640),
-              let output = try? TemplateGenerator(settings: settings)
-                .generate(from: image, lineArt: LineArtInput(edges: SyntheticTemplate.edgeMap(for: small)))
+              let small = try? PhotoLoader.load(url: url, maxPixelSize: 640)
+        else { return nil }
+        var input: LineArtInput?
+        if style == .coloringBook, let cgImage = PhotoLoader.cgImage(from: image) {
+            input = try? await LineArtInputs.compute(for: cgImage)
+            Self.log.notice("demo \(photo, privacy: .public): edge detector \(input == nil ? "unavailable, using the stand-in map" : "ran", privacy: .public)")
+        }
+        guard let output = try? TemplateGenerator(settings: settings)
+            .generate(from: image, lineArt: input ?? LineArtInput(edges: SyntheticTemplate.edgeMap(for: small)))
         else { return nil }
         return output.template.lineArt == nil || output.template.mesh.indices.isEmpty ? nil : output.template
     }
+
+    /// Read from `@concurrent` work, so not on the main actor like the rest of the view.
+    nonisolated private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "demo")
 }
 
 @MainActor
@@ -201,9 +220,9 @@ private final class Demo {
         case "paint-photo":
             paint(fraction: 0.4)
             showsPhoto = true
-        case "paint-layered-progress":
+        case "paint-layered-progress", "paint-book-progress":
             paint(fraction: 0.45)
-        case "paint-layered-dark-paper":
+        case "paint-layered-dark-paper", "paint-book-dark-paper":
             paint(fraction: 0.45)
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
         case "paint-layered-inked":
@@ -214,7 +233,7 @@ private final class Demo {
             if let data = try? JSONEncoder().encode(appearance) {
                 UserDefaults.standard.register(defaults: [SettingsKey.lineAppearance: data])
             }
-        case "paint-layered-zoom2", "paint-layered-zoomed":
+        case "paint-layered-zoom2", "paint-layered-zoomed", "paint-book-zoomed":
             paint(fraction: 0.2)
             camera = CanvasCamera(zoom: scenario == "paint-layered-zoom2" ? 2 : 4, center: Self.busiest(t))
         default:

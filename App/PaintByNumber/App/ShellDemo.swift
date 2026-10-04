@@ -42,7 +42,9 @@ import PaintCore
 /// - `settings-advanced-effects`: the same at the defaults, scrolled to Sounds & Effects with
 ///   the color finished jingle switched off.
 /// - `settings-advanced-coloring-book`: the same on the Coloring Book preset, previewing the red
-///   fox (closed outlined cells), the preset marked in the Presets row.
+///   fox (its outline in thick ink, the paints inside told apart by their numbers), the preset
+///   marked in the Presets row.
+/// - `settings-advanced-book`: the same with Coloring Book lines alone, on the Line Art section.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -56,7 +58,7 @@ enum ShellDemo: Equatable {
          galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createSuggested, createCustom, createFromFile, settings,
          settingsLongText, settingsAcknowledgements, settingsAdvanced, settingsAdvancedLayered, settingsAdvancedTuned,
-         settingsAdvancedEffects, settingsAdvancedColoringBook
+         settingsAdvancedEffects, settingsAdvancedColoringBook, settingsAdvancedBook
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -86,6 +88,7 @@ enum ShellDemo: Equatable {
         case "settings-advanced-tuned": .settingsAdvancedTuned
         case "settings-advanced-effects": .settingsAdvancedEffects
         case "settings-advanced-coloring-book": .settingsAdvancedColoringBook
+        case "settings-advanced-book": .settingsAdvancedBook
         default: nil
         }
     }()
@@ -142,7 +145,7 @@ enum ShellDemo: Equatable {
 
     var opensAdvanced: Bool {
         self == .settingsAdvanced || self == .settingsAdvancedLayered || self == .settingsAdvancedTuned
-            || self == .settingsAdvancedEffects || self == .settingsAdvancedColoringBook
+            || self == .settingsAdvancedEffects || self == .settingsAdvancedColoringBook || self == .settingsAdvancedBook
     }
 
     /// The library picture Settings › Advanced previews.
@@ -150,7 +153,7 @@ enum ShellDemo: Equatable {
         switch self {
         case .settingsAdvanced, .settingsAdvancedEffects: "great-wave"
         case .settingsAdvancedLayered: "santa-fe-freight"
-        case .settingsAdvancedTuned, .settingsAdvancedColoringBook: "red-fox"
+        case .settingsAdvancedTuned, .settingsAdvancedColoringBook, .settingsAdvancedBook: "red-fox"
         default: nil
         }
     }
@@ -227,6 +230,8 @@ enum ShellDemo: Equatable {
             if let lineArt = preset.lineArt { register(lineArt, forKey: SettingsKey.lineArt) }
             if let tuning = preset.tuning { register(tuning, forKey: SettingsKey.pipelineTuning) }
             if let appearance = preset.lineAppearance { register(appearance, forKey: SettingsKey.lineAppearance) }
+        case .settingsAdvancedBook:
+            register(LineArtSettings(style: .coloringBook), forKey: SettingsKey.lineArt)
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings, .settingsLongText,
              .settingsAcknowledgements, .settingsAdvanced:

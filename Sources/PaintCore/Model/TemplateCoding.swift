@@ -27,7 +27,7 @@ import Foundation
 /// payload shorter than the fields a reader knows, or a known chunk appearing twice, is
 /// corrupt. Chunks defined so far:
 /// - `GENR`: `UInt32 pipelineVersion` (see `Template.pipelineVersion`).
-/// - `LINE` (optional; layered templates only, see `Template.lineArt`):
+/// - `LINE` (optional; templates made from an edge map, see `Template.lineArt`):
 ///   ```
 ///   UInt32 edgeCount            equal to the template's edge count
 ///   edgeCount × UInt8 layer     LineLayer raw value per edge
@@ -36,8 +36,11 @@ import Foundation
 ///   pointCount × (Float32 x, Float32 y)    interior stroke vertices, inside the canvas
 ///   UInt32 strokeCount
 ///   strokeCount × (UInt32 pointStart, UInt32 pointCount, UInt8 layer, UInt8 weight, UInt32 region)
+///   [UInt8 style]               TemplateLineArt.Style raw value; written only when it is not
+///                               `layered`, so layered templates encode as they always did
 ///   ```
-///   Readers without it draw every edge alike, which is the classic look of the same cells.
+///   Readers without it draw every edge alike, which is the classic look of the same cells;
+///   readers before `style` draw a coloring book layered (every line drawn, cells faint).
 ///
 /// **Safety.** PaintCore is compiled with `-Ounchecked`, so the decoder checks every count
 /// against the bytes left before allocating, and every span, reference and coordinate in
@@ -353,11 +356,14 @@ extension TemplateLineArt {
         for s in strokes {
             w.write(s.pointStart); w.write(s.pointCount); w.write(s.layer); w.write(s.weight); w.write(s.region)
         }
+        if style != .layered { w.write(style.rawValue) }
         return w.data
     }
 
     /// Reads a `LINE` payload (trailing fields of a later writer are ignored). Spans and
-    /// values are checked by `Template.validateReferences`.
+    /// values are checked by `Template.validateReferences`. The style byte is optional: a
+    /// payload without it, or with a value this reader does not know, is layered (a later style
+    /// that must not be drawn layered flags its chunk required).
     init(_ r: inout BinaryReader, edgeCount: Int) throws {
         let count = try r.readCount(elementSize: 2)
         guard count == edgeCount else { throw Template.CodingError.corrupt("LINE edge count") }
@@ -373,6 +379,7 @@ extension TemplateLineArt {
                 layer: try r.read(UInt8.self), weight: try r.read(UInt8.self), region: try r.read(UInt32.self)))
         }
         self.strokes = strokes
+        style = r.remaining >= 1 ? (Style(rawValue: try r.read(UInt8.self)) ?? .layered) : .layered
     }
 }
 
