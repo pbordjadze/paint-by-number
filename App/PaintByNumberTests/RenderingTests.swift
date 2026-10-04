@@ -206,13 +206,19 @@ struct PDFExporterTests {
         for (color, nickname) in zip(t.palette, nicknames) {
             let shade = ColorNameText.title(color.colorName)
             #expect(key.contains(shade), "\(shade) missing from the key: \(key)")
-            #expect(key.contains(PDFExporter.hex(color.rgb)), "hex missing from the key: \(key)")
+            #expect(key.contains(color.hexCode), "hex missing from the key: \(key)")
             if let nickname { #expect(key.contains(nickname), "\(nickname) missing from the key: \(key)") }
         }
         // Heading, then the plain name below it.
         let order = [key.range(of: "Poppy Field")?.lowerBound, key.range(of: ColorNameText.title(t.palette[0].colorName))?.lowerBound]
         #expect(order[0] != nil && order[1] != nil && order[0]! < order[1]!)
         Attachment.record(data, named: "stripes-nicknames.pdf")
+    }
+
+    /// Uppercase "#RRGGBB", halves rounded away from zero, out-of-gamut channels clamped.
+    @Test func hexCodeWritesClampedUppercaseRGB() {
+        #expect(PaletteColor(oklab: .zero, rgb: SIMD3(1, 0.5, 0)).hexCode == "#FF8000")
+        #expect(PaletteColor(oklab: .zero, rgb: SIMD3(1.2, -0.1, 0.2)).hexCode == "#FF0033")
     }
 
     /// Entries with a nickname are three lines tall: the key still fits every page up to 150 colors.

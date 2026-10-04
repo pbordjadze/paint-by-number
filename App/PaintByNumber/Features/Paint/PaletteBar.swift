@@ -184,7 +184,7 @@ struct PaletteBar: View {
         .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
         .popover(isPresented: detailsBinding(index), arrowEdge: axis == .horizontal ? .bottom : .trailing) {
             SwatchDetails(
-                number: index + 1, nickname: nickname, name: name, hex: PDFExporter.hex(template.palette[index].rgb))
+                number: index + 1, nickname: nickname, name: name, hex: template.palette[index].hexCode)
                 .presentationCompactAdaptation(.popover)
         }
         .accessibilityLabel(PaintSpeech.colorLabel(number: index + 1, name: name, nickname: nickname))

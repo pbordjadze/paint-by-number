@@ -1,5 +1,6 @@
 import Foundation
 import PaintCore
+import simd
 
 /// The app's localizable rendering of `ColorName` ("dark grayish green"). PaintCore's `english`
 /// serves the CLI; in English both read the same. Word order lives in the format strings, so a
@@ -111,6 +112,14 @@ nonisolated enum ColorNameText {
         case .magenta: String(localized: "colorName.family.magenta", defaultValue: "magenta", comment: "Color name hue family")
         case .pink: String(localized: "colorName.family.pink", defaultValue: "pink", comment: "Color name hue family")
         }
+    }
+}
+
+nonisolated extension PaletteColor {
+    /// "#AA5E59": how the swatch details and the PDF key write a paint.
+    var hexCode: String {
+        let c = (rgb.clamped(lowerBound: .zero, upperBound: SIMD3(repeating: 1)) * 255).rounded(.toNearestOrAwayFromZero)
+        return String(format: "#%02X%02X%02X", Int(c.x), Int(c.y), Int(c.z))
     }
 }
 

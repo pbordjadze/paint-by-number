@@ -334,7 +334,7 @@ nonisolated enum PDFExporter {
                      at: CGPoint(x: textX, y: detailY), maxWidth: textWidth)
                 detailY += 8 * s
             }
-            let hexText = hex(color.rgb), areasText = TemplateCounts.areas(counts[i])
+            let hexText = color.hexCode, areasText = TemplateCounts.areas(counts[i])
             let detail = String(localized: "pdf.key.detail", defaultValue: "\(hexText) · \(areasText)",
                                 comment: "Second line of a color key entry; the arguments are the color's hex code and its number of areas")
             text(ctx, detail, font: font(.system, 6 * s), color: gray(0.5),
@@ -397,11 +397,5 @@ nonisolated enum PDFExporter {
         ctx.textPosition = CGPoint(x: x, y: point.y)
         CTLineDraw(run, ctx)
         ctx.restoreGState()
-    }
-
-    /// A color as "#AA5E59": the color key prints it and the swatch details show it.
-    static func hex(_ rgb: SIMD3<Float>) -> String {
-        let c = (rgb.clamped(lowerBound: .zero, upperBound: SIMD3(repeating: 1)) * 255).rounded(.toNearestOrAwayFromZero)
-        return String(format: "#%02X%02X%02X", Int(c.x), Int(c.y), Int(c.z))
     }
 }
