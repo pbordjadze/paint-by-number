@@ -148,9 +148,7 @@ final class Library {
         let store = self.store
         try await Background.run {
             let progress = draft.progress ?? PaintProgress(regionCount: draft.template.regions.count)
-            let thumbnail = TemplateRasterizer.pngData(
-                draft.template, painted: progress.painted, style: .thumbnail,
-                maxPixelSize: ArtworkStore.thumbnailMaxPixelSize)
+            let thumbnail = Library.thumbnailPNG(draft.template, painted: progress.painted)
             let source = draft.photo.flatMap {
                 ImageCodec.jpegData(ImageCodec.downscaled($0, maxPixelSize: ArtworkStore.sourceMaxPixelSize), quality: 0.88)
             }
@@ -262,13 +260,12 @@ final class Library {
         // that doesn't fit would be discarded on the next open with a "couldn't be read" notice.
         _ = await writes[id]?.value
         let store = self.store
+        // Nil when damaged: opening offers to regenerate, which sizes progress itself.
         let template: Template?
         do {
-            template = try await Background.run { try store.readTemplate(id) }
-        } catch let error as Template.CodingError where error.requiresNewerReader {
-            return
+            template = try await Background.run { try Library.readTemplate(id, from: store) }
         } catch {
-            template = nil  // damaged: opening offers to regenerate, which sizes progress itself
+            return  // written by a newer app
         }
         guard var artwork = artwork(with: id), !artwork.needsNewerApp else { return }
         if let template { artwork.adopt(template, settings: artwork.settings) }
@@ -308,9 +305,7 @@ final class Library {
         guard artwork(with: id)?.needsNewerApp != true else { return }
         let written = await enqueue(id) { store in
             let t = try template ?? store.readTemplate(id)
-            guard let png = TemplateRasterizer.pngData(
-                t, painted: progress.painted, style: .thumbnail, maxPixelSize: ArtworkStore.thumbnailMaxPixelSize)
-            else { return }
+            guard let png = Library.thumbnailPNG(t, painted: progress.painted) else { return }
             try store.writeThumbnail(png, for: id)
         }.value
         guard written, var artwork = artwork(with: id) else { return }
@@ -366,23 +361,10 @@ final class Library {
         _ = await writes[id]?.value
         let store = self.store
         let (template, saved) = try await Background.run { () throws -> (Template, ArtworkStore.SavedProgress) in
-            let template: Template
-            do {
-                template = try store.readTemplate(id)
-            } catch let error as Template.CodingError where error.requiresNewerReader {
-                throw OpenError.needsNewerApp
-            } catch {
-                Log.library.error("Template of \(id.uuidString, privacy: .public) is unreadable: \(String(describing: error), privacy: .public)")
+            guard let template = try Library.readTemplate(id, from: store) else {
                 throw OpenError.damaged(canRegenerate: ArtworkFactory.canRegenerate(artwork, store: store))
             }
-            do {
-                return (template, try store.readProgress(id, regionCount: template.regions.count))
-            } catch is PaintProgress.CodingError {
-                throw OpenError.needsNewerApp
-            } catch {
-                Log.library.error("Progress of \(id.uuidString, privacy: .public) can't be read: \(String(describing: error), privacy: .public)")
-                throw OpenError.unreadable
-            }
+            return (template, try Library.readProgress(id, regionCount: template.regions.count, from: store))
         }
 
         let reset: Bool
@@ -434,32 +416,16 @@ final class Library {
         }
         let store = self.store
         let (old, savedProgress, photo) = try await Background.run { () throws -> (Template?, ArtworkStore.SavedProgress, RGBAImage) in
-            let old: Template?
-            do {
-                old = try store.readTemplate(id)
-            } catch let error as Template.CodingError where error.requiresNewerReader {
-                throw OpenError.needsNewerApp
-            } catch {
-                old = nil
-            }
+            let old = try Library.readTemplate(id, from: store)
             // Progress from a newer app is never overwritten, even when the template is damaged.
-            let saved: ArtworkStore.SavedProgress
-            do {
-                saved = try store.readProgress(id, regionCount: old?.regions.count ?? 0)
-            } catch is PaintProgress.CodingError {
-                throw OpenError.needsNewerApp
-            } catch {
-                throw OpenError.unreadable
-            }
+            let saved = try Library.readProgress(id, regionCount: old?.regions.count ?? 0, from: store)
             return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store))
         }
         let template = try await ArtworkFactory.template(from: photo, settings: settings, progress: report)
         let (progress, thumbnail) = await Background.run { () -> (PaintProgress, Data?) in
             let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
                 ?? PaintProgress(regionCount: template.regions.count)
-            let thumbnail = TemplateRasterizer.pngData(
-                template, painted: progress.painted, style: .thumbnail, maxPixelSize: ArtworkStore.thumbnailMaxPixelSize)
-            return (progress, thumbnail)
+            return (progress, Library.thumbnailPNG(template, painted: progress.painted))
         }
         try Task.checkCancellation()
 
@@ -493,6 +459,39 @@ final class Library {
     }
 
     // MARK: Internals
+
+    /// An artwork's template, or nil when it is damaged. A template from a newer app throws
+    /// `OpenError.needsNewerApp`: it is kept, never replaced.
+    private nonisolated static func readTemplate(_ id: UUID, from store: ArtworkStore) throws -> Template? {
+        do {
+            return try store.readTemplate(id)
+        } catch let error as Template.CodingError where error.requiresNewerReader {
+            throw OpenError.needsNewerApp
+        } catch {
+            Log.library.error("Template of \(id.uuidString, privacy: .public) is unreadable: \(String(describing: error), privacy: .public)")
+            return nil
+        }
+    }
+
+    /// An artwork's saved progress for a template of `regionCount` regions. Progress from a
+    /// newer app throws `OpenError.needsNewerApp` and a file that can't be read now
+    /// `OpenError.unreadable`: both are kept, never replaced with fresh progress.
+    private nonisolated static func readProgress(
+        _ id: UUID, regionCount: Int, from store: ArtworkStore
+    ) throws -> ArtworkStore.SavedProgress {
+        do {
+            return try store.readProgress(id, regionCount: regionCount)
+        } catch is PaintProgress.CodingError {
+            throw OpenError.needsNewerApp
+        } catch {
+            Log.library.error("Progress of \(id.uuidString, privacy: .public) can't be read: \(String(describing: error), privacy: .public)")
+            throw OpenError.unreadable
+        }
+    }
+
+    private nonisolated static func thumbnailPNG(_ template: Template, painted: [Bool]) -> Data? {
+        TemplateRasterizer.pngData(template, painted: painted, style: .thumbnail, maxPixelSize: ArtworkStore.thumbnailMaxPixelSize)
+    }
 
     /// A stable partition: each group keeps the order it came in.
     private static func favoritesFirst(_ list: [Artwork]) -> [Artwork] {
