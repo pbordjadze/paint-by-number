@@ -25,7 +25,7 @@ street and a portrait) with HED maps at the app's size and Suggested settings at
 | --- | --- | --- |
 | Line Style | Coloring Book | the drawing alone is drawn, over the paint; no color edges, no selected outline |
 | Lines From | 60 % | what is drawn, read off the drawing laid over the contours. 50 % draws about a tenth more lines, 70 % a sixth fewer; 60 % keeps the structure (the fox's ears and legs, the Milkmaid's sleeves) and drops the brushwork. A book has no texture lines, so Texture From is hidden |
-| Outlines From | 50 % | read off the contour map (HED) alone: an object's boundary is an outline wherever HED found it, the drawing's fur and creases are detail whatever their ink (`docs/coloring-book.md`, Detectors) |
+| Outlines From | 60 % | read off the contour map (HED) alone: an object's boundary is an outline wherever HED found it, the drawing's fur and creases are detail whatever their ink (`docs/coloring-book.md`, Detectors). Never below Lines From: the thresholds stay ordered |
 | Shortest Line | 36 px | specks never become lines or cells |
 | Gap Closing | 16 px | open strokes reach further for a line, paint boundary or the frame, so cells close |
 | Line Smoothing | 70 % | flowing curves |

@@ -89,9 +89,10 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
 
     /// A style at its defaults, any field given set instead. The coloring book draws every
     /// line the combined map holds at 0.6, and a line is an outline where the contour map holds
-    /// 0.5 (HED's silhouettes mostly do, the drawing's strokes rarely), so same-paint cells join
-    /// across everything but silhouettes and the fur, creases and strands draw inside their
-    /// cells; its longer shortest line and gap closing drop specks and close cells, and its
+    /// 0.6 too (HED's silhouettes mostly do, the drawing's strokes rarely; `normalized` keeps the
+    /// outline threshold at or above the detail threshold, so it cannot sit lower), so same-paint
+    /// cells join across everything but silhouettes and the fur, creases and strands draw inside
+    /// their cells; its longer shortest line and gap closing drop specks and close cells, and its
     /// curves flow (measured in `docs/coloring-book.md` and `docs/presets/README.md`). The
     /// layered defaults are the research's HED thresholds (`research/lineart/results_layers.md`),
     /// outlines a little higher and thinned where lines crowd, as the owner found the research's
@@ -129,7 +130,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     private static func numbers(for style: Style) -> Numbers {
         switch style {
         case .coloringBook:
-            Numbers(outline: 0.5, detail: 0.6, texture: 0.3, minimumStrokeLength: 36, gapBridging: 16, lineSmoothing: 0.7,
+            Numbers(outline: 0.6, detail: 0.6, texture: 0.3, minimumStrokeLength: 36, gapBridging: 16, lineSmoothing: 0.7,
                     samePaint: .joinAllButOutlines)
         case .layered, .classic:
             Numbers(outline: 0.85, detail: 0.5, texture: 0.3, minimumStrokeLength: 18, gapBridging: 9, lineSmoothing: 0.5,

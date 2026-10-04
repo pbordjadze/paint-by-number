@@ -58,18 +58,21 @@ line between paints, the sky bands numbered only. Cells are identical to the lay
 the same settings except where texture lines (now absent) used to split them.
 
 The coloring book is the app's default line style (`LineArtSettings()`): lines from 0.6 of
-the combined map (the owner's own books' threshold), outlines where HED holds 0.5, same-paint
-cells joined across everything but outlines (`samePaint = .joinAllButOutlines`, the book's own
+the combined map (the owner's own books' threshold), outlines where HED holds 0.6 (the
+thresholds stay ordered, `LineArtSettings.normalized`, so the outline threshold never sits
+under the detail threshold: an outline threshold of 0.5 would read as 0.6), same-paint cells
+joined across everything but outlines (`samePaint = .joinAllButOutlines`, the book's own
 default), a 36 px shortest line, 16 px gap closing and flowing curves
 (`LineArtSettings.init(style:)`; layered lines keep the research's values, and choosing a style
 in Settings › Advanced carries each style's defaults along), over paint flattened 1.5×
 (`SegmentationParameters.coloringBookFlattening`). Measured with the book sheets on the fox,
-the Milkmaid, the Arrieta and the turtle against the previous defaults (0.6 for both thresholds,
-same-paint cells split by every line): cells 10–20 % fewer (the slivers fur strokes walled),
-the strokes drawn inside cells two to three times as many (92 on the fox, 168 on the Milkmaid),
-the same ink; lowering what is drawn to 0.5 would double the ink and the open ends (the fox 211
-strokes, the Milkmaid 388), too busy for a book. Settings › Advanced exposes the thresholds for
-the book with the texture threshold hidden; Coloring Book in its Presets row is the defaults.
+the Milkmaid, the Arrieta and the turtle against the previous defaults (the same thresholds
+read off one map, same-paint cells split by every line): cells 10–20 % fewer (the slivers fur
+strokes walled), the strokes drawn inside cells two to three times as many (92 on the fox, 168
+on the Milkmaid), the same ink; lowering both thresholds to 0.5 would double the ink and the
+open ends (the fox 211 strokes, the Milkmaid 388), too busy for a book. Settings › Advanced
+exposes the thresholds for the book with the texture threshold hidden; Coloring Book in its
+Presets row is the defaults.
 
 ## Detectors, and what each decides
 
