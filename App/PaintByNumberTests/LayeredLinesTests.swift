@@ -222,7 +222,7 @@ struct LayeredLinesTests {
         for r in layered.regions.indices where r % 3 == 0 { progress.paint(r) }
         let classicImage = try #require(CanvasSnapshot.render(template: Fixtures.mosaic, progress: progress, size: size, options: options))
         let layeredImage = try #require(CanvasSnapshot.render(template: layered, progress: progress, size: size, options: options))
-        let a = Pixels(classicImage), b = Pixels(layeredImage)
+        let a = PixelReader(classicImage), b = PixelReader(layeredImage)
         var differing = 0
         for y in 0..<a.height { for x in 0..<a.width where a[x, y] != b[x, y] { differing += 1 } }
         #expect(differing == 0)
@@ -236,7 +236,7 @@ struct LayeredLinesTests {
             options.lineZoom = zoom
             let image = try #require(CanvasSnapshot.render(template: t, progress: nil, size: CGSize(width: t.width * 2, height: t.height * 2), options: options))
             record(image, "layered-mosaic-z\(Int(zoom))")
-            return layerDarkness(Pixels(image), t, scale: 2)
+            return layerDarkness(PixelReader(image), t, scale: 2)
         }
         let fitted = try darkness(zoom: 1), deep = try darkness(zoom: 4)
         for i in 1..<4 {
@@ -252,10 +252,10 @@ struct LayeredLinesTests {
         var options = CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: 1.5)
         options.lineAppearance = .default
         let size = CGSize(width: t.width * 2, height: t.height * 2)
-        let blank = Pixels(try #require(CanvasSnapshot.render(template: t, progress: nil, size: size, options: options)))
+        let blank = PixelReader(try #require(CanvasSnapshot.render(template: t, progress: nil, size: size, options: options)))
         var done = PaintProgress(regionCount: t.regions.count)
         for r in t.regions.indices { done.paint(r) }
-        let painted = Pixels(try #require(CanvasSnapshot.render(template: t, progress: done, size: size, options: options)))
+        let painted = PixelReader(try #require(CanvasSnapshot.render(template: t, progress: done, size: size, options: options)))
         let paper = luma(encoded(CanvasPalette.light.paper))
         #expect(art.strokes.count > 10)
         for stroke in art.strokes {
@@ -283,8 +283,8 @@ struct LayeredLinesTests {
         let keptImage = try #require(CanvasSnapshot.render(template: t, progress: done, size: size, options: options))
         record(keptImage, "layered-kept-painted")
         options.lineAppearance = .default
-        let dissolved = Pixels(try #require(CanvasSnapshot.render(template: t, progress: done, size: size, options: options)))
-        let inked = Pixels(keptImage)
+        let dissolved = PixelReader(try #require(CanvasSnapshot.render(template: t, progress: done, size: size, options: options)))
+        let inked = PixelReader(keptImage)
         func differs(_ x: Int, _ y: Int) -> Bool {
             (-1...1).contains { dy in (-1...1).contains { dx in maxDifference(inked[x + dx, y + dy], dissolved[x + dx, y + dy]) > 8 } }
         }
@@ -325,7 +325,7 @@ struct LayeredLinesTests {
         options.highlight = color
         let image = try #require(CanvasSnapshot.render(template: t, progress: nil, size: CGSize(width: t.width * 2, height: t.height * 2), options: options))
         record(image, "layered-selected")
-        let px = Pixels(image)
+        let px = PixelReader(image)
         let paper = luma(encoded(CanvasPalette.light.paper))
         var bounding: [Double] = [], other: [Double] = []
         for edge in t.edges where edge.right != BoundaryEdge.outside && edge.pointCount >= 3 {
@@ -529,8 +529,8 @@ struct LayeredLinesTests {
         let size = CGSize(width: t.width * 2, height: t.height * 2)
         var options = CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: 1.5)
         options.lineAppearance = .default
-        func render(_ options: CanvasSnapshot.Options, progress: PaintProgress? = nil) throws -> Pixels {
-            Pixels(try #require(CanvasSnapshot.render(template: t, progress: progress, size: size, options: options)))
+        func render(_ options: CanvasSnapshot.Options, progress: PaintProgress? = nil) throws -> PixelReader {
+            PixelReader(try #require(CanvasSnapshot.render(template: t, progress: progress, size: size, options: options)))
         }
         let blank = try render(options)
         record(try #require(CanvasSnapshot.render(template: t, progress: nil, size: size, options: options)), "book-mosaic")
@@ -647,7 +647,7 @@ struct LayeredLinesTests {
 
     /// Mean darkness (paper luma minus the darkest pixel around an edge's middle point) of the
     /// interior edges of each layer.
-    private func layerDarkness(_ px: Pixels, _ t: Template, scale: Float) -> [Double] {
+    private func layerDarkness(_ px: PixelReader, _ t: Template, scale: Float) -> [Double] {
         let paper = luma(encoded(CanvasPalette.light.paper))
         var sums = [Double](repeating: 0, count: 4), counts = [Int](repeating: 0, count: 4)
         for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside && edge.pointCount >= 3 {
@@ -659,7 +659,7 @@ struct LayeredLinesTests {
         return (0..<4).map { sums[$0] / Double(max(counts[$0], 1)) }
     }
 
-    private func darkest(_ px: Pixels, _ x: Int, _ y: Int) -> Int {
+    private func darkest(_ px: PixelReader, _ x: Int, _ y: Int) -> Int {
         var best = 255
         for dy in -1...1 { for dx in -1...1 { best = min(best, luma(px[x + dx, y + dy])) } }
         return best

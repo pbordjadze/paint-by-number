@@ -132,11 +132,12 @@ func record(_ image: CGImage, _ name: String) {
     if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "\(name).png") }
 }
 
-/// Reads back pixels of a rendered image as 8-bit RGBA in the image's own color space.
+/// Reads back a rendered image's pixels as 8-bit RGB in its own color space (sRGB when it has
+/// none); a read past an edge returns the nearest pixel.
 struct PixelReader {
     let width: Int
     let height: Int
-    private let bytes: [UInt8]
+    private let data: [UInt8]
 
     init(_ image: CGImage) {
         width = image.width
@@ -149,12 +150,30 @@ struct PixelReader {
                 bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
             ctx?.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
         }
-        bytes = buffer
+        data = buffer
     }
 
     /// RGB at (x, y), origin top-left.
     subscript(x: Int, y: Int) -> SIMD3<Int> {
-        let i = (y * width + x) * 4
-        return SIMD3(Int(bytes[i]), Int(bytes[i + 1]), Int(bytes[i + 2]))
+        let cx = min(max(x, 0), width - 1), cy = min(max(y, 0), height - 1)
+        let i = (cy * width + cx) * 4
+        return SIMD3(Int(data[i]), Int(data[i + 1]), Int(data[i + 2]))
     }
+}
+
+func bytes(_ encoded: SIMD3<Float>) -> SIMD3<Int> {
+    SIMD3(Int((encoded.x * 255).rounded()), Int((encoded.y * 255).rounded()), Int((encoded.z * 255).rounded()))
+}
+
+/// Linear P3 → 8-bit encoded P3.
+func encoded(_ linear: SIMD3<Float>) -> SIMD3<Int> {
+    bytes(SIMD3(ColorScience.encodeSRGB(linear.x), ColorScience.encodeSRGB(linear.y), ColorScience.encodeSRGB(linear.z)))
+}
+
+func maxDifference(_ a: SIMD3<Int>, _ b: SIMD3<Int>) -> Int {
+    max(abs(a.x - b.x), abs(a.y - b.y), abs(a.z - b.z))
+}
+
+func luma(_ c: SIMD3<Int>) -> Int {
+    (c.x * 2126 + c.y * 7152 + c.z * 722) / 10000
 }

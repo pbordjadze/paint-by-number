@@ -44,7 +44,7 @@ struct CanvasRenderTests {
         for r in t.regions.indices where r % 2 == 0 { progress.paint(r) }
         let image = try #require(CanvasSnapshot.render(template: t, progress: progress, size: size(t, 1), options: .painting))
         record(image, "fills")
-        let px = Pixels(image)
+        let px = PixelReader(image)
         let paper = encoded(CanvasPalette.light.paper)
         var checked = 0
         for (r, region) in t.regions.enumerated() {
@@ -66,7 +66,7 @@ struct CanvasRenderTests {
         let finished = try #require(CanvasSnapshot.render(template: t, progress: done, size: size(t, 2), options: options))
         record(blank, "outlines-blank")
         record(finished, "outlines-finished")
-        let open = Pixels(blank), closed = Pixels(finished)
+        let open = PixelReader(blank), closed = PixelReader(finished)
         let paperLuma = luma(encoded(CanvasPalette.light.paper))
         var checked = 0
         for edge in t.edges where edge.right != BoundaryEdge.outside && edge.pointCount >= 3 {
@@ -89,7 +89,7 @@ struct CanvasRenderTests {
         for r in t.regions.indices { done.paint(r) }
         let finished = try #require(CanvasSnapshot.render(template: t, progress: done, size: size(t, 2), options: .preview))
         record(blank, "numbers")
-        let open = Pixels(blank), closed = Pixels(finished)
+        let open = PixelReader(blank), closed = PixelReader(finished)
         let paperLuma = luma(encoded(CanvasPalette.light.paper))
         var checked = 0
         for (r, region) in t.regions.enumerated() {
@@ -121,7 +121,7 @@ struct CanvasRenderTests {
         options.highlight = color
         let image = try #require(CanvasSnapshot.render(template: t, progress: nil, size: size(t, 2), options: options))
         record(image, "highlight")
-        let px = Pixels(image)
+        let px = PixelReader(image)
         let paper = encoded(CanvasPalette.light.paper)
         for (r, region) in t.regions.enumerated() {
             guard let label = t.labels(ofRegion: r).first, label.radius >= 10 else { continue }
@@ -271,7 +271,7 @@ struct CanvasRenderTests {
         let content = RenderContext.Content(outlines: false, numbers: false, photo: texture)
         let shown = try #require(unpainted(scene, uniforms: u, content: content, width: w, height: h, context: context))
         record(shown, "photo-overlay")
-        let px = Pixels(shown)
+        let px = PixelReader(shown)
         let left = Double(u.transform.x), right = left + Double(u.transform.z) * Double(t.width)
         let midX = Int((left + right) / 2), midY = h / 2
         let expected = [red, green, blue, yellow].map { bytes($0) }
@@ -296,7 +296,7 @@ struct CanvasRenderTests {
         let half = try #require(unpainted(scene, uniforms: u, content: content, width: w, height: h, context: context))
         let mixed = encoded(0.5 * red + 0.5 * CanvasPalette.light.paper)
         let (x, y) = centres[0]
-        #expect(maxDifference(Pixels(half)[Int(x), y], mixed) <= 3, "\(Pixels(half)[Int(x), y]) vs \(mixed)")
+        #expect(maxDifference(PixelReader(half)[Int(x), y], mixed) <= 3, "\(PixelReader(half)[Int(x), y]) vs \(mixed)")
     }
 
     @Test func timelapseFramesReplayTheStrokeLog() throws {
@@ -327,7 +327,7 @@ struct CanvasRenderTests {
             provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent))
         record(image, "timelapse-frame")
         // Strokes run from the last region backwards: late regions are painted, early ones paper.
-        let px = Pixels(image)
+        let px = PixelReader(image)
         let paper = encoded(CanvasPalette.light.paper)
         let scale = Float(240) / Float(t.width)
         func sample(_ r: Int) -> SIMD3<Int>? {
@@ -353,7 +353,7 @@ struct CanvasRenderTests {
         options.palette = .darkPaper
         let image = try #require(CanvasSnapshot.render(template: t, progress: progress, size: size(t, 2), options: options))
         record(image, "dark-paper")
-        let px = Pixels(image)
+        let px = PixelReader(image)
         let paper = encoded(CanvasPalette.darkPaper.paper)
         #expect(luma(paper) < 50)
         var painted = 0, unpainted = 0
@@ -384,7 +384,7 @@ struct CanvasRenderTests {
         options.highlight = darkestPaint
         let highlighted = try #require(CanvasSnapshot.render(template: t, progress: nil, size: size(t, 2), options: options))
         record(highlighted, "dark-paper-highlight")
-        let hpx = Pixels(highlighted)
+        let hpx = PixelReader(highlighted)
         var checked = 0
         for (r, region) in t.regions.enumerated() where Int(region.colorIndex) == darkestPaint {
             guard let label = t.labels(ofRegion: r).first, label.radius >= 10 else { continue }
@@ -412,7 +412,7 @@ struct CanvasRenderTests {
                                  blue: Double(CanvasPalette.darkPaper.background.z), alpha: 1))
         let shown = try #require(unpainted(scene, uniforms: u, content: content, width: w, height: h, context: context))
         record(shown, "dark-paper-rim")
-        let px = Pixels(shown)
+        let px = PixelReader(shown)
         let left = Int(u.transform.x), midY = h / 2
         let backdrop = encoded(CanvasPalette.darkPaper.background)
         // The pixel row just outside the left edge is lighter than the backdrop; further out it is the backdrop.
@@ -436,51 +436,6 @@ struct CanvasRenderTests {
     private func size(_ t: Template, _ scale: Int) -> CGSize {
         CGSize(width: t.width * scale, height: t.height * scale)
     }
-}
-
-/// 8-bit RGB pixels of a rendered image, in Display P3.
-struct Pixels {
-    let width: Int
-    let height: Int
-    private let data: [UInt8]
-
-    init(_ image: CGImage) {
-        let w = image.width, h = image.height
-        var buffer = [UInt8](repeating: 0, count: w * h * 4)
-        let space = CGColorSpace(name: CGColorSpace.displayP3)!
-        buffer.withUnsafeMutableBytes { raw in
-            let ctx = CGContext(
-                data: raw.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
-                space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
-            ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
-        }
-        width = w
-        height = h
-        data = buffer
-    }
-
-    subscript(x: Int, y: Int) -> SIMD3<Int> {
-        let cx = min(max(x, 0), width - 1), cy = min(max(y, 0), height - 1)
-        let i = (cy * width + cx) * 4
-        return SIMD3(Int(data[i]), Int(data[i + 1]), Int(data[i + 2]))
-    }
-}
-
-func bytes(_ encoded: SIMD3<Float>) -> SIMD3<Int> {
-    SIMD3(Int((encoded.x * 255).rounded()), Int((encoded.y * 255).rounded()), Int((encoded.z * 255).rounded()))
-}
-
-/// Linear P3 → 8-bit encoded P3.
-func encoded(_ linear: SIMD3<Float>) -> SIMD3<Int> {
-    bytes(SIMD3(ColorScience.encodeSRGB(linear.x), ColorScience.encodeSRGB(linear.y), ColorScience.encodeSRGB(linear.z)))
-}
-
-func maxDifference(_ a: SIMD3<Int>, _ b: SIMD3<Int>) -> Int {
-    max(abs(a.x - b.x), abs(a.y - b.y), abs(a.z - b.z))
-}
-
-func luma(_ c: SIMD3<Int>) -> Int {
-    (c.x * 2126 + c.y * 7152 + c.z * 722) / 10000
 }
 
 /// The canvas palettes: contrast, the accent on dark paper, and how the Paper preference and
