@@ -13,6 +13,7 @@ import plistlib
 import subprocess
 import sys
 
+# Builds listed; the ipa job in .github/workflows/ci.yml keeps this many releases (its `tail -n +6`).
 KEEP = 5
 
 app_path, icon_url = sys.argv[1], sys.argv[2]
@@ -50,10 +51,10 @@ app = {
     "name": info.get("CFBundleDisplayName", "Paint by Moonlight"),
     "bundleIdentifier": info["CFBundleIdentifier"],
     "developerName": repo.split("/")[0],
-    "subtitle": "Photos into paint-by-numbers",
+    "subtitle": "Turn any photo into a painting",
     "localizedDescription": description,
     "iconURL": icon_url,
-    "tintColor": "#F04F5D",
+    "tintColor": "#7B3F7E",
     "category": "entertainment",
     "versions": versions,
     # Legacy fields for clients that predate `versions`.
@@ -70,10 +71,10 @@ app = {
 source = {
     "name": "Paint by Moonlight (CI builds)",
     "identifier": f"{info['CFBundleIdentifier']}.source",
-    "subtitle": "Automatic builds of the main branch",
+    "subtitle": "Automatic builds",
     "iconURL": icon_url,
     "website": f"https://github.com/{repo}",
-    "tintColor": "#F04F5D",
+    "tintColor": "#7B3F7E",
     "apps": [app],
     "news": [],
 }
