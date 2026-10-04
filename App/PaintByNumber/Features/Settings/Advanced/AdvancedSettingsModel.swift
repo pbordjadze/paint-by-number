@@ -255,6 +255,9 @@ final class AdvancedSettingsModel {
 
     func isChanged(_ control: AdvancedControl) -> Bool { value(of: control) != control.defaultValue(for: lineArt.style) }
 
+    /// What the setting does to the preview right now.
+    func effect(of control: AdvancedControl) -> Effect { effects[control] ?? .atDefault }
+
     /// Sets a slider's setting. The three thresholds push each other along, so texture ≤
     /// detail ≤ outline always holds and the sliders show what generation uses.
     func set(_ control: AdvancedControl, to value: Double) {

@@ -202,15 +202,15 @@ struct AdvancedSettingsView: View {
                 SamePaintRow(model: model)
                 AdvancedToggleRow(
                     title: AdvancedControl.keepColorEdges.title, summary: AdvancedControl.keepColorEdges.summary(for: style),
-                    isOn: $model.lineArt.keepColorEdges, effect: model.effects[.keepColorEdges] ?? .atDefault,
+                    isOn: $model.lineArt.keepColorEdges, effect: model.effect(of: .keepColorEdges),
                     identifier: "advanced-control-keepColorEdges")
                 AdvancedToggleRow(
                     title: AdvancedControl.outlineEyes.title, summary: AdvancedControl.outlineEyes.summary,
-                    isOn: $model.lineArt.outlineEyes, effect: model.effects[.outlineEyes] ?? .atDefault,
+                    isOn: $model.lineArt.outlineEyes, effect: model.effect(of: .outlineEyes),
                     identifier: "advanced-control-outlineEyes")
                 AdvancedToggleRow(
                     title: AdvancedControl.outlineObjects.title, summary: AdvancedControl.outlineObjects.summary,
-                    isOn: $model.lineArt.outlineObjects, effect: model.effects[.outlineObjects] ?? .atDefault,
+                    isOn: $model.lineArt.outlineObjects, effect: model.effect(of: .outlineObjects),
                     identifier: "advanced-control-outlineObjects")
             }
         } header: {
