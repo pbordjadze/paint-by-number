@@ -9,7 +9,7 @@ import Testing
 struct AdvancedSettingsTests {
     /// Layered line art with every field off its default, and every multiplier at 2.
     private static let changedArt = LineArtSettings(
-        style: .layered, outlineThreshold: 0.95, detailThreshold: 0.65, textureThreshold: 0.45, minimumStrokeLength: 30,
+        style: .layered, detector: .contours, outlineThreshold: 0.95, detailThreshold: 0.65, textureThreshold: 0.45, minimumStrokeLength: 30,
         gapBridging: 14, lineSmoothing: 0.9, samePaint: .split, keepColorEdges: false, outlineEyes: false,
         outlineObjects: false)
     private static let changedTuning = PipelineTuning(

@@ -191,6 +191,7 @@ struct AdvancedSettingsView: View {
                 .id("advanced-lineArt")
             if model.lineArt.style.usesEdgeMap {
                 let style = model.lineArt.style
+                DetectorRow(model: model)
                 SensitivityBand(lineArt: model.lineArt, lines: model.preview?.stats.lines)
                 ForEach(AdvancedControl.thresholds.filter { $0.applies(to: style) }, id: \.self) { control in
                     AdvancedSliderRow(control: control, model: model)

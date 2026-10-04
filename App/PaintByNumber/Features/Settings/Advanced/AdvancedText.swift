@@ -203,6 +203,9 @@ nonisolated extension AdvancedControl {
         case .outlineObjects:
             String(localized: "advanced.control.outlineObjects", defaultValue: "Outline Subjects",
                    comment: "Settings › Advanced › Line Art: switch that closes each subject's silhouette with an outline where the picture gives no edge")
+        case .detector:
+            String(localized: "advanced.control.detector", defaultValue: "Detector",
+                   comment: "Settings › Advanced › Line Art: choice of which of the two bundled models the lines come from")
         case .smoothing:
             String(localized: "advanced.control.smoothing", defaultValue: "Smoothing",
                    comment: "Settings › Advanced › Pipeline: multiplier on how much the photo is smoothed before paints are picked")
@@ -301,6 +304,10 @@ nonisolated extension AdvancedControl {
             String(localized: "advanced.control.outlineObjects.summary",
                    defaultValue: "Closes the silhouette of the main subjects where the picture gives no edge, so each is an area of its own.",
                    comment: "Settings › Advanced › Line Art: explanation under the Outline Subjects switch")
+        case .detector:
+            String(localized: "advanced.control.detector.summary",
+                   defaultValue: "Which of the two bundled models the lines come from (see each option).",
+                   comment: "Settings › Advanced › Line Art: explanation of the Detector choice")
         case .smoothing:
             String(localized: "advanced.control.smoothing.summary",
                    defaultValue: "How much the photo is smoothed before paints are picked. Higher melts texture into flat areas.",
@@ -352,6 +359,33 @@ nonisolated extension LineArtSettings.Style {
         case .coloringBook: String(localized: "advanced.style.coloringBook.summary",
                                    defaultValue: "A drawing in thick ink that stays over the paint. Inside an outline, only the numbers tell the paints apart.",
                                    comment: "Settings › Advanced › Line Art: what the Coloring Book line style does")
+        }
+    }
+}
+
+nonisolated extension LineArtSettings.Detector {
+    var name: String {
+        switch self {
+        case .drawingAndContours: String(localized: "advanced.detector.drawingAndContours", defaultValue: "Drawing and Contours",
+                                         comment: "Settings › Advanced › Line Art: Detector option, the line drawing over the contour map")
+        case .drawing: String(localized: "advanced.detector.drawing", defaultValue: "Drawing Only",
+                              comment: "Settings › Advanced › Line Art: Detector option, the line-drawing model alone")
+        case .contours: String(localized: "advanced.detector.contours", defaultValue: "Contours Only",
+                               comment: "Settings › Advanced › Line Art: Detector option, the contour (HED) model alone")
+        }
+    }
+
+    var summary: String {
+        switch self {
+        case .drawingAndContours: String(localized: "advanced.detector.drawingAndContours.summary",
+                                         defaultValue: "The line drawing laid over the contour map; the contours decide which lines are outlines.",
+                                         comment: "Settings › Advanced › Line Art: what the Drawing and Contours detector option does")
+        case .drawing: String(localized: "advanced.detector.drawing.summary",
+                              defaultValue: "The line drawing alone: fur, petals and glass, with its strongest strokes as outlines.",
+                              comment: "Settings › Advanced › Line Art: what the Drawing Only detector option does")
+        case .contours: String(localized: "advanced.detector.contours.summary",
+                               defaultValue: "The contour map alone: strong, closed silhouettes and little inside them.",
+                               comment: "Settings › Advanced › Line Art: what the Contours Only detector option does")
         }
     }
 }

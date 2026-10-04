@@ -107,8 +107,13 @@ func setLineArt(_ s: inout LineArtSettings, _ argument: String?) {
             fail("--line-art samePaint: " + LineArtSettings.SamePaint.allCases.map(\.rawValue).joined(separator: ", ") + ", not \(value)")
         }
         s.samePaint = v
+    } else if key == "detector" {
+        guard let v = LineArtSettings.Detector(rawValue: value) else {
+            fail("--line-art detector: " + LineArtSettings.Detector.allCases.map(\.rawValue).joined(separator: ", ") + ", not \(value)")
+        }
+        s.detector = v
     } else {
-        let keys = (Array(Fields.lineArtFloats.keys) + Array(Fields.lineArtBools.keys) + ["style", "samePaint"]).sorted()
+        let keys = (Array(Fields.lineArtFloats.keys) + Array(Fields.lineArtBools.keys) + ["style", "samePaint", "detector"]).sorted()
         fail("--line-art: unknown field \(key) (known: \(keys.joined(separator: ", ")))")
     }
 }
@@ -199,7 +204,7 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
 /// The edge map and eyes layered and coloring-book line art draw from: `--edges` (a contour
 /// map, HED), `--lines` (a line drawing), or both combined as the app combines its two models
 /// (`EdgeMap.combined`, the contours alone then deciding the outlines, `--contour-weight` the
-/// weight); and `--eyes`.
+/// weight), unless `--line-art detector=drawing|contours` keeps one of them; and `--eyes`.
 func loadLineArt(_ options: Options) -> LineArtInput? {
     guard options.edges != nil || options.lines != nil else {
         let style = options.settings.lineArt.style
@@ -212,13 +217,13 @@ func loadLineArt(_ options: Options) -> LineArtInput? {
     }
     let edges: EdgeMap
     var outlines: EdgeMap?
-    switch (options.lines.map(map), options.edges.map(map)) {
-    case let (drawing?, contours?):
+    switch (options.lines.map(map), options.edges.map(map), options.settings.lineArt.detector) {
+    case let (drawing?, contours?, .drawingAndContours):
         edges = EdgeMap.combined(drawing: drawing, contours: contours, contourWeight: options.contourWeight)
         outlines = contours
-    case let (drawing?, nil): edges = drawing
-    case let (nil, contours?): edges = contours
-    case (nil, nil): fatalError()
+    case let (drawing?, _, .drawing), let (drawing?, nil, _): edges = drawing
+    case let (_, contours?, .contours), let (nil, contours?, _): edges = contours
+    case (nil, nil, _): fatalError()
     }
     /// Closed polygons of [x, y] normalized to the photo, from a JSON file.
     func polygons(_ path: String) -> [[SIMD2<Float>]] {

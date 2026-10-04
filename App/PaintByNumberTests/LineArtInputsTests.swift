@@ -66,12 +66,15 @@ struct EdgeDetectorTests {
 
         let hed = try EdgeDetector.edgeMap(for: input, cancel: .none)
         let maps = try EdgeDetector.maps(for: input, cancel: .none)
-        let combined = maps.edges
-        #expect(combined.width == hed.width && combined.height == hed.height)
-        #expect(combined == EdgeMap.combined(drawing: map, contours: hed))
-        #expect(maps.contours == hed)
-        #expect(zip(combined.values, map.values).allSatisfy { $0 >= $1 })
-        #expect(try EdgeDetector.maps(for: input, cancel: .none).edges == combined)
+        #expect(maps.contours == hed && maps.drawing == map)
+        let both = LineArtInputs.Maps(drawing: maps.drawing, contours: maps.contours, eyes: [], objects: [])
+        let combined = both.input(for: .drawingAndContours)
+        #expect(combined.edges.width == hed.width && combined.edges.height == hed.height)
+        #expect(combined.edges == EdgeMap.combined(drawing: map, contours: hed) && combined.contours == hed)
+        #expect(zip(combined.edges.values, map.values).allSatisfy { $0 >= $1 })
+        #expect(both.input(for: .drawing) == LineArtInput(edges: map))
+        #expect(both.input(for: .contours) == LineArtInput(edges: hed))
+        #expect(try EdgeDetector.maps(for: input, cancel: .none).drawing == map)
     }
 
     /// A photo at full size: scaled to 1152 px, the same map on every run. Records the time and

@@ -16,11 +16,33 @@ nonisolated enum LineArtInputs {
     /// Photos whose inputs are kept: the photo being made into a painting and a preview's.
     static let cacheCapacity = 2
 
+    /// Everything the models and Vision found in a photo, from which the input for any
+    /// detector choice follows.
+    struct Maps: Sendable, Equatable {
+        var drawing: EdgeMap
+        var contours: EdgeMap
+        var eyes: [[SIMD2<Float>]]
+        var objects: [[SIMD2<Float>]]
+
+        /// The input `detector` generates from: the drawing over the contours with the contours
+        /// deciding the outlines, or either map alone deciding everything.
+        func input(for detector: LineArtSettings.Detector) -> LineArtInput {
+            switch detector {
+            case .drawingAndContours:
+                LineArtInput(edges: EdgeMap.combined(drawing: drawing, contours: contours), eyes: eyes, objects: objects, contours: contours)
+            case .drawing:
+                LineArtInput(edges: drawing, eyes: eyes, objects: objects)
+            case .contours:
+                LineArtInput(edges: contours, eyes: eyes, objects: objects)
+            }
+        }
+    }
+
     /// The inputs `settings` need for `image`: nil for classic line art, which draws from the
     /// photo alone.
     static func make(for image: CGImage, settings: LineArtSettings) async throws -> LineArtInput? {
         guard settings.style.usesEdgeMap else { return nil }
-        return try await cache.input(for: image)
+        return try await cache.maps(for: image).input(for: settings.detector)
     }
 
     /// The inputs for a template about to be generated: `make` (or `compute` when not
@@ -34,8 +56,8 @@ nonisolated enum LineArtInputs {
             return nil
         }
         do {
-            if cached { return try await cache.input(for: image) }
-            return try await compute(for: image)
+            if cached { return try await cache.maps(for: image).input(for: settings.detector) }
+            return try await compute(for: image, detector: settings.detector)
         } catch is CancellationError {
             throw CancellationError()
         } catch {
@@ -44,14 +66,19 @@ nonisolated enum LineArtInputs {
         }
     }
 
-    /// The inputs of `image`, computed now without the cache: the combined map and the
-    /// contours (both models, one after the other) and, meanwhile, the eyes and the subjects.
+    /// The inputs of `image` for `detector`, computed now without the cache.
+    static func compute(for image: CGImage, detector: LineArtSettings.Detector = .drawingAndContours) async throws -> LineArtInput {
+        try await maps(for: image).input(for: detector)
+    }
+
+    /// Everything found in `image`, computed now without the cache: both maps (the models one
+    /// after the other) and, meanwhile, the eyes and the subjects.
     @concurrent
-    static func compute(for image: CGImage) async throws -> LineArtInput {
+    static func maps(for image: CGImage) async throws -> Maps {
         async let eyes = findEyes(in: image)
         async let objects = findObjects(in: image)
         let maps = try EdgeDetector.maps(for: image)
-        return LineArtInput(edges: maps.edges, eyes: await eyes, objects: await objects, contours: maps.contours)
+        return Maps(drawing: maps.drawing, contours: maps.contours, eyes: await eyes, objects: await objects)
     }
 
     @concurrent
@@ -67,12 +94,12 @@ nonisolated enum LineArtInputs {
     private static let cache = InputCache()
 }
 
-/// The cache behind `LineArtInputs.make`: one computation task per photo, shared by the
-/// callers waiting for it.
+/// The cache behind `LineArtInputs.make`: one computation task per photo (every map, so a
+/// change of detector costs nothing), shared by the callers waiting for it.
 private actor InputCache {
     private nonisolated struct Entry {
         let image: CGImage
-        let task: Task<LineArtInput, any Error>
+        let task: Task<LineArtInputs.Maps, any Error>
         /// Callers waiting for `task`, and those of them whose own tasks were cancelled.
         var waiting: Set<UUID> = []
         var abandoned: Set<UUID> = []
@@ -81,7 +108,7 @@ private actor InputCache {
     /// Least recently requested first.
     private var entries: [Entry] = []
 
-    func input(for image: CGImage) async throws -> LineArtInput {
+    func maps(for image: CGImage) async throws -> LineArtInputs.Maps {
         let caller = UUID()
         let task = join(image, as: caller)
         defer { leave(task, as: caller) }
@@ -100,13 +127,13 @@ private actor InputCache {
 
     /// The running or finished computation for `image`, or a new one when there is none (or
     /// only a cancelled one).
-    private func join(_ image: CGImage, as caller: UUID) -> Task<LineArtInput, any Error> {
+    private func join(_ image: CGImage, as caller: UUID) -> Task<LineArtInputs.Maps, any Error> {
         var entry: Entry
         if let index = entries.firstIndex(where: { $0.image === image }), !entries[index].task.isCancelled {
             entry = entries.remove(at: index)
         } else {
             entries.removeAll { $0.image === image }
-            entry = Entry(image: image, task: Task { try await LineArtInputs.compute(for: image) })
+            entry = Entry(image: image, task: Task { try await LineArtInputs.maps(for: image) })
         }
         entry.waiting.insert(caller)
         entries.append(entry)
@@ -114,14 +141,14 @@ private actor InputCache {
         return entry.task
     }
 
-    private func leave(_ task: Task<LineArtInput, any Error>, as caller: UUID) {
+    private func leave(_ task: Task<LineArtInputs.Maps, any Error>, as caller: UUID) {
         guard let index = entries.firstIndex(where: { $0.task == task }) else { return }
         entries[index].waiting.remove(caller)
         entries[index].abandoned.remove(caller)
     }
 
     /// A caller's task was cancelled: the computation stops when nobody else waits for it.
-    private func abandon(_ task: Task<LineArtInput, any Error>, as caller: UUID) {
+    private func abandon(_ task: Task<LineArtInputs.Maps, any Error>, as caller: UUID) {
         guard let index = entries.firstIndex(where: { $0.task == task }), entries[index].waiting.contains(caller) else { return }
         entries[index].abandoned.insert(caller)
         if entries[index].abandoned == entries[index].waiting { task.cancel() }

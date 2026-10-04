@@ -525,6 +525,30 @@
         }
       }
     },
+    "advanced.control.detector" : {
+      "comment" : "Settings › Advanced › Line Art: choice of which of the two bundled models the lines come from",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detector"
+          }
+        }
+      }
+    },
+    "advanced.control.detector.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation of the Detector choice",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which of the two bundled models the lines come from (see each option)."
+          }
+        }
+      }
+    },
     "advanced.control.gapBridging" : {
       "comment" : "Settings › Advanced › Line Art: slider for how far apart line ends may be and still be joined",
       "extractionState" : "manual",
@@ -917,6 +941,78 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "+%@"
+          }
+        }
+      }
+    },
+    "advanced.detector.contours" : {
+      "comment" : "Settings › Advanced › Line Art: Detector option, the contour (HED) model alone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contours Only"
+          }
+        }
+      }
+    },
+    "advanced.detector.contours.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Contours Only detector option does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The contour map alone: strong, closed silhouettes and little inside them."
+          }
+        }
+      }
+    },
+    "advanced.detector.drawing" : {
+      "comment" : "Settings › Advanced › Line Art: Detector option, the line-drawing model alone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drawing Only"
+          }
+        }
+      }
+    },
+    "advanced.detector.drawing.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Drawing Only detector option does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The line drawing alone: fur, petals and glass, with its strongest strokes as outlines."
+          }
+        }
+      }
+    },
+    "advanced.detector.drawingAndContours" : {
+      "comment" : "Settings › Advanced › Line Art: Detector option, the line drawing over the contour map",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drawing and Contours"
+          }
+        }
+      }
+    },
+    "advanced.detector.drawingAndContours.summary" : {
+      "comment" : "Settings › Advanced › Line Art: what the Drawing and Contours detector option does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The line drawing laid over the contour map; the contours decide which lines are outlines."
           }
         }
       }

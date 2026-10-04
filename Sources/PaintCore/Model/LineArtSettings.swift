@@ -43,7 +43,19 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         case joinAllButOutlines
     }
 
+    /// Which of the app's two models the lines come from (`LineArtInput`): the generator reads
+    /// whatever maps it is handed; the app and `pbn` choose them by this.
+    public enum Detector: String, Sendable, Codable, CaseIterable {
+        /// The line drawing over the contour map, the contours deciding the outlines.
+        case drawingAndContours
+        /// The line drawing alone, its strongest strokes the outlines.
+        case drawing
+        /// The contour map (HED) alone, as the first books were made.
+        case contours
+    }
+
     public var style: Style
+    public var detector: Detector
     /// Edge strength (0...1 of the detector's output) from which a line is an outline. A line
     /// keeps its layer along a stretch that stays above 60 % of the threshold once it has held
     /// the threshold for a few pixels. Where lines crowd (a shell's pattern, rock strata, a
@@ -86,7 +98,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     /// outlines too strong; texture lines join same-paint cells and color cells stay ("we want
     /// more colors"). Classic lines read none of them and carry the layered values.
     public init(
-        style: Style = .coloringBook,
+        style: Style = .coloringBook, detector: Detector = .drawingAndContours,
         outlineThreshold: Float? = nil, detailThreshold: Float? = nil, textureThreshold: Float? = nil,
         minimumStrokeLength: Float? = nil, gapBridging: Float? = nil, lineSmoothing: Float? = nil,
         samePaint: SamePaint? = nil, keepColorEdges: Bool = true, outlineEyes: Bool = true,
@@ -94,6 +106,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     ) {
         let d = Self.numbers(for: style)
         self.style = style
+        self.detector = detector
         self.outlineThreshold = outlineThreshold ?? d.outline
         self.detailThreshold = detailThreshold ?? d.detail
         self.textureThreshold = textureThreshold ?? d.texture
@@ -153,7 +166,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case style, outlineThreshold, detailThreshold, textureThreshold, minimumStrokeLength, gapBridging,
+        case style, detector, outlineThreshold, detailThreshold, textureThreshold, minimumStrokeLength, gapBridging,
              lineSmoothing, samePaint, keepColorEdges, outlineEyes, outlineObjects
     }
 
@@ -163,6 +176,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         style = ((try? c.decodeIfPresent(Style.self, forKey: .style)) ?? nil) ?? LineArtSettings().style
         let d = LineArtSettings(style: style)
+        detector = ((try? c.decodeIfPresent(Detector.self, forKey: .detector)) ?? nil) ?? d.detector
         outlineThreshold = (try? c.decodeIfPresent(Float.self, forKey: .outlineThreshold)) ?? d.outlineThreshold
         detailThreshold = (try? c.decodeIfPresent(Float.self, forKey: .detailThreshold)) ?? d.detailThreshold
         textureThreshold = (try? c.decodeIfPresent(Float.self, forKey: .textureThreshold)) ?? d.textureThreshold

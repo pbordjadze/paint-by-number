@@ -232,6 +232,33 @@ struct AdvancedToggleRow: View {
     }
 }
 
+/// Which of the two bundled models the lines come from (`LineArtSettings.Detector`).
+struct DetectorRow: View {
+    @Bindable var model: AdvancedSettingsModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker(selection: $model.lineArt.detector) {
+                ForEach(LineArtSettings.Detector.allCases, id: \.self) { option in
+                    Text(option.name).tag(option)
+                }
+            } label: {
+                Text(AdvancedControl.detector.title)
+                    .font(.subheadline.weight(.semibold))
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("advanced-control-detector")
+            Text(model.lineArt.detector.summary)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .contentTransition(.opacity)
+            EffectLine(effect: model.effects[.detector] ?? .atDefault)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 /// What happens where a line runs between two areas of the same paint. A coloring book has no
 /// texture lines, so it offers two choices, joining across texture shown as splitting.
 struct SamePaintRow: View {

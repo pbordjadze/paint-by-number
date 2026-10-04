@@ -38,14 +38,14 @@ nonisolated struct GenerationKey: Hashable, Sendable {
 /// A setting of Settings › Advanced that changes templates. Each one shows its effect: the
 /// preview's numbers against the same settings with this one back at its default.
 nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
-    case style
+    case style, detector
     case outlineThreshold, detailThreshold, textureThreshold
     case minimumStrokeLength, gapBridging, lineSmoothing
     case samePaint, keepColorEdges, outlineEyes, outlineObjects
     case smoothing, textureFlattening, minimumCellSize, subjectEmphasis, accentColors, colorfulness
 
     static let lineArt: [AdvancedControl] = [
-        .style, .outlineThreshold, .detailThreshold, .textureThreshold, .minimumStrokeLength, .gapBridging,
+        .style, .detector, .outlineThreshold, .detailThreshold, .textureThreshold, .minimumStrokeLength, .gapBridging,
         .lineSmoothing, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects,
     ]
     static let thresholds: [AdvancedControl] = [.outlineThreshold, .detailThreshold, .textureThreshold]
@@ -71,6 +71,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
         let a = LineArtSettings(style: art.style), t = PipelineTuning()
         switch self {
         case .style: art = art.changing(to: LineArtSettings().style)
+        case .detector: art.detector = a.detector
         case .outlineThreshold: art.outlineThreshold = a.outlineThreshold
         case .detailThreshold: art.detailThreshold = a.detailThreshold
         case .textureThreshold: art.textureThreshold = a.textureThreshold
@@ -105,6 +106,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     func value(lineArt art: LineArtSettings, tuning: PipelineTuning) -> Double {
         switch self {
         case .style: Double(LineArtSettings.Style.allCases.firstIndex(of: art.style) ?? 0)
+        case .detector: Double(LineArtSettings.Detector.allCases.firstIndex(of: art.detector) ?? 0)
         case .outlineThreshold: Double(art.outlineThreshold)
         case .detailThreshold: Double(art.detailThreshold)
         case .textureThreshold: Double(art.textureThreshold)
@@ -147,7 +149,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
             SliderSpec(
                 range: Double(PipelineTuning.range.lowerBound)...Double(PipelineTuning.range.upperBound),
                 defaultValue: defaultValue, logarithmic: true, quantum: 0.01, accessibilityStep: 0.25, format: .multiplier)
-        case .style, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects:
+        case .style, .detector, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects:
             nil
         }
     }
@@ -156,6 +158,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     func valueText(lineArt art: LineArtSettings, tuning: PipelineTuning) -> String {
         switch self {
         case .style: art.style.name
+        case .detector: art.detector.name
         case .samePaint: art.samePaint.name(in: art.style)
         case .keepColorEdges: AdvancedText.onOff(art.keepColorEdges)
         case .outlineEyes: AdvancedText.onOff(art.outlineEyes)
