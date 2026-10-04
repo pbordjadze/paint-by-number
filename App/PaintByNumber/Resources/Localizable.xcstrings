@@ -1797,18 +1797,6 @@
         }
       }
     },
-    "advanced.report.numbers" : {
-      "comment" : "Settings › Advanced: the preview's numbers in shared settings text, e.g. 24 colors · 1,284 areas · ~1 h; the arguments are the colors, areas and painting time",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ · %2$@ · %3$@"
-          }
-        }
-      }
-    },
     "advanced.report.numbersWithChange" : {
       "comment" : "Settings › Advanced: the preview's numbers and their change from the default settings in shared settings text; the arguments are the numbers and the change, e.g. +212 areas",
       "extractionState" : "manual",
@@ -2906,7 +2894,7 @@
       }
     },
     "create.stats.summary" : {
-      "comment" : "Template summary under the create sliders; the arguments are the colors, areas and estimated painting time, e.g. 24 colors · 1,284 areas · ~1.5 h",
+      "comment" : "Template summary under the create sliders and in Settings › Advanced's shared settings text; the arguments are the colors, areas and estimated painting time, e.g. 24 colors · 1,284 areas · ~1.5 h",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

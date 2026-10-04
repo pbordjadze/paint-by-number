@@ -42,13 +42,7 @@ final class CreateModel {
             estimate = PaintingTime.estimate(regionCount: t.regions.count)
         }
 
-        var summary: String {
-            let colorsText = TemplateCounts.colors(colors)
-            let areasText = TemplateCounts.areas(areas)
-            let timeText = PaintingTimeText.approximate(estimate)
-            return String(localized: "create.stats.summary", defaultValue: "\(colorsText) · \(areasText) · \(timeText)",
-                          comment: "Template summary under the create sliders; the arguments are the colors, areas and estimated painting time, e.g. 24 colors · 1,284 areas · ~1.5 h")
-        }
+        var summary: String { TemplateCounts.summary(colors: colors, areas: areas, seconds: estimate) }
     }
 
     enum Phase: Equatable {
@@ -434,9 +428,18 @@ final class CreateModel {
 
     // MARK: Background work
 
+    /// A decoded photo the pipeline can work with: at least 16 px on each side, with a preview.
     nonisolated struct Decoded: Sendable {
-        var image: RGBAImage
-        var preview: CGImage
+        let image: RGBAImage
+        let preview: CGImage
+
+        init(_ image: RGBAImage) throws {
+            guard image.width >= 16, image.height >= 16, let preview = PhotoLoader.cgImage(from: image) else {
+                throw CreateError.unreadable
+            }
+            self.image = image
+            self.preview = preview
+        }
     }
 
     nonisolated struct Prepared: Sendable {
@@ -448,19 +451,12 @@ final class CreateModel {
 
     @concurrent
     private static func decode(url: URL) async throws -> Decoded {
-        try decoded(PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize))
+        try Decoded(PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize))
     }
 
     @concurrent
     private static func decode(data: Data) async throws -> Decoded {
-        try decoded(PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize))
-    }
-
-    nonisolated private static func decoded(_ image: RGBAImage) throws -> Decoded {
-        guard image.width >= 16, image.height >= 16, let preview = PhotoLoader.cgImage(from: image) else {
-            throw CreateError.unreadable
-        }
-        return Decoded(image: image, preview: preview)
+        try Decoded(PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize))
     }
 
     /// Subject importance and hints, and for layered line art the edge map and eyes (once per

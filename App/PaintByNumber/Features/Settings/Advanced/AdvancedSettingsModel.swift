@@ -369,10 +369,7 @@ final class AdvancedSettingsModel {
     /// The preview's numbers worded for the shared text, with their change from the defaults.
     var summary: String? {
         guard let stats = preview?.stats else { return nil }
-        let numbers = String(
-            localized: "advanced.report.numbers",
-            defaultValue: "\(TemplateCounts.colors(stats.colors)) · \(TemplateCounts.areas(stats.areas)) · \(PaintingTimeText.approximate(stats.seconds))",
-            comment: "Settings › Advanced: the preview's numbers in shared settings text, e.g. 24 colors · 1,284 areas · ~1 h; the arguments are the colors, areas and painting time")
+        let numbers = TemplateCounts.summary(colors: stats.colors, areas: stats.areas, seconds: stats.seconds)
         guard let delta = statsDelta, !delta.isZero else { return numbers }
         let effect = AdvancedText.effect(delta)
         return String(localized: "advanced.report.numbersWithChange", defaultValue: "\(numbers) (\(effect) from the defaults)",
@@ -460,10 +457,10 @@ final class AdvancedSettingsModel {
         }
     }
 
-    /// Decodes the picture the way the create flow does, finds its subject and chooses its
-    /// settings (the suggestion's center, at the draft size), then renders the preview at the
-    /// default advanced settings like any other (the suggestion's own draft has no edge map,
-    /// and the default lines draw from one).
+    /// Decodes the picture as the create flow does (`CreateModel.Decoded`), finds its subject
+    /// and chooses its settings (the suggestion's center, at the draft size), then renders the
+    /// preview at the default advanced settings like any other (the suggestion's own draft has
+    /// no edge map, and the default lines draw from one).
     @concurrent
     private static func prepare(_ source: Source, preference: PaintingLength) async throws -> (base: Base, baseline: Preview) {
         let image: RGBAImage
@@ -476,9 +473,7 @@ final class AdvancedSettingsModel {
             }
             image = try PhotoLoader.rgbaImage(from: photo)
         }
-        guard image.width >= 16, image.height >= 16, let photo = PhotoLoader.cgImage(from: image) else {
-            throw CreateModel.CreateError.unreadable
-        }
+        let photo = try CreateModel.Decoded(image).preview
         try Task.checkCancellation()
         let subject = SubjectImportance.analyze(photo)
         try Task.checkCancellation()
