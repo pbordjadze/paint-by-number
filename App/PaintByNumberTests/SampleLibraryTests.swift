@@ -6,7 +6,7 @@ import PaintCore
 import Testing
 @testable import PaintByNumber
 
-/// The picture library: `Resources/Samples/library.json`, the titles in `Sample` and the bundled
+/// The picture library: `Resources/Samples/library.json`, the catalog's titles and the bundled
 /// JPEGs agree, and the retired samples stay bundled for the paintings that name them.
 struct SampleLibraryTests {
     /// The bundled `library.json`, read without `Sample`'s decoder.
@@ -21,8 +21,11 @@ struct SampleLibraryTests {
         let records = try Self.records()
         #expect(!records.isEmpty)
         #expect(Sample.all.map(\.id) == records.map { $0["id"] as? String ?? "" },
-                "Every record needs a title in Sample.title(of:) (and a catalog entry), and the file must decode")
+                "The file must decode: every record needs its id, title and facts")
         for (sample, record) in zip(Sample.all, records) {
+            let missing = "\u{0}missing"
+            #expect(Bundle.main.localizedString(forKey: "sample.\(sample.id)", value: missing, table: nil) == record["title"] as? String,
+                    "\(sample.id): the catalog has no sample.\(sample.id), or its English differs from the record's title")
             #expect(sample.title == record["title"] as? String, "\(sample.id): the catalog's title differs from the record's")
             let provenance = try #require(sample.provenance)
             #expect(provenance.kind.rawValue == record["kind"] as? String)
@@ -112,19 +115,22 @@ struct SampleLibraryTests {
         #expect(Sample.named("missing") == nil)
     }
 
-    /// A record without a title isn't offered, and a file that doesn't decode offers nothing.
-    /// Fields the app doesn't read (the audit's) are ignored.
-    @Test func untitledRecordsAndUnreadableFilesOfferNothing() {
+    /// A title is the catalog's `sample.<id>`, or the record's own where the catalog has none. A
+    /// file that doesn't decode (a record without its title or a fact) offers nothing. Fields
+    /// the app doesn't read (the audit's) are ignored.
+    @Test func titlesComeFromTheCatalogAndUnreadableFilesOfferNothing() {
         let json = """
-            [{"id": "great-wave", "kind": "painting", "title": "The Great Wave", "creator": "Katsushika Hokusai",
+            [{"id": "great-wave", "kind": "painting", "title": "Under the Wave off Kanagawa", "creator": "Katsushika Hokusai",
               "year": "c. 1830–32", "credit": "A museum", "license": "CC0", "source": "https://example.org/45434"},
-             {"id": "untitled", "kind": "photograph", "title": "Untitled", "creator": "Somebody", "year": "1900",
+             {"id": "uncatalogued", "kind": "photograph", "title": "Uncatalogued", "creator": "Somebody", "year": "1900",
               "credit": "An archive", "license": "Public domain"}]
             """
         let listed = Sample.listed(in: Data(json.utf8))
-        #expect(listed.map(\.id) == ["great-wave"])
+        #expect(listed.map(\.id) == ["great-wave", "uncatalogued"])
+        #expect(listed.map(\.title) == ["The Great Wave", "Uncatalogued"])
         #expect(listed.first?.provenance?.creator == "Katsushika Hokusai")
         #expect(listed.first?.provenance?.year == "c. 1830–32")
+        #expect(Sample.listed(in: Data(#"[{"id": "great-wave", "kind": "painting", "creator": "x", "year": "x", "credit": "x", "license": "x"}]"#.utf8)).isEmpty)
         #expect(Sample.listed(in: Data(#"[{"id": "great-wave", "kind": "painting"}]"#.utf8)).isEmpty)
         #expect(Sample.listed(in: Data(#"[{"id": "great-wave", "kind": "sculpture", "title": "x", "creator": "x", "year": "x", "credit": "x", "license": "x"}]"#.utf8)).isEmpty)
         #expect(Sample.listed(in: Data("{".utf8)).isEmpty)
