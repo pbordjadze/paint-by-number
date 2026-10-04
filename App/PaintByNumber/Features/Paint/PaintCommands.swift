@@ -47,17 +47,14 @@ struct PaintCommands: Commands {
         }
     }
 
-    /// Selects the next (or previous) color that still has regions to paint.
+    /// Selects the next (or previous) color in the palette's order that still has regions to
+    /// paint.
     private func step(_ delta: Int) {
-        guard let session = painting?.session, session.paletteCount > 0 else { return }
-        let n = session.paletteCount
-        var color = session.selectedColor ?? (delta > 0 ? n - 1 : 0)
-        for _ in 0..<n {
-            color = (color + delta + n) % n
-            if !session.isColorComplete(color) { break }
-        }
-        guard color != session.selectedColor else { return }
-        session.select(color: color)
+        guard let session = painting?.session,
+              let next = session.nextIncompleteColor(after: session.selectedColor, backwards: delta < 0),
+              next != session.selectedColor
+        else { return }
+        session.select(color: next)
         FeedbackEngine.shared.selectionChanged()
     }
 }

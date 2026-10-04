@@ -74,6 +74,18 @@ struct PaletteArrangementTests {
         session.colorOrder = Array((0..<count).reversed())
         #expect(session.nextIncompleteColor(after: 0) == count - 1)
         #expect(session.nextIncompleteColor(after: count - 1) == count - 2)
+        // Backwards (the Paint menu's `[`), and from either end with nothing selected.
+        #expect(session.nextIncompleteColor(after: 0, backwards: true) == 1)
+        #expect(session.nextIncompleteColor(after: count - 1, backwards: true) == 0)
+        #expect(session.nextIncompleteColor(after: nil) == count - 1)
+        #expect(session.nextIncompleteColor(after: nil, backwards: true) == 0)
+        // A finished color is passed over both ways.
+        let finished = count - 2
+        session.paint(
+            template.regions.indices.filter { Int(template.regions[$0].colorIndex) == finished }, from: .zero, animated: false)
+        #expect(session.isColorComplete(finished))
+        #expect(session.nextIncompleteColor(after: count - 1) == count - 3)
+        #expect(session.nextIncompleteColor(after: count - 3, backwards: true) == count - 1)
         // An order that doesn't fit the palette is ignored.
         session.colorOrder = [1, 0]
         #expect(session.nextIncompleteColor(after: 0) == 1)
