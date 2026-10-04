@@ -123,7 +123,7 @@ enum PaintTips {
         do {
             try Tips.configure([.displayFrequency(.immediate), .datastoreLocation(.applicationDefault)])
         } catch {
-            log.error("TipKit configuration failed: \(String(describing: error), privacy: .public)")
+            Log.tips.error("TipKit configuration failed: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -207,6 +207,4 @@ enum PaintTips {
         guard invalidated.insert(tip.id).inserted else { return }
         tip.invalidate(reason: .actionPerformed)
     }
-
-    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "tips")
 }

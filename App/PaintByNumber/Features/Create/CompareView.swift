@@ -4,7 +4,7 @@ import SwiftUI
 /// Before/after: the photo on the leading side of a draggable divider, the template layer
 /// on the trailing side. New template layers crossfade in.
 struct CompareView: View {
-    let photo: CGImage?
+    let photo: CGImage
     let after: CGImage?
     /// Identity of `after`; a change crossfades.
     let afterID: String
@@ -12,16 +12,7 @@ struct CompareView: View {
     let afterLabel: String
     let aspectRatio: CGFloat
     /// Fraction of the width showing the photo; purely presentational, so owned here.
-    @State private var split: CGFloat
-
-    init(photo: CGImage?, after: CGImage?, afterID: String, afterLabel: String, aspectRatio: CGFloat, initialSplit: CGFloat = 0.5) {
-        self.photo = photo
-        self.after = after
-        self.afterID = afterID
-        self.afterLabel = afterLabel
-        self.aspectRatio = aspectRatio
-        _split = State(initialValue: initialSplit)
-    }
+    @State private var split: CGFloat = 0.5
 
     var body: some View {
         GeometryReader { geo in
@@ -37,12 +28,10 @@ struct CompareView: View {
                 }
                 .animation(.easeInOut(duration: 0.3), value: afterID)
 
-                if let photo {
-                    layer(photo, size: geo.size)
-                        .mask(alignment: .leading) {
-                            Rectangle().frame(width: x)
-                        }
-                }
+                layer(photo, size: geo.size)
+                    .mask(alignment: .leading) {
+                        Rectangle().frame(width: x)
+                    }
 
                 if after != nil {
                     divider(at: x, height: geo.size.height)

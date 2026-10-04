@@ -8,9 +8,8 @@ struct TemplatePreviewView: View {
     @Bindable var model: CreateModel
     var onStart: () async throws -> Void
 
-    enum Layer: String, CaseIterable, Identifiable {
+    enum Layer: String {
         case painting, numbers
-        var id: String { rawValue }
     }
 
     @State private var size: CGSize = .zero
@@ -227,15 +226,15 @@ struct TemplatePreviewView: View {
             originChip
             SettingSlider(
                 title: "Colors", value: Self.colorPosition(model.colorCount),
-                onChange: { update(\.colorCount, Self.colorCount(at: $0)) }, range: 0...1,
+                onChange: { update(\.colorCount, Self.colorCount(at: $0)) },
                 valueText: Int(model.colorCount.rounded()).formatted(), isPending: model.isChoosingSettings,
                 onEditing: model.setAdjusting)
             SettingSlider(
-                title: "Detail", value: model.detail, onChange: { update(\.detail, $0) }, range: 0...1,
+                title: "Detail", value: model.detail, onChange: { update(\.detail, $0) },
                 valueText: Self.detailWord(model.detail), isPending: model.isChoosingSettings,
                 onEditing: model.setAdjusting)
             SettingSlider(
-                title: "Smoothness", value: model.smoothness, onChange: { update(\.smoothness, $0) }, range: 0...1,
+                title: "Smoothness", value: model.smoothness, onChange: { update(\.smoothness, $0) },
                 valueText: Self.smoothnessWord(model.smoothness), isPending: model.isChoosingSettings,
                 onEditing: model.setAdjusting)
 
@@ -392,8 +391,6 @@ private struct SettingSlider: View {
     let title: LocalizedStringKey
     let value: Double
     var onChange: (Double) -> Void
-    let range: ClosedRange<Double>
-    var step: Double?
     let valueText: String
     /// The value is not chosen yet (Suggested settings are being chosen): shown as a
     /// placeholder, and the slider waits.
@@ -415,16 +412,10 @@ private struct SettingSlider: View {
                     .animation(.snappy, value: valueText)
                     .redacted(reason: isPending ? .placeholder : [])
             }
-            Group {
-                if let step {
-                    Slider(value: value, in: range, step: step, onEditingChanged: onEditing)
-                } else {
-                    Slider(value: value, in: range, onEditingChanged: onEditing)
-                }
-            }
-            .disabled(isPending)
-            .accessibilityLabel(title)
-            .accessibilityValue(isPending ? Text("Choosing settings…") : Text(valueText))
+            Slider(value: value, in: 0...1, onEditingChanged: onEditing)
+                .disabled(isPending)
+                .accessibilityLabel(title)
+                .accessibilityValue(isPending ? Text("Choosing settings…") : Text(valueText))
         }
     }
 }

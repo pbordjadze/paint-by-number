@@ -115,12 +115,4 @@ final class LongTextTests: XCTestCase {
     private func button(_ app: XCUIApplication, labelPrefix prefix: String) -> XCUIElement {
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", prefix)).firstMatch
     }
-
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
-    }
 }

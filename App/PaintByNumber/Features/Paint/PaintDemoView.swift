@@ -6,7 +6,8 @@ import os
 import simd
 
 /// Demo scenarios for the painting screen, deterministic for CI screenshots. The template is
-/// generated from a bundled photo (append `-mosaic` for the synthetic test template):
+/// generated from a library picture, which the canvas's photo loader also gets, so the top bar
+/// is the one users see. Classic lines, from Delicate Arch:
 ///
 /// - `paint`: fresh canvas, fit to screen
 /// - `paint-progress`: ~55 % painted color by color, the color in progress selected
@@ -20,8 +21,6 @@ import simd
 /// - `paint-photo`: the source photo shown over a painting in progress
 /// - `paint-tip`: a fresh canvas with the first tip ("Tap to Paint") at the selected swatch;
 ///   the only scenario that shows tips (`PaintTips.configure`)
-///
-/// Photo-based scenarios have the photo loader, so the top bar is the one users see.
 /// - `paint-ax`: `paint-progress`, showing the selected color's name
 /// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
 /// - `paint-names-plain`: `paint-progress` under Settings › Color Names › Plain (structured names only)
@@ -32,7 +31,7 @@ import simd
 ///   caption and completion bar as translations would stress them
 ///
 /// Layered line art from the real pipeline (the stand-in edge map `SyntheticTemplate.edgeMap`
-/// for the learned detector; `-mosaic`: `SyntheticTemplate.layered`) at the default Line Appearance:
+/// for the learned detector) at the default Line Appearance:
 /// - `paint-layered`: fresh canvas, fit to screen (the 1× look: outlines, faint texture)
 /// - `paint-layered-progress`: ~45 % painted, the color in progress selected (painted lines
 ///   dissolve, the selected color's cells are outlined boldly whatever their layer)
@@ -54,10 +53,6 @@ struct PaintDemoView: View {
     @State private var demo: Demo?
     @Environment(\.dynamicTypeSize) private var systemTypeSize
 
-    init(scenario: String) {
-        self.scenario = scenario
-    }
-
     var body: some View {
         ZStack {
             if let demo {
@@ -78,25 +73,21 @@ struct PaintDemoView: View {
             }
         }
         .task {
-            let synthetic = scenario.hasSuffix("-mosaic")
-            let base = synthetic ? String(scenario.dropLast("-mosaic".count)) : scenario
-            let layered = base.hasPrefix("paint-layered"), book = base.hasPrefix("paint-book")
-            let photo = layered ? "santa-fe-freight" : book ? "red-fox" : "parrots"
-            var template: Template?
-            if synthetic {
-                template = nil
-            } else if layered || book {
+            let layered = scenario.hasPrefix("paint-layered"), book = scenario.hasPrefix("paint-book")
+            let photo = layered ? "santa-fe-freight" : book ? "red-fox" : "delicate-arch"
+            let template: Template?
+            if layered || book {
                 template = await Self.drawnTemplate(photo: photo, style: book ? .coloringBook : .layered)
             } else {
                 template = await Self.template(photo: photo)
             }
             // Titles are the person's own words, which pseudo-localization doesn't lengthen.
-            let title = base.hasSuffix("-long-text")
-                ? "Two Parrots on a Branch in the Morning Light"
-                : (template == nil ? "Mosaic" : (layered ? "Freight Train" : book ? "Red Fox" : "Parrots"))
-            let mosaic = layered ? SyntheticTemplate.layered(SyntheticTemplate.make()) : SyntheticTemplate.make()
+            let title = scenario.hasSuffix("-long-text")
+                ? "Delicate Arch on Our Spring Trip Through Utah"
+                : (template == nil ? "Mosaic" : (layered ? "Freight Train" : book ? "Red Fox" : "Delicate Arch"))
             demo = Demo(
-                scenario: base, template: template ?? mosaic, title: title, photo: template == nil ? nil : photo)
+                scenario: scenario, template: template ?? SyntheticTemplate.make(), title: title,
+                photo: template == nil ? nil : photo)
         }
     }
 
@@ -133,23 +124,21 @@ struct PaintDemoView: View {
         var input: LineArtInput?
         if style == .coloringBook, let cgImage = PhotoLoader.cgImage(from: image) {
             input = try? await LineArtInputs.compute(for: cgImage)
-            Self.log.notice("demo \(photo, privacy: .public): edge detector \(input == nil ? "unavailable, using the stand-in map" : "ran", privacy: .public)")
+            Log.demo.notice("demo \(photo, privacy: .public): edge detector \(input == nil ? "unavailable, using the stand-in map" : "ran", privacy: .public)")
         }
         guard let output = try? TemplateGenerator(settings: settings)
             .generate(from: image, lineArt: input ?? LineArtInput(edges: SyntheticTemplate.edgeMap(for: small)))
         else { return nil }
         return output.template.lineArt == nil || output.template.mesh.indices.isEmpty ? nil : output.template
     }
-
-    /// Read from `@concurrent` work, so not on the main actor like the rest of the view.
-    nonisolated private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "demo")
 }
 
 @MainActor
 private final class Demo {
     let session: PaintingSession
     let title: String
-    /// The bundled photo the template was made from; nil for the synthetic mosaic.
+    /// The bundled photo the template was made from; nil for the synthetic mosaic that stands
+    /// in when generating from it failed.
     let photo: String?
     var camera: CanvasCamera?
     var fillDurationScale: Float = 1
@@ -265,7 +254,7 @@ private final class Demo {
             try? await Task.sleep(for: .seconds(1.5))
             session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
             let attached = session.canvas != nil
-            Self.log.notice("demo paint-hint: requested (canvas attached: \(attached, privacy: .public))")
+            Log.demo.notice("demo paint-hint: requested (canvas attached: \(attached, privacy: .public))")
             return
         }
         if scenario == "paint-photo" {
@@ -278,7 +267,7 @@ private final class Demo {
                 if opacity >= 0.999 { break }
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            Self.log.notice("demo paint-photo: photo opacity \(opacity, privacy: .public)")
+            Log.demo.notice("demo paint-photo: photo opacity \(opacity, privacy: .public)")
             return
         }
         if scenario == PaintTips.demoScenario {
@@ -314,11 +303,9 @@ private final class Demo {
             session.paint([r], from: Self.center(t, r), animated: true)
         }
         let canvas = session.canvas as? CanvasView
-        Self.log.notice(
+        Log.demo.notice(
             "demo paint-fill: painted \(Array(targets), privacy: .public) of color \(color, privacy: .public); frames \(canvas?.framesRendered ?? -1, privacy: .public)")
     }
-
-    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "demo")
 
     private static func center(_ t: Template, _ region: Int) -> SIMD2<Float> {
         t.labels(ofRegion: region).first?.position ?? .zero

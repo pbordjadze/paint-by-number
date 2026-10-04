@@ -56,7 +56,7 @@ nonisolated enum LineArtInputs {
             return nil
         }
         do {
-            if cached { return try await cache.maps(for: image).input(for: settings.detector) }
+            if cached { return try await make(for: image, settings: settings) }
             return try await compute(for: image, detector: settings.detector)
         } catch is CancellationError {
             throw CancellationError()
@@ -66,14 +66,15 @@ nonisolated enum LineArtInputs {
         }
     }
 
-    /// The inputs of `image` for `detector`, computed now without the cache.
+    /// The inputs of `image` for `detector`, computed now, outside `make`'s per-photo cache.
     static func compute(for image: CGImage, detector: LineArtSettings.Detector = .drawingAndContours) async throws -> LineArtInput {
         try await maps(for: image).input(for: detector)
     }
 
-    /// Everything found in `image`, computed now without the cache: both maps (the models one
-    /// after the other) and, meanwhile, the eyes and the subjects. Demo and test launches read
-    /// and keep them on disk (`LineArtMapsCache`), so a CI run computes each picture once.
+    /// Everything found in `image`, computed now, outside `make`'s per-photo cache: both maps
+    /// (the models one after the other) and, meanwhile, the eyes and the subjects. Demo and test
+    /// launches read and keep them on disk (`LineArtMapsCache`), so a CI run computes each
+    /// picture once.
     @concurrent
     static func maps(for image: CGImage) async throws -> Maps {
         #if DEBUG

@@ -16,7 +16,7 @@ struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
     var onClose: (() -> Void)?
-    /// Where the canvas first looks (demos, restored sessions); nil = fit.
+    /// Where the canvas first looks (demo scenarios); nil = fit.
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
     var fillDurationScale: Float = 1
@@ -47,6 +47,11 @@ struct PaintView: View {
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
+    /// The top bar below the safe area, the bottom bar above it, and either bar to the canvas
+    /// (`canvasInsets` keeps the canvas clear of the bars by these).
+    private static let topGap: CGFloat = 6
+    private static let bottomGap: CGFloat = 4
+    private static let canvasGap: CGFloat = 6
 
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
@@ -74,7 +79,7 @@ struct PaintView: View {
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding))
         .onAppear {
             if tips == nil { tips = PaintTips.makeGroup() }
-            FeedbackAttachment.attach(session)
+            FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
             chrome.observe(session, controller: controller)
             RenderContext.prewarm()
@@ -137,12 +142,12 @@ struct PaintView: View {
             VStack(spacing: 0) {
                 topBar(width: geo.size.width)
                     .padding(.horizontal, Self.edge)
-                    .padding(.top, 6)
+                    .padding(.top, Self.topGap)
                 Spacer(minLength: 0)
                 if !palette.side || session.isComplete {
                     bottomBar(palette)
                         .padding(.horizontal, Self.edge)
-                        .padding(.bottom, 4)
+                        .padding(.bottom, Self.bottomGap)
                 }
             }
             if palette.side && !session.isComplete {
@@ -173,7 +178,7 @@ struct PaintView: View {
 
     private var paletteMetrics: PaletteMetrics { PaletteMetrics(dynamicTypeSize: dynamicTypeSize) }
 
-    private static let sidePaletteTop: CGFloat = 6 + barHeight + 12
+    private static let sidePaletteTop: CGFloat = topGap + barHeight + 12
 
     private func paletteLayout(in size: CGSize) -> PaletteLayout {
         let count = PaletteBar.visibleColors(session).count
@@ -213,17 +218,19 @@ struct PaintView: View {
 
     /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
     private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
-        let top = safe.top + 6 + Self.barHeight + 6
+        let top = safe.top + Self.topGap + Self.barHeight + Self.canvasGap
         if session.isComplete {
-            return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + CompletionBar.height + 6,
-                              trailing: safe.trailing)
+            return EdgeInsets(
+                top: top, leading: safe.leading,
+                bottom: safe.bottom + Self.bottomGap + CompletionBar.height + Self.canvasGap, trailing: safe.trailing)
         }
         if palette.side {
             return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 8,
                               trailing: safe.trailing + Self.edge + palette.thickness + 4)
         }
-        return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + palette.thickness + 6,
-                          trailing: safe.trailing)
+        return EdgeInsets(
+            top: top, leading: safe.leading,
+            bottom: safe.bottom + Self.bottomGap + palette.thickness + Self.canvasGap, trailing: safe.trailing)
     }
 
     /// The canvas's visible area within the safe area (the canvas itself ignores it).
@@ -319,24 +326,14 @@ struct PaintView: View {
     }
 
     private func progressBadge(_ variant: BadgeVariant) -> some View {
-        badgeVariant(
-            fraction: session.fractionComplete, showsTitle: variant.showsTitle, showsPercent: variant.showsPercent,
-            showsColor: variant.showsColor, shrinksColor: variant.shrinksColor)
-            .frame(height: Self.barHeight)
-            .glassEffect(.regular, in: .capsule)
-    }
-
-    private func badgeVariant(
-        fraction: Double, showsTitle: Bool, showsPercent: Bool, showsColor: Bool, shrinksColor: Bool = false
-    ) -> some View {
         HStack(spacing: 10) {
-            progressGroup(fraction: fraction, showsTitle: showsTitle, showsPercent: showsPercent)
-            if showsColor {
+            progressGroup(showsTitle: variant.showsTitle, showsPercent: variant.showsPercent)
+            if variant.showsColor {
                 Capsule()
                     .fill(Color.primary.opacity(0.15))
                     .frame(width: 1, height: 18)
                     .accessibilityHidden(true)
-                if shrinksColor {
+                if variant.shrinksColor {
                     CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
                         .frame(idealWidth: 60, alignment: .leading)
                 } else {
@@ -346,6 +343,8 @@ struct PaintView: View {
             }
         }
         .padding(.horizontal, 14)
+        .frame(height: Self.barHeight)
+        .glassEffect(.regular, in: .capsule)
     }
 
     /// The ring fills in paint: each color's painted share of the areas, in palette order.
@@ -361,7 +360,8 @@ struct PaintView: View {
         }
     }
 
-    private func progressGroup(fraction: Double, showsTitle: Bool, showsPercent: Bool) -> some View {
+    private func progressGroup(showsTitle: Bool, showsPercent: Bool) -> some View {
+        let fraction = session.fractionComplete
         // Whole percent, rounded down: 100 only once the last area is painted.
         let percent = Int(fraction * 100)
         return HStack(spacing: 8) {
@@ -461,7 +461,7 @@ struct PaintView: View {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
                 shakes: chrome.shakes, tip: swatchTip, metrics: palette.metrics, showsCurrentColor: palette.caption,
-                order: paletteOrder, customOrder: customOrder)
+                order: colorOrder)
         }
     }
 
@@ -501,250 +501,5 @@ struct PaintView: View {
         case .lifted:
             PaintTips.record(.pencilUsed)
         }
-    }
-}
-
-/// A 44 pt circular Liquid Glass button with an SF Symbol. Uses the system glass button style:
-/// interactive glass on a plain button's label swallows the tap, so the action never ran.
-struct GlassIconButton: View {
-    let systemImage: String
-    let label: LocalizedStringKey
-    let action: () -> Void
-
-    init(systemImage: String, label: LocalizedStringKey, action: @escaping () -> Void) {
-        self.systemImage = systemImage
-        self.label = label
-        self.action = action
-    }
-
-    @Environment(\.isEnabled) private var isEnabled
-
-    var body: some View {
-        Button(action: action) {
-            GlassIconLabel(systemImage: systemImage)
-                .opacity(isEnabled ? 1 : 0.35)
-        }
-        .buttonStyle(.glass)
-        .buttonBorderShape(.circle)
-        .accessibilityLabel(Text(label))
-        .accessibilityShowsLargeContentViewer { Label(label, systemImage: systemImage) }
-    }
-}
-
-/// The symbol inside a circular glass button; the style's padding brings it to 44 pt.
-struct GlassIconLabel: View {
-    let systemImage: String
-
-    var body: some View {
-        Image(systemName: systemImage)
-            .font(.body.weight(.semibold))
-            .foregroundStyle(Color.primary)
-            .frame(width: 30, height: 30)
-    }
-}
-
-/// Replaces the palette once the painting is finished.
-private struct CompletionBar: View {
-    /// As tall as a one-line palette, so the canvas keeps its place when the painting finishes.
-    static let height = PaletteMetrics.standard.thickness(lines: 1, caption: false)
-
-    let session: PaintingSession
-    let title: String
-    let share: CompletionShare
-    let onReplay: () -> Void
-    let onShareTimelapse: () -> Void
-    let onClose: (() -> Void)?
-
-    init(
-        session: PaintingSession, title: String, share: CompletionShare, onReplay: @escaping () -> Void,
-        onShareTimelapse: @escaping () -> Void, onClose: (() -> Void)?
-    ) {
-        self.session = session
-        self.title = title
-        self.share = share
-        self.onReplay = onReplay
-        self.onShareTimelapse = onShareTimelapse
-        self.onClose = onClose
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 28))
-                .foregroundStyle(.tint)
-                .symbolEffect(.bounce, value: session.isComplete)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Finished!").font(.headline)
-                Group {
-                    if title.isEmpty {
-                        Text("Every region is painted.")
-                    } else {
-                        Text(title)
-                    }
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            }
-            // The buttons keep their size on a phone; the caption shrinks, then truncates.
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-            Spacer(minLength: 0)
-            Button(action: onReplay) {
-                GlassIconLabel(systemImage: "play.fill")
-            }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.circle)
-            .accessibilityLabel(Text("Replay"))
-            .accessibilityShowsLargeContentViewer { Label("Replay", systemImage: "play.fill") }
-            if let picture = share.picture {
-                let name = title.isEmpty ? String(localized: "Painting") : title
-                // UIImage keeps the picture's Display P3 colors.
-                let shareImage = Image(uiImage: UIImage(cgImage: picture))
-                Menu {
-                    ShareLink(item: shareImage, preview: SharePreview(name, image: shareImage)) {
-                        Label("Share Picture", systemImage: "photo")
-                    }
-                    Button { onShareTimelapse() } label: {
-                        Label("Share Time-lapse", systemImage: "timelapse")
-                    }
-                } label: {
-                    GlassIconLabel(systemImage: "square.and.arrow.up")
-                }
-                .buttonStyle(.glass)
-                .buttonBorderShape(.circle)
-                .accessibilityLabel(Text("Share"))
-                .accessibilityShowsLargeContentViewer { Label("Share", systemImage: "square.and.arrow.up") }
-            }
-            if let onClose {
-                Button(action: onClose) {
-                    Text("Done").lineLimit(1).fixedSize()
-                }
-                .buttonStyle(.glassProminent)
-                .tint(Theme.signature)
-                .fixedSize()
-                .accessibilityShowsLargeContentViewer()
-            }
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 8)
-        .frame(minHeight: Self.height)
-        .frame(maxWidth: 560)
-        // One compact row even at the largest text sizes: the canvas insets assume its height,
-        // and the Large Content Viewer shows its buttons enlarged.
-        .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-        .glassEffect(.regular, in: .capsule)
-        .task(id: session.revision) { await share.prepare(for: session) }
-    }
-}
-
-/// The finished painting as a picture to share, rendered once per completion (the bar
-/// showing it is rebuilt far more often: layout changes, the palette moving aside).
-@Observable
-final class CompletionShare {
-    private(set) var picture: CGImage?
-    /// The session revision `picture` shows (or is being rendered for).
-    @ObservationIgnored private var revision: Int?
-
-    func prepare(for session: PaintingSession) async {
-        guard session.isComplete, revision != session.revision else { return }
-        let target = session.revision
-        revision = target
-        picture = nil
-        let image = await Self.render(template: session.template, progress: session.progress)
-        // Undone and finished again meanwhile: that completion renders its own.
-        guard revision == target else { return }
-        picture = image
-        // A failed render may succeed next time the bar appears.
-        if image == nil { revision = nil }
-    }
-
-    @concurrent
-    private static func render(template: Template, progress: PaintProgress) async -> CGImage? {
-        let size = CanvasSnapshot.fittedSize(for: template, longSide: 2048)
-        return CanvasSnapshot.render(template: template, progress: progress, size: size, options: .painting)
-    }
-}
-
-/// Transient chrome reactions to painting events, undo registration, and the tips they feed.
-@Observable
-final class PaintChromeState {
-    /// Per color: bumped to shake its swatch.
-    var shakes: [Int: Int] = [:]
-    /// The window's undo manager: every fill is registered with it (⌘Z, the Edit menu,
-    /// three-finger undo and redo).
-    @ObservationIgnored weak var undoManager: UndoManager?
-    @ObservationIgnored private var observed: ObjectIdentifier?
-
-    func observe(_ session: PaintingSession, controller: CanvasController) {
-        guard observed != ObjectIdentifier(session) else { return }
-        observed = ObjectIdentifier(session)
-        PaintTips.paintingOpened(hasProgress: session.progress.paintedCount > 0)
-        session.onEvent { [weak self, weak controller, weak session] event in
-            if let session, let signal = PaintTips.signal(for: event, isStroking: session.isStroking) {
-                PaintTips.record(signal)
-            }
-            switch event {
-            case let .painted(regions, _):
-                if let session, !session.isStroking { self?.registerUndo(of: regions.count, in: session) }
-            case let .strokeEnded(regions):
-                if let session { self?.registerUndo(of: regions.count, in: session) }
-            case let .rejected(_, expected):
-                // Without animation the shake's whole-number step leaves the swatch in place.
-                withAnimation(UIAccessibility.isReduceMotionEnabled ? nil : .linear(duration: 0.45)) {
-                    self?.shakes[expected, default: 0] += 1
-                }
-            case let .colorCompleted(color):
-                if let session {
-                    Announcer.announce(PaintSpeech.colorFinished(number: color + 1, name: session.colorNames[color], nickname: session.nickname(of: color)))
-                }
-            case .artworkCompleted:
-                Announcer.announce(PaintSpeech.paintingFinished)
-                controller?.zoomToFit()
-            default:
-                break
-            }
-        }
-    }
-
-    /// Undo takes back the fills of one tap or one whole stroke. Redoing paints them again,
-    /// which registers the next undo through the same event.
-    private func registerUndo(of count: Int, in session: PaintingSession) {
-        guard let undoManager else { return }
-        // UndoManager calls back on the thread that undoes: the main thread.
-        undoManager.registerUndo(withTarget: session) { [weak self] session in
-            MainActor.assumeIsolated { self?.undoFills(count, in: session) }
-        }
-        undoManager.setActionName(String(localized: "Paint"))
-    }
-
-    private func undoFills(_ count: Int, in session: PaintingSession) {
-        let undone = (0..<count).compactMap { _ in session.undo() }
-        guard let undoManager, let first = undone.first else { return }
-        undoManager.registerUndo(withTarget: session) { session in
-            MainActor.assumeIsolated {
-                let origin = session.template.labels(ofRegion: first).first?.position ?? .zero
-                session.paint(undone.reversed(), from: origin, animated: true)
-            }
-        }
-        undoManager.setActionName(String(localized: "Paint"))
-    }
-}
-
-/// Attaches haptics and sound to a session exactly once, however often its screen appears.
-@MainActor
-enum FeedbackAttachment {
-    private final class Box {
-        weak var session: PaintingSession?
-        init(_ session: PaintingSession) { self.session = session }
-    }
-
-    private static var attached: [Box] = []
-
-    static func attach(_ session: PaintingSession) {
-        attached.removeAll { $0.session == nil }
-        guard !attached.contains(where: { $0.session === session }) else { return }
-        attached.append(Box(session))
-        FeedbackEngine.shared.attach(to: session)
-        FeedbackEngine.shared.prepare()
     }
 }

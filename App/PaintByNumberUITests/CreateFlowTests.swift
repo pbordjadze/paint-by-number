@@ -21,16 +21,16 @@ final class CreateFlowTests: XCTestCase {
         compare.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: compare.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5)))
         sleep(1)
-        attachScreenshot(app, named: "compare-after-drag")
+        attachScreenshot(of: app, named: "compare-after-drag")
         XCTAssertNotEqual(compare.value as? String, "50 percent photo", "The divider didn't follow the drag")
     }
 
     /// The preview's title field offers the sample's name and names the painting with what
-    /// was typed. (On a retired sample, whose title doesn't move with the library's curation.)
+    /// was typed. (On the demo's fixed pictures, whose titles don't move with the library's order.)
     @MainActor
     func testTitleNamesThePainting() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create-preview", "-demoRetiredSamples", "YES"]
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES"]
         app.launch()
 
         let start = app.buttons["Start Painting"]
@@ -40,7 +40,7 @@ final class CreateFlowTests: XCTestCase {
 
         let title = app.textFields["painting-title"]
         XCTAssertTrue(title.exists, "The preview has no title field")
-        XCTAssertEqual(title.placeholderValue, "Parrots")
+        XCTAssertEqual(title.placeholderValue, "The Great Wave")
         // The first tap can land while the preview is still settling: type only once focused.
         let focused = NSPredicate(format: "hasKeyboardFocus == true")
         let unfocusedFrame = title.frame
@@ -51,16 +51,13 @@ final class CreateFlowTests: XCTestCase {
         // The keyboard shrinks the view; the layout must not switch (stacked ↔ side by side).
         XCTAssertEqual(title.frame.minX, unfocusedFrame.minX, accuracy: 1, "The preview changed layout when the keyboard showed")
         XCTAssertEqual(title.frame.width, unfocusedFrame.width, accuracy: 1, "The preview changed layout when the keyboard showed")
-        title.typeText("Jungle Birds\n")
-        XCTAssertEqual(title.value as? String, "Jungle Birds")
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = "create-title-typed"
-        shot.lifetime = .keepAlways
-        add(shot)
+        title.typeText("Big Wave\n")
+        XCTAssertEqual(title.value as? String, "Big Wave")
+        attachScreenshot(of: app, named: "create-title-typed")
 
         start.tap()
         XCTAssertTrue(
-            app.staticTexts["Jungle Birds, 0 percent painted"].waitForExistence(timeout: 90),
+            app.staticTexts["Big Wave, 0 percent painted"].waitForExistence(timeout: 90),
             "The painting didn't open with the typed title")
     }
 
@@ -96,7 +93,7 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertEqual(reset.label, "Reset to Suggested")
         XCTAssertEqual(reset.value as? String, "Custom")
         XCTAssertNotEqual(detail.value as? String, suggested)
-        attachScreenshot(app, named: "create-custom-settings")
+        attachScreenshot(of: app, named: "create-custom-settings")
 
         reset.tap()
         let restored = NSPredicate(format: "value == %@", suggested)
@@ -105,7 +102,7 @@ final class CreateFlowTests: XCTestCase {
             "Reset didn't bring Detail back to \(suggested)")
         XCTAssertEqual(chip.value as? String, "Suggested for this photo")
         XCTAssertFalse(reset.exists, "Reset is still offered after resetting")
-        attachScreenshot(app, named: "create-suggested-settings")
+        attachScreenshot(of: app, named: "create-suggested-settings")
     }
 
     /// The inline picker is the page's primary content and no scroll view contains it: its pan
@@ -114,7 +111,7 @@ final class CreateFlowTests: XCTestCase {
     func testLibraryFillsTheScreenOutsideAnyScrollView() throws {
         let (app, picker) = launchToPicker("create")
         XCTAssertTrue(picker.exists, "No library picker")
-        attachTree(app, named: "library-layout-tree")
+        attachTree(of: app, named: "library-layout-tree")
 
         XCTAssertEqual(app.scrollViews.containing(pickerPredicate).count, 0, "The library picker is inside a scroll view")
         let window = app.windows.firstMatch.frame
@@ -134,7 +131,7 @@ final class CreateFlowTests: XCTestCase {
             XCTAssertEqual(picker.frame.minX, window.minX, accuracy: 1, "The picker isn't flush with the window's left edge")
             XCTAssertEqual(picker.frame.width, window.width, accuracy: 1, "The picker doesn't span the window")
         }
-        attachScreenshot(app, named: "library-layout")
+        attachScreenshot(of: app, named: "library-layout")
     }
 
     /// A single tap on a library photo opens its preview; after going back, the same photo can
@@ -146,23 +143,23 @@ final class CreateFlowTests: XCTestCase {
 
         let start = app.buttons["Start Painting"]
         let opened = try pickFirstInlinePhoto(app, picker: picker, opens: start)
-        attachScreenshot(app, named: "library-photo-picked")
+        attachScreenshot(of: app, named: "library-photo-picked")
         XCTAssertTrue(opened, "Picking a library photo didn't open its preview")
         guard opened else { return }
 
         let back = app.navigationBars.buttons.matching(NSPredicate(format: "label IN {'New Painting', 'Back'}")).firstMatch
         guard back.waitForExistence(timeout: 10) else {
-            attachTree(app, named: "preview-back-tree")
+            attachTree(of: app, named: "preview-back-tree")
             XCTFail("No back button on the preview")
             return
         }
         back.tap()
-        let returned = poll(timeout: 10) { !start.exists }
+        let returned = waitUntil(timeout: 10) { !start.exists }
         XCTAssertTrue(returned, "Back didn't return to the photo step")
         XCTAssertTrue(picker.waitForExistence(timeout: 20))
 
         let reopened = try pickFirstInlinePhoto(app, picker: picker, opens: start)
-        attachScreenshot(app, named: "library-photo-picked-again")
+        attachScreenshot(of: app, named: "library-photo-picked-again")
         XCTAssertTrue(reopened, "The same photo couldn't be picked a second time")
     }
 
@@ -189,7 +186,7 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertGreaterThan(first.frame.minY, paintings.frame.maxY, "The first sample isn't under the Paintings title")
         // "Sample: <title>, <creator>"
         XCTAssertTrue(first.label.dropFirst("Sample: ".count).contains(", "), "The sample's label doesn't name its creator: \(first.label)")
-        attachScreenshot(app, named: "samples")
+        attachScreenshot(of: app, named: "samples")
 
         if !isPad {
             // Back to the picker at full height, then to the samples again.
@@ -217,7 +214,7 @@ final class CreateFlowTests: XCTestCase {
         let first = firstSample(app)
         XCTAssertTrue(first.waitForExistence(timeout: 20), "The Samples pane shows no sample")
         sleep(1)
-        attachScreenshot(app, named: "samples-largest-text")
+        attachScreenshot(of: app, named: "samples-largest-text")
         let window = app.windows.firstMatch.frame
         XCTAssertGreaterThanOrEqual(first.frame.minX, window.minX - 1, "The first sample runs off the screen")
         XCTAssertLessThanOrEqual(first.frame.maxX, window.maxX + 1, "The first sample runs off the screen")
@@ -234,8 +231,8 @@ final class CreateFlowTests: XCTestCase {
 
         guard let cancel = openBrowseAll(app, sheet: sheet) else { return }
         tap(app, at: cancel)
-        let dismissed = poll(timeout: 15) { sheet.dismissFrame == nil }
-        if !dismissed { attachTree(app, named: "browse-all-dismiss-tree") }
+        let dismissed = waitUntil(timeout: 15) { sheet.dismissFrame == nil }
+        if !dismissed { attachTree(of: app, named: "browse-all-dismiss-tree") }
         XCTAssertTrue(dismissed, "The system picker didn't dismiss")
         XCTAssertTrue(picker.waitForExistence(timeout: 10))
         XCTAssertFalse(app.buttons["Start Painting"].exists)
@@ -245,6 +242,7 @@ final class CreateFlowTests: XCTestCase {
     /// sheet dismisses, which must not stall either transition.
     @MainActor
     func testBrowseAllPickOpensPreview() throws {
+        try XCTSkipIf(isPad, "The system picker sheet's photos aren't reachable on the iPad simulator (no fully visible photo)")
         let (app, picker) = launchToPicker("create")
         XCTAssertTrue(picker.exists, "No library picker")
         let sheet = settledSheetDetector(app)
@@ -252,12 +250,12 @@ final class CreateFlowTests: XCTestCase {
         guard openBrowseAll(app, sheet: sheet) != nil else { return }
         // The sheet can open on a blank "Loading…" page whose Close sits left of the loaded
         // sheet's Cancel: wait for its photos, then read the bar of the sheet they are in.
-        let sheetPhotosShown = poll(timeout: 30) {
+        let sheetPhotosShown = waitUntil(timeout: 30) {
             app.images.matching(photoPredicate).count > picker.images.matching(photoPredicate).count
         }
         if sheetPhotosShown { sleep(1) }
         guard sheetPhotosShown, let cancel = sheet.dismissFrame else {
-            attachTree(app, named: "browse-all-loading-tree")
+            attachTree(of: app, named: "browse-all-loading-tree")
             XCTFail("The system picker showed no photos")
             return
         }
@@ -276,10 +274,10 @@ final class CreateFlowTests: XCTestCase {
 
         let start = app.buttons["Start Painting"]
         let opened = start.waitForExistence(timeout: 60)
-        attachScreenshot(app, named: "browse-all-picked")
-        if !opened { attachTree(app, named: "browse-all-pick-tree") }
+        attachScreenshot(of: app, named: "browse-all-picked")
+        if !opened { attachTree(of: app, named: "browse-all-pick-tree") }
         XCTAssertTrue(opened, "Picking a photo in Browse All didn't open its preview")
-        XCTAssertTrue(poll(timeout: 15) { sheet.dismissFrame == nil }, "The system picker stayed up after a pick")
+        XCTAssertTrue(waitUntil(timeout: 15) { sheet.dismissFrame == nil }, "The system picker stayed up after a pick")
     }
 
     // MARK: - Helpers
@@ -345,12 +343,12 @@ final class CreateFlowTests: XCTestCase {
     @MainActor
     private func openBrowseAll(_ app: XCUIApplication, sheet: SheetDetector) -> CGRect? {
         app.buttons["Browse All…"].tap()
-        let shown = poll(timeout: 15) { sheet.dismissFrame != nil }
+        let shown = waitUntil(timeout: 15) { sheet.dismissFrame != nil }
         // Read again once the sheet has slid into place: a frame read mid-animation misses.
         if shown { sleep(1) }
-        attachScreenshot(app, named: "browse-all")
+        attachScreenshot(of: app, named: "browse-all")
         guard shown, let cancel = sheet.dismissFrame else {
-            attachTree(app, named: "browse-all-tree")
+            attachTree(of: app, named: "browse-all-tree")
             XCTFail("Browse All didn't present the system picker")
             return nil
         }
@@ -360,13 +358,14 @@ final class CreateFlowTests: XCTestCase {
     /// Picks the inline picker's first photo and waits for `opens`. A tap that opens nothing is
     /// kept as a screenshot and tree (a selection badge without a preview says it reached the
     /// picker) and tried once more at the same point: a picker inset from the window's left and
-    /// top edge took its first seconds to take taps on iPhone, which the layout now avoids.
+    /// top edge takes its first seconds to accept taps on iPhone; the edge-to-edge layout avoids
+    /// that, and the retry stays as a safety net.
     @MainActor
     private func pickFirstInlinePhoto(_ app: XCUIApplication, picker: XCUIElement, opens: XCUIElement) throws -> Bool {
         let point = try tapFirstPhoto(app, in: picker.frame)
         if opens.waitForExistence(timeout: 15) { return true }
-        attachScreenshot(app, named: "inline-tap-missed")
-        attachTree(app, named: "inline-tap-missed-tree")
+        attachScreenshot(of: app, named: "inline-tap-missed")
+        attachTree(of: app, named: "inline-tap-missed-tree")
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: point.x, dy: point.y)).tap()
         return opens.waitForExistence(timeout: 30)
     }
@@ -387,7 +386,7 @@ final class CreateFlowTests: XCTestCase {
     ) throws -> CGPoint {
         let photos = app.images.matching(photoPredicate)
         guard photos.firstMatch.waitForExistence(timeout: 20) else {
-            attachTree(app, named: "library-picker-tree")
+            attachTree(of: app, named: "library-picker-tree")
             throw XCTSkip("The library picker's photos aren't reachable from the UI test")
         }
         let excluding = other?.images.matching(photoPredicate).allElementsBoundByIndex.map { $0.frame } ?? []
@@ -418,7 +417,7 @@ final class CreateFlowTests: XCTestCase {
             if target != nil { break }
         }
         guard let target else {
-            attachTree(app, named: "library-picker-tree")
+            attachTree(of: app, named: "library-picker-tree")
             throw XCTSkip("No library photo is fully visible inside the picker")
         }
         let point = CGPoint(x: target.midX, y: target.midY)
@@ -426,37 +425,10 @@ final class CreateFlowTests: XCTestCase {
         return point
     }
 
-    /// Polls a condition on the UI (queries are synchronous, so the main thread may block).
-    @MainActor
-    private func poll(timeout: TimeInterval, until condition: () -> Bool) -> Bool {
-        let deadline = Date.now.addingTimeInterval(timeout)
-        while !condition() {
-            guard Date.now < deadline else { return false }
-            usleep(250_000)
-        }
-        return true
-    }
-
-    @MainActor
-    private func attachTree(_ app: XCUIApplication, named name: String) {
-        let tree = XCTAttachment(string: app.debugDescription)
-        tree.name = name
-        tree.lifetime = .keepAlways
-        add(tree)
-    }
-
     /// Taps the middle of `frame` (window coordinates).
     @MainActor
     private func tap(_ app: XCUIApplication, at frame: CGRect) {
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.midY)).tap()
-    }
-
-    @MainActor
-    private func attachScreenshot(_ app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
     }
 }
 

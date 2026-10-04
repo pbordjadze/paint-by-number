@@ -6,8 +6,6 @@ struct RootView: View {
     var body: some View {
         #if DEBUG
         switch DemoMode.scenario {
-        case "pipeline":
-            PipelineCheckView()
         case "paint-unavailable":
             // The painting screen's stand-in when the device can't draw the canvas.
             CanvasUnavailableView(onClose: {})

@@ -15,7 +15,7 @@ struct ArtworkPaintingView: View {
     @Environment(Library.self) private var library
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
-    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
+    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .default
     @State private var autosaver: PaintingAutosaver?
     @State private var failure: Library.OpenError?
     @State private var regeneration: Task<Void, Never>?
@@ -81,7 +81,7 @@ struct ArtworkPaintingView: View {
         .animation(.snappy, value: notice)
         .animation(.snappy, value: saveFailed)
         .onChange(of: saveFailed) { _, failed in
-            if failed { UIAccessibility.post(notification: .announcement, argument: String(localized: "Couldn’t save progress")) }
+            if failed { Announcer.announce(String(localized: "Couldn’t save progress")) }
         }
         .toolbar(.hidden, for: .navigationBar)
         .background { CanvasGesturesOverZoomDismissal().frame(width: 0, height: 0) }
@@ -135,7 +135,7 @@ struct ArtworkPaintingView: View {
     private func show(_ openNotice: OpenNotice) {
         let shown = ShownNotice(notice: openNotice)
         notice = shown
-        UIAccessibility.post(notification: .announcement, argument: openNotice.text)
+        Announcer.announce(openNotice.text)
         Task {
             try? await Task.sleep(for: .seconds(4))
             if notice == shown { notice = nil }
@@ -172,9 +172,10 @@ struct ArtworkPaintingView: View {
 
 /// The zoom transition lets a swipe down or a pinch anywhere dismiss the pushed screen, which
 /// steals the canvas's pan and pinch and drops the painter back in the gallery. SwiftUI has no
-/// switch for it, so this turns those two recognizers off on the pushed controller's view once
-/// it has appeared; the edge swipe back and the Close button keep working. The recognizers are
-/// found by their UIKit class names (`PaintingNavigationTests` notices if they change).
+/// switch for it, so this turns the recognizers behind those two gestures off on the pushed
+/// controller's view once it has appeared; the edge swipe back and the Close button keep
+/// working. The recognizers are found by their UIKit class names (`PaintingNavigationTests`
+/// notices if they change).
 private struct CanvasGesturesOverZoomDismissal: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> Controller { Controller() }
     func updateUIViewController(_ controller: Controller, context: Context) {}
@@ -224,54 +225,6 @@ private struct RevisionObserver: View {
     }
 }
 
-/// Persists a painting session: progress about a second after the last change (right
-/// away when the painting is finished), and a fresh thumbnail when leaving.
-final class PaintingAutosaver {
-    let session: PaintingSession
-    let artworkID: UUID
-    private let library: Library
-    private var pending: Task<Void, Never>?
-    private var savedRevision: Int
-    private var thumbnailRevision: Int
-
-    static let delay: Duration = .seconds(1)
-
-    init(session: PaintingSession, artworkID: UUID, library: Library) {
-        self.session = session
-        self.artworkID = artworkID
-        self.library = library
-        savedRevision = session.revision
-        thumbnailRevision = session.revision
-    }
-
-    func sessionChanged() {
-        pending?.cancel()
-        if session.isComplete {
-            saveNow(refreshThumbnail: true)
-            return
-        }
-        pending = Task { [weak self] in
-            try? await Task.sleep(for: Self.delay)
-            guard !Task.isCancelled else { return }
-            self?.saveNow()
-        }
-    }
-
-    func saveNow(refreshThumbnail: Bool = false) {
-        pending?.cancel()
-        pending = nil
-        if session.revision != savedRevision {
-            savedRevision = session.revision
-            library.saveProgress(session.progress, for: artworkID)
-        }
-        if refreshThumbnail && session.revision != thumbnailRevision {
-            thumbnailRevision = session.revision
-            let library = library, id = artworkID, template = session.template, progress = session.progress
-            Task { await library.refreshThumbnail(id, template: template, progress: progress) }
-        }
-    }
-}
-
 private extension OpenNotice {
     var text: String {
         switch self {
@@ -295,24 +248,5 @@ private extension OpenNotice {
         case .progressReset: "exclamationmark.triangle"
         case .regenerated: "checkmark.circle"
         }
-    }
-}
-
-/// Loads the photo the open painting was made from, for the painting screen's photo peek:
-/// read by `PaintView` (`@Environment(\.sourcePhotoLoader)`) and called by `CanvasView`.
-nonisolated struct SourcePhotoLoader: Sendable {
-    let load: @Sendable (_ maxPixelSize: Int?) async -> CGImage?
-
-    func callAsFunction(maxPixelSize: Int? = nil) async -> CGImage? { await load(maxPixelSize) }
-}
-
-private nonisolated struct SourcePhotoLoaderKey: EnvironmentKey {
-    static let defaultValue: SourcePhotoLoader? = nil
-}
-
-extension EnvironmentValues {
-    var sourcePhotoLoader: SourcePhotoLoader? {
-        get { self[SourcePhotoLoaderKey.self] }
-        set { self[SourcePhotoLoaderKey.self] = newValue }
     }
 }

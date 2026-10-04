@@ -67,7 +67,7 @@ struct ImageCacheTests {
         let library = Library(store: ArtworkStore(root: root))
         let template = try Fixtures.sample()
         let artwork = try await library.create(ArtworkDraft(
-            title: "Parrots", template: template, settings: GenerationSettings(colorCount: 12),
+            title: "The Great Wave", template: template, settings: GenerationSettings(colorCount: 12),
             photo: nil, sampleName: nil, progress: nil))
         await library.flush()
 

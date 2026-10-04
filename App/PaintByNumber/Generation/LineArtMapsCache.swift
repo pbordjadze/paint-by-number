@@ -9,8 +9,9 @@ import PaintCore
 /// kept on disk in the app's caches by the photo's pixels, so the dozens of launches a CI run
 /// makes (one per screenshot scenario and UI test, each seeding the same bundled pictures)
 /// run the models and Vision once per picture instead of once per launch. What a launch gets
-/// back is exactly what it would compute; a file that doesn't read is recomputed. Release builds
-/// have none of this.
+/// back is exactly what it would compute; a file that doesn't read is recomputed. Keyed by the
+/// photo's pixels alone: bump `version` (or delete Caches/LineArtMaps) when a model, `EyeFinder`
+/// or `ObjectFinder` changes. Release builds have none of this.
 nonisolated enum LineArtMapsCache {
     private static let magic = "LAMC"
     private static let version: UInt32 = 1

@@ -43,8 +43,7 @@ final class PaintingNavigationTests: XCTestCase {
         let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
         let before = badge.label
         for _ in 0..<3 { app.buttons["Undo"].tap() }
-        sleep(1)
-        XCTAssertNotEqual(badge.label, before, "Undo didn't take anything back")
+        XCTAssertTrue(wait(for: badge, toMatch: NSPredicate(format: "label != %@", before)), "Undo didn't take anything back")
     }
 
     /// The Hint button flies the camera to an unpainted area.
@@ -55,12 +54,7 @@ final class PaintingNavigationTests: XCTestCase {
         app.buttons["Hint"].tap()
         sleep(2)
         let after = app.screenshot()
-        for (shot, name) in [(before, "before-hint"), (after, "after-hint")] {
-            let attachment = XCTAttachment(screenshot: shot)
-            attachment.name = name
-            attachment.lifetime = .keepAlways
-            add(attachment)
-        }
+        for (shot, name) in [(before, "before-hint"), (after, "after-hint")] { attach(shot, named: name) }
         XCTAssertNotEqual(canvasArea(of: before), canvasArea(of: after), "Hint didn't move the canvas")
     }
 
@@ -93,7 +87,7 @@ final class PaintingNavigationTests: XCTestCase {
 
         let before = selected()
         app.typeKey("]", modifierFlags: [])
-        sleep(1)
+        _ = waitUntil(timeout: Self.stateTimeout) { !selected().subtracting(before).isEmpty }
         let newlySelected = try XCTUnwrap(selected().subtracting(before).first, "] didn't select another color")
         let swatch = swatches[newlySelected]
 
@@ -226,13 +220,5 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 90), "The painting didn't open")
         sleep(2)
         return app
-    }
-
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
     }
 }

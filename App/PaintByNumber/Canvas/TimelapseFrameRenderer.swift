@@ -24,25 +24,12 @@ nonisolated final class TimelapseFrameRenderer {
 
     init?(template: Template, progress: PaintProgress, options: CanvasSnapshot.Options = .thumbnail) {
         guard let context = RenderContext.shared, let scene = CanvasScene(template: template, context: context) else { return nil }
-        var origins: [SIMD2<Float>] = []
-        var radii: [Float] = []
-        for (i, region) in template.regions.enumerated() {
-            let b = region.bounds
-            let o = template.labels(ofRegion: i).first?.position ?? SIMD2(Float(b.minX + b.maxX) / 2, Float(b.minY + b.maxY) / 2)
-            origins.append(o)
-            var r: Float = 1
-            for x in [Float(b.minX), Float(b.maxX)] {
-                for y in [Float(b.minY), Float(b.maxY)] { r = max(r, ((SIMD2(x, y) - o) * (SIMD2(x, y) - o)).sum().squareRoot()) }
-            }
-            radii.append(r)
-        }
-        let states = template.regions.indices.map { RegionState.settled(painted: false, origin: origins[$0], seed: 0) }
+        let origins = template.regions.indices.map { template.anchor(ofRegion: $0) }
+        let radii = template.regions.indices.map { template.regions[$0].bounds.farthestCorner(from: origins[$0]) }
+        let states = [RegionState](repeating: .settled(painted: false), count: template.regions.count)
         var stateBuffers: [any MTLBuffer] = []
         for _ in 0..<TimelapseExporter.framesInFlight {
-            let buffer: (any MTLBuffer)? = states.isEmpty
-                ? context.device.makeBuffer(length: 16, options: .storageModeShared)
-                : context.device.makeBuffer(bytes: states, length: MemoryLayout<RegionState>.stride * states.count, options: .storageModeShared)
-            guard let buffer else { return nil }
+            guard let buffer = CanvasScene.buffer(states, context.device) else { return nil }
             stateBuffers.append(buffer)
         }
         self.context = context
@@ -53,7 +40,7 @@ nonisolated final class TimelapseFrameRenderer {
         self.stateBuffers = stateBuffers
         var options = options
         // Read once, not for every frame.
-        if scene.isLayered && options.lineAppearance == nil { options.lineAppearance = .stored() }
+        if scene.lineArtStyle != nil && options.lineAppearance == nil { options.lineAppearance = .stored() }
         self.options = options
         CVMetalTextureCacheCreate(nil, nil, context.device, nil, &cache)
     }
@@ -72,9 +59,11 @@ nonisolated final class TimelapseFrameRenderer {
         for (k, r) in order.enumerated() {
             let age = Float(strokes - k) + fraction
             if k < strokes || (k == strokes && fraction > 0) {
-                states[r] = RegionState(origin: origins[r], start: -age, duration: 1, radius: radii[r], painted: 1, seed: Float(r % 61) * 0.73)
+                states[r] = RegionState(
+                    origin: origins[r], start: -age, duration: 1, radius: radii[r], painted: 1,
+                    seed: RegionState.frontSeed(forRegion: r))
             } else {
-                states[r] = .settled(painted: false, origin: origins[r], seed: 0)
+                states[r] = .settled(painted: false)
             }
         }
 
@@ -96,7 +85,7 @@ nonisolated final class TimelapseFrameRenderer {
             commands, scene: scene, states: stateBuffer, uniforms: u,
             targets: RenderContext.Targets(color: texture, multisample: multisample, outlines: outlines),
             content: RenderContext.Content(
-                outlines: options.outlines || scene.lineArtStyle == .coloringBook, numbers: options.numbers,
+                outlines: options.drawsLines(for: scene), numbers: options.numbers,
                 clear: MTLClearColor(red: Double(background.x), green: Double(background.y), blue: Double(background.z), alpha: 1)))
         commands.commit()
         return {

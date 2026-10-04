@@ -11,19 +11,11 @@ final class RecoveryTests: XCTestCase {
         let regenerate = app.buttons["Regenerate"]
         XCTAssertTrue(regenerate.waitForExistence(timeout: 90), "The recovery screen didn't appear")
         XCTAssertTrue(app.buttons["Delete Painting"].exists)
-        attach(app, named: "recovery")
+        attachScreenshot(of: app, named: "recovery")
 
         regenerate.tap()
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 120), "The regenerated painting didn't open")
         sleep(1)
-        attach(app, named: "regenerated")
-    }
-
-    @MainActor
-    private func attach(_ app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
+        attachScreenshot(of: app, named: "regenerated")
     }
 }

@@ -37,9 +37,7 @@ struct RasterizerTests {
             for x in 50..<110 where pixels[x, y].x < 170 { ink += 1 }
         }
         #expect(ink > 40)
-        if let png = ImageCodec.pngData(image) {
-            Attachment.record(png, named: "stripes-template-\(vector ? "vector" : "raster").png")
-        }
+        record(image, "stripes-template-\(vector ? "vector" : "raster")")
     }
 
     @Test func numbersAreNeverDropped() throws {
@@ -80,9 +78,7 @@ struct RasterizerTests {
         }
         #expect(outside == 0)
         #expect(inside > 100)
-        if let png = ImageCodec.pngData(image) {
-            Attachment.record(png, named: "three-digit-number-\(printable ? "printable" : "template").png")
-        }
+        record(image, "three-digit-number-\(printable ? "printable" : "template")")
     }
 
     /// A number in a region with the minimum room stays inside that room at print scale, both
@@ -131,14 +127,14 @@ struct RasterizerTests {
         let finished = try #require(TemplateRasterizer.pngData(t, style: .finished, maxPixelSize: 1600))
         let numbers = try #require(TemplateRasterizer.pngData(t, style: .template, maxPixelSize: 2000))
         #expect(thumbnail.count > 10_000)
-        Attachment.record(thumbnail, named: "parrots-thumbnail-40.png")
-        Attachment.record(finished, named: "parrots-finished.png")
-        Attachment.record(numbers, named: "parrots-numbers.png")
+        Attachment.record(thumbnail, named: "great-wave-thumbnail-40.png")
+        Attachment.record(finished, named: "great-wave-finished.png")
+        Attachment.record(numbers, named: "great-wave-numbers.png")
     }
 
     @Test(arguments: zip([12, 150], [Float(0.2), 1]))
     func generatedTemplatesKeepEveryNumberLegible(colors: Int, detail: Float) throws {
-        // The bundled photo decoded on device, through the whole pipeline: every label has
+        // A library picture decoded on device, through the whole pipeline: every label has
         // room for its number at the legible size (what CreateModel asserts in Debug builds).
         let t = try Fixtures.sample(colors: colors, detail: detail)
         let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
@@ -164,15 +160,15 @@ struct PDFExporterTests {
 
     @Test func samplePDFRendersPages() throws {
         let t = try Fixtures.sample(colors: 18)
-        let data = PDFExporter.document(for: t, title: "Parrots", paper: .a4)
+        let data = PDFExporter.document(for: t, title: "The Great Wave", paper: .a4)
         let document = try #require(CGDataProvider(data: data as CFData).flatMap { CGPDFDocument($0) })
         let sheets = PDFExporter.sheets(for: t, paper: .a4)
         // The template (an overview and its sheets when tiled), then the color key.
         #expect(document.numberOfPages == (sheets.isTiled ? sheets.count + 2 : 2))
-        Attachment.record(data, named: "parrots.pdf")
+        Attachment.record(data, named: "great-wave.pdf")
         for index in 1...document.numberOfPages {
             let page = try #require(document.page(at: index))
-            let image = try #require(render(page, scale: 2))
+            let image = try #require(Fixtures.rasterize(page, scale: 2))
             let pixels = PixelReader(image)
             // Something besides white paper was drawn.
             var ink = 0
@@ -180,7 +176,7 @@ struct PDFExporterTests {
                 for x in stride(from: 0, to: pixels.width, by: 4) where pixels[x, y].x < 200 { ink += 1 }
             }
             #expect(ink > 50)
-            if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "parrots-pdf-page\(index).png") }
+            record(image, "great-wave-pdf-page\(index)")
         }
     }
 
@@ -206,7 +202,7 @@ struct PDFExporterTests {
         for (color, nickname) in zip(t.palette, nicknames) {
             let shade = ColorNameText.title(color.colorName)
             #expect(key.contains(shade), "\(shade) missing from the key: \(key)")
-            #expect(key.contains(PDFExporter.hex(color.rgb)), "hex missing from the key: \(key)")
+            #expect(key.contains(color.hexCode), "hex missing from the key: \(key)")
             if let nickname { #expect(key.contains(nickname), "\(nickname) missing from the key: \(key)") }
         }
         // Heading, then the plain name below it.
@@ -215,13 +211,18 @@ struct PDFExporterTests {
         Attachment.record(data, named: "stripes-nicknames.pdf")
     }
 
+    /// Uppercase "#RRGGBB", halves rounded away from zero, out-of-gamut channels clamped.
+    @Test func hexCodeWritesClampedUppercaseRGB() {
+        #expect(PaletteColor(oklab: .zero, rgb: SIMD3(1, 0.5, 0)).hexCode == "#FF8000")
+        #expect(PaletteColor(oklab: .zero, rgb: SIMD3(1.2, -0.1, 0.2)).hexCode == "#FF0033")
+    }
+
     /// Entries with a nickname are three lines tall: the key still fits every page up to 150 colors.
     @Test func threeLineKeyFitsUpTo150Colors() {
         for paper in PDFExporter.Paper.allCases {
             for landscape in [false, true] {
                 let size = landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size
-                let content = CGRect(origin: .zero, size: size).insetBy(dx: 36, dy: 36)
-                let body = CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
+                let body = PDFExporter.bodyRect(CGRect(origin: .zero, size: size))
                 for count in [1, 24, 100, 150] {
                     let layout = PDFExporter.keyLayout(count: count, widestEntry: 150, lines: 3, in: body)
                     #expect(layout.height <= body.height, "\(paper) landscape \(landscape), \(count) colors")
@@ -236,9 +237,7 @@ struct PDFExporterTests {
         for paper in PDFExporter.Paper.allCases {
             for landscape in [false, true] {
                 let size = landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size
-                // Page margins and the header, as `document` lays them out.
-                let content = CGRect(origin: .zero, size: size).insetBy(dx: 36, dy: 36)
-                let body = CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
+                let body = PDFExporter.bodyRect(CGRect(origin: .zero, size: size))
                 for count in [0, 1, 12, 24, 48, 100, 150] {
                     for widest: CGFloat in [110, 160] {
                         let layout = PDFExporter.keyLayout(count: count, widestEntry: widest, in: body)
@@ -253,7 +252,7 @@ struct PDFExporterTests {
                 }
             }
         }
-        let a4 = CGRect(x: 36, y: 72, width: PDFExporter.Paper.a4.size.width - 72, height: PDFExporter.Paper.a4.size.height - 108)
+        let a4 = PDFExporter.bodyRect(CGRect(origin: .zero, size: PDFExporter.Paper.a4.size))
         #expect(PDFExporter.keyLayout(count: 24, widestEntry: 120, in: a4).scale == 1)
     }
 
@@ -279,7 +278,7 @@ struct PDFExporterTests {
         // Each sheet shows its part of the outlines: the separators at canvas x = 700 and 1400.
         for index in 2...(sheets.count + 1) {
             let page = try #require(document.page(at: index))
-            let image = try #require(render(page, scale: 2))
+            let image = try #require(Fixtures.rasterize(page, scale: 2))
             let pixels = PixelReader(image)
             var ink = 0
             // Inside the body (72...576 pt down, 36...756 pt across at 2 px/pt), clear of the
@@ -298,127 +297,5 @@ struct PDFExporterTests {
         #expect(PDFExporter.Paper.default(for: Locale.Region("US")) == .letter)
         #expect(PDFExporter.Paper.default(for: Locale.Region("DE")) == .a4)
         #expect(PDFExporter.Paper.default(for: nil) == .a4)
-    }
-
-    private func render(_ page: CGPDFPage, scale: CGFloat) -> CGImage? {
-        let box = page.getBoxRect(.mediaBox)
-        let width = Int(box.width * scale), height = Int(box.height * scale)
-        guard let ctx = CGContext(
-            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
-        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        ctx.scaleBy(x: scale, y: scale)
-        ctx.drawPDFPage(page)
-        return ctx.makeImage()
-    }
-}
-
-@MainActor
-struct PreferencesTests {
-    @Test func defaultsAndSessionMapping() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        var preferences = Preferences(defaults: defaults)
-        #expect(preferences.autoAdvance && preferences.haptics && preferences.sounds)
-        #expect(preferences.colorNames == .playful)
-
-        defaults.set(false, forKey: SettingsKey.autoAdvance)
-        defaults.set("a4", forKey: SettingsKey.paperSize)
-        defaults.set(false, forKey: "hapticsEnabled")
-        defaults.set("plain", forKey: SettingsKey.colorNames)
-        preferences = Preferences(defaults: defaults)
-        #expect(preferences.colorNames == .plain)
-        #expect(!preferences.autoAdvance)
-        #expect(!preferences.haptics)
-        #expect(preferences.paper == .a4)
-
-        let session = PaintingSession(template: Fixtures.stripes())
-        #expect(session.autoAdvance && session.colorNameStyle == .playful)
-        preferences.apply(to: session)
-        #expect(!session.autoAdvance && session.colorNameStyle == .plain)
-    }
-
-    /// An unknown stored value is the default, not a crash or a third style.
-    @Test func colorNameStyleFallsBackToPlayful() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        for stored in ["", "shouty", "Playful"] {
-            defaults.set(stored, forKey: SettingsKey.colorNames)
-            #expect(Preferences(defaults: defaults).colorNames == .playful, "\(stored)")
-        }
-        defaults.set("playful", forKey: SettingsKey.colorNames)
-        #expect(Preferences(defaults: defaults).colorNames == .playful)
-        #expect(ColorNameStyle.allCases == [.playful, .plain])
-    }
-
-    /// The Paper preference defaults to light, round-trips its raw values, and ignores
-    /// anything it doesn't know.
-    @Test func paperAppearanceDefaultsAndParses() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        #expect(Preferences(defaults: defaults).paperAppearance == .light)
-        for appearance in PaperAppearance.allCases {
-            defaults.set(appearance.rawValue, forKey: SettingsKey.paperAppearance)
-            #expect(Preferences(defaults: defaults).paperAppearance == appearance)
-        }
-        defaults.set("sepia", forKey: SettingsKey.paperAppearance)
-        #expect(Preferences(defaults: defaults).paperAppearance == .light)
-        #expect(SettingsKey.paperAppearance == "paperAppearance")
-        #expect(Set(PaperAppearance.allCases.map(\.rawValue)) == ["light", "dark", "automatic"])
-    }
-
-    /// Painting Length defaults to Relaxed, round-trips its raw values, ignores anything it
-    /// doesn't know, and is what the create flow aims for.
-    @Test func paintingLengthDefaultsAndPersists() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        #expect(Preferences(defaults: defaults).paintingLength == .relaxed)
-        #expect(PaintingLength.default == .relaxed)
-        for length in PaintingLength.allCases {
-            defaults.set(length.rawValue, forKey: SettingsKey.paintingLength)
-            #expect(Preferences(defaults: defaults).paintingLength == length)
-            #expect(!length.name.isEmpty && !length.footer.isEmpty)
-        }
-        defaults.set("marathon", forKey: SettingsKey.paintingLength)
-        #expect(Preferences(defaults: defaults).paintingLength == .relaxed)
-        #expect(SettingsKey.paintingLength == "paintingLength")
-        #expect(Set(PaintingLength.allCases.map(\.rawValue)) == ["quick", "relaxed", "detailed"])
-        #expect(PaintingLength.relaxed.footer == "Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings.")
-
-        #expect(CreateModel(paintingLength: .quick).paintingLength == .quick)
-    }
-
-    @Test func createModelMapsSliders() {
-        let model = CreateModel()
-        // The sliders wait at the generator's defaults until a photo's suggestion moves them.
-        #expect(model.settings == GenerationSettings())
-        #expect(model.settingsOrigin == nil && model.decision == nil && !model.isChoosingSettings)
-        model.colorCount = 30
-        model.detail = 0.25
-        model.smoothness = 0.75
-        #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
-        model.colorCount = 11.6
-        #expect(model.settings.colorCount == 12)
-        model.colorCount = 999
-        #expect(model.settings.colorCount == GenerationSettings.colorCountRange.upperBound)
-        #expect(model.preview == nil && !model.isFinal)
-    }
-
-    @Test func formatsDurations() {
-        #expect(PaintByNumber.PaintingTime.approximate(10 * 60) == "~10 min")
-        #expect(PaintByNumber.PaintingTime.approximate(2 * 3600) == "~2 h")
-        #expect(PaintByNumber.PaintingTime.approximate(1.4 * 3600) == "~1.5 h")
-        #expect(PaintByNumber.PaintingTime.approximate(30 * 3600) == "~30 h")
-        #expect(PaintByNumber.PaintingTime.spent(125 * 60) == "2 h 5 min")
-        #expect(PaintByNumber.PaintingTime.spent(20) == "< 1 min")
     }
 }

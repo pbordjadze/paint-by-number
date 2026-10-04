@@ -140,11 +140,7 @@ final class SampleImages {
 
     private let images = ImageCache<String>(costLimit: SampleImages.costLimit)
 
-    func cached(_ sample: Sample, maxPixelSize: Int = 640) -> CGImage? {
-        images.image(for: "\(sample.id)@\(maxPixelSize)")
-    }
-
-    func load(_ sample: Sample, maxPixelSize: Int = 640) async -> CGImage? {
+    func load(_ sample: Sample, maxPixelSize: Int) async -> CGImage? {
         let key = "\(sample.id)@\(maxPixelSize)"
         if let hit = images.image(for: key) { return hit }
         guard let url = sample.url else { return nil }

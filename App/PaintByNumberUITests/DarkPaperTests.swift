@@ -40,12 +40,4 @@ final class DarkPaperTests: XCTestCase {
         app.launch()
         return app
     }
-
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
-    }
 }

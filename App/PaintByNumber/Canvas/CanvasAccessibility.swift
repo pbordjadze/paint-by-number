@@ -6,7 +6,7 @@ import simd
 
 /// Where an area sits on the canvas, in thirds ("top left" … "bottom right"), so VoiceOver
 /// users know where on the picture they are.
-nonisolated enum CanvasPosition: Int, CaseIterable, Sendable {
+nonisolated enum CanvasPosition: Int, Sendable {
     case topLeft, top, topRight, left, center, right, bottomLeft, bottom, bottomRight
 
     /// Column = clamp(floor(3·x / width), 0, 2), rows alike; non-finite input maps to the middle.
@@ -60,8 +60,7 @@ nonisolated enum CanvasAccessibility {
     /// Regions whose anchor lies in `visible` (canvas units, edges included): the `limit`
     /// nearest `center` (ties: lower index), in reading order.
     static func visibleAreas(
-        _ regions: [Int], anchors: [SIMD2<Float>], visible: CGRect, center: SIMD2<Float>, rowHeight: Float,
-        limit: Int = CanvasAccessibility.limit
+        _ regions: [Int], anchors: [SIMD2<Float>], visible: CGRect, center: SIMD2<Float>, rowHeight: Float
     ) -> [Int] {
         let inside = regions.filter { r in
             let a = anchors[r]
@@ -71,7 +70,7 @@ nonisolated enum CanvasAccessibility {
         let nearest = inside
             .map { (distance: simd_distance_squared(anchors[$0], center), region: $0) }
             .sorted { ($0.distance, $0.region) < ($1.distance, $1.region) }
-            .prefix(max(limit, 0))
+            .prefix(limit)
             .map { $0.region }
         return nearest.sorted { key($0, anchor: anchors[$0], rowHeight: rowHeight) < key($1, anchor: anchors[$1], rowHeight: rowHeight) }
     }

@@ -77,7 +77,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Settings › Advanced › Line Appearance: how a layered template's lines draw at each zoom.
     /// The next frame uses it, so a change shows at once; classic templates ignore it.
     var lineAppearance = LineAppearance.default {
-        didSet { if lineAppearance != oldValue, scene?.isLayered == true { requestRender() } }
+        didSet { if lineAppearance != oldValue, scene?.lineArtStyle != nil { requestRender() } }
     }
 
     private let template: Template
@@ -95,18 +95,16 @@ final class CanvasView: UIView, PaintingCanvas {
     private var lastCamera: Camera?
 
     // Visual state fed to the shaders (renderer clock, seconds)
-    private var selectionTime: Float = -10_000
+    private var selectionTime = CanvasClock.never
     private var pulseRegion = -1
-    private var pulseStart: Float = -10_000
+    private var pulseStart = CanvasClock.never
     private var bumpRegion = -1
-    private var bumpStart: Float = -10_000
+    private var bumpStart = CanvasClock.never
     private var hoverRegion = -1
     private var brushPoint: CGPoint?
-    private var numbersFrom: Float = 1
-    private var numbersTo: Float = 1
-    private var numbersStart: Float = -10_000
+    private var numbersFade = Fade(from: 1, to: 1, duration: 0.25)
     /// When the finishing shine starts (renderer clock; tests read it).
-    private(set) var shineStart: Float = -10_000
+    private(set) var shineStart = CanvasClock.never
     private var replayTask: Task<Void, Never>?
     private var isReplaying = false
     private var shineColor = -1
@@ -116,9 +114,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private var lastSparkles: CFTimeInterval = 0
     private var photoTexture: (any MTLTexture)?
     private var photoTask: Task<Void, Never>?
-    private var photoFrom: Float = 0
-    private var photoTo: Float = 0
-    private var photoStart: Float = -10_000
+    private var photoFade = Fade(from: 0, to: 0, duration: 0.2)
 
     // Camera
     private var fitZoom: CGFloat = 1
@@ -160,7 +156,6 @@ final class CanvasView: UIView, PaintingCanvas {
     private static let margin: CGFloat = 16
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
-    private static let photoFade: Float = 0.2
 
     private struct Camera: Equatable {
         var zoom: CGFloat
@@ -180,7 +175,7 @@ final class CanvasView: UIView, PaintingCanvas {
         self.session = session
         let template = session.template
         self.template = template
-        anchors = template.regions.indices.map { CanvasView.labelPosition(template, $0) }
+        anchors = template.regions.indices.map { template.anchor(ofRegion: $0) }
         labelRadii = template.regions.indices.map { i in
             template.labels(ofRegion: i).first?.radius ?? template.regions[i].inscribedRadius
         }
@@ -207,7 +202,7 @@ final class CanvasView: UIView, PaintingCanvas {
         accessibilityIdentifier = "canvas"
         accessibilityCustomActions = accessibilityActionList
         accessibilityCustomRotors = [areasRotor]
-        registerForTraitChanges([UITraitUserInterfaceStyle.self], action: #selector(appearanceChanged))
+        registerForTraitChanges([UITraitUserInterfaceStyle.self], action: #selector(paperChanged))
         tracePaper()
         session.canvas = self
         session.onEvent { [weak self] event in self?.celebrate(event) }
@@ -222,16 +217,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private var metalLayer: CAMetalLayer { layer as! CAMetalLayer }
 
     private static func settledStates(template: Template, progress: PaintProgress) -> [RegionState] {
-        template.regions.indices.map { i in
-            RegionState.settled(painted: progress.isPainted(i), origin: labelPosition(template, i), seed: Float(i % 61) * 0.73)
-        }
-    }
-
-    /// Where a region's number sits; the bounds centre for a region without a label.
-    static func labelPosition(_ template: Template, _ region: Int) -> SIMD2<Float> {
-        if let label = template.labels(ofRegion: region).first { return label.position }
-        let b = template.regions[region].bounds
-        return SIMD2(Float(b.minX + b.maxX) / 2, Float(b.minY + b.maxY) / 2)
+        template.regions.indices.map { RegionState.settled(painted: progress.isPainted($0)) }
     }
 
     // MARK: Setup
@@ -358,16 +344,13 @@ final class CanvasView: UIView, PaintingCanvas {
         cameraDidSettle()
     }
 
-    @objc private func appearanceChanged() {
-        paperChanged()
-    }
-
     /// The paper, backdrop and ink the next frame draws with.
-    var canvasPalette: CanvasPalette {
+    private var canvasPalette: CanvasPalette {
         .resolve(paperAppearance, interfaceIsDark: traitCollection.userInterfaceStyle == .dark)
     }
 
-    private func paperChanged() {
+    /// The Paper preference or the system appearance changed.
+    @objc private func paperChanged() {
         tracePaper()
         requestRender()
     }
@@ -570,7 +553,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// view), centre it, then pulse it.
     func reveal(region: Int) {
         let r = template.regions[region]
-        let center = Self.labelPosition(template, region)
+        let center = anchors[region]
         let labelSize = CGFloat(max(scene?.labelSizes[region] ?? 8, 0.5))
         let extent = CGFloat(max(r.bounds.width, r.bounds.height, 1))
         let avail = bounds.inset(by: chromeInsets)
@@ -630,14 +613,13 @@ final class CanvasView: UIView, PaintingCanvas {
             skippedFrames = 0
         } else {
             skippedFrames += 1
-            if skippedFrames == 120 { Self.log.error("canvas: no frame produced for 120 ticks") }
+            if skippedFrames == 120 { Log.canvas.error("canvas: no frame produced for 120 ticks") }
         }
     }
 
     /// Frames presented so far (diagnostics and tests).
     private(set) var framesRendered = 0
     private var skippedFrames = 0
-    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "canvas")
 
     /// The paint state the shaders currently see for a region (tests).
     func regionState(_ region: Int) -> RegionState? { renderer?.states[region] }
@@ -665,7 +647,7 @@ final class CanvasView: UIView, PaintingCanvas {
         if let selected, let scene, selected < scene.paletteLinear.count {
             u.select(scene.paletteLinear[selected], palette: palette)
         }
-        u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersVisibility(at: time))
+        u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersFade.value(at: time))
         switch scene?.lineArtStyle {
         case .layered:
             u.setLines(LineStyle(lineAppearance, zoom: Float(camera.zoom / fitZoom), classicStrength: LineStyle.classicStrength(depth: depth)))
@@ -684,28 +666,21 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         u.shine = SIMD4(shineStart, Float(shineColor), 0, 0)
         u.ids = SIMD4(Int32(selected ?? -1), Int32(isReplaying ? -1 : hoverRegion), Int32(pulseRegion), Int32(bumpRegion))
-        u.photo = SIMD4(photoVisibility(at: time), 0, 0, 0)
+        u.photo = SIMD4(photoFade.value(at: time), 0, 0, 0)
         return u
     }
 
     private func numbersChanged() {
         let t = now()
-        numbersFrom = numbersVisibility(at: t)
-        numbersTo = showsNumbers && !isReplaying ? 1 : 0
-        numbersStart = t
+        numbersFade.retarget(to: showsNumbers && !isReplaying ? 1 : 0, at: t)
         activeUntil = max(activeUntil, t + 0.3)
         requestRender()
-    }
-
-    private func numbersVisibility(at t: Float) -> Float {
-        let k = min(max((t - numbersStart) / 0.25, 0), 1)
-        return numbersFrom + (numbersTo - numbersFrom) * k * k * (3 - 2 * k)
     }
 
     // MARK: Source photo
 
     /// Opacity of the photo overlay now (tests and demos).
-    var photoOpacity: Float { photoVisibility(at: now()) }
+    var photoOpacity: Float { photoFade.value(at: now()) }
 
     private func photoChanged() {
         accessibilityValue = showsPhoto ? String(localized: "Showing the photo") : nil
@@ -732,7 +707,7 @@ final class CanvasView: UIView, PaintingCanvas {
             guard let self else { return }
             photoTask = nil
             guard let texture else {
-                Self.log.error("canvas: source photo unavailable")
+                Log.canvas.error("canvas: source photo unavailable")
                 onPhotoUnavailable?()
                 return
             }
@@ -749,16 +724,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     private func fadePhoto(to target: Float) {
         let t = now()
-        photoFrom = photoVisibility(at: t)
-        photoTo = target
-        photoStart = t
-        activeUntil = max(activeUntil, t + Self.photoFade + 0.05)
+        photoFade.retarget(to: target, at: t)
+        activeUntil = max(activeUntil, t + photoFade.duration + 0.05)
         requestRender()
-    }
-
-    private func photoVisibility(at t: Float) -> Float {
-        let k = min(max((t - photoStart) / Self.photoFade, 0), 1)
-        return photoFrom + (photoTo - photoFrom) * k * k * (3 - 2 * k)
     }
 
     // MARK: Replay
@@ -776,9 +744,7 @@ final class CanvasView: UIView, PaintingCanvas {
         let lift: Float = reduceMotion ? 0 : 0.45
         let time = now()
         for r in painted {
-            renderer.update(r, RegionState(
-                origin: Self.labelPosition(template, r), start: time, duration: lift, radius: 0, painted: 0,
-                seed: Float(r % 61) * 0.73))
+            renderer.update(r, .unpainting(start: time, duration: lift))
         }
         activeUntil = max(activeUntil, time + lift)
         requestRender()
@@ -790,11 +756,11 @@ final class CanvasView: UIView, PaintingCanvas {
             let step = span / Float(painted.count)
             let begin = now()
             for (i, r) in painted.enumerated() {
-                let origin = Self.labelPosition(template, r)
+                let origin = anchors[r]
                 renderer.update(r, RegionState(
                     origin: origin, start: begin + Float(i) * step, duration: reduceMotion ? 0 : 0.5,
-                    radius: reduceMotion ? 0 : farthestDistance(from: origin, in: template.regions[r].bounds), painted: 1,
-                    seed: Float(r % 61) * 0.73))
+                    radius: reduceMotion ? 0 : template.regions[r].bounds.farthestCorner(from: origin), painted: 1,
+                    seed: RegionState.frontSeed(forRegion: r)))
             }
             activeUntil = max(activeUntil, begin + span + 1.5)
             requestRender()
@@ -843,16 +809,17 @@ final class CanvasView: UIView, PaintingCanvas {
         let animate = animated && !reduceMotion
         var longest: Float = 0
         for r in regions {
-            let seed = Float(r % 61) * 0.73
             guard animate else {
-                renderer.update(r, .settled(painted: true, origin: Self.labelPosition(template, r), seed: seed))
+                renderer.update(r, .settled(painted: true))
                 continue
             }
             let start = paintOrigin(for: r, near: origin)
-            let radius = farthestDistance(from: start, in: template.regions[r].bounds)
+            let radius = template.regions[r].bounds.farthestCorner(from: start)
             // Bigger on screen → a little longer, so every fill reads as one smooth stroke.
             let duration = min(0.6, max(0.25, 0.2 + radius * zoom / 700)) * fillDurationScale
-            renderer.update(r, RegionState(origin: start, start: time, duration: duration, radius: radius, painted: 1, seed: seed))
+            renderer.update(r, RegionState(
+                origin: start, start: time, duration: duration, radius: radius, painted: 1,
+                seed: RegionState.frontSeed(forRegion: r)))
             longest = max(longest, duration)
         }
         if animated { FeedbackEngine.shared.fillDuration = TimeInterval(longest) }
@@ -874,6 +841,7 @@ final class CanvasView: UIView, PaintingCanvas {
         if sparkleLayers.isEmpty {
             sparkleLayers = (0..<4).map { _ in
                 let sparkle = CAShapeLayer()
+                // `Theme.gold`, spelled out: the theme is SwiftUI, this file isn't.
                 sparkle.fillColor = UIColor(red: 0.788, green: 0.635, blue: 0.290, alpha: 1).cgColor
                 sparkle.opacity = 0
                 sparkle.zPosition = 10
@@ -914,10 +882,7 @@ final class CanvasView: UIView, PaintingCanvas {
         guard let renderer else { return }
         let time = now()
         for r in regions {
-            let origin = Self.labelPosition(template, r), seed = Float(r % 61) * 0.73
-            renderer.update(r, reduceMotion
-                ? .settled(painted: false, origin: origin, seed: seed)
-                : RegionState(origin: origin, start: time, duration: 0.25, radius: 0, painted: 0, seed: seed))
+            renderer.update(r, reduceMotion ? .settled(painted: false) : .unpainting(start: time, duration: 0.25))
         }
         activeUntil = max(activeUntil, time + 0.3)
         requestRender()
@@ -969,14 +934,7 @@ final class CanvasView: UIView, PaintingCanvas {
                 }
             }
         }
-        return best ?? Self.labelPosition(template, region)
-    }
-
-    private func farthestDistance(from p: SIMD2<Float>, in b: PixelBounds) -> Float {
-        let xs = [Float(b.minX), Float(b.maxX)], ys = [Float(b.minY), Float(b.maxY)]
-        var d: Float = 1
-        for x in xs { for y in ys { d = max(d, simd_distance(p, SIMD2(x, y))) } }
-        return d
+        return best ?? anchors[region]
     }
 
     // MARK: Gestures
@@ -1113,9 +1071,8 @@ final class CanvasView: UIView, PaintingCanvas {
         let a = canvasPoint(forView: inner.origin)
         let b = canvasPoint(forView: CGPoint(x: inner.maxX, y: inner.maxY))
         let visible = CGRect(x: CGFloat(a.x), y: CGFloat(a.y), width: CGFloat(b.x - a.x), height: CGFloat(b.y - a.y))
-        let candidates = regionsByColor[color].filter { !session.isPainted($0) }
         let regions = CanvasAccessibility.visibleAreas(
-            candidates, anchors: anchors, visible: visible, center: visibleCenter, rowHeight: Float(44 / camera.zoom))
+            unpaintedOfSelectedColor(), anchors: anchors, visible: visible, center: visibleCenter, rowHeight: Float(44 / camera.zoom))
         guard !regions.isEmpty else {
             areaElements = [:]
             return [configuredPlaceholder(frame: area)]

@@ -15,8 +15,8 @@ final class OpenFileTests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 60), "The opened file didn't open the create flow")
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 90)
-        XCTAssertEqual(app.textFields["painting-title"].placeholderValue, "Morning Parrots")
-        attach(app, named: "create-from-file")
+        XCTAssertEqual(app.textFields["painting-title"].placeholderValue, "Winter Fox")
+        attachScreenshot(of: app, named: "create-from-file")
     }
 
     @MainActor
@@ -51,14 +51,6 @@ final class OpenFileTests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Couldn’t Open Photo"].waitForExistence(timeout: 60), "No failure state for a file that isn't a photo")
         XCTAssertTrue(app.buttons["Close"].exists)
-        attach(app, named: "create-from-file-failed")
-    }
-
-    @MainActor
-    private func attach(_ app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
+        attachScreenshot(of: app, named: "create-from-file-failed")
     }
 }

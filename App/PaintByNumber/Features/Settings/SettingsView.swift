@@ -14,7 +14,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
-    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
+    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .default
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
     @State private var path: [Destination] = []
@@ -25,7 +25,7 @@ struct SettingsView: View {
     private enum Destination: Hashable { case acknowledgements, advanced }
     @State private var tipsReset = false
 
-    init(advancedFullScreen: Bool = false) {
+    init(advancedFullScreen: Bool) {
         self.advancedFullScreen = advancedFullScreen
         #if DEBUG
         switch ShellDemo.current {

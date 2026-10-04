@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings › About: the app version and the acknowledgements; Settings › Paper.
+/// Settings: About (version, acknowledgements), Paper, Painting Length and Color Names.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -48,10 +48,13 @@ final class SettingsTests: XCTestCase {
             XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Paper picker has no \(choice)")
         }
         app.buttons["Dark"].firstMatch.tap()
-        let chosen = NSPredicate(format: "label CONTAINS 'Dark' OR value CONTAINS 'Dark'")
-        let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5)
-        XCTAssertEqual(result, .completed, "Choosing Dark didn't change the picker: \(describe(picker))")
+        XCTAssertTrue(shows(picker, "Dark"), "Choosing Dark didn't change the picker: \(describe(picker))")
         attachScreenshot(of: app, named: "settings-paper-dark")
+        // The choice is stored in the simulator's defaults: put it back for the other tests.
+        picker.tap()
+        XCTAssertTrue(app.buttons["Light"].waitForExistence(timeout: 5))
+        app.buttons["Light"].firstMatch.tap()
+        XCTAssertTrue(shows(picker, "Light"), "Choosing Light didn't change the picker: \(describe(picker))")
     }
 
     /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps
@@ -72,9 +75,7 @@ final class SettingsTests: XCTestCase {
             XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Painting Length picker has no \(choice)")
         }
         app.buttons["Quick"].firstMatch.tap()
-        let chosen = NSPredicate(format: "label CONTAINS 'Quick' OR value CONTAINS 'Quick'")
-        let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5)
-        XCTAssertEqual(result, .completed, "Choosing Quick didn't change the picker: \(describe(picker))")
+        XCTAssertTrue(shows(picker, "Quick"), "Choosing Quick didn't change the picker: \(describe(picker))")
         let quickFooter = NSPredicate(format: "label == 'Suggested settings aim for about 15 minutes of painting.'")
         XCTAssertEqual(
             XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: quickFooter, object: footer)], timeout: 5), .completed,
@@ -85,11 +86,7 @@ final class SettingsTests: XCTestCase {
         picker.tap()
         XCTAssertTrue(app.buttons["Relaxed"].waitForExistence(timeout: 5))
         app.buttons["Relaxed"].firstMatch.tap()
-        XCTAssertEqual(
-            XCTWaiter.wait(for: [XCTNSPredicateExpectation(
-                predicate: NSPredicate(format: "label CONTAINS 'Relaxed' OR value CONTAINS 'Relaxed'"), object: picker)],
-                timeout: 5),
-            .completed)
+        XCTAssertTrue(shows(picker, "Relaxed"))
     }
 
     /// The picker's label and value together: how a menu picker's row reads.
@@ -128,19 +125,6 @@ final class SettingsTests: XCTestCase {
         return XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5) == .completed
     }
 
-    /// Opens Settings the way a person does: from the gallery's toolbar.
-    @MainActor
-    private func openSettings() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "gallery-empty"]
-        app.launch()
-        let button = app.buttons["Settings"]
-        XCTAssertTrue(button.waitForExistence(timeout: 30), "The gallery has no Settings button")
-        button.tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10), "The settings sheet didn't open")
-        return app
-    }
-
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view.
     @MainActor
     private func scroll(_ app: XCUIApplication, to element: XCUIElement, maxSwipes: Int = 6) {
@@ -149,13 +133,5 @@ final class SettingsTests: XCTestCase {
             app.swipeUp()
             swipes += 1
         }
-    }
-
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
     }
 }

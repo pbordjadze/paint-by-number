@@ -9,7 +9,7 @@ using namespace metal;
 struct FrameUniforms {
     float4 transform;   // xy: translation (px), z: px per canvas unit, w: px per point
     float4 viewport;    // xy: target size (px), zw: canvas size (units)
-    float4 background;  // rgb: backdrop around the paper
+    float4 background;  // rgb: backdrop around the paper; no shader reads it (the time-lapse clears to it)
     float4 paper;       // rgb: unpainted paper, a: drop shadow opacity
     float4 ink;         // rgb: outline and number ink, a: outline opacity
     float4 selected;    // rgb: selected paint, a: 1 when a color is selected
@@ -40,6 +40,7 @@ struct RegionState {
     float pad;
 };
 
+// Must match `GlyphInstance` (CanvasTypes.swift).
 struct GlyphInstance {
     float2 center;      // label centre (canvas units)
     float size;         // font size that fits the label (canvas units)
@@ -49,7 +50,7 @@ struct GlyphInstance {
 };
 
 constant float kWetSettle = 0.7;
-constant uint kOutside = 0xFFFFFFFFu;
+constant uint kOutside = 0xFFFFFFFFu;    // BoundaryEdge.outside (PaintCore): no region on that side
 
 static float4 toClip(float2 px, constant FrameUniforms &u) {
     return float4(px.x / u.viewport.x * 2.0 - 1.0, 1.0 - px.y / u.viewport.y * 2.0, 0.0, 1.0);

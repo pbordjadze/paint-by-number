@@ -34,6 +34,10 @@ Forms scanned (comments and string contents are skipped by a small Swift lexer):
    specifier (`%@` for strings, `%lld` for integers, `%1$@ %2$lld` when there are several).
 3. `String(localized: "literal")` without `defaultValue`: the literal is the key, like form 1.
 
+The titles of the library's pictures are the one exception: `Sample` looks each one up at
+runtime as `sample.<id>`, so every record of `Resources/Samples/library.json` counts as a use of
+that key with the record's `title` as its English default.
+
 `Text(verbatim:)`, `Text(someString)` and other non-literal arguments are not localized by
 SwiftUI and are not scanned: build such strings with form 2 or 3 first.
 """
@@ -50,6 +54,7 @@ CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
 INFOPLIST_CATALOG = "App/PaintByNumber/Resources/InfoPlist.xcstrings"
 PROJECT = "App/PaintByNumber.xcodeproj/project.pbxproj"
 INFOPLIST_FILE = "App/Config/Info.plist"
+LIBRARY = "App/PaintByNumber/Resources/Samples/library.json"
 
 # Developer tooling compiled only into Debug builds: its text is never shown to a user.
 DEBUG_ONLY_FILES = {
@@ -76,13 +81,13 @@ WRAPPERS = {
     "section": "",              # GalleryView.section(_:count:content:)
     "SettingSlider": "title",   # TemplatePreviewView
     "SectionTitle": "",         # PhotoSourceView
-    "GlassIconButton": "label", # PaintView
+    "GlassIconButton": "label", # GlassIconButton.swift
 }
 # How often each file mentions the `LocalizedStringKey` type (a parameter or property of a
 # wrapper above). A new wrapper changes a count, which fails the check until WRAPPERS lists it.
 KEY_TYPE_DECLARATIONS = {
     "Features/Gallery/GalleryView.swift": 1,
-    "Features/Paint/PaintView.swift": 2,
+    "Features/Paint/GlassIconButton.swift": 1,
     "Features/Create/TemplatePreviewView.swift": 1,
     "Features/Create/PhotoSourceView.swift": 2,
 }
@@ -522,6 +527,25 @@ def shorten(text, limit=60):
     return text if len(text) <= limit else text[:limit - 1] + "…"
 
 
+def library_usages(text, path=LIBRARY):
+    """The `sample.<id>` keys the library's records name, each with its title as the English
+    default (no placeholders: the title is looked up, not formatted). Returns (usages, findings)."""
+    try:
+        records = json.loads(text)
+    except json.JSONDecodeError as error:
+        return [], [Finding(path, error.lineno, f"invalid JSON: {error.msg}")]
+    if not isinstance(records, list):
+        return [], [Finding(path, 0, "must be a list of records")]
+    usages, findings = [], []
+    for index, record in enumerate(records):
+        key, title = (record.get("id"), record.get("title")) if isinstance(record, dict) else (None, None)
+        if not (isinstance(key, str) and key and isinstance(title, str) and title):
+            findings.append(Finding(path, 0, f"record {index + 1} needs an id and a title"))
+            continue
+        usages.append(Usage(f"sample.{key}", path, 0, title))
+    return usages, findings
+
+
 def swift_sources(root):
     base = root / APP_SOURCES
     for path in sorted(base.rglob("*.swift")):
@@ -721,6 +745,13 @@ def run(root):
         return [Finding(APP_SOURCES, 0, "no Swift sources found")], 0, 0
     usages, scan_findings = scan_sources(sources)
     findings += scan_findings
+    library_path = root / LIBRARY
+    if not library_path.exists():
+        findings.append(Finding(LIBRARY, 0, "missing"))
+    else:
+        library, library_findings = library_usages(library_path.read_text(encoding="utf-8"))
+        usages += library
+        findings += library_findings
     catalog_path = root / CATALOG
     keys = 0
     if not catalog_path.exists():
@@ -828,6 +859,21 @@ def self_test():
     expect(check({"k": entry(en="%1$lld of %2$lld")}, two) == [], "valid positional rejected")
     expect(any("numbered" in m for m in check({"k": entry(en="%lld of %lld")}, two)), "unnumbered placeholders not reported")
     expect(any("comment" in m for m in check({"Hello": entry(comment="")}, 'Text("Hello")')), "empty comment not reported")
+
+    # Library titles: each record is the key sample.<id>, its title the English.
+    usages, findings = library_usages('[{"id": "great-wave", "title": "The Great Wave", "kind": "painting"}]')
+    expect([(u.key, u.default, u.interpolations) for u in usages] == [("sample.great-wave", "The Great Wave", 0)] and not findings,
+           f"library titles: {[(u.key, u.default) for u in usages]} {[str(f) for f in findings]}")
+    for strings, wanted in [({"sample.great-wave": entry(en="The Great Wave")}, None),
+                            ({"sample.great-wave": entry(en="Great Wave")}, "differs"),
+                            ({}, "missing")]:
+        findings = []
+        check_catalog(catalog(strings), usages, findings)
+        messages = [f.message for f in findings]
+        expect(not messages if wanted is None else any(wanted in m for m in messages),
+               f"library title against {sorted(strings)}: {messages}")
+    expect(library_usages('[{"id": "untitled"}]')[1], "library record without a title not reported")
+    expect(library_usages('{')[1], "unreadable library not reported")
 
     # InfoPlist.
     project = 'INFOPLIST_KEY_CFBundleDisplayName = "App";\nINFOPLIST_KEY_NSCameraUsageDescription = "Why.";\nINFOPLIST_KEY_UILaunchScreen_Generation = YES;'

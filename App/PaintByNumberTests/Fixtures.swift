@@ -1,9 +1,18 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import Testing
 @testable import PaintByNumber
 
 enum Fixtures {
+    /// The repository checkout the tests were built from (tests run on the build machine's
+    /// simulator, which sees the host's files).
+    static let repositoryRoot = URL(filePath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+
+    /// The canvas tests' synthetic mosaic: 480×640, 6×8 cells.
+    static let mosaic = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
+
     static let stripeColors: [SIMD3<Float>] = [SIMD3(1, 0, 0), SIMD3(0, 1, 0), SIMD3(0, 0, 1), SIMD3(1, 1, 0)]
 
     /// `count` vertical stripes (one region and palette color each, red/green/blue/yellow),
@@ -71,8 +80,8 @@ enum Fixtures {
             regionMap: RegionMap(width: width, height: height, storage: map))
     }
 
-    /// A template generated from a bundled sample by the real pipeline.
-    static func sample(_ name: String = "parrots", colors: Int = 12, detail: Float = 0.2) throws -> Template {
+    /// A template generated from a library picture by the real pipeline.
+    static func sample(_ name: String = "great-wave", colors: Int = 12, detail: Float = 0.2) throws -> Template {
         guard let url = Bundle.main.url(forResource: name, withExtension: "jpg") else { throw CocoaError(.fileNoSuchFile) }
         let photo = try PhotoLoader.load(url: url, maxPixelSize: 480)
         return try TemplateGenerator(settings: GenerationSettings(colorCount: colors, detail: detail))
@@ -84,13 +93,51 @@ enum Fixtures {
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }
+
+    /// A PDF page drawn on white at `scale` pixels per point.
+    static func rasterize(_ page: CGPDFPage, scale: CGFloat) -> CGImage? {
+        let box = page.getBoxRect(.mediaBox)
+        let width = Int(box.width * scale), height = Int(box.height * scale)
+        guard let ctx = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        ctx.scaleBy(x: scale, y: scale)
+        ctx.drawPDFPage(page)
+        return ctx.makeImage()
+    }
 }
 
-/// Reads back pixels of a rendered image as 8-bit RGBA in the image's own color space.
+/// Polls `condition` until it holds; a timeout is recorded at the caller and ends the test.
+@MainActor
+func waitUntil(
+    timeout: Duration = .seconds(120), polling interval: Duration = .milliseconds(50),
+    sourceLocation: SourceLocation = #_sourceLocation, _ condition: () -> Bool
+) async throws {
+    let clock = ContinuousClock()
+    let deadline = clock.now + timeout
+    while !condition() {
+        guard clock.now < deadline else {
+            Issue.record("Timed out waiting for the condition", sourceLocation: sourceLocation)
+            throw CancellationError()
+        }
+        try await Task.sleep(for: interval)
+    }
+}
+
+/// Attaches `image` to the test's results as `<name>.png`.
+func record(_ image: CGImage, _ name: String) {
+    if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "\(name).png") }
+}
+
+/// Reads back a rendered image's pixels as 8-bit RGB in its own color space (sRGB when it has
+/// none); a read past an edge returns the nearest pixel.
 struct PixelReader {
     let width: Int
     let height: Int
-    private let bytes: [UInt8]
+    private let data: [UInt8]
 
     init(_ image: CGImage) {
         width = image.width
@@ -103,12 +150,30 @@ struct PixelReader {
                 bytesPerRow: image.width * 4, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
             ctx?.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
         }
-        bytes = buffer
+        data = buffer
     }
 
     /// RGB at (x, y), origin top-left.
     subscript(x: Int, y: Int) -> SIMD3<Int> {
-        let i = (y * width + x) * 4
-        return SIMD3(Int(bytes[i]), Int(bytes[i + 1]), Int(bytes[i + 2]))
+        let cx = min(max(x, 0), width - 1), cy = min(max(y, 0), height - 1)
+        let i = (cy * width + cx) * 4
+        return SIMD3(Int(data[i]), Int(data[i + 1]), Int(data[i + 2]))
     }
+}
+
+func bytes(_ encoded: SIMD3<Float>) -> SIMD3<Int> {
+    SIMD3(Int((encoded.x * 255).rounded()), Int((encoded.y * 255).rounded()), Int((encoded.z * 255).rounded()))
+}
+
+/// Linear P3 → 8-bit encoded P3.
+func encoded(_ linear: SIMD3<Float>) -> SIMD3<Int> {
+    bytes(SIMD3(ColorScience.encodeSRGB(linear.x), ColorScience.encodeSRGB(linear.y), ColorScience.encodeSRGB(linear.z)))
+}
+
+func maxDifference(_ a: SIMD3<Int>, _ b: SIMD3<Int>) -> Int {
+    max(abs(a.x - b.x), abs(a.y - b.y), abs(a.z - b.z))
+}
+
+func luma(_ c: SIMD3<Int>) -> Int {
+    (c.x * 2126 + c.y * 7152 + c.z * 722) / 10000
 }

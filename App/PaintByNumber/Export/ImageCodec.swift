@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import ImageIO
+import PaintCore
 import UniformTypeIdentifiers
 
 /// PNG/JPEG encoding and size-limited decoding via ImageIO (thread-safe, keeps the
@@ -17,11 +18,6 @@ nonisolated enum ImageCodec {
     /// Decodes an image file, downscaled so its long side is at most `maxPixelSize`.
     static func image(at url: URL, maxPixelSize: Int? = nil) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary) else { return nil }
-        return image(from: source, maxPixelSize: maxPixelSize)
-    }
-
-    static func image(data: Data, maxPixelSize: Int? = nil) -> CGImage? {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         return image(from: source, maxPixelSize: maxPixelSize)
     }
 
@@ -42,7 +38,9 @@ nonisolated enum ImageCodec {
         return ctx.makeImage() ?? image
     }
 
-    private static func image(from source: CGImageSource, maxPixelSize: Int?) -> CGImage? {
+    /// The image at index 0 of `source`, decoded through the thumbnail path when `maxPixelSize`
+    /// bounds it (orientation applied).
+    static func image(from source: CGImageSource, maxPixelSize: Int?) -> CGImage? {
         guard let maxPixelSize else {
             return CGImageSourceCreateImageAtIndex(source, 0, [kCGImageSourceShouldCacheImmediately: true] as CFDictionary)
         }
@@ -61,5 +59,12 @@ nonisolated enum ImageCodec {
         CGImageDestinationAddImage(destination, image, properties as CFDictionary)
         guard CGImageDestinationFinalize(destination) else { return nil }
         return data as Data
+    }
+}
+
+nonisolated extension RGBColorSpace {
+    /// The CoreGraphics color space pixels in this space are drawn and tagged with.
+    var cgColorSpace: CGColorSpace {
+        CGColorSpace(name: self == .displayP3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB)!
     }
 }

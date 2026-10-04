@@ -37,7 +37,7 @@ nonisolated enum PaintSpeech {
                comment: "VoiceOver value of a palette color or of the painting: how much of it is painted, as a whole percentage")
     }
 
-    /// "Parrots, 30 percent painted": the painting screen's progress badge when it shows the title.
+    /// "Irises, 30 percent painted": the painting screen's progress badge when it shows the title.
     static func paintingProgress(title: String, percent: Int) -> String {
         let progress = percentPainted(percent)
         return String(localized: "paint.speech.titleProgress", defaultValue: "\(title), \(progress)",

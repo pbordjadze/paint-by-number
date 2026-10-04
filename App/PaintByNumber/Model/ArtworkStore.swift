@@ -4,11 +4,6 @@ import PaintCore
 import Synchronization
 import os
 
-nonisolated enum Log {
-    static let library = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "library")
-    static let create = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "create")
-}
-
 /// File layout and IO of the artwork library. Every method is synchronous and touches
 /// only the file system, so callers choose where it runs (`Library` keeps it off the
 /// main actor).

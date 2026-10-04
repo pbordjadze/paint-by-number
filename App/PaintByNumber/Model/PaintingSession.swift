@@ -49,7 +49,7 @@ final class PaintingSession {
     /// app doesn't run in English), fixed for the painting by `nicknameSeed`.
     let colorNicknames: [String?]
     /// How the colors are named on screen and by VoiceOver: by nickname, or plainly (Settings).
-    var colorNameStyle: ColorNameStyle = .playful
+    var colorNameStyle: ColorNameStyle = .default
     /// Increments on every progress change; cheap to observe for autosave/thumbnails.
     private(set) var revision = 0
 
@@ -268,14 +268,18 @@ final class PaintingSession {
         }
     }
 
-    /// The next color with areas left after `color`, in the palette's order (`colorOrder`),
-    /// coming round from the start.
-    func nextIncompleteColor(after color: Int) -> Int? {
+    /// The next color with areas left after `color` (before it when `backwards`), in the
+    /// palette's order (`colorOrder`), coming round; from the start (or the end) when `color`
+    /// is nil.
+    func nextIncompleteColor(after color: Int?, backwards: Bool = false) -> Int? {
         let order = colorOrder.flatMap { $0.count == paletteCount ? $0 : nil } ?? Array(0..<paletteCount)
         let n = order.count
-        let start = order.firstIndex(of: color) ?? 0
+        guard n > 0 else { return nil }
+        let start = color.flatMap { order.firstIndex(of: $0) } ?? (backwards ? 0 : n - 1)
+        // Stepping n - 1 places forward goes one back, without a negative remainder.
+        let step = backwards ? n - 1 : 1
         for k in 1...n {
-            let c = order[(start + k) % n]
+            let c = order[(start + k * step) % n]
             if remainingByColor[c] > 0 { return c }
         }
         return nil

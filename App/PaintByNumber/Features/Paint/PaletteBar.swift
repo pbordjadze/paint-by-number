@@ -5,7 +5,7 @@ import TipKit
 
 /// Swatch geometry at a Dynamic Type size. Numerals grow with text up to 1.4×, so the palette
 /// keeps its place on screen at accessibility sizes; the Large Content Viewer covers the rest.
-/// At the default size every value equals the original fixed layout.
+/// At the default size (scale 1) swatches are 40 pt on a 56 pt pitch.
 nonisolated struct PaletteMetrics: Equatable, Sendable {
     let scale: CGFloat
 
@@ -51,7 +51,7 @@ nonisolated struct PaletteMetrics: Equatable, Sendable {
 
 /// The paint palette: circular swatches with their number and a progress ring per color;
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
-/// in the chosen `order`, and scroll when they still don't fit; the selected color is kept in view.
+/// in `order`, and scroll when they still don't fit; the selected color is kept in view.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
@@ -65,29 +65,12 @@ struct PaletteBar: View {
     /// Shows the selected color's number and name above the swatches, so the color can be
     /// told by name (horizontal bars only; wide layouts show it in the progress badge).
     var showsCurrentColor = false
-    var order: PaletteOrder = .number
-    /// The painting's custom arrangement, for `.custom`.
-    var customOrder: [Int]?
+    /// Every color in its order on screen (`PaintView.colorOrder`), finished ones too.
+    let order: [Int]
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The color whose details popover is open (long-press on its swatch).
     @State private var detailsColor: Int?
-
-    init(
-        session: PaintingSession, axis: Axis = .horizontal, lines: Int = 1, shakes: [Int: Int] = [:],
-        tip: (any Tip)? = nil, metrics: PaletteMetrics = .standard, showsCurrentColor: Bool = false,
-        order: PaletteOrder = .number, customOrder: [Int]? = nil
-    ) {
-        self.session = session
-        self.axis = axis
-        self.lines = lines
-        self.shakes = shakes
-        self.tip = tip
-        self.metrics = metrics
-        self.showsCurrentColor = showsCurrentColor
-        self.order = order
-        self.customOrder = customOrder
-    }
 
     /// Colors still to paint (plus the selected one): finished colors leave the palette.
     static func visibleColors(_ session: PaintingSession) -> [Int] {
@@ -101,10 +84,18 @@ struct PaletteBar: View {
                      red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z))
     }
 
+    /// The ink of the number on palette color `index`.
+    static func numeralInk(_ template: Template, _ index: Int) -> Color {
+        ColorScience.relativeLuminance(encoded: template.palette[index].rgb, space: template.colorSpace) > darkInkLuminance
+            ? Color.black.opacity(0.75) : Color.white
+    }
+
+    /// Paints lighter than this (relative luminance) take dark numerals, the rest white ones.
+    private static let darkInkLuminance: Float = 0.36
+
     var body: some View {
-        let colors = order.arrange(
-            Self.visibleColors(session), palette: session.template.palette, remaining: session.remainingByColor,
-            custom: customOrder)
+        let visible = Set(Self.visibleColors(session))
+        let colors = order.filter(visible.contains)
         let count = max(colors.count, 1)
         let lineCount = max(1, min(lines, count))
         let columns = max(1, axis == .horizontal ? (count + lineCount - 1) / lineCount : lineCount)
@@ -162,7 +153,6 @@ struct PaletteBar: View {
         let fraction = 1 - Double(session.remainingByColor[index]) / Double(max(total, 1))
         let complete = session.isColorComplete(index)
         let selected = session.selectedColor == index
-        let darkInk = ColorScience.relativeLuminance(encoded: template.palette[index].rgb, space: template.colorSpace) > 0.36
         let name = session.colorNames[index]
         let nickname = session.nickname(of: index)
         return Button {
@@ -176,7 +166,7 @@ struct PaletteBar: View {
             }
         } label: {
             Swatch(
-                number: index + 1, color: Self.paint(template, index), darkInk: darkInk, fraction: fraction,
+                number: index + 1, color: Self.paint(template, index), ink: Self.numeralInk(template, index), fraction: fraction,
                 isComplete: complete, isSelected: selected, metrics: metrics, reduceMotion: reduceMotion)
                 .modifier(Shake(amount: CGFloat(shakes[index] ?? 0)))
         }
@@ -184,7 +174,7 @@ struct PaletteBar: View {
         .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
         .popover(isPresented: detailsBinding(index), arrowEdge: axis == .horizontal ? .bottom : .trailing) {
             SwatchDetails(
-                number: index + 1, nickname: nickname, name: name, hex: PDFExporter.hex(template.palette[index].rgb))
+                number: index + 1, nickname: nickname, name: name, hex: template.palette[index].hexCode)
                 .presentationCompactAdaptation(.popover)
         }
         .accessibilityLabel(PaintSpeech.colorLabel(number: index + 1, name: name, nickname: nickname))
@@ -274,7 +264,7 @@ struct CurrentColorLabel: View {
 private struct Swatch: View {
     let number: Int
     let color: Color
-    let darkInk: Bool
+    let ink: Color
     let fraction: Double
     let isComplete: Bool
     let isSelected: Bool
@@ -296,7 +286,7 @@ private struct Swatch: View {
                     .minimumScaleFactor(0.6)
             }
         }
-        .foregroundStyle(darkInk ? Color.black.opacity(0.75) : Color.white)
+        .foregroundStyle(ink)
         .frame(width: metrics.diameter, height: metrics.diameter)
         .padding(4)
         .overlay {

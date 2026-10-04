@@ -11,7 +11,7 @@ final class LandscapeLayoutTests: XCTestCase {
         let app = try launchInLandscape("paint-progress")
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 60))
         sleep(3)
-        attachScreenshot(of: app, named: "landscape-paint-progress")
+        attachScreen(named: "landscape-paint-progress")
         let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
         XCTAssertFalse(swatches.isEmpty)
         let window = app.windows.firstMatch.frame
@@ -36,7 +36,7 @@ final class LandscapeLayoutTests: XCTestCase {
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 60)
         sleep(1)
-        attachScreenshot(of: app, named: "landscape-create-preview")
+        attachScreen(named: "landscape-create-preview")
         try audit(app, named: "create-preview")
     }
 
@@ -48,7 +48,7 @@ final class LandscapeLayoutTests: XCTestCase {
         let deadline = Date.now.addingTimeInterval(120)
         while preparing.exists && Date.now < deadline { sleep(1) }
         sleep(2)
-        attachScreenshot(of: app, named: "landscape-gallery")
+        attachScreen(named: "landscape-gallery")
         XCTAssertFalse(preparing.exists, "Samples were still being prepared")
         try audit(app, named: "gallery")
     }
@@ -104,10 +104,5 @@ final class LandscapeLayoutTests: XCTestCase {
     /// The whole screen in its native (portrait) orientation: app screenshots taken in
     /// landscape come out rotated and cropped.
     @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
-    }
+    private func attachScreen(named name: String) { attach(XCUIScreen.main.screenshot(), named: name) }
 }

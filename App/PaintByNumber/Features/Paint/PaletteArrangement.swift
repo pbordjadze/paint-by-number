@@ -1,7 +1,7 @@
 import Foundation
 import PaintCore
 
-/// How many lines the palette wraps into (Settings › Painting and the painting screen's More ›
+/// How many lines the palette wraps into (Settings › Palette and the painting screen's More ›
 /// Palette): rows at the bottom, columns along the trailing edge of a landscape iPad.
 nonisolated enum PaletteRows: Int, CaseIterable, Identifiable, Sendable {
     /// A few lines on roomy screens (three at the bottom, two beside), one on compact ones.
@@ -28,7 +28,7 @@ nonisolated enum PaletteRows: Int, CaseIterable, Identifiable, Sendable {
     var isFixed: Bool { self != .auto && self != .all }
 }
 
-/// The order of the palette's swatches (Settings › Painting and the painting screen's More ›
+/// The order of the palette's swatches (Settings › Palette and the painting screen's More ›
 /// Palette). Custom is arranged per painting (`PaletteArrangeSheet`); a painting not arranged
 /// yet goes by number.
 nonisolated enum PaletteOrder: String, CaseIterable, Identifiable, Sendable {
@@ -105,5 +105,51 @@ nonisolated enum PaletteOrder: String, CaseIterable, Identifiable, Sendable {
 
     static func storeCustom(_ order: [Int], seed: UInt64, in defaults: UserDefaults = .standard) {
         defaults.set(order, forKey: customKey(seed: seed))
+    }
+}
+
+// MARK: Names
+
+extension PaletteRows {
+    var name: String {
+        switch self {
+        case .auto:
+            String(localized: "palette.rows.auto", defaultValue: "Auto",
+                   comment: "Palette Rows choice: as many rows as fit the screen (three on iPad, one on iPhone)")
+        case .all:
+            String(localized: "palette.rows.all", defaultValue: "All at Once",
+                   comment: "Palette Rows choice: as many rows as it takes to show every color without scrolling")
+        default:
+            String(localized: "palette.rows.count", defaultValue: "\(rawValue) Rows",
+                   comment: "Palette Rows choice: a fixed number of rows of swatches (columns beside a landscape iPad); the argument is the count")
+        }
+    }
+}
+
+extension PaletteOrder {
+    var name: String {
+        switch self {
+        case .number:
+            String(localized: "palette.order.number", defaultValue: "By Number",
+                   comment: "Palette Order choice: swatches in the order of their numbers")
+        case .rainbow:
+            String(localized: "palette.order.rainbow", defaultValue: "Rainbow",
+                   comment: "Palette Order choice: swatches by hue, red through violet, then grays")
+        case .lightToDark:
+            String(localized: "palette.order.lightToDark", defaultValue: "Light to Dark",
+                   comment: "Palette Order choice: lightest paint first")
+        case .darkToLight:
+            String(localized: "palette.order.darkToLight", defaultValue: "Dark to Light",
+                   comment: "Palette Order choice: darkest paint first")
+        case .nearlyDone:
+            String(localized: "palette.order.nearlyDone", defaultValue: "Nearly Done First",
+                   comment: "Palette Order choice: colors with the fewest areas left to paint first")
+        case .mostLeft:
+            String(localized: "palette.order.mostLeft", defaultValue: "Most Left First",
+                   comment: "Palette Order choice: colors with the most areas left to paint first")
+        case .custom:
+            String(localized: "palette.order.custom", defaultValue: "Custom",
+                   comment: "Palette Order choice: the order the painter arranged for this painting by hand")
+        }
     }
 }

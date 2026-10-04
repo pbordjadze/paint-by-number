@@ -1,8 +1,8 @@
 import Foundation
 
 /// The sounds, haptics and flourishes of painting, each on a switch of its own (Settings ›
-/// Advanced › Sounds & Effects), all on by default. Each is read where it plays, as it plays;
-/// the sounds and haptics also need Settings' Sounds and Haptics on.
+/// Advanced › Sounds, Haptics and Sparkles & Shine), all on by default. Each is read where it
+/// plays, as it plays; the sounds and haptics also need Settings' Sounds and Haptics on.
 nonisolated enum PaintingEffect: String, CaseIterable, Sendable {
     /// A note of the painting's tune per fill.
     case paintNotes

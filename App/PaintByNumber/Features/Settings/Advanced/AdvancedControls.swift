@@ -1,11 +1,15 @@
 import PaintCore
 import SwiftUI
 
-/// The canvas sheet's paper and ink (`CanvasPalette.light`), for the drawings that show what
-/// lines look like.
-private nonisolated enum Sheet {
-    static let paper = Color(red: 0.957, green: 0.937, blue: 0.902)
-    static let ink = Color(red: 0.118, green: 0.102, blue: 0.133)
+/// The canvas sheet's paper and ink (`CanvasPalette.sheetPaperSRGB`, `sheetInkSRGB`), for the
+/// drawings that show what lines look like (the line styles' swatches, the zoom strip).
+nonisolated enum LineSwatchSheet {
+    static let paper = color(CanvasPalette.sheetPaperSRGB)
+    static let ink = color(CanvasPalette.sheetInkSRGB)
+
+    private static func color(_ c: SIMD3<Float>) -> Color {
+        Color(.sRGB, red: Double(c.x), green: Double(c.y), blue: Double(c.z))
+    }
 }
 
 /// A section header with a Reset button while the section differs from its defaults.
@@ -48,8 +52,7 @@ struct EffectLine: View {
             case .measuring(nil):
                 ProgressView()
                     .controlSize(.mini)
-                Text(String(localized: "advanced.effect.measuring", defaultValue: "Measuring…",
-                            comment: "Settings › Advanced: under a changed setting while its effect on the preview is being worked out"))
+                Text(AdvancedText.measuring)
             case .measuring(let delta?), .measured(let delta):
                 Image(systemName: Self.symbol(for: delta))
                 Text(AdvancedText.effect(delta))
@@ -83,8 +86,7 @@ struct EffectLine: View {
         case .atDefault:
             return nil
         case .measuring(nil):
-            return String(localized: "advanced.effect.measuring", defaultValue: "Measuring…",
-                          comment: "Settings › Advanced: under a changed setting while its effect on the preview is being worked out")
+            return AdvancedText.measuring
         case .measuring(let delta?), .measured(let delta):
             return AdvancedText.effect(delta)
         }
@@ -95,7 +97,7 @@ struct EffectLine: View {
 /// reads the slider alone, with all of that, moving by the setting's own step.
 struct AdvancedSlider: View {
     let title: String
-    var summary: String?
+    let summary: String
     let valueText: String
     let spec: SliderSpec
     let value: Double
@@ -103,7 +105,7 @@ struct AdvancedSlider: View {
     var effect: AdvancedSettingsModel.Effect?
     let identifier: String
     var onChange: (Double) -> Void
-    var onReset: (() -> Void)?
+    let onReset: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -111,7 +113,7 @@ struct AdvancedSlider: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                 Spacer(minLength: 8)
-                if isChanged, let onReset {
+                if isChanged {
                     Button {
                         FeedbackEngine.shared.selectionChanged()
                         onReset()
@@ -137,7 +139,7 @@ struct AdvancedSlider: View {
             Slider(value: position, in: 0...1)
                 .accessibilityLabel(Text(title))
                 .accessibilityValue(Text(accessibilityValue))
-                .accessibilityHint(Text(summary ?? ""))
+                .accessibilityHint(Text(summary))
                 .accessibilityAdjustableAction { direction in
                     switch direction {
                     case .increment: set(spec.value(value, adjustedBy: 1))
@@ -146,18 +148,16 @@ struct AdvancedSlider: View {
                     }
                 }
                 .accessibilityActions {
-                    if isChanged, let onReset {
+                    if isChanged {
                         Button("Reset to Default", action: onReset)
                     }
                 }
                 .accessibilityIdentifier(identifier)
             Group {
-                if let summary {
-                    Text(summary)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text(summary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let effect {
                     EffectLine(effect: effect)
                 }
@@ -198,7 +198,7 @@ struct AdvancedSliderRow: View {
             AdvancedSlider(
                 title: control.title(for: style), summary: control.summary(for: style), valueText: model.valueText(of: control), spec: spec,
                 value: model.value(of: control), isChanged: model.isChanged(control),
-                effect: model.effects[control] ?? .atDefault, identifier: "advanced-control-\(control.rawValue)",
+                effect: model.effect(of: control), identifier: "advanced-control-\(control.rawValue)",
                 onChange: { model.set(control, to: $0) }, onReset: { model.reset(control) })
         }
     }
@@ -232,30 +232,46 @@ struct AdvancedToggleRow: View {
     }
 }
 
+/// A choice from a menu: its name, a line on the chosen option and its effect.
+struct AdvancedChoiceRow<Option: Hashable>: View {
+    let control: AdvancedControl
+    @Binding var selection: Option
+    let options: [Option]
+    let name: (Option) -> String
+    let summary: String
+    let effect: AdvancedSettingsModel.Effect
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker(selection: $selection) {
+                ForEach(options, id: \.self) { option in
+                    Text(name(option)).tag(option)
+                }
+            } label: {
+                Text(control.title)
+                    .font(.subheadline.weight(.semibold))
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("advanced-control-\(control.rawValue)")
+            Text(summary)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .contentTransition(.opacity)
+            EffectLine(effect: effect)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 /// Which of the two bundled models the lines come from (`LineArtSettings.Detector`).
 struct DetectorRow: View {
     @Bindable var model: AdvancedSettingsModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Picker(selection: $model.lineArt.detector) {
-                ForEach(LineArtSettings.Detector.allCases, id: \.self) { option in
-                    Text(option.name).tag(option)
-                }
-            } label: {
-                Text(AdvancedControl.detector.title)
-                    .font(.subheadline.weight(.semibold))
-            }
-            .pickerStyle(.menu)
-            .accessibilityIdentifier("advanced-control-detector")
-            Text(model.lineArt.detector.summary)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.opacity)
-            EffectLine(effect: model.effects[.detector] ?? .atDefault)
-        }
-        .padding(.vertical, 2)
+        AdvancedChoiceRow(
+            control: .detector, selection: $model.lineArt.detector, options: LineArtSettings.Detector.allCases,
+            name: { $0.name }, summary: model.lineArt.detector.summary, effect: model.effect(of: .detector))
     }
 }
 
@@ -268,25 +284,10 @@ struct SamePaintRow: View {
         let style = model.lineArt.style
         let book = style == .coloringBook
         let options: [LineArtSettings.SamePaint] = book ? [.joinTexture, .joinAllButOutlines] : LineArtSettings.SamePaint.allCases
-        VStack(alignment: .leading, spacing: 6) {
-            Picker(selection: selection(book: book)) {
-                ForEach(options, id: \.self) { option in
-                    Text(option.name(in: style)).tag(option)
-                }
-            } label: {
-                Text(AdvancedControl.samePaint.title)
-                    .font(.subheadline.weight(.semibold))
-            }
-            .pickerStyle(.menu)
-            .accessibilityIdentifier("advanced-control-samePaint")
-            Text(model.lineArt.samePaint.summary(in: style))
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.opacity)
-            EffectLine(effect: model.effects[.samePaint] ?? .atDefault)
-        }
-        .padding(.vertical, 2)
+        AdvancedChoiceRow(
+            control: .samePaint, selection: selection(book: book), options: options,
+            name: { $0.name(in: style) }, summary: model.lineArt.samePaint.summary(in: style),
+            effect: model.effect(of: .samePaint))
     }
 
     /// In a coloring book Always Split and Join Across Texture are one choice, shown as the
@@ -315,7 +316,7 @@ struct LineStyleRow: View {
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            EffectLine(effect: model.effects[.style] ?? .atDefault)
+            EffectLine(effect: model.effect(of: .style))
         }
         .padding(.vertical, 4)
     }
@@ -366,7 +367,7 @@ private struct LineStyleSwatch: View {
         let style = self.style
         Canvas { context, size in
             let w = size.width, h = size.height
-            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Sheet.paper))
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(LineSwatchSheet.paper))
             let moon = Path(ellipseIn: CGRect(x: w * 0.68, y: h * 0.12, width: h * 0.32, height: h * 0.32))
             let crater = Path(ellipseIn: CGRect(x: w * 0.68 + h * 0.08, y: h * 0.2, width: h * 0.09, height: h * 0.09))
             var ridge = Path()
@@ -383,7 +384,7 @@ private struct LineStyleSwatch: View {
                 grass.addLine(to: CGPoint(x: x + w * 0.02, y: y - h * 0.08))
             }
             func stroke(_ path: Path, width: CGFloat, opacity: Double) {
-                context.stroke(path, with: .color(Sheet.ink.opacity(opacity)), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
+                context.stroke(path, with: .color(LineSwatchSheet.ink.opacity(opacity)), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
             }
             switch style {
             case .classic:
@@ -531,339 +532,45 @@ struct PresetCapsule: View {
     }
 }
 
-/// Presets of the whole screen (`AdvancedPreset`), the one the settings match marked, with a
-/// line on what it does.
+/// A row of presets, the one the settings match marked, with a line on what it does.
+struct PresetRow<Preset: RawRepresentable & Identifiable & Hashable>: View where Preset.RawValue == String {
+    let presets: [Preset]
+    let current: Preset?
+    let name: (Preset) -> String
+    let summary: (Preset) -> String
+    /// Under the presets when the settings match none of them.
+    let customSummary: String
+    var apply: (Preset) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                ForEach(presets) { preset in
+                    PresetCapsule(
+                        title: name(preset), summary: summary(preset), isSelected: current == preset,
+                        identifier: "advanced-preset-\(preset.rawValue)"
+                    ) { apply(preset) }
+                }
+            }
+            Text(current.map(summary) ?? customSummary)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// Presets of the whole screen (`AdvancedPreset`).
 struct AdvancedPresetRow: View {
     let model: AdvancedSettingsModel
 
     var body: some View {
-        let current = model.currentPreset
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(AdvancedPreset.allCases) { preset in
-                    PresetCapsule(
-                        title: preset.name, summary: preset.summary, isSelected: current == preset,
-                        identifier: "advanced-preset-\(preset.rawValue)"
-                    ) { model.apply(preset) }
-                }
-            }
-            Text(current?.summary ?? String(
+        PresetRow(
+            presets: AdvancedPreset.allCases, current: model.currentPreset, name: { $0.name }, summary: { $0.summary },
+            customSummary: String(
                 localized: "advanced.presets.custom.summary", defaultValue: "Your own mix of settings.",
-                comment: "Settings › Advanced › Presets: under the presets when the settings match none of them"))
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-/// Line Appearance: presets, how each layer looks at 1×, 2× and 4×, and per layer the opacity
-/// and width at those zooms; for a coloring book, which draws every line alike, its line weight.
-struct LineAppearanceSection: View {
-    @Bindable var model: AdvancedSettingsModel
-    let zoom: CGFloat
-    var onZoom: (Int) -> Void
-    @State private var layer: LineLayer = .detail
-
-    var body: some View {
-        Section {
-            if model.lineArt.style == .coloringBook {
-                AdvancedSlider(
-                    title: AdvancedText.coloringBookWeightTitle, summary: AdvancedText.coloringBookWeightSummary,
-                    valueText: coloringBookWeightSlider.text(model.coloringBookWeight), spec: coloringBookWeightSlider,
-                    value: model.coloringBookWeight, isChanged: model.coloringBookWeight != coloringBookWeightSlider.defaultValue,
-                    identifier: "advanced-appearance-bookWeight",
-                    onChange: { model.coloringBookWeight = $0 }, onReset: { model.coloringBookWeight = coloringBookWeightSlider.defaultValue })
-                    .id("advanced-appearance")
-            } else {
-                if model.lineArt.style == .classic {
-                    SwiftUI.Label {
-                        Text("Layered lines are drawn this way. Choose Layered above to see it in the preview.")
-                            .font(.footnote)
-                    } icon: {
-                        Image(systemName: "info.circle")
-                            .foregroundStyle(Theme.accent)
-                    }
-                }
-                presets
-                    .id("advanced-appearance")
-                ZoomStrip(appearance: model.appearance, layer: layer, zoom: zoom, onSelect: onZoom)
-                    .padding(.vertical, 4)
-                layerPicker
-                values(.opacity)
-                values(.width)
-                paintedRow
-                AdvancedToggleRow(
-                    title: AdvancedText.weightTitle,
-                    summary: String(localized: "advanced.appearance.weighted.summary",
-                                    defaultValue: "Draws stronger edges heavier within each layer. Off draws a layer’s lines alike.",
-                                    comment: "Settings › Advanced › Line Appearance: explanation under the Weight by Edge Strength switch"),
-                    isOn: $model.appearance.weighted, identifier: "advanced-appearance-weighted")
-            }
-        } header: {
-            AdvancedSectionHeader(
-                title: String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
-                              comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom"),
-                canReset: !model.isAppearanceDefault, identifier: "advanced-reset-appearance") { model.resetAppearance() }
-        } footer: {
-            if model.lineArt.style == .coloringBook {
-                Text("Drawing only: changes show at once and apply to every coloring-book painting, including the ones you have.")
-            } else {
-                Text("Drawing only: changes show at once and apply to every layered painting, including the ones you have.")
-            }
-        }
-    }
-
-    private var presets: some View {
-        let current = LineAppearancePreset.matching(model.appearance)
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(LineAppearancePreset.allCases) { preset in
-                    PresetCapsule(
-                        title: preset.name, summary: preset.summary, isSelected: current == preset,
-                        identifier: "advanced-preset-\(preset.rawValue)"
-                    ) { model.apply(preset) }
-                }
-            }
-            Text(current?.summary ?? String(
-                localized: "advanced.preset.custom.summary", defaultValue: "Your own values for each layer.",
-                comment: "Settings › Advanced › Line Appearance: under the presets when the layers match none of them"))
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.vertical, 4)
-    }
-
-    private var layerPicker: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ViewThatFits(in: .horizontal) {
-                layerChoices.pickerStyle(.segmented).fixedSize()
-                layerChoices.pickerStyle(.menu)
-            }
-            SwiftUI.Label {
-                Text(AdvancedText.clarity(of: model.appearance[layer]))
-                    .contentTransition(.opacity)
-            } icon: {
-                Image(systemName: "eye")
-            }
-            .font(.footnote.weight(.medium))
-            .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 2)
-    }
-
-    private var layerChoices: some View {
-        Picker(selection: $layer) {
-            ForEach(LineLayer.allCases, id: \.self) { layer in
-                Text(layer.name).tag(layer)
-            }
-        } label: {
-            Text(String(localized: "advanced.appearance.layer", defaultValue: "Layer",
-                        comment: "Settings › Advanced › Line Appearance: label of the choice of which layer the sliders below edit"))
-        }
-        .accessibilityIdentifier("advanced-appearance-layer")
-    }
-
-    private enum Property {
-        case opacity, width
-
-        var title: String {
-            switch self {
-            case .opacity: String(localized: "advanced.appearance.opacity", defaultValue: "Opacity",
-                                  comment: "Settings › Advanced › Line Appearance: heading of a layer's opacity at each zoom")
-            case .width: String(localized: "advanced.appearance.width", defaultValue: "Width",
-                                comment: "Settings › Advanced › Line Appearance: heading of a layer's line width at each zoom, relative to a classic line")
-            }
-        }
-
-        func values(of layer: LineAppearance.Layer) -> [Float] {
-            switch self {
-            case .opacity: layer.opacity
-            case .width: layer.width
-            }
-        }
-
-        func set(_ value: Float, at index: Int, in layer: inout LineAppearance.Layer) {
-            switch self {
-            case .opacity: layer.opacity[index] = value
-            case .width: layer.width[index] = value
-            }
-        }
-    }
-
-    /// How much of the layer's lines stays once the areas on both sides are painted.
-    private var paintedRow: some View {
-        let layer = self.layer
-        let spec = SliderSpec(
-            range: 0...1, defaultValue: Double(LineAppearance.default[layer].painted), quantum: 0.01, accessibilityStep: 0.05,
-            format: .percent)
-        let value = Double(model.appearance[layer].painted)
-        return AdvancedSlider(
-            title: AdvancedText.paintedTitle(of: layer), summary: AdvancedText.paintedSummary, valueText: spec.text(value), spec: spec,
-            value: value, isChanged: value != spec.defaultValue, identifier: "advanced-appearance-painted",
-            onChange: { model.appearance[layer].painted = Float($0) },
-            onReset: { model.appearance[layer].painted = LineAppearance.default[layer].painted })
-    }
-
-    /// A layer's opacity or width at the three zooms.
-    private func values(_ property: Property) -> some View {
-        let isOpacity = property == .opacity
-        let defaults = property.values(of: LineAppearance.default[layer])
-        let current = property.values(of: model.appearance[layer])
-        return VStack(alignment: .leading, spacing: 2) {
-            Text(property.title)
-                .font(.subheadline.weight(.semibold))
-            ForEach(LineAppearance.zooms.indices, id: \.self) { index in
-                let spec = isOpacity
-                    ? SliderSpec(range: 0...1, defaultValue: Double(defaults[index]), quantum: 0.01, accessibilityStep: 0.05, format: .percent)
-                    : SliderSpec(range: 0.2...3, defaultValue: Double(defaults[index]), quantum: 0.05, accessibilityStep: 0.05, format: .multiplier)
-                let zoomText = AdvancedText.zoom(Int(LineAppearance.zooms[index]))
-                let layerName = layer.name
-                CompactSlider(
-                    label: zoomText, spec: spec, value: Double(current[index]),
-                    accessibilityLabel: isOpacity
-                        ? String(localized: "advanced.appearance.opacityAt", defaultValue: "\(layerName) opacity at \(zoomText)",
-                                 comment: "Settings › Advanced › Line Appearance: VoiceOver label of a slider; the arguments are the layer, e.g. Texture, and the zoom, e.g. 2×")
-                        : String(localized: "advanced.appearance.widthAt", defaultValue: "\(layerName) width at \(zoomText)",
-                                 comment: "Settings › Advanced › Line Appearance: VoiceOver label of a slider; the arguments are the layer, e.g. Texture, and the zoom, e.g. 2×"),
-                    identifier: "advanced-appearance-\(isOpacity ? "opacity" : "width")-\(index)"
-                ) { value in
-                    property.set(Float(value), at: index, in: &model.appearance[layer])
-                }
-            }
-        }
-        .padding(.vertical, 4)
-    }
-}
-
-/// One value of a layer on a slider in a single line: the zoom, the slider, the value.
-private struct CompactSlider: View {
-    let label: String
-    let spec: SliderSpec
-    let value: Double
-    let accessibilityLabel: String
-    let identifier: String
-    var onChange: (Double) -> Void
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Text(label)
-                .font(.footnote.weight(.semibold))
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 26, alignment: .leading)
-                .accessibilityHidden(true)
-            Slider(value: Binding(get: { spec.position(of: value) }, set: { set(spec.value(at: $0)) }), in: 0...1)
-                .accessibilityLabel(Text(accessibilityLabel))
-                .accessibilityValue(Text(spec.text(value)))
-                .accessibilityAdjustableAction { direction in
-                    switch direction {
-                    case .increment: set(spec.value(value, adjustedBy: 1))
-                    case .decrement: set(spec.value(value, adjustedBy: -1))
-                    @unknown default: break
-                    }
-                }
-                .accessibilityIdentifier(identifier)
-            Text(spec.text(value))
-                .font(.footnote)
-                .monospacedDigit()
-                .foregroundStyle(value == spec.defaultValue ? Color.secondary : Theme.accent)
-                .contentTransition(.numericText())
-                .frame(minWidth: 48, alignment: .trailing)
-                .accessibilityHidden(true)
-        }
-    }
-
-    private func set(_ newValue: Double) {
-        guard newValue != value else { return }
-        if newValue == spec.defaultValue { FeedbackEngine.shared.selectionChanged() }
-        onChange(newValue)
-    }
-}
-
-/// The four layers drawn as each zoom shows them (relative to a classic line), the layer being
-/// edited marked. A tile zooms the preview to its level.
-private struct ZoomStrip: View {
-    let appearance: LineAppearance
-    let layer: LineLayer
-    let zoom: CGFloat
-    var onSelect: (Int) -> Void
-
-    var body: some View {
-        HStack(spacing: 8) {
-            ForEach(PreviewZoom.levels.indices, id: \.self) { index in
-                tile(index: index, level: PreviewZoom.levels[index])
-            }
-        }
-    }
-
-    private func tile(index: Int, level: Int) -> some View {
-        let selected = PreviewZoom.level(near: zoom) == level
-        let zoomText = AdvancedText.zoom(level)
-        let appearance = self.appearance, layer = self.layer, mark = Theme.accent.opacity(0.14)
-        return Button {
-            FeedbackEngine.shared.selectionChanged()
-            onSelect(level)
-        } label: {
-            VStack(spacing: 5) {
-                Canvas { context, size in
-                    Self.draw(appearance, at: index, marking: layer, with: mark, in: context, size: size)
-                }
-                .frame(height: 62)
-                .background(Sheet.paper, in: .rect(cornerRadius: 8, style: .continuous))
-                Text(zoomText)
-                    .font(.caption.weight(.semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(selected ? Theme.accent : Color.secondary)
-            }
-            .padding(5)
-            .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(selected ? Theme.accent : Color.clear, lineWidth: 2)
-            }
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text(String(localized: "advanced.appearance.tile", defaultValue: "Lines at \(zoomText)",
-                                        comment: "Settings › Advanced › Line Appearance: VoiceOver label of a drawing of every layer at a zoom; the argument is the zoom, e.g. 2×")))
-        .accessibilityHint(Text(String(localized: "advanced.appearance.tile.hint", defaultValue: "Zooms the preview to this level.",
-                                       comment: "Settings › Advanced › Line Appearance: VoiceOver hint of a drawing of every layer at a zoom")))
-        .accessibilityAddTraits(selected ? .isSelected : [])
-    }
-
-    nonisolated private static func draw(
-        _ appearance: LineAppearance, at index: Int, marking marked: LineLayer, with mark: Color, in context: GraphicsContext,
-        size: CGSize
-    ) {
-        let layers = LineLayer.allCases
-        let row = size.height / CGFloat(layers.count)
-        for (position, layer) in layers.enumerated() {
-            let values = appearance[layer]
-            let y = row * (CGFloat(position) + 0.5)
-            if layer == marked {
-                context.fill(Path(CGRect(x: 0, y: y - row / 2, width: size.width, height: row)), with: .color(mark))
-            }
-            var path = Path()
-            let inset: CGFloat = 8, swing = row * 0.32
-            path.move(to: CGPoint(x: inset, y: y))
-            path.addCurve(
-                to: CGPoint(x: size.width - inset, y: y),
-                control1: CGPoint(x: size.width * 0.38, y: y - swing), control2: CGPoint(x: size.width * 0.62, y: y + swing))
-            let width = max(0.3, CGFloat(values.width[index]) * 1.6)
-            let color = Sheet.ink.opacity(Double(values.opacity[index]))
-            if appearance.weighted {
-                // Stronger edges heavier: one line, heavy at its start, light at its end.
-                let parts: [(from: CGFloat, to: CGFloat, factor: CGFloat)] = [(0, 0.34, 1.35), (0.33, 0.67, 1), (0.66, 1, 0.65)]
-                for part in parts {
-                    context.stroke(
-                        path.trimmedPath(from: part.from, to: part.to), with: .color(color),
-                        style: StrokeStyle(lineWidth: width * part.factor, lineCap: .round))
-                }
-            } else {
-                context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round))
-            }
-        }
+                comment: "Settings › Advanced › Presets: under the presets when the settings match none of them"),
+            apply: { model.apply($0) })
     }
 }

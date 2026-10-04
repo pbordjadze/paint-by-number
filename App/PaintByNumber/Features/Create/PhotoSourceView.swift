@@ -15,7 +15,7 @@ import UIKit
 /// edge, the embedded picker's photo grid ignores taps on iPhone for its first ten seconds or
 /// so (its bar takes them at once), measured on the iOS 26 simulator, where every layout that
 /// keeps the picker flush with one of those edges picks a photo on the first tap. Wide windows
-/// (and iPad in general) don't suffer it and keep the picker's card.
+/// (600 pt and wider, `isWide`: a full-screen iPad) don't suffer it and keep the picker's card.
 struct PhotoSourceView: View {
     enum Pane: Hashable { case photos, samples }
 
@@ -32,7 +32,7 @@ struct PhotoSourceView: View {
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
     @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
 
-    init(model: CreateModel, initialPane: Pane = .photos, onClose: @escaping () -> Void, onPicked: @escaping () -> Void) {
+    init(model: CreateModel, initialPane: Pane, onClose: @escaping () -> Void, onPicked: @escaping () -> Void) {
         self.model = model
         self.onClose = onClose
         self.onPicked = onPicked

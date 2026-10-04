@@ -12,10 +12,7 @@ final class PaintingTipsTests: XCTestCase {
 
         let tip = app.staticTexts["Tap to Paint"]
         XCTAssertTrue(tip.waitForExistence(timeout: 90), "The first tip didn't appear")
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = "first-tip"
-        shot.lifetime = .keepAlways
-        add(shot)
+        attachScreenshot(of: app, named: "first-tip")
 
         // Outside the popover, which sits over the palette at the bottom.
         app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()

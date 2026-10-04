@@ -8,7 +8,7 @@ import Testing
 /// fading. (Pixel alignment is checked in `CanvasRenderTests`.)
 @MainActor
 struct PhotoOverlayTests {
-    let template = SyntheticTemplate.make(.init(width: 480, height: 640, columns: 6, rows: 8, seed: 3))
+    let template = Fixtures.mosaic
 
     // MARK: PhotoPeek
 

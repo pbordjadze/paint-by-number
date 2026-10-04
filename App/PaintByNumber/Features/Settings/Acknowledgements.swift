@@ -59,7 +59,7 @@ nonisolated enum Acknowledgements {
             name: "ControlNet HED",
             credit: "Lvmin Zhang (lllyasviel), ControlNet: ControlNetHED.pth from lllyasviel/Annotators",
             usage: String(
-                localized: "acknowledgements.hedModel.usage", defaultValue: "Finds the lines of a photo for layered line art.",
+                localized: "acknowledgements.hedModel.usage", defaultValue: "Finds the outlines of a photo, for coloring books and layered line art.",
                 comment: "What a credited machine-learning model is used for (ControlNet's HED edge detector); shown in Settings under Acknowledgements"),
             license: .apache2),
         Acknowledgement(

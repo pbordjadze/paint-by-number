@@ -67,15 +67,6 @@ nonisolated enum EdgeDetector {
             case .lineArt: "lines"
             }
         }
-
-        /// The long side the app runs the model at: HED at the map's size, the drawing smaller
-        /// (`drawingLongSide`) and resampled up.
-        var runLongSide: Int {
-            switch self {
-            case .hed: EdgeDetector.maximumLongSide
-            case .lineArt: EdgeDetector.drawingLongSide
-            }
-        }
     }
 
     /// Longest side the models accept (their input shapes' bound) and the default size of maps.
@@ -100,13 +91,8 @@ nonisolated enum EdgeDetector {
         try map(.hed, for: image, maxLongSide: maxLongSide, cancel: cancel)
     }
 
-    /// The line drawing of `image` (see `edgeMap(for:maxLongSide:)`; `maxLongSide` defaults to
-    /// `drawingLongSide`), ink probability per pixel.
-    static func lineDrawing(for image: CGImage, maxLongSide: Int = drawingLongSide) throws -> EdgeMap {
-        try lineDrawing(for: PhotoLoader.rgbaImage(from: image, colorSpace: .sRGB), maxLongSide: maxLongSide, cancel: .task)
-    }
-
-    /// The line drawing of an sRGB image.
+    /// The line drawing of an sRGB image (see `edgeMap(for:maxLongSide:)`; `maxLongSide` defaults
+    /// to `drawingLongSide`), ink probability per pixel.
     static func lineDrawing(for image: RGBAImage, maxLongSide: Int = drawingLongSide, cancel: CancellationCheck) throws -> EdgeMap {
         try map(.lineArt, for: image, maxLongSide: maxLongSide, cancel: cancel)
     }

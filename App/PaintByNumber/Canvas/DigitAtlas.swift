@@ -4,7 +4,8 @@ import Foundation
 import PaintCore
 import UIKit
 
-/// Signed-distance-field atlas of the digits 0–9 in SF Pro Rounded, generated at runtime.
+/// Signed-distance-field atlas of the digits 0–9 in New York Bold (the system serif), generated
+/// at runtime.
 ///
 /// Each digit is rasterized supersampled, turned into a signed distance with an exact EDT
 /// and box-filtered down, so numbers stay crisp from 6 pt to full screen with one texture.

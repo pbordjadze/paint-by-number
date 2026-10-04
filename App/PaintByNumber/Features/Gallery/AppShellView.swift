@@ -193,7 +193,9 @@ struct AppShellView: View {
     /// first-launch samples are still being made, and the settings or time-lapse sheet has to
     /// close first (its `onDismiss` comes back here; dismissing the time-lapse sheet cancels its
     /// render). An open painting is dismissed (it saves as it disappears) and a create flow
-    /// already on screen starts over on the new photo.
+    /// already on screen starts over on the new photo. Not handled (untested): the gallery's
+    /// rename and delete dialogs and the painting screen's own sheets can be up when a file
+    /// arrives, and may keep the create flow from presenting.
     private func presentIncomingImage() {
         guard let image = incomingImage, library.placeholders.isEmpty else { return }
         guard !isShowingSettings, timelapse == nil else {

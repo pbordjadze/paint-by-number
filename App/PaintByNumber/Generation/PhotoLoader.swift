@@ -22,15 +22,7 @@ nonisolated enum PhotoLoader {
     }
 
     private static func load(source: CGImageSource, maxPixelSize: Int) throws -> RGBAImage {
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
-        ]
-        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
-            throw LoadError.undecodable
-        }
+        guard let image = ImageCodec.image(from: source, maxPixelSize: maxPixelSize) else { throw LoadError.undecodable }
         return try rgbaImage(from: image)
     }
 
@@ -39,7 +31,7 @@ nonisolated enum PhotoLoader {
     static func rgbaImage(from image: CGImage, colorSpace: RGBColorSpace = .displayP3) throws -> RGBAImage {
         let w = image.width, h = image.height
         var pixels = [UInt8](repeating: 0, count: w * h * 4)
-        let space = CGColorSpace(name: colorSpace == .displayP3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB)!
+        let space = colorSpace.cgColorSpace
         let ok = pixels.withUnsafeMutableBytes { raw -> Bool in
             guard let ctx = CGContext(
                 data: raw.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4,
@@ -65,7 +57,7 @@ nonisolated enum PhotoLoader {
 
     /// Wraps an `RGBAImage` as a CGImage (for previews and export).
     static func cgImage(from image: RGBAImage) -> CGImage? {
-        let space = CGColorSpace(name: image.colorSpace == .displayP3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB)!
+        let space = image.colorSpace.cgColorSpace
         guard let provider = CGDataProvider(data: Data(image.pixels) as CFData) else { return nil }
         return CGImage(
             width: image.width, height: image.height, bitsPerComponent: 8, bitsPerPixel: 32,

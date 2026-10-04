@@ -93,7 +93,7 @@ nonisolated enum TemplateRasterizer {
     static func makeContext(width: Int, height: Int, colorSpace: RGBColorSpace) -> CGContext? {
         guard let ctx = CGContext(
             data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
-            space: cgColorSpace(colorSpace), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            space: colorSpace.cgColorSpace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         else { return nil }
         ctx.translateBy(x: 0, y: CGFloat(height))
         ctx.scaleBy(x: 1, y: -1)
@@ -141,13 +141,9 @@ nonisolated enum TemplateRasterizer {
 
     // MARK: Colors
 
-    static func cgColorSpace(_ space: RGBColorSpace) -> CGColorSpace {
-        CGColorSpace(name: space == .displayP3 ? CGColorSpace.displayP3 : CGColorSpace.sRGB)!
-    }
-
     static func cgColor(_ rgba: SIMD4<Float>, space: RGBColorSpace) -> CGColor {
         let components = [CGFloat(rgba.x), CGFloat(rgba.y), CGFloat(rgba.z), CGFloat(rgba.w)]
-        return CGColor(colorSpace: cgColorSpace(space), components: components)
+        return CGColor(colorSpace: space.cgColorSpace, components: components)
             ?? CGColor(red: components[0], green: components[1], blue: components[2], alpha: components[3])
     }
 
@@ -401,7 +397,7 @@ nonisolated enum TemplateRasterizer {
         guard let provider = CGDataProvider(data: data as CFData) else { return nil }
         return CGImage(
             width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: w * 4,
-            space: cgColorSpace(t.colorSpace),
+            space: t.colorSpace.cgColorSpace,
             bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
             provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
     }

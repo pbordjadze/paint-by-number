@@ -30,12 +30,12 @@ nonisolated enum ArtworkExporter {
     /// Long side of shared images, in pixels.
     static let imagePixelSize = 4096
 
-    /// The painting as a PNG: finished if it is (or `finished` asks for it), otherwise its
-    /// current state with the unpainted areas sketched in.
-    static func paintingPNG(store: ArtworkStore, artwork: Artwork, finished: Bool = false) throws -> Data {
+    /// The painting as a PNG: finished if it is, otherwise its current state with the
+    /// unpainted areas sketched in.
+    static func paintingPNG(store: ArtworkStore, artwork: Artwork) throws -> Data {
         let template = try store.readTemplate(artwork.id)
         let progress = try store.readProgress(artwork.id, regionCount: template.regions.count).progress
-        let style: TemplateRasterizer.Style = finished || progress.isComplete ? .finished : .thumbnail
+        let style: TemplateRasterizer.Style = progress.isComplete ? .finished : .thumbnail
         guard let data = TemplateRasterizer.pngData(template, painted: progress.painted, style: style, maxPixelSize: imagePixelSize) else {
             throw ExportError.renderFailed
         }
@@ -45,7 +45,7 @@ nonisolated enum ArtworkExporter {
     /// The printable template. Its color key names the colors by their nicknames (the ones the
     /// painting shows) unless `colorNames` is Plain.
     static func templatePDF(
-        store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper, colorNames: ColorNameStyle = .playful
+        store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper, colorNames: ColorNameStyle
     ) throws -> Data {
         let template = try store.readTemplate(artwork.id)
         let nicknames = colorNames == .playful
@@ -101,13 +101,13 @@ nonisolated enum ArtworkExporter {
         try? FileManager.default.removeItem(at: folder)
     }
 
-    /// "Parrots Template": the printable PDF's name, in the share sheet and as its file name.
+    /// "Irises Template": the printable PDF's name, in the share sheet and as its file name.
     static func templateName(title: String) -> String {
         String(localized: "export.templateName", defaultValue: "\(title) Template",
                comment: "Name of a painting's printable template PDF; the argument is the painting's title")
     }
 
-    /// "Parrots Time-lapse": the movie's file name.
+    /// "Irises Time-lapse": the movie's file name.
     static func timelapseName(title: String) -> String {
         String(localized: "export.timelapseName", defaultValue: "\(title) Time-lapse",
                comment: "File name of a painting's time-lapse movie; the argument is the painting's title")
@@ -154,7 +154,7 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     let store: ArtworkStore
     let artwork: Artwork
     let paper: PDFExporter.Paper
-    var colorNames: ColorNameStyle = .playful
+    let colorNames: ColorNameStyle
 
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(exportedContentType: .pdf) { item in

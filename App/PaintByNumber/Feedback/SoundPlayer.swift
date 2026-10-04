@@ -1,7 +1,8 @@
 import AVFoundation
 import Foundation
 
-/// Soft, musical feedback sounds, synthesized at launch (no audio assets).
+/// Soft, musical feedback sounds, synthesized the first time they're needed (when a painting
+/// screen first appears, or at the first sound; no audio assets).
 ///
 /// Painting plays one tune (`PaintingMelody`), a note per fill whatever the color, on a
 /// pentatonic scale so its kalimba-like notes can never clash. Uses the ambient session
@@ -106,54 +107,5 @@ final class SoundPlayer {
             buffer.floatChannelData![0].update(from: src.baseAddress!, count: samples.count)
         }
         return buffer
-    }
-}
-
-/// Tiny additive synthesizer for the feedback sounds.
-nonisolated enum ToneSynth {
-    /// Plucked-tine tone: fundamental with a bright, fast-decaying inharmonic partial and a
-    /// soft "wet" noise onset (the brush touching the canvas).
-    static func kalimba(frequency f: Double, sampleRate sr: Double) -> [Float] {
-        let n = Int(sr * 0.9)
-        var out = [Float](repeating: 0, count: n)
-        var noise = SplitMixNoise(seed: UInt64(f * 1000))
-        var lowpassed: Double = 0
-        for i in 0..<n {
-            let t = Double(i) / sr
-            let attack = min(1, t / 0.003)
-            let body = sin(2 * .pi * f * t) * exp(-t * 5.5)
-            let octave = 0.18 * sin(2 * .pi * 2 * f * t) * exp(-t * 9)
-            let tine = 0.22 * sin(2 * .pi * 5.4 * f * t) * exp(-t * 28)
-            lowpassed += 0.25 * (noise.next() - lowpassed)
-            let brush = 0.10 * lowpassed * exp(-t * 45)
-            out[i] = Float(attack * (body + octave + tine) + brush) * 0.55
-        }
-        return out
-    }
-
-    /// Muted wooden "thock" for a wrong-color tap.
-    static func thud(sampleRate sr: Double) -> [Float] {
-        let n = Int(sr * 0.18)
-        var out = [Float](repeating: 0, count: n)
-        for i in 0..<n {
-            let t = Double(i) / sr
-            let pitch = 180 * (1 - 0.25 * min(1, t / 0.08))
-            let attack = min(1, t / 0.002)
-            out[i] = Float(attack * sin(2 * .pi * pitch * t) * exp(-t * 32)) * 0.6
-        }
-        return out
-    }
-
-    struct SplitMixNoise {
-        var state: UInt64
-        init(seed: UInt64) { state = seed &+ 0x9E37_79B9_7F4A_7C15 }
-        mutating func next() -> Double {
-            state &+= 0x9E37_79B9_7F4A_7C15
-            var z = state
-            z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
-            z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
-            z ^= z >> 31
-            return Double(z >> 11) / Double(1 << 53) * 2 - 1
-        }
     }
 }

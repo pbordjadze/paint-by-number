@@ -68,12 +68,10 @@ nonisolated struct LineAppearance: Codable, Equatable, Sendable {
     /// designed), within `coloringBookWeightRange`.
     var coloringBookWeight: Float
 
-    /// The owner's picks from the layered-lines report: lines fade in by opacity at even weight,
-    /// with outlines lighter and thinner than the research's (which drew them in solid ink about
-    /// 2.8 times as wide as a classic line). Outlines take the full ink a classic line reaches
-    /// zoomed in, a third wider, so the drawing reads at 1× where classic lines are lighter;
-    /// the other layers are faint at 1× and come in by 4×. Every layer dissolves when painted,
-    /// as classic lines do. Coloring books draw at their designed weight.
+    /// Outlines take the full ink a classic line reaches zoomed in, at about 1.3 times its
+    /// width, so the drawing reads at 1× where classic lines draw at 0.7 of it; the other
+    /// layers, near a classic line's width, are faint at 1× and come in by 4×. Every layer
+    /// dissolves when painted, as classic lines do. Coloring books draw at their designed weight.
     static let `default` = LineAppearance(
         outline: Layer(opacity: [1, 1, 1], width: [1.3, 1.3, 1.35]),
         detail: Layer(opacity: [0.5, 0.8, 0.9], width: [0.95, 1, 1.05]),
@@ -151,5 +149,19 @@ nonisolated struct LineAppearance: Codable, Equatable, Sendable {
         weighted = (try? c.decodeIfPresent(Bool.self, forKey: .weighted)) ?? d.weighted
         let weight = (try? c.decodeIfPresent(Float.self, forKey: .coloringBookWeight)) ?? nil
         coloringBookWeight = weight.map { Self.coloringBookWeightRange.contains($0) ? $0 : d.coloringBookWeight } ?? d.coloringBookWeight
+    }
+}
+
+nonisolated extension LineAppearance {
+    /// The appearance Settings › Advanced stored (`SettingsKey.lineAppearance`, written with
+    /// `Preferences.store`), or the default when there is none or it can't be read. Safe off the
+    /// main actor: images of layered paintings are drawn with it in the background.
+    static func stored(in defaults: UserDefaults = .standard) -> LineAppearance {
+        decoded(defaults.data(forKey: SettingsKey.lineAppearance))
+    }
+
+    /// An appearance stored as JSON, or the default.
+    static func decoded(_ data: Data?) -> LineAppearance {
+        data.flatMap { try? JSONDecoder().decode(LineAppearance.self, from: $0) } ?? .default
     }
 }

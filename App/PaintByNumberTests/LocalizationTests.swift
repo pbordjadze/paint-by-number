@@ -3,11 +3,6 @@ import PaintCore
 import Testing
 @testable import PaintByNumber
 
-/// The repository checkout the tests were built from (tests run on the build machine's
-/// simulator, which sees the host's files).
-private let repositoryRoot = URL(filePath: #filePath)
-    .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-
 /// `Localizable.xcstrings` holds every user-facing string. `tools/strings_check.py` keeps it in
 /// step with the sources on CI's Linux job; these tests check what the app bundle ships and that
 /// the code reads it. They run in English, the catalog's source language.
@@ -15,7 +10,7 @@ struct LocalizationTests {
     private typealias Entry = [String: Any]
 
     private static func catalog(_ name: String) throws -> [String: Entry] {
-        let url = repositoryRoot.appending(path: "App/PaintByNumber/Resources/\(name).xcstrings")
+        let url = Fixtures.repositoryRoot.appending(path: "App/PaintByNumber/Resources/\(name).xcstrings")
         let root = try #require(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
         #expect(root["sourceLanguage"] as? String == "en")
         return try #require(root["strings"] as? [String: Entry])
@@ -48,11 +43,11 @@ struct LocalizationTests {
         #expect(PaintSpeech.canvasLabel == "Painting")
         #expect(PaintSpeech.areaLabel(number: 12) == "Area 12")
         #expect(PaintSpeech.percentPainted(30) == "30 percent painted")
-        #expect(PaintSpeech.paintingProgress(title: "Parrots", percent: 30) == "Parrots, 30 percent painted")
-        #expect(ArtworkExporter.templateName(title: "Parrots") == "Parrots Template")
-        #expect(ArtworkExporter.timelapseName(title: "Parrots") == "Parrots Time-lapse")
-        // The library's titles resolve to their records' (`SampleLibraryTests`).
-        #expect(Sample.retired.map(\.title) == ["Parrots", "Hibiscus", "Lighthouse", "Red Barn", "Espresso", "Regatta"])
+        #expect(PaintSpeech.paintingProgress(title: "Irises", percent: 30) == "Irises, 30 percent painted")
+        #expect(ArtworkExporter.templateName(title: "Irises") == "Irises Template")
+        #expect(ArtworkExporter.timelapseName(title: "Irises") == "Irises Time-lapse")
+        // A library picture's title is its `sample.<id>` (each against its record: `SampleLibraryTests`).
+        #expect(Sample.named("great-wave")?.title == "The Great Wave")
         let hokusai = Sample.Provenance(kind: .painting, creator: "Katsushika Hokusai", year: "c. 1830–32", credit: "", license: "")
         #expect(Acknowledgements.byline(hokusai) == "Katsushika Hokusai, c. 1830–32")
         #expect(PDFExporter.Paper.letter.name == "US Letter")
@@ -118,10 +113,19 @@ struct LocalizationTests {
     }
 
     @Test func durationsAreAssembledFromCatalogUnits() {
-        #expect(PaintingTime.spent(14 * 60) == "14 min")
-        #expect(PaintingTime.spent(2 * 3600) == "2 h")
-        #expect(PaintingTime.spent(134 * 60) == "2 h 14 min")
-        #expect(PaintingTime.approximate(90 * 60) == "~1.5 h")
+        #expect(PaintingTimeText.spent(14 * 60) == "14 min")
+        #expect(PaintingTimeText.spent(2 * 3600) == "2 h")
+        #expect(PaintingTimeText.spent(134 * 60) == "2 h 14 min")
+        #expect(PaintingTimeText.approximate(90 * 60) == "~1.5 h")
+    }
+
+    @Test func formatsDurations() {
+        #expect(PaintingTimeText.approximate(10 * 60) == "~10 min")
+        #expect(PaintingTimeText.approximate(2 * 3600) == "~2 h")
+        #expect(PaintingTimeText.approximate(1.4 * 3600) == "~1.5 h")
+        #expect(PaintingTimeText.approximate(30 * 3600) == "~30 h")
+        #expect(PaintingTimeText.spent(125 * 60) == "2 h 5 min")
+        #expect(PaintingTimeText.spent(20) == "< 1 min")
     }
 
     @Test func errorsDescribeThemselvesInWords() throws {

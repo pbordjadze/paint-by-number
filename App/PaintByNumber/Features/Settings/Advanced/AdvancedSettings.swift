@@ -37,6 +37,25 @@ nonisolated struct GenerationKey: Hashable, Sendable {
 
 /// A setting of Settings › Advanced that changes templates. Each one shows its effect: the
 /// preview's numbers against the same settings with this one back at its default.
+///
+/// Adding a setting (the compiler finds only some of these places):
+/// 1. Its field on PaintCore's `LineArtSettings` or `PipelineTuning`, decoded tolerantly and
+///    clamped by `normalized`. The field name is its `pbn --line-art` / `--tuning` key, a stable
+///    interface; new regression baselines go with it if it moves the pipeline's output.
+/// 2. A case here, listed in `lineArt` (read only from an edge map: `needsEdgeMap`) or in
+///    `pipeline`; `applies(to:)` if a style ignores it, and then `GenerationKey.init`, so the
+///    settings that style ignores share a preview.
+/// 3. The switches the compiler checks: `reset(_:_:)`, `value(lineArt:tuning:)`,
+///    `slider(for:)`, `title`, `summary` and `AdvancedSettingsModel.set(_:to:)`. `valueText`
+///    and `summary(for:)` have default arms: a choice or a switch needs an arm of its own in
+///    `valueText`, and a setting that means something else in a coloring book one in
+///    `summary(for:)`.
+/// 4. Its row in `AdvancedSettingsView.lineArtSection`, which lists its rows by hand
+///    (`pipelineSection` shows every case of `pipeline`).
+/// 5. Catalog entries for its title and summary (`advanced.control.<case>` and `.summary`,
+///    with `comment`, `"extractionState": "manual"` and `localizations.en`).
+/// 6. A value off its default in `AdvancedSettingsTests`' `changedArt` or `changedTuning`:
+///    `everySettingResetsToItsDefault` expects every case changed there.
 nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     case style, detector
     case outlineThreshold, detailThreshold, textureThreshold
@@ -168,62 +187,6 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     }
 }
 
-/// A slider of Settings › Advanced: its range (linear, or on a log₂ scale for multipliers), the
-/// rounding of its values, the step one VoiceOver adjustment moves, and how values read. The
-/// track works in positions 0…1; values near the default snap to it.
-nonisolated struct SliderSpec: Sendable {
-    enum Format: Sendable {
-        case percent, pixels, multiplier
-    }
-
-    let range: ClosedRange<Double>
-    let defaultValue: Double
-    var logarithmic = false
-    /// Values are rounded to multiples of this.
-    let quantum: Double
-    /// One VoiceOver adjustment: in value units, or in log₂ units on a logarithmic slider.
-    let accessibilityStep: Double
-    let format: Format
-
-    /// Within this fraction of the track the default catches the thumb.
-    static let detent = 0.02
-
-    private func scaled(_ value: Double) -> Double { logarithmic ? log2(max(value, 1e-6)) : value }
-    private func unscaled(_ value: Double) -> Double { logarithmic ? exp2(value) : value }
-
-    func position(of value: Double) -> Double {
-        let lo = scaled(range.lowerBound), hi = scaled(range.upperBound)
-        guard hi > lo else { return 0 }
-        return min(max((scaled(value) - lo) / (hi - lo), 0), 1)
-    }
-
-    /// The value at a track position: rounded to `quantum`, the default when it is that close.
-    func value(at position: Double) -> Double {
-        let p = min(max(position, 0), 1)
-        if abs(p - self.position(of: defaultValue)) < Self.detent { return defaultValue }
-        let lo = scaled(range.lowerBound), hi = scaled(range.upperBound)
-        return clamped((unscaled(lo + (hi - lo) * p) / quantum).rounded() * quantum)
-    }
-
-    /// `value` moved by `steps` VoiceOver adjustments, which land on multiples of the step
-    /// (on a logarithmic slider, of the step in log₂ units: 1×, 1.19×, 1.41×, 1.68×, 2×), so
-    /// rounding never makes them drift.
-    func value(_ value: Double, adjustedBy steps: Int) -> Double {
-        let index = (scaled(value) / accessibilityStep).rounded() + Double(steps)
-        return clamped((unscaled(index * accessibilityStep) / quantum).rounded() * quantum)
-    }
-
-    private func clamped(_ value: Double) -> Double { min(max(value, range.lowerBound), range.upperBound) }
-
-    func text(_ value: Double) -> String {
-        switch format {
-        case .percent: value.formatted(.percent.precision(.fractionLength(0)))
-        case .pixels: AdvancedText.pixels(Int(value.rounded()))
-        case .multiplier: AdvancedText.multiplier(value)
-        }
-    }
-}
-
 /// A preview's numbers, estimated for the full painting: the draft's counts grown by the ratio
 /// Suggested settings use to estimate a full template from a draft (`AutoScore.estimatedSeconds`).
 nonisolated struct AdvancedStats: Equatable, Sendable {
@@ -270,214 +233,5 @@ nonisolated struct AdvancedStats: Equatable, Sendable {
         var lines: Int?
         if let mine = drawnLines, let theirs = other.drawnLines { lines = mine - theirs }
         return Delta(areas: areas - other.areas, colors: colors - other.colors, lines: lines)
-    }
-}
-
-/// The Line Weight slider of a coloring book (`LineAppearance.coloringBookWeight`): half to
-/// twice the designed line, on a log scale with the default in the middle.
-nonisolated let coloringBookWeightSlider = SliderSpec(
-    range: Double(LineAppearance.coloringBookWeightRange.lowerBound)...Double(LineAppearance.coloringBookWeightRange.upperBound),
-    defaultValue: Double(LineAppearance.default.coloringBookWeight), logarithmic: true, quantum: 0.05, accessibilityStep: 0.25,
-    format: .multiplier)
-
-/// Quick starting points for Line Appearance: how the four layers' opacity and width change
-/// with zoom. Presets leave `weighted`, what stays when painted and the coloring book's weight
-/// alone.
-nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Sendable {
-    /// The owner's pick: fainter layers fade in by opacity, at even weight.
-    case fade
-    /// Fainter layers start thin and grow as the painter zooms.
-    case grow
-    /// Every line alike at every zoom, like a classic template.
-    case even
-
-    var id: String { rawValue }
-
-    var layers: [LineAppearance.Layer] {
-        switch self {
-        case .fade:
-            LineLayer.allCases.map { LineAppearance.default[$0] }
-        case .grow:
-            [
-                LineAppearance.Layer(opacity: [0.85, 0.9, 0.95], width: [1, 1.15, 1.3]),
-                LineAppearance.Layer(opacity: [0.7, 0.75, 0.8], width: [0.45, 0.75, 1]),
-                LineAppearance.Layer(opacity: [0.55, 0.6, 0.7], width: [0.3, 0.55, 0.85]),
-                LineAppearance.Layer(opacity: [0.3, 0.35, 0.45], width: [0.25, 0.45, 0.7]),
-            ]
-        case .even:
-            LineLayer.allCases.map { _ in LineAppearance.Layer(opacity: [1, 1, 1], width: [1, 1, 1]) }
-        }
-    }
-
-    /// `appearance` with this preset's opacities and widths.
-    func applied(to appearance: LineAppearance) -> LineAppearance {
-        var result = appearance
-        for (layer, values) in zip(LineLayer.allCases, layers) {
-            result[layer].opacity = values.opacity
-            result[layer].width = values.width
-        }
-        return result
-    }
-
-    /// The preset whose opacities and widths `appearance` has, if any.
-    static func matching(_ appearance: LineAppearance) -> LineAppearancePreset? {
-        allCases.first { preset in
-            zip(LineLayer.allCases, preset.layers).allSatisfy {
-                appearance[$0].opacity == $1.opacity && appearance[$0].width == $1.width
-            }
-        }
-    }
-}
-
-/// Quick starting points for the whole screen (Settings › Advanced › Presets): a line style at
-/// its own defaults, the pipeline untuned and the lines drawn as designed. The coloring book is
-/// the app's defaults (`LineArtSettings()`), so Coloring Book is Reset All.
-nonisolated enum AdvancedPreset: String, CaseIterable, Identifiable, Sendable {
-    case coloringBook, layered, classic
-
-    var id: String { rawValue }
-
-    /// The app's defaults.
-    static let defaults = AdvancedPreset.coloringBook
-
-    var style: LineArtSettings.Style {
-        switch self {
-        case .coloringBook: .coloringBook
-        case .layered: .layered
-        case .classic: .classic
-        }
-    }
-
-    /// Every group the preset sets.
-    var settings: AdvancedReport.Imported {
-        AdvancedReport.Imported(lineArt: LineArtSettings(style: style), tuning: PipelineTuning(), lineAppearance: .default)
-    }
-
-    /// The preset whose settings these are, as generation uses them (`GenerationKey`: a setting
-    /// the style ignores, like a coloring book's texture threshold, doesn't count) and as the
-    /// lines are drawn.
-    static func matching(lineArt: LineArtSettings, tuning: PipelineTuning, appearance: LineAppearance) -> AdvancedPreset? {
-        let key = GenerationKey(lineArt: lineArt, tuning: tuning)
-        return allCases.first { preset in
-            let s = preset.settings
-            guard let art = s.lineArt, let tune = s.tuning else { return false }
-            return GenerationKey(lineArt: art, tuning: tune) == key && s.lineAppearance == appearance.normalized
-        }
-    }
-}
-
-/// The text Copy Settings and Share with a Note hand over: what the painter saw (picture,
-/// numbers, every setting that differs from its default, their note) and the settings as JSON,
-/// which reproduce the preview exactly for a library picture (generation is deterministic).
-/// Paste Settings reads the same text back (`settings(in:)`), so settings travel between
-/// devices, and a preset is any text written like it (`docs/presets/`).
-nonisolated enum AdvancedReport {
-    /// The settings a pasted text holds: each group the text has, clamped to its range.
-    struct Imported: Equatable, Sendable {
-        var lineArt: LineArtSettings?
-        var tuning: PipelineTuning?
-        var lineAppearance: LineAppearance?
-
-        var isEmpty: Bool { lineArt == nil && tuning == nil && lineAppearance == nil }
-    }
-
-    /// The settings in `text`: the JSON object in it that holds any of the three groups, read
-    /// the way stored settings are (fields a build doesn't know fall back to their defaults),
-    /// clamped. Nil when there is none. Objects are tried from each `{` to the last `}`, so a
-    /// note before the JSON may hold braces.
-    static func settings(in text: String) -> Imported? {
-        guard let close = text.lastIndex(of: "}") else { return nil }
-        var start = text.startIndex
-        while let open = text[start..<close].firstIndex(of: "{") {
-            if let groups = try? JSONDecoder().decode(Groups.self, from: Data(text[open...close].utf8)) {
-                let imported = Imported(
-                    lineArt: groups.lineArt?.normalized, tuning: groups.tuning?.normalized,
-                    lineAppearance: groups.lineAppearance?.normalized)
-                return imported.isEmpty ? nil : imported
-            }
-            start = text.index(after: open)
-        }
-        return nil
-    }
-
-    /// The three groups of the snapshot, each optional and read leniently: a group that is not
-    /// an object counts as absent.
-    private struct Groups: Decodable {
-        var lineArt: LineArtSettings?
-        var tuning: PipelineTuning?
-        var lineAppearance: LineAppearance?
-
-        private enum CodingKeys: String, CodingKey { case lineArt, tuning, lineAppearance }
-
-        init(from decoder: any Decoder) throws {
-            let c = try decoder.container(keyedBy: CodingKeys.self)
-            lineArt = try? c.decodeIfPresent(LineArtSettings.self, forKey: .lineArt)
-            tuning = try? c.decodeIfPresent(PipelineTuning.self, forKey: .tuning)
-            lineAppearance = try? c.decodeIfPresent(LineAppearance.self, forKey: .lineAppearance)
-        }
-    }
-
-    struct Snapshot: Codable, Equatable, Sendable {
-        struct Numbers: Codable, Equatable, Sendable {
-            var areas: Int
-            var colors: Int
-            var minutes: Int
-
-            init(_ stats: AdvancedStats) {
-                areas = stats.areas
-                colors = stats.colors
-                minutes = Int((stats.seconds / 60).rounded())
-            }
-        }
-
-        var app: String
-        /// The library picture's id, or "photo" for the painter's own.
-        var picture: String
-        var paintingLength: String
-        var lineArt: LineArtSettings
-        var tuning: PipelineTuning
-        var lineAppearance: LineAppearance
-        var preview: Numbers?
-        var defaults: Numbers?
-    }
-
-    static func json(_ snapshot: Snapshot) -> String {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        guard let data = try? encoder.encode(snapshot) else { return "" }
-        return String(decoding: data, as: UTF8.self)
-    }
-
-    /// - Parameters:
-    ///   - changes: The settings that differ from their defaults, already worded.
-    ///   - summary: The preview's numbers, already worded; nil before there is a preview.
-    static func text(snapshot: Snapshot, pictureTitle: String, summary: String?, changes: [String], note: String) -> String {
-        let app = snapshot.app
-        var lines = [
-            String(localized: "advanced.report.title", defaultValue: "Paint by Moonlight \(app): Advanced settings",
-                   comment: "First line of the settings text Settings › Advanced copies or shares for feedback; the argument is the app version, e.g. 1.0.42 (42)"),
-            String(localized: "advanced.report.picture", defaultValue: "Picture: \(pictureTitle)",
-                   comment: "Line of the shared Advanced settings text: the picture the preview showed; the argument is its title"),
-        ]
-        if let summary {
-            lines.append(String(localized: "advanced.report.preview", defaultValue: "Preview: \(summary)",
-                                comment: "Line of the shared Advanced settings text: the preview's numbers; the argument is e.g. 24 colors · 1,284 areas · ~1 h, +212 areas from the defaults"))
-        }
-        if changes.isEmpty {
-            lines.append(String(localized: "advanced.report.allDefault", defaultValue: "Every setting is at its default.",
-                                comment: "Line of the shared Advanced settings text when nothing was changed"))
-        } else {
-            let list = changes.formatted(.list(type: .and))
-            lines.append(String(localized: "advanced.report.changes", defaultValue: "Changed: \(list)",
-                                comment: "Line of the shared Advanced settings text listing the changed settings; the argument is a list such as Line Style Layered and Smallest Area 2×"))
-        }
-        let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmed.isEmpty {
-            lines.append("")
-            lines.append(trimmed)
-        }
-        lines.append("")
-        lines.append(json(snapshot))
-        return lines.joined(separator: "\n")
     }
 }

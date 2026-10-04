@@ -15,7 +15,7 @@ final class CanvasController {
 /// SwiftUI host of the Metal canvas.
 struct PaintCanvas: UIViewRepresentable {
     let session: PaintingSession
-    var controller: CanvasController?
+    let controller: CanvasController
     /// Space taken by floating chrome, in the canvas's own (full-screen) coordinates.
     var chromeInsets = EdgeInsets()
     var showsNumbers = true
@@ -41,7 +41,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.reduceMotion = context.environment.accessibilityReduceMotion
         view.paperAppearance = paperAppearance
         view.lineAppearance = lineAppearance
-        controller?.view = view
+        controller.view = view
         // Deferred: state mustn't change while SwiftUI is making views.
         if !view.isRenderable, let onUnavailable { Task { onUnavailable() } }
         return view
@@ -63,7 +63,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.onDismissPhoto = onDismissPhoto
         view.onZoomStep = onZoomStep
         view.showsPhoto = showsPhoto
-        controller?.view = view
+        controller.view = view
     }
 }
 

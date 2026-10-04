@@ -191,8 +191,6 @@ final class AdvancedSettingsModel {
     /// until the new one's first template replaces it.
     @ObservationIgnored private var previewLoadID = -1
 
-    private static let log = Logger(subsystem: "com.pbordjadze.paintbynumber", category: "advanced")
-
     /// - Parameters:
     ///   - picture: The picture to preview; by default the one chosen last, else the painter's
     ///     most recent photo, else the library's first picture.
@@ -209,7 +207,7 @@ final class AdvancedSettingsModel {
         recentPhoto = recent
         let stored = defaults.string(forKey: SettingsKey.advancedPreviewPicture).flatMap(Picture.init(storageValue:))
             .flatMap { Self.isAvailable($0, recent: recent) ? $0 : nil }
-        self.picture = picture ?? stored ?? recent.map { .photo($0.id) } ?? .sample(Sample.all.first?.id ?? "parrots")
+        self.picture = picture ?? stored ?? recent.map { .photo($0.id) } ?? .sample(Sample.all.first?.id ?? "")
         refreshEffects()
     }
 
@@ -256,6 +254,9 @@ final class AdvancedSettingsModel {
     }
 
     func isChanged(_ control: AdvancedControl) -> Bool { value(of: control) != control.defaultValue(for: lineArt.style) }
+
+    /// What the setting does to the preview right now.
+    func effect(of control: AdvancedControl) -> Effect { effects[control] ?? .atDefault }
 
     /// Sets a slider's setting. The three thresholds push each other along, so texture ≤
     /// detail ≤ outline always holds and the sliders show what generation uses.
@@ -324,77 +325,6 @@ final class AdvancedSettingsModel {
         if let look = imported.lineAppearance { appearance = look }
     }
 
-    // MARK: Feedback
-
-    /// Every setting that differs from its default, worded ("Smallest Area 2×"), after the
-    /// preset they add up to, if any.
-    var changes: [String] {
-        var list: [String] = []
-        // A preset other than the defaults names the style, so the style line is left out.
-        let preset = currentPreset
-        if let preset, preset != .defaults {
-            list.append(Self.change(AdvancedText.presetTitle, preset.name))
-        }
-        for control in AdvancedControl.allCases
-        where isChanged(control) && control.applies(to: lineArt.style) && (control != .style || preset == nil) {
-            list.append(Self.change(control.title(for: lineArt.style), valueText(of: control)))
-        }
-        var layers = appearance
-        layers.coloringBookWeight = LineAppearance.default.coloringBookWeight
-        if layers != .default {
-            let title = String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
-                               comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom")
-            let value = LineAppearancePreset.matching(appearance)?.name
-                ?? String(localized: "advanced.preset.custom", defaultValue: "Custom",
-                          comment: "Settings › Advanced › Line Appearance: the layers' values match no preset; in shared settings text")
-            list.append(Self.change(title, value))
-            if appearance.weighted != LineAppearance.default.weighted {
-                list.append(Self.change(AdvancedText.weightTitle, AdvancedText.onOff(appearance.weighted)))
-            }
-            for layer in LineLayer.allCases where appearance[layer].painted != LineAppearance.default[layer].painted {
-                list.append(Self.change(AdvancedText.paintedTitle(of: layer), AdvancedText.percent(appearance[layer].painted)))
-            }
-        }
-        if appearance.coloringBookWeight != LineAppearance.default.coloringBookWeight {
-            list.append(Self.change(AdvancedText.coloringBookWeightTitle, AdvancedText.multiplier(Double(appearance.coloringBookWeight))))
-        }
-        return list
-    }
-
-    private static func change(_ title: String, _ value: String) -> String {
-        String(localized: "advanced.report.change", defaultValue: "\(title) \(value)",
-               comment: "Settings › Advanced: one changed setting in shared settings text, e.g. Smallest Area 2×; the arguments are the setting's name and its value")
-    }
-
-    /// The preview's numbers worded for the shared text, with their change from the defaults.
-    var summary: String? {
-        guard let stats = preview?.stats else { return nil }
-        let numbers = String(
-            localized: "advanced.report.numbers",
-            defaultValue: "\(TemplateCounts.colors(stats.colors)) · \(TemplateCounts.areas(stats.areas)) · \(PaintingTime.approximate(stats.seconds))",
-            comment: "Settings › Advanced: the preview's numbers in shared settings text, e.g. 24 colors · 1,284 areas · ~1 h; the arguments are the colors, areas and painting time")
-        guard let delta = statsDelta, !delta.isZero else { return numbers }
-        let effect = AdvancedText.effect(delta)
-        return String(localized: "advanced.report.numbersWithChange", defaultValue: "\(numbers) (\(effect) from the defaults)",
-                      comment: "Settings › Advanced: the preview's numbers and their change from the default settings in shared settings text; the arguments are the numbers and the change, e.g. +212 areas")
-    }
-
-    /// The text Copy Settings and Share with a Note hand over.
-    func report(note: String = "") -> String {
-        let snapshot = AdvancedReport.Snapshot(
-            app: AppInfo().summary, picture: pictureID, paintingLength: paintingLength.rawValue, lineArt: lineArt,
-            tuning: tuning, lineAppearance: appearance, preview: preview.map { .init($0.stats) },
-            defaults: baseline.map { .init($0) })
-        return AdvancedReport.text(snapshot: snapshot, pictureTitle: pictureTitle, summary: summary, changes: changes, note: note)
-    }
-
-    private var pictureID: String {
-        switch picture {
-        case .sample(let id): id
-        case .photo: "photo"
-        }
-    }
-
     // MARK: Loading a picture
 
     private static func recentPhoto(in library: Library?) -> RecentPhoto? {
@@ -412,11 +342,6 @@ final class AdvancedSettingsModel {
         }
     }
 
-    nonisolated private enum Source: Sendable {
-        case file(URL)
-        case artwork(UUID, ArtworkStore)
-    }
-
     private func load(_ picture: Picture) {
         stop()
         loadID += 1
@@ -430,16 +355,15 @@ final class AdvancedSettingsModel {
         phase = .loading
         refreshEffects()
         updateStatus()
-        let source: Source?
-        switch picture {
-        case .sample(let name): source = Sample.named(name)?.url.map(Source.file)
-        case .photo(let artwork): source = store.map { Source.artwork(artwork, $0) }
+        let url: URL? = switch picture {
+        case .sample(let name): Sample.named(name)?.url
+        case .photo(let artwork): store?.url(.source, of: artwork)
         }
         let preference = paintingLength
         loadTask = Task {
             do {
-                guard let source else { throw CreateModel.CreateError.unreadable }
-                let prepared = try await Self.prepare(source, preference: preference)
+                guard let url else { throw CreateModel.CreateError.unreadable }
+                let prepared = try await Self.prepare(url, preference: preference)
                 guard id == loadID else { return }
                 base = prepared.base
                 baseline = prepared.baseline.stats
@@ -453,32 +377,21 @@ final class AdvancedSettingsModel {
             } catch {
                 guard id == loadID else { return }
                 loadTask = nil
-                Self.log.error("Preparing the preview failed: \(String(describing: error), privacy: .public)")
+                Log.advanced.error("Preparing the preview failed: \(String(describing: error), privacy: .public)")
                 phase = .failed(CreateModel.CreateError.unreadable.localizedDescription)
                 updateStatus()
             }
         }
     }
 
-    /// Decodes the picture the way the create flow does, finds its subject and chooses its
-    /// settings (the suggestion's center, at the draft size), then renders the preview at the
-    /// default advanced settings like any other (the suggestion's own draft has no edge map,
-    /// and the default lines draw from one).
+    /// Decodes the picture as the create flow does (`CreateModel.decode(url:)`), finds its
+    /// subject and chooses its settings (the suggestion's center, at the draft size), then
+    /// renders the preview at the default advanced settings like any other (the suggestion's own
+    /// draft has no edge map, and the default lines draw from one).
     @concurrent
-    private static func prepare(_ source: Source, preference: PaintingLength) async throws -> (base: Base, baseline: Preview) {
-        let image: RGBAImage
-        switch source {
-        case .file(let url):
-            image = try PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize)
-        case .artwork(let id, let store):
-            guard let photo = store.source(id, maxPixelSize: ArtworkStore.sourceMaxPixelSize) else {
-                throw CreateModel.CreateError.unreadable
-            }
-            image = try PhotoLoader.rgbaImage(from: photo)
-        }
-        guard image.width >= 16, image.height >= 16, let photo = PhotoLoader.cgImage(from: image) else {
-            throw CreateModel.CreateError.unreadable
-        }
+    private static func prepare(_ url: URL, preference: PaintingLength) async throws -> (base: Base, baseline: Preview) {
+        let decoded = try await CreateModel.decode(url: url)
+        let image = decoded.image, photo = decoded.preview
         try Task.checkCancellation()
         let subject = SubjectImportance.analyze(photo)
         try Task.checkCancellation()
@@ -556,7 +469,7 @@ final class AdvancedSettingsModel {
                     record(preview, isReference: isReference)
                 case .failure(let error):
                     if error is CancellationError { continue }
-                    Self.log.error("Preview generation failed: \(String(describing: error), privacy: .public)")
+                    Log.advanced.error("Preview generation failed: \(String(describing: error), privacy: .public)")
                     failed.insert(key)
                     refreshEffects()
                 }

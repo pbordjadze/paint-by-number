@@ -3,13 +3,43 @@ import Foundation
 import PaintCore
 import simd
 
+/// Times on the canvas renderer's clock (seconds).
+nonisolated enum CanvasClock {
+    /// A time so long ago that every animation reading it has finished.
+    static let never: Float = -10_000
+}
+
+/// A value easing from `from` to `to` over `duration` seconds of the renderer clock, from
+/// `start` (smoothstep): the numbers and the photo fade in and out with it.
+nonisolated struct Fade {
+    var from: Float
+    var to: Float
+    var start = CanvasClock.never
+    let duration: Float
+
+    func value(at t: Float) -> Float {
+        let k = min(max((t - start) / duration, 0), 1)
+        return from + (to - from) * k * k * (3 - 2 * k)
+    }
+
+    /// Fades on from wherever it is at `t` to `target`.
+    mutating func retarget(to target: Float, at t: Float) {
+        from = value(at: t)
+        to = target
+        start = t
+    }
+}
+
 /// Per-frame shader constants. Layout mirrors `FrameUniforms` in Shaders.metal (only 16-byte
-/// vectors, so Swift and MSL agree without padding rules).
+/// vectors, so Swift and MSL agree without padding rules). A new field goes into `FrameUniforms`
+/// at the same position; `CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the stride.
 nonisolated struct CanvasUniforms {
     /// xy: translation (px), z: px per canvas unit, w: px per point.
     var transform: SIMD4<Float> = .zero
     /// xy: target size (px), zw: canvas size (units).
     var viewport: SIMD4<Float> = .zero
+    /// rgb: the backdrop around the sheet. No shader reads it: it carries the backdrop to the
+    /// time-lapse's clear color (`TimelapseFrameRenderer`).
     var background: SIMD4<Float> = .zero
     /// rgb: unpainted paper, a: drop shadow opacity.
     var paper: SIMD4<Float> = .zero
@@ -35,7 +65,7 @@ nonisolated struct CanvasUniforms {
     /// xy: position (px), z: radius (px), w: opacity.
     var brush: SIMD4<Float> = .zero
     /// x: start of a light sweep over finished paint, y: its palette color (-1 = everything).
-    var shine: SIMD4<Float> = SIMD4(-10_000, -1, 0, 0)
+    var shine: SIMD4<Float> = SIMD4(CanvasClock.never, -1, 0, 0)
     /// x: selected color, y: hovered region, z: pulsing region, w: bumped region (-1 = none).
     var ids: SIMD4<Int32> = SIMD4(repeating: -1)
     /// x: source photo opacity (0 = hidden).
@@ -102,9 +132,40 @@ nonisolated struct RegionState {
     var seed: Float
     var pad: Float = 0
 
-    /// Settled state: painted or not, no animation.
-    static func settled(painted: Bool, origin: SIMD2<Float>, seed: Float) -> RegionState {
-        RegionState(origin: origin, start: -10_000, duration: painted ? 0 : 0.2, radius: 0, painted: painted ? 1 : 0, seed: seed)
+    /// Painted or not, no animation. The shaders read the origin, radius and seed only while
+    /// paint spreads (Shaders.metal `samplePaint`), so a settled state carries none.
+    static func settled(painted: Bool) -> RegionState {
+        RegionState(
+            origin: .zero, start: CanvasClock.never, duration: painted ? 0 : 0.2, radius: 0, painted: painted ? 1 : 0, seed: 0)
+    }
+
+    /// Paint lifting off over `duration` seconds from `start` (0: at once).
+    static func unpainting(start: Float, duration: Float) -> RegionState {
+        RegionState(origin: .zero, start: start, duration: duration, radius: 0, painted: 0, seed: 0)
+    }
+
+    /// Varies the shader's lobed paint front from region to region.
+    static func frontSeed(forRegion r: Int) -> Float { Float(r % 61) * 0.73 }
+}
+
+nonisolated extension Template {
+    /// Where region `r`'s number sits, or the centre of its bounds when it has none: where paint
+    /// spreads from when no touch says otherwise, and where VoiceOver finds the area.
+    func anchor(ofRegion r: Int) -> SIMD2<Float> {
+        if let label = labels(ofRegion: r).first { return label.position }
+        let b = regions[r].bounds
+        return SIMD2(Float(b.minX + b.maxX) / 2, Float(b.minY + b.maxY) / 2)
+    }
+}
+
+nonisolated extension PixelBounds {
+    /// How far paint spreading from `p` has to reach: the distance to the farthest corner, at
+    /// least 1.
+    func farthestCorner(from p: SIMD2<Float>) -> Float {
+        let x0 = Float(minX), x1 = Float(maxX), y0 = Float(minY), y1 = Float(maxY)
+        return max(
+            1, simd_distance(p, SIMD2(x0, y0)), simd_distance(p, SIMD2(x0, y1)),
+            simd_distance(p, SIMD2(x1, y0)), simd_distance(p, SIMD2(x1, y1)))
     }
 }
 
@@ -167,17 +228,21 @@ nonisolated struct CanvasPalette: Sendable {
     /// on light paper (Shaders.metal `highlightPaper`).
     var hatchCeiling: Float = 0.4
 
+    /// The canvas sheet (design token `paper`, #F4EFE6) and its ink, sRGB-encoded.
+    static let sheetPaperSRGB = SIMD3<Float>(0.957, 0.937, 0.902)
+    static let sheetInkSRGB = SIMD3<Float>(0.118, 0.102, 0.133)
+
     static let light = CanvasPalette(
         background: CanvasColor.linearP3(sRGB: SIMD3(0.949, 0.945, 0.957)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.957, 0.937, 0.902)),
-        ink: CanvasColor.linearP3(sRGB: SIMD3(0.118, 0.102, 0.133)),
+        paper: CanvasColor.linearP3(sRGB: sheetPaperSRGB),
+        ink: CanvasColor.linearP3(sRGB: sheetInkSRGB),
         shadowOpacity: 0.16, outlineOpacity: 0.62)
 
     /// Light paper on a dark backdrop (dark system appearance, Paper set to Light).
     static let dark = CanvasPalette(
         background: CanvasColor.linearP3(sRGB: SIMD3(0.078, 0.067, 0.090)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.957, 0.937, 0.902)),
-        ink: CanvasColor.linearP3(sRGB: SIMD3(0.118, 0.102, 0.133)),
+        paper: CanvasColor.linearP3(sRGB: sheetPaperSRGB),
+        ink: CanvasColor.linearP3(sRGB: sheetInkSRGB),
         shadowOpacity: 0.55, outlineOpacity: 0.62)
 
     /// A deep warm grey sheet with a hint of violet and light ink, for painting in the evening.
@@ -189,11 +254,9 @@ nonisolated struct CanvasPalette: Sendable {
         rim: CanvasColor.linearP3(sRGB: SIMD3(0.812, 0.780, 0.827)), rimOpacity: 0.3,
         accentFloor: 0.35, hatchCeiling: 1)
 
-    static func appearance(dark: Bool) -> CanvasPalette { dark ? .dark : .light }
-
     /// The palette for the Paper preference under the system appearance.
     static func resolve(_ paper: PaperAppearance, interfaceIsDark: Bool) -> CanvasPalette {
-        paper.usesDarkPaper(interfaceIsDark: interfaceIsDark) ? .darkPaper : appearance(dark: interfaceIsDark)
+        paper.usesDarkPaper(interfaceIsDark: interfaceIsDark) ? .darkPaper : interfaceIsDark ? .dark : .light
     }
 
     /// `paint` (linear P3) as an accent on this paper: unchanged on light paper, lightened on

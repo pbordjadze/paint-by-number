@@ -11,6 +11,29 @@ nonisolated enum AdvancedText {
                      comment: "Settings › Advanced: value of a switch that is off, in shared settings text and VoiceOver")
     }
 
+    /// Under a changed setting while its effect on the preview is being worked out.
+    static var measuring: String {
+        String(localized: "advanced.effect.measuring", defaultValue: "Measuring…",
+               comment: "Settings › Advanced: under a changed setting while its effect on the preview is being worked out")
+    }
+
+    /// The Line Appearance section's header, which names it in shared settings text too.
+    static var lineAppearanceTitle: String {
+        String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
+               comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom")
+    }
+
+    /// The preview's two looks: the template as a painting starts, and every area painted.
+    static var previewTemplate: String {
+        String(localized: "advanced.preview.template", defaultValue: "Template",
+               comment: "Settings › Advanced: preview choice showing the template's lines and numbers, as a painting starts")
+    }
+
+    static var previewPainted: String {
+        String(localized: "advanced.preview.painted", defaultValue: "Painted",
+               comment: "Settings › Advanced: preview choice showing every area painted, as a finished painting")
+    }
+
     /// Line Appearance's switch for weighting lines within a layer by their edge's strength.
     static var weightTitle: String {
         String(localized: "advanced.appearance.weighted", defaultValue: "Weight by Edge Strength",
@@ -72,6 +95,11 @@ nonisolated enum AdvancedText {
                comment: "Settings › Advanced: a zoom level of the preview, relative to the whole picture in view, e.g. 2×; the argument is the level")
     }
 
+    /// "2.4×": any zoom, to a tenth.
+    static func zoomText(_ zoom: Double) -> String {
+        multiplier((zoom * 10).rounded() / 10)
+    }
+
     /// "+212", "−85".
     static func signed(_ value: Int) -> String {
         signed(abs(value).formatted(), positive: value > 0)
@@ -79,7 +107,7 @@ nonisolated enum AdvancedText {
 
     /// "+10 min", "−1 h 5 min".
     static func signedDuration(_ seconds: TimeInterval) -> String {
-        signed(PaintingTime.spent(abs(seconds)), positive: seconds > 0)
+        signed(PaintingTimeText.spent(abs(seconds)), positive: seconds > 0)
     }
 
     private static func signed(_ text: String, positive: Bool) -> String {
@@ -119,7 +147,7 @@ nonisolated enum AdvancedText {
         }
         let minutes = Int((abs(delta.seconds) / 60).rounded())
         if minutes >= 1 {
-            let duration = PaintingTime.spent(Double(minutes) * 60)
+            let duration = PaintingTimeText.spent(Double(minutes) * 60)
             parts.append(delta.seconds > 0
                 ? String(localized: "advanced.effect.longer", defaultValue: "about \(duration) longer",
                          comment: "Settings › Advanced: a setting's effect on the estimated painting time; the argument is a duration such as 10 min")
@@ -161,7 +189,7 @@ nonisolated enum AdvancedText {
                 break
             }
         }
-        let text = multiplier((Double(zoom) * 10).rounded() / 10)
+        let text = zoomText(Double(zoom))
         return String(localized: "advanced.appearance.clearFrom", defaultValue: "Clear from about \(text)",
                       comment: "Settings › Advanced › Line Appearance: the zoom from which the selected layer's lines read clearly; the argument is a zoom such as 2.4×")
     }
@@ -172,7 +200,7 @@ nonisolated extension AdvancedControl {
         switch self {
         case .style:
             String(localized: "advanced.control.style", defaultValue: "Line Style",
-                   comment: "Settings › Advanced › Line Art: name of the choice between Classic and Layered lines")
+                   comment: "Settings › Advanced › Line Art: name of the choice between the Classic, Layered and Coloring Book line styles")
         case .outlineThreshold:
             String(localized: "advanced.control.outlineThreshold", defaultValue: "Outlines From",
                    comment: "Settings › Advanced › Line Art: slider for the edge strength from which a line is an outline")

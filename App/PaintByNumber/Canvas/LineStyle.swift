@@ -1,5 +1,6 @@
 import Foundation
 import PaintCore
+import simd
 
 /// How strongly each `LineLayer` draws in one frame or image, as factors of the classic line at
 /// the same zoom: 1 draws exactly a classic template's line. The canvas, `CanvasSnapshot` (share
@@ -70,7 +71,7 @@ nonisolated enum ColoringBookLook {
     static func widthPoints(depth: Float, weight: Float) -> Float { (1.5 + 0.7 * max(depth, 0)) * weight }
 
     /// The ink pictures draw the book with: the canvas sheet's ink, encoded sRGB.
-    static let ink = SIMD4<Float>(0.118, 0.102, 0.133, 1)
+    static let ink = SIMD4(CanvasPalette.sheetInkSRGB, 1)
 
     /// On paper there is no highlight to show a color's cells, so a printed book draws its color
     /// edges as dotted guides: this fraction of the print style's outline opacity, dots this many
@@ -146,20 +147,6 @@ nonisolated struct DrawableLineArt: Sendable {
     }
 }
 
-nonisolated extension LineAppearance {
-    /// The appearance Settings › Advanced stored (`SettingsKey.lineAppearance`, written with
-    /// `Preferences.store`), or the default when there is none or it can't be read. Safe off the
-    /// main actor: images of layered paintings are drawn with it in the background.
-    static func stored(in defaults: UserDefaults = .standard) -> LineAppearance {
-        decoded(defaults.data(forKey: SettingsKey.lineAppearance))
-    }
-
-    /// An appearance stored as JSON, or the default.
-    static func decoded(_ data: Data?) -> LineAppearance {
-        data.flatMap { try? JSONDecoder().decode(LineAppearance.self, from: $0) } ?? .default
-    }
-}
-
 /// What the outline pass draws for a template: a "line" per boundary edge, then one per interior
 /// stroke, each with its two regions and its style, and a segment per step of every line's
 /// polyline. A stroke has its region on both sides, which the shader reads as "inside a cell".
@@ -174,8 +161,6 @@ nonisolated struct OutlineGeometry {
     let lineRegions: [SIMD2<UInt32>]
     /// (layer, width factor) per line.
     let lineStyles: [SIMD2<Float>]
-    /// True when the template has line art (drawn in layers, or as a coloring book).
-    let isLayered: Bool
     /// How the template's line art is drawn; nil for classic templates.
     let lineArtStyle: TemplateLineArt.Style?
 
@@ -209,7 +194,6 @@ nonisolated struct OutlineGeometry {
         segments = segs
         lineRegions = regions
         lineStyles = styles
-        isLayered = lines != nil
         lineArtStyle = lines?.style
     }
 }
