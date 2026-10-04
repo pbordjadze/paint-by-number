@@ -422,7 +422,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   (`EdgeMap.contourWeight`, measured on the fox and Arrieta's still life), and hands the HED map
   along as `LineArtInput.contours`, which decides the outlines; `LineArtSettings.detector`
   (Settings › Advanced › Detector, `pbn --line-art detector=…`) picks that or either map alone,
-  derived from the one cached computation (`LineArtInputs.Maps`). `.cpuOnly` keeps maps
+  derived from the one cached computation (`LineArtInputs.Maps`; demo and test launches also keep
+  each photo's maps on disk, `LineArtMapsCache`, DEBUG only, so a CI run's dozens of launches
+  compute every bundled picture once). `.cpuOnly` keeps maps
   the same across devices, up to a level where a value sits on a rounding boundary (the Neural
   Engine and GPU compute in reduced precision that differs by chip); the target has
   `COREML_CODEGEN_LANGUAGE = None` and loads the `.mlmodelc`s by URL. `EyeFinder.eyes(in:)`:

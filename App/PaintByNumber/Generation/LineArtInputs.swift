@@ -72,13 +72,21 @@ nonisolated enum LineArtInputs {
     }
 
     /// Everything found in `image`, computed now without the cache: both maps (the models one
-    /// after the other) and, meanwhile, the eyes and the subjects.
+    /// after the other) and, meanwhile, the eyes and the subjects. Demo and test launches read
+    /// and keep them on disk (`LineArtMapsCache`), so a CI run computes each picture once.
     @concurrent
     static func maps(for image: CGImage) async throws -> Maps {
+        #if DEBUG
+        if let cached = LineArtMapsCache.maps(for: image) { return cached }
+        #endif
         async let eyes = findEyes(in: image)
         async let objects = findObjects(in: image)
         let maps = try EdgeDetector.maps(for: image)
-        return Maps(drawing: maps.drawing, contours: maps.contours, eyes: await eyes, objects: await objects)
+        let found = Maps(drawing: maps.drawing, contours: maps.contours, eyes: await eyes, objects: await objects)
+        #if DEBUG
+        LineArtMapsCache.store(found, for: image)
+        #endif
+        return found
     }
 
     @concurrent
