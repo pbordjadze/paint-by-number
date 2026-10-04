@@ -31,12 +31,15 @@ nonisolated struct Fade {
 }
 
 /// Per-frame shader constants. Layout mirrors `FrameUniforms` in Shaders.metal (only 16-byte
-/// vectors, so Swift and MSL agree without padding rules).
+/// vectors, so Swift and MSL agree without padding rules). A new field goes into `FrameUniforms`
+/// at the same position; `CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the stride.
 nonisolated struct CanvasUniforms {
     /// xy: translation (px), z: px per canvas unit, w: px per point.
     var transform: SIMD4<Float> = .zero
     /// xy: target size (px), zw: canvas size (units).
     var viewport: SIMD4<Float> = .zero
+    /// rgb: the backdrop around the sheet. No shader reads it: it carries the backdrop to the
+    /// time-lapse's clear color (`TimelapseFrameRenderer`).
     var background: SIMD4<Float> = .zero
     /// rgb: unpainted paper, a: drop shadow opacity.
     var paper: SIMD4<Float> = .zero

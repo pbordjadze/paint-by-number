@@ -544,7 +544,8 @@ struct CanvasPaletteTests {
         #expect(u.selected == SIMD4(0, 0, 0, 1) && u.accent.w == palette.hatchCeiling && u.accent.x > 0)
     }
 
-    /// Thumbnails, share pictures and time-lapses are paper-themed whatever the canvas shows.
+    /// The offscreen renders (completion picture, time-lapse) are on light paper whatever the
+    /// canvas shows.
     @Test func offscreenRendersStayOnLightPaper() throws {
         for options in [CanvasSnapshot.Options.painting, .preview, .thumbnail] {
             #expect(options.palette.paper == CanvasPalette.light.paper)

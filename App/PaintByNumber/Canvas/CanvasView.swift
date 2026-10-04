@@ -841,6 +841,7 @@ final class CanvasView: UIView, PaintingCanvas {
         if sparkleLayers.isEmpty {
             sparkleLayers = (0..<4).map { _ in
                 let sparkle = CAShapeLayer()
+                // `Theme.gold`, spelled out: the theme is SwiftUI, this file isn't.
                 sparkle.fillColor = UIColor(red: 0.788, green: 0.635, blue: 0.290, alpha: 1).cgColor
                 sparkle.opacity = 0
                 sparkle.zPosition = 10

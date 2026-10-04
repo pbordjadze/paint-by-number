@@ -276,10 +276,11 @@ nonisolated final class RenderContext: @unchecked Sendable {
         }
 
         if drawOutlines {
-            var edge: Float = 2
+            // Outlines on the sheet's border reach past it.
+            var outlineOverhang: Float = 2
             enc.setRenderPipelineState(compositePipeline)
             enc.setVertexBytes(&u, length: uniformSize, index: 0)
-            enc.setVertexBytes(&edge, length: MemoryLayout<Float>.size, index: 1)
+            enc.setVertexBytes(&outlineOverhang, length: MemoryLayout<Float>.size, index: 1)
             enc.setFragmentTexture(targets.outlines, index: 0)
             enc.setFragmentBytes(&u, length: uniformSize, index: 0)
             enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
@@ -299,10 +300,10 @@ nonisolated final class RenderContext: @unchecked Sendable {
         }
 
         if let photo = content.photo, u.photo.x > 0 {
-            var edge: Float = 0
+            var photoMargin: Float = 0
             enc.setRenderPipelineState(photoPipeline)
             enc.setVertexBytes(&u, length: uniformSize, index: 0)
-            enc.setVertexBytes(&edge, length: MemoryLayout<Float>.size, index: 1)
+            enc.setVertexBytes(&photoMargin, length: MemoryLayout<Float>.size, index: 1)
             enc.setFragmentTexture(photo, index: 0)
             enc.setFragmentBytes(&u, length: uniformSize, index: 0)
             enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)

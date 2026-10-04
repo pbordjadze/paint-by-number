@@ -3,8 +3,10 @@ import Foundation
 import Metal
 import PaintCore
 
-/// Offscreen rendering with the canvas shaders: gallery thumbnails, share/export images,
-/// printable previews. Thread-safe; call it off the main actor.
+/// Offscreen rendering with the canvas shaders: the finished painting's share picture
+/// (`CompletionShare`), the time-lapse's frames (`TimelapseFrameRenderer` uses its uniforms)
+/// and the render tests. Thumbnails, shared images, previews and PDFs are `TemplateRasterizer`'s.
+/// Thread-safe; call it off the main actor.
 nonisolated enum CanvasSnapshot {
     nonisolated struct Options: Sendable {
         var outlines: Bool
@@ -24,9 +26,9 @@ nonisolated enum CanvasSnapshot {
         /// The artwork as painted so far: unpainted regions stay paper, no line art (a coloring
         /// book keeps its drawing, `drawsLines(for:)`).
         static let painting = Options(outlines: false, numbers: false)
-        /// Line art and numbers (painted regions filled): a printable template.
+        /// Line art and numbers over the paint (render tests).
         static let preview = Options(outlines: true, numbers: true)
-        /// Gallery tile: paint plus faint line art, no numbers.
+        /// The time-lapse's look: paint plus faint line art, no numbers.
         static let thumbnail = Options(outlines: true, numbers: false, outlineWidth: 0.8)
 
         /// Whether `scene`'s line art is drawn: with `outlines`, and always for a coloring book,
