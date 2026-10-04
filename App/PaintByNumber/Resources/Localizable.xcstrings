@@ -681,6 +681,30 @@
         }
       }
     },
+    "advanced.control.outlineObjects" : {
+      "comment" : "Settings › Advanced › Line Art: switch that closes each subject's silhouette with an outline where the picture gives no edge",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outline Subjects"
+          }
+        }
+      }
+    },
+    "advanced.control.outlineObjects.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Outline Subjects switch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closes the silhouette of the main subjects where the picture gives no edge, so each is an area of its own."
+          }
+        }
+      }
+    },
     "advanced.control.outlineThreshold" : {
       "comment" : "Settings › Advanced › Line Art: slider for the edge strength from which a line is an outline",
       "extractionState" : "manual",

@@ -65,11 +65,13 @@ struct EdgeDetectorTests {
         #expect(ink > 0.005 && ink < 0.2, "\(ink) of the fixture is ink")
 
         let hed = try EdgeDetector.edgeMap(for: input, cancel: .none)
-        let combined = try EdgeDetector.combinedMap(for: input, cancel: .none)
+        let maps = try EdgeDetector.maps(for: input, cancel: .none)
+        let combined = maps.edges
         #expect(combined.width == hed.width && combined.height == hed.height)
         #expect(combined == EdgeMap.combined(drawing: map, contours: hed))
+        #expect(maps.contours == hed)
         #expect(zip(combined.values, map.values).allSatisfy { $0 >= $1 })
-        #expect(try EdgeDetector.combinedMap(for: input, cancel: .none) == combined)
+        #expect(try EdgeDetector.maps(for: input, cancel: .none).edges == combined)
     }
 
     /// A photo at full size: scaled to 1152 px, the same map on every run. Records the time and

@@ -1,6 +1,114 @@
 {
   "about": "Quality baseline for tools/regression.py; regenerate with --update.",
   "cases": {
+    "book-c24-d0.5/barn": {
+      "bandRings": 72,
+      "colors": 24,
+      "enclosedAreas": 124,
+      "encodedBytes": 1349470,
+      "inkDensity": 22.16,
+      "interiorStrokes": 61,
+      "largestAreaFraction": 0.322,
+      "meanDeltaE": 0.03854236,
+      "minInscribedRadius": 2.8526695,
+      "minPaletteDistance": 0.04086547,
+      "openEndsPer1000": 6.22,
+      "p95DeltaE": 0.09569522,
+      "regions": 460,
+      "regionsUnderRadius3": 2,
+      "templateSHA1": "5d10fea348c206dacb54a5aa5a57e8df3892d4e1",
+      "totalMs": 764.0
+    },
+    "book-c24-d0.5/espresso": {
+      "bandRings": 46,
+      "colors": 23,
+      "enclosedAreas": 13,
+      "encodedBytes": 738595,
+      "inkDensity": 11.5,
+      "interiorStrokes": 3,
+      "largestAreaFraction": 0.495,
+      "meanDeltaE": 0.036113627,
+      "minInscribedRadius": 2.891848,
+      "minPaletteDistance": 0.04044038,
+      "openEndsPer1000": 0.97,
+      "p95DeltaE": 0.10488898,
+      "regions": 172,
+      "regionsUnderRadius3": 1,
+      "templateSHA1": "916c9fae0c3ac3663561ae8d80ee6332f67ce094",
+      "totalMs": 490.6
+    },
+    "book-c24-d0.5/hibiscus": {
+      "bandRings": 116,
+      "colors": 24,
+      "enclosedAreas": 214,
+      "encodedBytes": 1152220,
+      "inkDensity": 27.65,
+      "interiorStrokes": 52,
+      "largestAreaFraction": 0.383,
+      "meanDeltaE": 0.038518973,
+      "minInscribedRadius": 2.9917946,
+      "minPaletteDistance": 0.04560226,
+      "openEndsPer1000": 4.25,
+      "p95DeltaE": 0.13929337,
+      "regions": 517,
+      "regionsUnderRadius3": 1,
+      "templateSHA1": "8ab8dcff80bdcf47779279634f1478ee705bbbb4",
+      "totalMs": 730.0
+    },
+    "book-c24-d0.5/lighthouse": {
+      "bandRings": 55,
+      "colors": 24,
+      "enclosedAreas": 140,
+      "encodedBytes": 1220007,
+      "inkDensity": 30.57,
+      "interiorStrokes": 373,
+      "largestAreaFraction": 0.48,
+      "meanDeltaE": 0.042072184,
+      "minInscribedRadius": 3.725477,
+      "minPaletteDistance": 0.040436722,
+      "openEndsPer1000": 27.58,
+      "p95DeltaE": 0.15166363,
+      "regions": 423,
+      "regionsUnderRadius3": 0,
+      "templateSHA1": "9261593f855dae0bc34767333ea9a0b53c112561",
+      "totalMs": 755.1
+    },
+    "book-c24-d0.5/parrots": {
+      "bandRings": 124,
+      "colors": 24,
+      "enclosedAreas": 41,
+      "encodedBytes": 849644,
+      "inkDensity": 10.62,
+      "interiorStrokes": 18,
+      "largestAreaFraction": 0.562,
+      "meanDeltaE": 0.03819486,
+      "minInscribedRadius": 2.8977907,
+      "minPaletteDistance": 0.044035617,
+      "openEndsPer1000": 3.83,
+      "p95DeltaE": 0.08438272,
+      "regions": 208,
+      "regionsUnderRadius3": 1,
+      "templateSHA1": "2c5b8f92d9bffb3b56046aae5f5058b6fb0e0cec",
+      "totalMs": 682.8
+    },
+    "book-c24-d0.5/regatta": {
+      "bandRings": 45,
+      "colors": 24,
+      "enclosedAreas": 82,
+      "encodedBytes": 788605,
+      "inkDensity": 13.26,
+      "interiorStrokes": 48,
+      "largestAreaFraction": 0.475,
+      "meanDeltaE": 0.031192312,
+      "minInscribedRadius": 3.2450361,
+      "minPaletteDistance": 0.0404404,
+      "openEndsPer1000": 8.18,
+      "p95DeltaE": 0.09053155,
+      "regions": 241,
+      "regionsUnderRadius3": 0,
+      "templateSHA1": "7b8655d0c9a9d46d03dde7254b6f123ef70331f1",
+      "totalMs": 819.6
+    },
     "c12-d0/barn": {
       "bandRings": 32,
       "colors": 12,
@@ -11,8 +119,8 @@
       "p95DeltaE": 0.096754365,
       "regions": 138,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "4620dd40d2394ba53e8f9bfcaaef1fceba191898",
-      "totalMs": 290.1
+      "templateSHA1": "4e5d06dd87511d3ff136a2904fe7ca5f95af1d98",
+      "totalMs": 312.8
     },
     "c12-d0/espresso": {
       "bandRings": 32,
@@ -24,8 +132,8 @@
       "p95DeltaE": 0.108587176,
       "regions": 91,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "534b3a2dfa709e7eedb2410bffe1e9f77f8ccf77",
-      "totalMs": 210.4
+      "templateSHA1": "afbf86ed93d1f08adc689b2d3f3c43948079c577",
+      "totalMs": 263.8
     },
     "c12-d0/hibiscus": {
       "bandRings": 36,
@@ -37,8 +145,8 @@
       "p95DeltaE": 0.1258677,
       "regions": 191,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "533ff3ee77f15acb1d73422d1eadbd249e76ba70",
-      "totalMs": 264.5
+      "templateSHA1": "2ebae0b2793cb774b228ab2ae2cc2d60412672d9",
+      "totalMs": 388.2
     },
     "c12-d0/lighthouse": {
       "bandRings": 6,
@@ -50,8 +158,8 @@
       "p95DeltaE": 0.13760047,
       "regions": 168,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "73cf9e9ab06394eeedd10d5c0ff9ede0da921fc1",
-      "totalMs": 312.6
+      "templateSHA1": "326116724342b0eec877e2e97accfc4bd9d54484",
+      "totalMs": 399.2
     },
     "c12-d0/parrots": {
       "bandRings": 54,
@@ -63,8 +171,8 @@
       "p95DeltaE": 0.093677826,
       "regions": 86,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "49181ff66b1835a364f41988ff66d29841f74323",
-      "totalMs": 248.7
+      "templateSHA1": "1ac0dc7a1be9b9d139ab96ae27df9a87da7c20b5",
+      "totalMs": 342.8
     },
     "c12-d0/regatta": {
       "bandRings": 19,
@@ -76,8 +184,8 @@
       "p95DeltaE": 0.09774041,
       "regions": 110,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "0918191f7d0a003a242e6a98147b328fdc4b0f86",
-      "totalMs": 310.1
+      "templateSHA1": "fa1fa0d4960d70ca615567940d31c3ca5ebda3f3",
+      "totalMs": 363.3
     },
     "c150-d1/barn": {
       "bandRings": 29,
@@ -89,8 +197,8 @@
       "p95DeltaE": 0.08125467,
       "regions": 839,
       "regionsUnderRadius3": 1,
-      "templateSHA1": "4e4f9d86a76fd02c90bc6cf3e5c7425e2d77f86e",
-      "totalMs": 563.3
+      "templateSHA1": "9007f631a745ca97aa4e5a171deb01286dc67bda",
+      "totalMs": 723.8
     },
     "c150-d1/espresso": {
       "bandRings": 44,
@@ -102,8 +210,8 @@
       "p95DeltaE": 0.0915167,
       "regions": 335,
       "regionsUnderRadius3": 6,
-      "templateSHA1": "ab81c4ccab3afdebd6d14a73badf78d44f07dfe6",
-      "totalMs": 361.6
+      "templateSHA1": "48a93d32879db2e9a3318736af6ad4129c8e3523",
+      "totalMs": 481.5
     },
     "c150-d1/hibiscus": {
       "bandRings": 87,
@@ -115,8 +223,8 @@
       "p95DeltaE": 0.112938024,
       "regions": 695,
       "regionsUnderRadius3": 3,
-      "templateSHA1": "e6cedd1505a865dbd710e6922d3fcd93ae25686c",
-      "totalMs": 538.7
+      "templateSHA1": "123d78f71de4df93f98f85b0734c3a81ef056457",
+      "totalMs": 764.5
     },
     "c150-d1/lighthouse": {
       "bandRings": 25,
@@ -128,8 +236,8 @@
       "p95DeltaE": 0.1081904,
       "regions": 804,
       "regionsUnderRadius3": 3,
-      "templateSHA1": "3dac6683ee7283f24c8eda4aaa5dc527c861474e",
-      "totalMs": 515.4
+      "templateSHA1": "bc1371991177eb207f1cbe85605939fd426eb27e",
+      "totalMs": 841.2
     },
     "c150-d1/parrots": {
       "bandRings": 168,
@@ -141,8 +249,8 @@
       "p95DeltaE": 0.07080057,
       "regions": 381,
       "regionsUnderRadius3": 1,
-      "templateSHA1": "cea3ece5dffe5a33f5a26e33ef4a63ad3efe989d",
-      "totalMs": 449.9
+      "templateSHA1": "1e35d2dd330cf873e9d012daeb6e37cb8a72dbf9",
+      "totalMs": 703.6
     },
     "c150-d1/regatta": {
       "bandRings": 33,
@@ -154,8 +262,8 @@
       "p95DeltaE": 0.076419994,
       "regions": 444,
       "regionsUnderRadius3": 2,
-      "templateSHA1": "6b8867907bb338a9a014b6eab62a0121907532ad",
-      "totalMs": 486.0
+      "templateSHA1": "4a98d51cdbad5ac18573d7e0d37d4939e44bf088",
+      "totalMs": 670.9
     },
     "c24-d0.5/barn": {
       "bandRings": 40,
@@ -167,8 +275,8 @@
       "p95DeltaE": 0.08644577,
       "regions": 391,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "451a46a624028d60c8fc621cdf089537ef5b9ed6",
-      "totalMs": 353.1
+      "templateSHA1": "d5e147ca29a4fc011b821e847351afa0862ae1b0",
+      "totalMs": 437.4
     },
     "c24-d0.5/espresso": {
       "bandRings": 41,
@@ -180,8 +288,8 @@
       "p95DeltaE": 0.09080619,
       "regions": 184,
       "regionsUnderRadius3": 4,
-      "templateSHA1": "37b4e392166066809a99b3fa0a38c9160f913614",
-      "totalMs": 227.8
+      "templateSHA1": "56f4d30119d7154952fe367f367fc79117029bd2",
+      "totalMs": 288.2
     },
     "c24-d0.5/hibiscus": {
       "bandRings": 63,
@@ -193,8 +301,8 @@
       "p95DeltaE": 0.107338026,
       "regions": 467,
       "regionsUnderRadius3": 4,
-      "templateSHA1": "f21a61fba93ec388a3c9bf3aaed6cd691aa0ba22",
-      "totalMs": 337.3
+      "templateSHA1": "dfb209c97977ce13ec46cdaf30763ca74488642e",
+      "totalMs": 455.6
     },
     "c24-d0.5/lighthouse": {
       "bandRings": 22,
@@ -206,8 +314,8 @@
       "p95DeltaE": 0.109414384,
       "regions": 563,
       "regionsUnderRadius3": 2,
-      "templateSHA1": "62af1d111b1b2465be6bb16fda2a556f75d66f4c",
-      "totalMs": 355.4
+      "templateSHA1": "c7535bf0442cfd3ee33ee2111fb5ff3ed64c138d",
+      "totalMs": 453.3
     },
     "c24-d0.5/parrots": {
       "bandRings": 107,
@@ -219,8 +327,8 @@
       "p95DeltaE": 0.07665925,
       "regions": 202,
       "regionsUnderRadius3": 3,
-      "templateSHA1": "48851276e123341980e126063aa4fc6435bb5456",
-      "totalMs": 333.4
+      "templateSHA1": "ac3f06c821b6eb7e6264b6e14b51a1072c6010fb",
+      "totalMs": 407.5
     },
     "c24-d0.5/regatta": {
       "bandRings": 32,
@@ -232,11 +340,16 @@
       "p95DeltaE": 0.07825873,
       "regions": 239,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "bc9dea1b671862ac7ee0e46034416191c0f7fd80",
-      "totalMs": 305.8
+      "templateSHA1": "64ba26dc8c5f734b70bc66cbe3af192c069345cb",
+      "totalMs": 451.2
     }
   },
   "regimes": {
+    "book-c24-d0.5": {
+      "book": "coloringBook",
+      "colors": 24,
+      "detail": 0.5
+    },
     "c12-d0": {
       "colors": 12,
       "detail": 0.0

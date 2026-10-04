@@ -207,6 +207,10 @@ struct AdvancedSettingsView: View {
                     title: AdvancedControl.outlineEyes.title, summary: AdvancedControl.outlineEyes.summary,
                     isOn: $model.lineArt.outlineEyes, effect: model.effects[.outlineEyes] ?? .atDefault,
                     identifier: "advanced-control-outlineEyes")
+                AdvancedToggleRow(
+                    title: AdvancedControl.outlineObjects.title, summary: AdvancedControl.outlineObjects.summary,
+                    isOn: $model.lineArt.outlineObjects, effect: model.effects[.outlineObjects] ?? .atDefault,
+                    identifier: "advanced-control-outlineObjects")
             }
         } header: {
             AdvancedSectionHeader(

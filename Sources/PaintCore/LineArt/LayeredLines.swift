@@ -13,7 +13,9 @@ import Foundation
 /// 3. `layer`: per point, hysteresis along the stroke against the outline, detail and
 ///    texture thresholds, the outline threshold rising where lines crowd (`LineLayering`);
 ///    stretches below texture are cut out. Eyes (`outlineEyes`) replace the lines inside them
-///    with their contours and irises as outlines and promote the lines around them. Free ends
+///    with their contours and irises as outlines and promote the lines around them; the
+///    subjects' silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
+///    (`LineLayering.addObjects`). Free ends
 ///    reach for the nearest line, paint boundary or frame (`gapBridging` × 1.6 / 1.2 / 1 by
 ///    layer), so open strokes close cells.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
@@ -46,6 +48,9 @@ enum LayeredLines {
     static let mergeSteps: Float = 2
     /// Paint difference at which a color line's weight saturates.
     static let colorWeightReference: Float = 0.15
+    /// How far (working pixels) a stroke may run from a contour's ridge and still read its
+    /// strength for the outline threshold (`LineArtInput.contours`).
+    static let contourReach = 2
 
     struct Plan {
         var segmentation: Segmentation
@@ -89,6 +94,16 @@ enum LayeredLines {
             return (mask, ridges.smooth, clutter)
         }
         try cancel.throwIfCancelled()
+        // The contour map's strength, smoothed like the lines' and widened by two pixels, so a
+        // stroke the drawing traced a little off the contour's ridge still reads the contour.
+        let contourStrength: [Float]? = try input.contours.map { contours in
+            let field = LineDetection.strength(contours, width: w, height: h)
+            try cancel.throwIfCancelled()
+            let smooth = Gaussian.filter(field, width: w, height: h, sigma: LineDetection.responseSigma, orderX: 0, orderY: 0)
+            let levels = smooth.map { UInt8(min(max($0, 0), 1) * 255 + 0.5) }
+            return Self.maxFilter(levels, width: w, height: h, radius: contourReach).map { Float($0) / 255 }
+        }
+        try cancel.throwIfCancelled()
 
         let strokes = clock.measure("lineArt.trace") { () -> [StrokeGraph.Stroke] in
             var g = StrokeGraph.trace(mask.mask, strength: mask.strength, width: w, height: h)
@@ -105,11 +120,19 @@ enum LayeredLines {
         try cancel.throwIfCancelled()
 
         let lines = clock.measure("lineArt.layer") { () -> [DrawnLine] in
-            var lines = LineLayering.layered(strokes, thresholds: thresholds, clutter: mask.clutter, width: w)
+            var lines = LineLayering.layered(
+                strokes, thresholds: thresholds, clutter: mask.clutter, width: w, contours: contourStrength)
             if s.outlineEyes {
                 let eyes = LineLayering.eyePolygons(input.eyes, width: w, height: h)
                 stats.eyes = eyes.count
                 lines = LineLayering.addEyes(lines, eyes: eyes, width: w, height: h)
+            }
+            if s.outlineObjects {
+                let objects = LineLayering.eyePolygons(input.objects, width: w, height: h)
+                stats.objects = objects.count
+                let added = LineLayering.addObjects(lines, objects: objects, width: w, height: h)
+                stats.objectStretches = added.count
+                lines += added
             }
             let colorEdge = Self.boundaryPixels(segmentation.labels.storage, width: w, height: h)
             let first = LineLayering.walls(lines, width: w, height: h)
@@ -434,6 +457,10 @@ public struct LineArtStats: Sendable, Codable, Equatable {
     public var strokes = 0
     /// Eyes outlined.
     public var eyes = 0
+    /// Subjects whose silhouettes were given, and the stretches of them drawn where the
+    /// drawing left a silhouette open.
+    public var objects = 0
+    public var objectStretches = 0
     /// Free ends extended to a line, paint boundary or the frame.
     public var endsClosed = 0
     /// Cells right after splitting the segmentation along the lines.

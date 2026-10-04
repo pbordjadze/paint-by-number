@@ -3,6 +3,8 @@
 
     tools/eval.py run IMAGE... --out DIR [--sheet-width 2400] [--importance-dir DIR]
         [--edges-dir DIR] [--lines-dir DIR] [--eyes-dir DIR] [-- pbn generate options]
+    tools/eval.py book IMAGE... --out DIR [--edges-dir DIR] [--lines-dir DIR] [--eyes-dir DIR] [--objects-dir DIR]
+        [--importance-dir DIR] [--variant NAME=OPTIONS]... [--zoom 3] [--cell 560] [-- pbn generate options]
 
 `-- --auto [--length L]` generates at the settings Auto suggests; the caption shows them.
 
@@ -16,10 +18,26 @@ Layered line art: --edges-dir passes `<name>.pgm` from that directory as the edg
 (`--lines`; both given, pbn combines them as the app combines its two models), and generates
 layered templates (`--line-style layered`, unless the pbn options set a style: `-- --line-style
 coloringBook` for coloring books); --eyes-dir passes
-`<name>.json` (closed polygons normalized to the photo) as `--eyes`. Other line-art settings
+`<name>.json` (closed polygons normalized to the photo) as `--eyes`, and --objects-dir (`book`
+only) `<name>.pgm` (a subject mask) or `<name>.json` as `--objects`. Other line-art settings
 go through as pbn options (`-- --line-art samePaint=split`). The template panel draws each
 layer in its group (a coloring book its drawing in heavy ink and no color edges); the caption
 adds the style, cells against the classic regions and the edges per layer.
+
+`book` judges coloring books the way their painter sees them: for every image a sheet
+`DIR/<name>/book.png` with one column per variant (`--variant NAME=OPTIONS`, pbn generate
+options such as `--line-art outlineThreshold=0.5`; none means the defaults alone, named
+`default`) and five rows: the drawing fitted, the middle of it at --zoom, the cells of the
+paint with the most of them hatched as the selected color (pbn's selected.svg), the
+finished painting with the drawing over it, and the areas the drawing encloses (pbn's
+areas.ppm: a color per area, light for a single cell, red rings where widening the lines
+closes an opening). Under each column, the drawing metrics of `stats.json`'s `lineArt`:
+cells (and against the classic regions), areas the drawing encloses (cells per area, areas
+of a single cell, the largest area's share of the canvas), ink density, the share inside
+cells, open stroke ends per 1000 units, interior strokes, and the share of the canvas the
+lines wall off as drawn and widened by 1 to 4 pixels (a jump says how wide the openings
+are). `DIR/book-summary.json` keeps every variant's stats; the table printed has a row per
+image and variant. Books are generated unless the options set another style.
 
 Requires a static release build of pbn:  tools/swift.sh build -c release --static-swift-stdlib
 (or set PBN=/path/to/pbn, e.g. a saved baseline binary for before/after comparisons)
@@ -80,25 +98,39 @@ def palette_names(stats):
     return [f"{nicknames[i]}\n{name}" if i < len(nicknames) else name for i, name in enumerate(plain)]
 
 
+def map_args(name, pbn_args, importance_dir=None, edges_dir=None, lines_dir=None, eyes_dir=None, objects_dir=None,
+             style="layered"):
+    """pbn options passing `name`'s maps from the directories given (a map that isn't there is
+    skipped), with `--line-style STYLE` when a map is passed and the options name no style."""
+    extra = []
+    if importance_dir and os.path.exists(os.path.join(importance_dir, name + ".pgm")):
+        extra = ["--importance", os.path.join(importance_dir, name + ".pgm")]
+    maps = False
+    if edges_dir and os.path.exists(os.path.join(edges_dir, name + ".pgm")):
+        extra += ["--edges", os.path.join(edges_dir, name + ".pgm")]
+        maps = True
+    if lines_dir and os.path.exists(os.path.join(lines_dir, name + ".pgm")):
+        extra += ["--lines", os.path.join(lines_dir, name + ".pgm")]
+        maps = True
+    if maps:
+        if "--line-style" not in pbn_args:
+            extra += ["--line-style", style]
+        if eyes_dir and os.path.exists(os.path.join(eyes_dir, name + ".json")):
+            extra += ["--eyes", os.path.join(eyes_dir, name + ".json")]
+        for ext in (".pgm", ".json"):
+            if objects_dir and os.path.exists(os.path.join(objects_dir, name + ext)):
+                extra += ["--objects", os.path.join(objects_dir, name + ext)]
+                break
+    return extra
+
+
 def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, edges_dir=None, eyes_dir=None, lines_dir=None):
     name = os.path.splitext(os.path.basename(image_path))[0]
     out = os.path.join(out_root, name)
     os.makedirs(out, exist_ok=True)
     ppm = os.path.join(out, "input.ppm")
     Image.open(image_path).convert("RGB").save(ppm)
-    extra = []
-    if importance_dir and os.path.exists(os.path.join(importance_dir, name + ".pgm")):
-        extra = ["--importance", os.path.join(importance_dir, name + ".pgm")]
-    if edges_dir and os.path.exists(os.path.join(edges_dir, name + ".pgm")):
-        extra += ["--edges", os.path.join(edges_dir, name + ".pgm")]
-        if "--line-style" not in pbn_args:
-            extra += ["--line-style", "layered"]
-    if lines_dir:
-        extra += ["--lines", os.path.join(lines_dir, name + ".pgm")]
-        if not edges_dir and "--line-style" not in pbn_args:
-            extra += ["--line-style", "layered"]
-        if eyes_dir and os.path.exists(os.path.join(eyes_dir, name + ".json")):
-            extra += ["--eyes", os.path.join(eyes_dir, name + ".json")]
+    extra = map_args(name, pbn_args, importance_dir, edges_dir, lines_dir, eyes_dir)
     res = subprocess.run([PBN, "generate", ppm, out] + pbn_args + extra, capture_output=True, text=True)
     if res.returncode != 0:
         print(f"[{name}] FAILED\n{res.stderr}", file=sys.stderr)
@@ -149,16 +181,158 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, ed
     return name, stats
 
 
+BOOK_ROWS = ["fitted", "zoomed", "selected", "finished", "areas"]
+BOOK_KEYS = ["regions", "enclosedAreas", "cellsPerEnclosedArea", "singleCellAreaFraction", "largestAreaFraction",
+             "inkDensity", "interiorFraction", "openEndsPer1000", "interiorStrokes"]
+
+
+def book_metrics(stats):
+    """The drawing metrics under a book column (`stats.json`'s `lineArt`), three lines."""
+    la = stats.get("lineArt") or {}
+    if not la:
+        return [f"no line art: {stats['regions']} regions"]
+    return [
+        f"cells {stats['regions']} (x{la.get('cellsVsClassic', 0):.2f} classic)  colors {stats['colors']}  "
+        f"dE {stats['meanDeltaE']:.4f}  {stats['totalMs']:.0f} ms",
+        f"areas {la.get('enclosedAreas', '?')}: {la.get('cellsPerEnclosedArea', 0):.2f} cells/area, "
+        f"{100 * la.get('singleCellAreaFraction', 0):.0f}% single, largest {100 * la.get('largestAreaFraction', 0):.0f}%, "
+        f"outlines alone {la.get('outlineAreas', '?')}",
+        f"ink {la.get('inkDensity', 0):.2f}/kpx, {100 * la.get('interiorFraction', 0):.0f}% inside cells, "
+        f"open ends {la.get('openEndsPer1000', 0):.1f}/1000, {la.get('interiorStrokes', '?')} strokes, "
+        f"selected #{la.get('selectedColor', '?')}",
+        "walled off as drawn, widened 1..4 px: " + " ".join(f"{100 * v:.0f}%" for v in la.get("enclosedByWidening", []))
+        + (f", openings at {la['openings']}" if la.get("openings") else ""),
+    ]
+
+
+def book_variant(out_root, name, variant, options, pbn_args, dirs, cell, zoom):
+    """Generates one variant of `name`'s book into DIR/<name>/<variant> and rasterizes its four
+    views, `cell` px wide: the stats and the views by row."""
+    out = os.path.join(out_root, name, variant)
+    os.makedirs(out, exist_ok=True)
+    args = pbn_args + options
+    extra = map_args(name, args, *dirs, style="coloringBook")
+    res = subprocess.run([PBN, "generate", os.path.join(out_root, name, "input.ppm"), out] + args + extra,
+                         capture_output=True, text=True)
+    if res.returncode != 0:
+        print(f"[{name}/{variant}] FAILED\n{res.stderr}", file=sys.stderr)
+        return None
+    stats = json.load(open(os.path.join(out, "stats.json")))
+    views = {}
+    for row, svg in (("fitted", "template"), ("selected", "selected"), ("finished", "painted-outlined")):
+        path = os.path.join(out, f"{svg}.svg")
+        if os.path.exists(path):
+            svg_to_png(path, os.path.join(out, f"{row}.png"), cell)
+            views[row] = Image.open(os.path.join(out, f"{row}.png")).convert("RGB")
+    # The middle of the drawing at `zoom`, as a panel of the fitted view's size.
+    svg_to_png(os.path.join(out, "template.svg"), os.path.join(out, "zoomed-full.png"), cell * zoom)
+    full = Image.open(os.path.join(out, "zoomed-full.png")).convert("RGB")
+    w, h = views["fitted"].size
+    x0, y0 = (full.width - w) // 2, (full.height - h) // 2
+    views["zoomed"] = full.crop((x0, y0, x0 + w, y0 + h))
+    views["zoomed"].save(os.path.join(out, "zoomed.png"))
+    os.remove(os.path.join(out, "zoomed-full.png"))
+    # The areas the drawing encloses (pbn's areas.ppm: a color per area, red rings at the
+    # openings a widening of the lines closes).
+    if os.path.exists(os.path.join(out, "areas.ppm")):
+        views["areas"] = Image.open(os.path.join(out, "areas.ppm")).convert("RGB").resize((w, h), Image.LANCZOS)
+        views["areas"].save(os.path.join(out, "areas.png"))
+    return stats, views
+
+
+def book(image_path, out_root, variants, pbn_args, dirs, cell, zoom):
+    """One image's book sheet: a column per variant, the four views down each."""
+    name = os.path.splitext(os.path.basename(image_path))[0]
+    os.makedirs(os.path.join(out_root, name), exist_ok=True)
+    Image.open(image_path).convert("RGB").save(os.path.join(out_root, name, "input.ppm"))
+    results = {variant: book_variant(out_root, name, variant, options, pbn_args, dirs, cell, zoom)
+               for variant, options in variants}
+    done = [(v, o, results[v]) for v, o in variants if results[v]]
+    if not done:
+        return name, {}
+    panel_h = max(views["fitted"].height for _, _, (_, views) in done)
+    gap, header, footer, line = 6, 44, 84, 18
+    rows = len(BOOK_ROWS)
+    sheet = Image.new("RGB", (len(done) * (cell + gap) - gap, header + rows * (panel_h + gap) + footer), "white")
+    d = ImageDraw.Draw(sheet)
+    font, small = ImageFont.load_default(size=16), ImageFont.load_default(size=13)
+    for i, (variant, options, (stats, views)) in enumerate(done):
+        x = i * (cell + gap)
+        d.text((x + 4, 4), f"{name} / {variant}", fill=(0, 0, 0), font=font)
+        d.text((x + 4, 24), " ".join(options) or "(defaults)", fill=(70, 70, 70), font=small)
+        for r, row in enumerate(BOOK_ROWS):
+            y = header + r * (panel_h + gap)
+            if row in views:
+                sheet.paste(views[row], (x, y))
+            else:
+                d.rectangle([x, y, x + cell - 1, y + panel_h - 1], outline=(200, 200, 200))
+            d.rectangle([x + 2, y + 2, x + 10 + 7 * len(row), y + 18], fill=(255, 255, 255))
+            d.text((x + 5, y + 3), row, fill=(120, 60, 125), font=small)
+        for k, text in enumerate(book_metrics(stats)):
+            d.text((x + 4, header + rows * (panel_h + gap) + 2 + k * line), text, fill=(0, 0, 0), font=small)
+    sheet.save(os.path.join(out_root, name, "book.png"))
+    return name, {variant: stats for variant, _, (stats, _) in done}
+
+
+def parse_variants(values):
+    """`NAME=OPTIONS` → (name, pbn options); none means the defaults alone."""
+    import shlex
+    variants = []
+    for value in values:
+        name, _, options = value.partition("=")
+        variants.append((name.strip() or "default", shlex.split(options)))
+    return variants or [("default", [])]
+
+
+def book_main(argv, pbn_args):
+    out_root, cell, zoom = "out", 560, 3
+    dirs = {"--importance-dir": None, "--edges-dir": None, "--lines-dir": None, "--eyes-dir": None, "--objects-dir": None}
+    variants, images = [], []
+    it = iter(argv)
+    for a in it:
+        if a == "--out":
+            out_root = next(it)
+        elif a == "--cell":
+            cell = int(next(it))
+        elif a == "--zoom":
+            zoom = int(next(it))
+        elif a == "--variant":
+            variants.append(next(it))
+        elif a in dirs:
+            dirs[a] = next(it)
+        else:
+            images.append(a)
+    variants = parse_variants(variants)
+    order = (dirs["--importance-dir"], dirs["--edges-dir"], dirs["--lines-dir"], dirs["--eyes-dir"], dirs["--objects-dir"])
+    os.makedirs(out_root, exist_ok=True)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda p: book(p, out_root, variants, pbn_args, order, cell, zoom), images))
+    summary = {name: stats for name, stats in results if stats}
+    json.dump(summary, open(os.path.join(out_root, "book-summary.json"), "w"), indent=2)
+    width = max([len(f"{n}/{v}") for n, s in results for v in s] + [12])
+    print("picture/variant".ljust(width) + "  cells  areas  cells/area  single  largest  ink   inside  open/1000  strokes")
+    for name, stats in results:
+        for variant, s in stats.items():
+            la = s.get("lineArt") or {}
+            print(f"{name}/{variant}".ljust(width) + f"  {s['regions']:5d}  {la.get('enclosedAreas', 0):5d}  "
+                  f"{la.get('cellsPerEnclosedArea', 0):10.2f}  {100 * la.get('singleCellAreaFraction', 0):5.0f}%  "
+                  f"{100 * la.get('largestAreaFraction', 0):6.0f}%  {la.get('inkDensity', 0):4.2f}  "
+                  f"{100 * la.get('interiorFraction', 0):5.0f}%  {la.get('openEndsPer1000', 0):9.1f}  {la.get('interiorStrokes', 0):7d}")
+
+
 def main():
     argv = sys.argv[1:]
-    if not argv or argv[0] != "run":
+    if not argv or argv[0] not in ("run", "book"):
         print(__doc__)
         sys.exit(1)
-    argv = argv[1:]
+    mode, argv = argv[0], argv[1:]
     pbn_args = []
     if "--" in argv:
         i = argv.index("--")
         argv, pbn_args = argv[:i], argv[i + 1:]
+    if mode == "book":
+        book_main(argv, pbn_args)
+        return
     out_root = "out"
     sheet_width = 2400
     importance_dir = edges_dir = eyes_dir = lines_dir = None

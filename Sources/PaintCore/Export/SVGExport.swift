@@ -28,11 +28,18 @@ public enum SVGExport {
         public var layerStyles: [LayerStyle] = SVGExport.defaultLayerStyles
         public var lineColor: String = "#2b2530"
         public var coloringBookWidth: Float = SVGExport.coloringBookWidth
+        /// A palette index whose unpainted regions show as the app shows the selected color's
+        /// cells: a tint hatched in `selectionColor` (group `selection`), drawn over the fills and
+        /// under the lines. A coloring book outlines nothing for being selected, so the hatch alone
+        /// tells its cells apart; nil selects nothing.
+        public var selectedColor: Int? = nil
+        public var selectionColor: String = "#7b3f7e"
 
-        public init(painted: Bool = false, outlines: Bool = true, numbers: Bool = true) {
+        public init(painted: Bool = false, outlines: Bool = true, numbers: Bool = true, selectedColor: Int? = nil) {
             self.painted = painted
             self.outlines = outlines
             self.numbers = numbers
+            self.selectedColor = selectedColor
         }
     }
 
@@ -80,6 +87,27 @@ public enum SVGExport {
                 s += "<path d=\"\(d)\" fill=\"\(color)\" stroke=\"\(color)\" vector-effect=\"non-scaling-stroke\"/>\n"
             }
             s += "</g>\n"
+        }
+
+        if let selected = options.selectedColor, t.palette.indices.contains(selected), !t.rings.isEmpty {
+            // Diagonal hatching a few canvas units apart, like the canvas's highlight of the
+            // selected color's unpainted cells; a hairline of the tint covers the seams.
+            let spacing = max(4, Float(max(t.width, t.height)) / 160)
+            let hatch = (spacing / 4 * 100).rounded() / 100, tint = options.selectionColor
+            s += "<defs><pattern id=\"hatch\" patternUnits=\"userSpaceOnUse\" width=\"\(fmt(spacing))\" height=\"\(fmt(spacing))\" patternTransform=\"rotate(45)\">"
+            s += "<rect width=\"\(fmt(spacing))\" height=\"\(fmt(spacing))\" fill=\"\(tint)\" fill-opacity=\"0.12\"/>"
+            s += "<line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"\(fmt(spacing))\" stroke=\"\(tint)\" stroke-width=\"\(fmt(hatch))\"/></pattern></defs>\n"
+            var d = ""
+            for index in t.regions.indices where Int(t.regions[index].colorIndex) == selected {
+                for poly in t.polygons(ofRegion: index) where !poly.isEmpty {
+                    d += "M" + fmt(poly[0])
+                    for p in poly.dropFirst() { d += "L" + fmt(p) }
+                    d += "Z"
+                }
+            }
+            if !d.isEmpty {
+                s += "<g id=\"selection\" fill-rule=\"evenodd\"><path d=\"\(d)\" fill=\"url(#hatch)\" stroke=\"\(tint)\" stroke-opacity=\"0.12\" stroke-width=\"0.6\" vector-effect=\"non-scaling-stroke\"/></g>\n"
+            }
         }
 
         if options.outlines, let lines = t.lineArt, lines.edgeLayers.count == t.edges.count {

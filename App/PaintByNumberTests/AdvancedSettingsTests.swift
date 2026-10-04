@@ -10,14 +10,16 @@ struct AdvancedSettingsTests {
     /// Layered line art with every field off its default, and every multiplier at 2.
     private static let changedArt = LineArtSettings(
         style: .layered, outlineThreshold: 0.95, detailThreshold: 0.65, textureThreshold: 0.45, minimumStrokeLength: 30,
-        gapBridging: 14, lineSmoothing: 0.9, samePaint: .split, keepColorEdges: false, outlineEyes: false)
+        gapBridging: 14, lineSmoothing: 0.9, samePaint: .split, keepColorEdges: false, outlineEyes: false,
+        outlineObjects: false)
     private static let changedTuning = PipelineTuning(
         smoothing: 2, textureFlattening: 2, minimumCellSize: 2, subjectEmphasis: 2, accentColors: 2, colorfulness: 2)
 
     @Test func classicKeysIgnoreTheLayeredSettings() {
         // The defaults' key is the coloring book, canonical (joining across its absent texture lines is splitting).
         #expect(GenerationKey.defaults == GenerationKey(lineArt: LineArtSettings(), tuning: PipelineTuning()))
-        #expect(GenerationKey.defaults.lineArt.style == .coloringBook && GenerationKey.defaults.lineArt.samePaint == .split)
+        #expect(GenerationKey.defaults.lineArt.style == .coloringBook && GenerationKey.defaults.lineArt.samePaint == .joinAllButOutlines)
+        #expect(GenerationKey(lineArt: LineArtSettings(samePaint: .joinTexture), tuning: PipelineTuning()).lineArt.samePaint == .split)
         var classic = Self.changedArt
         classic.style = .classic
         let classicKey = GenerationKey(lineArt: classic, tuning: PipelineTuning())

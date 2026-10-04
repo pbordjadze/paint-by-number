@@ -4,7 +4,8 @@ import os
 import PaintCore
 
 /// What layered and coloring-book line art draw from, computed once per photo: the line
-/// drawing over the HED edge map (`EdgeDetector.combinedMap`) and the eyes (`EyeFinder`).
+/// drawing over the HED edge map, the HED map alone for the outlines (`EdgeDetector.maps`),
+/// the eyes (`EyeFinder`) and the subjects' silhouettes (`ObjectFinder`).
 ///
 /// Inputs are cached by the photo's identity (the same `CGImage` instance) for the last
 /// `cacheCapacity` photos, so the create flow's drafts, candidates and full resolution, and a
@@ -43,18 +44,24 @@ nonisolated enum LineArtInputs {
         }
     }
 
-    /// The inputs of `image`, computed now without the cache: the combined map (both models,
-    /// one after the other) and, meanwhile, the eyes.
+    /// The inputs of `image`, computed now without the cache: the combined map and the
+    /// contours (both models, one after the other) and, meanwhile, the eyes and the subjects.
     @concurrent
     static func compute(for image: CGImage) async throws -> LineArtInput {
         async let eyes = findEyes(in: image)
-        let edges = try EdgeDetector.combinedMap(for: image)
-        return LineArtInput(edges: edges, eyes: await eyes)
+        async let objects = findObjects(in: image)
+        let maps = try EdgeDetector.maps(for: image)
+        return LineArtInput(edges: maps.edges, eyes: await eyes, objects: await objects, contours: maps.contours)
     }
 
     @concurrent
     private static func findEyes(in image: CGImage) async -> [[SIMD2<Float>]] {
         EyeFinder.eyes(in: image)
+    }
+
+    @concurrent
+    private static func findObjects(in image: CGImage) async -> [[SIMD2<Float>]] {
+        ObjectFinder.objects(in: image)
     }
 
     private static let cache = InputCache()

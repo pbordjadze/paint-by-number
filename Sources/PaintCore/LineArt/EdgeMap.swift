@@ -67,14 +67,28 @@ public struct EdgeMap: Sendable, Equatable {
 
 /// Everything layered line art needs beyond the photo.
 public struct LineArtInput: Sendable, Equatable {
+    /// What is drawn: the line drawing over the contours (`EdgeMap.combined`), or either alone.
     public var edges: EdgeMap
     /// Detected eyes as closed polygons (contours, then irises), in coordinates normalized to
     /// the source photo (0...1, origin top-left). Drawn as outlines when
     /// `LineArtSettings.outlineEyes` is on.
     public var eyes: [[SIMD2<Float>]]
+    /// The subjects' silhouettes as closed polygons normalized like `eyes` (the app's Vision
+    /// foreground masks, `pbn --objects`; `MaskContours.outlines` traces a mask). Where no drawn
+    /// line runs along a stretch of a silhouette, that stretch is drawn as an outline
+    /// (`LineArtSettings.outlineObjects`), so a subject is closed off from the background even
+    /// where the detectors saw no contour (a white belly against snow).
+    public var objects: [[SIMD2<Float>]]
+    /// The contour map alone (HED) when `edges` combines it with a drawing: it decides which
+    /// lines are outlines (`LineArtSettings.outlineThreshold` reads it), so an object's boundary
+    /// is an outline wherever the contour detector found it and the drawing's strokes, however
+    /// strong, are detail. Nil: `edges` decides, as a single map always did.
+    public var contours: EdgeMap?
 
-    public init(edges: EdgeMap, eyes: [[SIMD2<Float>]] = []) {
+    public init(edges: EdgeMap, eyes: [[SIMD2<Float>]] = [], objects: [[SIMD2<Float>]] = [], contours: EdgeMap? = nil) {
         self.edges = edges
         self.eyes = eyes
+        self.objects = objects
+        self.contours = contours
     }
 }

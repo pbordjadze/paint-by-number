@@ -24,13 +24,15 @@ street and a portrait) with HED maps at the app's size and Suggested settings at
 | Setting | Value | Why |
 | --- | --- | --- |
 | Line Style | Coloring Book | the drawing alone is drawn, over the paint; no color edges, no selected outline |
-| Lines From, Detail From | 60 % each | one class of line: every drawn edge is an outline (busy areas demote to Detail, drawn alike in a book). 50 % draws about a tenth more lines, 70 % a sixth fewer; 60 % keeps the structure (the fox's ears and legs, the Milkmaid's sleeves) and drops the brushwork. A book has no texture lines, so Texture From is hidden |
+| Lines From | 60 % | what is drawn, read off the drawing laid over the contours. 50 % draws about a tenth more lines, 70 % a sixth fewer; 60 % keeps the structure (the fox's ears and legs, the Milkmaid's sleeves) and drops the brushwork. A book has no texture lines, so Texture From is hidden |
+| Outlines From | 50 % | read off the contour map (HED) alone: an object's boundary is an outline wherever HED found it, the drawing's fur and creases are detail whatever their ink (`docs/coloring-book.md`, Detectors) |
 | Shortest Line | 36 px | specks never become lines or cells |
 | Gap Closing | 16 px | open strokes reach further for a line, paint boundary or the frame, so cells close |
 | Line Smoothing | 70 % | flowing curves |
-| Same Paint Across a Line | Join Across Texture Lines | a book has no texture lines to join across, so every line splits same-paint cells |
+| Same Paint Across a Line | Join Across Detail | silhouettes split same-paint cells; fur, creases and strands are drawn inside their cells instead of walling slivers (10–20 % fewer cells, two to three times the strokes inside cells on the fox, the Milkmaid, the Arrieta and the turtle) |
 | Keep Color Edges | On | the paints inside an outline stay separate areas (numbered, never drawn) |
 | Outline Eyes | On | eyes as closed outlines with an iris |
+| Outline Subjects | On | the subjects' silhouettes (Vision's foreground mask) close the drawing where the detectors left it open |
 | Flatter paint | 1.5× smoothing, texture flattening and smallest area, built into the style (`SegmentationParameters.coloringBookFlattening`) | fewer small color cells inside the outlines, which are told apart by numbers only: a tenth to a third fewer cells on the ten pictures before Suggested settings re-balance the painting's length, and a calmer book after (the fox at 1× came out at 24 colors and detail 0.79 with numbered specks all over its body, at 1.5× at 32 colors and detail 0.59 with cells a painter can find). The Pipeline factors multiply it, so 1× there is the book's own paint |
 | Line Appearance | default | a book reads only Line Weight (1×) |
 

@@ -191,9 +191,115 @@ struct LineArtTests {
         #expect(layered.contains("id=\"lines-outline\"") && layered.contains("id=\"lines-color\"") && !layered.contains("lines-drawing"))
     }
 
+    @Test func selectedColorIsHatched() throws {
+        let book = try Self.generate(Self.book()).template
+        let selected = SVGExport.render(book, options: .init(painted: false, outlines: true, numbers: true, selectedColor: 0))
+        #expect(selected.contains("<pattern id=\"hatch\"") && selected.contains("id=\"selection\""))
+        // Its cells, and only its cells: one subpath per ring of every region of that paint.
+        let cells = book.regions.indices.filter { book.regions[$0].colorIndex == 0 }
+        let rings = cells.reduce(0) { $0 + book.polygons(ofRegion: $1).count }
+        let group = selected.components(separatedBy: "id=\"selection\"")[1].components(separatedBy: "</g>")[0]
+        #expect(group.components(separatedBy: "Z").count - 1 == rings && rings > 0)
+        // Nothing selected, or a paint the template doesn't have: no selection group.
+        #expect(!SVGExport.render(book).contains("selection"))
+        #expect(!SVGExport.render(book, options: .init(selectedColor: book.palette.count)).contains("selection"))
+    }
+
     @Test func deterministic() throws {
         let a = try Self.generate().template.encoded(), b = try Self.generate().template.encoded()
         #expect(a == b)
+    }
+
+    @Test func subjectsCloseTheirSilhouettes() throws {
+        func generate(objects: [[SIMD2<Float>]], on: Bool = true) throws -> Template {
+            try TemplateGenerator(settings: Self.settings { $0.outlineObjects = on }).generate(
+                from: Self.photo(), lineArt: LineArtInput(edges: Self.edges(), objects: objects), cancel: .none).template
+        }
+        let plain = try Self.generate().template
+        let outline = Int(LineLayer.outline.rawValue)
+        // A subject in the sky's top-left corner with no edge of its own: its silhouette is
+        // drawn whole, as an outline, and walls its cells off from the rest of the sky.
+        let box: [SIMD2<Float>] = [SIMD2(4, 4), SIMD2(56, 4), SIMD2(56, 26), SIMD2(4, 26)].map { $0 / SIMD2(128, 96) }
+        let boxed = try generate(objects: [box])
+        #expect(boxed.regions.count > plain.regions.count)
+        #expect(Self.lengths(boxed)[outline] > Self.lengths(plain)[outline] + 100)
+        #expect(boxed.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
+        // The disc's own silhouette runs along its drawn contour: nothing is added.
+        let disc = (0..<64).map { k -> SIMD2<Float> in
+            let a = Float(k) / 64 * 2 * .pi
+            return SIMD2(40 + 18 * cos(a), 48 + 18 * sin(a)) / SIMD2(128, 96)
+        }
+        let same = try generate(objects: [disc])
+        #expect(same.regions.count == plain.regions.count)
+        #expect(abs(Self.lengths(same)[outline] - Self.lengths(plain)[outline]) < 20)
+        // Off, subjects change nothing.
+        #expect(try generate(objects: [box], on: false) == plain)
+    }
+
+    @Test func maskContoursTraceShapes() {
+        // A 64×48 mask: a rectangle (x 8..<40, y 6..<30) and a disc of radius 7 around (52, 38);
+        // a 2-pixel speck is left out.
+        let w = 64, h = 48
+        var mask = [Bool](repeating: false, count: w * h)
+        for y in 6..<30 { for x in 8..<40 { mask[y * w + x] = true } }
+        for y in 0..<h {
+            for x in 0..<w where (x - 52) * (x - 52) + (y - 38) * (y - 38) <= 49 { mask[y * w + x] = true }
+        }
+        mask[2 * w + 60] = true
+        mask[2 * w + 61] = true
+        let outlines = MaskContours.outlines(of: mask, width: w, height: h)
+        #expect(outlines.count == 2)
+        func area(_ poly: [SIMD2<Float>]) -> Float {
+            var sum: Float = 0
+            for i in poly.indices {
+                let a = poly[i] * SIMD2(Float(w), Float(h)), b = poly[(i + 1) % poly.count] * SIMD2(Float(w), Float(h))
+                sum += a.x * b.y - b.x * a.y
+            }
+            return abs(sum) / 2
+        }
+        // Largest first: the rectangle is exactly its four corners, the disc close to its area.
+        #expect(outlines[0].count == 4 && abs(area(outlines[0]) - 32 * 24) < 1)
+        #expect(outlines[0].contains(SIMD2(8.0 / 64, 6.0 / 48)) && outlines[0].contains(SIMD2(40.0 / 64, 30.0 / 48)))
+        #expect(abs(area(outlines[1]) - Float.pi * 49) < 25 && outlines[1].count >= 8)
+        #expect(outlines.allSatisfy { $0.allSatisfy { $0.x >= 0 && $0.x <= 1 && $0.y >= 0 && $0.y <= 1 } })
+        // The whole mask: the frame itself, one polygon.
+        let full = MaskContours.outlines(of: [Bool](repeating: true, count: w * h), width: w, height: h)
+        #expect(full.count == 1 && full[0].count == 4 && abs(area(full[0]) - Float(w * h)) < 1)
+        #expect(MaskContours.outlines(of: [Bool](repeating: false, count: w * h), width: w, height: h).isEmpty)
+    }
+
+    @Test func contoursDecideTheOutlines() throws {
+        // The drawing (`edges()`) is drawn as before; which of its lines are outlines follows the
+        // contour map alone: scaled under the outline threshold, nothing is an outline (the
+        // disc, square and horizon become detail); with the ground's 0.62 line raised to full
+        // strength in the contours, that line is an outline though the drawing has it faint.
+        func generate(contours: EdgeMap) throws -> Template {
+            try TemplateGenerator(settings: Self.settings()).generate(
+                from: Self.photo(), lineArt: LineArtInput(edges: Self.edges(), contours: contours), cancel: .none).template
+        }
+        let plain = try Self.generate().template
+        var faint = Self.edges()
+        faint.values = faint.values.map { UInt8(Float($0) * 0.6) }
+        let noOutlines = try generate(contours: faint)
+        let outline = LineLayer.outline.rawValue, detail = LineLayer.detail.rawValue
+        #expect(Self.lengths(plain)[Int(outline)] > 100)
+        #expect(Self.lengths(noOutlines)[Int(outline)] == 0)
+        #expect(Self.lengths(noOutlines)[Int(detail)] > Self.lengths(plain)[Int(detail)] + 100)
+        var strongGround = Self.edges()
+        for x in 0..<strongGround.width { for y in 78...82 { strongGround.values[y * strongGround.width + x] = 255 } }
+        let groundOutlined = try generate(contours: strongGround)
+        // The template's canvas is the photo scaled up to the working size.
+        func groundEdges(_ t: Template) -> [Int] {
+            let scale = Float(t.height) / 96
+            return t.edges.indices.filter { k in
+                t.edges[k].right != BoundaryEdge.outside && t.points(of: t.edges[k]).allSatisfy { abs($0.y - 80 * scale) < 3 * scale }
+            }
+        }
+        let outlined = groundEdges(groundOutlined), plainGround = groundEdges(plain)
+        #expect(!outlined.isEmpty && outlined.allSatisfy { groundOutlined.lineArt!.edgeLayers[$0] == outline })
+        #expect(!plainGround.isEmpty && plainGround.allSatisfy { plain.lineArt!.edgeLayers[$0] == detail })
+        // The same map as contours changes nothing.
+        #expect(try generate(contours: Self.edges()) == plain)
     }
 
     @Test func samePaintJoinsFollowTheSetting() throws {

@@ -71,20 +71,26 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     /// Draw detected eyes as outlines (their contours and irises), whatever their contrast;
     /// lines around an eye draw one layer stronger.
     public var outlineEyes: Bool
+    /// Close each subject's silhouette (`LineArtInput.objects`) with outlines where the
+    /// drawing leaves it open, so a subject is an area of its own.
+    public var outlineObjects: Bool
 
-    /// A style at its defaults, any field given set instead. The coloring book's thresholds
-    /// make each drawn line an outline (busy areas demote to detail, drawn alike in a book),
-    /// its longer shortest line and gap closing drop specks and close cells, and its curves
-    /// flow (measured in `docs/presets/README.md`). The layered defaults are the research's
-    /// HED thresholds (`research/lineart/results_layers.md`), outlines a little higher and
-    /// thinned where lines crowd, as the owner found the research's outlines too strong;
-    /// texture lines join same-paint cells and color cells stay ("we want more colors").
-    /// Classic lines read none of them and carry the layered values.
+    /// A style at its defaults, any field given set instead. The coloring book draws every
+    /// line the combined map holds at 0.6, and a line is an outline where the contour map holds
+    /// 0.5 (HED's silhouettes mostly do, the drawing's strokes rarely), so same-paint cells join
+    /// across everything but silhouettes and the fur, creases and strands draw inside their
+    /// cells; its longer shortest line and gap closing drop specks and close cells, and its
+    /// curves flow (measured in `docs/coloring-book.md` and `docs/presets/README.md`). The
+    /// layered defaults are the research's HED thresholds (`research/lineart/results_layers.md`),
+    /// outlines a little higher and thinned where lines crowd, as the owner found the research's
+    /// outlines too strong; texture lines join same-paint cells and color cells stay ("we want
+    /// more colors"). Classic lines read none of them and carry the layered values.
     public init(
         style: Style = .coloringBook,
         outlineThreshold: Float? = nil, detailThreshold: Float? = nil, textureThreshold: Float? = nil,
         minimumStrokeLength: Float? = nil, gapBridging: Float? = nil, lineSmoothing: Float? = nil,
-        samePaint: SamePaint = .joinTexture, keepColorEdges: Bool = true, outlineEyes: Bool = true
+        samePaint: SamePaint? = nil, keepColorEdges: Bool = true, outlineEyes: Bool = true,
+        outlineObjects: Bool = true
     ) {
         let d = Self.numbers(for: style)
         self.style = style
@@ -94,23 +100,27 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         self.minimumStrokeLength = minimumStrokeLength ?? d.minimumStrokeLength
         self.gapBridging = gapBridging ?? d.gapBridging
         self.lineSmoothing = lineSmoothing ?? d.lineSmoothing
-        self.samePaint = samePaint
+        self.samePaint = samePaint ?? d.samePaint
         self.keepColorEdges = keepColorEdges
         self.outlineEyes = outlineEyes
+        self.outlineObjects = outlineObjects
     }
 
-    /// A style's default thresholds, line lengths and smoothing.
+    /// A style's default thresholds, line lengths, smoothing and same-paint rule.
     private struct Numbers {
         var outline: Float, detail: Float, texture: Float
         var minimumStrokeLength: Float, gapBridging: Float, lineSmoothing: Float
+        var samePaint: SamePaint
     }
 
     private static func numbers(for style: Style) -> Numbers {
         switch style {
         case .coloringBook:
-            Numbers(outline: 0.6, detail: 0.6, texture: 0.3, minimumStrokeLength: 36, gapBridging: 16, lineSmoothing: 0.7)
+            Numbers(outline: 0.5, detail: 0.6, texture: 0.3, minimumStrokeLength: 36, gapBridging: 16, lineSmoothing: 0.7,
+                    samePaint: .joinAllButOutlines)
         case .layered, .classic:
-            Numbers(outline: 0.85, detail: 0.5, texture: 0.3, minimumStrokeLength: 18, gapBridging: 9, lineSmoothing: 0.5)
+            Numbers(outline: 0.85, detail: 0.5, texture: 0.3, minimumStrokeLength: 18, gapBridging: 9, lineSmoothing: 0.5,
+                    samePaint: .joinTexture)
         }
     }
 
@@ -126,6 +136,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         if minimumStrokeLength == old.minimumStrokeLength { s.minimumStrokeLength = new.minimumStrokeLength }
         if gapBridging == old.gapBridging { s.gapBridging = new.gapBridging }
         if lineSmoothing == old.lineSmoothing { s.lineSmoothing = new.lineSmoothing }
+        if samePaint == old.samePaint { s.samePaint = new.samePaint }
         return s
     }
 
@@ -143,7 +154,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
 
     private enum CodingKeys: String, CodingKey {
         case style, outlineThreshold, detailThreshold, textureThreshold, minimumStrokeLength, gapBridging,
-             lineSmoothing, samePaint, keepColorEdges, outlineEyes
+             lineSmoothing, samePaint, keepColorEdges, outlineEyes, outlineObjects
     }
 
     /// Tolerant: missing or unknown values fall back to the defaults (the decoded style's), so
@@ -161,6 +172,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         samePaint = (try? c.decodeIfPresent(SamePaint.self, forKey: .samePaint)) ?? d.samePaint
         keepColorEdges = (try? c.decodeIfPresent(Bool.self, forKey: .keepColorEdges)) ?? d.keepColorEdges
         outlineEyes = (try? c.decodeIfPresent(Bool.self, forKey: .outlineEyes)) ?? d.outlineEyes
+        outlineObjects = (try? c.decodeIfPresent(Bool.self, forKey: .outlineObjects)) ?? d.outlineObjects
     }
 }
 

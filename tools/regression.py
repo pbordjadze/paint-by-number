@@ -19,6 +19,14 @@ baseline tools/baseline/regression.json:
                    band), colors, regions under radius 3, min inscribed radius, timings,
                    whether the template is byte-identical to the baseline's
 
+in the book regime (BOOK_REGIME: the coloring book at the app's default settings, from the
+committed maps of tools/baseline/lines: `<name>-contours.png`, HED, and `<name>-drawing.png`,
+the line-drawing model, both at the photo's size, combined by pbn as the app combines them),
+with the same invariants and bands (regions are the book's cells) and, informational, the
+drawing metrics of `stats.json`'s `lineArt`: areas the drawing encloses, the largest area's
+share of the canvas (the background, unless a silhouette is open), ink density, open stroke
+ends per 1000 units and interior strokes;
+
 and in the auto regime (AUTO_REGIME: `pbn generate --auto`, the settings Auto suggests at
 Relaxed) against tools/baseline/auto.json:
 
@@ -56,6 +64,8 @@ SAMPLES = os.path.join(ROOT, "App", "PaintByNumber", "Resources", "Samples")
 SAMPLE_NAMES = ["barn", "espresso", "hibiscus", "lighthouse", "parrots", "regatta"]
 BASELINE = os.path.join(ROOT, "tools", "baseline", "regression.json")
 AUTO_BASELINE = os.path.join(ROOT, "tools", "baseline", "auto.json")
+# The samples' edge maps for the book regime, as the app's two models make them.
+LINES = os.path.join(ROOT, "tools", "baseline", "lines")
 
 # The app's default, its most intricate and its boldest settings.
 REGIMES = [
@@ -64,12 +74,18 @@ REGIMES = [
     {"colors": 12, "detail": 0.0},
 ]
 
+# The coloring book at the app's defaults, from the committed maps.
+BOOK_REGIME = {"book": "coloringBook", "colors": 24, "detail": 0.5}
+
 # Auto: every sample at the settings it suggests for this painting length.
 AUTO_REGIME = {"auto": "relaxed"}
 
+# The drawing metrics of a book (`stats.json`'s `lineArt`), lifted beside the other metrics.
+BOOK_METRICS = ["enclosedAreas", "largestAreaFraction", "inkDensity", "openEndsPer1000", "interiorStrokes"]
+
 # Metrics kept in the baseline: the banded ones plus informational ones worth a delta.
 BASELINE_KEYS = ["regions", "meanDeltaE", "p95DeltaE", "encodedBytes", "colors", "regionsUnderRadius3",
-                 "minInscribedRadius", "minPaletteDistance", "totalMs", "bandRings"]
+                 "minInscribedRadius", "minPaletteDistance", "totalMs", "bandRings"] + BOOK_METRICS
 
 # Tolerance bands versus the baseline: (metric, lowest ratio, highest ratio); None = unbounded.
 BANDS = [
@@ -85,7 +101,8 @@ FLOAT_SLACK = 1e-6
 def regime_name(regime):
     if "auto" in regime:
         return f"auto-{regime['auto']}"
-    return f"c{regime['colors']}-d{regime['detail']:g}"
+    book = "book-" if "book" in regime else ""
+    return f"{book}c{regime['colors']}-d{regime['detail']:g}"
 
 
 def chosen(result):
@@ -255,6 +272,44 @@ AUTO_COLUMNS = ["sample", "choice", "baseline", "regions", "mean dE", "p95 dE", 
                 "paint gap", "ms", "template", "verdict"]
 
 
+BOOK_COLUMNS = ["sample", "cells", "mean dE", "areas", "largest", "ink", "open ends", "strokes", "bytes", "r<2",
+                "paint gap", "ms", "template", "verdict"]
+
+
+def columns(regime):
+    return AUTO_COLUMNS if "auto" in regime else BOOK_COLUMNS if "book" in regime else COLUMNS
+
+
+def book_row(name, regime, result, base, failures):
+    base = base or {}
+    if result.get("error"):
+        return [name] + ["-"] * (len(BOOK_COLUMNS) - 2) + ["FAIL"]
+    sha = result.get("templateSHA1")
+    template = "new" if not base.get("templateSHA1") else ("same" if sha == base.get("templateSHA1") else "changed")
+    return [
+        name,
+        cell(result.get("regions"), base.get("regions"), "{:.0f}"),
+        cell(result.get("meanDeltaE"), base.get("meanDeltaE"), "{:.4f}"),
+        cell(result.get("enclosedAreas"), base.get("enclosedAreas"), "{:.0f}"),
+        cell(result.get("largestAreaFraction"), base.get("largestAreaFraction"), "{:.3f}"),
+        cell(result.get("inkDensity"), base.get("inkDensity"), "{:.2f}"),
+        cell(result.get("openEndsPer1000"), base.get("openEndsPer1000"), "{:.1f}"),
+        cell(result.get("interiorStrokes"), base.get("interiorStrokes"), "{:.0f}"),
+        cell(result.get("encodedBytes"), base.get("encodedBytes"), "{:.0f}"),
+        cell(result.get("regionsUnderRadius2"), fmt="{:.0f}"),
+        f"{cell(result.get('minPaletteDistance'), base.get('minPaletteDistance'), '{:.4f}')}"
+        f" >= {palette_floor(regime, result):.4f}",
+        cell(result.get("totalMs"), base.get("totalMs"), "{:.0f}"),
+        template,
+        "FAIL" if failures else "ok",
+    ]
+
+
+def make_row(name, regime, result, base, failures):
+    maker = auto_row if "auto" in regime else book_row if "book" in regime else row
+    return maker(name, regime, result, base, failures)
+
+
 def auto_row(name, regime, result, base, failures):
     base = base or {}
     if result.get("error"):
@@ -341,13 +396,18 @@ def totals(results, base_cases, keys):
 
 # ---------------------------------------------------------------------------- running
 
-def run_case(ppm, regime, out):
+def run_case(ppm, regime, out, maps=None):
     """Generates `ppm` twice in `regime` (into out/ and out/repeat/), validates the
-    template and returns the metrics with the run's findings."""
+    template and returns the metrics with the run's findings. `maps`: the sample's contour
+    and drawing PGMs, for the book regime."""
     if "auto" in regime:
         args = ["--auto", "--length", regime["auto"]]
     else:
         args = ["--colors", str(regime["colors"]), "--detail", str(regime["detail"])]
+    if "book" in regime:
+        if not maps:
+            return {"error": "no edge maps for the book regime"}
+        args += ["--line-style", regime["book"], "--edges", maps[0], "--lines", maps[1]]
     templates = []
     for target in (out, os.path.join(out, "repeat")):
         res = subprocess.run([PBN, "generate", ppm, target] + args, capture_output=True, text=True)
@@ -358,6 +418,10 @@ def run_case(ppm, regime, out):
             templates.append(f.read())
     with open(os.path.join(out, "stats.json")) as f:
         result = json.load(f)
+    line_art = result.get("lineArt")
+    if isinstance(line_art, dict):
+        for key in BOOK_METRICS:
+            result[key] = line_art.get(key)
     shutil.rmtree(os.path.join(out, "repeat"))
     check = subprocess.run([PBN, "check", os.path.join(out, "template.pbnt")], capture_output=True, text=True)
     # `pbn check` prints the file's versions first and its verdict ("valid …"/"INVALID …") last.
@@ -441,6 +505,11 @@ def main(argv):
     if missing:
         print(f"missing from {SAMPLES}: {', '.join(missing)}", file=sys.stderr)
         sys.exit(2)
+    map_files = {name: [f"{name}-{kind}.png" for kind in ("contours", "drawing")] for name in SAMPLE_NAMES}
+    missing = [f for files in map_files.values() for f in files if not os.path.isfile(os.path.join(LINES, f))]
+    if missing:
+        print(f"missing from {LINES}: {', '.join(missing)}", file=sys.stderr)
+        sys.exit(2)
     try:
         with open(BASELINE) as f:
             baseline = json.load(f)
@@ -456,23 +525,28 @@ def main(argv):
         auto_baseline = {}
     if isinstance(auto_baseline.get("cases"), dict):
         base_cases.update(auto_baseline["cases"])
-    regimes = REGIMES + [AUTO_REGIME]
+    regimes = REGIMES + [BOOK_REGIME, AUTO_REGIME]
 
     work = options.get("--out") or tempfile.mkdtemp(prefix="pbn-regression-")
     try:
-        inputs = {}
+        inputs, maps = {}, {}
         for sample in samples:
             name = os.path.splitext(sample)[0]
             inputs[name] = os.path.join(work, "input", name + ".ppm")
             os.makedirs(os.path.dirname(inputs[name]), exist_ok=True)
             Image.open(os.path.join(SAMPLES, sample)).convert("RGB").save(inputs[name])
+            maps[name] = []
+            for file in map_files[name]:
+                pgm = os.path.join(work, "input", os.path.splitext(file)[0] + ".pgm")
+                Image.open(os.path.join(LINES, file)).convert("L").save(pgm)
+                maps[name].append(pgm)
         cases = [(regime, name) for regime in regimes for name in inputs]
         key = lambda regime, name: f"{regime_name(regime)}/{name}"
         # Two at a time: pbn is itself parallel, and concurrent runs vary the scheduling
         # the determinism check sees.
         with ThreadPoolExecutor(max_workers=2) as pool:
             outputs = list(pool.map(
-                lambda c: run_case(inputs[c[1]], c[0], os.path.join(work, regime_name(c[0]), c[1])), cases))
+                lambda c: run_case(inputs[c[1]], c[0], os.path.join(work, regime_name(c[0]), c[1]), maps[c[1]]), cases))
         results = {key(r, n): out for (r, n), out in zip(cases, outputs)}
 
         report, all_failures, verdicts = [], [], {}
@@ -488,11 +562,14 @@ def main(argv):
                     failures = check_case(regime, results[k], base_cases.get(k))
                 verdicts[k] = failures
                 all_failures += [f"{k}: {f}" for f in failures]
-                rows.append((auto_row if auto else row)(k.split("/")[1], regime, results[k], base_cases.get(k), failures))
+                rows.append(make_row(k.split("/")[1], regime, results[k], base_cases.get(k), failures))
             title = (f"{regime_name(regime)}: the settings Auto suggests at {regime['auto'].capitalize()} (choices are "
                      "informational; est min < or > the time band)" if auto
+                     else f"{regime_name(regime)}: the coloring book at {regime['colors']} colors, detail "
+                          f"{regime['detail']:g}, from the maps in tools/baseline/lines (areas, largest, ink, open ends "
+                          "and strokes are informational)" if "book" in regime
                      else f"{regime_name(regime)}: {regime['colors']} colors, detail {regime['detail']:g}")
-            report += [title, table(rows, AUTO_COLUMNS if auto else COLUMNS)]
+            report += [title, table(rows, columns(regime))]
             if not any(results[k].get("error") for k in keys):
                 report.append(totals(results, base_cases, keys))
             report.append("")
@@ -512,14 +589,10 @@ def main(argv):
                 out = os.path.join(work, regime_name(regime), name)
                 if results[k].get("error"):
                     continue
-                if "auto" in regime:
-                    cells = dict(zip(AUTO_COLUMNS, auto_row(name, regime, results[k], base_cases.get(k), verdicts[k])))
-                    lines = ["  ".join(f"{c} {cells[c]}" for c in AUTO_COLUMNS[1:7]),
-                             "  ".join(f"{c} {cells[c]}" for c in AUTO_COLUMNS[7:-1])]
-                else:
-                    cells = dict(zip(COLUMNS, row(name, regime, results[k], base_cases.get(k), verdicts[k])))
-                    lines = ["  ".join(f"{c} {cells[c]}" for c in COLUMNS[1:7]),
-                             "  ".join(f"{c} {cells[c]}" for c in COLUMNS[7:-1])]
+                names = columns(regime)
+                cells = dict(zip(names, make_row(name, regime, results[k], base_cases.get(k), verdicts[k])))
+                lines = ["  ".join(f"{c} {cells[c]}" for c in names[1:7]),
+                         "  ".join(f"{c} {cells[c]}" for c in names[7:-1])]
                 write_sheet(os.path.join(options["--sheets"], regime_name(regime), name + ".jpg"),
                             f"{k}  ({results[k]['width']}x{results[k]['height']})  {cells['verdict']}",
                             lines, verdicts[k], out)
@@ -536,7 +609,7 @@ def main(argv):
             auto_keys = {key(AUTO_REGIME, name) for name in inputs}
             with open(BASELINE, "w") as f:
                 json.dump({"about": "Quality baseline for tools/regression.py; regenerate with --update.",
-                           "regimes": {regime_name(r): r for r in REGIMES},
+                           "regimes": {regime_name(r): r for r in REGIMES + [BOOK_REGIME]},
                            "cases": {k: baseline_entry(results[k]) for k in sorted(results) if k not in auto_keys}},
                           f, indent=2, sort_keys=True)
                 f.write("\n")
@@ -651,6 +724,25 @@ def self_test():
     totals({"k": good}, {"k": base}, ["k"])
     totals({"k": good}, {}, ["k"])
     checks += 3
+    # The book regime: the same rules on the book's cells, its drawing metrics informational.
+    book_regime = {"book": "coloringBook", "colors": 24, "detail": 0.5}
+    assert regime_name(book_regime) == "book-c24-d0.5" and columns(book_regime) == BOOK_COLUMNS
+    book_base = dict(base, minPaletteDistance=0.045, enclosedAreas=40, largestAreaFraction=0.6, inkDensity=8.0,
+                     openEndsPer1000=5.0, interiorStrokes=120)
+    book_good = dict(good, minPaletteDistance=0.045, minPaletteDistanceFloor=0.04, enclosedAreas=44,
+                     largestAreaFraction=0.62, inkDensity=8.4, openEndsPer1000=4.0, interiorStrokes=100)
+    assert check_case(book_regime, book_good, book_base) == []
+    assert check_case(book_regime, dict(book_good, enclosedAreas=4000, largestAreaFraction=1.0, inkDensity=None), book_base) == []
+    assert check_case(book_regime, dict(book_good, regions=1200), book_base)
+    assert check_case(book_regime, dict(book_good, regionsUnderRadius2=1), book_base)
+    cells = dict(zip(BOOK_COLUMNS, make_row("x", book_regime, book_good, book_base, [])))
+    assert cells["cells"] == "1000 =" and cells["areas"] == "44 +10.0%" and cells["largest"] == "0.620 +3.3%", cells
+    assert cells["strokes"] == "100 -16.7%" and cells["verdict"] == "ok", cells
+    assert make_row("x", book_regime, {"error": "pbn: boom"}, None, ["x"])[-1] == "FAIL"
+    assert set(BOOK_METRICS) <= set(baseline_entry(book_good)), baseline_entry(book_good)
+    assert make_row("x", regime, good, base, []) == row("x", regime, good, base, [])
+    table([make_row("x", book_regime, book_good, book_base, [])], BOOK_COLUMNS)
+    checks += 10
     # The auto regime: the choice must lie inside the bands pbn reports; the rest is
     # informational, but the baseline entry must exist.
     auto_regime = {"auto": "relaxed"}

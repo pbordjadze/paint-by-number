@@ -200,6 +200,9 @@ nonisolated extension AdvancedControl {
         case .outlineEyes:
             String(localized: "advanced.control.outlineEyes", defaultValue: "Outline Eyes",
                    comment: "Settings › Advanced › Line Art: switch that draws detected eyes as outlines")
+        case .outlineObjects:
+            String(localized: "advanced.control.outlineObjects", defaultValue: "Outline Subjects",
+                   comment: "Settings › Advanced › Line Art: switch that closes each subject's silhouette with an outline where the picture gives no edge")
         case .smoothing:
             String(localized: "advanced.control.smoothing", defaultValue: "Smoothing",
                    comment: "Settings › Advanced › Pipeline: multiplier on how much the photo is smoothed before paints are picked")
@@ -294,6 +297,10 @@ nonisolated extension AdvancedControl {
             String(localized: "advanced.control.outlineEyes.summary",
                    defaultValue: "Draws the eyes of faces in the picture as outlines, however soft they are.",
                    comment: "Settings › Advanced › Line Art: explanation under the Outline Eyes switch")
+        case .outlineObjects:
+            String(localized: "advanced.control.outlineObjects.summary",
+                   defaultValue: "Closes the silhouette of the main subjects where the picture gives no edge, so each is an area of its own.",
+                   comment: "Settings › Advanced › Line Art: explanation under the Outline Subjects switch")
         case .smoothing:
             String(localized: "advanced.control.smoothing.summary",
                    defaultValue: "How much the photo is smoothed before paints are picked. Higher melts texture into flat areas.",

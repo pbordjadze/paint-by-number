@@ -195,8 +195,13 @@ enum LineLayering {
     /// (texture: a shell's pattern, rock strata, a truss) the outline threshold rises toward 1
     /// with the clutter (all the way where it is full), so a busy area's strongest lines stay
     /// detail while lone contours, and long ones (`longOutline`), stay outlines; a lower
-    /// threshold still brings outlines back where lines crowd less.
-    static func layered(_ strokes: [StrokeGraph.Stroke], thresholds: [Float], clutter: [Float], width w: Int) -> [DrawnLine] {
+    /// threshold still brings outlines back where lines crowd less. `contours`, when given
+    /// (0...1 per working pixel, the contour map's own strength), is what the outline
+    /// threshold reads instead of the strokes' strength: a line is an outline where the
+    /// contour detector found an object's boundary, whatever the drawing made of it.
+    static func layered(
+        _ strokes: [StrokeGraph.Stroke], thresholds: [Float], clutter: [Float], width w: Int, contours: [Float]? = nil
+    ) -> [DrawnLine] {
         var out: [DrawnLine] = []
         let h = clutter.count / max(w, 1)
         let long = longOutline * Float(max(w, h)) / 1500
@@ -205,17 +210,19 @@ enum LineLayering {
                 points: s.points, strength: s.strength, layer: [], closed: s.closed, free: s.free, links: s.links, eye: false)
             let arc = line.arcLength
             let closing = s.closed ? simdLength(s.points[0] - s.points[s.points.count - 1]) : 0
+            let pixel = s.points.map { p -> Int in
+                min(max(Int(p.y.rounded()), 0), h - 1) * w + min(max(Int(p.x.rounded()), 0), w - 1)
+            }
+            let contour = contours.map { field in pixel.map { field[$0] } } ?? s.strength
             // Scaled so that it reaches the threshold t where the strength reaches t + (1 − t)·clutter.
             let t = max(thresholds[0], 1e-3)
             let outlineStrength = s.points.indices.map { k -> Float in
-                let p = s.points[k]
-                let x = min(max(Int(p.x.rounded()), 0), w - 1), y = min(max(Int(p.y.rounded()), 0), h - 1)
-                return s.strength[k] * t / (t + (1 - t) * clutter[y * w + x])
+                contour[k] * t / (t + (1 - t) * clutter[pixel[k]])
             }
             var layer = classify(
                 s.strength, outlineStrength: outlineStrength, arc: arc, closed: s.closed, closing: closing, thresholds: thresholds)
             // Long outline stretches by strength alone stay outlines.
-            let plain = classify(s.strength, arc: arc, closed: s.closed, closing: closing, thresholds: thresholds)
+            let plain = classify(s.strength, outlineStrength: contour, arc: arc, closed: s.closed, closing: closing, thresholds: thresholds)
             for run in runs(of: LineLayer.outline.rawValue, in: plain, closed: s.closed)
             where span(run, arc: arc, closing: closing) >= long {
                 for k in run { layer[k % layer.count] = LineLayer.outline.rawValue }
@@ -309,6 +316,45 @@ enum LineLayering {
                 points: poly, strength: [Float](repeating: 1, count: poly.count),
                 layer: [UInt8](repeating: LineLayer.outline.rawValue, count: poly.count), closed: true,
                 free: (false, false), links: [], eye: true))
+        }
+        return out
+    }
+
+    // MARK: - Subjects
+
+    /// How far (working pixels on a 1500-px canvas; it scales with the canvas) a subject's
+    /// silhouette may run from a drawn line and still be that line: a mask's contour lies a
+    /// little off the detector's ridge.
+    static let objectNear: Float = 12
+    /// A stretch of silhouette shorter than this (same units) away from every line is the
+    /// mask's wobble, not a gap in the drawing.
+    static let objectMinimumStretch: Float = 24
+
+    /// The subjects' silhouettes (`LineArtInput.objects`, as `eyePolygons` makes them) fill the
+    /// gaps in the drawing: the stretches of each polygon farther than `objectNear` from every
+    /// drawn line become outlines at full strength, free at both ends so that `closeFreeEnds`
+    /// leads them into the lines they stop short of. A silhouette no line runs along at all
+    /// (a subject the detectors missed) comes whole, closed.
+    static func addObjects(_ lines: [DrawnLine], objects polygons: [[SIMD2<Float>]], width w: Int, height h: Int) -> [DrawnLine] {
+        guard !polygons.isEmpty else { return [] }
+        let scale = Float(max(w, h)) / 1500
+        let near = objectNear * scale, minimum = objectMinimumStretch * scale
+        let walls = walls(lines, width: w, height: h)
+        let distance = DistanceTransform.squaredEDT(width: w, height: h) { walls.isWall($0) }.storage
+        var out: [DrawnLine] = []
+        for poly in polygons {
+            let far = poly.map { p -> Bool in
+                let x = min(max(Int(p.x.rounded()), 0), w - 1), y = min(max(Int(p.y.rounded()), 0), h - 1)
+                return distance[y * w + x] > near * near
+            }
+            let line = DrawnLine(
+                points: poly, strength: [Float](repeating: 1, count: poly.count),
+                layer: [UInt8](repeating: LineLayer.outline.rawValue, count: poly.count), closed: true,
+                free: (false, false), links: [], eye: false)
+            for var piece in line.pieces(keeping: far, freeCuts: true) where piece.length >= minimum {
+                if !piece.closed { piece.free = (true, true) }
+                out.append(piece)
+            }
         }
         return out
     }

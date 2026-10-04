@@ -9,8 +9,9 @@ import PaintCore
 /// whose silhouettes are strong and closed, and the Informative Drawings generator
 /// (`LineArt.mlpackage`: Chan, Durand & Isola's MIT-licensed line-drawing network, the one
 /// ControlNet's lineart annotator runs, converted by `tools/models/convert_lineart.py`), a line
-/// drawing with the fur, petals and glass a contour map lacks. `combinedMap` lays the drawing
-/// over the contours (`EdgeMap.combined`), which is what the app generates from.
+/// drawing with the fur, petals and glass a contour map lacks. `maps` lays the drawing over the
+/// contours (`EdgeMap.combined`), which is what the app generates from, and keeps the contours
+/// beside it, which decide the outlines.
 ///
 /// A map is made the way the layered-lines research made its HED maps: the photo in sRGB,
 /// area-resampled to at most the model's long side (PaintCore's own resampler, as `pbn` made the
@@ -111,17 +112,21 @@ nonisolated enum EdgeDetector {
     }
 
     /// What the app generates from: the line drawing (made at `drawingLongSide`, resampled up)
-    /// over the HED map at `maxLongSide` (`EdgeMap.combined`), at the HED map's size.
-    static func combinedMap(for image: CGImage, maxLongSide: Int = maximumLongSide) throws -> EdgeMap {
-        try combinedMap(for: PhotoLoader.rgbaImage(from: image, colorSpace: .sRGB), maxLongSide: maxLongSide, cancel: .task)
+    /// over the HED map at `maxLongSide` (`EdgeMap.combined`), at the HED map's size, and the
+    /// HED map itself, which decides the outlines (`LineArtInput.contours`).
+    static func maps(for image: CGImage, maxLongSide: Int = maximumLongSide) throws -> (edges: EdgeMap, contours: EdgeMap) {
+        try maps(for: PhotoLoader.rgbaImage(from: image, colorSpace: .sRGB), maxLongSide: maxLongSide, cancel: .task)
     }
 
-    /// The combined map of an sRGB image (see `combinedMap(for:maxLongSide:)`).
-    static func combinedMap(for image: RGBAImage, maxLongSide: Int = maximumLongSide, cancel: CancellationCheck) throws -> EdgeMap {
+    /// The maps of an sRGB image (see `maps(for:maxLongSide:)`).
+    static func maps(
+        for image: RGBAImage, maxLongSide: Int = maximumLongSide, cancel: CancellationCheck
+    ) throws -> (edges: EdgeMap, contours: EdgeMap) {
         let contours = try map(.hed, for: image, maxLongSide: maxLongSide, cancel: cancel)
         let drawing = try map(.lineArt, for: image, maxLongSide: min(drawingLongSide, maxLongSide), cancel: cancel)
         try cancel.throwIfCancelled()
-        return EdgeMap.combined(drawing: drawing.resampled(width: contours.width, height: contours.height), contours: contours)
+        let edges = EdgeMap.combined(drawing: drawing.resampled(width: contours.width, height: contours.height), contours: contours)
+        return (edges, contours)
     }
 
     /// `model`'s map of `image`, at the image's size scaled down to `maxLongSide` (clamped to

@@ -284,7 +284,7 @@ final class AdvancedSettingsModel {
         case .subjectEmphasis: tune.subjectEmphasis = v
         case .accentColors: tune.accentColors = v
         case .colorfulness: tune.colorfulness = v
-        case .style, .samePaint, .keepColorEdges, .outlineEyes: return
+        case .style, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects: return
         }
         if activeControl != control { activeControl = control }
         lineArt = art

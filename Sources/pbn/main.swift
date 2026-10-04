@@ -10,12 +10,15 @@ import ImageIO
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--importance m.pgm]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
-//       [--line-style classic|layered|coloringBook --edges map.pgm [--lines drawing.pgm] [--eyes eyes.json] [--line-art key=value]...]
-//       [--tuning key=value]...
+//       [--line-style classic|layered|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
+//        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--line-art key=value]...] [--tuning key=value]...
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
 //       layered and coloring-book line art split the cells along the edge map's lines
-//       (stats.json gains `lineArt`); eyes.json is an array of closed polygons of [x, y]
-//       normalized to the photo; --line-art sets a LineArtSettings field and --tuning a
+//       (stats.json gains `lineArt`, with the drawing's density, open ends and the areas it
+//       encloses, and selected.svg hatches the cells of the paint with the most of them, as the
+//       canvas shows the selected color); eyes.json is an array of closed polygons of [x, y]
+//       normalized to the photo, and the subjects (--objects) either the same or a mask image
+//       whose shapes MaskContours traces; --line-art sets a LineArtSettings field and --tuning a
 //       PipelineTuning factor by name
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
@@ -57,6 +60,9 @@ struct Options {
     var edges: String?
     var lines: String?
     var eyes: String?
+    var objects: String?
+    /// How much of `--edges` goes under `--lines` when both are given (`EdgeMap.contourWeight`).
+    var contourWeight = EdgeMap.contourWeight
 }
 
 /// `--line-art` and `--tuning` fields by name.
@@ -66,7 +72,7 @@ enum Fields {
          "minimumStrokeLength": \.minimumStrokeLength, "gapBridging": \.gapBridging, "lineSmoothing": \.lineSmoothing]
     }
     static var lineArtBools: [String: WritableKeyPath<LineArtSettings, Bool>] {
-        ["keepColorEdges": \.keepColorEdges, "outlineEyes": \.outlineEyes]
+        ["keepColorEdges": \.keepColorEdges, "outlineEyes": \.outlineEyes, "outlineObjects": \.outlineObjects]
     }
     static var tuning: [String: WritableKeyPath<PipelineTuning, Float>] {
         ["smoothing": \.smoothing, "textureFlattening": \.textureFlattening, "minimumCellSize": \.minimumCellSize,
@@ -139,6 +145,8 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--edges": o.edges = it.next()
         case "--lines": o.lines = it.next()
         case "--eyes": o.eyes = it.next()
+        case "--objects": o.objects = it.next()
+        case "--contour-weight": o.contourWeight = Float(it.next() ?? "") ?? o.contourWeight
         case "--line-style":
             let value = it.next() ?? ""
             guard let style = LineArtSettings.Style(rawValue: value) else { fail("--line-style: \(lineStyles), not \(value)") }
@@ -190,7 +198,8 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
 
 /// The edge map and eyes layered and coloring-book line art draw from: `--edges` (a contour
 /// map, HED), `--lines` (a line drawing), or both combined as the app combines its two models
-/// (`EdgeMap.combined`); and `--eyes`.
+/// (`EdgeMap.combined`, the contours alone then deciding the outlines, `--contour-weight` the
+/// weight); and `--eyes`.
 func loadLineArt(_ options: Options) -> LineArtInput? {
     guard options.edges != nil || options.lines != nil else {
         let style = options.settings.lineArt.style
@@ -202,25 +211,40 @@ func loadLineArt(_ options: Options) -> LineArtInput? {
         return EdgeMap(width: img.width, height: img.height, values: (0..<(img.width * img.height)).map { img.pixels[$0 * 4] })
     }
     let edges: EdgeMap
+    var outlines: EdgeMap?
     switch (options.lines.map(map), options.edges.map(map)) {
-    case let (drawing?, contours?): edges = EdgeMap.combined(drawing: drawing, contours: contours)
+    case let (drawing?, contours?):
+        edges = EdgeMap.combined(drawing: drawing, contours: contours, contourWeight: options.contourWeight)
+        outlines = contours
     case let (drawing?, nil): edges = drawing
     case let (nil, contours?): edges = contours
     case (nil, nil): fatalError()
     }
-    var eyes: [[SIMD2<Float>]] = []
-    if let eyesPath = options.eyes {
-        guard let data = FileManager.default.contents(atPath: eyesPath) else { fail("cannot read \(eyesPath)") }
+    /// Closed polygons of [x, y] normalized to the photo, from a JSON file.
+    func polygons(_ path: String) -> [[SIMD2<Float>]] {
+        guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
         do {
-            eyes = try JSONDecoder().decode([[[Float]]].self, from: data).map { poly in
+            return try JSONDecoder().decode([[[Float]]].self, from: data).map { poly in
                 poly.map { p in
-                    guard p.count == 2 else { fail("\(eyesPath): points are [x, y]") }
+                    guard p.count == 2 else { fail("\(path): points are [x, y]") }
                     return SIMD2(p[0], p[1])
                 }
             }
-        } catch { fail("cannot decode \(eyesPath): \(error)") }
+        } catch { fail("cannot decode \(path): \(error)") }
     }
-    return LineArtInput(edges: edges, eyes: eyes)
+    let eyes = options.eyes.map(polygons) ?? []
+    var objects: [[SIMD2<Float>]] = []
+    if let path = options.objects {
+        if path.hasSuffix(".json") {
+            objects = polygons(path)
+        } else {
+            // A mask (PGM or PPM, the red channel): inside at or above half.
+            let img = loadImage(path)
+            let mask = (0..<(img.width * img.height)).map { img.pixels[$0 * 4] >= 128 }
+            objects = MaskContours.outlines(of: mask, width: img.width, height: img.height)
+        }
+    }
+    return LineArtInput(edges: edges, eyes: eyes, objects: objects, contours: outlines)
 }
 
 func loadHints(_ path: String?) -> SubjectHints? {
@@ -347,6 +371,37 @@ struct LineArtReport: Codable {
     var interiorPoints: Int
     /// Cells against the segmentation's regions (a classic template at the same settings).
     var cellsVsClassic: Float
+    /// The drawing's length: every drawn layer, along cell boundaries and inside cells (canvas units).
+    var drawnLength: Float
+    /// Drawn line per 1000 canvas pixels: how dense the drawing is.
+    var inkDensity: Float
+    /// The share of the drawing that runs inside cells (fur, creases) rather than along a boundary.
+    var interiorFraction: Float
+    var meanInteriorStrokeLength: Float
+    /// Open ends of interior strokes per 1000 units of drawing: how fragmented it is (a closed
+    /// drawing has none; every dangling stroke adds two).
+    var openEndsPer1000: Float
+    /// Areas the drawn lines enclose: cells joined across the edges with no line (`color`). What
+    /// the coloring book's painter reads as a shape.
+    var enclosedAreas: Int
+    var cellsPerEnclosedArea: Float
+    /// Enclosed areas holding a single cell, as a fraction of all.
+    var singleCellAreaFraction: Float
+    /// The largest enclosed area as a fraction of the canvas: a gap in a silhouette lets the
+    /// background's area reach inside, and the whole canvas is one area when nothing closes.
+    var largestAreaFraction: Float
+    /// Areas the outlines alone enclose (cells joined across detail, texture and color edges).
+    var outlineAreas: Int
+    /// The palette number `selected.svg` hatches: the paint with the most cells.
+    var selectedColor: Int
+    /// The share of the canvas the drawn lines wall off from the frame, as pixels, with the
+    /// lines as drawn and then widened by 1, 2, 3 and 4 pixels on each side: a silhouette that
+    /// is open by a few pixels encloses nothing until a widening closes the gap (the jump says
+    /// how wide the gap is; `openings` where the widening closed it).
+    var enclosedByWidening: [Float]
+    /// Where the first widening that walled off the most area closed a gap: [x, y] (canvas
+    /// units) of the pixel the frame reached last before, up to five.
+    var openings: [[Int]]
 
     init?(_ out: TemplateGenerator.Output, settings: LineArtSettings, input: LineArtInput?) {
         guard let stats = out.lineArtStats, let lines = out.template.lineArt, let input else { return nil }
@@ -370,7 +425,241 @@ struct LineArtReport: Codable {
         interiorStrokes = lines.strokes.count
         interiorPoints = lines.strokePoints.count
         cellsVsClassic = Float(t.regions.count) / Float(max(stats.segmentationRegions, 1))
+
+        var interior: Float = 0
+        var openEnds = 0
+        for stroke in lines.strokes {
+            let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
+            guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
+            for i in (start + 1)..<end {
+                let d = lines.strokePoints[i] - lines.strokePoints[i - 1]
+                interior += (d * d).sum().squareRoot()
+            }
+            if lines.strokePoints[start] != lines.strokePoints[end - 1] { openEnds += 2 }
+        }
+        let drawn = length[0] + length[1] + length[2] + interior
+        func round(_ v: Float, _ places: Float) -> Float { (v * places).rounded() / places }
+        drawnLength = round(drawn, 10)
+        inkDensity = round(drawn / Float(max(t.width * t.height, 1)) * 1000, 100)
+        interiorFraction = round(drawn > 0 ? interior / drawn : 0, 1000)
+        meanInteriorStrokeLength = round(lines.strokes.isEmpty ? 0 : interior / Float(lines.strokes.count), 10)
+        openEndsPer1000 = round(drawn > 0 ? Float(openEnds) / drawn * 1000 : 0, 100)
+
+        let enclosed = Self.areas(t, labels: Self.enclosedAreaLabels(t))
+        enclosedAreas = enclosed.count
+        cellsPerEnclosedArea = round(Float(t.regions.count) / Float(max(enclosed.count, 1)), 100)
+        singleCellAreaFraction = round(enclosed.isEmpty ? 0 : Float(enclosed.filter { $0.cells == 1 }.count) / Float(enclosed.count), 1000)
+        largestAreaFraction = round((enclosed.map(\.area).max() ?? 0) / Float(max(t.width * t.height, 1)), 1000)
+        outlineAreas = Self.areas(t, labels: Self.areaLabels(t, joining: { $0 != LineLayer.outline.rawValue })).count
+
+        var cellsPerColor = [Int](repeating: 0, count: t.palette.count)
+        for region in t.regions { cellsPerColor[Int(region.colorIndex)] += 1 }
+        selectedColor = (cellsPerColor.indices.max { cellsPerColor[$0] < cellsPerColor[$1] } ?? 0) + 1
+        let gaps = Self.gaps(t)
+        enclosedByWidening = gaps.enclosed.map { round($0, 1000) }
+        openings = gaps.openings
     }
+
+    /// The drawn lines (every drawn edge and interior stroke) as a pixel mask.
+    static func drawnMask(_ t: Template) -> [Bool] {
+        let w = t.width, h = t.height
+        var mask = [Bool](repeating: false, count: w * h)
+        guard let lines = t.lineArt, lines.edgeLayers.count == t.edges.count else { return mask }
+        func segment(_ a: SIMD2<Float>, _ b: SIMD2<Float>) {
+            let d = b - a
+            let n = max(1, Int((d * d).sum().squareRoot().rounded(.up)))
+            for s in 0...n {
+                let p = a + d * (Float(s) / Float(n))
+                let x = Int(p.x.rounded()), y = Int(p.y.rounded())
+                if x >= 0, y >= 0, x < w, y < h { mask[y * w + x] = true }
+            }
+        }
+        for (k, e) in t.edges.enumerated() where lines.edgeLayers[k] != LineLayer.color.rawValue {
+            let pts = t.points(of: e)
+            for j in pts.indices.dropFirst() { segment(pts[j - 1], pts[j]) }
+        }
+        for stroke in lines.strokes {
+            let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
+            guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
+            for j in (start + 1)..<end { segment(lines.strokePoints[j - 1], lines.strokePoints[j]) }
+        }
+        return mask
+    }
+
+    /// Flood from the frame through the pixels not in `wall` (4-connected): per pixel the
+    /// steps from the frame, or -1 when walled off.
+    static func flood(_ wall: [Bool], width w: Int, height h: Int) -> [Int32] {
+        var steps = [Int32](repeating: -1, count: w * h)
+        var queue: [Int32] = []
+        for y in 0..<h {
+            for x in 0..<w where x == 0 || y == 0 || x == w - 1 || y == h - 1 {
+                let i = y * w + x
+                if !wall[i] { steps[i] = 0; queue.append(Int32(i)) }
+            }
+        }
+        var head = 0
+        while head < queue.count {
+            let i = Int(queue[head]); head += 1
+            let y = i / w, x = i - y * w, next = steps[i] + 1
+            for (dx, dy) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
+                let xx = x + dx, yy = y + dy
+                guard xx >= 0, yy >= 0, xx < w, yy < h else { continue }
+                let j = yy * w + xx
+                if !wall[j] && steps[j] < 0 { steps[j] = next; queue.append(Int32(j)) }
+            }
+        }
+        return steps
+    }
+
+    /// `enclosedByWidening` and `openings`: the lines widened by 0...4 pixels, the share of
+    /// the canvas the frame cannot reach through them, and where the widening that gained the
+    /// most closed a gap (the pixels enclosed by it the frame reached last before it).
+    static func gaps(_ t: Template) -> (enclosed: [Float], openings: [[Int]]) {
+        let w = t.width, h = t.height
+        var wall = drawnMask(t)
+        var enclosed: [Float] = []
+        var floods: [[Int32]] = []
+        for r in 0...4 {
+            if r > 0 {
+                // One pixel of widening on every side (a 3×3 dilation).
+                var wider = wall
+                for y in 0..<h {
+                    for x in 0..<w where wall[y * w + x] {
+                        for yy in max(0, y - 1)...min(h - 1, y + 1) {
+                            for xx in max(0, x - 1)...min(w - 1, x + 1) { wider[yy * w + xx] = true }
+                        }
+                    }
+                }
+                wall = wider
+            }
+            let steps = flood(wall, width: w, height: h)
+            floods.append(steps)
+            enclosed.append(Float(steps.filter { $0 < 0 }.count - wall.filter { $0 }.count) / Float(w * h))
+        }
+        var openings: [[Int]] = []
+        if let best = (1...4).max(by: { enclosed[$0] - enclosed[$0 - 1] < enclosed[$1] - enclosed[$1 - 1] }),
+           enclosed[best] - enclosed[best - 1] > 0.01 {
+            // Pixels the widening walled off, ordered by how soon the frame reached them before:
+            // the first few are at the gap (one per 30-pixel neighbourhood).
+            let before = floods[best - 1], after = floods[best]
+            var candidates: [(steps: Int32, x: Int, y: Int)] = []
+            for i in 0..<(w * h) where after[i] < 0 && before[i] >= 0 {
+                candidates.append((before[i], i % w, i / w))
+            }
+            candidates.sort { $0.steps != $1.steps ? $0.steps < $1.steps : ($0.y, $0.x) < ($1.y, $1.x) }
+            for c in candidates where openings.count < 5 && !openings.contains(where: { abs($0[0] - c.x) < 30 && abs($0[1] - c.y) < 30 }) {
+                openings.append([c.x, c.y])
+            }
+        }
+        return (enclosed, openings)
+    }
+
+    /// Per region, the area the drawn lines enclose it in (0-based, dense), or nil for a
+    /// template without line art.
+    static func enclosedAreaLabels(_ t: Template) -> [Int] {
+        areaLabels(t, joining: { $0 == LineLayer.color.rawValue })
+    }
+
+    /// Per region, the area it lies in (0-based, dense) when neighbouring cells join across
+    /// every edge whose layer `joining` accepts; every region its own area without line art.
+    static func areaLabels(_ t: Template, joining: (UInt8) -> Bool) -> [Int] {
+        var parent = Array(t.regions.indices)
+        func find(_ i: Int) -> Int {
+            var i = i
+            while parent[i] != i { parent[i] = parent[parent[i]]; i = parent[i] }
+            return i
+        }
+        if let layers = t.lineArt?.edgeLayers, layers.count == t.edges.count {
+            for (k, e) in t.edges.enumerated() where e.right != BoundaryEdge.outside && joining(layers[k]) {
+                let a = find(Int(e.left)), b = find(Int(e.right))
+                if a != b { parent[max(a, b)] = min(a, b) }
+            }
+        }
+        var dense: [Int: Int] = [:]
+        return t.regions.indices.map { i in
+            let root = find(i)
+            if let label = dense[root] { return label }
+            dense[root] = dense.count
+            return dense.count - 1
+        }
+    }
+
+    /// Each area's cell count and area (canvas pixels), by label.
+    static func areas(_ t: Template, labels: [Int]) -> [(cells: Int, area: Float)] {
+        let count = (labels.max() ?? -1) + 1
+        var cells = [Int](repeating: 0, count: count), area = [Float](repeating: 0, count: count)
+        for (i, label) in labels.enumerated() {
+            cells[label] += 1
+            area[label] += t.regions[i].area
+        }
+        return zip(cells, area).map { ($0, $1) }
+    }
+}
+
+/// Debug view of the areas a book's drawing encloses: every area in a color of its own (a
+/// hashed hue, light where the area is one cell), the drawn edges in ink. Where a silhouette
+/// is open, the background's color runs into the object.
+func areasRaster(_ t: Template) -> RGBAImage {
+    let labels = LineArtReport.enclosedAreaLabels(t)
+    let counts = LineArtReport.areas(t, labels: labels)
+    let w = t.width, h = t.height
+    var px = [UInt8](repeating: 255, count: w * h * 4)
+    let colors = counts.indices.map { label -> SIMD3<UInt8> in
+        // Golden-angle hues: neighbouring labels get colors far apart.
+        let hue = (Float(label) * 0.618_034).truncatingRemainder(dividingBy: 1)
+        let single = counts[label].cells == 1
+        let (s, v): (Float, Float) = single ? (0.25, 0.98) : (0.55, 0.9)
+        let k = hue * 6, i = Int(k), f = k - Float(i)
+        let p = v * (1 - s), q = v * (1 - s * f), u = v * (1 - s * (1 - f))
+        let rgb: SIMD3<Float>
+        switch i % 6 {
+        case 0: rgb = SIMD3(v, u, p)
+        case 1: rgb = SIMD3(q, v, p)
+        case 2: rgb = SIMD3(p, v, u)
+        case 3: rgb = SIMD3(p, q, v)
+        case 4: rgb = SIMD3(u, p, v)
+        default: rgb = SIMD3(v, p, q)
+        }
+        return SIMD3(UInt8((rgb.x * 255).rounded()), UInt8((rgb.y * 255).rounded()), UInt8((rgb.z * 255).rounded()))
+    }
+    for i in 0..<(w * h) {
+        let c = colors[labels[Int(t.regionMap.storage[i])]]
+        px[i * 4] = c.x; px[i * 4 + 1] = c.y; px[i * 4 + 2] = c.z
+    }
+    if let lines = t.lineArt, lines.edgeLayers.count == t.edges.count {
+        func plot(_ p: SIMD2<Float>) {
+            let x = Int(p.x.rounded()), y = Int(p.y.rounded())
+            guard x >= 0, y >= 0, x < w, y < h else { return }
+            let o = (y * w + x) * 4
+            px[o] = 30; px[o + 1] = 26; px[o + 2] = 34
+        }
+        func segment(_ a: SIMD2<Float>, _ b: SIMD2<Float>) {
+            let d = b - a
+            let n = max(1, Int((d * d).sum().squareRoot().rounded(.up)))
+            for s in 0...n { plot(a + d * (Float(s) / Float(n))) }
+        }
+        for (k, e) in t.edges.enumerated() where lines.edgeLayers[k] != LineLayer.color.rawValue {
+            let pts = t.points(of: e)
+            for j in pts.indices.dropFirst() { segment(pts[j - 1], pts[j]) }
+        }
+        for stroke in lines.strokes {
+            let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
+            guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
+            for j in (start + 1)..<end { segment(lines.strokePoints[j - 1], lines.strokePoints[j]) }
+        }
+        // The openings (`LineArtReport.gaps`): a red ring around each.
+        for opening in LineArtReport.gaps(t).openings {
+            for dy in -14...14 {
+                for dx in -14...14 where abs(dx * dx + dy * dy - 12 * 12) <= 12 {
+                    let x = opening[0] + dx, y = opening[1] + dy
+                    guard x >= 0, y >= 0, x < w, y < h else { continue }
+                    let o = (y * w + x) * 4
+                    px[o] = 255; px[o + 1] = 0; px[o + 2] = 0
+                }
+            }
+        }
+    }
+    return RGBAImage(width: w, height: h, pixels: px, colorSpace: t.colorSpace)
 }
 
 /// `stats.json`'s `auto`: the chosen settings, every candidate with its score terms, and the
@@ -573,13 +862,20 @@ func jsonEncoder() -> JSONEncoder {
     return encoder
 }
 
-func writeSVGs(_ t: Template, to outDir: URL) throws {
+/// painted.svg, template.svg, painted-outlined.svg and, for a template with line art,
+/// selected.svg: the template with the cells of palette number `selected` hatched, as the
+/// canvas shows the selected color.
+func writeSVGs(_ t: Template, selected: Int? = nil, to outDir: URL) throws {
     try SVGExport.render(t, options: .init(painted: true, outlines: false, numbers: false))
         .write(to: outDir.appendingPathComponent("painted.svg"), atomically: true, encoding: .utf8)
     try SVGExport.render(t, options: .init(painted: false, outlines: true, numbers: true))
         .write(to: outDir.appendingPathComponent("template.svg"), atomically: true, encoding: .utf8)
     try SVGExport.render(t, options: .init(painted: true, outlines: true, numbers: false))
         .write(to: outDir.appendingPathComponent("painted-outlined.svg"), atomically: true, encoding: .utf8)
+    if let selected, t.lineArt != nil {
+        try SVGExport.render(t, options: .init(painted: false, outlines: true, numbers: true, selectedColor: selected - 1))
+            .write(to: outDir.appendingPathComponent("selected.svg"), atomically: true, encoding: .utf8)
+    }
 }
 
 /// Flat-color image → segmentation: one palette entry per distinct color.
@@ -638,7 +934,8 @@ case "generate":
     try Netpbm.encodePPM(paintedRaster(t)).write(to: outDir.appendingPathComponent("raster.ppm"))
     try Netpbm.encodePPM(working).write(to: outDir.appendingPathComponent("working.ppm"))
     try Netpbm.encodePPM(boundaryRaster(t)).write(to: outDir.appendingPathComponent("boundaries.ppm"))
-    try writeSVGs(t, to: outDir)
+    if t.lineArt != nil { try Netpbm.encodePPM(areasRaster(t)).write(to: outDir.appendingPathComponent("areas.ppm")) }
+    try writeSVGs(t, selected: m.lineArt?.selectedColor, to: outDir)
     print(String(data: try encoder.encode(m), encoding: .utf8)!)
 
 case "suggest":

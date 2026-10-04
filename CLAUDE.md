@@ -20,10 +20,16 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs, applied in its
     init: a factor of exactly 1 leaves every knob bit for bit, so classic output never moves)
   - `LineArt/` layered line art (`LayeredLines.apply`; stages in its doc comment): an 8-bit
-    `EdgeMap` (the app's line drawing over its HED map, `EdgeMap.combined`; `pbn --edges`/`--lines`) and eye polygons → ridges, hysteresis and thinning
+    `EdgeMap` (the app's line drawing over its HED map, `EdgeMap.combined`; `pbn --edges`/`--lines`),
+    eye polygons and the subjects' silhouettes → ridges, hysteresis and thinning
     (`LineDetection`), traced and cleaned strokes (`StrokeGraph`), a `LineLayer` per point by
     hysteresis along the stroke, the outline threshold rising toward 1 where lines crowd except on
-    long contours (`LineLayering`), the segmentation split along the lines (`CellMap`: cells keep
+    long contours (`LineLayering`; with `LineArtInput.contours`, the HED map alone, the outline
+    threshold reads the contours instead of the drawing, so an object's boundary is an outline
+    wherever HED found it and the drawing's strokes are detail; `LineLayering.addObjects` draws
+    the stretches of a subject's silhouette (`LineArtInput.objects`, from a mask via
+    `MaskContours`) that run more than 12 px of a 1500-px canvas from every line, as outlines, so
+    the subject closes where the detectors left it open), the segmentation split along the lines (`CellMap`: cells keep
     their paint and hold their number; small ones merge, same-paint ones join per `SamePaint`),
     then after the vectorizer each edge's layer and weight and the lines inside cells
     (`InteriorStroke`s) as `Template.lineArt`. Layered settings without an edge map generate the
@@ -113,10 +119,25 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   research's HED (`research/lineart/lines_learned.py` on `claude/lineart-research`) quantized to
   8-bit PGM; the app runs the same model at ≤ 1152 px, so evaluate with maps at that size (the
   weights load without the `controlnet_aux` package by copying its network class next to
-  `tools/models/convert_hed.py`'s `research_map` and `quantize`). The regression gate covers
-  classic output only; `LineArtTests` and the `template-v2-lines.pbnt` / `template-v2-book.pbnt`
-  fixtures cover layered and coloring-book generation and coding. A coloring book's SVG draws
-  its drawing as one `lines-drawing` group, three times the outline width, and no color edges.
+  `tools/models/convert_hed.py`'s `research_map` and `quantize`); line drawings from the
+  app's second model (`tools/models/convert_lineart.py`'s network), and `--objects` takes a subject
+  mask (any image, inside at half; the app's Vision mask) or polygons. The regression gate's
+  `book` regime covers the book at the app's defaults from committed maps (below); `LineArtTests`
+  and the `template-v2-lines.pbnt` / `template-v2-book.pbnt` fixtures cover layered and
+  coloring-book generation and coding. A coloring book's SVG draws its drawing as one
+  `lines-drawing` group, three times the outline width, and no color edges. A layered or book
+  template's `stats.json` `lineArt` also reports the drawing: `drawnLength`, `inkDensity` (per
+  1000 px), `interiorFraction`, `openEndsPer1000`, the areas the drawn lines enclose
+  (`enclosedAreas`, `cellsPerEnclosedArea`, `singleCellAreaFraction`, `largestAreaFraction`: the
+  background's share unless a silhouette is open, `outlineAreas`), `enclosedByWidening` (the
+  canvas share the lines wall off as drawn and widened 1–4 px: a jump says how wide the openings
+  are) and `openings` (where the widening closed them); pbn also writes `selected.svg` (the cells
+  of the paint with the most of them hatched, as the canvas shows the selected color;
+  `SVGExport.Options.selectedColor`) and `areas.ppm` (a color per enclosed area, red rings at the
+  openings). `tools/eval.py book <images> --out DIR --edges-dir … --lines-dir … [--objects-dir …]
+  [--variant NAME="pbn options"]…` makes the book sheet (`DIR/<name>/book.png`): one column per
+  variant, rows fitted / zoomed / selected / finished / areas, the metrics under each; use it for
+  every line-art tuning (`docs/coloring-book.md`, Measuring a book).
 - Suggested settings: `pbn suggest <image> [--importance m.pgm] [--hints h.json] [--length
   quick|relaxed|detailed] [--candidates 5] [--out dir]` prints the candidate table (every score
   term, the winner starred) and writes `decision.json`; with `--out` also every candidate's
@@ -133,7 +154,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the six retired samples, pinned by name (`SAMPLE_NAMES`; CI's `pbn bench` step lists the same
   files), never the picture library beside them, whose curation must move neither the baselines
   nor CI's time; in three regimes (24 colors/detail 0.5, 150/1.0, 12/0.0), each
-  generated twice, plus the `auto` regime (`pbn generate --auto`, Relaxed): its hard invariant is
+  generated twice, the `book` regime (the coloring book at the app's defaults from the committed
+  maps `tools/baseline/lines/<name>-contours.png` (HED) and `-drawing.png` (the line-drawing
+  model), at the photos' size; the same invariants and bands on its cells, its drawing metrics
+  informational), plus the `auto` regime (`pbn generate --auto`, Relaxed): its hard invariant is
   that the choice lies inside the length's bands; the chosen settings and metrics are compared
   with `tools/baseline/auto.json` for information only (choices move when the pipeline moves). Hard invariants: `pbn check` valid, byte-identical runs, no region under
   radius 2, palette distance ≥ the floor pbn reports (`GenerationSettings.minPaletteDistance`),
@@ -393,15 +417,21 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   Chan, Durand & Isola 2022, `sk_model.pth` from the same repository, MIT, the network ControlNet's
   lineart annotator uses; `tools/models/convert_lineart.py`; 8.6 MB; ≤ 768 px, stride 4, RGB in
   0...1, its paper inverted to ink), a drawing with the fur, petals and glass HED lacks.
-  `combinedMap(for:)`, what the app generates from, lays the drawing (resampled up) over the HED
+  `maps(for:)`, what the app generates from, lays the drawing (resampled up) over the HED
   map, `EdgeMap.combined`: per pixel the larger of the drawing and 0.85 × the contours
-  (`EdgeMap.contourWeight`, measured on the fox and Arrieta's still life). `.cpuOnly` keeps maps
+  (`EdgeMap.contourWeight`, measured on the fox and Arrieta's still life), and hands the HED map
+  along as `LineArtInput.contours`, which decides the outlines. `.cpuOnly` keeps maps
   the same across devices, up to a level where a value sits on a rounding boundary (the Neural
   Engine and GPU compute in reduced precision that differs by chip); the target has
   `COREML_CODEGEN_LANGUAGE = None` and loads the `.mlmodelc`s by URL. `EyeFinder.eyes(in:)`:
   Vision face landmarks → per eye a smoothed contour and an iris (a circle around the pupil, 0.2 ×
   the eye's width, clipped to the lids), closed polygons normalized to the photo, contours then
-  irises, quantized to 1/4096. `LineArtInputs.make(for:settings:)` (nil for classic) caches both per
+  irises, quantized to 1/4096. `ObjectFinder.objects(in:)`: Vision's foreground instance mask
+  (every instance together, scaled to 384 px, cut at half) traced by PaintCore's `MaskContours`
+  into the subjects' silhouettes (`LineArtInput.objects`), which `LineLayering.addObjects` draws as
+  outlines wherever the drawing leaves a silhouette open by more than 12 px of a 1500-px canvas
+  (`LineArtSettings.outlineObjects`, Settings › Advanced › Outline Subjects; `pbn --objects
+  mask.pgm|polygons.json`). `LineArtInputs.make(for:settings:)` (nil for classic) caches all of it per
   `CGImage` instance (two photos; shared computation, cancelled when all its waiters are);
   `forGeneration(of:settings:cached:)` turns a model failure into nil (a layered template then comes
   out classic). New paintings get `Preferences.lineArt`/`.tuning` on top of the suggested or slider

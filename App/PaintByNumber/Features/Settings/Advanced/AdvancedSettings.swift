@@ -41,12 +41,12 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     case style
     case outlineThreshold, detailThreshold, textureThreshold
     case minimumStrokeLength, gapBridging, lineSmoothing
-    case samePaint, keepColorEdges, outlineEyes
+    case samePaint, keepColorEdges, outlineEyes, outlineObjects
     case smoothing, textureFlattening, minimumCellSize, subjectEmphasis, accentColors, colorfulness
 
     static let lineArt: [AdvancedControl] = [
         .style, .outlineThreshold, .detailThreshold, .textureThreshold, .minimumStrokeLength, .gapBridging,
-        .lineSmoothing, .samePaint, .keepColorEdges, .outlineEyes,
+        .lineSmoothing, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects,
     ]
     static let thresholds: [AdvancedControl] = [.outlineThreshold, .detailThreshold, .textureThreshold]
     static let pipeline: [AdvancedControl] = [
@@ -80,6 +80,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
         case .samePaint: art.samePaint = a.samePaint
         case .keepColorEdges: art.keepColorEdges = a.keepColorEdges
         case .outlineEyes: art.outlineEyes = a.outlineEyes
+        case .outlineObjects: art.outlineObjects = a.outlineObjects
         case .smoothing: tuning.smoothing = t.smoothing
         case .textureFlattening: tuning.textureFlattening = t.textureFlattening
         case .minimumCellSize: tuning.minimumCellSize = t.minimumCellSize
@@ -113,6 +114,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
         case .samePaint: Double(LineArtSettings.SamePaint.allCases.firstIndex(of: art.samePaint) ?? 0)
         case .keepColorEdges: art.keepColorEdges ? 1 : 0
         case .outlineEyes: art.outlineEyes ? 1 : 0
+        case .outlineObjects: art.outlineObjects ? 1 : 0
         case .smoothing: Double(tuning.smoothing)
         case .textureFlattening: Double(tuning.textureFlattening)
         case .minimumCellSize: Double(tuning.minimumCellSize)
@@ -145,7 +147,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
             SliderSpec(
                 range: Double(PipelineTuning.range.lowerBound)...Double(PipelineTuning.range.upperBound),
                 defaultValue: defaultValue, logarithmic: true, quantum: 0.01, accessibilityStep: 0.25, format: .multiplier)
-        case .style, .samePaint, .keepColorEdges, .outlineEyes:
+        case .style, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects:
             nil
         }
     }
@@ -157,6 +159,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
         case .samePaint: art.samePaint.name(in: art.style)
         case .keepColorEdges: AdvancedText.onOff(art.keepColorEdges)
         case .outlineEyes: AdvancedText.onOff(art.outlineEyes)
+        case .outlineObjects: AdvancedText.onOff(art.outlineObjects)
         default: slider(for: art.style)?.text(value(lineArt: art, tuning: tuning)) ?? ""
         }
     }

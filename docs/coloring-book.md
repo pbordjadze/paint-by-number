@@ -57,25 +57,66 @@ method plainly: the silhouette and features in thick ink, the numbers floating i
 line between paints, the sky bands numbered only. Cells are identical to the layered style's at
 the same settings except where texture lines (now absent) used to split them.
 
-The coloring book is the app's default line style (`LineArtSettings()`), at the settings the
-owner's own books used: thresholds of 0.6, a 36 px shortest line, 16 px gap closing and
-flowing curves (`LineArtSettings.init(style:)`; layered lines keep the research's values, and
-choosing a style in Settings › Advanced carries each style's defaults along), over paint
-flattened 1.5× (`SegmentationParameters.coloringBookFlattening`). Both are measured in
-`docs/presets/README.md`. Settings › Advanced exposes the thresholds for the book with the
-texture threshold hidden; Coloring Book in its Presets row is the defaults.
+The coloring book is the app's default line style (`LineArtSettings()`): lines from 0.6 of
+the combined map (the owner's own books' threshold), outlines where HED holds 0.5, same-paint
+cells joined across everything but outlines (`samePaint = .joinAllButOutlines`, the book's own
+default), a 36 px shortest line, 16 px gap closing and flowing curves
+(`LineArtSettings.init(style:)`; layered lines keep the research's values, and choosing a style
+in Settings › Advanced carries each style's defaults along), over paint flattened 1.5×
+(`SegmentationParameters.coloringBookFlattening`). Measured with the book sheets on the fox,
+the Milkmaid, the Arrieta and the turtle against the previous defaults (0.6 for both thresholds,
+same-paint cells split by every line): cells 10–20 % fewer (the slivers fur strokes walled),
+the strokes drawn inside cells two to three times as many (92 on the fox, 168 on the Milkmaid),
+the same ink; lowering what is drawn to 0.5 would double the ink and the open ends (the fox 211
+strokes, the Milkmaid 388), too busy for a book. Settings › Advanced exposes the thresholds for
+the book with the texture threshold hidden; Coloring Book in its Presets row is the defaults.
 
-## Detectors
+## Detectors, and what each decides
 
 HED alone (build 176) finds strong, closed silhouettes and little else: the fox is an outline
 with five strokes inside, the Arrieta still life a row of blobs. The Informative Drawings
 generator (`LineArt.mlpackage`, the network ControlNet's lineart annotator runs) draws what an
 illustrator draws, fur, petals, cut glass, the cat's face, but its silhouettes are thin and
-sometimes open. The app now generates from the drawing laid over the HED map
-(`EdgeMap.combined`: per pixel the larger of the drawing and 0.85 × HED): the contours keep every
-object closed, the drawing supplies the detail. With the pipeline's thresholds at 0.5 (outlines)
-and 0.3 (detail) and same-paint cells joined across detail lines (`samePaint =
-.joinAllButOutlines`), the fur strokes draw inside their cells instead of walling slivers.
-Measured on the ten-picture corpus plus the Arrieta (`tools/eval.py --edges-dir … --lines-dir …`):
-cells within a tenth of HED's, strokes inside cells from a handful to hundreds. The drawing runs
-at a long side of 768 (cleaner and four times faster than 1152) and is resampled up.
+sometimes open. The app generates from the drawing laid over the HED map (`EdgeMap.combined`:
+per pixel the larger of the drawing and 0.85 × HED), and hands the HED map along by itself
+(`LineArtInput.contours`): the combined map says what is drawn, the contours say what is an
+outline. A stroke is an outline where HED's strength along it (smoothed like the lines, read
+within two pixels of the stroke) holds the outline threshold, whatever the drawing made of it;
+everything else drawn is detail. So the drawing's strong fur strokes never pose as silhouettes,
+and a silhouette HED found is an outline even where the drawing traced it thinly. The drawing
+runs at a long side of 768 (cleaner and four times faster than 1152) and is resampled up.
+
+## Closing the subjects
+
+A silhouette the detectors miss stays open, and the method's areas then leak: the fox's white
+belly against snow gives HED and the drawing nothing, so the fox and the snow are one enclosed
+area, a hundred pixels wide at the belly, however the thresholds are set. The owner's notes
+allow a gap to let the background in, but a painter sees the fox as one shape. The subjects'
+silhouettes (`LineArtInput.objects`) come from a foreground mask, in the app Vision's
+foreground instance mask, every subject together, scaled to 384 px and traced by
+`MaskContours` (a crack-following walk around each shape of at least 1.5 % of the mask, the
+staircase simplified), and `LineLayering.addObjects` draws, as outlines at full strength, only
+the stretches of a silhouette that run more than 12 px (on a 1500-px canvas) from every drawn
+line, dropping stretches under 24 px as the mask's wobble; the stretches' free ends then reach
+the lines they stopped short of like any other free end. Where the detectors drew the silhouette
+it stays theirs, precise; where they left it open the mask closes it. `pbn --objects` takes a
+mask (any image, inside at half) or polygons; the Linux evaluation stands in for Vision with a
+mask made from HED itself (the shapes HED at 0.2 encloses), which the eval sheets show closing
+the fox.
+
+## Measuring a book
+
+A book is judged the way its painter sees it. `pbn generate` writes, for a template with line
+art, `selected.svg` (the cells of the paint with the most of them hatched, nothing outlined,
+as the canvas shows the selected color) and `areas.ppm` (a color per area the drawn lines
+enclose, light where the area is one cell, red rings where widening the lines closes an
+opening), and `stats.json`'s `lineArt` reports the drawing: its length and `inkDensity`
+(drawn length per 1000 canvas pixels), the share inside cells (`interiorFraction`), open stroke
+ends per 1000 units, the areas the lines enclose (`enclosedAreas`, cells per area, the share
+with a single cell, `largestAreaFraction`: the background's share unless a silhouette is open),
+the areas the outlines alone enclose, and `enclosedByWidening`, the share of the canvas the lines
+wall off as drawn and widened by 1 to 4 px, whose jumps say how wide the openings are
+(`openings` says where). `tools/eval.py book` lays these out per picture: one column per
+setting variant, the drawing fitted, its middle zoomed, the selected view, the finished painting
+and the areas, with the numbers under each; `tools/regression.py`'s book regime generates the
+six retired samples as books from committed maps on every push.
