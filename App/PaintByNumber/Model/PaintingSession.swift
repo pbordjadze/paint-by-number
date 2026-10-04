@@ -49,7 +49,7 @@ final class PaintingSession {
     /// app doesn't run in English), fixed for the painting by `nicknameSeed`.
     let colorNicknames: [String?]
     /// How the colors are named on screen and by VoiceOver: by nickname, or plainly (Settings).
-    var colorNameStyle: ColorNameStyle = .playful
+    var colorNameStyle: ColorNameStyle = .default
     /// Increments on every progress change; cheap to observe for autosave/thumbnails.
     private(set) var revision = 0
 

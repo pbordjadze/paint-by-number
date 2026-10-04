@@ -14,7 +14,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
-    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
+    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .default
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
     @State private var path: [Destination] = []

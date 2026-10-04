@@ -15,7 +15,7 @@ struct ArtworkPaintingView: View {
     @Environment(Library.self) private var library
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
-    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
+    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .default
     @State private var autosaver: PaintingAutosaver?
     @State private var failure: Library.OpenError?
     @State private var regeneration: Task<Void, Never>?

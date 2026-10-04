@@ -129,4 +129,6 @@ nonisolated enum ColorNameStyle: String, CaseIterable, Identifiable, Sendable {
     case playful, plain
 
     var id: String { rawValue }
+
+    static let `default` = ColorNameStyle.playful
 }

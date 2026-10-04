@@ -45,7 +45,7 @@ nonisolated enum ArtworkExporter {
     /// The printable template. Its color key names the colors by their nicknames (the ones the
     /// painting shows) unless `colorNames` is Plain.
     static func templatePDF(
-        store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper, colorNames: ColorNameStyle = .playful
+        store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper, colorNames: ColorNameStyle
     ) throws -> Data {
         let template = try store.readTemplate(artwork.id)
         let nicknames = colorNames == .playful
@@ -154,7 +154,7 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     let store: ArtworkStore
     let artwork: Artwork
     let paper: PDFExporter.Paper
-    var colorNames: ColorNameStyle = .playful
+    let colorNames: ColorNameStyle
 
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(exportedContentType: .pdf) { item in

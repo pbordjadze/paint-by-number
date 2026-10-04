@@ -13,7 +13,7 @@ struct GalleryView: View {
 
     @Environment(Library.self) private var library
     @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
-    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .playful
+    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .default
     @State private var width: CGFloat = 0
     @State private var renaming: Artwork?
     @State private var renameText = ""

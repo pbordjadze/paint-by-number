@@ -53,7 +53,7 @@ struct Preferences: Equatable {
             ?? .default(for: Locale.current.region)
         paperAppearance = defaults.string(forKey: SettingsKey.paperAppearance).flatMap(PaperAppearance.init(rawValue:))
             ?? .default
-        colorNames = defaults.string(forKey: SettingsKey.colorNames).flatMap(ColorNameStyle.init(rawValue:)) ?? .playful
+        colorNames = defaults.string(forKey: SettingsKey.colorNames).flatMap(ColorNameStyle.init(rawValue:)) ?? .default
         lineArt = Self.decoded(LineArtSettings.self, defaults, SettingsKey.lineArt) ?? LineArtSettings()
         tuning = Self.decoded(PipelineTuning.self, defaults, SettingsKey.pipelineTuning) ?? PipelineTuning()
         lineAppearance = Self.decoded(LineAppearance.self, defaults, SettingsKey.lineAppearance) ?? .default
