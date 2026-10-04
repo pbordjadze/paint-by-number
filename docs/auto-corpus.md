@@ -1,10 +1,11 @@
 # Auto tuning corpus
 
-The photos W1b tuned Suggested settings ("Auto") on: 69 in all. None of them is committed;
-this file records where each came from and under which licence, so the corpus can be
-rebuilt. Wikimedia, Unsplash and most image hosts are blocked from the build machines, so
-every new photo comes from a public GitHub repository (cloned with `git`, which the proxy
-allows) and is pinned to the commit it was fetched at.
+The photos Suggested settings ("Auto") were tuned on ([`auto-tuning.md`](auto-tuning.md)): 69
+in all. Only the six regression photos are committed (`Tests/Corpus`); this file records where
+each came from and under which licence, so the corpus can be rebuilt. Wikimedia, Unsplash and
+most image hosts are blocked from the build machines, so every new photo comes from a public
+GitHub repository (cloned with `git`, which the proxy allows) and is pinned to the commit it was
+fetched at.
 
 Preparation (`/tmp/pbn-w1b/prep.py` during tuning): EXIF orientation applied, converted to
 RGB, reduced with Lanczos to at most 2048 px on the long side (the size the app keeps a photo
@@ -14,15 +15,15 @@ at, `ArtworkStore.sourceMaxPixelSize`), written as PPM. Smaller photos are used 
 
 | Photos | Source | Licence |
 | --- | --- | --- |
-| barn, espresso, hibiscus, lighthouse, parrots, regatta | `App/PaintByNumber/Resources/Samples/*.jpg` (the bundled samples; derived from Kodak 22, scikit-image coffee, Kodak 07, Kodak 21, Kodak 23, Kodak 09) | as bundled; the samples' licence note is the open Phase 0 decision |
-| kodim01 … kodim24 (768 × 512) | `https://raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite/master/PhotoCD_PCD0992/<n>.png` (as `CLAUDE.md` says) | Kodak released the suite for unrestricted use |
+| barn, espresso, hibiscus, lighthouse, parrots, regatta | `Tests/Corpus/*.jpg` (the regression gate's and the benchmark's photos, never shipped; JPEG copies of Kodak 22, scikit-image coffee, Kodak 07, Kodak 21, Kodak 23, Kodak 09) | as their sources below; credits in `Tests/Corpus/README.md`. The app never offers or credits them (no `library.json` record) |
+| kodim01 … kodim24 (768 × 512) | `https://raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite/master/PhotoCD_PCD0992/<n>.png` | Kodak released the suite for unrestricted use |
 | astronaut, chelsea, coffee, rocket | scikit-image `skimage/data` | astronaut and rocket: public domain (NASA); chelsea and coffee: CC0 (scikit-image's data licence list) |
 
-## Added for W1b (35)
+## Added for the tuning (35)
 
-Hand-written hints (faces, cats and dogs, normalized rects) live in `/tmp/pbn-w1b/hints/`
-for grace-hopper, portrait-tunnel, portrait-dress, dog, chelsea, astronaut, kodim04, kodim12,
-kodim15 and kodim18. Only cats and dogs get animal rects, as `VNRecognizeAnimalsRequest`
+Hand-written hints (faces, cats and dogs, normalized rects) lived in `/tmp/pbn-w1b/hints/` (not
+committed) for grace-hopper, portrait-tunnel, portrait-dress, dog, chelsea, astronaut, kodim04,
+kodim12, kodim15 and kodim18. Only cats and dogs get animal rects, as `VNRecognizeAnimalsRequest`
 reports nothing else.
 
 Repositories (all CC0 1.0 unless noted):

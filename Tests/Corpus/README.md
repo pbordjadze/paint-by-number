@@ -29,5 +29,6 @@ The Kodak suite is 24 lossless 768 × 512 images that Eastman Kodak Company rele
 unrestricted use. The copies came from
 `https://raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite/master/PhotoCD_PCD0992/<n>.png`
 and were re-encoded as JPEG at their own size (against the PNGs, a mean difference of
-1.4–2.1 of 255 per channel, `coffee` included). The rest of the Kodak suite is the tuning
-corpus described in `docs/wave2/log/auto-corpus.md`, which is not committed.
+1.4–2.1 of 255 per channel, `coffee` included). The rest of the Kodak suite belongs to Auto's
+tuning corpus, which is not committed; `docs/auto-corpus.md` records where each of its photos
+came from.
