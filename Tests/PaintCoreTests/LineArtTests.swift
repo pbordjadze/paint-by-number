@@ -107,8 +107,11 @@ struct LineArtTests {
             && LineArtSettings.Style.coloringBook.usesEdgeMap)
         let missing = try Self.generate(Self.settings(), input: false)
         #expect(missing.template == plain.template)
+        // A coloring book without one is classic lines over the book's flatter paint.
         let missingBook = try Self.generate(Self.book(), input: false)
-        #expect(missingBook.template == plain.template)
+        #expect(missingBook.template.lineArt == nil && missingBook.lineArtStats == nil)
+        #expect(missingBook.template.regions.count <= plain.template.regions.count)
+        #expect(missingBook.template.palette.count <= plain.template.palette.count)
     }
 
     // MARK: - Coloring book

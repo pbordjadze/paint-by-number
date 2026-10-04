@@ -394,7 +394,8 @@ public enum AutoSettings {
     ///
     /// `lineArt` and `tuning` (Settings › Advanced), when given, are carried by every candidate,
     /// so the decision's settings have them. The tuning changes the drafts and so the scores;
-    /// line art does not (drafts get no edge map, so they are classic).
+    /// line art only through a coloring book's flatter paint (drafts get no edge map, so their
+    /// lines are classic).
     public static func choose(
         image: RGBAImage, sourceSize: (width: Int, height: Int)? = nil, importance: Grid<Float>?, hints: SubjectHints?,
         preference: PaintingLength, maxCandidates: Int, lineArt: LineArtSettings? = nil, tuning: PipelineTuning? = nil,

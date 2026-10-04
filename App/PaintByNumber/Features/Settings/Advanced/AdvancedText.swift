@@ -412,20 +412,26 @@ nonisolated extension LineLayer {
 nonisolated extension AdvancedPreset {
     var name: String {
         switch self {
-        case .defaults: String(localized: "advanced.preset.defaults", defaultValue: "Defaults",
-                               comment: "Settings › Advanced › Presets: the preset of the app's own settings")
         case .coloringBook: String(localized: "advanced.preset.coloringBook", defaultValue: "Coloring Book",
-                                   comment: "Settings › Advanced › Presets: the preset that makes coloring books: a drawing in solid ink that stays over the paint, the areas inside an outline told apart by their numbers")
+                                   comment: "Settings › Advanced › Presets: the app's own settings, a coloring book: a drawing in solid ink that stays over the paint, the areas inside an outline told apart by their numbers")
+        case .layered: String(localized: "advanced.preset.layered", defaultValue: "Layered",
+                              comment: "Settings › Advanced › Presets: layered lines at their defaults: lines that follow a drawing of the picture, in layers that fade in as you zoom")
+        case .classic: String(localized: "advanced.preset.classic", defaultValue: "Classic",
+                              comment: "Settings › Advanced › Presets: the original look at its defaults, every boundary one even line")
         }
     }
 
     var summary: String {
         switch self {
-        case .defaults: String(localized: "advanced.preset.defaults.summary", defaultValue: "The app’s own settings.",
-                               comment: "Settings › Advanced › Presets: what the Defaults preset is")
         case .coloringBook: String(localized: "advanced.preset.coloringBook.summary",
-                                   defaultValue: "A drawing in solid ink that stays over the paint. The areas inside an outline are told apart by their numbers, not by lines.",
-                                   comment: "Settings › Advanced › Presets: what the Coloring Book preset does")
+                                   defaultValue: "The app’s own settings: a drawing in solid ink that stays over the paint. The areas inside an outline are told apart by their numbers, not by lines.",
+                                   comment: "Settings › Advanced › Presets: what the Coloring Book preset, the app's defaults, does")
+        case .layered: String(localized: "advanced.preset.layered.summary",
+                              defaultValue: "Lines follow a drawing of the picture: outlines stay strong, finer lines come in as you zoom.",
+                              comment: "Settings › Advanced › Presets: what the Layered preset does")
+        case .classic: String(localized: "advanced.preset.classic.summary",
+                              defaultValue: "The original look: every boundary between areas is one even line.",
+                              comment: "Settings › Advanced › Presets: what the Classic preset does")
         }
     }
 }

@@ -15,7 +15,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     `assign(_:seed:)` picks one per paint, unique in the palette and varied by seed)
   - `Model/` `Template` (the product of the pipeline) + versioned binary coding, `GenerationSettings`,
     `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map),
-    `LineArtSettings` (classic, layered or coloring-book lines and their knobs; defaults and why on its init) and
+    `LineArtSettings` (coloring-book, layered or classic lines and their knobs; the coloring book is the
+    default, each style has defaults of its own, `init(style:)`, carried along by `changing(to:)`) and
     `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs, applied in its
     init: a factor of exactly 1 leaves every knob bit for bit, so classic output never moves)
   - `LineArt/` layered line art (`LayeredLines.apply`; stages in its doc comment): an 8-bit
@@ -28,12 +29,16 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     (`InteriorStroke`s) as `Template.lineArt`. Layered settings without an edge map generate the
     classic template; same edge map and settings give the same bytes on any core count. The
     **coloring book** style (`LineArtSettings.Style.coloringBook`, `TemplateLineArt.Style`;
-    `docs/coloring-book.md`) is the same pipeline with the drawing as the only lines: nothing
-    below the detail threshold is extracted (no texture layer, `textureThreshold` unused, so
+    `docs/coloring-book.md`), the default, is the same pipeline with the drawing as the only lines:
+    nothing below the detail threshold is extracted (no texture layer, `textureThreshold` unused, so
     `samePaint = .joinTexture` splits), every line is kept whether or not it bounds a cell
-    (stretches inside a cell of `LineLayering.minimumRun` or more become interior strokes), and
-    the template's style tells every renderer to draw the drawn layers alike in full ink over
-    the paint, never the color edges and never a selected cell's outline.
+    (stretches inside a cell of `LineLayering.minimumRun` or more become interior strokes), its
+    paint is flatter (`SegmentationParameters.coloringBookFlattening`, 1.5× smoothing, texture
+    flattening and smallest area, applied by `TemplateGenerator` by the settings' style, edge map or
+    not, so Auto's drafts are scored on the paint the book gets; classic templates and
+    `PhotoAnalyzer` never see it), and the template's style tells every renderer to draw the drawn
+    layers alike in full ink over the paint, never the color edges and never a selected cell's
+    outline.
   - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
     its doc comment, all tunables in `SegmentationParameters`)
   - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
@@ -97,7 +102,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   at detail 1 and Auto's suggestion (`--edges map.pgm`: also layered line art, stage by stage).
 - Layered line art: `pbn generate <in.ppm> <out> --line-style layered|coloringBook --edges map.pgm
   [--eyes eyes.json] [--line-art key=value]… [--tuning key=value]…` (eyes: closed polygons of
-  `[x, y]` normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names);
+  `[x, y]` normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names;
+  pbn is classic unless `--line-style` says otherwise, whatever the pipeline's default, and
+  `--line-style` picks the style at its own defaults, `--line-art` fields on top in any order);
   `stats.json` gains `lineArt` (settings, `LineArtStats`, edges and length per layer, interior
   strokes, `cellsVsClassic`) and `tuning` when not default. Edge maps for evaluation come from the
   research's HED (`research/lineart/lines_learned.py` on `claude/lineart-research`) quantized to
@@ -246,7 +253,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   finished picture included), with dotted color-edge guides first in `.print`, since paper has no
   hatch. Demo scenarios `paint-book`, `-progress`, `-zoomed`, `-dark-paper` (the red fox through the
   real pipeline with the real detector, `LineArtInputs.compute`, the stand-in map when it is
-  unavailable) and `settings-advanced-book`.
+  unavailable). The `paint*` classic demos ask for classic lines; every other template the app
+  makes (new paintings, the samples prepared on first launch, the gallery demos' seeds) is a
+  coloring book, so `ArtworkFactory.template` runs the edge detector for each.
 - Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
   and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
   Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the
@@ -399,15 +408,19 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - Settings › Advanced (Experimental; `Features/Settings/Advanced/`): `LineArtSettings`,
   `LineAppearance` and `PipelineTuning` for testers, stored as they change (`Preferences.store`;
   values equal to the defaults are removed, so better defaults reach them). Line Style offers
-  Classic, Layered and Coloring Book (`LineStyleRow`, a swatch each); under the book,
-  `AdvancedControl.applies(to:)` hides Texture From, Detail From reads Lines From, the same-paint
-  picker shows Always Split for `.joinTexture` (`SamePaintRow`), `GenerationKey` canonicalizes
-  both (so previews are shared) and Line Appearance shows only Line Weight. Pushed inside the
+  Classic, Layered and Coloring Book (`LineStyleRow`, a swatch each; choosing one carries each
+  style's own defaults, `LineArtSettings.changing(to:)`, and every reset, detent and effect is
+  against the style's defaults, `AdvancedControl.defaultValue(for:)`, `slider(for:)`); under the
+  book, `AdvancedControl.applies(to:)` hides Texture From, Detail From reads Lines From, the
+  same-paint picker shows Always Split for `.joinTexture` (`SamePaintRow`), `GenerationKey`
+  canonicalizes both (so previews are shared; classic keys carry the classic defaults) and Line
+  Appearance shows only Line Weight. Pushed inside the
   settings sheet in compact widths, a full-screen cover in regular ones (the sheet is a small card
   there). `AdvancedSettingsModel` prepares the chosen picture once (a library picture or the most
   recent photo, `SettingsKey.advancedPreviewPicture`): decoded like the create flow, Vision
-  importance, `AutoSettings.choose` with one candidate at the draft size, whose template is the
-  defaults' preview and whose estimate scales draft areas to the full painting. Settings that
+  importance, `AutoSettings.choose` with one candidate at the draft size, whose estimate scales
+  draft areas to the full painting; the defaults' preview is rendered like every other key (the
+  suggestion's own draft has no edge map). Settings that
   change templates (`GenerationKey`: canonical, classic keys drop the layered fields) queue a
   generation: debounced, coalesced while a slider moves, the last preview kept until the next,
   every template kept in a small LRU. Each changed setting's effect (`AdvancedControl`) is the
@@ -420,13 +433,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the preview of a library picture); Paste Settings (the system `PasteButton`, no permission prompt)
   reads it back through `AdvancedReport.settings(in:)`: the JSON object in the text, each of its three
   groups optional and tolerant, clamped; groups it leaves out stay. The Presets row (`AdvancedPreset`:
-  Defaults, Coloring Book) sets all three groups at once, the one the settings match marked (matched
-  as generation uses them, by `GenerationKey`, so a setting the style ignores doesn't count); a
-  preset's values live in Swift only (Coloring Book: the coloring-book style at the owner's
-  thresholds and line lengths, measured in `docs/presets/README.md`). Demo scenarios
-  `settings-advanced` (+ `-dark`, `-long-text`), `settings-advanced-layered` (Line Appearance, 2×),
-  `settings-advanced-tuned` (Pipeline, effects measured) and `settings-advanced-coloring-book` (the
-  preset on the fox) register their settings instead of storing them. Its Sounds,
+  Coloring Book, the defaults; Layered; Classic: a style at its defaults, the pipeline untuned, the
+  lines drawn as designed) sets all three groups at once, the one the settings match marked
+  (matched as generation uses them, by `GenerationKey`, so a setting the style ignores doesn't
+  count; the book's settings are measured in `docs/presets/README.md`). Demo scenarios
+  `settings-advanced` (+ `-dark`, `-long-text`), `settings-advanced-layered` (Line Appearance, 2×)
+  and `settings-advanced-tuned` (Pipeline, effects measured) register their settings instead of
+  storing them. Its Sounds,
   Haptics and Sparkles & Shine sections (`PaintingEffectsSections`) put each `PaintingEffect` (the
   painting notes, the color finished jingle, the fanfare, the wrong-color sound, three haptics,
   the fill sparkles, the finishing shine) on its own `@AppStorage` switch (absent means on), read
@@ -539,6 +552,9 @@ Saved paintings must open in every later build. The format history is documented
   anything indexes with it. PaintCore is compiled `-Ounchecked` in release, so a missed check is a
   silent out-of-bounds read; the truncation, random-corruption and crafted-reference tests in
   `TemplateCodingTests` guard this.
+- An artwork's recorded settings are what regeneration uses: a `meta.json` without `settings`
+  or `lineArt` (saved before line art existed) means classic lines (`Artwork.settingsBeforeLineArt`,
+  the `GenerationSettings` decoder), never the current default style.
 - A file from a newer app is never reset or rewritten: it throws a "newer" error
   (`Template.CodingError.requiresNewerReader`, `PaintProgress.CodingError.newerVersion`) and the
   app says it needs an update. `PaintProgress` fields are append-only (readers ignore trailing

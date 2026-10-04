@@ -33,18 +33,15 @@ import PaintCore
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `settings-advanced`, `settings-advanced-dark`, `settings-advanced-long-text`: Settings ›
-///   Advanced at the default settings, previewing The Great Wave (pushed inside the sheet on
-///   iPhone, over the whole window on iPad); the last with every localized string twice as long.
+///   Advanced at the default settings (a coloring book), previewing The Great Wave (pushed inside
+///   the sheet on iPhone, over the whole window on iPad); the last with every localized string
+///   twice as long.
 /// - `settings-advanced-layered`: the same with Layered lines, previewing the freight train at
 ///   2×, scrolled to Line Appearance.
 /// - `settings-advanced-tuned`: the same with three pipeline multipliers moved, previewing the
 ///   red fox, scrolled to Pipeline with every effect measured.
 /// - `settings-advanced-effects`: the same at the defaults, scrolled to Sounds & Effects with
 ///   the color finished jingle switched off.
-/// - `settings-advanced-coloring-book`: the same on the Coloring Book preset, previewing the red
-///   fox (its outline in thick ink, the paints inside told apart by their numbers), the preset
-///   marked in the Presets row.
-/// - `settings-advanced-book`: the same with Coloring Book lines alone, on the Line Art section.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -58,7 +55,7 @@ enum ShellDemo: Equatable {
          galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createSuggested, createCustom, createFromFile, settings,
          settingsLongText, settingsAcknowledgements, settingsAdvanced, settingsAdvancedLayered, settingsAdvancedTuned,
-         settingsAdvancedEffects, settingsAdvancedColoringBook, settingsAdvancedBook
+         settingsAdvancedEffects
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -87,8 +84,6 @@ enum ShellDemo: Equatable {
         case "settings-advanced-layered": .settingsAdvancedLayered
         case "settings-advanced-tuned": .settingsAdvancedTuned
         case "settings-advanced-effects": .settingsAdvancedEffects
-        case "settings-advanced-coloring-book": .settingsAdvancedColoringBook
-        case "settings-advanced-book": .settingsAdvancedBook
         default: nil
         }
     }()
@@ -145,7 +140,7 @@ enum ShellDemo: Equatable {
 
     var opensAdvanced: Bool {
         self == .settingsAdvanced || self == .settingsAdvancedLayered || self == .settingsAdvancedTuned
-            || self == .settingsAdvancedEffects || self == .settingsAdvancedColoringBook || self == .settingsAdvancedBook
+            || self == .settingsAdvancedEffects
     }
 
     /// The library picture Settings › Advanced previews.
@@ -153,7 +148,7 @@ enum ShellDemo: Equatable {
         switch self {
         case .settingsAdvanced, .settingsAdvancedEffects: "great-wave"
         case .settingsAdvancedLayered: "santa-fe-freight"
-        case .settingsAdvancedTuned, .settingsAdvancedColoringBook, .settingsAdvancedBook: "red-fox"
+        case .settingsAdvancedTuned: "red-fox"
         default: nil
         }
     }
@@ -225,13 +220,6 @@ enum ShellDemo: Equatable {
             register(PipelineTuning(smoothing: 1.5, minimumCellSize: 2, accentColors: 0.5), forKey: SettingsKey.pipelineTuning)
         case .settingsAdvancedEffects:
             UserDefaults.standard.register(defaults: [PaintingEffect.colorJingle.key: false])
-        case .settingsAdvancedColoringBook:
-            let preset = AdvancedPreset.coloringBook.settings
-            if let lineArt = preset.lineArt { register(lineArt, forKey: SettingsKey.lineArt) }
-            if let tuning = preset.tuning { register(tuning, forKey: SettingsKey.pipelineTuning) }
-            if let appearance = preset.lineAppearance { register(appearance, forKey: SettingsKey.lineAppearance) }
-        case .settingsAdvancedBook:
-            register(LineArtSettings(style: .coloringBook), forKey: SettingsKey.lineArt)
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings, .settingsLongText,
              .settingsAcknowledgements, .settingsAdvanced:

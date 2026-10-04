@@ -40,7 +40,12 @@ import ImageIO
 
 struct Options {
     var positional: [String] = []
-    var settings = GenerationSettings()
+    /// pbn draws lines only from an edge map it is handed (`--edges`), so it starts classic
+    /// whatever the pipeline's default style; `--line-style` picks a style at its own
+    /// defaults, and `--line-art` fields apply on top of it whatever their order.
+    var settings = GenerationSettings(lineArt: LineArtSettings(style: .classic))
+    var lineStyle: LineArtSettings.Style?
+    var lineArtFields: [String] = []
     var importance: String?
     var runs = 3
     var minLabelRadius = LabelSizing.minimumRadius
@@ -135,12 +140,14 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--line-style":
             let value = it.next() ?? ""
             guard let style = LineArtSettings.Style(rawValue: value) else { fail("--line-style: \(lineStyles), not \(value)") }
-            o.settings.lineArt.style = style
-        case "--line-art": setLineArt(&o.settings.lineArt, it.next())
+            o.lineStyle = style
+        case "--line-art": o.lineArtFields.append(it.next() ?? "")
         case "--tuning": setTuning(&o.settings.tuning, it.next())
         default: o.positional.append(a)
         }
     }
+    if let style = o.lineStyle { o.settings.lineArt = LineArtSettings(style: style) }
+    for field in o.lineArtFields { setLineArt(&o.settings.lineArt, field) }
     return o
 }
 

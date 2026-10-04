@@ -15,9 +15,12 @@ struct AdvancedSettingsTests {
         smoothing: 2, textureFlattening: 2, minimumCellSize: 2, subjectEmphasis: 2, accentColors: 2, colorfulness: 2)
 
     @Test func classicKeysIgnoreTheLayeredSettings() {
+        #expect(GenerationKey.defaults.lineArt == LineArtSettings() && GenerationKey.defaults.lineArt.style == .coloringBook)
         var classic = Self.changedArt
         classic.style = .classic
-        #expect(GenerationKey(lineArt: classic, tuning: PipelineTuning()) == .defaults)
+        let classicKey = GenerationKey(lineArt: classic, tuning: PipelineTuning())
+        #expect(classicKey == GenerationKey(lineArt: LineArtSettings(style: .classic), tuning: PipelineTuning()))
+        #expect(classicKey != .defaults)
         let layered = GenerationKey(lineArt: LineArtSettings(style: .layered), tuning: PipelineTuning())
         #expect(layered != .defaults)
         #expect(GenerationKey(lineArt: Self.changedArt, tuning: PipelineTuning()) != layered)
@@ -34,31 +37,43 @@ struct AdvancedSettingsTests {
             #expect(control.isChanged(in: key), "\(control) isn't changed in the changed key")
             let reset = control.reset(key)
             #expect(!control.isChanged(in: reset), "\(control) is still changed after its reset")
-            #expect(control.value(lineArt: reset.lineArt, tuning: reset.tuning) == control.defaultValue)
-            // Classic lines (the style's default) drop the layered settings; thresholds push each other.
+            #expect(control.value(lineArt: reset.lineArt, tuning: reset.tuning) == control.defaultValue(for: reset.lineArt.style))
+            // The style's reset carries the layered defaults into the book; thresholds push each other.
             guard control != .style else { continue }
             for other in AdvancedControl.allCases where other != control && !AdvancedControl.thresholds.contains(other) {
                 #expect(other.isChanged(in: reset), "Resetting \(control) reset \(other) too")
             }
         }
-        // Under classic lines the layered settings change nothing.
+        // Under classic lines the drawn-line settings change nothing; the style itself does.
         var classic = Self.changedArt
         classic.style = .classic
         let classicKey = GenerationKey(lineArt: classic, tuning: PipelineTuning())
-        for control in AdvancedControl.lineArt {
+        for control in AdvancedControl.lineArt where control != .style {
             #expect(!control.isChanged(in: classicKey), "\(control) counts under classic lines")
         }
+        #expect(AdvancedControl.style.isChanged(in: classicKey))
         #expect(AdvancedControl.lineArt.filter { !$0.needsEdgeMap } == [.style])
-        // A coloring book reads everything but the texture threshold, and joining across its
-        // (absent) texture lines is splitting.
+        // A coloring book, the default style, reads everything but the texture threshold, and
+        // joining across its (absent) texture lines is splitting.
         var book = Self.changedArt
         book.style = .coloringBook
         let bookKey = GenerationKey(lineArt: book, tuning: PipelineTuning())
         #expect(AdvancedControl.lineArt.filter { !$0.applies(to: .coloringBook) } == [.textureThreshold])
         #expect(!AdvancedControl.textureThreshold.isChanged(in: bookKey))
-        for control in AdvancedControl.lineArt where control != .textureThreshold && control != .samePaint {
+        #expect(!AdvancedControl.style.isChanged(in: bookKey))
+        for control in AdvancedControl.lineArt where ![.textureThreshold, .samePaint, .style].contains(control) {
             #expect(control.isChanged(in: bookKey), "\(control) under a coloring book")
         }
+        // Each style has defaults of its own, carried along when the style changes.
+        let layeredDefaults = LineArtSettings(style: .layered)
+        #expect(layeredDefaults.outlineThreshold == 0.85 && LineArtSettings().outlineThreshold == 0.6)
+        #expect(layeredDefaults.changing(to: .coloringBook) == LineArtSettings())
+        var custom = layeredDefaults
+        custom.gapBridging = 3
+        let carried = custom.changing(to: .coloringBook)
+        #expect(carried.gapBridging == 3 && carried.outlineThreshold == 0.6 && carried.style == .coloringBook)
+        #expect(AdvancedControl.outlineThreshold.defaultValue(for: .layered) == 0.85)
+        #expect(AdvancedControl.style.defaultValue(for: .layered) == AdvancedControl.style.defaultValue(for: .classic))
         var joined = LineArtSettings(style: .coloringBook, samePaint: .joinTexture)
         let split = GenerationKey(lineArt: LineArtSettings(style: .coloringBook, samePaint: .split), tuning: PipelineTuning())
         #expect(GenerationKey(lineArt: joined, tuning: PipelineTuning()) == split)
@@ -68,7 +83,7 @@ struct AdvancedSettingsTests {
     }
 
     @Test func slidersMapValuesAndCatchTheDefault() throws {
-        let multiplier = try #require(AdvancedControl.minimumCellSize.slider)
+        let multiplier = try #require(AdvancedControl.minimumCellSize.slider(for: .coloringBook))
         func close(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }
         #expect(close(multiplier.position(of: 1), 0.5))
         #expect(close(multiplier.value(at: 0), 0.25))
@@ -81,7 +96,8 @@ struct AdvancedSettingsTests {
         #expect(close(multiplier.value(4, adjustedBy: 1), 4))
         #expect(multiplier.text(1.5) == "1.5×")
 
-        let threshold = try #require(AdvancedControl.outlineThreshold.slider)
+        let threshold = try #require(AdvancedControl.outlineThreshold.slider(for: .layered))
+        #expect(threshold.defaultValue == 0.85 && AdvancedControl.outlineThreshold.slider(for: .coloringBook)?.defaultValue == 0.6)
         #expect(close(threshold.value(at: threshold.position(of: 0.42)), 0.42))
         // VoiceOver steps land on the step grid, so they never drift.
         #expect(close(threshold.value(0.42, adjustedBy: 1), 0.45))
@@ -90,10 +106,10 @@ struct AdvancedSettingsTests {
         #expect(stepped == 2, "Four quarter doublings from 1× aren't 2×: \(stepped)")
         #expect(threshold.text(0.6) == 0.6.formatted(.percent.precision(.fractionLength(0))))
 
-        let length = try #require(AdvancedControl.minimumStrokeLength.slider)
+        let length = try #require(AdvancedControl.minimumStrokeLength.slider(for: .coloringBook))
         #expect(close(length.value(at: 0.25), 15))
         #expect(length.text(8) == "8 px")
-        #expect(AdvancedControl.style.slider == nil && AdvancedControl.samePaint.slider == nil)
+        #expect(AdvancedControl.style.slider(for: .classic) == nil && AdvancedControl.samePaint.slider(for: .layered) == nil)
     }
 
     @Test func effectsReadAsChanges() {
@@ -169,30 +185,41 @@ struct AdvancedSettingsTests {
     }
 
     /// A preset of the whole screen sets every group, is recognized until a setting moves,
-    /// survives its own normalization and the text Copy Settings writes for it.
+    /// survives its own normalization and the text Copy Settings writes for it; the coloring
+    /// book is the defaults.
     @Test func presetsSetEveryGroupAndAreRecognized() throws {
         let (defaults, suite) = try Self.makeDefaults()
         defer { defaults.removePersistentDomain(forName: suite) }
         let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"))
-        #expect(model.currentPreset == .defaults)
-        model.apply(.coloringBook)
-        let book = AdvancedPreset.coloringBook.settings
-        #expect(model.currentPreset == .coloringBook)
-        #expect(model.lineArt == book.lineArt && model.tuning == book.tuning && model.appearance == book.lineAppearance)
+        #expect(AdvancedPreset.defaults == .coloringBook && model.currentPreset == .coloringBook)
+        #expect(model.changes.isEmpty)
+        model.apply(.layered)
+        let layered = AdvancedPreset.layered.settings
+        #expect(model.currentPreset == .layered)
+        #expect(model.lineArt == layered.lineArt && model.lineArt == LineArtSettings(style: .layered))
+        #expect(model.tuning == layered.tuning && model.appearance == layered.lineAppearance)
         let stored = Preferences(defaults: defaults)
-        #expect(stored.lineArt == book.lineArt && stored.tuning == book.tuning && stored.lineAppearance == book.lineAppearance)
-        #expect(book.lineArt?.normalized == book.lineArt && book.tuning?.normalized == book.tuning
-                    && book.lineAppearance?.normalized == book.lineAppearance)
-        #expect(model.changes.first == "Preset Coloring Book")
+        #expect(stored.lineArt == layered.lineArt && stored.tuning == layered.tuning && stored.lineAppearance == layered.lineAppearance)
+        #expect(layered.lineArt?.normalized == layered.lineArt && layered.tuning?.normalized == layered.tuning
+                    && layered.lineAppearance?.normalized == layered.lineAppearance)
+        // The preset names the style, so the style line is left out.
+        #expect(model.changes == ["Preset Layered"])
         let snapshot = try AdvancedReport.Snapshot(
-            app: "1.0 (1)", picture: "parrots", paintingLength: "relaxed", lineArt: #require(book.lineArt),
-            tuning: #require(book.tuning), lineAppearance: #require(book.lineAppearance), preview: nil, defaults: nil)
+            app: "1.0 (1)", picture: "parrots", paintingLength: "relaxed", lineArt: #require(layered.lineArt),
+            tuning: #require(layered.tuning), lineAppearance: #require(layered.lineAppearance), preview: nil, defaults: nil)
         let text = AdvancedReport.text(snapshot: snapshot, pictureTitle: "Parrots", summary: nil, changes: model.changes, note: "")
-        #expect(AdvancedReport.settings(in: text) == book)
+        #expect(AdvancedReport.settings(in: text) == layered)
+        model.apply(.classic)
+        #expect(model.currentPreset == .classic && model.changes == ["Preset Classic"])
 
-        // A setting the book ignores (its texture threshold) doesn't unmatch the preset; a
-        // setting it reads does, and so does drawing its lines differently.
-        #expect(book.lineArt?.style == .coloringBook)
+        // Back to the defaults: a setting the book ignores (its texture threshold) doesn't
+        // unmatch the preset; a setting it reads does, and so does drawing its lines differently.
+        model.apply(.coloringBook)
+        #expect(model.currentPreset == .coloringBook && model.currentKey == .defaults && model.isAppearanceDefault)
+        #expect(model.changes.isEmpty)
+        for key in [SettingsKey.lineArt, SettingsKey.pipelineTuning, SettingsKey.lineAppearance] {
+            #expect(defaults.data(forKey: key) == nil, "\(key) is stored at the defaults")
+        }
         model.lineArt.textureThreshold = 0.2
         #expect(model.currentPreset == .coloringBook)
         model.coloringBookWeight = 1.5
@@ -200,10 +227,7 @@ struct AdvancedSettingsTests {
         model.coloringBookWeight = 1
         model.set(.minimumCellSize, to: 2)
         #expect(model.currentPreset == nil)
-        #expect(model.changes.first != "Preset Coloring Book")
-        model.apply(.defaults)
-        #expect(model.currentPreset == .defaults && model.currentKey == .defaults && model.isAppearanceDefault)
-        #expect(model.changes.isEmpty)
+        #expect(model.changes == ["Smallest Area 2×"])
     }
 
     @Test func pastedSettingsApplyStoreAndReport() throws {
@@ -258,11 +282,11 @@ struct AdvancedSettingsTests {
         #expect(model.changes.isEmpty)
 
         model.set(.minimumCellSize, to: 2)
-        model.lineArt.style = .layered
+        model.lineArt = model.lineArt.changing(to: .layered)
         model.apply(.grow)
         let stored = Preferences(defaults: defaults)
         #expect(stored.tuning.minimumCellSize == 2)
-        #expect(stored.lineArt.style == .layered)
+        #expect(stored.lineArt == LineArtSettings(style: .layered))
         #expect(stored.lineAppearance == LineAppearancePreset.grow.applied(to: .default))
         #expect(model.changes.contains("Smallest Area 2×"))
         #expect(model.changes.contains("Line Style Layered"))

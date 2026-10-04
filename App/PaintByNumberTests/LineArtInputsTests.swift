@@ -255,8 +255,9 @@ struct LineArtInputsTests {
 
     @Test func classicLineArtNeedsNoInputs() async throws {
         let image = try Self.photo()
-        #expect(try await LineArtInputs.make(for: image, settings: LineArtSettings()) == nil)
-        #expect(try await LineArtInputs.forGeneration(of: image, settings: LineArtSettings(), cached: false) == nil)
+        let classic = LineArtSettings(style: .classic)
+        #expect(try await LineArtInputs.make(for: image, settings: classic) == nil)
+        #expect(try await LineArtInputs.forGeneration(of: image, settings: classic, cached: false) == nil)
         #expect(try await LineArtInputs.forGeneration(of: nil, settings: Self.layered, cached: false) == nil)
     }
 
@@ -316,13 +317,14 @@ struct LineArtInputsTests {
         #expect(json.contains("layered"))
     }
 
-    /// Classic settings compute nothing extra and record the default line art and tuning.
+    /// Classic settings compute nothing extra and record the classic line art and default tuning.
     @Test func classicCreateFlowComputesNoInputs() async throws {
-        let model = CreateModel(paintingLength: .quick, lineArt: LineArtSettings(), tuning: PipelineTuning())
+        let classic = LineArtSettings(style: .classic)
+        let model = CreateModel(paintingLength: .quick, lineArt: classic, tuning: PipelineTuning())
         model.load(sample: try #require(Sample.named("espresso")))
         let draft = try await model.makeDraft()
         #expect(model.lineArtInput == nil)
-        #expect(draft.settings.lineArt == LineArtSettings() && draft.settings.tuning == PipelineTuning())
+        #expect(draft.settings.lineArt == classic && draft.settings.tuning == PipelineTuning())
         #expect(model.decision?.settings == draft.settings)
         #expect(draft.template.lineArt == nil)
     }

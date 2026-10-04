@@ -619,7 +619,8 @@ struct LibraryTests {
         let artwork = try JSONDecoder().decode(Artwork.self, from: Data(minimal.utf8))
         #expect(artwork.title.isEmpty)
         #expect(artwork.paintedCount == 0)
-        #expect(artwork.settings == GenerationSettings())
+        // Saved before line art existed: classic lines, whatever the default style is now.
+        #expect(artwork.settings == Artwork.settingsBeforeLineArt && artwork.settings.lineArt.style == .classic)
         let invalid = #"{"id":"\#(id)","width":0,"height":20,"regionCount":5}"#
         #expect(throws: (any Error).self) { try JSONDecoder().decode(Artwork.self, from: Data(invalid.utf8)) }
         #expect(!artwork.needsNewerApp)

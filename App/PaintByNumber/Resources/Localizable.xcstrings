@@ -1377,8 +1377,32 @@
         }
       }
     },
+    "advanced.preset.classic" : {
+      "comment" : "Settings › Advanced › Presets: the original look at its defaults, every boundary one even line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Classic"
+          }
+        }
+      }
+    },
+    "advanced.preset.classic.summary" : {
+      "comment" : "Settings › Advanced › Presets: what the Classic preset does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The original look: every boundary between areas is one even line."
+          }
+        }
+      }
+    },
     "advanced.preset.coloringBook" : {
-      "comment" : "Settings › Advanced › Presets: the preset that makes coloring books: a drawing in solid ink that stays over the paint, the areas inside an outline told apart by their numbers",
+      "comment" : "Settings › Advanced › Presets: the app's own settings, a coloring book: a drawing in solid ink that stays over the paint, the areas inside an outline told apart by their numbers",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1390,13 +1414,13 @@
       }
     },
     "advanced.preset.coloringBook.summary" : {
-      "comment" : "Settings › Advanced › Presets: what the Coloring Book preset does",
+      "comment" : "Settings › Advanced › Presets: what the Coloring Book preset, the app's defaults, does",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A drawing in solid ink that stays over the paint. The areas inside an outline are told apart by their numbers, not by lines."
+            "value" : "The app’s own settings: a drawing in solid ink that stays over the paint. The areas inside an outline are told apart by their numbers, not by lines."
           }
         }
       }
@@ -1421,30 +1445,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Your own values for each layer."
-          }
-        }
-      }
-    },
-    "advanced.preset.defaults" : {
-      "comment" : "Settings › Advanced › Presets: the preset of the app's own settings",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Defaults"
-          }
-        }
-      }
-    },
-    "advanced.preset.defaults.summary" : {
-      "comment" : "Settings › Advanced › Presets: what the Defaults preset is",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app’s own settings."
           }
         }
       }
@@ -1517,6 +1517,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fainter lines start thin and grow as you zoom."
+          }
+        }
+      }
+    },
+    "advanced.preset.layered" : {
+      "comment" : "Settings › Advanced › Presets: layered lines at their defaults: lines that follow a drawing of the picture, in layers that fade in as you zoom",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Layered"
+          }
+        }
+      }
+    },
+    "advanced.preset.layered.summary" : {
+      "comment" : "Settings › Advanced › Presets: what the Layered preset does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines follow a drawing of the picture: outlines stay strong, finer lines come in as you zoom."
           }
         }
       }

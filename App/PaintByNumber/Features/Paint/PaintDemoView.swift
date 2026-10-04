@@ -107,11 +107,13 @@ struct PaintDemoView: View {
         return ImageCodec.image(at: url, maxPixelSize: maxPixelSize)
     }
 
+    /// The photo's classic template: the classic demos show the original look.
     @concurrent
     private static func template(photo: String) async -> Template? {
+        let settings = GenerationSettings(lineArt: LineArtSettings(style: .classic))
         guard let url = Bundle.main.url(forResource: photo, withExtension: "jpg"),
               let image = try? PhotoLoader.load(url: url, maxPixelSize: 2048),
-              let output = try? TemplateGenerator().generate(from: image)
+              let output = try? TemplateGenerator(settings: settings).generate(from: image)
         else { return nil }
         return output.template.mesh.indices.isEmpty ? nil : output.template
     }

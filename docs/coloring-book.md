@@ -57,8 +57,10 @@ method plainly: the silhouette and features in thick ink, the numbers floating i
 line between paints, the sky bands numbered only. Cells are identical to the layered style's at
 the same settings except where texture lines (now absent) used to split them.
 
-The style has no defaults of its own: the thresholds, shortest line and gap closing default to
-the layered values, and Settings › Advanced exposes them for the book with the texture threshold
-hidden. The owner's own books used stronger thresholds (0.6) and longer lines: that is the
-Coloring Book preset of Settings › Advanced › Presets (`AdvancedPreset`, measured in
-`docs/presets/README.md`).
+The coloring book is the app's default line style (`LineArtSettings()`), at the settings the
+owner's own books used: thresholds of 0.6, a 36 px shortest line, 16 px gap closing and
+flowing curves (`LineArtSettings.init(style:)`; layered lines keep the research's values, and
+choosing a style in Settings › Advanced carries each style's defaults along), over paint
+flattened 1.5× (`SegmentationParameters.coloringBookFlattening`). Both are measured in
+`docs/presets/README.md`. Settings › Advanced exposes the thresholds for the book with the
+texture threshold hidden; Coloring Book in its Presets row is the defaults.

@@ -8,7 +8,7 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     public var smoothness: Float
     /// Seed for any stochastic step, so identical inputs give identical templates.
     public var seed: UInt64
-    /// Classic or layered lines, and how layered lines are found.
+    /// Coloring-book, layered or classic lines, and how drawn lines are found.
     public var lineArt: LineArtSettings
     /// Expert multipliers on the segmentation's derived knobs (default: none).
     public var tuning: PipelineTuning
@@ -30,14 +30,15 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     }
 
     /// The four original fields are required as before; the later ones default, so settings
-    /// saved before they existed (every artwork's `meta.json`) still decode.
+    /// saved before they existed (every artwork's `meta.json`) still decode: such an artwork
+    /// was made with classic lines, whatever the default is now, so regeneration keeps them.
     public init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         colorCount = try c.decode(Int.self, forKey: .colorCount)
         detail = try c.decode(Float.self, forKey: .detail)
         smoothness = try c.decode(Float.self, forKey: .smoothness)
         seed = try c.decode(UInt64.self, forKey: .seed)
-        lineArt = (try? c.decodeIfPresent(LineArtSettings.self, forKey: .lineArt)) ?? LineArtSettings()
+        lineArt = ((try? c.decodeIfPresent(LineArtSettings.self, forKey: .lineArt)) ?? nil) ?? LineArtSettings(style: .classic)
         tuning = (try? c.decodeIfPresent(PipelineTuning.self, forKey: .tuning)) ?? PipelineTuning()
     }
 

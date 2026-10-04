@@ -193,8 +193,8 @@ struct AdvancedSliderRow: View {
     let model: AdvancedSettingsModel
 
     var body: some View {
-        if let spec = control.slider {
-            let style = model.lineArt.style
+        let style = model.lineArt.style
+        if let spec = control.slider(for: style) {
             AdvancedSlider(
                 title: control.title(for: style), summary: control.summary(for: style), valueText: model.valueText(of: control), spec: spec,
                 value: model.value(of: control), isChanged: model.isChanged(control),
@@ -298,7 +298,7 @@ struct LineStyleRow: View {
         return Button {
             guard !selected else { return }
             FeedbackEngine.shared.selectionChanged()
-            withAnimation(reduceMotion ? nil : .snappy) { model.lineArt.style = style }
+            withAnimation(reduceMotion ? nil : .snappy) { model.lineArt = model.lineArt.changing(to: style) }
         } label: {
             VStack(spacing: 8) {
                 LineStyleSwatch(style: style)
