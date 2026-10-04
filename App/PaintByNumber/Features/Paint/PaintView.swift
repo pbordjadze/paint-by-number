@@ -47,6 +47,11 @@ struct PaintView: View {
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
+    /// The top bar below the safe area, the bottom bar above it, and either bar to the canvas
+    /// (`canvasInsets` keeps the canvas clear of the bars by these).
+    private static let topGap: CGFloat = 6
+    private static let bottomGap: CGFloat = 4
+    private static let canvasGap: CGFloat = 6
 
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
@@ -137,12 +142,12 @@ struct PaintView: View {
             VStack(spacing: 0) {
                 topBar(width: geo.size.width)
                     .padding(.horizontal, Self.edge)
-                    .padding(.top, 6)
+                    .padding(.top, Self.topGap)
                 Spacer(minLength: 0)
                 if !palette.side || session.isComplete {
                     bottomBar(palette)
                         .padding(.horizontal, Self.edge)
-                        .padding(.bottom, 4)
+                        .padding(.bottom, Self.bottomGap)
                 }
             }
             if palette.side && !session.isComplete {
@@ -173,7 +178,7 @@ struct PaintView: View {
 
     private var paletteMetrics: PaletteMetrics { PaletteMetrics(dynamicTypeSize: dynamicTypeSize) }
 
-    private static let sidePaletteTop: CGFloat = 6 + barHeight + 12
+    private static let sidePaletteTop: CGFloat = topGap + barHeight + 12
 
     private func paletteLayout(in size: CGSize) -> PaletteLayout {
         let count = PaletteBar.visibleColors(session).count
@@ -213,17 +218,19 @@ struct PaintView: View {
 
     /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
     private func canvasInsets(safe: EdgeInsets, palette: PaletteLayout) -> EdgeInsets {
-        let top = safe.top + 6 + Self.barHeight + 6
+        let top = safe.top + Self.topGap + Self.barHeight + Self.canvasGap
         if session.isComplete {
-            return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + CompletionBar.height + 6,
-                              trailing: safe.trailing)
+            return EdgeInsets(
+                top: top, leading: safe.leading,
+                bottom: safe.bottom + Self.bottomGap + CompletionBar.height + Self.canvasGap, trailing: safe.trailing)
         }
         if palette.side {
             return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 8,
                               trailing: safe.trailing + Self.edge + palette.thickness + 4)
         }
-        return EdgeInsets(top: top, leading: safe.leading, bottom: safe.bottom + 4 + palette.thickness + 6,
-                          trailing: safe.trailing)
+        return EdgeInsets(
+            top: top, leading: safe.leading,
+            bottom: safe.bottom + Self.bottomGap + palette.thickness + Self.canvasGap, trailing: safe.trailing)
     }
 
     /// The canvas's visible area within the safe area (the canvas itself ignores it).
