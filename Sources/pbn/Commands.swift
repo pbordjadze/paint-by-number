@@ -136,9 +136,8 @@ func runNames(_ options: Options) throws {
         let template = try Template(encoded: data)
         let nicknames = ColorNickname.assign(template.palette, seed: options.settings.seed)
         for (index, color) in template.palette.enumerated() {
-            let hex = color.rgb.indices.map { String(format: "%02X", Int((min(max(color.rgb[$0], 0), 1) * 255).rounded())) }.joined()
             print(String(format: "%3d  %@  ·  %@  ·  #%@", index + 1, nicknames[index].padding(toLength: 18, withPad: " ", startingAt: 0),
-                         color.colorName.english, hex))
+                         color.colorName.english, color.hexDigits.uppercased()))
         }
     } catch { fail("cannot decode: \(error)") }
 }

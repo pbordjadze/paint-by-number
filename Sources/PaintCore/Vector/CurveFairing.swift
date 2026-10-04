@@ -10,14 +10,14 @@
 /// move and split the curve into independently faired runs; no point moves further than
 /// `maxShift`. The result is simplified back to a compact polyline.
 struct CurveFairing {
-    /// Half-width of the regression window along the curve, canvas units; 0 disables fairing.
+    /// Half-width of the regression window along the curve, canvas units.
     var halfWindow: Double
     /// Upper bound on how far fairing may move a point.
     var maxShift: Double
     /// Douglas–Peucker tolerance for the output polyline.
     var tolerance: Double
     /// Resampling step along the curve.
-    var spacing = 0.5
+    let spacing = 0.5
 
     private var sequence: [SIMD2<Double>] = [], sequencePins: [Bool] = []
     private var samples: [SIMD2<Double>] = [], faired: [SIMD2<Double>] = []
@@ -39,7 +39,7 @@ struct CurveFairing {
         out.removeAll(keepingCapacity: true)
         let pts = curve.points
         let n = pts.count
-        guard halfWindow > 0, n >= 3 else {
+        guard n >= 3 else {
             out.append(contentsOf: pts)
             return
         }

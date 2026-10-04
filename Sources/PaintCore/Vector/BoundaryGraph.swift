@@ -11,8 +11,8 @@
 /// Chains are stored as chain codes (one direction per unit step) so they stay compact
 /// and exact; smoothing turns them into float polylines later.
 struct BoundaryGraph: Sendable {
-    /// Unit-step direction codes. Canvas y points down, so `south` is +y.
-    static let east: UInt8 = 0, south: UInt8 = 1, west: UInt8 = 2, north: UInt8 = 3
+    /// Direction codes: 0 east (+x), 1 south (+y; canvas y points down), 2 west, 3 north.
+    /// The opposite of `d` is `(d + 2) & 3`.
     static let dx: [Int] = [1, 0, -1, 0]
     static let dy: [Int] = [0, 1, 0, -1]
 

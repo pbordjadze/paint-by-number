@@ -13,7 +13,9 @@ import Foundation
 /// per band. For a floating-point reduction use `forEachChunk` with a fixed chunk size and add
 /// the per-chunk results in chunk order (`RegionAdjacency.boundarySteps`,
 /// `AutoSettings.colorError`), or compute each output whole in one task in a fixed order
-/// (`RegionRuns.accumulate`: a region's pixels in raster order).
+/// (`RegionRuns.accumulate`: a region's pixels in raster order). `mapChunks` is `forEachChunk`
+/// returning one result per chunk, in chunk order, for work whose cost per index is very
+/// uneven (the vectorizer's regions and edges).
 public enum Parallel {
     /// Number of worker bands to split work into. Oversubscribes slightly so that
     /// uneven bands (and efficiency cores) balance out.
@@ -93,6 +95,34 @@ public enum Parallel {
                 work.value((c * size)..<min(count, (c + 1) * size))
             }
         }
+    }
+
+    /// Parallel map over `0..<count` in chunks of `chunk`, scheduled dynamically; results
+    /// in chunk order. With `cost` (per item), the most expensive chunks start first so a
+    /// huge item late in the list does not leave the other workers idle at the end.
+    static func mapChunks<T>(_ count: Int, chunk: Int, cost: ((Int) -> Int)? = nil, _ body: (Range<Int>) -> T) -> [T] {
+        guard count > 0 else { return [] }
+        let n = (count + chunk - 1) / chunk
+        var order = Array(0..<n)
+        if let cost {
+            let chunkCost = (0..<n).map { c in ((c * chunk)..<min(count, (c + 1) * chunk)).reduce(0) { $0 + cost($1) } }
+            order.sort { chunkCost[$0] != chunkCost[$1] ? chunkCost[$0] > chunkCost[$1] : $0 < $1 }
+        }
+        var results = [T?](repeating: nil, count: n)
+        results.withUnsafeMutableBufferPointer { buf in
+            order.withUnsafeBufferPointer { ob in
+                let out = UncheckedSendable(buf.baseAddress!)
+                let sequence = UncheckedSendable(ob.baseAddress!)
+                withoutActuallyEscaping(body) { body in
+                    let work = UncheckedSendable(body)
+                    DispatchQueue.concurrentPerform(iterations: n) { k in
+                        let i = sequence.value[k]
+                        out.value[i] = work.value((i * chunk)..<min(count, (i + 1) * chunk))
+                    }
+                }
+            }
+        }
+        return results.map { $0! }
     }
 
     /// Parallel map over `0..<count` producing one result per band, in band order.

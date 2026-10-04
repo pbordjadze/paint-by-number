@@ -139,9 +139,7 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         minPaletteDistanceFloor: settings.minPaletteDistance,
         timingsMs: timings, totalMs: out.totalSeconds * 1000,
         encodedBytes: t.encoded().count,
-        palette: t.palette.map { c in
-            c.rgb.indices.map { String(format: "%02x", Int((min(max(c.rgb[$0], 0), 1) * 255).rounded())) }.joined()
-        },
+        palette: t.palette.map(\.hexDigits),
         minLabelRadius: t.labels.map(\.radius).min() ?? 0,
         minLabelRoom: minLabelRoom.isFinite ? minLabelRoom : 0,
         legibleLabelRadius: LabelSizing.minimumRadius,

@@ -34,6 +34,12 @@ struct FoundationTests {
         #expect(abs(atan2(back.z, back.y) - atan2(Float(0.3), Float(0.4))) < 0.05)  // hue preserved
     }
 
+    @Test func paletteHexIsLowercaseEightBitAndClamped() {
+        // 0.02 × 255 = 5.1 pads to "05"; 0.5 × 255 = 127.5 rounds away from zero to 0x80.
+        #expect(PaletteColor(oklab: .zero, rgb: SIMD3(0.02, 0.5, 1)).hexDigits == "0580ff")
+        #expect(PaletteColor(oklab: .zero, rgb: SIMD3(-0.1, 1.2, 0)).hexDigits == "00ff00")
+    }
+
     @Test func distanceTransformMatchesBruteForce() {
         var rng = SplitMix64(seed: 7)
         let w = 37, h = 23

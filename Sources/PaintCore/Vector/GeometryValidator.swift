@@ -5,16 +5,14 @@
 /// Predicates are evaluated exactly in integer arithmetic on the template's coordinate
 /// grid (multiples of `Template.coordinateQuantum`); segments are bucketed into a uniform
 /// grid so the check runs in near-linear time.
-public enum GeometryValidator {
+enum GeometryValidator {
+    /// Side of a bucket of the uniform grid, canvas units.
+    private static let cellSize: Float = 6
 
     /// Indices of all edges involved in an improper contact (or containing a zero-length
-    /// segment), ascending. Empty when the geometry is valid.
-    public static func invalidEdges(points: [SIMD2<Float>], edges: [BoundaryEdge], cellSize: Float = 6) -> [Int] {
-        invalidEdges(points: points, edges: edges, cellSize: cellSize, onlyInvolving: nil)
-    }
-
-    /// As above, but only tests pairs where at least one edge is flagged in `onlyInvolving`.
-    static func invalidEdges(points: [SIMD2<Float>], edges: [BoundaryEdge], cellSize: Float = 6, onlyInvolving dirty: [Bool]?) -> [Int] {
+    /// segment), ascending. Empty when the geometry is valid. With `onlyInvolving`, only
+    /// pairs where at least one edge is flagged are tested.
+    static func invalidEdges(points: [SIMD2<Float>], edges: [BoundaryEdge], onlyInvolving dirty: [Bool]? = nil) -> [Int] {
         guard !edges.isEmpty else { return [] }
         let scale = Double(1 / Template.coordinateQuantum)
         var fixed = [SIMD2<Int64>](repeating: .zero, count: points.count)
@@ -48,7 +46,7 @@ public enum GeometryValidator {
         }
         guard lo.x <= hi.x else { return bad.sorted() }
 
-        let cell = max(Int64(1), Int64((Double(cellSize) * Double(scale)).rounded()))
+        let cell = max(Int64(1), Int64((Double(Self.cellSize) * Double(scale)).rounded()))
         let gw = Int((hi.x - lo.x) / cell) + 1, gh = Int((hi.y - lo.y) / cell) + 1
         @inline(__always) func cellX(_ v: Int64) -> Int { Int((v - lo.x) / cell) }
         @inline(__always) func cellY(_ v: Int64) -> Int { Int((v - lo.y) / cell) }
@@ -109,7 +107,7 @@ public enum GeometryValidator {
     }
 
     @inline(__always)
-    static func orient(_ a: SIMD2<Int64>, _ b: SIMD2<Int64>, _ c: SIMD2<Int64>) -> Int64 {
+    private static func orient(_ a: SIMD2<Int64>, _ b: SIMD2<Int64>, _ c: SIMD2<Int64>) -> Int64 {
         (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
     }
 
@@ -120,7 +118,7 @@ public enum GeometryValidator {
 
     /// Whether closed segments p1q1 and p2q2 share at least one point.
     @inline(__always)
-    static func segmentsIntersect(_ p1: SIMD2<Int64>, _ q1: SIMD2<Int64>, _ p2: SIMD2<Int64>, _ q2: SIMD2<Int64>) -> Bool {
+    private static func segmentsIntersect(_ p1: SIMD2<Int64>, _ q1: SIMD2<Int64>, _ p2: SIMD2<Int64>, _ q2: SIMD2<Int64>) -> Bool {
         let o1 = orient(p1, q1, p2).signum(), o2 = orient(p1, q1, q2).signum()
         let o3 = orient(p2, q2, p1).signum(), o4 = orient(p2, q2, q1).signum()
         if o1 * o2 < 0 && o3 * o4 < 0 { return true }

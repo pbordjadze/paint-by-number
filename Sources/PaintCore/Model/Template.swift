@@ -168,6 +168,16 @@ public struct PaletteColor: Sendable, Hashable, Codable {
         self.oklab = oklab
         self.rgb = ColorScience.okLabToEncoded(oklab, space: space)
     }
+
+    /// `rgb` as eight-bit lowercase hex, `rrggbb` with no prefix.
+    public var hexDigits: String {
+        var digits = ""
+        for channel in [rgb.x, rgb.y, rgb.z] {
+            let byte = Int((min(max(channel, 0), 1) * 255).rounded())
+            digits += (byte < 16 ? "0" : "") + String(byte, radix: 16)
+        }
+        return digits
+    }
 }
 
 public struct Region: Sendable, Hashable {

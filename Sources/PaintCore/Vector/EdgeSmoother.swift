@@ -64,8 +64,8 @@ struct SmoothingResult {
     /// Zero by construction (see `EdgeSmoother.run`); counted so a broken invariant shows up
     /// in the stats rather than only as an invalid template.
     var labelRoomUnmet: Int
-    /// Labels of the final geometry; nil when no label room was requested.
-    var poles: LabelPoles?
+    /// Labels of the final geometry.
+    var poles: LabelPoles
 }
 
 /// Turns lattice chains into smooth shared boundary polylines and guarantees the result
@@ -81,9 +81,9 @@ struct SmoothingResult {
 /// crossings among themselves, so the loop always terminates with valid geometry.
 ///
 /// Smoothing can also shave a thin region's interior (a fitted curve cuts across a narrow
-/// waist), leaving its number too little room. With a `LabelRoom`, each region's label is
-/// placed on the smoothed polygon and a region whose label falls short of its minimum
-/// steps the edges near its raster seed down the same chain until it holds.
+/// waist), leaving its number too little room. Each region's label is placed on the smoothed
+/// polygon, and a region whose label falls short of its `LabelRoom` minimum steps the edges
+/// near its raster seed down the same chain until it holds.
 struct EdgeSmoother {
     /// Edge shapes in order of preference; the repair loop moves offending edges down.
     enum Shape: UInt8 { case faired = 0, fitted = 1, midpoints = 2, lattice = 3 }
@@ -111,8 +111,8 @@ struct EdgeSmoother {
         fairingShift = 0.3 + 0.4 * s
     }
 
-    /// Smooths all edges, repairs invalid geometry and, with `labelRoom`, places every
-    /// region's label and makes sure it keeps its minimum room.
+    /// Smooths all edges, repairs invalid geometry, places every region's label and makes
+    /// sure it keeps its minimum room (`labelRoom`).
     ///
     /// The label stage terminates with every label at least `labelRoom.minRadius` (less a
     /// rounding slack) from its outline: `PolyLabel` evaluates the seed, so a label's radius
@@ -120,7 +120,7 @@ struct EdgeSmoother {
     /// edge within the minimum of the seed is not lattice-shaped (border edges always are),
     /// since lattice edges keep at least the seed's clearance, which bounds the minimum. Those
     /// edges step down; shapes only ever step down, so the loop ends.
-    func run(labelRoom room: LabelRoom? = nil, cancel: CancellationCheck = .none) throws -> SmoothingResult {
+    func run(labelRoom room: LabelRoom, cancel: CancellationCheck = .none) throws -> SmoothingResult {
         var repairs = 0
         let edgeCount = graph.edgeCount
         var shapes = [UInt8](repeating: Shape.faired.rawValue, count: edgeCount)
@@ -137,7 +137,7 @@ struct EdgeSmoother {
         var offset: Int32 = 0
         for c in first.counts { geo.start.append(offset); offset += c }
 
-        let regionCount = room?.seeds.count ?? 0
+        let regionCount = room.seeds.count
         var poles = LabelPoles(
             position: [SIMD2<Float>](repeating: .zero, count: regionCount), radius: [Float](repeating: 0, count: regionCount))
         var needPole = [Bool](repeating: true, count: regionCount)
@@ -149,10 +149,8 @@ struct EdgeSmoother {
             for e in list {
                 shapes[e] += 1
                 changed[e] = true
-                if room != nil {
-                    needPole[Int(graph.edgeLeft[e])] = true
-                    if graph.edgeRight[e] != BoundaryEdge.outside { needPole[Int(graph.edgeRight[e])] = true }
-                }
+                needPole[Int(graph.edgeLeft[e])] = true
+                if graph.edgeRight[e] != BoundaryEdge.outside { needPole[Int(graph.edgeRight[e])] = true }
             }
             let redo = polylines(for: list, shapes: shapes)
             geo.replace(list, points: redo.points, counts: redo.counts)
@@ -172,7 +170,6 @@ struct EdgeSmoother {
                 dirty = step(fix, shapes: &shapes)
                 continue
             }
-            guard let room else { break }
 
             // Valid geometry: place the labels of regions whose outline changed.
             let edges = geo.boundaryEdges(graph)
@@ -213,7 +210,7 @@ struct EdgeSmoother {
         }
         return SmoothingResult(
             geometry: geo, repairs: repairs, labelRoomEdges: roomEdge.count(where: { $0 }),
-            labelRoomRegions: roomRegion.count(where: { $0 }), labelRoomUnmet: unmet, poles: room == nil ? nil : poles)
+            labelRoomRegions: roomRegion.count(where: { $0 }), labelRoomUnmet: unmet, poles: poles)
     }
 
     /// Tolerance of the label room check: a lattice polygon clears exactly the seed's lattice
@@ -229,7 +226,7 @@ struct EdgeSmoother {
         for first in stride(from: 0, to: list.count, by: 512) {
             try cancel.throwIfCancelled()
             let wave = Array(list[first..<min(list.count, first + 512)])
-            let found = mapChunks(wave.count, chunk: 16, cost: { shapes.pointCount(wave[$0]) }) { range -> [(SIMD2<Double>, Double)] in
+            let found = Parallel.mapChunks(wave.count, chunk: 16, cost: { shapes.pointCount(wave[$0]) }) { range -> [(SIMD2<Double>, Double)] in
                 var poly = FlatPolygon()
                 return range.map { k in
                     let r = wave[k]
@@ -255,7 +252,7 @@ struct EdgeSmoother {
     func polylines(for list: [Int], shapes: [UInt8]) -> (points: [SIMD2<Float>], counts: [Int32]) {
         // Edge lengths vary wildly (a coastline next to specks), so small chunks are handed
         // out dynamically.
-        let bands = mapChunks(list.count, chunk: 48, cost: { Int(graph.edgeStepCount[list[$0]]) }) { range -> ([SIMD2<Float>], [Int32]) in
+        let bands = Parallel.mapChunks(list.count, chunk: 48, cost: { Int(graph.edgeStepCount[list[$0]]) }) { range -> ([SIMD2<Float>], [Int32]) in
             var worker = Worker(
                 fitter: CurveFitter(alphaMax: alphaMax, minCornerAngle: minCornerAngle, cornerRadius: cornerRadius, flattenTolerance: tolerance),
                 fairing: CurveFairing(halfWindow: fairingWindow, maxShift: fairingShift, tolerance: tolerance))

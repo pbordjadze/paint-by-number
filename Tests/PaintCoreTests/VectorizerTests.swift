@@ -330,9 +330,7 @@ struct VectorizerTests {
             }
         }
         let s = Self.segmentation(width: w, height: h, classes: classes)
-        let graph = try BoundaryGraph.build(labels: s.labels)
         for smoothness in [Float(0), 0.5, 1] {
-            #expect(try EdgeSmoother(graph: graph, smoothness: smoothness).run().repairs == 0)
             try Self.expectValid(try Self.vectorize(s, smoothness: smoothness), s)
             var settings = GenerationSettings()
             settings.smoothness = smoothness
@@ -402,7 +400,7 @@ struct VectorizerTests {
             topology: topology, seeds: seeds, minRadius: clearance,
             measureFinely: Array(repeating: false, count: seeds.count))
         let result = try EdgeSmoother(graph: graph, smoothness: 1).run(labelRoom: room)
-        let poles = try #require(result.poles)
+        let poles = result.poles
         for r in 0..<s.regionCount { #expect(poles.radius[r] >= clearance[r] - 1e-4, "region \(r)") }
         #expect(result.labelRoomEdges > 0)
         #expect(result.labelRoomUnmet == 0)
@@ -588,6 +586,15 @@ struct VectorizerTests {
         #expect(GeometryValidator.invalidEdges(points: spike, edges: [edge(0, 3)]) == [0])
         let zero: [SIMD2<Float>] = [SIMD2(0, 0), SIMD2(0, 0), SIMD2(1, 0)]
         #expect(GeometryValidator.invalidEdges(points: zero, edges: [edge(0, 3)]) == [0])
+
+        // Incremental mode, as the repair loop uses it: only pairs with a flagged edge are
+        // tested. Edge 2 shares the crossing's grid cell without touching either edge.
+        let crowded = cross + [SIMD2(4, 0), SIMD2(4, 2)]
+        let edges = [edge(0, 2), edge(2, 2), edge(4, 2)]
+        #expect(GeometryValidator.invalidEdges(points: crowded, edges: edges) == [0, 1])
+        #expect(GeometryValidator.invalidEdges(points: crowded, edges: edges, onlyInvolving: [true, true, true]) == [0, 1])
+        #expect(GeometryValidator.invalidEdges(points: crowded, edges: edges, onlyInvolving: [false, false, true]).isEmpty)
+        #expect(GeometryValidator.invalidEdges(points: crowded, edges: edges, onlyInvolving: [true, false, false]) == [0, 1])
     }
 
     @Test func earcutCoversPolygonsExactly() {
