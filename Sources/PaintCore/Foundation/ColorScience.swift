@@ -1,7 +1,7 @@
 import Foundation
 
 /// RGB primaries a buffer is encoded in. Both use the sRGB transfer function.
-public enum RGBColorSpace: UInt8, Sendable, Codable, Hashable {
+public enum RGBColorSpace: UInt8, Sendable, Hashable {
     case sRGB = 0
     /// Apple's Display P3 (DCI-P3 primaries, D65, sRGB curve). iPhone photos are P3.
     case displayP3 = 1
@@ -112,7 +112,7 @@ public enum ColorScience {
             }
             linear = toLinear(SIMD3(L, lab.y * lo, lab.z * lo))
         }
-        let clamped = simd_clamp01(linear)
+        let clamped = linear.clamped(lowerBound: .zero, upperBound: SIMD3(repeating: 1))
         return SIMD3(encodeSRGB(clamped.x), encodeSRGB(clamped.y), encodeSRGB(clamped.z))
     }
 
@@ -121,30 +121,19 @@ public enum ColorScience {
         linearToOKLab(SIMD3(decodeSRGB(rgb.x), decodeSRGB(rgb.y), decodeSRGB(rgb.z)), space: space)
     }
 
-    /// Converts an 8-bit image to OKLab. The fourth lane carries alpha (0...1).
+    /// An sRGB color given as 0xRRGGBB → OKLab.
+    static func okLab(hex: UInt32) -> SIMD3<Float> {
+        let rgb = SIMD3(Float((hex >> 16) & 0xFF), Float((hex >> 8) & 0xFF), Float(hex & 0xFF)) / 255
+        return encodedToOKLab(rgb, space: .sRGB)
+    }
+
+    /// Converts an 8-bit image to true OKLab (no chroma stretch) after compositing over white
+    /// (paper), as the segmenter sees it; the fourth lane is zero. The segmentation's own grids
+    /// come from `WorkingImage.okLab(chromaScale:)` and carry the stretch whenever the factor is
+    /// not 1: unscale their chroma before comparing with a paint (as `PaletteBuilder.Separation`
+    /// does), or measure on this image.
     public static func okLabImage(from image: RGBAImage) -> Grid<SIMD4<Float>> {
-        let n = image.width * image.height
-        let lut = decodeLUT
-        let space = image.colorSpace
-        var out = [SIMD4<Float>](repeating: .zero, count: n)
-        image.pixels.withUnsafeBufferPointer { src in
-            out.withUnsafeMutableBufferPointer { dst in
-                let s = UncheckedSendable(src.baseAddress!)
-                let d = UncheckedSendable(dst.baseAddress!)
-                lut.withUnsafeBufferPointer { lutBuf in
-                    let l = UncheckedSendable(lutBuf.baseAddress!)
-                    Parallel.forEachBand(n, minimumBandSize: 8192) { range in
-                        for i in range {
-                            let p = s.value + i * 4
-                            let lin = SIMD3(l.value[Int(p[0])], l.value[Int(p[1])], l.value[Int(p[2])])
-                            let lab = linearToOKLab(lin, space: space)
-                            d.value[i] = SIMD4(lab, Float(p[3]) / 255)
-                        }
-                    }
-                }
-            }
-        }
-        return Grid(width: image.width, height: image.height, storage: out)
+        try! WorkingImage.okLab(image, chromaScale: 1, cancel: .none)
     }
 
     // MARK: Perceptual helpers
@@ -168,9 +157,4 @@ public enum ColorScience {
         if space == .displayP3 { lin = p3ToSRGBLinear(lin) }
         return 0.2126 * lin.x + 0.7152 * lin.y + 0.0722 * lin.z
     }
-}
-
-@inlinable
-func simd_clamp01(_ v: SIMD3<Float>) -> SIMD3<Float> {
-    v.clamped(lowerBound: .zero, upperBound: SIMD3(repeating: 1))
 }

@@ -14,9 +14,13 @@ extension ColorNickname {
     /// - The anchor has to look like its name to a careful person: pick the hex from the actual
     ///   object, material or weather, and check it on a swatch before adding it.
     ///
-    /// Anchors must also cover the sRGB gamut (`ColorNicknameTests.vocabularyCoversTheGamut`), so a
-    /// new name goes where the test finds a gap or where the table is thin, never as a stretched
-    /// duplicate of a neighbour.
+    /// Anchors must also cover the sRGB gamut (`ColorNicknameTests.vocabularyCoversTheGamut`).
+    /// The table is at its size cap (`ColorNicknameTests.vocabularySizeAndFormat`) and any edit
+    /// renames existing paintings' colors, so a change is a deliberate rename: replace a name, or
+    /// raise the bound on purpose, never add a stretched duplicate of a neighbour. The exact
+    /// limits and the forbidden words live in `ColorNicknameTests` (`vocabularySizeAndFormat`,
+    /// `namesFollowTheStyleGuide`, `namesAvoidWhatTheStyleGuideForbids`,
+    /// `colorWordsInNamesMatchTheAnchor`).
     static let table = """
 050507 Void
 0F0E0D Soot

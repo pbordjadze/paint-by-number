@@ -403,9 +403,9 @@ public enum AutoSettings {
         firstDraft: (@Sendable (TemplateGenerator.Output) -> Void)?
     ) throws -> AutoDecision {
         // Checks only see task cancellation on the calling thread; once it sees one, the
-        // latch stops the candidates running on other threads too.
-        let latch = CancellationLatch()
-        let check = CancellationCheck { latch.isSet || (cancel.isCancelled && latch.set()) }
+        // flag stops the candidates running on other threads too.
+        let flag = CancellationFlag()
+        let check = CancellationCheck { flag.isSet || (cancel.isCancelled && flag.set()) }
         try check.throwIfCancelled()
         let source = sourceSize ?? (image.width, image.height)
         let draft = draftImage(from: image)
@@ -485,19 +485,5 @@ public enum AutoSettings {
     @inline(__always) static func hundredths(_ value: Float) -> Float { (value * 100).rounded() / 100 }
     @inline(__always) static func clamp<T: Comparable>(_ value: T, _ band: ClosedRange<T>) -> T {
         min(max(value, band.lowerBound), band.upperBound)
-    }
-}
-
-/// Set once, read by every candidate's cancellation checks.
-private final class CancellationLatch: @unchecked Sendable {
-    private let lock = NSLock()
-    private var cancelled = false
-
-    var isSet: Bool { lock.withLock { cancelled } }
-
-    /// Sets the latch; returns true so it can end a check expression.
-    func set() -> Bool {
-        lock.withLock { cancelled = true }
-        return true
     }
 }

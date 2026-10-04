@@ -6,6 +6,14 @@ import Foundation
 /// The pipeline works on large flat buffers; the fastest portable way to spread that
 /// work across performance cores is `concurrentPerform` over contiguous bands, which
 /// keeps each worker streaming through its own cache lines.
+///
+/// Bands follow the core count (`bandCount`), so their boundaries differ between devices: use
+/// `forEachBand` and `mapBands` where each index writes its own output or the per-band results
+/// combine exactly (concatenated in band order, integer sums, max); never sum floating point
+/// per band. For a floating-point reduction use `forEachChunk` with a fixed chunk size and add
+/// the per-chunk results in chunk order (`RegionAdjacency.boundarySteps`,
+/// `AutoSettings.colorError`), or compute each output whole in one task in a fixed order
+/// (`RegionRuns.accumulate`: a region's pixels in raster order).
 public enum Parallel {
     /// Number of worker bands to split work into. Oversubscribes slightly so that
     /// uneven bands (and efficiency cores) balance out.
@@ -40,7 +48,8 @@ public enum Parallel {
 
     /// `forEachBand` in consecutive waves of at most `wave` indices with a cancellation check
     /// between waves. Checks only see task cancellation on the calling thread, so long passes
-    /// are split this way to stay responsive (about every 20 ms of work).
+    /// are split this way to stay responsive; the caller sizes a wave by how heavy an index is
+    /// (`wavePixels` and `waveRows` for simple per-pixel work).
     @inlinable
     public static func forEachBand(
         _ count: Int,
@@ -117,7 +126,7 @@ public enum Parallel {
 /// regions are written by different workers) so it can cross into concurrent closures.
 /// Callers are responsible for guaranteeing data-race freedom.
 public struct UncheckedSendable<Value>: @unchecked Sendable {
-    public var value: Value
+    public let value: Value
     @inlinable public init(_ value: Value) { self.value = value }
 }
 
@@ -130,12 +139,35 @@ public struct CancellationCheck: Sendable {
     /// Never cancels.
     public static let none = CancellationCheck { false }
 
-    /// Cancels when the current Swift concurrency task is cancelled.
+    /// Cancels when the current Swift concurrency task is cancelled. It reads `Task.isCancelled`
+    /// of the calling thread, so inside a `forEachBand`, `mapBands` or `forEachChunk` body it is
+    /// seen only on the calling thread's share of the work: check between waves
+    /// (`forEachBand(wave:cancel:)`), or share a `CancellationFlag` between the threads.
     public static let task = CancellationCheck { Task.isCancelled }
 
     public var isCancelled: Bool { check() }
 
     public func throwIfCancelled() throws {
         if check() { throw CancellationError() }
+    }
+}
+
+/// A one-way latch every thread can set and read: a task's cancellation shows only on the thread
+/// running it, so work spread over several threads shares one, set from a
+/// `withTaskCancellationHandler` or by the first check that sees the cancellation
+/// (`AutoSettings.choose`).
+public final class CancellationFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var cancelled = false
+
+    public init() {}
+
+    public var isSet: Bool { lock.withLock { cancelled } }
+
+    /// Sets the flag; returns true so it can end a check expression.
+    @discardableResult
+    public func set() -> Bool {
+        lock.withLock { cancelled = true }
+        return true
     }
 }

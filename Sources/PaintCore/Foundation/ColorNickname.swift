@@ -36,8 +36,7 @@ public enum ColorNickname {
     /// Every entry, in table order.
     public static let vocabulary: [Entry] = table.split(separator: "\n").map { line in
         let hex = UInt32(line.prefix(6), radix: 16) ?? 0
-        let rgb = SIMD3(Float((hex >> 16) & 0xFF), Float((hex >> 8) & 0xFF), Float(hex & 0xFF)) / 255
-        return Entry(name: String(line.dropFirst(7)), hex: hex, oklab: ColorScience.encodedToOKLab(rgb, space: .sRGB))
+        return Entry(name: String(line.dropFirst(7)), hex: hex, oklab: ColorScience.okLab(hex: hex))
     }
 
     private static let names: Set<String> = Set(vocabulary.map(\.name))
@@ -50,11 +49,11 @@ public enum ColorNickname {
     ///
     /// Each paint draws one of its `poolSize` nearest anchors (true OKLab distance, none beyond
     /// `maximumDistance`, none more than `window` farther than the nearest) with weight
-    /// `exp(-d / 0.03)` from `SplitMix64(seed ^ index)`. Paints
-    /// are resolved in palette order: one whose draw is taken moves to its other candidates,
-    /// nearest first, and one with none left (or none near) gets its structured name in English
-    /// ("Dark grayish green"), so a result is never empty. Weights are rounded to integers
-    /// before the draw so a last-bit difference in `exp` cannot change a name.
+    /// `exp(-d / falloff)` from `SplitMix64(seed ^ index)`. Paints are resolved in palette order:
+    /// one whose draw is taken moves to its other candidates, nearest first, and one with none
+    /// left (or none near) gets its structured name in English ("Dark grayish green"), so a
+    /// result is never empty. Weights are rounded to integers before the draw so a last-bit
+    /// difference in `exp` cannot change a name.
     public static func assign(_ palette: [PaletteColor], seed: UInt64) -> [String] {
         var taken = Set<Int>()
         var names: [String] = []
@@ -103,21 +102,14 @@ public enum ColorNickname {
     }
 
     /// Folds a UUID (an artwork's identity) into the 64-bit seed `assign` takes: the XOR of its
-    /// two big-endian halves. Stable by definition, so a painting's names never change.
+    /// two big-endian halves. The seed is stable, so a painting's names are the same on every
+    /// open; the names are derived, never stored, so editing the table, the draw constants or
+    /// `ColorName`'s thresholds renames saved paintings.
     public static func seed(for id: UUID) -> UInt64 {
         let bytes = id.uuid
         let all = [bytes.0, bytes.1, bytes.2, bytes.3, bytes.4, bytes.5, bytes.6, bytes.7,
                    bytes.8, bytes.9, bytes.10, bytes.11, bytes.12, bytes.13, bytes.14, bytes.15]
         func half(_ range: Range<Int>) -> UInt64 { all[range].reduce(0) { $0 << 8 | UInt64($1) } }
         return half(0..<8) ^ half(8..<16)
-    }
-}
-
-extension ColorName {
-    /// `english` with a capital first letter, for names shown on their own ("Dark grayish green").
-    public var englishTitle: String {
-        let text = english
-        guard let first = text.first else { return text }
-        return first.uppercased() + text.dropFirst()
     }
 }

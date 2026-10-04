@@ -5,24 +5,7 @@ import Testing
 @Suite("ColorNickname")
 struct ColorNicknameTests {
 
-    private func lab(_ hex: String) -> SIMD3<Float> {
-        let v = UInt32(hex, radix: 16)!
-        let rgb = SIMD3(Float((v >> 16) & 0xFF), Float((v >> 8) & 0xFF), Float(v & 0xFF)) / 255
-        return ColorScience.encodedToOKLab(rgb, space: .sRGB)
-    }
-
     private func paint(_ lab: SIMD3<Float>) -> PaletteColor { PaletteColor(oklab: lab, space: .sRGB) }
-
-    /// The bundled samples in `ColorNamingTests.samplePalettes`.
-    private static let samples = ["barn", "espresso", "hibiscus", "lighthouse", "parrots", "regatta"]
-
-    /// The bundled samples' palettes (`ColorNamingTests`), by sample name.
-    private func samplePalette(_ sample: String) -> [PaletteColor] {
-        ColorNamingTests.samplePalettes.split(separator: "\n").compactMap { line in
-            let words = line.split(separator: " ")
-            return words[0] == sample ? paint(lab(String(words[1]))) : nil
-        }
-    }
 
     /// A deterministic palette of `count` in-gamut colors at least 0.04 apart.
     private func spreadPalette(count: Int, seed: UInt64) -> [PaletteColor] {
@@ -45,6 +28,8 @@ struct ColorNicknameTests {
 
     @Test func vocabularySizeAndFormat() {
         let vocabulary = ColorNickname.vocabulary
+        // The size range is from the design; raise the upper bound deliberately (adding names
+        // renames saved paintings).
         #expect((480...640).contains(vocabulary.count), "\(vocabulary.count) entries")
         #expect(ColorNickname.table.split(separator: "\n").count == vocabulary.count)
         for line in ColorNickname.table.split(separator: "\n") {
@@ -154,8 +139,8 @@ struct ColorNicknameTests {
 
     /// A typical photo palette finds names close by, not just within the discard radius.
     @Test func samplePalettesHaveNearbyAnchors() {
-        for sample in Self.samples {
-            let palette = samplePalette(sample)
+        for sample in ColorFixtures.samples {
+            let palette = ColorFixtures.palette(of: sample)
             #expect(palette.count >= 23, "\(sample)")
             for color in palette {
                 let nearest = ColorNickname.nearest(to: color.oklab)
@@ -167,10 +152,17 @@ struct ColorNicknameTests {
 
     // MARK: Assignment
 
-    @Test func parrotsPaletteGetsDistinctApposites() {
-        let palette = samplePalette("parrots")
+    @Test func parrotsPaletteGetsDistinctNicknames() {
+        let palette = ColorFixtures.palette(of: "parrots")
         #expect(palette.count == 24)
         let names = ColorNickname.assign(palette, seed: 0x5eed)
+        // Pinned on purpose: names are derived at load, never stored, so a change here renames
+        // saved paintings. This pins one palette; treat every table or constant edit as a rename.
+        #expect(names == [
+            "Dusty Coral", "Ember Glow", "Roof Tile", "Barn Roof", "Fire Brick", "Rosewood", "Rose Quartz", "Daffodil",
+            "Ochre Wall", "Latte Foam", "Eucalyptus", "Bay Leaf", "Shale", "Wet Moss", "Moss Garden", "Swamp Reed",
+            "Bog Myrtle", "Agave", "Dragonfly", "Marshmallow", "Galvanized Pail", "Driftwood", "Bog Oak", "Burnt Cork",
+        ], "\(names)")
         #expect(Set(names).count == names.count)
         #expect(names.allSatisfy(ColorNickname.isNickname))
         // Every pick is one of the paint's own near anchors.
@@ -189,7 +181,7 @@ struct ColorNicknameTests {
     }
 
     @Test func crowdedPalettesStayUniqueWhereAnchorsAllow() {
-        // 150 colors in one narrow, well populated region: fallbacks may repeat, nicknames never do.
+        // 60 colors in one narrow, well populated region: fallbacks may repeat, nicknames never do.
         var rng = SplitMix64(seed: 9)
         var colors: [SIMD3<Float>] = []
         while colors.count < 60 {
@@ -210,7 +202,7 @@ struct ColorNicknameTests {
     }
 
     @Test func differentSeedsGiveDifferentNames() {
-        let palette = samplePalette("parrots")
+        let palette = ColorFixtures.palette(of: "parrots")
         let a = ColorNickname.assign(palette, seed: 1)
         let b = ColorNickname.assign(palette, seed: 2)
         let differing = zip(a, b).filter { $0 != $1 }.count
@@ -224,11 +216,6 @@ struct ColorNicknameTests {
         #expect(names[1] == "Gray")
         #expect(!ColorNickname.isNickname(names[0]))
         #expect(names.allSatisfy { !$0.isEmpty })
-    }
-
-    @Test func englishTitleCapitalizesOnlyTheFirstLetter() {
-        #expect(ColorName(family: .green, lightness: .dark, chroma: .grayish).englishTitle == "Dark grayish green")
-        #expect(ColorName(family: .navy, lightness: .dark, chroma: .vivid).englishTitle == "Navy")
     }
 
     /// A paint right on an anchor with few close neighbours takes that anchor's name about half the
@@ -251,8 +238,8 @@ struct ColorNicknameTests {
     /// The draw stays within `window` of the nearest anchor (one paint per palette, so no name is
     /// taken): a warm gray is never called "Morning Lake", a blue-gray 0.03 away, yet still varies.
     @Test func drawsStayCloseToTheNearestAnchor() {
-        for sample in Self.samples {
-            for color in samplePalette(sample) {
+        for sample in ColorFixtures.samples {
+            for color in ColorFixtures.palette(of: sample) {
                 let nearest = ColorNickname.nearest(to: color.oklab)
                 for seed in 0..<40 as Range<UInt64> {
                     let name = ColorNickname.assign([color], seed: seed)[0]
@@ -262,7 +249,7 @@ struct ColorNicknameTests {
                 }
             }
         }
-        let warmGray = paint(lab("B5AFAF"))
+        let warmGray = paint(ColorFixtures.lab("B5AFAF"))
         let names = Set((0..<300 as Range<UInt64>).map { ColorNickname.assign([warmGray], seed: $0)[0] })
         #expect(!names.contains("Morning Lake"))
         #expect(names.count >= 2, "\(names)")

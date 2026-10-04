@@ -37,6 +37,11 @@ public struct ColorName: Sendable, Hashable {
     /// Classifies an OKLab color. Neutrals are decided first (very dark colors are black whatever
     /// their hue), then a hue sector picks the family, and lightness/chroma split sectors that
     /// English names differently (dark orange is brown, pale red is pink, dark blue is navy).
+    ///
+    /// The thresholds are pinned by `ColorNamingTests` (`known`, the sample palettes with their
+    /// hue-sector check, `syntheticPaletteNames`, `grayRampIsMonotonic`) and by
+    /// `ColorNicknameTests.colorWordsInNamesMatchTheAnchor`, so change them together. The name
+    /// also feeds nickname fallbacks (`ColorNickname.assign`).
     public init(oklab lab: SIMD3<Float>) {
         guard lab.x.isFinite, lab.y.isFinite, lab.z.isFinite else {
             self.init(family: .gray, lightness: .medium, chroma: .grayish)
@@ -160,6 +165,13 @@ public struct ColorName: Sendable, Hashable {
         }
         words.append(family.rawValue)
         return words.joined(separator: " ")
+    }
+
+    /// `english` with a capital first letter, for names shown on their own ("Dark grayish green").
+    public var englishTitle: String {
+        let text = english
+        guard let first = text.first else { return text }
+        return first.uppercased() + text.dropFirst()
     }
 
     /// The most chroma an sRGB color can have at this lightness and hue (radians).

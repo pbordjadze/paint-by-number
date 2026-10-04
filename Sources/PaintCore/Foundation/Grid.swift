@@ -32,25 +32,6 @@ public struct Grid<Element> {
     public func contains(x: Int, y: Int) -> Bool {
         x >= 0 && y >= 0 && x < width && y < height
     }
-
-    /// Returns a new grid produced by applying `transform` to every element, in parallel.
-    @inlinable
-    public func map<T>(_ transform: (Element) -> T) -> Grid<T> {
-        let n = count
-        var out = [T]()
-        out.reserveCapacity(n)
-        storage.withUnsafeBufferPointer { src in
-            out = [T](unsafeUninitializedCapacity: n) { dst, initialized in
-                let d = UncheckedSendable(dst.baseAddress!)
-                let s = UncheckedSendable(src.baseAddress!)
-                Parallel.forEachBand(n, minimumBandSize: 16_384) { range in
-                    for i in range { (d.value + i).initialize(to: transform(s.value[i])) }
-                }
-                initialized = n
-            }
-        }
-        return Grid<T>(width: width, height: height, storage: out)
-    }
 }
 
 extension Grid: Sendable where Element: Sendable {}

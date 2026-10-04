@@ -90,8 +90,30 @@ struct FoundationTests {
         for y in 0..<5 { for x in 0..<7 { #expect(small[x, y] == SIMD4(200, 100, 50, 255)) } }
     }
 
+    @Test func resampleAveragesInLinearLight() {
+        // Black beside white averages to half the light, which encodes as 188, not 128.
+        let blackWhite = RGBAImage(width: 2, height: 1, pixels: [0, 0, 0, 255, 255, 255, 255, 255])
+        #expect(Resample.area(blackWhite, width: 1, height: 1)[0, 0] == SIMD4(188, 188, 188, 255))
+        // A transparent neighbour adds no color: red keeps its hue at half the alpha.
+        let redClear = RGBAImage(width: 2, height: 1, pixels: [255, 0, 0, 255, 0, 255, 0, 0])
+        #expect(Resample.area(redClear, width: 1, height: 1)[0, 0] == SIMD4(255, 0, 0, 128))
+        #expect(Resample.area(blackWhite, width: 2, height: 1) == blackWhite)
+    }
+
+    @Test func rowDividerIsExact() {
+        let limit = 1 << 26
+        var rng = SplitMix64(seed: 5)
+        for width in [1, 2, 3, 5, 7, 640, 768, 1023, 1024, 1500, 4096, 65535] {
+            let divider = RowDivider(width: width)
+            var indices = (0..<200).flatMap { row in (-1...1).map { row * width * 5 + $0 } }.filter { $0 >= 0 }
+            indices += (1...64).map { limit - $0 } + (0..<500).map { _ in Int(rng.next() % UInt64(limit)) }
+            for i in indices { #expect(divider.row(i) == i / width, "\(i) / \(width)") }
+        }
+    }
+
     @Test func encodeTableMatchesTransferFunction() {
-        // Exhaustive over [0, 1.25] on Linux; here a dense sample plus every step position.
+        // Checked exhaustively over [0, 1.25] once, when the table was written; here a dense
+        // sample (every 4099th bit pattern) plus every step position and its neighbours.
         let table = ColorScience.EncodeTable.shared
         @inline(__always) func direct(_ v: Float) -> UInt8 { Resample.quantize(ColorScience.encodeSRGB(v)) }
         var bits = UInt32(0)
@@ -113,10 +135,40 @@ struct FoundationTests {
         }
     }
 
+    @Test func parallelHelpersCoverEachIndexOnce() {
+        for count in [0, 1, 7, 1000, 100_003] {
+            for size in [1, 64] {
+                var bandHits = [Int](repeating: 0, count: count)
+                var chunkHits = bandHits
+                bandHits.withUnsafeMutableBufferPointer { bands in
+                    chunkHits.withUnsafeMutableBufferPointer { chunks in
+                        let band = UncheckedSendable(bands.baseAddress), chunk = UncheckedSendable(chunks.baseAddress)
+                        Parallel.forEachBand(count, minimumBandSize: size) { for i in $0 { band.value![i] += 1 } }
+                        Parallel.forEachChunk(count, chunk: size) { for i in $0 { chunk.value![i] += 1 } }
+                    }
+                }
+                #expect(bandHits.allSatisfy { $0 == 1 }, "forEachBand \(count) by \(size)")
+                #expect(chunkHits.allSatisfy { $0 == 1 }, "forEachChunk \(count) by \(size)")
+                #expect(Parallel.mapBands(count, minimumBandSize: size) { Array($0) }.flatMap { $0 } == Array(0..<count))
+            }
+        }
+    }
+
     @Test func netpbmRoundTrip() throws {
         var img = RGBAImage(width: 3, height: 2, fill: SIMD4(1, 2, 3, 255))
         img[2, 1] = SIMD4(250, 128, 7, 255)
         let decoded = try Netpbm.read(Netpbm.encodePPM(img))
         #expect(decoded == img)
+    }
+
+    @Test func netpbmReadsGrayAndRejectsBadInput() throws {
+        let gray = try Netpbm.read(Data("P5\n# a comment\n2 1\n255\n".utf8) + Data([7, 200]))
+        #expect(gray.pixels == [7, 7, 7, 255, 200, 200, 200, 255])
+        let rejected = [
+            Data("P3\n1 1\n255\n".utf8) + Data([1, 2, 3]),  // magic
+            Data("P5\n1 1\n65535\n".utf8) + Data([0, 0]),  // maxval
+            Data("P5\n2 2\n255\n".utf8) + Data([1, 2, 3]),  // body one byte short
+        ]
+        for data in rejected { #expect(throws: Netpbm.Error.self) { try Netpbm.read(data) } }
     }
 }
