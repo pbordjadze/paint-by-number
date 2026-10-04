@@ -81,13 +81,13 @@ WRAPPERS = {
     "section": "",              # GalleryView.section(_:count:content:)
     "SettingSlider": "title",   # TemplatePreviewView
     "SectionTitle": "",         # PhotoSourceView
-    "GlassIconButton": "label", # PaintView
+    "GlassIconButton": "label", # GlassIconButton.swift
 }
 # How often each file mentions the `LocalizedStringKey` type (a parameter or property of a
 # wrapper above). A new wrapper changes a count, which fails the check until WRAPPERS lists it.
 KEY_TYPE_DECLARATIONS = {
     "Features/Gallery/GalleryView.swift": 1,
-    "Features/Paint/PaintView.swift": 2,
+    "Features/Paint/GlassIconButton.swift": 2,
     "Features/Create/TemplatePreviewView.swift": 1,
     "Features/Create/PhotoSourceView.swift": 2,
 }
