@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Keeps the app's string catalog and its sources in step (stdlib only; runs on Linux CI).
 
-    python3 tools/strings_check.py [--root DIR] [--list] [--self-test]
+    python3 tools/strings_check.py [--root DIR] [--self-test]
 
 Every user-facing string of the app target is looked up by a key in
 `App/PaintByNumber/Resources/Localizable.xcstrings`. A key that is missing there falls back to
@@ -104,8 +104,6 @@ ALLOWED_LITERALS = {
     # Diagnostics of failed file decoding: logged, never shown (the person sees the recovery screen).
     ("Model/Artwork.swift", "invalid artwork dimensions"),
     ("Model/ArtworkStore.swift", "template decompression"),
-    # A malformed stored Line Appearance: the decoder falls back to the default, nothing is shown.
-    ("App/LineAppearance.swift", "three zooms"),
 }
 # Files whose text is shown verbatim in every language: license texts, and credits (names,
 # copyright lines and paper citations). Their localizable sentences still go through the forms.
@@ -404,7 +402,7 @@ def scan_file(rel, source, usages, findings):
         return
     consumed = set()   # id()s of Str tokens that belong to a recognised form
 
-    def implicit(call, arg_tokens, what):
+    def implicit(arg_tokens, what):
         literal = literal_of(arg_tokens)
         if literal is None:
             stray = depth_zero_strings(arg_tokens)
@@ -439,10 +437,10 @@ def scan_file(rel, source, usages, findings):
         elif call.name in IMPLICIT_CALLS and not call.member or (
                 call.name in IMPLICIT_CALLS and call.qualifier == "SwiftUI"):
             if call.args and call.args[0][0] is None:
-                implicit(call, call.args[0][1], f"{call.name}(...)")
+                implicit(call.args[0][1], f"{call.name}(...)")
         elif call.name in IMPLICIT_MODIFIERS and call.member:
             if call.args and call.args[0][0] is None:
-                implicit(call, call.args[0][1], f".{call.name}(...)")
+                implicit(call.args[0][1], f".{call.name}(...)")
         elif call.name in WRAPPERS and call.args:
             label = WRAPPERS[call.name]
             if label == "":
@@ -450,7 +448,7 @@ def scan_file(rel, source, usages, findings):
             else:
                 target = labels.get(label)
             if target is not None:
-                implicit(call, target, f"{call.name}(...)")
+                implicit(target, f"{call.name}(...)")
 
     # Prose that no recognised form claims.
     if rel not in VERBATIM_FILES:
@@ -565,11 +563,6 @@ def count_key_type_mentions(text):
 # ----------------------------------------------------------------------------------------------
 # The catalog.
 
-def normalize_default(text):
-    """A Swift defaultValue (interpolations already PLACEHOLDER) as a comparable string."""
-    return text
-
-
 def normalize_catalog(value):
     return SPECIFIER.sub(PLACEHOLDER, value).replace("%%", "%")
 
@@ -641,7 +634,7 @@ def check_catalog(catalog, usages, findings, path=CATALOG):
 
 
 def check_entry_value(path, key, en, default, findings):
-    wanted = normalize_default(default.default)
+    wanted = default.default
     unit = en.get("stringUnit")
     variations = en.get("variations")
     if unit is not None and variations is None:

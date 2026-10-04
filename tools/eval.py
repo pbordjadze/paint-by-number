@@ -40,13 +40,16 @@ are). `DIR/book-summary.json` keeps every variant's stats; the table printed has
 image and variant. Books are generated unless the options set another style.
 
 Requires a static release build of pbn:  tools/swift.sh build -c release --static-swift-stdlib
-(or set PBN=/path/to/pbn, e.g. a saved baseline binary for before/after comparisons)
+(or set PBN=/path/to/pbn, e.g. a saved baseline binary for before/after comparisons), node
+(`cd tools && npm ci` once: resvg renders the SVGs) and Pillow.
 """
 import json
 import os
+import shlex
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from typing import NamedTuple
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -98,44 +101,61 @@ def palette_names(stats):
     return [f"{nicknames[i]}\n{name}" if i < len(nicknames) else name for i, name in enumerate(plain)]
 
 
-def map_args(name, pbn_args, importance_dir=None, edges_dir=None, lines_dir=None, eyes_dir=None, objects_dir=None,
-             style="layered"):
+class Maps(NamedTuple):
+    """Directories holding each picture's maps as `<name>.pgm` (eyes `<name>.json`, objects either);
+    None where none is given."""
+    importance: str | None = None
+    edges: str | None = None
+    lines: str | None = None
+    eyes: str | None = None
+    objects: str | None = None
+
+
+def map_args(name, pbn_args, maps, style="layered"):
     """pbn options passing `name`'s maps from the directories given (a map that isn't there is
     skipped), with `--line-style STYLE` when a map is passed and the options name no style."""
     extra = []
-    if importance_dir and os.path.exists(os.path.join(importance_dir, name + ".pgm")):
-        extra = ["--importance", os.path.join(importance_dir, name + ".pgm")]
-    maps = False
-    if edges_dir and os.path.exists(os.path.join(edges_dir, name + ".pgm")):
-        extra += ["--edges", os.path.join(edges_dir, name + ".pgm")]
-        maps = True
-    if lines_dir and os.path.exists(os.path.join(lines_dir, name + ".pgm")):
-        extra += ["--lines", os.path.join(lines_dir, name + ".pgm")]
-        maps = True
-    if maps:
+    if maps.importance and os.path.exists(os.path.join(maps.importance, name + ".pgm")):
+        extra = ["--importance", os.path.join(maps.importance, name + ".pgm")]
+    drawn = False
+    if maps.edges and os.path.exists(os.path.join(maps.edges, name + ".pgm")):
+        extra += ["--edges", os.path.join(maps.edges, name + ".pgm")]
+        drawn = True
+    if maps.lines and os.path.exists(os.path.join(maps.lines, name + ".pgm")):
+        extra += ["--lines", os.path.join(maps.lines, name + ".pgm")]
+        drawn = True
+    if drawn:
         if "--line-style" not in pbn_args:
             extra += ["--line-style", style]
-        if eyes_dir and os.path.exists(os.path.join(eyes_dir, name + ".json")):
-            extra += ["--eyes", os.path.join(eyes_dir, name + ".json")]
+        if maps.eyes and os.path.exists(os.path.join(maps.eyes, name + ".json")):
+            extra += ["--eyes", os.path.join(maps.eyes, name + ".json")]
         for ext in (".pgm", ".json"):
-            if objects_dir and os.path.exists(os.path.join(objects_dir, name + ext)):
-                extra += ["--objects", os.path.join(objects_dir, name + ext)]
+            if maps.objects and os.path.exists(os.path.join(maps.objects, name + ext)):
+                extra += ["--objects", os.path.join(maps.objects, name + ext)]
                 break
     return extra
 
 
-def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, edges_dir=None, eyes_dir=None, lines_dir=None):
+def generate(label, ppm, out, args):
+    """Runs `pbn generate` on `ppm` into `out`: the stats it wrote, or None (after printing why)
+    when it failed."""
+    res = subprocess.run([PBN, "generate", ppm, out] + args, capture_output=True, text=True)
+    if res.returncode != 0:
+        print(f"[{label}] FAILED\n{res.stderr}", file=sys.stderr)
+        return None
+    with open(os.path.join(out, "stats.json")) as f:
+        return json.load(f)
+
+
+def process(image_path, out_root, pbn_args, sheet_width, maps):
     name = os.path.splitext(os.path.basename(image_path))[0]
     out = os.path.join(out_root, name)
     os.makedirs(out, exist_ok=True)
     ppm = os.path.join(out, "input.ppm")
     Image.open(image_path).convert("RGB").save(ppm)
-    extra = map_args(name, pbn_args, importance_dir, edges_dir, lines_dir, eyes_dir)
-    res = subprocess.run([PBN, "generate", ppm, out] + pbn_args + extra, capture_output=True, text=True)
-    if res.returncode != 0:
-        print(f"[{name}] FAILED\n{res.stderr}", file=sys.stderr)
+    stats = generate(name, ppm, out, pbn_args + map_args(name, pbn_args, maps))
+    if stats is None:
         return name, None
-    stats = json.load(open(os.path.join(out, "stats.json")))
     working = Image.open(os.path.join(out, "working.ppm")).convert("RGB")
     w, h = working.size
     panel_w = sheet_width // 3
@@ -182,12 +202,10 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, ed
 
 
 BOOK_ROWS = ["fitted", "zoomed", "selected", "finished", "areas"]
-BOOK_KEYS = ["regions", "enclosedAreas", "cellsPerEnclosedArea", "singleCellAreaFraction", "largestAreaFraction",
-             "inkDensity", "interiorFraction", "openEndsPer1000", "interiorStrokes"]
 
 
 def book_metrics(stats):
-    """The drawing metrics under a book column (`stats.json`'s `lineArt`), three lines."""
+    """The drawing metrics under a book column (`stats.json`'s `lineArt`), four lines."""
     la = stats.get("lineArt") or {}
     if not la:
         return [f"no line art: {stats['regions']} regions"]
@@ -205,19 +223,16 @@ def book_metrics(stats):
     ]
 
 
-def book_variant(out_root, name, variant, options, pbn_args, dirs, cell, zoom):
-    """Generates one variant of `name`'s book into DIR/<name>/<variant> and rasterizes its four
+def book_variant(out_root, name, variant, options, pbn_args, maps, cell, zoom):
+    """Generates one variant of `name`'s book into DIR/<name>/<variant> and rasterizes its five
     views, `cell` px wide: the stats and the views by row."""
     out = os.path.join(out_root, name, variant)
     os.makedirs(out, exist_ok=True)
     args = pbn_args + options
-    extra = map_args(name, args, *dirs, style="coloringBook")
-    res = subprocess.run([PBN, "generate", os.path.join(out_root, name, "input.ppm"), out] + args + extra,
-                         capture_output=True, text=True)
-    if res.returncode != 0:
-        print(f"[{name}/{variant}] FAILED\n{res.stderr}", file=sys.stderr)
+    stats = generate(f"{name}/{variant}", os.path.join(out_root, name, "input.ppm"), out,
+                     args + map_args(name, args, maps, style="coloringBook"))
+    if stats is None:
         return None
-    stats = json.load(open(os.path.join(out, "stats.json")))
     views = {}
     for row, svg in (("fitted", "template"), ("selected", "selected"), ("finished", "painted-outlined")):
         path = os.path.join(out, f"{svg}.svg")
@@ -240,12 +255,12 @@ def book_variant(out_root, name, variant, options, pbn_args, dirs, cell, zoom):
     return stats, views
 
 
-def book(image_path, out_root, variants, pbn_args, dirs, cell, zoom):
-    """One image's book sheet: a column per variant, the four views down each."""
+def book(image_path, out_root, variants, pbn_args, maps, cell, zoom):
+    """One image's book sheet: a column per variant, the five views down each."""
     name = os.path.splitext(os.path.basename(image_path))[0]
     os.makedirs(os.path.join(out_root, name), exist_ok=True)
     Image.open(image_path).convert("RGB").save(os.path.join(out_root, name, "input.ppm"))
-    results = {variant: book_variant(out_root, name, variant, options, pbn_args, dirs, cell, zoom)
+    results = {variant: book_variant(out_root, name, variant, options, pbn_args, maps, cell, zoom)
                for variant, options in variants}
     done = [(v, o, results[v]) for v, o in variants if results[v]]
     if not done:
@@ -274,9 +289,13 @@ def book(image_path, out_root, variants, pbn_args, dirs, cell, zoom):
     return name, {variant: stats for variant, _, (stats, _) in done}
 
 
+def usage_error():
+    print(__doc__, file=sys.stderr)
+    sys.exit(2)
+
+
 def parse_variants(values):
     """`NAME=OPTIONS` → (name, pbn options); none means the defaults alone."""
-    import shlex
     variants = []
     for value in values:
         name, _, options = value.partition("=")
@@ -300,13 +319,16 @@ def book_main(argv, pbn_args):
             variants.append(next(it))
         elif a in dirs:
             dirs[a] = next(it)
+        elif a.startswith("--"):
+            usage_error()
         else:
             images.append(a)
     variants = parse_variants(variants)
-    order = (dirs["--importance-dir"], dirs["--edges-dir"], dirs["--lines-dir"], dirs["--eyes-dir"], dirs["--objects-dir"])
+    maps = Maps(dirs["--importance-dir"], dirs["--edges-dir"], dirs["--lines-dir"], dirs["--eyes-dir"],
+                dirs["--objects-dir"])
     os.makedirs(out_root, exist_ok=True)
     with ThreadPoolExecutor(max_workers=2) as pool:
-        results = list(pool.map(lambda p: book(p, out_root, variants, pbn_args, order, cell, zoom), images))
+        results = list(pool.map(lambda p: book(p, out_root, variants, pbn_args, maps, cell, zoom), images))
     summary = {name: stats for name, stats in results if stats}
     json.dump(summary, open(os.path.join(out_root, "book-summary.json"), "w"), indent=2)
     width = max([len(f"{n}/{v}") for n, s in results for v in s] + [12])
@@ -351,12 +373,14 @@ def main():
             lines_dir = next(it)
         elif a == "--eyes-dir":
             eyes_dir = next(it)
+        elif a.startswith("--"):
+            usage_error()
         else:
             images.append(a)
+    maps = Maps(importance=importance_dir, edges=edges_dir, lines=lines_dir, eyes=eyes_dir)
     os.makedirs(out_root, exist_ok=True)
     with ThreadPoolExecutor(max_workers=2) as pool:
-        results = list(pool.map(
-            lambda p: process(p, out_root, pbn_args, sheet_width, importance_dir, edges_dir, eyes_dir, lines_dir), images))
+        results = list(pool.map(lambda p: process(p, out_root, pbn_args, sheet_width, maps), images))
     summary = {name: stats for name, stats in results if stats}
     json.dump(summary, open(os.path.join(out_root, "summary.json"), "w"), indent=2)
 
