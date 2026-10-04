@@ -76,7 +76,7 @@ enum PaletteBuilder {
             if !swapped && centers.count == k { break }
         }
         let weights = clusterWeights(samples, centers: centers)
-        _ = mergeClose(&centers, weights: weights, separation: separation)
+        mergeClose(&centers, weights: weights, separation: separation)
         return centers
     }
 
@@ -358,11 +358,9 @@ enum PaletteBuilder {
     }
 
     /// Repeatedly merges the closest pair of centers (weighted mean) while it is closer than
-    /// the separation distance. Returns whether anything was merged.
-    @discardableResult
-    static func mergeClose(_ centers: inout [SIMD3<Float>], weights initial: [Float], separation: Separation) -> Bool {
+    /// the separation distance.
+    static func mergeClose(_ centers: inout [SIMD3<Float>], weights initial: [Float], separation: Separation) {
         var weights = initial.map { max($0, 1e-6) }
-        var merged = false
         let limit = separation.minDistance * separation.minDistance
         while centers.count > 1 {
             var bi = 0, bj = 0
@@ -379,9 +377,7 @@ enum PaletteBuilder {
             weights[bi] = wi + wj
             centers.remove(at: bj)
             weights.remove(at: bj)
-            merged = true
         }
-        return merged
     }
 
     /// Minimum distance between paints, measured after scaling differences by `metric`.
@@ -401,11 +397,10 @@ enum PaletteBuilder {
         }
 
         /// Pushes pairs of centers that are too close apart along their difference, the
-        /// lighter (less used) one moving more. Returns whether all pairs end up distinct.
-        @discardableResult
-        func separate(_ centers: inout [SIMD3<Float>], weights: [Float], sweeps: Int = 24) -> Bool {
+        /// lighter (less used) one moving more, until a sweep moves nothing (at most 24 sweeps).
+        func separate(_ centers: inout [SIMD3<Float>], weights: [Float]) {
             let limit = minDistance * minDistance
-            for _ in 0..<sweeps {
+            for _ in 0..<24 {
                 var moved = false
                 for i in 0..<centers.count {
                     for j in (i + 1)..<centers.count {
@@ -427,12 +422,8 @@ enum PaletteBuilder {
                         moved = true
                     }
                 }
-                if !moved { return true }
+                if !moved { break }
             }
-            for i in 0..<centers.count {
-                for j in (i + 1)..<centers.count where !isDistinct(centers[i], centers[j]) { return false }
-            }
-            return true
         }
     }
 

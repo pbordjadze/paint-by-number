@@ -547,7 +547,7 @@ struct VectorizerTests {
 
     @Test func highColorPipelineIsLegibleAndDeterministic() throws {
         let generator = TemplateGenerator(settings: GenerationSettings(colorCount: 150, detail: 1))
-        let image = SegmentationTests.colorful()
+        let image = TestScenes.colorful()
         let out = try generator.generate(from: image, cancel: .none)
         let again = try generator.generate(from: image, cancel: .none)
         #expect(again.template == out.template)

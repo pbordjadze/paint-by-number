@@ -58,7 +58,7 @@ public struct TemplateGenerator: Sendable {
         // the paint the book gets, and a book whose edge map failed keeps its flatter paint.
         if settings.lineArt.style == .coloringBook { parameters.flattenForColoringBook() }
         var (segmentation, weights) = try clock.measure("segment") {
-            try Segmenter.segmentWithImportance(
+            try Segmenter.segment(
                 working, importance: importance, parameters: parameters, cancel: cancel, clock: clock,
                 progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) })
         }

@@ -8,6 +8,10 @@ import Foundation
 /// straighten, while real color edges (large color penalty for switching) stay put.
 enum BoundarySmoothing {
 
+    /// Distinct paints a pixel's disc can tally; paints past the first sixteen met are
+    /// ignored (deterministic, and rare).
+    private static let voteSlots = 16
+
     /// - Parameters:
     ///   - radius: Vote disc radius in pixels.
     ///   - fidelity: Weight of the squared color distance (working OKLab) against votes;
@@ -66,8 +70,8 @@ enum BoundarySmoothing {
                                         let rows = (band.lowerBound + base)..<(band.upperBound + base)
                                         var moved: [(Int, UInt32)] = []
                                         var boundary = [UInt8](repeating: 0, count: w)
-                                        withUnsafeTemporaryAllocation(of: UInt32.self, capacity: 16) { labelBuffer in
-                                            withUnsafeTemporaryAllocation(of: Float.self, capacity: 16) { voteBuffer in
+                                        withUnsafeTemporaryAllocation(of: UInt32.self, capacity: Self.voteSlots) { labelBuffer in
+                                            withUnsafeTemporaryAllocation(of: Float.self, capacity: Self.voteSlots) { voteBuffer in
                                                 boundary.withUnsafeMutableBufferPointer { bb in
                                                     let labels = labelBuffer.baseAddress!, votes = voteBuffer.baseAddress!
                                                     let b = bb.baseAddress!
@@ -86,7 +90,7 @@ enum BoundarySmoothing {
                                                                 var slot = 0
                                                                 while slot < k && labels[slot] != l { slot += 1 }
                                                                 if slot == k {
-                                                                    if k == 16 { return }
+                                                                    if k == Self.voteSlots { return }
                                                                     labels[k] = l
                                                                     votes[k] = 0
                                                                     k += 1

@@ -100,8 +100,8 @@ struct BandRingsTests {
                 image[x, y] = SIMD4(UInt8(c.x.rounded()), UInt8(c.y.rounded()), UInt8(c.z.rounded()), 255)
             }
         }
-        let a = try SegmentationTests.segment(image)
-        let b = try SegmentationTests.segment(image)
+        let a = try TestScenes.segment(image)
+        let b = try TestScenes.segment(image)
         let count = BandRings.count(a, working: image)
         #expect(count > 0 && count < a.regionCount)
         #expect(count == BandRings.count(b, working: image))

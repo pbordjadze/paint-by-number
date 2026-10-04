@@ -3,13 +3,15 @@ import Foundation
 /// Removal of hair-thin region parts (tendrils, necks, 1-px slivers along edges) and of
 /// sharp pixel corners.
 ///
-/// A morphological opening per region with a small disc decides what is thin: pixels not
-/// covered by any disc lying entirely inside their region are handed to the neighbouring
-/// paint that dominates their 8-neighbourhood (color breaks ties). A disc (rather than a
-/// square) also clips the corners of blocky shapes, so texture crumbs come out rounded
-/// instead of as pixel squares. Updates run in four interleaved phases so each pixel sees its
-/// neighbours' new values, which keeps the result coherent (no saw-tooth) and independent of
-/// thread count.
+/// A morphological opening per region with a small disc decides what is thin, tightened by
+/// a 2×2 test: a pixel is covered only when it lies in a uniform disc (one lying entirely
+/// inside its region) and in a uniform 2×2 block (the disc alone would accept 1-px bumps),
+/// see `uncoveredPixels`. Pixels not covered are handed to the neighbouring paint that
+/// dominates their 8-neighbourhood (color breaks ties). A disc (rather than a square) also
+/// clips the corners of blocky shapes, so texture crumbs come out rounded instead of as
+/// pixel squares. Updates run in four interleaved phases so each pixel sees its neighbours'
+/// new values, which keeps the result coherent (no saw-tooth) and independent of thread
+/// count.
 enum ThinPartRemoval {
 
     /// One strong pass (uncovered pixels must leave their paint) followed by settling passes

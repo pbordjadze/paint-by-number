@@ -163,11 +163,7 @@ struct RegionMergingTests {
     @Test func boundaryStepsMatchBruteForce() {
         var rng = SplitMix64(seed: 13)
         let w = 70, h = 90
-        let coarse = (0..<(14 * 18)).map { _ in UInt32(rng.next() % 4) }
-        var classes = [UInt32](repeating: 0, count: w * h)
-        for y in 0..<h {
-            for x in 0..<w { classes[y * w + x] = coarse[(y / 5) * 14 + x / 5] }
-        }
+        var classes = TestScenes.blobbyClasses(width: w, height: h, cell: 5, kinds: 4, rng: &rng)
         let colors = (0..<(w * h)).map { _ in SIMD4(rng.nextFloat(), rng.nextFloat(), rng.nextFloat(), 0) }
         var regions = RegionRuns(classes: classes, width: w, height: h)
         var adjacency = RegionAdjacency(regions)
@@ -233,14 +229,13 @@ struct RegionMergingTests {
             var labelling = classes0
             var regions = RegionRuns(classes: classes, width: w, height: h)
             var adjacency = RegionAdjacency(regions)
-            let merges = try BandMerging.apply(
+            try BandMerging.apply(
                 classes: &classes, labelling: &labelling, regions: &regions, adjacency: &adjacency, colors: colors,
                 importance: [Float](repeating: importance, count: w * h), palette: palette,
                 metric: SIMD3(repeating: 1), tolerance: (near: 0.045, nearImportant: 0.0225, band: 0.1),
                 bandWidth: bandWidth, contrast: 0.25)
             // Closest pairs first; the contour never fuses.
             #expect(expected.contains(regions.count))
-            #expect(merges == 11 - regions.count)
             let bandsPerPaint = Dictionary(grouping: 0..<10) { classes[15 * w + 20 * $0] }.values.map(\.count)
             #expect(bandsPerPaint.max()! <= (importance == 1 ? 2 : 6))
             #expect(regions.classOf.last == 10)
@@ -251,10 +246,40 @@ struct RegionMergingTests {
             let paints = Set(classes[(15 * w)..<(16 * w)])
             #expect(paints.count == regions.count)
             for k in adjacency.pairs.indices {
-                let a = Int(adjacency.pairs[k] >> 32), b = Int(adjacency.pairs[k] & 0xFFFF_FFFF)
+                let (a, b) = RegionAdjacency.regions(of: adjacency.pairs[k])
                 #expect(regions.classOf[a] != regions.classOf[b])
             }
         }
+    }
+
+    // MARK: - Texture consolidation
+
+    @Test func textureConsolidationMergesCloseTonesOnlyInUnimportantTexture() {
+        // Three 30-px stripes in greys 0.50, 0.54 and 0.80: the first two are 0.04 apart, the
+        // third is clearly another tone.
+        let w = 90, h = 30
+        let palette = [Self.grey(0.5), Self.grey(0.54), Self.grey(0.8)]
+        func consolidate(texture: Float, importance: Float, tolerance: Float) -> (classes: [UInt32], regions: RegionRuns) {
+            var classes = (0..<(w * h)).map { UInt32($0 % w / 30) }
+            var regions = RegionRuns(classes: classes, width: w, height: h)
+            var adjacency = RegionAdjacency(regions)
+            TextureConsolidation.apply(
+                classes: &classes, regions: &regions, adjacency: &adjacency,
+                texture: [Float](repeating: texture, count: w * h),
+                importance: [Float](repeating: importance, count: w * h), palette: palette,
+                metric: SIMD3(repeating: 1), tolerance: tolerance)
+            return (classes, regions)
+        }
+        let merged = consolidate(texture: 1, importance: 0, tolerance: 0.1)
+        #expect(merged.regions.count == 2)
+        #expect(merged.regions.classOf == [0, 2])
+        #expect(merged.classes[15 * w + 45] == 0 && merged.classes[15 * w + 75] == 2)
+        let labels = merged.regions.labelMap()
+        #expect(labels[10, 5] == labels[45, 5] && labels[45, 5] != labels[75, 5])
+        // Important areas, smooth areas and a zero tolerance keep all three.
+        #expect(consolidate(texture: 1, importance: 1, tolerance: 0.1).regions.count == 3)
+        #expect(consolidate(texture: 0, importance: 0, tolerance: 0.1).regions.count == 3)
+        #expect(consolidate(texture: 1, importance: 0, tolerance: 0).regions.count == 3)
     }
 
     // MARK: - End to end
@@ -291,8 +316,8 @@ struct RegionMergingTests {
             }
         }
         let settings = GenerationSettings(colorCount: 150)
-        let s = try SegmentationTests.segment(image, settings: settings)
-        SegmentationTests.checkInvariants(s, settings: settings, minRadius: 2.7)
+        let s = try TestScenes.segment(image, settings: settings)
+        TestScenes.checkInvariants(s, settings: settings)
         // 0.6 of lightness at a tolerance near 0.045 leaves room for about 13 bands.
         let bands = Self.regions(of: s, x: 0..<w, y: 30..<90).count
         #expect(bands >= 6 && bands <= 16)
@@ -319,8 +344,8 @@ struct RegionMergingTests {
             for x in 60..<180 { importance[x, y] = 1 }
         }
         let settings = GenerationSettings(colorCount: 24)
-        let s = try SegmentationTests.segment(image, settings: settings, importance: importance)
-        SegmentationTests.checkInvariants(s, settings: settings, minRadius: 2.7)
+        let s = try TestScenes.segment(image, settings: settings, importance: importance)
+        TestScenes.checkInvariants(s, settings: settings)
         let face = Self.regions(of: s, x: 70..<170, y: 40..<140)
         #expect(face.count <= 6)
         let eye = s.palette[Int(s.regionColor[Int(s.labels[140, 78])])].oklab

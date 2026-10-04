@@ -1,8 +1,10 @@
 import Foundation
 
 /// Final palette polish once regions are settled: paints are refitted to the pixels they
-/// actually cover, each region takes the paint closest to its own mean color, paints too
-/// similar to tell apart are pushed apart (or merged as a last resort) and unused ones dropped.
+/// actually cover, each region takes the paint closest to its own mean color, paints that a
+/// fused ramp or a merge left unused are first re-spent on the worst-fitting regions (up to
+/// three rounds), paints too similar to tell apart are pushed apart (or merged as a last
+/// resort) and the rest of the unused ones dropped.
 ///
 /// Every change here only recolors whole regions, and regions that end up sharing a paint
 /// simply fuse, so the size and thickness guarantees established earlier are preserved

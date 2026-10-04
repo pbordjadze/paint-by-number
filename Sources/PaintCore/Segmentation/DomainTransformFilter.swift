@@ -13,16 +13,16 @@ enum DomainTransformFilter {
     ///   - sigmaRange: Range standard deviation in OKLab units.
     ///   - edgeScale: Optional per-pixel factors (0...1) on the horizontal and vertical
     ///     gradient terms; below 1 the filter smooths across that gradient more freely.
-    ///   - stiffness: Optional per-pixel factor `1 + sharpening · importance` (≥ 1)
-    ///     stretching the domain there, which shrinks the effective spatial sigma (used to
-    ///     keep detail in important areas).
+    ///   - stiffness: Per-pixel factor `1 + sharpening · importance` (≥ 1) stretching the
+    ///     domain there, which shrinks the effective spatial sigma (used to keep detail in
+    ///     important areas).
     static func filter(
         _ input: Grid<SIMD4<Float>>,
         sigmaSpatial: Float,
         sigmaRange: Float,
         iterations: Int,
         edgeScale: (horizontal: [Float], vertical: [Float])? = nil,
-        stiffness: (importance: [Float], sharpening: Float)? = nil,
+        stiffness: (importance: [Float], sharpening: Float),
         cancel: CancellationCheck
     ) throws -> Grid<SIMD4<Float>> {
         let w = input.width, h = input.height, n = w * h
@@ -38,8 +38,8 @@ enum DomainTransformFilter {
         var out = [SIMD4<Float>](uninitializedCount: n)
         let noScale: [Float] = []
         let eh = edgeScale?.horizontal ?? noScale, ev = edgeScale?.vertical ?? noScale
-        let st = stiffness?.importance ?? noScale, sharpening = stiffness?.sharpening ?? 0
-        let scaled = edgeScale != nil, stiff = stiffness != nil
+        let st = stiffness.importance, sharpening = stiffness.sharpening
+        let scaled = edgeScale != nil
         let waveRows = Parallel.waveRows(width: w)
         try input.storage.withUnsafeBufferPointer { g in
             try out.withUnsafeMutableBufferPointer { ob in
@@ -77,12 +77,10 @@ enum DomainTransformFilter {
                                                     vp.value[i] = 1 + (vp.value[i] - 1) * evp.value[i]
                                                 }
                                             }
-                                            if stiff {
-                                                for i in row..<(row + w) {
-                                                    let factor = 1 + sharpening * sp.value[i]
-                                                    hp.value[i] *= factor
-                                                    vp.value[i] *= factor
-                                                }
+                                            for i in row..<(row + w) {
+                                                let factor = 1 + sharpening * sp.value[i]
+                                                hp.value[i] *= factor
+                                                vp.value[i] *= factor
                                             }
                                         }
                                     }

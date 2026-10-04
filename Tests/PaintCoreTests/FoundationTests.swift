@@ -81,7 +81,16 @@ struct FoundationTests {
         #expect(cc.labels[3, 0] != cc.labels[0, 0])
         #expect(cc.labels[2, 2] != cc.labels[3, 1])  // diagonal only: not connected under 4-connectivity
         #expect(cc.area.reduce(0, +) == 12)
-        #expect(cc.bounds[Int(cc.labels[2, 0])] == PixelBounds(minX: 0, minY: 0, maxX: 3, maxY: 3))
+    }
+
+    @Test func disjointSetCompressesToTheRootTheCallerChose() {
+        var sets = DisjointSet(count: 8)
+        for i in 1..<6 { sets.parent[i] = i - 1 }  // the chain 5 → 4 → … → 0 and two loners
+        #expect(sets.find(5) == 0)
+        #expect(sets.parent[0..<6].allSatisfy { $0 == 0 })
+        sets.parent[0] = 7
+        #expect(sets.find(3) == 7)
+        #expect(sets.find(6) == 6)
     }
 
     @Test func areaResampleOfUniformImageIsExact() {

@@ -170,10 +170,11 @@ struct SegmentationParameters: Sendable {
         // leftovers go).
         crumbContrast = 0.12
         crumbFloor = 0.2
-        // Aspect ratio above ~10 (a rectangle's compactness is 4·L·w/(L + w)²) and narrower
-        // than three number-holding discs; the mean colour may stray from the mixing line by
-        // 40% of its distance to the nearer paint (blur mixes are rarely exact), and a border
-        // whose pixel step reaches 70% of the paint difference is a contour, not a ramp.
+        // Aspect ratio above ~10 (a rectangle's compactness is 4·L·w/(L + w)²) and a mean
+        // width under three minimum radii (about one and a half number-holding discs across);
+        // the mean colour may stray from the mixing line by 40% of its distance to the nearer
+        // paint (blur mixes are rarely exact), and a border whose pixel step reaches 70% of the
+        // paint difference is a contour, not a ramp.
         stripCompactness = 0.35
         stripWidth = 3 * minRadius
         stripMixture = 0.4
@@ -202,7 +203,9 @@ struct SegmentationParameters: Sendable {
         consolidationTolerance = 0.1 * lerp(1.4, 0.7, d)
     }
 
-    /// The coloring book's flatter paint (`coloringBookFlattening`).
+    /// The coloring book's flatter paint (`coloringBookFlattening`). It must not change the
+    /// radius knobs: `Vectorizer` and `LayeredLines` rebuild the parameters from the settings,
+    /// without this, and read `minRadius(digits:)` for the room every number needs.
     mutating func flattenForColoringBook() {
         smoothSpatial *= Self.coloringBookFlattening
         textureFlattening *= Self.coloringBookFlattening

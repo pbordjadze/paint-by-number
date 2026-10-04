@@ -1,7 +1,9 @@
 import Foundation
 
 /// Counts the rings a smooth gradient was posterized into: a quality metric of the
-/// pipeline's output (`pbn generate` reports it as `bandRings`), not a pipeline stage.
+/// pipeline's output (`pbn generate` reports it as `bandRings`), not a pipeline stage. It is
+/// also the rings term of `AutoSettings.score`, so changing its definition moves Auto's
+/// decisions.
 ///
 /// A ring's boundary has the tell `BandMerging` uses: the photo barely changes across it,
 /// since the paints only changed because the ramp crossed the midpoint between them, while
@@ -42,7 +44,7 @@ public enum BandRings {
         var weak = [Int](repeating: 0, count: runs.count)
         var perimeter = [Int](repeating: 0, count: runs.count)
         for k in adjacency.pairs.indices {
-            let a = Int(adjacency.pairs[k] >> 32), b = Int(adjacency.pairs[k] & 0xFFFF_FFFF)
+            let (a, b) = RegionAdjacency.regions(of: adjacency.pairs[k])
             let length = Int(adjacency.lengths[k])
             perimeter[a] += length
             perimeter[b] += length

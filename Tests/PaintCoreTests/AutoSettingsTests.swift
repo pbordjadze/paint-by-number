@@ -149,7 +149,7 @@ struct AutoSettingsTests {
     }
 
     @Test func featuresAreQuantized() throws {
-        let a = try Self.analyze(SegmentationTests.colorful(width: 300, height: 200))
+        let a = try Self.analyze(TestScenes.colorful(width: 300, height: 200))
         let values = [a.chromaticFraction, a.chromaSpread, a.structureDensity, a.textureFraction, a.smoothFraction,
                       a.subjectCoverage, a.importanceEntropy]
         for v in values { #expect(v == (v * 1000).rounded() / 1000) }
@@ -160,7 +160,7 @@ struct AutoSettingsTests {
     // MARK: - Candidates
 
     @Test func monochromeGetsFewerColorsThanColorful() throws {
-        let colorful = SegmentationTests.colorful(width: 300, height: 200)
+        let colorful = TestScenes.colorful(width: 300, height: 200)
         var gray = colorful
         for i in 0..<(gray.width * gray.height) {
             let l = (UInt32(gray.pixels[i * 4]) * 3 + UInt32(gray.pixels[i * 4 + 1]) * 6 + UInt32(gray.pixels[i * 4 + 2])) / 10
@@ -255,7 +255,7 @@ struct AutoSettingsTests {
     // MARK: - Scoring
 
     @Test func paintingTimeOutsideTheBandCostsAtEqualFidelity() throws {
-        let image = SegmentationTests.scene(width: 240, height: 160)
+        let image = TestScenes.scene(width: 240, height: 160)
         let output = try TemplateGenerator().generate(from: image, cancel: .none)
         let t = output.template
         let working = Resample.area(image, width: t.width, height: t.height)
@@ -343,7 +343,7 @@ struct AutoSettingsTests {
     }
 
     @Test func scoreMeasuresTheTemplate() throws {
-        let image = SegmentationTests.scene(width: 240, height: 160)
+        let image = TestScenes.scene(width: 240, height: 160)
         let output = try TemplateGenerator().generate(from: image, cancel: .none)
         let t = output.template
         let working = Resample.area(image, width: t.width, height: t.height)
@@ -404,7 +404,7 @@ struct AutoSettingsTests {
     }
 
     @Test func choosePicksAWinnerInsideTheBandsAfterOneFirstDraft() throws {
-        let image = SegmentationTests.scene(width: 360, height: 240)
+        let image = TestScenes.scene(width: 360, height: 240)
         for preference in PaintingLength.allCases {
             let drafts = Counter()
             let decision = try AutoSettings.choose(
@@ -425,7 +425,7 @@ struct AutoSettingsTests {
     }
 
     @Test func chooseIsByteIdenticalAcrossRuns() throws {
-        let image = SegmentationTests.colorful(width: 300, height: 200)
+        let image = TestScenes.colorful(width: 300, height: 200)
         let hints = SubjectHints(faces: [NormalizedRect(x: 0.4, y: 0.2, width: 0.3, height: 0.4)], labels: ["flower": 0.5])
         let runs = try (0..<2).map { _ in
             try Self.json(AutoSettings.choose(
@@ -436,7 +436,7 @@ struct AutoSettingsTests {
     }
 
     @Test func chooseStopsWhenCancelled() throws {
-        let image = SegmentationTests.scene(width: 360, height: 240)
+        let image = TestScenes.scene(width: 360, height: 240)
         // Cancelled during the remaining candidates: the first draft still arrived once.
         let drafts = Counter()
         #expect(throws: CancellationError.self) {

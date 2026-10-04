@@ -6,8 +6,6 @@ public struct Components: Sendable {
     public var classOf: [UInt32]
     /// Pixel count of each component.
     public var area: [Int]
-    /// Bounds of each component.
-    public var bounds: [PixelBounds]
 
     public var count: Int { classOf.count }
 }
@@ -18,7 +16,7 @@ public enum ConnectedComponents {
     public static func label(_ classes: Grid<UInt32>) -> Components {
         let w = classes.width, h = classes.height, n = w * h
         guard n > 0 else {
-            return Components(labels: RegionMap(width: w, height: h, repeating: 0), classOf: [], area: [], bounds: [])
+            return Components(labels: RegionMap(width: w, height: h, repeating: 0), classOf: [], area: [])
         }
         var provisional = [UInt32](repeating: 0, count: n)
         var parent: [UInt32] = []
@@ -69,7 +67,6 @@ public enum ConnectedComponents {
         var finalID = [UInt32](repeating: .max, count: parent.count)
         var classOf: [UInt32] = []
         var area: [Int] = []
-        var bounds: [PixelBounds] = []
         classes.storage.withUnsafeBufferPointer { cls in
             provisional.withUnsafeMutableBufferPointer { lab in
                 for y in 0..<h {
@@ -83,18 +80,13 @@ public enum ConnectedComponents {
                             finalID[root] = id
                             classOf.append(cls[i])
                             area.append(0)
-                            bounds.append(.empty)
                         }
                         lab[i] = id
                         area[Int(id)] += 1
-                        bounds[Int(id)].include(x: x, y: y)
                     }
                 }
             }
         }
-        return Components(
-            labels: RegionMap(width: w, height: h, storage: provisional),
-            classOf: classOf, area: area, bounds: bounds
-        )
+        return Components(labels: RegionMap(width: w, height: h, storage: provisional), classOf: classOf, area: area)
     }
 }

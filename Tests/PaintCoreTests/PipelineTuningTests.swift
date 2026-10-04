@@ -48,6 +48,23 @@ struct PipelineTuningTests {
         #expect(PipelineTuning().isDefault)
     }
 
+    @Test func coloringBookFlatteningScalesOnlyThePaintKnobs() {
+        let settings = GenerationSettings(colorCount: 30, detail: 0.6, smoothness: 0.4)
+        let plain = SegmentationParameters(settings: settings, width: 1200, height: 800)
+        var flat = plain
+        flat.flattenForColoringBook()
+        let before = Self.knobs(plain), after = Self.knobs(flat)
+        let flattened: Set<String> = ["smoothSpatial", "textureFlattening", "minArea"]
+        #expect(after.count == before.count)
+        // The radius knobs must stay: the vectorizer rebuilds its parameters without the
+        // flattening and reads them for label room.
+        #expect(flattened.union(["minRadius"]).isSubset(of: before.keys))
+        for (name, value) in before {
+            let expected = flattened.contains(name) ? Double(Float(value) * SegmentationParameters.coloringBookFlattening) : value
+            #expect(after[name] == expected, "\(name)")
+        }
+    }
+
     @Test func tuningIsClamped() {
         let wild = PipelineTuning(smoothing: 100, textureFlattening: 0, minimumCellSize: .nan, subjectEmphasis: -3,
                                   accentColors: .infinity, colorfulness: 0.3).normalized
@@ -107,7 +124,7 @@ struct PipelineTuningTests {
     }
 
     @Test func autoCandidatesCarryLineArtAndTuning() throws {
-        let image = SegmentationTests.scene(width: 300, height: 200)
+        let image = TestScenes.scene(width: 300, height: 200)
         let classic = LineArtSettings(style: .classic)
         let plain = try AutoSettings.choose(
             image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3, lineArt: classic,

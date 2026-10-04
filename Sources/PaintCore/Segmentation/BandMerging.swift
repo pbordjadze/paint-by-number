@@ -16,6 +16,8 @@ import Foundation
 /// so every size and thickness guarantee holds.
 enum BandMerging {
 
+    /// Updates `classes`, `labelling`, `regions` and `adjacency`.
+    ///
     /// - Parameters:
     ///   - labelling: Paint of every pixel before region simplification, the reference the
     ///     palette refit treats as a region's own colour; absorbed bands are rewritten to
@@ -28,8 +30,6 @@ enum BandMerging {
     ///     region counts as a narrow band.
     ///   - contrast: A boundary is weak when the mean colour step across it is below this
     ///     fraction of the paint difference.
-    /// - Returns: The number of merges; `classes`, `labelling`, `regions` and `adjacency`
-    ///   are updated.
     static func apply(
         classes: inout [UInt32],
         labelling: inout [UInt32],
@@ -43,10 +43,10 @@ enum BandMerging {
         bandWidth: Float,
         contrast: Float,
         cancel: CancellationCheck = .none
-    ) throws -> Int {
+    ) throws {
         let n = regions.count
         let maxTolerance = max(tolerance.near, tolerance.nearImportant, tolerance.band)
-        guard n > 1, maxTolerance > 0, !adjacency.pairs.isEmpty else { return 0 }
+        guard n > 1, maxTolerance > 0, !adjacency.pairs.isEmpty else { return }
         let cls = regions.classOf
         let paints = palette.map { $0 * metric }
         @inline(__always) func distance(_ a: UInt32, _ b: UInt32) -> Float {
@@ -69,7 +69,7 @@ enum BandMerging {
         var links = [[Link]](repeating: [], count: n)
         var perimeter = [Int](repeating: 0, count: n)
         for k in adjacency.pairs.indices {
-            let a = Int(adjacency.pairs[k] >> 32), b = Int(adjacency.pairs[k] & 0xFFFF_FFFF)
+            let (a, b) = RegionAdjacency.regions(of: adjacency.pairs[k])
             let length = adjacency.lengths[k]
             links[a].append(Link(region: Int32(b), length: length))
             links[b].append(Link(region: Int32(a), length: length))
@@ -82,17 +82,10 @@ enum BandMerging {
             guard steps[k] <= contrast * difference * Float(length) else { continue }
             edges.append((Int32(a), Int32(b), d))
         }
-        guard !edges.isEmpty else { return 0 }
+        guard !edges.isEmpty else { return }
         edges.sort { $0.key < $1.key || ($0.key == $1.key && ($0.a, $0.b) < ($1.a, $1.b)) }
 
-        var parent = Array(0..<n)
-        func find(_ x: Int) -> Int {
-            var r = x
-            while parent[r] != r { r = parent[r] }
-            var c = x
-            while parent[c] != r { let next = parent[c]; parent[c] = r; c = next }
-            return r
-        }
+        var sets = DisjointSet(count: n)
         var area = regions.area
         var weight = importanceSum
         var largest = Array(0..<n)
@@ -102,9 +95,9 @@ enum BandMerging {
         var spread = [Float](repeating: 0, count: n)
         func width(_ r: Int) -> Float { perimeter[r] > 0 ? 2 * Float(area[r]) / Float(perimeter[r]) : .infinity }
 
-        var merges = 0
+        var merged = false
         for e in edges {
-            let a = find(Int(e.a)), b = find(Int(e.b))
+            let a = sets.find(Int(e.a)), b = sets.find(Int(e.b))
             if a == b { continue }
             let imp = Float((weight[a] + weight[b]) / Double(area[a] + area[b]))
             let unimportant = min(width(a), width(b)) <= bandWidth ? tolerance.band : tolerance.near
@@ -116,8 +109,8 @@ enum BandMerging {
             if joined > limit { continue }
             let (root, other) = area[a] >= area[b] ? (a, b) : (b, a)
             var shared = 0
-            for l in links[other] where find(Int(l.region)) == root { shared += Int(l.length) }
-            parent[other] = root
+            for l in links[other] where sets.find(Int(l.region)) == root { shared += Int(l.length) }
+            sets.parent[other] = root
             area[root] += area[other]
             weight[root] += weight[other]
             perimeter[root] += perimeter[other] - 2 * shared
@@ -127,21 +120,20 @@ enum BandMerging {
             for paint in members[other] where !members[root].contains(paint) { members[root].append(paint) }
             members[other] = []
             spread[root] = joined
-            merges += 1
+            merged = true
         }
-        guard merges > 0 else { return 0 }
+        guard merged else { return }
         try cancel.throwIfCancelled()
 
         var roots = [Int32](repeating: 0, count: n)
         var paint = cls
         for r in 0..<n {
-            let root = find(r)
+            let root = sets.find(r)
             roots[r] = Int32(root)
             paint[r] = cls[largest[root]]
         }
         rewriteLabelling(&labelling, regions: regions, roots: roots, paint: paint)
         regions.merge(roots: roots, paint: paint, adjacency: &adjacency, classes: &classes)
-        return merges
     }
 
     /// Rewrites the reference labelling of absorbed regions' own pixels to the fused paint

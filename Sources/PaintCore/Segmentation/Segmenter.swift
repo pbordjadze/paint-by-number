@@ -16,42 +16,17 @@ import Foundation
 ///    peel hair-thin parts, until every region is tappable and holds a number; then fuse
 ///    the bands of smooth gradients across weak boundaries and merge similar neighbours
 ///    inside busy texture.
-/// 6. Refit paints to the regions they cover, recolor regions, keep paints distinct and
-///    order the palette like a kit.
+/// 6. Refit paints to the regions they cover, recolor regions, re-spend the paints that
+///    fusing or merging left unused on the worst-fitting regions (the rest are dropped),
+///    keep paints distinct and order the palette like a kit.
 /// 7. Regions too small for a multi-digit number take a paint with a shorter number or
 ///    merge (see `RegionSimplifier.enforceLabelRoom`), so every number is legible.
-public enum Segmenter {
-    public static func segment(
-        _ image: RGBAImage,
-        importance: Grid<Float>?,
-        settings: GenerationSettings,
-        cancel: CancellationCheck,
-        clock: StageClock,
-        progress: (Float) -> Void
-    ) throws -> Segmentation {
-        try segment(
-            image, importance: importance,
-            parameters: SegmentationParameters(settings: settings, width: image.width, height: image.height),
-            cancel: cancel, clock: clock, progress: progress)
-    }
-
-    /// The pipeline with explicit internal knobs (tests compare stages switched off).
+enum Segmenter {
+    /// The pipeline with explicit knobs (tests switch stages off through them), also returning
+    /// the importance weights it worked with (0...1 per working pixel: the given map
+    /// resampled, or the fallback estimate), which layered line art reuses. The generator
+    /// applies `flattenForColoringBook` to the parameters for coloring books.
     static func segment(
-        _ image: RGBAImage,
-        importance: Grid<Float>?,
-        parameters p: SegmentationParameters,
-        cancel: CancellationCheck,
-        clock: StageClock,
-        progress: (Float) -> Void
-    ) throws -> Segmentation {
-        try segmentWithImportance(image, importance: importance, parameters: p, cancel: cancel, clock: clock, progress: progress)
-            .segmentation
-    }
-
-    /// `segment`, also returning the importance weights it worked with (0...1 per working
-    /// pixel: the given map resampled, or the fallback estimate), which layered line art
-    /// reuses.
-    static func segmentWithImportance(
         _ image: RGBAImage,
         importance: Grid<Float>?,
         parameters p: SegmentationParameters,
@@ -134,7 +109,7 @@ public enum Segmenter {
         try cancel.throwIfCancelled()
         let metric = SIMD3<Float>(1, 1 / p.chromaScale, 1 / p.chromaScale)
         try clock.measure("segment.bands") {
-            _ = try BandMerging.apply(
+            try BandMerging.apply(
                 classes: &classes, labelling: &labelling, regions: &regions, adjacency: &adjacency, colors: smooth.storage,
                 importance: weights, palette: palette, metric: metric,
                 tolerance: (p.bandNearTolerance, p.bandNearImportantTolerance, p.bandTolerance),
@@ -142,7 +117,7 @@ public enum Segmenter {
         }
         try cancel.throwIfCancelled()
         clock.measure("segment.consolidate") {
-            _ = TextureConsolidation.apply(
+            TextureConsolidation.apply(
                 classes: &classes, regions: &regions, adjacency: &adjacency, texture: texture, importance: weights,
                 palette: palette, metric: metric, tolerance: p.consolidationTolerance)
         }

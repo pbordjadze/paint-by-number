@@ -263,23 +263,16 @@ struct StrokeGraph {
 
     /// Connected components as lists of edge ids (a closed edge is its own component).
     func components() -> [[Int]] {
-        var parent = Array(0..<nodes.count)
-        func find(_ x: Int) -> Int {
-            var r = x
-            while parent[r] != r { r = parent[r] }
-            var c = x
-            while parent[c] != r { let next = parent[c]; parent[c] = r; c = next }
-            return r
-        }
+        var sets = DisjointSet(count: nodes.count)
         for e in edges where e.alive && e.a >= 0 {
-            let ra = find(e.a), rb = find(e.b)
-            if ra != rb { parent[max(ra, rb)] = min(ra, rb) }
+            let ra = sets.find(e.a), rb = sets.find(e.b)
+            if ra != rb { sets.parent[max(ra, rb)] = min(ra, rb) }
         }
         var keyOrder: [Int] = []
         var byKey: [Int: [Int]] = [:]
         for (i, e) in edges.enumerated() where e.alive {
             // Closed edges get keys past every node.
-            let key = e.a >= 0 ? find(e.a) : nodes.count + i
+            let key = e.a >= 0 ? sets.find(e.a) : nodes.count + i
             if byKey[key] == nil { keyOrder.append(key) }
             byKey[key, default: []].append(i)
         }

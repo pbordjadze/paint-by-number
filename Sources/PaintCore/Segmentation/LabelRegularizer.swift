@@ -208,24 +208,24 @@ enum LabelRegularizer {
             for k in 0..<8 { nw[k] = weights[k] }
             count = 8
         } else {
-        // Gather neighbours with contrast-sensitive weights.
-        for dy in -1...1 {
-            let yy = y + dy
-            if yy < 0 || yy >= h { continue }
-            for dx in -1...1 {
-                if dx == 0 && dy == 0 { continue }
-                let xx = x + dx
-                if xx < 0 || xx >= w { continue }
-                let j = yy * w + xx
-                let l = labels[j]
-                if l != current { differs = true }
-                let e = c - colors[j]
-                let base: Float = (dx != 0 && dy != 0) ? diagonal : 1
-                nl[count] = l
-                nw[count] = strength * base / (1 + (e * e).sum() * invSigma2)
-                count += 1
+            // Gather neighbours with contrast-sensitive weights.
+            for dy in -1...1 {
+                let yy = y + dy
+                if yy < 0 || yy >= h { continue }
+                for dx in -1...1 {
+                    if dx == 0 && dy == 0 { continue }
+                    let xx = x + dx
+                    if xx < 0 || xx >= w { continue }
+                    let j = yy * w + xx
+                    let l = labels[j]
+                    if l != current { differs = true }
+                    let e = c - colors[j]
+                    let base: Float = (dx != 0 && dy != 0) ? diagonal : 1
+                    nl[count] = l
+                    nw[count] = strength * base / (1 + (e * e).sum() * invSigma2)
+                    count += 1
+                }
             }
-        }
         }
         guard differs else { return false }
         var total: Float = 0
