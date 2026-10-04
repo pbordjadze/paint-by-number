@@ -54,7 +54,7 @@ struct AutoSettingsTests {
         PhotoAnalysis(
             sourceWidth: source, sourceHeight: source * 3 / 4, paletteCurve: curve, chromaticFraction: chromatic,
             chromaSpread: spread, structureDensity: structure, textureFraction: texture, smoothFraction: smooth, noise: noise,
-            subjectCoverage: subject, importanceEntropy: 0.9, meanImportance: 0.5, faceCoverage: faces, animalCoverage: 0, labels: [:])
+            subjectCoverage: subject, importanceEntropy: 0.9, meanImportance: 0.5, faceCoverage: faces, animalCoverage: 0)
     }
 
     static func json<T: Encodable>(_ value: T) throws -> Data {
@@ -130,21 +130,21 @@ struct AutoSettingsTests {
     @Test func hintsAreCopiedClampedAndQuantized() throws {
         let hints = SubjectHints(
             faces: [NormalizedRect(x: 0.1, y: 0.1, width: 0.2, height: 0.3), NormalizedRect(x: 0.9, y: 0.9, width: 0.5, height: 0.5)],
-            animals: [NormalizedRect(x: -1, y: -1, width: 5, height: 5)],
-            labels: ["portrait": 0.81234])
+            animals: [NormalizedRect(x: -1, y: -1, width: 5, height: 5)])
         let a = try Self.analyze(Self.flat, hints: hints)
         #expect(a.faceCoverage == 0.07)  // 0.06 + the 0.01 inside the frame
         #expect(a.animalCoverage == 1)
-        #expect(a.labels == ["portrait": 0.812])
         let none = try Self.analyze(Self.flat)
-        #expect(none.faceCoverage == 0 && none.animalCoverage == 0 && none.labels.isEmpty)
+        #expect(none.faceCoverage == 0 && none.animalCoverage == 0)
     }
 
     @Test func hintsDecodeWithMissingLists() throws {
         let faces = try JSONDecoder().decode(SubjectHints.self, from: Data(#"{"faces": [{"x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}]}"#.utf8))
         #expect(faces == SubjectHints(faces: [NormalizedRect(x: 0.1, y: 0.2, width: 0.3, height: 0.4)]))
         #expect(try JSONDecoder().decode(SubjectHints.self, from: Data("{}".utf8)) == SubjectHints())
-        let full = SubjectHints(animals: [NormalizedRect(x: 0, y: 0, width: 1, height: 1)], labels: ["pet": 0.9])
+        // Hints written when scene labels existed still decode: the key is ignored.
+        #expect(try JSONDecoder().decode(SubjectHints.self, from: Data(#"{"labels": {"flower": 0.5}}"#.utf8)) == SubjectHints())
+        let full = SubjectHints(animals: [NormalizedRect(x: 0, y: 0, width: 1, height: 1)])
         #expect(try JSONDecoder().decode(SubjectHints.self, from: Self.json(full)) == full)
     }
 
@@ -350,48 +350,17 @@ struct AutoSettingsTests {
         let s = AutoSettings.score(output, working: working, importance: AutoSettings.importance(for: working, map: nil),
                                    preference: .relaxed)
         #expect(s.regions == t.regions.count)
-        #expect(s.tinyRegions == t.regions.filter { $0.inscribedRadius < 3 }.count)
+        #expect(s.tinyRegions == t.regions.filter { $0.inscribedRadius < AutoSettings.tinyRadius }.count)
         #expect(s.fidelity > 0 && s.fidelity < 0.1)
         #expect(s.fidelityP95 >= s.fidelity)
         #expect(s.minLabelRoom >= LabelSizing.minimumRadius - 1e-3)
         #expect(s.estimatedSeconds == PaintingTime.estimate(regionCount: t.regions.count))
-        #expect(s.total >= s.fidelity + 0.5 * s.fidelityP95)
+        #expect(s.total >= s.fidelity + AutoSettings.p95Weight * s.fidelityP95)
     }
 
     @Test func paintingTimeEstimate() {
         #expect(PaintingTime.estimate(regionCount: 1200) == 3600)
         #expect(PaintingTime.estimate(regionCount: 0) == 0)
-    }
-
-    /// A segmentation of vertical stripes, each with its mean colour as paint.
-    static func stripes(_ image: RGBAImage, width stripe: Int) -> Segmentation {
-        let w = image.width, h = image.height, count = (w + stripe - 1) / stripe
-        var labels = RegionMap(width: w, height: h, repeating: 0)
-        var sums = [SIMD3<Float>](repeating: .zero, count: count)
-        let lab = ColorScience.okLabImage(from: image)
-        for y in 0..<h {
-            for x in 0..<w {
-                labels[x, y] = UInt32(x / stripe)
-                let v = lab[x, y]
-                sums[x / stripe] += SIMD3(v.x, v.y, v.z)
-            }
-        }
-        let palette = (0..<count).map { r in
-            PaletteColor(oklab: sums[r] / Float(h * min(stripe, w - r * stripe)), space: .sRGB)
-        }
-        return Segmentation(labels: labels, regionColor: (0..<count).map(UInt32.init), palette: palette, colorSpace: .sRGB)
-    }
-
-    @Test func bandRingsCountsARampsRingsNotHardContours() {
-        let ramp = Self.image { x, _ in SIMD3(repeating: 40 + 180 * Float(x) / Float(Self.width - 1)) }
-        let bars = Self.image { x, _ in SIMD3(repeating: 40 + 180 * Float(x / 40) / Float(Self.width / 40 - 1)) }
-        let rampRings = BandRings.count(Self.stripes(ramp, width: 40), working: ramp)
-        let barRings = BandRings.count(Self.stripes(bars, width: 40), working: bars)
-        #expect(rampRings == 10)
-        #expect(barRings == 0)
-        // One region, or a working image of another size, has no rings.
-        #expect(BandRings.count(Self.stripes(ramp, width: Self.width), working: ramp) == 0)
-        #expect(BandRings.count(Self.stripes(ramp, width: 40), working: Self.flat.cropped(width: 10)) == 0)
     }
 
     // MARK: - Choosing
@@ -419,7 +388,7 @@ struct AutoSettingsTests {
 
     @Test func chooseIsByteIdenticalAcrossRuns() throws {
         let image = TestScenes.colorful(width: 300, height: 200)
-        let hints = SubjectHints(faces: [NormalizedRect(x: 0.4, y: 0.2, width: 0.3, height: 0.4)], labels: ["flower": 0.5])
+        let hints = SubjectHints(faces: [NormalizedRect(x: 0.4, y: 0.2, width: 0.3, height: 0.4)])
         let runs = try (0..<2).map { _ in
             try Self.json(AutoSettings.choose(
                 image: image, importance: nil, hints: hints, preference: .relaxed, maxCandidates: 5, cancel: .none,
@@ -503,13 +472,5 @@ struct AutoSettingsTests {
             }
             #expect(s.estimatedSeconds == p.estimatedSeconds)
         }
-    }
-}
-
-private extension RGBAImage {
-    func cropped(width w: Int) -> RGBAImage {
-        var out = RGBAImage(width: w, height: height, fill: SIMD4(0, 0, 0, 255))
-        for y in 0..<height { for x in 0..<w { out[x, y] = self[x, y] } }
-        return out
     }
 }

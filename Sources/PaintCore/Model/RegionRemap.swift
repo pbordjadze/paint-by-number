@@ -13,8 +13,8 @@ public enum RegionRemap {
         }
     }
 
-    /// A new region counts as painted when at least this share of its area was painted.
-    public static let defaultCoveragePercent = 60
+    /// A new region counts as painted when at least this share (percent) of its area was painted.
+    private static let coveragePercent = 60
 
     /// Painted regions of `newMap`, ordered by the stroke that carried them (ties by region),
     /// so replaying them keeps the old painting order. Maps of different sizes are compared
@@ -25,8 +25,7 @@ public enum RegionRemap {
     ///     `0..<oldRegionCount` are ignored, as are repeats.
     public static func carryOver(
         paintOrder: [UInt32], oldMap: RegionMap, oldRegionCount: Int,
-        newMap: RegionMap, newRegionCount: Int,
-        coveragePercent: Int = defaultCoveragePercent
+        newMap: RegionMap, newRegionCount: Int
     ) -> [Carried] {
         guard !paintOrder.isEmpty, !oldMap.storage.isEmpty, !newMap.storage.isEmpty, newRegionCount > 0 else { return [] }
         var strokeOf = [Int](repeating: -1, count: oldRegionCount)

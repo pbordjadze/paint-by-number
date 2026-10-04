@@ -9,8 +9,8 @@ import Foundation
 ///    negative eigenvector, and curves down there. A soft, wide line (HED draws 5–10 px)
 ///    and a crisp one both give their centre, and close lines do not merge. Ridges hugging
 ///    the frame and parallel to it (a vignette, a dark rim) are dropped.
-/// 3. Hysteresis: ridge pixels above half the texture threshold that are 8-connected to one
-///    above it, the thresholds scaled mildly by importance (more lines on the subject).
+/// 3. Hysteresis: ridge pixels above half the lowest layer's threshold (texture; a coloring
+///    book's detail) that are 8-connected to one above it, the thresholds scaled mildly by importance (more lines on the subject).
 /// 4. A 3×3 closing seals one-pixel breaks; thinning leaves 8-connected one-pixel lines.
 enum LineDetection {
     /// Cleared border, working pixels.

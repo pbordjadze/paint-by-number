@@ -29,10 +29,35 @@ struct AutoWorking {
     }
 }
 
+/// What each per-pixel accumulator of `PhotoAnalyzer.analyze` sums, one lane each.
+private enum Lane: Int, CaseIterable {
+    /// Pixels above the chroma threshold.
+    case chromatic
+    /// The sum of chroma and of its squares (for the chroma spread).
+    case chromaSum, chromaSquares
+    /// Busy pixels whose gradient is incoherent.
+    case texture
+    /// Busy pixels whose gradient is coherent.
+    case structure
+    /// Pixels inside gentle ramps.
+    case ramp
+    /// Pixels above `PhotoAnalyzer.subjectImportance`.
+    case subject
+    /// The sum of the importance weights.
+    case importance
+}
+
+private extension [Double] {
+    subscript(lane: Lane) -> Double {
+        @inline(__always) get { self[lane.rawValue] }
+        @inline(__always) set { self[lane.rawValue] = newValue }
+    }
+}
+
 /// Photo features for the candidate rule (`AutoSettings.analyze`). Thresholds are in the
 /// pipeline's working space (OKLab with chroma × `chromaScale`) and per working pixel; they
-/// are the spec's (`docs/wave2/01-suggested-settings.md`), kept through tuning
-/// (`docs/wave2/log/auto-tuning.md`) except where a constant says otherwise.
+/// are starting values kept through tuning (`docs/wave2/log/auto-tuning.md`) except where a
+/// constant says otherwise.
 enum PhotoAnalyzer {
     /// Paint-count curve: Lloyd iterations per k after k-means++ seeding.
     static let curveIterations = 10
@@ -66,6 +91,9 @@ enum PhotoAnalyzer {
     static let subjectImportance: Float = 0.6
     /// Cells per side of the grid the importance entropy is measured on.
     static let entropyCells = 32
+    /// The noise histogram: `noiseBins` bins of Laplacian magnitude, `noiseBin` wide.
+    static let noiseBins = 2000
+    static let noiseBin: Float = 0.0002
     /// The palette curve keeps 4 decimals (0.0001 ΔE, a two-hundredth of a just-noticeable
     /// difference): the color rule reads its slope, and at 3 decimals one quantum between
     /// 8 and 12 paints was 0.00025 ΔE per paint against a 0.0004 threshold, so the knee
@@ -92,8 +120,7 @@ enum PhotoAnalyzer {
 
         // Per-pixel features, summed over fixed chunks in chunk order (the result does not
         // depend on the number of cores); the noise histogram counts are integers.
-        let lanes = 8
-        let noiseBins = 2000, noiseBin: Float = 0.0002
+        let lanes = Lane.allCases.count
         let chunk = 16_384
         let chunks = (n + chunk - 1) / chunk
         var sums = [Double](repeating: 0, count: chunks * lanes)
@@ -132,16 +159,16 @@ enum PhotoAnalyzer {
                                                 let v = lab.value[i]
                                                 let chroma = (v.y * v.y + v.z * v.z).squareRoot() / chromaScale
                                                 let lightness = min(1, max(v.x / chromaticLightness, chromaticFloor))
-                                                if chroma > chromaticChroma * lightness { acc[0] += 1 }
-                                                acc[1] += Double(chroma)
-                                                acc[2] += Double(chroma * chroma)
+                                                if chroma > chromaticChroma * lightness { acc[Lane.chromatic] += 1 }
+                                                acc[Lane.chromaSum] += Double(chroma)
+                                                acc[Lane.chromaSquares] += Double(chroma * chroma)
                                                 var a = hor.value[i], b = ver.value[i]
                                                 let total = a.w + b.w
                                                 a.w = 0
                                                 b.w = 0
                                                 let coherent = (a * a).sum().squareRoot() + (b * b).sum().squareRoot()
                                                 if total > textureStep {
-                                                    acc[coherent < textureCoherence * total ? 3 : 4] += 1
+                                                    acc[coherent < textureCoherence * total ? Lane.texture : Lane.structure] += 1
                                                 }
                                                 // A ramp slopes alike at both scales; flat ground next to an
                                                 // edge slopes only at the coarse one.
@@ -150,11 +177,11 @@ enum PhotoAnalyzer {
                                                     let wide = slope(co.value, x: x, y: y, r: rampRadius)
                                                     if wide >= rampSlope && wide <= rampStep
                                                         && slope(fi.value, x: x, y: y, r: 2) >= rampAgreement * wide {
-                                                        acc[5] += 1
+                                                        acc[Lane.ramp] += 1
                                                     }
                                                 }
-                                                if weight.value[i] > subjectImportance { acc[6] += 1 }
-                                                acc[7] += Double(weight.value[i])
+                                                if weight.value[i] > subjectImportance { acc[Lane.subject] += 1 }
+                                                acc[Lane.importance] += Double(weight.value[i])
                                                 // Noise: the Laplacian of lightness where the photo is flat or
                                                 // gently sloped at a scale of a few pixels (texture slopes there).
                                                 if x > 0, y > 0, x < w - 1, y < h - 1,
@@ -182,11 +209,31 @@ enum PhotoAnalyzer {
             for b in 0..<noiseBins { histogram[b] += Int(histograms[c * noiseBins + b]) }
         }
         let count = Double(max(n, 1))
-        let meanChroma = total[1] / count
-        let chromaVariance = max(total[2] / count - meanChroma * meanChroma, 0)
+        let meanChroma = total[Lane.chromaSum] / count
+        let chromaVariance = max(total[Lane.chromaSquares] / count - meanChroma * meanChroma, 0)
+        let noise = noiseSigma(histogram: histogram)
 
-        // Median absolute Laplacian → noise σ (for Gaussian noise the 4-neighbour Laplacian has
-        // σ·√20, and its median absolute value is 0.6745 of that).
+        let hints = hints ?? SubjectHints()
+        return PhotoAnalysis(
+            sourceWidth: source.width, sourceHeight: source.height,
+            paletteCurve: curve.map { quantized($0, places: curvePlaces) },
+            chromaticFraction: quantized(Float(total[Lane.chromatic] / count)),
+            chromaSpread: quantized(Float(chromaVariance.squareRoot())),
+            structureDensity: quantized(Float(total[Lane.structure] / count)),
+            textureFraction: quantized(Float(total[Lane.texture] / count)),
+            smoothFraction: quantized(Float(total[Lane.ramp] / count)),
+            noise: quantized(noise, places: 4),
+            subjectCoverage: quantized(Float(total[Lane.subject] / count)),
+            importanceEntropy: quantized(entropy(working.weights, width: w, height: h)),
+            meanImportance: quantized(Float(total[Lane.importance] / count)),
+            faceCoverage: quantized(min(hints.faces.reduce(0) { $0 + $1.clippedArea }, 1)),
+            animalCoverage: quantized(min(hints.animals.reduce(0) { $0 + $1.clippedArea }, 1)))
+    }
+
+    /// The noise σ of a histogram of absolute Laplacians (`noiseBins` bins of `noiseBin`): the
+    /// median absolute Laplacian → σ (for Gaussian noise the 4-neighbour Laplacian has σ·√20,
+    /// and its median absolute value is 0.6745 of that); 0 when nothing was counted.
+    static func noiseSigma(histogram: [Int]) -> Float {
         var noise: Float = 0
         let samples = histogram.reduce(0, +)
         if samples > 0 {
@@ -199,23 +246,7 @@ enum PhotoAnalyzer {
                 }
             }
         }
-
-        let hints = hints ?? SubjectHints()
-        return PhotoAnalysis(
-            sourceWidth: source.width, sourceHeight: source.height,
-            paletteCurve: curve.map { quantized($0, places: curvePlaces) },
-            chromaticFraction: quantized(Float(total[0] / count)),
-            chromaSpread: quantized(Float(chromaVariance.squareRoot())),
-            structureDensity: quantized(Float(total[4] / count)),
-            textureFraction: quantized(Float(total[3] / count)),
-            smoothFraction: quantized(Float(total[5] / count)),
-            noise: quantized(noise, places: 4),
-            subjectCoverage: quantized(Float(total[6] / count)),
-            importanceEntropy: quantized(entropy(working.weights, width: w, height: h)),
-            meanImportance: quantized(Float(total[7] / count)),
-            faceCoverage: quantized(min(hints.faces.reduce(0) { $0 + $1.clippedArea }, 1)),
-            animalCoverage: quantized(min(hints.animals.reduce(0) { $0 + $1.clippedArea }, 1)),
-            labels: hints.labels.mapValues { quantized($0) })
+        return noise
     }
 
     /// Features are stored and compared at `places` decimals, so tiny floating-point

@@ -10,13 +10,14 @@ import Foundation
 ///    template against the photo: importance-weighted colour error, rings, crumbs, and the
 ///    distance of its painting time from the preference's band. The lowest total wins.
 ///
-/// The rule is fixed and its inputs are the photo, its importance and hints and the
-/// preference, so the same pixels always get the same settings; decisions are reproducible
-/// and never stored. A re-encoded copy of a photo moves the scores a little, so the rule's
-/// thresholds are ramps, the knee is a fitted curve and a neighbour must beat the center by
-/// more than that (`tieMargin`); a JPEG re-save still changes about one suggestion in six
-/// materially. The constants were tuned by eye on contact sheets (`tools/auto_sheet.py`,
-/// `docs/wave2/log/auto-tuning.md`).
+/// The rule is fixed and its inputs are the photo, its importance and hints, the preference
+/// and the line art and tuning handed to `choose`, so the same inputs always get the same
+/// settings; decisions are reproducible and never stored. A re-encoded copy of a photo moves
+/// the scores a little, so the rule's thresholds are ramps, the knee is a fitted curve and a
+/// neighbour must beat the center by more than that (`tieMargin`); a JPEG re-save still
+/// changes about one suggestion in six materially. The constants were tuned by eye on contact sheets (`tools/auto_sheet.py`,
+/// `docs/wave2/log/auto-tuning.md`, which records the tuned ones); a constant without a
+/// measurement note is a starting value kept through tuning.
 public enum AutoSettings {
     public static let paletteCurveKs = [8, 12, 16, 24, 32, 48, 64]
 
@@ -38,16 +39,13 @@ public enum AutoSettings {
 
     /// Measures the features the candidate rule reads (see `PhotoAnalysis`). Runs at the draft
     /// size: larger inputs are reduced first.
-    /// - Parameter sourceSize: The original photo's size when `image` is already a reduced
-    ///   draft; nil means `image` is the photo itself.
     public static func analyze(
-        _ image: RGBAImage, sourceSize: (width: Int, height: Int)? = nil, importance: Grid<Float>?, hints: SubjectHints?,
-        cancel: CancellationCheck
+        _ image: RGBAImage, importance: Grid<Float>?, hints: SubjectHints?, cancel: CancellationCheck
     ) throws -> PhotoAnalysis {
         let working = try AutoWorking(
             draft: draftImage(from: image), settings: GenerationSettings(), importance: importance, cancel: cancel)
         return try PhotoAnalyzer.analyze(
-            working, source: sourceSize ?? (image.width, image.height), hints: hints, cancel: cancel)
+            working, source: (image.width, image.height), hints: hints, cancel: cancel)
     }
 
     // MARK: - Candidates
@@ -74,9 +72,9 @@ public enum AutoSettings {
     static let monochromeFraction: Float = 0.15
     static let monochromeFactor: Float = 0.6
     /// Detail: a subject filling the frame gets more, busy texture less. A small source gets
-    /// no less (the spec's −0.1 under 900 px): its canvas is enlarged to 1.5 times whatever
-    /// the detail, so detail still sets how fine its areas are, and on the corpus's 105
-    /// decisions for photos under 900 px the score chose more detail than the center 77
+    /// no less (an earlier rule gave −0.1 under 900 px): its canvas is enlarged to 1.5 times
+    /// whatever the detail, so detail still sets how fine its areas are, and on the corpus's
+    /// 105 decisions for photos under 900 px the score chose more detail than the center 77
     /// times and less never, while those photos already fell short of the time bands.
     static let fillingSubject: Float = 0.5
     static let fillingSubjectDetail: Float = 0.15
@@ -140,11 +138,11 @@ public enum AutoSettings {
         colors += faceColors * ramp(a.faceCoverage, at: faceCoverage)
         colors *= 1 + (colorfulFactor - 1) * ramp(a.chromaSpread, at: colorfulSpread)
         colors *= monochromeFactor + (1 - monochromeFactor) * min(a.chromaticFraction / monochromeFraction, 1)
-        // Ramps get no extra paints (the spec's +2 per tenth of the frame in ramps beyond 30 %
-        // was meant for W3's gradient-aware allocation, which did not land): on the corpus's
-        // 32 decisions for photos with ramps, the candidate with 1.3 times the paints lowered
-        // ΔE by only 0.0005 and raised the share of ring regions by 0.8 points; the colour
-        // neighbours already offer more paints where they pay.
+        // Ramps get no extra paints. An earlier rule gave +2 per tenth of the frame in ramps
+        // beyond 30 %, for a gradient-aware paint allocation that was tried and not shipped: on
+        // the corpus's 32 decisions for photos with ramps, the candidate with 1.3 times the
+        // paints lowered ΔE by only 0.0005 and raised the share of ring regions by 0.8 points;
+        // the colour neighbours already offer more paints where they pay.
 
         var detail = preference.detailCenter
         detail += fillingSubjectDetail * ramp(a.subjectCoverage, at: fillingSubject)
@@ -165,9 +163,9 @@ public enum AutoSettings {
     /// `marginalGain`, on a power law `error = A · k^−b` fitted to the whole curve (least
     /// squares in log–log): `k = (A·b / marginalGain)^(1 / (b + 1))`, within 8…64. Each point
     /// of the curve is its own k-means run, so reading the gain between neighbouring points
-    /// (the first rule) moved the knee by a tenth on average when a photo was re-saved as JPEG
-    /// q92, up to 26 → 35 paints; the fit moves it by 2 % on the same 33 photos, at the same
-    /// level (median ratio 0.99).
+    /// (an earlier version of the rule) moved the knee by a tenth on average when a photo was
+    /// re-saved as JPEG q92, up to 26 → 35 paints; the fit moves it by 2 % on the same 33
+    /// photos, at the same level (median ratio 0.99).
     static func knee(_ curve: [Float]) -> Float {
         let ks = paletteCurveKs.map(Double.init)
         let range = Float(ks[0])...Float(ks[ks.count - 1])
@@ -233,7 +231,7 @@ public enum AutoSettings {
     /// 1104 draft/full pairs: the 69 corpus photos at 28 colours and detail 0.1, 0.4, 0.7 and
     /// 1, each under four maps: the pipeline's fallback (mean 0.6, what `pbn` uses without a
     /// map), uniform 0.25 and 0.4, and a Vision stand-in built like `SubjectImportance`'s
-    /// (0.25 base, an attention blob, a 0.75 subject mask and faces near 1; W3's hand-made
+    /// (0.25 base, an attention blob, a 0.75 subject mask and faces near 1; hand-made
     /// maps for four photos; mean 0.36–0.63). rms error of the log count 0.22 with no bias
     /// by map (±0.04), against 0.35 for the detail-only fit (0.29 + 0.42 × detail, tuned on
     /// fallback maps), which overestimated a uniform-0.25 map's count 1.4-fold.
@@ -390,7 +388,8 @@ public enum AutoSettings {
     /// photo's size when `image` is a reduced draft (nil: `image` is the photo itself); it
     /// sets the analysis's source size and the canvas the painting time is estimated for.
     /// Candidates run at most as many at a time as there are cores, each with its own
-    /// parallel pipeline. Deterministic for the same image, importance, hints and preference.
+    /// parallel pipeline. Deterministic for the same image, importance, hints, preference,
+    /// candidate count, line art and tuning.
     ///
     /// `lineArt` and `tuning` (Settings › Advanced), when given, are carried by every candidate,
     /// so the decision's settings have them. The tuning changes the drafts and so the scores;

@@ -28,14 +28,10 @@ public struct SubjectHints: Sendable, Codable, Hashable {
     /// Normalized rects (0…1, top-left origin) of detected human faces and animals.
     public var faces: [NormalizedRect]
     public var animals: [NormalizedRect]
-    /// Scene labels with confidence (VNClassifyImageRequest identifiers the app chose to
-    /// keep, e.g. "portrait", "landscape", "flower", "food", "night"); empty on Linux.
-    public var labels: [String: Float]
 
-    public init(faces: [NormalizedRect] = [], animals: [NormalizedRect] = [], labels: [String: Float] = [:]) {
+    public init(faces: [NormalizedRect] = [], animals: [NormalizedRect] = []) {
         self.faces = faces
         self.animals = animals
-        self.labels = labels
     }
 
     /// Missing lists decode as empty: hand-written hints for tooling name only what a photo has.
@@ -43,29 +39,42 @@ public struct SubjectHints: Sendable, Codable, Hashable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         faces = try c.decodeIfPresent([NormalizedRect].self, forKey: .faces) ?? []
         animals = try c.decodeIfPresent([NormalizedRect].self, forKey: .animals) ?? []
-        labels = try c.decodeIfPresent([String: Float].self, forKey: .labels) ?? [:]
     }
 }
 
-/// Features of a photo that the candidate rule reads (`AutoSettings.analyze`). Every value is
-/// quantized (to 3 decimals; the palette curve and noise, whose small differences the rule
-/// reads, to 4), so floating-point differences between devices cannot flip a decision.
+/// Features of a photo (`AutoSettings.analyze`). The candidate rule (`AutoSettings.center`)
+/// reads the palette curve, chromatic fraction, chroma spread, structure density, texture
+/// fraction, noise, subject coverage, mean importance and face coverage; the rest (the source
+/// size, smooth fraction, importance entropy, animal coverage) are diagnostics for `pbn
+/// suggest` and the tuning sheets. Every value is quantized (to 3 decimals; the palette curve
+/// and noise, whose small differences the rule reads, to 4), so floating-point differences
+/// between devices cannot flip a decision.
 public struct PhotoAnalysis: Sendable, Codable, Hashable {
     public var sourceWidth, sourceHeight: Int
     /// Weighted mean ΔE a k-paint palette reaches, for k in `paletteCurveKs` (8…64).
     public var paletteCurve: [Float]
-    public var chromaticFraction: Float      // pixels with chroma > 0.04 (less below lightness 0.5)
-    public var chromaSpread: Float           // std of chroma
-    public var structureDensity: Float       // busy pixels whose gradient is coherent (contours)
-    public var textureFraction: Float        // busy but incoherent pixels
-    public var smoothFraction: Float         // pixels inside gentle ramps (sky, skin, bokeh)
-    public var noise: Float                  // high-frequency energy in flat areas
-    public var subjectCoverage: Float        // importance > 0.6
-    public var importanceEntropy: Float      // 0 = one hotspot … 1 = flat (share of the frame it covers)
-    public var meanImportance: Float         // mean importance weight: how much of the frame the map protects
-    public var faceCoverage: Float           // from hints, 0 without
+    /// Pixels with chroma > 0.04 (less below lightness 0.5).
+    public var chromaticFraction: Float
+    /// Standard deviation of chroma.
+    public var chromaSpread: Float
+    /// Busy pixels whose gradient is coherent (contours).
+    public var structureDensity: Float
+    /// Busy but incoherent pixels.
+    public var textureFraction: Float
+    /// Pixels inside gentle ramps (sky, skin, bokeh).
+    public var smoothFraction: Float
+    /// High-frequency energy in flat areas.
+    public var noise: Float
+    /// Pixels with importance > 0.6.
+    public var subjectCoverage: Float
+    /// 0 = one hotspot … 1 = flat (the share of the frame the importance covers).
+    public var importanceEntropy: Float
+    /// Mean importance weight: how much of the frame the map protects.
+    public var meanImportance: Float
+    /// Area of the hints' faces inside the frame, 0 without hints.
+    public var faceCoverage: Float
+    /// Area of the hints' animals inside the frame, 0 without hints.
     public var animalCoverage: Float
-    public var labels: [String: Float]
 }
 
 /// The one preference Auto needs: how long a painting the user wants (Settings › Painting
@@ -124,7 +133,8 @@ public enum PaintingLength: String, Sendable, Codable, CaseIterable {
 /// One setting tried for a photo.
 public struct AutoCandidate: Sendable, Codable {
     public var settings: GenerationSettings
-    public var score: AutoScore?             // nil until run
+    /// nil until run.
+    public var score: AutoScore?
 
     public init(settings: GenerationSettings, score: AutoScore? = nil) {
         self.settings = settings
@@ -134,25 +144,32 @@ public struct AutoCandidate: Sendable, Codable {
 
 /// How one candidate's template measures against its photo (`AutoSettings.score`).
 public struct AutoScore: Sendable, Codable, Hashable {
-    public var fidelity: Float               // importance-weighted mean ΔE
+    /// Importance-weighted mean ΔE.
+    public var fidelity: Float
     public var fidelityP95: Float
     public var regions: Int
-    public var tinyRegions: Int              // under radius 3
-    public var bandRings: Int                // regions bounded mostly by weak boundaries (see W3)
+    /// Regions under `AutoSettings.tinyRadius`.
+    public var tinyRegions: Int
+    /// Regions bounded mostly by weak boundaries (`BandRings`).
+    public var bandRings: Int
     public var minLabelRoom: Float
     public var estimatedSeconds: Double
     /// The share of `total` paid for an estimated painting time outside the preference's
     /// `timeBand` (0 inside it), kept so the decision explains itself.
     public var bandPenalty: Float
-    public var total: Float                  // lower is better
+    /// Lower is better.
+    public var total: Float
 }
 
 /// The outcome of `AutoSettings.choose`: reproducible from the photo, its importance and
-/// hints and the preference, so it is never stored.
+/// hints, the preference, the line art and tuning and the candidate count, so it is never
+/// stored.
 public struct AutoDecision: Sendable, Codable {
     public var analysis: PhotoAnalysis
     public var preference: PaintingLength
-    public var candidates: [AutoCandidate]   // in evaluation order, scores filled in
-    public var winner: Int                   // index into candidates
+    /// In evaluation order, scores filled in.
+    public var candidates: [AutoCandidate]
+    /// Index into `candidates`.
+    public var winner: Int
     public var settings: GenerationSettings { candidates[winner].settings }
 }

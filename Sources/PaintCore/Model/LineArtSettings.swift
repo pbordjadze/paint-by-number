@@ -1,7 +1,8 @@
 /// How a template's lines are made (Settings › Advanced › Line Art).
 ///
-/// `coloringBook`, the default, splits the paint regions along a drawing found by a learned
-/// edge detector (the app's HED model, or an edge map handed to `pbn`) and is a coloring book:
+/// `coloringBook`, the default, splits the paint regions along a drawing found by learned
+/// detectors (the app's line-drawing model laid over its HED contour map, or the maps handed
+/// to `pbn`; see `Detector`) and is a coloring book:
 /// the drawing alone is drawn, in full ink at every zoom, the paint boundaries inside an
 /// outline are never lines (the areas inside it are told apart by their numbers, and by the
 /// highlight of the selected color), the drawing stays over the paint (`TemplateLineArt.Style`)
@@ -13,8 +14,8 @@
 /// the template. How the layers are drawn is the app's `LineAppearance`.
 ///
 /// Each style has defaults of its own for the thresholds, line lengths and smoothing
-/// (`init(style:)`, `changing(to:)`): the coloring book's are the settings the owner's own
-/// books were made with, the layered ones the research's.
+/// (`init(style:)`, `changing(to:)`): the coloring book's are the ones measured in
+/// `docs/coloring-book.md`, the layered ones the research's.
 public struct LineArtSettings: Sendable, Hashable, Codable {
     public enum Style: String, Sendable, Codable, CaseIterable {
         case classic, layered, coloringBook
@@ -56,11 +57,14 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
 
     public var style: Style
     public var detector: Detector
-    /// Edge strength (0...1 of the detector's output) from which a line is an outline. A line
-    /// keeps its layer along a stretch that stays above 60 % of the threshold once it has held
-    /// the threshold for a few pixels. Where lines crowd (a shell's pattern, rock strata, a
-    /// truss) the threshold rises toward 1, except for long contours, so busy texture stays
-    /// detail. HED saturates near 1 on most contours, hence the high default.
+    /// Edge strength (0...1) from which a line is an outline, read off the contour map
+    /// (`LineArtInput.contours`) when there is one, else the stroke's own strength in the edge
+    /// map; `normalized` keeps it at or above `detailThreshold`. A line keeps its layer along a
+    /// stretch that stays above 60 % of the threshold once it has held the threshold for a few
+    /// pixels. Where lines crowd (a shell's pattern, rock strata, a truss) the threshold rises
+    /// toward 1, except for long contours, so busy texture stays detail. HED saturates near 1
+    /// on most contours, hence layered's high default; the coloring book's 0.6 equals its
+    /// detail threshold.
     public var outlineThreshold: Float
     /// Edge strength from which a line is detail (stretches above half of it, once reached).
     public var detailThreshold: Float
@@ -94,10 +98,11 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     /// cells join across everything but silhouettes and the fur, creases and strands draw inside
     /// their cells; its longer shortest line and gap closing drop specks and close cells, and its
     /// curves flow (measured in `docs/coloring-book.md` and `docs/presets/README.md`). The
-    /// layered defaults are the research's HED thresholds (`research/lineart/results_layers.md`),
-    /// outlines a little higher and thinned where lines crowd, as the owner found the research's
-    /// outlines too strong; texture lines join same-paint cells and color cells stay ("we want
-    /// more colors"). Classic lines read none of them and carry the layered values.
+    /// layered defaults are the research's HED thresholds (`research/lineart/results_layers.md`
+    /// in the `archive/lineart-research` tag), outlines a little higher and thinned where lines
+    /// crowd, because the research's outlines read too strong in the app; texture lines join
+    /// same-paint cells and color cells stay. Classic lines read none of them and carry the
+    /// layered values.
     public init(
         style: Style = .coloringBook, detector: Detector = .drawingAndContours,
         outlineThreshold: Float? = nil, detailThreshold: Float? = nil, textureThreshold: Float? = nil,

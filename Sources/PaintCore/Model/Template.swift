@@ -371,8 +371,6 @@ public struct FillMesh: Sendable, Equatable {
 // MARK: - Convenience accessors
 
 extension Template {
-    public var regionCount: Int { regions.count }
-
     /// Number of regions per palette color.
     public var regionCountsByColor: [Int] {
         var counts = [Int](repeating: 0, count: palette.count)

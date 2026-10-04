@@ -29,7 +29,8 @@ public struct TemplateGenerator: Sendable {
     ///   - image: Source photo, any size (it is area-resampled to the working size).
     ///   - importance: Optional per-pixel saliency in 0...1 at any resolution (e.g. a
     ///     subject mask from Vision). Important areas receive more colors and detail.
-    ///   - lineArt: The edge map (and eyes) layered and coloring-book line art draw from.
+    ///   - lineArt: The edge map, eyes, subject silhouettes and contour map (`LineArtInput`)
+    ///     layered and coloring-book line art draw from.
     ///     Ignored by classic settings; settings that need it generate a classic template
     ///     without it (a coloring book's over its flatter paint).
     ///   - cancel: Polled between and within stages.
@@ -76,6 +77,7 @@ public struct TemplateGenerator: Sendable {
             try cancel.throwIfCancelled()
             progress?(0.7)
         }
+        // Drops the canvas-sized importance map before the vectorizer's own large buffers.
         weights = []
 
         var vector = try clock.measure("vectorize") {

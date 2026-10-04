@@ -303,12 +303,14 @@ struct TemplateCodingTests {
             }
             return data
         }
-        let paletteCount = 17
-        let pointsCount = paletteCount + 4 + 24 * t.palette.count + 4 + 52 * t.regions.count
-        #expect(patched(at: pointsCount, UInt32(t.points.count)) == fixture)
+        // Byte offsets of the palette's and the points' counts: magic, version, width, height, color space.
+        let paletteCountOffset = 4 + 4 + 4 + 4 + 1
+        let pointsCountOffset = paletteCountOffset + 4 + 24 * t.palette.count + 4 + 52 * t.regions.count
+        #expect(patched(at: pointsCountOffset, UInt32(t.points.count)) == fixture)
 
-        for (name, data) in [("palette", patched(at: paletteCount, 0xFFFF_FFFF)), ("points", patched(at: pointsCount, 0xFFFF_FFFF)),
-                             ("points one too many", patched(at: pointsCount, UInt32(t.points.count + 1)))] {
+        for (name, data) in [("palette", patched(at: paletteCountOffset, 0xFFFF_FFFF)),
+                             ("points", patched(at: pointsCountOffset, 0xFFFF_FFFF)),
+                             ("points one too many", patched(at: pointsCountOffset, UInt32(t.points.count + 1)))] {
             let error = #expect(throws: Template.CodingError.self, "\(name)") { try Template(encoded: data) }
             #expect(error == .truncated, "\(name)")
         }
@@ -319,11 +321,5 @@ struct TemplateCodingTests {
         if case .corrupt = error {} else { Issue.record("\(String(describing: error))") }
         let tooLarge = #expect(throws: Template.CodingError.self) { try Template(encoded: patched(at: 8, 0x7FFF_FFFF, 0x7FFF_FFFF)) }
         #expect(tooLarge == .corrupt("size"))
-    }
-
-    @Test func emptyBoundsHaveNoSize() {
-        #expect(PixelBounds.empty.width < 0)
-        #expect(PixelBounds.empty.height < 0)
-        #expect(PixelBounds.empty.isEmpty)
     }
 }

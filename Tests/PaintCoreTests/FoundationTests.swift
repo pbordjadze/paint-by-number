@@ -186,4 +186,10 @@ struct FoundationTests {
         ]
         for data in rejected { #expect(throws: Netpbm.Error.self) { try Netpbm.read(data) } }
     }
+
+    @Test func emptyBoundsHaveNoSize() {
+        #expect(PixelBounds.empty.width < 0)
+        #expect(PixelBounds.empty.height < 0)
+        #expect(PixelBounds.empty.isEmpty)
+    }
 }

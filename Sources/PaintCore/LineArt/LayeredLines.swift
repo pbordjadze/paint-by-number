@@ -1,7 +1,7 @@
 import Foundation
 
-/// Layered line art: an edge map (and eyes) turned into cells bounded by lines, each line in
-/// a `LineLayer` by its strength. `LineArtSettings` holds every user-facing knob.
+/// Layered line art: an edge map (with eyes, subjects and contours) turned into cells bounded
+/// by lines, each line in a `LineLayer` by its strength. `LineArtSettings` holds every user-facing knob.
 ///
 /// Stages (timed as `lineArt.*`):
 /// 1. `detect`: the edge map resampled to the working size, its ridges, hysteresis and
@@ -15,9 +15,8 @@ import Foundation
 ///    stretches below texture are cut out. Eyes (`outlineEyes`) replace the lines inside them
 ///    with their contours and irises as outlines and promote the lines around them; the
 ///    subjects' silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
-///    (`LineLayering.addObjects`). Free ends
-///    reach for the nearest line, paint boundary or frame (`gapBridging` × 1.6 / 1.2 / 1 by
-///    layer), so open strokes close cells.
+///    (`LineLayering.addObjects`). Free ends reach for the nearest line, paint boundary or
+///    frame (`gapBridging` × 1.6 / 1.2 / 1 by layer), so open strokes close cells.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
 ///    paints are within two palette steps.
@@ -31,6 +30,14 @@ import Foundation
 /// After vectorizing, `annotate` gives each boundary edge the layer of the line along it
 /// (`color` where only the paint changes) and a weight, and stamps the template's line art
 /// with its style.
+///
+/// Lengths are canvas units (working pixels). `LineLayering.longOutline`, `objectNear`,
+/// `objectMinimumStretch` and `LineDetection.clutterWindow` are given for a 1500-px canvas and
+/// scale with its long side; the tracing reaches (`popBubbles` perimeter, `pruneSpurs`,
+/// `pruneFragments`, `extendToFrame`) and the ridge Hessian scale with `unit`, the working
+/// pixels per edge-map pixel (at least 1; `LineDetection.ridges` clamps it);
+/// `minimumStrokeLength`, `gapBridging`, `minimumRun`, `trimNear`, `trimMinimum`,
+/// `contourReach`, `annotateNear` and the `lineSmoothing` sigma do not scale.
 ///
 /// Deterministic: everything is sequential, per pixel, or integer counts summed across
 /// bands, with fixed tie-breaks, so the same edge map and settings give the same template on
