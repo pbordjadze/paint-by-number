@@ -77,7 +77,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Settings › Advanced › Line Appearance: how a layered template's lines draw at each zoom.
     /// The next frame uses it, so a change shows at once; classic templates ignore it.
     var lineAppearance = LineAppearance.default {
-        didSet { if lineAppearance != oldValue, scene?.isLayered == true { requestRender() } }
+        didSet { if lineAppearance != oldValue, scene?.lineArtStyle != nil { requestRender() } }
     }
 
     private let template: Template
@@ -207,7 +207,7 @@ final class CanvasView: UIView, PaintingCanvas {
         accessibilityIdentifier = "canvas"
         accessibilityCustomActions = accessibilityActionList
         accessibilityCustomRotors = [areasRotor]
-        registerForTraitChanges([UITraitUserInterfaceStyle.self], action: #selector(appearanceChanged))
+        registerForTraitChanges([UITraitUserInterfaceStyle.self], action: #selector(paperChanged))
         tracePaper()
         session.canvas = self
         session.onEvent { [weak self] event in self?.celebrate(event) }
@@ -349,16 +349,13 @@ final class CanvasView: UIView, PaintingCanvas {
         cameraDidSettle()
     }
 
-    @objc private func appearanceChanged() {
-        paperChanged()
-    }
-
     /// The paper, backdrop and ink the next frame draws with.
-    var canvasPalette: CanvasPalette {
+    private var canvasPalette: CanvasPalette {
         .resolve(paperAppearance, interfaceIsDark: traitCollection.userInterfaceStyle == .dark)
     }
 
-    private func paperChanged() {
+    /// The Paper preference or the system appearance changed.
+    @objc private func paperChanged() {
         tracePaper()
         requestRender()
     }
@@ -1092,9 +1089,8 @@ final class CanvasView: UIView, PaintingCanvas {
         let a = canvasPoint(forView: inner.origin)
         let b = canvasPoint(forView: CGPoint(x: inner.maxX, y: inner.maxY))
         let visible = CGRect(x: CGFloat(a.x), y: CGFloat(a.y), width: CGFloat(b.x - a.x), height: CGFloat(b.y - a.y))
-        let candidates = regionsByColor[color].filter { !session.isPainted($0) }
         let regions = CanvasAccessibility.visibleAreas(
-            candidates, anchors: anchors, visible: visible, center: visibleCenter, rowHeight: Float(44 / camera.zoom))
+            unpaintedOfSelectedColor(), anchors: anchors, visible: visible, center: visibleCenter, rowHeight: Float(44 / camera.zoom))
         guard !regions.isEmpty else {
             areaElements = [:]
             return [configuredPlaceholder(frame: area)]

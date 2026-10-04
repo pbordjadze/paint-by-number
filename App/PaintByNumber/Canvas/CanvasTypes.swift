@@ -226,11 +226,9 @@ nonisolated struct CanvasPalette: Sendable {
         rim: CanvasColor.linearP3(sRGB: SIMD3(0.812, 0.780, 0.827)), rimOpacity: 0.3,
         accentFloor: 0.35, hatchCeiling: 1)
 
-    static func appearance(dark: Bool) -> CanvasPalette { dark ? .dark : .light }
-
     /// The palette for the Paper preference under the system appearance.
     static func resolve(_ paper: PaperAppearance, interfaceIsDark: Bool) -> CanvasPalette {
-        paper.usesDarkPaper(interfaceIsDark: interfaceIsDark) ? .darkPaper : appearance(dark: interfaceIsDark)
+        paper.usesDarkPaper(interfaceIsDark: interfaceIsDark) ? .darkPaper : interfaceIsDark ? .dark : .light
     }
 
     /// `paint` (linear P3) as an accent on this paper: unchanged on light paper, lightened on

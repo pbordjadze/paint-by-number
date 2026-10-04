@@ -22,9 +22,8 @@ nonisolated final class CanvasScene: @unchecked Sendable {
     let lineRegions: any MTLBuffer      // uint2 (left, right) per line (edge, then stroke)
     let lineStyles: any MTLBuffer       // float2 (layer, weight) per line
     let segmentCount: Int
-    /// The template has line art: layered (`CanvasUniforms.setLines` with a `LineAppearance`) or
-    /// a coloring book (`setColoringBookLines`), per `lineArtStyle`.
-    let isLayered: Bool
+    /// How the template's line art is drawn: layered (`CanvasUniforms.setLines` with a
+    /// `LineAppearance`), a coloring book (`setColoringBookLines`), or nil for classic lines.
     let lineArtStyle: TemplateLineArt.Style?
 
     let glyphs: any MTLBuffer
@@ -102,7 +101,6 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         self.lineRegions = lineRegions
         self.lineStyles = lineStyles
         segmentCount = lines.segments.count
-        isLayered = lines.isLayered
         lineArtStyle = lines.lineArtStyle
         self.glyphs = glyphs
         glyphCount = glyphList.count

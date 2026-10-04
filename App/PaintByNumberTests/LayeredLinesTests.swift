@@ -122,7 +122,7 @@ struct LayeredLinesTests {
     @Test func classicGeometryIsTheEdgesAsEver() {
         let t = CanvasRenderTests.template
         let g = OutlineGeometry(t)
-        #expect(!g.isLayered && g.points == t.points)
+        #expect(g.lineArtStyle == nil && g.points == t.points)
         var segments: [SIMD2<UInt32>] = []
         for (e, edge) in t.edges.enumerated() where edge.pointCount >= 2 {
             for k in 0..<(edge.pointCount - 1) { segments.append(SIMD2(edge.pointStart + k, UInt32(e))) }
@@ -136,7 +136,7 @@ struct LayeredLinesTests {
         let t = Self.mosaic
         let art = try #require(t.lineArt)
         let g = OutlineGeometry(t)
-        #expect(g.isLayered)
+        #expect(g.lineArtStyle != nil)
         #expect(g.points == t.points + art.strokePoints)
         #expect(g.lineRegions.count == t.edges.count + art.strokes.count)
         let weights = DrawableLineArt.weights(
@@ -172,7 +172,7 @@ struct LayeredLinesTests {
         // Line data that doesn't match the edges draws the template as classic.
         art.edgeWeights.removeLast()
         t.lineArt = art
-        #expect(DrawableLineArt(t) == nil && !OutlineGeometry(t).isLayered)
+        #expect(DrawableLineArt(t) == nil && OutlineGeometry(t).lineArtStyle == nil)
     }
 
     // MARK: Uniforms
@@ -187,12 +187,12 @@ struct LayeredLinesTests {
 
         let context = try #require(RenderContext.shared)
         let classic = try #require(CanvasScene(template: CanvasRenderTests.template, context: context))
-        #expect(!classic.isLayered)
+        #expect(classic.lineArtStyle == nil)
         let c = CanvasSnapshot.uniforms(scene: classic, width: 240, height: 320, options: .preview)
         #expect(c.lineAlpha == SIMD4(repeating: c.ink.w) && c.lineWidth == SIMD4(repeating: c.outline.x))
 
         let layered = try #require(CanvasScene(template: Self.mosaic, context: context))
-        #expect(layered.isLayered && layered.segmentCount > classic.segmentCount)
+        #expect(layered.lineArtStyle != nil && layered.segmentCount > classic.segmentCount)
         var options = CanvasSnapshot.Options.preview
         var kept = LineAppearance.default
         kept.detail.painted = 0.4
@@ -519,7 +519,7 @@ struct LayeredLinesTests {
         #expect(u.lineAlpha == SIMD4(1, 1, 1, 0) && u.lineWidth == SIMD4(4, 4, 4, 0) && u.lineMode == SIMD4(0, 1, 0, 0))
         let context = try #require(RenderContext.shared)
         let scene = try #require(CanvasScene(template: Self.book, context: context))
-        #expect(scene.isLayered && scene.lineArtStyle == .coloringBook)
+        #expect(scene.lineArtStyle == .coloringBook)
         #expect(try #require(CanvasScene(template: Self.mosaic, context: context)).lineArtStyle == .layered)
         #expect(try #require(CanvasScene(template: CanvasRenderTests.template, context: context)).lineArtStyle == nil)
         var options = CanvasSnapshot.Options.preview

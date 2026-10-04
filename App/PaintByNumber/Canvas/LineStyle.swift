@@ -160,8 +160,6 @@ nonisolated struct OutlineGeometry {
     let lineRegions: [SIMD2<UInt32>]
     /// (layer, width factor) per line.
     let lineStyles: [SIMD2<Float>]
-    /// True when the template has line art (drawn in layers, or as a coloring book).
-    let isLayered: Bool
     /// How the template's line art is drawn; nil for classic templates.
     let lineArtStyle: TemplateLineArt.Style?
 
@@ -195,7 +193,6 @@ nonisolated struct OutlineGeometry {
         segments = segs
         lineRegions = regions
         lineStyles = styles
-        isLayered = lines != nil
         lineArtStyle = lines?.style
     }
 }
