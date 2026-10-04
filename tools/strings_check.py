@@ -58,7 +58,6 @@ LIBRARY = "App/PaintByNumber/Resources/Samples/library.json"
 
 # Developer tooling compiled only into Debug builds: its text is never shown to a user.
 DEBUG_ONLY_FILES = {
-    "Features/PipelineCheckView.swift",
     "Features/Paint/PaintDemoView.swift",
     "App/DemoMode.swift",
     "App/ShellDemo.swift",
