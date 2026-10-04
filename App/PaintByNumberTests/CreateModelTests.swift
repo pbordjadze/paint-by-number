@@ -159,7 +159,6 @@ struct CreateModelTests {
         #expect(model.phase == .failed(CreateModel.CreateError.cameraCapture.localizedDescription))
         #expect(model.source == nil && model.preview == nil && model.stats == nil)
         #expect(model.decision == nil && model.settingsOrigin == nil)
-        #expect(!model.isWorking)
         try await Task.sleep(for: .milliseconds(300))
         #expect(model.preview == nil)
     }

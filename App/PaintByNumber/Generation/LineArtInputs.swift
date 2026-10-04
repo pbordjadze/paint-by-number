@@ -56,7 +56,7 @@ nonisolated enum LineArtInputs {
             return nil
         }
         do {
-            if cached { return try await cache.maps(for: image).input(for: settings.detector) }
+            if cached { return try await make(for: image, settings: settings) }
             return try await compute(for: image, detector: settings.detector)
         } catch is CancellationError {
             throw CancellationError()

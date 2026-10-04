@@ -111,9 +111,7 @@ nonisolated enum PDFExporter {
 
     /// `nicknames` (index-aligned with the palette, nil where a color has none) head the color key
     /// entries, with the plain color name below them; without them the plain name heads each entry.
-    static func document(
-        for t: Template, title: String, paper: Paper = .default(for: Locale.current.region), nicknames: [String?] = []
-    ) -> Data {
+    static func document(for t: Template, title: String, paper: Paper, nicknames: [String?] = []) -> Data {
         let data = NSMutableData()
         var box = pageBox(for: t, paper: paper)
         let info: [CFString: Any] = [kCGPDFContextTitle: title, kCGPDFContextCreator: "Paint by Moonlight"]

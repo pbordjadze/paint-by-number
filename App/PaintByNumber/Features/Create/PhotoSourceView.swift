@@ -32,7 +32,7 @@ struct PhotoSourceView: View {
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
     @ScaledMetric(relativeTo: .subheadline) private var tileMinimumWidth: CGFloat = 150
 
-    init(model: CreateModel, initialPane: Pane = .photos, onClose: @escaping () -> Void, onPicked: @escaping () -> Void) {
+    init(model: CreateModel, initialPane: Pane, onClose: @escaping () -> Void, onPicked: @escaping () -> Void) {
         self.model = model
         self.onClose = onClose
         self.onPicked = onPicked

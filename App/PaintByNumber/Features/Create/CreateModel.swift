@@ -155,13 +155,6 @@ final class CreateModel {
         ).normalized
     }
 
-    var isWorking: Bool {
-        switch phase {
-        case .loading, .analyzing, .suggesting, .generating: true
-        default: false
-        }
-    }
-
     /// The photo's settings are still being chosen: the sliders wait for them.
     var isChoosingSettings: Bool {
         switch phase {
