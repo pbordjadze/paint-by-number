@@ -242,6 +242,7 @@ final class CreateFlowTests: XCTestCase {
     /// sheet dismisses, which must not stall either transition.
     @MainActor
     func testBrowseAllPickOpensPreview() throws {
+        try XCTSkipIf(isPad, "The system picker sheet's photos aren't reachable on the iPad simulator (no fully visible photo)")
         let (app, picker) = launchToPicker("create")
         XCTAssertTrue(picker.exists, "No library picker")
         let sheet = settledSheetDetector(app)
