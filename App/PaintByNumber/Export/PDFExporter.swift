@@ -205,7 +205,7 @@ nonisolated enum PDFExporter {
     }
 
     /// The part of a page below its header, in page coordinates.
-    private static func bodyRect(_ box: CGRect) -> CGRect {
+    static func bodyRect(_ box: CGRect) -> CGRect {
         body(of: box.insetBy(dx: margin, dy: margin))
     }
 

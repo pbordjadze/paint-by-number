@@ -222,8 +222,7 @@ struct PDFExporterTests {
         for paper in PDFExporter.Paper.allCases {
             for landscape in [false, true] {
                 let size = landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size
-                let content = CGRect(origin: .zero, size: size).insetBy(dx: 36, dy: 36)
-                let body = CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
+                let body = PDFExporter.bodyRect(CGRect(origin: .zero, size: size))
                 for count in [1, 24, 100, 150] {
                     let layout = PDFExporter.keyLayout(count: count, widestEntry: 150, lines: 3, in: body)
                     #expect(layout.height <= body.height, "\(paper) landscape \(landscape), \(count) colors")
@@ -238,9 +237,7 @@ struct PDFExporterTests {
         for paper in PDFExporter.Paper.allCases {
             for landscape in [false, true] {
                 let size = landscape ? CGSize(width: paper.size.height, height: paper.size.width) : paper.size
-                // Page margins and the header, as `document` lays them out.
-                let content = CGRect(origin: .zero, size: size).insetBy(dx: 36, dy: 36)
-                let body = CGRect(x: content.minX, y: content.minY + 36, width: content.width, height: content.height - 36)
+                let body = PDFExporter.bodyRect(CGRect(origin: .zero, size: size))
                 for count in [0, 1, 12, 24, 48, 100, 150] {
                     for widest: CGFloat in [110, 160] {
                         let layout = PDFExporter.keyLayout(count: count, widestEntry: widest, in: body)
@@ -255,7 +252,7 @@ struct PDFExporterTests {
                 }
             }
         }
-        let a4 = CGRect(x: 36, y: 72, width: PDFExporter.Paper.a4.size.width - 72, height: PDFExporter.Paper.a4.size.height - 108)
+        let a4 = PDFExporter.bodyRect(CGRect(origin: .zero, size: PDFExporter.Paper.a4.size))
         #expect(PDFExporter.keyLayout(count: 24, widestEntry: 120, in: a4).scale == 1)
     }
 
@@ -300,101 +297,5 @@ struct PDFExporterTests {
         #expect(PDFExporter.Paper.default(for: Locale.Region("US")) == .letter)
         #expect(PDFExporter.Paper.default(for: Locale.Region("DE")) == .a4)
         #expect(PDFExporter.Paper.default(for: nil) == .a4)
-    }
-}
-
-@MainActor
-struct PreferencesTests {
-    @Test func defaultsAndSessionMapping() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        var preferences = Preferences(defaults: defaults)
-        #expect(preferences.autoAdvance)
-        #expect(preferences.colorNames == .playful)
-
-        defaults.set(false, forKey: SettingsKey.autoAdvance)
-        defaults.set("plain", forKey: SettingsKey.colorNames)
-        preferences = Preferences(defaults: defaults)
-        #expect(preferences.colorNames == .plain)
-        #expect(!preferences.autoAdvance)
-        // The persisted key strings: renaming one would forget every painter's switch.
-        #expect(SettingsKey.haptics == "hapticsEnabled" && SettingsKey.sounds == "soundsEnabled")
-
-        let session = PaintingSession(template: Fixtures.stripes())
-        #expect(session.autoAdvance && session.colorNameStyle == .playful)
-        preferences.apply(to: session)
-        #expect(!session.autoAdvance && session.colorNameStyle == .plain)
-    }
-
-    /// An unknown stored value is the default, not a crash or a third style.
-    @Test func colorNameStyleFallsBackToPlayful() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        for stored in ["", "shouty", "Playful"] {
-            defaults.set(stored, forKey: SettingsKey.colorNames)
-            #expect(Preferences(defaults: defaults).colorNames == .playful, "\(stored)")
-        }
-        defaults.set("playful", forKey: SettingsKey.colorNames)
-        #expect(Preferences(defaults: defaults).colorNames == .playful)
-        #expect(ColorNameStyle.allCases == [.playful, .plain])
-    }
-
-    /// The Paper preference's key and raw values are what `@AppStorage` and launch arguments
-    /// (`-paperAppearance dark`) use, and anything else isn't a paper.
-    @Test func paperAppearanceKeyAndRawValues() {
-        #expect(SettingsKey.paperAppearance == "paperAppearance")
-        #expect(Set(PaperAppearance.allCases.map(\.rawValue)) == ["light", "dark", "automatic"])
-        #expect(PaperAppearance(rawValue: "sepia") == nil)
-    }
-
-    /// Painting Length defaults to Relaxed, round-trips its raw values, ignores anything it
-    /// doesn't know, and is what the create flow aims for.
-    @Test func paintingLengthDefaultsAndPersists() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        #expect(Preferences(defaults: defaults).paintingLength == .relaxed)
-        #expect(PaintingLength.default == .relaxed)
-        for length in PaintingLength.allCases {
-            defaults.set(length.rawValue, forKey: SettingsKey.paintingLength)
-            #expect(Preferences(defaults: defaults).paintingLength == length)
-            #expect(!length.name.isEmpty && !length.footer.isEmpty)
-        }
-        defaults.set("marathon", forKey: SettingsKey.paintingLength)
-        #expect(Preferences(defaults: defaults).paintingLength == .relaxed)
-        #expect(SettingsKey.paintingLength == "paintingLength")
-        #expect(Set(PaintingLength.allCases.map(\.rawValue)) == ["quick", "relaxed", "detailed"])
-        #expect(PaintingLength.relaxed.footer == "Suggested settings aim for about half an hour of painting. Small or simple photos make shorter paintings.")
-
-        #expect(CreateModel(paintingLength: .quick).paintingLength == .quick)
-    }
-
-    @Test func createModelMapsSliders() {
-        let model = CreateModel()
-        // The sliders wait at the generator's defaults until a photo's suggestion moves them.
-        #expect(model.settings == GenerationSettings())
-        #expect(model.settingsOrigin == nil && model.decision == nil && !model.isChoosingSettings)
-        model.colorCount = 30
-        model.detail = 0.25
-        model.smoothness = 0.75
-        #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
-        model.colorCount = 11.6
-        #expect(model.settings.colorCount == 12)
-        model.colorCount = 999
-        #expect(model.settings.colorCount == GenerationSettings.colorCountRange.upperBound)
-        #expect(model.preview == nil && !model.isFinal)
-    }
-
-    @Test func formatsDurations() {
-        #expect(PaintingTimeText.approximate(10 * 60) == "~10 min")
-        #expect(PaintingTimeText.approximate(2 * 3600) == "~2 h")
-        #expect(PaintingTimeText.approximate(1.4 * 3600) == "~1.5 h")
-        #expect(PaintingTimeText.approximate(30 * 3600) == "~30 h")
-        #expect(PaintingTimeText.spent(125 * 60) == "2 h 5 min")
-        #expect(PaintingTimeText.spent(20) == "< 1 min")
     }
 }

@@ -182,4 +182,20 @@ struct CreateModelTests {
         #expect(model.resolvedTitle == model.defaultTitle)
         model.cancelAll()
     }
+
+    @Test func createModelMapsSliders() {
+        let model = CreateModel()
+        // The sliders wait at the generator's defaults until a photo's suggestion moves them.
+        #expect(model.settings == GenerationSettings())
+        #expect(model.settingsOrigin == nil && model.decision == nil && !model.isChoosingSettings)
+        model.colorCount = 30
+        model.detail = 0.25
+        model.smoothness = 0.75
+        #expect(model.settings == GenerationSettings(colorCount: 30, detail: 0.25, smoothness: 0.75))
+        model.colorCount = 11.6
+        #expect(model.settings.colorCount == 12)
+        model.colorCount = 999
+        #expect(model.settings.colorCount == GenerationSettings.colorCountRange.upperBound)
+        #expect(model.preview == nil && !model.isFinal)
+    }
 }
