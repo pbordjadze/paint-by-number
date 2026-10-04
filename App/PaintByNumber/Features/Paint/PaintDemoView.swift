@@ -6,7 +6,8 @@ import os
 import simd
 
 /// Demo scenarios for the painting screen, deterministic for CI screenshots. The template is
-/// generated from a bundled photo:
+/// generated from a bundled photo, which the canvas's photo loader also gets, so the top bar is
+/// the one users see:
 ///
 /// - `paint`: fresh canvas, fit to screen
 /// - `paint-progress`: ~55 % painted color by color, the color in progress selected
@@ -20,8 +21,6 @@ import simd
 /// - `paint-photo`: the source photo shown over a painting in progress
 /// - `paint-tip`: a fresh canvas with the first tip ("Tap to Paint") at the selected swatch;
 ///   the only scenario that shows tips (`PaintTips.configure`)
-///
-/// Photo-based scenarios have the photo loader, so the top bar is the one users see.
 /// - `paint-ax`: `paint-progress`, showing the selected color's name
 /// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
 /// - `paint-names-plain`: `paint-progress` under Settings › Color Names › Plain (structured names only)
