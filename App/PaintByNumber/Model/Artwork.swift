@@ -28,7 +28,8 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     var activeSeconds: Double
     /// Bumped whenever `thumbnail.png` is rewritten; part of the image cache key.
     var thumbnailVersion: Int
-    /// The bundled sample the artwork was made from, if any.
+    /// The library picture the artwork was made from (`Sample.id`), if any. It may name one the
+    /// app no longer has, which `Sample.named` doesn't resolve.
     var sampleName: String?
     var format: Int
     /// `Template.pipelineVersion` of the current template (0 = unknown).

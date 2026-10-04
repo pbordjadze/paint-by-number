@@ -7,7 +7,7 @@ import Testing
 @testable import PaintByNumber
 
 /// The picture library: `Resources/Samples/library.json`, the catalog's titles and the bundled
-/// JPEGs agree, and the retired samples stay bundled for the paintings that name them.
+/// JPEGs agree.
 struct SampleLibraryTests {
     /// The bundled `library.json`, read without `Sample`'s decoder.
     private static func records() throws -> [[String: Any]] {
@@ -37,7 +37,7 @@ struct SampleLibraryTests {
     }
 
     /// A record carries everything the license audit relies on, under an id that is a flat
-    /// file name; no picture is listed twice and no retired sample is listed at all.
+    /// file name; no picture is listed twice.
     @Test func recordsAreComplete() throws {
         let fields = ["id", "kind", "title", "creator", "year", "credit", "license", "source", "image", "evidence",
                       "retrieved", "crop", "sha256"]
@@ -56,7 +56,6 @@ struct SampleLibraryTests {
         }
         let ids = records.compactMap { $0["id"] as? String }
         #expect(Set(ids).count == ids.count, "A picture is listed twice")
-        #expect(Set(ids).isDisjoint(with: Sample.retired.map(\.id)), "A retired sample is listed")
     }
 
     /// Each listed picture ships as the file its record describes: the checksum matches, and
@@ -99,16 +98,9 @@ struct SampleLibraryTests {
         #expect(paintings == Sample.all.filter { paintings.contains($0) })
     }
 
-    /// The six former samples stay bundled and resolve by name (saved paintings name them), but
-    /// nothing records where they come from, so they are not offered.
-    @Test func retiredSamplesStayBundledButAreNotOffered() {
-        #expect(Sample.retired.map(\.id) == ["parrots", "hibiscus", "lighthouse", "barn", "espresso", "regatta"])
-        for sample in Sample.retired {
-            #expect(sample.url != nil, "\(sample.id).jpg isn't bundled")
-            #expect(sample.provenance == nil)
-            #expect(Sample.named(sample.id) == sample)
-            #expect(!Sample.all.contains { $0.id == sample.id })
-        }
+    /// Saved paintings name their picture by id (`Artwork.sampleName`): every library picture
+    /// resolves by its own, and nothing else does.
+    @Test func picturesResolveByTheirIds() {
         for sample in Sample.all {
             #expect(Sample.named(sample.id) == sample)
         }
@@ -137,26 +129,24 @@ struct SampleLibraryTests {
     }
 }
 
-/// Paintings made from a bundled picture keep regenerating whatever the library offers: when
-/// no `source.jpg` was stored, `sampleName` still finds the photo, retired or not.
+/// Paintings made from a library picture regenerate from it when no `source.jpg` was stored;
+/// one whose picture the app no longer has can't be regenerated, and says so up front.
 @MainActor
 struct SampleRegenerationTests {
     let root = Fixtures.temporaryDirectory()
 
-    @Test func paintingsWithoutAStoredPhotoRegenerateFromTheBundledPicture() async throws {
-        // Regeneration finds a painting's photo by its `sampleName`; every bundled picture
+    @Test func paintingsWithoutAStoredPhotoRegenerateFromTheLibraryPicture() async throws {
+        // Regeneration finds a painting's photo by its `sampleName`; every library picture
         // resolves (SampleLibraryTests checks the files themselves).
-        for sample in Sample.retired + Sample.all {
+        for sample in Sample.all {
             #expect(Sample.named(sample.id)?.url != nil, "\(sample.id) doesn't resolve to a bundled file")
         }
-        // Stored artworks for two retired samples and a library picture: storing one per picture
-        // (44 and counting) would load the parallel test run enough to push its timing tests
-        // over their budgets.
+        // Stored artworks for two of them: storing one per picture (44 and counting) would load
+        // the parallel test run enough to push its timing tests over their budgets.
         let library = Library(store: ArtworkStore(root: root))
-        let picture = try #require(Sample.all.first)
-        let espressoSample = try #require(Sample.named("espresso"))
         var artworks: [Artwork] = []
-        for sample in [Sample.retired[0], espressoSample, picture] {
+        for id in ["great-wave", "morning-glories"] {
+            let sample = try #require(Sample.named(id))
             artworks.append(try await library.create(ArtworkDraft(
                 title: sample.title, template: Fixtures.stripes(), settings: GenerationSettings(colorCount: 12),
                 photo: nil, sampleName: sample.id, progress: nil)))
@@ -168,10 +158,37 @@ struct SampleRegenerationTests {
             #expect(photo.width > 0 && photo.height > 0)
         }
 
-        // End to end on the smallest retired photo.
-        let espresso = try #require(artworks.first { $0.sampleName == "espresso" })
-        let document = try await library.regenerate(artwork: espresso.id, settings: GenerationSettings(colorCount: 12, detail: 0))
+        // End to end on one of them.
+        let glories = try #require(artworks.last)
+        let document = try await library.regenerate(artwork: glories.id, settings: GenerationSettings(colorCount: 12, detail: 0))
         #expect(document.template.regions.count > Fixtures.stripes().regions.count)
-        #expect(library.artwork(with: espresso.id)?.regionCount == document.template.regions.count)
+        #expect(library.artwork(with: glories.id)?.regionCount == document.template.regions.count)
+    }
+
+    /// "parrots" is one of the six photos the app shipped before its library, which saved
+    /// paintings may name. Without a stored photo such a painting has nothing to regenerate
+    /// from: damaged, it opens on the recovery screen without the offer, and regenerating
+    /// anyway fails without touching it.
+    @Test func paintingsOfAPictureTheAppNoLongerHasCantRegenerate() async throws {
+        let library = Library(store: ArtworkStore(root: root))
+        let artwork = try await library.create(ArtworkDraft(
+            title: "Parrots", template: Fixtures.stripes(), settings: GenerationSettings(colorCount: 12),
+            photo: nil, sampleName: "parrots", progress: nil))
+        #expect(Sample.named("parrots") == nil)
+        #expect(!ArtworkFactory.canRegenerate(artwork, store: library.store))
+        #expect(throws: ArtworkFactory.FactoryError.sourceUnavailable) {
+            try ArtworkFactory.sourcePhoto(of: artwork, in: library.store)
+        }
+
+        let url = library.store.url(.template, of: artwork.id)
+        try Data("damaged".utf8).write(to: url)
+        await #expect(throws: Library.OpenError.damaged(canRegenerate: false)) {
+            try await library.loadForPainting(artwork.id)
+        }
+        await #expect(throws: ArtworkFactory.FactoryError.sourceUnavailable) {
+            try await library.regenerate(artwork: artwork.id, settings: artwork.settings)
+        }
+        #expect(try Data(contentsOf: url) == Data("damaged".utf8))
+        #expect(library.regenerating.isEmpty)
     }
 }

@@ -207,7 +207,7 @@ final class AdvancedSettingsModel {
         recentPhoto = recent
         let stored = defaults.string(forKey: SettingsKey.advancedPreviewPicture).flatMap(Picture.init(storageValue:))
             .flatMap { Self.isAvailable($0, recent: recent) ? $0 : nil }
-        self.picture = picture ?? stored ?? recent.map { .photo($0.id) } ?? .sample(Sample.all.first?.id ?? "parrots")
+        self.picture = picture ?? stored ?? recent.map { .photo($0.id) } ?? .sample(Sample.all.first?.id ?? "")
         refreshEffects()
     }
 

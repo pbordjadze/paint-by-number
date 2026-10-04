@@ -127,14 +127,14 @@ struct RasterizerTests {
         let finished = try #require(TemplateRasterizer.pngData(t, style: .finished, maxPixelSize: 1600))
         let numbers = try #require(TemplateRasterizer.pngData(t, style: .template, maxPixelSize: 2000))
         #expect(thumbnail.count > 10_000)
-        Attachment.record(thumbnail, named: "parrots-thumbnail-40.png")
-        Attachment.record(finished, named: "parrots-finished.png")
-        Attachment.record(numbers, named: "parrots-numbers.png")
+        Attachment.record(thumbnail, named: "great-wave-thumbnail-40.png")
+        Attachment.record(finished, named: "great-wave-finished.png")
+        Attachment.record(numbers, named: "great-wave-numbers.png")
     }
 
     @Test(arguments: zip([12, 150], [Float(0.2), 1]))
     func generatedTemplatesKeepEveryNumberLegible(colors: Int, detail: Float) throws {
-        // The bundled photo decoded on device, through the whole pipeline: every label has
+        // A library picture decoded on device, through the whole pipeline: every label has
         // room for its number at the legible size (what CreateModel asserts in Debug builds).
         let t = try Fixtures.sample(colors: colors, detail: detail)
         let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
@@ -160,12 +160,12 @@ struct PDFExporterTests {
 
     @Test func samplePDFRendersPages() throws {
         let t = try Fixtures.sample(colors: 18)
-        let data = PDFExporter.document(for: t, title: "Parrots", paper: .a4)
+        let data = PDFExporter.document(for: t, title: "The Great Wave", paper: .a4)
         let document = try #require(CGDataProvider(data: data as CFData).flatMap { CGPDFDocument($0) })
         let sheets = PDFExporter.sheets(for: t, paper: .a4)
         // The template (an overview and its sheets when tiled), then the color key.
         #expect(document.numberOfPages == (sheets.isTiled ? sheets.count + 2 : 2))
-        Attachment.record(data, named: "parrots.pdf")
+        Attachment.record(data, named: "great-wave.pdf")
         for index in 1...document.numberOfPages {
             let page = try #require(document.page(at: index))
             let image = try #require(Fixtures.rasterize(page, scale: 2))
@@ -176,7 +176,7 @@ struct PDFExporterTests {
                 for x in stride(from: 0, to: pixels.width, by: 4) where pixels[x, y].x < 200 { ink += 1 }
             }
             #expect(ink > 50)
-            record(image, "parrots-pdf-page\(index)")
+            record(image, "great-wave-pdf-page\(index)")
         }
     }
 

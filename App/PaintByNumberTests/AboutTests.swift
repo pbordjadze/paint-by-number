@@ -191,8 +191,7 @@ struct AcknowledgementsTests {
 
     /// Every picture the Samples pane offers is credited, in Settings (`Sample.all` with its
     /// `library.json` record) and in `ACKNOWLEDGEMENTS.md`'s Pictures section: the same pictures
-    /// in the same order, each with its creator, year, credit and license. The retired samples,
-    /// whose provenance was never recorded, are in neither.
+    /// in the same order, each with its creator, year, credit and license.
     @Test func picturesAreCreditedInTheAppAndTheFile() throws {
         #expect(!Sample.all.isEmpty)
         let text = try String(contentsOf: Fixtures.repositoryRoot.appending(path: "ACKNOWLEDGEMENTS.md"), encoding: .utf8)
@@ -212,7 +211,6 @@ struct AcknowledgementsTests {
                 #expect(entry.contains("\n\(line)\n"), "ACKNOWLEDGEMENTS.md's \(sample.title) is missing: \(line)")
             }
         }
-        #expect(Sample.retired.allSatisfy { $0.provenance == nil && !Sample.all.contains($0) })
     }
 
     /// `ACKNOWLEDGEMENTS.md` at the repository root repeats what Settings shows.

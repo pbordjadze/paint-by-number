@@ -6,8 +6,8 @@ import os
 import simd
 
 /// Demo scenarios for the painting screen, deterministic for CI screenshots. The template is
-/// generated from a bundled photo, which the canvas's photo loader also gets, so the top bar is
-/// the one users see:
+/// generated from a library picture, which the canvas's photo loader also gets, so the top bar
+/// is the one users see. Classic lines, from Delicate Arch:
 ///
 /// - `paint`: fresh canvas, fit to screen
 /// - `paint-progress`: ~55 % painted color by color, the color in progress selected
@@ -74,7 +74,7 @@ struct PaintDemoView: View {
         }
         .task {
             let layered = scenario.hasPrefix("paint-layered"), book = scenario.hasPrefix("paint-book")
-            let photo = layered ? "santa-fe-freight" : book ? "red-fox" : "parrots"
+            let photo = layered ? "santa-fe-freight" : book ? "red-fox" : "delicate-arch"
             let template: Template?
             if layered || book {
                 template = await Self.drawnTemplate(photo: photo, style: book ? .coloringBook : .layered)
@@ -83,8 +83,8 @@ struct PaintDemoView: View {
             }
             // Titles are the person's own words, which pseudo-localization doesn't lengthen.
             let title = scenario.hasSuffix("-long-text")
-                ? "Two Parrots on a Branch in the Morning Light"
-                : (template == nil ? "Mosaic" : (layered ? "Freight Train" : book ? "Red Fox" : "Parrots"))
+                ? "Delicate Arch on Our Spring Trip Through Utah"
+                : (template == nil ? "Mosaic" : (layered ? "Freight Train" : book ? "Red Fox" : "Delicate Arch"))
             demo = Demo(
                 scenario: scenario, template: template ?? SyntheticTemplate.make(), title: title,
                 photo: template == nil ? nil : photo)

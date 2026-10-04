@@ -101,13 +101,13 @@ nonisolated enum ArtworkExporter {
         try? FileManager.default.removeItem(at: folder)
     }
 
-    /// "Parrots Template": the printable PDF's name, in the share sheet and as its file name.
+    /// "Irises Template": the printable PDF's name, in the share sheet and as its file name.
     static func templateName(title: String) -> String {
         String(localized: "export.templateName", defaultValue: "\(title) Template",
                comment: "Name of a painting's printable template PDF; the argument is the painting's title")
     }
 
-    /// "Parrots Time-lapse": the movie's file name.
+    /// "Irises Time-lapse": the movie's file name.
     static func timelapseName(title: String) -> String {
         String(localized: "export.timelapseName", defaultValue: "\(title) Time-lapse",
                comment: "File name of a painting's time-lapse movie; the argument is the painting's title")

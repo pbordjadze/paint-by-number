@@ -447,7 +447,7 @@ struct LayeredLinesTests {
     /// Pictures of a layered painting, for the eye: canvas renders at the 1×, 2× and 4× looks,
     /// the gallery thumbnail, the share picture and the printed template.
     @Test func layeredPicturesForReview() throws {
-        let url = try #require(Bundle.main.url(forResource: "parrots", withExtension: "jpg"))
+        let url = try #require(Bundle.main.url(forResource: "great-wave", withExtension: "jpg"))
         let photo = try PhotoLoader.load(url: url, maxPixelSize: 640)
         var settings = GenerationSettings(colorCount: 18, detail: 0.4)
         settings.lineArt.style = .layered
@@ -464,23 +464,23 @@ struct LayeredLinesTests {
             options.lineAppearance = .default
             options.lineZoom = zoom
             let image = try #require(CanvasSnapshot.render(template: t, progress: nil, size: size, options: options))
-            record(image, "layered-parrots-canvas-z\(Int(zoom))")
+            record(image, "layered-great-wave-canvas-z\(Int(zoom))")
         }
         var progress = PaintProgress(regionCount: t.regions.count)
         for r in t.regions.indices where t.regions[r].colorIndex % 2 == 0 { progress.paint(r) }
         var thumbnail = TemplateRasterizer.Style.thumbnail
         thumbnail.lines = .screen(.default, zoom: 1)
         let png = try #require(TemplateRasterizer.pngData(t, painted: progress.painted, style: thumbnail, maxPixelSize: 1024))
-        Attachment.record(png, named: "layered-parrots-thumbnail.png")
+        Attachment.record(png, named: "layered-great-wave-thumbnail.png")
         var template = TemplateRasterizer.Style.template
         template.lines = .screen(.default, zoom: 1)
         let preview = try #require(TemplateRasterizer.pngData(t, style: template, maxPixelSize: 1600))
-        Attachment.record(preview, named: "layered-parrots-template.png")
-        let pdf = PDFExporter.document(for: t, title: "Parrots", paper: .a4)
-        Attachment.record(pdf, named: "layered-parrots.pdf")
+        Attachment.record(preview, named: "layered-great-wave-template.png")
+        let pdf = PDFExporter.document(for: t, title: "The Great Wave", paper: .a4)
+        Attachment.record(pdf, named: "layered-great-wave.pdf")
         let document = try #require(CGDataProvider(data: pdf as CFData).flatMap { CGPDFDocument($0) })
         let page = try #require(document.page(at: 1))
-        record(try #require(Fixtures.rasterize(page, scale: 3)), "layered-parrots-pdf-page1")
+        record(try #require(Fixtures.rasterize(page, scale: 3)), "layered-great-wave-pdf-page1")
     }
 
     // MARK: Coloring book

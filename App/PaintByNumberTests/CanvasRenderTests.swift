@@ -181,11 +181,12 @@ struct CanvasRenderTests {
     /// A template from the real pipeline, drawn at iPhone 17 Pro resolution with every pass on
     /// (MSAA fills with highlight, outline coverage + composite, numbers). Timings are attached.
     @Test func realTemplateFrameCost() throws {
-        let url = try #require(Bundle.main.url(forResource: "parrots", withExtension: "jpg"))
-        let photo = try PhotoLoader.load(url: url, maxPixelSize: 2048)
+        let url = try #require(Bundle.main.url(forResource: "great-wave", withExtension: "jpg"))
+        // The photo at 768 px, the size the upload bound below was set for, at the most detailed
+        // settings a user can pick.
+        let photo = try PhotoLoader.load(url: url, maxPixelSize: 768)
         let clock = ContinuousClock()
         var t0 = clock.now
-        // The most detailed settings a user can pick: the realistic worst case for the canvas.
         let t = try TemplateGenerator(settings: GenerationSettings(colorCount: 48, detail: 1)).generate(from: photo).template
         let generate = clock.now - t0
         let context = try #require(RenderContext.shared)
@@ -226,7 +227,7 @@ struct CanvasRenderTests {
         }
         let wall = (clock.now - t0) / frames
         let report = """
-            parrots (48 colors, detail 1): \(t.regions.count) regions, \(t.mesh.indices.count / 3) triangles, \(scene.segmentCount) outline segments, \
+            great-wave at 768 px (48 colors, detail 1): \(t.regions.count) regions, \(t.mesh.indices.count / 3) triangles, \(scene.segmentCount) outline segments, \
             \(scene.glyphCount) digit quads
             generate \(generate), scene upload \(upload)
             frame 1206×2622 MSAA×\(context.sampleCount): wall \(wall), GPU \(String(format: "%.2f", gpu / Double(frames) * 1000)) ms (simulator)

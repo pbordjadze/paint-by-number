@@ -6,7 +6,7 @@ import PaintCore
 nonisolated enum ArtworkFactory {
     enum FactoryError: Error, Equatable {
         case missingSample
-        /// Neither the stored photo nor the bundled sample an artwork was made from is available.
+        /// Neither the stored photo nor the library picture an artwork was made from is available.
         case sourceUnavailable
     }
 
@@ -56,7 +56,8 @@ nonisolated enum ArtworkFactory {
     }
 
     /// The photo an artwork was made from, as the create flow loaded it: the stored
-    /// `source.jpg`, else the bundled sample it came from.
+    /// `source.jpg`, else the library picture it came from while the library still offers it
+    /// (`Sample.named`).
     static func sourcePhoto(of artwork: Artwork, in store: ArtworkStore) throws -> RGBAImage {
         if store.hasSource(artwork.id) {
             return try PhotoLoader.load(url: store.url(.source, of: artwork.id), maxPixelSize: ArtworkStore.sourceMaxPixelSize)

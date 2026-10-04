@@ -64,24 +64,24 @@ struct GalleryQueryTests {
     }
 
     @Test func filterAndSearchCombine() throws {
-        let barn = try artwork("Red Barn", favorite: true)
-        let regatta = try artwork("Regatta", favorite: false)
-        let parrots = try artwork("Parrots", favorite: true)
+        let fox = try artwork("Red Fox in Snow", favorite: true)
+        let fuji = try artwork("Red Fuji", favorite: false)
+        let wave = try artwork("The Great Wave", favorite: true)
 
         let everything = GalleryQuery()
-        #expect([barn, regatta, parrots].allSatisfy(everything.includes))
+        #expect([fox, fuji, wave].allSatisfy(everything.includes))
         #expect(!everything.isActive)
 
         let favorites = GalleryQuery(filter: .favorites)
-        #expect(favorites.includes(barn) && favorites.includes(parrots) && !favorites.includes(regatta))
+        #expect(favorites.includes(fox) && favorites.includes(wave) && !favorites.includes(fuji))
         #expect(favorites.isActive && !favorites.isSearching)
 
         let search = GalleryQuery(search: "re")
-        #expect(search.includes(barn) && search.includes(regatta) && !search.includes(parrots))
+        #expect(search.includes(fox) && search.includes(fuji) && !search.includes(wave))
         #expect(search.isActive && search.isSearching)
 
         let both = GalleryQuery(filter: .favorites, search: "re")
-        #expect(both.includes(barn) && !both.includes(regatta) && !both.includes(parrots))
+        #expect(both.includes(fox) && !both.includes(fuji) && !both.includes(wave))
     }
 
     @Test func aBlankSearchIsNotActive() {

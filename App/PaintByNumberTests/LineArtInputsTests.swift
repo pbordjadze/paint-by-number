@@ -318,7 +318,7 @@ struct LineArtInputsTests {
     }
 
     @Test func aCancelledRequestStopsTheComputation() async throws {
-        let image = try Self.photo("hibiscus")
+        let image = try Self.photo("great-wave")
         let request = Task { try await LineArtInputs.make(for: image, settings: Self.layered) }
         request.cancel()
         await #expect(throws: CancellationError.self) { try await request.value }
@@ -357,7 +357,7 @@ struct LineArtInputsTests {
     @Test func classicCreateFlowComputesNoInputs() async throws {
         let classic = LineArtSettings(style: .classic)
         let model = CreateModel(paintingLength: .quick, lineArt: classic, tuning: PipelineTuning())
-        model.load(sample: try #require(Sample.named("espresso")))
+        model.load(sample: try #require(Sample.named("morning-glories")))
         let draft = try await model.makeDraft()
         #expect(model.lineArtInput == nil)
         #expect(draft.settings.lineArt == classic && draft.settings.tuning == PipelineTuning())

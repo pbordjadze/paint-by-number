@@ -16,7 +16,7 @@ struct OpenURLTests {
     }
 
     private func sampleJPEG() throws -> Data {
-        try Data(contentsOf: #require(Bundle.main.url(forResource: "parrots", withExtension: "jpg")))
+        try Data(contentsOf: #require(Bundle.main.url(forResource: "great-wave", withExtension: "jpg")))
     }
 
     @Test func aJPEGInTheInboxIsReadDeletedAndOpensTheCreateFlowUnderItsName() async throws {

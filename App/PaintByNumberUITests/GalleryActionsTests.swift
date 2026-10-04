@@ -6,7 +6,7 @@ final class GalleryActionsTests: XCTestCase {
     @MainActor
     func testDeleteAsksForConfirmation() {
         let app = launchGallery()
-        let card = revealCard("Parrots", in: app)
+        let card = revealCard("The Great Wave", in: app)
         card.press(forDuration: 1.5)
         let delete = app.buttons["Delete"]
         XCTAssertTrue(delete.waitForExistence(timeout: 5), "The card menu has no Delete")
@@ -17,7 +17,7 @@ final class GalleryActionsTests: XCTestCase {
         attachScreenshot(of: app, named: "delete-confirmation")
         XCTAssertTrue(card.exists, "The painting was deleted before confirming")
 
-        app.buttons["Delete “Parrots”"].tap()
+        app.buttons["Delete “The Great Wave”"].tap()
         let undo = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Undo'")).firstMatch
         XCTAssertTrue(undo.waitForExistence(timeout: 5), "No undo after deleting")
         XCTAssertTrue(card.waitForNonExistence(timeout: 5), "The painting is still in the gallery")
@@ -27,7 +27,7 @@ final class GalleryActionsTests: XCTestCase {
     @MainActor
     func testTimelapseShowsProgressAndCancels() throws {
         let app = launchGallery()
-        let card = revealCard("Hibiscus", in: app)
+        let card = revealCard("Delicate Arch", in: app)
         card.press(forDuration: 1.5)
         let share = app.buttons["Share Time-lapse"]
         XCTAssertTrue(share.waitForExistence(timeout: 5), "The finished card's menu has no Share Time-lapse")
@@ -50,43 +50,43 @@ final class GalleryActionsTests: XCTestCase {
     @MainActor
     func testFavoriteFromTheMenuMarksAndMovesTheCard() {
         let app = launchGallery()
-        // The demo gallery's one favorite is Lighthouse; Espresso is the last card in progress.
-        let espresso = revealCard("Espresso", in: app)
-        XCTAssertFalse(valueOf(espresso).contains("Favorite"), "Espresso starts out as a favorite")
-        espresso.press(forDuration: 1.5)
+        // The demo gallery's one favorite is Earthrise; The Milkmaid is the last card in progress.
+        let milkmaid = revealCard("The Milkmaid", in: app)
+        XCTAssertFalse(valueOf(milkmaid).contains("Favorite"), "The Milkmaid starts out as a favorite")
+        milkmaid.press(forDuration: 1.5)
         let favorite = app.buttons["Favorite"]
         XCTAssertTrue(favorite.waitForExistence(timeout: 5), "The card menu has no Favorite")
         favorite.tap()
 
-        XCTAssertTrue(waitFor(espresso, "value CONTAINS 'Favorite'"), "The card doesn't say it is a favorite")
+        XCTAssertTrue(waitFor(milkmaid, "value CONTAINS 'Favorite'"), "The card doesn't say it is a favorite")
         scrollToTop(app)
-        let parrots = app.buttons["Parrots"].firstMatch
-        XCTAssertTrue(waitUntil { self.precedes(espresso, parrots) }, "The favorite didn't move ahead of Parrots")
+        let wave = app.buttons["The Great Wave"].firstMatch
+        XCTAssertTrue(waitUntil { self.precedes(milkmaid, wave) }, "The favorite didn't move ahead of The Great Wave")
         attachScreenshot(of: app, named: "favorite")
 
-        espresso.press(forDuration: 1.5)
+        milkmaid.press(forDuration: 1.5)
         let unfavorite = app.buttons["Unfavorite"]
         XCTAssertTrue(unfavorite.waitForExistence(timeout: 5), "A favorite's menu has no Unfavorite")
         unfavorite.tap()
-        XCTAssertTrue(waitFor(espresso, "NOT (value CONTAINS 'Favorite')"), "Unfavorite left the mark on the card")
-        XCTAssertTrue(waitUntil { self.precedes(parrots, espresso) }, "The card didn't return to its place")
+        XCTAssertTrue(waitFor(milkmaid, "NOT (value CONTAINS 'Favorite')"), "Unfavorite left the mark on the card")
+        XCTAssertTrue(waitUntil { self.precedes(wave, milkmaid) }, "The card didn't return to its place")
     }
 
     /// The Show menu lists favorites only; with none left the gallery explains how to add one.
     @MainActor
     func testShowMenuFiltersFavorites() {
         let app = launchGallery()
-        let lighthouse = revealCard("Lighthouse", in: app)
-        let parrots = app.buttons["Parrots"].firstMatch
-        XCTAssertTrue(parrots.exists)
+        let earthrise = revealCard("Earthrise", in: app)
+        let wave = app.buttons["The Great Wave"].firstMatch
+        XCTAssertTrue(wave.exists)
 
         chooseShow("Favorites", in: app)
-        XCTAssertTrue(parrots.waitForNonExistence(timeout: 5), "Parrots is not a favorite but still shows")
-        XCTAssertTrue(lighthouse.exists, "The favorite disappeared under the Favorites filter")
-        XCTAssertFalse(app.buttons["Hibiscus"].exists, "A finished painting that is no favorite still shows")
+        XCTAssertTrue(wave.waitForNonExistence(timeout: 5), "The Great Wave is not a favorite but still shows")
+        XCTAssertTrue(earthrise.exists, "The favorite disappeared under the Favorites filter")
+        XCTAssertFalse(app.buttons["Delicate Arch"].exists, "A finished painting that is no favorite still shows")
         attachScreenshot(of: app, named: "favorites-filter")
 
-        lighthouse.press(forDuration: 1.5)
+        earthrise.press(forDuration: 1.5)
         let unfavorite = app.buttons["Unfavorite"]
         XCTAssertTrue(unfavorite.waitForExistence(timeout: 5), "The favorite's menu has no Unfavorite")
         unfavorite.tap()
@@ -94,21 +94,21 @@ final class GalleryActionsTests: XCTestCase {
         attachScreenshot(of: app, named: "no-favorites")
 
         chooseShow("All", in: app)
-        XCTAssertTrue(app.buttons["Parrots"].firstMatch.waitForExistence(timeout: 5), "All didn't bring the paintings back")
+        XCTAssertTrue(app.buttons["The Great Wave"].firstMatch.waitForExistence(timeout: 5), "All didn't bring the paintings back")
     }
 
     @MainActor
     func testSearchNarrowsToMatchingTitles() {
         let app = launchGallery()
-        _ = revealCard("Parrots", in: app)
+        _ = revealCard("The Great Wave", in: app)
         let field = app.searchFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10), "The gallery has no search field")
         field.tap()
         field.typeText("re")
 
-        XCTAssertTrue(app.buttons["Red Barn"].firstMatch.waitForExistence(timeout: 5), "“re” didn't find Red Barn")
-        XCTAssertTrue(app.buttons["Regatta"].firstMatch.exists, "“re” didn't find Regatta")
-        XCTAssertTrue(app.buttons["Parrots"].firstMatch.waitForNonExistence(timeout: 5), "Parrots matches “re”")
+        XCTAssertTrue(app.buttons["Red Fox in Snow"].firstMatch.waitForExistence(timeout: 5), "“re” didn't find Red Fox in Snow")
+        XCTAssertTrue(app.buttons["Red Fuji"].firstMatch.exists, "“re” didn't find Red Fuji")
+        XCTAssertTrue(app.buttons["The Great Wave"].firstMatch.waitForNonExistence(timeout: 5), "The Great Wave matches “re”")
         attachScreenshot(of: app, named: "search")
 
         field.typeText("zzz")
@@ -117,32 +117,32 @@ final class GalleryActionsTests: XCTestCase {
         attachScreenshot(of: app, named: "search-empty")
     }
 
-    /// `gallery-search` starts with “re” typed: Red Barn (in progress) and Regatta (finished).
+    /// `gallery-search` starts with “re” typed: Red Fox in Snow (in progress) and Red Fuji (finished).
     @MainActor
     func testSearchScenarioShowsTwoResults() {
         let app = launchGallery("gallery-search")
-        XCTAssertTrue(app.buttons["Red Barn"].firstMatch.waitForExistence(timeout: 120), "Red Barn never appeared")
-        XCTAssertTrue(app.buttons["Regatta"].firstMatch.waitForExistence(timeout: 10), "Regatta never appeared")
-        XCTAssertFalse(app.buttons["Parrots"].firstMatch.exists, "Parrots doesn't match the query")
-        XCTAssertFalse(app.buttons["Lighthouse"].firstMatch.exists, "Lighthouse doesn't match the query")
+        XCTAssertTrue(app.buttons["Red Fox in Snow"].firstMatch.waitForExistence(timeout: 120), "Red Fox in Snow never appeared")
+        XCTAssertTrue(app.buttons["Red Fuji"].firstMatch.waitForExistence(timeout: 10), "Red Fuji never appeared")
+        XCTAssertFalse(app.buttons["The Great Wave"].firstMatch.exists, "The Great Wave doesn't match the query")
+        XCTAssertFalse(app.buttons["Earthrise"].firstMatch.exists, "Earthrise doesn't match the query")
     }
 
     /// `gallery-favorites` lists the two favorites, one in each section.
     @MainActor
     func testFavoritesScenarioShowsOnlyFavorites() {
         let app = launchGallery("gallery-favorites")
-        XCTAssertTrue(app.buttons["Lighthouse"].firstMatch.waitForExistence(timeout: 120), "Lighthouse never appeared")
-        XCTAssertTrue(app.buttons["Regatta"].firstMatch.waitForExistence(timeout: 10), "Regatta never appeared")
-        XCTAssertFalse(app.buttons["Parrots"].firstMatch.exists, "Parrots is not a favorite")
-        XCTAssertFalse(app.buttons["Hibiscus"].firstMatch.exists, "Hibiscus is not a favorite")
+        XCTAssertTrue(app.buttons["Earthrise"].firstMatch.waitForExistence(timeout: 120), "Earthrise never appeared")
+        XCTAssertTrue(app.buttons["Red Fuji"].firstMatch.waitForExistence(timeout: 10), "Red Fuji never appeared")
+        XCTAssertFalse(app.buttons["The Great Wave"].firstMatch.exists, "The Great Wave is not a favorite")
+        XCTAssertFalse(app.buttons["Delicate Arch"].firstMatch.exists, "Delicate Arch is not a favorite")
     }
 
     /// The demo gallery: six paintings, generated in the background at launch. They are the
-    /// retired samples' (`-demoRetiredSamples`), whose titles don't move with the library's curation.
+    /// demo's fixed pictures (`-demoFixedPictures`), whose titles don't move with the library's order.
     @MainActor
     private func launchGallery(_ scenario: String = "gallery") -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", scenario, "-demoRetiredSamples", "YES"]
+        app.launchArguments = ["-demo", scenario, "-demoFixedPictures", "YES"]
         app.launch()
         return app
     }

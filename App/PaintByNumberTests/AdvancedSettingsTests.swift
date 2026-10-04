@@ -164,10 +164,10 @@ struct AdvancedSettingsTests {
         var kept = LineAppearancePreset.grow.applied(to: .default)
         kept.outline.painted = 1
         let snapshot = AdvancedReport.Snapshot(
-            app: "1.0 (1)", picture: "parrots", paintingLength: "relaxed", lineArt: Self.changedArt,
+            app: "1.0 (1)", picture: "great-wave", paintingLength: "relaxed", lineArt: Self.changedArt,
             tuning: Self.changedTuning, lineAppearance: kept, preview: nil, defaults: nil)
         // The note comes before the JSON and may hold braces of its own.
-        let text = AdvancedReport.text(snapshot: snapshot, pictureTitle: "Parrots", summary: nil, changes: [], note: "a {note}")
+        let text = AdvancedReport.text(snapshot: snapshot, pictureTitle: "The Great Wave", summary: nil, changes: [], note: "a {note}")
         let imported = try #require(AdvancedReport.settings(in: text))
         #expect(imported == .init(lineArt: Self.changedArt, tuning: Self.changedTuning, lineAppearance: kept))
 
@@ -185,7 +185,7 @@ struct AdvancedSettingsTests {
         #expect(wild.tuning?.smoothing == PipelineTuning.range.upperBound)
         #expect(wild.lineAppearance?.color == .init(opacity: [1, 1, 1], width: [0.2, 0.2, 0.2], painted: 0))
 
-        for text in ["Hello", "{}", #"{"picture": "parrots"}"#, #"{"lineArt": 5}"#, "{not json}"] {
+        for text in ["Hello", "{}", #"{"picture": "great-wave"}"#, #"{"lineArt": 5}"#, "{not json}"] {
             #expect(AdvancedReport.settings(in: text) == nil, "settings found in \(text)")
         }
     }
@@ -196,7 +196,7 @@ struct AdvancedSettingsTests {
     @Test func presetsSetEveryGroupAndAreRecognized() throws {
         let (defaults, suite) = try Self.makeDefaults()
         defer { defaults.removePersistentDomain(forName: suite) }
-        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"))
+        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("great-wave"))
         #expect(AdvancedPreset.defaults == .coloringBook && model.currentPreset == .coloringBook)
         #expect(model.changes.isEmpty)
         model.apply(.layered)
@@ -211,9 +211,9 @@ struct AdvancedSettingsTests {
         // The preset names the style, so the style line is left out.
         #expect(model.changes == ["Preset Layered"])
         let snapshot = try AdvancedReport.Snapshot(
-            app: "1.0 (1)", picture: "parrots", paintingLength: "relaxed", lineArt: #require(layered.lineArt),
+            app: "1.0 (1)", picture: "great-wave", paintingLength: "relaxed", lineArt: #require(layered.lineArt),
             tuning: #require(layered.tuning), lineAppearance: #require(layered.lineAppearance), preview: nil, defaults: nil)
-        let text = AdvancedReport.text(snapshot: snapshot, pictureTitle: "Parrots", summary: nil, changes: model.changes, note: "")
+        let text = AdvancedReport.text(snapshot: snapshot, pictureTitle: "The Great Wave", summary: nil, changes: model.changes, note: "")
         #expect(AdvancedReport.settings(in: text) == layered)
         model.apply(.classic)
         #expect(model.currentPreset == .classic && model.changes == ["Preset Classic"])
@@ -239,7 +239,7 @@ struct AdvancedSettingsTests {
     @Test func pastedSettingsApplyStoreAndReport() throws {
         let (defaults, suite) = try Self.makeDefaults()
         defer { defaults.removePersistentDomain(forName: suite) }
-        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"))
+        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("great-wave"))
         var kept = LineAppearance.default
         kept.outline.painted = 1
         model.apply(AdvancedReport.Imported(lineArt: Self.changedArt, lineAppearance: kept))
@@ -263,7 +263,7 @@ struct AdvancedSettingsTests {
 
     @Test func reportCarriesEverySettingAsJSON() throws {
         let snapshot = AdvancedReport.Snapshot(
-            app: "1.0 (1)", picture: "parrots", paintingLength: "relaxed", lineArt: Self.changedArt,
+            app: "1.0 (1)", picture: "great-wave", paintingLength: "relaxed", lineArt: Self.changedArt,
             tuning: Self.changedTuning, lineAppearance: LineAppearancePreset.grow.applied(to: .default),
             preview: .init(AdvancedStats(areas: 1200, colors: 24)), defaults: .init(AdvancedStats(areas: 1000, colors: 24)))
         let json = AdvancedReport.json(snapshot)
@@ -272,9 +272,9 @@ struct AdvancedSettingsTests {
         #expect(decoded.preview?.minutes == 60)
 
         let text = AdvancedReport.text(
-            snapshot: snapshot, pictureTitle: "Parrots", summary: nil, changes: ["Smallest Area 2×"], note: "  Too busy  ")
+            snapshot: snapshot, pictureTitle: "The Great Wave", summary: nil, changes: ["Smallest Area 2×"], note: "  Too busy  ")
         #expect(text.hasPrefix("Paint by Moonlight 1.0 (1): Advanced settings"))
-        #expect(text.contains("Picture: Parrots"))
+        #expect(text.contains("Picture: The Great Wave"))
         #expect(text.contains("Changed: Smallest Area 2×"))
         #expect(text.contains("\nToo busy\n"))
         #expect(text.hasSuffix(json))
@@ -283,7 +283,7 @@ struct AdvancedSettingsTests {
     @Test func changesAreStoredAndDefaultsAreNot() throws {
         let (defaults, suite) = try Self.makeDefaults()
         defer { defaults.removePersistentDomain(forName: suite) }
-        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"))
+        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("great-wave"))
         #expect(model.currentKey == .defaults)
         #expect(model.changes.isEmpty)
 
@@ -300,7 +300,7 @@ struct AdvancedSettingsTests {
         #expect(model.activeControl == .style)
 
         // A new model (the screen opened again) starts from what was stored.
-        let reopened = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"))
+        let reopened = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("great-wave"))
         #expect(reopened.currentKey == model.currentKey)
         #expect(reopened.appearance == model.appearance)
 
@@ -317,7 +317,7 @@ struct AdvancedSettingsTests {
     @Test func thresholdsPushEachOtherAlong() throws {
         let (defaults, suite) = try Self.makeDefaults()
         defer { defaults.removePersistentDomain(forName: suite) }
-        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"))
+        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("great-wave"))
         model.lineArt.style = .layered
         model.set(.textureThreshold, to: 0.9)
         #expect(model.lineArt.textureThreshold == 0.9)
@@ -333,7 +333,7 @@ struct AdvancedSettingsTests {
     @Test func previewFollowsTheSettingsAndMeasuresEffects() async throws {
         let (defaults, suite) = try Self.makeDefaults()
         defer { defaults.removePersistentDomain(forName: suite) }
-        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("parrots"), paintingLength: .quick)
+        let model = AdvancedSettingsModel(library: nil, defaults: defaults, picture: .sample("great-wave"), paintingLength: .quick)
         model.start()
         defer { model.stop() }
         try await waitUntil { model.isIdle && model.preview != nil }
@@ -373,14 +373,14 @@ struct AdvancedSettingsTests {
         #expect(model.preview?.key == .defaults)
         #expect(!model.isUpdating)
 
-        model.choose(.sample("hibiscus"))
+        model.choose(.sample("red-fox"))
         #expect(model.phase == .loading)
-        #expect(defaults.string(forKey: SettingsKey.advancedPreviewPicture) == "sample:hibiscus")
+        #expect(defaults.string(forKey: SettingsKey.advancedPreviewPicture) == "sample:red-fox")
         try await waitUntil { model.isIdle && model.phase == .ready }
-        #expect(model.pictureTitle == Sample.named("hibiscus")?.title)
+        #expect(model.pictureTitle == Sample.named("red-fox")?.title)
         #expect(model.baseline != baseline)
         // The choice is remembered for the next time the screen opens.
-        #expect(AdvancedSettingsModel(library: nil, defaults: defaults).picture == .sample("hibiscus"))
+        #expect(AdvancedSettingsModel(library: nil, defaults: defaults).picture == .sample("red-fox"))
     }
 
     @Test func picturesSurviveTheirStorage() {

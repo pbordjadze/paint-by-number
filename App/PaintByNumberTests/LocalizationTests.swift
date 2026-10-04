@@ -43,11 +43,11 @@ struct LocalizationTests {
         #expect(PaintSpeech.canvasLabel == "Painting")
         #expect(PaintSpeech.areaLabel(number: 12) == "Area 12")
         #expect(PaintSpeech.percentPainted(30) == "30 percent painted")
-        #expect(PaintSpeech.paintingProgress(title: "Parrots", percent: 30) == "Parrots, 30 percent painted")
-        #expect(ArtworkExporter.templateName(title: "Parrots") == "Parrots Template")
-        #expect(ArtworkExporter.timelapseName(title: "Parrots") == "Parrots Time-lapse")
-        // The library's titles resolve to their records' (`SampleLibraryTests`).
-        #expect(Sample.retired.map(\.title) == ["Parrots", "Hibiscus", "Lighthouse", "Red Barn", "Espresso", "Regatta"])
+        #expect(PaintSpeech.paintingProgress(title: "Irises", percent: 30) == "Irises, 30 percent painted")
+        #expect(ArtworkExporter.templateName(title: "Irises") == "Irises Template")
+        #expect(ArtworkExporter.timelapseName(title: "Irises") == "Irises Time-lapse")
+        // A library picture's title is its `sample.<id>` (each against its record: `SampleLibraryTests`).
+        #expect(Sample.named("great-wave")?.title == "The Great Wave")
         let hokusai = Sample.Provenance(kind: .painting, creator: "Katsushika Hokusai", year: "c. 1830–32", credit: "", license: "")
         #expect(Acknowledgements.byline(hokusai) == "Katsushika Hokusai, c. 1830–32")
         #expect(PDFExporter.Paper.letter.name == "US Letter")

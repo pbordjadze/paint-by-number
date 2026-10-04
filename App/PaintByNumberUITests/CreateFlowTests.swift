@@ -26,11 +26,11 @@ final class CreateFlowTests: XCTestCase {
     }
 
     /// The preview's title field offers the sample's name and names the painting with what
-    /// was typed. (On a retired sample, whose title doesn't move with the library's curation.)
+    /// was typed. (On the demo's fixed pictures, whose titles don't move with the library's order.)
     @MainActor
     func testTitleNamesThePainting() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "create-preview", "-demoRetiredSamples", "YES"]
+        app.launchArguments = ["-demo", "create-preview", "-demoFixedPictures", "YES"]
         app.launch()
 
         let start = app.buttons["Start Painting"]
@@ -40,7 +40,7 @@ final class CreateFlowTests: XCTestCase {
 
         let title = app.textFields["painting-title"]
         XCTAssertTrue(title.exists, "The preview has no title field")
-        XCTAssertEqual(title.placeholderValue, "Parrots")
+        XCTAssertEqual(title.placeholderValue, "The Great Wave")
         // The first tap can land while the preview is still settling: type only once focused.
         let focused = NSPredicate(format: "hasKeyboardFocus == true")
         let unfocusedFrame = title.frame
@@ -51,13 +51,13 @@ final class CreateFlowTests: XCTestCase {
         // The keyboard shrinks the view; the layout must not switch (stacked ↔ side by side).
         XCTAssertEqual(title.frame.minX, unfocusedFrame.minX, accuracy: 1, "The preview changed layout when the keyboard showed")
         XCTAssertEqual(title.frame.width, unfocusedFrame.width, accuracy: 1, "The preview changed layout when the keyboard showed")
-        title.typeText("Jungle Birds\n")
-        XCTAssertEqual(title.value as? String, "Jungle Birds")
+        title.typeText("Big Wave\n")
+        XCTAssertEqual(title.value as? String, "Big Wave")
         attachScreenshot(of: app, named: "create-title-typed")
 
         start.tap()
         XCTAssertTrue(
-            app.staticTexts["Jungle Birds, 0 percent painted"].waitForExistence(timeout: 90),
+            app.staticTexts["Big Wave, 0 percent painted"].waitForExistence(timeout: 90),
             "The painting didn't open with the typed title")
     }
 

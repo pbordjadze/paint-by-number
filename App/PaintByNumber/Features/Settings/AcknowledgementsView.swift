@@ -6,7 +6,6 @@ import SwiftUI
 struct AcknowledgementsView: View {
     var body: some View {
         Form {
-            // The retired samples have no provenance record: they are neither offered nor listed.
             Section {
                 ForEach(Sample.all) { PictureRow(sample: $0) }
             } header: {

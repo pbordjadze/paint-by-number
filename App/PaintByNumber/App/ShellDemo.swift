@@ -4,12 +4,13 @@ import Foundation
 import PaintCore
 
 /// Demo scenarios owned by the app shell (see `DemoMode`). Each uses a throwaway library
-/// seeded deterministically from the bundled pictures (`pictures`): the ones a viewer judges
-/// the app by show the curated library, the rest the retired samples.
+/// seeded deterministically from the library's pictures (`pictures`): the ones a viewer judges
+/// the app by show the library by position, the rest six pictures chosen by name
+/// (`fixedPictures`).
 ///
 /// - `gallery`, `gallery-dark`: the library's first six pictures (all of them while it holds
 ///   fewer) painted to various stages, the third a favorite.
-/// - `gallery-favorites`, `gallery-favorites-dark`: six retired samples' paintings with two
+/// - `gallery-favorites`, `gallery-favorites-dark`: the fixed pictures' paintings with two
 ///   favorites and the Show filter on Favorites.
 /// - `gallery-search`, `gallery-search-dark`: the same paintings with "re" typed in the search
 ///   field (two results).
@@ -24,12 +25,12 @@ import PaintCore
 /// - `create-preview`, `create-preview-dark`: the painting starter generated, comparison at half.
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
-/// - `create-custom`, `create-custom-long-text`: the parrots sample after Detail moved off the
+/// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
 ///   suggestion (the chip offers Reset to Suggested); the second with every localized string
 ///   twice as long.
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
-///   is a bundled sample written to the temporary directory at launch (`DemoMode.openFileURL`).
+///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `settings-advanced`, `settings-advanced-dark`, `settings-advanced-long-text`: Settings ›
@@ -45,8 +46,8 @@ import PaintCore
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
-/// - `gallery-long-text`, `gallery-timelapse-long-text`, `settings-long-text`: the retired
-///   samples' gallery (with a deletion, so its Undo toast is up), `gallery-timelapse` and
+/// - `gallery-long-text`, `gallery-timelapse-long-text`, `settings-long-text`: the fixed
+///   pictures' gallery (with a deletion, so its Undo toast is up), `gallery-timelapse` and
 ///   `settings` with every localized string twice as long: `ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
@@ -91,19 +92,26 @@ enum ShellDemo: Equatable {
     /// The Show filter starts on Favorites.
     var showsFavoritesOnly: Bool { self == .galleryFavorites || self == .galleryNoFavorites }
 
-    /// Whether the scenario shows the curated library: the ones a viewer judges the app by do,
-    /// by position (`Sample.all`, `Sample.starters`), so curating the library needs no edit
-    /// here. The rest, and UI tests that name paintings (`-demoRetiredSamples YES`), keep the
-    /// retired samples, whose titles and templates never change.
+    /// Whether the scenario shows the library by position: the ones a viewer judges the app by
+    /// do (`Sample.all`, `Sample.starters`), so curating the library needs no edit here. The
+    /// rest, and UI tests that name paintings (`-demoFixedPictures YES`), show `fixedPictures`.
     private var showsLibrary: Bool {
-        (self == .gallery || self == .createPreview || self == .createSuggested) && !DemoMode.usesRetiredSamples
+        (self == .gallery || self == .createPreview || self == .createSuggested) && !DemoMode.usesFixedPictures
     }
 
-    /// The pictures the gallery scenarios paint, by position.
-    private var pictures: [Sample] { showsLibrary ? Sample.all : Sample.retired }
+    /// Six library pictures by name, whose titles UI tests look for, in the order the gallery
+    /// scenarios paint them (`galleryItems`): a painting and a photograph first (the create
+    /// scenarios' too), the favorites third and sixth (`favoriteSamples`), and only the fourth
+    /// and sixth matching `searchText`. A picture the library drops is replaced here and in the
+    /// UI tests.
+    private static let fixedPictures: [Sample] =
+        ["great-wave", "delicate-arch", "earthrise", "red-fox", "milkmaid", "red-fuji"].compactMap(Sample.named)
 
-    /// The pictures whose paintings are favorites, by position in `pictures` (of the retired
-    /// samples: Lighthouse, and Regatta).
+    /// The pictures the gallery scenarios paint, by position.
+    private var pictures: [Sample] { showsLibrary ? Sample.all : Self.fixedPictures }
+
+    /// The pictures whose paintings are favorites, by position in `pictures` (of the fixed
+    /// pictures: Earthrise, and Red Fuji).
     private var favoriteSamples: [String] {
         let positions: [Int] = switch self {
         case .gallery, .gallerySearch: [2]
@@ -113,7 +121,7 @@ enum ShellDemo: Equatable {
         return positions.filter { $0 < pictures.count }.map { pictures[$0].id }
     }
 
-    /// The search field starts with this text: it finds "Red Barn" and "Regatta".
+    /// The search field starts with this text: it finds "Red Fox in Snow" and "Red Fuji".
     var searchText: String? { self == .gallerySearch ? "re" : nil }
 
     var sharesTimelapse: Bool { self == .galleryTimelapse || self == .galleryTimelapseLongText }
@@ -168,10 +176,10 @@ enum ShellDemo: Equatable {
 
     var previewSample: Sample? {
         switch self {
-        // The library's painting and photograph starters.
-        case .createPreview: showsLibrary ? Sample.starters.first : Sample.named("parrots")
-        case .createSuggested: showsLibrary ? Sample.starters.last : Sample.named("lighthouse")
-        case .createCustom: Sample.named("parrots")
+        // A painting and a photograph: the library's starters, or the first two fixed pictures.
+        case .createPreview: showsLibrary ? Sample.starters.first : pictures.first
+        case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
+        case .createCustom: pictures.first
         default: nil
         }
     }

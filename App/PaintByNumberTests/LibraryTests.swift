@@ -458,18 +458,18 @@ struct LibraryTests {
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let library = makeLibrary()
-        let espresso = try #require(Sample.named("espresso"))
+        let glories = try #require(Sample.named("morning-glories"))
 
-        let task = try #require(library.seedIfNeeded([espresso], defaults: defaults))
-        #expect(library.placeholders.map(\.id) == ["espresso"])
+        let task = try #require(library.seedIfNeeded([glories], defaults: defaults))
+        #expect(library.placeholders.map(\.id) == ["morning-glories"])
         #expect(!library.isEmpty)
         await task.value
         #expect(library.placeholders.isEmpty)
-        #expect(library.artworks.map(\.title) == ["Espresso"])
-        #expect(library.artworks.first?.sampleName == "espresso")
+        #expect(library.artworks.map(\.title) == [glories.title])
+        #expect(library.artworks.first?.sampleName == "morning-glories")
         #expect(defaults.bool(forKey: Library.seededKey))
         #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
-        #expect(library.seedIfNeeded([espresso], defaults: defaults) == nil)
+        #expect(library.seedIfNeeded([glories], defaults: defaults) == nil)
     }
 
     @Test func seedingRetriesAfterFailuresAndGivesUpAfterThree() async throws {
@@ -499,11 +499,11 @@ struct LibraryTests {
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
         let library = makeLibrary()
-        let espresso = try #require(Sample.named("espresso"))
+        let glories = try #require(Sample.named("morning-glories"))
 
-        let task = try #require(library.seedIfNeeded([Sample(id: "missing", title: "Missing"), espresso], defaults: defaults))
+        let task = try #require(library.seedIfNeeded([Sample(id: "missing", title: "Missing"), glories], defaults: defaults))
         await task.value
-        #expect(library.artworks.map(\.title) == ["Espresso"])
+        #expect(library.artworks.map(\.title) == [glories.title])
         #expect(defaults.bool(forKey: Library.seededKey))
         #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
     }
@@ -743,23 +743,23 @@ struct LibraryTests {
 
     @Test func galleryListsRespectTheQuery() async throws {
         let library = makeLibrary()
-        let barn = try await library.create(draft(title: "Red Barn"))
-        let regatta = try await library.create(draft(title: "Regatta", painted: [0, 1, 2]))
-        let parrots = try await library.create(draft(title: "Parrots"))
-        library.setFavorite(regatta.id, true)
-        library.setFavorite(parrots.id, true)
+        let fox = try await library.create(draft(title: "Red Fox in Snow"))
+        let fuji = try await library.create(draft(title: "Red Fuji", painted: [0, 1, 2]))
+        let wave = try await library.create(draft(title: "The Great Wave"))
+        library.setFavorite(fuji.id, true)
+        library.setFavorite(wave.id, true)
 
-        #expect(Set(library.inProgress(matching: GalleryQuery()).map(\.id)) == [barn.id, parrots.id])
+        #expect(Set(library.inProgress(matching: GalleryQuery()).map(\.id)) == [fox.id, wave.id])
         let favorites = GalleryQuery(filter: .favorites)
-        #expect(library.inProgress(matching: favorites).map(\.id) == [parrots.id])
-        #expect(library.finished(matching: favorites).map(\.id) == [regatta.id])
+        #expect(library.inProgress(matching: favorites).map(\.id) == [wave.id])
+        #expect(library.finished(matching: favorites).map(\.id) == [fuji.id])
         let search = GalleryQuery(filter: .all, search: "re")
-        #expect(library.inProgress(matching: search).map(\.id) == [barn.id])
-        #expect(library.finished(matching: search).map(\.id) == [regatta.id])
+        #expect(library.inProgress(matching: search).map(\.id) == [fox.id])
+        #expect(library.finished(matching: search).map(\.id) == [fuji.id])
         // The search narrows the filter's list.
         let both = GalleryQuery(filter: .favorites, search: "re")
         #expect(library.inProgress(matching: both).isEmpty)
-        #expect(library.finished(matching: both).map(\.id) == [regatta.id])
+        #expect(library.finished(matching: both).map(\.id) == [fuji.id])
     }
 
     @Test func favoriteWriteFailuresAreRetried() async throws {

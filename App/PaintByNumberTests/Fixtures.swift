@@ -80,8 +80,8 @@ enum Fixtures {
             regionMap: RegionMap(width: width, height: height, storage: map))
     }
 
-    /// A template generated from a bundled sample by the real pipeline.
-    static func sample(_ name: String = "parrots", colors: Int = 12, detail: Float = 0.2) throws -> Template {
+    /// A template generated from a library picture by the real pipeline.
+    static func sample(_ name: String = "great-wave", colors: Int = 12, detail: Float = 0.2) throws -> Template {
         guard let url = Bundle.main.url(forResource: name, withExtension: "jpg") else { throw CocoaError(.fileNoSuchFile) }
         let photo = try PhotoLoader.load(url: url, maxPixelSize: 480)
         return try TemplateGenerator(settings: GenerationSettings(colorCount: colors, detail: detail))

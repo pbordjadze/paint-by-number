@@ -15,7 +15,7 @@ final class OpenFileTests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 60), "The opened file didn't open the create flow")
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 90)
-        XCTAssertEqual(app.textFields["painting-title"].placeholderValue, "Morning Parrots")
+        XCTAssertEqual(app.textFields["painting-title"].placeholderValue, "Winter Fox")
         attachScreenshot(of: app, named: "create-from-file")
     }
 

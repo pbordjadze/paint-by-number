@@ -21,13 +21,13 @@ enum DemoMode {
     static var isTestHost: Bool { ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil }
 
     /// `-openFile <path>`: the file the app opens on launch, through the same handler as a file
-    /// opened from the share sheet. The `create-from-file` scenario, given none, opens a bundled
-    /// sample it writes to the temporary directory under a name of its own, so the title the
+    /// opened from the share sheet. The `create-from-file` scenario, given none, opens a library
+    /// picture it writes to the temporary directory under a name of its own, so the title the
     /// create flow derives from the file name is visible.
     static let openFileURL: URL? = {
         if let path = UserDefaults.standard.string(forKey: "openFile") { return URL(fileURLWithPath: path) }
-        guard scenario == "create-from-file", let sample = Sample.named("parrots")?.url else { return nil }
-        let copy = FileManager.default.temporaryDirectory.appending(path: "Morning Parrots.jpg")
+        guard scenario == "create-from-file", let sample = Sample.named("red-fox")?.url else { return nil }
+        let copy = FileManager.default.temporaryDirectory.appending(path: "Winter Fox.jpg")
         try? FileManager.default.removeItem(at: copy)
         do { try FileManager.default.copyItem(at: sample, to: copy) } catch { return nil }
         return copy
@@ -41,10 +41,11 @@ enum DemoMode {
     /// (`canvas-paper-light` or `canvas-paper-dark`), so a UI test can see the preference reach it.
     static let tracesPaper = UserDefaults.standard.bool(forKey: "tracePaper")
 
-    /// `-demoRetiredSamples YES`: the scenarios that show the curated picture library (`gallery`,
-    /// `create-preview`, `create-suggested`) show the retired samples instead, for UI tests that
-    /// name paintings by their titles: those stay put whatever the library's curation.
-    static let usesRetiredSamples = UserDefaults.standard.bool(forKey: "demoRetiredSamples")
+    /// `-demoFixedPictures YES`: the scenarios that show the picture library by position
+    /// (`gallery`, `create-preview`, `create-suggested`) show `ShellDemo`'s fixed pictures
+    /// instead, for UI tests that name paintings by their titles: those stay put however the
+    /// library is reordered.
+    static let usesFixedPictures = UserDefaults.standard.bool(forKey: "demoFixedPictures")
 
     /// `tmp/demo-ready` in the app's data container. CI screenshots a scenario shortly after
     /// this file appears instead of sleeping for a worst-case delay (`ci/screenshots.sh`).

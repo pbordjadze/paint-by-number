@@ -395,11 +395,13 @@ final class Library {
         return PaintingDocument(template: template, progress: saved.progress, notice: reset ? .progressReset : nil)
     }
 
-    /// Generates an artwork's template again from its photo (`source.jpg`, or the bundled
-    /// sample) with `settings`, off the main actor, and swaps it in atomically. Progress
-    /// carries over by painted area when the old template is still readable; otherwise the
-    /// painting starts fresh. Recovers damaged paintings (`PaintingRecoveryView`, with the
-    /// artwork's own `settings`). `regenerating[id]` reports progress meanwhile.
+    /// Generates an artwork's template again from its photo (`ArtworkFactory.sourcePhoto`:
+    /// `source.jpg`, or the library picture it was made from) with `settings`, off the main
+    /// actor, and swaps it in atomically; without either it throws
+    /// `ArtworkFactory.FactoryError.sourceUnavailable` and changes nothing. Progress carries
+    /// over by painted area when the old template is still readable; otherwise the painting
+    /// starts fresh. Recovers damaged paintings (`PaintingRecoveryView`, with the artwork's own
+    /// `settings`). `regenerating[id]` reports progress meanwhile.
     func regenerate(artwork id: UUID, settings: GenerationSettings) async throws -> PaintingDocument {
         guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
         guard !artwork.needsNewerApp else { throw OpenError.needsNewerApp }

@@ -28,7 +28,6 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
 
     let id: String
     let title: String
-    /// Nil only for the retired samples, whose provenance was never recorded.
     let provenance: Provenance?
 
     init(id: String, title: String, provenance: Provenance? = nil) {
@@ -56,11 +55,13 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
 
     /// Prepared on first launch so the gallery starts with something to paint: a painting and
     /// a photograph, the library's best first impression.
-    static let starters: [Sample] = ["great-wave", "delicate-arch"].compactMap { id in Sample.all.first { $0.id == id } }
+    static let starters: [Sample] = ["great-wave", "delicate-arch"].compactMap(Sample.named)
 
-    /// Any bundled picture, offered or retired: saved paintings name theirs (`Artwork.sampleName`).
+    /// The library picture `id` names. Saved paintings name theirs (`Artwork.sampleName`) and
+    /// regenerate from it when they have no stored photo; one the library no longer offers
+    /// resolves to nil, so such a painting can't be regenerated (`ArtworkFactory.canRegenerate`).
     static func named(_ id: String) -> Sample? {
-        all.first { $0.id == id } ?? retired.first { $0.id == id }
+        all.first { $0.id == id }
     }
 
     /// The pictures a `library.json` lists, in its order, each titled by the catalog's
@@ -98,29 +99,4 @@ nonisolated struct Sample: Identifiable, Hashable, Sendable {
             provenance = try Provenance(from: decoder)
         }
     }
-
-    /// The six photos the app shipped with before the curated library. Saved paintings name
-    /// them and regenerate from them when they have no stored photo, so they stay in the
-    /// bundle; their provenance was never recorded, so they are neither offered nor credited.
-    /// The quality regression and the benchmark run on them (`tools/regression.py`).
-    static let retired: [Sample] = [
-        Sample(id: "parrots", title: String(
-            localized: "sample.parrots", defaultValue: "Parrots",
-            comment: "Name of a bundled sample photo, shown as its default painting title")),
-        Sample(id: "hibiscus", title: String(
-            localized: "sample.hibiscus", defaultValue: "Hibiscus",
-            comment: "Name of a bundled sample photo, shown as its default painting title")),
-        Sample(id: "lighthouse", title: String(
-            localized: "sample.lighthouse", defaultValue: "Lighthouse",
-            comment: "Name of a bundled sample photo, shown as its default painting title")),
-        Sample(id: "barn", title: String(
-            localized: "sample.barn", defaultValue: "Red Barn",
-            comment: "Name of a bundled sample photo, shown as its default painting title")),
-        Sample(id: "espresso", title: String(
-            localized: "sample.espresso", defaultValue: "Espresso",
-            comment: "Name of a bundled sample photo, shown as its default painting title")),
-        Sample(id: "regatta", title: String(
-            localized: "sample.regatta", defaultValue: "Regatta",
-            comment: "Name of a bundled sample photo, shown as its default painting title")),
-    ]
 }
