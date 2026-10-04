@@ -15,7 +15,9 @@ struct AdvancedSettingsTests {
         smoothing: 2, textureFlattening: 2, minimumCellSize: 2, subjectEmphasis: 2, accentColors: 2, colorfulness: 2)
 
     @Test func classicKeysIgnoreTheLayeredSettings() {
-        #expect(GenerationKey.defaults.lineArt == LineArtSettings() && GenerationKey.defaults.lineArt.style == .coloringBook)
+        // The defaults' key is the coloring book, canonical (joining across its absent texture lines is splitting).
+        #expect(GenerationKey.defaults == GenerationKey(lineArt: LineArtSettings(), tuning: PipelineTuning()))
+        #expect(GenerationKey.defaults.lineArt.style == .coloringBook && GenerationKey.defaults.lineArt.samePaint == .split)
         var classic = Self.changedArt
         classic.style = .classic
         let classicKey = GenerationKey(lineArt: classic, tuning: PipelineTuning())
@@ -72,7 +74,7 @@ struct AdvancedSettingsTests {
         custom.gapBridging = 3
         let carried = custom.changing(to: .coloringBook)
         #expect(carried.gapBridging == 3 && carried.outlineThreshold == 0.6 && carried.style == .coloringBook)
-        #expect(AdvancedControl.outlineThreshold.defaultValue(for: .layered) == 0.85)
+        #expect(AdvancedControl.outlineThreshold.defaultValue(for: .layered) == Double(Float(0.85)))
         #expect(AdvancedControl.style.defaultValue(for: .layered) == AdvancedControl.style.defaultValue(for: .classic))
         var joined = LineArtSettings(style: .coloringBook, samePaint: .joinTexture)
         let split = GenerationKey(lineArt: LineArtSettings(style: .coloringBook, samePaint: .split), tuning: PipelineTuning())
@@ -97,7 +99,9 @@ struct AdvancedSettingsTests {
         #expect(multiplier.text(1.5) == "1.5×")
 
         let threshold = try #require(AdvancedControl.outlineThreshold.slider(for: .layered))
-        #expect(threshold.defaultValue == 0.85 && AdvancedControl.outlineThreshold.slider(for: .coloringBook)?.defaultValue == 0.6)
+        // Defaults are Floats shown as Doubles.
+        #expect(abs(threshold.defaultValue - 0.85) < 1e-6)
+        #expect(abs(try #require(AdvancedControl.outlineThreshold.slider(for: .coloringBook)).defaultValue - 0.6) < 1e-6)
         #expect(close(threshold.value(at: threshold.position(of: 0.42)), 0.42))
         // VoiceOver steps land on the step grid, so they never drift.
         #expect(close(threshold.value(0.42, adjustedBy: 1), 0.45))
@@ -335,7 +339,8 @@ struct AdvancedSettingsTests {
         let baseline = try #require(model.baseline)
         #expect(model.preview?.key == .defaults)
         #expect(model.preview?.stats == baseline)
-        #expect(model.statsDelta == .init(areas: 0, colors: 0))
+        // The defaults are a coloring book, so the preview carries line counts (rendered with the edge map).
+        #expect(model.statsDelta == .init(areas: 0, colors: 0, lines: 0))
         #expect(baseline.areas >= model.preview?.template.regions.count ?? .max, "Draft areas weren't grown to the full painting")
         #expect(model.effects.values.allSatisfy { $0 == .atDefault })
 
