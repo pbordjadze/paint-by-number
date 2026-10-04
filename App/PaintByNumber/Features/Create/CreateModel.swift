@@ -535,13 +535,3 @@ final class CreateModel {
         Date.now.formatted(.dateTime.month(.wide).day())
     }
 }
-
-/// Set once when a suggestion's task is cancelled; read by every candidate's thread.
-private nonisolated final class CancellationFlag: @unchecked Sendable {
-    private let lock = NSLock()
-    private var cancelled = false
-
-    var isSet: Bool { lock.withLock { cancelled } }
-
-    func set() { lock.withLock { cancelled = true } }
-}
