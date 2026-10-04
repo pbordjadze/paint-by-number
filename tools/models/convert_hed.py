@@ -7,7 +7,8 @@
 Writes App/PaintByNumber/Resources/Models/HED.mlpackage (what `EdgeDetector` runs) and the
 simulator test's reference map App/PaintByNumberTests/HEDFixture.pgm, computed with PyTorch
 from the committed input App/PaintByNumberTests/HEDFixture.ppm exactly the way the layered-lines
-research computed its maps (`research/lineart/lines_learned.py`, model `hed`).
+research computed its maps (`research/lineart/lines_learned.py` in the `archive/lineart-research`
+tag, model `hed`).
 
 --map writes the 8-bit edge map of an image already at its map size (≤ 1152 px; `pbn
 generate`'s working.ppm, or the model input the app's tests attach) as `pbn generate --edges`
