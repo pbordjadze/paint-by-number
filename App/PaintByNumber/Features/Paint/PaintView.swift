@@ -454,7 +454,7 @@ struct PaintView: View {
             PaletteBar(
                 session: session, axis: palette.side ? .vertical : .horizontal, lines: palette.lines,
                 shakes: chrome.shakes, tip: swatchTip, metrics: palette.metrics, showsCurrentColor: palette.caption,
-                order: paletteOrder, customOrder: customOrder)
+                order: colorOrder)
         }
     }
 
