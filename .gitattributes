@@ -1,0 +1,2 @@
+# One scenario per line: two branches that each append one merge without a conflict.
+ci/scenarios.txt merge=union
