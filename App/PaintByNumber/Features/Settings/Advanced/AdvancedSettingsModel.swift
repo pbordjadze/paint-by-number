@@ -343,12 +343,10 @@ final class AdvancedSettingsModel {
         var layers = appearance
         layers.coloringBookWeight = LineAppearance.default.coloringBookWeight
         if layers != .default {
-            let title = String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
-                               comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom")
             let value = LineAppearancePreset.matching(appearance)?.name
                 ?? String(localized: "advanced.preset.custom", defaultValue: "Custom",
                           comment: "Settings › Advanced › Line Appearance: the layers' values match no preset; in shared settings text")
-            list.append(Self.change(title, value))
+            list.append(Self.change(AdvancedText.lineAppearanceTitle, value))
             if appearance.weighted != LineAppearance.default.weighted {
                 list.append(Self.change(AdvancedText.weightTitle, AdvancedText.onOff(appearance.weighted)))
             }

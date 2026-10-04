@@ -46,8 +46,7 @@ struct LineAppearanceSection: View {
             }
         } header: {
             AdvancedSectionHeader(
-                title: String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
-                              comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom"),
+                title: AdvancedText.lineAppearanceTitle,
                 canReset: !model.isAppearanceDefault, identifier: "advanced-reset-appearance") { model.resetAppearance() }
         } footer: {
             if model.lineArt.style == .coloringBook {
@@ -150,7 +149,9 @@ struct LineAppearanceSection: View {
             ForEach(LineAppearance.zooms.indices, id: \.self) { index in
                 let spec = isOpacity
                     ? SliderSpec(range: 0...1, defaultValue: Double(defaults[index]), quantum: 0.01, accessibilityStep: 0.05, format: .percent)
-                    : SliderSpec(range: 0.2...3, defaultValue: Double(defaults[index]), quantum: 0.05, accessibilityStep: 0.05, format: .multiplier)
+                    : SliderSpec(
+                        range: Double(LineAppearance.widthRange.lowerBound)...Double(LineAppearance.widthRange.upperBound),
+                        defaultValue: Double(defaults[index]), quantum: 0.05, accessibilityStep: 0.05, format: .multiplier)
                 let zoomText = AdvancedText.zoom(Int(LineAppearance.zooms[index]))
                 let layerName = layer.name
                 CompactSlider(

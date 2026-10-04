@@ -176,7 +176,6 @@ struct AdvancedSettingsView: View {
     private var presetsSection: some View {
         Section {
             AdvancedPresetRow(model: model)
-                .id("advanced-presets")
         } header: {
             Text(String(localized: "advanced.section.presets", defaultValue: "Presets",
                         comment: "Settings › Advanced: header of the section whose presets set Line Art, Line Appearance and Pipeline at once"))
@@ -188,7 +187,6 @@ struct AdvancedSettingsView: View {
     private var lineArtSection: some View {
         Section {
             LineStyleRow(model: model)
-                .id("advanced-lineArt")
             if model.lineArt.style.usesEdgeMap {
                 let style = model.lineArt.style
                 DetectorRow(model: model)
@@ -247,7 +245,6 @@ struct AdvancedSettingsView: View {
                 }
             }
             .accessibilityIdentifier("advanced-copy")
-            .id("advanced-feedback")
             Button {
                 isSharing = true
             } label: {

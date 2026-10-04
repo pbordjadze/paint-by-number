@@ -25,7 +25,7 @@ struct SettingsView: View {
     private enum Destination: Hashable { case acknowledgements, advanced }
     @State private var tipsReset = false
 
-    init(advancedFullScreen: Bool = false) {
+    init(advancedFullScreen: Bool) {
         self.advancedFullScreen = advancedFullScreen
         #if DEBUG
         switch ShellDemo.current {

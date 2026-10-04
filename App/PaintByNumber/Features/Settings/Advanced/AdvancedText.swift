@@ -11,6 +11,29 @@ nonisolated enum AdvancedText {
                      comment: "Settings › Advanced: value of a switch that is off, in shared settings text and VoiceOver")
     }
 
+    /// Under a changed setting while its effect on the preview is being worked out.
+    static var measuring: String {
+        String(localized: "advanced.effect.measuring", defaultValue: "Measuring…",
+               comment: "Settings › Advanced: under a changed setting while its effect on the preview is being worked out")
+    }
+
+    /// The Line Appearance section's header, which names it in shared settings text too.
+    static var lineAppearanceTitle: String {
+        String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
+               comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom")
+    }
+
+    /// The preview's two looks: the template as a painting starts, and every area painted.
+    static var previewTemplate: String {
+        String(localized: "advanced.preview.template", defaultValue: "Template",
+               comment: "Settings › Advanced: preview choice showing the template's lines and numbers, as a painting starts")
+    }
+
+    static var previewPainted: String {
+        String(localized: "advanced.preview.painted", defaultValue: "Painted",
+               comment: "Settings › Advanced: preview choice showing every area painted, as a finished painting")
+    }
+
     /// Line Appearance's switch for weighting lines within a layer by their edge's strength.
     static var weightTitle: String {
         String(localized: "advanced.appearance.weighted", defaultValue: "Weight by Edge Strength",
@@ -70,6 +93,11 @@ nonisolated enum AdvancedText {
     static func zoom(_ level: Int) -> String {
         String(localized: "advanced.zoom", defaultValue: "\(level)×",
                comment: "Settings › Advanced: a zoom level of the preview, relative to the whole picture in view, e.g. 2×; the argument is the level")
+    }
+
+    /// "2.4×": any zoom, to a tenth.
+    static func zoomText(_ zoom: Double) -> String {
+        multiplier((zoom * 10).rounded() / 10)
     }
 
     /// "+212", "−85".
@@ -161,7 +189,7 @@ nonisolated enum AdvancedText {
                 break
             }
         }
-        let text = multiplier((Double(zoom) * 10).rounded() / 10)
+        let text = zoomText(Double(zoom))
         return String(localized: "advanced.appearance.clearFrom", defaultValue: "Clear from about \(text)",
                       comment: "Settings › Advanced › Line Appearance: the zoom from which the selected layer's lines read clearly; the argument is a zoom such as 2.4×")
     }

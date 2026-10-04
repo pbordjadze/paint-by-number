@@ -52,8 +52,7 @@ struct EffectLine: View {
             case .measuring(nil):
                 ProgressView()
                     .controlSize(.mini)
-                Text(String(localized: "advanced.effect.measuring", defaultValue: "Measuring…",
-                            comment: "Settings › Advanced: under a changed setting while its effect on the preview is being worked out"))
+                Text(AdvancedText.measuring)
             case .measuring(let delta?), .measured(let delta):
                 Image(systemName: Self.symbol(for: delta))
                 Text(AdvancedText.effect(delta))
@@ -87,8 +86,7 @@ struct EffectLine: View {
         case .atDefault:
             return nil
         case .measuring(nil):
-            return String(localized: "advanced.effect.measuring", defaultValue: "Measuring…",
-                          comment: "Settings › Advanced: under a changed setting while its effect on the preview is being worked out")
+            return AdvancedText.measuring
         case .measuring(let delta?), .measured(let delta):
             return AdvancedText.effect(delta)
         }
@@ -99,7 +97,7 @@ struct EffectLine: View {
 /// reads the slider alone, with all of that, moving by the setting's own step.
 struct AdvancedSlider: View {
     let title: String
-    var summary: String?
+    let summary: String
     let valueText: String
     let spec: SliderSpec
     let value: Double
@@ -107,7 +105,7 @@ struct AdvancedSlider: View {
     var effect: AdvancedSettingsModel.Effect?
     let identifier: String
     var onChange: (Double) -> Void
-    var onReset: (() -> Void)?
+    let onReset: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -115,7 +113,7 @@ struct AdvancedSlider: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                 Spacer(minLength: 8)
-                if isChanged, let onReset {
+                if isChanged {
                     Button {
                         FeedbackEngine.shared.selectionChanged()
                         onReset()
@@ -141,7 +139,7 @@ struct AdvancedSlider: View {
             Slider(value: position, in: 0...1)
                 .accessibilityLabel(Text(title))
                 .accessibilityValue(Text(accessibilityValue))
-                .accessibilityHint(Text(summary ?? ""))
+                .accessibilityHint(Text(summary))
                 .accessibilityAdjustableAction { direction in
                     switch direction {
                     case .increment: set(spec.value(value, adjustedBy: 1))
@@ -150,18 +148,16 @@ struct AdvancedSlider: View {
                     }
                 }
                 .accessibilityActions {
-                    if isChanged, let onReset {
+                    if isChanged {
                         Button("Reset to Default", action: onReset)
                     }
                 }
                 .accessibilityIdentifier(identifier)
             Group {
-                if let summary {
-                    Text(summary)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Text(summary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let effect {
                     EffectLine(effect: effect)
                 }

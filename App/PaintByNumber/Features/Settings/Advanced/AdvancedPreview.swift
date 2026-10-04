@@ -23,7 +23,8 @@ final class PreviewCanvasController {
 
 /// The preview's zoom levels: 1 shows the whole picture.
 enum PreviewZoom {
-    static let levels = [1, 2, 4]
+    /// The zooms Line Appearance gives values for, which the zoom strip indexes alike.
+    static let levels = LineAppearance.zooms.map { Int($0) }
 
     /// The level `zoom` is at (within a tenth), if any.
     static func level(near zoom: CGFloat) -> Int? {
@@ -305,10 +306,8 @@ struct AdvancedPreviewCard: View {
     private var layerSegments: some View {
         GlassSegments(
             segments: [
-                GlassSegment(value: false, title: String(localized: "advanced.preview.template", defaultValue: "Template",
-                                                         comment: "Settings › Advanced: preview choice showing the template's lines and numbers, as a painting starts")),
-                GlassSegment(value: true, title: String(localized: "advanced.preview.painted", defaultValue: "Painted",
-                                                        comment: "Settings › Advanced: preview choice showing every area painted, as a finished painting")),
+                GlassSegment(value: false, title: AdvancedText.previewTemplate),
+                GlassSegment(value: true, title: AdvancedText.previewPainted),
             ],
             selection: showsPainted
         ) { painted in
@@ -325,7 +324,7 @@ struct AdvancedPreviewCard: View {
         GlassSegments(
             segments: PreviewZoom.levels.map { GlassSegment(value: $0, title: AdvancedText.zoom($0)) },
             selection: PreviewZoom.level(near: zoom),
-            leading: PreviewZoom.level(near: zoom) == nil ? AdvancedText.multiplier((Double(zoom) * 10).rounded() / 10) : nil
+            leading: PreviewZoom.level(near: zoom) == nil ? AdvancedText.zoomText(Double(zoom)) : nil
         ) { level in
             FeedbackEngine.shared.selectionChanged()
             controller.zoom(to: CGFloat(level))
@@ -339,12 +338,8 @@ struct AdvancedPreviewCard: View {
     /// The canvas as one VoiceOver element: what it shows, adjustable through the zoom levels.
     private var accessibilityElement: some View {
         let title = model.pictureTitle
-        let shows = showsPainted
-            ? String(localized: "advanced.preview.painted", defaultValue: "Painted",
-                     comment: "Settings › Advanced: preview choice showing every area painted, as a finished painting")
-            : String(localized: "advanced.preview.template", defaultValue: "Template",
-                     comment: "Settings › Advanced: preview choice showing the template's lines and numbers, as a painting starts")
-        let zoomText = AdvancedText.multiplier((Double(zoom) * 10).rounded() / 10)
+        let shows = showsPainted ? AdvancedText.previewPainted : AdvancedText.previewTemplate
+        let zoomText = AdvancedText.zoomText(Double(zoom))
         return Rectangle()
             .fill(.clear)
             .contentShape(.rect)

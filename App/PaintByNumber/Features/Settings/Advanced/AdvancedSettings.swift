@@ -284,7 +284,7 @@ nonisolated let coloringBookWeightSlider = SliderSpec(
 /// with zoom. Presets leave `weighted`, what stays when painted and the coloring book's weight
 /// alone.
 nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Sendable {
-    /// The owner's pick: fainter layers fade in by opacity, at even weight.
+    /// Fainter layers fade in by opacity, at even weight: the default look.
     case fade
     /// Fainter layers start thin and grow as the painter zooms.
     case grow
