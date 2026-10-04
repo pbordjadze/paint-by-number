@@ -4,39 +4,48 @@ import PaintCore
 /// Turns painting events into haptics and sound. One shared instance; attach each
 /// `PaintingSession` when its screen appears.
 ///
-/// Preferences (read live, set from Settings): `hapticsEnabled`, `soundsEnabled` (both
-/// default on), and each sound and haptic's own switch (`PaintingEffect`, Settings › Advanced).
+/// Preferences (read live, set from Settings): `SettingsKey.haptics`, `SettingsKey.sounds`
+/// (both default on), and each sound and haptic's own switch (`PaintingEffect`, Settings ›
+/// Advanced).
 final class FeedbackEngine {
     static let shared = FeedbackEngine()
 
-    enum Keys {
-        static let haptics = "hapticsEnabled"
-        static let sounds = "soundsEnabled"
-    }
-
     private let haptics = HapticsPlayer()
     private let sounds = SoundPlayer()
+
+    private final class AttachedSession {
+        weak var session: PaintingSession?
+        init(_ session: PaintingSession) { self.session = session }
+    }
+
+    /// Weak, not by `ObjectIdentifier`: a freed session's address can come back as a new one's.
+    private var attached: [AttachedSession] = []
 
     /// How long the canvas animates a fill, so the haptic swell can match it. The canvas may
     /// update this per paint.
     var fillDuration: TimeInterval = 0.4
 
-    private var hapticsEnabled: Bool { UserDefaults.standard.object(forKey: Keys.haptics) as? Bool ?? true }
-    private var soundsEnabled: Bool { UserDefaults.standard.object(forKey: Keys.sounds) as? Bool ?? true }
+    private var hapticsEnabled: Bool { UserDefaults.standard.object(forKey: SettingsKey.haptics) as? Bool ?? true }
+    private var soundsEnabled: Bool { UserDefaults.standard.object(forKey: SettingsKey.sounds) as? Bool ?? true }
 
     private init() {}
 
-    /// Warms up the haptic and audio engines so the first stroke isn't late.
-    func prepare() {
-        if hapticsEnabled { haptics.prepare() }
-        if soundsEnabled { sounds.prepare() }
-    }
-
+    /// Plays a session's events, once however often its screen appears, and warms up the
+    /// engines so the first stroke isn't late.
     func attach(to session: PaintingSession) {
+        attached.removeAll { $0.session == nil }
+        guard !attached.contains(where: { $0.session === session }) else { return }
+        attached.append(AttachedSession(session))
         session.onEvent { [weak self, weak session] event in
             guard let self, let session else { return }
             self.handle(event, in: session)
         }
+        prepare()
+    }
+
+    private func prepare() {
+        if hapticsEnabled { haptics.prepare() }
+        if soundsEnabled { sounds.prepare() }
     }
 
     /// Selection changes and other UI detents.

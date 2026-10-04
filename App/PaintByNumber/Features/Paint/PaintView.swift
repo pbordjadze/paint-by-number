@@ -74,7 +74,7 @@ struct PaintView: View {
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding))
         .onAppear {
             if tips == nil { tips = PaintTips.makeGroup() }
-            FeedbackAttachment.attach(session)
+            FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
             chrome.observe(session, controller: controller)
             RenderContext.prewarm()
@@ -727,24 +727,5 @@ final class PaintChromeState {
             }
         }
         undoManager.setActionName(String(localized: "Paint"))
-    }
-}
-
-/// Attaches haptics and sound to a session exactly once, however often its screen appears.
-@MainActor
-enum FeedbackAttachment {
-    private final class Box {
-        weak var session: PaintingSession?
-        init(_ session: PaintingSession) { self.session = session }
-    }
-
-    private static var attached: [Box] = []
-
-    static func attach(_ session: PaintingSession) {
-        attached.removeAll { $0.session == nil }
-        guard !attached.contains(where: { $0.session === session }) else { return }
-        attached.append(Box(session))
-        FeedbackEngine.shared.attach(to: session)
-        FeedbackEngine.shared.prepare()
     }
 }

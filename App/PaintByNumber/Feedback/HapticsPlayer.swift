@@ -6,11 +6,9 @@ import Foundation
 /// finished color and a rising shimmer for a finished painting.
 final class HapticsPlayer {
     private var engine: CHHapticEngine?
-    private let supported = CHHapticEngine.capabilitiesForHardware().supportsHaptics
+    let isSupported = CHHapticEngine.capabilitiesForHardware().supportsHaptics
     private var lastPaint: ContinuousClock.Instant?
     private let clock = ContinuousClock()
-
-    var isSupported: Bool { supported }
 
     /// Paint spreading over a region. `strength` 0…1 (bigger regions feel heavier),
     /// `duration` matches the fill animation.
@@ -97,7 +95,7 @@ final class HapticsPlayer {
     }
 
     private func ensureEngine() -> CHHapticEngine? {
-        guard supported else { return nil }
+        guard isSupported else { return nil }
         if let engine { return engine }
         do {
             let engine = try CHHapticEngine()

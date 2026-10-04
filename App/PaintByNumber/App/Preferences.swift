@@ -3,8 +3,8 @@ import PaintCore
 
 /// UserDefaults keys of user preferences (views bind them with `@AppStorage`).
 enum SettingsKey {
-    static let haptics = FeedbackEngine.Keys.haptics
-    static let sounds = FeedbackEngine.Keys.sounds
+    static let haptics = "hapticsEnabled"
+    static let sounds = "soundsEnabled"
     static let autoAdvance = "autoAdvanceColors"
     static let paintingLength = "paintingLength"
     static let paperSize = "printPaperSize"
