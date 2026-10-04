@@ -5,7 +5,7 @@ public struct TemplateGenerator: Sendable {
     /// Stamped into every generated template (`Template.pipelineVersion`). Bump in the same
     /// commit as any change that alters generated output for identical inputs and settings,
     /// so saved paintings record which pipeline drew them.
-    public static let pipelineVersion: UInt32 = 4
+    public static let pipelineVersion: UInt32 = 6
 
     public var settings: GenerationSettings
 
@@ -18,7 +18,7 @@ public struct TemplateGenerator: Sendable {
         public var segmentation: Segmentation
         /// What vectorizing had to give up (fallback edges; see `VectorStats`).
         public var vectorStats: VectorStats
-        /// What layered line art did; nil for classic templates.
+        /// What line art drawn from an edge map did; nil for classic templates.
         public var lineArtStats: LineArtStats?
         public var timings: [StageClock.Timing]
         public var totalSeconds: Double { timings.filter { !$0.name.contains(".") }.reduce(0) { $0 + $1.seconds } }
@@ -29,8 +29,9 @@ public struct TemplateGenerator: Sendable {
     ///   - image: Source photo, any size (it is area-resampled to the working size).
     ///   - importance: Optional per-pixel saliency in 0...1 at any resolution (e.g. a
     ///     subject mask from Vision). Important areas receive more colors and detail.
-    ///   - lineArt: The edge map (and eyes) layered line art draws from. Ignored by classic
-    ///     settings; layered settings without it generate a classic template.
+    ///   - lineArt: The edge map (and eyes) layered and coloring-book line art draw from.
+    ///     Ignored by classic settings; settings that need it generate a classic template
+    ///     without it (a coloring book's over its flatter paint).
     ///   - cancel: Polled between and within stages.
     ///   - progress: Called with a rough 0...1 completion fraction.
     public func generate(
@@ -49,10 +50,13 @@ public struct TemplateGenerator: Sendable {
         try cancel.throwIfCancelled()
         progress?(0.1)
 
-        // Layered line art needs its edge map; without one the template is classic.
-        let layered = settings.lineArt.style == .layered ? lineArt : nil
+        // Line art drawn from an edge map needs it; without one the template is classic.
+        let layered = settings.lineArt.style.usesEdgeMap ? lineArt : nil
         let segmentEnd: Float = layered == nil ? 0.7 : 0.6
-        let parameters = SegmentationParameters(settings: settings, width: working.width, height: working.height)
+        var parameters = SegmentationParameters(settings: settings, width: working.width, height: working.height)
+        // By the settings, not the edge map, so Auto's drafts (which have none) are scored on
+        // the paint the book gets, and a book whose edge map failed keeps its flatter paint.
+        if settings.lineArt.style == .coloringBook { parameters.flattenForColoringBook() }
         var (segmentation, weights) = try clock.measure("segment") {
             try Segmenter.segmentWithImportance(
                 working, importance: importance, parameters: parameters, cancel: cancel, clock: clock,

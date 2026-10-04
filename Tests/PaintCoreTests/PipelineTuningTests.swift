@@ -71,10 +71,13 @@ struct PipelineTuningTests {
     }
 
     @Test func settingsDecodeTolerantly() throws {
-        // meta.json of artworks saved before line art existed.
+        // meta.json of artworks saved before line art existed: they were made with classic
+        // lines, so they regenerate with them whatever the default style is now.
         let old = #"{"colorCount": 20, "detail": 0.4, "smoothness": 0.6, "seed": 7}"#
         let settings = try JSONDecoder().decode(GenerationSettings.self, from: Data(old.utf8))
-        #expect(settings == GenerationSettings(colorCount: 20, detail: 0.4, smoothness: 0.6, seed: 7))
+        #expect(settings == GenerationSettings(
+            colorCount: 20, detail: 0.4, smoothness: 0.6, seed: 7, lineArt: LineArtSettings(style: .classic)))
+        #expect(GenerationSettings().lineArt.style == .coloringBook)
         // Unknown and malformed values fall back field by field.
         let odd = #"{"colorCount": 20, "detail": 0.4, "smoothness": 0.6, "seed": 7,"#
             + #" "lineArt": {"style": "watercolor", "outlineThreshold": "high", "gapBridging": 12, "samePaint": "split"},"#
@@ -84,6 +87,9 @@ struct PipelineTuningTests {
         expected.gapBridging = 12
         expected.samePaint = .split
         #expect(decoded.lineArt == expected)
+        // A missing number takes its style's default.
+        let layered = try JSONDecoder().decode(LineArtSettings.self, from: Data(#"{"style": "layered"}"#.utf8))
+        #expect(layered == LineArtSettings(style: .layered) && layered.outlineThreshold == 0.85)
         #expect(decoded.tuning == PipelineTuning(smoothing: 2))
         // Round trip.
         var full = GenerationSettings()
@@ -102,19 +108,26 @@ struct PipelineTuningTests {
 
     @Test func autoCandidatesCarryLineArtAndTuning() throws {
         let image = SegmentationTests.scene(width: 300, height: 200)
+        let classic = LineArtSettings(style: .classic)
         let plain = try AutoSettings.choose(
-            image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3, cancel: .none, firstDraft: nil)
-        var lineArt = LineArtSettings()
-        lineArt.style = .layered
+            image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3, lineArt: classic,
+            cancel: .none, firstDraft: nil)
+        var lineArt = LineArtSettings(style: .layered)
         lineArt.keepColorEdges = false
-        // Neutral tuning changes nothing but what the settings carry.
+        // Neutral tuning and layered lines change nothing but what the settings carry.
         let carried = try AutoSettings.choose(
             image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3, lineArt: lineArt,
             tuning: PipelineTuning(), cancel: .none, firstDraft: nil)
         #expect(carried.candidates.allSatisfy { $0.settings.lineArt == lineArt && $0.settings.tuning.isDefault })
         #expect(carried.candidates.map(\.score) == plain.candidates.map(\.score))
         #expect(carried.winner == plain.winner)
-        #expect(plain.candidates.allSatisfy { $0.settings.lineArt == LineArtSettings() })
+        #expect(plain.candidates.allSatisfy { $0.settings.lineArt == classic })
+        // Without line art given, candidates carry the default style: a coloring book, whose
+        // flatter paint reaches the drafts.
+        let book = try AutoSettings.choose(
+            image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3, cancel: .none, firstDraft: nil)
+        #expect(book.candidates.allSatisfy { $0.settings.lineArt == LineArtSettings() })
+        #expect(book.candidates[0].score!.regions <= plain.candidates[0].score!.regions)
         // A tuning reaches the drafts Auto scores.
         let tuned = try AutoSettings.choose(
             image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3,

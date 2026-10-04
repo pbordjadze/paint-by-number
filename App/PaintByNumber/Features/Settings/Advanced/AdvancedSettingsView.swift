@@ -158,7 +158,7 @@ struct AdvancedSettingsView: View {
     private var introSection: some View {
         Section {
             SwiftUI.Label {
-                Text("Line Art and Pipeline settings apply to new paintings. Line Appearance changes how every layered painting is drawn.")
+                Text("Line Art and Pipeline settings apply to new paintings. Line Appearance changes how every layered or coloring-book painting is drawn.")
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
             } icon: {
@@ -189,9 +189,11 @@ struct AdvancedSettingsView: View {
         Section {
             LineStyleRow(model: model)
                 .id("advanced-lineArt")
-            if model.lineArt.style == .layered {
+            if model.lineArt.style.usesEdgeMap {
+                let style = model.lineArt.style
+                DetectorRow(model: model)
                 SensitivityBand(lineArt: model.lineArt, lines: model.preview?.stats.lines)
-                ForEach(AdvancedControl.thresholds, id: \.self) { control in
+                ForEach(AdvancedControl.thresholds.filter { $0.applies(to: style) }, id: \.self) { control in
                     AdvancedSliderRow(control: control, model: model)
                 }
                 AdvancedSliderRow(control: .minimumStrokeLength, model: model)
@@ -199,13 +201,17 @@ struct AdvancedSettingsView: View {
                 AdvancedSliderRow(control: .lineSmoothing, model: model)
                 SamePaintRow(model: model)
                 AdvancedToggleRow(
-                    title: AdvancedControl.keepColorEdges.title, summary: AdvancedControl.keepColorEdges.summary,
+                    title: AdvancedControl.keepColorEdges.title, summary: AdvancedControl.keepColorEdges.summary(for: style),
                     isOn: $model.lineArt.keepColorEdges, effect: model.effects[.keepColorEdges] ?? .atDefault,
                     identifier: "advanced-control-keepColorEdges")
                 AdvancedToggleRow(
                     title: AdvancedControl.outlineEyes.title, summary: AdvancedControl.outlineEyes.summary,
                     isOn: $model.lineArt.outlineEyes, effect: model.effects[.outlineEyes] ?? .atDefault,
                     identifier: "advanced-control-outlineEyes")
+                AdvancedToggleRow(
+                    title: AdvancedControl.outlineObjects.title, summary: AdvancedControl.outlineObjects.summary,
+                    isOn: $model.lineArt.outlineObjects, effect: model.effects[.outlineObjects] ?? .atDefault,
+                    identifier: "advanced-control-outlineObjects")
             }
         } header: {
             AdvancedSectionHeader(

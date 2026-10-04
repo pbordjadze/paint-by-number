@@ -19,6 +19,12 @@ struct SegmentationParameters: Sendable {
     /// change. Beyond that the new paint reads as a different colour (dark slats on a blue
     /// shutter turning brown), and merging into a neighbour looks better.
     static let labelRecolorLimit: Float = 2 * jnd
+    /// A coloring book's paint is flatter: the areas inside an outline are told apart only by
+    /// their numbers, so small color cells cost more than they show. Its smoothing, texture
+    /// flattening and smallest area are this many times the classic ones
+    /// (`flattenForColoringBook`), a fifth to a third fewer cells on the preset's ten pictures
+    /// (`docs/presets/README.md`); the Pipeline factors multiply that.
+    static let coloringBookFlattening: Float = 1.5
 
     var colorCount: Int
     var seed: UInt64
@@ -116,7 +122,9 @@ struct SegmentationParameters: Sendable {
     var consolidationTolerance: Float
 
     /// `GenerationSettings.tuning` multiplies the knobs it names (`PipelineTuning`); a factor
-    /// of exactly 1 leaves every value bit for bit as derived.
+    /// of exactly 1 leaves every value bit for bit as derived. The line style changes nothing
+    /// here: a coloring book's flatter paint is `flattenForColoringBook`, which the generator
+    /// applies, so analysis (`PhotoAnalyzer`) and classic templates never see it.
     init(settings: GenerationSettings, width: Int, height: Int) {
         let s = settings.normalized
         let d = s.detail, sm = s.smoothness
@@ -192,6 +200,13 @@ struct SegmentationParameters: Sendable {
         boundaryPasses = Int((3 * sm).rounded())
         boundaryFidelity = 40
         consolidationTolerance = 0.1 * lerp(1.4, 0.7, d)
+    }
+
+    /// The coloring book's flatter paint (`coloringBookFlattening`).
+    mutating func flattenForColoringBook() {
+        smoothSpatial *= Self.coloringBookFlattening
+        textureFlattening *= Self.coloringBookFlattening
+        minArea *= Self.coloringBookFlattening
     }
 
     /// Minimum inscribed radius of a region whose number has `digits` digits: scaled like the

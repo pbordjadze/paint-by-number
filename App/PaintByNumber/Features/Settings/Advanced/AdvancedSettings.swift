@@ -3,14 +3,24 @@ import PaintCore
 
 /// What a preview of Settings › Advanced is generated with: the two groups of settings that
 /// change templates, canonical, so that settings giving the same template share a key. Classic
-/// line art ignores every other line art setting, so classic keys carry the default ones.
+/// line art ignores every other line art setting, so classic keys carry the classic defaults; a
+/// coloring book ignores the texture threshold and has no texture lines to join across.
 nonisolated struct GenerationKey: Hashable, Sendable {
     let lineArt: LineArtSettings
     let tuning: PipelineTuning
 
     init(lineArt: LineArtSettings, tuning: PipelineTuning) {
-        let art = lineArt.normalized
-        self.lineArt = art.style == .classic ? LineArtSettings() : art
+        var art = lineArt.normalized
+        switch art.style {
+        case .classic:
+            art = LineArtSettings(style: .classic)
+        case .coloringBook:
+            art.textureThreshold = min(art.detailThreshold, LineArtSettings().textureThreshold)
+            if art.samePaint == .joinTexture { art.samePaint = .split }
+        case .layered:
+            break
+        }
+        self.lineArt = art
         self.tuning = tuning.normalized
     }
 
@@ -28,29 +38,40 @@ nonisolated struct GenerationKey: Hashable, Sendable {
 /// A setting of Settings › Advanced that changes templates. Each one shows its effect: the
 /// preview's numbers against the same settings with this one back at its default.
 nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
-    case style
+    case style, detector
     case outlineThreshold, detailThreshold, textureThreshold
     case minimumStrokeLength, gapBridging, lineSmoothing
-    case samePaint, keepColorEdges, outlineEyes
+    case samePaint, keepColorEdges, outlineEyes, outlineObjects
     case smoothing, textureFlattening, minimumCellSize, subjectEmphasis, accentColors, colorfulness
 
     static let lineArt: [AdvancedControl] = [
-        .style, .outlineThreshold, .detailThreshold, .textureThreshold, .minimumStrokeLength, .gapBridging,
-        .lineSmoothing, .samePaint, .keepColorEdges, .outlineEyes,
+        .style, .detector, .outlineThreshold, .detailThreshold, .textureThreshold, .minimumStrokeLength, .gapBridging,
+        .lineSmoothing, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects,
     ]
     static let thresholds: [AdvancedControl] = [.outlineThreshold, .detailThreshold, .textureThreshold]
     static let pipeline: [AdvancedControl] = [
         .smoothing, .textureFlattening, .minimumCellSize, .subjectEmphasis, .accentColors, .colorfulness,
     ]
 
-    /// Only layered line art reads it.
-    var isLayeredOnly: Bool { self != .style && Self.lineArt.contains(self) }
+    /// Only line art drawn from an edge map (layered, coloring book) reads it.
+    var needsEdgeMap: Bool { self != .style && Self.lineArt.contains(self) }
 
-    /// Puts this setting back to its default in `art` and `tuning`.
+    /// Whether templates of `style` read the setting: classic reads only the style, and a
+    /// coloring book draws nothing below detail, so it has no texture threshold.
+    func applies(to style: LineArtSettings.Style) -> Bool {
+        guard needsEdgeMap else { return true }
+        guard style.usesEdgeMap else { return false }
+        return !(style == .coloringBook && self == .textureThreshold)
+    }
+
+    /// Puts this setting back to its default in `art` and `tuning`: a line art setting to its
+    /// style's own default, the style to the default style, carrying each style's defaults
+    /// (`LineArtSettings.changing(to:)`).
     func reset(_ art: inout LineArtSettings, _ tuning: inout PipelineTuning) {
-        let a = LineArtSettings(), t = PipelineTuning()
+        let a = LineArtSettings(style: art.style), t = PipelineTuning()
         switch self {
-        case .style: art.style = a.style
+        case .style: art = art.changing(to: LineArtSettings().style)
+        case .detector: art.detector = a.detector
         case .outlineThreshold: art.outlineThreshold = a.outlineThreshold
         case .detailThreshold: art.detailThreshold = a.detailThreshold
         case .textureThreshold: art.textureThreshold = a.textureThreshold
@@ -60,6 +81,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
         case .samePaint: art.samePaint = a.samePaint
         case .keepColorEdges: art.keepColorEdges = a.keepColorEdges
         case .outlineEyes: art.outlineEyes = a.outlineEyes
+        case .outlineObjects: art.outlineObjects = a.outlineObjects
         case .smoothing: tuning.smoothing = t.smoothing
         case .textureFlattening: tuning.textureFlattening = t.textureFlattening
         case .minimumCellSize: tuning.minimumCellSize = t.minimumCellSize
@@ -83,7 +105,8 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     /// The setting as a number: choices by their position, switches 0 or 1.
     func value(lineArt art: LineArtSettings, tuning: PipelineTuning) -> Double {
         switch self {
-        case .style: art.style == .layered ? 1 : 0
+        case .style: Double(LineArtSettings.Style.allCases.firstIndex(of: art.style) ?? 0)
+        case .detector: Double(LineArtSettings.Detector.allCases.firstIndex(of: art.detector) ?? 0)
         case .outlineThreshold: Double(art.outlineThreshold)
         case .detailThreshold: Double(art.detailThreshold)
         case .textureThreshold: Double(art.textureThreshold)
@@ -93,6 +116,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
         case .samePaint: Double(LineArtSettings.SamePaint.allCases.firstIndex(of: art.samePaint) ?? 0)
         case .keepColorEdges: art.keepColorEdges ? 1 : 0
         case .outlineEyes: art.outlineEyes ? 1 : 0
+        case .outlineObjects: art.outlineObjects ? 1 : 0
         case .smoothing: Double(tuning.smoothing)
         case .textureFlattening: Double(tuning.textureFlattening)
         case .minimumCellSize: Double(tuning.minimumCellSize)
@@ -102,12 +126,17 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
         }
     }
 
-    /// The default as a number (see `value(lineArt:tuning:)`).
-    var defaultValue: Double { value(lineArt: LineArtSettings(), tuning: PipelineTuning()) }
+    /// The default as a number (see `value(lineArt:tuning:)`) under `style`, whose own defaults
+    /// the line art settings have; the style's default is the default style.
+    func defaultValue(for style: LineArtSettings.Style) -> Double {
+        value(lineArt: LineArtSettings(style: self == .style ? LineArtSettings().style : style), tuning: PipelineTuning())
+    }
 
-    /// How a slider shows the setting; nil for choices and switches.
-    var slider: SliderSpec? {
-        switch self {
+    /// How a slider shows the setting under `style` (its default is the style's); nil for
+    /// choices and switches.
+    func slider(for style: LineArtSettings.Style) -> SliderSpec? {
+        let defaultValue = defaultValue(for: style)
+        return switch self {
         case .outlineThreshold, .detailThreshold, .textureThreshold:
             SliderSpec(range: 0.02...0.98, defaultValue: defaultValue, quantum: 0.01, accessibilityStep: 0.05, format: .percent)
         case .minimumStrokeLength:
@@ -120,7 +149,7 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
             SliderSpec(
                 range: Double(PipelineTuning.range.lowerBound)...Double(PipelineTuning.range.upperBound),
                 defaultValue: defaultValue, logarithmic: true, quantum: 0.01, accessibilityStep: 0.25, format: .multiplier)
-        case .style, .samePaint, .keepColorEdges, .outlineEyes:
+        case .style, .detector, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects:
             nil
         }
     }
@@ -129,10 +158,12 @@ nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     func valueText(lineArt art: LineArtSettings, tuning: PipelineTuning) -> String {
         switch self {
         case .style: art.style.name
-        case .samePaint: art.samePaint.name
+        case .detector: art.detector.name
+        case .samePaint: art.samePaint.name(in: art.style)
         case .keepColorEdges: AdvancedText.onOff(art.keepColorEdges)
         case .outlineEyes: AdvancedText.onOff(art.outlineEyes)
-        default: slider?.text(value(lineArt: art, tuning: tuning)) ?? ""
+        case .outlineObjects: AdvancedText.onOff(art.outlineObjects)
+        default: slider(for: art.style)?.text(value(lineArt: art, tuning: tuning)) ?? ""
         }
     }
 }
@@ -242,8 +273,16 @@ nonisolated struct AdvancedStats: Equatable, Sendable {
     }
 }
 
+/// The Line Weight slider of a coloring book (`LineAppearance.coloringBookWeight`): half to
+/// twice the designed line, on a log scale with the default in the middle.
+nonisolated let coloringBookWeightSlider = SliderSpec(
+    range: Double(LineAppearance.coloringBookWeightRange.lowerBound)...Double(LineAppearance.coloringBookWeightRange.upperBound),
+    defaultValue: Double(LineAppearance.default.coloringBookWeight), logarithmic: true, quantum: 0.05, accessibilityStep: 0.25,
+    format: .multiplier)
+
 /// Quick starting points for Line Appearance: how the four layers' opacity and width change
-/// with zoom. Presets leave `weighted` and what stays when painted alone.
+/// with zoom. Presets leave `weighted`, what stays when painted and the coloring book's weight
+/// alone.
 nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Sendable {
     /// The owner's pick: fainter layers fade in by opacity, at even weight.
     case fade
@@ -290,47 +329,39 @@ nonisolated enum LineAppearancePreset: String, CaseIterable, Identifiable, Senda
     }
 }
 
-/// Starting points for the whole screen: Line Art, Line Appearance and Pipeline at once
-/// (Settings › Advanced › Presets). A preset is the single source of its values; Copy Settings
-/// with one active gives the text that pastes it into another build.
+/// Quick starting points for the whole screen (Settings › Advanced › Presets): a line style at
+/// its own defaults, the pipeline untuned and the lines drawn as designed. The coloring book is
+/// the app's defaults (`LineArtSettings()`), so Coloring Book is Reset All.
 nonisolated enum AdvancedPreset: String, CaseIterable, Identifiable, Sendable {
-    /// The app's own settings.
-    case defaults
-    /// The look of a coloring book: closed cells bounded by solid lines that stay over the
-    /// paint, nothing drawn inside a cell, the paints inside an outline divided only by color
-    /// edges. Every threshold at 0.6 makes each drawn line an outline (busy areas demote to
-    /// detail, drawn almost as strong); Always Split keeps every line a cell boundary; a longer
-    /// shortest line and gap closing close cells; 1.5× smoothing, texture flattening and
-    /// smallest area flatten the paint. Measured on ten pictures in `docs/presets/README.md`.
-    case coloringBook
+    case coloringBook, layered, classic
 
     var id: String { rawValue }
 
-    /// Every group the preset sets.
-    var settings: AdvancedReport.Imported {
+    /// The app's defaults.
+    static let defaults = AdvancedPreset.coloringBook
+
+    var style: LineArtSettings.Style {
         switch self {
-        case .defaults:
-            AdvancedReport.Imported(lineArt: LineArtSettings(), tuning: PipelineTuning(), lineAppearance: .default)
-        case .coloringBook:
-            AdvancedReport.Imported(
-                lineArt: LineArtSettings(
-                    style: .layered, outlineThreshold: 0.6, detailThreshold: 0.6, textureThreshold: 0.6,
-                    minimumStrokeLength: 36, gapBridging: 16, lineSmoothing: 0.7, samePaint: .split),
-                tuning: PipelineTuning(smoothing: 1.5, textureFlattening: 1.5, minimumCellSize: 1.5),
-                lineAppearance: LineAppearance(
-                    outline: .init(opacity: [1, 1, 1], width: [1.3, 1.3, 1.35], painted: 1),
-                    detail: .init(opacity: [0.85, 0.9, 0.95], width: [1.1, 1.1, 1.15], painted: 0.85),
-                    texture: .init(opacity: [0.7, 0.8, 0.9], width: [1, 1, 1.05], painted: 0.7),
-                    color: .init(opacity: [0.35, 0.5, 0.65], width: [0.75, 0.8, 0.9], painted: 0),
-                    weighted: false))
+        case .coloringBook: .coloringBook
+        case .layered: .layered
+        case .classic: .classic
         }
     }
 
-    /// The preset whose settings these are (as generation uses them), if any.
+    /// Every group the preset sets.
+    var settings: AdvancedReport.Imported {
+        AdvancedReport.Imported(lineArt: LineArtSettings(style: style), tuning: PipelineTuning(), lineAppearance: .default)
+    }
+
+    /// The preset whose settings these are, as generation uses them (`GenerationKey`: a setting
+    /// the style ignores, like a coloring book's texture threshold, doesn't count) and as the
+    /// lines are drawn.
     static func matching(lineArt: LineArtSettings, tuning: PipelineTuning, appearance: LineAppearance) -> AdvancedPreset? {
-        allCases.first { preset in
+        let key = GenerationKey(lineArt: lineArt, tuning: tuning)
+        return allCases.first { preset in
             let s = preset.settings
-            return s.lineArt == lineArt.normalized && s.tuning == tuning.normalized && s.lineAppearance == appearance.normalized
+            guard let art = s.lineArt, let tune = s.tuning else { return false }
+            return GenerationKey(lineArt: art, tuning: tune) == key && s.lineAppearance == appearance.normalized
         }
     }
 }

@@ -41,6 +41,42 @@ struct EdgeDetectorTests {
         #expect(zip(viaImage.values, map.values).allSatisfy { abs(Int($0) - Int($1)) <= 1 })
     }
 
+    /// `LineArtFixture.pgm` is what `tools/models/convert_lineart.py` computes in PyTorch from
+    /// the same crop (the generator's float16-rounded weights in float32, as the package stores
+    /// and runs them). Core ML on the CPU lands on the same levels but for float rounding, and
+    /// the combined map is that drawing over the HED map, the same on every run.
+    @Test func lineDrawingMatchesThePyTorchReferenceAndCombinesWithHED() throws {
+        let input = try Netpbm.read(Data(contentsOf: TestBundle.url("HEDFixture", "ppm")))
+        let reference = try Netpbm.read(Data(contentsOf: TestBundle.url("LineArtFixture", "pgm")))
+        let map = try EdgeDetector.lineDrawing(for: input, maxLongSide: EdgeDetector.maximumLongSide, cancel: .none)
+        #expect(map.width == reference.width && map.height == reference.height)
+        let expected = (0..<(reference.width * reference.height)).map { reference.pixels[$0 * 4] }
+        let differences = zip(map.values, expected).map { abs(Int($0) - Int($1)) }
+        let largest = differences.max() ?? 0
+        let differing = differences.filter { $0 > 0 }.count
+        Attachment.record(Data("""
+            line drawing fixture \(map.width)×\(map.height): largest difference \(largest) levels, \
+            \(differing) of \(differences.count) pixels differ
+            """.utf8), named: "lineart-fixture-comparison.txt")
+        #expect(largest <= 2, "Core ML's drawing is up to \(largest) levels from PyTorch's")
+        #expect(Double(differing) <= 0.01 * Double(differences.count), "\(differing) pixels differ from PyTorch's")
+        // A drawing: a few percent of the pixels are ink, most are paper.
+        let ink = Double(map.values.filter { $0 >= 128 }.count) / Double(map.values.count)
+        #expect(ink > 0.005 && ink < 0.2, "\(ink) of the fixture is ink")
+
+        let hed = try EdgeDetector.edgeMap(for: input, cancel: .none)
+        let maps = try EdgeDetector.maps(for: input, cancel: .none)
+        #expect(maps.contours == hed && maps.drawing == map)
+        let both = LineArtInputs.Maps(drawing: maps.drawing, contours: maps.contours, eyes: [], objects: [])
+        let combined = both.input(for: .drawingAndContours)
+        #expect(combined.edges.width == hed.width && combined.edges.height == hed.height)
+        #expect(combined.edges == EdgeMap.combined(drawing: map, contours: hed) && combined.contours == hed)
+        #expect(zip(combined.edges.values, map.values).allSatisfy { $0 >= $1 })
+        #expect(both.input(for: .drawing) == LineArtInput(edges: map))
+        #expect(both.input(for: .contours) == LineArtInput(edges: hed))
+        #expect(try EdgeDetector.maps(for: input, cancel: .none).drawing == map)
+    }
+
     /// A photo at full size: scaled to 1152 px, the same map on every run. Records the time and
     /// the model's input and output, so they can be checked against PyTorch off the device.
     @Test func edgeMapIsIdenticalAcrossRunsAtTheModelsSize() throws {
@@ -255,8 +291,9 @@ struct LineArtInputsTests {
 
     @Test func classicLineArtNeedsNoInputs() async throws {
         let image = try Self.photo()
-        #expect(try await LineArtInputs.make(for: image, settings: LineArtSettings()) == nil)
-        #expect(try await LineArtInputs.forGeneration(of: image, settings: LineArtSettings(), cached: false) == nil)
+        let classic = LineArtSettings(style: .classic)
+        #expect(try await LineArtInputs.make(for: image, settings: classic) == nil)
+        #expect(try await LineArtInputs.forGeneration(of: image, settings: classic, cached: false) == nil)
         #expect(try await LineArtInputs.forGeneration(of: nil, settings: Self.layered, cached: false) == nil)
     }
 
@@ -316,13 +353,14 @@ struct LineArtInputsTests {
         #expect(json.contains("layered"))
     }
 
-    /// Classic settings compute nothing extra and record the default line art and tuning.
+    /// Classic settings compute nothing extra and record the classic line art and default tuning.
     @Test func classicCreateFlowComputesNoInputs() async throws {
-        let model = CreateModel(paintingLength: .quick, lineArt: LineArtSettings(), tuning: PipelineTuning())
+        let classic = LineArtSettings(style: .classic)
+        let model = CreateModel(paintingLength: .quick, lineArt: classic, tuning: PipelineTuning())
         model.load(sample: try #require(Sample.named("espresso")))
         let draft = try await model.makeDraft()
         #expect(model.lineArtInput == nil)
-        #expect(draft.settings.lineArt == LineArtSettings() && draft.settings.tuning == PipelineTuning())
+        #expect(draft.settings.lineArt == classic && draft.settings.tuning == PipelineTuning())
         #expect(model.decision?.settings == draft.settings)
         #expect(draft.template.lineArt == nil)
     }

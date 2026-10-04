@@ -108,6 +108,10 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         case pipelineVersion, isFavorite, settingsOrigin, paintingLength
     }
 
+    /// What an artwork saved without settings was made with: classic lines, the only kind
+    /// there was, so regeneration keeps its look whatever the default style is now.
+    static let settingsBeforeLineArt = GenerationSettings(lineArt: LineArtSettings(style: .classic))
+
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         format = try c.decodeIfPresent(Int.self, forKey: .format) ?? Self.currentFormat
@@ -122,7 +126,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             createdAt = field(.createdAt, .distantPast)
             modifiedAt = field(.modifiedAt, createdAt)
             completedAt = try? c.decodeIfPresent(Date.self, forKey: .completedAt)
-            settings = field(.settings, GenerationSettings())
+            settings = field(.settings, Self.settingsBeforeLineArt)
             width = max(1, field(.width, 1))
             height = max(1, field(.height, 1))
             colorCount = max(0, field(.colorCount, 0))
@@ -142,7 +146,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? .distantPast
         modifiedAt = try c.decodeIfPresent(Date.self, forKey: .modifiedAt) ?? createdAt
         completedAt = try c.decodeIfPresent(Date.self, forKey: .completedAt)
-        settings = try c.decodeIfPresent(GenerationSettings.self, forKey: .settings) ?? GenerationSettings()
+        settings = try c.decodeIfPresent(GenerationSettings.self, forKey: .settings) ?? Self.settingsBeforeLineArt
         width = try c.decode(Int.self, forKey: .width)
         height = try c.decode(Int.self, forKey: .height)
         colorCount = try c.decodeIfPresent(Int.self, forKey: .colorCount) ?? 0

@@ -193,9 +193,10 @@ struct AdvancedSliderRow: View {
     let model: AdvancedSettingsModel
 
     var body: some View {
-        if let spec = control.slider {
+        let style = model.lineArt.style
+        if let spec = control.slider(for: style) {
             AdvancedSlider(
-                title: control.title, summary: control.summary, valueText: model.valueText(of: control), spec: spec,
+                title: control.title(for: style), summary: control.summary(for: style), valueText: model.valueText(of: control), spec: spec,
                 value: model.value(of: control), isChanged: model.isChanged(control),
                 effect: model.effects[control] ?? .atDefault, identifier: "advanced-control-\(control.rawValue)",
                 onChange: { model.set(control, to: $0) }, onReset: { model.reset(control) })
@@ -231,15 +232,46 @@ struct AdvancedToggleRow: View {
     }
 }
 
-/// What happens where a line runs between two areas of the same paint.
-struct SamePaintRow: View {
+/// Which of the two bundled models the lines come from (`LineArtSettings.Detector`).
+struct DetectorRow: View {
     @Bindable var model: AdvancedSettingsModel
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Picker(selection: $model.lineArt.samePaint) {
-                ForEach(LineArtSettings.SamePaint.allCases, id: \.self) { option in
+            Picker(selection: $model.lineArt.detector) {
+                ForEach(LineArtSettings.Detector.allCases, id: \.self) { option in
                     Text(option.name).tag(option)
+                }
+            } label: {
+                Text(AdvancedControl.detector.title)
+                    .font(.subheadline.weight(.semibold))
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("advanced-control-detector")
+            Text(model.lineArt.detector.summary)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .contentTransition(.opacity)
+            EffectLine(effect: model.effects[.detector] ?? .atDefault)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+/// What happens where a line runs between two areas of the same paint. A coloring book has no
+/// texture lines, so it offers two choices, joining across texture shown as splitting.
+struct SamePaintRow: View {
+    @Bindable var model: AdvancedSettingsModel
+
+    var body: some View {
+        let style = model.lineArt.style
+        let book = style == .coloringBook
+        let options: [LineArtSettings.SamePaint] = book ? [.joinTexture, .joinAllButOutlines] : LineArtSettings.SamePaint.allCases
+        VStack(alignment: .leading, spacing: 6) {
+            Picker(selection: selection(book: book)) {
+                ForEach(options, id: \.self) { option in
+                    Text(option.name(in: style)).tag(option)
                 }
             } label: {
                 Text(AdvancedControl.samePaint.title)
@@ -247,7 +279,7 @@ struct SamePaintRow: View {
             }
             .pickerStyle(.menu)
             .accessibilityIdentifier("advanced-control-samePaint")
-            Text(model.lineArt.samePaint.summary)
+            Text(model.lineArt.samePaint.summary(in: style))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -256,9 +288,17 @@ struct SamePaintRow: View {
         }
         .padding(.vertical, 2)
     }
+
+    /// In a coloring book Always Split and Join Across Texture are one choice, shown as the
+    /// default (joining across texture), so the row reads "at its default" until it is changed.
+    private func selection(book: Bool) -> Binding<LineArtSettings.SamePaint> {
+        Binding(
+            get: { book && model.lineArt.samePaint == .split ? .joinTexture : model.lineArt.samePaint },
+            set: { model.lineArt.samePaint = $0 })
+    }
 }
 
-/// Classic or Layered, each with a small drawing of what its lines look like.
+/// Classic, Layered or Coloring Book, each with a small drawing of what its lines look like.
 struct LineStyleRow: View {
     @Bindable var model: AdvancedSettingsModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -268,7 +308,7 @@ struct LineStyleRow: View {
             Text(AdvancedControl.style.title)
                 .font(.subheadline.weight(.semibold))
                 .accessibilityAddTraits(.isHeader)
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 ForEach(LineArtSettings.Style.allCases, id: \.self) { style in card(style) }
             }
             Text(model.lineArt.style.summary)
@@ -285,22 +325,22 @@ struct LineStyleRow: View {
         return Button {
             guard !selected else { return }
             FeedbackEngine.shared.selectionChanged()
-            withAnimation(reduceMotion ? nil : .snappy) { model.lineArt.style = style }
+            withAnimation(reduceMotion ? nil : .snappy) { model.lineArt = model.lineArt.changing(to: style) }
         } label: {
             VStack(spacing: 8) {
                 LineStyleSwatch(style: style)
                     .frame(height: 62)
                     .clipShape(.rect(cornerRadius: 10, style: .continuous))
-                HStack(spacing: 5) {
+                HStack(spacing: 4) {
                     Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(selected ? Theme.accent : Color.secondary)
                     Text(style.name)
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .minimumScaleFactor(0.7)
                 }
             }
-            .padding(8)
+            .padding(6)
             .frame(maxWidth: .infinity)
             .background(Color(uiColor: .tertiarySystemGroupedBackground), in: .rect(cornerRadius: 14, style: .continuous))
             .overlay {
@@ -317,7 +357,8 @@ struct LineStyleRow: View {
 }
 
 /// A moonlit hill drawn the way each line style draws it: Classic every line alike, Layered
-/// with strong outlines, lighter detail and faint texture.
+/// with strong outlines, lighter detail and faint texture, Coloring Book its outlines and
+/// details alike in heavy ink and nothing faint.
 private struct LineStyleSwatch: View {
     let style: LineArtSettings.Style
 
@@ -353,6 +394,9 @@ private struct LineStyleSwatch: View {
                 stroke(ridge, width: 1.1, opacity: 0.5)
                 stroke(crater, width: 1, opacity: 0.4)
                 stroke(grass, width: 0.8, opacity: 0.25)
+            case .coloringBook:
+                for path in [moon, hill, ridge] { stroke(path, width: 2.4, opacity: 1) }
+                stroke(crater, width: 1.8, opacity: 1)
             }
         }
         .accessibilityHidden(true)
@@ -360,20 +404,30 @@ private struct LineStyleSwatch: View {
 }
 
 /// Where the three thresholds cut the scale of edge strength into texture, detail and
-/// outlines, with the preview's count of lines in each layer.
+/// outlines, with the preview's count of lines in each layer. A coloring book has two cuts:
+/// nothing below detail is drawn, so its texture layer is not shown.
 struct SensitivityBand: View {
     let lineArt: LineArtSettings
     /// Lines per `LineLayer`; nil before there is a layered preview.
     let lines: [Int]?
 
+    private var book: Bool { lineArt.style == .coloringBook }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Sensitivity")
                 .font(.subheadline.weight(.semibold))
-            Text("How strong an edge must be to become each kind of line. Lower values draw more lines.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            if book {
+                Text("How strong an edge must be to be drawn, and to be an outline. Lower values draw more lines.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("How strong an edge must be to become each kind of line. Lower values draw more lines.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             band
             HStack {
                 Text("Faint")
@@ -384,7 +438,9 @@ struct SensitivityBand: View {
             .foregroundStyle(.tertiary)
             LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
                       alignment: .leading, spacing: 6) {
-                ForEach([LineLayer.outline, .detail, .texture, .color], id: \.self) { layer in legend(layer) }
+                ForEach(book ? [LineLayer.outline, .detail, .color] : [LineLayer.outline, .detail, .texture, .color], id: \.self) { layer in
+                    legend(layer)
+                }
             }
         }
         .padding(.vertical, 4)
@@ -399,7 +455,7 @@ struct SensitivityBand: View {
             let outline = CGFloat(lineArt.outlineThreshold)
             ZStack(alignment: .leading) {
                 Rectangle().fill(Color.primary.opacity(0.06))
-                segment(from: texture, to: detail, layer: .texture, width: w)
+                if !book { segment(from: texture, to: detail, layer: .texture, width: w) }
                 segment(from: detail, to: outline, layer: .detail, width: w)
                 segment(from: outline, to: 1, layer: .outline, width: w)
             }
@@ -503,7 +559,7 @@ struct AdvancedPresetRow: View {
 }
 
 /// Line Appearance: presets, how each layer looks at 1×, 2× and 4×, and per layer the opacity
-/// and width at those zooms.
+/// and width at those zooms; for a coloring book, which draws every line alike, its line weight.
 struct LineAppearanceSection: View {
     @Bindable var model: AdvancedSettingsModel
     let zoom: CGFloat
@@ -512,36 +568,50 @@ struct LineAppearanceSection: View {
 
     var body: some View {
         Section {
-            if model.lineArt.style == .classic {
-                SwiftUI.Label {
-                    Text("Layered lines are drawn this way. Choose Layered above to see it in the preview.")
-                        .font(.footnote)
-                } icon: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(Theme.accent)
+            if model.lineArt.style == .coloringBook {
+                AdvancedSlider(
+                    title: AdvancedText.coloringBookWeightTitle, summary: AdvancedText.coloringBookWeightSummary,
+                    valueText: coloringBookWeightSlider.text(model.coloringBookWeight), spec: coloringBookWeightSlider,
+                    value: model.coloringBookWeight, isChanged: model.coloringBookWeight != coloringBookWeightSlider.defaultValue,
+                    identifier: "advanced-appearance-bookWeight",
+                    onChange: { model.coloringBookWeight = $0 }, onReset: { model.coloringBookWeight = coloringBookWeightSlider.defaultValue })
+                    .id("advanced-appearance")
+            } else {
+                if model.lineArt.style == .classic {
+                    SwiftUI.Label {
+                        Text("Layered lines are drawn this way. Choose Layered above to see it in the preview.")
+                            .font(.footnote)
+                    } icon: {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(Theme.accent)
+                    }
                 }
+                presets
+                    .id("advanced-appearance")
+                ZoomStrip(appearance: model.appearance, layer: layer, zoom: zoom, onSelect: onZoom)
+                    .padding(.vertical, 4)
+                layerPicker
+                values(.opacity)
+                values(.width)
+                paintedRow
+                AdvancedToggleRow(
+                    title: AdvancedText.weightTitle,
+                    summary: String(localized: "advanced.appearance.weighted.summary",
+                                    defaultValue: "Draws stronger edges heavier within each layer. Off draws a layer’s lines alike.",
+                                    comment: "Settings › Advanced › Line Appearance: explanation under the Weight by Edge Strength switch"),
+                    isOn: $model.appearance.weighted, identifier: "advanced-appearance-weighted")
             }
-            presets
-                .id("advanced-appearance")
-            ZoomStrip(appearance: model.appearance, layer: layer, zoom: zoom, onSelect: onZoom)
-                .padding(.vertical, 4)
-            layerPicker
-            values(.opacity)
-            values(.width)
-            paintedRow
-            AdvancedToggleRow(
-                title: AdvancedText.weightTitle,
-                summary: String(localized: "advanced.appearance.weighted.summary",
-                                defaultValue: "Draws stronger edges heavier within each layer. Off draws a layer’s lines alike.",
-                                comment: "Settings › Advanced › Line Appearance: explanation under the Weight by Edge Strength switch"),
-                isOn: $model.appearance.weighted, identifier: "advanced-appearance-weighted")
         } header: {
             AdvancedSectionHeader(
                 title: String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
                               comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom"),
                 canReset: !model.isAppearanceDefault, identifier: "advanced-reset-appearance") { model.resetAppearance() }
         } footer: {
-            Text("Drawing only: changes show at once and apply to every layered painting, including the ones you have.")
+            if model.lineArt.style == .coloringBook {
+                Text("Drawing only: changes show at once and apply to every coloring-book painting, including the ones you have.")
+            } else {
+                Text("Drawing only: changes show at once and apply to every layered painting, including the ones you have.")
+            }
         }
     }
 

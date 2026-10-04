@@ -9,7 +9,9 @@ import simd
 ///
 /// Uses the template's vector geometry when present (crisp at any size, vector in PDFs)
 /// and otherwise samples the raster region map. Layered line art draws each layer with its
-/// `LineStyle` relative to the style's outline (faintest layer first), interior strokes included.
+/// `LineStyle` relative to the style's outline (faintest layer first), interior strokes included;
+/// a coloring book draws its drawing in full ink over everything (`ColoringBookLook`), in every
+/// style, with dotted guides along its color edges on paper.
 nonisolated enum TemplateRasterizer {
     struct Style: Sendable {
         enum Unpainted: Sendable, Equatable {
@@ -122,8 +124,11 @@ nonisolated enum TemplateRasterizer {
             drawRegionMap(t, painted: flags, style: style, in: ctx, resolution: deviceSize)
         } else {
             drawVectorFills(t, painted: flags, style: style, in: ctx, scale: scale)
-            if style.outlineWidth > 0 {
-                if let lines = DrawableLineArt(t) {
+            let lines = DrawableLineArt(t)
+            if let lines, lines.style == .coloringBook {
+                drawBookOutlines(t, lines: lines, style: style, in: ctx, scale: scale)
+            } else if style.outlineWidth > 0 {
+                if let lines {
                     drawLayeredOutlines(t, lines: lines, look: lineStyle(style), painted: flags, style: style, in: ctx, scale: scale)
                 } else {
                     drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale)
@@ -273,6 +278,55 @@ nonisolated enum TemplateRasterizer {
             ctx.addPath(path)
             ctx.strokePath()
         }
+        ctx.restoreGState()
+    }
+
+    /// A coloring book's lines (`ColoringBookLook`): the drawing (every drawn layer, edges and
+    /// strokes alike) in full ink, `widthFactor` times the style's line (a style without lines
+    /// still gets it at the finished picture's width: the drawing is part of the picture), never
+    /// hidden by paint. On paper (`.print`), where no highlight shows a color's cells, the color
+    /// edges go underneath first, as dotted guides.
+    private static func drawBookOutlines(_ t: Template, lines: DrawableLineArt, style: Style, in ctx: CGContext, scale: CGFloat) {
+        let visible = ctx.boundingBoxOfClipPath
+        let units = 1 / max(scale, 0.0001)
+        let weight: Float
+        switch style.lines {
+        case let .screen(appearance, _): weight = (appearance ?? .stored()).coloringBookWeight
+        case .print: weight = LineAppearance.stored().coloringBookWeight
+        }
+        let base = style.outlineWidth > 0 ? style.outlineWidth : Style.finished.outlineWidth
+        ctx.saveGState()
+        ctx.setLineJoin(.round)
+        ctx.setLineCap(.round)
+        if style.lines == .print {
+            let guides = CGMutablePath()
+            for (e, edge) in t.edges.enumerated()
+            where edge.right != BoundaryEdge.outside && !DrawableLineArt.isDrawn(lines.edgeLayers[e]) {
+                addPolyline(t.points(of: edge), to: guides, within: visible)
+            }
+            if !guides.isEmpty {
+                let c = style.outlineColor
+                ctx.setStrokeColor(cgColor(SIMD4(c.x, c.y, c.z, c.w * ColoringBookLook.printedGuideOpacity), space: t.colorSpace))
+                let width = style.outlineWidth * units
+                ctx.setLineWidth(width)
+                // Round caps on zero-length dashes: dots.
+                ctx.setLineDash(phase: 0, lengths: [0, width * ColoringBookLook.printedGuideSpacing])
+                ctx.addPath(guides)
+                ctx.strokePath()
+                ctx.setLineDash(phase: 0, lengths: [])
+            }
+        }
+        let drawing = CGMutablePath()
+        for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside && DrawableLineArt.isDrawn(lines.edgeLayers[e]) {
+            addPolyline(t.points(of: edge), to: drawing, within: visible)
+        }
+        for stroke in lines.strokes where DrawableLineArt.isDrawn(stroke.layer) {
+            addPolyline(lines.points(of: stroke), to: drawing, within: visible)
+        }
+        ctx.setStrokeColor(cgColor(ColoringBookLook.ink, space: t.colorSpace))
+        ctx.setLineWidth(base * CGFloat(ColoringBookLook.widthFactor * weight) * units)
+        ctx.addPath(drawing)
+        ctx.strokePath()
         ctx.restoreGState()
     }
 

@@ -41,6 +41,18 @@ nonisolated enum AdvancedText {
         Double(value).formatted(.percent.precision(.fractionLength(0)))
     }
 
+    /// Line Appearance's slider for how heavy a coloring book's lines are.
+    static var coloringBookWeightTitle: String {
+        String(localized: "advanced.appearance.bookWeight", defaultValue: "Line Weight",
+               comment: "Settings › Advanced › Line Appearance: slider for how heavy a coloring book's lines are drawn")
+    }
+
+    static var coloringBookWeightSummary: String {
+        String(localized: "advanced.appearance.bookWeight.summary",
+               defaultValue: "How heavy the drawing’s lines are, at every zoom. Coloring books draw every line alike, in full ink, over the paint.",
+               comment: "Settings › Advanced › Line Appearance: explanation under the Line Weight slider of a coloring book")
+    }
+
     /// "8 px": a length in pixels of the image the template is made at.
     static func pixels(_ count: Int) -> String {
         String(localized: "advanced.value.pixels", defaultValue: "\(count) px",
@@ -188,6 +200,12 @@ nonisolated extension AdvancedControl {
         case .outlineEyes:
             String(localized: "advanced.control.outlineEyes", defaultValue: "Outline Eyes",
                    comment: "Settings › Advanced › Line Art: switch that draws detected eyes as outlines")
+        case .outlineObjects:
+            String(localized: "advanced.control.outlineObjects", defaultValue: "Outline Subjects",
+                   comment: "Settings › Advanced › Line Art: switch that closes each subject's silhouette with an outline where the picture gives no edge")
+        case .detector:
+            String(localized: "advanced.control.detector", defaultValue: "Detector",
+                   comment: "Settings › Advanced › Line Art: choice of which of the two bundled models the lines come from")
         case .smoothing:
             String(localized: "advanced.control.smoothing", defaultValue: "Smoothing",
                    comment: "Settings › Advanced › Pipeline: multiplier on how much the photo is smoothed before paints are picked")
@@ -206,6 +224,36 @@ nonisolated extension AdvancedControl {
         case .colorfulness:
             String(localized: "advanced.control.colorfulness", defaultValue: "Colorfulness",
                    comment: "Settings › Advanced › Pipeline: multiplier on how much hue counts against lightness when telling paints apart")
+        }
+    }
+
+    /// The setting's name under `style`: a coloring book, which draws every line at or above
+    /// the detail threshold alike, calls that threshold Lines From.
+    func title(for style: LineArtSettings.Style) -> String {
+        guard style == .coloringBook, self == .detailThreshold else { return title }
+        return String(localized: "advanced.control.detailThreshold.book", defaultValue: "Lines From",
+                      comment: "Settings › Advanced › Line Art, Coloring Book: slider for the edge strength from which a line is drawn")
+    }
+
+    /// One line on what the setting does under `style` (a coloring book has no faint lines and
+    /// never draws color edges, so some settings mean something else there).
+    func summary(for style: LineArtSettings.Style) -> String {
+        guard style == .coloringBook else { return summary }
+        switch self {
+        case .outlineThreshold:
+            return String(localized: "advanced.control.outlineThreshold.summary.book",
+                          defaultValue: "Edges at least this strong are outlines, which reach further to close an area.",
+                          comment: "Settings › Advanced › Line Art, Coloring Book: explanation under the Outlines From slider")
+        case .detailThreshold:
+            return String(localized: "advanced.control.detailThreshold.summary.book",
+                          defaultValue: "Edges at least this strong are drawn; weaker ones are left out. Lower draws more lines.",
+                          comment: "Settings › Advanced › Line Art, Coloring Book: explanation under the Lines From slider")
+        case .keepColorEdges:
+            return String(localized: "advanced.control.keepColorEdges.summary.book",
+                          defaultValue: "Keeps the paints inside an outline as separate areas, told apart by their numbers. Off merges close paints for fewer areas.",
+                          comment: "Settings › Advanced › Line Art, Coloring Book: explanation under the Keep Color Edges switch")
+        default:
+            return summary
         }
     }
 
@@ -252,6 +300,14 @@ nonisolated extension AdvancedControl {
             String(localized: "advanced.control.outlineEyes.summary",
                    defaultValue: "Draws the eyes of faces in the picture as outlines, however soft they are.",
                    comment: "Settings › Advanced › Line Art: explanation under the Outline Eyes switch")
+        case .outlineObjects:
+            String(localized: "advanced.control.outlineObjects.summary",
+                   defaultValue: "Closes the silhouette of the main subjects where the picture gives no edge, so each is an area of its own.",
+                   comment: "Settings › Advanced › Line Art: explanation under the Outline Subjects switch")
+        case .detector:
+            String(localized: "advanced.control.detector.summary",
+                   defaultValue: "Which of the two bundled models the lines come from (see each option).",
+                   comment: "Settings › Advanced › Line Art: explanation of the Detector choice")
         case .smoothing:
             String(localized: "advanced.control.smoothing.summary",
                    defaultValue: "How much the photo is smoothed before paints are picked. Higher melts texture into flat areas.",
@@ -287,6 +343,8 @@ nonisolated extension LineArtSettings.Style {
                               comment: "Settings › Advanced › Line Art: the original line style, every boundary one even line")
         case .layered: String(localized: "advanced.style.layered", defaultValue: "Layered",
                               comment: "Settings › Advanced › Line Art: the line style that follows a drawing of the picture, with lines in layers that fade in as you zoom")
+        case .coloringBook: String(localized: "advanced.style.coloringBook", defaultValue: "Coloring Book",
+                                   comment: "Settings › Advanced › Line Art: the line style that draws the picture's outlines in thick ink, with the paints inside an outline told apart only by their numbers")
         }
     }
 
@@ -298,6 +356,36 @@ nonisolated extension LineArtSettings.Style {
         case .layered: String(localized: "advanced.style.layered.summary",
                               defaultValue: "Lines follow a drawing of the picture: outlines stay strong, finer lines come in as you zoom.",
                               comment: "Settings › Advanced › Line Art: what the Layered line style does")
+        case .coloringBook: String(localized: "advanced.style.coloringBook.summary",
+                                   defaultValue: "A drawing in thick ink that stays over the paint. Inside an outline, only the numbers tell the paints apart.",
+                                   comment: "Settings › Advanced › Line Art: what the Coloring Book line style does")
+        }
+    }
+}
+
+nonisolated extension LineArtSettings.Detector {
+    var name: String {
+        switch self {
+        case .drawingAndContours: String(localized: "advanced.detector.drawingAndContours", defaultValue: "Drawing and Contours",
+                                         comment: "Settings › Advanced › Line Art: Detector option, the line drawing over the contour map")
+        case .drawing: String(localized: "advanced.detector.drawing", defaultValue: "Drawing Only",
+                              comment: "Settings › Advanced › Line Art: Detector option, the line-drawing model alone")
+        case .contours: String(localized: "advanced.detector.contours", defaultValue: "Contours Only",
+                               comment: "Settings › Advanced › Line Art: Detector option, the contour (HED) model alone")
+        }
+    }
+
+    var summary: String {
+        switch self {
+        case .drawingAndContours: String(localized: "advanced.detector.drawingAndContours.summary",
+                                         defaultValue: "The line drawing laid over the contour map; the contours decide which lines are outlines.",
+                                         comment: "Settings › Advanced › Line Art: what the Drawing and Contours detector option does")
+        case .drawing: String(localized: "advanced.detector.drawing.summary",
+                              defaultValue: "The line drawing alone: fur, petals and glass, with its strongest strokes as outlines.",
+                              comment: "Settings › Advanced › Line Art: what the Drawing Only detector option does")
+        case .contours: String(localized: "advanced.detector.contours.summary",
+                               defaultValue: "The contour map alone: strong, closed silhouettes and little inside them.",
+                               comment: "Settings › Advanced › Line Art: what the Contours Only detector option does")
         }
     }
 }
@@ -314,6 +402,12 @@ nonisolated extension LineArtSettings.SamePaint {
         }
     }
 
+    /// The option's name under `style`: a coloring book has no texture lines, so joining across
+    /// them is splitting.
+    func name(in style: LineArtSettings.Style) -> String {
+        style == .coloringBook && self == .joinTexture ? Self.split.name : name
+    }
+
     var summary: String {
         switch self {
         case .split: String(localized: "advanced.samePaint.split.summary",
@@ -325,6 +419,18 @@ nonisolated extension LineArtSettings.SamePaint {
         case .joinAllButOutlines: String(localized: "advanced.samePaint.joinAllButOutlines.summary",
                                          defaultValue: "Only outlines split areas of one paint; detail and texture lines are drawn inside them.",
                                          comment: "Settings › Advanced › Line Art: what the Join Across Detail option does")
+        }
+    }
+
+    func summary(in style: LineArtSettings.Style) -> String {
+        guard style == .coloringBook else { return summary }
+        switch self {
+        case .split, .joinTexture:
+            return Self.split.summary
+        case .joinAllButOutlines:
+            return String(localized: "advanced.samePaint.joinAllButOutlines.summary.book",
+                          defaultValue: "Only outlines split areas of one paint; other lines are drawn across them.",
+                          comment: "Settings › Advanced › Line Art, Coloring Book: what the Join Across Detail option does")
         }
     }
 }
@@ -347,20 +453,26 @@ nonisolated extension LineLayer {
 nonisolated extension AdvancedPreset {
     var name: String {
         switch self {
-        case .defaults: String(localized: "advanced.preset.defaults", defaultValue: "Defaults",
-                               comment: "Settings › Advanced › Presets: the preset of the app's own settings")
         case .coloringBook: String(localized: "advanced.preset.coloringBook", defaultValue: "Coloring Book",
-                                   comment: "Settings › Advanced › Presets: the preset that makes closed, outlined cells whose lines stay over the paint, like a coloring book")
+                                   comment: "Settings › Advanced › Presets: the app's own settings, a coloring book: a drawing in solid ink that stays over the paint, the areas inside an outline told apart by their numbers")
+        case .layered: String(localized: "advanced.preset.layered", defaultValue: "Layered",
+                              comment: "Settings › Advanced › Presets: layered lines at their defaults: lines that follow a drawing of the picture, in layers that fade in as you zoom")
+        case .classic: String(localized: "advanced.preset.classic", defaultValue: "Classic",
+                              comment: "Settings › Advanced › Presets: the original look at its defaults, every boundary one even line")
         }
     }
 
     var summary: String {
         switch self {
-        case .defaults: String(localized: "advanced.preset.defaults.summary", defaultValue: "The app’s own settings.",
-                               comment: "Settings › Advanced › Presets: what the Defaults preset is")
         case .coloringBook: String(localized: "advanced.preset.coloringBook.summary",
-                                   defaultValue: "Closed cells with solid outlines that stay over the paint, and nothing drawn inside a cell.",
-                                   comment: "Settings › Advanced › Presets: what the Coloring Book preset does")
+                                   defaultValue: "The app’s own settings: a drawing in solid ink that stays over the paint. The areas inside an outline are told apart by their numbers, not by lines.",
+                                   comment: "Settings › Advanced › Presets: what the Coloring Book preset, the app's defaults, does")
+        case .layered: String(localized: "advanced.preset.layered.summary",
+                              defaultValue: "Lines follow a drawing of the picture: outlines stay strong, finer lines come in as you zoom.",
+                              comment: "Settings › Advanced › Presets: what the Layered preset does")
+        case .classic: String(localized: "advanced.preset.classic.summary",
+                              defaultValue: "The original look: every boundary between areas is one even line.",
+                              comment: "Settings › Advanced › Presets: what the Classic preset does")
         }
     }
 }

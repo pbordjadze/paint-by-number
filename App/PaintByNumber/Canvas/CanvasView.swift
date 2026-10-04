@@ -666,9 +666,14 @@ final class CanvasView: UIView, PaintingCanvas {
             u.select(scene.paletteLinear[selected], palette: palette)
         }
         u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersVisibility(at: time))
-        u.setLines(scene?.isLayered == true
-            ? LineStyle(lineAppearance, zoom: Float(camera.zoom / fitZoom), classicStrength: LineStyle.classicStrength(depth: depth))
-            : .classic)
+        switch scene?.lineArtStyle {
+        case .layered:
+            u.setLines(LineStyle(lineAppearance, zoom: Float(camera.zoom / fitZoom), classicStrength: LineStyle.classicStrength(depth: depth)))
+        case .coloringBook:
+            u.setColoringBookLines(width: ColoringBookLook.widthPoints(depth: depth, weight: lineAppearance.coloringBookWeight) * s)
+        case nil:
+            u.setLines(.classic)
+        }
         u.labels = SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s)
         u.numbers = SIMD4(0.5, 0.9, 0.05, reduceMotion ? 1 : 0)
         u.time = SIMD4(time, selectionTime, pulseStart, bumpStart)

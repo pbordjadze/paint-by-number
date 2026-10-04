@@ -150,13 +150,15 @@ struct AcknowledgementsTests {
         #expect(License.apache2.text.hasPrefix("TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION"))
         for section in 1...9 { #expect(License.apache2.text.contains("\n\n\(section). "), "Apache 2.0 section \(section)") }
         #expect(License.apache2.text.hasSuffix("END OF TERMS AND CONDITIONS"))
+        #expect(License.mit.text.hasPrefix("Permission is hereby granted, free of charge"))
+        #expect(License.mit.text.contains("THE SOFTWARE IS PROVIDED \"AS IS\""))
     }
 
     /// The bundled HED model: ControlNet's Apache-2.0 weights, credited with their license, and
     /// the method (Xie & Tu) among the methods. The conversion script records the weights'
     /// origin and checksum, and the model itself is in the bundle.
     @Test func bundledModelsAreCreditedWithTheirLicense() throws {
-        #expect(Acknowledgements.models.map(\.name) == ["ControlNet HED"])
+        #expect(Acknowledgements.models.map(\.name) == ["ControlNet HED", "Informative Drawings"])
         let hed = try #require(Acknowledgements.models.first)
         #expect(hed.license == .apache2 && hed.credit.contains("lllyasviel") && hed.credit.contains("ControlNetHED.pth"))
         let method = try #require(Acknowledgements.methods.first { $0.name == "Holistically-nested edge detection" })
@@ -164,6 +166,14 @@ struct AcknowledgementsTests {
         let script = try String(contentsOf: repositoryRoot.appending(path: "tools/models/convert_hed.py"), encoding: .utf8)
         #expect(script.contains("lllyasviel/Annotators") && script.contains("Apache") && script.contains("SOURCE_SHA256 = \""))
         #expect(Bundle.main.url(forResource: "HED", withExtension: "mlmodelc") != nil, "HED.mlmodelc isn't in the app bundle")
+        // The line-drawing model: Informative Drawings' MIT-licensed weights, its method among the methods.
+        let drawing = try #require(Acknowledgements.models.last)
+        #expect(drawing.license == .mit && drawing.credit.contains("Caroline Chan") && drawing.credit.contains("sk_model.pth"))
+        let drawingMethod = try #require(Acknowledgements.methods.first { $0.name == "Informative drawings" })
+        #expect(drawingMethod.credit.contains("Chan") && drawingMethod.credit.contains("2022"))
+        let lineScript = try String(contentsOf: repositoryRoot.appending(path: "tools/models/convert_lineart.py"), encoding: .utf8)
+        #expect(lineScript.contains("lllyasviel/Annotators") && lineScript.contains("MIT") && lineScript.contains("SOURCE_SHA256 = \""))
+        #expect(Bundle.main.url(forResource: "LineArt", withExtension: "mlmodelc") != nil, "LineArt.mlmodelc isn't in the app bundle")
     }
 
     @Test func entriesAreCompleteAndUnique() {

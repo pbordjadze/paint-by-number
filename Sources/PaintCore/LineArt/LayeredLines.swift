@@ -5,27 +5,32 @@ import Foundation
 ///
 /// Stages (timed as `lineArt.*`):
 /// 1. `detect`: the edge map resampled to the working size, its ridges, hysteresis and
-///    thinning (`LineDetection`).
+///    thinning (`LineDetection`). A coloring book extracts nothing below the detail
+///    threshold: it has no faint lines, so its texture layer stays empty.
 /// 2. `trace`: the centerlines as a graph, cleaned (bubbles, spurs, specks, components under
 ///    `minimumStrokeLength`), gaps up to `gapBridging` bridged, ends led into the frame, and
 ///    joined into strokes smoothed by `lineSmoothing` (`StrokeGraph`).
 /// 3. `layer`: per point, hysteresis along the stroke against the outline, detail and
 ///    texture thresholds, the outline threshold rising where lines crowd (`LineLayering`);
 ///    stretches below texture are cut out. Eyes (`outlineEyes`) replace the lines inside them
-///    with their contours and irises as outlines and promote the lines around them. Free ends
+///    with their contours and irises as outlines and promote the lines around them; the
+///    subjects' silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
+///    (`LineLayering.addObjects`). Free ends
 ///    reach for the nearest line, paint boundary or frame (`gapBridging` × 1.6 / 1.2 / 1 by
 ///    layer), so open strokes close cells.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
 ///    paints are within two palette steps.
 /// 5. `trim`: lines keep only the stretches that run along a cell boundary (a line dangling
-///    inside a cell is not drawn); eyes are kept whole.
+///    inside a cell is not drawn); eyes are kept whole. A coloring book keeps every line: it
+///    is a drawing, and a stretch that bounds no cell is still drawn (as an interior stroke).
 /// 6. `join`: same-paint neighbours join per `samePaint` (by default across texture lines),
 ///    and the lines that end up inside a cell become interior strokes (stretches shorter than
-///    `LineLayering.minimumRun` are trimming leftovers, not drawing, and go). Paints no cell
-///    uses are dropped, cells renumbered.
+///    `LineLayering.minimumRun` are a boundary stretch's end point or a merged tiny cell's
+///    sliver, not drawing, and go). Paints no cell uses are dropped, cells renumbered.
 /// After vectorizing, `annotate` gives each boundary edge the layer of the line along it
-/// (`color` where only the paint changes) and a weight.
+/// (`color` where only the paint changes) and a weight, and stamps the template's line art
+/// with its style.
 ///
 /// Deterministic: everything is sequential, per pixel, or integer counts summed across
 /// bands, with fixed tie-breaks, so the same edge map and settings give the same template on
@@ -43,6 +48,9 @@ enum LayeredLines {
     static let mergeSteps: Float = 2
     /// Paint difference at which a color line's weight saturates.
     static let colorWeightReference: Float = 0.15
+    /// How far (working pixels) a stroke may run from a contour's ridge and still read its
+    /// strength for the outline threshold (`LineArtInput.contours`).
+    static let contourReach = 2
 
     struct Plan {
         var segmentation: Segmentation
@@ -50,6 +58,8 @@ enum LayeredLines {
         var boundaryLines: [DrawnLine]
         /// Lines drawn inside a cell, with that cell.
         var interiorLines: [(line: DrawnLine, region: Int)]
+        /// How the template's line art is drawn (`TemplateLineArt.style`).
+        var style: TemplateLineArt.Style
         var stats: LineArtStats
     }
 
@@ -58,11 +68,16 @@ enum LayeredLines {
         cancel: CancellationCheck, clock: StageClock
     ) throws -> Plan {
         let s = settings.normalized.lineArt
+        let style = s.style.templateStyle ?? .layered
+        let book = style == .coloringBook
+        // A coloring book has no faint lines: nothing is drawn below the detail threshold, so
+        // its texture layer is empty (and `textureThreshold` unused).
+        let thresholds = [s.outlineThreshold, s.detailThreshold, book ? s.detailThreshold : s.textureThreshold]
         let w = segmentation.width, h = segmentation.height
         var stats = LineArtStats()
         stats.segmentationRegions = segmentation.regionCount
         guard w >= 8, h >= 8, segmentation.regionCount > 0 else {
-            return Plan(segmentation: segmentation, boundaryLines: [], interiorLines: [], stats: stats)
+            return Plan(segmentation: segmentation, boundaryLines: [], interiorLines: [], style: style, stats: stats)
         }
         let mapScale = Float(max(w, h)) / Float(max(input.edges.width, input.edges.height))
         let unit = max(mapScale, 1)
@@ -74,9 +89,19 @@ enum LayeredLines {
             try cancel.throwIfCancelled()
             let mask = try LineDetection.lines(
                 ridge: ridges.ridge, smooth: ridges.smooth, importance: importance, width: w, height: h,
-                threshold: s.textureThreshold, cancel: cancel)
+                threshold: thresholds[2], cancel: cancel)
             let clutter = try LineDetection.clutter(mask, width: w, height: h, cancel: cancel)
             return (mask, ridges.smooth, clutter)
+        }
+        try cancel.throwIfCancelled()
+        // The contour map's strength, smoothed like the lines' and widened by two pixels, so a
+        // stroke the drawing traced a little off the contour's ridge still reads the contour.
+        let contourStrength: [Float]? = try input.contours.map { contours in
+            let field = LineDetection.strength(contours, width: w, height: h)
+            try cancel.throwIfCancelled()
+            let smooth = Gaussian.filter(field, width: w, height: h, sigma: LineDetection.responseSigma, orderX: 0, orderY: 0)
+            let levels = smooth.map { UInt8(min(max($0, 0), 1) * 255 + 0.5) }
+            return Self.maxFilter(levels, width: w, height: h, radius: contourReach).map { Float($0) / 255 }
         }
         try cancel.throwIfCancelled()
 
@@ -95,12 +120,19 @@ enum LayeredLines {
         try cancel.throwIfCancelled()
 
         let lines = clock.measure("lineArt.layer") { () -> [DrawnLine] in
-            let thresholds = [s.outlineThreshold, s.detailThreshold, s.textureThreshold]
-            var lines = LineLayering.layered(strokes, thresholds: thresholds, clutter: mask.clutter, width: w)
+            var lines = LineLayering.layered(
+                strokes, thresholds: thresholds, clutter: mask.clutter, width: w, contours: contourStrength)
             if s.outlineEyes {
                 let eyes = LineLayering.eyePolygons(input.eyes, width: w, height: h)
                 stats.eyes = eyes.count
                 lines = LineLayering.addEyes(lines, eyes: eyes, width: w, height: h)
+            }
+            if s.outlineObjects {
+                let objects = LineLayering.eyePolygons(input.objects, width: w, height: h)
+                stats.objects = objects.count
+                let added = LineLayering.addObjects(lines, objects: objects, width: w, height: h)
+                stats.objectStretches = added.count
+                lines += added
             }
             let colorEdge = Self.boundaryPixels(segmentation.labels.storage, width: w, height: h)
             let first = LineLayering.walls(lines, width: w, height: h)
@@ -141,6 +173,8 @@ enum LayeredLines {
         try cancel.throwIfCancelled()
 
         let trimmed = try clock.measure("lineArt.trim") { () throws -> [DrawnLine] in
+            // A coloring book draws every line, whether or not it bounds a cell.
+            if book { return lines }
             let distance = Self.boundaryDistance(cells.label, width: w, height: h)
             try cancel.throwIfCancelled()
             return lines.flatMap { line -> [DrawnLine] in
@@ -193,7 +227,7 @@ enum LayeredLines {
         }
         for line in boundary { stats.add(line, interior: false) }
         for (line, _) in interior { stats.add(line, interior: true) }
-        return Plan(segmentation: split, boundaryLines: boundary, interiorLines: interior, stats: stats)
+        return Plan(segmentation: split, boundaryLines: boundary, interiorLines: interior, style: style, stats: stats)
     }
 
     // MARK: - Annotation
@@ -273,7 +307,7 @@ enum LayeredLines {
                 pointStart: start, pointCount: UInt32(keep.count), layer: UInt8(layer),
                 weight: UInt8((min(max(mean, 0), 1) * 255).rounded()), region: UInt32(region)))
         }
-        return TemplateLineArt(edgeLayers: layers, edgeWeights: weights, strokePoints: points, strokes: strokes)
+        return TemplateLineArt(edgeLayers: layers, edgeWeights: weights, strokePoints: points, strokes: strokes, style: plan.style)
     }
 
     // MARK: - Helpers
@@ -423,6 +457,10 @@ public struct LineArtStats: Sendable, Codable, Equatable {
     public var strokes = 0
     /// Eyes outlined.
     public var eyes = 0
+    /// Subjects whose silhouettes were given, and the stretches of them drawn where the
+    /// drawing left a silhouette open.
+    public var objects = 0
+    public var objectStretches = 0
     /// Free ends extended to a line, paint boundary or the frame.
     public var endsClosed = 0
     /// Cells right after splitting the segmentation along the lines.

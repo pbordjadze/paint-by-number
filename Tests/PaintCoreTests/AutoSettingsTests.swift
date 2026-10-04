@@ -496,9 +496,11 @@ struct AutoSettingsTests {
         }
         let pinned = try JSONDecoder().decode(AutoDecision.self, from: fixture("auto-parrots.json"))
         let draft = try Netpbm.read(fixture("auto-parrots-draft.ppm"))
+        // The fixture was written by pbn, whose templates are classic unless told otherwise.
         let decision = try AutoSettings.choose(
             image: draft, sourceSize: (pinned.analysis.sourceWidth, pinned.analysis.sourceHeight), importance: nil,
-            hints: nil, preference: .relaxed, maxCandidates: 5, cancel: .none, firstDraft: nil)
+            hints: nil, preference: .relaxed, maxCandidates: 5, lineArt: LineArtSettings(style: .classic), cancel: .none,
+            firstDraft: nil)
         #expect(decision.analysis == pinned.analysis)
         #expect(decision.preference == pinned.preference)
         #expect(decision.winner == pinned.winner)

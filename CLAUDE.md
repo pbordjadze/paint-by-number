@@ -15,18 +15,36 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     `assign(_:seed:)` picks one per paint, unique in the palette and varied by seed)
   - `Model/` `Template` (the product of the pipeline) + versioned binary coding, `GenerationSettings`,
     `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map),
-    `LineArtSettings` (classic or layered lines and their knobs; defaults and why on its init) and
+    `LineArtSettings` (coloring-book, layered or classic lines and their knobs; the coloring book is the
+    default, each style has defaults of its own, `init(style:)`, carried along by `changing(to:)`) and
     `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs, applied in its
     init: a factor of exactly 1 leaves every knob bit for bit, so classic output never moves)
   - `LineArt/` layered line art (`LayeredLines.apply`; stages in its doc comment): an 8-bit
-    `EdgeMap` (the app's HED, or `pbn --edges`) and eye polygons → ridges, hysteresis and thinning
+    `EdgeMap` (the app's line drawing over its HED map, `EdgeMap.combined`; `pbn --edges`/`--lines`),
+    eye polygons and the subjects' silhouettes → ridges, hysteresis and thinning
     (`LineDetection`), traced and cleaned strokes (`StrokeGraph`), a `LineLayer` per point by
     hysteresis along the stroke, the outline threshold rising toward 1 where lines crowd except on
-    long contours (`LineLayering`), the segmentation split along the lines (`CellMap`: cells keep
+    long contours (`LineLayering`; with `LineArtInput.contours`, the HED map alone, the outline
+    threshold reads the contours instead of the drawing, so an object's boundary is an outline
+    wherever HED found it and the drawing's strokes are detail; `LineLayering.addObjects` draws
+    the stretches of a subject's silhouette (`LineArtInput.objects`, from a mask via
+    `MaskContours`) that run more than 12 px of a 1500-px canvas from every line, as outlines, so
+    the subject closes where the detectors left it open), the segmentation split along the lines (`CellMap`: cells keep
     their paint and hold their number; small ones merge, same-paint ones join per `SamePaint`),
     then after the vectorizer each edge's layer and weight and the lines inside cells
     (`InteriorStroke`s) as `Template.lineArt`. Layered settings without an edge map generate the
-    classic template; same edge map and settings give the same bytes on any core count.
+    classic template; same edge map and settings give the same bytes on any core count. The
+    **coloring book** style (`LineArtSettings.Style.coloringBook`, `TemplateLineArt.Style`;
+    `docs/coloring-book.md`), the default, is the same pipeline with the drawing as the only lines:
+    nothing below the detail threshold is extracted (no texture layer, `textureThreshold` unused, so
+    `samePaint = .joinTexture` splits), every line is kept whether or not it bounds a cell
+    (stretches inside a cell of `LineLayering.minimumRun` or more become interior strokes), its
+    paint is flatter (`SegmentationParameters.coloringBookFlattening`, 1.5× smoothing, texture
+    flattening and smallest area, applied by `TemplateGenerator` by the settings' style, edge map or
+    not, so Auto's drafts are scored on the paint the book gets; classic templates and
+    `PhotoAnalyzer` never see it), and the template's style tells every renderer to draw the drawn
+    layers alike in full ink over the paint, never the color edges and never a selected cell's
+    outline.
   - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
     its doc comment, all tunables in `SegmentationParameters`)
   - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
@@ -54,7 +72,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `tools/` evaluation tooling (`swift.sh`, `eval.py`, `compare.py`, `regression.py` + its
   committed `baseline/regression.json` and `baseline/auto.json`, `auto_sheet.py`, `svg2png.mjs`),
   `strings_check.py` (string catalog drift check, see Localization) and `models/convert_hed.py`
-  (the app's HED Core ML model from its source weights, see Layered line art inputs).
+  (the app's HED Core ML model from its source weights, see Layered line art inputs) and
+  `models/convert_lineart.py` (the line-drawing model the same way).
 - `.github/workflows/` CI: Linux PaintCore tests + quality regression; macOS builds the app, runs
   tests, captures simulator screenshots.
 - `ACKNOWLEDGEMENTS.md` credits and license texts for the ported code, bundled models and published methods (also shown in the app).
@@ -88,15 +107,37 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   too, with its edges per layer and interior strokes counted). `pbn bench
   <ppm...>` times the pipeline, including a preview, detail 1 on a large photo, 150 colors
   at detail 1 and Auto's suggestion (`--edges map.pgm`: also layered line art, stage by stage).
-- Layered line art: `pbn generate <in.ppm> <out> --line-style layered --edges map.pgm [--eyes
-  eyes.json] [--line-art key=value]… [--tuning key=value]…` (eyes: closed polygons of `[x, y]`
-  normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names);
+- Layered line art: `pbn generate <in.ppm> <out> --line-style layered|coloringBook --edges map.pgm
+  [--lines drawing.pgm] [--eyes eyes.json] [--line-art key=value]… [--tuning key=value]…` (`--edges`
+  a contour map, HED; `--lines` a line drawing; both given, combined as the app combines its two
+  models, `EdgeMap.combined`; `eval.py --edges-dir`/`--lines-dir`; eyes: closed polygons of
+  `[x, y]` normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names;
+  pbn is classic unless `--line-style` says otherwise, whatever the pipeline's default, and
+  `--line-style` picks the style at its own defaults, `--line-art` fields on top in any order);
   `stats.json` gains `lineArt` (settings, `LineArtStats`, edges and length per layer, interior
   strokes, `cellsVsClassic`) and `tuning` when not default. Edge maps for evaluation come from the
   research's HED (`research/lineart/lines_learned.py` on `claude/lineart-research`) quantized to
-  8-bit PGM; the app runs the same model at ≤ 1152 px, so evaluate with maps at that size. The
-  regression gate covers classic output only; `LineArtTests` and the `template-v2-lines.pbnt`
-  fixture cover layered generation and coding.
+  8-bit PGM; the app runs the same model at ≤ 1152 px, so evaluate with maps at that size (the
+  weights load without the `controlnet_aux` package by copying its network class next to
+  `tools/models/convert_hed.py`'s `research_map` and `quantize`); line drawings from the
+  app's second model (`tools/models/convert_lineart.py`'s network), and `--objects` takes a subject
+  mask (any image, inside at half; the app's Vision mask) or polygons. The regression gate's
+  `book` regime covers the book at the app's defaults from committed maps (below); `LineArtTests`
+  and the `template-v2-lines.pbnt` / `template-v2-book.pbnt` fixtures cover layered and
+  coloring-book generation and coding. A coloring book's SVG draws its drawing as one
+  `lines-drawing` group, three times the outline width, and no color edges. A layered or book
+  template's `stats.json` `lineArt` also reports the drawing: `drawnLength`, `inkDensity` (per
+  1000 px), `interiorFraction`, `openEndsPer1000`, the areas the drawn lines enclose
+  (`enclosedAreas`, `cellsPerEnclosedArea`, `singleCellAreaFraction`, `largestAreaFraction`: the
+  background's share unless a silhouette is open, `outlineAreas`), `enclosedByWidening` (the
+  canvas share the lines wall off as drawn and widened 1–4 px: a jump says how wide the openings
+  are) and `openings` (where the widening closed them); pbn also writes `selected.svg` (the cells
+  of the paint with the most of them hatched, as the canvas shows the selected color;
+  `SVGExport.Options.selectedColor`) and `areas.ppm` (a color per enclosed area, red rings at the
+  openings). `tools/eval.py book <images> --out DIR --edges-dir … --lines-dir … [--objects-dir …]
+  [--variant NAME="pbn options"]…` makes the book sheet (`DIR/<name>/book.png`): one column per
+  variant, rows fitted / zoomed / selected / finished / areas, the metrics under each; use it for
+  every line-art tuning (`docs/coloring-book.md`, Measuring a book).
 - Suggested settings: `pbn suggest <image> [--importance m.pgm] [--hints h.json] [--length
   quick|relaxed|detailed] [--candidates 5] [--out dir]` prints the candidate table (every score
   term, the winner starred) and writes `decision.json`; with `--out` also every candidate's
@@ -113,7 +154,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the six retired samples, pinned by name (`SAMPLE_NAMES`; CI's `pbn bench` step lists the same
   files), never the picture library beside them, whose curation must move neither the baselines
   nor CI's time; in three regimes (24 colors/detail 0.5, 150/1.0, 12/0.0), each
-  generated twice, plus the `auto` regime (`pbn generate --auto`, Relaxed): its hard invariant is
+  generated twice, the `book` regime (the coloring book at the app's defaults from the committed
+  maps `tools/baseline/lines/<name>-contours.png` (HED) and `-drawing.png` (the line-drawing
+  model), at the photos' size; the same invariants and bands on its cells, its drawing metrics
+  informational), plus the `auto` regime (`pbn generate --auto`, Relaxed): its hard invariant is
   that the choice lies inside the length's bands; the chosen settings and metrics are compared
   with `tools/baseline/auto.json` for information only (choices move when the pipeline moves). Hard invariants: `pbn check` valid, byte-identical runs, no region under
   radius 2, palette distance ≥ the floor pbn reports (`GenerationSettings.minPaletteDistance`),
@@ -222,6 +266,23 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   painted): the freight train through the real
   layered pipeline, with `SyntheticTemplate.edgeMap` (blurred OKLab gradient, DEBUG) standing in for the
   learned detector; `-mosaic` uses `SyntheticTemplate.layered` (layers by paint contrast).
+- Coloring books (drawing): a template whose `lineArt.style` is `.coloringBook` is drawn the same way
+  everywhere (`ColoringBookLook`, `docs/coloring-book.md`): every drawn layer alike in the paper's full
+  ink, color edges never, the drawing never dissolving under paint and nothing outlined for being
+  selected (the fill's hatch shows the selected color's cells), so the painter colors by the outer
+  boundaries and the numbers. The canvas line is 1.5 pt fitted and 0.7 pt more per zoom doubling
+  (`widthPoints`), pictures draw it three times their classic line (`widthFactor`), both times
+  `LineAppearance.coloringBookWeight` (Settings › Advanced › Line Appearance › Line Weight, the only
+  appearance setting a book reads; tolerant decoding, 0.5–2). `CanvasScene.lineArtStyle` picks
+  `CanvasUniforms.setColoringBookLines` (`lineMode.y` in the outline shader) over `setLines`;
+  `CanvasSnapshot` and the time-lapse draw the drawing even with `outlines` off, and
+  `TemplateRasterizer` draws it in every style (`drawBookOutlines`; the painted preview and the
+  finished picture included), with dotted color-edge guides first in `.print`, since paper has no
+  hatch. Demo scenarios `paint-book`, `-progress`, `-zoomed`, `-dark-paper` (the red fox through the
+  real pipeline with the real detector, `LineArtInputs.compute`, the stand-in map when it is
+  unavailable). The `paint*` classic demos ask for classic lines; every other template the app
+  makes (new paintings, the samples prepared on first launch, the gallery demos' seeds) is a
+  coloring book, so `ArtworkFactory.template` runs the edge detector for each.
 - Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
   and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
   Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the
@@ -351,17 +412,35 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   it would be a hand-written `.appex` target in the pbxproj that can't open its containing app and
   would hand the image over through an app group. Debug builds: `-openFile <path>` calls the same
   handler at launch (`DemoMode.openFileURL`; scenario `create-from-file`).
-- Layered line art inputs (`Generation/`): `EdgeDetector.edgeMap(for:maxLongSide:)` runs
-  `Resources/Models/HED.mlpackage` (ControlNet's HED, `ControlNetHED.pth` from Hugging Face
-  `lllyasviel/Annotators`, Apache-2.0, sha256 and conversion in `tools/models/convert_hed.py`; 29 MB
-  of float16 weights computed in float32) on the photo drawn into sRGB and area-resampled to ≤ 1152
-  px, reflect-padded to a multiple of 16; the edge probability is rounded to 8 bits (`EdgeMap`).
-  `.cpuOnly` keeps maps the same across devices, up to a level where a value sits on a rounding
-  boundary (the Neural Engine and GPU compute in reduced precision that differs by chip); the target
-  has `COREML_CODEGEN_LANGUAGE = None` and loads `HED.mlmodelc` by URL. `EyeFinder.eyes(in:)`:
+- Layered line art inputs (`Generation/`): `EdgeDetector` runs two bundled models on the photo
+  drawn into sRGB and area-resampled, reflect-padded to the network's stride, the probability
+  rounded to 8 bits (`EdgeMap`): `edgeMap(for:maxLongSide:)` runs `Resources/Models/HED.mlpackage`
+  (ControlNet's HED, `ControlNetHED.pth` from Hugging Face `lllyasviel/Annotators`, Apache-2.0,
+  sha256 and conversion in `tools/models/convert_hed.py`; 29 MB of float16 weights computed in
+  float32; ≤ 1152 px, stride 16), a contour map whose silhouettes are strong and closed, and
+  `lineDrawing(for:)` runs `LineArt.mlpackage` (Informative Drawings' contour-style generator,
+  Chan, Durand & Isola 2022, `sk_model.pth` from the same repository, MIT, the network ControlNet's
+  lineart annotator uses; `tools/models/convert_lineart.py`; 8.6 MB; ≤ 768 px, stride 4, RGB in
+  0...1, its paper inverted to ink), a drawing with the fur, petals and glass HED lacks.
+  `maps(for:)`, what the app generates from, lays the drawing (resampled up) over the HED
+  map, `EdgeMap.combined`: per pixel the larger of the drawing and 0.85 × the contours
+  (`EdgeMap.contourWeight`, measured on the fox and Arrieta's still life), and hands the HED map
+  along as `LineArtInput.contours`, which decides the outlines; `LineArtSettings.detector`
+  (Settings › Advanced › Detector, `pbn --line-art detector=…`) picks that or either map alone,
+  derived from the one cached computation (`LineArtInputs.Maps`; demo and test launches also keep
+  each photo's maps on disk, `LineArtMapsCache`, DEBUG only, so a CI run's dozens of launches
+  compute every bundled picture once). `.cpuOnly` keeps maps
+  the same across devices, up to a level where a value sits on a rounding boundary (the Neural
+  Engine and GPU compute in reduced precision that differs by chip); the target has
+  `COREML_CODEGEN_LANGUAGE = None` and loads the `.mlmodelc`s by URL. `EyeFinder.eyes(in:)`:
   Vision face landmarks → per eye a smoothed contour and an iris (a circle around the pupil, 0.2 ×
   the eye's width, clipped to the lids), closed polygons normalized to the photo, contours then
-  irises, quantized to 1/4096. `LineArtInputs.make(for:settings:)` (nil for classic) caches both per
+  irises, quantized to 1/4096. `ObjectFinder.objects(in:)`: Vision's foreground instance mask
+  (every instance together, scaled to 384 px, cut at half) traced by PaintCore's `MaskContours`
+  into the subjects' silhouettes (`LineArtInput.objects`), which `LineLayering.addObjects` draws as
+  outlines wherever the drawing leaves a silhouette open by more than 12 px of a 1500-px canvas
+  (`LineArtSettings.outlineObjects`, Settings › Advanced › Outline Subjects; `pbn --objects
+  mask.pgm|polygons.json`). `LineArtInputs.make(for:settings:)` (nil for classic) caches all of it per
   `CGImage` instance (two photos; shared computation, cancelled when all its waiters are);
   `forGeneration(of:settings:cached:)` turns a model failure into nil (a layered template then comes
   out classic). New paintings get `Preferences.lineArt`/`.tuning` on top of the suggested or slider
@@ -370,20 +449,29 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   gives every candidate the line art and tuning (its drafts get no edge map, so a layered winner is
   drafted again with it).
   `ArtworkFactory.template` (regeneration, samples) computes the inputs per template. `meta.json`
-  records them in `settings`. Tests: the model against a PyTorch-made map
-  (`App/PaintByNumberTests/HEDFixture.ppm` → `.pgm`, written by the conversion script; ≤ 2 levels
-  apart), eyes on `FaceFixture.jpg` (NASA's 1962 portrait of John Glenn).
+  records them in `settings`. Tests: each model against a PyTorch-made map
+  (`App/PaintByNumberTests/HEDFixture.ppm` → `HEDFixture.pgm` and `LineArtFixture.pgm`, written by
+  the conversion scripts; ≤ 2 levels apart), eyes on `FaceFixture.jpg` (NASA's 1962 portrait of
+  John Glenn).
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`). Settings › Painting Length
   (Quick, Relaxed by default, Detailed; `Preferences.paintingLength`) is what suggestions aim for;
   nothing starts from fixed settings any more (the old Starting Colors value is never read).
 - Settings › Advanced (Experimental; `Features/Settings/Advanced/`): `LineArtSettings`,
   `LineAppearance` and `PipelineTuning` for testers, stored as they change (`Preferences.store`;
-  values equal to the defaults are removed, so better defaults reach them). Pushed inside the
+  values equal to the defaults are removed, so better defaults reach them). Line Style offers
+  Classic, Layered and Coloring Book (`LineStyleRow`, a swatch each; choosing one carries each
+  style's own defaults, `LineArtSettings.changing(to:)`, and every reset, detent and effect is
+  against the style's defaults, `AdvancedControl.defaultValue(for:)`, `slider(for:)`); under the
+  book, `AdvancedControl.applies(to:)` hides Texture From, Detail From reads Lines From, the
+  same-paint picker shows Always Split for `.joinTexture` (`SamePaintRow`), `GenerationKey`
+  canonicalizes both (so previews are shared; classic keys carry the classic defaults) and Line
+  Appearance shows only Line Weight. Pushed inside the
   settings sheet in compact widths, a full-screen cover in regular ones (the sheet is a small card
   there). `AdvancedSettingsModel` prepares the chosen picture once (a library picture or the most
   recent photo, `SettingsKey.advancedPreviewPicture`): decoded like the create flow, Vision
-  importance, `AutoSettings.choose` with one candidate at the draft size, whose template is the
-  defaults' preview and whose estimate scales draft areas to the full painting. Settings that
+  importance, `AutoSettings.choose` with one candidate at the draft size, whose estimate scales
+  draft areas to the full painting; the defaults' preview is rendered like every other key (the
+  suggestion's own draft has no edge map). Settings that
   change templates (`GenerationKey`: canonical, classic keys drop the layered fields) queue a
   generation: debounced, coalesced while a slider moves, the last preview kept until the next,
   every template kept in a small LRU. Each changed setting's effect (`AdvancedControl`) is the
@@ -396,12 +484,13 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   the preview of a library picture); Paste Settings (the system `PasteButton`, no permission prompt)
   reads it back through `AdvancedReport.settings(in:)`: the JSON object in the text, each of its three
   groups optional and tolerant, clamped; groups it leaves out stay. The Presets row (`AdvancedPreset`:
-  Defaults, Coloring Book) sets all three groups at once, the one the settings match marked; a
-  preset's values live in Swift only (Coloring Book: closed cells, every line an outline that stays
-  over the paint, measured in `docs/presets/README.md`). Demo scenarios `settings-advanced` (+ `-dark`,
-  `-long-text`), `settings-advanced-layered` (Line Appearance, 2×), `settings-advanced-tuned`
-  (Pipeline, effects measured) and `settings-advanced-coloring-book` (the preset on the fox)
-  register their settings instead of storing them. Its Sounds,
+  Coloring Book, the defaults; Layered; Classic: a style at its defaults, the pipeline untuned, the
+  lines drawn as designed) sets all three groups at once, the one the settings match marked
+  (matched as generation uses them, by `GenerationKey`, so a setting the style ignores doesn't
+  count; the book's settings are measured in `docs/presets/README.md`). Demo scenarios
+  `settings-advanced` (+ `-dark`, `-long-text`), `settings-advanced-layered` (Line Appearance, 2×)
+  and `settings-advanced-tuned` (Pipeline, effects measured) register their settings instead of
+  storing them. Its Sounds,
   Haptics and Sparkles & Shine sections (`PaintingEffectsSections`) put each `PaintingEffect` (the
   painting notes, the color finished jingle, the fanfare, the wrong-color sound, three haptics,
   the fill sparkles, the finishing shine) on its own `@AppStorage` switch (absent means on), read
@@ -499,8 +588,10 @@ Saved paintings must open in every later build. The format history is documented
 
 - Never change how an existing template format is read: `readPayloadV1` is frozen, and
   `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` / `template-v2-lines.pbnt`
-  (the optional `LINE` chunk of layered templates) must keep decoding (they are never
-  regenerated). Add a fixture file and decode test for every new `formatVersion` or chunk.
+  (the optional `LINE` chunk of layered templates) / `template-v2-book.pbnt` (the chunk's
+  trailing style byte, written only for coloring books) must keep decoding (they are never
+  regenerated). Add a fixture file and decode test for every new `formatVersion`, chunk or
+  trailing field.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
   ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base
@@ -512,6 +603,9 @@ Saved paintings must open in every later build. The format history is documented
   anything indexes with it. PaintCore is compiled `-Ounchecked` in release, so a missed check is a
   silent out-of-bounds read; the truncation, random-corruption and crafted-reference tests in
   `TemplateCodingTests` guard this.
+- An artwork's recorded settings are what regeneration uses: a `meta.json` without `settings`
+  or `lineArt` (saved before line art existed) means classic lines (`Artwork.settingsBeforeLineArt`,
+  the `GenerationSettings` decoder), never the current default style.
 - A file from a newer app is never reset or rewritten: it throws a "newer" error
   (`Template.CodingError.requiresNewerReader`, `PaintProgress.CodingError.newerVersion`) and the
   app says it needs an update. `PaintProgress` fields are append-only (readers ignore trailing

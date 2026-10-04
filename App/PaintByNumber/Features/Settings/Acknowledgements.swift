@@ -62,6 +62,13 @@ nonisolated enum Acknowledgements {
                 localized: "acknowledgements.hedModel.usage", defaultValue: "Finds the lines of a photo for layered line art.",
                 comment: "What a credited machine-learning model is used for (ControlNet's HED edge detector); shown in Settings under Acknowledgements"),
             license: .apache2),
+        Acknowledgement(
+            name: "Informative Drawings",
+            credit: "Caroline Chan, Frédo Durand and Phillip Isola, Informative Drawings: sk_model.pth (contour style) from lllyasviel/Annotators",
+            usage: String(
+                localized: "acknowledgements.lineArtModel.usage", defaultValue: "Draws a photo's lines, fur, petals and glass, for coloring books and layered line art.",
+                comment: "What a credited machine-learning model is used for (the Informative Drawings line-drawing generator); shown in Settings under Acknowledgements"),
+            license: .mit),
     ]
 
     /// The footer under the model credits.
@@ -121,6 +128,12 @@ nonisolated enum Acknowledgements {
             usage: String(
                 localized: "acknowledgements.hed.usage", defaultValue: "Combines edges found at five scales into one map of a photo's lines.",
                 comment: "What a credited third-party method or library is used for in the template engine (Holistically-nested edge detection); shown in Settings under Acknowledgements")),
+        Acknowledgement(
+            name: "Informative drawings",
+            credit: "Caroline Chan, Frédo Durand and Phillip Isola, \"Learning to generate line drawings that convey geometry and semantics\", 2022",
+            usage: String(
+                localized: "acknowledgements.informativeDrawings.usage", defaultValue: "Turns a photo into a line drawing that keeps its geometry and meaning.",
+                comment: "What a credited third-party method or library is used for in the template engine (Informative drawings); shown in Settings under Acknowledgements")),
         Acknowledgement(
             name: "SplitMix64",
             credit: "Guy Steele, Doug Lea and Christine Flood, \"Fast Splittable Pseudorandom Number Generators\", 2014",

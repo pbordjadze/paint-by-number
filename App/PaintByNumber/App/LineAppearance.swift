@@ -1,17 +1,20 @@
 import Foundation
 import PaintCore
 
-/// How layered line art is drawn at each zoom (Settings › Advanced › Line Appearance). Drawing
-/// only: changing it never changes a template, so it applies to every layered painting at
-/// once and previews instantly. Classic templates ignore it.
+/// How line art drawn from an edge map is drawn at each zoom (Settings › Advanced › Line
+/// Appearance). Drawing only: changing it never changes a template, so it applies to every
+/// layered or coloring-book painting at once and previews instantly. Classic templates ignore it.
 ///
-/// Each `LineLayer` has an opacity and a width at three zooms, where 1 is the painting fitted
-/// to the canvas; values in between interpolate on log₂ of the zoom and hold beyond 1× and 4×.
-/// Opacities are fractions of the paper's full ink, the darkest a classic line gets (zoomed in;
-/// fitted, classic lines draw at 0.7 of it). Widths multiply the classic outline width at that
-/// zoom, so 1 draws a line exactly as heavy as a classic template's. A layer also says how much
-/// of its lines stays once the areas on both sides are painted (`painted`). Renderers apply it
-/// through `LineStyle`; pictures (thumbnails, share images) show the 1× look.
+/// Layered templates: each `LineLayer` has an opacity and a width at three zooms, where 1 is the
+/// painting fitted to the canvas; values in between interpolate on log₂ of the zoom and hold
+/// beyond 1× and 4×. Opacities are fractions of the paper's full ink, the darkest a classic line
+/// gets (zoomed in; fitted, classic lines draw at 0.7 of it). Widths multiply the classic outline
+/// width at that zoom, so 1 draws a line exactly as heavy as a classic template's. A layer also
+/// says how much of its lines stays once the areas on both sides are painted (`painted`).
+/// Renderers apply it through `LineStyle`; pictures (thumbnails, share images) show the 1× look.
+///
+/// Coloring books draw every line alike in full ink, kept over the paint (`ColoringBookLook`);
+/// only how heavy, `coloringBookWeight`, is theirs to change here.
 nonisolated struct LineAppearance: Codable, Equatable, Sendable {
     struct Layer: Codable, Equatable, Sendable {
         /// Opacity at 1×, 2× and 4×.
@@ -61,13 +64,16 @@ nonisolated struct LineAppearance: Codable, Equatable, Sendable {
     var color: Layer
     /// Weight lines within a layer by their edge's strength; off draws every line of a layer alike.
     var weighted: Bool
+    /// How heavy a coloring book's lines are, as a factor on `ColoringBookLook`'s line (1 = as
+    /// designed), within `coloringBookWeightRange`.
+    var coloringBookWeight: Float
 
     /// The owner's picks from the layered-lines report: lines fade in by opacity at even weight,
     /// with outlines lighter and thinner than the research's (which drew them in solid ink about
     /// 2.8 times as wide as a classic line). Outlines take the full ink a classic line reaches
     /// zoomed in, a third wider, so the drawing reads at 1× where classic lines are lighter;
     /// the other layers are faint at 1× and come in by 4×. Every layer dissolves when painted,
-    /// as classic lines do.
+    /// as classic lines do. Coloring books draw at their designed weight.
     static let `default` = LineAppearance(
         outline: Layer(opacity: [1, 1, 1], width: [1.3, 1.3, 1.35]),
         detail: Layer(opacity: [0.5, 0.8, 0.9], width: [0.95, 1, 1.05]),
@@ -77,6 +83,8 @@ nonisolated struct LineAppearance: Codable, Equatable, Sendable {
 
     /// The widths the editor offers, as factors of the classic line.
     static let widthRange: ClosedRange<Float> = 0.2...3
+    /// Half as heavy to twice as heavy.
+    static let coloringBookWeightRange: ClosedRange<Float> = 0.5...2
 
     subscript(layer: LineLayer) -> Layer {
         get {
@@ -112,24 +120,27 @@ nonisolated struct LineAppearance: Codable, Equatable, Sendable {
         value.isFinite ? min(max(value, range.lowerBound), range.upperBound) : range.lowerBound
     }
 
-    /// Every layer clamped (`Layer.normalized`): what pasted settings are taken as.
+    /// Every layer and the coloring book weight clamped (`Layer.normalized`): what pasted
+    /// settings are taken as.
     var normalized: LineAppearance {
         LineAppearance(
             outline: outline.normalized, detail: detail.normalized, texture: texture.normalized, color: color.normalized,
-            weighted: weighted)
+            weighted: weighted, coloringBookWeight: Self.clamped(coloringBookWeight, to: Self.coloringBookWeightRange))
     }
 
-    private enum CodingKeys: String, CodingKey { case outline, detail, texture, color, weighted }
+    private enum CodingKeys: String, CodingKey { case outline, detail, texture, color, weighted, coloringBookWeight }
 
-    init(outline: Layer, detail: Layer, texture: Layer, color: Layer, weighted: Bool) {
+    init(outline: Layer, detail: Layer, texture: Layer, color: Layer, weighted: Bool, coloringBookWeight: Float = 1) {
         self.outline = outline
         self.detail = detail
         self.texture = texture
         self.color = color
         self.weighted = weighted
+        self.coloringBookWeight = coloringBookWeight
     }
 
-    /// Tolerant: a missing or malformed layer falls back to its default.
+    /// Tolerant: a missing or malformed layer falls back to its default, and so does a coloring
+    /// book weight that is missing (appearances stored before it existed) or out of range.
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let d = LineAppearance.default
@@ -138,5 +149,7 @@ nonisolated struct LineAppearance: Codable, Equatable, Sendable {
         texture = (try? c.decodeIfPresent(Layer.self, forKey: .texture)) ?? d.texture
         color = (try? c.decodeIfPresent(Layer.self, forKey: .color)) ?? d.color
         weighted = (try? c.decodeIfPresent(Bool.self, forKey: .weighted)) ?? d.weighted
+        let weight = (try? c.decodeIfPresent(Float.self, forKey: .coloringBookWeight)) ?? nil
+        coloringBookWeight = weight.map { Self.coloringBookWeightRange.contains($0) ? $0 : d.coloringBookWeight } ?? d.coloringBookWeight
     }
 }

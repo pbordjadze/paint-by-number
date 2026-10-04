@@ -249,7 +249,13 @@ final class AdvancedSettingsModel {
 
     func valueText(of control: AdvancedControl) -> String { control.valueText(lineArt: lineArt, tuning: tuning) }
 
-    func isChanged(_ control: AdvancedControl) -> Bool { value(of: control) != control.defaultValue }
+    /// A coloring book's line weight (Line Appearance), as the slider shows it.
+    var coloringBookWeight: Double {
+        get { Double(appearance.coloringBookWeight) }
+        set { appearance.coloringBookWeight = Float(newValue) }
+    }
+
+    func isChanged(_ control: AdvancedControl) -> Bool { value(of: control) != control.defaultValue(for: lineArt.style) }
 
     /// Sets a slider's setting. The three thresholds push each other along, so texture ≤
     /// detail ≤ outline always holds and the sliders show what generation uses.
@@ -278,7 +284,7 @@ final class AdvancedSettingsModel {
         case .subjectEmphasis: tune.subjectEmphasis = v
         case .accentColors: tune.accentColors = v
         case .colorfulness: tune.colorfulness = v
-        case .style, .samePaint, .keepColorEdges, .outlineEyes: return
+        case .style, .detector, .samePaint, .keepColorEdges, .outlineEyes, .outlineObjects: return
         }
         if activeControl != control { activeControl = control }
         lineArt = art
@@ -324,13 +330,18 @@ final class AdvancedSettingsModel {
     /// preset they add up to, if any.
     var changes: [String] {
         var list: [String] = []
-        if let preset = currentPreset, preset != .defaults {
+        // A preset other than the defaults names the style, so the style line is left out.
+        let preset = currentPreset
+        if let preset, preset != .defaults {
             list.append(Self.change(AdvancedText.presetTitle, preset.name))
         }
-        for control in AdvancedControl.allCases where isChanged(control) && (!control.isLayeredOnly || lineArt.style == .layered) {
-            list.append(Self.change(control.title, valueText(of: control)))
+        for control in AdvancedControl.allCases
+        where isChanged(control) && control.applies(to: lineArt.style) && (control != .style || preset == nil) {
+            list.append(Self.change(control.title(for: lineArt.style), valueText(of: control)))
         }
-        if !isAppearanceDefault {
+        var layers = appearance
+        layers.coloringBookWeight = LineAppearance.default.coloringBookWeight
+        if layers != .default {
             let title = String(localized: "advanced.section.appearance", defaultValue: "Line Appearance",
                                comment: "Settings › Advanced: header of the section on how layered lines are drawn at each zoom")
             let value = LineAppearancePreset.matching(appearance)?.name
@@ -343,6 +354,9 @@ final class AdvancedSettingsModel {
             for layer in LineLayer.allCases where appearance[layer].painted != LineAppearance.default[layer].painted {
                 list.append(Self.change(AdvancedText.paintedTitle(of: layer), AdvancedText.percent(appearance[layer].painted)))
             }
+        }
+        if appearance.coloringBookWeight != LineAppearance.default.coloringBookWeight {
+            list.append(Self.change(AdvancedText.coloringBookWeightTitle, AdvancedText.multiplier(Double(appearance.coloringBookWeight))))
         }
         return list
     }
@@ -447,8 +461,9 @@ final class AdvancedSettingsModel {
     }
 
     /// Decodes the picture the way the create flow does, finds its subject and chooses its
-    /// settings (the suggestion's center, at the draft size), whose template is the preview at
-    /// the default advanced settings.
+    /// settings (the suggestion's center, at the draft size), then renders the preview at the
+    /// default advanced settings like any other (the suggestion's own draft has no edge map,
+    /// and the default lines draw from one).
     @concurrent
     private static func prepare(_ source: Source, preference: PaintingLength) async throws -> (base: Base, baseline: Preview) {
         let image: RGBAImage
@@ -468,19 +483,15 @@ final class AdvancedSettingsModel {
         let subject = SubjectImportance.analyze(photo)
         try Task.checkCancellation()
         let draft = AutoSettings.draftImage(from: image)
-        let center = TemplateSlot()
         let decision = try AutoSettings.choose(
             image: draft, sourceSize: (image.width, image.height), importance: subject.map, hints: subject.hints,
-            preference: preference, maxCandidates: 1, cancel: .task
-        ) { output in
-            center.store(output.template)
-        }
-        guard let template = center.template, let score = decision.candidates.first?.score, score.regions > 0 else {
+            preference: preference, maxCandidates: 1, cancel: .task, firstDraft: nil)
+        guard let score = decision.candidates.first?.score, score.regions > 0 else {
             throw CreateModel.CreateError.renderFailed
         }
         let scale = score.estimatedSeconds / PaintingTime.estimate(regionCount: score.regions)
         let base = Base(photo: photo, draft: draft, importance: subject.map, settings: decision.settings, areaScale: scale)
-        return (base, Preview(key: .defaults, template: template, stats: AdvancedStats(template, areaScale: scale)))
+        return (base, try await render(.defaults, base: base))
     }
 
     @concurrent
@@ -500,8 +511,10 @@ final class AdvancedSettingsModel {
         let moved = AdvancedControl.allCases.filter {
             $0.value(lineArt: oldArt, tuning: oldTuning) != $0.value(lineArt: lineArt, tuning: tuning)
         }
-        if moved.count == 1, activeControl != moved[0] {
-            activeControl = moved[0]
+        // A new style carries its own defaults along: the style is what moved.
+        let active: AdvancedControl? = moved.contains(.style) ? .style : (moved.count == 1 ? moved[0] : nil)
+        if let active, activeControl != active {
+            activeControl = active
         }
         lastChange = .now
         if let cached = previews[currentKey] { show(cached) }
@@ -632,14 +645,4 @@ final class AdvancedSettingsModel {
             Preferences.store(value, forKey: key, in: defaults)
         }
     }
-}
-
-/// Holds the suggestion's first template, handed over on the pipeline thread that made it.
-private nonisolated final class TemplateSlot: @unchecked Sendable {
-    private let lock = NSLock()
-    private var value: Template?
-
-    var template: Template? { lock.withLock { value } }
-
-    func store(_ template: Template) { lock.withLock { value = template } }
 }
