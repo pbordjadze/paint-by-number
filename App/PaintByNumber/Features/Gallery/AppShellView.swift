@@ -37,6 +37,11 @@ struct AppShellView: View {
     /// A painting just created in the create flow, opened once the flow has closed.
     @State private var pendingOpen: UUID?
     @SceneStorage("openArtwork") private var openArtwork = ""
+    #if DEBUG
+    /// The `gallery-open` demo opens its painting once: the gallery's other seeds land later, and
+    /// one landing after the painting was closed must not open it again.
+    @State private var demoOpenedPainting = false
+    #endif
 
     var body: some View {
         // Read here, not only in the cover's content: a presentation runs its content with the
@@ -101,7 +106,9 @@ struct AppShellView: View {
         .onAppear { if ShellDemo.current?.showsFavoritesOnly == true { filter = .favorites } }
         .onChange(of: library.artworks.first?.id) { _, id in
             // Demo: open the painting as soon as it is ready.
-            if ShellDemo.current == .galleryOpen, path.isEmpty, let id { path = [id] }
+            guard ShellDemo.current == .galleryOpen, !demoOpenedPainting, path.isEmpty, let id else { return }
+            demoOpenedPainting = true
+            path = [id]
         }
         .onChange(of: library.placeholders) { _, placeholders in
             // Demo: open the damaged painting once it has been seeded (and damaged).
