@@ -200,7 +200,7 @@ struct CanvasViewAccessibilityTests {
         (canvas.accessibilityElements ?? []).compactMap { $0 as? CanvasAreaElement }
     }
 
-    private func anchor(_ t: Template, _ region: Int) -> SIMD2<Float> { CanvasView.labelPosition(t, region) }
+    private func anchor(_ t: Template, _ region: Int) -> SIMD2<Float> { t.anchor(ofRegion: region) }
 
     private func regions(_ t: Template, ofColor color: Int) -> [Int] {
         t.regions.indices.filter { Int(t.regions[$0].colorIndex) == color }
@@ -399,14 +399,14 @@ struct CanvasViewAccessibilityTests {
         canvas.reduceMotion = true
         session.paint([own[0]], from: anchor(template, own[0]), animated: true)
         let settled = try #require(canvas.regionState(own[0]))
-        #expect(settled.start == -10_000)
+        #expect(settled.start == CanvasClock.never)
         #expect(settled.painted == 1)
         #expect(settled.duration == 0)
 
         canvas.reduceMotion = false
         session.paint([own[1]], from: anchor(template, own[1]), animated: true)
         let animated = try #require(canvas.regionState(own[1]))
-        #expect(animated.start > -10_000)
+        #expect(animated.start > CanvasClock.never)
         #expect(animated.duration > 0)
     }
 
@@ -421,7 +421,7 @@ struct CanvasViewAccessibilityTests {
         #expect(session.undo() == region)
         let state = try #require(canvas.regionState(region))
         #expect(state.painted == 0)
-        #expect((state.start == -10_000) == reduceMotion)
+        #expect((state.start == CanvasClock.never) == reduceMotion)
     }
 
     /// A hint's highlight starts as the camera lands (at once under Reduce Motion, where the
@@ -445,7 +445,7 @@ struct CanvasViewAccessibilityTests {
         let color = try #require(session.selectedColor)
         session.paint(regions(template, ofColor: color), from: .zero, animated: true)
         #expect(session.isColorComplete(color))
-        #expect((canvas.shineStart == -10_000) == reduceMotion)
+        #expect((canvas.shineStart == CanvasClock.never) == reduceMotion)
     }
 
     @Test func reduceMotionReplayStepsWithoutAnimation() async throws {

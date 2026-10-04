@@ -95,18 +95,18 @@ final class CanvasView: UIView, PaintingCanvas {
     private var lastCamera: Camera?
 
     // Visual state fed to the shaders (renderer clock, seconds)
-    private var selectionTime: Float = -10_000
+    private var selectionTime = CanvasClock.never
     private var pulseRegion = -1
-    private var pulseStart: Float = -10_000
+    private var pulseStart = CanvasClock.never
     private var bumpRegion = -1
-    private var bumpStart: Float = -10_000
+    private var bumpStart = CanvasClock.never
     private var hoverRegion = -1
     private var brushPoint: CGPoint?
     private var numbersFrom: Float = 1
     private var numbersTo: Float = 1
-    private var numbersStart: Float = -10_000
+    private var numbersStart = CanvasClock.never
     /// When the finishing shine starts (renderer clock; tests read it).
-    private(set) var shineStart: Float = -10_000
+    private(set) var shineStart = CanvasClock.never
     private var replayTask: Task<Void, Never>?
     private var isReplaying = false
     private var shineColor = -1
@@ -118,7 +118,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private var photoTask: Task<Void, Never>?
     private var photoFrom: Float = 0
     private var photoTo: Float = 0
-    private var photoStart: Float = -10_000
+    private var photoStart = CanvasClock.never
 
     // Camera
     private var fitZoom: CGFloat = 1
@@ -180,7 +180,7 @@ final class CanvasView: UIView, PaintingCanvas {
         self.session = session
         let template = session.template
         self.template = template
-        anchors = template.regions.indices.map { CanvasView.labelPosition(template, $0) }
+        anchors = template.regions.indices.map { template.anchor(ofRegion: $0) }
         labelRadii = template.regions.indices.map { i in
             template.labels(ofRegion: i).first?.radius ?? template.regions[i].inscribedRadius
         }
@@ -222,16 +222,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private var metalLayer: CAMetalLayer { layer as! CAMetalLayer }
 
     private static func settledStates(template: Template, progress: PaintProgress) -> [RegionState] {
-        template.regions.indices.map { i in
-            RegionState.settled(painted: progress.isPainted(i), origin: labelPosition(template, i), seed: Float(i % 61) * 0.73)
-        }
-    }
-
-    /// Where a region's number sits; the bounds centre for a region without a label.
-    static func labelPosition(_ template: Template, _ region: Int) -> SIMD2<Float> {
-        if let label = template.labels(ofRegion: region).first { return label.position }
-        let b = template.regions[region].bounds
-        return SIMD2(Float(b.minX + b.maxX) / 2, Float(b.minY + b.maxY) / 2)
+        template.regions.indices.map { RegionState.settled(painted: progress.isPainted($0)) }
     }
 
     // MARK: Setup
@@ -570,7 +561,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// view), centre it, then pulse it.
     func reveal(region: Int) {
         let r = template.regions[region]
-        let center = Self.labelPosition(template, region)
+        let center = anchors[region]
         let labelSize = CGFloat(max(scene?.labelSizes[region] ?? 8, 0.5))
         let extent = CGFloat(max(r.bounds.width, r.bounds.height, 1))
         let avail = bounds.inset(by: chromeInsets)
@@ -775,9 +766,7 @@ final class CanvasView: UIView, PaintingCanvas {
         let lift: Float = reduceMotion ? 0 : 0.45
         let time = now()
         for r in painted {
-            renderer.update(r, RegionState(
-                origin: Self.labelPosition(template, r), start: time, duration: lift, radius: 0, painted: 0,
-                seed: Float(r % 61) * 0.73))
+            renderer.update(r, .unpainting(start: time, duration: lift))
         }
         activeUntil = max(activeUntil, time + lift)
         requestRender()
@@ -789,11 +778,11 @@ final class CanvasView: UIView, PaintingCanvas {
             let step = span / Float(painted.count)
             let begin = now()
             for (i, r) in painted.enumerated() {
-                let origin = Self.labelPosition(template, r)
+                let origin = anchors[r]
                 renderer.update(r, RegionState(
                     origin: origin, start: begin + Float(i) * step, duration: reduceMotion ? 0 : 0.5,
-                    radius: reduceMotion ? 0 : farthestDistance(from: origin, in: template.regions[r].bounds), painted: 1,
-                    seed: Float(r % 61) * 0.73))
+                    radius: reduceMotion ? 0 : template.regions[r].bounds.farthestCorner(from: origin), painted: 1,
+                    seed: RegionState.frontSeed(forRegion: r)))
             }
             activeUntil = max(activeUntil, begin + span + 1.5)
             requestRender()
@@ -842,16 +831,17 @@ final class CanvasView: UIView, PaintingCanvas {
         let animate = animated && !reduceMotion
         var longest: Float = 0
         for r in regions {
-            let seed = Float(r % 61) * 0.73
             guard animate else {
-                renderer.update(r, .settled(painted: true, origin: Self.labelPosition(template, r), seed: seed))
+                renderer.update(r, .settled(painted: true))
                 continue
             }
             let start = paintOrigin(for: r, near: origin)
-            let radius = farthestDistance(from: start, in: template.regions[r].bounds)
+            let radius = template.regions[r].bounds.farthestCorner(from: start)
             // Bigger on screen → a little longer, so every fill reads as one smooth stroke.
             let duration = min(0.6, max(0.25, 0.2 + radius * zoom / 700)) * fillDurationScale
-            renderer.update(r, RegionState(origin: start, start: time, duration: duration, radius: radius, painted: 1, seed: seed))
+            renderer.update(r, RegionState(
+                origin: start, start: time, duration: duration, radius: radius, painted: 1,
+                seed: RegionState.frontSeed(forRegion: r)))
             longest = max(longest, duration)
         }
         if animated { FeedbackEngine.shared.fillDuration = TimeInterval(longest) }
@@ -913,10 +903,7 @@ final class CanvasView: UIView, PaintingCanvas {
         guard let renderer else { return }
         let time = now()
         for r in regions {
-            let origin = Self.labelPosition(template, r), seed = Float(r % 61) * 0.73
-            renderer.update(r, reduceMotion
-                ? .settled(painted: false, origin: origin, seed: seed)
-                : RegionState(origin: origin, start: time, duration: 0.25, radius: 0, painted: 0, seed: seed))
+            renderer.update(r, reduceMotion ? .settled(painted: false) : .unpainting(start: time, duration: 0.25))
         }
         activeUntil = max(activeUntil, time + 0.3)
         requestRender()
@@ -968,14 +955,7 @@ final class CanvasView: UIView, PaintingCanvas {
                 }
             }
         }
-        return best ?? Self.labelPosition(template, region)
-    }
-
-    private func farthestDistance(from p: SIMD2<Float>, in b: PixelBounds) -> Float {
-        let xs = [Float(b.minX), Float(b.maxX)], ys = [Float(b.minY), Float(b.maxY)]
-        var d: Float = 1
-        for x in xs { for y in ys { d = max(d, simd_distance(p, SIMD2(x, y))) } }
-        return d
+        return best ?? anchors[region]
     }
 
     // MARK: Gestures

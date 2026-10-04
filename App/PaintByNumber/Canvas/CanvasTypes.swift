@@ -3,6 +3,12 @@ import Foundation
 import PaintCore
 import simd
 
+/// Times on the canvas renderer's clock (seconds).
+nonisolated enum CanvasClock {
+    /// A time so long ago that every animation reading it has finished.
+    static let never: Float = -10_000
+}
+
 /// Per-frame shader constants. Layout mirrors `FrameUniforms` in Shaders.metal (only 16-byte
 /// vectors, so Swift and MSL agree without padding rules).
 nonisolated struct CanvasUniforms {
@@ -35,7 +41,7 @@ nonisolated struct CanvasUniforms {
     /// xy: position (px), z: radius (px), w: opacity.
     var brush: SIMD4<Float> = .zero
     /// x: start of a light sweep over finished paint, y: its palette color (-1 = everything).
-    var shine: SIMD4<Float> = SIMD4(-10_000, -1, 0, 0)
+    var shine: SIMD4<Float> = SIMD4(CanvasClock.never, -1, 0, 0)
     /// x: selected color, y: hovered region, z: pulsing region, w: bumped region (-1 = none).
     var ids: SIMD4<Int32> = SIMD4(repeating: -1)
     /// x: source photo opacity (0 = hidden).
@@ -102,9 +108,40 @@ nonisolated struct RegionState {
     var seed: Float
     var pad: Float = 0
 
-    /// Settled state: painted or not, no animation.
-    static func settled(painted: Bool, origin: SIMD2<Float>, seed: Float) -> RegionState {
-        RegionState(origin: origin, start: -10_000, duration: painted ? 0 : 0.2, radius: 0, painted: painted ? 1 : 0, seed: seed)
+    /// Painted or not, no animation. The shaders read the origin, radius and seed only while
+    /// paint spreads (Shaders.metal `samplePaint`), so a settled state carries none.
+    static func settled(painted: Bool) -> RegionState {
+        RegionState(
+            origin: .zero, start: CanvasClock.never, duration: painted ? 0 : 0.2, radius: 0, painted: painted ? 1 : 0, seed: 0)
+    }
+
+    /// Paint lifting off over `duration` seconds from `start` (0: at once).
+    static func unpainting(start: Float, duration: Float) -> RegionState {
+        RegionState(origin: .zero, start: start, duration: duration, radius: 0, painted: 0, seed: 0)
+    }
+
+    /// Varies the shader's lobed paint front from region to region.
+    static func frontSeed(forRegion r: Int) -> Float { Float(r % 61) * 0.73 }
+}
+
+nonisolated extension Template {
+    /// Where region `r`'s number sits, or the centre of its bounds when it has none: where paint
+    /// spreads from when no touch says otherwise, and where VoiceOver finds the area.
+    func anchor(ofRegion r: Int) -> SIMD2<Float> {
+        if let label = labels(ofRegion: r).first { return label.position }
+        let b = regions[r].bounds
+        return SIMD2(Float(b.minX + b.maxX) / 2, Float(b.minY + b.maxY) / 2)
+    }
+}
+
+nonisolated extension PixelBounds {
+    /// How far paint spreading from `p` has to reach: the distance to the farthest corner, at
+    /// least 1.
+    func farthestCorner(from p: SIMD2<Float>) -> Float {
+        let x0 = Float(minX), x1 = Float(maxX), y0 = Float(minY), y1 = Float(maxY)
+        return max(
+            1, simd_distance(p, SIMD2(x0, y0)), simd_distance(p, SIMD2(x0, y1)),
+            simd_distance(p, SIMD2(x1, y0)), simd_distance(p, SIMD2(x1, y1)))
     }
 }
 

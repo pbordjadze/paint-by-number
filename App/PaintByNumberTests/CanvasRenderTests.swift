@@ -198,7 +198,7 @@ struct CanvasRenderTests {
         let upload = clock.now - t0
 
         let w = 1206, h = 2622
-        var states = t.regions.indices.map { RegionState.settled(painted: $0 % 2 == 0, origin: .zero, seed: 0) }
+        var states = t.regions.indices.map { RegionState.settled(painted: $0 % 2 == 0) }
         // A handful of fills mid-animation, like drag painting.
         for r in stride(from: 1, to: min(t.regions.count, 400), by: 40) {
             states[r] = RegionState(origin: t.labels(ofRegion: r).first?.position ?? .zero, start: -0.2, duration: 0.5,
@@ -429,7 +429,7 @@ struct CanvasRenderTests {
     private func render(scene: CanvasScene, uniforms: CanvasUniforms, content: RenderContext.Content, width w: Int, height h: Int) -> CGImage? {
         guard let context = RenderContext.shared else { return nil }
         let device = context.device
-        let states = (0..<scene.regionCount).map { _ in RegionState.settled(painted: false, origin: .zero, seed: 0) }
+        let states = (0..<scene.regionCount).map { _ in RegionState.settled(painted: false) }
         let rowBytes = (w * 4 + 255) / 256 * 256
         guard let stateBuffer = device.makeBuffer(bytes: states, length: MemoryLayout<RegionState>.stride * max(states.count, 1), options: .storageModeShared),
               let color = context.makeColorTarget(width: w, height: h),

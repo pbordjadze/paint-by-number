@@ -482,7 +482,7 @@ struct PaintingSessionTests {
     @Test func rendererKeepsProducingFrames() async throws {
         let context = try #require(RenderContext.shared)
         let scene = try #require(CanvasScene(template: template, context: context))
-        let states = template.regions.indices.map { _ in RegionState.settled(painted: false, origin: .zero, seed: 0) }
+        let states = template.regions.indices.map { _ in RegionState.settled(painted: false) }
         let renderer = try #require(CanvasRenderer(scene: scene, context: context, states: states))
         let layer = CAMetalLayer()
         layer.device = context.device

@@ -45,7 +45,7 @@ nonisolated enum CanvasSnapshot {
         var states: [RegionState] = []
         states.reserveCapacity(template.regions.count)
         for i in template.regions.indices {
-            states.append(.settled(painted: painted[i], origin: .zero, seed: 0))
+            states.append(.settled(painted: painted[i]))
         }
         let u = uniforms(scene: scene, width: w, height: h, options: options)
 
@@ -111,7 +111,7 @@ nonisolated enum CanvasSnapshot {
         }
         u.labels = SIMD4(5, 7, .greatestFiniteMagnitude, 0)
         u.numbers = SIMD4(0.8, 0.9, 0.04, 0)
-        u.time = SIMD4(0, -10_000, -10_000, -10_000)
+        u.time = SIMD4(0, CanvasClock.never, CanvasClock.never, CanvasClock.never)
         if let color = options.highlight, color >= 0, color < scene.paletteLinear.count {
             u.select(scene.paletteLinear[color], palette: palette)
             u.ids.x = Int32(color)
