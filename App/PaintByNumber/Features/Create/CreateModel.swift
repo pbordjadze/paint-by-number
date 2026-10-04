@@ -450,7 +450,7 @@ final class CreateModel {
     }
 
     @concurrent
-    private static func decode(url: URL) async throws -> Decoded {
+    static func decode(url: URL) async throws -> Decoded {
         try Decoded(PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize))
     }
 

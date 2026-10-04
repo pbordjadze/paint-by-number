@@ -342,11 +342,6 @@ final class AdvancedSettingsModel {
         }
     }
 
-    nonisolated private enum Source: Sendable {
-        case file(URL)
-        case artwork(UUID, ArtworkStore)
-    }
-
     private func load(_ picture: Picture) {
         stop()
         loadID += 1
@@ -360,16 +355,15 @@ final class AdvancedSettingsModel {
         phase = .loading
         refreshEffects()
         updateStatus()
-        let source: Source?
-        switch picture {
-        case .sample(let name): source = Sample.named(name)?.url.map(Source.file)
-        case .photo(let artwork): source = store.map { Source.artwork(artwork, $0) }
+        let url: URL? = switch picture {
+        case .sample(let name): Sample.named(name)?.url
+        case .photo(let artwork): store?.url(.source, of: artwork)
         }
         let preference = paintingLength
         loadTask = Task {
             do {
-                guard let source else { throw CreateModel.CreateError.unreadable }
-                let prepared = try await Self.prepare(source, preference: preference)
+                guard let url else { throw CreateModel.CreateError.unreadable }
+                let prepared = try await Self.prepare(url, preference: preference)
                 guard id == loadID else { return }
                 base = prepared.base
                 baseline = prepared.baseline.stats
@@ -390,23 +384,14 @@ final class AdvancedSettingsModel {
         }
     }
 
-    /// Decodes the picture as the create flow does (`CreateModel.Decoded`), finds its subject
-    /// and chooses its settings (the suggestion's center, at the draft size), then renders the
-    /// preview at the default advanced settings like any other (the suggestion's own draft has
-    /// no edge map, and the default lines draw from one).
+    /// Decodes the picture as the create flow does (`CreateModel.decode(url:)`), finds its
+    /// subject and chooses its settings (the suggestion's center, at the draft size), then
+    /// renders the preview at the default advanced settings like any other (the suggestion's own
+    /// draft has no edge map, and the default lines draw from one).
     @concurrent
-    private static func prepare(_ source: Source, preference: PaintingLength) async throws -> (base: Base, baseline: Preview) {
-        let image: RGBAImage
-        switch source {
-        case .file(let url):
-            image = try PhotoLoader.load(url: url, maxPixelSize: ArtworkStore.sourceMaxPixelSize)
-        case .artwork(let id, let store):
-            guard let photo = store.source(id, maxPixelSize: ArtworkStore.sourceMaxPixelSize) else {
-                throw CreateModel.CreateError.unreadable
-            }
-            image = try PhotoLoader.rgbaImage(from: photo)
-        }
-        let photo = try CreateModel.Decoded(image).preview
+    private static func prepare(_ url: URL, preference: PaintingLength) async throws -> (base: Base, baseline: Preview) {
+        let decoded = try await CreateModel.decode(url: url)
+        let image = decoded.image, photo = decoded.preview
         try Task.checkCancellation()
         let subject = SubjectImportance.analyze(photo)
         try Task.checkCancellation()
