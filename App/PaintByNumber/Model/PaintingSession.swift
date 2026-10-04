@@ -74,7 +74,8 @@ final class PaintingSession {
     }
 
     /// A fresh painting of `template`. `nicknameSeed` (the artwork's `ColorNickname.seed(for:)`)
-    /// picks the colors' nicknames, so a painting's names never change.
+    /// picks the colors' nicknames, the same on every open; they are derived, never stored, so
+    /// an edit to PaintCore's nickname table or draw renames saved paintings' colors.
     convenience init(template: Template, nicknameSeed: UInt64 = 0) {
         self.init(checked: template, progress: PaintProgress(regionCount: template.regions.count), nicknameSeed: nicknameSeed)
     }
