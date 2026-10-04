@@ -10,7 +10,7 @@ import ImageIO
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--importance m.pgm]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
-//       [--line-style classic|layered|coloringBook --edges map.pgm [--eyes eyes.json] [--line-art key=value]...]
+//       [--line-style classic|layered|coloringBook --edges map.pgm [--lines drawing.pgm] [--eyes eyes.json] [--line-art key=value]...]
 //       [--tuning key=value]...
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
 //       layered and coloring-book line art split the cells along the edge map's lines
@@ -55,6 +55,7 @@ struct Options {
     var candidates = 5
     var out: String?
     var edges: String?
+    var lines: String?
     var eyes: String?
 }
 
@@ -136,6 +137,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--candidates": o.candidates = Int(it.next() ?? "") ?? o.candidates
         case "--out": o.out = it.next()
         case "--edges": o.edges = it.next()
+        case "--lines": o.lines = it.next()
         case "--eyes": o.eyes = it.next()
         case "--line-style":
             let value = it.next() ?? ""
@@ -186,15 +188,26 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
                 storage: (0..<(img.width * img.height)).map { Float(img.pixels[$0 * 4]) / 255 })
 }
 
-/// The edge map and eyes layered and coloring-book line art draw from (`--edges`, `--eyes`).
+/// The edge map and eyes layered and coloring-book line art draw from: `--edges` (a contour
+/// map, HED), `--lines` (a line drawing), or both combined as the app combines its two models
+/// (`EdgeMap.combined`); and `--eyes`.
 func loadLineArt(_ options: Options) -> LineArtInput? {
-    guard let path = options.edges else {
+    guard options.edges != nil || options.lines != nil else {
         let style = options.settings.lineArt.style
-        if style.usesEdgeMap { fail("--line-style \(style.rawValue) needs --edges map.pgm") }
+        if style.usesEdgeMap { fail("--line-style \(style.rawValue) needs --edges map.pgm and/or --lines drawing.pgm") }
         return nil
     }
-    let img = loadImage(path)
-    let edges = EdgeMap(width: img.width, height: img.height, values: (0..<(img.width * img.height)).map { img.pixels[$0 * 4] })
+    func map(_ path: String) -> EdgeMap {
+        let img = loadImage(path)
+        return EdgeMap(width: img.width, height: img.height, values: (0..<(img.width * img.height)).map { img.pixels[$0 * 4] })
+    }
+    let edges: EdgeMap
+    switch (options.lines.map(map), options.edges.map(map)) {
+    case let (drawing?, contours?): edges = EdgeMap.combined(drawing: drawing, contours: contours)
+    case let (drawing?, nil): edges = drawing
+    case let (nil, contours?): edges = contours
+    case (nil, nil): fatalError()
+    }
     var eyes: [[SIMD2<Float>]] = []
     if let eyesPath = options.eyes {
         guard let data = FileManager.default.contents(atPath: eyesPath) else { fail("cannot read \(eyesPath)") }

@@ -97,6 +97,30 @@
         }
       }
     },
+    "acknowledgements.informativeDrawings.usage" : {
+      "comment" : "What a credited third-party method or library is used for in the template engine (Informative drawings); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turns a photo into a line drawing that keeps its geometry and meaning."
+          }
+        }
+      }
+    },
+    "acknowledgements.lineArtModel.usage" : {
+      "comment" : "What a credited machine-learning model is used for (the Informative Drawings line-drawing generator); shown in Settings under Acknowledgements",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draws a photo's lines, fur, petals and glass, for coloring books and layered line art."
+          }
+        }
+      }
+    },
     "acknowledgements.kmeans.usage" : {
       "comment" : "What a credited third-party method or library is used for in the template engine (k-means++); shown in Settings under Acknowledgements",
       "extractionState" : "manual",

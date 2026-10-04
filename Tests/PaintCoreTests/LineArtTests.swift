@@ -320,6 +320,28 @@ struct LineArtTests {
         #expect(t.validate(minLabelRadius: LabelSizing.minimumRadius).isValid)
     }
 
+    // MARK: - Maps
+
+    /// A drawing over contours: the drawing's levels where it has lines, the contours scaled
+    /// elsewhere; a contour map of another size is resampled first, and the result is bytes
+    /// for bytes the same on every run.
+    @Test func drawingCombinesWithContours() {
+        let drawing = EdgeMap(width: 4, height: 2, values: [0, 200, 40, 0, 255, 0, 0, 10])
+        let contours = EdgeMap(width: 4, height: 2, values: [100, 100, 100, 100, 0, 255, 60, 60])
+        let combined = EdgeMap.combined(drawing: drawing, contours: contours)
+        #expect(combined.values == [85, 200, 85, 85, 255, 217, 51, 51])
+        #expect(EdgeMap.combined(drawing: drawing, contours: contours, contourWeight: 1) .values == [100, 200, 100, 100, 255, 255, 60, 60])
+        // Contours twice the drawing's size resample to it; the same levels come out again.
+        let large = EdgeMap(width: 8, height: 4, values: (0..<32).map { UInt8(($0 * 37) % 256) })
+        let small = large.resampled(width: 4, height: 2)
+        #expect(small.width == 4 && small.height == 2 && small == large.resampled(width: 4, height: 2))
+        #expect(EdgeMap.combined(drawing: drawing, contours: large) == EdgeMap.combined(drawing: drawing, contours: small))
+        #expect(large.resampled(width: 8, height: 4) == large)
+        // Resampling up and down keeps a flat map flat and its levels inside the range.
+        let flat = EdgeMap(width: 3, height: 3, values: [UInt8](repeating: 77, count: 9))
+        #expect(flat.resampled(width: 7, height: 5).values.allSatisfy { $0 == 77 })
+    }
+
     // MARK: - Stages
 
     @Test func layersByHysteresisAlongTheLine() {

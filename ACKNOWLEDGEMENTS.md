@@ -395,9 +395,9 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 
 ## Models
 
-Machine-learning models that run on your device. The weights are distributed under the license
-given in full below; `tools/models/convert_hed.py` converts them to Core ML and records where
-they come from.
+Machine-learning models that run on your device. The weights are distributed under the licenses
+given in full below; `tools/models/convert_hed.py` and `tools/models/convert_lineart.py` convert
+them to Core ML and record where they come from.
 
 ### ControlNet HED
 
@@ -406,6 +406,14 @@ Finds the lines of a photo for layered line art.
 Lvmin Zhang (lllyasviel), ControlNet: ControlNetHED.pth from lllyasviel/Annotators
 
 Apache License, Version 2.0
+
+### Informative Drawings
+
+Draws a photo's lines, fur, petals and glass, for coloring books and layered line art.
+
+Caroline Chan, Frédo Durand and Phillip Isola, Informative Drawings: sk_model.pth (contour style) from lllyasviel/Annotators
+
+MIT License
 
 ## Apache License, Version 2.0
 
@@ -461,6 +469,14 @@ You may add Your own copyright statement to Your modifications and may provide a
 
 END OF TERMS AND CONDITIONS
 
+## MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 ## Methods
 
 Published techniques the template engine builds on.
@@ -514,6 +530,12 @@ David Douglas and Thomas Peucker, "Algorithms for the reduction of the number of
 Combines edges found at five scales into one map of a photo's lines.
 
 Saining Xie and Zhuowen Tu, "Holistically-Nested Edge Detection", 2015
+
+### Informative drawings
+
+Turns a photo into a line drawing that keeps its geometry and meaning.
+
+Caroline Chan, Frédo Durand and Phillip Isola, "Learning to generate line drawings that convey geometry and semantics", 2022
 
 ### SplitMix64
 

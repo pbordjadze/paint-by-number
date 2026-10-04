@@ -107,24 +107,26 @@ final class PaintingNavigationTests: XCTestCase {
         func point(_ x: CGFloat, _ y: CGFloat) -> XCUICoordinate {
             origin.withOffset(CGVector(dx: app.frame.minX + x * app.frame.width, dy: top + y * (bottom - top)))
         }
-        let unpainted = swatch.value as? String
+        // A color whose last area gets painted is finished, and its swatch leaves the palette.
+        func state() -> String? { swatch.exists ? swatch.value as? String : "finished" }
+        let unpainted = state()
         point(0.5, 0.5).tap()
         sleep(1)
-        if swatch.value as? String == unpainted {
+        if state() == unpainted {
             point(0.1, 0.5).press(forDuration: 0.5, thenDragTo: point(0.9, 0.5))
             point(0.5, 0.1).press(forDuration: 0.5, thenDragTo: point(0.5, 0.9))
             sleep(1)
         }
-        let painted = swatch.value as? String
+        let painted = state()
         attachScreenshot(of: app, named: "keyboard-painted")
         XCTAssertNotEqual(painted, unpainted, "Couldn't paint the hinted color")
 
         app.typeKey("z", modifierFlags: .command)
         sleep(1)
-        XCTAssertNotEqual(swatch.value as? String, painted, "⌘Z didn't undo")
+        XCTAssertNotEqual(state(), painted, "⌘Z didn't undo")
         app.typeKey("z", modifierFlags: [.command, .shift])
         sleep(1)
-        XCTAssertEqual(swatch.value as? String, painted, "⇧⌘Z didn't redo")
+        XCTAssertEqual(state(), painted, "⇧⌘Z didn't redo")
     }
 
     /// The Photo control: a tap keeps the photo shown until the next tap; a hold only peeks.

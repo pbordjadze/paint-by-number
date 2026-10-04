@@ -64,3 +64,18 @@ choosing a style in Settings › Advanced carries each style's defaults along), 
 flattened 1.5× (`SegmentationParameters.coloringBookFlattening`). Both are measured in
 `docs/presets/README.md`. Settings › Advanced exposes the thresholds for the book with the
 texture threshold hidden; Coloring Book in its Presets row is the defaults.
+
+## Detectors
+
+HED alone (build 176) finds strong, closed silhouettes and little else: the fox is an outline
+with five strokes inside, the Arrieta still life a row of blobs. The Informative Drawings
+generator (`LineArt.mlpackage`, the network ControlNet's lineart annotator runs) draws what an
+illustrator draws, fur, petals, cut glass, the cat's face, but its silhouettes are thin and
+sometimes open. The app now generates from the drawing laid over the HED map
+(`EdgeMap.combined`: per pixel the larger of the drawing and 0.85 × HED): the contours keep every
+object closed, the drawing supplies the detail. With the pipeline's thresholds at 0.5 (outlines)
+and 0.3 (detail) and same-paint cells joined across detail lines (`samePaint =
+.joinAllButOutlines`), the fur strokes draw inside their cells instead of walling slivers.
+Measured on the ten-picture corpus plus the Arrieta (`tools/eval.py --edges-dir … --lines-dir …`):
+cells within a tenth of HED's, strokes inside cells from a handful to hundreds. The drawing runs
+at a long side of 768 (cleaner and four times faster than 1152) and is resampled up.

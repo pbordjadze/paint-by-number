@@ -20,7 +20,7 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
     `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs, applied in its
     init: a factor of exactly 1 leaves every knob bit for bit, so classic output never moves)
   - `LineArt/` layered line art (`LayeredLines.apply`; stages in its doc comment): an 8-bit
-    `EdgeMap` (the app's HED, or `pbn --edges`) and eye polygons → ridges, hysteresis and thinning
+    `EdgeMap` (the app's line drawing over its HED map, `EdgeMap.combined`; `pbn --edges`/`--lines`) and eye polygons → ridges, hysteresis and thinning
     (`LineDetection`), traced and cleaned strokes (`StrokeGraph`), a `LineLayer` per point by
     hysteresis along the stroke, the outline threshold rising toward 1 where lines crowd except on
     long contours (`LineLayering`), the segmentation split along the lines (`CellMap`: cells keep
@@ -66,7 +66,8 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
 - `tools/` evaluation tooling (`swift.sh`, `eval.py`, `compare.py`, `regression.py` + its
   committed `baseline/regression.json` and `baseline/auto.json`, `auto_sheet.py`, `svg2png.mjs`),
   `strings_check.py` (string catalog drift check, see Localization) and `models/convert_hed.py`
-  (the app's HED Core ML model from its source weights, see Layered line art inputs).
+  (the app's HED Core ML model from its source weights, see Layered line art inputs) and
+  `models/convert_lineart.py` (the line-drawing model the same way).
 - `.github/workflows/` CI: Linux PaintCore tests + quality regression; macOS builds the app, runs
   tests, captures simulator screenshots.
 - `ACKNOWLEDGEMENTS.md` credits and license texts for the ported code, bundled models and published methods (also shown in the app).
@@ -101,7 +102,9 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   <ppm...>` times the pipeline, including a preview, detail 1 on a large photo, 150 colors
   at detail 1 and Auto's suggestion (`--edges map.pgm`: also layered line art, stage by stage).
 - Layered line art: `pbn generate <in.ppm> <out> --line-style layered|coloringBook --edges map.pgm
-  [--eyes eyes.json] [--line-art key=value]… [--tuning key=value]…` (eyes: closed polygons of
+  [--lines drawing.pgm] [--eyes eyes.json] [--line-art key=value]… [--tuning key=value]…` (`--edges`
+  a contour map, HED; `--lines` a line drawing; both given, combined as the app combines its two
+  models, `EdgeMap.combined`; `eval.py --edges-dir`/`--lines-dir`; eyes: closed polygons of
   `[x, y]` normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names;
   pbn is classic unless `--line-style` says otherwise, whatever the pipeline's default, and
   `--line-style` picks the style at its own defaults, `--line-art` fields on top in any order);
@@ -380,14 +383,22 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   it would be a hand-written `.appex` target in the pbxproj that can't open its containing app and
   would hand the image over through an app group. Debug builds: `-openFile <path>` calls the same
   handler at launch (`DemoMode.openFileURL`; scenario `create-from-file`).
-- Layered line art inputs (`Generation/`): `EdgeDetector.edgeMap(for:maxLongSide:)` runs
-  `Resources/Models/HED.mlpackage` (ControlNet's HED, `ControlNetHED.pth` from Hugging Face
-  `lllyasviel/Annotators`, Apache-2.0, sha256 and conversion in `tools/models/convert_hed.py`; 29 MB
-  of float16 weights computed in float32) on the photo drawn into sRGB and area-resampled to ≤ 1152
-  px, reflect-padded to a multiple of 16; the edge probability is rounded to 8 bits (`EdgeMap`).
-  `.cpuOnly` keeps maps the same across devices, up to a level where a value sits on a rounding
-  boundary (the Neural Engine and GPU compute in reduced precision that differs by chip); the target
-  has `COREML_CODEGEN_LANGUAGE = None` and loads `HED.mlmodelc` by URL. `EyeFinder.eyes(in:)`:
+- Layered line art inputs (`Generation/`): `EdgeDetector` runs two bundled models on the photo
+  drawn into sRGB and area-resampled, reflect-padded to the network's stride, the probability
+  rounded to 8 bits (`EdgeMap`): `edgeMap(for:maxLongSide:)` runs `Resources/Models/HED.mlpackage`
+  (ControlNet's HED, `ControlNetHED.pth` from Hugging Face `lllyasviel/Annotators`, Apache-2.0,
+  sha256 and conversion in `tools/models/convert_hed.py`; 29 MB of float16 weights computed in
+  float32; ≤ 1152 px, stride 16), a contour map whose silhouettes are strong and closed, and
+  `lineDrawing(for:)` runs `LineArt.mlpackage` (Informative Drawings' contour-style generator,
+  Chan, Durand & Isola 2022, `sk_model.pth` from the same repository, MIT, the network ControlNet's
+  lineart annotator uses; `tools/models/convert_lineart.py`; 8.6 MB; ≤ 768 px, stride 4, RGB in
+  0...1, its paper inverted to ink), a drawing with the fur, petals and glass HED lacks.
+  `combinedMap(for:)`, what the app generates from, lays the drawing (resampled up) over the HED
+  map, `EdgeMap.combined`: per pixel the larger of the drawing and 0.85 × the contours
+  (`EdgeMap.contourWeight`, measured on the fox and Arrieta's still life). `.cpuOnly` keeps maps
+  the same across devices, up to a level where a value sits on a rounding boundary (the Neural
+  Engine and GPU compute in reduced precision that differs by chip); the target has
+  `COREML_CODEGEN_LANGUAGE = None` and loads the `.mlmodelc`s by URL. `EyeFinder.eyes(in:)`:
   Vision face landmarks → per eye a smoothed contour and an iris (a circle around the pupil, 0.2 ×
   the eye's width, clipped to the lids), closed polygons normalized to the photo, contours then
   irises, quantized to 1/4096. `LineArtInputs.make(for:settings:)` (nil for classic) caches both per
@@ -399,9 +410,10 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   gives every candidate the line art and tuning (its drafts get no edge map, so a layered winner is
   drafted again with it).
   `ArtworkFactory.template` (regeneration, samples) computes the inputs per template. `meta.json`
-  records them in `settings`. Tests: the model against a PyTorch-made map
-  (`App/PaintByNumberTests/HEDFixture.ppm` → `.pgm`, written by the conversion script; ≤ 2 levels
-  apart), eyes on `FaceFixture.jpg` (NASA's 1962 portrait of John Glenn).
+  records them in `settings`. Tests: each model against a PyTorch-made map
+  (`App/PaintByNumberTests/HEDFixture.ppm` → `HEDFixture.pgm` and `LineArtFixture.pgm`, written by
+  the conversion scripts; ≤ 2 levels apart), eyes on `FaceFixture.jpg` (NASA's 1962 portrait of
+  John Glenn).
 - Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`). Settings › Painting Length
   (Quick, Relaxed by default, Detailed; `Preferences.paintingLength`) is what suggestions aim for;
   nothing starts from fixed settings any more (the old Starting Colors value is never read).

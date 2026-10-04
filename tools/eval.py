@@ -2,7 +2,7 @@
 """Visual + quantitative evaluation harness for the template pipeline.
 
     tools/eval.py run IMAGE... --out DIR [--sheet-width 2400] [--importance-dir DIR]
-        [--edges-dir DIR [--eyes-dir DIR]] [-- pbn generate options]
+        [--edges-dir DIR] [--lines-dir DIR] [--eyes-dir DIR] [-- pbn generate options]
 
 `-- --auto [--length L]` generates at the settings Auto suggests; the caption shows them.
 
@@ -12,8 +12,10 @@ plus `DIR/summary.json` and an overview grid `DIR/overview.png`. With --importan
 `<name>.pgm` in that directory (if present) is passed to pbn as the importance map.
 
 Layered line art: --edges-dir passes `<name>.pgm` from that directory as the edge map
-(`--edges`) and generates layered templates (`--line-style layered`, unless the pbn options
-set a style: `-- --line-style coloringBook` for coloring books); --eyes-dir passes
+(`--edges`, a contour map such as HED) and --lines-dir `<name>.pgm` as a line drawing
+(`--lines`; both given, pbn combines them as the app combines its two models), and generates
+layered templates (`--line-style layered`, unless the pbn options set a style: `-- --line-style
+coloringBook` for coloring books); --eyes-dir passes
 `<name>.json` (closed polygons normalized to the photo) as `--eyes`. Other line-art settings
 go through as pbn options (`-- --line-art samePaint=split`). The template panel draws each
 layer in its group (a coloring book its drawing in heavy ink and no color edges); the caption
@@ -78,7 +80,7 @@ def palette_names(stats):
     return [f"{nicknames[i]}\n{name}" if i < len(nicknames) else name for i, name in enumerate(plain)]
 
 
-def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, edges_dir=None, eyes_dir=None):
+def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, edges_dir=None, eyes_dir=None, lines_dir=None):
     name = os.path.splitext(os.path.basename(image_path))[0]
     out = os.path.join(out_root, name)
     os.makedirs(out, exist_ok=True)
@@ -90,6 +92,10 @@ def process(image_path, out_root, pbn_args, sheet_width, importance_dir=None, ed
     if edges_dir and os.path.exists(os.path.join(edges_dir, name + ".pgm")):
         extra += ["--edges", os.path.join(edges_dir, name + ".pgm")]
         if "--line-style" not in pbn_args:
+            extra += ["--line-style", "layered"]
+    if lines_dir:
+        extra += ["--lines", os.path.join(lines_dir, name + ".pgm")]
+        if not edges_dir and "--line-style" not in pbn_args:
             extra += ["--line-style", "layered"]
         if eyes_dir and os.path.exists(os.path.join(eyes_dir, name + ".json")):
             extra += ["--eyes", os.path.join(eyes_dir, name + ".json")]
@@ -155,7 +161,7 @@ def main():
         argv, pbn_args = argv[:i], argv[i + 1:]
     out_root = "out"
     sheet_width = 2400
-    importance_dir = edges_dir = eyes_dir = None
+    importance_dir = edges_dir = eyes_dir = lines_dir = None
     images = []
     it = iter(argv)
     for a in it:
@@ -167,6 +173,8 @@ def main():
             importance_dir = next(it)
         elif a == "--edges-dir":
             edges_dir = next(it)
+        elif a == "--lines-dir":
+            lines_dir = next(it)
         elif a == "--eyes-dir":
             eyes_dir = next(it)
         else:
@@ -174,7 +182,7 @@ def main():
     os.makedirs(out_root, exist_ok=True)
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(
-            lambda p: process(p, out_root, pbn_args, sheet_width, importance_dir, edges_dir, eyes_dir), images))
+            lambda p: process(p, out_root, pbn_args, sheet_width, importance_dir, edges_dir, eyes_dir, lines_dir), images))
     summary = {name: stats for name, stats in results if stats}
     json.dump(summary, open(os.path.join(out_root, "summary.json"), "w"), indent=2)
 

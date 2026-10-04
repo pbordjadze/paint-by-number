@@ -41,6 +41,37 @@ struct EdgeDetectorTests {
         #expect(zip(viaImage.values, map.values).allSatisfy { abs(Int($0) - Int($1)) <= 1 })
     }
 
+    /// `LineArtFixture.pgm` is what `tools/models/convert_lineart.py` computes in PyTorch from
+    /// the same crop (the generator's float16-rounded weights in float32, as the package stores
+    /// and runs them). Core ML on the CPU lands on the same levels but for float rounding, and
+    /// the combined map is that drawing over the HED map, the same on every run.
+    @Test func lineDrawingMatchesThePyTorchReferenceAndCombinesWithHED() throws {
+        let input = try Netpbm.read(Data(contentsOf: TestBundle.url("HEDFixture", "ppm")))
+        let reference = try Netpbm.read(Data(contentsOf: TestBundle.url("LineArtFixture", "pgm")))
+        let map = try EdgeDetector.lineDrawing(for: input, maxLongSide: EdgeDetector.maximumLongSide, cancel: .none)
+        #expect(map.width == reference.width && map.height == reference.height)
+        let expected = (0..<(reference.width * reference.height)).map { reference.pixels[$0 * 4] }
+        let differences = zip(map.values, expected).map { abs(Int($0) - Int($1)) }
+        let largest = differences.max() ?? 0
+        let differing = differences.filter { $0 > 0 }.count
+        Attachment.record(Data("""
+            line drawing fixture \(map.width)×\(map.height): largest difference \(largest) levels, \
+            \(differing) of \(differences.count) pixels differ
+            """.utf8), named: "lineart-fixture-comparison.txt")
+        #expect(largest <= 2, "Core ML's drawing is up to \(largest) levels from PyTorch's")
+        #expect(Double(differing) <= 0.01 * Double(differences.count), "\(differing) pixels differ from PyTorch's")
+        // A drawing: a few percent of the pixels are ink, most are paper.
+        let ink = Double(map.values.filter { $0 >= 128 }.count) / Double(map.values.count)
+        #expect(ink > 0.005 && ink < 0.2, "\(ink) of the fixture is ink")
+
+        let hed = try EdgeDetector.edgeMap(for: input, cancel: .none)
+        let combined = try EdgeDetector.combinedMap(for: input, cancel: .none)
+        #expect(combined.width == hed.width && combined.height == hed.height)
+        #expect(combined == EdgeMap.combined(drawing: map, contours: hed))
+        #expect(zip(combined.values, map.values).allSatisfy { $0 >= $1 })
+        #expect(try EdgeDetector.combinedMap(for: input, cancel: .none) == combined)
+    }
+
     /// A photo at full size: scaled to 1152 px, the same map on every run. Records the time and
     /// the model's input and output, so they can be checked against PyTorch off the device.
     @Test func edgeMapIsIdenticalAcrossRunsAtTheModelsSize() throws {

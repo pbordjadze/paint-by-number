@@ -3,8 +3,8 @@ import Foundation
 import os
 import PaintCore
 
-/// What layered and coloring-book line art draw from, computed once per photo: the HED edge
-/// map (`EdgeDetector`) and the eyes (`EyeFinder`).
+/// What layered and coloring-book line art draw from, computed once per photo: the line
+/// drawing over the HED edge map (`EdgeDetector.combinedMap`) and the eyes (`EyeFinder`).
 ///
 /// Inputs are cached by the photo's identity (the same `CGImage` instance) for the last
 /// `cacheCapacity` photos, so the create flow's drafts, candidates and full resolution, and a
@@ -43,12 +43,12 @@ nonisolated enum LineArtInputs {
         }
     }
 
-    /// The inputs of `image`, computed now without the cache: the edge map and, meanwhile,
-    /// the eyes.
+    /// The inputs of `image`, computed now without the cache: the combined map (both models,
+    /// one after the other) and, meanwhile, the eyes.
     @concurrent
     static func compute(for image: CGImage) async throws -> LineArtInput {
         async let eyes = findEyes(in: image)
-        let edges = try EdgeDetector.edgeMap(for: image)
+        let edges = try EdgeDetector.combinedMap(for: image)
         return LineArtInput(edges: edges, eyes: await eyes)
     }
 
