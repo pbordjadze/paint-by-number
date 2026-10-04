@@ -7,13 +7,7 @@ final class AdvancedSettingsUITests: XCTestCase {
     /// prepared and its numbers appear.
     @MainActor
     func testAdvancedOpensFromSettingsWithThePreviewsNumbers() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "gallery-empty"]
-        app.launch()
-        let settings = app.buttons["Settings"]
-        XCTAssertTrue(settings.waitForExistence(timeout: 30), "The gallery has no Settings button")
-        settings.tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10), "The settings sheet didn't open")
+        let app = openSettings()
         let row = app.descendants(matching: .any)["settings-advanced"]
         var swipes = 0
         while !(row.exists && row.isHittable) && swipes < 8 {
@@ -141,17 +135,6 @@ final class AdvancedSettingsUITests: XCTestCase {
     @MainActor
     private func settle() { RunLoop.current.run(until: Date().addingTimeInterval(0.6)) }
 
-    /// Polls `condition` four times a second until it holds or `timeout` passes.
-    @MainActor
-    private func waitUntil(timeout: TimeInterval, _ condition: () -> Bool) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if condition() { return true }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
-        }
-        return condition()
-    }
-
     /// The frame of the element with `identifier` in a snapshot of the app, if it holds one.
     @MainActor
     private func frame(of identifier: String, in app: XCUIApplication) -> CGRect? {
@@ -171,13 +154,5 @@ final class AdvancedSettingsUITests: XCTestCase {
             if let found = element(identifier, in: child) { return found }
         }
         return nil
-    }
-
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
     }
 }

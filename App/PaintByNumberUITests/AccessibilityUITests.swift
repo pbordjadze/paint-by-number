@@ -66,7 +66,7 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertNotNil(hex.range(of: #"#[0-9A-F]{6}$"#, options: .regularExpression), hex)
         // Dismiss by tapping outside the popover: that touch only closes it.
         app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.5)).tap()
-        XCTAssertTrue(waitForDisappearance(of: details), "The details didn't close")
+        XCTAssertTrue(details.waitForNonExistence(timeout: 10), "The details didn't close")
         let selectedAfter = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-' AND selected == true")).firstMatch
         XCTAssertEqual(selectedAfter.identifier, selectedBefore, "The long press changed the selected color")
     }
@@ -180,12 +180,6 @@ final class AccessibilityUITests: XCTestCase {
     }
 
     @MainActor
-    private func waitForDisappearance(of element: XCUIElement, timeout: TimeInterval = 10) -> Bool {
-        let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
-        return XCTWaiter().wait(for: [gone], timeout: timeout) == .completed
-    }
-
-    @MainActor
     private func launch(_ arguments: [String]) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = arguments
@@ -193,13 +187,5 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 60), "The painting didn't open")
         sleep(3)
         return app
-    }
-
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
     }
 }

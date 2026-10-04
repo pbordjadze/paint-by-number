@@ -181,17 +181,6 @@ final class GalleryActionsTests: XCTestCase {
         return XCTWaiter.wait(for: [wait], timeout: timeout) == .completed
     }
 
-    /// Polls until `condition` holds (card moves animate), up to `timeout` seconds.
-    @MainActor
-    private func waitUntil(timeout: TimeInterval = 5, _ condition: () -> Bool) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if condition() { return true }
-            Thread.sleep(forTimeInterval: 0.25)
-        }
-        return condition()
-    }
-
     /// Waits for a card to be ready and scrolls it into view (the finished ones sit below the
     /// fold on a phone). Cards are buttons; the placeholder shown while a painting is still
     /// being generated is not, so it can't be mistaken for the card.
@@ -204,21 +193,8 @@ final class GalleryActionsTests: XCTestCase {
         let preparing = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Preparing'")).firstMatch
         XCTAssertTrue(preparing.waitForNonExistence(timeout: 120), "The demo gallery never finished generating")
         for _ in 0..<6 where !card.isHittable { app.swipeUp() }
-        if !card.isHittable {
-            let tree = XCTAttachment(string: app.debugDescription)
-            tree.name = "gallery-tree"
-            tree.lifetime = .keepAlways
-            add(tree)
-        }
+        if !card.isHittable { attachTree(of: app, named: "gallery-tree") }
         XCTAssertTrue(card.isHittable, "“\(title)” couldn't be scrolled into view")
         return card
-    }
-
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
     }
 }

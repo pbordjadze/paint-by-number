@@ -128,19 +128,6 @@ final class SettingsTests: XCTestCase {
         return XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5) == .completed
     }
 
-    /// Opens Settings the way a person does: from the gallery's toolbar.
-    @MainActor
-    private func openSettings() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "gallery-empty"]
-        app.launch()
-        let button = app.buttons["Settings"]
-        XCTAssertTrue(button.waitForExistence(timeout: 30), "The gallery has no Settings button")
-        button.tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10), "The settings sheet didn't open")
-        return app
-    }
-
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view.
     @MainActor
     private func scroll(_ app: XCUIApplication, to element: XCUIElement, maxSwipes: Int = 6) {
@@ -149,13 +136,5 @@ final class SettingsTests: XCTestCase {
             app.swipeUp()
             swipes += 1
         }
-    }
-
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let shot = XCTAttachment(screenshot: app.screenshot())
-        shot.name = name
-        shot.lifetime = .keepAlways
-        add(shot)
     }
 }
