@@ -16,8 +16,9 @@ enum ColorFixtures {
         let name: String
     }
 
-    /// The six retired samples' 24-color palettes ("<sample> <hex> <expected name>"), from
-    /// `pbn` at `--colors 24`; the names were reviewed by eye against the swatches.
+    /// The six corpus photos' 24-color palettes (`Tests/Corpus`), "<sample> <hex> <expected
+    /// name>" per line, from `pbn` at `--colors 24`; the names were reviewed by eye against the
+    /// swatches.
     private static let samplePalettes = """
         barn f77b5c light vivid red
         barn c66148 vivid red
@@ -170,10 +171,10 @@ enum ColorFixtures {
         return Swatch(sample: sample, hex: hex, name: words.joined(separator: " "))
     }
 
-    /// The retired samples whose palettes `samplePalettes` holds.
+    /// The corpus photos whose palettes `samplePalettes` holds.
     static let samples = Array(Set(swatches.map(\.sample))).sorted()
 
-    /// A retired sample's palette, by name.
+    /// A corpus photo's palette, by name.
     static func palette(of sample: String) -> [PaletteColor] {
         swatches.filter { $0.sample == sample }.map { PaletteColor(oklab: lab($0.hex), space: .sRGB) }
     }

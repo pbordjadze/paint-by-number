@@ -439,12 +439,12 @@ struct AutoSettingsTests {
 
     // MARK: - Fixture
 
-    /// `Fixtures/auto-parrots.json` pins the decision for the bundled parrots photo at Relaxed
+    /// `Fixtures/auto-parrots.json` pins the decision for the corpus's parrots photo at Relaxed
     /// with 5 candidates and no importance map; `auto-parrots-draft.ppm` is that photo
     /// (decoded by Pillow) at the draft size. Regenerate both, only when a change to Auto or
     /// the pipeline is meant to move the decision, with the release pbn:
     ///
-    ///     python3 -c "from PIL import Image; Image.open('App/PaintByNumber/Resources/Samples/parrots.jpg').convert('RGB').save('/tmp/parrots.ppm')"
+    ///     python3 -c "from PIL import Image; Image.open('Tests/Corpus/parrots.jpg').convert('RGB').save('/tmp/parrots.ppm')"
     ///     .build/release/pbn suggest /tmp/parrots.ppm --length relaxed --candidates 5 --out /tmp/auto-parrots
     ///     cp /tmp/auto-parrots/decision.json Tests/PaintCoreTests/Fixtures/auto-parrots.json
     ///     cp /tmp/auto-parrots/draft.ppm Tests/PaintCoreTests/Fixtures/auto-parrots-draft.ppm
