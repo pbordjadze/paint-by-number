@@ -24,17 +24,10 @@ nonisolated enum LineArtInputs {
         var eyes: [[SIMD2<Float>]]
         var objects: [[SIMD2<Float>]]
 
-        /// The input `detector` generates from: the drawing over the contours with the contours
-        /// deciding the outlines, or either map alone deciding everything.
+        /// The input `detector` generates from, by the rule `pbn` follows too
+        /// (`LineArtInput(drawing:contours:detector:)`).
         func input(for detector: LineArtSettings.Detector) -> LineArtInput {
-            switch detector {
-            case .drawingAndContours:
-                LineArtInput(edges: EdgeMap.combined(drawing: drawing, contours: contours), eyes: eyes, objects: objects, contours: contours)
-            case .drawing:
-                LineArtInput(edges: drawing, eyes: eyes, objects: objects)
-            case .contours:
-                LineArtInput(edges: contours, eyes: eyes, objects: objects)
-            }
+            LineArtInput(drawing: drawing, contours: contours, detector: detector, eyes: eyes, objects: objects)
         }
     }
 
