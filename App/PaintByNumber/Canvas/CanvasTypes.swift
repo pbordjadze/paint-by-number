@@ -228,17 +228,21 @@ nonisolated struct CanvasPalette: Sendable {
     /// on light paper (Shaders.metal `highlightPaper`).
     var hatchCeiling: Float = 0.4
 
+    /// The canvas sheet (design token `paper`, #F4EFE6) and its ink, sRGB-encoded.
+    static let sheetPaperSRGB = SIMD3<Float>(0.957, 0.937, 0.902)
+    static let sheetInkSRGB = SIMD3<Float>(0.118, 0.102, 0.133)
+
     static let light = CanvasPalette(
         background: CanvasColor.linearP3(sRGB: SIMD3(0.949, 0.945, 0.957)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.957, 0.937, 0.902)),
-        ink: CanvasColor.linearP3(sRGB: SIMD3(0.118, 0.102, 0.133)),
+        paper: CanvasColor.linearP3(sRGB: sheetPaperSRGB),
+        ink: CanvasColor.linearP3(sRGB: sheetInkSRGB),
         shadowOpacity: 0.16, outlineOpacity: 0.62)
 
     /// Light paper on a dark backdrop (dark system appearance, Paper set to Light).
     static let dark = CanvasPalette(
         background: CanvasColor.linearP3(sRGB: SIMD3(0.078, 0.067, 0.090)),
-        paper: CanvasColor.linearP3(sRGB: SIMD3(0.957, 0.937, 0.902)),
-        ink: CanvasColor.linearP3(sRGB: SIMD3(0.118, 0.102, 0.133)),
+        paper: CanvasColor.linearP3(sRGB: sheetPaperSRGB),
+        ink: CanvasColor.linearP3(sRGB: sheetInkSRGB),
         shadowOpacity: 0.55, outlineOpacity: 0.62)
 
     /// A deep warm grey sheet with a hint of violet and light ink, for painting in the evening.

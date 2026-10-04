@@ -1,11 +1,15 @@
 import PaintCore
 import SwiftUI
 
-/// The canvas sheet's paper and ink (`CanvasPalette.light`), for the drawings that show what
-/// lines look like.
+/// The canvas sheet's paper and ink (`CanvasPalette.sheetPaperSRGB`, `sheetInkSRGB`), for the
+/// drawings that show what lines look like.
 private nonisolated enum Sheet {
-    static let paper = Color(red: 0.957, green: 0.937, blue: 0.902)
-    static let ink = Color(red: 0.118, green: 0.102, blue: 0.133)
+    static let paper = color(CanvasPalette.sheetPaperSRGB)
+    static let ink = color(CanvasPalette.sheetInkSRGB)
+
+    private static func color(_ c: SIMD3<Float>) -> Color {
+        Color(.sRGB, red: Double(c.x), green: Double(c.y), blue: Double(c.z))
+    }
 }
 
 /// A section header with a Reset button while the section differs from its defaults.

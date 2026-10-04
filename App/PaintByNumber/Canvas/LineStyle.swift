@@ -1,5 +1,6 @@
 import Foundation
 import PaintCore
+import simd
 
 /// How strongly each `LineLayer` draws in one frame or image, as factors of the classic line at
 /// the same zoom: 1 draws exactly a classic template's line. The canvas, `CanvasSnapshot` (share
@@ -70,7 +71,7 @@ nonisolated enum ColoringBookLook {
     static func widthPoints(depth: Float, weight: Float) -> Float { (1.5 + 0.7 * max(depth, 0)) * weight }
 
     /// The ink pictures draw the book with: the canvas sheet's ink, encoded sRGB.
-    static let ink = SIMD4<Float>(0.118, 0.102, 0.133, 1)
+    static let ink = SIMD4(CanvasPalette.sheetInkSRGB, 1)
 
     /// On paper there is no highlight to show a color's cells, so a printed book draws its color
     /// edges as dotted guides: this fraction of the print style's outline opacity, dots this many
