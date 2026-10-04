@@ -5,13 +5,13 @@
 # refs/heads) contains STATUS.md, trimmed logs (*.log), <device>/errors.txt, test results,
 # screenshots under */shots/*.png and the quality regression under core/regression/
 # (regression.txt, regression.json, sheets/*/*.jpg).
-# Polls every 30 s for up to 60 min. Run it in the background and read the report when done.
+# Polls every 30 s for up to 100 min (a full run takes about 70). Run it in the background and read the report when done.
 set -euo pipefail
 SHA="${1:-$(git rev-parse HEAD)}"
 OUT="${2:-ci-report}"
 BRANCH="${CI_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 REF="refs/ci-shots/${BRANCH}"
-for _ in $(seq 1 120); do
+for _ in $(seq 1 200); do
   if git fetch -q origin "+${REF}:${REF}" 2>/dev/null; then
     if [[ "$(git show "${REF}:COMMIT" 2>/dev/null)" == "$SHA" ]]; then
       rm -rf "$OUT" && mkdir -p "$OUT"

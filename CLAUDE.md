@@ -240,7 +240,7 @@ Saved paintings must open in every later build. The format history is documented
   like `1$lld` in the first copy are expected).
 - Demo scenarios: `-demo <name>`; the catalogs are the doc comments of `ShellDemo`, `PaintDemoView`
   and `RootView`. A screenshotted scenario is one `name@seconds` line of `ci/scenarios.txt` (no
-  comments; `@seconds` is only the timeout) and calls `DemoMode.markReady()` once its content is on
+  comments; `@seconds` is only the timeout; the file merges as a union) and calls `DemoMode.markReady()` once its content is on
   screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `SyntheticTemplate` and
   `LineArtMapsCache` are wrapped in `#if DEBUG`, and every other reference (`RootView`,
   `Library.forLaunch`, `AppShellView`, `SettingsView`, `LineArtInputs`, …) sits in an `#if DEBUG`
@@ -292,8 +292,8 @@ any port of it, when changing the fitter: work from the paper.
    `[iphone]`.
 3. Turnaround is about 70 min (the iPad job takes about an hour of its 75-minute cap, so a slow new
    UI test needs a matching saving), longer when branches queue (only 5 macOS jobs run at once).
-   `ci/fetch.sh` gives up after 60 min: run it again. A newer push to the same branch cancels the
-   older run, which then never reports. Work on something else while it runs.
+   `ci/fetch.sh` waits up to 100 min. A newer push to the same branch cancels the older run, which
+   then never reports. Work on something else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`),
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the
