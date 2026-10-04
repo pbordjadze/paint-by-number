@@ -7,10 +7,10 @@ name: CI
 # Each simulator gets its own VM: two booted simulators on one 3-core runner thrash. The
 # simulator boots in the background while the app builds.
 # iPad is the primary device (Debug build, screenshots, tests on every push, then a Release
-# build checked for the privacy manifest and for Debug-only code that must not ship); iPhone (the
-# same, without the Release check) runs on the main development branch or on request.
-# The main development branch also publishes an unsigned device IPA as a `build-<n>`
-# prerelease and a SideStore source listing the latest builds (branch `sidestore`).
+# build checked for the privacy manifest and for Debug-only code that must not ship); iPhone
+# (the same, without the Release check) runs on the shipping branch, main, or on request.
+# The shipping branch also publishes an unsigned device IPA as a `build-<n>` prerelease and
+# a SideStore source listing the latest builds (branch `sidestore`).
 
 on:
   push:
@@ -145,8 +145,7 @@ jobs:
           # from the previous commit), so a feature branch's later app-only commits keep
           # benchmarking its pipeline changes; app-only work skips the 2-minute benchmark.
           BASE=HEAD~1
-          if [[ "$GITHUB_REF_NAME" != claude/paint-by-numbers-app ]] \
-            && git fetch -q --depth=1 origin claude/paint-by-numbers-app; then BASE=FETCH_HEAD; fi
+          if [[ "$GITHUB_REF_NAME" != main ]] && git fetch -q --depth=1 origin main; then BASE=FETCH_HEAD; fi
           if git rev-parse -q --verify "$BASE" >/dev/null && git diff --quiet "$BASE" -- Sources Package.swift; then
             echo "PaintCore unchanged; benchmark skipped" | tee out/bench.txt; exit 0
           fi
@@ -175,10 +174,10 @@ jobs:
 
   iphone:
     name: iPhone — Debug build, screenshots, tests
-    # Secondary device: on the main development branch, or when requested (workflow_dispatch,
-    # or `[iphone]` in the pushed commit's message). The iPad job covers the Release build.
+    # Secondary device: on the shipping branch, or when requested (workflow_dispatch, or
+    # `[iphone]` in the pushed commit's message). The iPad job covers the Release build.
     if: >-
-      github.ref_name == 'claude/paint-by-numbers-app' || github.event.inputs.iphone == 'true'
+      github.ref_name == 'main' || github.event.inputs.iphone == 'true'
       || contains(github.event.head_commit.message, '[iphone]')
     runs-on: macos-26
     timeout-minutes: 75
@@ -237,7 +236,7 @@ jobs:
 
   ipa:
     name: IPA for SideStore (unsigned device build)
-    if: github.ref_name == 'claude/paint-by-numbers-app'
+    if: github.ref_name == 'main'
     runs-on: macos-26
     timeout-minutes: 30
     env:
