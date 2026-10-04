@@ -37,6 +37,25 @@ nonisolated struct GenerationKey: Hashable, Sendable {
 
 /// A setting of Settings › Advanced that changes templates. Each one shows its effect: the
 /// preview's numbers against the same settings with this one back at its default.
+///
+/// Adding a setting (the compiler finds only some of these places):
+/// 1. Its field on PaintCore's `LineArtSettings` or `PipelineTuning`, decoded tolerantly and
+///    clamped by `normalized`. The field name is its `pbn --line-art` / `--tuning` key, a stable
+///    interface; new regression baselines go with it if it moves the pipeline's output.
+/// 2. A case here, listed in `lineArt` (read only from an edge map: `needsEdgeMap`) or in
+///    `pipeline`; `applies(to:)` if a style ignores it, and then `GenerationKey.init`, so the
+///    settings that style ignores share a preview.
+/// 3. The switches the compiler checks: `reset(_:_:)`, `value(lineArt:tuning:)`,
+///    `slider(for:)`, `title`, `summary` and `AdvancedSettingsModel.set(_:to:)`. `valueText`
+///    and `summary(for:)` have default arms: a choice or a switch needs an arm of its own in
+///    `valueText`, and a setting that means something else in a coloring book one in
+///    `summary(for:)`.
+/// 4. Its row in `AdvancedSettingsView.lineArtSection`, which lists its rows by hand
+///    (`pipelineSection` shows every case of `pipeline`).
+/// 5. Catalog entries for its title and summary (`advanced.control.<case>` and `.summary`,
+///    with `comment`, `"extractionState": "manual"` and `localizations.en`).
+/// 6. A value off its default in `AdvancedSettingsTests`' `changedArt` or `changedTuning`:
+///    `everySettingResetsToItsDefault` expects every case changed there.
 nonisolated enum AdvancedControl: String, CaseIterable, Sendable {
     case style, detector
     case outlineThreshold, detailThreshold, textureThreshold
