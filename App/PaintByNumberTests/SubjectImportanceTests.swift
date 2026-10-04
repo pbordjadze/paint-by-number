@@ -6,8 +6,8 @@ import Testing
 
 struct SubjectImportanceTests {
     /// Vision's rects (bottom-left origin) become top-left rects inside the image, quantized to
-    /// hundredths and sorted; labels keep only the allowlist at a confidence of at least 0.3.
-    @Test func hintsAreQuantizedClippedAndFiltered() throws {
+    /// hundredths and sorted.
+    @Test func hintsAreQuantizedClippedAndSorted() throws {
         let hints = SubjectImportance.hints(
             faces: [
                 CGRect(x: 0.5, y: 0.1, width: 0.1, height: 0.2),
@@ -17,13 +17,7 @@ struct SubjectImportanceTests {
                 // Outside the image: dropped.
                 CGRect(x: 1.2, y: 0.2, width: 0.1, height: 0.1),
             ],
-            animals: [CGRect(x: 0.2, y: 0.2, width: 0.6, height: 0.5)],
-            labels: [
-                (identifier: "cat", confidence: 0.8123),
-                (identifier: "flower", confidence: 0.304),
-                (identifier: "sky", confidence: 0.29),
-                (identifier: "kitchen_utensil", confidence: 0.95),
-            ])
+            animals: [CGRect(x: 0.2, y: 0.2, width: 0.6, height: 0.5)])
 
         func expect(_ rect: PaintCore.NormalizedRect, _ x: Float, _ y: Float, _ width: Float, _ height: Float,
                     sourceLocation: SourceLocation = #_sourceLocation) {
@@ -40,14 +34,10 @@ struct SubjectImportanceTests {
         expect(hints.faces[2], 0.5, 0.7, 0.1, 0.2)
         #expect(hints.animals.count == 1)
         expect(hints.animals[0], 0.2, 0.3, 0.6, 0.5)
-
-        #expect(Set(hints.labels.keys) == ["cat", "flower"])
-        #expect(abs((hints.labels["cat"] ?? 0) - 0.81) < 1e-5)
-        #expect(abs((hints.labels["flower"] ?? 0) - 0.3) < 1e-5)
     }
 
     @Test func noObservationsMeanEmptyHints() {
-        #expect(SubjectImportance.hints(faces: [], animals: [], labels: []) == SubjectHints())
+        #expect(SubjectImportance.hints(faces: [], animals: []) == SubjectHints())
     }
 
     /// A plain synthetic image: Vision finds no faces or animals (and may find nothing at all
@@ -66,11 +56,6 @@ struct SubjectImportanceTests {
         let analysis = SubjectImportance.analyze(image)
         #expect(analysis.hints.faces.isEmpty)
         #expect(analysis.hints.animals.isEmpty)
-        for (identifier, confidence) in analysis.hints.labels {
-            #expect(SubjectImportance.labelAllowlist.contains(identifier))
-            #expect(confidence >= SubjectImportance.minimumLabelConfidence && confidence <= 1)
-            #expect(abs(confidence * 100 - (confidence * 100).rounded()) < 1e-3)
-        }
         if let map = analysis.map {
             #expect(max(map.width, map.height) == SubjectImportance.resolution)
             #expect(map.storage.allSatisfy { (0...1).contains($0) })

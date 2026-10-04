@@ -12,45 +12,22 @@ nonisolated enum SubjectImportance {
     /// Long side of the returned map; the pipeline resamples it to the working size.
     static let resolution = 256
 
-    /// `VNClassifyImageRequest` identifiers kept as hints: people, animals, landscape, sky,
-    /// water, flowers, food, night, buildings, vehicles and documents. Everything else is
-    /// dropped, so a label Auto never reads can't make two devices' hints differ.
-    static let labelAllowlist: Set<String> = [
-        "people", "adult", "child", "baby", "portrait", "selfie",
-        "animal", "mammal", "cat", "dog", "bird", "horse", "fish", "insect",
-        "landscape", "mountain", "sky", "sunset_sunrise",
-        "water", "water_body", "sea", "lake",
-        "flower", "food", "fruit", "dessert",
-        "night", "night_sky",
-        "building", "structure", "architecture",
-        "vehicle", "car", "boat",
-        "document", "text",
-    ]
-    /// Labels less confident than this are dropped.
-    static let minimumLabelConfidence: Float = 0.3
-
     struct Analysis: Sendable {
         /// Nil when Vision can't help (e.g. unsupported on this device/simulator).
         var map: Grid<Float>?
         var hints: SubjectHints
     }
 
-    /// The importance map and the subject hints, from one pass of Vision requests.
-    static func analyze(_ image: CGImage) -> Analysis {
-        analyze(image, classifies: true)
-    }
-
-    /// The importance map alone (no scene classification). Nil when Vision can't help.
+    /// The importance map alone. Nil when Vision can't help.
     static func map(for image: CGImage) -> Grid<Float>? {
-        analyze(image, classifies: false).map
+        analyze(image).map
     }
 
     /// Hints from Vision's observations: rects (normalized, bottom-left origin, as Vision
     /// reports them) flipped to a top-left origin, clipped to the image and quantized to
-    /// hundredths; labels quantized likewise and kept only when allowlisted and at least
-    /// `minimumLabelConfidence`. Quantized and sorted so small differences between devices and
-    /// OS versions don't move a suggestion.
-    static func hints(faces: [CGRect], animals: [CGRect], labels: [(identifier: String, confidence: Float)]) -> SubjectHints {
+    /// hundredths. Quantized and sorted so small differences between devices and OS versions
+    /// don't move a suggestion.
+    static func hints(faces: [CGRect], animals: [CGRect]) -> SubjectHints {
         func hundredths(_ value: Double) -> Float { Float((value * 100).rounded() / 100) }
         func normalized(_ rects: [CGRect]) -> [PaintCore.NormalizedRect] {
             rects.compactMap { box -> PaintCore.NormalizedRect? in
@@ -63,15 +40,11 @@ nonisolated enum SubjectImportance {
             }
             .sorted { ($0.y, $0.x, $0.width, $0.height) < ($1.y, $1.x, $1.width, $1.height) }
         }
-        var kept: [String: Float] = [:]
-        for label in labels where labelAllowlist.contains(label.identifier) {
-            let confidence = hundredths(Double(label.confidence))
-            if confidence >= minimumLabelConfidence { kept[label.identifier] = max(kept[label.identifier] ?? 0, confidence) }
-        }
-        return SubjectHints(faces: normalized(faces), animals: normalized(animals), labels: kept)
+        return SubjectHints(faces: normalized(faces), animals: normalized(animals))
     }
 
-    private static func analyze(_ image: CGImage, classifies: Bool) -> Analysis {
+    /// The importance map and the subject hints, from one pass of Vision requests.
+    static func analyze(_ image: CGImage) -> Analysis {
         let aspect = Double(image.width) / Double(image.height)
         let w = aspect >= 1 ? resolution : max(1, Int(Double(resolution) * aspect))
         let h = aspect >= 1 ? max(1, Int(Double(resolution) / aspect)) : resolution
@@ -81,9 +54,7 @@ nonisolated enum SubjectImportance {
         let faces = VNDetectFaceRectanglesRequest()
         let animals = VNRecognizeAnimalsRequest()
         let saliency = VNGenerateAttentionBasedSaliencyImageRequest()
-        let classify = VNClassifyImageRequest()
-        var requests: [VNRequest] = [foreground, faces, animals, saliency]
-        if classifies { requests.append(classify) }
+        let requests: [VNRequest] = [foreground, faces, animals, saliency]
         // Run independently: one failing request (common on simulators) shouldn't sink the rest.
         for request in requests {
             try? handler.perform([request])
@@ -108,12 +79,7 @@ nonisolated enum SubjectImportance {
             emphasize(&map, around: box)
             informative = true
         }
-        let labels = classifies
-            ? (classify.results ?? []).map { (identifier: $0.identifier, confidence: Float($0.confidence)) }
-            : []
-        return Analysis(
-            map: informative ? map : nil,
-            hints: hints(faces: faceBoxes, animals: animalBoxes, labels: labels))
+        return Analysis(map: informative ? map : nil, hints: hints(faces: faceBoxes, animals: animalBoxes))
     }
 
     /// Raises the map to near 1 inside an ellipse around a face or an animal. Vision rects are

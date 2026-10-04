@@ -37,7 +37,7 @@ def decision_dirs(paths):
 def analysis_lines(decision):
     a = decision["analysis"]
     curve = " ".join(f"{k}:{v:.3f}" for k, v in zip([8, 12, 16, 24, 32, 48, 64], a["paletteCurve"]))
-    lines = [
+    return [
         f"source {a['sourceWidth']}x{a['sourceHeight']}   length {decision['preference']}",
         f"curve {curve}",
         f"chromatic {a['chromaticFraction']:.3f}  spread {a['chromaSpread']:.3f}  noise {a['noise']:.3f}",
@@ -45,9 +45,6 @@ def analysis_lines(decision):
         f"subject {a['subjectCoverage']:.3f}  entropy {a['importanceEntropy']:.3f}",
         f"faces {a['faceCoverage']:.3f}  animals {a['animalCoverage']:.3f}",
     ]
-    if a.get("labels"):
-        lines.append("labels " + ", ".join(f"{k} {v:g}" for k, v in sorted(a["labels"].items())))
-    return lines
 
 
 def candidate_lines(index, candidate, winner):
