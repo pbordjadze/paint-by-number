@@ -414,11 +414,11 @@ struct PreferencesTests {
     }
 
     @Test func formatsDurations() {
-        #expect(PaintByNumber.PaintingTime.approximate(10 * 60) == "~10 min")
-        #expect(PaintByNumber.PaintingTime.approximate(2 * 3600) == "~2 h")
-        #expect(PaintByNumber.PaintingTime.approximate(1.4 * 3600) == "~1.5 h")
-        #expect(PaintByNumber.PaintingTime.approximate(30 * 3600) == "~30 h")
-        #expect(PaintByNumber.PaintingTime.spent(125 * 60) == "2 h 5 min")
-        #expect(PaintByNumber.PaintingTime.spent(20) == "< 1 min")
+        #expect(PaintingTimeText.approximate(10 * 60) == "~10 min")
+        #expect(PaintingTimeText.approximate(2 * 3600) == "~2 h")
+        #expect(PaintingTimeText.approximate(1.4 * 3600) == "~1.5 h")
+        #expect(PaintingTimeText.approximate(30 * 3600) == "~30 h")
+        #expect(PaintingTimeText.spent(125 * 60) == "2 h 5 min")
+        #expect(PaintingTimeText.spent(20) == "< 1 min")
     }
 }

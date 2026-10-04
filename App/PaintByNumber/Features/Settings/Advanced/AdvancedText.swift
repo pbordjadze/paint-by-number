@@ -79,7 +79,7 @@ nonisolated enum AdvancedText {
 
     /// "+10 min", "−1 h 5 min".
     static func signedDuration(_ seconds: TimeInterval) -> String {
-        signed(PaintingTime.spent(abs(seconds)), positive: seconds > 0)
+        signed(PaintingTimeText.spent(abs(seconds)), positive: seconds > 0)
     }
 
     private static func signed(_ text: String, positive: Bool) -> String {
@@ -119,7 +119,7 @@ nonisolated enum AdvancedText {
         }
         let minutes = Int((abs(delta.seconds) / 60).rounded())
         if minutes >= 1 {
-            let duration = PaintingTime.spent(Double(minutes) * 60)
+            let duration = PaintingTimeText.spent(Double(minutes) * 60)
             parts.append(delta.seconds > 0
                 ? String(localized: "advanced.effect.longer", defaultValue: "about \(duration) longer",
                          comment: "Settings › Advanced: a setting's effect on the estimated painting time; the argument is a duration such as 10 min")

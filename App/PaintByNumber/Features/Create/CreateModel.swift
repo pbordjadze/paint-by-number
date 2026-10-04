@@ -45,7 +45,7 @@ final class CreateModel {
         var summary: String {
             let colorsText = TemplateCounts.colors(colors)
             let areasText = TemplateCounts.areas(areas)
-            let timeText = PaintingTime.approximate(estimate)
+            let timeText = PaintingTimeText.approximate(estimate)
             return String(localized: "create.stats.summary", defaultValue: "\(colorsText) · \(areasText) · \(timeText)",
                           comment: "Template summary under the create sliders; the arguments are the colors, areas and estimated painting time, e.g. 24 colors · 1,284 areas · ~1.5 h")
         }

@@ -134,7 +134,7 @@ struct AdvancedSettingsTests {
         #expect(stats.areas == 8)
         #expect(stats.colors == 3)
         #expect(stats.lines == nil, "A classic template has no layers")
-        #expect(stats.seconds == 8 * PaintCore.PaintingTime.secondsPerRegion)
+        #expect(stats.seconds == 8 * PaintingTime.secondsPerRegion)
         let layered = AdvancedStats(areas: 100, colors: 20, lines: [10, 20, 30, 40])
         let other = AdvancedStats(areas: 90, colors: 21, lines: [10, 20, 20, 0])
         #expect(layered.drawnLines == 60)

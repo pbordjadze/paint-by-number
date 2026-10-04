@@ -473,7 +473,7 @@ struct AdvancedStatsRow: View {
         StatChip(
             label: String(localized: "advanced.stat.time", defaultValue: "Painting Time",
                           comment: "Settings › Advanced: label of the preview's estimated painting time"),
-            value: stats.map { PaintingTime.approximate($0.seconds) }, change: timeChange,
+            value: stats.map { PaintingTimeText.approximate($0.seconds) }, change: timeChange,
             isChanged: minutes != 0, identifier: "advanced-stat-time")
     }
 

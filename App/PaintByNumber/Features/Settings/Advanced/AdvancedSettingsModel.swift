@@ -371,7 +371,7 @@ final class AdvancedSettingsModel {
         guard let stats = preview?.stats else { return nil }
         let numbers = String(
             localized: "advanced.report.numbers",
-            defaultValue: "\(TemplateCounts.colors(stats.colors)) · \(TemplateCounts.areas(stats.areas)) · \(PaintingTime.approximate(stats.seconds))",
+            defaultValue: "\(TemplateCounts.colors(stats.colors)) · \(TemplateCounts.areas(stats.areas)) · \(PaintingTimeText.approximate(stats.seconds))",
             comment: "Settings › Advanced: the preview's numbers in shared settings text, e.g. 24 colors · 1,284 areas · ~1 h; the arguments are the colors, areas and painting time")
         guard let delta = statsDelta, !delta.isZero else { return numbers }
         let effect = AdvancedText.effect(delta)

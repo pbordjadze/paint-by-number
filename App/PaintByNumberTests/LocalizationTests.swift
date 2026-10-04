@@ -118,10 +118,10 @@ struct LocalizationTests {
     }
 
     @Test func durationsAreAssembledFromCatalogUnits() {
-        #expect(PaintingTime.spent(14 * 60) == "14 min")
-        #expect(PaintingTime.spent(2 * 3600) == "2 h")
-        #expect(PaintingTime.spent(134 * 60) == "2 h 14 min")
-        #expect(PaintingTime.approximate(90 * 60) == "~1.5 h")
+        #expect(PaintingTimeText.spent(14 * 60) == "14 min")
+        #expect(PaintingTimeText.spent(2 * 3600) == "2 h")
+        #expect(PaintingTimeText.spent(134 * 60) == "2 h 14 min")
+        #expect(PaintingTimeText.approximate(90 * 60) == "~1.5 h")
     }
 
     @Test func errorsDescribeThemselvesInWords() throws {

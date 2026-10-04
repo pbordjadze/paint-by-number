@@ -165,7 +165,7 @@ struct ProgressCaption: View {
             } else if artwork.isComplete {
                 Image(systemName: "checkmark.seal.fill").foregroundStyle(.tint)
                 if artwork.activeSeconds >= 60 {
-                    let spent = PaintingTime.spent(artwork.activeSeconds)
+                    let spent = PaintingTimeText.spent(artwork.activeSeconds)
                     Text(String(localized: "gallery.card.finishedAfter", defaultValue: "Finished · \(spent)",
                                 comment: "Caption of a finished painting's card; the argument is the time spent painting, e.g. 2 h 14 min"))
                 } else {
