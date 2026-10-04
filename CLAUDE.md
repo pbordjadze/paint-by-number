@@ -1,585 +1,157 @@
-# Paint by Numbers — engineering notes
+# Paint by Moonlight — engineering notes
 
-Native iOS/iPadOS 26 app that turns photos into paint-by-numbers templates on-device and
-makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell, Metal canvas.
+Native iOS/iPadOS 26 app that turns photos into paint-by-numbers templates on-device and makes
+painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell, Metal canvas.
 
-## Layout
+This file is the map and the rules. An area's reference is its entry type's doc comment (named
+below); the tools' docstrings and `Sources/pbn/main.swift`'s header are their manuals; `docs/` holds
+the measurements and provenance the code cites.
 
-- `Package.swift`, `Sources/PaintCore` — portable, dependency-free template pipeline
-  (builds on Linux too). `Sources/pbn` — headless CLI. `Tests/PaintCoreTests` — Swift Testing
-  (`Fixtures/` holds files written by past encoders, e.g. `template-v1.pbnt`).
-  - `Foundation/` grids, color science (OKLab, Display P3), EDT, connected components, resampling,
-    color naming (`ColorName`: OKLab → structured name, e.g. "dark grayish green"; `english` for the CLI),
-    `ColorNickname` (playful names like "Harbor Fog": the hex-anchored table in
-    `ColorNicknameVocabulary.swift`, whose doc comment is the style guide `ColorNicknameTests` lints;
-    `assign(_:seed:)` picks one per paint, unique in the palette and varied by seed)
-  - `Model/` `Template` (the product of the pipeline) + versioned binary coding, `GenerationSettings`,
-    `Segmentation`, `RegionRemap` (carries painted regions onto a regenerated region map),
-    `LineArtSettings` (coloring-book, layered or classic lines and their knobs; the coloring book is the
-    default, each style has defaults of its own, `init(style:)`, carried along by `changing(to:)`) and
-    `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs, applied in its
-    init: a factor of exactly 1 leaves every knob bit for bit, so classic output never moves)
-  - `LineArt/` layered line art (`LayeredLines.apply`; stages in its doc comment): an 8-bit
-    `EdgeMap` (the app's line drawing over its HED map, `EdgeMap.combined`; `pbn --edges`/`--lines`),
-    eye polygons and the subjects' silhouettes → ridges, hysteresis and thinning
-    (`LineDetection`), traced and cleaned strokes (`StrokeGraph`), a `LineLayer` per point by
-    hysteresis along the stroke, the outline threshold rising toward 1 where lines crowd except on
-    long contours (`LineLayering`; with `LineArtInput.contours`, the HED map alone, the outline
-    threshold reads the contours instead of the drawing, so an object's boundary is an outline
-    wherever HED found it and the drawing's strokes are detail; `LineLayering.addObjects` draws
-    the stretches of a subject's silhouette (`LineArtInput.objects`, from a mask via
-    `MaskContours`) that run more than 12 px of a 1500-px canvas from every line, as outlines, so
-    the subject closes where the detectors left it open), the segmentation split along the lines (`CellMap`: cells keep
-    their paint and hold their number; small ones merge, same-paint ones join per `SamePaint`),
-    then after the vectorizer each edge's layer and weight and the lines inside cells
-    (`InteriorStroke`s) as `Template.lineArt`. Layered settings without an edge map generate the
-    classic template; same edge map and settings give the same bytes on any core count. The
-    **coloring book** style (`LineArtSettings.Style.coloringBook`, `TemplateLineArt.Style`;
-    `docs/coloring-book.md`), the default, is the same pipeline with the drawing as the only lines:
-    nothing below the detail threshold is extracted (no texture layer, `textureThreshold` unused, so
-    `samePaint = .joinTexture` splits), every line is kept whether or not it bounds a cell
-    (stretches inside a cell of `LineLayering.minimumRun` or more become interior strokes), its
-    paint is flatter (`SegmentationParameters.coloringBookFlattening`, 1.5× smoothing, texture
-    flattening and smallest area, applied by `TemplateGenerator` by the settings' style, edge map or
-    not, so Auto's drafts are scored on the paint the book gets; classic templates and
-    `PhotoAnalyzer` never see it), and the template's style tells every renderer to draw the drawn
-    layers alike in full ink over the paint, never the color edges and never a selected cell's
-    outline.
-  - `Segmentation/` photo → region label map + palette (`Segmenter.segment`; pipeline overview in
-    its doc comment, all tunables in `SegmentationParameters`)
-  - `Vector/` label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer.vectorize`)
-  - `Export/` SVG (layered templates draw a group per `LineLayer`, faintest first; and later PDF helpers)
-  - `Auto/` Suggested settings: `AutoSettings.analyze` (photo → `PhotoAnalysis` features at the
-    draft size), `candidates` (a named rule: a center from the palette curve's knee and the
-    features, plus neighbours in colors × detail), `score` (importance-weighted ΔE, p95, rings,
-    crumbs, a price per paint and the distance of `PaintingTime.estimate` from the
-    `PaintingLength`'s time band) and `choose` (runs the candidates on the draft in parallel,
-    cancellable, calls `firstDraft` with the center, returns an `AutoDecision`). Every constant
-    carries what it was tuned on (`docs/wave2/log/auto-tuning.md`). Features are quantized (3
-    decimals; palette curve and noise 4) before the rule reads them, so a decision is reproducible
-    from the same pixels, importance, hints and length on every device; decisions are never stored.
-    The rule's thresholds are ramps and the knee a power-law fit, and the center wins any score
-    within `tieMargin` (0.006, measured JPEG re-encode noise) unless it runs over its band, so a
-    re-saved photo rarely gets materially different settings (16 of 99 decisions). Bands: Quick
-    8–25 min, Relaxed 20–50, Detailed 40–120 at 3 s per area; a draft's region count is scaled to
-    the full canvas by area^(−0.18 + 0.42 × detail + 0.77 × mean importance), and the detail
-    center rises one unit per unit of mean importance below 0.6, so Vision maps (which protect
-    less of the frame than pbn's fallback) still reach the band.
-  - `TemplateGenerator.swift` entry point composing the stages, with `StageClock` timings
-    (`generate(from:importance:lineArt:…)`; `Output.lineArtStats` for layered templates)
-- `App/` Xcode project (`PaintByNumber.xcodeproj`, synchronized folders — adding files needs no
-  project edits) with the SwiftUI app, Metal renderer and UI tests.
-- `tools/` evaluation tooling (`swift.sh`, `eval.py`, `compare.py`, `regression.py` + its
-  committed `baseline/regression.json` and `baseline/auto.json`, `auto_sheet.py`, `svg2png.mjs`),
-  `strings_check.py` (string catalog drift check, see Localization) and `models/convert_hed.py`
-  (the app's HED Core ML model from its source weights, see Layered line art inputs) and
-  `models/convert_lineart.py` (the line-drawing model the same way).
-- `.github/workflows/` CI: Linux PaintCore tests + quality regression; macOS builds the app, runs
-  tests, captures simulator screenshots.
-- `ACKNOWLEDGEMENTS.md` credits and license texts for the ported code, bundled models and published methods (also shown in the app).
+**App feature notes and gotchas: `App/CLAUDE.md`** (loaded when you read files under `App/`; read it
+before planning app work).
 
-## Building & testing on Linux (no Xcode here)
+## Map
 
-- `tools/swift.sh build -c release --static-swift-stdlib` — builds `pbn` in the `swift:6.2-noble`
-  Docker image; the static binary at `.build/release/pbn` then runs directly on the host.
-- `tools/swift.sh test` — runs the package tests in Docker.
-- `python3 tools/eval.py run <images...> --out <dir> [-- --colors 24 --detail 0.5]` — runs the
-  pipeline and writes contact sheets (`<dir>/<name>/sheet.png`: source | painted | template),
-  `overview.png` and `summary.json` with metrics (region count, mean ΔE, tiny regions, label
-  legibility — `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0, `minLabelRadius`,
-  `minLabelRoom`, `valid` — `bandRings` (`BandRings.count`: regions bounded mostly by weak,
-  ramp-like boundaries, the rings a gradient is posterized into), timings, palette, `colorNames`
-  and `colorNicknames`; the sheet's palette panel labels each swatch with its nickname and name).
-  The metrics are `pbn generate`'s `stats.json`, a stable interface for regression tooling: add
-  fields, never rename them. Look at the PNGs with the Read tool. The sheet's second row shows the
-  raw region raster, a 2× `boundaries.png` (1-px region outlines, best for judging segmentation
-  shapes) and the palette; `--importance-dir DIR` passes `DIR/<name>.pgm` as the importance map
-  (Vision stand-in); `--edges-dir DIR [--eyes-dir DIR]` passes `DIR/<name>.pgm` as the edge map
-  (and `<name>.json` as eyes) and generates layered templates (the caption adds cells against the
-  classic regions and edges per layer).
-- Test photos: the Kodak suite (`kodim01..24.png`, 768×512) and scikit-image samples are a good
-  corpus (download Kodak from raw.githubusercontent.com/MohamedBakrAli/Kodak-Lossless-True-Color-Image-Suite).
-- `pbn trace <flat.ppm> <outdir>` vectorizes a flat-color image directly (one palette entry per
-  distinct color) — ideal for judging curve quality on synthetic shapes. `pbn check <t.pbnt>`
-  prints the file's format and pipeline versions and runs `Template.validate()` (planarity, ring
-  orientation, mesh coverage/watertightness, labels, and every label's room for its number:
-  `--min-label-radius R`, default `LabelSizing.minimumRadius`, `0` skips it; layered line data
-  too, with its edges per layer and interior strokes counted). `pbn bench
-  <ppm...>` times the pipeline, including a preview, detail 1 on a large photo, 150 colors
-  at detail 1 and Auto's suggestion (`--edges map.pgm`: also layered line art, stage by stage).
-- Layered line art: `pbn generate <in.ppm> <out> --line-style layered|coloringBook --edges map.pgm
-  [--lines drawing.pgm] [--eyes eyes.json] [--line-art key=value]… [--tuning key=value]…` (`--edges`
-  a contour map, HED; `--lines` a line drawing; both given, combined as the app combines its two
-  models, `EdgeMap.combined`; `eval.py --edges-dir`/`--lines-dir`; eyes: closed polygons of
-  `[x, y]` normalized to the photo; keys are the `LineArtSettings` / `PipelineTuning` field names;
-  pbn is classic unless `--line-style` says otherwise, whatever the pipeline's default, and
-  `--line-style` picks the style at its own defaults, `--line-art` fields on top in any order);
-  `stats.json` gains `lineArt` (settings, `LineArtStats`, edges and length per layer, interior
-  strokes, `cellsVsClassic`) and `tuning` when not default. Edge maps for evaluation come from the
-  research's HED (`research/lineart/lines_learned.py` on `claude/lineart-research`) quantized to
-  8-bit PGM; the app runs the same model at ≤ 1152 px, so evaluate with maps at that size (the
-  weights load without the `controlnet_aux` package by copying its network class next to
-  `tools/models/convert_hed.py`'s `research_map` and `quantize`); line drawings from the
-  app's second model (`tools/models/convert_lineart.py`'s network), and `--objects` takes a subject
-  mask (any image, inside at half; the app's Vision mask) or polygons. The regression gate's
-  `book` regime covers the book at the app's defaults from committed maps (below); `LineArtTests`
-  and the `template-v2-lines.pbnt` / `template-v2-book.pbnt` fixtures cover layered and
-  coloring-book generation and coding. A coloring book's SVG draws its drawing as one
-  `lines-drawing` group, three times the outline width, and no color edges. A layered or book
-  template's `stats.json` `lineArt` also reports the drawing: `drawnLength`, `inkDensity` (per
-  1000 px), `interiorFraction`, `openEndsPer1000`, the areas the drawn lines enclose
-  (`enclosedAreas`, `cellsPerEnclosedArea`, `singleCellAreaFraction`, `largestAreaFraction`: the
-  background's share unless a silhouette is open, `outlineAreas`), `enclosedByWidening` (the
-  canvas share the lines wall off as drawn and widened 1–4 px: a jump says how wide the openings
-  are) and `openings` (where the widening closed them); pbn also writes `selected.svg` (the cells
-  of the paint with the most of them hatched, as the canvas shows the selected color;
-  `SVGExport.Options.selectedColor`) and `areas.ppm` (a color per enclosed area, red rings at the
-  openings). `tools/eval.py book <images> --out DIR --edges-dir … --lines-dir … [--objects-dir …]
-  [--variant NAME="pbn options"]…` makes the book sheet (`DIR/<name>/book.png`): one column per
-  variant, rows fitted / zoomed / selected / finished / areas, the metrics under each; use it for
-  every line-art tuning (`docs/coloring-book.md`, Measuring a book).
-- Suggested settings: `pbn suggest <image> [--importance m.pgm] [--hints h.json] [--length
-  quick|relaxed|detailed] [--candidates 5] [--out dir]` prints the candidate table (every score
-  term, the winner starred) and writes `decision.json`; with `--out` also every candidate's
-  preview for `tools/auto_sheet.py <dir>` (one sheet per photo, winner framed). `pbn generate
-  --auto [--length …] [--hints …]` generates at the suggestion (`stats.json` gains `auto` and
-  `analysis`; `eval.py run … -- --auto` captions the chosen settings). pbn has no Vision: without
-  `--importance` it uses the pipeline's fallback map, which rates busy texture important, so at
-  like settings its region counts run above the app's (CI's simulator gave the lighthouse and
-  parrots samples a third to a half of pbn's areas); Auto reads the map's mean importance, so its
-  suggestions follow (Vision stand-in maps for tuning: `docs/wave2/log/auto-tuning.md`).
-- Vector geometry conventions (orientation, junctions, closed edges, coordinate quantum) are
-  documented on `BoundaryEdge`, `Ring` and `FillMesh` in `Model/Template.swift`.
-- `tools/regression.py [--sheets DIR] [--json FILE]` — the quality gate CI runs on every push:
-  the six retired samples, pinned by name (`SAMPLE_NAMES`; CI's `pbn bench` step lists the same
-  files), never the picture library beside them, whose curation must move neither the baselines
-  nor CI's time; in three regimes (24 colors/detail 0.5, 150/1.0, 12/0.0), each
-  generated twice, the `book` regime (the coloring book at the app's defaults from the committed
-  maps `tools/baseline/lines/<name>-contours.png` (HED) and `-drawing.png` (the line-drawing
-  model), at the photos' size; the same invariants and bands on its cells, its drawing metrics
-  informational), plus the `auto` regime (`pbn generate --auto`, Relaxed): its hard invariant is
-  that the choice lies inside the length's bands; the chosen settings and metrics are compared
-  with `tools/baseline/auto.json` for information only (choices move when the pipeline moves). Hard invariants: `pbn check` valid, byte-identical runs, no region under
-  radius 2, palette distance ≥ the floor pbn reports (`GenerationSettings.minPaletteDistance`),
-  and `labelsBelowLegibleSize == 0` once pbn's stats report that field. Bands versus
-  `tools/baseline/regression.json`: mean ΔE ≤ baseline × 1.05, regions ±15 %, template bytes
-  ±20 %; timings and `bandRings` are informational (±1 noise on the decoded input moves the
-  ring count by up to half). Prints a table with deltas, exits 1 on any failure;
-  `--self-test` checks the rules themselves. Needs the release `pbn` and Pillow (no node: its
-  sheets are source | painted raster | region outlines + palette).
-- **Whenever a change alters pipeline output, run `tools/regression.py --update` (it only writes
-  a baseline that satisfies the hard invariants), look at the `--sheets`, and commit
-  `tools/baseline/regression.json` and `tools/baseline/auto.json` together with the change**: CI fails once a metric leaves
-  its band, and a fresh baseline keeps the table's deltas meaningful. The `template
-  same/changed` column is informational: it only means something where the templates come
-  from an identical build and input decode (CI's pbn and Pillow differ from the host's). Use
-  `eval.py`/`compare.py` for deeper before/after looks (vector previews with numbers).
+- `Package.swift`: `PaintCore`, `pbn`, `PaintCoreTests`. The Xcode project builds PaintCore from
+  this package (local reference `..`), so its flags change the app's builds too (release
+  `-Ounchecked`); its iOS 18 / macOS 15 platforms are only a floor (the app's 26.0 is the
+  project's).
+- `Sources/PaintCore`: the portable, dependency-free pipeline (builds on Linux too).
+  `TemplateGenerator.generate(from:importance:lineArt:…)` composes the stages, timed by
+  `StageClock`; `TemplateGenerator.pipelineVersion` is recorded in every template.
+  - `Foundation/`: grids, `ColorScience` (OKLab, Display P3), resampling, morphology, `DisjointSet`,
+    `MinHeap`, `Netpbm` (pbn's only image input off Apple platforms), `SplitMix64` (the only RNG),
+    `Parallel` (bands, chunks, `CancellationCheck`; its doc comment is the determinism contract),
+    `ColorName` and `ColorNickname` (the doc comment of `ColorNicknameVocabulary.swift`'s table is
+    the style guide `ColorNicknameTests` lints).
+  - `Model/`: `Template` + `TemplateCoding` (geometry conventions on `BoundaryEdge`, `Ring`,
+    `FillMesh`, `Template.coordinateQuantum` and `points`), `GenerationSettings`, `Segmentation`,
+    `LabelSizing`, `TemplateLineArt`, `RegionRemap`, `PaintingTime` (the one painting-time
+    estimate), `LineArtSettings` (`init(style:)` and `changing(to:)` carry each style's own
+    defaults; `normalized` keeps texture ≤ detail ≤ outline, and the generator reads normalized
+    values) and `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs:
+    exactly 1 leaves every knob bit for bit).
+  - `Segmentation/`: photo → region label map + palette (`Segmenter.segment`; stages in its doc
+    comment). `SegmentationParameters` holds the knobs derived from the settings and canvas size;
+    each stage's constants sit beside their use. After `RegionSimplifier.simplify`, later stages
+    only merge or recolor whole regions; a paint's number is its final palette index + 1, so
+    `enforceLabelRoom` drops unused paints in order and nothing reorders them. `Auto/` reuses
+    `WorkingImage`, `StructureMap`, `ImportanceMap`, `BoxBlur`, `PaletteBuilder` and
+    `SegmentationParameters`, so a refactor there that keeps templates byte-identical can still move
+    Auto's decisions. `Vectorizer` and `LayeredLines` rebuild `SegmentationParameters` without the
+    coloring-book flattening, which must therefore never change `minRadius`. Gradient rings
+    (`BandRings`): `docs/gradient-rings.md`.
+  - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline
+    calls `vectorizeWithStats`); `EdgeSmoother` repairs until `GeometryValidator` and every
+    `LabelRoom` hold. `Template.validate` (`TemplateValidation.swift`) is the oracle of `pbn check`,
+    the regression gate and the create flow's Debug check.
+  - `LineArt/` (`LayeredLines.apply`, see Line art), `Auto/` (`AutoSettings`, see Suggested
+    settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
+    prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
+- `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
+  (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
+  `Commands.swift`, `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
+  `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
+- `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
+  `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data);
+  `layered-photo.ppm`, `layered-edges.pgm` and `shapes.ppm` are inputs that tests and the line
+  fixtures' recorded commands read (edit them and those recipes stop reproducing);
+  `auto-parrots.json` + `auto-parrots-draft.ppm` pin one Auto decision (the draft is also a test
+  photo) and are regenerated on purpose, by the recipe above
+  `AutoSettingsTests.parrotsDecisionIsPinned`, when a change moves that decision.
+- `Tests/Corpus`: the six photos the regression gate and the CI benchmark run on, pinned by name,
+  never shipped (provenance and credits in its `README.md`).
+- `App/`: `PaintByNumber.xcodeproj` (synchronized folders: adding files needs no project edit),
+  `PaintByNumber/`, `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
+  `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
+- `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
+  with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
+  (the app's Core ML models from their source weights).
+- `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
+  regression, string catalog), `ipad` (every push: Debug build, screenshots, tests, Release check,
+  benchmark), `iphone` and `ipa` (unsigned IPA, SideStore source) on `main`, `report`.
+- `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
+  `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
+  per-agent reports are not committed (they live on their branch and in commit messages); a
+  measurement the code relies on goes into its feature's doc or the constant's doc comment.
+- `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
+  `archive/lineart-research` (`research/lineart/`, which `LineArtSettings`, `convert_hed.py` and
+  `docs/coloring-book.md` cite) and `archive/resume-notes` keep unmerged history
+  (`git show <tag>:<path>`).
 
-## iOS app (App/)
+## Line art
 
-- Deployment target iOS 26.0, iPhone + iPad. Build with Xcode 26.6 (CI). Swift 6 with
-  `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency: app types are
-  MainActor by default; mark pure/background helpers `nonisolated` and CPU-heavy async work
-  `@concurrent`. PaintCore is a separate module (nonisolated).
-- `MemberImportVisibility` is enabled: every file that touches members of a type from another
-  module must import that module itself (`import PaintCore`, `import simd`, …).
-- Closures handed to system APIs that call back on arbitrary threads (AVFoundation, Core Haptics,
-  Metal completion handlers, NotificationCenter with a queue) must not be MainActor-isolated —
-  form them in `nonisolated` code or they trap at runtime under Swift 6.
-- Liquid Glass design language (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)`,
-  `.glassProminent`), SF Symbols, Dynamic Type, dark mode, VoiceOver labels.
-- Identity: the app is called **Paint by Moonlight** (display name, gallery title, permission texts,
-  PDF footer; App Store subtitle "Turn any photo into a painting"). Pipo is only the working name:
-  it never appears in the product; the target, module and repository keep the PaintByNumber names.
-  Styled by its design system (claude.ai/artifact/HRz1Lc9bkLACNvPKhctojF: README, tokens, icon,
-  motifs). Native first: system
-  controls stay system controls. `Theme` and the asset catalog carry its tokens: Paper =
-  `surface-base` (`#F2F1F4` / `#141117`), Surface = `surface-elevated`, Outline, AccentColor = `tint`
-  (Nightshade `#7B3F7E` by day, antique gold `#C9A24A` at night), `signature` (Nightshade in both,
-  under the labels of `.glassProminent` buttons and tinted glass badges: give every new prominent
-  button `.tint(Theme.signature)`), `gold` (stars, sparkles, crescent only) and the `Sparkle` shape.
-  The canvas sheet is the `paper` token (`#F4EFE6`) with `ink` lines in both appearances. Titles
-  and numerals use New York: `Font.display(_:weight:)`, serif navigation titles
-  (`Theme.styleNavigationTitles`), swatch numerals and canvas digits (`DigitAtlas`); buttons and body
-  text stay SF. The fill moment's two gold sparkles are `CAShapeLayer`s over the canvas
-  (`CanvasView.popSparkles`). The app icon is rendered from the system's `pipo-app-icon-v2.svg` at
-  1024 px (dark: the same art; tinted: its grayscale).
-- Key model types: `PaintingSession` (@Observable; painting rules, tap tolerance, drag-paint, undo,
-  per-color progress, events) + `PaintProgress` (persisted). The Metal canvas conforms to
-  `PaintingCanvas` and is driven by the session.
-- iPad first: `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns (trailing
-  edge of wide windows) so every color shows at once; Settings › Palette and More › Palette choose
-  its lines (`PaletteRows`: Auto, 1–6, All at Once; never thicker than 45 % of the height, 40 % of
-  the width beside) and order (`PaletteOrder`: number, rainbow, lightness, areas left, or Custom,
-  arranged per painting in `PaletteArrangeSheet` and kept under its nickname seed), and picking
-  the next color follows that order (`PaintingSession.colorOrder`; demo `paint-palette`); `PaintCommands` is the Paint menu (iPadOS
-  menu bar, single-key shortcuts) fed by the focused `PaintingFocus`; fills are registered with
-  the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu, three-finger undo); the Pencil paints while
-  fingers navigate (and only navigate under "Only Draw with Apple Pencil"). The app is single
-  window: one live `PaintingSession` per painting.
-- Color names: each paint goes by a nickname ("Harbor Fog") from `ColorNickname.assign`, seeded by
-  the artwork id folded to 64 bits (`ColorNickname.seed(for:)`, XOR of the UUID's halves), so a
-  painting's names never change; `PaintingSession.colorNicknames`/`nickname(of:)` (nil under Settings ›
-  Color Names › Plain, and for every color unless the app runs in English: the vocabulary is English
-  data, `ColorNameText.nicknamesAvailable`) feed the palette caption, current-color, VoiceOver
-  ("12, Harbor Fog, dark grayish blue"), the swatch's long-press popover (number, name, shade, hex)
-  and the PDF key. Nicknames reach the UI as variables shown verbatim, never as literals, so the
-  string checker needs no exceptions; `pbn names <template.pbnt> [--seed N]` prints a palette's.
-- Photo peek: `PhotoPeek`/`PhotoPeekButton` (hold to peek, tap to latch, `p` in the Paint menu)
-  drive `CanvasView.showsPhoto`. The canvas loads the photo once through `sourcePhotoLoader`
-  (bounded by the canvas size) and draws it in the canvas pass (`photoFragment`,
-  `RenderContext.makePhotoTexture`), so it tracks zoom and pan exactly. Canvas touches hide a
-  latched photo instead of painting. Launched with `-tracePhotoPeek YES`, the control's
-  accessibility identifier lists its values so UI tests can check a hold.
-- Paper: Settings › Paper (`PaperAppearance`: light, dark, automatic; `SettingsKey.paperAppearance`)
-  reaches `CanvasView.paperAppearance`, which resolves a `CanvasPalette` (`.light`, `.dark` = light
-  paper on a dark backdrop, `.darkPaper`) from it and the trait collection every frame, and redraws
-  on a trait change. The chrome colors are uniforms (`CanvasUniforms.paper/ink/rim/accent`, set by
-  `setChrome`/`select`), so the shaders have one path and no paper, ink or accent literals (the
-  brush and the paint sheen keep theirs). `accent` is the selected paint lifted until it reads on
-  the paper (`CanvasPalette.accent(for:)`; the paint itself on light paper). Exports, thumbnails and
-  the time-lapse stay on light paper (`CanvasSnapshot.Options.palette`). `-tracePaper YES` makes the
-  canvas's accessibility identifier `canvas-paper-light|dark`; demo scenario `paint-dark-paper`.
-- Layered lines (drawing): a template with `lineArt` draws each boundary edge in its `LineLayer` and
-  its interior strokes inside their cells. `LineAppearance` (Settings › Advanced, JSON under
-  `SettingsKey.lineAppearance`; `LineAppearance.stored()` reads it off the main actor) gives each layer
-  an opacity (fraction of the paper's full ink, which classic lines reach zoomed in) and a width
-  (factor of the classic width) at 1×/2×/4× (1 = fitted), and a `painted` fraction: how much of its
-  lines stays once both sides are painted (0 by default, tolerant decoding). `LineStyle` turns it into
-  factors of a renderer's classic line (the canvas divides by its zoom ramp `classicStrength`; pictures
-  draw their classic line at full ink); `.classic` (every factor 1, nothing kept when painted) keeps
-  classic frames and pictures exactly as they were, `.print` prints every layer in PDFs.
-  `DrawableLineArt` checks the line data (bad strokes are dropped, counts that don't match the edges
-  draw as classic) and `OutlineGeometry` gives the canvas a line per edge, then per stroke with its
-  cell on both sides, each with (layer, weight); the outline shader reads
-  `CanvasUniforms.lineAlpha/lineWidth/lineMode/linePainted`. `weighted` scales a line's width by its
-  strength over its layer's mean (0.6–1.4). Painted: lines between painted cells dissolve, strokes with
-  their cell, but for their layer's `painted` fraction of their ink (the coloring-book look: outlines
-  kept over the paint; `TemplateRasterizer` draws such lines at that fraction where
-  `hidesOutlinesBetweenPainted` would drop them). Selected: the selected color's unpainted cells keep at least the classic selected outline
-  whatever their layer; strokes inside them keep their layer's look. `PaintView` reads the preference
-  with `@AppStorage`, so an open canvas follows a change at once (`PaintCanvas`/`CanvasView.lineAppearance`).
-  Pictures show the 1× look: `CanvasSnapshot.Options.lineAppearance`/`lineZoom` (nil = stored; the
-  time-lapse reads it once per export) and `TemplateRasterizer.Style.lines` (`.screen(appearance?,
-  zoom:)`, faintest layer first relative to the style's line; `.print` for `.printable`). Demo scenarios
-  `paint-layered`, `-progress`, `-zoom2`, `-zoomed`, `-dark-paper`, `-inked` (outlines kept when
-  painted): the freight train through the real
-  layered pipeline, with `SyntheticTemplate.edgeMap` (blurred OKLab gradient, DEBUG) standing in for the
-  learned detector; `-mosaic` uses `SyntheticTemplate.layered` (layers by paint contrast).
-- Coloring books (drawing): a template whose `lineArt.style` is `.coloringBook` is drawn the same way
-  everywhere (`ColoringBookLook`, `docs/coloring-book.md`): every drawn layer alike in the paper's full
-  ink, color edges never, the drawing never dissolving under paint and nothing outlined for being
-  selected (the fill's hatch shows the selected color's cells), so the painter colors by the outer
-  boundaries and the numbers. The canvas line is 1.5 pt fitted and 0.7 pt more per zoom doubling
-  (`widthPoints`), pictures draw it three times their classic line (`widthFactor`), both times
-  `LineAppearance.coloringBookWeight` (Settings › Advanced › Line Appearance › Line Weight, the only
-  appearance setting a book reads; tolerant decoding, 0.5–2). `CanvasScene.lineArtStyle` picks
-  `CanvasUniforms.setColoringBookLines` (`lineMode.y` in the outline shader) over `setLines`;
-  `CanvasSnapshot` and the time-lapse draw the drawing even with `outlines` off, and
-  `TemplateRasterizer` draws it in every style (`drawBookOutlines`; the painted preview and the
-  finished picture included), with dotted color-edge guides first in `.print`, since paper has no
-  hatch. Demo scenarios `paint-book`, `-progress`, `-zoomed`, `-dark-paper` (the red fox through the
-  real pipeline with the real detector, `LineArtInputs.compute`, the stand-in map when it is
-  unavailable). The `paint*` classic demos ask for classic lines; every other template the app
-  makes (new paintings, the samples prepared on first launch, the gallery demos' seeds) is a
-  coloring book, so `ArtworkFactory.template` runs the edge detector for each.
-- Tips: `Features/Paint/PaintTips.swift` (TipKit), configured in `PaintByNumberApp.init`. Donations
-  and invalidations come from session events in `PaintChromeState` (plus double-tap zoom and
-  Pencil strokes from the canvas); one tip at a time through a `TipGroup`, anchored to the
-  selected swatch or the middle of the canvas. Tip types are `nonisolated struct`s driven by
-  `Tips.Event`s (plus a `hasPaint` parameter for the first tip); their ids carry a generation
-  that Settings ▸ Show Tips Again bumps. Invalidations, like donations, go to TipKit at most
-  once per tip and launch (strokes report paint many times a second).
-- Library (`Model/`): `Library` (@Observable, injected via `.environment`) keeps `Artwork` metadata
-  in memory; `ArtworkStore` does the file IO (`Application Support/Artworks/<uuid>/` with
-  `meta.json`, LZFSE `template.pbnt`, `progress.bin`, `source.jpg`, `thumbnail.png`; atomic writes,
-  staging/trash folders). Writes are queued per artwork off the main actor; deletes are undoable.
-  `Library.loadForPainting` classifies failures (`Library.OpenError`: `needsNewerApp` or
-  `damaged(canRegenerate:)`), resets unusable progress with a one-time `OpenNotice` and repairs
-  stale metadata; `Library.regenerate(artwork:settings:)` re-runs the pipeline on the stored photo
-  (or bundled sample) off the main actor, carries progress over by region overlap
-  (`PaintProgress.remapped`) and swaps the folder in atomically (`ArtworkStore.replaceContents`).
-  Artworks written by a newer app (`Artwork.needsNewerApp`) are listed read-only: delete only.
-  `ArtworkPaintingView` hosts `PaintView` and autosaves (debounced, on background, on close). It is
-  pushed with a zoom transition whose swipe-down/pinch dismissal it turns off (they stole canvas
-  gestures; `PaintingNavigationTests` guards this).
-- Favorites and search: `Artwork.isFavorite` (tolerant `decodeIfPresent`, no format bump;
-  `Library.setFavorite` persists metadata like rename; the card badge is hidden from VoiceOver and
-  the card's *value* says "Favorite", its label stays the title). `Library.inProgress`/`finished`
-  list favorites first. The gallery's Show menu (`GalleryFilter`, `@SceneStorage("galleryFilter")` in
-  `AppShellView`) and `.searchable` make a `GalleryQuery`, which `Library.inProgress(matching:)`/
-  `finished(matching:)` apply and the subtitle counts; `TitleSearch.matches` (pure, unit-tested) needs
-  every query word to start a title word, ignoring case, diacritics and width ("ba" finds "Red Barn",
-  "arn" doesn't). Placeholders show only while nothing is narrowed. Demo scenarios `gallery-favorites`,
-  `gallery-search` (+ `-dark`) and `gallery-no-favorites-long-text`.
-- Save failures: `Library.writeFailures` records failed progress/metadata writes per artwork (the
-  newest unsaved progress is kept for `retrySaving`); the painting screen and the gallery show a
-  Retry toast, and the next successful save clears it. Thumbnail and trash writes only log.
-  Tests make writes fail through `ArtworkStore.writeFaults` (`WriteFaults`).
-- Sharing: the time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress,
-  Cancel, Try Again; its Pace control, `timelapsePace`, picks Even or As painted, which
-  `TimelapseSchedule` maps from the strokes' recorded times: pauses clamp to 2 s, all-zero times
-  fall back to Even, the frame count never changes; another pace restarts the render) and is
-  handed to `ActivityShareSheet`, which reports when the share sheet closes so the movie is deleted (also when the sheet is dismissed). Every export lives in
-  `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture/template `ShareLink`s can't report
-  completion, so they rely on the launch purge and the sweep of exports older than ten
-  minutes that each new export runs (`ArtworkExporter.staleExportAge`).
-- Image caches (`ImageCache`): LRU by decoded bytes (thumbnails 48 MB, samples 16 MB: about a
-  dozen 640 px tiles, so a long library's far tiles decode again), emptied on memory warnings;
-  gallery tiles decode thumbnails at their own pixel size.
-- Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`), radius capped at
-  `PaintingSession.maxBrushRadius` canvas units (a cost bound never reached on current devices).
-- Rendering without Metal: `Export/TemplateRasterizer` (CoreGraphics; vector geometry, falls back to
-  the region map) backs thumbnails, share PNGs, create-flow previews and `PDFExporter`.
-- Create flow `PhotoSourceView`: the inline `PhotosPicker` runs out of process, so it must never
-  sit inside a ScrollView (UIKit can't arbitrate their pans across the process boundary: neither
-  scrolls). It fills the page; compact windows switch Photos/Samples with a segmented control,
-  wide windows put a scrolling samples column beside it. "Browse All…" presents the full picker.
-  On compact widths the picker runs edge to edge, flush with the window's left edge: inset from
-  both the left and the top edge, its photo grid ignores taps on iPhone for its first ten
-  seconds or so (measured on the iOS 26 simulator; `CreateFlowTests` picks an inline photo on
-  both devices), while any layout flush with one of those edges takes the first tap. iPad keeps
-  the card.
-  The samples come in two sections, Paintings then Photographs (`Sample.all(of:)`); a painting's
-  tile shows its creator under the title while there is room (`ViewThatFits`: long text and large
-  sizes drop the creator, then truncate the title), every tile's VoiceOver label names the
-  creator, and tiles widen with Dynamic Type (`@ScaledMetric`, capped at the column).
-- Picture library (`Resources/Samples/`, `Model/Sample.swift`): public-domain paintings and
-  photographs. `library.json` is its single source of truth: which pictures ship, in which order
-  (`Sample.all` follows the file; reorder there, not in Swift), and a record per picture (`id` =
-  the file name `<id>.jpg`, `kind` painting|photograph, English `title`, `creator`, `year`,
-  `credit`, `license`, `source`, `image`, `evidence`, `retrieved`, `crop`, `sha256` of the shipped
-  file; optional `work_title`, the source's own title where `title` shortens it, and
-  `evidence_url`; format in `docs/overnight/library.md`). It holds 25 paintings and 19
-  photographs (21.5 MB), each re-verified from its source by an independent license audit
-  before it shipped. The app decodes it at runtime: creator, year,
-  credit and license are proper names and facts shown verbatim, so they stay in the audited
-  record instead of a Swift copy that could drift from it (and would need `VERBATIM_FILES`).
-  Titles are translatable, so they live in Swift: `Sample.title(of:)` holds one
-  `String(localized: "sample.<id>", …)` per picture (its comment names the work for
-  translators); a record without one isn't offered. `Sample.starters` names the two pictures
-  (a painting and a photograph) prepared on first launch. License rules (hard; reject on any
-  doubt): paintings and prints by creators dead by 1955, made before 1931, from a source that
-  releases the file as CC0 or public domain (The Met, AIC, NGA, Rijksmuseum, Cleveland,
-  Smithsonian, …); photographs CC0, by the US federal government (NASA credited alone, NOAA,
-  NPS, USFWS, USGS, LoC) or published before 1931; never Italian state museums, Unsplash/Pexels/
-  Pixabay/Flickr licenses, aggregator "PD" claims or AI pictures; `evidence` quotes the source's
-  own license statement. `SampleLibraryTests` fails when file, titles and JPEGs disagree (every
-  record offered in order with the catalog title equal to its `title`, complete fields, checksum,
-  long edge 1024–2048 px, starters a painting and a photograph); `AboutTests` keeps the Pictures
-  credits of Settings › Acknowledgements and `ACKNOWLEDGEMENTS.md` in step. **Adding a picture**:
-  (1) `Resources/Samples/<id>.jpg` (2048 px long edge, sRGB, metadata stripped; the whole library
-  ≤ 25 MB); (2) its record in `library.json` at its place in the order; (3) a `case "<id>":` in
-  `Sample.title(of:)`; (4) the `sample.<id>` catalog entry (`comment`, `"extractionState":
-  "manual"`, `localizations.en` = the record's `title`); (5) its `### <title>` entry at the same
-  place in `ACKNOWLEDGEMENTS.md`'s Pictures section ("creator, year", credit and license lines).
-  Removing one undoes the same five; synchronized folders need no project edit. The **retired
-  samples** (`Sample.retired`: parrots, hibiscus, lighthouse, barn, espresso, regatta, the photos
-  the app first shipped) stay bundled for good: saved artworks name them by `sampleName`, and
-  regeneration falls back to the bundled photo when an artwork has no `source.jpg`
-  (`Sample.named` resolves offered and retired ids; `SampleRegenerationTests`). Nothing records
-  their provenance, so they are never offered or credited; they are the regression and benchmark
-  corpus, the paint demos' photo and the fixtures of tests. Demos: the scenarios a viewer judges
-  the app by (`gallery`, `create-preview`, `create-suggested`, the Samples pane) show the library
-  by position (the first six of `Sample.all`, `Sample.starters`), so curation needs no demo edit;
-  the rest keep the retired samples, and UI tests that name paintings launch with
-  `-demoRetiredSamples YES`. `create-samples-paintings`/`-photographs` scroll the pane to a
-  section, `create-samples-long-text` doubles its strings.
-- Suggested settings in the create flow (`CreateModel`): every photo (picker, camera, sample, drop,
-  opened file) goes loading → analyzing (`SubjectImportance.analyze`: importance map plus
-  `SubjectHints` — faces, animals, allowlisted scene labels, quantized to hundredths — in one Vision
-  pass) → suggesting (`AutoSettings.choose` on the draft image, `sourceSize` = the photo's size,
-  `maxCandidates` 3 below 6 cores; its first candidate shows as a draft at once, sliders and Start
-  wait) → the winner's draft (unless it is that candidate) and its full resolution. A new photo or
-  closing the flow cancels it (a `withTaskCancellationHandler` flag reaches every candidate's
-  thread). `settingsOrigin` is `.suggested` until the painter moves a slider (`.custom`; the view
-  reports moves through `settingsChanged()`, the model's own slider updates don't); the chip in
-  `TemplatePreviewView` offers Reset to Suggested, which restores the kept `AutoDecision` without
-  choosing again. Decisions are reproducible from the photo and the painting length and never
-  stored: `meta.json` records only `settingsOrigin` and `paintingLength` (tolerant strings), and
-  regeneration reuses an artwork's recorded settings. Demo scenarios `create-suggested`,
-  `create-custom`, `create-custom-long-text`.
-- Open in Paint by Moonlight: images from the share sheet and Files arrive through an image document type
-  (`CFBundleDocumentTypes` in `Config/Info.plist`, `Alternate` rank, not opened in place, so the system
-  copies each file into `Documents/Inbox`) and `.onOpenURL` → `AppShellView.openFile`. `IncomingFile`
-  reads it off the main actor (security scope tried), deletes it only if it is inside the app's inbox,
-  and titles the painting after the file name; the create flow opens like a drop (`droppedPhoto`; an
-  unreadable file is an empty photo, so "Couldn't Open Photo" shows), after the library's first-launch
-  samples are done, the settings or gallery time-lapse sheet is closed (both live on `AppShellView`;
-  their `onDismiss` resumes the open) and an open painting is dismissed (it autosaves as it goes); only
-  the first of several files opens. A document type's name is localized in
-  `InfoPlist.xcstrings` under its own English text (`strings_check.py` checks it). No Share Extension:
-  it would be a hand-written `.appex` target in the pbxproj that can't open its containing app and
-  would hand the image over through an app group. Debug builds: `-openFile <path>` calls the same
-  handler at launch (`DemoMode.openFileURL`; scenario `create-from-file`).
-- Layered line art inputs (`Generation/`): `EdgeDetector` runs two bundled models on the photo
-  drawn into sRGB and area-resampled, reflect-padded to the network's stride, the probability
-  rounded to 8 bits (`EdgeMap`): `edgeMap(for:maxLongSide:)` runs `Resources/Models/HED.mlpackage`
-  (ControlNet's HED, `ControlNetHED.pth` from Hugging Face `lllyasviel/Annotators`, Apache-2.0,
-  sha256 and conversion in `tools/models/convert_hed.py`; 29 MB of float16 weights computed in
-  float32; ≤ 1152 px, stride 16), a contour map whose silhouettes are strong and closed, and
-  `lineDrawing(for:)` runs `LineArt.mlpackage` (Informative Drawings' contour-style generator,
-  Chan, Durand & Isola 2022, `sk_model.pth` from the same repository, MIT, the network ControlNet's
-  lineart annotator uses; `tools/models/convert_lineart.py`; 8.6 MB; ≤ 768 px, stride 4, RGB in
-  0...1, its paper inverted to ink), a drawing with the fur, petals and glass HED lacks.
-  `maps(for:)`, what the app generates from, lays the drawing (resampled up) over the HED
-  map, `EdgeMap.combined`: per pixel the larger of the drawing and 0.85 × the contours
-  (`EdgeMap.contourWeight`, measured on the fox and Arrieta's still life), and hands the HED map
-  along as `LineArtInput.contours`, which decides the outlines; `LineArtSettings.detector`
-  (Settings › Advanced › Detector, `pbn --line-art detector=…`) picks that or either map alone,
-  derived from the one cached computation (`LineArtInputs.Maps`; demo and test launches also keep
-  each photo's maps on disk, `LineArtMapsCache`, DEBUG only, so a CI run's dozens of launches
-  compute every bundled picture once). `.cpuOnly` keeps maps
-  the same across devices, up to a level where a value sits on a rounding boundary (the Neural
-  Engine and GPU compute in reduced precision that differs by chip); the target has
-  `COREML_CODEGEN_LANGUAGE = None` and loads the `.mlmodelc`s by URL. `EyeFinder.eyes(in:)`:
-  Vision face landmarks → per eye a smoothed contour and an iris (a circle around the pupil, 0.2 ×
-  the eye's width, clipped to the lids), closed polygons normalized to the photo, contours then
-  irises, quantized to 1/4096. `ObjectFinder.objects(in:)`: Vision's foreground instance mask
-  (every instance together, scaled to 384 px, cut at half) traced by PaintCore's `MaskContours`
-  into the subjects' silhouettes (`LineArtInput.objects`), which `LineLayering.addObjects` draws as
-  outlines wherever the drawing leaves a silhouette open by more than 12 px of a 1500-px canvas
-  (`LineArtSettings.outlineObjects`, Settings › Advanced › Outline Subjects; `pbn --objects
-  mask.pgm|polygons.json`). `LineArtInputs.make(for:settings:)` (nil for classic) caches all of it per
-  `CGImage` instance (two photos; shared computation, cancelled when all its waiters are);
-  `forGeneration(of:settings:cached:)` turns a model failure into nil (a layered template then comes
-  out classic). New paintings get `Preferences.lineArt`/`.tuning` on top of the suggested or slider
-  settings: `CreateModel(lineArt:tuning:)` computes the inputs once per photo in the analyzing
-  phase, beside Vision, and hands them to the generator; `AutoSettings.choose(lineArt:tuning:)`
-  gives every candidate the line art and tuning (its drafts get no edge map, so a layered winner is
-  drafted again with it).
-  `ArtworkFactory.template` (regeneration, samples) computes the inputs per template. `meta.json`
-  records them in `settings`. Tests: each model against a PyTorch-made map
-  (`App/PaintByNumberTests/HEDFixture.ppm` → `HEDFixture.pgm` and `LineArtFixture.pgm`, written by
-  the conversion scripts; ≤ 2 levels apart), eyes on `FaceFixture.jpg` (NASA's 1962 portrait of
-  John Glenn).
-- Preferences: `SettingsKey` / `Preferences` (UserDefaults, `@AppStorage`). Settings › Painting Length
-  (Quick, Relaxed by default, Detailed; `Preferences.paintingLength`) is what suggestions aim for;
-  nothing starts from fixed settings any more (the old Starting Colors value is never read).
-- Settings › Advanced (Experimental; `Features/Settings/Advanced/`): `LineArtSettings`,
-  `LineAppearance` and `PipelineTuning` for testers, stored as they change (`Preferences.store`;
-  values equal to the defaults are removed, so better defaults reach them). Line Style offers
-  Classic, Layered and Coloring Book (`LineStyleRow`, a swatch each; choosing one carries each
-  style's own defaults, `LineArtSettings.changing(to:)`, and every reset, detent and effect is
-  against the style's defaults, `AdvancedControl.defaultValue(for:)`, `slider(for:)`); under the
-  book, `AdvancedControl.applies(to:)` hides Texture From, Detail From reads Lines From, the
-  same-paint picker shows Always Split for `.joinTexture` (`SamePaintRow`), `GenerationKey`
-  canonicalizes both (so previews are shared; classic keys carry the classic defaults) and Line
-  Appearance shows only Line Weight. Pushed inside the
-  settings sheet in compact widths, a full-screen cover in regular ones (the sheet is a small card
-  there). `AdvancedSettingsModel` prepares the chosen picture once (a library picture or the most
-  recent photo, `SettingsKey.advancedPreviewPicture`): decoded like the create flow, Vision
-  importance, `AutoSettings.choose` with one candidate at the draft size, whose estimate scales
-  draft areas to the full painting; the defaults' preview is rendered like every other key (the
-  suggestion's own draft has no edge map). Settings that
-  change templates (`GenerationKey`: canonical, classic keys drop the layered fields) queue a
-  generation: debounced, coalesced while a slider moves, the last preview kept until the next,
-  every template kept in a small LRU. Each changed setting's effect (`AdvancedControl`) is the
-  preview's `AdvancedStats` against the same key with that setting reset, generated once the
-  painter pauses. The preview is the real `CanvasView` (`AdvancedPreviewCanvas`: no paint
-  selected, so touches only navigate; Painted paints every area; a new template opens at the old
-  one's camera); `TemplateRasterizer` stands in without Metal. Sliders are single adjustable
-  VoiceOver elements stepping by `SliderSpec.accessibilityStep`, with a detent and haptic at
-  the default. Copy Settings / Share with a Note hand over `AdvancedReport` (the JSON reproduces
-  the preview of a library picture); Paste Settings (the system `PasteButton`, no permission prompt)
-  reads it back through `AdvancedReport.settings(in:)`: the JSON object in the text, each of its three
-  groups optional and tolerant, clamped; groups it leaves out stay. The Presets row (`AdvancedPreset`:
-  Coloring Book, the defaults; Layered; Classic: a style at its defaults, the pipeline untuned, the
-  lines drawn as designed) sets all three groups at once, the one the settings match marked
-  (matched as generation uses them, by `GenerationKey`, so a setting the style ignores doesn't
-  count; the book's settings are measured in `docs/presets/README.md`). Demo scenarios
-  `settings-advanced` (+ `-dark`, `-long-text`), `settings-advanced-layered` (Line Appearance, 2×)
-  and `settings-advanced-tuned` (Pipeline, effects measured) register their settings instead of
-  storing them. Its Sounds,
-  Haptics and Sparkles & Shine sections (`PaintingEffectsSections`) put each `PaintingEffect` (the
-  painting notes, the color finished jingle, the fanfare, the wrong-color sound, three haptics,
-  the fill sparkles, the finishing shine) on its own `@AppStorage` switch (absent means on), read
-  where it plays (`FeedbackEngine`, `CanvasView`) under Settings' Sounds and Haptics; Try buttons
-  play a sound or haptic once (`FeedbackEngine.preview`). Demo `settings-advanced-effects` (the
-  jingle off).
-- Localization: every user-facing string of the app target lives in
-  `Resources/Localizable.xcstrings` (source language English; no translations yet, so the catalog
-  is the translator hand-off) and the Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by
-  the `INFOPLIST_KEY_*` names). `PaintCore` and `pbn` stay English. Three code forms, and nothing
-  else: a SwiftUI literal with no interpolation (`Text("Done")`, `Button`, `Label`, `.navigationTitle`,
-  … ; the literal is the key), `String(localized: "key", defaultValue: "…\(x)…", comment: "…")` for
-  anything with an interpolation, a count or a non-SwiftUI destination (the dotted explicit keys; the
-  comment says where it shows and what the arguments are), and `String(localized: "literal")` for a
-  plain string. `Text(someString)` is verbatim in SwiftUI, so build such strings with the second or
-  third form first. Counts are catalog plurals (`one`/`other` variations with `%lld`; never an
-  `"s"` suffix); several arguments use numbered placeholders (`%1$@ %2$lld`); durations, percentages
-  and numbers go through `.formatted(...)` or `PaintingTime`'s catalog units, never string
-  concatenation; errors are `LocalizedError`. Neither a conditional nor `+` of literals goes inside a
-  SwiftUI literal position (write one call per literal). Helper views that take a `LocalizedStringKey`
-  are listed in `WRAPPERS` of the checker. Adding a string means adding its catalog entry (`"comment"`
-  and `"extractionState": "manual"` included; an explicit key also needs `localizations.en`, with
-  the plural forms for a count). `tools/strings_check.py` (Python 3, stdlib only; the Linux CI job
-  runs it with `--self-test`) reads the sources with a small Swift lexer and fails on a literal
-  missing from the catalog, an English value that differs from the code's `defaultValue`, a catalog
-  key no source uses, a malformed entry or plural, `InfoPlist.xcstrings` drifting from the build
-  settings, and prose-like literals that bypass localization (`ALLOWED_LITERALS` / `VERBATIM_FILES`
-  hold the justified exceptions: license texts, credit names). Xcode itself extracts nothing here:
-  `SWIFT_EMIT_LOC_STRINGS` is on for the app target, but entries are `manual`, so the catalog is
-  edited by hand and checked by the script; generated string symbols are off for the app
-  (`STRING_CATALOG_GENERATE_SYMBOLS = NO`: keys like "Finished" and "Finished!" would name the same
-  symbol, and the code reads keys as literals). `LocalizationTests` checks what ships (bundle lookup,
-  plurals, Info.plist). Layout under longer text: demo scenarios named `*-long-text`
-  (`paint-long-text`, `paint-complete-long-text`, `gallery-long-text`, `gallery-timelapse-long-text`,
-  `settings-long-text`, `settings-advanced-long-text`) are launched by `ci/screenshots.sh` with `-NSDoubleLocalizedStrings YES`, which doubles every
-  localized string; read their screenshots after UI text changes (bars scale or wrap their text,
-  no text sits in a fixed-width frame). Foundation doubles format strings before substituting, so
-  the first copy shows raw placeholders (`1$lld · 2$@`, `@ painted`): expected, length is what
-  counts there. `LongTextTests` (UI tests) keeps the bars' controls, the
-  color name and the toast on screen under the same doubling.
-- Accessibility: `CanvasView` is a VoiceOver container (`CanvasAccessibility`): up to 40
-  `canvas-area-<region>` buttons for the unpainted areas of the selected color in view (activating
-  one paints it), a `canvas-placeholder` when none are, custom actions Paint next area / Zoom to
-  next area / Hint / Zoom to fit, an "Unpainted areas" rotor and `accessibilityScroll` (three-finger
-  swipes page the camera; the container hides the scroll view); it posts `layoutChanged` on
-  selection, progress and camera settle, and hints move VoiceOver focus to the revealed area.
-  Swatches are `swatch-N` labelled "N, <color name>" (`PaintSpeech` holds all spoken strings,
-  `ColorNameText` the localizable color names); `current-color` shows the selected color's name
-  (progress badge on regular widths, palette caption on compact). `PaletteMetrics` scales swatches
-  with Dynamic Type up to 1.4×; the fixed-height top and completion bars clamp at `.xxLarge` and use
-  the Large Content Viewer. Reduce Motion reaches the canvas via `CanvasView.reduceMotion` (instant
-  fills and undos, no shine, stepped replay; hint highlights and wrong-paint numbers fade in place,
-  flagged to the shaders in `CanvasUniforms.numbers.w`). UI tests query these identifiers; demo
-  scenarios `paint-ax` and `paint-ax-large` cover the color name and the largest text size.
-- Demo scenarios: launch with `-demo <name>` (see `DemoMode`, `RootView`; `ShellDemo` owns the
-  gallery, create and settings ones, e.g. `create` on the Photos pane, `create-samples` on the
-  Samples pane). CI screenshots every scenario listed in `ci/scenarios.txt` ~2 s after the app
-  calls `DemoMode.markReady()` (a new scenario must call it once its content is on screen;
-  `name@seconds` is only the timeout). Failure states have scenarios too: `gallery-damaged`
-  (recovery screen), `gallery-timelapse` (time-lapse progress sheet), `paint-unavailable` (the
-  painting screen's stand-in when Metal is unavailable). Demo launches and the unit-test host
-  (`DemoMode.isTestHost`) reset TipKit and hide every tip except in `paint-tip`.
-  Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `PipelineCheckView` and
-  `SyntheticTemplate` are wrapped in `#if DEBUG`, and every other reference (`RootView`,
-  `Library.forLaunch`, `AppShellView`, `SettingsView`, …) sits in an `#if DEBUG` block, so Release
-  builds and the IPA have no `-demo` switch. New demo code follows the same rule;
-  `ci/check_release.sh` (run by the iPad job on a Release build) fails if a demo type name
-  shows up in the Release binary.
-- Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking, no
-  collected data; required-reason APIs: UserDefaults `CA92.1`, file timestamps `C617.1` for purging
-  the app's own export folders by creation date). Using another required-reason API
-  (file timestamps, disk space, boot time via `systemUptime`/`mach_absolute_time`, active
-  keyboards) means adding its category and reason code there; `AboutTests` fails when the
-  sources of the app or of `Sources/PaintCore` (not the `pbn` CLI) and the manifest disagree.
-  Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category are in
-  `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings.
-- Settings › About shows the bundle version/build (`AppInfo`) and Acknowledgements
-  (`Acknowledgements.swift`). It opens on the Pictures section (every offered picture with
-  its `library.json` record: title, "creator, year", credit, license). Ported or adapted
-  third-party code and the methods the pipeline implements are credited there and in
-  `ACKNOWLEDGEMENTS.md` (`AboutTests` keeps the two in step): add an entry when adding either.
-  Bundled models are credited under Models with their weights' license (`Acknowledgements.models`).
-- Licensing: `Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox); nothing else is
-  third-party code, and nothing is GPL. The HED model's weights are Apache-2.0 (ControlNet; the
-  evidence is in `tools/models/convert_hed.py`). `Vector/CurveFitter.swift` is a clean-room implementation
-  of the method in Selinger's paper "Potrace: a polygon-based tracing algorithm" (2003), written
-  from the paper alone (provenance: `docs/cleanroom-curve-fitter.md`); it replaced a GPL
-  translation of potrace's source in pipeline version 3 and is credited as a method. Never consult
-  potrace's source, or any port of it, when changing the fitter: work from the paper.
+`LayeredLines.apply` (stages and constants in its doc comment) turns an 8-bit `EdgeMap`
+(`LineArtInput`) into cells bounded by lines, each line in a `LineLayer`. Detect and trace read the
+edge map alone; eyes and the subjects' silhouettes enter at the layer stage (`LineLayering.addEyes`,
+`addObjects`), where `LineArtInput.contours` decides the outlines; `CellMap` splits the segmentation
+along the lines; lines inside cells become `InteriorStroke`s (`Template.lineArt`). The **coloring
+book** (`LineArtSettings.Style.coloringBook`: the default, and every template the app makes) is the
+same pipeline with the drawing as its only lines, on flatter paint
+(`SegmentationParameters.coloringBookFlattening`, by style, edge map or not), drawn in full ink over
+the paint (`docs/coloring-book.md`). Without an edge map, layered or book settings generate a
+classic template; the same maps and settings give the same bytes on any core count.
+
+## Suggested settings
+
+`AutoSettings` (`analyze`, `candidates`, `score`, `choose`) suggests settings for a photo and a
+`PaintingLength`. Features are quantized and thresholds are ramps, so a decision is reproducible
+from the same pixels, importance, hints, Painting Length, line style, tuning and candidate count
+(the app runs 3 candidates below 6 cores, 5 otherwise); decisions are never stored. Constants are
+documented where declared (`AutoSettings`, `PaintingLength`, `PhotoAnalyzer`); `docs/auto-tuning.md`
+logs the tuned ones.
+
+## Working here (Linux, no Xcode)
+
+| Task | Command (manual: its docstring) |
+| --- | --- |
+| Build pbn (static; runs on the host) | `tools/swift.sh build -c release --static-swift-stdlib` |
+| PaintCore tests | `tools/swift.sh test` |
+| Sheets and metrics | `tools/eval.py run <images> --out <dir> [-- <pbn options>]` |
+| Line-art tuning (always) | `tools/eval.py book`: `docs/coloring-book.md` › Measuring a book |
+| Suggested settings | `pbn suggest <image> --out <dir>`, `tools/auto_sheet.py <dir>` |
+
+- Look at the PNGs with the Read tool. An eval sheet's second row is the raw region raster, a 2×
+  `boundaries.png` (best for judging segmentation shapes) and the palette.
+- stats.json, decision.json and the file names pbn writes are read by `tools/*.py` by key and name:
+  add fields and files, never rename or repurpose them, nor the properties of the PaintCore types
+  they embed (listed on pbn's `Metrics`); a field leaves only with its readers.
+  `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0.
+- pbn has no tests: CI runs `generate`, `check` and `bench`; run `suggest`, `trace` and `names` by
+  hand after touching them. A new `LineArtSettings` or `PipelineTuning` field needs its `Fields`
+  entry. `pbn trace`'s `valid` skips the label-room check: run `pbn check`. pbn is classic unless
+  `--line-style` says otherwise and reads PPM/PGM (other formats only on Apple platforms);
+  `tools/eval.py` needs node (`cd tools && npm ci`) and Pillow, the others Pillow. pbn has no
+  Vision: its fallback importance map rates busy texture important, so its region counts run above
+  the app's, and Auto follows.
+- Test photos: `Tests/Corpus`, the rest of the Kodak suite (its URL is in that folder's `README.md`)
+  and scikit-image's samples.
+- `App/` compiles only on CI: after editing an App Swift file, re-read it whole and check its
+  imports (`MemberImportVisibility`), actor isolation at each boundary, API names and signatures
+  against iOS 26 / Swift 6.2, and every call site of anything renamed; when unsure of an API, mirror
+  an existing use in the repo.
+- "database is locked" from `tools/swift.sh`: another build is using `.build`; wait and retry.
+- Scratch output goes outside the repo. Never commit `.build/`, eval output, `tools/node_modules`,
+  `.claude/worktrees/` or `.claude/corpus/`. Keep a diff to what the task needs; edits to shared
+  files (`Localizable.xcstrings`, `ci/scenarios.txt`) are minimal.
+
+## Quality gate
+
+`tools/regression.py` (CI, every push) generates the six `Tests/Corpus` photos, pinned by name
+(`SAMPLE_NAMES`; the picture library's curation must move neither the baselines nor CI's time), in
+three regimes twice each, as coloring books from the committed maps in `tools/baseline/lines/`, and
+at Auto's suggestion; it checks hard invariants (`pbn check` valid, byte-identical runs, minimum
+radius and palette distance, `labelsBelowLegibleSize == 0`, Auto's choice inside its bands) and
+bands against `tools/baseline/regression.json`, all listed in its docstring. Its template
+same/changed column means something only for an identical build and input decode. `swift test` fails
+`AutoSettingsTests.parrotsDecisionIsPinned` when a change moves that draft: regenerate the fixture
+with the baselines. No regime passes eyes or subjects: `LineArtTests` alone guards `addEyes`,
+`addObjects` and `MaskContours`.
+
+**Whenever a change alters pipeline output, run `tools/regression.py --update` (it only writes a
+baseline that satisfies the hard invariants), look at the `--sheets`, and commit
+`tools/baseline/regression.json` and `tools/baseline/auto.json` together with the change**: CI fails
+once a metric leaves its band, and a fresh baseline keeps the table's deltas meaningful.
 
 ## Saved data compatibility (never lose a painting)
 
@@ -588,76 +160,176 @@ Saved paintings must open in every later build. The format history is documented
 
 - Never change how an existing template format is read: `readPayloadV1` is frozen, and
   `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` / `template-v2-lines.pbnt`
-  (the optional `LINE` chunk of layered templates) / `template-v2-book.pbnt` (the chunk's
-  trailing style byte, written only for coloring books) must keep decoding (they are never
-  regenerated). Add a fixture file and decode test for every new `formatVersion`, chunk or
-  trailing field.
+  (the optional `LINE` chunk of layered templates) / `template-v2-book.pbnt` (the chunk's trailing
+  style byte, written only for coloring books) must keep decoding (they are never regenerated). Add
+  a fixture file and decode test for every new `formatVersion`, chunk or trailing field.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
-  ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base
-  layout itself changes.
+  ignoring it would misrender the painting. Bump `Template.formatVersion` only when the base layout
+  itself changes.
 - Bump `TemplateGenerator.pipelineVersion` in the same commit as any change that alters generated
   output for identical inputs and settings; templates record it.
-- Decoders treat files as hostile: check every count against the bytes left before allocating,
-  and every span, reference and coordinate (inside the canvas) in `Int` arithmetic before
-  anything indexes with it. PaintCore is compiled `-Ounchecked` in release, so a missed check is a
-  silent out-of-bounds read; the truncation, random-corruption and crafted-reference tests in
-  `TemplateCodingTests` guard this.
-- An artwork's recorded settings are what regeneration uses: a `meta.json` without `settings`
-  or `lineArt` (saved before line art existed) means classic lines (`Artwork.settingsBeforeLineArt`,
-  the `GenerationSettings` decoder), never the current default style.
+- Decoders treat files as hostile: check every count against the bytes left before allocating, and
+  every span, reference and coordinate (inside the canvas) in `Int` arithmetic before anything
+  indexes with it. PaintCore is compiled `-Ounchecked` in release, so a missed check is a silent
+  out-of-bounds read; the truncation, random-corruption and crafted-reference tests in
+  `TemplateCodingTests` and `LineArtCodingTests` guard this.
+- An artwork's recorded settings are what regeneration uses: a `meta.json` without `settings` or
+  `lineArt` (saved before line art existed) means classic lines (`Artwork.settingsBeforeLineArt`,
+  the `GenerationSettings` decoder), never the current default style. Its `lineArt` and `tuning`
+  decode tolerantly, like Settings › Advanced's JSON in UserDefaults; never rename a settings field.
 - A file from a newer app is never reset or rewritten: it throws a "newer" error
-  (`Template.CodingError.requiresNewerReader`, `PaintProgress.CodingError.newerVersion`) and the
-  app says it needs an update. `PaintProgress` fields are append-only (readers ignore trailing
-  bytes); bump its `formatVersion` only when an existing field changes meaning. Bump
-  `Artwork.currentFormat` when older apps must not open or rewrite an artwork folder (a template
-  `formatVersion` bump or a new required chunk).
+  (`Template.CodingError.newerFormat` or `.requiredExtension`, whose `requiresNewerReader` is true;
+  `PaintProgress.CodingError.newerVersion`) and the app says it needs an update. `PaintProgress`
+  fields are append-only (readers ignore trailing bytes); bump its `formatVersion` only when an
+  existing field changes meaning. Bump `Artwork.currentFormat` when older apps must not open or
+  rewrite an artwork folder (a template `formatVersion` bump or a new required chunk).
 - Damaged data never traps: progress that doesn't fit its template is a recoverable error
-  (`PaintingSession.init(template:progress:) throws`), and `LibraryTests` cover each failure.
+  (`PaintingSession.init(template:progress:) throws`), and `LibraryTests` cover each failure. A
+  progress file that can't be read right now (an I/O or protection error) throws
+  `Library.OpenError.unreadable` and is kept, never replaced with fresh progress
+  (`LibraryTests.unreadableProgressIsKept`).
+- Paint nicknames are derived at load, never stored (`ColorNickname.assign(_:seed:)`, seeded from
+  the artwork id): editing the vocabulary table, `ColorNickname`'s constants or `ColorName`'s
+  thresholds renames the colors of saved paintings, so treat them like a file format
+  (`ColorNicknameTests.parrotsPaletteGetsDistinctNicknames` pins one assignment).
+
+## App rules
+
+- Deployment target iOS 26.0, iPhone + iPad. Build with Xcode 26.6 (CI). Swift 6 with
+  `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and approachable concurrency: app types are MainActor
+  by default; mark pure/background helpers `nonisolated` and CPU-heavy async work `@concurrent`.
+  PaintCore is a separate module (nonisolated). The test targets have neither setting: their suites
+  that touch app types are `@MainActor`.
+- `MemberImportVisibility` is enabled: every file that touches members of a type from another module
+  must import that module itself (`import PaintCore`, `import simd`, …).
+- Closures handed to system APIs that call back on arbitrary threads (AVFoundation, Core Haptics,
+  Metal completion handlers, NotificationCenter with a queue) must not be MainActor-isolated — form
+  them in `nonisolated` code or they trap at runtime under Swift 6.
+- Liquid Glass design language (`.glassEffect`, `GlassEffectContainer`, `.buttonStyle(.glass)`,
+  `.glassProminent`), SF Symbols, Dynamic Type, dark mode, VoiceOver labels.
+- Identity: the app is called **Paint by Moonlight** (display name, gallery title, permission texts,
+  PDF footer; App Store subtitle "Turn any photo into a painting"). Pipo is only the working name
+  and never appears in the product; target, module and repository keep the PaintByNumber names.
+  Native first: system controls stay system controls. Every new `.glassProminent` button gets
+  `.tint(Theme.signature)`; `Theme.gold` is for stars, sparkles and the crescent only; titles and
+  numerals use New York, buttons and body text SF. The design system, tokens, canvas sheet and app
+  icon: `App/CLAUDE.md` › Design.
+- Localization: every user-facing string of the app target lives in
+  `Resources/Localizable.xcstrings` (English, no translations yet: the translator hand-off), the
+  Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by the `INFOPLIST_KEY_*` names);
+  `PaintCore` and `pbn` stay English. Three code forms, and nothing else: a SwiftUI literal with no
+  interpolation (`Text("Done")`, `Button`, `Label`, `.navigationTitle`, …: the literal is the key);
+  `String(localized: "key", defaultValue: "…\(x)…", comment: "…")` for an interpolation, a count or
+  a non-SwiftUI destination (dotted keys; the comment says where it shows and what the arguments
+  are); `String(localized: "literal")` for a plain string. `Text(someString)` is verbatim, so build
+  such strings with the second or third form first. Counts are catalog plurals (`one`/`other` with
+  `%lld`; never an `"s"` suffix); several arguments use numbered placeholders (`%1$@ %2$lld`);
+  durations, percentages and numbers go through `.formatted(...)` or `PaintingTimeText`'s catalog
+  units, never concatenation; errors are `LocalizedError`; no conditional or `+` of literals in a
+  SwiftUI literal position (one call per literal). Helper views taking a `LocalizedStringKey` are
+  listed in `WRAPPERS` and counted in `KEY_TYPE_DECLARATIONS` of the checker. The one runtime key
+  family is `sample.<id>`, the library's titles (checked against `library.json`). A new string needs
+  its catalog entry, written by hand (`"comment"`, `"extractionState": "manual"`; an explicit key
+  also `localizations.en`, with plural forms for a count): Xcode extracts nothing
+  (`STRING_CATALOG_GENERATE_SYMBOLS = NO`: "Finished" and "Finished!" would collide).
+  `tools/strings_check.py` (CI runs it) fails on any drift between sources and catalogs and on
+  prose-like literals that bypass localization (`ALLOWED_LITERALS` / `VERBATIM_FILES` hold the
+  justified exceptions); `LocalizationTests` checks what ships. After UI text changes, read the
+  screenshots of every scenario whose name contains `long-text` (doubled strings; raw placeholders
+  like `1$lld` in the first copy are expected).
+- Demo scenarios: `-demo <name>`; the catalogs are the doc comments of `ShellDemo`, `PaintDemoView`
+  and `RootView`. A screenshotted scenario is one `name@seconds` line of `ci/scenarios.txt` (no
+  comments; `@seconds` is only the timeout) and calls `DemoMode.markReady()` once its content is on
+  screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `SyntheticTemplate` and
+  `LineArtMapsCache` are wrapped in `#if DEBUG`, and every other reference (`RootView`,
+  `Library.forLaunch`, `AppShellView`, `SettingsView`, `LineArtInputs`, …) sits in an `#if DEBUG`
+  block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
+  `ci/check_release.sh` (run by the iPad job on a Release build) fails if a Debug-only type name
+  shows up in the Release binary.
+- Done means: a test for each new behaviour in the right target (Swift Testing in
+  `Tests/PaintCoreTests` and `App/PaintByNumberTests`, XCTest in `App/PaintByNumberUITests`), a demo
+  scenario for any new screen worth a CI screenshot, catalog entries for its strings, VoiceOver
+  labels and values, Dynamic Type, Reduce Motion and dark mode for every new control, and the
+  CLAUDE.md pointers kept current. No stubs or flags hiding unfinished work.
+- Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking, no collected
+  data; required-reason APIs: UserDefaults `CA92.1`, file timestamps `C617.1` for purging the app's
+  own export folders). Using another required-reason API (file timestamps, disk space, boot time via
+  `systemUptime`/`mach_absolute_time`, active keyboards) means adding its category and reason code
+  there; `AboutTests` fails when the sources of the app or of `Sources/PaintCore` (not `pbn`) and
+  the manifest disagree. Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category
+  are in `Config/Info.plist` and the target's `INFOPLIST_KEY_*` settings.
+- Picture library: public-domain pictures only, under hard license rules (reject on any doubt);
+  `library.json` is its single source of truth. Read `docs/picture-library.md` before adding,
+  replacing or removing a picture.
+
+## Licensing and credits
+
+Ported or adapted code, the methods the pipeline implements and the bundled models (with their
+weights' license) are credited in Settings › About › Acknowledgements (`Acknowledgements.swift`) and
+`ACKNOWLEDGEMENTS.md`, which `AboutTests` keeps in step: add an entry when adding any.
+`Vector/Earcut.swift` and `PolyLabel.swift` are ISC (Mapbox); nothing else is third-party code, and
+nothing is GPL. The models' weights are Apache-2.0 (HED, ControlNet) and MIT (the line-drawing
+network); the evidence is in `tools/models/convert_*.py`. `Vector/CurveFitter.swift` is a clean-room
+implementation of the method in Selinger's paper "Potrace: a polygon-based tracing algorithm"
+(2003), written from the paper alone (provenance: `docs/cleanroom-curve-fitter.md`); it replaced a
+GPL translation of potrace's source and is credited as a method. Never consult potrace's source, or
+any port of it, when changing the fitter: work from the paper.
 
 ## CI feedback loop (no Xcode locally)
 
 1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).
-2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the
-   report CI publishes to `ci-shots/<branch>`: `STATUS.md` (job results and the regression
-   verdict), trimmed `*.log`, `core/core-test.log` and `core/regression/` (`regression.txt`
-   table, `regression.json`, `sheets/<regime>/<sample>.jpg`) from the Linux job, and per device
-   `errors.txt` (compiler errors), `shots/*.png` plus `*-app.log` (the app's os_log output) and
-   `*-steps.log` (readiness, crashes). iPad is the primary device: every push builds Debug on a
-   13" iPad Pro simulator and adds `ipad/test-results.json`, `ipad/attachments/` and
-   `ipad/bench.txt` (pipeline timings on the M1 runner, only when `Sources/` changed). The iPad
-   job also builds Release and runs `ci/check_release.sh` (privacy manifest present, no demo
-   code); its problems land in `ipad/errors.txt` too. The
-   iPhone job (the same on an iPhone 17 Pro, without the benchmark) runs on
-   `claude/paint-by-numbers-app`, via workflow_dispatch with `iphone: true`, or on any branch
-   when the pushed commit's message contains `[iphone]`. Turnaround
-   ~15–20 min (longer if several branches are queued: only 5 macOS jobs run concurrently).
-   Work on something else while it runs.
-3. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
-4. Device builds: every push to `claude/paint-by-numbers-app` also archives an unsigned Release
-   IPA (version `1.0.<run>`, build `<run>`), publishes it as the `build-<run>` prerelease (the
-   five newest are kept) and rewrites the SideStore/AltStore source on the `sidestore` branch
-   (`ci/sidestore_source.py`). Users add
-   `https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/source.json` in
-   SideStore; it signs the IPA with their Apple ID and offers each new build as an update.
+2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the report CI
+   publishes to the ref `refs/ci-shots/<branch>` (not fetched by a clone) and unpacks it:
+   `STATUS.md` (job results and verdicts), trimmed logs, `core/` (tests, strings check,
+   `regression/` with its table and `sheets/<regime>/<sample>.jpg`), and per device `errors.txt`
+   (compiler errors), `shots/*.png`, `*-app.log` (the app's os_log), `*-steps.log` (readiness,
+   crashes), test results and `attachments/`. iPad is the primary device: every push builds Debug on
+   a 13" iPad Pro simulator, screenshots, tests, builds Release for `ci/check_release.sh` (problems
+   land in `ipad/errors.txt` too), and benchmarks the pipeline (`ipad/bench.txt`, only when
+   `Sources/` or `Package.swift` differ from `main`). The iPhone job (an iPhone 17 Pro) runs on
+   `main`, via workflow_dispatch with `iphone: true`, or for a commit whose message contains
+   `[iphone]`.
+3. Turnaround is about 70 min (the iPad job takes about an hour of its 75-minute cap, so a slow new
+   UI test needs a matching saving), longer when branches queue (only 5 macOS jobs run at once).
+   `ci/fetch.sh` gives up after 60 min: run it again. A newer push to the same branch cancels the
+   older run, which then never reports. Work on something else while it runs.
+4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
+5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`),
+   publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the
+   SideStore source on the `sidestore` branch (`ci/sidestore_source.py`), which users add in
+   SideStore as
+   `https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/source.json`.
+
+**Branches.** `main` is the default and shipping branch (iPhone job, IPA, SideStore source; the
+benchmark's base). Work on `claude/<topic>` branches and merge into `main`; once merged, the branch
+and its report ref can go. CI owns `sidestore` (never delete or push it) and the `refs/ci-shots/*`
+reports. Local `main` may lag: fetch before comparing.
 
 ## Conventions
 
 - Swift 6 language mode, strict concurrency. Core types are `Sendable` value types.
 - Hot loops use `withUnsafe(Mutable)BufferPointer` + `Parallel.forEachBand`; wrap raw pointers in
   `UncheckedSendable` to share them with workers writing disjoint ranges.
-- Color math happens in OKLab (`ColorScience`). Distances there ≈ ΔE; 0.02 ≈ just noticeable,
-  and paints are never closer than that (`SegmentationParameters.jnd`).
-- Numbers are sized only by `LabelSizing` (`Model/Template.swift`): SVG, `TemplateRasterizer`
+- Color math happens in OKLab (`ColorScience`). Distances in true OKLab ≈ ΔE (palettes,
+  `PaletteColor.oklab`, `ColorScience.distance`); 0.02 ≈ just noticeable, and paints are never
+  closer than that (`SegmentationParameters.jnd`). Segmentation grids
+  (`WorkingImage.okLab(_:chromaScale:)`) stretch the chroma axes by
+  `SegmentationParameters.chromaScale` (1.6 × `PipelineTuning.colorfulness`): a distance there is
+  not ΔE; unscale it (`PaletteBuilder.Separation`'s `metric`) before comparing it with one.
+- Numbers are sized only by `LabelSizing` (`Model/LabelSizing.swift`): SVG, `TemplateRasterizer`
   (thumbnails, PDF) and the Metal canvas all use it and never drop a number. The pipeline gives
   every label room for its digit count (raster `minRadius(digits:)`, vector `LabelRoom`), so no
-  number is smaller than `LabelSizing.minimumFontSize`; `validate(minLabelRadius:)` checks it.
-  Print legibility is the PDF exporter's job, not a renderer floor: `PDFExporter.sheets` prints a
-  detailed template on overlapping sheets so the smallest number is at least 2.6 pt.
-- Canvas units = pixels of the working image; origin top-left, +y down.
+  number is smaller than `LabelSizing.minimumFontSize`; `validate(minLabelRadius:)` checks it. Print
+  legibility is the PDF exporter's job, not a renderer floor: `PDFExporter.sheets` prints a detailed
+  template on overlapping sheets so the smallest number is at least 2.6 pt.
+- Canvas units = pixels of the working image (long side min(1100 + 1000 × detail, 1.5 × the
+  photo's): `GenerationSettings.workingSize`); origin top-left, +y down.
 - Keep `PaintCore` free of Apple-only frameworks (guard any Accelerate/Metal use with
   `#if canImport(...)` and keep a portable path).
 - Deterministic output for identical inputs + settings (seeded `SplitMix64`), on every device:
-  parallel floating-point reductions accumulate fixed-size chunks and add them in order
-  (`RegionRuns.accumulate`, `RegionAdjacency.boundarySteps`), never one partial sum per core.
+  parallel floating-point reductions must not depend on the core count: fixed-size chunks summed in
+  chunk order (`RegionAdjacency.boundarySteps`: 32-row chunks), or each output computed whole by one
+  task in a fixed order (`RegionRuns.accumulate`: a region's pixels in raster order); never one
+  partial sum per band or core (bands follow the core count).
 - Comments explain *why*, sparingly. No dead code, no TODO litter.
