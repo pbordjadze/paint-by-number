@@ -1,6 +1,5 @@
 import Foundation
 import SwiftUI
-import UIKit
 
 /// The gallery: paintings in progress and finished ones, as an adaptive grid of cards.
 struct GalleryView: View {
@@ -269,7 +268,7 @@ struct GalleryView: View {
     private func show(_ text: String, _ systemImage: String) {
         let next = Notice(text: text, systemImage: systemImage)
         notice = next
-        UIAccessibility.post(notification: .announcement, argument: text)
+        Announcer.announce(text)
         Task {
             try? await Task.sleep(for: .seconds(2.5))
             if notice?.id == next.id { notice = nil }
@@ -304,11 +303,11 @@ struct GalleryView: View {
         // VoiceOver users hear what the toasts show, and that their action is there to find.
         .onChange(of: library.latestWriteFailure?.artwork.id) {
             guard let failed = library.latestWriteFailure?.artwork else { return }
-            UIAccessibility.post(notification: .announcement, argument: saveFailedText(failed))
+            Announcer.announce(saveFailedText(failed))
         }
         .onChange(of: library.recentlyDeleted?.id) {
             guard let deleted = library.recentlyDeleted else { return }
-            UIAccessibility.post(notification: .announcement, argument: deletedText(deleted))
+            Announcer.announce(deletedText(deleted))
         }
     }
 
@@ -324,39 +323,5 @@ struct GalleryView: View {
 
     private func isPresent<T>(_ value: Binding<T?>) -> Binding<Bool> {
         Binding(get: { value.wrappedValue != nil }, set: { if !$0 { value.wrappedValue = nil } })
-    }
-}
-
-/// A floating glass capsule message with an optional action.
-struct Toast<Trailing: View>: View {
-    let text: String
-    let systemImage: String
-    /// The screen edge it slides in from.
-    var edge: Edge = .bottom
-    @ViewBuilder var trailing: Trailing
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .foregroundStyle(.secondary)
-            // The action keeps its label however long the message is: the message gets what is left.
-            Text(text)
-                .lineLimit(3)
-                .fixedSize(horizontal: false, vertical: true)
-                .layoutPriority(-1)
-            trailing
-        }
-        .font(.subheadline.weight(.medium))
-        .padding(.horizontal, 20)
-        .padding(.vertical, 13)
-        .glassEffect(.regular, in: .capsule)
-        .transition(.move(edge: edge).combined(with: .opacity))
-        .accessibilityElement(children: .combine)
-    }
-}
-
-extension Toast where Trailing == EmptyView {
-    init(text: String, systemImage: String, edge: Edge = .bottom) {
-        self.init(text: text, systemImage: systemImage, edge: edge) { EmptyView() }
     }
 }

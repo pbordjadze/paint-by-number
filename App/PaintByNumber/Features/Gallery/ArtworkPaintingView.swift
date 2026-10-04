@@ -81,7 +81,7 @@ struct ArtworkPaintingView: View {
         .animation(.snappy, value: notice)
         .animation(.snappy, value: saveFailed)
         .onChange(of: saveFailed) { _, failed in
-            if failed { UIAccessibility.post(notification: .announcement, argument: String(localized: "Couldn’t save progress")) }
+            if failed { Announcer.announce(String(localized: "Couldn’t save progress")) }
         }
         .toolbar(.hidden, for: .navigationBar)
         .background { CanvasGesturesOverZoomDismissal().frame(width: 0, height: 0) }
@@ -135,7 +135,7 @@ struct ArtworkPaintingView: View {
     private func show(_ openNotice: OpenNotice) {
         let shown = ShownNotice(notice: openNotice)
         notice = shown
-        UIAccessibility.post(notification: .announcement, argument: openNotice.text)
+        Announcer.announce(openNotice.text)
         Task {
             try? await Task.sleep(for: .seconds(4))
             if notice == shown { notice = nil }
