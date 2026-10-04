@@ -97,7 +97,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     /// outline threshold at or above the detail threshold, so it cannot sit lower), so same-paint
     /// cells join across everything but silhouettes and the fur, creases and strands draw inside
     /// their cells; its longer shortest line and gap closing drop specks and close cells, and its
-    /// curves flow (measured in `docs/coloring-book.md` and `docs/presets/README.md`). The
+    /// curves flow (measured in `docs/coloring-book.md`, Defaults). The
     /// layered defaults are the research's HED thresholds (`research/lineart/results_layers.md`
     /// in the `archive/lineart-research` tag), outlines a little higher and thinned where lines
     /// crowd, because the research's outlines read too strong in the app; texture lines join

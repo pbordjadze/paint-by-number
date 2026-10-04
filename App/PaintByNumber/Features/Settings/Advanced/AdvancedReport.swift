@@ -5,7 +5,8 @@ import PaintCore
 /// numbers, every setting that differs from its default, their note) and the settings as JSON,
 /// which reproduce the preview exactly for a library picture (generation is deterministic).
 /// Paste Settings reads the same text back (`settings(in:)`), so settings travel between
-/// devices, and a preset is any text written like it (`docs/presets/`).
+/// devices, and a preset is any text written like it (`docs/coloring-book.md`, Presets and
+/// settings as text).
 nonisolated enum AdvancedReport {
     /// The settings a pasted text holds: each group the text has, clamped to its range.
     struct Imported: Equatable, Sendable {
