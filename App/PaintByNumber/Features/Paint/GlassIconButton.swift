@@ -7,12 +7,6 @@ struct GlassIconButton: View {
     let label: LocalizedStringKey
     let action: () -> Void
 
-    init(systemImage: String, label: LocalizedStringKey, action: @escaping () -> Void) {
-        self.systemImage = systemImage
-        self.label = label
-        self.action = action
-    }
-
     @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {

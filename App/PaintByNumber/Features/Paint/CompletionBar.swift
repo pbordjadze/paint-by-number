@@ -16,18 +16,6 @@ struct CompletionBar: View {
     let onShareTimelapse: () -> Void
     let onClose: (() -> Void)?
 
-    init(
-        session: PaintingSession, title: String, share: CompletionShare, onReplay: @escaping () -> Void,
-        onShareTimelapse: @escaping () -> Void, onClose: (() -> Void)?
-    ) {
-        self.session = session
-        self.title = title
-        self.share = share
-        self.onReplay = onReplay
-        self.onShareTimelapse = onShareTimelapse
-        self.onClose = onClose
-    }
-
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.seal.fill")
@@ -50,13 +38,7 @@ struct CompletionBar: View {
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             Spacer(minLength: 0)
-            Button(action: onReplay) {
-                GlassIconLabel(systemImage: "play.fill")
-            }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.circle)
-            .accessibilityLabel(Text("Replay"))
-            .accessibilityShowsLargeContentViewer { Label("Replay", systemImage: "play.fill") }
+            GlassIconButton(systemImage: "play.fill", label: "Replay", action: onReplay)
             if let picture = share.picture {
                 let name = title.isEmpty ? String(localized: "Painting") : title
                 // UIImage keeps the picture's Display P3 colors.

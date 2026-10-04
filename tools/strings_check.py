@@ -87,7 +87,7 @@ WRAPPERS = {
 # wrapper above). A new wrapper changes a count, which fails the check until WRAPPERS lists it.
 KEY_TYPE_DECLARATIONS = {
     "Features/Gallery/GalleryView.swift": 1,
-    "Features/Paint/GlassIconButton.swift": 2,
+    "Features/Paint/GlassIconButton.swift": 1,
     "Features/Create/TemplatePreviewView.swift": 1,
     "Features/Create/PhotoSourceView.swift": 2,
 }

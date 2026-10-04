@@ -54,10 +54,6 @@ struct PaintDemoView: View {
     @State private var demo: Demo?
     @Environment(\.dynamicTypeSize) private var systemTypeSize
 
-    init(scenario: String) {
-        self.scenario = scenario
-    }
-
     var body: some View {
         ZStack {
             if let demo {

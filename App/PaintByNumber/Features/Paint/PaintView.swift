@@ -319,24 +319,14 @@ struct PaintView: View {
     }
 
     private func progressBadge(_ variant: BadgeVariant) -> some View {
-        badgeVariant(
-            fraction: session.fractionComplete, showsTitle: variant.showsTitle, showsPercent: variant.showsPercent,
-            showsColor: variant.showsColor, shrinksColor: variant.shrinksColor)
-            .frame(height: Self.barHeight)
-            .glassEffect(.regular, in: .capsule)
-    }
-
-    private func badgeVariant(
-        fraction: Double, showsTitle: Bool, showsPercent: Bool, showsColor: Bool, shrinksColor: Bool = false
-    ) -> some View {
         HStack(spacing: 10) {
-            progressGroup(fraction: fraction, showsTitle: showsTitle, showsPercent: showsPercent)
-            if showsColor {
+            progressGroup(showsTitle: variant.showsTitle, showsPercent: variant.showsPercent)
+            if variant.showsColor {
                 Capsule()
                     .fill(Color.primary.opacity(0.15))
                     .frame(width: 1, height: 18)
                     .accessibilityHidden(true)
-                if shrinksColor {
+                if variant.shrinksColor {
                     CurrentColorLabel(session: session, font: .subheadline.weight(.semibold))
                         .frame(idealWidth: 60, alignment: .leading)
                 } else {
@@ -346,6 +336,8 @@ struct PaintView: View {
             }
         }
         .padding(.horizontal, 14)
+        .frame(height: Self.barHeight)
+        .glassEffect(.regular, in: .capsule)
     }
 
     /// The ring fills in paint: each color's painted share of the areas, in palette order.
@@ -361,7 +353,8 @@ struct PaintView: View {
         }
     }
 
-    private func progressGroup(fraction: Double, showsTitle: Bool, showsPercent: Bool) -> some View {
+    private func progressGroup(showsTitle: Bool, showsPercent: Bool) -> some View {
+        let fraction = session.fractionComplete
         // Whole percent, rounded down: 100 only once the last area is painted.
         let percent = Int(fraction * 100)
         return HStack(spacing: 8) {
