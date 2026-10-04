@@ -11,7 +11,7 @@ baseline tools/baseline/regression.json:
   hard invariants  pbn succeeds; `pbn check` validates the template; the two runs give
                    byte-identical templates; no region under radius 2; palette distance
                    at least the floor the segmentation enforces; no label below legible
-                   size (only when pbn reports `labelsBelowLegibleSize`)
+                   size
   tolerance bands  mean ΔE at most baseline × 1.05; region count within ±15 %; template
                    bytes within ±20 %
   informational    p95 ΔE, band rings (`bandRings`: regions a smooth gradient is posterized
@@ -80,6 +80,9 @@ BOOK_REGIME = {"book": "coloringBook", "colors": 24, "detail": 0.5}
 # Auto: every sample at the settings it suggests for this painting length.
 AUTO_REGIME = {"auto": "relaxed"}
 
+BASELINED_REGIMES = REGIMES + [BOOK_REGIME]
+ALL_REGIMES = BASELINED_REGIMES + [AUTO_REGIME]
+
 # The drawing metrics of a book (`stats.json`'s `lineArt`), lifted beside the other metrics.
 BOOK_METRICS = ["enclosedAreas", "largestAreaFraction", "inkDensity", "openEndsPer1000", "interiorStrokes"]
 
@@ -105,6 +108,22 @@ def regime_name(regime):
     return f"{book}c{regime['colors']}-d{regime['detail']:g}"
 
 
+def regime_title(regime):
+    name = regime_name(regime)
+    if "auto" in regime:
+        return (f"{name}: the settings Auto suggests at {regime['auto'].capitalize()} (choices are "
+                "informational; est min < or > the time band)")
+    if "book" in regime:
+        return (f"{name}: the coloring book at {regime['colors']} colors, detail {regime['detail']:g}, "
+                "from the maps in tools/baseline/lines (areas, largest, ink, open ends and strokes are "
+                "informational)")
+    return f"{name}: {regime['colors']} colors, detail {regime['detail']:g}"
+
+
+def case_key(regime, name):
+    return f"{regime_name(regime)}/{name}"
+
+
 def chosen(result):
     """Auto's chosen settings from pbn's stats (an empty dict when absent or malformed)."""
     auto = result.get("auto")
@@ -112,15 +131,10 @@ def chosen(result):
     return settings if isinstance(settings, dict) else {}
 
 
-def palette_floor(regime, result):
-    """Minimum OKLab distance between paints. pbn reports the pipeline's own floor
-    (GenerationSettings.minPaletteDistance) as minPaletteDistanceFloor; the formula mirrors it
-    for a pbn that predates that field."""
-    reported = number(result.get("minPaletteDistanceFloor"))
-    if reported is not None:
-        return reported
-    colors = regime.get("colors") or number(chosen(result).get("colorCount")) or 24
-    return 0.04 * min(1.0, math.sqrt(24 / colors))
+def palette_floor(result):
+    """Minimum OKLab distance between paints: the pipeline's own floor
+    (GenerationSettings.minPaletteDistance) as pbn reports it, None if it did not."""
+    return number(result.get("minPaletteDistanceFloor"))
 
 
 def number(value):
@@ -133,7 +147,7 @@ def number(value):
 
 # ---------------------------------------------------------------------------- rules
 
-def invariant_failures(regime, result):
+def invariant_failures(result):
     """Hard-invariant failures of one generated case. `result` holds pbn's metrics plus the
     run's own findings (`error`, `validation`, `deterministic`)."""
     if result.get("error"):
@@ -151,14 +165,17 @@ def invariant_failures(regime, result):
         radius = number(result.get("minInscribedRadius"))
         failures.append(f"{under2:g} region(s) under radius 2"
                         + (f" (min inscribed radius {radius:.3f})" if radius is not None else ""))
-    distance = number(result.get("minPaletteDistance"))
-    floor = palette_floor(regime, result)
+    distance, floor = number(result.get("minPaletteDistance")), palette_floor(result)
     if distance is None:
         failures.append("pbn did not report minPaletteDistance")
-    elif distance < floor - FLOAT_SLACK:
+    if floor is None:
+        failures.append("pbn did not report minPaletteDistanceFloor")
+    elif distance is not None and distance < floor - FLOAT_SLACK:
         failures.append(f"palette distance {distance:.4f} below the floor {floor:.4f}")
     illegible = number(result.get("labelsBelowLegibleSize"))
-    if illegible is not None and illegible != 0:
+    if illegible is None:
+        failures.append("pbn did not report labelsBelowLegibleSize")
+    elif illegible != 0:
         failures.append(f"{illegible:g} label(s) below legible size")
     return failures
 
@@ -185,8 +202,8 @@ def band_failures(result, base):
 
 def check_case(regime, result, base):
     if "auto" in regime:
-        return invariant_failures(regime, result) + choice_failures(regime, result) + auto_baseline_failures(result, base)
-    return invariant_failures(regime, result) + band_failures(result, base)
+        return invariant_failures(result) + choice_failures(regime, result) + auto_baseline_failures(result, base)
+    return invariant_failures(result) + band_failures(result, base)
 
 
 def bounds(value):
@@ -263,6 +280,25 @@ def cell(value, ref=None, fmt="{:g}"):
     return text if ref is None else f"{text} {pct(value, ref)}"
 
 
+def template_status(result, base):
+    """Whether the template is byte-identical to the baseline's: new, same or changed."""
+    reference = base.get("templateSHA1")
+    if not reference:
+        return "new"
+    return "same" if result.get("templateSHA1") == reference else "changed"
+
+
+def paint_gap_cell(result, base):
+    """The closest pair of paints beside the floor it must clear."""
+    floor = palette_floor(result)
+    gap = cell(result.get("minPaletteDistance"), base.get("minPaletteDistance"), "{:.4f}")
+    return f"{gap} >= " + ("-" if floor is None else f"{floor:.4f}")
+
+
+def failed_row(name, columns):
+    return [name] + ["-"] * (len(columns) - 2) + ["FAIL"]
+
+
 # ASCII only: the sheets' font has no Δ or ≥.
 COLUMNS = ["sample", "regions", "mean dE", "p95 dE", "rings", "bytes", "r<2", "r<3", "min r", "paint gap",
            "colors", "ms", "template", "verdict"]
@@ -283,9 +319,7 @@ def columns(regime):
 def book_row(name, regime, result, base, failures):
     base = base or {}
     if result.get("error"):
-        return [name] + ["-"] * (len(BOOK_COLUMNS) - 2) + ["FAIL"]
-    sha = result.get("templateSHA1")
-    template = "new" if not base.get("templateSHA1") else ("same" if sha == base.get("templateSHA1") else "changed")
+        return failed_row(name, BOOK_COLUMNS)
     return [
         name,
         cell(result.get("regions"), base.get("regions"), "{:.0f}"),
@@ -297,10 +331,9 @@ def book_row(name, regime, result, base, failures):
         cell(result.get("interiorStrokes"), base.get("interiorStrokes"), "{:.0f}"),
         cell(result.get("encodedBytes"), base.get("encodedBytes"), "{:.0f}"),
         cell(result.get("regionsUnderRadius2"), fmt="{:.0f}"),
-        f"{cell(result.get('minPaletteDistance'), base.get('minPaletteDistance'), '{:.4f}')}"
-        f" >= {palette_floor(regime, result):.4f}",
+        paint_gap_cell(result, base),
         cell(result.get("totalMs"), base.get("totalMs"), "{:.0f}"),
-        template,
+        template_status(result, base),
         "FAIL" if failures else "ok",
     ]
 
@@ -313,20 +346,18 @@ def make_row(name, regime, result, base, failures):
 def auto_row(name, regime, result, base, failures):
     base = base or {}
     if result.get("error"):
-        return [name] + ["-"] * (len(AUTO_COLUMNS) - 2) + ["FAIL"]
+        return failed_row(name, AUTO_COLUMNS)
     choice = choice_text(chosen(result))
     if not base:
         was = "new"
     else:
         was = "same" if choice == choice_text(base.get("settings") or {}) else "was " + choice_text(base.get("settings"))
-    sha = result.get("templateSHA1")
-    template = "new" if not base.get("templateSHA1") else ("same" if sha == base.get("templateSHA1") else "changed")
     auto = result.get("auto") if isinstance(result.get("auto"), dict) else {}
     minutes = bounds((auto.get("bands") or {}).get("minutes") if isinstance(auto.get("bands"), dict) else None)
     regions = number(result.get("regions"))
     estimate = "-"
     if regions is not None:
-        # PaintingTime.estimate: 3 s per region.
+        # PaintingTime.secondsPerRegion: 3 s per region.
         estimate = f"{regions * 3 / 60:.0f}"
         if minutes is not None:
             estimate += " <" if regions * 3 / 60 < minutes[0] else (" >" if regions * 3 / 60 > minutes[1] else "")
@@ -338,10 +369,9 @@ def auto_row(name, regime, result, base, failures):
         cell(result.get("encodedBytes"), base.get("encodedBytes"), "{:.0f}"),
         estimate,
         cell(result.get("regionsUnderRadius2"), fmt="{:.0f}"),
-        f"{cell(result.get('minPaletteDistance'), base.get('minPaletteDistance'), '{:.4f}')}"
-        f" >= {palette_floor(regime, result):.4f}",
+        paint_gap_cell(result, base),
         cell(result.get("totalMs"), base.get("totalMs"), "{:.0f}"),
-        template,
+        template_status(result, base),
         "FAIL" if failures else "ok",
     ]
 
@@ -349,9 +379,7 @@ def auto_row(name, regime, result, base, failures):
 def row(name, regime, result, base, failures):
     base = base or {}
     if result.get("error"):
-        return [name] + ["-"] * (len(COLUMNS) - 2) + ["FAIL"]
-    sha = result.get("templateSHA1")
-    template = "new" if not base.get("templateSHA1") else ("same" if sha == base.get("templateSHA1") else "changed")
+        return failed_row(name, COLUMNS)
     return [
         name,
         cell(result.get("regions"), base.get("regions"), "{:.0f}"),
@@ -362,11 +390,10 @@ def row(name, regime, result, base, failures):
         cell(result.get("regionsUnderRadius2"), fmt="{:.0f}"),
         cell(result.get("regionsUnderRadius3"), base.get("regionsUnderRadius3"), "{:.0f}"),
         cell(result.get("minInscribedRadius"), base.get("minInscribedRadius"), "{:.3f}"),
-        f"{cell(result.get('minPaletteDistance'), base.get('minPaletteDistance'), '{:.4f}')}"
-        f" >= {palette_floor(regime, result):.4f}",
+        paint_gap_cell(result, base),
         cell(result.get("colors"), base.get("colors"), "{:.0f}"),
         cell(result.get("totalMs"), base.get("totalMs"), "{:.0f}"),
-        template,
+        template_status(result, base),
         "FAIL" if failures else "ok",
     ]
 
@@ -449,6 +476,41 @@ def auto_baseline_entry(result):
     return entry
 
 
+def load_baselines():
+    """The committed baselines' cases by key, the banded regimes' and the auto regime's
+    together; an unreadable file leaves its cases out, so they fail until --update."""
+    cases = {}
+    for path, what, scope in ((BASELINE, "baseline", "case"), (AUTO_BASELINE, "auto baseline", "auto case")):
+        try:
+            with open(path) as f:
+                loaded = json.load(f).get("cases")
+        except (OSError, ValueError) as error:
+            print(f"no usable {what} ({error}); every {scope} will fail until --update", file=sys.stderr)
+            continue
+        if isinstance(loaded, dict):
+            cases.update(loaded)
+    return cases
+
+
+def write_baselines(results, names):
+    """Rewrites both baselines from a run of the samples `names`."""
+    os.makedirs(os.path.dirname(BASELINE), exist_ok=True)
+    auto_keys = {case_key(AUTO_REGIME, name) for name in names}
+    with open(BASELINE, "w") as f:
+        json.dump({"about": "Quality baseline for tools/regression.py; regenerate with --update.",
+                   "regimes": {regime_name(r): r for r in BASELINED_REGIMES},
+                   "cases": {k: baseline_entry(results[k]) for k in sorted(results) if k not in auto_keys}},
+                  f, indent=2, sort_keys=True)
+        f.write("\n")
+    with open(AUTO_BASELINE, "w") as f:
+        json.dump({"about": "Settings Auto suggests per sample, for tools/regression.py's auto regime "
+                            "(informational); regenerate with --update.",
+                   "regime": {regime_name(AUTO_REGIME): AUTO_REGIME},
+                   "cases": {k: auto_baseline_entry(results[k]) for k in sorted(auto_keys)}},
+                  f, indent=2, sort_keys=True)
+        f.write("\n")
+
+
 def write_sheet(path, title, lines, failures, out):
     """Contact sheet: source | painted | region outlines, the palette underneath."""
     from PIL import Image, ImageDraw, ImageFont
@@ -510,22 +572,7 @@ def main(argv):
     if missing:
         print(f"missing from {LINES}: {', '.join(missing)}", file=sys.stderr)
         sys.exit(2)
-    try:
-        with open(BASELINE) as f:
-            baseline = json.load(f)
-    except (OSError, ValueError) as error:
-        print(f"no usable baseline ({error}); every case will fail until --update", file=sys.stderr)
-        baseline = {}
-    base_cases = baseline.get("cases") if isinstance(baseline.get("cases"), dict) else {}
-    try:
-        with open(AUTO_BASELINE) as f:
-            auto_baseline = json.load(f)
-    except (OSError, ValueError) as error:
-        print(f"no usable auto baseline ({error}); every auto case will fail until --update", file=sys.stderr)
-        auto_baseline = {}
-    if isinstance(auto_baseline.get("cases"), dict):
-        base_cases.update(auto_baseline["cases"])
-    regimes = REGIMES + [BOOK_REGIME, AUTO_REGIME]
+    base_cases = load_baselines()
 
     work = options.get("--out") or tempfile.mkdtemp(prefix="pbn-regression-")
     try:
@@ -540,36 +587,29 @@ def main(argv):
                 pgm = os.path.join(work, "input", os.path.splitext(file)[0] + ".pgm")
                 Image.open(os.path.join(LINES, file)).convert("L").save(pgm)
                 maps[name].append(pgm)
-        cases = [(regime, name) for regime in regimes for name in inputs]
-        key = lambda regime, name: f"{regime_name(regime)}/{name}"
+        cases = [(regime, name) for regime in ALL_REGIMES for name in inputs]
         # Two at a time: pbn is itself parallel, and concurrent runs vary the scheduling
         # the determinism check sees.
         with ThreadPoolExecutor(max_workers=2) as pool:
             outputs = list(pool.map(
                 lambda c: run_case(inputs[c[1]], c[0], os.path.join(work, regime_name(c[0]), c[1]), maps[c[1]]), cases))
-        results = {key(r, n): out for (r, n), out in zip(cases, outputs)}
+        results = {case_key(r, n): out for (r, n), out in zip(cases, outputs)}
 
         report, all_failures, verdicts = [], [], {}
-        for regime in regimes:
-            keys = [key(regime, name) for name in inputs]
+        for regime in ALL_REGIMES:
+            keys = [case_key(regime, name) for name in inputs]
             auto = "auto" in regime
             rows = []
             for k in keys:
                 # A new baseline only has to satisfy the invariants.
                 if update:
-                    failures = invariant_failures(regime, results[k]) + (choice_failures(regime, results[k]) if auto else [])
+                    failures = invariant_failures(results[k]) + (choice_failures(regime, results[k]) if auto else [])
                 else:
                     failures = check_case(regime, results[k], base_cases.get(k))
                 verdicts[k] = failures
                 all_failures += [f"{k}: {f}" for f in failures]
                 rows.append(make_row(k.split("/")[1], regime, results[k], base_cases.get(k), failures))
-            title = (f"{regime_name(regime)}: the settings Auto suggests at {regime['auto'].capitalize()} (choices are "
-                     "informational; est min < or > the time band)" if auto
-                     else f"{regime_name(regime)}: the coloring book at {regime['colors']} colors, detail "
-                          f"{regime['detail']:g}, from the maps in tools/baseline/lines (areas, largest, ink, open ends "
-                          "and strokes are informational)" if "book" in regime
-                     else f"{regime_name(regime)}: {regime['colors']} colors, detail {regime['detail']:g}")
-            report += [title, table(rows, columns(regime))]
+            report += [regime_title(regime), table(rows, columns(regime))]
             if not any(results[k].get("error") for k in keys):
                 report.append(totals(results, base_cases, keys))
             report.append("")
@@ -585,7 +625,7 @@ def main(argv):
 
         if options.get("--sheets"):
             for (regime, name) in cases:
-                k = key(regime, name)
+                k = case_key(regime, name)
                 out = os.path.join(work, regime_name(regime), name)
                 if results[k].get("error"):
                     continue
@@ -605,21 +645,7 @@ def main(argv):
                                          "baseline": base_cases.get(k), "failures": verdicts[k]}
                                      for k in results}}, f, indent=2, sort_keys=True)
         if update and not all_failures:
-            os.makedirs(os.path.dirname(BASELINE), exist_ok=True)
-            auto_keys = {key(AUTO_REGIME, name) for name in inputs}
-            with open(BASELINE, "w") as f:
-                json.dump({"about": "Quality baseline for tools/regression.py; regenerate with --update.",
-                           "regimes": {regime_name(r): r for r in REGIMES + [BOOK_REGIME]},
-                           "cases": {k: baseline_entry(results[k]) for k in sorted(results) if k not in auto_keys}},
-                          f, indent=2, sort_keys=True)
-                f.write("\n")
-            with open(AUTO_BASELINE, "w") as f:
-                json.dump({"about": "Settings Auto suggests per sample, for tools/regression.py's auto regime "
-                                    "(informational); regenerate with --update.",
-                           "regime": {regime_name(AUTO_REGIME): AUTO_REGIME},
-                           "cases": {k: auto_baseline_entry(results[k]) for k in sorted(auto_keys)}},
-                          f, indent=2, sort_keys=True)
-                f.write("\n")
+            write_baselines(results, inputs)
             print(f"baselines written to {os.path.relpath(BASELINE, ROOT)} and {os.path.relpath(AUTO_BASELINE, ROOT)}")
         elif update:
             print("baseline not written: the hard invariants must hold first")
@@ -634,15 +660,16 @@ def main(argv):
 def self_test():
     """Exercises the comparison rules on synthetic metrics."""
     regime = {"colors": 150, "detail": 1.0}
-    floor = palette_floor(regime, {})
+    floor = 0.02
     base = {"regions": 1000, "meanDeltaE": 0.02, "p95DeltaE": 0.05, "encodedBytes": 2_000_000, "colors": 140,
-            "regionsUnderRadius3": 50, "minInscribedRadius": 2.2, "minPaletteDistance": 0.0162, "totalMs": 400.0,
+            "regionsUnderRadius3": 50, "minInscribedRadius": 2.2, "minPaletteDistance": 0.0205, "totalMs": 400.0,
             "bandRings": 100, "templateSHA1": "a" * 40}
-    good = dict(base, regionsUnderRadius2=0, validation="valid edges 0", deterministic=True,
-                templateSHA1="a" * 40, width=1152, height=768, someFutureMetric=[1, 2])
+    good = dict(base, regionsUnderRadius2=0, minPaletteDistanceFloor=floor, labelsBelowLegibleSize=0,
+                validation="valid edges 0", deterministic=True, templateSHA1="a" * 40, width=1152, height=768,
+                someFutureMetric=[1, 2])
     checks = 0
 
-    def expect(changes, failing, base_entry=base, regime=regime):
+    def expect(changes, failing, base_entry=base):
         nonlocal checks
         result = dict(good, **changes)
         failures = check_case(regime, result, base_entry)
@@ -674,15 +701,16 @@ def self_test():
     expect({"regionsUnderRadius2": 1}, True)
     expect({"minPaletteDistance": floor}, False)
     expect({"minPaletteDistance": floor - 1e-4}, True)
-    assert expect({"minPaletteDistance": 0.03}, True, regime={"colors": 24, "detail": 0.5})
-    expect({"minPaletteDistance": 0.04}, False, regime={"colors": 12, "detail": 0.0})
-    # The floor pbn reports wins over the formula.
-    expect({"minPaletteDistanceFloor": 0.02}, True)
+    expect({"minPaletteDistance": 0.03, "minPaletteDistanceFloor": 0.04}, True)
+    expect({"minPaletteDistance": 0.04, "minPaletteDistanceFloor": 0.04}, False)
+    # The floor is the one pbn reports; without it the distance has nothing to clear.
+    expect({"minPaletteDistanceFloor": 0.021}, True)
     expect({"minPaletteDistanceFloor": 0.01, "minPaletteDistance": 0.012}, False)
-    expect({"minPaletteDistanceFloor": None, "minPaletteDistance": 0.012}, True)
+    assert "minPaletteDistanceFloor" in expect({"minPaletteDistanceFloor": None, "minPaletteDistance": 0.012}, True)[0]
+    assert "minPaletteDistanceFloor" in expect({"minPaletteDistanceFloor": "x"}, True)[0]
     expect({"labelsBelowLegibleSize": 0}, False)
     expect({"labelsBelowLegibleSize": 3}, True)
-    expect({"labelsBelowLegibleSize": "n/a"}, False)
+    expect({"labelsBelowLegibleSize": "n/a"}, True)
     expect({"deterministic": False}, True)
     expect({"validation": "INVALID edges 2"}, True)
     expect({"validation": None}, True)
@@ -691,6 +719,9 @@ def self_test():
     del good["regionsUnderRadius2"]
     assert "regionsUnderRadius2" in expect({}, True)[0]
     good["regionsUnderRadius2"] = 0
+    del good["labelsBelowLegibleSize"]
+    assert "labelsBelowLegibleSize" in expect({}, True)[0]
+    good["labelsBelowLegibleSize"] = 0
     expect({"meanDeltaE": None}, True)
     expect({"regions": "many"}, True)
     expect({"regions": float("nan")}, True)
@@ -699,8 +730,8 @@ def self_test():
     expect({}, True, base_entry={k: v for k, v in base.items() if k != "encodedBytes"})
     expect({}, False, base_entry=dict(base, meanDeltaE=0.0205, unknown="x"))
     # Invariants alone (--update) ignore the bands; baselines not produced by a run are stale.
-    assert invariant_failures(regime, dict(good, regions=5000)) == []
-    assert invariant_failures(regime, dict(good, regionsUnderRadius2=2))
+    assert invariant_failures(dict(good, regions=5000)) == []
+    assert invariant_failures(dict(good, regionsUnderRadius2=2))
     assert stale_entries({"c24-d0.5/a": {}, "c24-d0.5/b": {}}, {"c24-d0.5/a": {}}) == ["c24-d0.5/b"]
     checks += 3
     # Reporting helpers.
@@ -708,18 +739,22 @@ def self_test():
     assert cell(None) == "-" and cell(3, 2, "{:.0f}") == "3 +50.0%"
     assert regime_name({"colors": 24, "detail": 0.5}) == "c24-d0.5"
     assert regime_name({"colors": 12, "detail": 0.0}) == "c12-d0"
-    assert abs(palette_floor({"colors": 24}, {}) - 0.04) < 1e-12
-    assert abs(palette_floor({"colors": 150}, {}) - 0.016) < 1e-12
-    assert palette_floor({"colors": 150}, {"minPaletteDistanceFloor": 0.02}) == 0.02
-    assert abs(palette_floor({"colors": 150}, {"minPaletteDistanceFloor": "x"}) - 0.016) < 1e-12
-    checks += 7
+    assert palette_floor({"minPaletteDistanceFloor": 0.02}) == 0.02
+    assert palette_floor({}) is None and palette_floor({"minPaletteDistanceFloor": "x"}) is None
+    assert template_status(good, base) == "same" and template_status(dict(good, templateSHA1="b" * 40), base) == "changed"
+    assert template_status(good, {}) == "new"
+    assert failed_row("x", COLUMNS) == ["x"] + ["-"] * (len(COLUMNS) - 2) + ["FAIL"]
+    assert regime_title(regime) == "c150-d1: 150 colors, detail 1"
+    assert case_key(regime, "x") == "c150-d1/x"
+    checks += 8
     # Baseline-held metrics show their delta.
-    cells = dict(zip(COLUMNS, row("x", regime, dict(good, minInscribedRadius=2.09, colors=147, bandRings=105,
-                                                     minPaletteDistanceFloor=0.016), base, [])))
+    cells = dict(zip(COLUMNS, row("x", regime, dict(good, minInscribedRadius=2.09, colors=147, bandRings=105),
+                                  base, [])))
     assert cells["min r"] == "2.090 -5.0%" and cells["colors"] == "147 +5.0%", cells
     assert cells["rings"] == "105 +5.0%", cells
-    assert cells["paint gap"] == "0.0162 = >= 0.0160", cells
-    checks += 1
+    assert cells["paint gap"] == "0.0205 = >= 0.0200", cells
+    assert paint_gap_cell(dict(good, minPaletteDistanceFloor=None), base) == "0.0205 = >= -"
+    checks += 2
     table([row("x", regime, good, base, [])])
     totals({"k": good}, {"k": base}, ["k"])
     totals({"k": good}, {}, ["k"])
@@ -799,8 +834,7 @@ def self_test():
     assert cells["baseline"] == "was 30c d0.6 s0.4" and cells["est min"] == "5 <", cells
     assert dict(zip(AUTO_COLUMNS, auto_row("x", auto_regime, auto_good, None, [])))["baseline"] == "new"
     assert regime_name(auto_regime) == "auto-relaxed"
-    assert abs(palette_floor(auto_regime, {"auto": decision}) - 0.04) < 1e-12
-    assert abs(palette_floor(auto_regime, {}) - 0.04) < 1e-12
+    assert palette_floor(auto_good) == 0.04 and palette_floor({"auto": decision}) is None
     table([auto_row("x", auto_regime, auto_good, auto_base, [])], AUTO_COLUMNS)
     checks += 5
     print(f"self-test passed ({checks} checks)")
