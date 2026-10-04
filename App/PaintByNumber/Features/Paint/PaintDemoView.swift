@@ -6,7 +6,7 @@ import os
 import simd
 
 /// Demo scenarios for the painting screen, deterministic for CI screenshots. The template is
-/// generated from a bundled photo (append `-mosaic` for the synthetic test template):
+/// generated from a bundled photo:
 ///
 /// - `paint`: fresh canvas, fit to screen
 /// - `paint-progress`: ~55 % painted color by color, the color in progress selected
@@ -32,7 +32,7 @@ import simd
 ///   caption and completion bar as translations would stress them
 ///
 /// Layered line art from the real pipeline (the stand-in edge map `SyntheticTemplate.edgeMap`
-/// for the learned detector; `-mosaic`: `SyntheticTemplate.layered`) at the default Line Appearance:
+/// for the learned detector) at the default Line Appearance:
 /// - `paint-layered`: fresh canvas, fit to screen (the 1× look: outlines, faint texture)
 /// - `paint-layered-progress`: ~45 % painted, the color in progress selected (painted lines
 ///   dissolve, the selected color's cells are outlined boldly whatever their layer)
@@ -74,25 +74,21 @@ struct PaintDemoView: View {
             }
         }
         .task {
-            let synthetic = scenario.hasSuffix("-mosaic")
-            let base = synthetic ? String(scenario.dropLast("-mosaic".count)) : scenario
-            let layered = base.hasPrefix("paint-layered"), book = base.hasPrefix("paint-book")
+            let layered = scenario.hasPrefix("paint-layered"), book = scenario.hasPrefix("paint-book")
             let photo = layered ? "santa-fe-freight" : book ? "red-fox" : "parrots"
-            var template: Template?
-            if synthetic {
-                template = nil
-            } else if layered || book {
+            let template: Template?
+            if layered || book {
                 template = await Self.drawnTemplate(photo: photo, style: book ? .coloringBook : .layered)
             } else {
                 template = await Self.template(photo: photo)
             }
             // Titles are the person's own words, which pseudo-localization doesn't lengthen.
-            let title = base.hasSuffix("-long-text")
+            let title = scenario.hasSuffix("-long-text")
                 ? "Two Parrots on a Branch in the Morning Light"
                 : (template == nil ? "Mosaic" : (layered ? "Freight Train" : book ? "Red Fox" : "Parrots"))
-            let mosaic = layered ? SyntheticTemplate.layered(SyntheticTemplate.make()) : SyntheticTemplate.make()
             demo = Demo(
-                scenario: base, template: template ?? mosaic, title: title, photo: template == nil ? nil : photo)
+                scenario: scenario, template: template ?? SyntheticTemplate.make(), title: title,
+                photo: template == nil ? nil : photo)
         }
     }
 
@@ -142,7 +138,8 @@ struct PaintDemoView: View {
 private final class Demo {
     let session: PaintingSession
     let title: String
-    /// The bundled photo the template was made from; nil for the synthetic mosaic.
+    /// The bundled photo the template was made from; nil for the synthetic mosaic that stands
+    /// in when generating from it failed.
     let photo: String?
     var camera: CanvasCamera?
     var fillDurationScale: Float = 1
