@@ -401,7 +401,7 @@ them to Core ML and record where they come from.
 
 ### ControlNet HED
 
-Finds the lines of a photo for layered line art.
+Finds the outlines of a photo, for coloring books and layered line art.
 
 Lvmin Zhang (lllyasviel), ControlNet: ControlNetHED.pth from lllyasviel/Annotators
 

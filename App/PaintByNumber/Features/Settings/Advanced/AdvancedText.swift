@@ -200,7 +200,7 @@ nonisolated extension AdvancedControl {
         switch self {
         case .style:
             String(localized: "advanced.control.style", defaultValue: "Line Style",
-                   comment: "Settings › Advanced › Line Art: name of the choice between Classic and Layered lines")
+                   comment: "Settings › Advanced › Line Art: name of the choice between the Classic, Layered and Coloring Book line styles")
         case .outlineThreshold:
             String(localized: "advanced.control.outlineThreshold", defaultValue: "Outlines From",
                    comment: "Settings › Advanced › Line Art: slider for the edge strength from which a line is an outline")

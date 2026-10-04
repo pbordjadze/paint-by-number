@@ -92,7 +92,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finds the lines of a photo for layered line art."
+            "value" : "Finds the outlines of a photo, for coloring books and layered line art."
           }
         }
       }
@@ -814,7 +814,7 @@
       }
     },
     "advanced.control.style" : {
-      "comment" : "Settings › Advanced › Line Art: name of the choice between Classic and Layered lines",
+      "comment" : "Settings › Advanced › Line Art: name of the choice between the Classic, Layered and Coloring Book line styles",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
