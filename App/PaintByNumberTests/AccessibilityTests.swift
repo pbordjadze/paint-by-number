@@ -18,7 +18,7 @@ struct PaintSpeechTests {
         #expect(zip(scales, scales.dropFirst()).allSatisfy { $0 <= $1 })
     }
 
-    /// At the default size the palette keeps its original geometry.
+    /// At the default size (scale 1) swatches are 40 pt on a 56 pt pitch.
     @Test func standardPaletteMetrics() {
         let metrics = PaletteMetrics.standard
         #expect(metrics.pitch == 56)

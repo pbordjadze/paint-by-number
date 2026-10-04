@@ -16,7 +16,7 @@ struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
     var onClose: (() -> Void)?
-    /// Where the canvas first looks (demos, restored sessions); nil = fit.
+    /// Where the canvas first looks (demo scenarios); nil = fit.
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
     var fillDurationScale: Float = 1

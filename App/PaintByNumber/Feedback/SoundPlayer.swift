@@ -1,7 +1,8 @@
 import AVFoundation
 import Foundation
 
-/// Soft, musical feedback sounds, synthesized at launch (no audio assets).
+/// Soft, musical feedback sounds, synthesized the first time they're needed (when a painting
+/// screen first appears, or at the first sound; no audio assets).
 ///
 /// Painting plays one tune (`PaintingMelody`), a note per fill whatever the color, on a
 /// pentatonic scale so its kalimba-like notes can never clash. Uses the ambient session

@@ -1,7 +1,7 @@
 import Foundation
 import PaintCore
 
-/// How many lines the palette wraps into (Settings › Painting and the painting screen's More ›
+/// How many lines the palette wraps into (Settings › Palette and the painting screen's More ›
 /// Palette): rows at the bottom, columns along the trailing edge of a landscape iPad.
 nonisolated enum PaletteRows: Int, CaseIterable, Identifiable, Sendable {
     /// A few lines on roomy screens (three at the bottom, two beside), one on compact ones.
@@ -28,7 +28,7 @@ nonisolated enum PaletteRows: Int, CaseIterable, Identifiable, Sendable {
     var isFixed: Bool { self != .auto && self != .all }
 }
 
-/// The order of the palette's swatches (Settings › Painting and the painting screen's More ›
+/// The order of the palette's swatches (Settings › Palette and the painting screen's More ›
 /// Palette). Custom is arranged per painting (`PaletteArrangeSheet`); a painting not arranged
 /// yet goes by number.
 nonisolated enum PaletteOrder: String, CaseIterable, Identifiable, Sendable {

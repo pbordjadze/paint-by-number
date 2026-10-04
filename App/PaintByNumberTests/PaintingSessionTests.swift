@@ -177,17 +177,12 @@ struct PaintingSessionTests {
     }
 
     /// Zoomed far out, the finger covers a large part of the canvas; a drag across it must
-    /// still keep up: a stroke costs what its brush sweeps. Each of these 300-unit strokes
-    /// scans 2.8 times the pixels of a single stamp of the (capped) brush; stamping the disc
-    /// every canvas unit, as drags used to, scans 304 stamps' worth.
-    ///
-    /// So each stroke is timed against a stamp of the same brush taken just before it, on a
-    /// second session, not against a wall-clock budget: this Debug-build test shares the CPU
-    /// with the rest of the parallel run. The zigzag took 1.0 to 1.4 s in four CI runs and has
-    /// gone past a 1.5 s budget under load (1.57 s, 1.69 s), but load slows a stroke and the
-    /// stamp beside it alike: the median of the 40 ratios stayed between 2.4 and 3.0, single
-    /// pairs reaching 6.7, and the median ignores a pause that hits one of a pair only. Its
-    /// bound of 10 is far from both that and the old 300.
+    /// still keep up, since a stroke costs what its brush sweeps: each of these 300-unit
+    /// strokes scans 2.8 times the pixels of one stamp of the (capped) brush, where stamping
+    /// the disc every canvas unit would scan about 300 stamps' worth. This Debug-build test
+    /// shares the CPU with the parallel run, so each stroke is timed against a stamp of the
+    /// same brush taken just before it on a second session, which load slows alike: the median
+    /// of the 40 ratios (measured 2.4 to 3.0, single pairs up to 6.7) must stay under 10.
     @Test func zoomedOutDragIsFast() throws {
         let big = SyntheticTemplate.make(.init(width: 2048, height: 1536, columns: 24, rows: 18, seed: 11))
         let session = PaintingSession(template: big)

@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings › About: the app version and the acknowledgements; Settings › Paper.
+/// Settings: About (version, acknowledgements), Paper, Painting Length and Color Names.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {

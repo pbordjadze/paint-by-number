@@ -5,7 +5,7 @@ import TipKit
 
 /// Swatch geometry at a Dynamic Type size. Numerals grow with text up to 1.4×, so the palette
 /// keeps its place on screen at accessibility sizes; the Large Content Viewer covers the rest.
-/// At the default size every value equals the original fixed layout.
+/// At the default size (scale 1) swatches are 40 pt on a 56 pt pitch.
 nonisolated struct PaletteMetrics: Equatable, Sendable {
     let scale: CGFloat
 
