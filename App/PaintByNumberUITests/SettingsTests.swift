@@ -48,10 +48,13 @@ final class SettingsTests: XCTestCase {
             XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Paper picker has no \(choice)")
         }
         app.buttons["Dark"].firstMatch.tap()
-        let chosen = NSPredicate(format: "label CONTAINS 'Dark' OR value CONTAINS 'Dark'")
-        let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5)
-        XCTAssertEqual(result, .completed, "Choosing Dark didn't change the picker: \(describe(picker))")
+        XCTAssertTrue(shows(picker, "Dark"), "Choosing Dark didn't change the picker: \(describe(picker))")
         attachScreenshot(of: app, named: "settings-paper-dark")
+        // The choice is stored in the simulator's defaults: put it back for the other tests.
+        picker.tap()
+        XCTAssertTrue(app.buttons["Light"].waitForExistence(timeout: 5))
+        app.buttons["Light"].firstMatch.tap()
+        XCTAssertTrue(shows(picker, "Light"), "Choosing Light didn't change the picker: \(describe(picker))")
     }
 
     /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps
@@ -72,9 +75,7 @@ final class SettingsTests: XCTestCase {
             XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Painting Length picker has no \(choice)")
         }
         app.buttons["Quick"].firstMatch.tap()
-        let chosen = NSPredicate(format: "label CONTAINS 'Quick' OR value CONTAINS 'Quick'")
-        let result = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5)
-        XCTAssertEqual(result, .completed, "Choosing Quick didn't change the picker: \(describe(picker))")
+        XCTAssertTrue(shows(picker, "Quick"), "Choosing Quick didn't change the picker: \(describe(picker))")
         let quickFooter = NSPredicate(format: "label == 'Suggested settings aim for about 15 minutes of painting.'")
         XCTAssertEqual(
             XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: quickFooter, object: footer)], timeout: 5), .completed,
@@ -85,11 +86,7 @@ final class SettingsTests: XCTestCase {
         picker.tap()
         XCTAssertTrue(app.buttons["Relaxed"].waitForExistence(timeout: 5))
         app.buttons["Relaxed"].firstMatch.tap()
-        XCTAssertEqual(
-            XCTWaiter.wait(for: [XCTNSPredicateExpectation(
-                predicate: NSPredicate(format: "label CONTAINS 'Relaxed' OR value CONTAINS 'Relaxed'"), object: picker)],
-                timeout: 5),
-            .completed)
+        XCTAssertTrue(shows(picker, "Relaxed"))
     }
 
     /// The picker's label and value together: how a menu picker's row reads.
