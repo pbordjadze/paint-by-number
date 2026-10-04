@@ -316,7 +316,7 @@ final class CreateModel {
 
     /// Moves the sliders to the suggestion and generates it: the winner as a draft first unless
     /// it is the candidate already on screen and drawn as it will be (suggestion drafts have no
-    /// edge map, so layered line art is drafted again), then at full resolution.
+    /// edge map, so line art other than classic is drafted again), then at full resolution.
     private func adopt(_ decision: AutoDecision) {
         self.decision = decision
         apply(decision.settings)

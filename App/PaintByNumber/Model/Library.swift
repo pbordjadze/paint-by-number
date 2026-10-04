@@ -21,8 +21,9 @@ nonisolated enum OpenNotice: Equatable, Sendable {
 }
 
 /// The user's artworks. Metadata lives in memory (loaded at launch, it is small); templates
-/// are loaded on demand. All file work runs off the main actor, serialized per artwork so
-/// writes land in the order they were made.
+/// are loaded on demand. File work runs off the main actor (`Background.run`), serialized per
+/// artwork so writes land in the order they were made; only the launch-time scan in `init`
+/// runs on it.
 @Observable
 final class Library {
     /// An artwork still being generated in the background (first-launch samples).
@@ -397,8 +398,8 @@ final class Library {
     /// Generates an artwork's template again from its photo (`source.jpg`, or the bundled
     /// sample) with `settings`, off the main actor, and swaps it in atomically. Progress
     /// carries over by painted area when the old template is still readable; otherwise the
-    /// painting starts fresh. Recovers damaged paintings, and is the entry point for
-    /// re-tuning an artwork's settings. `regenerating[id]` reports progress meanwhile.
+    /// painting starts fresh. Recovers damaged paintings (`PaintingRecoveryView`, with the
+    /// artwork's own `settings`). `regenerating[id]` reports progress meanwhile.
     func regenerate(artwork id: UUID, settings: GenerationSettings) async throws -> PaintingDocument {
         guard let artwork = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
         guard !artwork.needsNewerApp else { throw OpenError.needsNewerApp }

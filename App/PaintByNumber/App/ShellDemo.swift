@@ -16,7 +16,7 @@ import PaintCore
 /// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
 ///   with every localized string twice as long.
 /// - `gallery-empty`: the empty state.
-/// - `create`, `create-dark`: the photo picker step of the create flow.
+/// - `create`: the photo picker step of the create flow.
 /// - `create-samples`, `create-samples-long-text`: the same step on its Samples pane (iPhone;
 ///   iPad shows both); the second with every localized string twice as long.
 /// - `create-samples-paintings`, `create-samples-photographs`: the Samples pane scrolled to its
@@ -28,8 +28,8 @@ import PaintCore
 ///   suggestion (the chip offers Reset to Suggested); the second with every localized string
 ///   twice as long.
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
-///   Numbers"): the create flow on that photo's preview, titled with the file's name. The file is
-///   a bundled sample written to the temporary directory at launch (`DemoMode.openFileURL`).
+///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
+///   is a bundled sample written to the temporary directory at launch (`DemoMode.openFileURL`).
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `settings-advanced`, `settings-advanced-dark`, `settings-advanced-long-text`: Settings ›
@@ -40,8 +40,8 @@ import PaintCore
 ///   2×, scrolled to Line Appearance.
 /// - `settings-advanced-tuned`: the same with three pipeline multipliers moved, previewing the
 ///   red fox, scrolled to Pipeline with every effect measured.
-/// - `settings-advanced-effects`: the same at the defaults, scrolled to Sounds & Effects with
-///   the color finished jingle switched off.
+/// - `settings-advanced-effects`: the same at the defaults, scrolled to Sounds with the color
+///   finished jingle switched off.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -69,7 +69,7 @@ enum ShellDemo: Equatable {
         case "gallery-damaged": .galleryDamaged
         case "gallery-timelapse": .galleryTimelapse
         case "gallery-timelapse-long-text": .galleryTimelapseLongText
-        case "create", "create-dark": .create
+        case "create": .create
         case "create-samples", "create-samples-long-text": .createSamples
         case "create-samples-paintings": .createSamplesPaintings
         case "create-samples-photographs": .createSamplesPhotographs

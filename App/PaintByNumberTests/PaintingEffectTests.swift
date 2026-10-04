@@ -2,7 +2,8 @@ import Foundation
 import Testing
 @testable import PaintByNumber
 
-/// Settings › Advanced › Sounds & Effects: every effect starts on and follows its own switch.
+/// Settings › Advanced › Sounds, Haptics and Sparkles & Shine: every effect starts on and follows
+/// its own switch.
 @MainActor
 struct PaintingEffectTests {
     @Test func everyEffectStartsOnAndFollowsItsOwnSwitch() throws {

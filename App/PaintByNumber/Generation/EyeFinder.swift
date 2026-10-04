@@ -4,10 +4,10 @@ import os
 import simd
 import Vision
 
-/// People's eyes, for layered line art to outline whatever their contrast (the owner: "eyes
-/// NEED to be detailed and NEED to be outlined"). From Vision's face landmarks: each eye's
-/// contour, smoothed into an almond, and its iris, a circle around the pupil sized from the
-/// eye's width and clipped to the contour (the lids cover the rest of it).
+/// People's eyes, which layered and coloring-book line art outline whatever their contrast: a
+/// face reads wrong when its eyes dissolve into the skin. From Vision's face landmarks: each
+/// eye's contour, smoothed into an almond, and its iris, a circle around the pupil sized from
+/// the eye's width and clipped to the contour (the lids cover the rest of it).
 ///
 /// Polygons are closed (the last point joins the first) and normalized to the photo (0...1,
 /// origin top-left), contours first, then irises, each list ordered by position (top to
