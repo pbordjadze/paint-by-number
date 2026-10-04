@@ -59,24 +59,13 @@ struct LineAppearanceSection: View {
     }
 
     private var presets: some View {
-        let current = LineAppearancePreset.matching(model.appearance)
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(LineAppearancePreset.allCases) { preset in
-                    PresetCapsule(
-                        title: preset.name, summary: preset.summary, isSelected: current == preset,
-                        identifier: "advanced-preset-\(preset.rawValue)"
-                    ) { model.apply(preset) }
-                }
-            }
-            Text(current?.summary ?? String(
+        PresetRow(
+            presets: LineAppearancePreset.allCases, current: LineAppearancePreset.matching(model.appearance),
+            name: { $0.name }, summary: { $0.summary },
+            customSummary: String(
                 localized: "advanced.preset.custom.summary", defaultValue: "Your own values for each layer.",
-                comment: "Settings › Advanced › Line Appearance: under the presets when the layers match none of them"))
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.vertical, 4)
+                comment: "Settings › Advanced › Line Appearance: under the presets when the layers match none of them"),
+            apply: { model.apply($0) })
     }
 
     private var layerPicker: some View {

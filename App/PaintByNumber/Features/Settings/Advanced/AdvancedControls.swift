@@ -236,30 +236,46 @@ struct AdvancedToggleRow: View {
     }
 }
 
+/// A choice from a menu: its name, a line on the chosen option and its effect.
+struct AdvancedChoiceRow<Option: Hashable>: View {
+    let control: AdvancedControl
+    @Binding var selection: Option
+    let options: [Option]
+    let name: (Option) -> String
+    let summary: String
+    let effect: AdvancedSettingsModel.Effect
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker(selection: $selection) {
+                ForEach(options, id: \.self) { option in
+                    Text(name(option)).tag(option)
+                }
+            } label: {
+                Text(control.title)
+                    .font(.subheadline.weight(.semibold))
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("advanced-control-\(control.rawValue)")
+            Text(summary)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .contentTransition(.opacity)
+            EffectLine(effect: effect)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 /// Which of the two bundled models the lines come from (`LineArtSettings.Detector`).
 struct DetectorRow: View {
     @Bindable var model: AdvancedSettingsModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Picker(selection: $model.lineArt.detector) {
-                ForEach(LineArtSettings.Detector.allCases, id: \.self) { option in
-                    Text(option.name).tag(option)
-                }
-            } label: {
-                Text(AdvancedControl.detector.title)
-                    .font(.subheadline.weight(.semibold))
-            }
-            .pickerStyle(.menu)
-            .accessibilityIdentifier("advanced-control-detector")
-            Text(model.lineArt.detector.summary)
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.opacity)
-            EffectLine(effect: model.effect(of: .detector))
-        }
-        .padding(.vertical, 2)
+        AdvancedChoiceRow(
+            control: .detector, selection: $model.lineArt.detector, options: LineArtSettings.Detector.allCases,
+            name: { $0.name }, summary: model.lineArt.detector.summary, effect: model.effect(of: .detector))
     }
 }
 
@@ -272,25 +288,10 @@ struct SamePaintRow: View {
         let style = model.lineArt.style
         let book = style == .coloringBook
         let options: [LineArtSettings.SamePaint] = book ? [.joinTexture, .joinAllButOutlines] : LineArtSettings.SamePaint.allCases
-        VStack(alignment: .leading, spacing: 6) {
-            Picker(selection: selection(book: book)) {
-                ForEach(options, id: \.self) { option in
-                    Text(option.name(in: style)).tag(option)
-                }
-            } label: {
-                Text(AdvancedControl.samePaint.title)
-                    .font(.subheadline.weight(.semibold))
-            }
-            .pickerStyle(.menu)
-            .accessibilityIdentifier("advanced-control-samePaint")
-            Text(model.lineArt.samePaint.summary(in: style))
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.opacity)
-            EffectLine(effect: model.effect(of: .samePaint))
-        }
-        .padding(.vertical, 2)
+        AdvancedChoiceRow(
+            control: .samePaint, selection: selection(book: book), options: options,
+            name: { $0.name(in: style) }, summary: model.lineArt.samePaint.summary(in: style),
+            effect: model.effect(of: .samePaint))
     }
 
     /// In a coloring book Always Split and Join Across Texture are one choice, shown as the
@@ -535,29 +536,45 @@ struct PresetCapsule: View {
     }
 }
 
-/// Presets of the whole screen (`AdvancedPreset`), the one the settings match marked, with a
-/// line on what it does.
-struct AdvancedPresetRow: View {
-    let model: AdvancedSettingsModel
+/// A row of presets, the one the settings match marked, with a line on what it does.
+struct PresetRow<Preset: RawRepresentable & Identifiable & Hashable>: View where Preset.RawValue == String {
+    let presets: [Preset]
+    let current: Preset?
+    let name: (Preset) -> String
+    let summary: (Preset) -> String
+    /// Under the presets when the settings match none of them.
+    let customSummary: String
+    var apply: (Preset) -> Void
 
     var body: some View {
-        let current = model.currentPreset
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                ForEach(AdvancedPreset.allCases) { preset in
+                ForEach(presets) { preset in
                     PresetCapsule(
-                        title: preset.name, summary: preset.summary, isSelected: current == preset,
+                        title: name(preset), summary: summary(preset), isSelected: current == preset,
                         identifier: "advanced-preset-\(preset.rawValue)"
-                    ) { model.apply(preset) }
+                    ) { apply(preset) }
                 }
             }
-            Text(current?.summary ?? String(
-                localized: "advanced.presets.custom.summary", defaultValue: "Your own mix of settings.",
-                comment: "Settings › Advanced › Presets: under the presets when the settings match none of them"))
+            Text(current.map(summary) ?? customSummary)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.vertical, 4)
+    }
+}
+
+/// Presets of the whole screen (`AdvancedPreset`).
+struct AdvancedPresetRow: View {
+    let model: AdvancedSettingsModel
+
+    var body: some View {
+        PresetRow(
+            presets: AdvancedPreset.allCases, current: model.currentPreset, name: { $0.name }, summary: { $0.summary },
+            customSummary: String(
+                localized: "advanced.presets.custom.summary", defaultValue: "Your own mix of settings.",
+                comment: "Settings › Advanced › Presets: under the presets when the settings match none of them"),
+            apply: { model.apply($0) })
     }
 }
