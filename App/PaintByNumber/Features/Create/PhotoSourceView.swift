@@ -10,6 +10,12 @@ import UIKit
 /// windows switch between it and the samples with a segmented control; wide windows show the
 /// samples in a scrolling column beside it, in two sections: paintings, then photographs.
 /// "Browse All…" presents the full system picker.
+///
+/// On compact widths the picker runs edge to edge: inset from both the window's left and top
+/// edge, the embedded picker's photo grid ignores taps on iPhone for its first ten seconds or
+/// so (its bar takes them at once), measured on the iOS 26 simulator, where every layout that
+/// keeps the picker flush with one of those edges picks a photo on the first tap. Wide windows
+/// (and iPad in general) don't suffer it and keep the picker's card.
 struct PhotoSourceView: View {
     enum Pane: Hashable { case photos, samples }
 
@@ -50,13 +56,12 @@ struct PhotoSourceView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 4)
-            if !isWide { sourceTabs }
+                .padding(.horizontal, horizontalPadding + 4)
+            if !isWide { sourceTabs.padding(.horizontal, horizontalPadding) }
             panes
         }
-        .padding(.horizontal, horizontalPadding)
         .padding(.top, 4)
-        .padding(.bottom, isWide ? 24 : 12)
+        .padding(.bottom, isWide ? 24 : 0)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Theme.paper)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
@@ -113,6 +118,8 @@ struct PhotoSourceView: View {
     /// One layout for both widths, so the picker keeps its identity (and its loaded grid and
     /// scroll position) across rotation and resizing. On compact widths the samples stack on
     /// top of the hidden picker; they are never an ancestor of it, and it takes no touches.
+    /// The page's horizontal padding is the panes' own: wide windows inset both, compact ones
+    /// only the samples, so the picker spans the window.
     private var panes: some View {
         let layout = isWide
             ? AnyLayout(HStackLayout(alignment: .top, spacing: paneSpacing))
@@ -125,8 +132,10 @@ struct PhotoSourceView: View {
             if showsSamples {
                 samplesPane
                     .frame(width: isWide ? samplesWidth : nil)
+                    .padding(.horizontal, isWide ? 0 : horizontalPadding)
             }
         }
+        .padding(.horizontal, isWide ? horizontalPadding : 0)
     }
 
     private var photosPane: some View {
@@ -150,11 +159,13 @@ struct PhotoSourceView: View {
             .photosPickerAccessoryVisibility(.hidden, edges: .bottom)
             .accessibilityIdentifier("library-picker")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Theme.surface)
-            .clipShape(.rect(cornerRadius: Theme.cardRadius, style: .continuous))
+            // The card only on wide windows (see the type's doc comment), through the same
+            // modifiers in both cases so the picker keeps its identity when the width changes.
+            .background(Theme.surface.opacity(isWide ? 1 : 0))
+            .clipShape(.rect(cornerRadius: isWide ? Theme.cardRadius : 0, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
-                    .strokeBorder(Theme.hairline, lineWidth: 0.5)
+                    .strokeBorder(Theme.hairline, lineWidth: isWide ? 0.5 : 0)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)

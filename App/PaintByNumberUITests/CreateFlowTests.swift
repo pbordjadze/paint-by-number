@@ -129,6 +129,10 @@ final class CreateFlowTests: XCTestCase {
         } else {
             XCTAssertTrue(sourceControl(app).exists)
             XCTAssertTrue(sourceControl(app).buttons["Photos"].isSelected)
+            // Edge to edge: inset from the left and the top, the picker's grid ignores taps on
+            // iPhone for its first seconds.
+            XCTAssertEqual(picker.frame.minX, window.minX, accuracy: 1, "The picker isn't flush with the window's left edge")
+            XCTAssertEqual(picker.frame.width, window.width, accuracy: 1, "The picker doesn't span the window")
         }
         attachScreenshot(app, named: "library-layout")
     }
@@ -280,9 +284,9 @@ final class CreateFlowTests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// On the iPhone simulator the system photo picker ignores synthesized taps on its photos
-    /// and its sheet's Cancel (screen recordings show the taps landing on them; the same flows
-    /// pass on iPad). These paths are verified on iPad and on a device.
+    /// On the iPhone simulator the system picker's sheet ignores a synthesized tap on its Cancel
+    /// (screen recordings show the tap landing on it; the same flow passes on iPad). Verified on
+    /// iPad and on a device.
     @MainActor
     private func skipOnPhoneSimulator() throws {
         try XCTSkipIf(!isPad, "The system photo picker ignores synthesized taps on the iPhone simulator")
@@ -353,21 +357,22 @@ final class CreateFlowTests: XCTestCase {
         return cancel
     }
 
-    /// Picks the inline picker's first photo and waits for `opens`. On a phone the picker's
-    /// accessibility tree can lag its screen (it listed a banner that wasn't showing), so when
-    /// the tap by reported frames opens nothing, it taps where the first photo sits.
+    /// Picks the inline picker's first photo and waits for `opens`. A tap that opens nothing is
+    /// kept as a screenshot and tree (a selection badge without a preview says it reached the
+    /// picker) and tried once more at the same point: a picker inset from the window's left and
+    /// top edge took its first seconds to take taps on iPhone, which the layout now avoids.
     @MainActor
     private func pickFirstInlinePhoto(_ app: XCUIApplication, picker: XCUIElement, opens: XCUIElement) throws -> Bool {
-        try tapFirstPhoto(app, in: picker.frame)
+        let point = try tapFirstPhoto(app, in: picker.frame)
         if opens.waitForExistence(timeout: 15) { return true }
-        // What the tap did: a selection badge without a preview says it reached the picker.
         attachScreenshot(app, named: "inline-tap-missed")
         attachTree(app, named: "inline-tap-missed-tree")
-        picker.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.25)).tap()
-        return opens.waitForExistence(timeout: 60)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: point.x, dy: point.y)).tap()
+        return opens.waitForExistence(timeout: 30)
     }
 
-    /// Taps the first library photo that is fully visible inside `area` (window coordinates).
+    /// Taps the first library photo that is fully visible inside `area` (window coordinates)
+    /// and returns the point tapped.
     /// The picker runs out of process and its photos may report frames in its own coordinates
     /// (relative to `origin`, the picker's top-left corner in the window) rather than the
     /// window's. For the inline picker (no `origin`) the grid's left edge tells which; for a
@@ -376,9 +381,10 @@ final class CreateFlowTests: XCTestCase {
     /// `excluding` picker are skipped, matched by the frames they report now: frames read
     /// earlier miss once its grid has moved, and a missed one passed for a sheet photo.
     @MainActor
+    @discardableResult
     private func tapFirstPhoto(
         _ app: XCUIApplication, in area: CGRect, origin: CGPoint? = nil, excluding other: XCUIElement? = nil
-    ) throws {
+    ) throws -> CGPoint {
         let photos = app.images.matching(photoPredicate)
         guard photos.firstMatch.waitForExistence(timeout: 20) else {
             attachTree(app, named: "library-picker-tree")
@@ -415,7 +421,9 @@ final class CreateFlowTests: XCTestCase {
             attachTree(app, named: "library-picker-tree")
             throw XCTSkip("No library photo is fully visible inside the picker")
         }
-        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: target.midX, dy: target.midY)).tap()
+        let point = CGPoint(x: target.midX, y: target.midY)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: point.x, dy: point.y)).tap()
+        return point
     }
 
     /// Polls a condition on the UI (queries are synchronous, so the main thread may block).

@@ -274,6 +274,11 @@ makes painting them fluid and satisfying. Swift 6, SwiftUI (Liquid Glass) shell,
   sit inside a ScrollView (UIKit can't arbitrate their pans across the process boundary: neither
   scrolls). It fills the page; compact windows switch Photos/Samples with a segmented control,
   wide windows put a scrolling samples column beside it. "Browse All…" presents the full picker.
+  On compact widths the picker runs edge to edge, flush with the window's left edge: inset from
+  both the left and the top edge, its photo grid ignores taps on iPhone for its first ten
+  seconds or so (measured on the iOS 26 simulator; `CreateFlowTests` picks an inline photo on
+  both devices), while any layout flush with one of those edges takes the first tap. iPad keeps
+  the card.
   The samples come in two sections, Paintings then Photographs (`Sample.all(of:)`); a painting's
   tile shows its creator under the title while there is room (`ViewThatFits`: long text and large
   sizes drop the creator, then truncate the title), every tile's VoiceOver label names the
