@@ -9,6 +9,27 @@ nonisolated enum CanvasClock {
     static let never: Float = -10_000
 }
 
+/// A value easing from `from` to `to` over `duration` seconds of the renderer clock, from
+/// `start` (smoothstep): the numbers and the photo fade in and out with it.
+nonisolated struct Fade {
+    var from: Float
+    var to: Float
+    var start = CanvasClock.never
+    let duration: Float
+
+    func value(at t: Float) -> Float {
+        let k = min(max((t - start) / duration, 0), 1)
+        return from + (to - from) * k * k * (3 - 2 * k)
+    }
+
+    /// Fades on from wherever it is at `t` to `target`.
+    mutating func retarget(to target: Float, at t: Float) {
+        from = value(at: t)
+        to = target
+        start = t
+    }
+}
+
 /// Per-frame shader constants. Layout mirrors `FrameUniforms` in Shaders.metal (only 16-byte
 /// vectors, so Swift and MSL agree without padding rules).
 nonisolated struct CanvasUniforms {

@@ -102,9 +102,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private var bumpStart = CanvasClock.never
     private var hoverRegion = -1
     private var brushPoint: CGPoint?
-    private var numbersFrom: Float = 1
-    private var numbersTo: Float = 1
-    private var numbersStart = CanvasClock.never
+    private var numbersFade = Fade(from: 1, to: 1, duration: 0.25)
     /// When the finishing shine starts (renderer clock; tests read it).
     private(set) var shineStart = CanvasClock.never
     private var replayTask: Task<Void, Never>?
@@ -116,9 +114,7 @@ final class CanvasView: UIView, PaintingCanvas {
     private var lastSparkles: CFTimeInterval = 0
     private var photoTexture: (any MTLTexture)?
     private var photoTask: Task<Void, Never>?
-    private var photoFrom: Float = 0
-    private var photoTo: Float = 0
-    private var photoStart = CanvasClock.never
+    private var photoFade = Fade(from: 0, to: 0, duration: 0.2)
 
     // Camera
     private var fitZoom: CGFloat = 1
@@ -160,7 +156,6 @@ final class CanvasView: UIView, PaintingCanvas {
     private static let margin: CGFloat = 16
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
-    private static let photoFade: Float = 0.2
 
     private struct Camera: Equatable {
         var zoom: CGFloat
@@ -652,7 +647,7 @@ final class CanvasView: UIView, PaintingCanvas {
         if let selected, let scene, selected < scene.paletteLinear.count {
             u.select(scene.paletteLinear[selected], palette: palette)
         }
-        u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersVisibility(at: time))
+        u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersFade.value(at: time))
         switch scene?.lineArtStyle {
         case .layered:
             u.setLines(LineStyle(lineAppearance, zoom: Float(camera.zoom / fitZoom), classicStrength: LineStyle.classicStrength(depth: depth)))
@@ -671,28 +666,21 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         u.shine = SIMD4(shineStart, Float(shineColor), 0, 0)
         u.ids = SIMD4(Int32(selected ?? -1), Int32(isReplaying ? -1 : hoverRegion), Int32(pulseRegion), Int32(bumpRegion))
-        u.photo = SIMD4(photoVisibility(at: time), 0, 0, 0)
+        u.photo = SIMD4(photoFade.value(at: time), 0, 0, 0)
         return u
     }
 
     private func numbersChanged() {
         let t = now()
-        numbersFrom = numbersVisibility(at: t)
-        numbersTo = showsNumbers && !isReplaying ? 1 : 0
-        numbersStart = t
+        numbersFade.retarget(to: showsNumbers && !isReplaying ? 1 : 0, at: t)
         activeUntil = max(activeUntil, t + 0.3)
         requestRender()
-    }
-
-    private func numbersVisibility(at t: Float) -> Float {
-        let k = min(max((t - numbersStart) / 0.25, 0), 1)
-        return numbersFrom + (numbersTo - numbersFrom) * k * k * (3 - 2 * k)
     }
 
     // MARK: Source photo
 
     /// Opacity of the photo overlay now (tests and demos).
-    var photoOpacity: Float { photoVisibility(at: now()) }
+    var photoOpacity: Float { photoFade.value(at: now()) }
 
     private func photoChanged() {
         accessibilityValue = showsPhoto ? String(localized: "Showing the photo") : nil
@@ -736,16 +724,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     private func fadePhoto(to target: Float) {
         let t = now()
-        photoFrom = photoVisibility(at: t)
-        photoTo = target
-        photoStart = t
-        activeUntil = max(activeUntil, t + Self.photoFade + 0.05)
+        photoFade.retarget(to: target, at: t)
+        activeUntil = max(activeUntil, t + photoFade.duration + 0.05)
         requestRender()
-    }
-
-    private func photoVisibility(at t: Float) -> Float {
-        let k = min(max((t - photoStart) / Self.photoFade, 0), 1)
-        return photoFrom + (photoTo - photoFrom) * k * k * (3 - 2 * k)
     }
 
     // MARK: Replay
