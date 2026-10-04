@@ -7,7 +7,7 @@ import Testing
 @testable import PaintByNumber
 
 /// The picture library: `Resources/Samples/library.json`, the catalog's titles and the bundled
-/// JPEGs agree.
+/// JPEGs agree, and the app ships no picture the library doesn't list.
 struct SampleLibraryTests {
     /// The bundled `library.json`, read without `Sample`'s decoder.
     private static func records() throws -> [[String: Any]] {
@@ -77,6 +77,18 @@ struct SampleLibraryTests {
             let height = try #require(properties[kCGImagePropertyPixelHeight] as? Int)
             #expect((ArtworkStore.sourceMaxPixelSize / 2...ArtworkStore.sourceMaxPixelSize).contains(max(width, height)),
                     "\(id).jpg is \(width)×\(height)")
+        }
+    }
+
+    /// Every picture the app bundles is a listed one, so every one is credited (`AboutTests`):
+    /// a photo whose provenance nobody recorded doesn't ship.
+    @Test func everyBundledPictureIsListed() throws {
+        let listed = try Set(Self.records().compactMap { $0["id"] as? String })
+        let bundled = Bundle.main.urls(forResourcesWithExtension: "jpg", subdirectory: nil) ?? []
+        #expect(!bundled.isEmpty)
+        for url in bundled {
+            let id = url.deletingPathExtension().lastPathComponent
+            #expect(listed.contains(id), "\(id).jpg ships, but library.json doesn't list it")
         }
     }
 
