@@ -153,3 +153,17 @@ nonisolated struct LineAppearance: Codable, Equatable, Sendable {
         coloringBookWeight = weight.map { Self.coloringBookWeightRange.contains($0) ? $0 : d.coloringBookWeight } ?? d.coloringBookWeight
     }
 }
+
+nonisolated extension LineAppearance {
+    /// The appearance Settings › Advanced stored (`SettingsKey.lineAppearance`, written with
+    /// `Preferences.store`), or the default when there is none or it can't be read. Safe off the
+    /// main actor: images of layered paintings are drawn with it in the background.
+    static func stored(in defaults: UserDefaults = .standard) -> LineAppearance {
+        decoded(defaults.data(forKey: SettingsKey.lineAppearance))
+    }
+
+    /// An appearance stored as JSON, or the default.
+    static func decoded(_ data: Data?) -> LineAppearance {
+        data.flatMap { try? JSONDecoder().decode(LineAppearance.self, from: $0) } ?? .default
+    }
+}

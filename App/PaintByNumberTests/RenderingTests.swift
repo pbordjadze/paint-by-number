@@ -329,18 +329,16 @@ struct PreferencesTests {
         defer { defaults.removePersistentDomain(forName: suite) }
 
         var preferences = Preferences(defaults: defaults)
-        #expect(preferences.autoAdvance && preferences.haptics && preferences.sounds)
+        #expect(preferences.autoAdvance)
         #expect(preferences.colorNames == .playful)
 
         defaults.set(false, forKey: SettingsKey.autoAdvance)
-        defaults.set("a4", forKey: SettingsKey.paperSize)
-        defaults.set(false, forKey: "hapticsEnabled")
         defaults.set("plain", forKey: SettingsKey.colorNames)
         preferences = Preferences(defaults: defaults)
         #expect(preferences.colorNames == .plain)
         #expect(!preferences.autoAdvance)
-        #expect(!preferences.haptics)
-        #expect(preferences.paper == .a4)
+        // The persisted key strings: renaming one would forget every painter's switch.
+        #expect(SettingsKey.haptics == "hapticsEnabled" && SettingsKey.sounds == "soundsEnabled")
 
         let session = PaintingSession(template: Fixtures.stripes())
         #expect(session.autoAdvance && session.colorNameStyle == .playful)
@@ -362,22 +360,12 @@ struct PreferencesTests {
         #expect(ColorNameStyle.allCases == [.playful, .plain])
     }
 
-    /// The Paper preference defaults to light, round-trips its raw values, and ignores
-    /// anything it doesn't know.
-    @Test func paperAppearanceDefaultsAndParses() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-
-        #expect(Preferences(defaults: defaults).paperAppearance == .light)
-        for appearance in PaperAppearance.allCases {
-            defaults.set(appearance.rawValue, forKey: SettingsKey.paperAppearance)
-            #expect(Preferences(defaults: defaults).paperAppearance == appearance)
-        }
-        defaults.set("sepia", forKey: SettingsKey.paperAppearance)
-        #expect(Preferences(defaults: defaults).paperAppearance == .light)
+    /// The Paper preference's key and raw values are what `@AppStorage` and launch arguments
+    /// (`-paperAppearance dark`) use, and anything else isn't a paper.
+    @Test func paperAppearanceKeyAndRawValues() {
         #expect(SettingsKey.paperAppearance == "paperAppearance")
         #expect(Set(PaperAppearance.allCases.map(\.rawValue)) == ["light", "dark", "automatic"])
+        #expect(PaperAppearance(rawValue: "sepia") == nil)
     }
 
     /// Painting Length defaults to Relaxed, round-trips its raw values, ignores anything it

@@ -146,20 +146,6 @@ nonisolated struct DrawableLineArt: Sendable {
     }
 }
 
-nonisolated extension LineAppearance {
-    /// The appearance Settings › Advanced stored (`SettingsKey.lineAppearance`, written with
-    /// `Preferences.store`), or the default when there is none or it can't be read. Safe off the
-    /// main actor: images of layered paintings are drawn with it in the background.
-    static func stored(in defaults: UserDefaults = .standard) -> LineAppearance {
-        decoded(defaults.data(forKey: SettingsKey.lineAppearance))
-    }
-
-    /// An appearance stored as JSON, or the default.
-    static func decoded(_ data: Data?) -> LineAppearance {
-        data.flatMap { try? JSONDecoder().decode(LineAppearance.self, from: $0) } ?? .default
-    }
-}
-
 /// What the outline pass draws for a template: a "line" per boundary edge, then one per interior
 /// stroke, each with its two regions and its style, and a segment per step of every line's
 /// polyline. A stroke has its region on both sides, which the shader reads as "inside a cell".

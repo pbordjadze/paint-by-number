@@ -23,17 +23,13 @@ enum SettingsKey {
     static let advancedPreviewPicture = "advancedPreviewPicture"
 }
 
-/// A snapshot of the user's preferences, with their defaults.
-struct Preferences: Equatable {
-    var haptics: Bool
-    var sounds: Bool
+/// The preferences that code outside views reads (the create flow, Settings › Advanced, a
+/// painting's session), with their defaults; views bind the other keys with `@AppStorage`.
+struct Preferences {
     /// Select the next unfinished color when one is completed.
     var autoAdvance: Bool
     /// How long a painting Suggested settings aim for in the create flow.
     var paintingLength: PaintingLength
-    var paper: PDFExporter.Paper
-    /// The paper the painting canvas shows.
-    var paperAppearance: PaperAppearance
     /// Whether paints go by playful nicknames or their plain structured names.
     var colorNames: ColorNameStyle
     /// Line art new paintings are generated with (Settings › Advanced).
@@ -44,19 +40,13 @@ struct Preferences: Equatable {
     var lineAppearance: LineAppearance
 
     init(defaults: UserDefaults = .standard) {
-        haptics = defaults.object(forKey: SettingsKey.haptics) as? Bool ?? true
-        sounds = defaults.object(forKey: SettingsKey.sounds) as? Bool ?? true
         autoAdvance = defaults.object(forKey: SettingsKey.autoAdvance) as? Bool ?? true
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
-            ?? .default
-        paper = defaults.string(forKey: SettingsKey.paperSize).flatMap(PDFExporter.Paper.init(rawValue:))
-            ?? .default(for: Locale.current.region)
-        paperAppearance = defaults.string(forKey: SettingsKey.paperAppearance).flatMap(PaperAppearance.init(rawValue:))
             ?? .default
         colorNames = defaults.string(forKey: SettingsKey.colorNames).flatMap(ColorNameStyle.init(rawValue:)) ?? .default
         lineArt = Self.decoded(LineArtSettings.self, defaults, SettingsKey.lineArt) ?? LineArtSettings()
         tuning = Self.decoded(PipelineTuning.self, defaults, SettingsKey.pipelineTuning) ?? PipelineTuning()
-        lineAppearance = Self.decoded(LineAppearance.self, defaults, SettingsKey.lineAppearance) ?? .default
+        lineAppearance = LineAppearance.stored(in: defaults)
     }
 
     /// A JSON-encoded setting, or nil when absent or unreadable (the caller's default applies).
