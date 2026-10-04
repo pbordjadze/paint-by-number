@@ -4,9 +4,9 @@
     tools/regression.py [--update] [--sheets DIR] [--json FILE] [--out DIR]
     tools/regression.py --self-test
 
-Generates the photos of SAMPLE_NAMES (App/PaintByNumber/Resources/Samples/<name>.jpg) in each
-regime of REGIMES with the release pbn, twice, and checks the results against the committed
-baseline tools/baseline/regression.json:
+Generates the photos of SAMPLE_NAMES (Tests/Corpus/<name>.jpg) in each regime of REGIMES with
+the release pbn, twice, and checks the results against the committed baseline
+tools/baseline/regression.json:
 
   hard invariants  pbn succeeds; `pbn check` validates the template; the two runs give
                    byte-identical templates; no region under radius 2; palette distance
@@ -57,10 +57,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PBN = os.environ.get("PBN", os.path.join(ROOT, ".build", "release", "pbn"))
-SAMPLES = os.path.join(ROOT, "App", "PaintByNumber", "Resources", "Samples")
-# The app's six former samples (`Sample.retired`), pinned by name: the curated picture library
-# beside them changes with curation, which must neither move the baselines nor multiply CI's
-# time. The benchmark step in .github/workflows/ci.yml lists the same files.
+SAMPLES = os.path.join(ROOT, "Tests", "Corpus")
+# The corpus (Tests/Corpus, never shipped), pinned by name: the app's curated picture library
+# changes with curation, which must neither move the baselines nor multiply CI's time. The
+# benchmark step in .github/workflows/ci.yml lists the same files.
 SAMPLE_NAMES = ["barn", "espresso", "hibiscus", "lighthouse", "parrots", "regatta"]
 BASELINE = os.path.join(ROOT, "tools", "baseline", "regression.json")
 AUTO_BASELINE = os.path.join(ROOT, "tools", "baseline", "auto.json")
