@@ -9,7 +9,9 @@ import Foundation
 /// since the paints only changed because the ramp crossed the midpoint between them, while
 /// a real contour carries most of the paint difference within a pixel or two. A region
 /// whose borders are mostly that weak is one band of a posterized ramp (a bokeh highlight's
-/// nested rings, a sky cut into stripes); a region with real outlines is a shape.
+/// nested rings, a sky cut into stripes); a region with real outlines is a shape. Every way
+/// tried to paint fewer rings cost more colour error than it was worth
+/// (`docs/gradient-rings.md`), so the pipeline only reports them.
 public enum BandRings {
 
     /// Regions whose boundary is weak (mean image step below `contrast` × the paint

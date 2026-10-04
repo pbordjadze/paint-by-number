@@ -15,9 +15,9 @@ import Foundation
 /// settings; decisions are reproducible and never stored. A re-encoded copy of a photo moves
 /// the scores a little, so the rule's thresholds are ramps, the knee is a fitted curve and a
 /// neighbour must beat the center by more than that (`tieMargin`); a JPEG re-save still
-/// changes about one suggestion in six materially. The constants were tuned by eye on contact sheets (`tools/auto_sheet.py`,
-/// `docs/wave2/log/auto-tuning.md`, which records the tuned ones); a constant without a
-/// measurement note is a starting value kept through tuning.
+/// changes about one suggestion in six materially. The constants were tuned by eye on contact
+/// sheets (`tools/auto_sheet.py`, `docs/auto-tuning.md`, which records the tuned ones); a
+/// constant without a measurement note is a starting value kept through tuning.
 public enum AutoSettings {
     public static let paletteCurveKs = [8, 12, 16, 24, 32, 48, 64]
 
@@ -139,10 +139,11 @@ public enum AutoSettings {
         colors *= 1 + (colorfulFactor - 1) * ramp(a.chromaSpread, at: colorfulSpread)
         colors *= monochromeFactor + (1 - monochromeFactor) * min(a.chromaticFraction / monochromeFraction, 1)
         // Ramps get no extra paints. An earlier rule gave +2 per tenth of the frame in ramps
-        // beyond 30 %, for a gradient-aware paint allocation that was tried and not shipped: on
-        // the corpus's 32 decisions for photos with ramps, the candidate with 1.3 times the
-        // paints lowered ΔE by only 0.0005 and raised the share of ring regions by 0.8 points;
-        // the colour neighbours already offer more paints where they pay.
+        // beyond 30 %, for a gradient-aware paint allocation that was tried and not shipped
+        // (`docs/gradient-rings.md`): on the corpus's 32 decisions for photos with ramps, the
+        // candidate with 1.3 times the paints lowered ΔE by only 0.0005 and raised the share of
+        // ring regions by 0.8 points; the colour neighbours already offer more paints where
+        // they pay.
 
         var detail = preference.detailCenter
         detail += fillingSubjectDetail * ramp(a.subjectCoverage, at: fillingSubject)

@@ -1,20 +1,43 @@
-# Auto tuning log (W1b)
+# Suggested settings: design and tuning log
 
-Tuning of Suggested settings ("Auto", `Sources/PaintCore/Auto/`) on the pipeline wave 2 ships
-with (W3 landed the `bandRings` metric only, so the pipeline is wave 1's). Started from W1a's
-untuned constants at `72a0ecc`. Corpus: 69 photos, listed with sources and licences in
-`auto-corpus.md`: the six samples, Kodak 01–24, scikit-image astronaut, chelsea, coffee and
+## Design
+
+- Auto decides `colorCount`, `detail` and `smoothness`; the region count follows from them, so
+  Auto scores it rather than setting it.
+- It lives in PaintCore (`AutoSettings`): the pipeline runs on the CPU and the decision is a
+  small search over pipeline runs, so it stays portable, deterministic and testable on Linux
+  (`pbn suggest`, `pbn generate --auto`). The app supplies only Vision's importance map and hints.
+- The objective is the best importance-weighted fidelity inside the Painting Length's time
+  band, every score term measured against this photo (colour error against its pixels, weighted
+  by its own importance; rings where the photo itself shows no edge).
+- A learned aesthetic score (Core ML) may only ever break ties between candidates whose
+  measured scores are close: its output differs between chips and it is hard to test.
+- Decisions are reproducible from the same pixels, importance, hints, length, line art and
+  tuning on every device, and never stored: a saved painting keeps its recorded settings.
+
+## Tuning
+
+Tuning of Suggested settings ("Auto", `Sources/PaintCore/Auto/`) on pipeline version 2 (the
+clean-room curve fitter of version 3 left Auto's pinned decision unchanged, and a
+gradient-aware palette allocation was tried and not shipped, see
+[`gradient-rings.md`](gradient-rings.md), so only the `bandRings` metric came with it).
+Started from the first, untuned constants at `72a0ecc`. Corpus: 69 photos, listed with sources
+and licences in [`auto-corpus.md`](auto-corpus.md): the six
+corpus photos (`Tests/Corpus`), Kodak 01–24, scikit-image astronaut, chelsea, coffee and
 rocket, and 35 CC0 / public-domain photos at the app's 2048-px source size (portraits, pets,
 animals, night, snow, food, architecture, haze). Hand-written hints (faces, cats, dogs) for
 ten photos.
 
-Tools (scratch, `/tmp/pbn-w1b/`): `pbn suggest` at Quick, Relaxed and Detailed with 5
-candidates for every photo; a compact sheet per photo (photo | five candidates' painted
+"Review N" below is item N of the adversarial review of the first constants (`w1a-review.md`,
+commit 2aa8e7e); round two answers the review of round one (`w1-review.md`, commit 2a1ff87).
+
+Tools (scratch, not committed: `/tmp/pbn-w1b/`): `pbn suggest` at Quick, Relaxed and Detailed
+with 5 candidates for every photo; a compact sheet per photo (photo | five candidates' painted
 drafts, per length, winner framed, every score term) next to `tools/auto_sheet.py`'s;
 `measure.py` (draft and full region counts over a settings grid); `accept.py` (full-size
 `pbn generate --auto` against 24/0.5/0.5).
 
-## What the app actually generates (the band problem)
+### What the app actually generates (the band problem)
 
 - Photos are kept at ≤ 2048 px (`ArtworkStore.sourceMaxPixelSize`); the working canvas is
   `1100 + 1000 × detail` px on the long side, at most 1.5 × the source. A 12 MP photo is
@@ -24,9 +47,9 @@ drafts, per length, winner framed, every score term) next to `tools/auto_sheet.p
   81 / 359 / 359 … at 0.5 103 / 532 / 532, at 0.9 186 / 1028 / 1028; 40 colours 160 / 376 /
   784 (0.3), 232 / 714 / 1421 (0.5), 492 / 1482 / 3727 (0.9). The 34 photos ≤ 768 px: 40
   colours 87 / 217 / 397 at 0.1 up to 270 / 434 / 956 at 0.9.
-- At 3 s per region (kept: no evidence against it) the spec's bands (Quick 10–45, Relaxed
-  40–120, Detailed 100–300 min) need 800–2400 regions for Relaxed: only the busiest large
-  photos reach that, and no 768-px photo. With the old bands every Relaxed/Detailed
+- At 3 s per region (kept: no evidence against it) the first design's bands (Quick 10–45,
+  Relaxed 40–120, Detailed 100–300 min) need 800–2400 regions for Relaxed: only the busiest
+  large photos reach that, and no 768-px photo. With the old bands every Relaxed/Detailed
   candidate sat below its band, so the band term pushed toward the most regions while only
   Quick's top ever bit.
 
@@ -51,11 +74,7 @@ Final winners against their band (estimates at decision time):
 "Above" Quick are the busy photos (grass, tulips, papayas, river stones) whose shortest
 candidate is already 27–35 minutes. Small photos cannot fill Relaxed/Detailed at any setting.
 
-**Settings footer:** "Suggested settings aim for about an hour of painting." is no longer
-true. Proposed (W1c owns the string): "Quick aims for about 15 minutes of painting, Relaxed
-for about half an hour, Detailed for an hour or more. Small photos make shorter paintings."
-
-## Rounds
+### Rounds
 
 One change per round was the aim; round 1 bundled the fixes the review had already
 diagnosed (each tied to a recorded disagreement or finding), later rounds changed one or two
@@ -63,7 +82,7 @@ things and were judged against the previous round's sheets.
 
 | round | change | why (evidence) |
 | --- | --- | --- |
-| 0 | W1a's constants | 28 disagreements recorded (table below) |
+| 0 | the first, untuned constants | 28 disagreements recorded (table below) |
 | 1 | bands and Detailed center (above); detail-dependent region exponent | Relaxed/Detailed unreachable; exponent 0.52…0.72 with detail (review 1, 2) |
 | 1 | monochrome cut fades in (×0.6 at no chromatic pixels → ×1 at 0.15) instead of a step | regatta (0.108), kodim09/10, windsurfer (0.047), portrait-tunnel (0.110), cake (0.149), clouds, mountain-haze lost paints to the cliff; grey copies of six photos knee at 23–27 vs 27–37 for colour, so the cut itself is right |
 | 1 | palette curve and noise kept at 4 decimals | at 3, one quantum between 8 and 12 paints was 0.00025 ΔE/paint against the 0.0004 threshold (review 8); 4 decimals is 1/200 JND, still far above cross-device float noise |
@@ -73,18 +92,18 @@ things and were judged against the previous round's sheets.
 | 2 | price per paint 0.0001 in `total` | past the knee a paint bought a median 0.00002; noise drifted Relaxed to its 40-paint ceiling |
 | 3 | above-band weight 0.05 → 0.15; tie tolerance 0.002 → 0.001 | hedgehog Detailed chose 163 min over 107 that looked the same; portrait 53 min Relaxed; ties took 10 paints over 18 (guinea pig) and 28 over 38 (borsen) |
 | 4 | ties go to the time nearest the band's middle, not fewer regions | the fewer-regions tie made pont-royal's Detailed (32 min) shorter than its Relaxed (41) |
-| 4 | ramp rule dropped | without W3's allocation (review 6): on 32 decisions for photos with ramps, 1.3× the paints lowered ΔE by 0.0005 and raised the ring share by 0.8 points |
+| 4 | ramp rule dropped | without a gradient-aware allocation, which was tried and not shipped ([`gradient-rings.md`](gradient-rings.md); review 6): on 32 decisions for photos with ramps, 1.3× the paints lowered ΔE by 0.0005 and raised the ring share by 0.8 points |
 | 4 | importance entropy as the covered share (exp H / cells) | normalized entropy above the floor still spanned only 0.95–0.99; the share spans 0.72–0.96 (no rule reads it yet) |
 | 5 | small-source rule (−0.1 detail under 900 px) dropped | on 105 small-photo decisions the score chose more detail than the center 77 times and less never, and those photos already fell short of the bands |
 
-Detail above 0.5 barely moving the draft (W1a's note) is the pipeline's: at the draft size
-the candidates' canvases differ by the generator's 1.5× cap, and region counts move with
-detail mostly at full size, which the detail-dependent exponent now models. Detailed now
-clearly sits above Relaxed (median 65 vs 36 min on large photos).
+Detail above 0.5 barely moving the draft (noted with the first constants) is the pipeline's:
+at the draft size the candidates' canvases differ by the generator's 1.5× cap, and region
+counts move with detail mostly at full size, which the detail-dependent exponent now models.
+Detailed now clearly sits above Relaxed (median 65 vs 36 min on large photos).
 
-## Disagreements (photo, length, winner, preferred, why)
+### Disagreements (photo, length, winner, preferred, why)
 
-Round 0 (W1a constants), 28 of 207 pairs (13.5 %), from ~40 sheets viewed plus the time
+Round 0 (the first constants), 28 of 207 pairs (13.5 %), from ~40 sheets viewed plus the time
 columns of the rest:
 
 | photo | length | winner | preferred | why |
@@ -132,7 +151,7 @@ Final (rounds 4–5), 4 of 207 pairs (1.9 %), none clearly wrong:
 | portrait-tunnel | Relaxed | #4 24c d0.85 (53 min) | #0 24c d0.65 (32 min) | looks the same, 3 min over the band |
 | frontenac-night | Detailed | #1 20c d0.8 | #0 26c d0.8 | 0.0006 apart; Detailed with fewer paints than Relaxed's 34 |
 
-## Acceptance against fixed defaults (Relaxed, full-size templates)
+### Acceptance against fixed defaults (Relaxed, full-size templates)
 
 `pbn generate --auto --length relaxed` against `--colors 24 --detail 0.5 --smooth 0.5` on all
 69 photos (hints where written); fidelity is the stats' unweighted mean ΔE (Auto's own score
@@ -153,11 +172,10 @@ weights by importance), a tie is within 0.0005 ΔE and 2 % regions.
   (night-moon 20, smoke-haze 18, mountain-haze 18, kodim08 18, dog 20, kodim16 20), trading
   ≤ 0.003 ΔE for fewer paints, which region count does not measure.
 
-The criterion as written needs a decision: either measure acceptance at equal painting time
-(the curve comparison above), or the Relaxed band must be pinned to the defaults' region
-count, which would drop the time-band objective.
+Owner decision (2026-10-01): acceptance is judged at equal painting time (the curve comparison
+above), not by the dominance criterion.
 
-## Determinism and budget
+### Determinism and budget
 
 - Byte-identical `decision.json` for parrots (768 px), lynx and portrait-tunnel (2048 px) at
   Detailed with hints under `taskset -c 0`, `0-1` and `0-3`.
@@ -165,25 +183,27 @@ count, which would drop the time-band objective.
   (first draft 134–198 ms), large photos 545–860 ms (hedgehog the slowest). CI's M1 is
   faster; budget 1.5 s.
 
-## Fixture and baselines
+### Fixture and baselines
 
 - `Tests/PaintCoreTests/Fixtures/auto-parrots.json` regenerated (draft PPM unchanged): the
   analysis (4-decimal curve and noise, entropy 0.842) and the decision moved with the tuning
-  (now 40c d0.7 s0.47).
+  (then 40c d0.7 s0.47; round two below moved it again).
 - `tools/baseline/auto.json` regenerated with `tools/regression.py --update`; the 18 legacy
   cases stayed "same" (their baseline is not rewritten: only timings differed).
 
-## Open
+### Open
 
 - Fog is untested (no free fog photo reachable); portraits and pets are few and small.
 - `importanceEntropy` now spreads (0.72–0.96) but no rule reads it; on the device Vision's
   saliency and face maps will move `subjectCoverage` and the weights, which this tuning could
   only approximate with hints.
+- Whether one Painting Length is enough, or whether "more colours" and "less detail" are
+  distinct wishes that need controls of their own, is the first design's open question.
 
-## Round two (after the W1 review, `docs/wave2/log/w1-review.md`)
+## Round two (after the review)
 
-Three majors fixed on `wt/w1c-auto-app`. Scratch: `/tmp/pbn-w1b/` (`maps/`, `m2/`,
-`noise/`, `simD/`, `accept/`).
+The review of round one found three majors; each was fixed. Scratch, not committed:
+`/tmp/pbn-w1b/` (`maps/`, `m2/`, `noise/`, `simD/`, `accept/`).
 
 ### 1. Region model and detail under Vision-like maps
 
@@ -192,8 +212,9 @@ rates busy texture important; the app passes Vision maps (0.25 base, attention 0
 0.75 foreground mask, faces/animals near 1), which protect far less of the frame. Stand-ins
 (`/tmp/pbn-w1b/mkmaps.py`): uniform 0.25 and 0.4, and a "vis" map per photo built like
 `SubjectImportance` (hand-placed subject ellipses for 36 photos, an attention blob for the rest,
-W3's hand-made maps for astronaut, chelsea, coffee/espresso, parrots/kodim23; means 0.36–0.63).
-CI's simulator counts (lighthouse 159 areas at 28 colours) sit at the uniform-0.25 end.
+the hand-made maps of the gradient-ring experiments for astronaut, chelsea, coffee/espresso,
+parrots/kodim23; means 0.36–0.63). CI's simulator counts (lighthouse 159 areas at 28 colours)
+sit at the uniform-0.25 end.
 
 - New feature `PhotoAnalysis.meanImportance` (mean importance weight; fallback 0.56–0.64, vis
   0.36–0.63, uniform maps their value).
@@ -271,16 +292,17 @@ frontenac-night, hedgehog, tulips, night-moon, smoke-haze (both maps). Disagreem
 
 ### Acceptance (Relaxed, full size, fallback map, 69 photos; round one in brackets)
 
-- Spec criterion (equal or better ΔE at equal or fewer regions vs 24/0.5/0.5): 6/69 [14/69].
+- The first design's criterion (equal or better ΔE at equal or fewer regions vs 24/0.5/0.5):
+  6/69 [14/69].
 - Worse on both: 5 [2]: bernina-snow, clouds, night-moon (0.0176 vs 0.0165 at 151 vs 143
   areas; was 0.0195), kodim06, kodim11, each by ≤ 0.0011 ΔE.
 - Inside 20–50 min: 44/69 [41].
 - Equal painting time (24 colours, detail 0.3–0.9, interpolated at Auto's region count): 56/69
   (81 %) [56/69]; median ΔE ratio 0.976 at 1.13× regions. 3 of the 13 misses are below the
   curve's range (tulips, waterfall, papayas: Auto chose fewer areas than 24/0.3 makes).
-- The spec criterion fell because the margin keeps the center more often and the center now
-  aims at the band's middle (more regions where 24/0.5 is short); the review's verdict stands:
-  judge at equal time.
+- The dominance criterion fell because the margin keeps the center more often and the center
+  now aims at the band's middle (more regions where 24/0.5 is short); the review's verdict
+  stands: judge at equal time, as the owner decided.
 
 Budget: `pbn suggest` Relaxed 415–430 ms on samples, 650–800 ms on 2048-px photos (first draft
 140–245 ms). `auto-parrots.json` regenerated (draft unchanged); `tools/baseline/auto.json`

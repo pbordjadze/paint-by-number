@@ -27,8 +27,8 @@ private extension [Double] {
 
 /// Photo features for the candidate rule (`AutoSettings.analyze`). Thresholds are in the
 /// pipeline's working space (OKLab with chroma × `chromaScale`) and per working pixel; they
-/// are starting values kept through tuning (`docs/wave2/log/auto-tuning.md`) except where a
-/// constant says otherwise.
+/// are starting values kept through tuning (`docs/auto-tuning.md`) except where a constant
+/// says otherwise.
 enum PhotoAnalyzer {
     /// Paint-count curve: Lloyd iterations per k after k-means++ seeding.
     static let curveIterations = 10
@@ -69,7 +69,7 @@ enum PhotoAnalyzer {
     /// difference): the color rule reads its slope, and at 3 decimals one quantum between
     /// 8 and 12 paints was 0.00025 ΔE per paint against a 0.0004 threshold, so the knee
     /// jumped between a few coarse values (tuned on the 69-photo corpus,
-    /// docs/wave2/log/auto-tuning.md).
+    /// `docs/auto-tuning.md`).
     static let curvePlaces = 4
 
     static func analyze(

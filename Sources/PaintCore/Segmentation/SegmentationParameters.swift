@@ -22,8 +22,8 @@ struct SegmentationParameters: Sendable {
     /// A coloring book's paint is flatter: the areas inside an outline are told apart only by
     /// their numbers, so small color cells cost more than they show. Its smoothing, texture
     /// flattening and smallest area are this many times the classic ones
-    /// (`flattenForColoringBook`), a fifth to a third fewer cells on the preset's ten pictures
-    /// (`docs/presets/README.md`); the Pipeline factors multiply that.
+    /// (`flattenForColoringBook`): fewer cells on the ten pictures the book's defaults were
+    /// measured on (`docs/coloring-book.md`, Defaults); the Pipeline factors multiply that.
     static let coloringBookFlattening: Float = 1.5
 
     var colorCount: Int
