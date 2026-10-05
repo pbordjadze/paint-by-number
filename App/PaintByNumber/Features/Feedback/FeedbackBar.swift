@@ -26,10 +26,11 @@ struct FeedbackBar: View {
                 ViewThatFits(in: .horizontal) {
                     title(.full)
                     title(.name)
+                    title(.word)
                     title(.symbol)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                // Identified apart from the tool picker's own Undo and Redo (iPhone).
+                // Identified apart from the Undo and Redo of the tool picker (iPad).
                 GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: draft.undo)
                     .disabled(!draft.canUndo)
                     .accessibilityIdentifier("feedback-undo")
@@ -55,18 +56,23 @@ struct FeedbackBar: View {
 
     /// How much of the title the bar has room for.
     private enum TitleStyle {
-        /// The mode's name and what to do in it.
+        /// The symbol, the mode's name and what to do in it.
         case full
+        /// The symbol and the name.
         case name
-        /// Only the symbol (the narrowest bars).
+        /// The name alone (phones).
+        case word
+        /// The symbol alone (the narrowest bars).
         case symbol
     }
 
     private func title(_ style: TitleStyle) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: "exclamationmark.bubble")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Theme.accent)
+            if style != .word {
+                Image(systemName: "exclamationmark.bubble")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Theme.accent)
+            }
             if style != .symbol {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(name)

@@ -131,6 +131,8 @@ final class MarkupCanvasView: PKCanvasView {
 
     private func markingChanged() {
         guard window != nil else { return }
+        // Under the review sheet, out of reach and out of the accessibility tree.
+        accessibilityElementsHidden = !isMarking
         toolPicker.setVisible(isMarking, forFirstResponder: self)
         if isMarking {
             // A finger draws unless the painter draws only with the Pencil, as when painting,

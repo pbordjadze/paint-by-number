@@ -124,8 +124,8 @@ final class FeedbackDraft {
         HandwritingReader.read(strokes)
     }
 
-    /// The review sheet's pictures, small: the ink drawn here (PencilKit), the painting under it
-    /// rendered in the background.
+    /// The review sheet's pictures, small, drawn in the background: the whole painting and each
+    /// mark close up, with the ink over them.
     private func drawPictures() {
         guard picturesFor != strokes || overview == nil else { return }
         picturesFor = strokes
@@ -137,24 +137,25 @@ final class FeedbackDraft {
             frame.scale = 240 / max(frame.rect.width, frame.rect.height, 1)
             return frame
         }
-        let overviewInk = FeedbackInk.image(of: drawing, rect: overviewFrame.rect, scale: overviewFrame.scale)
-        let inks = frames.map { FeedbackInk.image(of: drawing, rect: $0.rect, scale: $0.scale) }
         let ids = marks.map(\.id)
-        let capture = self.capture
+        let capture = self.capture, drawing = self.drawing
         Task {
-            let paintings = await Self.paintings(capture, frames: [overviewFrame] + frames)
+            let pictures = await Self.pictures(capture, ink: drawing, frames: [overviewFrame] + frames)
             guard picturesFor == shown else { return }
-            overview = paintings.first.flatMap { $0 }.map { FeedbackPicture(painting: $0, ink: overviewInk) }
-            var pictures: [Date: FeedbackPicture] = [:]
+            overview = pictures.first.flatMap { $0 }
+            var byMark: [Date: FeedbackPicture] = [:]
             for (index, id) in ids.enumerated() {
-                if let painting = paintings[index + 1] { pictures[id] = FeedbackPicture(painting: painting, ink: inks[index]) }
+                if let picture = pictures[index + 1] { byMark[id] = picture }
             }
-            closeUps = pictures
+            closeUps = byMark
         }
     }
 
+    /// The painting in each frame with `ink` over it.
     @concurrent
-    private static func paintings(_ capture: FeedbackCapture, frames: [FeedbackPackage.Frame]) async -> [CGImage?] {
+    private static func pictures(
+        _ capture: FeedbackCapture, ink: PKDrawing, frames: [FeedbackPackage.Frame]
+    ) async -> [FeedbackPicture?] {
         guard let context = RenderContext.shared, let scene = CanvasScene(template: capture.template, context: context) else {
             return frames.map { _ in nil }
         }
@@ -164,7 +165,8 @@ final class FeedbackDraft {
         options.lineAppearance = capture.lineAppearance
         return frames.map { frame in
             CanvasSnapshot.render(
-                scene: scene, painted: painted, size: frame.pixelSize, options: options, context: context, rect: frame.rect)
+                scene: scene, painted: painted, size: frame.pixelSize, options: options, context: context, rect: frame.rect
+            ).map { FeedbackPicture(painting: $0, ink: FeedbackInk.image(of: ink, rect: frame.rect, scale: frame.scale)) }
         }
     }
 
@@ -174,10 +176,7 @@ final class FeedbackDraft {
     func package() async throws -> [URL] {
         if strokes.isEmpty && hasInk { prepareReview() }
         let layout = FeedbackPackage.Layout(capture: capture, marks: marks, strokes: strokes)
-        let ink = FeedbackPackage.Ink(
-            overview: hasInk ? FeedbackInk.image(of: drawing, rect: layout.overview.rect, scale: layout.overview.scale) : nil,
-            view: FeedbackInk.image(of: drawing, rect: layout.view.rect, scale: layout.view.scale),
-            marks: layout.marks.map { FeedbackInk.image(of: drawing, rect: $0.rect, scale: $0.scale) })
+        let ink = await Self.ink(drawing, over: layout)
         var photo: Data?
         if includesPhoto, let load = capture.source?.photo {
             photo = await load()
@@ -187,6 +186,17 @@ final class FeedbackDraft {
             capture: capture, note: note, strokes: strokes, marks: marks, comments: comments, readings: readings,
             photo: photo, layout: layout, ink: ink)
         return try await FeedbackPackage.write(contents)
+    }
+
+    /// `drawing` over each of `layout`'s frames.
+    @concurrent
+    private static func ink(_ drawing: PKDrawing, over layout: FeedbackPackage.Layout) async -> FeedbackPackage.Ink {
+        func image(_ frame: FeedbackPackage.Frame) -> CGImage? {
+            FeedbackInk.image(of: drawing, rect: frame.rect, scale: frame.scale)
+        }
+        return FeedbackPackage.Ink(
+            overview: drawing.strokes.isEmpty ? nil : image(layout.overview), view: image(layout.view),
+            marks: layout.marks.map(image))
     }
 }
 

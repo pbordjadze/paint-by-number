@@ -6,7 +6,9 @@ import UIKit
 
 /// PencilKit's side of feedback: a drawing's strokes as `FeedbackStroke`s, and its ink as
 /// pictures in true colors. Drawing units are canvas units (`MarkupCanvas` keeps them so).
-enum FeedbackInk {
+/// Nonisolated: `FeedbackDraft` draws the pictures off the main actor, as PencilKit's sample
+/// code draws its thumbnails, never on the main thread beside the live canvas.
+nonisolated enum FeedbackInk {
     /// The visible parts of `drawing`'s strokes, each with the zoom it was drawn at (`zooms`,
     /// by stroke path creation date; 1 when unknown).
     static func strokes(of drawing: PKDrawing, zooms: [Date: CGFloat]) -> [FeedbackStroke] {
