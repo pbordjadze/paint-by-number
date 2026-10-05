@@ -2966,7 +2966,7 @@
       "extractionState" : "manual"
     },
     "Draw on the painting, pinch to zoom" : {
-      "comment" : "Feedback mode's top bar on the painting screen: hint under its title",
+      "comment" : "Feedback mode's top bar on the painting screen: hint under its title, also its VoiceOver hint",
       "extractionState" : "manual"
     },
     "Drawing only: changes show at once and apply to every coloring-book painting, including the ones you have." : {
@@ -3738,13 +3738,13 @@
       "extractionState" : "manual"
     },
     "feedback.bundleName" : {
-      "comment" : "Name of the files a painting's feedback is shared as (a picture and a zip archive); the argument is the painting's title",
+      "comment" : "Name of the files a painting's feedback is shared as (a picture and a zip archive); the arguments are the painting's title and when the feedback was given, e.g. 2026-10-05 14.32",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ Feedback"
+            "value" : "%1$@ Feedback %2$@"
           }
         }
       }
@@ -4571,6 +4571,10 @@
     },
     "Playful" : {
       "comment" : "Option of the Color Names setting: paints go by playful nicknames, e.g. “Harbor Fog”",
+      "extractionState" : "manual"
+    },
+    "Preparing your feedback…" : {
+      "comment" : "Feedback's review sheet: message while the feedback's pictures and files are being written, before the share sheet opens",
       "extractionState" : "manual"
     },
     "Preparing…" : {

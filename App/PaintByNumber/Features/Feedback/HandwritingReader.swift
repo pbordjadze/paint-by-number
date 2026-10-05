@@ -8,7 +8,7 @@ import Vision
 /// sure of, reads as nothing. Vision may read nothing at all on a simulator.
 nonisolated enum HandwritingReader {
     /// Lines Vision is less sure of than this (0…1) are dropped.
-    static let minimumConfidence: Float = 0.4
+    static let minimumConfidence: Float = 0.5
 
     /// The text the writing strokes among `strokes` spell (highlighter ink only marks areas),
     /// or nil.
@@ -18,7 +18,8 @@ nonisolated enum HandwritingReader {
     }
 
     /// The text in `image` (dark writing on a light ground), top line first, or nil when there
-    /// is none Vision trusts: a lone letter or sign is a circle or an arrow read as one.
+    /// is none Vision trusts. A line without two letters or digits is a circle or an arrow read
+    /// as a letter or a sign, and is left out.
     static func read(_ image: CGImage) -> String? {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
@@ -31,17 +32,17 @@ nonisolated enum HandwritingReader {
             return nil
         }
         let lines = (request.results ?? []).compactMap { observation -> (text: String, box: CGRect)? in
-            guard let best = observation.topCandidates(1).first, best.confidence >= minimumConfidence else { return nil }
-            return (best.string, observation.boundingBox)
+            guard let best = observation.topCandidates(1).first, best.confidence >= minimumConfidence,
+                  best.string.filter({ $0.isLetter || $0.isNumber }).count >= 2
+            else { return nil }
+            return (best.string.trimmingCharacters(in: .whitespacesAndNewlines), observation.boundingBox)
         }
+        guard !lines.isEmpty else { return nil }
         // Vision's boxes are normalized with the origin at the bottom left.
-        let text = lines
+        return lines
             .sorted { $0.box.midY != $1.box.midY ? $0.box.midY > $1.box.midY : $0.box.minX < $1.box.minX }
             .map(\.text)
             .joined(separator: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard text.filter({ $0.isLetter || $0.isNumber }).count >= 2 else { return nil }
-        return text
     }
 
     /// The writing strokes drawn black on white, as large as twice the points they covered on

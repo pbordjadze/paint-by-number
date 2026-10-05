@@ -143,12 +143,15 @@ struct FeedbackTests {
     /// The bundle: the painting with its marks beside a zip of everything, the folder they were
     /// written in gone.
     @Test func bundleIsAPictureAndAZip() async throws {
-        let files = try await FeedbackPackage.write(sampleContents())
+        let contents = sampleContents()
+        let files = try await FeedbackPackage.write(contents)
         defer { ArtworkExporter.removeExport(at: files[0]) }
-        #expect(files.map(\.lastPathComponent) == ["Stripes Feedback.png", "Stripes Feedback.zip"])
+        let name = FeedbackPackage.bundleName(title: "Stripes", date: contents.capture.date)
+        #expect(name.hasPrefix("Stripes Feedback "))
+        #expect(files.map(\.lastPathComponent) == ["\(name).png", "\(name).zip"])
         let folder = files[0].deletingLastPathComponent()
         let written = try FileManager.default.contentsOfDirectory(atPath: folder.path).sorted()
-        #expect(written == ["Stripes Feedback.png", "Stripes Feedback.zip"])
+        #expect(written == ["\(name).png", "\(name).zip"])
         let zip = try Data(contentsOf: files[1])
         #expect(zip.starts(with: [0x50, 0x4B, 0x03, 0x04]))
         let picture = try #require(ImageCodec.image(at: files[0]))

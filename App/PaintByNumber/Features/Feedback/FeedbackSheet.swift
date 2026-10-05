@@ -62,8 +62,17 @@ struct FeedbackSheet: View {
                 }
             }
             .disabled(phase == .packing)
+            .overlay(alignment: .bottom) {
+                if phase == .packing {
+                    Toast(text: String(localized: "Preparing your feedback…"), systemImage: "shippingbox")
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 24)
+                }
+            }
+            .animation(.snappy, value: phase)
         }
         .tint(Theme.accent)
+        .interactiveDismissDisabled(phase == .packing)
         .background {
             ActivityShareSheet(items: sharedFiles) { completed in finishSharing(completed: completed) }
         }
@@ -96,7 +105,7 @@ struct FeedbackSheet: View {
             Label("The painting with your marks, and each mark close up", systemImage: "photo")
             Label("Its template, settings and progress", systemImage: "square.grid.3x3")
             LabeledContent {
-                Text(verbatim: "\(draft.capture.app), \(draft.capture.system)")
+                Text(verbatim: "\(draft.capture.app), \(draft.capture.device), \(draft.capture.system)")
             } label: {
                 Label("App and Device", systemImage: "info.circle")
             }

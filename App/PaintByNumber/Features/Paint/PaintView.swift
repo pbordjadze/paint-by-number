@@ -325,16 +325,14 @@ struct PaintView: View {
     /// whole screen.
     private func topBar(width: CGFloat) -> some View {
         let badges = badgeVariants
+        let rows: [BarVariant] = badges.map { BarVariant(badge: $0, showsHint: true, showsFeedback: true) }
+            + badges.map { BarVariant(badge: $0, showsHint: true, showsFeedback: false) }
+            + badges.suffix(1).map { BarVariant(badge: $0, showsHint: false, showsFeedback: false) }
         return GlassEffectContainer(spacing: 10) {
+            // One `ForEach` of distinct rows: `ViewThatFits` traps on children sharing an id.
             ViewThatFits(in: .horizontal) {
-                ForEach(badges, id: \.self) { badge in
-                    topBarRow(badge: badge, showsHint: true, showsFeedback: true)
-                }
-                ForEach(badges, id: \.self) { badge in
-                    topBarRow(badge: badge, showsHint: true, showsFeedback: false)
-                }
-                if let smallest = badges.last {
-                    topBarRow(badge: smallest, showsHint: false, showsFeedback: false)
+                ForEach(rows, id: \.self) { row in
+                    topBarRow(badge: row.badge, showsHint: row.showsHint, showsFeedback: row.showsFeedback)
                 }
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
@@ -342,6 +340,13 @@ struct PaintView: View {
         // The bar keeps its 44 pt height (the canvas insets assume it); larger text sizes
         // reach its controls through the Large Content Viewer.
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
+
+    /// One way the top bar can be laid out (`topBar`).
+    nonisolated private struct BarVariant: Hashable {
+        var badge: BadgeVariant
+        var showsHint: Bool
+        var showsFeedback: Bool
     }
 
     private func topBarRow(badge: BadgeVariant, showsHint: Bool, showsFeedback: Bool) -> some View {
@@ -579,8 +584,10 @@ struct PaintView: View {
 
     // MARK: Feedback
 
+    /// Read while `body` is, so that the sheet and the markup canvas follow the draft.
     private var reviewsFeedback: Binding<Bool> {
-        Binding { feedback?.isReviewing ?? false } set: { feedback?.isReviewing = $0 }
+        let isReviewing = feedback?.isReviewing ?? false
+        return Binding { isReviewing } set: { feedback?.isReviewing = $0 }
     }
 
     /// Captures the painting as it is now and switches to feedback mode, with a flash like a

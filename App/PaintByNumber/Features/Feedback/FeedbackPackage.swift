@@ -78,7 +78,7 @@ nonisolated enum FeedbackPackage {
     /// either removes both.
     @concurrent
     static func write(_ contents: Contents) async throws -> [URL] {
-        let name = bundleName(title: contents.capture.title)
+        let name = bundleName(title: contents.capture.title, date: contents.capture.date)
         let picture = try ArtworkExporter.temporaryURL(name: name, pathExtension: "png")
         let directory = picture.deletingLastPathComponent()
         let folder = directory.appending(path: ArtworkExporter.fileName(name), directoryHint: .isDirectory)
@@ -95,11 +95,15 @@ nonisolated enum FeedbackPackage {
         return [picture, zip]
     }
 
-    /// "Red Fox Feedback": the name the picture and the zip are shared under.
-    static func bundleName(title: String) -> String {
+    /// "Red Fox Feedback 2026-10-05 14.32": the name the picture and the zip are shared under,
+    /// told apart by when the feedback was given (local time).
+    static func bundleName(title: String, date: Date) -> String {
         let painting = title.isEmpty ? String(localized: "Painting") : title
-        return String(localized: "feedback.bundleName", defaultValue: "\(painting) Feedback",
-                      comment: "Name of the files a painting's feedback is shared as (a picture and a zip archive); the argument is the painting's title")
+        let t = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let stamp = String(
+            format: "%04d-%02d-%02d %02d.%02d", t.year ?? 0, t.month ?? 0, t.day ?? 0, t.hour ?? 0, t.minute ?? 0)
+        return String(localized: "feedback.bundleName", defaultValue: "\(painting) Feedback \(stamp)",
+                      comment: "Name of the files a painting's feedback is shared as (a picture and a zip archive); the arguments are the painting's title and when the feedback was given, e.g. 2026-10-05 14.32")
     }
 
     private static func writeFiles(_ contents: Contents, into folder: URL, picture: URL) throws {

@@ -71,6 +71,8 @@ final class FeedbackDraft {
         let ink = !drawing.strokes.isEmpty
         if hasInk != ink { hasInk = ink }
         undoChanged()
+        // PencilKit may register a stroke's undo after telling of it.
+        Task { self.undoChanged() }
     }
 
     func undo() {

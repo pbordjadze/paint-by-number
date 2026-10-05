@@ -20,7 +20,7 @@ final class FeedbackUITests: XCTestCase {
         }
         let next = app.buttons["feedback-next"]
         XCTAssertTrue(next.waitForExistence(timeout: 10), "Feedback didn't start")
-        let undo = app.buttons["Undo"]
+        let undo = app.buttons["feedback-undo"]
         XCTAssertFalse(undo.isEnabled, "Undo is on before anything was drawn")
 
         let window = app.windows.firstMatch

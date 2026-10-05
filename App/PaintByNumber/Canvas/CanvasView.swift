@@ -622,6 +622,8 @@ final class CanvasView: UIView, PaintingCanvas {
     private func annotatingChanged() {
         accessibilityElementsHidden = isAnnotating
         if isAnnotating {
+            // The markup canvas starts from where the camera is: a flight would carry on alone.
+            cameraAnimation = nil
             hoverRegion = -1
             pendingFocus = nil
         }

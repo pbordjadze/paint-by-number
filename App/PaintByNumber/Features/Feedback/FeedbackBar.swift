@@ -24,14 +24,18 @@ struct FeedbackBar: View {
                         Text("Your marks and notes will be lost.")
                     }
                 ViewThatFits(in: .horizontal) {
-                    title(showsHint: true)
-                    title(showsHint: false)
+                    title(.full)
+                    title(.name)
+                    title(.symbol)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                // Identified apart from the tool picker's own Undo and Redo (iPhone).
                 GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: draft.undo)
                     .disabled(!draft.canUndo)
+                    .accessibilityIdentifier("feedback-undo")
                 GlassIconButton(systemImage: "arrow.uturn.forward", label: "Redo", action: draft.redo)
                     .disabled(!draft.canRedo)
+                    .accessibilityIdentifier("feedback-redo")
                 Button(action: onNext) {
                     Text("Next")
                         .fontWeight(.semibold)
@@ -49,32 +53,49 @@ struct FeedbackBar: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    private func title(showsHint: Bool) -> some View {
+    /// How much of the title the bar has room for.
+    private enum TitleStyle {
+        /// The mode's name and what to do in it.
+        case full
+        case name
+        /// Only the symbol (the narrowest bars).
+        case symbol
+    }
+
+    private func title(_ style: TitleStyle) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "exclamationmark.bubble")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Theme.accent)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 0) {
-                // Its own key: Settings' "Feedback" is haptics and sounds.
-                Text(String(localized: "feedback.mode.title", defaultValue: "Feedback",
-                            comment: "Feedback mode's top bar on the painting screen: its title, while the painter marks the painting and writes notes for the developers"))
-                    .font(.subheadline.weight(.semibold))
-                if showsHint {
-                    Text("Draw on the painting, pinch to zoom")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            if style != .symbol {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(name)
+                        .font(.subheadline.weight(.semibold))
+                    if style == .full {
+                        Text("Draw on the painting, pinch to zoom")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
+                .lineLimit(1)
+                .fixedSize()
             }
-            .lineLimit(1)
-            .fixedSize()
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, style == .symbol ? 0 : 14)
+        .frame(minWidth: 44)
         .frame(height: 44)
         .glassEffect(.regular, in: .capsule)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(name))
+        .accessibilityHint(Text("Draw on the painting, pinch to zoom"))
         .accessibilityAddTraits(.isHeader)
         .accessibilityShowsLargeContentViewer()
+    }
+
+    /// Its own key: Settings' "Feedback" is haptics and sounds.
+    private var name: String {
+        String(localized: "feedback.mode.title", defaultValue: "Feedback",
+               comment: "Feedback mode's top bar on the painting screen: its title, while the painter marks the painting and writes notes for the developers")
     }
 
     /// Nothing to lose: straight back to painting.
