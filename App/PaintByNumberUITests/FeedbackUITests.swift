@@ -1,7 +1,8 @@
 import XCTest
 
 /// Feedback on a painting: a finger draws a mark, Next reviews it (the mark gets its own
-/// comment field), Back returns to drawing, and Cancel › Discard returns to painting.
+/// comment field, which takes typing), Back returns to drawing, and Cancel › Discard returns
+/// to painting.
 final class FeedbackUITests: XCTestCase {
     @MainActor
     func testDrawReviewAndDiscard() throws {
@@ -38,6 +39,9 @@ final class FeedbackUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Send Feedback"].waitForExistence(timeout: 10), "Next didn't open the review")
         let comment = app.descendants(matching: .any)["feedback-mark-1"]
         XCTAssertTrue(comment.waitForExistence(timeout: 10), "The mark has no comment field")
+        comment.tap()
+        comment.typeText("Too busy")
+        XCTAssertTrue((comment.value as? String)?.contains("Too busy") == true, "The mark's comment can't be typed")
         attachScreenshot(of: app, named: "feedback-review")
 
         app.buttons["feedback-back"].tap()

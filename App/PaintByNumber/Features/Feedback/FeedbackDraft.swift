@@ -71,6 +71,7 @@ final class FeedbackDraft {
         let ink = !drawing.strokes.isEmpty
         if hasInk != ink { hasInk = ink }
         undoChanged()
+        Log.feedback.info("Ink: \(drawing.strokes.count, privacy: .public) strokes; undo \(self.canUndo, privacy: .public), redo \(self.canRedo, privacy: .public)")
         // PencilKit may register a stroke's undo after telling of it.
         Task { self.undoChanged() }
     }
@@ -99,6 +100,7 @@ final class FeedbackDraft {
     func prepareReview() {
         strokes = FeedbackInk.strokes(of: drawing, zooms: strokeZooms)
         marks = FeedbackMarks.group(strokes)
+        Log.feedback.notice("Review: \(self.strokes.count, privacy: .public) strokes in \(self.marks.count, privacy: .public) marks")
         for mark in marks {
             let markStrokes = mark.strokes.map { strokes[$0] }
             guard readFrom[mark.id] != markStrokes else { continue }

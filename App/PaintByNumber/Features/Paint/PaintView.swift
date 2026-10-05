@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 import PaintCore
 import SwiftUI
 import TipKit
@@ -188,7 +189,10 @@ struct PaintView: View {
                     if let feedback {
                         FeedbackBar(
                             draft: feedback, width: max(0, geo.size.width - 2 * Self.edge), onDiscard: endFeedback,
-                            onNext: { feedback.isReviewing = true })
+                            onNext: {
+                                Log.feedback.notice("Next: the review opens")
+                                feedback.isReviewing = true
+                            })
                     } else {
                         topBar(width: geo.size.width)
                     }
@@ -600,6 +604,7 @@ struct PaintView: View {
             darkInterface: colorScheme == .dark, lineAppearance: LineAppearance.decoded(storedLineAppearance),
             displayScale: displayScale, source: feedbackSource)
         FeedbackEngine.shared.selectionChanged()
+        Log.feedback.notice("Feedback started")
         withAnimation(reduceMotion ? nil : .snappy) { feedback = FeedbackDraft(capture: capture) }
         if !reduceMotion {
             flashes = true
@@ -615,9 +620,11 @@ struct PaintView: View {
     }
 
     private func endFeedback() {
+        Log.feedback.notice("Feedback ends")
         withAnimation(reduceMotion ? nil : .snappy) { feedback = nil }
         // Back to the window's undo history of fills.
         controller.focus()
+        Log.feedback.notice("Feedback ended")
     }
 
     /// The feedback was shared: the sheet goes, then feedback mode, and thanks.

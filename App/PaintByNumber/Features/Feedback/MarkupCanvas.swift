@@ -1,3 +1,4 @@
+import os
 import PencilKit
 import SwiftUI
 import UIKit
@@ -106,6 +107,14 @@ final class MarkupCanvasView: PKCanvasView {
     /// Marks undo apart from the window's history, which holds the painting's fills.
     override var undoManager: UndoManager? { marks }
 
+    @discardableResult
+    override func resignFirstResponder() -> Bool {
+        Log.feedback.notice("Markup canvas resigning first responder")
+        let resigned = super.resignFirstResponder()
+        Log.feedback.notice("Markup canvas resigned first responder: \(resigned, privacy: .public)")
+        return resigned
+    }
+
     override func didMoveToWindow() {
         super.didMoveToWindow()
         guard window != nil else { return }
@@ -122,15 +131,20 @@ final class MarkupCanvasView: PKCanvasView {
         Task { self.takeCanvasCamera() }
     }
 
-    /// Hides the tool picker and lets go of it as the canvas leaves.
+    /// Hides the tool picker and lets go of it as the canvas leaves (leaving the window, it
+    /// stops being first responder).
     func tearDown() {
+        Log.feedback.notice("Markup canvas leaving (first responder: \(self.isFirstResponder, privacy: .public))")
         toolPicker.setVisible(false, forFirstResponder: self)
         toolPicker.removeObserver(self)
-        resignFirstResponder()
     }
 
+    /// Under the review sheet the canvas stays first responder and only its tools go (when it
+    /// also resigned there, the app stopped answering as the sheet came up just after a finger
+    /// stroke, on CI's simulators).
     private func markingChanged() {
         guard window != nil else { return }
+        Log.feedback.notice("Markup canvas \(self.isMarking ? "marking" : "under the review", privacy: .public)")
         // Under the review sheet, out of reach and out of the accessibility tree.
         accessibilityElementsHidden = !isMarking
         toolPicker.setVisible(isMarking, forFirstResponder: self)
@@ -139,9 +153,8 @@ final class MarkupCanvasView: PKCanvasView {
             // shown tool picker or not (PencilKit's default lets only the Pencil draw without).
             drawingPolicy = UIPencilInteraction.prefersPencilOnlyDrawing ? .pencilOnly : .anyInput
             becomeFirstResponder()
-        } else {
-            resignFirstResponder()
         }
+        Log.feedback.notice("Tool picker \(self.isMarking ? "shown" : "hidden", privacy: .public)")
     }
 
     // MARK: Camera

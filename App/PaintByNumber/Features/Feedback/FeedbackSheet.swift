@@ -81,7 +81,10 @@ struct FeedbackSheet: View {
         } message: {
             Text("Try again in a moment.")
         }
-        .onAppear { draft.prepareReview() }
+        .onAppear {
+            Log.feedback.notice("Review sheet up")
+            draft.prepareReview()
+        }
     }
 
     // MARK: Sections
