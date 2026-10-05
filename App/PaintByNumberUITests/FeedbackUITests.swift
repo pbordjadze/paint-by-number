@@ -36,8 +36,6 @@ final class FeedbackUITests: XCTestCase {
         XCTAssertTrue(highlighter.isSelected, "The highlighter didn't become the tool")
 
         next.tap()
-        // The screen as it is, without asking the app (should it stop answering, this shows where).
-        attach(XCUIScreen.main.screenshot(), named: "feedback-next")
         XCTAssertTrue(app.navigationBars["Send Feedback"].waitForExistence(timeout: 10), "Next didn't open the review")
         let comment = app.descendants(matching: .any)["feedback-mark-1"]
         XCTAssertTrue(comment.waitForExistence(timeout: 10), "The mark has no comment field")

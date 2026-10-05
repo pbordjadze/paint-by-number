@@ -91,6 +91,9 @@ struct PaintView: View {
                 canvasAndChrome(geo: geo, palette: paletteLayout(in: geo.size))
             }
         }
+        // Nothing here takes typing: a keyboard over a sheet (feedback's notes) leaves the
+        // canvas where it is.
+        .ignoresSafeArea(.keyboard)
         .background(Color(uiColor: .systemGroupedBackground))
         .focusedSceneValue(\.painting, PaintingFocus(
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
