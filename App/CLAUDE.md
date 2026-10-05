@@ -140,17 +140,19 @@ synchronized folder would bundle it into the app.
   painting (`FeedbackCapture`: progress, selection, what is on screen, app and device; where it
   came from is `feedbackSource`, put in the environment by `ArtworkPaintingView`) into a
   `FeedbackDraft` and switches to feedback mode: painting, the Paint menu and the Pencil's double
-  tap and squeeze are off, the palette goes and `FeedbackBar` replaces the top bar.
+  tap and squeeze are off, `CanvasView` lets go of first responder (no undoing fills), the palette
+  gives way to `FeedbackTools` and `FeedbackBar` replaces the top bar.
 - `MarkupCanvas` is a PencilKit canvas over `CanvasView` that takes every touch. Its scroll view
   leads the camera (started from `CanvasView.ScrollCamera`, mirrored by `CanvasController.follow`),
   so drawing units are canvas units and the Metal canvas stays sharp at every zoom; its delegate is
   a separate object (a `PKCanvasView` subclass must not stand in for PencilKit's own scroll view
   callbacks). Marks have their own `UndoManager` (never the window's, which holds the fills), ink
-  is drawn in the light style so it keeps its colors, and the system tool picker offers a red pen,
-  a highlighter, the vector eraser and the lasso. A finger draws unless "Only Draw with Apple
-  Pencil" is on (the canvas sets its `drawingPolicy` from it: PencilKit's default lets only the
-  Pencil draw whenever the tool picker is hidden). `CanvasView.isAnnotating` hides the areas VoiceOver
-  would offer to paint.
+  is drawn in the light style so it keeps its colors, and a finger draws unless "Only Draw with
+  Apple Pencil" is on (its `drawingPolicy`). The tools are the app's own (`FeedbackTools`: the pen
+  in red, blue or green, the highlighter, the vector eraser), never PencilKit's tool picker: the
+  picker needs the canvas as first responder, and moving first responder to or from the canvas
+  while the review sheet came or went, just after a finger stroke, hung the app on CI's simulators
+  (iOS 26.5). `CanvasView.isAnnotating` hides the areas VoiceOver would offer to paint.
 - `FeedbackSheet` (Next) groups the ink into marks (`FeedbackMarks.group`: strokes within 36 points
   on screen at the zoom they were drawn at), gives each a comment that `HandwritingReader` (Vision's
   text recognition on the writing ink) fills in when it reads something (it may read nothing on a

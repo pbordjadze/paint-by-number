@@ -31,7 +31,7 @@ import simd
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette
 ///   caption and completion bar as translations would stress them
 /// - `paint-feedback`: ~45 % painted, in feedback mode with two marks drawn (a red circle and
-///   arrow round the busiest part, a highlighter stroke across another) and the tool picker up
+///   arrow round the busiest part, a highlighter stroke across another) and the tools
 /// - `paint-feedback-dark`: `paint-feedback` for dark appearance (the ink keeps its colors)
 /// - `paint-feedback-review`: the review and send sheet over it, with a note, the first mark's
 ///   comment, both close-ups and the Original Photo switch (a painting from the painter's photo)

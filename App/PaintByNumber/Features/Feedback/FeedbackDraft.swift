@@ -18,6 +18,9 @@ final class FeedbackDraft {
     var comments: [Date: String] = [:]
     /// Whether the painter's own photo goes along: never unless they say so.
     var includesPhoto = false
+    /// What the markup canvas draws with (`FeedbackTools`).
+    var tool = FeedbackTool.pen
+    var penColor = FeedbackInkColor.red
     /// The review and send sheet is up: the markup canvas lets go of the tools meanwhile.
     var isReviewing = false
     /// Shared: feedback mode is ending.

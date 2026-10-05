@@ -172,7 +172,7 @@ struct PaintView: View {
                 MarkupCanvas(
                     draft: feedback, controller: controller,
                     canvasSize: CGSize(width: session.template.width, height: session.template.height),
-                    isMarking: !feedback.isReviewing && !feedback.isSent)
+                    isMarking: !feedback.isReviewing && !feedback.isSent, tool: feedback.tool, penColor: feedback.penColor)
                     .ignoresSafeArea()
             }
 
@@ -200,7 +200,11 @@ struct PaintView: View {
                 .padding(.horizontal, Self.edge)
                 .padding(.top, Self.topGap)
                 Spacer(minLength: 0)
-                if feedback == nil && (!palette.side || session.isComplete) {
+                if let feedback {
+                    FeedbackTools(draft: feedback)
+                        .padding(.horizontal, Self.edge)
+                        .padding(.bottom, Self.bottomGap)
+                } else if !palette.side || session.isComplete {
                     bottomBar(palette)
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
@@ -605,6 +609,8 @@ struct PaintView: View {
             displayScale: displayScale, source: feedbackSource)
         FeedbackEngine.shared.selectionChanged()
         Log.feedback.notice("Feedback started")
+        // The painting is behind glass meanwhile: no undo of its fills.
+        controller.releaseFocus()
         withAnimation(reduceMotion ? nil : .snappy) { feedback = FeedbackDraft(capture: capture) }
         if !reduceMotion {
             flashes = true

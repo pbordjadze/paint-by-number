@@ -1,23 +1,24 @@
-import os
 import PencilKit
 import SwiftUI
 import UIKit
 
 /// Feedback mode's drawing surface: a transparent PencilKit canvas over the painting that
-/// takes every touch. A finger or the Pencil draws (only the Pencil under "Only Draw with
-/// Apple Pencil", as when painting); two fingers pan and pinch. Its scroll view
-/// leads the camera, set up with the painting canvas's zoom limits and insets, and the Metal
-/// canvas under it follows (`CanvasController.follow`), so the ink is drawn in canvas units
-/// over a painting that stays sharp at every zoom. Ink keeps the colors picked in either
-/// appearance, and marks have an undo history of their own: ⌘Z and the bar's Undo take back
-/// marks, never paint. The system tool picker shows while `isMarking` (not under the review
-/// sheet).
+/// takes every touch. A finger or the Pencil draws with the tool `FeedbackTools` picked (only
+/// the Pencil under "Only Draw with Apple Pencil", as when painting); two fingers pan and
+/// pinch. Its scroll view leads the camera, set up with the painting canvas's zoom limits and
+/// insets, and the Metal canvas under it follows (`CanvasController.follow`), so the ink is
+/// drawn in canvas units over a painting that stays sharp at every zoom. Ink keeps the colors
+/// picked in either appearance, and marks have an undo history of their own: the bar's Undo
+/// takes back marks, never paint. The canvas never becomes first responder (see
+/// `FeedbackTools`).
 struct MarkupCanvas: UIViewRepresentable {
     let draft: FeedbackDraft
     let controller: CanvasController
     /// The painting's size in canvas units.
     let canvasSize: CGSize
     var isMarking = true
+    var tool = FeedbackTool.pen
+    var penColor = FeedbackInkColor.red
 
     func makeUIView(context: Context) -> MarkupCanvasView {
         MarkupCanvasView(draft: draft, controller: controller, canvasSize: canvasSize)
@@ -25,10 +26,7 @@ struct MarkupCanvas: UIViewRepresentable {
 
     func updateUIView(_ view: MarkupCanvasView, context: Context) {
         view.isMarking = isMarking
-    }
-
-    static func dismantleUIView(_ view: MarkupCanvasView, coordinator: ()) {
-        view.tearDown()
+        view.use(tool, penColor: penColor)
     }
 }
 
@@ -40,7 +38,6 @@ final class MarkupCanvasView: PKCanvasView {
     private let draft: FeedbackDraft
     private let controller: CanvasController
     private let canvasSize: CGSize
-    private let toolPicker: PKToolPicker
     private let marks: UndoManager
     /// The canvas's delegate: a separate object, so no method here stands in for one of
     /// PencilKit's own scroll view callbacks.
@@ -48,25 +45,12 @@ final class MarkupCanvasView: PKCanvasView {
     private var laidOutSize: CGSize = .zero
     /// True while this canvas takes the painting canvas's camera (no echo back to it).
     private var isTakingCamera = false
-
-    private static let penID = "feedback.pen"
-
-    /// A red pen to circle and write with, a highlighter, an eraser that takes whole strokes
-    /// and the lasso to move them.
-    private static var tools: [PKToolPickerItem] {
-        [
-            PKToolPickerInkingItem(type: .pen, color: .systemRed, width: nil, identifier: penID),
-            PKToolPickerInkingItem(type: .marker, color: .systemYellow, width: nil, identifier: "feedback.marker"),
-            PKToolPickerEraserItem(type: .vector),
-            PKToolPickerLassoItem(),
-        ]
-    }
+    private var inUse: (FeedbackTool, FeedbackInkColor)?
 
     init(draft: FeedbackDraft, controller: CanvasController, canvasSize: CGSize) {
         self.draft = draft
         self.controller = controller
         self.canvasSize = canvasSize
-        toolPicker = PKToolPicker(toolItems: Self.tools)
         marks = UndoManager()
         events = Events()
         super.init(frame: .zero)
@@ -86,12 +70,8 @@ final class MarkupCanvasView: PKCanvasView {
         events.view = self
         delegate = events
         draft.undoManager = marks
-        toolPicker.selectedToolItemIdentifier = Self.penID
-        toolPicker.colorUserInterfaceStyle = .light
-        // The canvas follows the Pencil preference itself (`markingChanged`): the picker's
-        // switch for it would change nothing here.
-        toolPicker.showsDrawingPolicyControls = false
-        toolPicker.addObserver(self)
+        use(draft.tool, penColor: draft.penColor)
+        markingChanged()
         isAccessibilityElement = true
         accessibilityLabel = String(localized: "feedback.canvas.label", defaultValue: "Painting",
                                     comment: "VoiceOver label of the painting while feedback is being drawn on it")
@@ -107,21 +87,6 @@ final class MarkupCanvasView: PKCanvasView {
     /// Marks undo apart from the window's history, which holds the painting's fills.
     override var undoManager: UndoManager? { marks }
 
-    @discardableResult
-    override func resignFirstResponder() -> Bool {
-        Log.feedback.notice("Markup canvas resigning first responder")
-        let resigned = super.resignFirstResponder()
-        Log.feedback.notice("Markup canvas resigned first responder: \(resigned, privacy: .public)")
-        return resigned
-    }
-
-    override func didMoveToWindow() {
-        super.didMoveToWindow()
-        guard window != nil else { return }
-        setNeedsLayout()
-        markingChanged()
-    }
-
     override func layoutSubviews() {
         super.layoutSubviews()
         guard bounds.width > 1, bounds.height > 1, bounds.size != laidOutSize else { return }
@@ -131,30 +96,24 @@ final class MarkupCanvasView: PKCanvasView {
         Task { self.takeCanvasCamera() }
     }
 
-    /// Hides the tool picker and lets go of it as the canvas leaves (leaving the window, it
-    /// stops being first responder).
-    func tearDown() {
-        Log.feedback.notice("Markup canvas leaving (first responder: \(self.isFirstResponder, privacy: .public))")
-        toolPicker.setVisible(false, forFirstResponder: self)
-        toolPicker.removeObserver(self)
+    /// Draws with `tool` from now on: the pen in `penColor`, the yellow highlighter, or the
+    /// eraser that takes whole strokes.
+    func use(_ tool: FeedbackTool, penColor: FeedbackInkColor) {
+        if let inUse, inUse == (tool, penColor) { return }
+        inUse = (tool, penColor)
+        switch tool {
+        case .pen: self.tool = PKInkingTool(.pen, color: penColor.uiColor)
+        case .highlighter: self.tool = PKInkingTool(.marker, color: .systemYellow)
+        case .eraser: self.tool = PKEraserTool(.vector)
+        }
     }
 
-    /// Under the review sheet the canvas stays first responder and only its tools go (when it
-    /// also resigned there, the app stopped answering as the sheet came up just after a finger
-    /// stroke, on CI's simulators).
     private func markingChanged() {
-        guard window != nil else { return }
-        Log.feedback.notice("Markup canvas \(self.isMarking ? "marking" : "under the review", privacy: .public)")
-        // Under the review sheet, out of reach and out of the accessibility tree.
+        // Under the review sheet, out of the accessibility tree. It keeps taking touches, which
+        // would otherwise reach the painting under it.
         accessibilityElementsHidden = !isMarking
-        toolPicker.setVisible(isMarking, forFirstResponder: self)
-        if isMarking {
-            // A finger draws unless the painter draws only with the Pencil, as when painting,
-            // shown tool picker or not (PencilKit's default lets only the Pencil draw without).
-            drawingPolicy = UIPencilInteraction.prefersPencilOnlyDrawing ? .pencilOnly : .anyInput
-            becomeFirstResponder()
-        }
-        Log.feedback.notice("Tool picker \(self.isMarking ? "shown" : "hidden", privacy: .public)")
+        // A finger draws unless the painter draws only with the Pencil, as when painting.
+        if isMarking { drawingPolicy = UIPencilInteraction.prefersPencilOnlyDrawing ? .pencilOnly : .anyInput }
     }
 
     // MARK: Camera

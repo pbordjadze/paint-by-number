@@ -1,8 +1,8 @@
 import XCTest
 
-/// Feedback on a painting: a finger draws a mark, Next reviews it (the mark gets its own
-/// comment field, which takes typing), Back returns to drawing, and Cancel › Discard returns
-/// to painting.
+/// Feedback on a painting: a finger draws a mark, the highlighter can be picked, Next reviews
+/// the mark (it gets its own comment field, which takes typing), Back returns to drawing, and
+/// Cancel › Discard returns to painting.
 final class FeedbackUITests: XCTestCase {
     @MainActor
     func testDrawReviewAndDiscard() throws {
@@ -31,9 +31,11 @@ final class FeedbackUITests: XCTestCase {
             for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "enabled == true"), object: undo)], timeout: 10)
         attachScreenshot(of: app, named: "feedback-drawn")
         XCTAssertEqual(drawn, .completed, "A finger drag drew nothing")
+        let highlighter = app.buttons["feedback-tool-highlighter"]
+        highlighter.tap()
+        XCTAssertTrue(highlighter.isSelected, "The highlighter didn't become the tool")
 
         next.tap()
-        sleep(2)
         // The screen as it is, without asking the app (should it stop answering, this shows where).
         attach(XCUIScreen.main.screenshot(), named: "feedback-next")
         XCTAssertTrue(app.navigationBars["Send Feedback"].waitForExistence(timeout: 10), "Next didn't open the review")

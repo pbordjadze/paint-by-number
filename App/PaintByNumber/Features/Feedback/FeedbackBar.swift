@@ -30,7 +30,7 @@ struct FeedbackBar: View {
                     title(.symbol)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                // Identified apart from the Undo and Redo of the tool picker (iPad).
+                // Identified apart from the painting's own Undo, which has the same label.
                 GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: draft.undo)
                     .disabled(!draft.canUndo)
                     .accessibilityIdentifier("feedback-undo")

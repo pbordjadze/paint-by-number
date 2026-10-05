@@ -13,6 +13,8 @@ final class CanvasController {
     func replay() { view?.replay() }
     /// Makes the canvas first responder again (the window's undo history of fills, ⌘Z).
     func focus() { _ = view?.becomeFirstResponder() }
+    /// Lets go of first responder, so ⌘Z and three-finger undo take back no fills meanwhile.
+    func releaseFocus() { _ = view?.resignFirstResponder() }
 
     // Feedback (see `CanvasView`'s camera of another scroll view).
     var scrollCamera: CanvasView.ScrollCamera? { view?.scrollCamera }
