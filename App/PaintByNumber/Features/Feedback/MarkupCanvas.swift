@@ -4,7 +4,7 @@ import UIKit
 
 /// Feedback mode's drawing surface: a transparent PencilKit canvas over the painting that
 /// takes every touch. A finger or the Pencil draws (only the Pencil under "Only Draw with
-/// Apple Pencil", which the tool picker can switch); two fingers pan and pinch. Its scroll view
+/// Apple Pencil", as when painting); two fingers pan and pinch. Its scroll view
 /// leads the camera, set up with the painting canvas's zoom limits and insets, and the Metal
 /// canvas under it follows (`CanvasController.follow`), so the ink is drawn in canvas units
 /// over a painting that stays sharp at every zoom. Ink keeps the colors picked in either
@@ -73,7 +73,6 @@ final class MarkupCanvasView: PKCanvasView {
         isOpaque = false
         // PencilKit lightens dark ink in dark mode; marks keep the colors picked.
         overrideUserInterfaceStyle = .light
-        drawingPolicy = .default
         contentInsetAdjustmentBehavior = .never
         showsHorizontalScrollIndicator = false
         showsVerticalScrollIndicator = false
@@ -88,6 +87,9 @@ final class MarkupCanvasView: PKCanvasView {
         draft.undoManager = marks
         toolPicker.selectedToolItemIdentifier = Self.penID
         toolPicker.colorUserInterfaceStyle = .light
+        // The canvas follows the Pencil preference itself (`markingChanged`): the picker's
+        // switch for it would change nothing here.
+        toolPicker.showsDrawingPolicyControls = false
         toolPicker.addObserver(self)
         isAccessibilityElement = true
         accessibilityLabel = String(localized: "feedback.canvas.label", defaultValue: "Painting",
@@ -131,6 +133,9 @@ final class MarkupCanvasView: PKCanvasView {
         guard window != nil else { return }
         toolPicker.setVisible(isMarking, forFirstResponder: self)
         if isMarking {
+            // A finger draws unless the painter draws only with the Pencil, as when painting,
+            // shown tool picker or not (PencilKit's default lets only the Pencil draw without).
+            drawingPolicy = UIPencilInteraction.prefersPencilOnlyDrawing ? .pencilOnly : .anyInput
             becomeFirstResponder()
         } else {
             resignFirstResponder()
