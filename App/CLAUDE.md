@@ -66,9 +66,10 @@ synchronized folder would bundle it into the app.
 - `Features/`: `Create/`; `Gallery/` (`AppShellView` the shell, `GalleryView`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
-  `CompletionBar`, DEBUG `PaintDemoView`); `Settings/` and `Settings/Advanced/`; `Share/`.
-- `Feedback/`: `FeedbackEngine`, `ToneSynth`, `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`,
-  `PaintingEffect`.
+  `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
+  Giving feedback); `Settings/` and `Settings/Advanced/`; `Share/`.
+- `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
+  `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`, `PaintingEffect`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
@@ -132,6 +133,31 @@ synchronized folder would bundle it into the app.
   stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil under Settings ›
   Color Names › Plain, and outside English) feed the palette caption, current color, VoiceOver, the
   swatch's long-press popover and the PDF key; `pbn names` prints a template's.
+
+## Giving feedback
+
+- Give Feedback (`PaintView`: the top bar where it fits, else More; the Paint menu) captures the
+  painting (`FeedbackCapture`: progress, selection, what is on screen, app and device; where it
+  came from is `feedbackSource`, put in the environment by `ArtworkPaintingView`) into a
+  `FeedbackDraft` and switches to feedback mode: painting, the Paint menu and the Pencil's double
+  tap and squeeze are off, the palette goes and `FeedbackBar` replaces the top bar.
+- `MarkupCanvas` is a PencilKit canvas over `CanvasView` that takes every touch. Its scroll view
+  leads the camera (started from `CanvasView.ScrollCamera`, mirrored by `CanvasController.follow`),
+  so drawing units are canvas units and the Metal canvas stays sharp at every zoom; its delegate is
+  a separate object (a `PKCanvasView` subclass must not stand in for PencilKit's own scroll view
+  callbacks). Marks have their own `UndoManager` (never the window's, which holds the fills), ink
+  is drawn in the light style so it keeps its colors, and the system tool picker offers a red pen,
+  a highlighter, the vector eraser and the lasso. `CanvasView.isAnnotating` hides the areas VoiceOver
+  would offer to paint.
+- `FeedbackSheet` (Next) groups the ink into marks (`FeedbackMarks.group`: strokes within 36 points
+  on screen at the zoom they were drawn at), gives each a comment that `HandwritingReader` (Vision's
+  text recognition on the writing ink) fills in when it reads something (it may read nothing on a
+  simulator), and lists what goes along; the painter's own photo only when they switch Original
+  Photo on (a library picture is named instead).
+- Send writes the bundle (`FeedbackPackage`; its contents are `FeedbackReport`'s doc comment) and
+  hands the painting-with-marks PNG and the zip to `ActivityShareSheet`: there is no fixed address,
+  the painter picks Mail, Messages, AirDrop or Files. The export folder goes once the sheet closes;
+  sharing ends feedback with a thank-you toast.
 
 ## Canvas
 

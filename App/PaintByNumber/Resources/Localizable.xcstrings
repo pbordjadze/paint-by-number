@@ -2273,6 +2273,10 @@
       "comment" : "Message of the confirmation dialog for restarting the open painting",
       "extractionState" : "manual"
     },
+    "App and Device" : {
+      "comment" : "Feedback's review sheet: a row of what is sent, the app version and the device's system, shown beside it",
+      "extractionState" : "manual"
+    },
     "Apple Pencil paints; use your fingers to pan and zoom." : {
       "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
       "extractionState" : "manual"
@@ -2289,6 +2293,10 @@
       "comment" : "Time-lapse pace option: the video keeps the rhythm the painting was painted in, compressed (bursts of painting and the pauses between them); a short label for a two-segment control",
       "extractionState" : "manual"
     },
+    "Back" : {
+      "comment" : "Feedback's review sheet: button that closes it and returns to drawing on the painting",
+      "extractionState" : "manual"
+    },
     "Back to Gallery" : {
       "comment" : "Button on the screen shown when a painting can't be opened or the canvas can't be drawn: returns to the gallery",
       "extractionState" : "manual"
@@ -2302,7 +2310,7 @@
       "extractionState" : "manual"
     },
     "Cancel" : {
-      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, or closes Settings › Advanced › Share with a Note without doing anything",
+      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label)",
       "extractionState" : "manual"
     },
     "Can’t Find It?" : {
@@ -2697,6 +2705,10 @@
       "comment" : "Settings › Advanced: shown in place of the preview when its picture can't be read",
       "extractionState" : "manual"
     },
+    "Couldn’t Prepare Feedback" : {
+      "comment" : "Alert title when the feedback's pictures and files couldn't be written",
+      "extractionState" : "manual"
+    },
     "Couldn’t save progress" : {
       "comment" : "Toast on the painting screen (and its VoiceOver announcement) when saving progress to disk failed",
       "extractionState" : "manual"
@@ -2933,6 +2945,14 @@
       "comment" : "Create flow: label of the slider for how much detail the template has",
       "extractionState" : "manual"
     },
+    "Discard" : {
+      "comment" : "Button of that confirmation: throws the feedback away and returns to painting",
+      "extractionState" : "manual"
+    },
+    "Discard Your Feedback?" : {
+      "comment" : "Title of the confirmation before leaving feedback mode on the painting screen when marks or a note would be lost",
+      "extractionState" : "manual"
+    },
     "Done" : {
       "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet, and Settings › Advanced where it covers the whole window (iPad)",
       "extractionState" : "manual"
@@ -2943,6 +2963,10 @@
     },
     "Drag colors into the order you like. This painting’s palette keeps it as its Custom order." : {
       "comment" : "Arrange Colors: footer under the list of the painting's colors",
+      "extractionState" : "manual"
+    },
+    "Draw on the painting, pinch to zoom" : {
+      "comment" : "Feedback mode's top bar on the painting screen: hint under its title",
       "extractionState" : "manual"
     },
     "Drawing only: changes show at once and apply to every coloring-book painting, including the ones you have." : {
@@ -2959,6 +2983,10 @@
     },
     "Duplicate" : {
       "comment" : "Context menu item that makes a copy of a painting",
+      "extractionState" : "manual"
+    },
+    "Each mark gets its own comment. What you wrote on the painting fills it in when it can be read." : {
+      "comment" : "Feedback's review sheet: footer under the list of marks; handwriting in a mark is recognized and fills in its comment",
       "extractionState" : "manual"
     },
     "Each multiplies what the generator works out for the picture; 1× leaves it as it is." : {
@@ -3056,6 +3084,42 @@
     "Feedback" : {
       "comment" : "Header of the Settings section for haptics and sounds",
       "extractionState" : "manual"
+    },
+    "feedback.announcement.started" : {
+      "comment" : "VoiceOver announcement as the painting screen switches to giving feedback; Next is the button that opens the sheet to write and send it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback. Draw on the painting to show what it’s about, then choose Next."
+          }
+        }
+      }
+    },
+    "feedback.canvas.hint" : {
+      "comment" : "VoiceOver hint of the painting while feedback is being drawn on it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draw on the painting to show what your feedback is about. Two fingers move and zoom."
+          }
+        }
+      }
+    },
+    "feedback.mark.title" : {
+      "comment" : "Feedback's review sheet: the name of one of the marks drawn on the painting; the argument is its number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark %lld"
+          }
+        }
+      }
     },
     "Finding the subject…" : {
       "comment" : "Status shown while the photo's main subject is detected before generating the template",
@@ -3526,7 +3590,7 @@
       "extractionState" : "manual"
     },
     "Included" : {
-      "comment" : "Settings › Advanced › Share with a Note: header of the settings text that is shared with the note",
+      "comment" : "Header of what is shared: the settings text in Settings › Advanced › Share with a Note, and the list of what goes with feedback on a painting",
       "extractionState" : "manual"
     },
     "Layered lines are drawn this way. Choose Layered above to see it in the preview." : {
@@ -3618,7 +3682,7 @@
       "extractionState" : "manual"
     },
     "Note" : {
-      "comment" : "Settings › Advanced › Share with a Note: header of the note field",
+      "comment" : "Header of the note field: Settings › Advanced › Share with a Note, and the sheet that reviews and sends feedback on a painting",
       "extractionState" : "manual"
     },
     "Number" : {
@@ -3671,6 +3735,70 @@
     },
     "Every painting starts with a photo" : {
       "comment" : "Headline of the empty gallery",
+      "extractionState" : "manual"
+    },
+    "feedback.bundleName" : {
+      "comment" : "Name of the files a painting's feedback is shared as (a picture and a zip archive); the argument is the painting's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Feedback"
+          }
+        }
+      }
+    },
+    "feedback.canvas.label" : {
+      "comment" : "VoiceOver label of the painting while feedback is being drawn on it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting"
+          }
+        }
+      }
+    },
+    "feedback.mode.title" : {
+      "comment" : "Feedback mode's top bar on the painting screen: its title, while the painter marks the painting and writes notes for the developers",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback"
+          }
+        }
+      }
+    },
+    "Give Feedback" : {
+      "comment" : "Painting screen: top bar button (its accessibility label) that starts feedback: drawing on the painting and writing notes to send to the developers",
+      "extractionState" : "manual"
+    },
+    "Give Feedback…" : {
+      "comment" : "Painting screen: item of the More menu and of the iPadOS Paint menu that starts feedback: drawing on the painting and writing notes to send to the developers",
+      "extractionState" : "manual"
+    },
+    "Its template, settings and progress" : {
+      "comment" : "Feedback's review sheet: a row of what is sent, the painting's data",
+      "extractionState" : "manual"
+    },
+    "Made from a library picture: no photo needed" : {
+      "comment" : "Feedback's review sheet: why no photo is sent for a painting of one of the app's pictures",
+      "extractionState" : "manual"
+    },
+    "Marks" : {
+      "comment" : "Feedback's review sheet: header of the list of the marks drawn on the painting, each with its comment",
+      "extractionState" : "manual"
+    },
+    "Next" : {
+      "comment" : "Feedback mode's top bar on the painting screen: button that opens the sheet to review the feedback, write notes and send it",
+      "extractionState" : "manual"
+    },
+    "Original Photo" : {
+      "comment" : "Feedback's review sheet: switch that also sends the painter's own photo the painting was made from (off until turned on)",
       "extractionState" : "manual"
     },
     "Paint with Apple Pencil" : {
@@ -4465,12 +4593,24 @@
       "comment" : "Footer under the list of published methods in Acknowledgements",
       "extractionState" : "manual"
     },
+    "Read from your handwriting" : {
+      "comment" : "Feedback's review sheet: under a mark whose comment was filled in from the handwriting recognized in it",
+      "extractionState" : "manual"
+    },
+    "Reading your handwriting…" : {
+      "comment" : "Feedback's review sheet: under a mark while what is written in it is being recognized",
+      "extractionState" : "manual"
+    },
     "Ready to paint" : {
       "comment" : "Caption on the gallery card of a painting that has no paint yet",
       "extractionState" : "manual"
     },
     "Ready to Share" : {
       "comment" : "Status shown in the time-lapse sheet once the movie is ready to share",
+      "extractionState" : "manual"
+    },
+    "Redo" : {
+      "comment" : "Feedback mode's top bar on the painting screen: button (its accessibility label) that puts back the last mark undone",
       "extractionState" : "manual"
     },
     "Reference" : {
@@ -5093,8 +5233,28 @@
       "comment" : "Toast confirming a picture was saved to the photo library",
       "extractionState" : "manual"
     },
+    "Say what looks wrong or right, and why." : {
+      "comment" : "Feedback's review sheet: footer under the note field",
+      "extractionState" : "manual"
+    },
     "Search paintings" : {
       "comment" : "Placeholder of the gallery's search field",
+      "extractionState" : "manual"
+    },
+    "Send" : {
+      "comment" : "Feedback's review sheet: button that prepares the feedback's files and opens the share sheet to send them",
+      "extractionState" : "manual"
+    },
+    "Send Feedback" : {
+      "comment" : "Title of the sheet that reviews and sends feedback on a painting",
+      "extractionState" : "manual"
+    },
+    "Send opens the share sheet: choose how it goes and who gets it." : {
+      "comment" : "Feedback's review sheet: footer under what is sent",
+      "extractionState" : "manual"
+    },
+    "Send opens the share sheet: choose how it goes and who gets it. Your photo helps us remake the painting; it goes only if you turn it on." : {
+      "comment" : "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
       "extractionState" : "manual"
     },
     "Sensitivity" : {
@@ -5329,6 +5489,14 @@
         }
       }
     },
+    "Thanks for the feedback!" : {
+      "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared",
+      "extractionState" : "manual"
+    },
+    "The painting with your marks, and each mark close up" : {
+      "comment" : "Feedback's review sheet: a row of what is sent, the pictures",
+      "extractionState" : "manual"
+    },
     "The pasted text holds no Paint by Moonlight settings." : {
       "comment" : "Message of the alert shown when the text pasted into Settings › Advanced holds no settings",
       "extractionState" : "manual"
@@ -5473,12 +5641,16 @@
       "comment" : "Button in the time-lapse sheet after rendering failed",
       "extractionState" : "manual"
     },
+    "Try again in a moment." : {
+      "comment" : "Message of the alert when the feedback couldn't be prepared",
+      "extractionState" : "manual"
+    },
     "Turn any photo into a numbered canvas, then bring it to life one color at a time." : {
       "comment" : "Subheadline of the empty gallery",
       "extractionState" : "manual"
     },
     "Undo" : {
-      "comment" : "Undo button: the painting screen's undo button (its accessibility label), and the action of the gallery's toast after a painting is deleted",
+      "comment" : "Undo button: the painting screen's undo button and feedback mode's undo of the last mark (their accessibility labels), and the action of the gallery's toast after a painting is deleted",
       "extractionState" : "manual"
     },
     "Unfavorite" : {
@@ -5501,6 +5673,14 @@
       "comment" : "Settings › Advanced › Share with a Note: footer under the note field",
       "extractionState" : "manual"
     },
+    "What should we look at here?" : {
+      "comment" : "Feedback's review sheet: placeholder of the comment field of a mark drawn on the painting",
+      "extractionState" : "manual"
+    },
+    "What would make this painting better?" : {
+      "comment" : "Feedback's review sheet: placeholder of the note field",
+      "extractionState" : "manual"
+    },
     "When you finish a color, the next one is picked up automatically." : {
       "comment" : "Footer under the Advance to Next Color setting",
       "extractionState" : "manual"
@@ -5511,6 +5691,14 @@
     },
     "You feel them in every painting as you paint." : {
       "comment" : "Settings › Advanced: footer under the Haptics switches while Haptics is on in Settings",
+      "extractionState" : "manual"
+    },
+    "Your marks and notes will be lost." : {
+      "comment" : "Message of the confirmation before leaving feedback mode with marks or a note",
+      "extractionState" : "manual"
+    },
+    "Your painting with your marks" : {
+      "comment" : "Feedback's review sheet: VoiceOver label of the picture of the painting with the marks drawn on it",
       "extractionState" : "manual"
     },
     "Your Photo" : {

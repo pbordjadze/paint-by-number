@@ -2,7 +2,8 @@ import PaintCore
 import SwiftUI
 import UIKit
 
-/// Lets SwiftUI chrome and commands drive the live canvas (hints, zoom).
+/// Lets SwiftUI chrome and commands drive the live canvas (hints, zoom), and feedback's
+/// markup canvas take over its camera.
 final class CanvasController {
     fileprivate weak var view: CanvasView?
 
@@ -10,6 +11,16 @@ final class CanvasController {
     func zoomToFit() { view?.zoomToFit() }
     func zoom(by factor: CGFloat) { view?.zoom(by: factor) }
     func replay() { view?.replay() }
+    /// Makes the canvas first responder again (the window's undo history of fills, ⌘Z).
+    func focus() { _ = view?.becomeFirstResponder() }
+
+    // Feedback (see `CanvasView`'s camera of another scroll view).
+    var scrollCamera: CanvasView.ScrollCamera? { view?.scrollCamera }
+    func contentInsets(forZoom zoom: CGFloat) -> UIEdgeInsets { view?.contentInsets(forZoom: zoom) ?? .zero }
+    func follow(zoom: CGFloat, offset: CGPoint) { view?.follow(zoom: zoom, offset: offset) }
+    var visibleCanvasRect: CGRect? { view?.visibleCanvasRect }
+    var pointsPerUnit: CGFloat? { view?.pointsPerUnit }
+    var relativeZoom: CGFloat? { view?.relativeZoom }
 }
 
 /// SwiftUI host of the Metal canvas.
@@ -32,6 +43,8 @@ struct PaintCanvas: UIViewRepresentable {
     var onPhotoUnavailable: (() -> Void)?
     var onDismissPhoto: (() -> Void)?
     var onZoomStep: (() -> Void)?
+    /// Feedback mode: the markup canvas over this one has the touches and the camera.
+    var isAnnotating = false
 
     func makeUIView(context: Context) -> CanvasView {
         let view = CanvasView(session: session)
@@ -63,6 +76,7 @@ struct PaintCanvas: UIViewRepresentable {
         view.onDismissPhoto = onDismissPhoto
         view.onZoomStep = onZoomStep
         view.showsPhoto = showsPhoto
+        view.isAnnotating = isAnnotating
         controller.view = view
     }
 }

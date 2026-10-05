@@ -44,15 +44,33 @@ nonisolated enum CanvasSnapshot {
         return render(scene: scene, painted: painted, size: size, options: options, context: context)
     }
 
-    /// `scene` with the regions `painted` says (one flag per region), as `render(template:…)`.
-    static func render(scene: CanvasScene, painted: [Bool], size: CGSize, options: Options, context: RenderContext) -> CGImage? {
+    /// `scene` with the regions `painted` says (one flag per region), as `render(template:…)`;
+    /// with a `rect`, only that part of the canvas, as `render(template:progress:rect:…)`.
+    static func render(
+        scene: CanvasScene, painted: [Bool], size: CGSize, options: Options, context: RenderContext, rect: CGRect? = nil
+    ) -> CGImage? {
         let w = min(8192, max(1, Int(size.width.rounded()))), h = min(8192, max(1, Int(size.height.rounded())))
         return image(
             scene: scene, states: painted.map(RegionState.settled(painted:)),
-            uniforms: uniforms(scene: scene, width: w, height: h, options: options),
+            uniforms: uniforms(scene: scene, width: w, height: h, options: options, rect: rect),
             content: RenderContext.Content(outlines: options.drawsLines(for: scene), numbers: options.numbers),
             width: w, height: h, context: context)
     }
+
+    /// A close-up: `rect` of the canvas (canvas units) scaled to fill `size` pixels, with
+    /// `progress` (nil = nothing painted). Feedback renders what a mark covers and what was in
+    /// view this way. Lines stay as fine as at `closeUpLineScale` pixels per unit and numbers
+    /// as large as `closeUpMaxFontPixels`, as the zoomed canvas keeps them.
+    static func render(template: Template, progress: PaintProgress?, rect: CGRect, size: CGSize, options: Options) -> CGImage? {
+        guard rect.width > 0, rect.height > 0, let context = RenderContext.shared,
+              let scene = CanvasScene(template: template, context: context)
+        else { return nil }
+        let painted = (0..<template.regions.count).map { progress?.isPainted($0) ?? false }
+        return render(scene: scene, painted: painted, size: size, options: options, context: context, rect: rect)
+    }
+
+    static let closeUpLineScale: Float = 2
+    static let closeUpMaxFontPixels: Float = 44
 
     /// One frame of `scene` with these region states, uniforms and passes, read back as a
     /// Display P3 image of `w`×`h` pixels.
@@ -94,16 +112,20 @@ nonisolated enum CanvasSnapshot {
     }
 
     /// Shader constants for an offscreen frame: canvas fitted and centred in `width`×`height`
-    /// pixels, renderer clock at 0.
-    static func uniforms(scene: CanvasScene, width w: Int, height h: Int, options: Options) -> CanvasUniforms {
+    /// pixels, renderer clock at 0. With a `rect` (canvas units), that part of the canvas is
+    /// fitted and centred instead, as a close-up (`render(template:progress:rect:…)`).
+    static func uniforms(scene: CanvasScene, width w: Int, height h: Int, options: Options, rect: CGRect? = nil) -> CanvasUniforms {
         let canvasW = scene.canvasSize.x, canvasH = scene.canvasSize.y
-        let scale = min(Float(w) / canvasW, Float(h) / canvasH)
+        let shown = rect.map { (x: Float($0.minX), y: Float($0.minY), w: Float($0.width), h: Float($0.height)) }
+            ?? (x: 0, y: 0, w: canvasW, h: canvasH)
+        let scale = min(Float(w) / shown.w, Float(h) / shown.h)
         let palette = options.palette
         var u = CanvasUniforms()
-        u.transform = SIMD4((Float(w) - canvasW * scale) / 2, (Float(h) - canvasH * scale) / 2, scale, 1)
+        u.transform = SIMD4(
+            (Float(w) - shown.w * scale) / 2 - shown.x * scale, (Float(h) - shown.h * scale) / 2 - shown.y * scale, scale, 1)
         u.viewport = SIMD4(Float(w), Float(h), canvasW, canvasH)
         u.setChrome(palette, shadowOpacity: 0, outlineOpacity: palette.outlineOpacity)
-        let width = options.outlineWidth * max(scale, 0.25)
+        let width = options.outlineWidth * (rect == nil ? max(scale, 0.25) : min(max(scale, 0.25), closeUpLineScale))
         u.outline = SIMD4(width, width, 0, options.numbers ? 1 : 0)
         switch scene.lineArtStyle {
         case .layered:
@@ -114,7 +136,7 @@ nonisolated enum CanvasSnapshot {
         case nil:
             u.setLines(.classic)
         }
-        u.labels = SIMD4(5, 7, .greatestFiniteMagnitude, 0)
+        u.labels = SIMD4(5, 7, rect == nil ? .greatestFiniteMagnitude : closeUpMaxFontPixels, 0)
         u.numbers = SIMD4(0.8, 0.9, 0.04, 0)
         u.time = SIMD4(0, CanvasClock.never, CanvasClock.never, CanvasClock.never)
         if let color = options.highlight, color >= 0, color < scene.paletteLinear.count {

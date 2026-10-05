@@ -12,6 +12,11 @@ import UIKit
 /// lives outside (observe `session.revision`). With a `sourcePhotoLoader` in the environment
 /// the top bar offers the Photo control (see `PhotoPeek`). First-run tips (`PaintTips`) point
 /// at the selected swatch or the middle of the canvas, one at a time.
+///
+/// Give Feedback (the top bar where it fits, else More; always the Paint menu) captures the
+/// painting as it is (`FeedbackCapture`, with the environment's `feedbackSource`) and switches
+/// to feedback mode: painting stops, the palette goes, `FeedbackBar` takes the top and
+/// `MarkupCanvas` lies over the canvas for drawing; Next opens `FeedbackSheet`.
 struct PaintView: View {
     let session: PaintingSession
     var title: String = ""
@@ -44,6 +49,17 @@ struct PaintView: View {
     /// This painting's custom palette arrangement (`PaletteOrder.custom`), once loaded.
     @State private var customOrder: [Int]?
     @State private var arrangesPalette = false
+    /// Feedback mode while set.
+    @State private var feedback: FeedbackDraft?
+    /// The white flash of the capture as feedback starts.
+    @State private var flashes = false
+    @State private var thanks = false
+    @Environment(\.feedbackSource) private var feedbackSource
+    @Environment(\.displayScale) private var displayScale
+    @Environment(\.colorScheme) private var colorScheme
+    #if DEBUG
+    @Environment(\.feedbackDemo) private var feedbackDemo
+    #endif
 
     private static let barHeight: CGFloat = 44
     private static let edge: CGFloat = 12
@@ -76,7 +92,8 @@ struct PaintView: View {
         }
         .background(Color(uiColor: .systemGroupedBackground))
         .focusedSceneValue(\.painting, PaintingFocus(
-            session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding))
+            session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
+            isGivingFeedback: feedback != nil, giveFeedback: startFeedback))
         .onAppear {
             if tips == nil { tips = PaintTips.makeGroup() }
             FeedbackEngine.shared.attach(to: session)
@@ -109,6 +126,24 @@ struct PaintView: View {
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
         }
+        .sheet(isPresented: reviewsFeedback) {
+            if let feedback {
+                FeedbackSheet(draft: feedback, onSent: feedbackSent)
+            }
+        }
+        .overlay(alignment: .top) {
+            if thanks {
+                // Below the top bar, like the painting's other toasts; taps reach the canvas.
+                Toast(text: String(localized: "Thanks for the feedback!"), systemImage: "checkmark.circle", edge: .top)
+                    .padding(.top, 62)
+                    .padding(.horizontal, 20)
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(.snappy, value: thanks)
+        #if DEBUG
+        .task { await runFeedbackDemo() }
+        #endif
     }
 
     /// The Metal canvas with the floating bars over it.
@@ -127,9 +162,18 @@ struct PaintView: View {
                     peek = PhotoPeek()
                 },
                 onDismissPhoto: { peek.setLatched(false) },
-                onZoomStep: { PaintTips.record(.zoomedByDoubleTap) })
+                onZoomStep: { PaintTips.record(.zoomedByDoubleTap) },
+                isAnnotating: feedback != nil)
                 .id(ObjectIdentifier(session))
                 .ignoresSafeArea()
+
+            if let feedback {
+                MarkupCanvas(
+                    draft: feedback, controller: controller,
+                    canvasSize: CGSize(width: session.template.width, height: session.template.height),
+                    isMarking: !feedback.isReviewing && !feedback.isSent)
+                    .ignoresSafeArea()
+            }
 
             // Canvas tips point at the middle of the visible canvas.
             Color.clear
@@ -140,17 +184,25 @@ struct PaintView: View {
                 .allowsHitTesting(false)
 
             VStack(spacing: 0) {
-                topBar(width: geo.size.width)
-                    .padding(.horizontal, Self.edge)
-                    .padding(.top, Self.topGap)
+                Group {
+                    if let feedback {
+                        FeedbackBar(
+                            draft: feedback, width: max(0, geo.size.width - 2 * Self.edge), onDiscard: endFeedback,
+                            onNext: { feedback.isReviewing = true })
+                    } else {
+                        topBar(width: geo.size.width)
+                    }
+                }
+                .padding(.horizontal, Self.edge)
+                .padding(.top, Self.topGap)
                 Spacer(minLength: 0)
-                if !palette.side || session.isComplete {
+                if feedback == nil && (!palette.side || session.isComplete) {
                     bottomBar(palette)
                         .padding(.horizontal, Self.edge)
                         .padding(.bottom, Self.bottomGap)
                 }
             }
-            if palette.side && !session.isComplete {
+            if feedback == nil && palette.side && !session.isComplete {
                 HStack {
                     Spacer(minLength: 0)
                     bottomBar(palette)
@@ -159,6 +211,12 @@ struct PaintView: View {
                         .padding(.bottom, Self.edge)
                 }
             }
+
+            // The capture's flash as feedback starts.
+            Color.white
+                .opacity(flashes ? 0.5 : 0)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
         }
     }
 
@@ -243,9 +301,12 @@ struct PaintView: View {
 
     // MARK: Tips
 
-    /// Tips about canvas gestures; the rest belong to the selected swatch.
+    /// Tips about canvas gestures (none while feedback is drawn); the rest belong to the
+    /// selected swatch.
     private var canvasTip: (any Tip)? {
-        guard let tip = tips?.currentTip, tip is DragPaintTip || tip is ZoomTip || tip is PencilTip else { return nil }
+        guard feedback == nil, let tip = tips?.currentTip, tip is DragPaintTip || tip is ZoomTip || tip is PencilTip else {
+            return nil
+        }
         return tip
     }
 
@@ -256,20 +317,24 @@ struct PaintView: View {
 
     // MARK: Top bar
 
-    /// Close, the progress badge, then Photo, Hint, Undo and More, as the first of these that
-    /// fits: each badge variant (largest first, down to its ring and percentage) with every
-    /// control, then the smallest badge without Hint, which the selected swatch and the `h` key
-    /// still offer (the narrowest windows). Nothing here may grow wider than the window: the
-    /// bar's width would widen the whole screen.
+    /// Close, the progress badge, then Photo, Hint, Undo, Give Feedback and More, as the first of
+    /// these that fits: each badge variant (largest first, down to its ring and percentage) with
+    /// every control, then each without Give Feedback (More offers it then), then the smallest
+    /// badge without Hint, which the selected swatch and the `h` key still offer (the narrowest
+    /// windows). Nothing here may grow wider than the window: the bar's width would widen the
+    /// whole screen.
     private func topBar(width: CGFloat) -> some View {
         let badges = badgeVariants
         return GlassEffectContainer(spacing: 10) {
             ViewThatFits(in: .horizontal) {
                 ForEach(badges, id: \.self) { badge in
-                    topBarRow(badge: badge, showsHint: true)
+                    topBarRow(badge: badge, showsHint: true, showsFeedback: true)
+                }
+                ForEach(badges, id: \.self) { badge in
+                    topBarRow(badge: badge, showsHint: true, showsFeedback: false)
                 }
                 if let smallest = badges.last {
-                    topBarRow(badge: smallest, showsHint: false)
+                    topBarRow(badge: smallest, showsHint: false, showsFeedback: false)
                 }
             }
             .frame(maxWidth: max(0, width - 2 * Self.edge))
@@ -279,7 +344,7 @@ struct PaintView: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    private func topBarRow(badge: BadgeVariant, showsHint: Bool) -> some View {
+    private func topBarRow(badge: BadgeVariant, showsHint: Bool, showsFeedback: Bool) -> some View {
         // 8 pt apart: the buttons' glass sits inside their frames, so the shapes stay further
         // apart than the container's 10 pt and don't merge; six controls fit a 402 pt phone.
         HStack(spacing: 8) {
@@ -298,7 +363,10 @@ struct PaintView: View {
             }
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
                 .disabled(session.progress.paintedCount == 0)
-            moreMenu
+            if showsFeedback {
+                GlassIconButton(systemImage: "exclamationmark.bubble", label: "Give Feedback", action: startFeedback)
+            }
+            moreMenu(offersFeedback: !showsFeedback)
         }
     }
 
@@ -400,13 +468,17 @@ struct PaintView: View {
         .accessibilityShowsLargeContentViewer()
     }
 
-    private var moreMenu: some View {
+    /// `offersFeedback` when the bar has no room for Give Feedback.
+    private func moreMenu(offersFeedback: Bool) -> some View {
         Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             if !session.isComplete { paletteMenu }
             if session.isComplete {
                 Button { controller.replay() } label: { Label("Replay Painting", systemImage: "play") }
+            }
+            if offersFeedback {
+                Button(action: startFeedback) { Label("Give Feedback…", systemImage: "exclamationmark.bubble") }
             }
             Divider()
             Button(role: .destructive) { confirmRestart = true } label: { Label("Restart", systemImage: "arrow.counterclockwise") }
@@ -490,6 +562,8 @@ struct PaintView: View {
     }
 
     private func handlePencil(_ action: PencilAction) {
+        // Drawing feedback, the Pencil's double tap and squeeze belong to its tools.
+        guard feedback == nil else { return }
         switch action {
         case .tap:
             if let current = session.selectedColor, let next = session.nextIncompleteColor(after: current) {
@@ -502,4 +576,72 @@ struct PaintView: View {
             PaintTips.record(.pencilUsed)
         }
     }
+
+    // MARK: Feedback
+
+    private var reviewsFeedback: Binding<Bool> {
+        Binding { feedback?.isReviewing ?? false } set: { feedback?.isReviewing = $0 }
+    }
+
+    /// Captures the painting as it is now and switches to feedback mode, with a flash like a
+    /// camera's (not under Reduce Motion).
+    private func startFeedback() {
+        guard feedback == nil, !canvasUnavailable else { return }
+        peek.setLatched(false)
+        let capture = FeedbackCapture(
+            session: session, title: title, controller: controller, showsNumbers: showsNumbers, paper: paperAppearance,
+            darkInterface: colorScheme == .dark, lineAppearance: LineAppearance.decoded(storedLineAppearance),
+            displayScale: displayScale, source: feedbackSource)
+        FeedbackEngine.shared.selectionChanged()
+        withAnimation(reduceMotion ? nil : .snappy) { feedback = FeedbackDraft(capture: capture) }
+        if !reduceMotion {
+            flashes = true
+            Task {
+                try? await Task.sleep(for: .milliseconds(60))
+                withAnimation(.easeOut(duration: 0.5)) { flashes = false }
+            }
+        }
+        Announcer.announce(String(
+            localized: "feedback.announcement.started",
+            defaultValue: "Feedback. Draw on the painting to show what it’s about, then choose Next.",
+            comment: "VoiceOver announcement as the painting screen switches to giving feedback; Next is the button that opens the sheet to write and send it"))
+    }
+
+    private func endFeedback() {
+        withAnimation(reduceMotion ? nil : .snappy) { feedback = nil }
+        // Back to the window's undo history of fills.
+        controller.focus()
+    }
+
+    /// The feedback was shared: the sheet goes, then feedback mode, and thanks.
+    private func feedbackSent() {
+        feedback?.isSent = true
+        feedback?.isReviewing = false
+        Task {
+            try? await Task.sleep(for: .milliseconds(400))
+            endFeedback()
+            Announcer.announce(String(localized: "Thanks for the feedback!"))
+            thanks = true
+            try? await Task.sleep(for: .seconds(3))
+            thanks = false
+        }
+    }
+
+    #if DEBUG
+    /// Feedback demo scenarios: once the canvas is up, feedback starts with the demo's ink and
+    /// note, and the review sheet opens when the demo asks for it.
+    private func runFeedbackDemo() async {
+        guard let demo = feedbackDemo else { return }
+        try? await Task.sleep(for: .seconds(1))
+        startFeedback()
+        guard let feedback else { return }
+        let zoom = controller.pointsPerUnit ?? 1
+        feedback.drawingChanged(demo.ink(zoom), zoom: zoom, undoManager: nil)
+        feedback.note = demo.note
+        demo.draft = feedback
+        guard demo.reviews else { return }
+        try? await Task.sleep(for: .seconds(1))
+        feedback.isReviewing = true
+    }
+    #endif
 }

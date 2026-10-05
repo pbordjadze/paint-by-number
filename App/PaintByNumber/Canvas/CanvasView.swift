@@ -79,6 +79,11 @@ final class CanvasView: UIView, PaintingCanvas {
     var lineAppearance = LineAppearance.default {
         didSet { if lineAppearance != oldValue, scene?.lineArtStyle != nil { requestRender() } }
     }
+    /// Feedback mode (`MarkupCanvas`): the drawing canvas over this one takes every touch and
+    /// moves the camera (`follow`). VoiceOver isn't offered areas to paint meanwhile.
+    var isAnnotating = false {
+        didSet { if isAnnotating != oldValue { annotatingChanged() } }
+    }
 
     private let template: Template
     private let scene: CanvasScene?
@@ -571,6 +576,57 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Asks the session for a hint near what the user is looking at.
     func showHint() {
         session.showHint(near: visibleCenter)
+    }
+
+    // MARK: Camera of another scroll view
+
+    /// The camera as a scroll view holds it (`zoom` points per canvas unit, `offset` the content
+    /// offset over the zoomed canvas) and the zooms it allows: what a scroll view that takes
+    /// over navigation starts from (`MarkupCanvas`).
+    struct ScrollCamera: Equatable {
+        var zoom: CGFloat
+        var offset: CGPoint
+        var zoomRange: ClosedRange<CGFloat>
+    }
+
+    var scrollCamera: ScrollCamera {
+        let low = scrollView.minimumZoomScale
+        return ScrollCamera(
+            zoom: scrollView.zoomScale, offset: scrollView.contentOffset,
+            zoomRange: low...max(low, scrollView.maximumZoomScale))
+    }
+
+    /// The content insets the canvas keeps at zoom `z`: clear of the chrome, centring a canvas
+    /// smaller than the view.
+    func contentInsets(forZoom z: CGFloat) -> UIEdgeInsets { insets(forZoom: z) }
+
+    /// Shows what another scroll view looks at (`ScrollCamera`'s units), on this canvas's own
+    /// scroll view too.
+    func follow(zoom: CGFloat, offset: CGPoint) {
+        cameraAnimation = nil
+        apply(zoom: zoom, offset: offset)
+    }
+
+    /// The part of the canvas in view, clear of the chrome (canvas units).
+    var visibleCanvasRect: CGRect {
+        let area = bounds.inset(by: chromeInsets)
+        let a = canvasPoint(forView: CGPoint(x: area.minX, y: area.minY))
+        let b = canvasPoint(forView: CGPoint(x: area.maxX, y: area.maxY))
+        let seen = CGRect(x: CGFloat(a.x), y: CGFloat(a.y), width: CGFloat(b.x - a.x), height: CGFloat(b.y - a.y))
+        return seen.intersection(CGRect(x: 0, y: 0, width: template.width, height: template.height))
+    }
+
+    /// Points on screen per canvas unit now.
+    var pointsPerUnit: CGFloat { currentCamera().zoom }
+
+    private func annotatingChanged() {
+        accessibilityElementsHidden = isAnnotating
+        if isAnnotating {
+            hoverRegion = -1
+            pendingFocus = nil
+        }
+        accessibilityChanged()
+        requestRender()
     }
 
     // MARK: Rendering

@@ -33,6 +33,11 @@ paint-by-numbers templates — entirely on-device — and makes painting them fl
 - **Gallery and sharing**: search and favorites, a live create flow with a before/after
   comparison, printable PDF templates, share images, time-lapse videos (evenly paced or as
   painted), and photos sent from the share sheet or Files open straight in the create flow.
+- **Feedback on any painting**: Give Feedback freezes the paint as it is. Draw on the painting
+  with a finger or the Pencil, zooming into the detail you mean, then add a note and a comment
+  for each mark (your handwriting fills it in when Vision can read it). Send shares a picture of
+  the painting with your marks and a bundle for the developers (close-ups, the template, its
+  settings, a report) through the share sheet. Your photo goes along only if you switch it on.
 - **Details**: every paint gets a playful nickname ("Harbor Fog", "Apricot Jam") beside its
   plain name, a dark paper for painting in the evening, and Liquid Glass throughout.
 
