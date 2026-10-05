@@ -14,14 +14,14 @@ import UIKit
 final class FeedbackDraft {
     let capture: FeedbackCapture
     var note = ""
-    /// By mark (`FeedbackMark.id`): what the painter typed, or what their handwriting reads.
+    /// By mark (`FeedbackMark.id`): what the painter wrote about it.
     var comments: [Date: String] = [:]
     /// Whether the painter's own photo goes along: never unless they say so.
     var includesPhoto = false
     /// What the markup canvas draws with (`FeedbackTools`).
     var tool = FeedbackTool.pen
     var penColor = FeedbackInkColor.red
-    /// The review and send sheet is up: the markup canvas lets go of the tools meanwhile.
+    /// The review and send sheet is up (over the markup canvas).
     var isReviewing = false
     /// Shared: feedback mode is ending.
     var isSent = false
@@ -31,10 +31,6 @@ final class FeedbackDraft {
     /// The ink grouped into marks when the review began, in the order they were begun.
     private(set) var marks: [FeedbackMark] = []
     private(set) var strokes: [FeedbackStroke] = []
-    /// What each mark's handwriting reads, for the marks where Vision read something.
-    private(set) var readings: [Date: String] = [:]
-    /// Marks whose handwriting is being read.
-    private(set) var reading: Set<Date> = []
     /// The review sheet's pictures: the whole painting with its marks, and each mark close up.
     private(set) var overview: FeedbackPicture?
     private(set) var closeUps: [Date: FeedbackPicture] = [:]
@@ -44,10 +40,6 @@ final class FeedbackDraft {
     /// The zoom (points per canvas unit) each stroke was drawn at, by its path's creation date.
     @ObservationIgnored private var strokeZooms: [Date: CGFloat] = [:]
     @ObservationIgnored weak var undoManager: UndoManager?
-    /// The strokes each mark was read from, and the comments filled in from a reading (so a new
-    /// reading may replace a comment the painter left as it was).
-    @ObservationIgnored private var readFrom: [Date: [FeedbackStroke]] = [:]
-    @ObservationIgnored private var filledIn: [Date: String] = [:]
     /// The strokes the review sheet's pictures show.
     @ObservationIgnored private var picturesFor: [FeedbackStroke]?
 
@@ -97,36 +89,14 @@ final class FeedbackDraft {
 
     // MARK: Review
 
-    /// Groups the ink into marks, then reads their handwriting and draws their pictures in the
-    /// background (the review sheet shows them as they come). Comments stay with their marks;
-    /// one filled in from a reading follows a new reading until the painter edits it.
+    /// Groups the ink into marks and draws their pictures in the background (the review sheet
+    /// shows them as they come). Comments stay with their marks, which keep the id of the
+    /// stroke that began them.
     func prepareReview() {
         strokes = FeedbackInk.strokes(of: drawing, zooms: strokeZooms)
         marks = FeedbackMarks.group(strokes)
         Log.feedback.notice("Review: \(self.strokes.count, privacy: .public) strokes in \(self.marks.count, privacy: .public) marks")
-        for mark in marks {
-            let markStrokes = mark.strokes.map { strokes[$0] }
-            guard readFrom[mark.id] != markStrokes else { continue }
-            readFrom[mark.id] = markStrokes
-            reading.insert(mark.id)
-            Task {
-                let text = await Self.read(markStrokes)
-                guard readFrom[mark.id] == markStrokes else { return }
-                reading.remove(mark.id)
-                readings[mark.id] = text
-                let comment = comments[mark.id] ?? ""
-                if let text, comment.isEmpty || comment == filledIn[mark.id] {
-                    comments[mark.id] = text
-                    filledIn[mark.id] = text
-                }
-            }
-        }
         drawPictures()
-    }
-
-    @concurrent
-    private static func read(_ strokes: [FeedbackStroke]) async -> String? {
-        HandwritingReader.read(strokes)
     }
 
     /// The review sheet's pictures, small, drawn in the background: the whole painting and each
@@ -188,8 +158,8 @@ final class FeedbackDraft {
             if photo == nil { Log.feedback.error("The photo couldn't be read: the feedback goes without it") }
         }
         let contents = FeedbackPackage.Contents(
-            capture: capture, note: note, strokes: strokes, marks: marks, comments: comments, readings: readings,
-            photo: photo, layout: layout, ink: ink)
+            capture: capture, note: note, strokes: strokes, marks: marks, comments: comments, photo: photo,
+            layout: layout, ink: ink)
         return try await FeedbackPackage.write(contents)
     }
 

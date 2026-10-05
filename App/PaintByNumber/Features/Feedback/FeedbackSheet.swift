@@ -5,8 +5,8 @@ import SwiftUI
 import UIKit
 
 /// Feedback's review and send sheet: the painting with its marks, a note, a comment per mark
-/// (filled in from what its handwriting reads until the painter writes one), what goes along
-/// (the painter's own photo only if they turn it on), and Send, which writes the bundle
+/// beside its close-up, what goes along (the painter's own photo only if they turn it on), and
+/// Send, which writes the bundle
 /// (`FeedbackPackage`) and opens the share sheet, where the painter picks Mail, Messages,
 /// AirDrop or Files and who it goes to. Back returns to drawing; sharing it ends feedback.
 struct FeedbackSheet: View {
@@ -92,14 +92,12 @@ struct FeedbackSheet: View {
     private var marks: some View {
         Section {
             ForEach(Array(draft.marks.enumerated()), id: \.element.id) { index, mark in
-                MarkRow(
-                    number: index + 1, picture: draft.closeUps[mark.id], comment: comment(for: mark.id),
-                    isReading: draft.reading.contains(mark.id), reading: draft.readings[mark.id])
+                MarkRow(number: index + 1, picture: draft.closeUps[mark.id], comment: comment(for: mark.id))
             }
         } header: {
             Text("Marks")
         } footer: {
-            Text("Each mark gets its own comment. What you wrote on the painting fills it in when it can be read.")
+            Text("Each mark gets its own comment.")
         }
     }
 
@@ -179,8 +177,6 @@ private struct MarkRow: View {
     let number: Int
     let picture: FeedbackPicture?
     @Binding var comment: String
-    let isReading: Bool
-    let reading: String?
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -196,19 +192,6 @@ private struct MarkRow: View {
                     .lineLimit(1...6)
                     .accessibilityLabel(Text(title))
                     .accessibilityIdentifier("feedback-mark-\(number)")
-                if isReading {
-                    HStack(spacing: 6) {
-                        ProgressView()
-                            .controlSize(.mini)
-                        Text("Reading your handwriting…")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                } else if let reading, reading == comment {
-                    Label("Read from your handwriting", systemImage: "text.viewfinder")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
             }
         }
         .padding(.vertical, 4)

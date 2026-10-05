@@ -154,10 +154,11 @@ synchronized folder would bundle it into the app.
   while the review sheet came or went, just after a finger stroke, hung the app on CI's simulators
   (iOS 26.5). `CanvasView.isAnnotating` hides the areas VoiceOver would offer to paint.
 - `FeedbackSheet` (Next) groups the ink into marks (`FeedbackMarks.group`: strokes within 36 points
-  on screen at the zoom they were drawn at), gives each a comment that `HandwritingReader` (Vision's
-  text recognition on the writing ink) fills in when it reads something (it may read nothing on a
-  simulator), and lists what goes along; the painter's own photo only when they switch Original
-  Photo on (a library picture is named instead).
+  on screen at the zoom they were drawn at), gives each a comment beside its close-up (anything
+  written on the painting reads there; there is no handwriting recognition: Vision's text
+  recognition was tried and dropped, unproven on finger writing over a painting), and lists what
+  goes along; the painter's own photo only when they switch Original Photo on (a library picture
+  is named instead).
 - Send writes the bundle (`FeedbackPackage`; its contents are `FeedbackReport`'s doc comment) and
   hands the painting-with-marks PNG and the zip to `ActivityShareSheet`: there is no fixed address,
   the painter picks Mail, Messages, AirDrop or Files. The export folder goes once the sheet closes;

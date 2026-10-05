@@ -5,15 +5,16 @@ import PaintCore
 /// What a feedback bundle says (`<title> Feedback.zip`, written by `FeedbackPackage`), for the
 /// developers. The bundle holds:
 ///
-/// - `feedback.md`: this report for people: the note, each mark's comment, handwriting and the
-///   regions it touches, the painting's facts and these files. English, like pbn's output.
+/// - `feedback.md`: this report for people: the note, each mark's comment and the regions it
+///   touches, the painting's facts and these files. English, like pbn's output.
 /// - `feedback.json`: the same for scripts (`format` 1): app, device and system; where the
 ///   painting came from and its generation settings; what was on screen; each mark's comment,
-///   handwriting, regions (under the ink, or inside a loop it closes) and strokes as polylines
-///   in canvas units (the template's, y down), with the zoom each was drawn at.
+///   regions (under the ink, or inside a loop it closes) and strokes as polylines in canvas
+///   units (the template's, y down), with the zoom each was drawn at.
 /// - `marked.png`: the painting as captured with the marks; `markup.png`: the marks alone at the
 ///   same size; `view.png`: what was on screen (the selected color hatched as the canvas showed
-///   it); `mark-N.png`: each mark close up, about as large as the painter saw it.
+///   it); `mark-N.png`: each mark close up, about as large as the painter saw it (anything
+///   written on the painting reads there).
 /// - `template.pbnt`: the template (`pbn check` and `pbn names --seed <nicknameSeed>` read it).
 /// - `photo.jpg`: the painter's photo, only when they chose to include it. A library picture is
 ///   named instead (`painting.sample`, `App/PaintByNumber/Resources/Samples/<sample>.jpg`).
@@ -86,8 +87,6 @@ nonisolated struct FeedbackReport: Codable, Sendable {
         /// x, y, width, height in canvas units, ink included.
         var bounds: [Double]
         var comment: String
-        /// What Vision read in the mark's writing (`HandwritingReader`).
-        var handwriting: String?
         var image: String
         var regions: [FeedbackRegionHit]
         var strokes: [Stroke]
@@ -135,7 +134,7 @@ nonisolated extension FeedbackReport {
             Mark(
                 number: index + 1, bounds: Self.numbers(mark.bounds),
                 comment: (contents.comments[mark.id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
-                handwriting: contents.readings[mark.id], image: File.mark(index + 1),
+                image: File.mark(index + 1),
                 regions: regions.indices.contains(index) ? regions[index] : [],
                 strokes: mark.strokes.map { Self.stroke(contents.strokes[$0]) })
         }
@@ -183,7 +182,6 @@ nonisolated extension FeedbackReport {
         if marks.isEmpty { lines.append("(none)") }
         for mark in marks {
             lines.append("\(mark.number). \(mark.comment.isEmpty ? "(no comment)" : mark.comment)")
-            if let handwriting = mark.handwriting { lines.append("   - Handwriting read: \u{201C}\(handwriting)\u{201D}") }
             let inked = mark.regions.filter { $0.inked > 0 }.map(Self.describe)
             let circled = mark.regions.filter { $0.inked == 0 && $0.enclosed > 0 }.map(Self.describe)
             if !inked.isEmpty { lines.append("   - Under the ink: \(inked.joined(separator: ", "))") }

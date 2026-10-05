@@ -66,7 +66,6 @@ nonisolated enum FeedbackPackage {
         var marks: [FeedbackMark]
         /// By mark (`FeedbackMark.id`).
         var comments: [Date: String]
-        var readings: [Date: String]
         /// The painter's photo as JPEG, when they chose to include it.
         var photo: Data?
         var layout: Layout

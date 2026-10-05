@@ -144,9 +144,9 @@ nonisolated enum FeedbackMarks {
     }
 
     /// Draws `stroke` as a round-capped line of its width (a dot when it has no length).
-    static func stroke(_ stroke: FeedbackStroke, in ctx: CGContext, scale: CGFloat = 1) {
-        let width = max(CGFloat(stroke.width) * scale, 1)
-        let points = stroke.points.map { CGPoint(x: CGFloat($0.x) * scale, y: CGFloat($0.y) * scale) }
+    private static func stroke(_ stroke: FeedbackStroke, in ctx: CGContext) {
+        let width = max(CGFloat(stroke.width), 1)
+        let points = stroke.points.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) }
         guard let first = points.first else { return }
         if points.count < 2 {
             ctx.fillEllipse(in: CGRect(x: first.x - width / 2, y: first.y - width / 2, width: width, height: width))

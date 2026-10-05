@@ -2985,8 +2985,8 @@
       "comment" : "Context menu item that makes a copy of a painting",
       "extractionState" : "manual"
     },
-    "Each mark gets its own comment. What you wrote on the painting fills it in when it can be read." : {
-      "comment" : "Feedback's review sheet: footer under the list of marks; handwriting in a mark is recognized and fills in its comment",
+    "Each mark gets its own comment." : {
+      "comment" : "Feedback's review sheet: footer under the list of marks, each with its close-up and a comment field",
       "extractionState" : "manual"
     },
     "Each multiplies what the generator works out for the picture; 1× leaves it as it is." : {
@@ -4643,14 +4643,6 @@
     },
     "Published techniques the template engine builds on." : {
       "comment" : "Footer under the list of published methods in Acknowledgements",
-      "extractionState" : "manual"
-    },
-    "Read from your handwriting" : {
-      "comment" : "Feedback's review sheet: under a mark whose comment was filled in from the handwriting recognized in it",
-      "extractionState" : "manual"
-    },
-    "Reading your handwriting…" : {
-      "comment" : "Feedback's review sheet: under a mark while what is written in it is being recognized",
       "extractionState" : "manual"
     },
     "Ready to paint" : {

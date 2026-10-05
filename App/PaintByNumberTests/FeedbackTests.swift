@@ -7,7 +7,7 @@ import UIKit
 @testable import PaintByNumber
 
 /// Feedback on a painting: the ink grouped into marks, the regions a mark touches, PencilKit's
-/// strokes in canvas units, the image handwriting is read from, the report and the bundle.
+/// strokes in canvas units, the report and the bundle.
 @MainActor
 struct FeedbackTests {
     private func stroke(
@@ -88,34 +88,6 @@ struct FeedbackTests {
         #expect((xs.max() ?? 0) - (xs.min() ?? 0) > 50)
     }
 
-    /// Handwriting is read from the writing inks drawn black on white, about twice as large as
-    /// they were on screen; highlighter strokes stay out.
-    @Test func handwritingIsReadFromBlackInkOnWhite() throws {
-        let pen = stroke([SIMD2(0, 0), SIMD2(40, 0)], width: 2, zoom: 2, at: 1)
-        let highlight = stroke([SIMD2(0, 30), SIMD2(40, 30)], width: 20, at: 2, ink: "marker")
-        let image = try #require(HandwritingReader.inkImage([pen, highlight]))
-        // The pen's bounds (42 × 2 units) at 4 pixels a unit, with a 24-pixel margin all round.
-        #expect(image.width == 216 && image.height == 56)
-        let pixels = PixelReader(image)
-        #expect(luma(pixels[image.width / 2, image.height / 2]) < 60)
-        #expect(luma(pixels[4, 4]) > 240)
-        #expect(HandwritingReader.inkImage([highlight]) == nil)
-    }
-
-    /// Vision may read nothing on a simulator; whatever it reads of a printed line is its words.
-    @Test func visionReadsWordsWhenItCan() throws {
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 640, height: 200))
-        let picture = renderer.image { context in
-            UIColor.white.setFill()
-            context.fill(CGRect(x: 0, y: 0, width: 640, height: 200))
-            ("Paint more" as NSString).draw(
-                at: CGPoint(x: 40, y: 50), withAttributes: [.font: UIFont.systemFont(ofSize: 72, weight: .bold), .foregroundColor: UIColor.black])
-        }
-        let read = HandwritingReader.read(try #require(picture.cgImage))
-        Attachment.record(Data((read ?? "(nothing)").utf8), named: "vision-read.txt")
-        if let read { #expect(read.lowercased().contains("paint")) }
-    }
-
     @Test func reportNamesMarksRegionsAndPaints() throws {
         let contents = sampleContents()
         let regions = contents.marks.map { FeedbackMarks.regions(of: $0, strokes: contents.strokes, in: contents.capture.template) }
@@ -175,7 +147,7 @@ struct FeedbackTests {
         let marks = FeedbackMarks.group(strokes)
         return FeedbackPackage.Contents(
             capture: capture, note: " The stripes are too plain.\n", strokes: strokes, marks: marks,
-            comments: [marks[0].id: "These two"], readings: [:], photo: nil,
+            comments: [marks[0].id: "These two"], photo: nil,
             layout: FeedbackPackage.Layout(capture: capture, marks: marks, strokes: strokes),
             ink: FeedbackPackage.Ink(overview: nil, view: nil, marks: [nil]))
     }
