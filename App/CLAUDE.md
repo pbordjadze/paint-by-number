@@ -95,6 +95,10 @@ synchronized folder would bundle it into the app.
 - `PaintingSession` (@Observable: painting rules, tap tolerance, drag painting, undo, per-color
   progress, events) drives the canvas through `PaintingCanvas`; `PaintProgress` is what is saved.
   The app is single window: one live session per painting.
+- Every fill changes `progress` and `remainingByColor`, so `PaintView`'s body reads neither: it
+  reads `isComplete`, `isStarted` and `completedColors`, written only when they flip, and the
+  per-fill views read the rest themselves (the badge's `ProgressGroup`, `PaletteBar`). The
+  canvas draws on the main thread too: keep per-fill work in small views or off it.
 - Events: `PaintingSession.onEvent` has three observers registered when the screen appears:
   `FeedbackEngine.attach` (haptics, sound), `CanvasView` (the finishing shine) and
   `PaintChromeState.observe` (undo registration, swatch shake, tips, VoiceOver announcements); the
@@ -124,8 +128,9 @@ synchronized folder would bundle it into the app.
 - Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`, radius capped at
   `PaintingSession.maxBrushRadius`).
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
-  `PaintingMelody` note per fill; Core Haptics patterns, none on iPad. Settings' Sounds and Haptics
-  switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`).
+  `PaintingMelody` note per fill; Core Haptics patterns, none on iPad. `SoundPlayer` and
+  `HapticsPlayer` each work on a queue of their own (starting either engine blocks its caller).
+  Settings' Sounds and Haptics switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
   (`ColorNickname.seed(for:)`), so a painting's names are the same on every open (derived, never
   stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil outside English)
