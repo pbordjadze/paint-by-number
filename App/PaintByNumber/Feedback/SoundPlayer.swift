@@ -96,7 +96,8 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
             notes = Self.scale.map { buffer(ToneSynth.kalimba(frequency: $0, sampleRate: format.sampleRate)) }
             thud = buffer(ToneSynth.thud(sampleRate: format.sampleRate))
             isSetUp = true
-            Log.feedback.notice("Sounds ready in \(String(describing: clock.now - start), privacy: .public)")
+            let took = clock.now - start
+            Log.feedback.notice("Sounds ready in \(String(describing: took), privacy: .public)")
             return true
         } catch {
             Log.feedback.error("Sounds unavailable: \(String(describing: error), privacy: .public)")
