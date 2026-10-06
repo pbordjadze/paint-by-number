@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import Metal
+import os
 import PaintCore
 
 /// Process-wide Metal state shared by every canvas and offscreen render: device, queue,
@@ -34,7 +35,16 @@ nonisolated final class RenderContext: @unchecked Sendable {
         Task.detached(priority: .userInitiated) { _ = RenderContext.shared }
     }
 
+    /// `shared`, waited for off the caller's thread. Making it compiles the pipelines and waits on
+    /// the GPU, which on a busy device (CI's simulator) has taken long enough that a canvas made
+    /// on the main thread before then stopped the app answering; the painting screen awaits this
+    /// before it shows one.
+    @concurrent
+    static func ready() async -> RenderContext? { shared }
+
     private init?() {
+        let start = ContinuousClock.now
+        defer { Log.canvas.notice("Making the render context took \(String(describing: ContinuousClock.now - start), privacy: .public)") }
         guard let device = MTLCreateSystemDefaultDevice(),
               let queue = device.makeCommandQueue(),
               let library = try? device.makeDefaultLibrary(bundle: Bundle(for: RenderContext.self)),
