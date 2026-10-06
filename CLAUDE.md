@@ -305,7 +305,10 @@ any port of it, when changing the fitter: work from the paper.
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the
    SideStore source on the `sidestore` branch (`ci/sidestore_source.py`), which users add in
    SideStore as
-   `https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/source.json`.
+   `https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/source.json`, and
+   asks the combined source in `pbordjadze/sidestore` to rebuild (secret
+   `SIDESTORE_DISPATCH_TOKEN`, issue #1; without it that source catches up on its 15-minute
+   schedule).
 
 **Branches.** `main` is the default and shipping branch (iPhone job, IPA, SideStore source; the
 benchmark's base). Work on `claude/<topic>` branches and merge into `main`; once merged, the branch

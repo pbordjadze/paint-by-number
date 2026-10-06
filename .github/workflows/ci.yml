@@ -290,6 +290,16 @@ jobs:
           git init -q && git checkout -q -b sidestore && git add -A
           git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "SideStore source for build $BUILD"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "sidestore:refs/heads/sidestore"
+      - name: Tell pbordjadze/sidestore
+        # The combined source there re-reads this one on a 15-minute schedule GitHub runs late
+        # or drops; this rebuilds it now. Needs SIDESTORE_DISPATCH_TOKEN (fine-grained,
+        # Contents: read and write on that repo; issue #1).
+        env:
+          DISPATCH_TOKEN: ${{ secrets.SIDESTORE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$DISPATCH_TOKEN" ]; then echo "No SIDESTORE_DISPATCH_TOKEN: the combined source catches up on its schedule"; exit 0; fi
+          GH_TOKEN="$DISPATCH_TOKEN" gh api repos/pbordjadze/sidestore/dispatches -f event_type="paint-by-number build $BUILD" \
+            || echo "::warning::Couldn't notify pbordjadze/sidestore; its schedule will pick the build up"
       - uses: actions/upload-artifact@v5
         if: always()
         # The IPA is the build-<n> release asset; the report doesn't carry it.
