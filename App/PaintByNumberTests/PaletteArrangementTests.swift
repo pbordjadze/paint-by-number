@@ -34,6 +34,22 @@ struct PaletteArrangementTests {
         #expect(PaletteOrder.darkToLight.arrange([0, 3, 5], palette: Self.palette, remaining: Self.remaining) == [0, 5, 3])
     }
 
+    /// Only the orders that follow progress read the areas left: arranged by number, hue or
+    /// lightness, the painting screen that arranges its palette isn't re-rendered on every fill.
+    @Test func onlyProgressOrdersReadTheAreasLeft() {
+        var reads = 0
+        func remaining() -> [Int] {
+            reads += 1
+            return Self.remaining
+        }
+        for order in PaletteOrder.allCases {
+            reads = 0
+            _ = order.arrange(Self.all, palette: Self.palette, remaining: remaining())
+            let followsProgress = order == .nearlyDone || order == .mostLeft
+            #expect(reads == (followsProgress ? 1 : 0), "\(order)")
+        }
+    }
+
     @Test func rowsChoicesCapTheLines() {
         #expect(PaletteRows.auto.maxLines(automatic: 3) == 3)
         #expect(PaletteRows.four.maxLines(automatic: 1) == 4)

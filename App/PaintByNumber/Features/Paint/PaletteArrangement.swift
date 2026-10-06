@@ -40,8 +40,10 @@ nonisolated enum PaletteOrder: String, CaseIterable, Identifiable, Sendable {
     static let grayChroma: Float = 0.03
 
     /// `colors` (palette indices) in this order. `remaining` is each color's areas left to
-    /// paint. Ties keep number order, so the result depends only on its inputs.
-    func arrange(_ colors: [Int], palette: [PaletteColor], remaining: [Int]) -> [Int] {
+    /// paint, read only by the orders that follow it: a view whose body arranges the palette
+    /// then re-renders on every fill only under those. Ties keep number order, so the result
+    /// depends only on its inputs.
+    func arrange(_ colors: [Int], palette: [PaletteColor], remaining: @autoclosure () -> [Int]) -> [Int] {
         func by<T: Comparable>(_ key: (Int) -> T) -> [Int] {
             colors.sorted { key($0) != key($1) ? key($0) < key($1) : $0 < $1 }
         }
@@ -58,9 +60,11 @@ nonisolated enum PaletteOrder: String, CaseIterable, Identifiable, Sendable {
         case .darkToLight:
             return by { palette[$0].oklab.x }
         case .nearlyDone:
-            return by { remaining[$0] }
+            let left = remaining()
+            return by { left[$0] }
         case .mostLeft:
-            return by { -remaining[$0] }
+            let left = remaining()
+            return by { -left[$0] }
         }
     }
 

@@ -42,6 +42,13 @@ final class PaintingSession {
     private(set) var selectedColor: Int?
     /// Regions left to paint per palette color.
     private(set) var remainingByColor: [Int]
+    /// Whether every area is painted, whether any is, and the colors with none left. Set only
+    /// when they change, unlike `progress` and `remainingByColor`, which change on every fill:
+    /// the painting screen's layout and controls read only these, so a fill re-renders just the
+    /// views that show progress.
+    private(set) var isComplete: Bool
+    private(set) var isStarted: Bool
+    private(set) var completedColors: Set<Int>
     let totalByColor: [Int]
     /// Names of the palette colors, index-aligned with `template.palette`.
     let colorNames: [ColorName]
@@ -102,6 +109,9 @@ final class PaintingSession {
             remaining[Int(region.colorIndex)] -= 1
         }
         remainingByColor = remaining
+        isComplete = progress.isComplete
+        isStarted = progress.paintedCount > 0
+        completedColors = Set(remaining.indices.filter { remaining[$0] == 0 })
         selectedColor = remaining.firstIndex { $0 > 0 }
     }
 
@@ -115,10 +125,9 @@ final class PaintingSession {
     var fractionComplete: Double {
         progress.regionCount == 0 ? 0 : Double(progress.paintedCount) / Double(progress.regionCount)
     }
-    var isComplete: Bool { progress.isComplete }
 
     func isPainted(_ region: Int) -> Bool { progress.isPainted(region) }
-    func isColorComplete(_ color: Int) -> Bool { remainingByColor[color] == 0 }
+    func isColorComplete(_ color: Int) -> Bool { completedColors.contains(color) }
     func colorOf(_ region: Int) -> Int { Int(template.regions[region].colorIndex) }
 
     func onEvent(_ observer: @escaping (PaintEvent) -> Void) { observers.append(observer) }
@@ -215,15 +224,17 @@ final class PaintingSession {
         guard !newly.isEmpty else { return nil }
         strokeFills?.append(contentsOf: newly)
         revision += 1
+        let colors = Set(newly.map(colorOf))
+        updateMilestones(colors: colors)
         canvas?.session(self, didPaint: newly, from: origin, animated: animated)
         let color = colorOf(newly[0])
         let event = PaintEvent.painted(regions: newly, color: color)
         emit(event)
-        let completedColors = Set(newly.map(colorOf)).filter { remainingByColor[$0] == 0 }
-        for c in completedColors.sorted() { emit(.colorCompleted(c)) }
+        let completed = colors.filter { remainingByColor[$0] == 0 }
+        for c in completed.sorted() { emit(.colorCompleted(c)) }
         if progress.isComplete {
             emit(.artworkCompleted)
-        } else if autoAdvance, let selected = selectedColor, completedColors.contains(selected) {
+        } else if autoAdvance, let selected = selectedColor, completed.contains(selected) {
             select(color: nextIncompleteColor(after: selected))
         }
         // A stroke flies on when it ends (`endStroke`).
@@ -237,6 +248,7 @@ final class PaintingSession {
         guard let region = progress.undo() else { return nil }
         remainingByColor[colorOf(region)] += 1
         revision += 1
+        updateMilestones(colors: [colorOf(region)])
         canvas?.session(self, didUnpaint: [region])
         emit(.undone(region: region))
         return region
@@ -247,6 +259,7 @@ final class PaintingSession {
         progress.reset()
         remainingByColor = totalByColor
         revision += 1
+        updateMilestones(colors: 0..<paletteCount)
         canvas?.session(self, didUnpaint: painted)
         select(color: remainingByColor.firstIndex { $0 > 0 })
     }
@@ -307,6 +320,18 @@ final class PaintingSession {
 
     private func emit(_ event: PaintEvent) {
         for o in observers { o(event) }
+    }
+
+    /// Brings `isComplete`, `isStarted` and `completedColors` up to date after `colors`' areas
+    /// changed, writing each only when it flips: a write notifies observers even when the value
+    /// stays the same.
+    private func updateMilestones(colors: some Sequence<Int>) {
+        for c in colors where (remainingByColor[c] == 0) != completedColors.contains(c) {
+            if remainingByColor[c] == 0 { completedColors.insert(c) } else { completedColors.remove(c) }
+        }
+        if isComplete != progress.isComplete { isComplete = progress.isComplete }
+        let started = progress.paintedCount > 0
+        if isStarted != started { isStarted = started }
     }
 
     private func noteInteraction() {
