@@ -241,9 +241,10 @@ Saved paintings must open in every later build. The format history is documented
 - Demo scenarios: `-demo <name>`; the catalogs are the doc comments of `ShellDemo`, `PaintDemoView`
   and `RootView`. A screenshotted scenario is one `name@seconds` line of `ci/scenarios.txt` (no
   comments; `@seconds` is only the timeout; the file merges as a union) and calls `DemoMode.markReady()` once its content is on
-  screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `SyntheticTemplate` and
-  `LineArtMapsCache` are wrapped in `#if DEBUG`, and every other reference (`RootView`,
-  `Library.forLaunch`, `AppShellView`, `SettingsView`, `LineArtInputs`, …) sits in an `#if DEBUG`
+  screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `SyntheticTemplate`,
+  `LineArtMapsCache` and `DemoTemplateCache` are wrapped in `#if DEBUG`, and every other reference
+  (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`, `LineArtInputs`,
+  `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
   `ci/check_release.sh` (run by the iPad job on a Release build) fails if a Debug-only type name
   shows up in the Release binary.

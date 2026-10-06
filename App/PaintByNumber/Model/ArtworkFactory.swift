@@ -19,7 +19,18 @@ nonisolated enum ArtworkFactory {
         guard let url = sample.url else { throw FactoryError.missingSample }
         let photo = try PhotoLoader.load(url: url, maxPixelSize: photoMaxPixelSize)
         let image = PhotoLoader.cgImage(from: photo)
+        #if DEBUG
+        let cached = DemoTemplateCache.url(sample: sample.id, photoMaxPixelSize: photoMaxPixelSize, settings: settings)
+        let template: Template
+        if let cached, let kept = DemoTemplateCache.template(at: cached) {
+            template = kept
+        } else {
+            template = try await self.template(from: photo, image: image, settings: settings, progress: nil)
+            if let cached { DemoTemplateCache.store(template, at: cached) }
+        }
+        #else
         let template = try await self.template(from: photo, image: image, settings: settings, progress: nil)
+        #endif
         var progress: PaintProgress?
         if let paintedFraction {
             var painted = self.progress(painting: paintedFraction, of: template)

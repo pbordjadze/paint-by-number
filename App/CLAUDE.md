@@ -54,7 +54,7 @@ synchronized folder would bundle it into the app.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
   `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
-  `Background`, `Log` (every logger; CI's `*-app.log`).
+  `Background`, `Log` (every logger; CI's `*-app.log`); DEBUG `DemoTemplateCache`.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
   `ObjectFinder`, `LineArtInputs`; DEBUG `LineArtMapsCache`.
 - `Canvas/`: `CanvasView`, `CanvasRenderer`, `CanvasScene`, `RenderContext`, `Shaders.metal`,
@@ -87,7 +87,9 @@ synchronized folder would bundle it into the app.
   can't reach the picker. `LongTextTests` keeps each screen's controls, the color name and the toast
   on screen under doubled strings.
 - On CI's iPad simulator the unit tests take a few minutes, the UI tests about 25 minutes and the
-  screenshots about 20: the job is near its 75-minute cap.
+  screenshots about 20: the job is near its 75-minute cap. Demo and test launches seed their
+  pictures from templates kept on disk (DEBUG `DemoTemplateCache`, beside `LineArtMapsCache`'s
+  maps): a Debug build's pipeline took 10 to 19 s a seed there, and a UI test waits for its seed.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`). Demo launches and the test host
