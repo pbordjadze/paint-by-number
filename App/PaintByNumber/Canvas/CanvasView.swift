@@ -1380,8 +1380,10 @@ extension CanvasView: UIScrollViewDelegate {
 extension CanvasView: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         if gestureRecognizer === tapRecognizer {
-            // A tap that stops a fling (or a camera flight) only stops it.
-            tapBeganWhileMoving = scrollView.isDecelerating || cameraAnimation != nil
+            // A tap that stops a fling only stops it. One during a camera flight (the hint's, Zen
+            // Mode's) lands the flight where it is and paints: the painter is reaching for the
+            // area it flies to, and the flight would otherwise eat taps for half a second.
+            tapBeganWhileMoving = scrollView.isDecelerating
             tapWasFinger = touch.type == .direct
             cameraAnimation = nil
         }

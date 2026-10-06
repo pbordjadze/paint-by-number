@@ -59,6 +59,9 @@ final class PaintingSession {
     @ObservationIgnored private let clock = ContinuousClock()
     /// Automatically select the next unfinished color when one is completed.
     @ObservationIgnored var autoAdvance = true
+    /// Zen Mode: a moment after each fill the canvas flies to the nearest area left of the
+    /// selected color, as the hint does (`zenPause`).
+    @ObservationIgnored var flowsToNextArea = false
     /// The palette's order on screen (`PaletteOrder`), which picking the next color follows;
     /// nil goes by number.
     @ObservationIgnored var colorOrder: [Int]?
@@ -197,7 +200,9 @@ final class PaintingSession {
     func endStroke() {
         guard let fills = strokeFills else { return }
         strokeFills = nil
-        if !fills.isEmpty { emit(.strokeEnded(regions: fills)) }
+        guard let last = fills.last else { return }
+        emit(.strokeEnded(regions: fills))
+        if flowsToNextArea { showNextArea(near: template.labels(ofRegion: last).first?.position ?? .zero) }
     }
 
     var isStroking: Bool { strokeFills != nil }
@@ -225,6 +230,8 @@ final class PaintingSession {
         } else if autoAdvance, let selected = selectedColor, completedColors.contains(selected) {
             select(color: nextIncompleteColor(after: selected))
         }
+        // A stroke flies on when it ends (`endStroke`).
+        if flowsToNextArea, !isStroking { showNextArea(near: origin) }
         return event
     }
 
@@ -284,6 +291,20 @@ final class PaintingSession {
             if remainingByColor[c] > 0 { return c }
         }
         return nil
+    }
+
+    /// How long a fill shows before Zen Mode flies on.
+    static let zenPause: Duration = .milliseconds(350)
+
+    /// Zen Mode's flight: the hint near `point`, unless something was painted, undone or
+    /// finished meanwhile.
+    private func showNextArea(near point: SIMD2<Float>) {
+        let painted = revision
+        Task {
+            try? await Task.sleep(for: Self.zenPause)
+            guard revision == painted, !progress.isComplete else { return }
+            showHint(near: point)
+        }
     }
 
     // MARK: Internals

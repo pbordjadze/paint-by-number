@@ -47,6 +47,7 @@ struct PaintView: View {
     @AppStorage(SettingsKey.lineAppearance) private var storedLineAppearance: Data?
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
+    @AppStorage(SettingsKey.zenMode) private var zenMode = false
     /// This painting's custom palette arrangement (`PaletteOrder.custom`), once loaded.
     @State private var customOrder: [Int]?
     @State private var arrangesPalette = false
@@ -111,6 +112,7 @@ struct PaintView: View {
         }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
+        .onChange(of: zenMode, initial: true) { _, zen in session.flowsToNextArea = zen }
         .sheet(isPresented: $arrangesPalette) {
             PaletteArrangeSheet(session: session, order: colorOrder) { arranged in
                 PaletteOrder.storeCustom(arranged, seed: session.nicknameSeed)
@@ -488,6 +490,7 @@ struct PaintView: View {
     private func moreMenu(offersFeedback: Bool) -> some View {
         Menu {
             Toggle(isOn: $showsNumbers) { Label("Show Numbers", systemImage: "number") }
+            Toggle(isOn: $zenMode) { Label("Zen Mode", systemImage: "leaf") }
             Button { controller.zoomToFit() } label: { Label("Fit to Screen", systemImage: "arrow.down.right.and.arrow.up.left") }
             if !session.isComplete { paletteMenu }
             if session.isComplete {

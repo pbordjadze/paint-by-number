@@ -123,6 +123,10 @@ synchronized folder would bundle it into the app.
   come from session events in `PaintChromeState` (plus double-tap zoom and Pencil strokes from the
   canvas); one tip at a time through a `TipGroup`. Settings › Show Tips Again bumps the tips' id
   generation.
+- Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
+  canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
+  hint does. A tap during any camera flight lands it and paints; only a tap on a fling just
+  stops it.
 - Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`, radius capped at
   `PaintingSession.maxBrushRadius`).
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
