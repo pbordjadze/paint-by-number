@@ -208,7 +208,7 @@ Conventions).
   `EdgeDetector.maps(for:)` returns both (the drawing resampled to the contours' size). `EyeFinder`
   (Vision face landmarks → eye contours and irises) and `ObjectFinder` (Vision's foreground instance
   mask traced by PaintCore's `MaskContours`) find the eyes and subjects, `TextFinder` (Vision's text
-  recognition, down to 1/128 of the photo's height) the lines of text PaintCore's `Writing` keeps
+  recognition, down to 1/128 of the photo's height, 1/48 on the simulator) the lines of text PaintCore's `Writing` keeps
   legible (`docs/writing.md`).
 - `LineArtInputs.Maps.input(for:)` builds the generator's `LineArtInput` by the rule pbn uses too
   (`LineArtInput(drawing:contours:detector:)`): by default the drawing over the contours
