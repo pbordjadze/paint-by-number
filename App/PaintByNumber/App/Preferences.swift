@@ -9,11 +9,10 @@ enum SettingsKey {
     /// Zen Mode: fly on to the next area after each fill (the painting screen's More menu).
     static let zenMode = "zenMode"
     static let paintingLength = "paintingLength"
-    static let paperSize = "printPaperSize"
     static let timelapsePace = "timelapsePace"
     static let paperAppearance = "paperAppearance"
-    static let colorNames = "colorNameStyle"
-    /// The palette's lines (`PaletteRows`) and order (`PaletteOrder`).
+    /// The palette's lines (`PaletteRows`) and order (`PaletteOrder`), set from the painting
+    /// screen's More › Palette.
     static let paletteRows = "paletteRows"
     static let paletteOrder = "paletteOrder"
     /// How heavy a coloring book's drawing is (`LineWeight`).
@@ -27,33 +26,36 @@ struct Preferences {
     var autoAdvance: Bool
     /// How long a painting Suggested settings aim for in the create flow.
     var paintingLength: PaintingLength
-    /// Whether paints go by playful nicknames or their plain structured names.
-    var colorNames: ColorNameStyle
 
     init(defaults: UserDefaults = .standard) {
         autoAdvance = defaults.object(forKey: SettingsKey.autoAdvance) as? Bool ?? true
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
             ?? .default
-        colorNames = defaults.string(forKey: SettingsKey.colorNames).flatMap(ColorNameStyle.init(rawValue:)) ?? .default
     }
 
     func apply(to session: PaintingSession) {
         session.autoAdvance = autoAdvance
-        session.colorNameStyle = colorNames
     }
 
     /// Keys of settings the app no longer has: Settings › Advanced's line art, pipeline tuning,
-    /// line appearance and preview picture, and its switch for each sound, haptic and flourish.
-    /// Left in place, the first two would still shape new paintings, unseen.
+    /// line appearance and preview picture, and its switch for each sound, haptic and flourish;
+    /// Settings' paper size for printing and Color Names. Left in place, the first two would
+    /// still shape new paintings, unseen.
     static let retiredKeys = [
         "advancedLineArt", "advancedPipelineTuning", "advancedLineAppearance", "advancedPreviewPicture",
+        "printPaperSize", "colorNameStyle",
     ] + [
         "paintNotes", "colorJingle", "finishFanfare", "wrongColorSound", "fillHaptics", "wrongColorHaptics",
         "finishHaptics", "fillSparkles", "finishShine",
     ].map { "paintingEffect." + $0 }
 
+    /// Where the retired Custom palette order kept each painting's arrangement, by its nickname
+    /// seed.
+    static let retiredCustomOrderPrefix = "paletteOrder.custom."
+
     /// Removes the retired settings (at launch; nothing is left to do once they are gone), first
-    /// carrying Advanced's Line Weight over to Settings › Line Weight.
+    /// carrying Advanced's Line Weight over to Settings › Line Weight; the palette order Custom
+    /// goes with the arrangements it read.
     static func removeRetiredSettings(in defaults: UserDefaults = .standard) {
         if defaults.object(forKey: SettingsKey.lineWeight) == nil,
            let data = defaults.data(forKey: "advancedLineAppearance"),
@@ -63,6 +65,12 @@ struct Preferences {
             if carried != .default { defaults.set(carried.rawValue, forKey: SettingsKey.lineWeight) }
         }
         for key in retiredKeys { defaults.removeObject(forKey: key) }
+        if defaults.string(forKey: SettingsKey.paletteOrder) == "custom" {
+            defaults.removeObject(forKey: SettingsKey.paletteOrder)
+        }
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(retiredCustomOrderPrefix) {
+            defaults.removeObject(forKey: key)
+        }
     }
 }
 

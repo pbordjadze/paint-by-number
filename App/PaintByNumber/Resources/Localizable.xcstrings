@@ -233,14 +233,6 @@
       "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
       "extractionState" : "manual"
     },
-    "Arrange Colors" : {
-      "comment" : "Title of the sheet where the painting's colors are dragged into an order of one's own",
-      "extractionState" : "manual"
-    },
-    "Arrange Colors…" : {
-      "comment" : "More › Palette item that opens a list for dragging the painting's colors into an order of one's own",
-      "extractionState" : "manual"
-    },
     "As painted" : {
       "comment" : "Time-lapse pace option: the video keeps the rhythm the painting was painted in, compressed (bursts of painting and the pauses between them); a short label for a two-segment control",
       "extractionState" : "manual"
@@ -277,10 +269,6 @@
       "comment" : "Title of the screen shown when the device can't draw the painting canvas (no Metal)",
       "extractionState" : "manual"
     },
-    "Change these while painting from More › Palette, where Arrange Colors puts a painting’s colors in your own order." : {
-      "comment" : "Settings › Palette: footer under the Rows and Order pickers",
-      "extractionState" : "manual"
-    },
     "Choose a photo with a clear subject and good light. It becomes your canvas." : {
       "comment" : "Instruction above the photo picker in the create flow",
       "extractionState" : "manual"
@@ -299,10 +287,6 @@
     },
     "Color Key" : {
       "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
-      "extractionState" : "manual"
-    },
-    "Color Names" : {
-      "comment" : "Settings picker label: whether paints go by playful nicknames (“Harbor Fog”) or plain color names (“dark grayish blue”)",
       "extractionState" : "manual"
     },
     "colorName.chroma.grayish" : {
@@ -963,10 +947,6 @@
     },
     "Double-tap the canvas to zoom in on it. Pinch to zoom back out." : {
       "comment" : "Message of a tip about zooming in on small areas",
-      "extractionState" : "manual"
-    },
-    "Drag colors into the order you like. This painting’s palette keeps it as its Custom order." : {
-      "comment" : "Arrange Colors: footer under the list of the painting's colors",
       "extractionState" : "manual"
     },
     "Draw on the painting, pinch to zoom" : {
@@ -2309,18 +2289,6 @@
       "comment" : "Submenu of the painting screen's More menu with the palette's rows and order",
       "extractionState" : "manual"
     },
-    "palette.order.custom" : {
-      "comment" : "Palette Order choice: the order the painter arranged for this painting by hand",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Custom"
-          }
-        }
-      }
-    },
     "palette.order.darkToLight" : {
       "comment" : "Palette Order choice: darkest paint first",
       "extractionState" : "manual",
@@ -2493,18 +2461,6 @@
         }
       }
     },
-    "pdf.paper.letter" : {
-      "comment" : "Name of the US Letter paper size, in Settings and the print options",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "US Letter"
-          }
-        }
-      }
-    },
     "pdf.sheet.detail" : {
       "comment" : "Header of one sheet of a template printed on several; the arguments are the sheet's number, the number of sheets, and its row and column in the grid of sheets",
       "extractionState" : "manual",
@@ -2589,14 +2545,6 @@
       "comment" : "Header of the list crediting the bundled sample pictures (title, creator, collection, license) in Acknowledgements",
       "extractionState" : "manual"
     },
-    "Plain" : {
-      "comment" : "Option of the Color Names setting: paints go by plain color names, e.g. “dark grayish blue”",
-      "extractionState" : "manual"
-    },
-    "Playful" : {
-      "comment" : "Option of the Color Names setting: paints go by playful nicknames, e.g. “Harbor Fog”",
-      "extractionState" : "manual"
-    },
     "Preparing your feedback…" : {
       "comment" : "Feedback's review sheet: message while the feedback's pictures and files are being written, before the share sheet opens",
       "extractionState" : "manual"
@@ -2611,10 +2559,6 @@
     },
     "Print Template…" : {
       "comment" : "Context menu item that shares a printable PDF of the template",
-      "extractionState" : "manual"
-    },
-    "Printed Templates" : {
-      "comment" : "Settings picker label for the paper size used for printed templates",
       "extractionState" : "manual"
     },
     "Published techniques the template engine builds on." : {
@@ -3309,18 +3253,6 @@
         }
       }
     },
-    "settings.section.palette" : {
-      "comment" : "Header of the Settings section on how the painting screen's palette of swatches is laid out",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Palette"
-          }
-        }
-      }
-    },
     "Shade" : {
       "comment" : "Label of a row in a paint's details popover: the paint's plain color name, e.g. “dark grayish blue”",
       "extractionState" : "manual"
@@ -3383,10 +3315,6 @@
     },
     "Smoothness" : {
       "comment" : "Create flow: label of the slider for how smooth the template's outlines are",
-      "extractionState" : "manual"
-    },
-    "Sort By" : {
-      "comment" : "Arrange Colors: menu that orders the list by number, rainbow, lightness or areas left, to start from",
       "extractionState" : "manual"
     },
     "Sounds" : {
@@ -3475,10 +3403,6 @@
     },
     "The painting with your marks, and each mark close up" : {
       "comment" : "Feedback's review sheet: a row of what is sent, the pictures",
-      "extractionState" : "manual"
-    },
-    "The paper size printed templates are laid out for." : {
-      "comment" : "Footer under the Printed Templates paper size setting",
       "extractionState" : "manual"
     },
     "This device can’t draw the painting right now. Your progress is saved." : {

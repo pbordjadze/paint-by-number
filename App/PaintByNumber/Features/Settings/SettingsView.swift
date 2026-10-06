@@ -8,12 +8,8 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.haptics) private var haptics = true
     @AppStorage(SettingsKey.sounds) private var sounds = true
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
-    @AppStorage(SettingsKey.paperSize) private var paper: PDFExporter.Paper = .default(for: Locale.current.region)
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
-    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .default
-    @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
-    @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
     @State private var path: [Destination] = []
 
     private let appInfo = AppInfo()
@@ -34,46 +30,12 @@ struct SettingsView: View {
                     Toggle(isOn: $autoAdvance) {
                         SwiftUI.Label("Advance to Next Color", systemImage: "arrow.forward.circle")
                     }
-                    // The nicknames are English: in other languages the plain names are all there is.
-                    if ColorNameText.nicknamesAvailable() {
-                        Picker(selection: $colorNames) {
-                            Text("Playful").tag(ColorNameStyle.playful)
-                            Text("Plain").tag(ColorNameStyle.plain)
-                        } label: {
-                            SwiftUI.Label("Color Names", systemImage: "textformat")
-                        }
-                        .accessibilityIdentifier("settings-color-names")
-                    }
                 } header: {
                     // Not the "Painting" key: that one names a picture, this one the activity.
                     Text(String(localized: "settings.section.painting", defaultValue: "Painting",
                                 comment: "Header of the Settings section about how painting behaves (the activity, not a picture); it holds Advance to Next Color"))
                 } footer: {
                     Text("When you finish a color, the next one is picked up automatically.")
-                }
-
-                Section {
-                    Picker(selection: $paletteRows) {
-                        ForEach(PaletteRows.allCases) { rows in
-                            Text(rows.name).tag(rows)
-                        }
-                    } label: {
-                        SwiftUI.Label("Rows", systemImage: "square.grid.3x2")
-                    }
-                    .accessibilityIdentifier("settings-palette-rows")
-                    Picker(selection: $paletteOrder) {
-                        ForEach(PaletteOrder.allCases) { order in
-                            Text(order.name).tag(order)
-                        }
-                    } label: {
-                        SwiftUI.Label("Order", systemImage: "arrow.up.arrow.down")
-                    }
-                    .accessibilityIdentifier("settings-palette-order")
-                } header: {
-                    Text(String(localized: "settings.section.palette", defaultValue: "Palette",
-                                comment: "Header of the Settings section on how the painting screen's palette of swatches is laid out"))
-                } footer: {
-                    Text("Change these while painting from More › Palette, where Arrange Colors puts a painting’s colors in your own order.")
                 }
 
                 Section {
@@ -136,18 +98,6 @@ struct SettingsView: View {
                 } footer: {
                     Text(paintingLength.footer)
                         .accessibilityIdentifier("painting-length-footer")
-                }
-
-                Section {
-                    Picker(selection: $paper) {
-                        ForEach(PDFExporter.Paper.allCases) { paper in
-                            Text(paper.name).tag(paper)
-                        }
-                    } label: {
-                        SwiftUI.Label("Printed Templates", systemImage: "printer")
-                    }
-                } footer: {
-                    Text("The paper size printed templates are laid out for.")
                 }
 
                 Section {

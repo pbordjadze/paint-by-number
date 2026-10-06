@@ -48,8 +48,6 @@ final class PaintingSession {
     /// Playful nicknames of the palette colors, index-aligned (nil where the color has none or the
     /// app doesn't run in English), fixed for the painting by `nicknameSeed`.
     let colorNicknames: [String?]
-    /// How the colors are named on screen and by VoiceOver: by nickname, or plainly (Settings).
-    var colorNameStyle: ColorNameStyle = .default
     /// Increments on every progress change; cheap to observe for autosave/thumbnails.
     private(set) var revision = 0
 
@@ -109,11 +107,9 @@ final class PaintingSession {
 
     // MARK: Queries
 
-    /// The nickname `color` goes by now: nil under Plain names, where the vocabulary has none for it,
-    /// and when the app doesn't run in English (its structured name is shown then).
-    func nickname(of color: Int) -> String? {
-        colorNameStyle == .playful ? colorNicknames[color] : nil
-    }
+    /// The nickname `color` goes by: nil where the vocabulary has none for it, and when the app
+    /// doesn't run in English (its structured name is shown then).
+    func nickname(of color: Int) -> String? { colorNicknames[color] }
 
     var paletteCount: Int { template.palette.count }
     var fractionComplete: Double {

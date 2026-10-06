@@ -3,8 +3,8 @@ import PaintCore
 import Testing
 @testable import PaintByNumber
 
-/// The palette's orders and rows (Settings › Palette, More › Palette), custom arrangements,
-/// and picking the next color in the palette's order.
+/// The palette's orders and rows (More › Palette), and picking the next color in the palette's
+/// order.
 @MainActor
 struct PaletteArrangementTests {
     /// Red, a light gray, blue, yellow, a dark gray, green (OKLab).
@@ -17,8 +17,8 @@ struct PaletteArrangementTests {
     private static let remaining = [4, 0, 9, 2, 2, 7]
     private static let all = Array(0..<6)
 
-    private func arrange(_ order: PaletteOrder, custom: [Int]? = nil) -> [Int] {
-        order.arrange(Self.all, palette: Self.palette, remaining: Self.remaining, custom: custom)
+    private func arrange(_ order: PaletteOrder) -> [Int] {
+        order.arrange(Self.all, palette: Self.palette, remaining: Self.remaining)
     }
 
     @Test func presetsOrderTheColors() {
@@ -30,30 +30,8 @@ struct PaletteArrangementTests {
         // Ties keep number order.
         #expect(arrange(.nearlyDone) == [1, 3, 4, 0, 5, 2])
         #expect(arrange(.mostLeft) == [2, 5, 0, 3, 4, 1])
-    }
-
-    @Test func customFollowsTheArrangementAndFallsBackToNumbers() {
-        #expect(arrange(.custom, custom: [5, 4, 3, 2, 1, 0]) == [5, 4, 3, 2, 1, 0])
-        #expect(arrange(.custom) == Self.all)
-        // Colors the arrangement lacks follow it by number.
-        #expect(arrange(.custom, custom: [3, 1]) == [3, 1, 0, 2, 4, 5])
         // Only the colors asked for: finished ones have left the palette.
-        #expect(PaletteOrder.custom.arrange([0, 2, 5], palette: Self.palette, remaining: Self.remaining, custom: [5, 4, 3, 2, 1, 0])
-            == [5, 2, 0])
-    }
-
-    @Test func storedArrangementsMustFitThePainting() throws {
-        let suite = "PaletteArrangementTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        #expect(PaletteOrder.storedCustom(seed: 7, count: 3, in: defaults) == nil)
-        PaletteOrder.storeCustom([2, 0, 1], seed: 7, in: defaults)
-        #expect(PaletteOrder.storedCustom(seed: 7, count: 3, in: defaults) == [2, 0, 1])
-        #expect(PaletteOrder.storedCustom(seed: 8, count: 3, in: defaults) == nil)
-        // Regenerated with another palette size, or damaged: not used.
-        #expect(PaletteOrder.storedCustom(seed: 7, count: 4, in: defaults) == nil)
-        PaletteOrder.storeCustom([2, 2, 1], seed: 7, in: defaults)
-        #expect(PaletteOrder.storedCustom(seed: 7, count: 3, in: defaults) == nil)
+        #expect(PaletteOrder.darkToLight.arrange([0, 3, 5], palette: Self.palette, remaining: Self.remaining) == [0, 5, 3])
     }
 
     @Test func rowsChoicesCapTheLines() {

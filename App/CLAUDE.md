@@ -32,8 +32,6 @@ synchronized folder would bundle it into the app.
 - Nicknames reach the UI as variables shown verbatim, never as literals, so the string checker needs
   no exceptions; they are English data, shown only when the app runs in English
   (`ColorNameText.nicknamesAvailable`).
-- A painting's Custom palette order is a UserDefaults entry (`PaletteOrder.customKey(seed:)`), not
-  in the artwork folder and not purged with it.
 - Core ML models run `.cpuOnly` (the Neural Engine and GPU round differently per chip); the target
   has `COREML_CODEGEN_LANGUAGE = None` and loads the `.mlmodelc`s by URL.
 - Every template the app makes (new paintings, the first-launch starters, the gallery demos' seeds)
@@ -102,10 +100,9 @@ synchronized folder would bundle it into the app.
   `PaintChromeState.observe` (undo registration, swatch shake, tips, VoiceOver announcements); the
   canvas also gets direct `PaintingCanvas` calls.
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
-  (trailing edge of wide windows) so every color shows at once; Settings › Palette and More ›
-  Palette choose its lines (`PaletteRows`) and order (`PaletteOrder`, or Custom, arranged per
-  painting in `PaletteArrangeSheet`); picking the next color, and the Paint menu's `]`/`[`, follow
-  that order (`PaintingSession.colorOrder`).
+  (trailing edge of wide windows) so every color shows at once; More › Palette chooses its lines
+  (`PaletteRows`) and order (`PaletteOrder`); picking the next color, and the Paint menu's `]`/`[`,
+  follow that order (`PaintingSession.colorOrder`).
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
   three-finger undo); the Pencil paints while fingers navigate (and only navigates them under "Only
@@ -131,9 +128,9 @@ synchronized folder would bundle it into the app.
   switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
   (`ColorNickname.seed(for:)`), so a painting's names are the same on every open (derived, never
-  stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil under Settings ›
-  Color Names › Plain, and outside English) feed the palette caption, current color, VoiceOver, the
-  swatch's long-press popover and the PDF key; `pbn names` prints a template's.
+  stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil outside English)
+  feed the palette caption, current color, VoiceOver, the swatch's long-press popover and the PDF
+  key; `pbn names` prints a template's.
 
 ## Giving feedback
 
@@ -301,8 +298,10 @@ the time-lapse stay on light paper (`CanvasSnapshot.Options`).
   (`PaintingLength`, Relaxed by default) is what suggestions aim for. New paintings are coloring
   books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in Settings
   changes how a template is made.
+- Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
-  switch per sound, haptic and flourish) are removed at launch by
+  switch per sound, haptic and flourish; Settings' paper size and Color Names; the Custom palette
+  order with every painting's arrangement) are removed at launch by
   `Preferences.removeRetiredSettings`, Advanced's book Line Weight carried over to Settings ›
   Line Weight first; a setting retired later joins `Preferences.retiredKeys`.
 

@@ -12,34 +12,17 @@ struct PreferencesTests {
 
         var preferences = Preferences(defaults: defaults)
         #expect(preferences.autoAdvance)
-        #expect(preferences.colorNames == .playful)
 
         defaults.set(false, forKey: SettingsKey.autoAdvance)
-        defaults.set("plain", forKey: SettingsKey.colorNames)
         preferences = Preferences(defaults: defaults)
-        #expect(preferences.colorNames == .plain)
         #expect(!preferences.autoAdvance)
         // The persisted key strings: renaming one would forget every painter's switch.
         #expect(SettingsKey.haptics == "hapticsEnabled" && SettingsKey.sounds == "soundsEnabled")
 
         let session = PaintingSession(template: Fixtures.stripes())
-        #expect(session.autoAdvance && session.colorNameStyle == .playful)
+        #expect(session.autoAdvance)
         preferences.apply(to: session)
-        #expect(!session.autoAdvance && session.colorNameStyle == .plain)
-    }
-
-    /// An unknown stored value is the default, not a crash or a third style.
-    @Test func colorNameStyleFallsBackToPlayful() throws {
-        let suite = "PBNTests-\(UUID().uuidString)"
-        let defaults = try #require(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        for stored in ["", "shouty", "Playful"] {
-            defaults.set(stored, forKey: SettingsKey.colorNames)
-            #expect(Preferences(defaults: defaults).colorNames == .playful, "\(stored)")
-        }
-        defaults.set("playful", forKey: SettingsKey.colorNames)
-        #expect(Preferences(defaults: defaults).colorNames == .playful)
-        #expect(ColorNameStyle.allCases == [.playful, .plain])
+        #expect(!session.autoAdvance)
     }
 
     /// The Paper preference's key and raw values are what `@AppStorage` and launch arguments
@@ -107,6 +90,10 @@ struct PreferencesTests {
 
         for key in Preferences.retiredKeys { defaults.set(Data("{}".utf8), forKey: key) }
         defaults.set(false, forKey: "paintingEffect.colorJingle")
+        defaults.set("plain", forKey: "colorNameStyle")
+        defaults.set("custom", forKey: SettingsKey.paletteOrder)
+        defaults.set([2, 0, 1], forKey: Preferences.retiredCustomOrderPrefix + "42")
+        defaults.set(PaletteRows.four.rawValue, forKey: SettingsKey.paletteRows)
         defaults.set(Data(#"{"coloringBookWeight": 1.6, "weighted": true}"#.utf8), forKey: "advancedLineAppearance")
         defaults.set(true, forKey: SettingsKey.haptics)
         Preferences.removeRetiredSettings(in: defaults)
@@ -114,6 +101,14 @@ struct PreferencesTests {
         #expect(Preferences.retiredKeys.contains("advancedLineArt") && Preferences.retiredKeys.contains("paintingEffect.finishShine"))
         #expect(LineWeight.stored(in: defaults) == .bold)
         #expect(defaults.object(forKey: SettingsKey.haptics) as? Bool == true, "A current setting went too")
+        #expect(Preferences.retiredKeys.contains("printPaperSize") && Preferences.retiredKeys.contains("colorNameStyle"))
+        // The Custom palette order goes with every painting's arrangement; the rows stay.
+        #expect(defaults.object(forKey: SettingsKey.paletteOrder) == nil)
+        #expect(defaults.object(forKey: Preferences.retiredCustomOrderPrefix + "42") == nil)
+        #expect(defaults.integer(forKey: SettingsKey.paletteRows) == PaletteRows.four.rawValue)
+        defaults.set(PaletteOrder.rainbow.rawValue, forKey: SettingsKey.paletteOrder)
+        Preferences.removeRetiredSettings(in: defaults)
+        #expect(defaults.string(forKey: SettingsKey.paletteOrder) == "rainbow", "A current palette order went too")
 
         // A weight already chosen stays; a designed weight, or none, writes nothing.
         defaults.set(Data(#"{"coloringBookWeight": 0.5}"#.utf8), forKey: "advancedLineAppearance")
