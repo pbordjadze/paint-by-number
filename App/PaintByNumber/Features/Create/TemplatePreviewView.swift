@@ -101,6 +101,10 @@ struct TemplatePreviewView: View {
 
     private var sidePadding: CGFloat { size.width > 900 ? 32 : 16 }
     private var panelWidth: CGFloat { size.width > 900 ? 360 : 320 }
+    /// The card's rows sit closer stacked on a phone, where the card and the comparison share
+    /// the screen's height: with four sliders, 18 pt between rows left the comparison 125 pt tall
+    /// on an iPhone 17 Pro.
+    private var rowSpacing: CGFloat { !isSideBySide && size.width < 600 ? 12 : 18 }
 
     private var photoAspect: CGFloat {
         guard let image = model.source?.image, image.width > 0, image.height > 0 else { return 4 / 3 }
@@ -196,7 +200,7 @@ struct TemplatePreviewView: View {
     // MARK: Controls
 
     private var controls: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: rowSpacing) {
             titleField
             originChip
             SettingSlider(
