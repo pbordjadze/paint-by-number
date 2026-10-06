@@ -55,10 +55,8 @@ nonisolated enum TemplateRasterizer {
         static let finished = Style(
             paintAll: true, outlineWidth: 0.8, outlineColor: SIMD4(0.2, 0.2, 0.22, 0.10),
             hidesOutlinesBetweenPainted: false)
-        /// Painted preview without any lines (create flow).
+        /// Painted preview (create flow): no outlines, only a coloring book's drawing.
         static let painting = Style(paintAll: true, outlineWidth: 0)
-        /// Outlines with numbers on paper, as the user will start painting it.
-        static let template = Style(outlineWidth: 1, numbers: true)
         /// Printable template (PDF): hairlines and small numbers. `PDFExporter` picks a scale
         /// at which the smallest number is still legible on paper.
         static let printable = Style(

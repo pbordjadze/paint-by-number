@@ -230,20 +230,6 @@ nonisolated struct ArtworkStore: Sendable {
         }
     }
 
-    /// Copies an artwork's files under a new identity (`copy.id`).
-    func duplicate(_ id: UUID, as copy: Artwork) throws {
-        let staging = stagingRoot.appending(path: copy.id.uuidString, directoryHint: .isDirectory)
-        try? fm.removeItem(at: staging)
-        do {
-            try fm.copyItem(at: directory(for: id), to: staging)
-            try writeMeta(copy, in: staging)
-            try fm.moveItem(at: staging, to: directory(for: copy.id))
-        } catch {
-            try? fm.removeItem(at: staging)
-            throw error
-        }
-    }
-
     func moveToTrash(_ id: UUID) throws {
         let destination = trashRoot.appending(path: id.uuidString, directoryHint: .isDirectory)
         try? fm.removeItem(at: destination)

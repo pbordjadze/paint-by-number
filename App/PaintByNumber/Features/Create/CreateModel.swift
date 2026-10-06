@@ -21,10 +21,8 @@ final class CreateModel {
     nonisolated struct Preview: Sendable, Identifiable {
         let id = UUID()
         let template: Template
-        /// All regions painted, no lines.
+        /// All regions painted, under a coloring book's drawing (a classic template shows no lines).
         let painting: CGImage
-        /// Outlines with numbers, as the painting starts.
-        let outlines: CGImage
         /// Nil for a suggestion's first draft, shown before the settings are chosen.
         let settings: GenerationSettings?
         /// Generated from the reduced photo while adjusting.
@@ -578,10 +576,10 @@ final class CreateModel {
         }
         #endif
         let long = max(template.width, template.height)
-        guard let painting = TemplateRasterizer.image(template, style: .painting, maxPixelSize: long),
-              let outlines = TemplateRasterizer.image(template, style: .template, maxPixelSize: min(2400, max(1280, long * 2)))
-        else { throw CreateError.renderFailed }
-        return Preview(template: template, painting: painting, outlines: outlines, settings: settings, isDraft: isDraft)
+        guard let painting = TemplateRasterizer.image(template, style: .painting, maxPixelSize: long) else {
+            throw CreateError.renderFailed
+        }
+        return Preview(template: template, painting: painting, settings: settings, isDraft: isDraft)
     }
 
     private static func photoTitle() -> String {

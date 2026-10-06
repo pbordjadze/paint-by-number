@@ -131,7 +131,7 @@ struct LocalizationTests {
         let errors: [any LocalizedError] = [
             CreateModel.CreateError.unreadable, CreateModel.CreateError.renderFailed,
             CreateModel.CreateError.cameraCapture, ArtworkExporter.ExportError.renderFailed,
-            ArtworkExporter.ExportError.photosAccessDenied, ArtworkExporter.ExportError.timelapseFailed,
+            ArtworkExporter.ExportError.timelapseFailed,
         ]
         for error in errors {
             let text = try #require(error.errorDescription)

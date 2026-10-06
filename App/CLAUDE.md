@@ -249,8 +249,8 @@ Conventions).
 
 - `PhotoSourceView`: the inline picker fills the page (Gotchas). Compact windows switch Photos and
   Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
-  picker in a card with a scrolling samples column beside it. "Browse All…" presents the full
-  picker.
+  picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
+  albums and search, so no second, full picker is offered.
 - Samples: Paintings then Photographs (`Sample.all(of:)`), in `library.json`'s order, titled from
   the catalog (`sample.<id>`); `Sample.starters` (a painting and a photograph) are prepared on first
   launch. Adding a picture: `docs/picture-library.md`.
@@ -284,12 +284,12 @@ Conventions).
 ## Sharing and exports
 
 The time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress, Cancel, Try
-Again; its Pace picks Even or As painted, mapped by `TimelapseSchedule` from the strokes' recorded
-times) and goes to `ActivityShareSheet`, which reports when the share sheet closes so the movie is
-deleted. Every export lives in `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture and template
-`ShareLink`s can't report completion, so they rely on the launch purge and the sweep of stale
-exports each new export runs (`ArtworkExporter.staleExportAge`). The completion share picture and
-the time-lapse stay on light paper (`CanvasSnapshot.Options`).
+Again; `TimelapseSchedule` eases the strokes in and out) and goes to `ActivityShareSheet`, which
+reports when the share sheet closes so the movie is deleted. Every export lives in
+`tmp/Exports/<uuid>/` (`ArtworkExporter`); picture and template `ShareLink`s can't report
+completion, so they rely on the launch purge and the sweep of stale exports each new export runs
+(`ArtworkExporter.staleExportAge`). The completion share picture and the time-lapse stay on light
+paper (`CanvasSnapshot.Options`).
 
 ## Settings
 

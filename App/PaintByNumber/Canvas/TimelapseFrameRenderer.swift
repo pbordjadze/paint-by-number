@@ -105,16 +105,13 @@ nonisolated final class TimelapseFrameRenderer {
     /// Exports the replay of `progress` as a movie at `url`.
     @concurrent
     static func export(
-        template: Template, progress: PaintProgress, to url: URL, longSide: Int = 1080, pace: TimelapsePace = .even,
+        template: Template, progress: PaintProgress, to url: URL, longSide: Int = 1080,
         onProgress: (@Sendable (Double) -> Void)? = nil
     ) async throws {
         guard let renderer = TimelapseFrameRenderer(template: template, progress: progress) else { throw RenderError.unavailable }
         let size = CanvasSnapshot.fittedSize(for: template, longSide: longSide)
-        var options = TimelapseExporter.Options(size: size)
-        options.pace = pace
         try await TimelapseExporter.export(
-            strokeCount: renderer.strokeCount, strokeTimes: progress.log.map(\.time), options: options, to: url,
-            progress: onProgress
+            strokeCount: renderer.strokeCount, options: TimelapseExporter.Options(size: size), to: url, progress: onProgress
         ) { index, strokes, fraction, buffer in
             try renderer.render(frame: index, strokes: strokes, fraction: fraction, into: buffer)
         }

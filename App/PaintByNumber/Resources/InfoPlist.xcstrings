@@ -38,13 +38,13 @@
       }
     },
     "NSPhotoLibraryAddUsageDescription" : {
-      "comment" : "Shown in the system alert that asks permission to add pictures to the photo library (Save to Photos)",
+      "comment" : "Shown in the system alert that asks permission to add pictures to the photo library (Save Image or Save Video in the share sheet, sharing a painting or its time-lapse)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paint by Moonlight saves a finished painting to your photo library when you choose Save to Photos."
+            "value" : "Paint by Moonlight saves a painting or its time-lapse to your photo library when you choose Save Image or Save Video as you share it."
           }
         }
       }

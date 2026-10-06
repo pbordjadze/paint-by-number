@@ -9,7 +9,6 @@ enum SettingsKey {
     /// Zen Mode: fly on to the next area after each fill (the painting screen's More menu).
     static let zenMode = "zenMode"
     static let paintingLength = "paintingLength"
-    static let timelapsePace = "timelapsePace"
     static let paperAppearance = "paperAppearance"
     /// The palette's lines (`PaletteRows`) and order (`PaletteOrder`), set from the painting
     /// screen's More › Palette.
@@ -39,11 +38,11 @@ struct Preferences {
 
     /// Keys of settings the app no longer has: Settings › Advanced's line art, pipeline tuning,
     /// line appearance and preview picture, and its switch for each sound, haptic and flourish;
-    /// Settings' paper size for printing and Color Names. Left in place, the first two would
-    /// still shape new paintings, unseen.
+    /// Settings' paper size for printing and Color Names; the time-lapse's pace. Left in place,
+    /// the first two would still shape new paintings, unseen.
     static let retiredKeys = [
         "advancedLineArt", "advancedPipelineTuning", "advancedLineAppearance", "advancedPreviewPicture",
-        "printPaperSize", "colorNameStyle",
+        "printPaperSize", "colorNameStyle", "timelapsePace",
     ] + [
         "paintNotes", "colorJingle", "finishFanfare", "wrongColorSound", "fillHaptics", "wrongColorHaptics",
         "finishHaptics", "fillSparkles", "finishShine",

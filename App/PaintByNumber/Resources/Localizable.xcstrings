@@ -233,24 +233,12 @@
       "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
       "extractionState" : "manual"
     },
-    "As painted" : {
-      "comment" : "Time-lapse pace option: the video keeps the rhythm the painting was painted in, compressed (bursts of painting and the pauses between them); a short label for a two-segment control",
-      "extractionState" : "manual"
-    },
     "Back" : {
       "comment" : "Feedback's review sheet: button that closes it and returns to drawing on the painting",
       "extractionState" : "manual"
     },
     "Back to Gallery" : {
       "comment" : "Button on the screen shown when a painting can't be opened or the canvas can't be drawn: returns to the gallery",
-      "extractionState" : "manual"
-    },
-    "Browse all photos and albums" : {
-      "comment" : "Pointer hover help of the Browse All button",
-      "extractionState" : "manual"
-    },
-    "Browse All…" : {
-      "comment" : "Toolbar button of the photo step in the create flow: opens the full system photo picker",
       "extractionState" : "manual"
     },
     "Cancel" : {
@@ -609,10 +597,6 @@
       "comment" : "VoiceOver label of the draggable before/after comparison of the photo and its template",
       "extractionState" : "manual"
     },
-    "Couldn't duplicate the painting." : {
-      "comment" : "Toast shown when duplicating a painting from the gallery fails",
-      "extractionState" : "manual"
-    },
     "Couldn’t Create Painting" : {
       "comment" : "Title of the alert shown when saving a new painting from the create flow fails",
       "extractionState" : "manual"
@@ -957,20 +941,12 @@
       "comment" : "Shown over the gallery while a photo is dragged onto it",
       "extractionState" : "manual"
     },
-    "Duplicate" : {
-      "comment" : "Context menu item that makes a copy of a painting",
-      "extractionState" : "manual"
-    },
     "Each mark gets its own comment." : {
       "comment" : "Feedback's review sheet: footer under the list of marks, each with its close-up and a comment field",
       "extractionState" : "manual"
     },
     "Eraser" : {
       "comment" : "Feedback mode's tools on the painting screen: the eraser, which takes whole marks away (button label)",
-      "extractionState" : "manual"
-    },
-    "Even" : {
-      "comment" : "Time-lapse pace option: the strokes are spread evenly through the video, whatever the painter's rhythm was",
       "extractionState" : "manual"
     },
     "Every painted area will be cleared." : {
@@ -981,20 +957,8 @@
       "comment" : "Caption in the completion bar of a painting without a title",
       "extractionState" : "manual"
     },
-    "export.error.photosAccessDenied" : {
-      "comment" : "Error when saving to Photos is refused; tells the person to allow adding photos in the Settings app",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow Paint by Moonlight to add photos in Settings to save your painting."
-          }
-        }
-      }
-    },
     "export.error.renderFailed" : {
-      "comment" : "Error when a painting's picture can't be rendered for sharing or saving",
+      "comment" : "Error when a painting's picture can't be rendered for sharing",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1589,30 +1553,6 @@
       "comment" : "Header of what is shared: the settings text in Settings › Advanced › Share with a Note, and the list of what goes with feedback on a painting",
       "extractionState" : "manual"
     },
-    "library.copyTitle" : {
-      "comment" : "Title of a duplicated painting; the argument is the original's title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ Copy"
-          }
-        }
-      }
-    },
-    "library.copyTitle.numbered" : {
-      "comment" : "Title of a second or later duplicate of a painting; the arguments are the original's title and the copy number (2, 3, …)",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ Copy %2$lld"
-          }
-        }
-      }
-    },
     "Line Weight" : {
       "comment" : "Settings picker choosing how heavy a painting's drawn lines are (Fine, Regular or Bold)",
       "extractionState" : "manual"
@@ -1709,10 +1649,6 @@
       "comment" : "Label of a row in a paint's details popover: the paint's number",
       "extractionState" : "manual"
     },
-    "Numbers" : {
-      "comment" : "Create flow: name of the layer showing the template with its numbers, in the picker and as the comparison caption",
-      "extractionState" : "manual"
-    },
     "OK" : {
       "comment" : "Button that dismisses an alert",
       "extractionState" : "manual"
@@ -1727,10 +1663,6 @@
     },
     "Order" : {
       "comment" : "Picker in the painting screen's More › Palette menu and in Settings › Palette: the order of the palette's swatches",
-      "extractionState" : "manual"
-    },
-    "Pace" : {
-      "comment" : "Caption above the time-lapse sheet's control that picks how the painting is replayed (the speed and rhythm of the video); also its accessibility label",
       "extractionState" : "manual"
     },
     "Paint" : {
@@ -3167,14 +3099,6 @@
     },
     "Samples" : {
       "comment" : "Segment and section title for the bundled sample pictures (paintings and photographs) in the create flow",
-      "extractionState" : "manual"
-    },
-    "Save to Photos" : {
-      "comment" : "Context menu item that saves the painting as a picture in the photo library",
-      "extractionState" : "manual"
-    },
-    "Saved to Photos" : {
-      "comment" : "Toast confirming a picture was saved to the photo library",
       "extractionState" : "manual"
     },
     "Say what looks wrong or right, and why." : {

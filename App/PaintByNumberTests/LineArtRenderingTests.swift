@@ -258,8 +258,8 @@ struct LineArtRenderingTests {
             return ((x - 4)...(x + 4)).map { luma(pixels[$0, y]) }.min() ?? 255
         }
         // Every screen style: the outline and the stroke in full ink, the color edge invisible
-        // (no darker than the stripes beside it), painted or not; the painted preview (no lines)
-        // and the finished picture too.
+        // (no darker than the stripes beside it), painted or not; the painted preview (no outlines
+        // of its own) and the finished picture too.
         for screen in [TemplateRasterizer.Style.template, .thumbnail, .finished, .painting] {
             let outline = try column(screen, 160), color = try column(screen, 320), stroke = try column(screen, 80)
             #expect(outline < 60 && stroke < 60, "\(screen.outlineWidth): outline \(outline), stroke \(stroke)")

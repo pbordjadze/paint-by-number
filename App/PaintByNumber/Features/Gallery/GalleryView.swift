@@ -16,13 +16,6 @@ struct GalleryView: View {
     @State private var renameText = ""
     @State private var restarting: Artwork?
     @State private var deleting: Artwork?
-    @State private var notice: Notice?
-
-    private struct Notice: Equatable {
-        var text: String
-        var systemImage: String
-        var id = UUID()
-    }
 
     var body: some View {
         ScrollView {
@@ -201,15 +194,6 @@ struct GalleryView: View {
             renameText = artwork.title
             renaming = artwork
         }
-        Button("Duplicate", systemImage: "plus.square.on.square") {
-            Task {
-                do {
-                    try await library.duplicate(artwork.id)
-                } catch {
-                    show(String(localized: "Couldn't duplicate the painting."), "exclamationmark.triangle")
-                }
-            }
-        }
         Divider()
         ShareLink(
             item: PaintingImageFile(store: library.store, artwork: artwork),
@@ -231,7 +215,6 @@ struct GalleryView: View {
         ) {
             Label("Print Template…", systemImage: "printer")
         }
-        Button("Save to Photos", systemImage: "square.and.arrow.down") { saveToPhotos(artwork) }
         Divider()
         Button("Restart", systemImage: "arrow.counterclockwise") { restarting = artwork }
             .disabled(!artwork.isStarted)
@@ -251,29 +234,6 @@ struct GalleryView: View {
         timelapse = TimelapseRequest(title: artwork.title, source: .saved(store: library.store, artwork: artwork))
     }
 
-    private func saveToPhotos(_ artwork: Artwork) {
-        let store = library.store
-        Task {
-            do {
-                let png = try await Background.run { try ArtworkExporter.paintingPNG(store: store, artwork: artwork) }
-                try await ArtworkExporter.saveToPhotos(png)
-                show(String(localized: "Saved to Photos"), "checkmark.circle.fill")
-            } catch {
-                show(error.localizedDescription, "exclamationmark.triangle")
-            }
-        }
-    }
-
-    private func show(_ text: String, _ systemImage: String) {
-        let next = Notice(text: text, systemImage: systemImage)
-        notice = next
-        Announcer.announce(text)
-        Task {
-            try? await Task.sleep(for: .seconds(2.5))
-            if notice?.id == next.id { notice = nil }
-        }
-    }
-
     // MARK: Toasts
 
     private var toasts: some View {
@@ -283,9 +243,6 @@ struct GalleryView: View {
                     Button("Retry") { library.retrySaving(failed.id) }
                         .fontWeight(.semibold)
                 }
-            }
-            if let notice {
-                Toast(text: notice.text, systemImage: notice.systemImage)
             }
             if let deleted = library.recentlyDeleted {
                 Toast(text: deletedText(deleted), systemImage: "trash") {
@@ -298,7 +255,6 @@ struct GalleryView: View {
         .padding(.bottom, 12)
         .animation(.snappy, value: library.latestWriteFailure?.artwork.id)
         .animation(.snappy, value: library.recentlyDeleted?.id)
-        .animation(.snappy, value: notice)
         // VoiceOver users hear what the toasts show, and that their action is there to find.
         .onChange(of: library.latestWriteFailure?.artwork.id) {
             guard let failed = library.latestWriteFailure?.artwork else { return }
