@@ -231,6 +231,9 @@ nonisolated extension AdvancedControl {
         case .outlineObjects:
             String(localized: "advanced.control.outlineObjects", defaultValue: "Outline Subjects",
                    comment: "Settings › Advanced › Line Art: switch that closes each subject's silhouette with an outline where the picture gives no edge")
+        case .keepWriting:
+            String(localized: "advanced.control.keepWriting", defaultValue: "Keep Writing",
+                   comment: "Settings › Advanced › Line Art: switch that draws handwriting and small text found in the picture as legible ink")
         case .detector:
             String(localized: "advanced.control.detector", defaultValue: "Detector",
                    comment: "Settings › Advanced › Line Art: choice of which of the two bundled models the lines come from")
@@ -332,6 +335,10 @@ nonisolated extension AdvancedControl {
             String(localized: "advanced.control.outlineObjects.summary",
                    defaultValue: "Closes the silhouette of the main subjects where the picture gives no edge, so each is an area of its own.",
                    comment: "Settings › Advanced › Line Art: explanation under the Outline Subjects switch")
+        case .keepWriting:
+            String(localized: "advanced.control.keepWriting.summary",
+                   defaultValue: "Draws a note, a card or other fine writing in the picture as legible ink over the paper, with the numbers kept off it.",
+                   comment: "Settings › Advanced › Line Art: explanation under the Keep Writing switch")
         case .detector:
             String(localized: "advanced.control.detector.summary",
                    defaultValue: "Which of the two bundled models the lines come from (see each option).",

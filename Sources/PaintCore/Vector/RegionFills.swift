@@ -200,10 +200,11 @@ struct RegionFills {
 
     /// Spreads additional labels over large regions so a number stays in view when zoomed
     /// into any part of them: raster distance-transform samples are visited from the most
-    /// to the least spacious and accepted when far enough from every label placed so far.
+    /// to the least spacious and accepted when far enough from every label placed so far, and
+    /// with room to spare from the outline and from `keepOut`.
     mutating func addExtraLabels(
         _ shapes: RegionShapes, raster: RasterStats, distance: Grid<Float>, map: RegionMap, regionColor: [UInt32],
-        width: Int, height: Int
+        keepOut: LabelKeepOut = LabelKeepOut(rects: []), width: Int, height: Int
     ) {
         let regionCount = pole.count
         // Typical label radius: median pole radius of regions that can hold a number.
@@ -248,7 +249,7 @@ struct RegionFills {
                     }
                     guard far else { continue }
                     if !polyBuilt { shapes.polygon(r, into: &poly); polyBuilt = true }
-                    let free = poly.signedDistance(Double(p.x), Double(p.y))
+                    let free = min(poly.signedDistance(Double(p.x), Double(p.y)), keepOut.distance(Double(p.x), Double(p.y)))
                     guard free >= max(Double(minRadius) * 0.8, Double(legible)) else { continue }
                     placed.append(p)
                     extras.append(Label(position: p, radius: Float(free), region: UInt32(r)))

@@ -609,6 +609,30 @@
         }
       }
     },
+    "advanced.control.keepWriting" : {
+      "comment" : "Settings › Advanced › Line Art: switch that draws handwriting and small text found in the picture as legible ink",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Writing"
+          }
+        }
+      }
+    },
+    "advanced.control.keepWriting.summary" : {
+      "comment" : "Settings › Advanced › Line Art: explanation under the Keep Writing switch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draws a note, a card or other fine writing in the picture as legible ink over the paper, with the numbers kept off it."
+          }
+        }
+      }
+    },
     "advanced.control.lineSmoothing" : {
       "comment" : "Settings › Advanced › Line Art: slider for how much lines are smoothed into curves",
       "extractionState" : "manual",

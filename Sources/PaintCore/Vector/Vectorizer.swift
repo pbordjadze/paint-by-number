@@ -32,10 +32,21 @@ public enum Vectorizer {
         try vectorizeWithStats(segmentation, settings: settings, cancel: cancel, clock: clock).template
     }
 
-    /// `vectorize`, also reporting what the vectorizer had to give up.
+    /// `vectorize`, also reporting what the vectorizer had to give up. Numbers keep off
+    /// `keepOut` where their regions have room elsewhere (`LabelKeepOut`).
     public static func vectorizeWithStats(
         _ segmentation: Segmentation,
         settings: GenerationSettings,
+        cancel: CancellationCheck,
+        clock: StageClock
+    ) throws -> (template: Template, stats: VectorStats) {
+        try vectorizeWithStats(segmentation, settings: settings, keepOut: LabelKeepOut(rects: []), cancel: cancel, clock: clock)
+    }
+
+    static func vectorizeWithStats(
+        _ segmentation: Segmentation,
+        settings: GenerationSettings,
+        keepOut: LabelKeepOut,
         cancel: CancellationCheck,
         clock: StageClock
     ) throws -> (template: Template, stats: VectorStats) {
@@ -81,12 +92,18 @@ public enum Vectorizer {
         let smoothing = try clock.measure("vectorize.smooth") {
             try EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run(labelRoom: room, cancel: cancel)
         }
-        let poles = smoothing.poles
+        var poles = smoothing.poles
         let geometry = smoothing.geometry
         let edges = geometry.boundaryEdges(graph)
         try cancel.throwIfCancelled()
 
         let shapes = RegionShapes(points: geometry.points, edges: edges, topology: topology)
+        if !keepOut.isEmpty {
+            clock.measure("vectorize.keepOut") {
+                keepOut.move(&poles, shapes: shapes, room: room, regionColor: segmentation.regionColor)
+            }
+            try cancel.throwIfCancelled()
+        }
         var fills = try clock.measure("vectorize.fill") {
             try RegionFills.build(shapes, poles: poles, width: w, height: h, cancel: cancel)
         }
@@ -94,7 +111,7 @@ public enum Vectorizer {
         clock.measure("vectorize.labels") {
             fills.addExtraLabels(
                 shapes, raster: raster, distance: distance, map: map, regionColor: segmentation.regionColor,
-                width: w, height: h)
+                keepOut: keepOut, width: w, height: h)
         }
         try cancel.throwIfCancelled()
 

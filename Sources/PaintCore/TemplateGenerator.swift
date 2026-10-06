@@ -3,7 +3,7 @@ public struct TemplateGenerator: Sendable {
     /// Stamped into every generated template (`Template.pipelineVersion`). Bump in the same
     /// commit as any change that alters generated output for identical inputs and settings,
     /// so saved paintings record which pipeline drew them.
-    public static let pipelineVersion: UInt32 = 6
+    public static let pipelineVersion: UInt32 = 7
 
     public var settings: GenerationSettings
 
@@ -27,8 +27,8 @@ public struct TemplateGenerator: Sendable {
     ///   - image: Source photo, any size (it is area-resampled to the working size).
     ///   - importance: Optional per-pixel saliency in 0...1 at any resolution (e.g. a
     ///     subject mask from Vision). Important areas receive more colors and detail.
-    ///   - lineArt: The edge map, eyes, subject silhouettes and contour map (`LineArtInput`)
-    ///     layered and coloring-book line art draw from.
+    ///   - lineArt: The edge map, eyes, subject silhouettes, contour map and writing
+    ///     (`LineArtInput`) layered and coloring-book line art draw from.
     ///     Ignored by classic settings; settings that need it generate a classic template
     ///     without it (a coloring book's over its flatter paint).
     ///   - cancel: Polled between and within stages.
@@ -43,7 +43,7 @@ public struct TemplateGenerator: Sendable {
         let clock = StageClock()
         progress?(0)
         let size = settings.workingSize(sourceWidth: image.width, sourceHeight: image.height)
-        let working = try clock.measure("resample") {
+        var working = try clock.measure("resample") {
             try Resample.area(image, width: size.width, height: size.height, cancel: cancel)
         }
         try cancel.throwIfCancelled()
@@ -56,6 +56,15 @@ public struct TemplateGenerator: Sendable {
         // By the settings, not the edge map, so Auto's drafts (which have none) are scored on
         // the paint the book gets, and a book whose edge map failed keeps its flatter paint.
         if settings.lineArt.style == .coloringBook { parameters.flattenForColoringBook() }
+        // The writing's ink is traced and painted out first, so the paint ignores the letters.
+        var writing: Writing?
+        if let layered, settings.lineArt.keepWriting, !layered.writing.isEmpty {
+            writing = try clock.measure("writing") {
+                try Writing.find(
+                    in: &working, areas: layered.writing, minRadius: parameters.minRadius, cancel: cancel, clock: clock)
+            }
+            try cancel.throwIfCancelled()
+        }
         var (segmentation, weights) = try clock.measure("segment") {
             try Segmenter.segment(
                 working, importance: importance, parameters: parameters, cancel: cancel, clock: clock,
@@ -68,7 +77,8 @@ public struct TemplateGenerator: Sendable {
         if let layered {
             let result = try clock.measure("lineArt") {
                 try LayeredLines.apply(
-                    segmentation, input: layered, importance: weights, settings: settings, cancel: cancel, clock: clock)
+                    segmentation, input: layered, importance: weights, settings: settings, writing: writing, cancel: cancel,
+                    clock: clock)
             }
             segmentation = result.segmentation
             plan = result
@@ -78,8 +88,9 @@ public struct TemplateGenerator: Sendable {
         // Drops the canvas-sized importance map before the vectorizer's own large buffers.
         weights = []
 
+        let keepOut = LabelKeepOut(rects: writing?.keepOut ?? [])
         var vector = try clock.measure("vectorize") {
-            try Vectorizer.vectorizeWithStats(segmentation, settings: settings, cancel: cancel, clock: clock)
+            try Vectorizer.vectorizeWithStats(segmentation, settings: settings, keepOut: keepOut, cancel: cancel, clock: clock)
         }
         vector.template.pipelineVersion = Self.pipelineVersion
         if let plan {

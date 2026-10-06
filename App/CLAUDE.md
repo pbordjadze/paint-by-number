@@ -56,7 +56,7 @@ synchronized folder would bundle it into the app.
   `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
   `Background`, `Log` (every logger; CI's `*-app.log`); DEBUG `DemoTemplateCache`.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
-  `ObjectFinder`, `LineArtInputs`; DEBUG `LineArtMapsCache`.
+  `ObjectFinder`, `TextFinder`, `LineArtInputs`; DEBUG `LineArtMapsCache`.
 - `Canvas/`: `CanvasView`, `CanvasRenderer`, `CanvasScene`, `RenderContext`, `Shaders.metal`,
   `CanvasTypes.swift`, `LineStyle.swift` (`LineStyle`, `ColoringBookLook`, `DrawableLineArt`),
   `CanvasSnapshot`, `TimelapseFrameRenderer`, `CanvasAccessibility`, `DigitAtlas`; DEBUG
@@ -207,7 +207,9 @@ Conventions).
   `tools/models/convert_*.py`): `edgeMap` the HED contours, `lineDrawing` the drawing;
   `EdgeDetector.maps(for:)` returns both (the drawing resampled to the contours' size). `EyeFinder`
   (Vision face landmarks → eye contours and irises) and `ObjectFinder` (Vision's foreground instance
-  mask traced by PaintCore's `MaskContours`) find the eyes and subjects.
+  mask traced by PaintCore's `MaskContours`) find the eyes and subjects, `TextFinder` (Vision's text
+  recognition, down to 1/128 of the photo's height) the lines of text PaintCore's `Writing` keeps
+  legible (`docs/writing.md`).
 - `LineArtInputs.Maps.input(for:)` builds the generator's `LineArtInput` by the rule pbn uses too
   (`LineArtInput(drawing:contours:detector:)`): by default the drawing over the contours
   (`EdgeMap.combined`), the contours deciding the outlines; `LineArtSettings.detector` picks one map

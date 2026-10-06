@@ -84,12 +84,21 @@ public struct LineArtInput: Sendable, Equatable {
     /// is an outline wherever the contour detector found it and the drawing's strokes, however
     /// strong, are detail. Nil: `edges` decides, as a single map always did.
     public var contours: EdgeMap?
+    /// Lines of text found in the photo (a note, a card, a sign) as closed polygons, the
+    /// recognizer's quadrilaterals, normalized like `eyes` (the app's Vision text recognition,
+    /// `pbn --writing`). Their ink is traced from the photo and drawn legibly
+    /// (`Writing`, `LineArtSettings.keepWriting`).
+    public var writing: [[SIMD2<Float>]]
 
-    public init(edges: EdgeMap, eyes: [[SIMD2<Float>]] = [], objects: [[SIMD2<Float>]] = [], contours: EdgeMap? = nil) {
+    public init(
+        edges: EdgeMap, eyes: [[SIMD2<Float>]] = [], objects: [[SIMD2<Float>]] = [], contours: EdgeMap? = nil,
+        writing: [[SIMD2<Float>]] = []
+    ) {
         self.edges = edges
         self.eyes = eyes
         self.objects = objects
         self.contours = contours
+        self.writing = writing
     }
 
     /// The input `detector` draws from when both maps exist: the drawing over the contours with
@@ -97,17 +106,18 @@ public struct LineArtInput: Sendable, Equatable {
     /// detector setting and `pbn --line-art detector=` both go through here.
     public init(
         drawing: EdgeMap, contours: EdgeMap, detector: LineArtSettings.Detector,
-        eyes: [[SIMD2<Float>]] = [], objects: [[SIMD2<Float>]] = [], contourWeight: Float = EdgeMap.contourWeight
+        eyes: [[SIMD2<Float>]] = [], objects: [[SIMD2<Float>]] = [], writing: [[SIMD2<Float>]] = [],
+        contourWeight: Float = EdgeMap.contourWeight
     ) {
         switch detector {
         case .drawingAndContours:
             self.init(
                 edges: EdgeMap.combined(drawing: drawing, contours: contours, contourWeight: contourWeight),
-                eyes: eyes, objects: objects, contours: contours)
+                eyes: eyes, objects: objects, contours: contours, writing: writing)
         case .drawing:
-            self.init(edges: drawing, eyes: eyes, objects: objects)
+            self.init(edges: drawing, eyes: eyes, objects: objects, writing: writing)
         case .contours:
-            self.init(edges: contours, eyes: eyes, objects: objects)
+            self.init(edges: contours, eyes: eyes, objects: objects, writing: writing)
         }
     }
 }

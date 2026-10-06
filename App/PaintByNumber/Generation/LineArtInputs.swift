@@ -5,7 +5,8 @@ import PaintCore
 
 /// What layered and coloring-book line art draw from, computed once per photo: the line
 /// drawing over the HED edge map, the HED map alone for the outlines (`EdgeDetector.maps`),
-/// the eyes (`EyeFinder`) and the subjects' silhouettes (`ObjectFinder`).
+/// the eyes (`EyeFinder`), the subjects' silhouettes (`ObjectFinder`) and the lines of text
+/// (`TextFinder`).
 ///
 /// Inputs are cached by the photo's identity (the same `CGImage` instance) for the last
 /// `cacheCapacity` photos, so the create flow's drafts, candidates and full resolution, and a
@@ -23,11 +24,13 @@ nonisolated enum LineArtInputs {
         var contours: EdgeMap
         var eyes: [[SIMD2<Float>]]
         var objects: [[SIMD2<Float>]]
+        var writing: [[SIMD2<Float>]]
 
         /// The input `detector` generates from, by the rule `pbn` follows too
         /// (`LineArtInput(drawing:contours:detector:)`).
         func input(for detector: LineArtSettings.Detector) -> LineArtInput {
-            LineArtInput(drawing: drawing, contours: contours, detector: detector, eyes: eyes, objects: objects)
+            LineArtInput(
+                drawing: drawing, contours: contours, detector: detector, eyes: eyes, objects: objects, writing: writing)
         }
     }
 
@@ -65,7 +68,7 @@ nonisolated enum LineArtInputs {
     }
 
     /// Everything found in `image`, computed now, outside `make`'s per-photo cache: both maps
-    /// (the models one after the other) and, meanwhile, the eyes and the subjects. Demo and test
+    /// (the models one after the other) and, meanwhile, the eyes, the subjects and the text. Demo and test
     /// launches read and keep them on disk (`LineArtMapsCache`), so a CI run computes each
     /// picture once.
     @concurrent
@@ -75,8 +78,10 @@ nonisolated enum LineArtInputs {
         #endif
         async let eyes = findEyes(in: image)
         async let objects = findObjects(in: image)
+        async let writing = findWriting(in: image)
         let maps = try EdgeDetector.maps(for: image)
-        let found = Maps(drawing: maps.drawing, contours: maps.contours, eyes: await eyes, objects: await objects)
+        let found = Maps(
+            drawing: maps.drawing, contours: maps.contours, eyes: await eyes, objects: await objects, writing: await writing)
         #if DEBUG
         LineArtMapsCache.store(found, for: image)
         #endif
@@ -91,6 +96,11 @@ nonisolated enum LineArtInputs {
     @concurrent
     private static func findObjects(in image: CGImage) async -> [[SIMD2<Float>]] {
         ObjectFinder.objects(in: image)
+    }
+
+    @concurrent
+    private static func findWriting(in image: CGImage) async -> [[SIMD2<Float>]] {
+        TextFinder.lines(in: image)
     }
 
     private static let cache = InputCache()

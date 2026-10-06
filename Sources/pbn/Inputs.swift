@@ -42,7 +42,8 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
 /// The edge map and eyes layered and coloring-book line art draw from: `--edges` (a contour
 /// map, HED), `--lines` (a line drawing), or both combined as the app combines its two models
 /// (`EdgeMap.combined`, the contours alone then deciding the outlines, `--contour-weight` the
-/// weight), unless `--line-art detector=drawing|contours` keeps one of them; and `--eyes`.
+/// weight), unless `--line-art detector=drawing|contours` keeps one of them; `--eyes`,
+/// `--objects` and `--writing`.
 func loadLineArt(_ options: Options) -> LineArtInput? {
     func map(_ path: String) -> EdgeMap {
         let img = loadImage(path)
@@ -67,6 +68,7 @@ func loadLineArt(_ options: Options) -> LineArtInput? {
         } catch { fail("cannot decode \(path): \(error)") }
     }
     let eyes = options.eyes.map(polygons) ?? []
+    let writing = options.writing.map(polygons) ?? []
     var objects: [[SIMD2<Float>]] = []
     if let path = options.objects {
         if path.hasSuffix(".json") {
@@ -81,10 +83,10 @@ func loadLineArt(_ options: Options) -> LineArtInput? {
     if let drawing, let contours {
         return LineArtInput(
             drawing: drawing, contours: contours, detector: options.settings.lineArt.detector, eyes: eyes, objects: objects,
-            contourWeight: options.contourWeight)
+            writing: writing, contourWeight: options.contourWeight)
     }
     // One map is drawn as it is, whatever the detector says.
-    return LineArtInput(edges: single, eyes: eyes, objects: objects)
+    return LineArtInput(edges: single, eyes: eyes, objects: objects, writing: writing)
 }
 
 func loadHints(_ path: String?) -> SubjectHints? {
