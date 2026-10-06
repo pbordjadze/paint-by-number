@@ -21,11 +21,12 @@ struct TextFinderTests {
         #expect(lines.allSatisfy { $0.allSatisfy { p in p == quantized(SIMD2(Double(p.x), Double(p.y))) } })
     }
 
-    @Test func noteLinesAreWellFormedAndRecorded() throws {
+    @Test func noteLinesAreWellFormedAndRecorded() async throws {
         let size = CGSize(width: 1200, height: 900)
         let hello = CGRect(x: 180, y: 260, width: 840, height: 140), printed = CGRect(x: 180, y: 520, width: 840, height: 110)
-        // Lower than Vision's default least height (1/32 of the photo), as a note's words often are.
-        let small = CGRect(x: 180, y: 640, width: 840, height: 24)
+        // Lower than Vision's default least height (1/32 of the photo), as a note's words often are,
+        // and above the simulator's (`TextFinder.minimumTextHeight`, 1/48): 22-point letters.
+        let small = CGRect(x: 180, y: 640, width: 840, height: 30)
         let picture = UIGraphicsImageRenderer(size: size, format: { let f = UIGraphicsImageRendererFormat(); f.scale = 1; return f }())
             .image { context in
                 UIColor(red: 0.55, green: 0.4, blue: 0.3, alpha: 1).setFill()
@@ -36,13 +37,15 @@ struct TextFinderTests {
                 ("Hello there" as NSString).draw(in: hello, withAttributes: [.font: hand, .foregroundColor: UIColor.darkGray])
                 ("Printed line" as NSString).draw(
                     in: printed, withAttributes: [.font: UIFont.systemFont(ofSize: 80), .foregroundColor: UIColor.black])
+                // At a point, not in `small`: a rect no taller than the line would drop it.
                 ("See you all soon" as NSString).draw(
-                    in: small, withAttributes: [.font: UIFont(name: "Noteworthy-Bold", size: 18) ?? UIFont.systemFont(ofSize: 18),
-                                               .foregroundColor: UIColor.darkGray])
+                    at: small.origin, withAttributes: [.font: UIFont(name: "Noteworthy-Bold", size: 22) ?? UIFont.systemFont(ofSize: 22),
+                                                      .foregroundColor: UIColor.darkGray])
             }
         let image = try #require(picture.cgImage)
-        let lines = TextFinder.lines(in: image)
-        #expect(TextFinder.lines(in: image) == lines, "the lines differ between two runs")
+        let lines = await Self.lines(in: image)
+        let again = await Self.lines(in: image)
+        #expect(again == lines, "the lines differ between two runs")
         for line in lines {
             #expect(line.count == 4)
             #expect(line.allSatisfy { $0.x >= -0.01 && $0.x <= 1.01 && $0.y >= -0.01 && $0.y <= 1.01 })
@@ -66,6 +69,14 @@ struct TextFinderTests {
         if centres.contains(where: { hello.insetBy(dx: -40, dy: -30).contains($0) }) {
             #expect(centres.contains { small.insetBy(dx: 0, dy: -12).contains($0) }, "the small line wasn't found")
         }
+    }
+
+    /// Vision off the main actor, as the app runs it (`LineArtInputs`) and the other finders'
+    /// tests do: a read takes seconds on CI's simulator, and on the main actor it held up every
+    /// other test there.
+    @concurrent
+    private static func lines(in image: CGImage) async -> [[SIMD2<Float>]] {
+        TextFinder.lines(in: image)
     }
 
     private func quantized(_ p: SIMD2<Double>) -> SIMD2<Float> {

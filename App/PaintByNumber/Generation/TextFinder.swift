@@ -23,8 +23,15 @@ nonisolated enum TextFinder {
     /// The lowest text looked for, per height of the photo: the writing stage keeps text from 10
     /// canvas pixels (`Writing.minimumHeight`), about this much of a canvas's short side. Vision's
     /// default, 1/32, misses a note photographed among other things: the words of one beside
-    /// stuffed animals stood 1/51 to 1/22 of the photo's height.
+    /// stuffed animals stood 1/51 to 1/22 of the photo's height. The simulator runs Vision's
+    /// networks on the CPU, where text this small added 10 to 70 s to each 560-pixel picture CI
+    /// seeded and kept the create flow finding the subject past its screenshots' 90 s; there it
+    /// looks from 1/48, low enough for `TextFinderTests`' smallest line.
+    #if targetEnvironment(simulator)
+    static let minimumTextHeight: Float = 1 / 48
+    #else
     static let minimumTextHeight: Float = 1 / 128
+    #endif
     static let quantum = 4096.0
 
     /// The lines of text in `image` (upright pixels). Empty when there are none or Vision can't

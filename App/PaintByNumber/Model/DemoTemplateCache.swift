@@ -5,12 +5,13 @@ import os
 import PaintCore
 
 /// Demo and test launches only: the templates `ArtworkFactory.draft(sample:…)` generated for the
-/// bundled pictures, kept on disk in the app's caches by picture, size, settings and pipeline, so
-/// the dozens of launches a CI run makes (one per screenshot scenario and UI test, each seeding
-/// the same pictures into a fresh library) generate each once instead of once per launch: a
-/// Debug build's pipeline took 10 to 19 s a seed on CI's iPad simulator, and the tests waited for
-/// it. What a launch gets back is what it would generate (from the maps `LineArtMapsCache` keeps);
-/// a file that doesn't decode is generated again. Release builds have none of this.
+/// bundled pictures, kept on disk in the app's caches by picture, size, settings, pipeline and
+/// maps (`LineArtMapsCache.version`), so the dozens of launches a CI run makes (one per
+/// screenshot scenario and UI test, each seeding the same pictures into a fresh library) generate
+/// each once instead of once per launch: a Debug build's pipeline took 10 to 19 s a seed on CI's
+/// iPad simulator, and the tests waited for it. What a launch gets back is what it would generate
+/// (from the maps `LineArtMapsCache` keeps); a file that doesn't decode is generated again.
+/// Release builds have none of this.
 nonisolated enum DemoTemplateCache {
     private static var directory: URL? {
         guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
@@ -25,7 +26,7 @@ nonisolated enum DemoTemplateCache {
         encoder.outputFormatting = .sortedKeys
         guard let json = try? encoder.encode(settings) else { return nil }
         var hasher = SHA256()
-        hasher.update(data: Data("\(sample) \(photoMaxPixelSize) \(TemplateGenerator.pipelineVersion) ".utf8))
+        hasher.update(data: Data("\(sample) \(photoMaxPixelSize) \(TemplateGenerator.pipelineVersion) \(LineArtMapsCache.version) ".utf8))
         hasher.update(data: json)
         return directory.appending(path: hasher.finalize().map { String(format: "%02x", $0) }.joined() + ".pbnt")
     }

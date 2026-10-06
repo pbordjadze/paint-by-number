@@ -14,7 +14,8 @@ import PaintCore
 /// `ObjectFinder` or `TextFinder` changes. Release builds have none of this.
 nonisolated enum LineArtMapsCache {
     private static let magic = "LAMC"
-    private static let version: UInt32 = 2
+    /// Also keys `DemoTemplateCache`, whose templates are drawn from these maps.
+    static let version: UInt32 = 3
 
     /// On for demo scenarios (`-demo`, as `DemoMode.scenario` reads it) and the unit-test
     /// host (as `DemoMode.isTestHost` does), never for a painter's own launch; read here
