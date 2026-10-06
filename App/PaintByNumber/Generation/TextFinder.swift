@@ -3,8 +3,8 @@ import Foundation
 import os
 import Vision
 
-/// The lines of text in a photo (a note, a card, a sign), whose ink layered and coloring-book
-/// line art trace from the photo and draw legibly (`LineArtInput.writing`, PaintCore's
+/// The lines of text in a photo (a note, a card, a sign), whose ink a coloring book traces from
+/// the photo and draws legibly (`LineArtInput.writing`, PaintCore's
 /// `Writing`): Vision's text recognition at the accurate level, which reads handwriting too.
 /// Reading isn't the point, finding is: a line counts when Vision reads it with some confidence
 /// (`minimumConfidence`) as at least `minimumCharacters` letters or digits, so a stray mark it

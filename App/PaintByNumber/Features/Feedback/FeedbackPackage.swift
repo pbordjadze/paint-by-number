@@ -113,7 +113,7 @@ nonisolated enum FeedbackPackage {
         let painted = (0..<capture.template.regions.count).map { capture.progress.isPainted($0) }
         var options = CanvasSnapshot.Options(outlines: true, numbers: capture.showsNumbers)
         options.palette = capture.palette
-        options.lineAppearance = capture.lineAppearance
+        options.lineWeight = capture.lineWeight
         // The painting as it was shown, with `ink` over it.
         func shown(_ frame: Frame, ink: CGImage?, highlight: Int? = nil) -> CGImage? {
             var look = options

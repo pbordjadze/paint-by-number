@@ -7,7 +7,8 @@ import PaintCore
 ///
 /// - `feedback.md`: this report for people: the note, each mark's comment and the regions it
 ///   touches, the painting's facts and these files. English, like pbn's output.
-/// - `feedback.json`: the same for scripts (`format` 1): app, device and system; where the
+/// - `feedback.json`: the same for scripts (`format` 2; format 1 had the retired Line Appearance
+///   setting where 2 has `lineWeight`): app, device and system; where the
 ///   painting came from and its generation settings; what was on screen; each mark's comment,
 ///   regions (under the ink, or inside a loop it closes) and strokes as polylines in canvas
 ///   units (the template's, y down), with the zoom each was drawn at.
@@ -23,7 +24,7 @@ import PaintCore
 /// (palette index + 1) except in `FeedbackRegionHit.color`, a palette index. Fields are only
 /// ever added: scripts read them by name.
 nonisolated struct FeedbackReport: Codable, Sendable {
-    static let currentFormat = 1
+    static let currentFormat = 2
 
     var format: Int
     var app: String
@@ -48,7 +49,8 @@ nonisolated struct FeedbackReport: Codable, Sendable {
         var settingsOrigin: String?
         var paintingLength: String?
         var pipelineVersion: Int
-        /// "classic", "layered" or "coloringBook", as the template draws.
+        /// "classic", "layered" or "coloringBook", as the template records it (a layered one, of
+        /// the retired style, draws as a coloring book).
         var lineStyle: String
         var width: Int
         var height: Int
@@ -62,7 +64,8 @@ nonisolated struct FeedbackReport: Codable, Sendable {
         /// The Paper setting ("light", "dark", "automatic") and whether the paper was dark.
         var paper: String
         var darkPaper: Bool
-        var lineAppearance: LineAppearance
+        /// The Line Weight setting ("fine", "regular", "bold").
+        var lineWeight: String
         var nicknameSeed: UInt64
     }
 
@@ -155,7 +158,7 @@ nonisolated extension FeedbackReport {
                 activeSeconds: capture.progress.activeSeconds, selectedNumber: capture.selectedColor.map { $0 + 1 },
                 showsNumbers: capture.showsNumbers, paper: capture.paper.rawValue,
                 darkPaper: capture.paper.usesDarkPaper(interfaceIsDark: capture.darkInterface),
-                lineAppearance: capture.lineAppearance, nicknameSeed: capture.nicknameSeed),
+                lineWeight: capture.lineWeight.rawValue, nicknameSeed: capture.nicknameSeed),
             view: OnScreen(
                 rect: Self.numbers(contents.layout.view.rect), relativeZoom: Self.rounded(capture.relativeZoom),
                 pointsPerUnit: Self.rounded(capture.pointsPerUnit), displayScale: Double(capture.displayScale),

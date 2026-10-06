@@ -1,8 +1,9 @@
 # Coloring Book: color by outer boundary
 
-The third line style (`LineArtSettings.Style.coloringBook`), built from the owner's annotated
-screenshots of a layered painting of Arrieta's *Still Life with Cat and Birds*: a coloring book
-whose areas are told apart by their numbers, not by lines.
+The app's line style (`LineArtSettings.Style.coloringBook`), built from the owner's annotated
+screenshots of a layered painting of Arrieta's *Still Life with Cat and Birds* (the layered
+style, which faded fainter lines in as the painter zoomed, is retired): a coloring book whose
+areas are told apart by their numbers, not by lines.
 
 ## What a book must do
 
@@ -34,20 +35,20 @@ renderers*, so that is where the style lives:
 
 - `TemplateLineArt.style` (`layered` or `coloringBook`), stored in the LINE chunk as an
   optional trailing byte (absent = layered, so layered templates encode byte for byte as
-  before, and readers from before the byte draw a book layered). Every renderer (Metal canvas,
-  snapshots, time-lapse, thumbnails, share pictures, PDF, SVG) switches on it, so a painting
-  looks the same whatever Settings › Advanced says later.
+  before, and readers from before the byte draw a book layered). Since the layered style was
+  retired, every renderer (Metal canvas, snapshots, time-lapse, thumbnails, share pictures, PDF,
+  SVG) draws both as a book.
 - Generation, in `LayeredLines.apply`: a book draws nothing below the detail threshold (its
-  texture layer is empty, `textureThreshold` unused), keeps every line it draws rather than
-  trimming the stretches that bound no cell (those become interior strokes: the drawing's
-  creases and fur), and drops stretches shorter than `LineLayering.minimumRun` as trimming
-  slivers. Cells, merges and joins are the layered pipeline's; `samePaint = .joinTexture`
-  splits like `.split` since there are no texture lines.
+  texture layer is empty), keeps every line it draws rather than trimming the stretches that
+  bound no cell (those become interior strokes: the drawing's creases and fur), and drops
+  stretches shorter than `LineLayering.minimumRun` as trimming slivers. Cells, merges and joins
+  are the layered pipeline's; `samePaint = .joinTexture` splits like `.split` since there are no
+  texture lines.
 - Drawing (`ColoringBookLook`): every drawn layer alike in the paper's full ink, three times a
-  classic line fitted (the canvas ramp 1.5 pt + 0.7 pt per zoom doubling, times
-  `LineAppearance.coloringBookWeight`), color edges never drawn, lines never dissolving under
-  paint, nothing outlined for being selected (the fill's hatch shows the cells). On paper,
-  where there is no hatch, color edges print as dotted guides.
+  classic line fitted (the canvas ramp 1.5 pt + 0.7 pt per zoom doubling, times Settings › Line
+  Weight's factor, `LineWeight`), color edges never drawn, lines never dissolving under paint,
+  nothing outlined for being selected (the fill's hatch shows the cells). On paper, where there
+  is no hatch, color edges print as dotted guides.
 
 ## Evaluation
 
@@ -68,18 +69,18 @@ settings at Relaxed.
 
 | Setting | Value | Why |
 | --- | --- | --- |
-| Line Style | Coloring Book | the drawing alone is drawn, over the paint; no color edges, no selected outline |
-| Lines From | 60 % | what is drawn, read off the drawing laid over the contours. 50 % draws about a tenth more lines, 70 % a sixth fewer; 60 % keeps the structure (the fox's ears and legs, the Milkmaid's sleeves) and drops the brushwork. A book has no texture lines, so Texture From is hidden |
-| Outlines From | 60 % | read off the contour map (HED) alone: an object's boundary is an outline wherever HED found it, the drawing's fur and creases are detail whatever their ink (Detectors, below). Never below Lines From: the thresholds stay ordered |
-| Shortest Line | 36 px | specks never become lines or cells |
-| Gap Closing | 16 px | open strokes reach further for a line, paint boundary or the frame, so cells close |
-| Line Smoothing | 70 % | flowing curves |
-| Same Paint Across a Line | Join Across Detail | silhouettes split same-paint cells; fur, creases and strands are drawn inside their cells instead of walling slivers |
-| Keep Color Edges | On | the paints inside an outline stay separate areas (numbered, never drawn) |
-| Outline Eyes | On | eyes as closed outlines with an iris |
-| Outline Subjects | On | the subjects' silhouettes (Vision's foreground mask) close the drawing where the detectors left it open (Closing the subjects, below) |
-| Flatter paint | 1.5× smoothing, texture flattening and smallest area, built into the style (`SegmentationParameters.coloringBookFlattening`) | fewer small color cells inside the outlines, which are told apart by numbers only: a tenth to a third fewer cells on the ten pictures before Suggested settings re-balance the painting's length, and a calmer book after (the fox at 1× came out at 24 colors and detail 0.79 with numbered specks all over its body, at 1.5× at 32 colors and detail 0.59 with cells a painter can find). The Pipeline factors multiply it, so 1× there is the book's own paint |
-| Line Appearance | default | a book reads only Line Weight (1×) |
+| `style` | `coloringBook` | the drawing alone is drawn, over the paint; no color edges, no selected outline |
+| `detailThreshold` | 0.6 | what is drawn, read off the drawing laid over the contours. 0.5 draws about a tenth more lines, 0.7 a sixth fewer; 0.6 keeps the structure (the fox's ears and legs, the Milkmaid's sleeves) and drops the brushwork. The create flow's Lines slider moves it (`CreateModel.lineArt(_:lines:)`) |
+| `outlineThreshold` | 0.6 | read off the contour map (HED) alone: an object's boundary is an outline wherever HED found it, the drawing's fur and creases are detail whatever their ink (Detectors, below). Never below `detailThreshold`: the thresholds stay ordered |
+| `minimumStrokeLength` | 36 px | specks never become lines or cells |
+| `gapBridging` | 16 px | open strokes reach further for a line, paint boundary or the frame, so cells close |
+| `lineSmoothing` | 0.7 | flowing curves |
+| `samePaint` | `joinAllButOutlines` | silhouettes split same-paint cells; fur, creases and strands are drawn inside their cells instead of walling slivers |
+| `keepColorEdges` | on | the paints inside an outline stay separate areas (numbered, never drawn) |
+| `outlineEyes` | on | eyes as closed outlines with an iris |
+| `outlineObjects` | on | the subjects' silhouettes (Vision's foreground mask) close the drawing where the detectors left it open (Closing the subjects, below) |
+| Flatter paint | 1.5× smoothing, texture flattening and smallest area, built into the style (`SegmentationParameters.coloringBookFlattening`) | fewer small color cells inside the outlines, which are told apart by numbers only: a tenth to a third fewer cells on the ten pictures before Suggested settings re-balance the painting's length, and a calmer book after (the fox at 1× came out at 24 colors and detail 0.79 with numbered specks all over its body, at 1.5× at 32 colors and detail 0.59 with cells a painter can find). `PipelineTuning`'s factors (`pbn --tuning`) multiply it, so 1× there is the book's own paint |
+| Line weight | Regular (1×) | drawing only: Settings › Line Weight steps every book's line to Fine (0.7×) or Bold (1.4×) |
 
 The thresholds stay ordered (`LineArtSettings.normalized`): the outline threshold never sits
 under the detail threshold, so an outline threshold of 0.5 would read as 0.6. Against the
@@ -89,11 +90,6 @@ joining across detail gives 10–20 % fewer cells (the slivers fur strokes walle
 three times the strokes drawn inside cells (92 on the fox, 168 on the Milkmaid) and the same
 ink. Lowering both thresholds to 0.5 would double the ink and the open ends (the fox 211
 strokes, the Milkmaid 388), too busy for a book.
-
-The layered style keeps the research's defaults (Outlines From 85 %, Detail 50 %, Texture
-30 %, 18 px, 9 px, 50 %), and choosing a style in Settings › Advanced carries each style's
-defaults along (`LineArtSettings.changing(to:)`): a number the painter changed stays. Under
-the book, Settings › Advanced hides Texture From and shows Line Appearance's Line Weight only.
 
 ## Detectors, and what each decides
 
@@ -162,23 +158,3 @@ it). Reduce the photo first to the size the app runs each network at, at most 11
 long side for HED and 768 for the drawing (pbn's `working.ppm` can be larger). The committed
 maps of the regression's book regime are `tools/baseline/lines/<name>-contours.png` and
 `-drawing.png`.
-
-## Presets and settings as text
-
-Settings › Advanced › Presets sets Line Art, Line Appearance and Pipeline at once
-(`AdvancedPreset`: a line style at its own defaults, the pipeline untuned and the lines drawn
-as designed). Coloring Book is the app's defaults, so it is also Reset All; Layered and
-Classic are the other two styles. A preset is recognized as long as the settings generate the
-same template and draw the same lines (`GenerationKey`): a setting the style ignores can sit
-anywhere.
-
-Any other mix of settings travels as text: Copy Settings writes a JSON object
-(`AdvancedReport.Snapshot`), and Paste Settings reads one back: an object with some of the
-three groups, `lineArt`, `tuning` and `lineAppearance`, each naming only the fields it changes
-(the others keep their defaults), a group left out staying as the painter has it, values
-beyond a setting's range clamped.
-
-Layered line art has a related per-layer *When Painted* slider in Line Appearance: how much
-of a layer's lines stays once both sides are painted (0 % by default, dissolving every line
-between painted cells as classic templates do). It gives a layered painting kept outlines
-without the book's other rules.

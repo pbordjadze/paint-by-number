@@ -244,7 +244,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
                 enc.setVertexBuffer(states, offset: 0, index: 3)
                 enc.setVertexBuffer(scene.regionColors, offset: 0, index: 4)
                 enc.setVertexBytes(&u, length: uniformSize, index: 5)
-                enc.setVertexBuffer(scene.lineStyles, offset: 0, index: 6)
+                enc.setVertexBuffer(scene.lineLayers, offset: 0, index: 6)
                 enc.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4, instanceCount: scene.segmentCount)
                 enc.endEncoding()
             }

@@ -40,7 +40,7 @@ nonisolated final class TimelapseFrameRenderer {
         self.stateBuffers = stateBuffers
         var options = options
         // Read once, not for every frame.
-        if scene.lineArtStyle != nil && options.lineAppearance == nil { options.lineAppearance = .stored() }
+        if scene.isColoringBook && options.lineWeight == nil { options.lineWeight = .stored() }
         self.options = options
         CVMetalTextureCacheCreate(nil, nil, context.device, nil, &cache)
     }

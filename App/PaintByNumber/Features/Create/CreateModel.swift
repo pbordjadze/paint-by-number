@@ -94,16 +94,16 @@ final class CreateModel {
     private(set) var decision: AutoDecision?
     /// What suggestions aim for (Settings › Painting Length).
     let paintingLength: PaintingLength
-    /// Line art and pipeline tuning the painting is made with (Settings › Advanced), on top of
-    /// the suggested or slider settings: every candidate of a suggestion carries them.
+    /// The line art the painting is made with before the Lines slider (the coloring book's
+    /// defaults in the app), on top of the suggested or slider settings: every candidate of a
+    /// suggestion carries it.
     let baseLineArt: LineArtSettings
-    let tuning: PipelineTuning
-    /// The Lines slider: 0.5 is Settings › Advanced's line art, toward 1 more lines, toward 0
-    /// fewer (`lineArt(_:lines:)`). Classic line art has no lines to tune.
+    /// The Lines slider: 0.5 is the base line art, toward 1 more lines, toward 0 fewer
+    /// (`lineArt(_:lines:)`). Classic line art has no lines to tune.
     var lines = 0.5
-    /// The line art the painting is made with: Advanced's with the Lines slider applied.
+    /// The line art the painting is made with: the base with the Lines slider applied.
     var lineArt: LineArtSettings { Self.lineArt(baseLineArt, lines: lines) }
-    /// What layered line art draws from, computed once per photo; nil for classic line art.
+    /// What the coloring book draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
@@ -137,13 +137,9 @@ final class CreateModel {
     @ObservationIgnored private var loadID = 0
 
     /// The sliders start at the generator's defaults; a photo moves them to its suggestion.
-    init(
-        paintingLength: PaintingLength = Preferences().paintingLength,
-        lineArt: LineArtSettings = Preferences().lineArt, tuning: PipelineTuning = Preferences().tuning
-    ) {
+    init(paintingLength: PaintingLength = Preferences().paintingLength, lineArt: LineArtSettings = LineArtSettings()) {
         self.paintingLength = paintingLength
         self.baseLineArt = lineArt.normalized
-        self.tuning = tuning.normalized
         let initial = GenerationSettings()
         colorCount = Double(initial.colorCount)
         detail = Double(initial.detail)
@@ -152,8 +148,7 @@ final class CreateModel {
 
     var settings: GenerationSettings {
         GenerationSettings(
-            colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness),
-            lineArt: lineArt, tuning: tuning
+            colorCount: Int(colorCount.rounded()), detail: Float(detail), smoothness: Float(smoothness), lineArt: lineArt
         ).normalized
     }
 
@@ -224,7 +219,7 @@ final class CreateModel {
         loadID += 1
         let load = loadID
         let preference = paintingLength
-        let lineArt = baseLineArt, tuning = self.tuning
+        let lineArt = baseLineArt
         loadTask = Task {
             do {
                 let decoded = try await decode()
@@ -241,7 +236,7 @@ final class CreateModel {
                 do {
                     chosen = try await Self.suggest(
                         prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
-                        lineArt: lineArt, tuning: tuning, maxCandidates: Self.maxCandidates,
+                        lineArt: lineArt, maxCandidates: Self.maxCandidates,
                         firstDraft: Self.firstDraftHandler(for: self, load: load))
                 } catch is CancellationError {
                     throw CancellationError()
@@ -341,8 +336,8 @@ final class CreateModel {
         startGeneration(draftFirst: !shownAsItWillBe)
     }
 
-    /// A suggestion's settings on the sliders; its candidates carry Advanced's line art, the
-    /// Lines slider's middle.
+    /// A suggestion's settings on the sliders; its candidates carry the base line art, the Lines
+    /// slider's middle.
     private func apply(_ settings: GenerationSettings) {
         colorCount = Double(settings.colorCount)
         detail = Double(settings.detail)
@@ -487,7 +482,7 @@ final class CreateModel {
         try Decoded(PhotoLoader.load(data: data, maxPixelSize: ArtworkStore.sourceMaxPixelSize))
     }
 
-    /// Subject importance and hints, and for layered line art the edge map and eyes (once per
+    /// Subject importance and hints, and for a coloring book the edge map and eyes (once per
     /// photo, side by side), and the reduced photo for drafts and suggestions.
     @concurrent
     private static func prepare(_ decoded: Decoded, lineArt: LineArtSettings) async throws -> Prepared {
@@ -502,7 +497,7 @@ final class CreateModel {
     @concurrent
     private static func suggest(
         _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength,
-        lineArt: LineArtSettings, tuning: PipelineTuning, maxCandidates: Int,
+        lineArt: LineArtSettings, maxCandidates: Int,
         firstDraft: @escaping @Sendable (Preview) -> Void
     ) async throws -> AutoDecision {
         // A task's cancellation shows only on the thread running it; the flag reaches every
@@ -511,7 +506,7 @@ final class CreateModel {
         return try await withTaskCancellationHandler {
             try AutoSettings.choose(
                 image: prepared.draft, sourceSize: sourceSize, importance: prepared.importance, hints: prepared.hints,
-                preference: preference, maxCandidates: maxCandidates, lineArt: lineArt, tuning: tuning,
+                preference: preference, maxCandidates: maxCandidates, lineArt: lineArt,
                 cancel: CancellationCheck { flag.isSet }
             ) { output in
                 // Rendered here, before the other candidates run: it is what the painter waits for.
@@ -569,7 +564,6 @@ final class CreateModel {
         var art = base
         art.detailThreshold = min(max(base.detailThreshold - 0.2 * more, 0.2), 0.95)
         art.outlineThreshold = min(max(base.outlineThreshold - 0.2 * more, 0.2), 0.95)
-        art.textureThreshold = min(base.textureThreshold, art.detailThreshold)
         art.minimumStrokeLength = base.minimumStrokeLength * (1 - 0.5 * more)
         return art.normalized
     }

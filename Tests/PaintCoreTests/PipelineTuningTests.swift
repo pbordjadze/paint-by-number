@@ -105,22 +105,26 @@ struct PipelineTuningTests {
         expected.samePaint = .split
         #expect(decoded.lineArt == expected)
         // A missing number takes its style's default.
-        let layered = try JSONDecoder().decode(LineArtSettings.self, from: Data(#"{"style": "layered"}"#.utf8))
-        #expect(layered == LineArtSettings(style: .layered) && layered.outlineThreshold == 0.85)
+        let classic = try JSONDecoder().decode(LineArtSettings.self, from: Data(#"{"style": "classic"}"#.utf8))
+        #expect(classic == LineArtSettings(style: .classic) && classic.outlineThreshold == 0.85)
+        // Settings of the retired layered style are the coloring book's defaults, whatever their numbers.
+        let layered = #"{"style": "layered", "outlineThreshold": 0.85, "textureThreshold": 0.3, "samePaint": "joinTexture", "keepWriting": false}"#
+        #expect(try JSONDecoder().decode(LineArtSettings.self, from: Data(layered.utf8)) == LineArtSettings())
         #expect(decoded.tuning == PipelineTuning(smoothing: 2))
         // Round trip.
         var full = GenerationSettings()
-        full.lineArt = LineArtSettings(style: .layered, outlineThreshold: 0.9, samePaint: .joinAllButOutlines, keepColorEdges: false)
+        full.lineArt = LineArtSettings(outlineThreshold: 0.9, samePaint: .split, keepColorEdges: false)
         full.tuning = PipelineTuning(minimumCellSize: 0.5, colorfulness: 3)
         #expect(try JSONDecoder().decode(GenerationSettings.self, from: JSONEncoder().encode(full)) == full)
     }
 
     @Test func lineArtSettingsAreClampedAndOrdered() {
         let s = LineArtSettings(
-            outlineThreshold: 0.2, detailThreshold: 0.5, textureThreshold: 1.4, minimumStrokeLength: -4, gapBridging: 400,
-            lineSmoothing: 2).normalized
-        #expect(s.textureThreshold == 1 && s.detailThreshold == 1 && s.outlineThreshold == 1)
+            outlineThreshold: 0.2, detailThreshold: 1.4, minimumStrokeLength: -4, gapBridging: 400, lineSmoothing: 2).normalized
+        #expect(s.detailThreshold == 1 && s.outlineThreshold == 1)
         #expect(s.minimumStrokeLength == 0 && s.gapBridging == 40 && s.lineSmoothing == 1)
+        let low = LineArtSettings(outlineThreshold: 0.2, detailThreshold: -1).normalized
+        #expect(low.detailThreshold == 0 && low.outlineThreshold == 0.2)
     }
 
     @Test func autoCandidatesCarryLineArtAndTuning() throws {
@@ -129,9 +133,9 @@ struct PipelineTuningTests {
         let plain = try AutoSettings.choose(
             image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3, lineArt: classic,
             cancel: .none, firstDraft: nil)
-        var lineArt = LineArtSettings(style: .layered)
+        var lineArt = LineArtSettings(style: .classic, outlineThreshold: 0.9)
         lineArt.keepColorEdges = false
-        // Neutral tuning and layered lines change nothing but what the settings carry.
+        // Neutral tuning and classic lines' other fields change nothing but what the settings carry.
         let carried = try AutoSettings.choose(
             image: image, importance: nil, hints: nil, preference: .relaxed, maxCandidates: 3, lineArt: lineArt,
             tuning: PipelineTuning(), cancel: .none, firstDraft: nil)

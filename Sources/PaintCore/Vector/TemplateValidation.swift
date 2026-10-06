@@ -22,7 +22,7 @@ extension Template {
         public var minLabelRoom: Float = .infinity
         /// |Σ region areas − canvas area|.
         public var canvasAreaError: Double = 0
-        /// Problems with layered line data (`Template.lineArt`): layer or weight counts unlike
+        /// Problems with line data (`Template.lineArt`): layer or weight counts unlike
         /// the edges', unknown layers, interior strokes with a bad span, a point outside the
         /// canvas, or a point away from the stroke's region. Nil for classic templates.
         public var badLines: [String]?

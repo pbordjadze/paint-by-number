@@ -1,4 +1,4 @@
-/// A drawn line of layered line art, in pixel coordinates (pixel centres at integers).
+/// A drawn line of line art, in pixel coordinates (pixel centres at integers).
 struct DrawnLine {
     var points: [SIMD2<Float>]
     /// Edge strength per point, 0...1.

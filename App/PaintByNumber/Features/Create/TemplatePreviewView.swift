@@ -379,7 +379,7 @@ struct TemplatePreviewView: View {
         case 1: String(localized: "create.lines.fewer", defaultValue: "Fewer",
                        comment: "Lines slider value: second step")
         case 2: String(localized: "create.lines.balanced", defaultValue: "Balanced",
-                       comment: "Lines slider value: the middle, the lines as Settings › Advanced draws them")
+                       comment: "Lines slider value: the middle, the lines as a painting is drawn by default")
         case 3: String(localized: "create.lines.more", defaultValue: "More",
                        comment: "Lines slider value: fourth step")
         default: String(localized: "create.lines.most", defaultValue: "Most",

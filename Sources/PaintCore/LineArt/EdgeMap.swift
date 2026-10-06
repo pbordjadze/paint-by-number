@@ -1,4 +1,4 @@
-/// Edge strength per pixel (0 = none … 255 = certain), the input of layered line art. The app
+/// Edge strength per pixel (0 = none … 255 = certain), the input of line art. The app
 /// computes it from its line-drawing and HED models (`combined(drawing:contours:)`); `pbn`
 /// reads it from a PGM (`--lines`, `--edges`, or both). Any resolution: the generator
 /// resamples it to the working size, so a map from the photo's own aspect ratio lines up.
@@ -65,7 +65,7 @@ public struct EdgeMap: Sendable, Equatable {
     }
 }
 
-/// Everything layered line art needs beyond the photo.
+/// Everything line art needs beyond the photo.
 public struct LineArtInput: Sendable, Equatable {
     /// What is drawn: the line drawing over the contours (`EdgeMap.combined`), or either alone.
     public var edges: EdgeMap

@@ -5,6 +5,7 @@ struct PaintByNumberApp: App {
     @State private var library = Library.forLaunch()
 
     init() {
+        Preferences.removeRetiredSettings()
         PaintTips.configure()
         Theme.styleNavigationTitles()
     }

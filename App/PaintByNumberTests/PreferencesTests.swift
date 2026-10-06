@@ -72,4 +72,59 @@ struct PreferencesTests {
 
         #expect(CreateModel(paintingLength: .quick).paintingLength == .quick)
     }
+
+    /// Line Weight defaults to Regular, ignores anything it doesn't know, and steps a book's
+    /// line evenly lighter and heavier.
+    @Test func lineWeightDefaultsAndPersists() throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        #expect(LineWeight.stored(in: defaults) == .regular && LineWeight.default == .regular)
+        for weight in LineWeight.allCases {
+            defaults.set(weight.rawValue, forKey: SettingsKey.lineWeight)
+            #expect(LineWeight.stored(in: defaults) == weight)
+            #expect(!weight.name.isEmpty)
+        }
+        defaults.set("heavy", forKey: SettingsKey.lineWeight)
+        #expect(LineWeight.stored(in: defaults) == .regular)
+        #expect(SettingsKey.lineWeight == "lineWeight")
+        #expect(Set(LineWeight.allCases.map(\.rawValue)) == ["fine", "regular", "bold"])
+        #expect(LineWeight.regular.factor == 1)
+        #expect(abs(log2(LineWeight.fine.factor) + log2(LineWeight.bold.factor)) < 0.05)
+        // Nearest on a log scale, whatever the factor.
+        #expect(LineWeight.nearest(to: 0.5) == .fine && LineWeight.nearest(to: 0.9) == .regular)
+        #expect(LineWeight.nearest(to: 1.25) == .bold && LineWeight.nearest(to: 2) == .bold)
+        #expect(LineWeight.nearest(to: 0) == .regular && LineWeight.nearest(to: .nan) == .regular)
+    }
+
+    /// Settings › Advanced's stored settings are removed at launch, so nothing unseen shapes new
+    /// paintings; its Line Weight carries over unless Settings › Line Weight already has one.
+    @Test func retiredSettingsAreRemoved() throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        for key in Preferences.retiredKeys { defaults.set(Data("{}".utf8), forKey: key) }
+        defaults.set(false, forKey: "paintingEffect.colorJingle")
+        defaults.set(Data(#"{"coloringBookWeight": 1.6, "weighted": true}"#.utf8), forKey: "advancedLineAppearance")
+        defaults.set(true, forKey: SettingsKey.haptics)
+        Preferences.removeRetiredSettings(in: defaults)
+        #expect(Preferences.retiredKeys.allSatisfy { defaults.object(forKey: $0) == nil })
+        #expect(Preferences.retiredKeys.contains("advancedLineArt") && Preferences.retiredKeys.contains("paintingEffect.finishShine"))
+        #expect(LineWeight.stored(in: defaults) == .bold)
+        #expect(defaults.object(forKey: SettingsKey.haptics) as? Bool == true, "A current setting went too")
+
+        // A weight already chosen stays; a designed weight, or none, writes nothing.
+        defaults.set(Data(#"{"coloringBookWeight": 0.5}"#.utf8), forKey: "advancedLineAppearance")
+        Preferences.removeRetiredSettings(in: defaults)
+        #expect(LineWeight.stored(in: defaults) == .bold)
+        defaults.removeObject(forKey: SettingsKey.lineWeight)
+        defaults.set(Data(#"{"coloringBookWeight": 1}"#.utf8), forKey: "advancedLineAppearance")
+        Preferences.removeRetiredSettings(in: defaults)
+        #expect(defaults.object(forKey: SettingsKey.lineWeight) == nil)
+        defaults.set(Data("not json".utf8), forKey: "advancedLineAppearance")
+        Preferences.removeRetiredSettings(in: defaults)
+        #expect(defaults.object(forKey: SettingsKey.lineWeight) == nil && defaults.object(forKey: "advancedLineAppearance") == nil)
+    }
 }

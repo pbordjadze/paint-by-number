@@ -4,12 +4,12 @@
 //
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
-//       [--line-style classic|layered|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
+//       [--line-style classic|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
 //        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json] [--line-art key=value]...]
 //       [--tuning key=value]...
 //       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
-//       layered and coloring-book line art split the cells along the edge map's lines
+//       a coloring book splits the cells along the edge map's lines
 //       (stats.json gains `lineArt`, with the drawing's density, open ends and the areas it
 //       encloses, and selected.svg hatches the cells of the paint with the most of them, as the
 //       canvas shows the selected color); eyes.json is an array of closed polygons of [x, y]
@@ -27,9 +27,8 @@
 //       [--lines drawing.pgm]
 //       also times a live preview, detail 1 on a large photo, the same with 150 colors and
 //       Auto's suggestion (Relaxed, 5 candidates); with --edges and/or --lines (and generate's
-//       other line-art options) also layered and coloring-book line art, each style at its own
-//       defaults with the --line-art fields on top (the layered stages listed), the map
-//       resampled to each photo
+//       other line-art options) also the coloring book at its defaults with the --line-art fields
+//       on top (its line-art stages listed), the map resampled to each photo
 //   pbn trace <flat.ppm> <outdir> [--smooth F] [--runs N]
 //       vectorizes a flat-color image directly (each distinct color is a palette entry,
 //       each 4-connected component a region), bypassing segmentation

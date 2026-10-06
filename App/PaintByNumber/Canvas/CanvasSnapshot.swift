@@ -17,11 +17,8 @@ nonisolated enum CanvasSnapshot {
         var palette = CanvasPalette.light
         /// Palette index whose unpainted regions get the selection highlight.
         var highlight: Int?
-        /// How a layered template's lines draw, and how heavy a coloring book's are; nil = the
-        /// one Settings › Advanced stored.
-        var lineAppearance: LineAppearance?
-        /// The zoom whose line look to draw (1 = the painting fitted, as images show it).
-        var lineZoom: Float = 1
+        /// How heavy a coloring book's drawing is; nil = Settings › Line Weight.
+        var lineWeight: LineWeight?
 
         /// The artwork as painted so far: unpainted regions stay paper, no line art (a coloring
         /// book keeps its drawing, `drawsLines(for:)`).
@@ -33,7 +30,7 @@ nonisolated enum CanvasSnapshot {
 
         /// Whether `scene`'s line art is drawn: with `outlines`, and always for a coloring book,
         /// whose drawing is part of the picture.
-        func drawsLines(for scene: CanvasScene) -> Bool { outlines || scene.lineArtStyle == .coloringBook }
+        func drawsLines(for scene: CanvasScene) -> Bool { outlines || scene.isColoringBook }
     }
 
     /// Renders `template` with `progress` (nil = nothing painted) into an image of `size`
@@ -127,14 +124,11 @@ nonisolated enum CanvasSnapshot {
         u.setChrome(palette, shadowOpacity: 0, outlineOpacity: palette.outlineOpacity)
         let width = options.outlineWidth * (rect == nil ? max(scale, 0.25) : min(max(scale, 0.25), closeUpLineScale))
         u.outline = SIMD4(width, width, 0, options.numbers ? 1 : 0)
-        switch scene.lineArtStyle {
-        case .layered:
-            u.setLines(LineStyle(options.lineAppearance ?? .stored(), zoom: options.lineZoom))
-        case .coloringBook:
-            let weight = (options.lineAppearance ?? .stored()).coloringBookWeight
+        if scene.isColoringBook {
+            let weight = (options.lineWeight ?? .stored()).factor
             u.setColoringBookLines(width: width * ColoringBookLook.widthFactor * weight)
-        case nil:
-            u.setLines(.classic)
+        } else {
+            u.setClassicLines()
         }
         u.labels = SIMD4(5, 7, rect == nil ? .greatestFiniteMagnitude : closeUpMaxFontPixels, 0)
         u.numbers = SIMD4(0.8, 0.9, 0.04, 0)

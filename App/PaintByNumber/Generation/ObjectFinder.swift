@@ -5,7 +5,7 @@ import os
 import PaintCore
 import Vision
 
-/// The main subjects of a photo, for layered line art to close their silhouettes where the
+/// The main subjects of a photo, for a coloring book to close their silhouettes where the
 /// detectors leave them open (`LineArtInput.objects`, `LineArtSettings.outlineObjects`): Vision's
 /// foreground instance masks (the people, animals and objects a photo is of), every instance
 /// together, scaled to `maskLongSide`, cut at half, traced by `MaskContours`.

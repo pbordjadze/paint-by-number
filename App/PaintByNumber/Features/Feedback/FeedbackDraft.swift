@@ -137,7 +137,7 @@ final class FeedbackDraft {
         let painted = (0..<capture.template.regions.count).map { capture.progress.isPainted($0) }
         var options = CanvasSnapshot.Options(outlines: true, numbers: capture.showsNumbers)
         options.palette = capture.palette
-        options.lineAppearance = capture.lineAppearance
+        options.lineWeight = capture.lineWeight
         return frames.map { frame in
             CanvasSnapshot.render(
                 scene: scene, painted: painted, size: frame.pixelSize, options: options, context: context, rect: frame.rect

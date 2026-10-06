@@ -1,11 +1,11 @@
-/// The strength class of a line in layered line art; renderers draw each with its own
-/// opacity and width for the current zoom.
+/// The strength class of a line of the drawing (`LayeredLines`). A coloring book draws
+/// `outline`, `detail` and `texture` alike and `color` not at all.
 public enum LineLayer: UInt8, Sendable, CaseIterable {
-    /// Strong edges and eyes: always at full strength.
+    /// Strong edges and eyes; only these split same-paint cells by default.
     case outline = 0
-    /// Weaker edges: lighter zoomed out.
+    /// Weaker edges.
     case detail = 1
-    /// The weakest drawn edges: faint zoomed out, full when zoomed in.
+    /// The weakest drawn edges, which only the retired layered style made.
     case texture = 2
     /// A boundary where only the paint changes and nothing is drawn (banded skies, shading).
     case color = 3
@@ -17,10 +17,8 @@ public struct TemplateLineArt: Sendable, Equatable {
     /// How a template's line art is drawn, in every renderer (canvas, pictures, print, SVG).
     /// Stored with the template, so a painting looks the same whatever the settings are later.
     public enum Style: UInt8, Sendable, CaseIterable {
-        /// Each layer with its own opacity and width at the current zoom (the app's
-        /// `LineAppearance`): outlines strong, fainter layers coming in as the painter zooms,
-        /// `color` edges faint. Lines between two painted cells dissolve, and the selected
-        /// color's unpainted cells are outlined boldly whatever their layer.
+        /// Made by the retired layered style, which faded each layer in as the painter zoomed.
+        /// Saved paintings keep it; every renderer draws it as a coloring book.
         case layered = 0
         /// A coloring book: every drawn layer (`outline`, `detail`, `texture`) alike, in full ink
         /// and heavy at every zoom, over the paint for good; `color` edges are never drawn, so the
@@ -32,7 +30,7 @@ public struct TemplateLineArt: Sendable, Equatable {
 
     /// `LineLayer` raw value per `Template.edges` entry.
     public var edgeLayers: [UInt8]
-    /// Strength per edge (0...255), for renderers that weight lines within a layer.
+    /// Strength per edge (0...255): its line's, or for a color edge the paint difference.
     public var edgeWeights: [UInt8]
     /// Shared vertices of `strokes`, inside the canvas and on `Template.coordinateQuantum`.
     public var strokePoints: [SIMD2<Float>]

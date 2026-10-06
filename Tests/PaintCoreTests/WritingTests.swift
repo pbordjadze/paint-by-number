@@ -351,7 +351,7 @@ struct WritingTests {
     // MARK: - Settings
 
     @Test func keepWritingIsOnUnlessSaidOtherwise() throws {
-        #expect(LineArtSettings().keepWriting && LineArtSettings(style: .layered).keepWriting)
+        #expect(LineArtSettings().keepWriting && LineArtSettings(style: .classic).keepWriting)
         let decoded = try JSONDecoder().decode(LineArtSettings.self, from: Data(#"{"style":"coloringBook"}"#.utf8))
         #expect(decoded.keepWriting)
         var off = LineArtSettings()

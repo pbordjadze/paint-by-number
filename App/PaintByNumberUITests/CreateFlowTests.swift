@@ -97,7 +97,7 @@ final class CreateFlowTests: XCTestCase {
 
         let detail = app.sliders["Detail"]
         XCTAssertTrue(detail.exists, "No Detail slider")
-        // The book's lines, as Settings › Advanced draws them, on a slider of their own.
+        // The book's lines on a slider of their own.
         XCTAssertEqual(app.sliders["Lines"].value as? String, "Balanced")
         XCTAssertTrue(detail.isEnabled, "The Detail slider still waits for the suggestion")
         let suggested = try XCTUnwrap(detail.value as? String)

@@ -28,9 +28,8 @@ public struct TemplateGenerator: Sendable {
     ///   - importance: Optional per-pixel saliency in 0...1 at any resolution (e.g. a
     ///     subject mask from Vision). Important areas receive more colors and detail.
     ///   - lineArt: The edge map, eyes, subject silhouettes, contour map and writing
-    ///     (`LineArtInput`) layered and coloring-book line art draw from.
-    ///     Ignored by classic settings; settings that need it generate a classic template
-    ///     without it (a coloring book's over its flatter paint).
+    ///     (`LineArtInput`) a coloring book draws from. Ignored by classic settings; a coloring
+    ///     book without it is a classic template over the book's flatter paint.
     ///   - cancel: Polled between and within stages.
     ///   - progress: Called with a rough 0...1 completion fraction.
     public func generate(
@@ -50,18 +49,18 @@ public struct TemplateGenerator: Sendable {
         progress?(0.1)
 
         // Line art drawn from an edge map needs it; without one the template is classic.
-        let layered = settings.lineArt.style.usesEdgeMap ? lineArt : nil
-        let segmentEnd: Float = layered == nil ? 0.7 : 0.6
+        let input = settings.lineArt.style.usesEdgeMap ? lineArt : nil
+        let segmentEnd: Float = input == nil ? 0.7 : 0.6
         var parameters = SegmentationParameters(settings: settings, width: working.width, height: working.height)
         // By the settings, not the edge map, so Auto's drafts (which have none) are scored on
         // the paint the book gets, and a book whose edge map failed keeps its flatter paint.
         if settings.lineArt.style == .coloringBook { parameters.flattenForColoringBook() }
         // The writing's ink is traced and painted out first, so the paint ignores the letters.
         var writing: Writing?
-        if let layered, settings.lineArt.keepWriting, !layered.writing.isEmpty {
+        if let input, settings.lineArt.keepWriting, !input.writing.isEmpty {
             writing = try clock.measure("writing") {
                 try Writing.find(
-                    in: &working, areas: layered.writing, minRadius: parameters.minRadius, cancel: cancel, clock: clock)
+                    in: &working, areas: input.writing, minRadius: parameters.minRadius, cancel: cancel, clock: clock)
             }
             try cancel.throwIfCancelled()
         }
@@ -74,10 +73,10 @@ public struct TemplateGenerator: Sendable {
         progress?(segmentEnd)
 
         var plan: LayeredLines.Plan?
-        if let layered {
+        if let input {
             let result = try clock.measure("lineArt") {
                 try LayeredLines.apply(
-                    segmentation, input: layered, importance: weights, settings: settings, writing: writing, cancel: cancel,
+                    segmentation, input: input, importance: weights, settings: settings, writing: writing, cancel: cancel,
                     clock: clock)
             }
             segmentation = result.segmentation

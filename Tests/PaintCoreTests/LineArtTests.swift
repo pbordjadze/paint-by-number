@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import PaintCore
 
-@Suite("Layered line art")
+@Suite("Line art")
 struct LineArtTests {
 
     // MARK: - A synthetic scene
@@ -39,16 +39,14 @@ struct LineArtTests {
         return map
     }
 
+    /// A coloring book with the scene's thresholds: the disc, the square and the horizon are
+    /// outlines, the ground's line detail and the sky's too faint to draw. Same-paint cells join
+    /// across everything but outlines, as the app's books do.
     static func settings(_ change: (inout LineArtSettings) -> Void = { _ in }) -> GenerationSettings {
         var lineArt = LineArtSettings(
-            style: .layered, outlineThreshold: 0.8, detailThreshold: 0.5, textureThreshold: 0.3,
-            minimumStrokeLength: 10, gapBridging: 6, lineSmoothing: 0.5)
+            outlineThreshold: 0.8, detailThreshold: 0.5, minimumStrokeLength: 10, gapBridging: 6, lineSmoothing: 0.5)
         change(&lineArt)
         return GenerationSettings(colorCount: 8, detail: 0.5, lineArt: lineArt)
-    }
-
-    static func book(_ change: (inout LineArtSettings) -> Void = { _ in }) -> GenerationSettings {
-        settings { $0.style = .coloringBook; change(&$0) }
     }
 
     static func generate(
@@ -78,23 +76,27 @@ struct LineArtTests {
 
     // MARK: - Generation
 
-    @Test func layeredTemplateIsValid() throws {
+    @Test func lineArtTemplateIsValid() throws {
         let out = try Self.generate()
         let t = out.template
         let lines = try #require(t.lineArt)
+        #expect(lines.style == .coloringBook)
         #expect(lines.edgeLayers.count == t.edges.count && lines.edgeWeights.count == t.edges.count)
         let report = expectValid(t)
         #expect(report.badLines == [])
         #expect(out.vectorStats.labelRoomUnmet == 0)
-        let length = Self.lengths(t)
-        // The disc, square and horizon are outlines; the ground's line is detail.
-        #expect(length[0] > 300, "\(length)")
-        #expect(length[1] > 150, "\(length)")
+        // The disc, square and horizon are outlines.
+        #expect(Self.lengths(t)[0] > 300, "\(Self.lengths(t))")
         let stats = try #require(out.lineArtStats)
         #expect(stats.cells == t.regions.count)
-        // The detail line splits the ground's paint into two cells.
-        #expect(t.regions.count > stats.segmentationRegions)
         #expect(out.segmentation.regionCount == t.regions.count)
+        // The ground's detail line is drawn inside its cell; split, it divides the ground's paint
+        // into two cells.
+        #expect(lines.strokes.contains { $0.layer == LineLayer.detail.rawValue })
+        let split = try Self.generate(Self.settings { $0.samePaint = .split })
+        let splitStats = try #require(split.lineArtStats)
+        #expect(Self.lengths(split.template)[1] > 150, "\(Self.lengths(split.template))")
+        #expect(split.template.regions.count > splitStats.segmentationRegions)
     }
 
     @Test func classicIgnoresTheEdgeMap() throws {
@@ -104,16 +106,12 @@ struct LineArtTests {
         let given = try Self.generate(classic)
         #expect(given.template == plain.template)
         #expect(given.template.lineArt == nil && given.lineArtStats == nil)
-        // Layered and coloring-book settings without an edge map give the classic template too.
-        #expect(!LineArtSettings.Style.classic.usesEdgeMap && LineArtSettings.Style.layered.usesEdgeMap
-            && LineArtSettings.Style.coloringBook.usesEdgeMap)
+        #expect(!LineArtSettings.Style.classic.usesEdgeMap && LineArtSettings.Style.coloringBook.usesEdgeMap)
+        // A coloring book without an edge map is classic lines over the book's flatter paint.
         let missing = try Self.generate(Self.settings(), input: false)
-        #expect(missing.template == plain.template)
-        // A coloring book without one is classic lines over the book's flatter paint.
-        let missingBook = try Self.generate(Self.book(), input: false)
-        #expect(missingBook.template.lineArt == nil && missingBook.lineArtStats == nil)
-        #expect(missingBook.template.regions.count <= plain.template.regions.count)
-        #expect(missingBook.template.palette.count <= plain.template.palette.count)
+        #expect(missing.template.lineArt == nil && missing.lineArtStats == nil)
+        #expect(missing.template.regions.count <= plain.template.regions.count)
+        #expect(missing.template.palette.count <= plain.template.palette.count)
     }
 
     // MARK: - Coloring book
@@ -127,12 +125,11 @@ struct LineArtTests {
         func generate(_ settings: GenerationSettings) throws -> TemplateGenerator.Output {
             try Self.generate(settings, input: LineArtInput(edges: dangling))
         }
-        let layered = try generate(Self.settings()).template
-        let book = try generate(Self.book()).template
-        #expect(layered.lineArt?.style == .layered)
+        let split = Self.settings { $0.samePaint = .split }
+        let book = try generate(split).template
         #expect(book.lineArt?.style == .coloringBook)
-        for t in [layered, book] { expectValid(t) }
-        // The dangling line is drawn in the book, in the sky's cell, and trimmed away in layered line art.
+        expectValid(book)
+        // The dangling line is drawn, in the sky's cell.
         let sky = try #require(book.region(at: SIMD2<Float>(45, 15)))
         func strokes(_ t: Template, near p: SIMD2<Float>) -> [InteriorStroke] {
             let art = t.lineArt!
@@ -148,15 +145,12 @@ struct LineArtTests {
         let middle = SIMD2<Float>(24 * 1.5, 11 * 1.5)
         let drawn = strokes(book, near: middle)
         #expect(drawn.count == 1 && drawn.first?.region == UInt32(sky) && drawn.first?.layer == LineLayer.outline.rawValue)
-        #expect(strokes(layered, near: middle).isEmpty)
         // No texture lines: nothing below the detail threshold is drawn, so the sky's faint
-        // line (0.42) is gone from the book, while the ground's detail line (0.62) still splits
-        // the ground, and the outlines are the same.
+        // line (0.42) is gone, while the ground's detail line (0.62) splits the ground.
         let lengths = Self.lengths(book)
         #expect(lengths[2] == 0 && !book.lineArt!.strokes.contains { $0.layer == LineLayer.texture.rawValue })
-        #expect(lengths[1] > 150 && abs(lengths[0] - Self.lengths(layered)[0]) < 60, "\(lengths) vs \(Self.lengths(layered))")
-        #expect(layered.lineArt!.strokes.contains { $0.layer == LineLayer.texture.rawValue })
-        let stats = try #require(generate(Self.book()).lineArtStats)
+        #expect(lengths[1] > 150 && lengths[0] > 300, "\(lengths)")
+        let stats = try #require(generate(split).lineArtStats)
         #expect(stats.interiorStrokes == book.lineArt!.strokes.count && stats.cells == book.regions.count)
         // Every stroke is drawing of some length, inside its cell.
         for s in book.lineArt!.strokes {
@@ -167,29 +161,46 @@ struct LineArtTests {
         }
     }
 
-    @Test func coloringBookSamePaintChoices() throws {
+    @Test func samePaintChoices() throws {
         // No texture lines, so joining across them splits like Always Split; joining across
         // detail unites the ground's two cells and draws the line inside.
-        let split = try Self.generate(Self.book { $0.samePaint = .split }).template
-        let texture = try Self.generate(Self.book { $0.samePaint = .joinTexture }).template
-        let all = try Self.generate(Self.book { $0.samePaint = .joinAllButOutlines }).template
+        let split = try Self.generate(Self.settings { $0.samePaint = .split }).template
+        let texture = try Self.generate(Self.settings { $0.samePaint = .joinTexture }).template
+        let all = try Self.generate(Self.settings { $0.samePaint = .joinAllButOutlines }).template
         #expect(texture == split)
         #expect(all.regions.count < split.regions.count)
         #expect(all.lineArt!.strokes.contains { $0.layer == LineLayer.detail.rawValue })
-        #expect(all.lineArt?.style == .coloringBook)
-        expectValid(all)
+        for t in [split, all] { expectValid(t) }
+        // Interior strokes lie inside their cell, whose paint is on both sides.
+        for s in all.lineArt!.strokes {
+            let p = all.lineArt!.strokePoints[Int(s.pointStart) + Int(s.pointCount) / 2]
+            #expect(all.region(at: p) == Int(s.region))
+        }
+        // No stroke is a trimming leftover: a boundary stretch's end point or a merged tiny cell's
+        // sliver (shorter than the layering's minimum run, less the simplification's slack).
+        for t in [split, all] {
+            let art = t.lineArt!
+            for s in art.strokes where !(s.pointCount > 2 && art.strokePoints[Int(s.pointStart)] == art.strokePoints[Int(s.pointStart + s.pointCount - 1)]) {
+                let pts = art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]
+                let length = zip(pts, pts.dropFirst()).reduce(Float(0)) { $0 + simdLength($1.1 - $1.0) }
+                #expect(length >= LineLayering.minimumRun - 1, "a \(length)-unit stroke inside cell \(s.region)")
+            }
+        }
     }
 
     @Test func coloringBookSVGIsOneDrawing() throws {
-        let book = try Self.generate(Self.book()).template
-        let svg = SVGExport.render(book, options: .init(painted: false, outlines: true, numbers: false))
+        let book = try Self.generate().template
+        let options = SVGExport.Options(painted: false, outlines: true, numbers: false)
+        let svg = SVGExport.render(book, options: options)
         #expect(svg.contains("id=\"lines-drawing\"") && !svg.contains("lines-color") && !svg.contains("lines-outline"))
-        let layered = SVGExport.render(try Self.generate().template, options: .init(painted: false, outlines: true, numbers: false))
-        #expect(layered.contains("id=\"lines-outline\"") && layered.contains("id=\"lines-color\"") && !layered.contains("lines-drawing"))
+        // A template of the retired layered style draws as a coloring book.
+        var layered = book
+        layered.lineArt!.style = .layered
+        #expect(SVGExport.render(layered, options: options) == svg)
     }
 
     @Test func selectedColorIsHatched() throws {
-        let book = try Self.generate(Self.book()).template
+        let book = try Self.generate().template
         let selected = SVGExport.render(book, options: .init(painted: false, outlines: true, numbers: true, selectedColor: 0))
         #expect(selected.contains("<pattern id=\"hatch\"") && selected.contains("id=\"selection\""))
         // Its cells, and only its cells: one subpath per ring of every region of that paint.
@@ -270,10 +281,11 @@ struct LineArtTests {
         // contour map alone: scaled under the outline threshold, nothing is an outline (the
         // disc, square and horizon become detail); with the ground's 0.62 line raised to full
         // strength in the contours, that line is an outline though the drawing has it faint.
+        let split = Self.settings { $0.samePaint = .split }
         func generate(contours: EdgeMap) throws -> Template {
-            try Self.generate(Self.settings(), input: LineArtInput(edges: Self.edges(), contours: contours)).template
+            try Self.generate(split, input: LineArtInput(edges: Self.edges(), contours: contours)).template
         }
-        let plain = try Self.generate().template
+        let plain = try Self.generate(split).template
         var faint = Self.edges()
         faint.values = faint.values.map { UInt8(Float($0) * 0.6) }
         let noOutlines = try generate(contours: faint)
@@ -296,35 +308,6 @@ struct LineArtTests {
         #expect(!plainGround.isEmpty && plainGround.allSatisfy { plain.lineArt!.edgeLayers[$0] == detail })
         // The same map as contours changes nothing.
         #expect(try generate(contours: Self.edges()) == plain)
-    }
-
-    @Test func samePaintJoinsFollowTheSetting() throws {
-        let joined = try Self.generate(Self.settings { $0.samePaint = .joinTexture }).template
-        let split = try Self.generate(Self.settings { $0.samePaint = .split }).template
-        let all = try Self.generate(Self.settings { $0.samePaint = .joinAllButOutlines }).template
-        // The sky's texture line: one cell with the line inside it, or two cells.
-        #expect(split.regions.count > joined.regions.count)
-        #expect(joined.lineArt!.strokes.contains { $0.layer == LineLayer.texture.rawValue })
-        #expect(split.lineArt!.strokes.isEmpty)
-        // Joining across detail lines too also unites the ground's two cells.
-        #expect(all.regions.count < joined.regions.count)
-        #expect(all.lineArt!.strokes.contains { $0.layer == LineLayer.detail.rawValue })
-        for t in [joined, split, all] { expectValid(t) }
-        // Interior strokes lie inside their cell, whose paint is on both sides.
-        for s in joined.lineArt!.strokes {
-            let p = joined.lineArt!.strokePoints[Int(s.pointStart) + Int(s.pointCount) / 2]
-            #expect(joined.region(at: p) == Int(s.region))
-        }
-        // No stroke is a trimming leftover: a boundary stretch's end point or a merged tiny cell's
-        // sliver (shorter than the layering's minimum run, less the simplification's slack).
-        for t in [joined, split, all] {
-            let art = t.lineArt!
-            for s in art.strokes where !(s.pointCount > 2 && art.strokePoints[Int(s.pointStart)] == art.strokePoints[Int(s.pointStart + s.pointCount - 1)]) {
-                let pts = art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]
-                let length = zip(pts, pts.dropFirst()).reduce(Float(0)) { $0 + simdLength($1.1 - $1.0) }
-                #expect(length >= LineLayering.minimumRun - 1, "a \(length)-unit stroke inside cell \(s.region)")
-            }
-        }
     }
 
     @Test func eyesAreOutlined() throws {
@@ -406,9 +389,8 @@ struct LineArtTests {
 
     @Test func emptyEdgeMapKeepsTheCells() throws {
         let blank = EdgeMap(width: 128, height: 96, values: [UInt8](repeating: 0, count: 128 * 96))
-        var classic = Self.settings()
-        classic.lineArt.style = .classic
-        let plain = try TemplateGenerator(settings: classic).generate(from: Self.photo(), cancel: .none).template
+        // The book's paint without its lines: the same settings without an edge map.
+        let plain = try Self.generate(Self.settings(), input: false).template
         let t = try Self.generate(Self.settings(), input: LineArtInput(edges: blank)).template
         #expect(t.regions.count == plain.regions.count)
         #expect(t.lineArt!.edgeLayers.allSatisfy { $0 == LineLayer.color.rawValue })
@@ -524,7 +506,7 @@ struct LineArtTests {
         #expect(out[2].eye && out[2].closed && out[2].layer.allSatisfy { $0 == LineLayer.outline.rawValue })
     }
 
-    @Test func layeredGenerationCancels() throws {
+    @Test func lineArtGenerationCancels() throws {
         // Cancelled at about 25 evenly spaced check counts up to the last: always a CancellationError.
         let input = LineArtInput(edges: Self.edges())
         let total = LockedCounter()

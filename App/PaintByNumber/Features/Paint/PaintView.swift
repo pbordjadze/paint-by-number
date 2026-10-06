@@ -43,8 +43,7 @@ struct PaintView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
-    /// Settings › Advanced writes it while a painting may be open: the canvas follows at once.
-    @AppStorage(SettingsKey.lineAppearance) private var storedLineAppearance: Data?
+    @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
     @AppStorage(SettingsKey.zenMode) private var zenMode = false
@@ -159,7 +158,7 @@ struct PaintView: View {
                 session: session, controller: controller,
                 chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
                 showsNumbers: showsNumbers, paperAppearance: paperAppearance,
-                lineAppearance: LineAppearance.decoded(storedLineAppearance),
+                lineWeight: lineWeight,
                 initialCamera: initialCamera, fillDurationScale: fillDurationScale,
                 onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true },
                 photoLoader: photoLoader, showsPhoto: peek.isShown,
@@ -611,7 +610,7 @@ struct PaintView: View {
         peek.setLatched(false)
         let capture = FeedbackCapture(
             session: session, title: title, controller: controller, showsNumbers: showsNumbers, paper: paperAppearance,
-            darkInterface: colorScheme == .dark, lineAppearance: LineAppearance.decoded(storedLineAppearance),
+            darkInterface: colorScheme == .dark, lineWeight: lineWeight,
             displayScale: displayScale, source: feedbackSource)
         FeedbackEngine.shared.selectionChanged()
         Log.feedback.notice("Feedback started")

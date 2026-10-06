@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings: About (version, acknowledgements), Paper, Painting Length and Color Names.
+/// Settings: About (version, acknowledgements), Paper, Line Weight, Painting Length and Color Names.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -55,6 +55,28 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(app.buttons["Light"].waitForExistence(timeout: 5))
         app.buttons["Light"].firstMatch.tap()
         XCTAssertTrue(shows(picker, "Light"), "Choosing Light didn't change the picker: \(describe(picker))")
+    }
+
+    /// Settings › Line Weight offers Fine, Regular and Bold, starts on Regular and keeps the choice.
+    @MainActor
+    func testLineWeightPickerChangesTheValue() throws {
+        let app = openSettings()
+        let picker = app.descendants(matching: .any)["settings-line-weight"]
+        scroll(app, to: picker)
+        XCTAssertTrue(picker.exists, "Settings has no Line Weight picker")
+        XCTAssertTrue(describe(picker).contains("Regular"), "Line Weight doesn't start on Regular: \(describe(picker))")
+        picker.tap()
+        for choice in ["Fine", "Regular", "Bold"] {
+            XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Line Weight picker has no \(choice)")
+        }
+        app.buttons["Bold"].firstMatch.tap()
+        XCTAssertTrue(shows(picker, "Bold"), "Choosing Bold didn't change the picker: \(describe(picker))")
+        attachScreenshot(of: app, named: "settings-line-weight-bold")
+        // The choice is stored in the simulator's defaults: put it back for the other tests.
+        picker.tap()
+        XCTAssertTrue(app.buttons["Regular"].waitForExistence(timeout: 5))
+        app.buttons["Regular"].firstMatch.tap()
+        XCTAssertTrue(shows(picker, "Regular"), "Choosing Regular didn't change the picker: \(describe(picker))")
     }
 
     /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps

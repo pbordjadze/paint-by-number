@@ -10,7 +10,7 @@ import Testing
 /// Rendered PNGs are attached to the results for visual inspection.
 struct CanvasRenderTests {
     @Test func shaderStructLayoutsMatchMetal() {
-        #expect(MemoryLayout<CanvasUniforms>.stride == 320)
+        #expect(MemoryLayout<CanvasUniforms>.stride == 304)
         #expect(MemoryLayout<RegionState>.stride == 32)
         #expect(MemoryLayout<GlyphInstance>.stride == 24)
     }

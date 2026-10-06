@@ -1,7 +1,8 @@
 # Writing: notes and signs drawn legibly
 
-Layered and coloring-book templates draw the writing in a photo, a note, a card, a hand-lettered
-sign, as ink a painter can read (`LineArtSettings.keepWriting`, on by default). The stages and
+Coloring books draw the writing in a photo, a note, a card, a hand-lettered sign, as ink a
+painter can read (`LineArtSettings.keepWriting`, always on in the app; `pbn --line-art
+keepWriting=false` turns it off). The stages and
 their constants are `Writing`'s doc comment; the app finds the lines of text with Vision
 (`TextFinder`) and hands them over as `LineArtInput.writing`; `pbn --writing` reads them as
 polygons.

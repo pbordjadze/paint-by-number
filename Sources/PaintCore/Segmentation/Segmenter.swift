@@ -24,7 +24,7 @@ import Foundation
 enum Segmenter {
     /// The pipeline with explicit knobs (tests switch stages off through them), also returning
     /// the importance weights it worked with (0...1 per working pixel: the given map
-    /// resampled, or the fallback estimate), which layered line art reuses. The generator
+    /// resampled, or the fallback estimate), which line art reuses. The generator
     /// applies `flattenForColoringBook` to the parameters for coloring books.
     static func segment(
         _ image: RGBAImage,

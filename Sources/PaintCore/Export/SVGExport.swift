@@ -37,22 +37,9 @@ public enum SVGExport {
     /// as heavy as a classic line with the painting fitted to the screen.
     private static let coloringBookWidth: Float = 3
 
-    /// How a layered template draws a `LineLayer`: its group's name, its absolute ink opacity
-    /// and a factor on the outline width, as pbn's SVGs and eval sheets draw them. The app's
-    /// `LineAppearance` uses other units (fractions of the paper's full ink) and is not read here.
-    private static func lineLook(of layer: LineLayer) -> (name: String, opacity: Float, width: Float) {
-        switch layer {
-        case .outline: ("outline", 0.85, 1.15)
-        case .detail: ("detail", 0.45, 0.9)
-        case .texture: ("texture", 0.2, 0.75)
-        case .color: ("color", 0.12, 0.7)
-        }
-    }
-
-    /// Layered templates (`Template.lineArt`) draw each `LineLayer` as a group (`lines-outline`,
-    /// `lines-detail`, `lines-texture`, `lines-color`, faintest first) of its edges and interior
-    /// strokes. A coloring book draws its drawn layers alike as one group (`lines-drawing`) in
-    /// solid ink, three times the outline width, and no color edges, as the app does.
+    /// Templates with line art (`Template.lineArt`) draw as coloring books, as the app does:
+    /// the drawn layers alike as one group (`lines-drawing`) of edges and interior strokes in
+    /// solid ink, three times the outline width, and no color edges.
     public static func render(_ t: Template, options: Options = Options()) -> String {
         var s = ""
         s.reserveCapacity(t.points.count * 16 + t.labels.count * 96 + 4096)
@@ -94,32 +81,19 @@ public enum SVGExport {
         // About 0.1 mm lines on a printed page.
         let width = max(0.5, Float(max(t.width, t.height)) / 1900)
         if options.outlines, let lines = t.lineArt, lines.edgeLayers.count == t.edges.count {
-            // The groups drawn, faintest first: every layer on its own, or a coloring book's drawn
-            // layers together.
-            let groups: [(name: String, layers: [UInt8], opacity: Float, width: Float)]
-            switch lines.style {
-            case .layered:
-                groups = LineLayer.allCases.reversed().map { layer in
-                    let look = lineLook(of: layer)
-                    return (look.name, [layer.rawValue], look.opacity, look.width)
-                }
-            case .coloringBook:
-                let drawn = LineLayer.allCases.filter { $0 != .color }.map(\.rawValue)
-                groups = [("drawing", drawn, 1, coloringBookWidth)]
+            let drawn = LineLayer.allCases.filter { $0 != .color }.map(\.rawValue)
+            var d = ""
+            for (k, e) in t.edges.enumerated() where drawn.contains(lines.edgeLayers[k]) {
+                appendPath(&d, t.points(of: e), closed: false)
             }
-            for group in groups {
-                var d = ""
-                for (k, e) in t.edges.enumerated() where group.layers.contains(lines.edgeLayers[k]) {
-                    appendPath(&d, t.points(of: e), closed: false)
-                }
-                for stroke in lines.strokes where group.layers.contains(stroke.layer) {
-                    let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
-                    guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
-                    appendPath(&d, lines.strokePoints[start..<end], closed: false)
-                }
-                guard !d.isEmpty else { continue }
-                s += "<g id=\"lines-\(group.name)\" opacity=\"\(fmt(group.opacity))\">"
-                s += "<path d=\"\(d)\" fill=\"none\" stroke=\"\(lineColor)\" stroke-width=\"\(fmt(width * group.width))\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></g>\n"
+            for stroke in lines.strokes where drawn.contains(stroke.layer) {
+                let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
+                guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
+                appendPath(&d, lines.strokePoints[start..<end], closed: false)
+            }
+            if !d.isEmpty {
+                s += "<g id=\"lines-drawing\" opacity=\"1\">"
+                s += "<path d=\"\(d)\" fill=\"none\" stroke=\"\(lineColor)\" stroke-width=\"\(fmt(width * coloringBookWidth))\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></g>\n"
             }
         } else if options.outlines && !t.edges.isEmpty {
             var d = ""

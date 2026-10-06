@@ -29,7 +29,7 @@ struct Options {
 /// `--line-art` and `--tuning` fields by name.
 enum Fields {
     static var lineArtFloats: [String: WritableKeyPath<LineArtSettings, Float>] {
-        ["outlineThreshold": \.outlineThreshold, "detailThreshold": \.detailThreshold, "textureThreshold": \.textureThreshold,
+        ["outlineThreshold": \.outlineThreshold, "detailThreshold": \.detailThreshold,
          "minimumStrokeLength": \.minimumStrokeLength, "gapBridging": \.gapBridging, "lineSmoothing": \.lineSmoothing]
     }
     static var lineArtBools: [String: WritableKeyPath<LineArtSettings, Bool>] {

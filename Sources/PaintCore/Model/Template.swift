@@ -57,7 +57,7 @@ public struct Template: Sendable, Equatable {
     /// (format-1 files, templates built outside the generator such as `pbn trace`).
     public var pipelineVersion: UInt32
 
-    /// Line art drawn from an edge map (`LineArtSettings.Style.layered` or `.coloringBook`): a
+    /// Line art drawn from an edge map (`LineArtSettings.Style.coloringBook`): a
     /// layer and weight per boundary edge, the lines drawn inside cells, and how it is drawn
     /// (`TemplateLineArt.style`). `nil` for classic templates, which draw every edge alike.
     public var lineArt: TemplateLineArt?
