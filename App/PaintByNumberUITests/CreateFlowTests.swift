@@ -23,6 +23,21 @@ final class CreateFlowTests: XCTestCase {
         sleep(1)
         attachScreenshot(of: app, named: "compare-after-drag")
         XCTAssertNotEqual(compare.value as? String, "50 percent photo", "The divider didn't follow the drag")
+
+        // A double tap zooms both layers in; a drag then pans them, leaving the divider where it
+        // is; another double tap fits them again.
+        let split = try XCTUnwrap(compare.value as? String)
+        compare.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.3)).doubleTap()
+        let zoomed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value CONTAINS %@", "zoomed"), object: compare)
+        XCTAssertEqual(XCTWaiter.wait(for: [zoomed], timeout: 5), .completed, "A double tap didn't zoom in")
+        compare.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.7))
+            .press(forDuration: 0.1, thenDragTo: compare.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
+        attachScreenshot(of: app, named: "compare-zoomed")
+        compare.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.3)).doubleTap()
+        let fitted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", split), object: compare)
+        XCTAssertEqual(
+            XCTWaiter.wait(for: [fitted], timeout: 5), .completed,
+            "Panning moved the divider, or a second double tap didn't fit the layers again")
     }
 
     /// The preview's title field offers the sample's name and names the painting with what
@@ -82,6 +97,8 @@ final class CreateFlowTests: XCTestCase {
 
         let detail = app.sliders["Detail"]
         XCTAssertTrue(detail.exists, "No Detail slider")
+        // The book's lines, as Settings › Advanced draws them, on a slider of their own.
+        XCTAssertEqual(app.sliders["Lines"].value as? String, "Balanced")
         XCTAssertTrue(detail.isEnabled, "The Detail slider still waits for the suggestion")
         let suggested = try XCTUnwrap(detail.value as? String)
         // Far from the suggestion, so the slider's word changes.

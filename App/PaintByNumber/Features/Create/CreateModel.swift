@@ -84,6 +84,8 @@ final class CreateModel {
     /// 0…1 progress of the running full-resolution generation.
     private(set) var progress: Double = 0
     private(set) var isAdjusting = false
+    /// The settings a full-resolution generation is running for, if one is.
+    private(set) var refining: GenerationSettings?
     /// Whether the settings are the suggestion for this photo or the painter's own; nil until
     /// a suggestion exists.
     private(set) var settingsOrigin: SettingsOrigin?
@@ -94,8 +96,13 @@ final class CreateModel {
     let paintingLength: PaintingLength
     /// Line art and pipeline tuning the painting is made with (Settings › Advanced), on top of
     /// the suggested or slider settings: every candidate of a suggestion carries them.
-    let lineArt: LineArtSettings
+    let baseLineArt: LineArtSettings
     let tuning: PipelineTuning
+    /// The Lines slider: 0.5 is Settings › Advanced's line art, toward 1 more lines, toward 0
+    /// fewer (`lineArt(_:lines:)`). Classic line art has no lines to tune.
+    var lines = 0.5
+    /// The line art the painting is made with: Advanced's with the Lines slider applied.
+    var lineArt: LineArtSettings { Self.lineArt(baseLineArt, lines: lines) }
     /// What layered line art draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
     /// The painting's name as typed; empty means `defaultTitle`.
@@ -125,6 +132,7 @@ final class CreateModel {
     @ObservationIgnored private var draftToken = UUID()
     @ObservationIgnored private var draftPending = false
     @ObservationIgnored private var generation = 0
+    @ObservationIgnored private var refiningID = 0
     /// Identifies the photo being loaded, so a late first draft of an earlier one is dropped.
     @ObservationIgnored private var loadID = 0
 
@@ -134,7 +142,7 @@ final class CreateModel {
         lineArt: LineArtSettings = Preferences().lineArt, tuning: PipelineTuning = Preferences().tuning
     ) {
         self.paintingLength = paintingLength
-        self.lineArt = lineArt.normalized
+        self.baseLineArt = lineArt.normalized
         self.tuning = tuning.normalized
         let initial = GenerationSettings()
         colorCount = Double(initial.colorCount)
@@ -216,7 +224,7 @@ final class CreateModel {
         loadID += 1
         let load = loadID
         let preference = paintingLength
-        let lineArt = self.lineArt, tuning = self.tuning
+        let lineArt = baseLineArt, tuning = self.tuning
         loadTask = Task {
             do {
                 let decoded = try await decode()
@@ -259,12 +267,18 @@ final class CreateModel {
 
     // MARK: Adjusting
 
-    /// Call when the painter changed a setting: the settings become their own.
+    /// How long a slider's thumb rests under the finger before the full resolution renders:
+    /// the painter sees what they get without letting go.
+    static let restDelay: Duration = .milliseconds(350)
+
+    /// Call when the painter changed a setting: the settings become their own, unless they
+    /// are back on the suggestion's (the sliders' detents).
     func settingsChanged() {
         guard source != nil, !isChoosingSettings else { return }
-        if decision != nil { settingsOrigin = .custom }
+        if let decision { settingsOrigin = settings == decision.settings ? .suggested : .custom }
         if isAdjusting {
             requestDraft()
+            scheduleFull(after: Self.restDelay)
         } else {
             scheduleFull(after: .milliseconds(250))
         }
@@ -278,7 +292,8 @@ final class CreateModel {
             fullTask?.cancel()
         } else {
             stopDrafts()
-            scheduleFull(after: .milliseconds(60))
+            // The resting thumb's full resolution, already under way for these settings, carries on.
+            if refining != settings { scheduleFull(after: .milliseconds(60)) }
         }
     }
 
@@ -326,10 +341,13 @@ final class CreateModel {
         startGeneration(draftFirst: !shownAsItWillBe)
     }
 
+    /// A suggestion's settings on the sliders; its candidates carry Advanced's line art, the
+    /// Lines slider's middle.
     private func apply(_ settings: GenerationSettings) {
         colorCount = Double(settings.colorCount)
         detail = Double(settings.detail)
         smoothness = Double(settings.smoothness)
+        lines = 0.5
     }
 
     /// Generates the current settings as the cancellable full-resolution job, so setting
@@ -356,6 +374,8 @@ final class CreateModel {
 
     private func requestDraft() {
         fullTask?.cancel()
+        // A full resolution the thumb's rest started gives way to the drafts again.
+        if refining != nil, phase == .generating, preview != nil { phase = .ready }
         draftPending = true
         guard draftTask == nil else { return }
         let token = UUID()
@@ -401,7 +421,10 @@ final class CreateModel {
         if !draft {
             phase = .generating
             progress = 0
+            refining = settings
+            refiningID = id
         }
+        defer { if !draft, refiningID == id { refining = nil } }
         // Called on pipeline threads; hops to the main actor.
         let report: @Sendable (Float) -> Void = { value in
             Task { @MainActor in
@@ -410,11 +433,16 @@ final class CreateModel {
             }
         }
         do {
+            let made = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
             let result = try await Self.render(
-                input, importance: importance, lineArt: lineArtInput, settings: settings, isDraft: draft,
+                input, importance: importance, lineArt: lineArtInput, settings: made, recorded: settings, isDraft: draft,
                 progress: draft ? nil : report)
             try Task.checkCancellation()
-            withAnimation(.easeInOut(duration: draft ? 0.18 : 0.35)) {
+            // A draft finishing after a newer generation began (the resting thumb's full
+            // resolution) would replace it with less.
+            if draft, generation != id { return }
+            // Drafts follow the finger as they come: a crossfade would blur one into the next.
+            withAnimation(draft ? nil : .easeInOut(duration: 0.35)) {
                 preview = result
                 if !draft { stats = Stats(result.template) }
             }
@@ -503,16 +531,47 @@ final class CreateModel {
         }
     }
 
+    /// The template of `settings`, its preview recording `recorded` (the sliders' settings a
+    /// draft stands for).
     @concurrent
     private static func render(
         _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, settings: GenerationSettings,
-        isDraft: Bool, progress: (@Sendable (Float) -> Void)?
+        recorded: GenerationSettings, isDraft: Bool, progress: (@Sendable (Float) -> Void)?
     ) async throws -> Preview {
         let template = try TemplateGenerator(settings: settings)
             .generate(from: image, importance: importance, lineArt: lineArt, cancel: .task, progress: progress)
             .template
         try Task.checkCancellation()
-        return try makePreview(template, settings: settings, isDraft: isDraft)
+        return try makePreview(template, settings: recorded, isDraft: isDraft)
+    }
+
+    /// A draft's settings: the line art's lengths in canvas pixels (the shortest line, the gaps
+    /// closed) scaled from the full resolution's canvas to the draft's, a third of it or less, so
+    /// a draft draws the short strokes the final will (an eye, a nostril), which the full lengths
+    /// drop at a draft's size.
+    nonisolated static func draftSettings(_ settings: GenerationSettings, draft: RGBAImage, source: RGBAImage) -> GenerationSettings {
+        let small = settings.workingSize(sourceWidth: draft.width, sourceHeight: draft.height)
+        let full = settings.workingSize(sourceWidth: source.width, sourceHeight: source.height)
+        let scale = Float(max(small.width, small.height)) / Float(max(full.width, full.height, 1))
+        guard scale < 1 else { return settings }
+        var made = settings
+        made.lineArt.minimumStrokeLength *= scale
+        made.lineArt.gapBridging *= scale
+        return made
+    }
+
+    /// `base` with the Lines slider at `lines`: toward More the thresholds fall by up to 0.2 (weaker
+    /// edges drawn, outlines with them) and the shortest line halves, toward Fewer they rise and it
+    /// grows half again; the middle is `base` itself.
+    nonisolated static func lineArt(_ base: LineArtSettings, lines: Double) -> LineArtSettings {
+        let more = Float(min(max(lines, 0), 1) - 0.5) * 2
+        guard base.style != .classic, more != 0 else { return base }
+        var art = base
+        art.detailThreshold = min(max(base.detailThreshold - 0.2 * more, 0.2), 0.95)
+        art.outlineThreshold = min(max(base.outlineThreshold - 0.2 * more, 0.2), 0.95)
+        art.textureThreshold = min(base.textureThreshold, art.detailThreshold)
+        art.minimumStrokeLength = base.minimumStrokeLength * (1 - 0.5 * more)
+        return art.normalized
     }
 
     nonisolated private static func makePreview(_ template: Template, settings: GenerationSettings?, isDraft: Bool) throws -> Preview {
