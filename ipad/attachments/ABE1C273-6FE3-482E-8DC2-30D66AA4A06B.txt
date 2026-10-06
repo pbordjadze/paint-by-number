@@ -1,0 +1,10 @@
+Attributes: Other, 0x11673e580, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker'
+Element subtree:
+ →Other, 0x11673e580, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker'
+Path to element:
+ →Other, 0x11673e580, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Any
+    ↪︎Find: Elements matching predicate 'identifier == "library-picker"'
+      ↪︎Find: First Match
