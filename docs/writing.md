@@ -123,5 +123,5 @@ owner's note stood 1/51 to 1/22 of its photo's height, and three quarters of Hie
 lower than 1/32. `TextFinder` asks for text down to 1/128 (`minimumTextHeight`), about the
 lowest the writing stage keeps (`Writing.minimumHeight`, 10 canvas pixels). Of HierText's
 handwritten lines, 93 % stand at least 1/128 of their photo's height, 64 % at least 1/64 and 25 %
-at least 1/32. The simulator, which runs Vision's networks on the CPU, asks for 1/48: there text
-this small added 10 to 70 s to each 560-pixel picture CI seeded.
+at least 1/32. The simulator finds no text: it runs Vision's networks on the CPU, where reading
+took CI 8 to 42 s a 560-pixel picture and over 90 s a photo, and read nothing.

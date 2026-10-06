@@ -7,8 +7,8 @@ import UIKit
 /// The lines of text Vision finds (`TextFinder`): in reading order and quantized, so Vision's
 /// jitter never reaches a template; and on a note written in a handwriting face beside a printed
 /// line and a small one, well-formed quadrilaterals, the same on every run, over the words when
-/// Vision reads them (the simulator's Vision may read nothing), the small line too, recorded for
-/// the CI report.
+/// Vision reads them (the simulator's Vision may read nothing; the app's finder doesn't ask it
+/// there, this test does), the small line too, recorded for the CI report.
 @MainActor
 struct TextFinderTests {
     @Test func linesComeInReadingOrderQuantized() {
@@ -24,8 +24,8 @@ struct TextFinderTests {
     @Test func noteLinesAreWellFormedAndRecorded() async throws {
         let size = CGSize(width: 1200, height: 900)
         let hello = CGRect(x: 180, y: 260, width: 840, height: 140), printed = CGRect(x: 180, y: 520, width: 840, height: 110)
-        // Lower than Vision's default least height (1/32 of the photo), as a note's words often are,
-        // and above the simulator's (`TextFinder.minimumTextHeight`, 1/48): 22-point letters.
+        // Lower than Vision's default least height (1/32 of the photo), as a note's words often are:
+        // 22-point letters, about 1/40 of it.
         let small = CGRect(x: 180, y: 640, width: 840, height: 30)
         let picture = UIGraphicsImageRenderer(size: size, format: { let f = UIGraphicsImageRendererFormat(); f.scale = 1; return f }())
             .image { context in
@@ -71,12 +71,12 @@ struct TextFinderTests {
         }
     }
 
-    /// Vision off the main actor, as the app runs it (`LineArtInputs`) and the other finders'
-    /// tests do: a read takes seconds on CI's simulator, and on the main actor it held up every
-    /// other test there.
+    /// Vision's own reading, off the main actor as the app reads (`LineArtInputs`) and the other
+    /// finders' tests do: a read takes CI's simulator tens of seconds, which on the main actor
+    /// held up every other test there.
     @concurrent
     private static func lines(in image: CGImage) async -> [[SIMD2<Float>]] {
-        TextFinder.lines(in: image)
+        TextFinder.read(image)
     }
 
     private func quantized(_ p: SIMD2<Double>) -> SIMD2<Float> {

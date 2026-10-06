@@ -12,8 +12,11 @@ import Vision
 ///
 /// Polygons are each line's quadrilateral, normalized to the photo (0...1, origin top-left),
 /// quantized to 1/4096 of the photo and ordered top to bottom, then left to right, so small
-/// differences in Vision's output between runs don't reorder or jitter them. Vision may find
-/// nothing on a simulator.
+/// differences in Vision's output between runs don't reorder or jitter them.
+///
+/// The simulator finds none (`lines(in:)`): it runs Vision's networks on the CPU, where reading
+/// took CI 8 to 42 s a 560-pixel picture and over 90 s a photo, and read nothing. `read(_:)`
+/// asks Vision anywhere (`TextFinderTests`).
 nonisolated enum TextFinder {
     /// Lines Vision reads with less confidence than this are skipped: handwriting reads at 0.3
     /// to 0.5 where print reads near 1.
@@ -23,20 +26,22 @@ nonisolated enum TextFinder {
     /// The lowest text looked for, per height of the photo: the writing stage keeps text from 10
     /// canvas pixels (`Writing.minimumHeight`), about this much of a canvas's short side. Vision's
     /// default, 1/32, misses a note photographed among other things: the words of one beside
-    /// stuffed animals stood 1/51 to 1/22 of the photo's height. The simulator runs Vision's
-    /// networks on the CPU, where text this small added 10 to 70 s to each 560-pixel picture CI
-    /// seeded and kept the create flow finding the subject past its screenshots' 90 s; there it
-    /// looks from 1/48, low enough for `TextFinderTests`' smallest line.
-    #if targetEnvironment(simulator)
-    static let minimumTextHeight: Float = 1 / 48
-    #else
+    /// stuffed animals stood 1/51 to 1/22 of the photo's height.
     static let minimumTextHeight: Float = 1 / 128
-    #endif
     static let quantum = 4096.0
 
-    /// The lines of text in `image` (upright pixels). Empty when there are none or Vision can't
-    /// run.
+    /// The lines of text in `image` (upright pixels). Empty when there are none, on the
+    /// simulator, or when Vision can't run.
     static func lines(in image: CGImage) -> [[SIMD2<Float>]] {
+        #if targetEnvironment(simulator)
+        return []
+        #else
+        return read(image)
+        #endif
+    }
+
+    /// The lines Vision reads in `image`, the simulator's Vision included.
+    static func read(_ image: CGImage) -> [[SIMD2<Float>]] {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = false
