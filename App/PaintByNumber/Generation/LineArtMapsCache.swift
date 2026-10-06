@@ -15,7 +15,7 @@ import PaintCore
 nonisolated enum LineArtMapsCache {
     private static let magic = "LAMC"
     /// Also keys `DemoTemplateCache`, whose templates are drawn from these maps.
-    static let version: UInt32 = 3
+    static let version: UInt32 = 4
 
     /// On for demo scenarios (`-demo`, as `DemoMode.scenario` reads it) and the unit-test
     /// host (as `DemoMode.isTestHost` does), never for a painter's own launch; read here
