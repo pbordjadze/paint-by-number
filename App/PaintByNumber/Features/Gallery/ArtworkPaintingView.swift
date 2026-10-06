@@ -30,6 +30,21 @@ struct ArtworkPaintingView: View {
     private var artwork: Artwork? { library.artwork(with: artworkID) }
     private var saveFailed: Bool { library.writeFailures[artworkID] != nil }
 
+    /// Where the painting came from, for feedback given on it. The painter's own photo is read
+    /// (as stored, off the main actor) only if they choose to send it; a library picture's is
+    /// in the repository.
+    private var feedbackSource: FeedbackSource? {
+        guard let artwork else { return nil }
+        let store = library.store, id = artworkID
+        var photo: (@Sendable () async -> Data?)?
+        if artwork.sampleName == nil {
+            photo = { await Background.run { try? Data(contentsOf: store.url(.source, of: id)) } }
+        }
+        return FeedbackSource(
+            artworkID: id, settings: artwork.settings, settingsOrigin: artwork.settingsOrigin,
+            paintingLength: artwork.paintingLength, sampleName: artwork.sampleName, createdAt: artwork.createdAt, photo: photo)
+    }
+
     var body: some View {
         ZStack {
             Theme.paper.ignoresSafeArea()
@@ -38,6 +53,7 @@ struct ArtworkPaintingView: View {
                     .environment(\.sourcePhotoLoader, SourcePhotoLoader { [library, artworkID] maxPixelSize in
                         await library.sourcePhoto(for: artworkID, maxPixelSize: maxPixelSize)
                     })
+                    .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
                     .transition(.opacity)
             } else if let failure {

@@ -9,6 +9,7 @@ nonisolated enum Log {
     static let canvas = Logger(subsystem: subsystem, category: "canvas")
     static let advanced = Logger(subsystem: subsystem, category: "advanced")
     static let tips = Logger(subsystem: subsystem, category: "tips")
+    static let feedback = Logger(subsystem: subsystem, category: "feedback")
     #if DEBUG
     static let demo = Logger(subsystem: subsystem, category: "demo")
     #endif

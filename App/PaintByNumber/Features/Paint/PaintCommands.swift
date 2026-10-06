@@ -7,6 +7,9 @@ struct PaintingFocus {
     let showsNumbers: Binding<Bool>
     /// Nil when the painting has no photo to show.
     let showsPhoto: Binding<Bool>?
+    /// Feedback mode: painting is off, so are the commands.
+    let isGivingFeedback: Bool
+    let giveFeedback: () -> Void
 }
 
 extension FocusedValues {
@@ -42,8 +45,10 @@ struct PaintCommands: Commands {
                     .keyboardShortcut("-")
                 Button("Zoom to Fit") { painting?.controller.zoomToFit() }
                     .keyboardShortcut("0")
+                Divider()
+                Button("Give Feedback…") { painting?.giveFeedback() }
             }
-            .disabled(painting == nil)
+            .disabled(painting == nil || painting?.isGivingFeedback == true)
         }
     }
 

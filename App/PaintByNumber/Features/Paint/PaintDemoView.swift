@@ -1,6 +1,7 @@
 #if DEBUG
 import CoreGraphics
 import PaintCore
+import PencilKit
 import SwiftUI
 import os
 import simd
@@ -29,6 +30,12 @@ import simd
 ///   title and every localized string twice as long (`ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette
 ///   caption and completion bar as translations would stress them
+/// - `paint-feedback`: ~45 % painted, in feedback mode with two marks drawn (a red circle and
+///   arrow round the busiest part, a highlighter stroke across another) and the tools
+/// - `paint-feedback-dark`: `paint-feedback` for dark appearance (the ink keeps its colors)
+/// - `paint-feedback-review`: the review and send sheet over it, with a note, the first mark's
+///   comment, both close-ups and the Original Photo switch (a painting from the painter's photo)
+/// - `paint-feedback-long-text`: `paint-feedback-review` with doubled strings and a long title
 ///
 /// Layered line art from the real pipeline (the stand-in edge map `SyntheticTemplate.edgeMap`
 /// for the learned detector) at the default Line Appearance:
@@ -63,6 +70,8 @@ struct PaintDemoView: View {
                         SourcePhotoLoader(load: { size in await Self.photo(name, maxPixelSize: size) })
                     })
                     .environment(\.dynamicTypeSize, demo.dynamicTypeSize ?? systemTypeSize)
+                    .environment(\.feedbackSource, demo.feedbackSource)
+                    .environment(\.feedbackDemo, demo.feedback)
                     .task {
                         await demo.run()
                         DemoMode.markReady()
@@ -145,6 +154,9 @@ private final class Demo {
     var showsPhoto = false
     /// Overrides the system text size (accessibility scenarios).
     var dynamicTypeSize: DynamicTypeSize?
+    /// Feedback scenarios: what feedback starts with, and where the painting came from.
+    var feedback: FeedbackDemo?
+    var feedbackSource: FeedbackSource?
     private let scenario: String
 
     init(scenario: String, template t: Template, title: String, photo: String?) {
@@ -227,9 +239,70 @@ private final class Demo {
         case "paint-layered-zoom2", "paint-layered-zoomed", "paint-book-zoomed":
             paint(fraction: 0.2)
             camera = CanvasCamera(zoom: scenario == "paint-layered-zoom2" ? 2 : 4, center: Self.busiest(t))
+        case "paint-feedback", "paint-feedback-dark", "paint-feedback-review", "paint-feedback-long-text":
+            paint(fraction: 0.45)
+            let reviews = scenario.hasSuffix("-review") || scenario.hasSuffix("-long-text")
+            let busiest = Self.busiest(t)
+            feedback = FeedbackDemo(
+                ink: { pointsPerUnit in Self.feedbackInk(t, around: busiest, pointsPerUnit: pointsPerUnit) },
+                note: "The sky reads beautifully, but the rocks under the arch are too fiddly to paint.",
+                comment: "Too many tiny areas in here, and two of them are the same brown.", reviews: reviews)
+            // The review shows the photo switch: a painting made from the painter's own photo.
+            var source = FeedbackSource(settings: GenerationSettings(lineArt: LineArtSettings(style: .classic)))
+            if let name = photo {
+                if reviews {
+                    source.photo = { await Self.photoData(name) }
+                } else {
+                    source.sampleName = name
+                }
+            }
+            feedbackSource = source
         default:
             break
         }
+    }
+
+    /// Feedback's demo ink in canvas units, as large as drawn at `pointsPerUnit`: a red circle
+    /// round `center` with an arrow pointing at it, and a highlighter stroke across the other
+    /// half of the painting (two marks).
+    private static func feedbackInk(_ t: Template, around center: SIMD2<Float>, pointsPerUnit: CGFloat) -> PKDrawing {
+        let unit = 1 / max(pointsPerUnit, 0.01)
+        let c = CGPoint(x: CGFloat(center.x), y: CGFloat(center.y))
+        let r = CGFloat(min(t.width, t.height)) * 0.09
+        var date = Date(timeIntervalSinceReferenceDate: 800_000_000)
+        func stroke(_ points: [CGPoint], _ ink: PKInk, width: CGFloat) -> PKStroke {
+            date += 1
+            let controls = points.enumerated().map { i, p in
+                PKStrokePoint(
+                    location: p, timeOffset: Double(i) * 0.02, size: CGSize(width: width * unit, height: width * unit),
+                    opacity: 1, force: 1, azimuth: 0, altitude: .pi / 2)
+            }
+            return PKStroke(ink: ink, path: PKStrokePath(controlPoints: controls, creationDate: date), transform: .identity, mask: nil)
+        }
+        let pen = PKInk(.pen, color: .systemRed)
+        let circle = (0...48).map { i -> CGPoint in
+            let a = CGFloat(i) / 46 * 2 * .pi - 0.7
+            return CGPoint(x: c.x + r * 1.2 * cos(a), y: c.y + r * 0.95 * sin(a))
+        }
+        let tip = CGPoint(x: c.x + r * 0.95, y: c.y - r * 0.85)
+        let tail = CGPoint(x: c.x + r * 2.1, y: c.y - r * 1.9)
+        let shaft = (0...8).map { i in CGPoint(x: tail.x + (tip.x - tail.x) * CGFloat(i) / 8, y: tail.y + (tip.y - tail.y) * CGFloat(i) / 8) }
+        let head = [CGPoint(x: tip.x + r * 0.4, y: tip.y + r * 0.02), tip, CGPoint(x: tip.x - r * 0.02, y: tip.y - r * 0.4)]
+        // Across the half of the painting the circle isn't in.
+        let w = CGFloat(t.width), h = CGFloat(t.height)
+        let y = c.y < h / 2 ? h * 0.8 : h * 0.2
+        let from = CGPoint(x: w * 0.25, y: y), to = CGPoint(x: w * 0.6, y: y + h * 0.02)
+        let line = (0...12).map { i in CGPoint(x: from.x + (to.x - from.x) * CGFloat(i) / 12, y: from.y + (to.y - from.y) * CGFloat(i) / 12) }
+        return PKDrawing(strokes: [
+            stroke(circle, pen, width: 4), stroke(shaft, pen, width: 4), stroke(head, pen, width: 4),
+            stroke(line, PKInk(.marker, color: .systemYellow), width: 24),
+        ])
+    }
+
+    @concurrent
+    private static func photoData(_ name: String) async -> Data? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "jpg") else { return nil }
+        return try? Data(contentsOf: url)
     }
 
     /// The middle of the busiest of 8 × 8 tiles (most line points, strokes included), where
@@ -250,6 +323,27 @@ private final class Demo {
 
     /// Scenario actions that need the canvas on screen.
     func run() async {
+        if let feedback {
+            // Ready once the ink is down and, for the review, the sheet's pictures are drawn.
+            let clock = ContinuousClock()
+            let deadline = clock.now + .seconds(30)
+            var commented = false
+            while clock.now < deadline {
+                if let draft = feedback.draft {
+                    if !feedback.reviews { break }
+                    if !commented, let first = draft.marks.first {
+                        draft.comments[first.id] = feedback.comment
+                        commented = true
+                    }
+                    if commented, draft.overview != nil, draft.closeUps.count == draft.marks.count { break }
+                }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            let marks = feedback.draft?.marks.count ?? -1
+            Log.demo.notice("demo \(self.scenario, privacy: .public): \(marks, privacy: .public) marks")
+            try? await Task.sleep(for: .seconds(1))
+            return
+        }
         if scenario == "paint-hint" {
             try? await Task.sleep(for: .seconds(1.5))
             session.showHint(near: SIMD2(Float(session.template.width), Float(session.template.height)) * 0.5)
@@ -309,6 +403,36 @@ private final class Demo {
 
     private static func center(_ t: Template, _ region: Int) -> SIMD2<Float> {
         t.labels(ofRegion: region).first?.position ?? .zero
+    }
+}
+
+/// A feedback scenario (`paint-feedback*`): the ink feedback starts with (drawn as large as
+/// at the zoom it is given), the note, the first mark's comment and whether the review sheet
+/// opens. `PaintView` starts it and hands over the draft, which `Demo.run` watches.
+@MainActor
+final class FeedbackDemo {
+    let ink: (_ pointsPerUnit: CGFloat) -> PKDrawing
+    let note: String
+    let comment: String
+    let reviews: Bool
+    var draft: FeedbackDraft?
+
+    init(ink: @escaping (_ pointsPerUnit: CGFloat) -> PKDrawing, note: String, comment: String, reviews: Bool) {
+        self.ink = ink
+        self.note = note
+        self.comment = comment
+        self.reviews = reviews
+    }
+}
+
+private nonisolated struct FeedbackDemoKey: EnvironmentKey {
+    static let defaultValue: FeedbackDemo? = nil
+}
+
+extension EnvironmentValues {
+    var feedbackDemo: FeedbackDemo? {
+        get { self[FeedbackDemoKey.self] }
+        set { self[FeedbackDemoKey.self] = newValue }
     }
 }
 #endif
