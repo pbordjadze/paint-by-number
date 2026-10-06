@@ -143,6 +143,7 @@ struct ArtworkPaintingView: View {
             autosaver = PaintingAutosaver(session: session, artworkID: artworkID, library: library)
         }
         if let notice = document.notice { show(notice) }
+        Log.library.notice("Opened \(artworkID.uuidString, privacy: .public): \(document.template.regions.count, privacy: .public) regions")
         #if DEBUG
         if ShellDemo.current == .galleryOpen { DemoMode.markReady() }
         #endif

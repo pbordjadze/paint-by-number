@@ -284,7 +284,8 @@ any port of it, when changing the fitter: work from the paper.
    `STATUS.md` (job results and verdicts), trimmed logs, `core/` (tests, strings check,
    `regression/` with its table and `sheets/<regime>/<sample>.jpg`), and per device `errors.txt`
    (compiler errors), `shots/*.png`, `*-app.log` (the app's os_log), `*-steps.log` (readiness,
-   crashes), test results and `attachments/`. iPad is the primary device: every push builds Debug on
+   crashes), `test-app.log` (the app's library, demo, canvas and feedback lines during the tests),
+   test results and `attachments/`. iPad is the primary device: every push builds Debug on
    a 13" iPad Pro simulator, screenshots, tests, builds Release for `ci/check_release.sh` (problems
    land in `ipad/errors.txt` too), and benchmarks the pipeline (`ipad/bench.txt`, only when
    `Sources/` or `Package.swift` differ from `main`). The iPhone job (an iPhone 17 Pro) runs on

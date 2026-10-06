@@ -194,21 +194,27 @@ final class Library {
 
     /// Generates artworks from bundled samples, one after another, showing placeholders
     /// until each is ready. `completion` gets the number of artworks created.
+    ///
+    /// At utility priority: nobody waits on a seed (its placeholder shows meanwhile), and the
+    /// line-art models and the pipeline take every core, which at the caller's priority starved
+    /// the main thread on CI's iPad simulator until UI tests timed out querying the app.
     @discardableResult
     func seed(_ items: [SeedItem], completion: ((_ created: Int) -> Void)? = nil) -> Task<Void, Never> {
         let now = Date.now
         placeholders = items.map { Placeholder(sample: $0.sample) }
-        return Task {
+        return Task(priority: .utility) {
             var created = 0
             for (index, item) in items.enumerated() {
                 // Earlier items sort first when ages tie.
                 let date = now.addingTimeInterval(-item.age - Double(index))
+                let clock = ContinuousClock.now
                 do {
                     let draft = try await ArtworkFactory.draft(
                         sample: item.sample, paintedFraction: item.painted, date: date,
                         photoMaxPixelSize: item.photoMaxPixelSize)
                     try await create(draft)
                     created += 1
+                    Log.library.notice("Seeded \(item.sample.id, privacy: .public) in \(String(describing: ContinuousClock.now - clock), privacy: .public)")
                 } catch {
                     Log.library.error("Seeding \(item.sample.id, privacy: .public) failed: \(String(describing: error), privacy: .public)")
                 }
