@@ -33,7 +33,7 @@ final class FeedbackUITests: XCTestCase {
         XCTAssertEqual(drawn, .completed, "A finger drag drew nothing")
         let highlighter = app.buttons["feedback-tool-highlighter"]
         highlighter.tap()
-        XCTAssertTrue(highlighter.isSelected, "The highlighter didn't become the tool")
+        XCTAssertTrue(waitFor(highlighter, toMatch: NSPredicate(format: "isSelected == true")), "The highlighter didn't become the tool")
 
         next.tap()
         XCTAssertTrue(app.navigationBars["Send Feedback"].waitForExistence(timeout: 10), "Next didn't open the review")
@@ -41,7 +41,9 @@ final class FeedbackUITests: XCTestCase {
         XCTAssertTrue(comment.waitForExistence(timeout: 10), "The mark has no comment field")
         comment.tap()
         comment.typeText("Too busy")
-        XCTAssertTrue((comment.value as? String)?.contains("Too busy") == true, "The mark's comment can't be typed")
+        XCTAssertTrue(
+            waitFor(comment, toMatch: NSPredicate(format: "value CONTAINS %@", "Too busy")),
+            "The mark's comment can't be typed: \(comment.value ?? "")")
         attachScreenshot(of: app, named: "feedback-review")
 
         app.buttons["feedback-back"].tap()

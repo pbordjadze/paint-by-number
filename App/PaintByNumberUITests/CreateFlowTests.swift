@@ -20,9 +20,9 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertEqual(compare.value as? String, "50 percent photo")
         compare.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
             .press(forDuration: 0.1, thenDragTo: compare.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.5)))
-        sleep(1)
+        let moved = waitFor(compare, toMatch: NSPredicate(format: "value != nil AND value != %@", "50 percent photo"))
         attachScreenshot(of: app, named: "compare-after-drag")
-        XCTAssertNotEqual(compare.value as? String, "50 percent photo", "The divider didn't follow the drag")
+        XCTAssertTrue(moved, "The divider didn't follow the drag")
 
         // A double tap zooms both layers in; a drag then pans them, leaving the divider where it
         // is; another double tap fits them again.
@@ -67,7 +67,7 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertEqual(title.frame.minX, unfocusedFrame.minX, accuracy: 1, "The preview changed layout when the keyboard showed")
         XCTAssertEqual(title.frame.width, unfocusedFrame.width, accuracy: 1, "The preview changed layout when the keyboard showed")
         title.typeText("Big Wave\n")
-        XCTAssertEqual(title.value as? String, "Big Wave")
+        XCTAssertTrue(waitFor(title, toMatch: NSPredicate(format: "value == %@", "Big Wave")), "The title reads \(title.value ?? "")")
         attachScreenshot(of: app, named: "create-title-typed")
 
         start.tap()
@@ -163,6 +163,12 @@ final class CreateFlowTests: XCTestCase {
         attachScreenshot(of: app, named: "library-photo-picked")
         XCTAssertTrue(opened, "Picking a library photo didn't open its preview")
         guard opened else { return }
+        // Back once the photo's settings are chosen: until then its models and candidates keep
+        // every core busy, and on CI's simulators a Back tapped then was lost twice (the preview
+        // stayed, finishing its suggestion).
+        XCTAssertTrue(
+            waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120),
+            "The preview never finished choosing its settings")
 
         // By the system's identifier: the gallery's New Painting button, under the create flow,
         // carries the back button's label too.
@@ -173,7 +179,8 @@ final class CreateFlowTests: XCTestCase {
             return
         }
         back.tap()
-        let returned = waitUntil(timeout: 10) { !start.exists }
+        let returned = waitUntil(timeout: 30) { !start.exists }
+        if !returned { attachTree(of: app, named: "preview-back-missed-tree") }
         XCTAssertTrue(returned, "Back didn't return to the photo step")
         XCTAssertTrue(picker.waitForExistence(timeout: 20))
 
@@ -193,7 +200,7 @@ final class CreateFlowTests: XCTestCase {
         if !isPad {
             XCTAssertTrue(samples.waitForExistence(timeout: 10))
             samples.tap()
-            XCTAssertTrue(samples.isSelected)
+            XCTAssertTrue(waitFor(samples, toMatch: NSPredicate(format: "isSelected == true")), "Samples didn't become selected")
         }
         let first = firstSample(app)
         XCTAssertTrue(first.waitForExistence(timeout: 10))

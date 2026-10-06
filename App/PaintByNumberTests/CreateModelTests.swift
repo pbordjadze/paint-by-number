@@ -117,11 +117,16 @@ struct CreateModelTests {
         #expect(model.defaultTitle == sample.title)
         #expect(model.resolvedTitle == sample.title)
 
-        // Dragging a slider: quick drafts at reduced size…
+        // Dragging a slider: quick drafts at reduced size… The thumb keeps moving, as a drag
+        // does: each change puts the full resolution off by `CreateModel.restDelay` again. Changed
+        // once, a draft slower than that (CI's simulator, under the tests running beside it) was
+        // overtaken by the full resolution and dropped, and the wait timed out.
         model.setAdjusting(true)
         model.colorCount = 8
-        model.settingsChanged()
-        try await waitUntil { model.preview?.isDraft == true && model.preview?.settings?.colorCount == 8 }
+        try await waitUntil {
+            model.settingsChanged()
+            return model.preview?.isDraft == true && model.preview?.settings?.colorCount == 8
+        }
         #expect(model.preview.map { max($0.template.width, $0.template.height) } ?? 0 <= Int(AutoSettings.draftLongSide) + 1)
 
         // …and the full resolution once it is released.
