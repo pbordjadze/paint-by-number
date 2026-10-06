@@ -10,6 +10,13 @@ public struct LineArtStats: Sendable, Codable, Equatable {
     /// drawing left a silhouette open.
     public var objects = 0
     public var objectStretches = 0
+    /// Lines of text whose writing was traced (`Writing`), marks kept beside them, and the
+    /// writing's line (also counted in `interiorLength`).
+    public var writingAreas = 0
+    public var writingMarks = 0
+    public var writingLength: Float = 0
+    /// Every line of text the writing stage looked at, in the input's order.
+    public var writing: [WritingAreaStats] = []
     /// Free ends extended to a line, paint boundary or the frame.
     public var endsClosed = 0
     /// Cells right after splitting the segmentation along the lines.
@@ -44,4 +51,28 @@ public struct LineArtStats: Sendable, Codable, Equatable {
         }
         if interior { interiorStrokes += 1 }
     }
+}
+
+/// One line of text the writing stage looked at (`Writing`): what it measured and what came of it.
+public struct WritingAreaStats: Sendable, Codable, Equatable {
+    /// The box's centre and height (canvas units).
+    public var x: Float = 0
+    public var y: Float = 0
+    public var height: Float = 0
+    /// The contrast from which a pixel is ink, the share of the core's pixels that are ink, the
+    /// ground's grain (`Writing.maximumGrain`), the pen (`Writing.Ink.pen`), line traced per
+    /// length of the box, pieces (strokes between ends and junctions, and dots) per height of line
+    /// traced, and marks kept beside it.
+    public var contrast: Float = 0
+    public var coverage: Float = 0
+    public var grain: Float = 0
+    public var pen: Float = 0
+    public var inkPerLength: Float = 0
+    public var piecesPerHeight: Float = 0
+    public var marks = 0
+    /// `kept`, or why not: `size` (too small or large to take), `noInk`, `picture`, `bold`,
+    /// `sparse`, `dense` or `texture` (see `Writing`).
+    public var verdict = ""
+
+    public init() {}
 }

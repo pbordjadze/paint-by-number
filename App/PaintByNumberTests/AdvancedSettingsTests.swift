@@ -11,7 +11,7 @@ struct AdvancedSettingsTests {
     private static let changedArt = LineArtSettings(
         style: .layered, detector: .contours, outlineThreshold: 0.95, detailThreshold: 0.65, textureThreshold: 0.45, minimumStrokeLength: 30,
         gapBridging: 14, lineSmoothing: 0.9, samePaint: .split, keepColorEdges: false, outlineEyes: false,
-        outlineObjects: false)
+        outlineObjects: false, keepWriting: false)
     private static let changedTuning = PipelineTuning(
         smoothing: 2, textureFlattening: 2, minimumCellSize: 2, subjectEmphasis: 2, accentColors: 2, colorfulness: 2)
 

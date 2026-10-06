@@ -15,8 +15,10 @@ import Foundation
 ///    stretches below texture are cut out. Eyes (`outlineEyes`) replace the lines inside them
 ///    with their contours and irises as outlines and promote the lines around them; the
 ///    subjects' silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
-///    (`LineLayering.addObjects`). Free ends reach for the nearest line, paint boundary or
-///    frame (`gapBridging` × 1.6 / 1.2 / 1 by layer), so open strokes close cells.
+///    (`LineLayering.addObjects`). Lines on the writing (`Writing`, traced from the photo
+///    before segmenting) are its smudged copy and go. Free ends reach for the nearest line,
+///    paint boundary or frame (`gapBridging` × 1.6 / 1.2 / 1 by layer), so open strokes close
+///    cells.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
 ///    paints are within two palette steps.
@@ -26,7 +28,9 @@ import Foundation
 /// 6. `join`: same-paint neighbours join per `samePaint` (by default across texture lines),
 ///    and the lines that end up inside a cell become interior strokes (stretches shorter than
 ///    `LineLayering.minimumRun` are a boundary stretch's end point or a merged tiny cell's
-///    sliver, not drawing, and go). Paints no cell uses are dropped, cells renumbered.
+///    sliver, not drawing, and go). Paints no cell uses are dropped, cells renumbered. The
+///    writing is drawn inside the cells it crosses: it bounds none, so letters never become
+///    cells to number.
 /// After vectorizing, `annotate` gives each boundary edge the layer of the line along it
 /// (`color` where only the paint changes) and a weight, and stamps the template's line art
 /// with its style.
@@ -72,7 +76,7 @@ enum LayeredLines {
 
     static func apply(
         _ segmentation: Segmentation, input: LineArtInput, importance: [Float]?, settings: GenerationSettings,
-        cancel: CancellationCheck, clock: StageClock
+        writing: Writing? = nil, cancel: CancellationCheck, clock: StageClock
     ) throws -> Plan {
         let s = settings.normalized.lineArt
         let style = s.style.templateStyle ?? .layered
@@ -140,6 +144,11 @@ enum LayeredLines {
                 let added = LineLayering.addObjects(lines, objects: objects, width: w, height: h)
                 stats.objectStretches = added.count
                 lines += added
+            }
+            if let near = writing?.nearInk, !near.isEmpty {
+                lines = lines.flatMap { line in
+                    line.pieces(keeping: line.points.map { !near[LineLayering.pixelIndex(of: $0, width: w, height: h)] }, freeCuts: false)
+                }
             }
             let colorEdge = Self.boundaryPixels(segmentation.labels.storage, width: w, height: h)
             let first = LineLayering.walls(lines, width: w, height: h)
@@ -230,6 +239,15 @@ enum LayeredLines {
             // cell left, not a line drawn inside the cell.
             for piece in line.pieces(keeping: flags.map { !$0 }, freeCuts: true) where piece.length >= LineLayering.minimumRun {
                 interior += Self.byRegion(piece, labels: final.label, width: w, height: h)
+            }
+        }
+        if let writing {
+            stats.writingAreas = writing.areas
+            stats.writingMarks = writing.marks
+            stats.writing = writing.report
+            for line in writing.lines {
+                stats.writingLength += line.length
+                interior += Self.byRegion(line, labels: final.label, width: w, height: h)
             }
         }
         for line in boundary { stats.add(line, interior: false) }

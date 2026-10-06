@@ -5,7 +5,8 @@
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
 //       [--line-style classic|layered|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
-//        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--line-art key=value]...] [--tuning key=value]...
+//        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json] [--line-art key=value]...]
+//       [--tuning key=value]...
 //       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
 //       layered and coloring-book line art split the cells along the edge map's lines
@@ -13,8 +14,10 @@
 //       encloses, and selected.svg hatches the cells of the paint with the most of them, as the
 //       canvas shows the selected color); eyes.json is an array of closed polygons of [x, y]
 //       normalized to the photo, and the subjects (--objects) either the same or a mask image
-//       whose shapes MaskContours traces; --line-art sets a LineArtSettings field and --tuning a
-//       PipelineTuning factor by name
+//       whose shapes MaskContours traces; writing.json holds the lines of text found in the photo
+//       the same way (a quadrilateral each), whose ink is traced from the photo and drawn
+//       legibly; --line-art sets a LineArtSettings field and --tuning a PipelineTuning factor by
+//       name
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into

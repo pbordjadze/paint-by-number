@@ -202,6 +202,10 @@ struct AdvancedSettingsView: View {
                     title: AdvancedControl.outlineObjects.title, summary: AdvancedControl.outlineObjects.summary,
                     isOn: $model.lineArt.outlineObjects, effect: model.effect(of: .outlineObjects),
                     identifier: "advanced-control-outlineObjects")
+                AdvancedToggleRow(
+                    title: AdvancedControl.keepWriting.title, summary: AdvancedControl.keepWriting.summary,
+                    isOn: $model.lineArt.keepWriting, effect: model.effect(of: .keepWriting),
+                    identifier: "advanced-control-keepWriting")
             }
         } header: {
             AdvancedSectionHeader(

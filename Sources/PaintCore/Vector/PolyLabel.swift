@@ -159,6 +159,24 @@ enum PolyLabel {
         }
     }
 
+    /// `find` with numbers kept off `keepOut`: the interior point farthest from both the outline
+    /// and the rectangles, and that distance. The whole polygon is searched, however many
+    /// vertices it has: the best spot away from the writing may lie anywhere in it.
+    static func find(
+        _ poly: FlatPolygon, precision: Double, seed: SIMD2<Double>, keepOut: LabelKeepOut
+    ) -> (position: SIMD2<Double>, distance: Double) {
+        let outerEnd = poly.ringStarts.count > 1 ? poly.ringStarts[1] : 0
+        guard outerEnd > 0 else { return (seed, 0) }
+        var minX = Double.infinity, minY = Double.infinity, maxX = -Double.infinity, maxY = -Double.infinity
+        for i in 0..<outerEnd {
+            let p = poly.points[i]
+            minX = min(minX, p.x); minY = min(minY, p.y); maxX = max(maxX, p.x); maxY = max(maxY, p.y)
+        }
+        return search(minX: minX, minY: minY, maxX: maxX, maxY: maxY, precision: precision, seed: seed) {
+            min(poly.signedDistance($0, $1), keepOut.distance($0, $1))
+        }
+    }
+
     /// Best-first search over the box for the maximum of `distance`.
     private static func search(
         minX: Double, minY: Double, maxX: Double, maxY: Double, precision: Double, seed: SIMD2<Double>,

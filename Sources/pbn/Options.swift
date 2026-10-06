@@ -21,6 +21,7 @@ struct Options {
     var lines: String?
     var eyes: String?
     var objects: String?
+    var writing: String?
     /// How much of `--edges` goes under `--lines` when both are given (`EdgeMap.contourWeight`).
     var contourWeight = EdgeMap.contourWeight
 }
@@ -32,7 +33,8 @@ enum Fields {
          "minimumStrokeLength": \.minimumStrokeLength, "gapBridging": \.gapBridging, "lineSmoothing": \.lineSmoothing]
     }
     static var lineArtBools: [String: WritableKeyPath<LineArtSettings, Bool>] {
-        ["keepColorEdges": \.keepColorEdges, "outlineEyes": \.outlineEyes, "outlineObjects": \.outlineObjects]
+        ["keepColorEdges": \.keepColorEdges, "outlineEyes": \.outlineEyes, "outlineObjects": \.outlineObjects,
+         "keepWriting": \.keepWriting]
     }
     static var tuning: [String: WritableKeyPath<PipelineTuning, Float>] {
         ["smoothing": \.smoothing, "textureFlattening": \.textureFlattening, "minimumCellSize": \.minimumCellSize,
@@ -127,6 +129,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--lines": o.lines = value(a, &it)
         case "--eyes": o.eyes = value(a, &it)
         case "--objects": o.objects = value(a, &it)
+        case "--writing": o.writing = value(a, &it)
         case "--contour-weight": o.contourWeight = number(a, &it)
         case "--line-style": o.lineStyle = choice(a, value(a, &it))
         case "--line-art": o.lineArtFields.append(value(a, &it))

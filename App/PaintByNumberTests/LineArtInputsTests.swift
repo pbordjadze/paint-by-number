@@ -67,7 +67,7 @@ struct EdgeDetectorTests {
         let hed = try EdgeDetector.edgeMap(for: input, cancel: .none)
         let maps = try EdgeDetector.maps(for: input, cancel: .none)
         #expect(maps.contours == hed && maps.drawing == map)
-        let both = LineArtInputs.Maps(drawing: maps.drawing, contours: maps.contours, eyes: [], objects: [])
+        let both = LineArtInputs.Maps(drawing: maps.drawing, contours: maps.contours, eyes: [], objects: [], writing: [])
         let combined = both.input(for: .drawingAndContours)
         #expect(combined.edges.width == hed.width && combined.edges.height == hed.height)
         #expect(combined.edges == EdgeMap.combined(drawing: map, contours: hed) && combined.contours == hed)
@@ -105,6 +105,22 @@ struct EdgeDetectorTests {
         Attachment.record(Data("HED on red-fox at 1152×768, CPU only: \(times[0]) (first, loads the model), \(times[1])".utf8),
                           named: "hed-timings.txt")
     }
+
+    #if DEBUG
+    /// The demo and test launches' cache keeps everything `LineArtInputs.maps` found, the lines of
+    /// text included, and a file of another layout reads as none (and is recomputed).
+    @Test func mapsCacheKeepsEverythingFound() {
+        let map = EdgeMap(width: 3, height: 2, values: [0, 40, 80, 120, 160, 200])
+        let quad: [SIMD2<Float>] = [SIMD2(0.25, 0.5), SIMD2(0.75, 0.5), SIMD2(0.75, 0.625), SIMD2(0.25, 0.625)]
+        let maps = LineArtInputs.Maps(
+            drawing: map, contours: map, eyes: [[SIMD2(0.1, 0.2), SIMD2(0.2, 0.2), SIMD2(0.15, 0.25)]], objects: [],
+            writing: [quad])
+        let data = LineArtMapsCache.encode(maps)
+        #expect(LineArtMapsCache.decode(data) == maps)
+        #expect(maps.input(for: .drawingAndContours).writing == [quad])
+        #expect(LineArtMapsCache.decode(data.dropLast(4)) == nil)
+    }
+    #endif
 
     @Test func mapsKeepTheSizeOrFitTheModel() {
         func size(_ width: Int, _ height: Int, _ maxLongSide: Int) -> [Int] {

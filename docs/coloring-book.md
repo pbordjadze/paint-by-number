@@ -129,6 +129,14 @@ mask (any image, inside at half) or polygons; the Linux evaluation stands in for
 mask made from HED itself (the shapes HED at 0.2 encloses), which the eval sheets show closing
 the fox.
 
+## Writing
+
+The detectors draw no note or card legibly: the drawing runs at 768 px, where a pen stroke is
+about a pixel, HED draws no letters, and tracing drops a letter's short pieces. Writing is traced
+from the photo itself around the lines of text Vision found, painted out before segmenting, and
+drawn in the book's ink inside the cells it crosses, with the numbers kept off it
+(`docs/writing.md`; `Writing`'s doc comment).
+
 ## Measuring a book
 
 A book is judged the way its painter sees it. `pbn generate` writes, for a template with line

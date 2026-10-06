@@ -10,11 +10,11 @@ import PaintCore
 /// makes (one per screenshot scenario and UI test, each seeding the same bundled pictures)
 /// run the models and Vision once per picture instead of once per launch. What a launch gets
 /// back is exactly what it would compute; a file that doesn't read is recomputed. Keyed by the
-/// photo's pixels alone: bump `version` (or delete Caches/LineArtMaps) when a model, `EyeFinder`
-/// or `ObjectFinder` changes. Release builds have none of this.
+/// photo's pixels alone: bump `version` (or delete Caches/LineArtMaps) when a model, `EyeFinder`,
+/// `ObjectFinder` or `TextFinder` changes. Release builds have none of this.
 nonisolated enum LineArtMapsCache {
     private static let magic = "LAMC"
-    private static let version: UInt32 = 1
+    private static let version: UInt32 = 2
 
     /// On for demo scenarios (`-demo`, as `DemoMode.scenario` reads it) and the unit-test
     /// host (as `DemoMode.isTestHost` does), never for a painter's own launch; read here
@@ -89,6 +89,7 @@ nonisolated enum LineArtMapsCache {
         put(maps.contours)
         put(maps.eyes)
         put(maps.objects)
+        put(maps.writing)
         return data
     }
 
@@ -127,9 +128,9 @@ nonisolated enum LineArtMapsCache {
             return polygons
         }
         guard take(UInt32.self) == version, let drawing = takeMap(), let contours = takeMap(),
-              let eyes = takePolygons(), let objects = takePolygons(), offset == data.count
+              let eyes = takePolygons(), let objects = takePolygons(), let writing = takePolygons(), offset == data.count
         else { return nil }
-        return LineArtInputs.Maps(drawing: drawing, contours: contours, eyes: eyes, objects: objects)
+        return LineArtInputs.Maps(drawing: drawing, contours: contours, eyes: eyes, objects: objects, writing: writing)
     }
 }
 #endif

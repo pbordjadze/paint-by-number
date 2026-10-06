@@ -90,6 +90,10 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
     /// Close each subject's silhouette (`LineArtInput.objects`) with outlines where the
     /// drawing leaves it open, so a subject is an area of its own.
     public var outlineObjects: Bool
+    /// Draw the writing found in the photo (`LineArtInput.writing`: a note, a card, a sign) in
+    /// ink traced from the photo itself, so it stays legible, over paper painted as if it
+    /// weren't there, with the numbers kept off it (`Writing`).
+    public var keepWriting: Bool
 
     /// A style at its defaults, any field given set instead. The coloring book draws every
     /// line the combined map holds at 0.6, and a line is an outline where the contour map holds
@@ -108,7 +112,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         outlineThreshold: Float? = nil, detailThreshold: Float? = nil, textureThreshold: Float? = nil,
         minimumStrokeLength: Float? = nil, gapBridging: Float? = nil, lineSmoothing: Float? = nil,
         samePaint: SamePaint? = nil, keepColorEdges: Bool = true, outlineEyes: Bool = true,
-        outlineObjects: Bool = true
+        outlineObjects: Bool = true, keepWriting: Bool = true
     ) {
         let d = Self.numbers(for: style)
         self.style = style
@@ -123,6 +127,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         self.keepColorEdges = keepColorEdges
         self.outlineEyes = outlineEyes
         self.outlineObjects = outlineObjects
+        self.keepWriting = keepWriting
     }
 
     /// A style's default thresholds, line lengths, smoothing and same-paint rule.
@@ -173,7 +178,7 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
 
     private enum CodingKeys: String, CodingKey {
         case style, detector, outlineThreshold, detailThreshold, textureThreshold, minimumStrokeLength, gapBridging,
-             lineSmoothing, samePaint, keepColorEdges, outlineEyes, outlineObjects
+             lineSmoothing, samePaint, keepColorEdges, outlineEyes, outlineObjects, keepWriting
     }
 
     /// Tolerant: missing or unknown values fall back to the defaults (the decoded style's), so
@@ -193,5 +198,6 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         keepColorEdges = (try? c.decodeIfPresent(Bool.self, forKey: .keepColorEdges)) ?? d.keepColorEdges
         outlineEyes = (try? c.decodeIfPresent(Bool.self, forKey: .outlineEyes)) ?? d.outlineEyes
         outlineObjects = (try? c.decodeIfPresent(Bool.self, forKey: .outlineObjects)) ?? d.outlineObjects
+        keepWriting = (try? c.decodeIfPresent(Bool.self, forKey: .keepWriting)) ?? d.keepWriting
     }
 }

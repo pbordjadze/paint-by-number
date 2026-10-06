@@ -45,7 +45,7 @@ before planning app work).
     calls `vectorizeWithStats`); `EdgeSmoother` repairs until `GeometryValidator` and every
     `LabelRoom` hold. `Template.validate` (`TemplateValidation.swift`) is the oracle of `pbn check`,
     the regression gate and the create flow's Debug check.
-  - `LineArt/` (`LayeredLines.apply`, see Line art), `Auto/` (`AutoSettings`, see Suggested
+  - `LineArt/` (`LayeredLines.apply` and `Writing`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
@@ -71,7 +71,7 @@ before planning app work).
   regression, string catalog), `ipad` (every push: Debug build, screenshots, tests, Release check,
   benchmark), `iphone` and `ipa` (unsigned IPA, SideStore source) on `main`, `report`.
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
-  `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
+  `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
   per-agent reports are not committed (they live on their branch and in commit messages); a
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
@@ -89,8 +89,12 @@ along the lines; lines inside cells become `InteriorStroke`s (`Template.lineArt`
 book** (`LineArtSettings.Style.coloringBook`: the default, and every template the app makes) is the
 same pipeline with the drawing as its only lines, on flatter paint
 (`SegmentationParameters.coloringBookFlattening`, by style, edge map or not), drawn in full ink over
-the paint (`docs/coloring-book.md`). Without an edge map, layered or book settings generate a
-classic template; the same maps and settings give the same bytes on any core count.
+the paint (`docs/coloring-book.md`). Writing (`LineArtInput.writing`: the lines of text Vision
+found, `TextFinder`) is traced from the photo itself, painted out before segmenting and drawn as
+interior strokes with the numbers kept off it (`Writing`, `LabelKeepOut`; `keepWriting`;
+`docs/writing.md`, whose corpus every change to it is judged on). Without an edge map, layered or
+book settings generate a classic template; the same maps and settings give the same bytes on any
+core count.
 
 ## Suggested settings
 
