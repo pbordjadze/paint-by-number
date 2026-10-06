@@ -1,6 +1,7 @@
 import Dispatch
 import Foundation
 import Metal
+import os
 import PaintCore
 import QuartzCore
 
@@ -65,7 +66,20 @@ final class CanvasRenderer {
             outlines = context.makeOutlineTarget(width: size.x, height: size.y)
             targetSize = size
         }
-        guard let outlines, let drawable = layer.nextDrawable(), let commands = context.queue.makeCommandBuffer() else {
+        guard let outlines else {
+            inFlight.signal()
+            return false
+        }
+        // A drawable is normally at hand; waiting for one holds the main thread (up to a second a
+        // frame), so a long wait is logged: painting screens on CI's simulator have stopped
+        // answering for seconds after opening.
+        let asked = ContinuousClock.now
+        let next = layer.nextDrawable()
+        let waited = ContinuousClock.now - asked
+        if waited > .milliseconds(250) {
+            Log.canvas.notice("Waited \(String(describing: waited), privacy: .public) for a drawable")
+        }
+        guard let drawable = next, let commands = context.queue.makeCommandBuffer() else {
             inFlight.signal()
             return false
         }
