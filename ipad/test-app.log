@@ -1,0 +1,217 @@
+60:2026-10-06 03:58:46.707 E  PaintByNumber[40947:1b439] [com.pbordjadze.paintbynumber:library] Opening 24DE4086-6A84-4E65-B071-8988BBEDD2B9 failed: damaged(canRegenerate: true)
+75:2026-10-06 04:11:41.762 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork 01D536C8-3D9C-422D-A69C-ACFC19801332: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'n' around line 1, column 3." UserInfo={NSJSONSerializationErrorIndex=2, NSDebugDescription=Unexpected character 'n' around line 1, column 3.}
+79:2026-10-06 04:11:41.794 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork 01D536C8-3D9C-422D-A69C-ACFC19801332: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'n' around line 1, column 3." UserInfo={NSDebugDescription=Unexpected character 'n' around line 1, column 3., NSJSONSerializationErrorIndex=2}
+90:2026-10-06 04:11:51.004 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+91:2026-10-06 04:11:51.009 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+92:2026-10-06 04:11:51.011 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+93:2026-10-06 04:11:51.016 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+95:2026-10-06 04:11:51.426 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 21D6FE70-5269-427F-851B-98EF833EC095: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+96:2026-10-06 04:11:51.432 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 21D6FE70-5269-427F-851B-98EF833EC095: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+97:2026-10-06 04:11:51.460 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 6425C79F-E9C1-420D-B67C-CCE8FF49F0FB: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+98:2026-10-06 04:11:51.489 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 4A1F1362-3BF7-48DE-9927-826235D2BC99: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+99:2026-10-06 04:11:51.519 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 4F6FFB04-4536-4570-BD89-F4EBFFE99854: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+100:2026-10-06 04:11:51.532 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 917EB5FC-731A-4C41-8DFC-57023B3C269C: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+101:2026-10-06 04:11:51.847 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 2962DFF4-3444-4C6F-9B91-A099F8C0220A: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+106:2026-10-06 04:12:47.387 F  PaintByNumber[65346:2e85b] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected end of file" UserInfo={NSDebugDescription=Unexpected end of file}
+230:2026-10-06 04:38:07.229 E  PaintByNumber[13259:49152] [com.pbordjadze.paintbynumber:library] Opening D90C82E5-DBDC-4F82-AF08-6591D8176C12 failed: damaged(canRegenerate: true)
+----- tail -----
+2026-10-06 03:57:57.367 Df PaintByNumber[39075:1a11f] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.611845 seconds
+2026-10-06 03:57:57.622 Df PaintByNumber[39075:1a11f] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.255251209 seconds
+2026-10-06 03:57:57.787 Df PaintByNumber[39075:1a11f] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.164904834 seconds
+2026-10-06 03:57:58.007 Df PaintByNumber[39075:1a11f] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.219629334 seconds
+2026-10-06 03:57:59.046 Df PaintByNumber[39075:1a11f] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 1.03935925 seconds
+2026-10-06 03:57:59.223 Df PaintByNumber[39075:1a11f] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.176754125 seconds
+2026-10-06 03:58:06.305 Df PaintByNumber[39631:1a657] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.262022625 seconds
+2026-10-06 03:58:06.482 Df PaintByNumber[39631:1a657] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.177046917 seconds
+2026-10-06 03:58:06.574 Df PaintByNumber[39631:1a657] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.092091709 seconds
+2026-10-06 03:58:06.676 Df PaintByNumber[39631:1a657] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.101007666 seconds
+2026-10-06 03:58:06.999 Df PaintByNumber[39631:1a657] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.32342925 seconds
+2026-10-06 03:58:07.258 Df PaintByNumber[39631:1a657] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.257836042 seconds
+2026-10-06 03:58:14.902 Df PaintByNumber[39769:1a82e] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.387819542 seconds
+2026-10-06 03:58:15.102 Df PaintByNumber[39769:1a82e] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.1996805 seconds
+2026-10-06 03:58:15.198 Df PaintByNumber[39769:1a82e] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.095735083 seconds
+2026-10-06 03:58:15.259 Df PaintByNumber[39769:1a82e] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.06050525 seconds
+2026-10-06 03:58:15.400 Df PaintByNumber[39769:1a82e] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.140635667 seconds
+2026-10-06 03:58:15.507 Df PaintByNumber[39769:1a82e] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.106807125 seconds
+2026-10-06 03:58:27.680 Df PaintByNumber[40488:1af28] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.559632834 seconds
+2026-10-06 03:58:28.060 Df PaintByNumber[40488:1af28] [com.pbordjadze.paintbynumber:library] Opened 7CA2263B-123A-4672-A9A0-1846E26B1D80: 206 regions
+2026-10-06 03:58:39.060 Df PaintByNumber[40488:1af28] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 03:58:39.535 Df PaintByNumber[40488:1af28] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 03:58:46.391 Df PaintByNumber[40947:1b439] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.608767917 seconds
+2026-10-06 03:58:46.630 E  PaintByNumber[40947:1b43b] [com.pbordjadze.paintbynumber:library] Template of 24DE4086-6A84-4E65-B071-8988BBEDD2B9 is unreadable: unreadable("template decompression")
+2026-10-06 03:58:46.707 E  PaintByNumber[40947:1b439] [com.pbordjadze.paintbynumber:library] Opening 24DE4086-6A84-4E65-B071-8988BBEDD2B9 failed: damaged(canRegenerate: true)
+2026-10-06 03:58:47.590 Df PaintByNumber[40947:1b439] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 03:58:48.068 Df PaintByNumber[40947:1b439] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 03:58:54.318 Df PaintByNumber[41286:1b742] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.9918855 seconds
+2026-10-06 03:59:03.333 Df PaintByNumber[41393:1b8b4] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.916179542 seconds
+2026-10-06 03:59:23.127 Df PaintByNumber[42135:1bfa8] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.226656792 seconds
+2026-10-06 03:59:26.428 Df PaintByNumber[42135:1bfa8] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 3.300734209 seconds
+2026-10-06 03:59:28.032 Df PaintByNumber[42135:1bfa8] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 1.60406475 seconds
+2026-10-06 03:59:29.051 Df PaintByNumber[42135:1bfa8] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 1.018632542 seconds
+2026-10-06 03:59:30.027 Df PaintByNumber[42135:1bfa8] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.975017125 seconds
+2026-10-06 03:59:30.663 Df PaintByNumber[42135:1bfa8] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.63639675 seconds
+2026-10-06 04:06:34.285 Df PaintByNumber[58507:25f07] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-10-06 04:06:43.710 Df PaintByNumber[58577:260bf] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-10-06 04:06:54.465 Df PaintByNumber[59163:26629] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-10-06 04:07:09.073 Df PaintByNumber[59439:269df] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-10-06 04:11:41.762 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork 01D536C8-3D9C-422D-A69C-ACFC19801332: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'n' around line 1, column 3." UserInfo={NSJSONSerializationErrorIndex=2, NSDebugDescription=Unexpected character 'n' around line 1, column 3.}
+2026-10-06 04:11:41.768 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork E2D2731B-4225-4857-B51A-75CC2068D808: Error Domain=NSCocoaErrorDomain Code=260 "The file “meta.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/A2011F14-88A1-46AA-999A-FD6FEDCD870B/data/Containers/Data/Application/9330F83A-785A-41C3-ACEB-6314AFA3F8C9/tmp/PBNTests-495DD21B-14F1-4153-8A27-6060216CA6A4/E2D2731B-4225-4857-B51A-75CC2068D808/meta.json, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/A2011F14-88A1-46AA-999A-FD6FEDCD870B/data/Containers/Data/Application/9330F83A-785A-41C3-ACEB-6314AFA3F8C9/tmp/PBNTests-495DD21B-14F1-4153-8A27-6060216CA6A4/E2D2731B-4225-4857-B51A-75CC2068D808/meta.json, NSUnderlyingError=0x117185530 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+2026-10-06 04:11:41.774 E  PaintByNumber[65346:2a98c] [com.pbordjadze.paintbynumber:library] Template of 6CA6A3F7-727C-403D-84D7-1745FF300524 is unreadable: unreadable("template decompression")
+2026-10-06 04:11:41.792 E  PaintByNumber[65346:2a98c] [com.pbordjadze.paintbynumber:library] Discarding unreadable progress of BFEF5682-B48C-481C-AC74-E27DF315D954
+2026-10-06 04:11:41.794 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork 01D536C8-3D9C-422D-A69C-ACFC19801332: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'n' around line 1, column 3." UserInfo={NSDebugDescription=Unexpected character 'n' around line 1, column 3., NSJSONSerializationErrorIndex=2}
+2026-10-06 04:11:41.795 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Skipping unreadable artwork E2D2731B-4225-4857-B51A-75CC2068D808: Error Domain=NSCocoaErrorDomain Code=260 "The file “meta.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/A2011F14-88A1-46AA-999A-FD6FEDCD870B/data/Containers/Data/Application/9330F83A-785A-41C3-ACEB-6314AFA3F8C9/tmp/PBNTests-495DD21B-14F1-4153-8A27-6060216CA6A4/E2D2731B-4225-4857-B51A-75CC2068D808/meta.json, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/A2011F14-88A1-46AA-999A-FD6FEDCD870B/data/Containers/Data/Application/9330F83A-785A-41C3-ACEB-6314AFA3F8C9/tmp/PBNTests-495DD21B-14F1-4153-8A27-6060216CA6A4/E2D2731B-4225-4857-B51A-75CC2068D808/meta.json, NSUnderlyingError=0x117186970 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+2026-10-06 04:11:41.800 E  PaintByNumber[65346:2ce8d] [com.pbordjadze.paintbynumber:library] Template of 7F272764-F9F0-4199-A52A-644C57878A23 is unreadable: truncated
+2026-10-06 04:11:41.820 E  PaintByNumber[65346:2ce09] [com.pbordjadze.paintbynumber:library] Progress of 54794A04-C5A3-4336-A200-8B1D4CBC82DA can't be read: Error Domain=NSCocoaErrorDomain Code=256 "The file “progress.bin” couldn’t be opened." UserInfo={NSFilePath=/Users/runner/Library/Developer/CoreSimulator/Devices/A2011F14-88A1-46AA-999A-FD6FEDCD870B/data/Containers/Data/Application/9330F83A-785A-41C3-ACEB-6314AFA3F8C9/tmp/PBNTests-C4AE9B31-8121-434A-9B85-2563DE7BB9B3/54794A04-C5A3-4336-A200-8B1D4CBC82DA/progress.bin, NSURL=file:///Users/runner/Library/Developer/CoreSimulator/Devices/A2011F14-88A1-46AA-999A-FD6FEDCD870B/data/Containers/Data/Application/9330F83A-785A-41C3-ACEB-6314AFA3F8C9/tmp/PBNTests-C4AE9B31-8121-434A-9B85-2563DE7BB9B3/54794A04-C5A3-4336-A200-8B1D4CBC82DA/progress.bin, NSUnderlyingError=0x1171874b0 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}}
+2026-10-06 04:11:44.691 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Discarding progress of 296FDE2D-CA18-41D9-B870-F3E0AD0AC669: 5 regions, template has 3
+2026-10-06 04:11:44.691 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Discarding progress of 296FDE2D-CA18-41D9-B870-F3E0AD0AC669: 5 regions, template has 6
+2026-10-06 04:11:44.691 E  PaintByNumber[65346:2a9a8] [com.pbordjadze.paintbynumber:library] Discarding progress of 296FDE2D-CA18-41D9-B870-F3E0AD0AC669: 5 regions, template has 3
+2026-10-06 04:11:46.600 E  PaintByNumber[65346:2a9a8] [com.pbordjadze.paintbynumber:library] Template of 796E55A9-2BBB-4D66-B26A-63618F7EECAF is unreadable: unreadable("template decompression")
+2026-10-06 04:11:46.603 E  PaintByNumber[65346:2ce8d] [com.pbordjadze.paintbynumber:library] Template of 796E55A9-2BBB-4D66-B26A-63618F7EECAF is unreadable: unreadable("template decompression")
+2026-10-06 04:11:46.603 E  PaintByNumber[65346:2ce8d] [com.pbordjadze.paintbynumber:library] Discarding progress of 796E55A9-2BBB-4D66-B26A-63618F7EECAF: 3 regions, template has 0
+2026-10-06 04:11:50.995 Df PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeded morning-glories in 3.219781208 seconds
+2026-10-06 04:11:51.004 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+2026-10-06 04:11:51.009 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+2026-10-06 04:11:51.011 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+2026-10-06 04:11:51.016 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeding missing failed: missingSample
+2026-10-06 04:11:51.404 Df PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Seeded morning-glories in 0.387651584 seconds
+2026-10-06 04:11:51.426 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 21D6FE70-5269-427F-851B-98EF833EC095: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-10-06 04:11:51.432 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 21D6FE70-5269-427F-851B-98EF833EC095: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-10-06 04:11:51.460 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 6425C79F-E9C1-420D-B67C-CCE8FF49F0FB: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-10-06 04:11:51.489 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 4A1F1362-3BF7-48DE-9927-826235D2BC99: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-10-06 04:11:51.519 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 4F6FFB04-4536-4570-BD89-F4EBFFE99854: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-10-06 04:11:51.532 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 917EB5FC-731A-4C41-8DFC-57023B3C269C: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-10-06 04:11:51.847 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:library] Write failed for 2962DFF4-3444-4C6F-9B91-A099F8C0220A: Error Domain=NSCocoaErrorDomain Code=640 "The file couldn’t be saved because there isn’t enough space."
+2026-10-06 04:12:42.949 E  PaintByNumber[65346:2a342] [com.pbordjadze.paintbynumber:canvas] canvas: source photo unavailable
+2026-10-06 04:12:47.356 F  PaintByNumber[65346:2e85b] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.keyNotFound: Key 'title' not found in keyed decoding container. Path: [0]. Debug description: No value associated with key CodingKeys(stringValue: "title", intValue: nil) ("title").
+2026-10-06 04:12:47.386 F  PaintByNumber[65346:2e85b] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.keyNotFound: Key 'title' not found in keyed decoding container. Path: [0]. Debug description: No value associated with key CodingKeys(stringValue: "title", intValue: nil) ("title").
+2026-10-06 04:12:47.387 F  PaintByNumber[65346:2e85b] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.dataCorrupted: Data was corrupted. Path: [0].kind. Debug description: Cannot initialize Kind from invalid String value sculpture
+2026-10-06 04:12:47.387 F  PaintByNumber[65346:2e85b] [com.pbordjadze.paintbynumber:library] library.json doesn't decode: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected end of file" UserInfo={NSDebugDescription=Unexpected end of file}
+2026-10-06 04:12:49.719 E  PaintByNumber[65346:2a98d] [com.pbordjadze.paintbynumber:library] Template of 0B488806-87C0-49BB-96BD-EBC35C5E5D89 is unreadable: unreadable("template decompression")
+2026-10-06 04:12:49.720 E  PaintByNumber[65346:2e85b] [com.pbordjadze.paintbynumber:library] Template of 0B488806-87C0-49BB-96BD-EBC35C5E5D89 is unreadable: unreadable("template decompression")
+2026-10-06 04:12:49.720 E  PaintByNumber[65346:2e85b] [com.pbordjadze.paintbynumber:library] Discarding progress of 0B488806-87C0-49BB-96BD-EBC35C5E5D89: 3 regions, template has 0
+2026-10-06 04:23:13.959 Df PaintByNumber[89943:399af] [com.pbordjadze.paintbynumber:library] Opened 81650EBD-5334-4BEE-8CB1-937AC6C87DCC: 434 regions
+2026-10-06 04:24:21.923 Df PaintByNumber[89943:399af] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:24:22.679 Df PaintByNumber[89943:399af] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:25:12.601 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.0270905 seconds
+2026-10-06 04:25:12.946 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:library] Opened 54B3FE45-33D9-4B7F-BB75-72F7A3BEBF3D: 206 regions
+2026-10-06 04:25:16.048 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:25:16.654 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:25:18.873 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-10-06 04:25:26.452 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:feedback] Next: the review opens
+2026-10-06 04:25:26.872 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:feedback] Review sheet up
+2026-10-06 04:25:26.874 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:feedback] Review: 1 strokes in 1 marks
+2026-10-06 04:25:43.150 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:feedback] Feedback ends
+2026-10-06 04:25:43.183 Df PaintByNumber[91721:3b0c0] [com.pbordjadze.paintbynumber:feedback] Feedback ended
+2026-10-06 04:25:53.965 Df PaintByNumber[92688:3bade] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 4.1437145 seconds
+2026-10-06 04:25:54.732 Df PaintByNumber[92688:3bade] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.767077167 seconds
+2026-10-06 04:25:55.096 Df PaintByNumber[92688:3bade] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.363230833 seconds
+2026-10-06 04:25:55.540 Df PaintByNumber[92688:3bade] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.443936542 seconds
+2026-10-06 04:25:56.265 Df PaintByNumber[92688:3bade] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.724167125 seconds
+2026-10-06 04:25:56.993 Df PaintByNumber[92688:3bade] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.723359 seconds
+2026-10-06 04:26:24.604 Df PaintByNumber[93730:3c531] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 4.156687083 seconds
+2026-10-06 04:26:26.713 Df PaintByNumber[93730:3c531] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 2.107900042 seconds
+2026-10-06 04:26:27.694 Df PaintByNumber[93730:3c531] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.981117292 seconds
+2026-10-06 04:26:28.568 Df PaintByNumber[93730:3c531] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.873510792 seconds
+2026-10-06 04:26:29.616 Df PaintByNumber[93730:3c531] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 1.047551 seconds
+2026-10-06 04:26:30.270 Df PaintByNumber[93730:3c531] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.653080917 seconds
+2026-10-06 04:26:57.410 Df PaintByNumber[94747:3cf4b] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.851259041 seconds
+2026-10-06 04:26:57.622 Df PaintByNumber[94747:3cf4b] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.211301708 seconds
+2026-10-06 04:26:57.766 Df PaintByNumber[94747:3cf4b] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.144278542 seconds
+2026-10-06 04:26:57.887 Df PaintByNumber[94747:3cf4b] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.1203485 seconds
+2026-10-06 04:26:58.056 Df PaintByNumber[94747:3cf4b] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.168409625 seconds
+2026-10-06 04:26:58.176 Df PaintByNumber[94747:3cf4b] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.119726 seconds
+2026-10-06 04:27:07.820 Df PaintByNumber[94968:3d195] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.794958459 seconds
+2026-10-06 04:27:09.200 Df PaintByNumber[94968:3d195] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.378740459 seconds
+2026-10-06 04:27:09.464 Df PaintByNumber[94968:3d195] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.263089833 seconds
+2026-10-06 04:27:09.774 Df PaintByNumber[94968:3d195] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.309844875 seconds
+2026-10-06 04:27:10.320 Df PaintByNumber[94968:3d195] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.54555575 seconds
+2026-10-06 04:27:10.582 Df PaintByNumber[94968:3d195] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.26062475 seconds
+2026-10-06 04:27:32.533 Df PaintByNumber[95588:3d822] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.546482208 seconds
+2026-10-06 04:27:32.932 Df PaintByNumber[95588:3d822] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.3717505 seconds
+2026-10-06 04:27:33.161 Df PaintByNumber[95588:3d822] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.228853458 seconds
+2026-10-06 04:27:33.387 Df PaintByNumber[95588:3d822] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.226319875 seconds
+2026-10-06 04:27:35.039 Df PaintByNumber[95588:3d822] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 1.651502625 seconds
+2026-10-06 04:27:35.356 Df PaintByNumber[95588:3d822] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.316836375 seconds
+2026-10-06 04:27:50.403 Df PaintByNumber[96284:3de97] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 6.274873 seconds
+2026-10-06 04:27:52.095 Df PaintByNumber[96284:3de97] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.691727458 seconds
+2026-10-06 04:27:52.617 Df PaintByNumber[96284:3de97] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.52153075 seconds
+2026-10-06 04:27:53.538 Df PaintByNumber[96284:3de97] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.920686958 seconds
+2026-10-06 04:27:54.400 Df PaintByNumber[96284:3de97] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.861924791 seconds
+2026-10-06 04:27:54.928 Df PaintByNumber[96284:3de97] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.526736541 seconds
+2026-10-06 04:28:30.582 Df PaintByNumber[97175:3e78d] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 5.197956375 seconds
+2026-10-06 04:28:31.582 Df PaintByNumber[97175:3e78d] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.981287125 seconds
+2026-10-06 04:28:32.547 Df PaintByNumber[97175:3e78d] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.948995667 seconds
+2026-10-06 04:28:33.025 Df PaintByNumber[97175:3e78d] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.477252834 seconds
+2026-10-06 04:28:34.004 Df PaintByNumber[97175:3e78d] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.979089333 seconds
+2026-10-06 04:28:34.489 Df PaintByNumber[97175:3e78d] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.484858791 seconds
+2026-10-06 04:29:25.871 Df PaintByNumber[98671:3f715] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.105458833 seconds
+2026-10-06 04:29:26.316 Df PaintByNumber[98671:3f715] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.441523 seconds
+2026-10-06 04:29:26.952 Df PaintByNumber[98671:3f715] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.635331291 seconds
+2026-10-06 04:29:27.531 Df PaintByNumber[98671:3f715] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.579088875 seconds
+2026-10-06 04:29:28.407 Df PaintByNumber[98671:3f715] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.872061208 seconds
+2026-10-06 04:29:29.261 Df PaintByNumber[98671:3f715] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.854233792 seconds
+2026-10-06 04:31:11.364 Df PaintByNumber[1495:41309] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.120327958 seconds
+2026-10-06 04:31:12.211 Df PaintByNumber[1495:41309] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.846737417 seconds
+2026-10-06 04:31:12.597 Df PaintByNumber[1495:41309] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.382873875 seconds
+2026-10-06 04:31:13.193 Df PaintByNumber[1495:41309] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.596149333 seconds
+2026-10-06 04:31:13.638 Df PaintByNumber[1495:41309] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.444800667 seconds
+2026-10-06 04:31:14.370 Df PaintByNumber[1495:41309] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.731552083 seconds
+2026-10-06 04:31:22.816 Df PaintByNumber[1930:4174e] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.373079916 seconds
+2026-10-06 04:31:23.196 Df PaintByNumber[1930:4174e] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.379454417 seconds
+2026-10-06 04:31:23.411 Df PaintByNumber[1930:4174e] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.214819209 seconds
+2026-10-06 04:31:23.539 Df PaintByNumber[1930:4174e] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.1262715 seconds
+2026-10-06 04:31:23.888 Df PaintByNumber[1930:4174e] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.349056625 seconds
+2026-10-06 04:31:24.161 Df PaintByNumber[1930:4174e] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.272681292 seconds
+2026-10-06 04:31:57.217 Df PaintByNumber[3052:421a9] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.739680458 seconds
+2026-10-06 04:32:57.371 Df PaintByNumber[4895:4343f] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.135631083 seconds
+2026-10-06 04:32:57.963 Df PaintByNumber[4895:4343f] [com.pbordjadze.paintbynumber:library] Opened 54671918-25C1-4A77-A53B-D235DEE84AA1: 206 regions
+2026-10-06 04:33:01.202 Df PaintByNumber[4895:4343f] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:33:01.749 Df PaintByNumber[4895:4343f] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:33:16.324 Df PaintByNumber[5536:43acf] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.128182125 seconds
+2026-10-06 04:33:16.708 Df PaintByNumber[5536:43acf] [com.pbordjadze.paintbynumber:library] Opened 01D7F0DB-52CD-4F67-958F-D43D65F280EB: 206 regions
+2026-10-06 04:33:20.228 Df PaintByNumber[5536:43acf] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:33:20.887 Df PaintByNumber[5536:43acf] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:33:39.134 Df PaintByNumber[6301:4428b] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.285704125 seconds
+2026-10-06 04:33:39.566 Df PaintByNumber[6301:4428b] [com.pbordjadze.paintbynumber:library] Opened 4761F54D-19A4-4D54-9EB9-D7B8FFF455CC: 206 regions
+2026-10-06 04:33:42.651 Df PaintByNumber[6301:4428b] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:33:43.688 Df PaintByNumber[6301:4428b] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:33:58.500 Df PaintByNumber[6788:4485d] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.187857833 seconds
+2026-10-06 04:33:58.909 Df PaintByNumber[6788:4485d] [com.pbordjadze.paintbynumber:library] Opened 1EA59676-2FD0-4681-8035-1851528E1420: 206 regions
+2026-10-06 04:34:03.763 Df PaintByNumber[6788:4485d] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:34:04.281 Df PaintByNumber[6788:4485d] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:34:19.666 Df PaintByNumber[7186:44d2f] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.77862725 seconds
+2026-10-06 04:34:20.012 Df PaintByNumber[7186:44d2f] [com.pbordjadze.paintbynumber:library] Opened ED279104-1728-4382-9ABC-083B9288E706: 206 regions
+2026-10-06 04:34:23.252 Df PaintByNumber[7186:44d2f] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:34:23.959 Df PaintByNumber[7186:44d2f] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:34:39.602 Df PaintByNumber[7541:4516e] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.806556333 seconds
+2026-10-06 04:34:40.055 Df PaintByNumber[7541:4516e] [com.pbordjadze.paintbynumber:library] Opened DFC60670-0D05-4214-8E26-F2793A6BD438: 206 regions
+2026-10-06 04:34:42.786 Df PaintByNumber[7541:4516e] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:34:43.376 Df PaintByNumber[7541:4516e] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:34:57.980 Df PaintByNumber[7821:45518] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.383899917 seconds
+2026-10-06 04:34:58.565 Df PaintByNumber[7821:45518] [com.pbordjadze.paintbynumber:library] Opened 61C97276-1573-4BA9-8404-CADF8E2BB275: 206 regions
+2026-10-06 04:35:01.565 Df PaintByNumber[7821:45518] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:35:02.053 Df PaintByNumber[7821:45518] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:35:39.316 Df PaintByNumber[8862:46045] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 8.2235695 seconds
+2026-10-06 04:35:39.796 Df PaintByNumber[8862:46045] [com.pbordjadze.paintbynumber:library] Opened 2F36E495-CE3F-47D9-A8E9-C6DC01471DEB: 206 regions
+2026-10-06 04:35:43.277 Df PaintByNumber[8862:46045] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:35:44.416 Df PaintByNumber[8862:46045] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:35:55.685 Df PaintByNumber[9218:465db] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.232836917 seconds
+2026-10-06 04:35:56.140 Df PaintByNumber[9218:465db] [com.pbordjadze.paintbynumber:library] Opened 5861F5A9-CD3A-4853-9C0D-E8388487E99E: 206 regions
+2026-10-06 04:36:01.905 Df PaintByNumber[9218:465db] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:36:02.429 Df PaintByNumber[9218:465db] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:36:18.435 Df PaintByNumber[9773:46c1d] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.748203958 seconds
+2026-10-06 04:36:18.839 Df PaintByNumber[9773:46c1d] [com.pbordjadze.paintbynumber:library] Opened 18AEE066-0944-43CC-9C74-A10101AB36E6: 206 regions
+2026-10-06 04:36:22.090 Df PaintByNumber[9773:46c1d] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:36:22.722 Df PaintByNumber[9773:46c1d] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:37:21.153 Df PaintByNumber[10178:47195] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 6.956882917 seconds
+2026-10-06 04:37:21.574 Df PaintByNumber[10178:47195] [com.pbordjadze.paintbynumber:library] Opened 64B3364E-3081-46C0-B9D3-5E599BD3240A: 206 regions
+2026-10-06 04:37:25.444 Df PaintByNumber[10178:47195] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:37:25.937 Df PaintByNumber[10178:47195] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:38:06.494 Df PaintByNumber[13259:49152] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.434870458 seconds
+2026-10-06 04:38:06.869 E  PaintByNumber[13259:49259] [com.pbordjadze.paintbynumber:library] Template of D90C82E5-DBDC-4F82-AF08-6591D8176C12 is unreadable: unreadable("template decompression")
+2026-10-06 04:38:07.229 E  PaintByNumber[13259:49152] [com.pbordjadze.paintbynumber:library] Opening D90C82E5-DBDC-4F82-AF08-6591D8176C12 failed: damaged(canRegenerate: true)
+2026-10-06 04:38:08.072 Df PaintByNumber[13259:49152] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:38:08.733 Df PaintByNumber[13259:49152] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:38:09.512 E  PaintByNumber[13259:49251] [com.pbordjadze.paintbynumber:library] Template of D90C82E5-DBDC-4F82-AF08-6591D8176C12 is unreadable: unreadable("template decompression")
+2026-10-06 04:38:09.513 E  PaintByNumber[13259:49251] [com.pbordjadze.paintbynumber:library] Discarding progress of D90C82E5-DBDC-4F82-AF08-6591D8176C12: 206 regions, template has 0
+2026-10-06 04:38:20.314 Df PaintByNumber[13259:49152] [com.pbordjadze.paintbynumber:library] Opened D90C82E5-DBDC-4F82-AF08-6591D8176C12: 202 regions
