@@ -2737,6 +2737,18 @@
         }
       }
     },
+    "create.compare.zoomedValue" : {
+      "comment" : "VoiceOver value of the before/after comparison while zoomed in: the share of the width showing the photo and the zoom, both as percentages, e.g. 50% photo, zoomed to 250%",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ photo, zoomed to %2$@"
+          }
+        }
+      }
+    },
     "create.detail.detailed" : {
       "comment" : "Detail slider value: third step",
       "extractionState" : "manual",
@@ -2817,6 +2829,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This photo couldn’t be opened. Try another one."
+          }
+        }
+      }
+    },
+    "create.lines.balanced" : {
+      "comment" : "Lines slider value: the middle, the lines as Settings › Advanced draws them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balanced"
+          }
+        }
+      }
+    },
+    "create.lines.fewer" : {
+      "comment" : "Lines slider value: second step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fewer"
+          }
+        }
+      }
+    },
+    "create.lines.fewest" : {
+      "comment" : "Lines slider value: only the strongest edges are drawn",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fewest"
+          }
+        }
+      }
+    },
+    "create.lines.more" : {
+      "comment" : "Lines slider value: fourth step",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
+    "create.lines.most" : {
+      "comment" : "Lines slider value: the faintest edges drawn too",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most"
           }
         }
       }
@@ -3675,6 +3747,10 @@
     },
     "Line art, line appearance and the template pipeline, with a live preview. For testers: these settings may change between versions." : {
       "comment" : "Footer under the Advanced row in Settings",
+      "extractionState" : "manual"
+    },
+    "Lines" : {
+      "comment" : "Create flow: label of the slider for how many of the photo's edges the template draws as lines",
       "extractionState" : "manual"
     },
     "Making Your Time-lapse" : {

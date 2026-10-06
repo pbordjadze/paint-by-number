@@ -200,4 +200,77 @@ struct CreateModelTests {
         #expect(model.settings.colorCount == GenerationSettings.colorCountRange.upperBound)
         #expect(model.preview == nil && !model.isFinal)
     }
+
+    /// A thumb resting under the finger gets the full resolution without letting go, and
+    /// letting go then keeps it.
+    @Test func aRestingThumbShowsTheFullResolution() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        model.setAdjusting(true)
+        model.colorCount = 9
+        model.settingsChanged()
+        try await waitUntil { model.isFinal }
+        #expect(model.isAdjusting && model.preview?.settings?.colorCount == 9)
+        let shown = model.preview?.id
+        model.setAdjusting(false)
+        try await Task.sleep(for: .milliseconds(400))
+        #expect(model.preview?.id == shown, "Letting go generated the same settings again")
+        #expect(model.phase == .ready)
+    }
+
+    /// Back on the suggestion's values (the sliders' detents), the settings are the suggestion
+    /// again; the Lines slider's middle is Advanced's line art, and Reset brings it back.
+    @Test func linesTuneTheDrawingAndTheSuggestionComesBack() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let suggested = model.settings
+        #expect(model.lines == 0.5 && suggested.lineArt == model.baseLineArt)
+
+        model.lines = 0.9
+        model.settingsChanged()
+        #expect(model.settingsOrigin == .custom)
+        #expect(model.settings.lineArt.detailThreshold < suggested.lineArt.detailThreshold)
+        try await waitUntil { model.isFinal }
+        #expect(model.preview?.settings?.lineArt == model.settings.lineArt)
+
+        model.lines = 0.5
+        model.settingsChanged()
+        #expect(model.settingsOrigin == .suggested && model.settings == suggested)
+
+        model.lines = 0.2
+        model.settingsChanged()
+        model.resetToSuggested()
+        #expect(model.lines == 0.5 && model.settings == suggested)
+    }
+
+    /// More lines lower the thresholds and shorten the shortest line, fewer raise and lengthen
+    /// them; the middle and classic line art are left as they are.
+    @Test func linesMapToTheLineArt() {
+        let book = LineArtSettings(style: .coloringBook)
+        #expect(CreateModel.lineArt(book, lines: 0.5) == book)
+        let more = CreateModel.lineArt(book, lines: 1), fewer = CreateModel.lineArt(book, lines: 0)
+        #expect(more.detailThreshold < book.detailThreshold && more.outlineThreshold < book.outlineThreshold)
+        #expect(more.minimumStrokeLength < book.minimumStrokeLength)
+        #expect(fewer.detailThreshold > book.detailThreshold && fewer.minimumStrokeLength > book.minimumStrokeLength)
+        #expect(more == more.normalized && fewer == fewer.normalized)
+        let classic = LineArtSettings(style: .classic)
+        #expect(CreateModel.lineArt(classic, lines: 1) == classic)
+    }
+
+    /// Drafts draw from the reduced photo with the line art's lengths scaled to their smaller
+    /// canvas; the full resolution keeps them.
+    @Test func draftsScaleTheLineLengths() {
+        let settings = GenerationSettings(detail: 0.5)
+        let source = RGBAImage(width: 2000, height: 1500, pixels: [UInt8](repeating: 128, count: 2000 * 1500 * 4))
+        let draft = AutoSettings.draftImage(from: source)
+        let scaled = CreateModel.draftSettings(settings, draft: draft, source: source)
+        let small = settings.workingSize(sourceWidth: draft.width, sourceHeight: draft.height)
+        let scale = Float(max(small.width, small.height)) / Float(settings.workingLongSide)
+        #expect(scale < 0.5)
+        #expect(abs(scaled.lineArt.minimumStrokeLength - settings.lineArt.minimumStrokeLength * scale) < 0.01)
+        #expect(abs(scaled.lineArt.gapBridging - settings.lineArt.gapBridging * scale) < 0.01)
+        #expect(CreateModel.draftSettings(settings, draft: source, source: source) == settings)
+    }
 }

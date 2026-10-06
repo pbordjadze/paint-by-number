@@ -265,9 +265,17 @@ Conventions).
   full resolution. A new photo or closing the flow cancels it (a `withTaskCancellationHandler` flag
   reaches every candidate's thread).
 - `settingsOrigin` is `.suggested` until the painter moves a slider (`.custom`, reported through
-  `settingsChanged()`); `TemplatePreviewView`'s chip offers Reset to Suggested, which restores the
-  kept `AutoDecision` without choosing again. Decisions are never stored: `meta.json` records only
+  `settingsChanged()`; back on every suggested value, the sliders' detents, it is `.suggested`
+  again); `TemplatePreviewView`'s chip offers Reset to Suggested, which restores the kept
+  `AutoDecision` without choosing again. Decisions are never stored: `meta.json` records only
   `settingsOrigin` and `paintingLength`, and regeneration reuses an artwork's recorded settings.
+- Tuning: a drag renders drafts from the reduced photo, their line lengths scaled to the draft's
+  canvas (`CreateModel.draftSettings`) so short strokes like eyes show as they will; a thumb
+  resting `CreateModel.restDelay` renders the full resolution under the finger. The Lines slider
+  (book and layered line art) moves Settings › Advanced's thresholds and shortest line
+  (`CreateModel.lineArt(_:lines:)`; the middle is Advanced's, recorded with the painting like any
+  setting). `CompareView` zooms both layers alike (pinch, double tap, VoiceOver), the zoom held
+  across slider changes.
 - Open in Paint by Moonlight: images from the share sheet and Files arrive through an image document
   type (`CFBundleDocumentTypes` in `Config/Info.plist`, Alternate rank, copied into
   `Documents/Inbox`) and `.onOpenURL` → `AppShellView.openFile`. `IncomingFile` reads the file off

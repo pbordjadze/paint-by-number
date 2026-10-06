@@ -97,10 +97,10 @@ struct TemplatePreviewView: View {
         let room = roomSize.width > 0 && roomSize.height > 0 ? roomSize : size
         guard room.width.isFinite, room.height.isFinite, room.width > 0, room.height > 0 else { return false }
         let pickerHeight: CGFloat = 60
-        // The stacked controls card: title row, settings chip, three sliders, summary, Start.
+        // The stacked controls card: title row, settings chip, three or four sliders, summary, Start.
         let stacked = Self.fittedArea(
             width: room.width - 2 * sidePadding,
-            height: room.height - pickerHeight - 460, aspect: photoAspect)
+            height: room.height - pickerHeight - (hasLines ? 512 : 460), aspect: photoAspect)
         let beside = Self.fittedArea(
             width: room.width - 2 * sidePadding - panelWidth - 24,
             height: room.height - pickerHeight - 2 * sidePadding, aspect: photoAspect)
@@ -196,7 +196,7 @@ struct TemplatePreviewView: View {
                         Text("Choosing settings…")
                     }
                 }
-            case .generating where !model.isAdjusting:
+            case .generating where !model.isAdjusting || model.refining != nil:
                 StatusCapsule {
                     ProgressView(value: model.progress)
                         .frame(width: 64)
@@ -228,15 +228,21 @@ struct TemplatePreviewView: View {
                 title: "Colors", value: Self.colorPosition(model.colorCount),
                 onChange: { update(\.colorCount, Self.colorCount(at: $0)) },
                 valueText: Int(model.colorCount.rounded()).formatted(), isPending: model.isChoosingSettings,
-                onEditing: model.setAdjusting)
+                detent: suggested.map { Self.colorPosition(Double($0.colorCount)) }, onEditing: model.setAdjusting)
             SettingSlider(
                 title: "Detail", value: model.detail, onChange: { update(\.detail, $0) },
                 valueText: Self.detailWord(model.detail), isPending: model.isChoosingSettings,
-                onEditing: model.setAdjusting)
+                detent: suggested.map { Double($0.detail) }, onEditing: model.setAdjusting)
             SettingSlider(
                 title: "Smoothness", value: model.smoothness, onChange: { update(\.smoothness, $0) },
                 valueText: Self.smoothnessWord(model.smoothness), isPending: model.isChoosingSettings,
-                onEditing: model.setAdjusting)
+                detent: suggested.map { Double($0.smoothness) }, onEditing: model.setAdjusting)
+            if hasLines {
+                SettingSlider(
+                    title: "Lines", value: model.lines, onChange: { update(\.lines, $0) },
+                    valueText: Self.linesWord(model.lines), isPending: model.isChoosingSettings,
+                    detent: 0.5, onEditing: model.setAdjusting)
+            }
 
             Text(model.stats?.summary ?? " ")
                 .font(.footnote.weight(.medium))
@@ -265,6 +271,12 @@ struct TemplatePreviewView: View {
         .padding(.top, 22)
         .padding(.bottom, isSideBySide ? 22 : 8)
     }
+
+    /// The suggestion's settings, where each slider has a detent.
+    private var suggested: GenerationSettings? { model.decision?.settings }
+
+    /// Classic line art has no lines to tune.
+    private var hasLines: Bool { model.baseLineArt.style != .classic }
 
     /// Where the settings came from: the suggestion for this photo, or the painter's own with
     /// a way back to it. Its room is kept, empty, until there is a suggestion.
@@ -360,6 +372,21 @@ struct TemplatePreviewView: View {
         }
     }
 
+    private static func linesWord(_ value: Double) -> String {
+        switch step(value, of: 5) {
+        case 0: String(localized: "create.lines.fewest", defaultValue: "Fewest",
+                       comment: "Lines slider value: only the strongest edges are drawn")
+        case 1: String(localized: "create.lines.fewer", defaultValue: "Fewer",
+                       comment: "Lines slider value: second step")
+        case 2: String(localized: "create.lines.balanced", defaultValue: "Balanced",
+                       comment: "Lines slider value: the middle, the lines as Settings › Advanced draws them")
+        case 3: String(localized: "create.lines.more", defaultValue: "More",
+                       comment: "Lines slider value: fourth step")
+        default: String(localized: "create.lines.most", defaultValue: "Most",
+                        comment: "Lines slider value: the faintest edges drawn too")
+        }
+    }
+
     private static func smoothnessWord(_ value: Double) -> String {
         switch step(value, of: 4) {
         case 0: String(localized: "create.smoothness.crisp", defaultValue: "Crisp",
@@ -395,10 +422,14 @@ private struct SettingSlider: View {
     /// The value is not chosen yet (Suggested settings are being chosen): shown as a
     /// placeholder, and the slider waits.
     var isPending = false
+    /// The suggested value: the thumb settles on it within `detentReach`, with a tick.
+    var detent: Double?
     var onEditing: (Bool) -> Void
 
+    static let detentReach = 0.02
+
     var body: some View {
-        let value = Binding(get: { self.value }, set: { onChange($0) })
+        let value = Binding(get: { self.value }, set: { set($0) })
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline) {
                 Text(title)
@@ -417,6 +448,15 @@ private struct SettingSlider: View {
                 .accessibilityLabel(title)
                 .accessibilityValue(isPending ? Text("Choosing settings…") : Text(valueText))
         }
+    }
+
+    private func set(_ newValue: Double) {
+        guard let detent, abs(newValue - detent) < Self.detentReach else {
+            onChange(newValue)
+            return
+        }
+        if value != detent { FeedbackEngine.shared.selectionChanged() }
+        onChange(detent)
     }
 }
 
