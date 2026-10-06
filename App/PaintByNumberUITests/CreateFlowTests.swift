@@ -147,7 +147,9 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(opened, "Picking a library photo didn't open its preview")
         guard opened else { return }
 
-        let back = app.navigationBars.buttons.matching(NSPredicate(format: "label IN {'New Painting', 'Back'}")).firstMatch
+        // By the system's identifier: the gallery's New Painting button, under the create flow,
+        // carries the back button's label too.
+        let back = app.navigationBars.buttons.matching(identifier: "BackButton").firstMatch
         guard back.waitForExistence(timeout: 10) else {
             attachTree(of: app, named: "preview-back-tree")
             XCTFail("No back button on the preview")
