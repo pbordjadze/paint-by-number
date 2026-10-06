@@ -1,0 +1,75 @@
+59:2026-10-06 04:37:35.350 E  PaintByNumber[48686:1fe96] [com.pbordjadze.paintbynumber:library] Opening 4486515E-29F1-43FF-B7F5-EBD6BEC4925C failed: damaged(canRegenerate: true)
+----- tail -----
+Timestamp               Ty Process[PID:TID]
+2026-10-06 04:27:27.605 Df PaintByNumber[24138:10fc0] [com.pbordjadze.paintbynumber:demo] demo paint-fill: painted [9, 115, 366] of color 10; frames 1
+2026-10-06 04:27:39.769 Df PaintByNumber[24434:1134d] [com.pbordjadze.paintbynumber:demo] demo paint-hint: requested (canvas attached: true)
+2026-10-06 04:28:06.378 Df PaintByNumber[25392:11d90] [com.pbordjadze.paintbynumber:demo] demo paint-photo: photo opacity 1.000000
+2026-10-06 04:29:20.008 Df PaintByNumber[28426:13bd2] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-10-06 04:29:20.321 Df PaintByNumber[28426:13bd2] [com.pbordjadze.paintbynumber:demo] demo paint-feedback: 0 marks
+2026-10-06 04:29:34.208 Df PaintByNumber[28719:13f3f] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-10-06 04:29:34.378 Df PaintByNumber[28719:13f3f] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-dark: 0 marks
+2026-10-06 04:29:47.349 Df PaintByNumber[29296:144c5] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-10-06 04:29:48.692 Df PaintByNumber[29296:144c5] [com.pbordjadze.paintbynumber:feedback] Review sheet up
+2026-10-06 04:29:48.694 Df PaintByNumber[29296:144c5] [com.pbordjadze.paintbynumber:feedback] Review: 4 strokes in 2 marks
+2026-10-06 04:29:50.729 Df PaintByNumber[29296:144c5] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-review: 2 marks
+2026-10-06 04:30:02.125 Df PaintByNumber[29503:147a0] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2026-10-06 04:30:03.344 Df PaintByNumber[29503:147a0] [com.pbordjadze.paintbynumber:feedback] Review sheet up
+2026-10-06 04:30:03.345 Df PaintByNumber[29503:147a0] [com.pbordjadze.paintbynumber:feedback] Review: 4 strokes in 2 marks
+2026-10-06 04:30:04.701 Df PaintByNumber[29503:147a0] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-long-text: 2 marks
+2026-10-06 04:31:13.363 Df PaintByNumber[30211:14e6b] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 61.439879000000005 seconds
+2026-10-06 04:31:53.682 Df PaintByNumber[30211:14e6b] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 40.317000917 seconds
+2026-10-06 04:32:20.435 Df PaintByNumber[34180:17416] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 9.55362475 seconds
+2026-10-06 04:32:26.783 Df PaintByNumber[34180:17416] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 6.348060625 seconds
+2026-10-06 04:33:16.187 Df PaintByNumber[34180:17416] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 49.404221041 seconds
+2026-10-06 04:33:53.218 Df PaintByNumber[34180:17416] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 37.030076832999995 seconds
+2026-10-06 04:33:59.375 Df PaintByNumber[38094:198d8] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 2.701014375 seconds
+2026-10-06 04:34:01.220 Df PaintByNumber[38094:198d8] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.845831333 seconds
+2026-10-06 04:34:28.540 Df PaintByNumber[38094:198d8] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 27.319087625 seconds
+2026-10-06 04:34:49.727 Df PaintByNumber[38094:198d8] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 21.186410541 seconds
+2026-10-06 04:35:10.261 Df PaintByNumber[38094:198d8] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 20.532760292 seconds
+2026-10-06 04:35:22.896 Df PaintByNumber[38094:198d8] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 12.634864833 seconds
+2026-10-06 04:35:41.493 Df PaintByNumber[42984:1c7db] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 4.7974942910000005 seconds
+2026-10-06 04:35:43.602 Df PaintByNumber[42984:1c7db] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 2.108939542 seconds
+2026-10-06 04:35:45.286 Df PaintByNumber[42984:1c7db] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 1.683554625 seconds
+2026-10-06 04:35:46.801 Df PaintByNumber[42984:1c7db] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 1.515548959 seconds
+2026-10-06 04:35:49.029 Df PaintByNumber[42984:1c7db] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 2.227977917 seconds
+2026-10-06 04:35:50.805 Df PaintByNumber[42984:1c7db] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 1.775233958 seconds
+2026-10-06 04:36:04.124 Df PaintByNumber[44481:1d636] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 4.322083334 seconds
+2026-10-06 04:36:06.006 Df PaintByNumber[44481:1d636] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 1.881818208 seconds
+2026-10-06 04:36:07.773 Df PaintByNumber[44481:1d636] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 1.767566041 seconds
+2026-10-06 04:36:09.053 Df PaintByNumber[44481:1d636] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 1.279182208 seconds
+2026-10-06 04:36:11.630 Df PaintByNumber[44481:1d636] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 2.577065208 seconds
+2026-10-06 04:36:13.681 Df PaintByNumber[44481:1d636] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 2.050878125 seconds
+2026-10-06 04:36:25.061 Df PaintByNumber[45608:1e064] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.20612775 seconds
+2026-10-06 04:36:27.144 Df PaintByNumber[45608:1e064] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 2.082903541 seconds
+2026-10-06 04:36:29.353 Df PaintByNumber[45608:1e064] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 2.209079875 seconds
+2026-10-06 04:36:31.125 Df PaintByNumber[45608:1e064] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 1.771812917 seconds
+2026-10-06 04:36:34.078 Df PaintByNumber[45608:1e064] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 2.952494167 seconds
+2026-10-06 04:36:35.746 Df PaintByNumber[45608:1e064] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 1.667766959 seconds
+2026-10-06 04:36:47.809 Df PaintByNumber[46420:1e854] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 4.132868542 seconds
+2026-10-06 04:36:51.816 Df PaintByNumber[46420:1e854] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 4.007002542 seconds
+2026-10-06 04:36:55.261 Df PaintByNumber[46420:1e854] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 3.443722292 seconds
+2026-10-06 04:36:57.959 Df PaintByNumber[46420:1e854] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 2.697832042 seconds
+2026-10-06 04:37:00.462 Df PaintByNumber[46420:1e854] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 2.503250333 seconds
+2026-10-06 04:37:03.568 Df PaintByNumber[46420:1e854] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 3.105034083 seconds
+2026-10-06 04:37:20.010 Df PaintByNumber[48379:1fae1] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.533838333 seconds
+2026-10-06 04:37:20.210 Df PaintByNumber[48379:1fae1] [com.pbordjadze.paintbynumber:library] Opened DF5FD05E-AFE8-459E-87E8-23556C34A9DE: 206 regions
+2026-10-06 04:37:27.367 Df PaintByNumber[48379:1fae1] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:37:27.855 Df PaintByNumber[48379:1fae1] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:37:35.164 Df PaintByNumber[48686:1fe96] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 3.675113667 seconds
+2026-10-06 04:37:35.292 E  PaintByNumber[48686:1fea1] [com.pbordjadze.paintbynumber:library] Template of 4486515E-29F1-43FF-B7F5-EBD6BEC4925C is unreadable: unreadable("template decompression")
+2026-10-06 04:37:35.350 E  PaintByNumber[48686:1fe96] [com.pbordjadze.paintbynumber:library] Opening 4486515E-29F1-43FF-B7F5-EBD6BEC4925C failed: damaged(canRegenerate: true)
+2026-10-06 04:37:36.224 Df PaintByNumber[48686:1fe96] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+2026-10-06 04:37:36.687 Df PaintByNumber[48686:1fe96] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+2026-10-06 04:37:45.487 Df PaintByNumber[49155:202ce] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 3.712981083 seconds
+2026-10-06 04:37:57.212 Df PaintByNumber[49656:207c1] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 5.044426166 seconds
+2026-10-06 04:38:16.372 Df PaintByNumber[50123:20c43] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 11.737948083000001 seconds
+2026-10-06 04:38:22.510 Df PaintByNumber[50123:20c43] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 6.137640166 seconds
+2026-10-06 04:38:28.244 Df PaintByNumber[50123:20c43] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 5.7343040830000005 seconds
+2026-10-06 04:38:33.389 Df PaintByNumber[50123:20c43] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 5.1443133329999995 seconds
+2026-10-06 04:38:38.741 Df PaintByNumber[50123:20c43] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 5.351207667000001 seconds
+2026-10-06 04:38:43.249 Df PaintByNumber[50123:20c43] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 4.508241875 seconds
+2026-10-06 04:51:22.435 Df PaintByNumber[88643:37173] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-10-06 04:51:31.579 Df PaintByNumber[90118:37ea3] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-10-06 04:51:39.067 Df PaintByNumber[90185:37f87] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+2026-10-06 04:51:48.667 Df PaintByNumber[90791:3854d] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
