@@ -80,10 +80,11 @@ synchronized folder would bundle it into the app.
   (menu-bar keys, landscape) skip on iPhone, and the system-picker tests skip where synthesized taps
   can't reach the picker. `LongTextTests` keeps each screen's controls, the color name and the toast
   on screen under doubled strings.
-- On CI's iPad simulator the unit tests take a few minutes, the UI tests about 25 minutes and the
-  screenshots about 20: the job is near its 75-minute cap. Demo and test launches seed their
-  pictures from templates kept on disk (DEBUG `DemoTemplateCache`, beside `LineArtMapsCache`'s
-  maps): a Debug build's pipeline took 10 to 19 s a seed there, and a UI test waits for its seed.
+- On CI's iPad simulator the unit tests take about 4 minutes and the screenshots about 10 (job
+  `ipad`), the UI tests about 20 (job `ipad-ui`, the longest: a slow new UI test lengthens every
+  push's wait). Demo and test launches seed their pictures from templates kept on disk (DEBUG
+  `DemoTemplateCache`, beside `LineArtMapsCache`'s maps; CI keeps both between runs): the
+  line-art models take 10 to 40 s a picture there, and a UI test waits for its seed.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`). Demo launches and the test host

@@ -68,8 +68,10 @@ before planning app work).
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
   (the app's Core ML models from their source weights).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
-  regression, string catalog), `ipad` (every push: Debug build, screenshots, tests, Release check,
-  benchmark), `iphone` and `ipa` (unsigned IPA, SideStore source) on `main`, `report`.
+  regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
+  screenshots, unit tests, Release check, benchmark; `ipad-ui`, the UI tests; on `main`: `iphone`,
+  all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report` (`ci/report.py` writes
+  `STATUS.md`).
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
   per-agent reports are not committed (they live on their branch and in commit messages); a
@@ -253,7 +255,7 @@ Saved paintings must open in every later build. The format history is documented
   (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`, `LineArtInputs`,
   `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
-  `ci/check_release.sh` (run by the iPad job on a Release build) fails if a Debug-only type name
+  `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a Debug-only type name
   shows up in the Release binary.
 - Done means: a test for each new behaviour in the right target (Swift Testing in
   `Tests/PaintCoreTests` and `App/PaintByNumberTests`, XCTest in `App/PaintByNumberUITests`), a demo
@@ -289,20 +291,29 @@ any port of it, when changing the fitter: work from the paper.
 1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).
 2. Run `CI_BRANCH=<branch> ci/fetch.sh <sha> <outdir>` in the background; it waits for the report CI
    publishes to the ref `refs/ci-shots/<branch>` (not fetched by a clone) and unpacks it:
-   `STATUS.md` (job results and verdicts), trimmed logs, `core/` (tests, strings check,
-   `regression/` with its table and `sheets/<regime>/<sample>.jpg`), and per device `errors.txt`
-   (compiler errors), `shots/*.png`, `*-app.log` (the app's os_log), `*-steps.log` (readiness,
-   crashes), `test-app.log` (the app's library, demo, canvas and feedback lines during the tests),
-   test results and `attachments/`. iPad is the primary device: every push builds Debug on
-   a 13" iPad Pro simulator, screenshots, tests, builds Release for `ci/check_release.sh` (problems
-   land in `ipad/errors.txt` too), and benchmarks the pipeline (`ipad/bench.txt`, only when
-   `Sources/` or `Package.swift` differ from `main`). The iPhone job (an iPhone 17 Pro) runs on
-   `main`, via workflow_dispatch with `iphone: true`, or for a commit whose message contains
-   `[iphone]`.
-3. Turnaround is about 70 min (the iPad job takes about an hour of its 75-minute cap, so a slow new
-   UI test needs a matching saving), longer when branches queue (only 5 macOS jobs run at once).
-   `ci/fetch.sh` waits up to 100 min. A newer push to the same branch cancels the older run, which
-   then never reports. Work on something else while it runs.
+   `STATUS.md` (job results and verdicts, then per simulator job the steps that failed, its test
+   counts, each failed test with its first message, tests that passed only when run again, scenarios
+   that never signalled readiness and crashes), logs (those over 3000 lines trimmed), `core/` (tests,
+   strings check, `regression/` with its table and `sheets/<regime>/<sample>.jpg`), and per job
+   (`ipad`, `ipad-ui`, `iphone`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
+   app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's library, demo,
+   canvas and feedback lines during the run), test results and `attachments/`. iPad is the primary
+   device, a 13" iPad Pro simulator, its work in two jobs on every push: `ipad` builds Debug,
+   screenshots, runs the unit tests, builds Release for `ci/check_release.sh` (problems land in
+   `ipad/errors.txt` too) and benchmarks the pipeline (`ipad/bench.txt`, only when `Sources/` or
+   `Package.swift` differ from `main`); `ipad-ui` builds Debug and runs the UI tests. `iphone` (an
+   iPhone 17 Pro: screenshots, unit and UI tests) runs on `main`, via workflow_dispatch with
+   `iphone: true`, or for a commit whose message contains `[iphone]`. Simulator builds are arm64
+   only. A test that fails runs once more and passes if that run does (`-retry-tests-on-failure`);
+   STATUS.md names it, and a flake still needs its cause found. Demo and test launches keep the
+   templates and line-art maps they make on disk (DEBUG `DemoTemplateCache`, `LineArtMapsCache`),
+   and each job keeps them between runs in the Actions cache (`ci/demo_caches.sh`), keyed by the
+   files that make them; on a miss `ipad-ui` makes the UI tests' first (its warm-up).
+3. Turnaround is about 30 min (`ipad-ui`, the longest on a branch: about 25), longer when the caches
+   miss (a change to the pipeline, the models or the pictures: about 5 min more) or branches queue
+   (only 5 macOS jobs run at once: a branch push takes 2, `main` 4). `ci/fetch.sh` waits up to 100
+   min. A newer push to the same branch cancels the older run, which then never reports. Work on
+   something else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
 5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`),
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the
@@ -313,7 +324,7 @@ any port of it, when changing the fitter: work from the paper.
    `SIDESTORE_DISPATCH_TOKEN`, issue #1; without it that source catches up on its 15-minute
    schedule).
 
-**Branches.** `main` is the default and shipping branch (iPhone job, IPA, SideStore source; the
+**Branches.** `main` is the default and shipping branch (`iphone` job, IPA, SideStore source; the
 benchmark's base). Work on `claude/<topic>` branches and merge into `main`; once merged, the branch
 and its report ref can go. CI owns `sidestore` (never delete or push it) and the `refs/ci-shots/*`
 reports. Local `main` may lag: fetch before comparing.
