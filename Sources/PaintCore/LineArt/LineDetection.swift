@@ -1,6 +1,6 @@
 import Foundation
 
-/// Edge map → one-pixel centerlines: the raster half of layered line art.
+/// Edge map → one-pixel centerlines: the raster half of line art.
 ///
 /// 1. The 8-bit map is resampled to the working size (area average when shrinking, linear
 ///    when enlarging) and its 3-px frame cleared (the canvas edge is not a line).

@@ -89,7 +89,7 @@ struct LibraryTests {
         #expect(size.width == 320 && size.height == 212)
     }
 
-    @Test func renamesDuplicatesAndRestarts() async throws {
+    @Test func renamesAndRestarts() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft(painted: [0]))
         #expect(artwork.paintedCount == 1)
@@ -98,19 +98,13 @@ struct LibraryTests {
         library.rename(artwork.id, to: "   ")
         #expect(library.artwork(with: artwork.id)?.title == "Sunset")
 
-        let copy = try await library.duplicate(artwork.id)
-        #expect(copy.id != artwork.id)
-        #expect(copy.title == "Sunset Copy")
-        #expect(copy.paintedCount == 1)
-
         await library.restart(artwork.id)
         #expect(library.artwork(with: artwork.id)?.paintedCount == 0)
         await library.flush()
 
         let reloaded = makeLibrary()
-        #expect(Set(reloaded.artworks.map(\.title)) == ["Sunset", "Sunset Copy"])
+        #expect(reloaded.artworks.map(\.title) == ["Sunset"])
         #expect(try await reloaded.loadForPainting(artwork.id).progress.paintedCount == 0)
-        #expect(try await reloaded.loadForPainting(copy.id).progress.paintedCount == 1)
     }
 
     @Test func deletionCanBeUndoneOrFinalized() async throws {
@@ -253,7 +247,6 @@ struct LibraryTests {
         await #expect(throws: Library.OpenError.needsNewerApp) {
             try await library.regenerate(artwork: artwork.id, settings: listed.settings)
         }
-        await #expect(throws: Library.OpenError.needsNewerApp) { try await library.duplicate(artwork.id) }
 
         library.rename(artwork.id, to: "Renamed")
         var progress = PaintProgress(regionCount: 3)

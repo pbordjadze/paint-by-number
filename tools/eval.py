@@ -13,16 +13,15 @@ resvg, and writes a contact sheet `DIR/<name>/sheet.png` (source | painted | tem
 plus `DIR/summary.json` and an overview grid `DIR/overview.png`. With --importance-dir,
 `<name>.pgm` in that directory (if present) is passed to pbn as the importance map.
 
-Layered line art: --edges-dir passes `<name>.pgm` from that directory as the edge map
-(`--edges`, a contour map such as HED) and --lines-dir `<name>.pgm` as a line drawing
-(`--lines`; both given, pbn combines them as the app combines its two models), and generates
-layered templates (`--line-style layered`, unless the pbn options set a style: `-- --line-style
-coloringBook` for coloring books); --eyes-dir passes
+Line art: --edges-dir passes `<name>.pgm` from that directory as the edge map (`--edges`, a
+contour map such as HED) and --lines-dir `<name>.pgm` as a line drawing (`--lines`; both given,
+pbn combines them as the app combines its two models), and generates coloring books
+(`--line-style coloringBook`, unless the pbn options set a style); --eyes-dir passes
 `<name>.json` (closed polygons normalized to the photo) as `--eyes`, and --objects-dir (`book`
 only) `<name>.pgm` (a subject mask) or `<name>.json` as `--objects`. Other line-art settings
-go through as pbn options (`-- --line-art samePaint=split`). The template panel draws each
-layer in its group (a coloring book its drawing in heavy ink and no color edges); the caption
-adds the style, cells against the classic regions and the edges per layer.
+go through as pbn options (`-- --line-art samePaint=split`). The template panel draws the
+drawing in heavy ink and no color edges; the caption adds the style, cells against the classic
+regions and the edges per layer.
 
 `book` judges coloring books the way their painter sees them: for every image a sheet
 `DIR/<name>/book.png` with one column per variant (`--variant NAME=OPTIONS`, pbn generate
@@ -111,9 +110,9 @@ class Maps(NamedTuple):
     objects: str | None = None
 
 
-def map_args(name, pbn_args, maps, style="layered"):
+def map_args(name, pbn_args, maps):
     """pbn options passing `name`'s maps from the directories given (a map that isn't there is
-    skipped), with `--line-style STYLE` when a map is passed and the options name no style."""
+    skipped), with `--line-style coloringBook` when a map is passed and the options name no style."""
     extra = []
     if maps.importance and os.path.exists(os.path.join(maps.importance, name + ".pgm")):
         extra = ["--importance", os.path.join(maps.importance, name + ".pgm")]
@@ -126,7 +125,7 @@ def map_args(name, pbn_args, maps, style="layered"):
         drawn = True
     if drawn:
         if "--line-style" not in pbn_args:
-            extra += ["--line-style", style]
+            extra += ["--line-style", "coloringBook"]
         if maps.eyes and os.path.exists(os.path.join(maps.eyes, name + ".json")):
             extra += ["--eyes", os.path.join(maps.eyes, name + ".json")]
         for ext in (".pgm", ".json"):
@@ -189,7 +188,7 @@ def process(image_path, out_root, pbn_args, sheet_width, maps):
                f"belowLegible:{stats.get('labelsBelowLegibleSize', '?')}  total={stats['totalMs']:.0f}ms")
     if stats.get("lineArt"):
         line_art = stats["lineArt"]
-        style = line_art.get("settings", {}).get("style", "layered")
+        style = line_art.get("settings", {}).get("style", "coloringBook")
         caption += (f"  {style}: x{line_art['cellsVsClassic']:.2f} classic, edges outline/detail/texture/color "
                     f"{'/'.join(str(n) for n in line_art['edgesPerLayer'])}, {line_art['interiorStrokes']} inside cells")
     if stats.get("auto"):
@@ -230,7 +229,7 @@ def book_variant(out_root, name, variant, options, pbn_args, maps, cell, zoom):
     os.makedirs(out, exist_ok=True)
     args = pbn_args + options
     stats = generate(f"{name}/{variant}", os.path.join(out_root, name, "input.ppm"), out,
-                     args + map_args(name, args, maps, style="coloringBook"))
+                     args + map_args(name, args, maps))
     if stats is None:
         return None
     views = {}

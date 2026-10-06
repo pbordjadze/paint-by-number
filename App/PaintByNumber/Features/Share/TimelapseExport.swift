@@ -23,17 +23,17 @@ final class TimelapseExportModel {
         self.request = request
     }
 
-    /// Renders the movie at `pace`. Cancelling the calling task stops the render between frames
-    /// and removes the partial movie; a movie already made (another pace was picked since) is
-    /// removed first.
-    func run(pace: TimelapsePace = .even, longSide: Int = 1080) async {
+    /// Renders the movie. Cancelling the calling task stops the render between frames and
+    /// removes the partial movie; a movie already made (Try Again was tapped since) is removed
+    /// first.
+    func run(longSide: Int = 1080) async {
         await finishSharing()
         phase = .rendering(0)
         cleanedUp = false
         // Only the newest value matters: hundreds of per-frame updates coalesce to what the
         // main actor gets round to drawing.
         let (updates, continuation) = AsyncStream.makeStream(of: Double.self, bufferingPolicy: .bufferingNewest(1))
-        async let rendered = Self.render(request, pace: pace, longSide: longSide, updates: continuation)
+        async let rendered = Self.render(request, longSide: longSide, updates: continuation)
         // Ends when the render finishes, or at once when this task is cancelled.
         for await fraction in updates { phase = .rendering(fraction) }
         do {
@@ -63,28 +63,20 @@ final class TimelapseExportModel {
     /// own thread.
     @concurrent
     private static func render(
-        _ request: TimelapseRequest, pace: TimelapsePace, longSide: Int, updates: AsyncStream<Double>.Continuation
+        _ request: TimelapseRequest, longSide: Int, updates: AsyncStream<Double>.Continuation
     ) async throws -> URL {
         defer { updates.finish() }
-        return try await request.render(longSide: longSide, pace: pace) { updates.yield($0) }
+        return try await request.render(longSide: longSide) { updates.yield($0) }
     }
 }
 
 /// "Share Time-lapse": the movie's progress with Cancel (which deletes the partial movie),
-/// then the share sheet. Present it as a sheet; dismissing it cancels the render. Picking
-/// another pace starts the movie over.
+/// then the share sheet. Present it as a sheet; dismissing it cancels the render.
 struct TimelapseExportSheet: View {
-    /// What a render is for: a new attempt or another pace starts it again.
-    nonisolated private struct RenderID: Hashable, Sendable {
-        var attempt: Int
-        var pace: TimelapsePace
-    }
-
     @State private var model: TimelapseExportModel
+    /// Try Again starts the render over.
     @State private var attempt = 0
-    @AppStorage(SettingsKey.timelapsePace) private var pace: TimelapsePace = .even
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     init(request: TimelapseRequest) {
         _model = State(initialValue: TimelapseExportModel(request: request))
@@ -108,7 +100,6 @@ struct TimelapseExportSheet: View {
                         .lineLimit(1)
                 }
                 .multilineTextAlignment(.center)
-                paceControl
                 status
             }
             .padding(28)
@@ -126,7 +117,7 @@ struct TimelapseExportSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
-        .task(id: RenderID(attempt: attempt, pace: pace)) { await model.run(pace: pace) }
+        .task(id: attempt) { await model.run() }
         #if DEBUG
         .onChange(of: model.phase) { _, phase in
             if ShellDemo.current?.sharesTimelapse == true, case .rendering(let fraction) = phase, fraction > 0 {
@@ -136,34 +127,6 @@ struct TimelapseExportSheet: View {
         #endif
         // Swiped away (or tapped outside on iPad) with the movie ready: it mustn't stay behind.
         .onDisappear { Task { await model.finishSharing() } }
-    }
-
-    /// Segments while they fit; at accessibility text sizes a menu, which can't truncate its labels.
-    @ViewBuilder
-    private var paceControl: some View {
-        if dynamicTypeSize.isAccessibilitySize {
-            Picker("Pace", selection: $pace) { paceOptions }
-                .pickerStyle(.menu)
-                .accessibilityIdentifier("timelapse-pace")
-        } else {
-            VStack(spacing: 8) {
-                // The picker's own label carries the name for VoiceOver.
-                Text("Pace")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-                Picker("Pace", selection: $pace) { paceOptions }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .accessibilityIdentifier("timelapse-pace")
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var paceOptions: some View {
-        Text("Even").tag(TimelapsePace.even)
-        Text("As painted").tag(TimelapsePace.asPainted)
     }
 
     @ViewBuilder

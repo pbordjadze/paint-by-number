@@ -220,7 +220,7 @@ struct CreateModelTests {
     }
 
     /// Back on the suggestion's values (the sliders' detents), the settings are the suggestion
-    /// again; the Lines slider's middle is Advanced's line art, and Reset brings it back.
+    /// again; the Lines slider's middle is the base line art, and Reset brings it back.
     @Test func linesTuneTheDrawingAndTheSuggestionComesBack() async throws {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))

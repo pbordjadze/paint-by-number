@@ -8,16 +8,11 @@ struct TemplatePreviewView: View {
     @Bindable var model: CreateModel
     var onStart: () async throws -> Void
 
-    enum Layer: String {
-        case painting, numbers
-    }
-
     @State private var size: CGSize = .zero
     /// `size` with the keyboard's room given back: what the layout is chosen for.
     @State private var roomSize: CGSize = .zero
     /// The layout chosen when title editing began, for that window width: kept until it ends.
     @State private var editingLayout: (width: CGFloat, sideBySide: Bool)?
-    @State private var layer: Layer = .painting
     @State private var isStarting = false
     @State private var startError: String?
     @FocusState private var titleFocused: Bool
@@ -96,14 +91,11 @@ struct TemplatePreviewView: View {
     private var chosenLayout: Bool {
         let room = roomSize.width > 0 && roomSize.height > 0 ? roomSize : size
         guard room.width.isFinite, room.height.isFinite, room.width > 0, room.height > 0 else { return false }
-        let pickerHeight: CGFloat = 60
         // The stacked controls card: title row, settings chip, three or four sliders, summary, Start.
         let stacked = Self.fittedArea(
-            width: room.width - 2 * sidePadding,
-            height: room.height - pickerHeight - (hasLines ? 512 : 460), aspect: photoAspect)
+            width: room.width - 2 * sidePadding, height: room.height - (hasLines ? 512 : 460), aspect: photoAspect)
         let beside = Self.fittedArea(
-            width: room.width - 2 * sidePadding - panelWidth - 24,
-            height: room.height - pickerHeight - 2 * sidePadding, aspect: photoAspect)
+            width: room.width - 2 * sidePadding - panelWidth - 24, height: room.height - 2 * sidePadding, aspect: photoAspect)
         return beside > stacked
     }
 
@@ -149,21 +141,11 @@ struct TemplatePreviewView: View {
     // MARK: Canvas
 
     private var canvas: some View {
-        VStack(spacing: 14) {
-            Picker("Show", selection: $layer) {
-                Text("Painting").tag(Layer.painting)
-                Text("Numbers").tag(Layer.numbers)
-            }
-            .pickerStyle(.segmented)
-            .frame(maxWidth: 280)
-            .disabled(model.preview == nil)
-
-            // The picker stays with the image, the pair centred in the available space.
+        VStack {
             if let source = model.source {
                 CompareView(
-                    photo: source.preview, after: afterImage, afterID: afterID,
-                    afterLabel: layer == .painting ? String(localized: "Painting") : String(localized: "Numbers"),
-                    aspectRatio: photoAspect)
+                    photo: source.preview, after: model.preview?.painting, afterID: model.preview?.id.uuidString ?? "none",
+                    afterLabel: String(localized: "Painting"), aspectRatio: photoAspect)
                     .overlay(alignment: .bottom) {
                         status.padding(14)
                     }
@@ -177,13 +159,6 @@ struct TemplatePreviewView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
-    private var afterImage: CGImage? {
-        guard let preview = model.preview else { return nil }
-        return layer == .painting ? preview.painting : preview.outlines
-    }
-
-    private var afterID: String { "\(model.preview?.id.uuidString ?? "none")-\(layer.rawValue)" }
 
     @ViewBuilder
     private var status: some View {
@@ -383,7 +358,7 @@ struct TemplatePreviewView: View {
         case 1: String(localized: "create.lines.fewer", defaultValue: "Fewer",
                        comment: "Lines slider value: second step")
         case 2: String(localized: "create.lines.balanced", defaultValue: "Balanced",
-                       comment: "Lines slider value: the middle, the lines as Settings › Advanced draws them")
+                       comment: "Lines slider value: the middle, the lines as a painting is drawn by default")
         case 3: String(localized: "create.lines.more", defaultValue: "More",
                        comment: "Lines slider value: fourth step")
         default: String(localized: "create.lines.most", defaultValue: "Most",

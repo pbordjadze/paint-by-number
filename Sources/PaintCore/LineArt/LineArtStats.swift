@@ -1,4 +1,4 @@
-/// What layered line art did (`pbn`'s `stats.json` `lineArt` section). Lengths in canvas units.
+/// What line art did (`pbn`'s `stats.json` `lineArt` section). Lengths in canvas units.
 public struct LineArtStats: Sendable, Codable, Equatable {
     /// Regions of the color segmentation the lines split (a classic template's regions).
     public var segmentationRegions = 0

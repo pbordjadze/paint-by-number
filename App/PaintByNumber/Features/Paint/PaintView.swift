@@ -43,14 +43,10 @@ struct PaintView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
-    /// Settings › Advanced writes it while a painting may be open: the canvas follows at once.
-    @AppStorage(SettingsKey.lineAppearance) private var storedLineAppearance: Data?
+    @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.paletteRows) private var paletteRows = PaletteRows.default
     @AppStorage(SettingsKey.paletteOrder) private var paletteOrder = PaletteOrder.default
     @AppStorage(SettingsKey.zenMode) private var zenMode = false
-    /// This painting's custom palette arrangement (`PaletteOrder.custom`), once loaded.
-    @State private var customOrder: [Int]?
-    @State private var arrangesPalette = false
     /// Feedback mode while set.
     @State private var feedback: FeedbackDraft?
     /// The white flash of the capture as feedback starts.
@@ -107,19 +103,9 @@ struct PaintView: View {
             RenderContext.prewarm()
         }
         .onChange(of: undoManager) { _, manager in chrome.undoManager = manager }
-        .task(id: ObjectIdentifier(session)) {
-            customOrder = PaletteOrder.storedCustom(seed: session.nicknameSeed, count: session.paletteCount)
-        }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
         .onChange(of: zenMode, initial: true) { _, zen in session.flowsToNextArea = zen }
-        .sheet(isPresented: $arrangesPalette) {
-            PaletteArrangeSheet(session: session, order: colorOrder) { arranged in
-                PaletteOrder.storeCustom(arranged, seed: session.nicknameSeed)
-                customOrder = arranged
-                paletteOrder = .custom
-            }
-        }
         .onDisappear { undoManager?.removeAllActions(withTarget: session) }
         .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
             Button("Restart", role: .destructive) {
@@ -159,7 +145,7 @@ struct PaintView: View {
                 session: session, controller: controller,
                 chromeInsets: canvasInsets(safe: geo.safeAreaInsets, palette: palette),
                 showsNumbers: showsNumbers, paperAppearance: paperAppearance,
-                lineAppearance: LineAppearance.decoded(storedLineAppearance),
+                lineWeight: lineWeight,
                 initialCamera: initialCamera, fillDurationScale: fillDurationScale,
                 onPencilAction: { handlePencil($0) }, onUnavailable: { canvasUnavailable = true },
                 photoLoader: photoLoader, showsPhoto: peek.isShown,
@@ -283,8 +269,7 @@ struct PaintView: View {
     /// Every color of the palette in its order on screen (finished ones too).
     private var colorOrder: [Int] {
         paletteOrder.arrange(
-            Array(0..<session.paletteCount), palette: session.template.palette, remaining: session.remainingByColor,
-            custom: customOrder)
+            Array(0..<session.paletteCount), palette: session.template.palette, remaining: session.remainingByColor)
     }
 
     /// Canvas insets in full-screen coordinates: safe area plus the floating bars.
@@ -512,7 +497,7 @@ struct PaintView: View {
         .accessibilityShowsLargeContentViewer { Label("More", systemImage: "ellipsis") }
     }
 
-    /// More › Palette: its rows and order, and arranging this painting's colors by hand.
+    /// More › Palette: its rows and order.
     private var paletteMenu: some View {
         Menu {
             Picker(selection: $paletteRows) {
@@ -531,7 +516,6 @@ struct PaintView: View {
                 Label("Order", systemImage: "arrow.up.arrow.down")
             }
             .pickerStyle(.menu)
-            Button { arrangesPalette = true } label: { Label("Arrange Colors…", systemImage: "hand.draw") }
         } label: {
             Label("Palette", systemImage: "paintpalette")
         }
@@ -611,7 +595,7 @@ struct PaintView: View {
         peek.setLatched(false)
         let capture = FeedbackCapture(
             session: session, title: title, controller: controller, showsNumbers: showsNumbers, paper: paperAppearance,
-            darkInterface: colorScheme == .dark, lineAppearance: LineAppearance.decoded(storedLineAppearance),
+            darkInterface: colorScheme == .dark, lineWeight: lineWeight,
             displayScale: displayScale, source: feedbackSource)
         FeedbackEngine.shared.selectionChanged()
         Log.feedback.notice("Feedback started")

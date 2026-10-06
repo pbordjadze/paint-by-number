@@ -8,7 +8,7 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     public var smoothness: Float
     /// Seed for any stochastic step, so identical inputs give identical templates.
     public var seed: UInt64
-    /// Coloring-book, layered or classic lines, and how drawn lines are found.
+    /// Coloring-book or classic lines, and how drawn lines are found.
     public var lineArt: LineArtSettings
     /// Expert multipliers on the segmentation's derived knobs (default: none).
     public var tuning: PipelineTuning

@@ -50,7 +50,6 @@ struct LocalizationTests {
         #expect(Sample.named("great-wave")?.title == "The Great Wave")
         let hokusai = Sample.Provenance(kind: .painting, creator: "Katsushika Hokusai", year: "c. 1830–32", credit: "", license: "")
         #expect(Acknowledgements.byline(hokusai) == "Katsushika Hokusai, c. 1830–32")
-        #expect(PDFExporter.Paper.letter.name == "US Letter")
         #expect(PaintSpeech.colorLabel(
             number: 12, name: ColorName(family: .blue, lightness: .dark, chroma: .grayish), nickname: "Harbor Fog")
                 == "12, Harbor Fog, dark grayish blue")
@@ -132,7 +131,7 @@ struct LocalizationTests {
         let errors: [any LocalizedError] = [
             CreateModel.CreateError.unreadable, CreateModel.CreateError.renderFailed,
             CreateModel.CreateError.cameraCapture, ArtworkExporter.ExportError.renderFailed,
-            ArtworkExporter.ExportError.photosAccessDenied, ArtworkExporter.ExportError.timelapseFailed,
+            ArtworkExporter.ExportError.timelapseFailed,
         ]
         for error in errors {
             let text = try #require(error.errorDescription)

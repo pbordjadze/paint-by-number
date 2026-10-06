@@ -1,4 +1,4 @@
-/// Expert multipliers on the segmentation's derived knobs (Settings › Advanced › Pipeline).
+/// Expert multipliers on the segmentation's derived knobs (`pbn --tuning`).
 /// Every field is a factor on what `GenerationSettings` derives (1 = unchanged), so the
 /// default tuning reproduces the untuned pipeline exactly; `PipelineTuning.range` bounds them.
 public struct PipelineTuning: Sendable, Hashable, Codable {

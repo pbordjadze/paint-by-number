@@ -39,7 +39,7 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
     return Grid(width: img.width, height: img.height, storage: redChannel(img).map { Float($0) / 255 })
 }
 
-/// The edge map and eyes layered and coloring-book line art draw from: `--edges` (a contour
+/// The edge map and eyes a coloring book draws from: `--edges` (a contour
 /// map, HED), `--lines` (a line drawing), or both combined as the app combines its two models
 /// (`EdgeMap.combined`, the contours alone then deciding the outlines, `--contour-weight` the
 /// weight), unless `--line-art detector=drawing|contours` keeps one of them; `--eyes`,

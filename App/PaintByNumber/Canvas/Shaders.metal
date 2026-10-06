@@ -25,8 +25,7 @@ struct FrameUniforms {
     float4 photo;       // x: source photo opacity
     float4 lineAlpha;   // ink opacity per line layer (x outline, y detail, z texture, w color)
     float4 lineWidth;   // line width (px) per layer
-    float4 lineMode;    // x: 1 when lines are weighted by their edge's strength, y: 1 for a coloring book
-    float4 linePainted; // fraction of each layer's ink a line keeps between two painted cells
+    float4 lineMode;    // x: 1 for a coloring book
 };
 
 // Must match `RegionState` (CanvasTypes.swift).
@@ -238,12 +237,12 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
 // Pass 1: capsule segments expanded in screen space write ink opacity into an R16F target
 // with MAX blending, so overlapping caps and joints never double-darken.
 //
-// A segment belongs to a line: a boundary edge, or a stroke drawn inside a cell (layered line
-// art, after the edges, with its region on both sides). Each line draws with its layer's opacity
-// and width, the width scaled by the line's weight when lines are weighted; classic templates
-// put every line in layer 0, which is the classic line. A coloring book (lineMode.y) is a
-// drawing over the paint: its lines never dissolve, and the selected color's cells are not
-// outlined (the fill's highlight shows them); its color edges have no ink (lineAlpha.w = 0).
+// A segment belongs to a line: a boundary edge, or a stroke drawn inside a cell (line art, after
+// the edges, with its region on both sides). Each line draws with its layer's opacity and width;
+// classic templates put every line in layer 0, which is the classic line. A coloring book
+// (lineMode.x) is a drawing over the paint: its lines never dissolve, and the selected color's
+// cells are not outlined (the fill's highlight shows them); its color edges have no ink
+// (lineAlpha.w = 0).
 
 struct OutlineOut {
     float4 position [[position]];
@@ -260,31 +259,26 @@ vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
                                 const device RegionState *states [[buffer(3)]],
                                 const device float4 *regionColors [[buffer(4)]],
                                 constant FrameUniforms &u [[buffer(5)]],
-                                const device float2 *lineStyles [[buffer(6)]]) {
+                                const device float *lineLayers [[buffer(6)]]) {
     OutlineOut o;
     uint2 seg = segments[iid];
     uint2 nb = lineRegions[seg.y];
-    float2 style = lineStyles[seg.y];       // x: layer, y: weight (width factor)
-    uint layer = min(uint(style.x + 0.5), 3u);
+    uint layer = min(uint(lineLayers[seg.y] + 0.5), 3u);
     float now = u.time.x;
-    bool book = u.lineMode.y > 0.5;
+    bool book = u.lineMode.x > 0.5;
     float left = paintedAmount(states[nb.x], now);
     float right = nb.y == kOutside ? 1.0 : paintedAmount(states[nb.y], now);
-    // Edges between two painted regions dissolve, so finished areas read as a painting, except
-    // for the fraction of its ink the layer keeps when painted (a drawing over the painting). A
-    // stroke inside a cell goes with its cell the same way. A coloring book's drawing stays
-    // over the paint whole.
-    float visible = book ? 1.0 : 1.0 - min(left, right) * (1.0 - u.linePainted[layer]);
-    // The selected color's unpainted cells are outlined boldly, at least as strongly as a classic
-    // selected line whatever the layer of their boundary, so every cell to paint stands out. A
-    // stroke inside a cell is drawing, not a boundary: it keeps its layer's look. In a coloring
-    // book nothing is outlined for being selected: the drawing is the drawing.
-    bool boundary = nb.x != nb.y;
-    bool hasSelection = u.selected.a > 0.5 && boundary && !book;     // strokes never take the selected look
+    // Classic edges between two painted regions dissolve, so finished areas read as a painting;
+    // a coloring book's drawing stays over the paint whole.
+    float visible = book ? 1.0 : 1.0 - min(left, right);
+    // A classic template outlines the selected color's unpainted cells boldly, so every cell to
+    // paint stands out. In a coloring book nothing is outlined for being selected: the drawing is
+    // the drawing (strokes inside cells only come with one).
+    bool hasSelection = u.selected.a > 0.5 && !book;
     bool selLeft = hasSelection && int(regionColors[nb.x].w + 0.5) == u.ids.x && left < 1.0;
     bool selRight = hasSelection && nb.y != kOutside && int(regionColors[nb.y].w + 0.5) == u.ids.x && right < 1.0;
     bool selected = selLeft || selRight;
-    float lineWidth = u.lineWidth[layer] * mix(1.0, style.y, u.lineMode.x);
+    float lineWidth = u.lineWidth[layer];
     float lineAlpha = u.lineAlpha[layer];
     float width = selected ? max(u.outline.y, lineWidth) : lineWidth;
     // Thinner than a pixel: keep one pixel and fade instead, so lines never shimmer.

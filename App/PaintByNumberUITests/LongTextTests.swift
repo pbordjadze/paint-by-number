@@ -66,17 +66,14 @@ final class LongTextTests: XCTestCase {
         XCTAssertTrue(window.contains(title.frame), "The empty state's title runs off the screen")
     }
 
-    /// The time-lapse sheet keeps its title and Pace control on screen (the control becomes a menu
-    /// at accessibility sizes, so it is found by identifier, whichever form it takes).
+    /// The time-lapse sheet keeps its title on screen.
     @MainActor
-    func testTimelapseSheetKeepsItsPaceControl() {
+    func testTimelapseSheetKeepsItsTitleOnScreen() {
         let app = launch("gallery-timelapse-long-text")
         let title = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Making Your Time-lapse'")).firstMatch
         XCTAssertTrue(title.waitForExistence(timeout: 150), "The time-lapse sheet never opened")
         attachScreenshot(of: app, named: "gallery-timelapse-long-text")
-        let pace = app.descendants(matching: .any)["timelapse-pace"]
-        XCTAssertTrue(pace.exists, "The Pace control is missing")
-        XCTAssertTrue(app.windows.firstMatch.frame.contains(pace.frame), "The Pace control is cut off")
+        XCTAssertTrue(app.windows.firstMatch.frame.contains(title.frame), "The title runs off the screen")
     }
 
     /// The create flow's settings chip keeps Reset to Suggested whole and tappable.

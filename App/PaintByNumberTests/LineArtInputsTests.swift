@@ -292,11 +292,12 @@ struct EyeFinderTests {
     private func simdDistance(_ a: SIMD2<Double>, _ b: SIMD2<Double>) -> Double { ((a - b) * (a - b)).sum().squareRoot() }
 }
 
-/// `LineArtInputs`: classic settings need nothing, layered ones get the edge map and eyes once
-/// per photo, and the create flow and regeneration carry Settings › Advanced into the painting.
+/// `LineArtInputs`: classic settings need nothing, a coloring book gets the edge map and eyes
+/// once per photo, and the create flow and regeneration carry its line art into the painting.
 @MainActor
 struct LineArtInputsTests {
-    private static let layered = LineArtSettings(style: .layered, outlineThreshold: 0.7, minimumStrokeLength: 12)
+    private static let book = LineArtSettings(outlineThreshold: 0.7, minimumStrokeLength: 12)
+    /// A tuning an older painting recorded (Settings › Advanced had one).
     private static let tuning = PipelineTuning(minimumCellSize: 1.5, colorfulness: 0.8)
 
     private static func photo(_ name: String = "red-fox") throws -> CGImage {
@@ -310,21 +311,21 @@ struct LineArtInputsTests {
         let classic = LineArtSettings(style: .classic)
         #expect(try await LineArtInputs.make(for: image, settings: classic) == nil)
         #expect(try await LineArtInputs.forGeneration(of: image, settings: classic, cached: false) == nil)
-        #expect(try await LineArtInputs.forGeneration(of: nil, settings: Self.layered, cached: false) == nil)
+        #expect(try await LineArtInputs.forGeneration(of: nil, settings: Self.book, cached: false) == nil)
     }
 
     /// The first request runs the model; the next for the same image comes from the cache.
-    @Test func layeredInputsAreComputedOncePerPhoto() async throws {
+    @Test func bookInputsAreComputedOncePerPhoto() async throws {
         let image = try Self.photo()
         let clock = ContinuousClock()
         var start = clock.now
-        let first = try #require(try await LineArtInputs.make(for: image, settings: Self.layered))
+        let first = try #require(try await LineArtInputs.make(for: image, settings: Self.book))
         let computing = clock.now - start
         // A photo under the model's size keeps its own.
         #expect(first.edges.width == image.width && first.edges.height == image.height)
         #expect(first.eyes.isEmpty, "A fox has no human face")
         start = clock.now
-        let second = try await LineArtInputs.make(for: image, settings: Self.layered)
+        let second = try await LineArtInputs.make(for: image, settings: Self.book)
         let cached = clock.now - start
         #expect(second == first)
         #expect(cached * 5 < computing, "The second request took \(cached), the first \(computing)")
@@ -335,29 +336,29 @@ struct LineArtInputsTests {
 
     @Test func aCancelledRequestStopsTheComputation() async throws {
         let image = try Self.photo("great-wave")
-        let request = Task { try await LineArtInputs.make(for: image, settings: Self.layered) }
+        let request = Task { try await LineArtInputs.make(for: image, settings: Self.book) }
         request.cancel()
         await #expect(throws: CancellationError.self) { try await request.value }
         // Nothing failed is kept: the next request computes the inputs.
-        let input = try await LineArtInputs.make(for: image, settings: Self.layered)
+        let input = try await LineArtInputs.make(for: image, settings: Self.book)
         #expect(input?.edges.width == image.width)
     }
 
-    /// Advanced settings reach every candidate, the chosen settings, the draft, its template
-    /// and the saved artwork's meta.json; layered line art computes its inputs once for the photo.
-    @Test func createFlowCarriesAdvancedSettingsIntoTheArtwork() async throws {
-        let model = CreateModel(paintingLength: .quick, lineArt: Self.layered, tuning: Self.tuning)
+    /// The create flow's line art reaches every candidate, the chosen settings, the draft, its
+    /// template and the saved artwork's meta.json; the book computes its inputs once for the photo.
+    @Test func createFlowCarriesItsLineArtIntoTheArtwork() async throws {
+        let model = CreateModel(paintingLength: .quick, lineArt: Self.book)
         model.load(sample: try #require(Sample.named("red-fox")))
         let draft = try await model.makeDraft()
         let decision = try #require(model.decision)
-        #expect(decision.candidates.allSatisfy { $0.settings.lineArt == Self.layered && $0.settings.tuning == Self.tuning })
+        #expect(decision.candidates.allSatisfy { $0.settings.lineArt == Self.book && $0.settings.tuning.isDefault })
         #expect(model.settings == decision.settings)
         #expect(model.settingsOrigin == .suggested)
         let input = try #require(model.lineArtInput)
         #expect(max(input.edges.width, input.edges.height) == EdgeDetector.maximumLongSide)
         #expect(draft.settings == model.settings)
-        #expect(draft.settings.lineArt == Self.layered && draft.settings.tuning == Self.tuning)
-        #expect(draft.template.lineArt != nil, "The layered painting's template has no line art")
+        #expect(draft.settings.lineArt == Self.book && draft.settings.tuning.isDefault)
+        #expect(draft.template.lineArt?.style == .coloringBook, "The book's template has no line art")
 
         let root = Fixtures.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
@@ -366,13 +367,13 @@ struct LineArtInputsTests {
         let saved = try library.store.readMeta(artwork.id)
         #expect(saved.settings == draft.settings)
         let json = try String(contentsOf: library.store.url(.meta, of: artwork.id), encoding: .utf8)
-        #expect(json.contains("layered"))
+        #expect(json.contains("coloringBook"))
     }
 
     /// Classic settings compute nothing extra and record the classic line art and default tuning.
     @Test func classicCreateFlowComputesNoInputs() async throws {
         let classic = LineArtSettings(style: .classic)
-        let model = CreateModel(paintingLength: .quick, lineArt: classic, tuning: PipelineTuning())
+        let model = CreateModel(paintingLength: .quick, lineArt: classic)
         model.load(sample: try #require(Sample.named("morning-glories")))
         let draft = try await model.makeDraft()
         #expect(model.lineArtInput == nil)
@@ -381,9 +382,9 @@ struct LineArtInputsTests {
         #expect(draft.template.lineArt == nil)
     }
 
-    /// Regeneration uses the settings it is given, layered ones included (from the stored photo's
-    /// edge map), and records them.
-    @Test func regenerationRecordsLayeredSettings() async throws {
+    /// Regeneration uses the settings it is given, a book's line art (from the stored photo's
+    /// edge map) and an older painting's tuning included, and records them.
+    @Test func regenerationRecordsItsSettings() async throws {
         let root = Fixtures.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
         let library = Library(store: ArtworkStore(root: root))
@@ -391,10 +392,10 @@ struct LineArtInputsTests {
             sample: try #require(Sample.named("delicate-arch")), settings: GenerationSettings(colorCount: 12, detail: 0),
             photoMaxPixelSize: 640)
         let artwork = try await library.create(first)
-        let settings = GenerationSettings(colorCount: 12, detail: 0, lineArt: Self.layered, tuning: Self.tuning)
+        let settings = GenerationSettings(colorCount: 12, detail: 0, lineArt: Self.book, tuning: Self.tuning)
         let document = try await library.regenerate(artwork: artwork.id, settings: settings)
         #expect(document.template.regions.count > 0)
-        #expect(document.template.lineArt != nil, "Regenerating with layered settings drew no line art")
+        #expect(document.template.lineArt != nil, "Regenerating a book drew no line art")
         #expect(library.artwork(with: artwork.id)?.settings == settings)
         #expect(try library.store.readMeta(artwork.id).settings == settings)
     }

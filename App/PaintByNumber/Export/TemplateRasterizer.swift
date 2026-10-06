@@ -8,10 +8,9 @@ import simd
 /// images, create-flow previews and PDF pages. No Metal, safe off the main actor.
 ///
 /// Uses the template's vector geometry when present (crisp at any size, vector in PDFs)
-/// and otherwise samples the raster region map. Layered line art draws each layer with its
-/// `LineStyle` relative to the style's outline (faintest layer first), interior strokes included;
-/// a coloring book draws its drawing in full ink over everything (`ColoringBookLook`), in every
-/// style, with dotted guides along its color edges on paper.
+/// and otherwise samples the raster region map. Line art draws as a coloring book: the drawing
+/// in full ink over everything (`ColoringBookLook`), in every style, with dotted guides along
+/// its color edges on paper.
 nonisolated enum TemplateRasterizer {
     struct Style: Sendable {
         enum Unpainted: Sendable, Equatable {
@@ -22,12 +21,11 @@ nonisolated enum TemplateRasterizer {
             case sketch
         }
 
-        /// How a layered template's lines draw (classic templates draw every line alike).
+        /// Where a coloring book's drawing goes (classic templates draw every line alike).
         enum Lines: Sendable, Equatable {
-            /// As the canvas shows them at `zoom` (1 = fitted), with `appearance`, or with the
-            /// one Settings › Advanced stored when nil.
-            case screen(LineAppearance?, zoom: Float)
-            /// Every layer visible on paper (`LineStyle.print`).
+            /// As the canvas shows it.
+            case screen
+            /// On paper, where no highlight shows a color's cells: the color edges as dotted guides.
             case print
         }
 
@@ -46,8 +44,9 @@ nonisolated enum TemplateRasterizer {
         /// labels of this size rather than one huge number.
         var maximumNumberFraction: CGFloat = 1.0 / 64
         var paper = SIMD3<Float>(1, 1, 1)
-        /// Pictures show layered lines as the fitted canvas does.
-        var lines = Lines.screen(nil, zoom: 1)
+        var lines = Lines.screen
+        /// How heavy a coloring book's drawing is; nil = Settings › Line Weight.
+        var lineWeight: LineWeight?
 
         /// Gallery thumbnails: painted regions in color, the rest a faint sketch.
         static let thumbnail = Style(
@@ -56,12 +55,10 @@ nonisolated enum TemplateRasterizer {
         static let finished = Style(
             paintAll: true, outlineWidth: 0.8, outlineColor: SIMD4(0.2, 0.2, 0.22, 0.10),
             hidesOutlinesBetweenPainted: false)
-        /// Painted preview without any lines (create flow).
+        /// Painted preview (create flow): no outlines, only a coloring book's drawing.
         static let painting = Style(paintAll: true, outlineWidth: 0)
-        /// Outlines with numbers on paper, as the user will start painting it.
-        static let template = Style(outlineWidth: 1, numbers: true)
         /// Printable template (PDF): hairlines and small numbers. `PDFExporter` picks a scale
-        /// at which the smallest number is still legible on paper. Every line layer prints.
+        /// at which the smallest number is still legible on paper.
         static let printable = Style(
             outlineWidth: 0.4, outlineColor: SIMD4(0.45, 0.47, 0.5, 1), numbers: true,
             numberColor: SIMD4(0.35, 0.37, 0.4, 1), lines: .print)
@@ -124,15 +121,10 @@ nonisolated enum TemplateRasterizer {
             drawRegionMap(t, painted: flags, style: style, in: ctx, resolution: deviceSize)
         } else {
             drawVectorFills(t, painted: flags, style: style, in: ctx, scale: scale)
-            let lines = DrawableLineArt(t)
-            if let lines, lines.style == .coloringBook {
+            if let lines = DrawableLineArt(t) {
                 drawBookOutlines(t, lines: lines, style: style, in: ctx, scale: scale)
             } else if style.outlineWidth > 0 {
-                if let lines {
-                    drawLayeredOutlines(t, lines: lines, look: lineStyle(style), painted: flags, style: style, in: ctx, scale: scale)
-                } else {
-                    drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale)
-                }
+                drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale)
             }
         }
         if style.numbers { drawNumbers(t, painted: flags, style: style, in: ctx) }
@@ -222,61 +214,6 @@ nonisolated enum TemplateRasterizer {
         ctx.strokePath()
     }
 
-    /// The line style a layered template draws with under `style`.
-    static func lineStyle(_ style: Style) -> LineStyle {
-        switch style.lines {
-        case let .screen(appearance, zoom): LineStyle(appearance ?? .stored(), zoom: zoom)
-        case .print: .print
-        }
-    }
-
-    /// Layered line art: each layer's lines in the style's outline color at the layer's opacity
-    /// and width (`look`'s factors on the style's), faintest layer first so stronger lines lie on
-    /// top where they meet. Lines between painted regions and strokes inside painted cells go
-    /// with `hidesOutlinesBetweenPainted`, as on the canvas, but for the fraction of their ink
-    /// their layer keeps when painted (`look.painted`).
-    private static func drawLayeredOutlines(
-        _ t: Template, lines: DrawableLineArt, look: LineStyle, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat
-    ) {
-        let visible = ctx.boundingBoxOfClipPath
-        // One path per layer, per tenth of the layer's width when lines are weighted, and per
-        // whether the line is covered by paint on both sides.
-        var paths: [Int: CGMutablePath] = [:]
-        func add(_ points: ArraySlice<SIMD2<Float>>, layer: UInt8, weight: Float, covered: Bool) {
-            guard !covered || look.painted[Int(layer)] > 0 else { return }
-            let step = look.weighted ? Int((weight * 10).rounded()) : 10
-            let key = (Int(layer) * 100 + step) * 2 + (covered ? 1 : 0)
-            let path = paths[key] ?? CGMutablePath()
-            addPolyline(points, to: path, within: visible)
-            paths[key] = path
-        }
-        for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside {
-            let covered = style.hidesOutlinesBetweenPainted && painted[Int(edge.left)] && painted[Int(edge.right)]
-            add(t.points(of: edge), layer: lines.edgeLayers[e], weight: lines.edgeWeights[e], covered: covered)
-        }
-        for (s, stroke) in lines.strokes.enumerated() {
-            let covered = style.hidesOutlinesBetweenPainted && painted[Int(stroke.region)]
-            add(lines.points(of: stroke), layer: stroke.layer, weight: lines.strokeWeights[s], covered: covered)
-        }
-        let color = style.outlineColor
-        ctx.saveGState()
-        ctx.setLineJoin(.round)
-        ctx.setLineCap(.round)
-        // Descending keys: color lines first, outlines last.
-        for key in paths.keys.sorted(by: >) {
-            guard let path = paths[key], !path.isEmpty else { continue }
-            let covered = key % 2 == 1, layer = key / 200, factor = CGFloat(key / 2 % 100) / 10
-            let opacity = min(1, color.w * look.opacity[layer] * (covered ? look.painted[layer] : 1))
-            let width = style.outlineWidth * CGFloat(look.width[layer]) * factor
-            guard opacity > 0.002, width > 0 else { continue }
-            ctx.setStrokeColor(cgColor(SIMD4(color.x, color.y, color.z, opacity), space: t.colorSpace))
-            ctx.setLineWidth(width / max(scale, 0.0001))
-            ctx.addPath(path)
-            ctx.strokePath()
-        }
-        ctx.restoreGState()
-    }
-
     /// A coloring book's lines (`ColoringBookLook`): the drawing (every drawn layer, edges and
     /// strokes alike) in full ink, `widthFactor` times the style's line (a style without lines
     /// still gets it at the finished picture's width: the drawing is part of the picture), never
@@ -285,11 +222,7 @@ nonisolated enum TemplateRasterizer {
     private static func drawBookOutlines(_ t: Template, lines: DrawableLineArt, style: Style, in ctx: CGContext, scale: CGFloat) {
         let visible = ctx.boundingBoxOfClipPath
         let units = 1 / max(scale, 0.0001)
-        let weight: Float
-        switch style.lines {
-        case let .screen(appearance, _): weight = (appearance ?? .stored()).coloringBookWeight
-        case .print: weight = LineAppearance.stored().coloringBookWeight
-        }
+        let weight = (style.lineWeight ?? .stored()).factor
         let base = style.outlineWidth > 0 ? style.outlineWidth : Style.finished.outlineWidth
         ctx.saveGState()
         ctx.setLineJoin(.round)

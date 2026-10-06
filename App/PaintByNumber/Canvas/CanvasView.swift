@@ -74,10 +74,10 @@ final class CanvasView: UIView, PaintingCanvas {
     var paperAppearance = PaperAppearance.default {
         didSet { if paperAppearance != oldValue { paperChanged() } }
     }
-    /// Settings › Advanced › Line Appearance: how a layered template's lines draw at each zoom.
-    /// The next frame uses it, so a change shows at once; classic templates ignore it.
-    var lineAppearance = LineAppearance.default {
-        didSet { if lineAppearance != oldValue, scene?.lineArtStyle != nil { requestRender() } }
+    /// Settings › Line Weight: how heavy a coloring book's drawing is. The next frame uses it,
+    /// so a change shows at once; classic templates ignore it.
+    var lineWeight = LineWeight.default {
+        didSet { if lineWeight != oldValue, scene?.isColoringBook == true { requestRender() } }
     }
     /// Feedback mode (`MarkupCanvas`): the drawing canvas over this one takes every touch and
     /// moves the camera (`follow`). VoiceOver isn't offered areas to paint meanwhile.
@@ -696,23 +696,20 @@ final class CanvasView: UIView, PaintingCanvas {
             Float(template.width), Float(template.height))
         // Line art gets finer and lighter when zoomed out, where regions are small on screen.
         let depth = Float(log2(max(camera.zoom / fitZoom, 1)))
-        let widthPt = LineStyle.classicWidthPoints(depth: depth)
+        let widthPt = ClassicLook.widthPoints(depth: depth)
         u.setChrome(
             palette, shadowOpacity: palette.shadowOpacity,
-            outlineOpacity: palette.outlineOpacity * LineStyle.classicStrength(depth: depth))
+            outlineOpacity: palette.outlineOpacity * ClassicLook.strength(depth: depth))
         // A replay shows the painting as it was made, without the brush's highlight.
         let selected = isReplaying ? nil : session.selectedColor
         if let selected, let scene, selected < scene.paletteLinear.count {
             u.select(scene.paletteLinear[selected], palette: palette)
         }
         u.outline = SIMD4(widthPt * s, (widthPt + 0.55) * s, 1, numbersFade.value(at: time))
-        switch scene?.lineArtStyle {
-        case .layered:
-            u.setLines(LineStyle(lineAppearance, zoom: Float(camera.zoom / fitZoom), classicStrength: LineStyle.classicStrength(depth: depth)))
-        case .coloringBook:
-            u.setColoringBookLines(width: ColoringBookLook.widthPoints(depth: depth, weight: lineAppearance.coloringBookWeight) * s)
-        case nil:
-            u.setLines(.classic)
+        if scene?.isColoringBook == true {
+            u.setColoringBookLines(width: ColoringBookLook.widthPoints(depth: depth, weight: lineWeight.factor) * s)
+        } else {
+            u.setClassicLines()
         }
         u.labels = SIMD4(6.5 * s, 8.5 * s, 22 * s, 16 * s)
         u.numbers = SIMD4(0.5, 0.9, 0.05, reduceMotion ? 1 : 0)
@@ -831,9 +828,9 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     /// Finishing a color sweeps a gloss over it once its last fill has landed; finishing the
-    /// painting sweeps the whole canvas (not under Reduce Motion, nor with its switch off).
+    /// painting sweeps the whole canvas (not under Reduce Motion).
     private func celebrate(_ event: PaintEvent) {
-        guard !reduceMotion, PaintingEffect.finishShine.isEnabled() else { return }
+        guard !reduceMotion else { return }
         let delay: Float
         switch event {
         case let .colorCompleted(color):
@@ -889,9 +886,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     /// Two gold sparkles pop at the region's edge (on its label's free circle, which touches the
     /// outline) as the paint lands, then fade. Not during a fast stroke, nor where the region is
-    /// too small on screen for them to read, nor with their switch off.
+    /// too small on screen for them to read.
     private func popSparkles(at region: Int, after delay: Float) {
-        guard PaintingEffect.fillSparkles.isEnabled(), let label = template.labels(ofRegion: region).max(by: { $0.radius < $1.radius }) else { return }
+        guard let label = template.labels(ofRegion: region).max(by: { $0.radius < $1.radius }) else { return }
         let reach = CGFloat(label.radius) * currentCamera().zoom
         let start = CACurrentMediaTime()
         guard reach >= 10, start - lastSparkles > 0.3 else { return }
@@ -1039,7 +1036,7 @@ final class CanvasView: UIView, PaintingCanvas {
                 onDismissPhoto?()
                 return
             }
-            // No paint on the brush (a finished painting, the Advanced settings preview): no brush.
+            // No paint on the brush (a finished painting): no brush.
             guard session.selectedColor != nil else { return }
             FeedbackEngine.shared.selectionChanged()
             brushPoint = g.location(in: self)

@@ -8,8 +8,8 @@ import UIKit
 ///
 /// The inline picker is the page's primary content and fills the remaining height. Compact
 /// windows switch between it and the samples with a segmented control; wide windows show the
-/// samples in a scrolling column beside it, in two sections: paintings, then photographs.
-/// "Browse All…" presents the full system picker.
+/// samples in a scrolling column beside it, in two sections: paintings, then photographs. The
+/// picker's own top bar reaches the albums and search.
 ///
 /// On compact widths the picker runs edge to edge: inset from both the window's left and top
 /// edge, the embedded picker's photo grid ignores taps on iPhone for its first ten seconds or
@@ -25,8 +25,6 @@ struct PhotoSourceView: View {
 
     @State private var pane: Pane
     @State private var libraryItems: [PhotosPickerItem] = []
-    @State private var browsedItem: PhotosPickerItem?
-    @State private var isBrowsingAll = false
     @State private var isShowingCamera = false
     @State private var width: CGFloat = 0
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
@@ -72,10 +70,6 @@ struct PhotoSourceView: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
             }
-            ToolbarItem(placement: .primaryAction) {
-                Button("Browse All…", systemImage: "photo.on.rectangle.angled") { isBrowsingAll = true }
-                    .help("Browse all photos and albums")
-            }
             if cameraAvailable {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Take Photo", systemImage: "camera") { isShowingCamera = true }
@@ -86,14 +80,9 @@ struct PhotoSourceView: View {
             guard let item = items.first else { return }
             // Clearing the selection lets the same photo be picked again after coming back.
             libraryItems = []
-            pick(item)
+            model.load(item: item)
+            onPicked()
         }
-        .onChange(of: browsedItem) { _, item in
-            guard let item else { return }
-            browsedItem = nil
-            pick(item)
-        }
-        .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 model.load(imageData: data)
@@ -232,12 +221,6 @@ struct PhotoSourceView: View {
     private var tileWidth: CGFloat {
         let column = (isWide ? samplesWidth : width - 2 * horizontalPadding) - 8
         return column > 0 ? min(tileMinimumWidth, column) : tileMinimumWidth
-    }
-
-    /// Shared by the inline picker and Browse All.
-    private func pick(_ item: PhotosPickerItem) {
-        model.load(item: item)
-        onPicked()
     }
 }
 

@@ -50,7 +50,7 @@ nonisolated struct FeedbackCapture: Sendable {
     var showsNumbers: Bool
     var paper: PaperAppearance
     var darkInterface: Bool
-    var lineAppearance: LineAppearance
+    var lineWeight: LineWeight
     /// What was on screen (canvas units, clear of the chrome), at how many points per canvas
     /// unit, on a screen of `displayScale` pixels per point; `relativeZoom` is 1 when the whole
     /// painting fitted.
@@ -74,14 +74,14 @@ extension FeedbackCapture {
     /// The painting on `session` as the canvas behind `controller` shows it now.
     init(
         session: PaintingSession, title: String, controller: CanvasController, showsNumbers: Bool, paper: PaperAppearance,
-        darkInterface: Bool, lineAppearance: LineAppearance, displayScale: CGFloat, source: FeedbackSource?, date: Date = .now
+        darkInterface: Bool, lineWeight: LineWeight, displayScale: CGFloat, source: FeedbackSource?, date: Date = .now
     ) {
         let template = session.template
         self.init(
             date: date, title: title, template: template, progress: session.progress, selectedColor: session.selectedColor,
             nicknames: (0..<session.paletteCount).map { session.nickname(of: $0) }, nicknameSeed: session.nicknameSeed,
             showsNumbers: showsNumbers,
-            paper: paper, darkInterface: darkInterface, lineAppearance: lineAppearance,
+            paper: paper, darkInterface: darkInterface, lineWeight: lineWeight,
             visibleRect: controller.visibleCanvasRect ?? CGRect(x: 0, y: 0, width: template.width, height: template.height),
             pointsPerUnit: controller.pointsPerUnit ?? 1, displayScale: displayScale,
             relativeZoom: controller.relativeZoom ?? 1, app: AppInfo().summary, device: Self.deviceModel,

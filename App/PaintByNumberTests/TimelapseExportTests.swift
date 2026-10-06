@@ -104,21 +104,7 @@ struct TimelapseExportTests {
         #expect(model.phase == .ready(url))
     }
 
-    // MARK: Pace
-
-    private func options(_ pace: TimelapsePace) -> TimelapseExporter.Options {
-        var options = TimelapseExporter.Options(size: CGSize(width: 64, height: 64))
-        options.pace = pace
-        return options
-    }
-
-    /// Two bursts of twenty strokes a tenth of a second apart, a long pause between them.
-    private var twoBursts: [Float] {
-        var times: [Float] = []
-        for k in 0..<20 { times.append(Float(k) * 0.1) }
-        for k in 0..<20 { times.append(600 + Float(k) * 0.1) }
-        return times
-    }
+    // MARK: Schedule
 
     /// The frames of the painting part, as (completed strokes, fraction of the next).
     private func states(_ schedule: TimelapseSchedule) -> [[Float]] {
@@ -128,95 +114,22 @@ struct TimelapseExportTests {
         }
     }
 
-    /// The most consecutive painting frames showing exactly the same picture and fill.
-    private func longestHold(_ schedule: TimelapseSchedule) -> (frames: Int, strokes: Int) {
-        var best = (frames: 0, strokes: 0)
-        var run = 0
-        var previous: [Float]?
-        for state in states(schedule) {
-            run = state == previous ? run + 1 : 1
-            previous = state
-            if run > best.frames { best = (run, Int(state[0])) }
-        }
-        return best
-    }
-
-    @Test func asPaintedShowsThePauseBetweenBursts() {
-        let strokeTimes = twoBursts
-        let painted = TimelapseSchedule(strokeCount: 40, strokeTimes: strokeTimes, options: options(.asPainted))
-        let even = TimelapseSchedule(strokeCount: 40, strokeTimes: strokeTimes, options: options(.even))
-        // The 600 s pause counts as 2 s of the 5.8 s timeline: about a third of the painting part.
-        let hold = longestHold(painted)
-        #expect(hold.strokes == 20, "the picture holds after the first burst, not \(hold.strokes) strokes in")
-        #expect(hold.frames >= 60, "the pause lasts \(hold.frames) frames")
-        #expect(longestHold(even).frames < 5, "the even schedule never stands still")
-        // The movie is as long either way.
-        #expect(painted.frameCount == even.frameCount)
-        #expect(painted.paintingFrames == even.paintingFrames)
-        #expect(painted.state(atFrame: painted.introFrames).strokes == 0)
-        #expect(painted.state(atFrame: painted.frameCount - 1).strokes == 40)
-    }
-
-    @Test func asPaintedNeverGoesBackwardsAndPaintsEveryStroke() {
-        let schedule = TimelapseSchedule(strokeCount: 40, strokeTimes: twoBursts, options: options(.asPainted))
-        let counts = states(schedule).map { Int($0[0]) }
+    /// Strokes accelerate in and ease out: the count never goes backwards, every stroke is
+    /// reached, the picture never stands still while it paints, and a small painting makes a
+    /// short movie.
+    @Test func replayEasesThroughEveryStroke() {
+        let options = TimelapseExporter.Options(size: CGSize(width: 64, height: 64))
+        let schedule = TimelapseSchedule(strokeCount: 40, options: options)
+        let frames = states(schedule)
+        let counts = frames.map { Int($0[0]) }
         #expect(counts == counts.sorted())
-        #expect(states(schedule).allSatisfy { $0[1] >= 0 && $0[1] < 1 })
-        // Fills spread within a burst (some frame is part-way through a stroke) and each stroke is
-        // reached: no stroke is skipped by more than the few that fit in one frame.
-        #expect(states(schedule).contains { $0[1] > 0 })
-        let steps = zip(counts, counts.dropFirst()).map { $1 - $0 }
-        #expect((steps.max() ?? 0) <= 2, "strokes jumped by \(steps.max() ?? 0) in one frame")
-    }
-
-    @Test func pausesLongerThanTwoSecondsAreAllTheSameBeat() {
-        let short = TimelapseSchedule(strokeCount: 4, strokeTimes: [0, 1, 6, 7], options: options(.asPainted))
-        let long = TimelapseSchedule(strokeCount: 4, strokeTimes: [0, 1, 5000, 5001], options: options(.asPainted))
-        #expect(states(short) == states(long))
-    }
-
-    @Test func timesWithoutARhythmReplayEvenly() {
-        let even = states(TimelapseSchedule(strokeCount: 12, options: options(.even)))
-        // Progress written before times were recorded.
-        let zeros = TimelapseSchedule(strokeCount: 12, strokeTimes: [Float](repeating: 0, count: 12), options: options(.asPainted))
-        #expect(states(zeros) == even)
-        // Times that don't belong to the log.
-        let mismatched = TimelapseSchedule(strokeCount: 12, strokeTimes: [0, 1, 2], options: options(.asPainted))
-        #expect(states(mismatched) == even)
-        let none = TimelapseSchedule(strokeCount: 12, options: options(.asPainted))
-        #expect(states(none) == even)
-        // A single stroke has no intervals.
-        let single = TimelapseSchedule(strokeCount: 1, strokeTimes: [3], options: options(.asPainted))
-        #expect(states(single) == states(TimelapseSchedule(strokeCount: 1, options: options(.even))))
-        #expect(zeros.frameCount == TimelapseSchedule(strokeCount: 12, options: options(.even)).frameCount)
-    }
-
-    @Test func damagedTimesDontBreakTheSchedule() {
-        var times = (0..<10).map { Float($0) }
-        times[4] = .nan
-        times[6] = 1
-        let schedule = TimelapseSchedule(strokeCount: 10, strokeTimes: times, options: options(.asPainted))
-        let counts = states(schedule).map { Int($0[0]) }
-        #expect(counts == counts.sorted())
-        #expect(schedule.state(atFrame: schedule.frameCount - 1).strokes == 10)
-    }
-
-    /// A finished painting under both paces makes a movie of the same length.
-    @Test func bothPacesMakeMoviesOfTheSameLength() async throws {
-        var progress = PaintProgress(regionCount: 3)
-        for region in 0..<3 {
-            progress.activeSeconds = Double(region) * 40
-            progress.paint(region)
-        }
-        var durations: [CMTime] = []
-        for pace in TimelapsePace.allCases {
-            let request = TimelapseRequest(
-                title: "Pace \(UUID().uuidString)", source: .live(template: Fixtures.stripes(), progress: progress))
-            let url = try await request.render(longSide: 160, pace: pace)
-            defer { ArtworkExporter.removeExport(at: url) }
-            durations.append(try await AVURLAsset(url: url).load(.duration))
-        }
-        #expect(durations.count == 2 && durations[0] == durations[1], "durations \(durations)")
+        #expect(frames.allSatisfy { $0[1] >= 0 && $0[1] < 1 })
+        #expect(zip(frames, frames.dropFirst()).allSatisfy { $0 != $1 }, "the replay stands still")
+        #expect(schedule.state(atFrame: 0).strokes == 0 && schedule.state(atFrame: 0).fraction == 0)
+        #expect(schedule.state(atFrame: schedule.introFrames).strokes == 0)
+        #expect(schedule.state(atFrame: schedule.frameCount - 1).strokes == 40)
+        let small = TimelapseSchedule(strokeCount: 3, options: options)
+        #expect(small.paintingFrames < schedule.paintingFrames && small.paintingFrames == Int(1.5 * 60))
     }
 
     /// RGB of a decoded 32BGRA frame at (x, y), origin top-left.

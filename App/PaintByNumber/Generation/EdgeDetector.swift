@@ -3,15 +3,15 @@ import CoreML
 import Foundation
 import PaintCore
 
-/// The maps layered and coloring-book line art draw from, made by the two bundled models
+/// The maps a coloring book draws from, made by the two bundled models
 /// (`Resources/Models`): HED (`HED.mlpackage`: ControlNet's Apache-2.0 retraining of Xie & Tu's
 /// holistically-nested edge detector, converted by `tools/models/convert_hed.py`), a contour map
 /// whose silhouettes are strong and closed, and the Informative Drawings generator
 /// (`LineArt.mlpackage`: Chan, Durand & Isola's MIT-licensed line-drawing network, the one
 /// ControlNet's lineart annotator runs, converted by `tools/models/convert_lineart.py`), a line
 /// drawing with the fur, petals and glass a contour map lacks. `maps` makes both; `LineArtInputs`
-/// lays the drawing over the contours (`EdgeMap.combined`), which is what the app generates from
-/// unless Settings › Advanced picks one detector, with the contours deciding the outlines.
+/// lays the drawing over the contours (`EdgeMap.combined`), which is what the app generates from,
+/// with the contours deciding the outlines.
 ///
 /// A map is made the way the layered-lines research made its HED maps: the photo in sRGB,
 /// area-resampled to at most the model's long side (PaintCore's own resampler, as `pbn` made the

@@ -119,12 +119,3 @@ nonisolated extension PaletteColor {
     var hexCode: String { "#" + hexDigits.uppercased() }
 }
 
-/// Whether the paints go by their playful nicknames ("Harbor Fog") or only by their plain,
-/// structured names ("dark grayish blue"). Settings › Color Names.
-nonisolated enum ColorNameStyle: String, CaseIterable, Identifiable, Sendable {
-    case playful, plain
-
-    var id: String { rawValue }
-
-    static let `default` = ColorNameStyle.playful
-}

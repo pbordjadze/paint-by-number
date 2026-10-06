@@ -2,15 +2,16 @@ import Foundation
 import Testing
 @testable import PaintCore
 
-/// Coding of layered line data: the LINE chunk and its trailing style byte, against fixtures
-/// written by past encoders and against today's encoder output.
+/// Coding of line data: the LINE chunk and its trailing style byte, against fixtures written by
+/// past encoders and against today's encoder output.
 @Suite("Line art coding")
 struct LineArtCodingTests {
 
     /// `Fixtures/template-v2-lines.pbnt` was written by the LINE encoder of commit 7ae42a1 with
     /// `pbn generate Fixtures/layered-photo.ppm <dir> --colors 8 --line-style layered --edges
     /// Fixtures/layered-edges.pgm --line-art outlineThreshold=0.8 --line-art detailThreshold=0.5
-    /// --line-art textureThreshold=0.3 --line-art minimumStrokeLength=10 --line-art gapBridging=6`:
+    /// --line-art textureThreshold=0.3 --line-art minimumStrokeLength=10 --line-art gapBridging=6`
+    /// (a pbn of that time: the layered style is retired, and the app draws the fixture as a book):
     /// the v1 payload, then a GENR and a LINE chunk (12 edges: 7 outline, 1 detail, 4 color; one
     /// texture stroke of 6 points inside the joined sky). It pins the LINE layout: never
     /// regenerate it.
@@ -78,7 +79,7 @@ struct LineArtCodingTests {
     }
 
     @Test func lineArtStyleIsAnOptionalTrailingByte() throws {
-        let book = try LineArtTests.generate(LineArtTests.book()).template
+        let book = try LineArtTests.generate().template
         let art = try #require(book.lineArt)
         #expect(art.style == .coloringBook)
         #expect(try Template(encoded: book.encoded()) == book)

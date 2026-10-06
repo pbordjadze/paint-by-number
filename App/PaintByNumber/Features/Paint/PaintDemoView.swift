@@ -24,8 +24,7 @@ import simd
 ///   the only scenario that shows tips (`PaintTips.configure`)
 /// - `paint-ax`: `paint-progress`, showing the selected color's name
 /// - `paint-ax-large`: `paint-ax` at the largest accessibility text size
-/// - `paint-names-plain`: `paint-progress` under Settings › Color Names › Plain (structured names only)
-/// - `paint-palette`: ~30 % painted, the palette in four rows in rainbow order (Settings › Palette)
+/// - `paint-palette`: ~30 % painted, the palette in four rows in rainbow order (More › Palette)
 /// - `paint-long-text`, `paint-complete-long-text`: `paint-progress` and `paint-complete` with a long
 ///   title and every localized string twice as long (`ci/screenshots.sh` adds
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`): the progress badge, palette
@@ -36,17 +35,6 @@ import simd
 /// - `paint-feedback-review`: the review and send sheet over it, with a note, the first mark's
 ///   comment, both close-ups and the Original Photo switch (a painting from the painter's photo)
 /// - `paint-feedback-long-text`: `paint-feedback-review` with doubled strings and a long title
-///
-/// Layered line art from the real pipeline (the stand-in edge map `SyntheticTemplate.edgeMap`
-/// for the learned detector) at the default Line Appearance:
-/// - `paint-layered`: fresh canvas, fit to screen (the 1× look: outlines, faint texture)
-/// - `paint-layered-progress`: ~45 % painted, the color in progress selected (painted lines
-///   dissolve, the selected color's cells are outlined boldly whatever their layer)
-/// - `paint-layered-zoom2`, `paint-layered-zoomed`: zoomed 2× and 4× into the drawing, the
-///   fainter layers coming in
-/// - `paint-layered-dark-paper`: `paint-layered-progress` on dark paper
-/// - `paint-layered-inked`: `paint-layered-progress` with a Line Appearance whose outlines stay
-///   over the paint (lines between painted cells keep their ink)
 ///
 /// A coloring book of the red fox from the real pipeline, with the real edge detector (the
 /// stand-in map when the model is unavailable):
@@ -82,18 +70,18 @@ struct PaintDemoView: View {
             }
         }
         .task {
-            let layered = scenario.hasPrefix("paint-layered"), book = scenario.hasPrefix("paint-book")
-            let photo = layered ? "santa-fe-freight" : book ? "red-fox" : "delicate-arch"
+            let book = scenario.hasPrefix("paint-book")
+            let photo = book ? "red-fox" : "delicate-arch"
             let template: Template?
-            if layered || book {
-                template = await Self.drawnTemplate(photo: photo, style: book ? .coloringBook : .layered)
+            if book {
+                template = await Self.bookTemplate(photo: photo)
             } else {
                 template = await Self.template(photo: photo)
             }
             // Titles are the person's own words, which pseudo-localization doesn't lengthen.
             let title = scenario.hasSuffix("-long-text")
                 ? "Delicate Arch on Our Spring Trip Through Utah"
-                : (template == nil ? "Mosaic" : (layered ? "Freight Train" : book ? "Red Fox" : "Delicate Arch"))
+                : (template == nil ? "Mosaic" : (book ? "Red Fox" : "Delicate Arch"))
             demo = Demo(
                 scenario: scenario, template: template ?? SyntheticTemplate.make(), title: title,
                 photo: template == nil ? nil : photo)
@@ -118,24 +106,21 @@ struct PaintDemoView: View {
         return output.template.mesh.indices.isEmpty ? nil : output.template
     }
 
-    /// The photo's layered or coloring-book template from the real pipeline. Layered demos keep
-    /// the stand-in edge map (`SyntheticTemplate.edgeMap`) their screenshots were judged with;
-    /// a coloring book draws from the real detector (`LineArtInputs.compute`), falling back to
-    /// the stand-in when the model is unavailable.
+    /// The photo's coloring book from the real pipeline: from the real detector
+    /// (`LineArtInputs.compute`), or the stand-in map (`SyntheticTemplate.edgeMap`) when the model
+    /// is unavailable.
     @concurrent
-    private static func drawnTemplate(photo: String, style: LineArtSettings.Style) async -> Template? {
-        var settings = GenerationSettings()
-        settings.lineArt.style = style
+    private static func bookTemplate(photo: String) async -> Template? {
         guard let url = Bundle.main.url(forResource: photo, withExtension: "jpg"),
               let image = try? PhotoLoader.load(url: url, maxPixelSize: 2048),
               let small = try? PhotoLoader.load(url: url, maxPixelSize: 640)
         else { return nil }
         var input: LineArtInput?
-        if style == .coloringBook, let cgImage = PhotoLoader.cgImage(from: image) {
+        if let cgImage = PhotoLoader.cgImage(from: image) {
             input = try? await LineArtInputs.compute(for: cgImage)
             Log.demo.notice("demo \(photo, privacy: .public): edge detector \(input == nil ? "unavailable, using the stand-in map" : "ran", privacy: .public)")
         }
-        guard let output = try? TemplateGenerator(settings: settings)
+        guard let output = try? TemplateGenerator()
             .generate(from: image, lineArt: input ?? LineArtInput(edges: SyntheticTemplate.edgeMap(for: small)))
         else { return nil }
         return output.template.lineArt == nil || output.template.mesh.indices.isEmpty ? nil : output.template
@@ -186,9 +171,6 @@ private final class Demo {
             // Registered, not stored: it lasts for this launch, so the next scenario on the same
             // simulator keeps the default light paper.
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
-        case "paint-names-plain":
-            paint(fraction: 0.55)
-            session.colorNameStyle = .plain
         case "paint-palette":
             paint(fraction: 0.3)
             // Registered, not stored, like the paper above.
@@ -223,22 +205,14 @@ private final class Demo {
         case "paint-photo":
             paint(fraction: 0.4)
             showsPhoto = true
-        case "paint-layered-progress", "paint-book-progress":
+        case "paint-book-progress":
             paint(fraction: 0.45)
-        case "paint-layered-dark-paper", "paint-book-dark-paper":
+        case "paint-book-dark-paper":
             paint(fraction: 0.45)
             UserDefaults.standard.register(defaults: [SettingsKey.paperAppearance: PaperAppearance.dark.rawValue])
-        case "paint-layered-inked":
-            paint(fraction: 0.45)
-            var appearance = LineAppearance.default
-            appearance.outline.painted = 1
-            appearance.detail.painted = 0.5
-            if let data = try? JSONEncoder().encode(appearance) {
-                UserDefaults.standard.register(defaults: [SettingsKey.lineAppearance: data])
-            }
-        case "paint-layered-zoom2", "paint-layered-zoomed", "paint-book-zoomed":
+        case "paint-book-zoomed":
             paint(fraction: 0.2)
-            camera = CanvasCamera(zoom: scenario == "paint-layered-zoom2" ? 2 : 4, center: Self.busiest(t))
+            camera = CanvasCamera(zoom: 4, center: Self.busiest(t))
         case "paint-feedback", "paint-feedback-dark", "paint-feedback-review", "paint-feedback-long-text":
             paint(fraction: 0.45)
             let reviews = scenario.hasSuffix("-review") || scenario.hasSuffix("-long-text")

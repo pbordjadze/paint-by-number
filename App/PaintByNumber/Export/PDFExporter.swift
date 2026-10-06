@@ -13,25 +13,15 @@ import simd
 /// template is printed on several overlapping sheets instead (`Sheets`), after an overview
 /// page showing how they fit together.
 nonisolated enum PDFExporter {
-    enum Paper: String, Sendable, CaseIterable, Identifiable {
+    /// The paper a template is laid out for: the region's usual size (`default(for:)`).
+    enum Paper: String, Sendable, CaseIterable {
         case letter, a4
-
-        var id: String { rawValue }
 
         /// Portrait size in points.
         var size: CGSize {
             switch self {
             case .letter: CGSize(width: 612, height: 792)
             case .a4: CGSize(width: 595.28, height: 841.89)
-            }
-        }
-
-        var name: String {
-            switch self {
-            case .letter: String(localized: "pdf.paper.letter", defaultValue: "US Letter",
-                                 comment: "Name of the US Letter paper size, in Settings and the print options")
-            // The standard's own name in every language.
-            case .a4: "A4"
             }
         }
 

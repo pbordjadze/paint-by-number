@@ -127,6 +127,12 @@ func waitUntil(
     }
 }
 
+extension TemplateRasterizer.Style {
+    /// Outlines with numbers on paper, as a painting starts: the rasterizer's outline and number
+    /// paths at screen sizes (the painting screen itself draws with Metal).
+    static let template = TemplateRasterizer.Style(outlineWidth: 1, numbers: true)
+}
+
 /// Attaches `image` to the test's results as `<name>.png`.
 func record(_ image: CGImage, _ name: String) {
     if let png = ImageCodec.pngData(image) { Attachment.record(png, named: "\(name).png") }

@@ -27,22 +27,6 @@ final class AccessibilityUITests: XCTestCase {
         attachScreenshot(of: app, named: "paint-ax")
     }
 
-    /// Under Plain color names the swatches read as before: number and structured name only.
-    @MainActor
-    func testPlainColorNamesDropTheNicknames() throws {
-        let app = launch(["-demo", "paint-names-plain"])
-        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
-        XCTAssertFalse(swatches.isEmpty)
-        for swatch in swatches {
-            XCTAssertNotNil(
-                swatch.label.range(of: #"^[0-9]+, [a-z]+( [a-z]+){0,3}$"#, options: .regularExpression), swatch.label)
-        }
-        let current = app.descendants(matching: .any)["current-color"]
-        XCTAssertTrue(current.exists, "The selected color's name isn't on screen")
-        XCTAssertEqual(current.value as? String, swatches.first(where: \.isSelected)?.label)
-        attachScreenshot(of: app, named: "paint-names-plain")
-    }
-
     /// A long press on a swatch shows its number, nickname, shade and hex code, and leaves the
     /// selected color alone.
     @MainActor
@@ -69,22 +53,6 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertTrue(details.waitForNonExistence(timeout: 10), "The details didn't close")
         let selectedAfter = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-' AND selected == true")).firstMatch
         XCTAssertEqual(selectedAfter.identifier, selectedBefore, "The long press changed the selected color")
-    }
-
-    /// Plain names have no nickname row.
-    @MainActor
-    func testPlainDetailsHaveNoNameRow() throws {
-        let app = launch(["-demo", "paint-names-plain"])
-        // Finished colors leave the palette: press one that is still on screen.
-        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'"))
-        XCTAssertTrue(swatches.firstMatch.waitForExistence(timeout: 10))
-        let window = app.windows.firstMatch.frame
-        let swatch = try XCTUnwrap(swatches.allElementsBoundByIndex.first { window.contains($0.frame) })
-        swatch.press(forDuration: 1)
-        XCTAssertTrue(app.descendants(matching: .any)["swatch-details"].waitForExistence(timeout: 10))
-        XCTAssertFalse(app.descendants(matching: .any)["swatch-details-name"].exists, "Plain names show a nickname")
-        XCTAssertTrue(app.descendants(matching: .any)["swatch-details-shade"].exists)
-        XCTAssertTrue(app.descendants(matching: .any)["swatch-details-hex"].exists)
     }
 
     /// The canvas offers the unpainted areas of the selected color to VoiceOver, top to bottom,

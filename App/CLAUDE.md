@@ -23,21 +23,15 @@ synchronized folder would bundle it into the app.
 - The shaders hold no paper, ink or accent literals (the brush and the paint sheen keep theirs): the
   chrome colors are uniforms (`CanvasUniforms.setChrome`, `select`).
 - Exhaustive switches: `PaintTips.signal(for:isStroking:)` and `FeedbackEngine.handle` over
-  `PaintEvent`; a new `PaintingEffect` needs its `kind`, its row in `PaintingEffectsSections`,
-  `FeedbackEngine.handle`/`preview` and catalog strings.
+  `PaintEvent`.
 - Strokes report paint many times a second, so each tip is invalidated at most once per launch and
   donations are capped per event and launch (`PaintTips.donate`).
-- `AdvancedStatsBar` and `AdvancedPreviewCard` poll the model on purpose (Observation alone left
-  them stale on some routes), and `FittedCard` reads it in a body of its own on purpose: keep them
-  when restructuring.
 - `AboutTests` and `LocalizationTests` read repository files through `Fixtures.repositoryRoot`
   (`#filePath`): `ACKNOWLEDGEMENTS.md`, the string catalogs, `tools/models/convert_*.py`,
   `Sources/PaintCore`; moving those breaks them.
 - Nicknames reach the UI as variables shown verbatim, never as literals, so the string checker needs
   no exceptions; they are English data, shown only when the app runs in English
   (`ColorNameText.nicknamesAvailable`).
-- A painting's Custom palette order is a UserDefaults entry (`PaletteOrder.customKey(seed:)`), not
-  in the artwork folder and not purged with it.
 - Core ML models run `.cpuOnly` (the Neural Engine and GPU round differently per chip); the target
   has `COREML_CODEGEN_LANGUAGE = None` and loads the `.mlmodelc`s by URL.
 - Every template the app makes (new paintings, the first-launch starters, the gallery demos' seeds)
@@ -49,7 +43,7 @@ synchronized folder would bundle it into the app.
 
 ## Layout (`App/PaintByNumber/`)
 
-- `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineAppearance`;
+- `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`;
   DEBUG `DemoMode`, `ShellDemo`.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
@@ -58,7 +52,7 @@ synchronized folder would bundle it into the app.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
   `ObjectFinder`, `TextFinder`, `LineArtInputs`; DEBUG `LineArtMapsCache`.
 - `Canvas/`: `CanvasView`, `CanvasRenderer`, `CanvasScene`, `RenderContext`, `Shaders.metal`,
-  `CanvasTypes.swift`, `LineStyle.swift` (`LineStyle`, `ColoringBookLook`, `DrawableLineArt`),
+  `CanvasTypes.swift`, `LineStyle.swift` (`ClassicLook`, `ColoringBookLook`, `DrawableLineArt`),
   `CanvasSnapshot`, `TimelapseFrameRenderer`, `CanvasAccessibility`, `DigitAtlas`; DEBUG
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
@@ -67,9 +61,9 @@ synchronized folder would bundle it into the app.
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
-  Giving feedback); `Settings/` and `Settings/Advanced/`; `Share/`.
+  Giving feedback); `Settings/`; `Share/`.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
-  `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`, `PaintingEffect`.
+  `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
@@ -94,8 +88,7 @@ synchronized folder would bundle it into the app.
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`). Demo launches and the test host
   reset TipKit and hide every tip except in `paint-tip`. The scenarios a viewer judges the app by
-  show the library by position; the rest use `ShellDemo.fixedPictures`. The `settings-advanced*`
-  scenarios register their settings instead of storing them.
+  show the library by position; the rest use `ShellDemo.fixedPictures`.
 
 ## Painting screen
 
@@ -107,10 +100,9 @@ synchronized folder would bundle it into the app.
   `PaintChromeState.observe` (undo registration, swatch shake, tips, VoiceOver announcements); the
   canvas also gets direct `PaintingCanvas` calls.
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
-  (trailing edge of wide windows) so every color shows at once; Settings › Palette and More ›
-  Palette choose its lines (`PaletteRows`) and order (`PaletteOrder`, or Custom, arranged per
-  painting in `PaletteArrangeSheet`); picking the next color, and the Paint menu's `]`/`[`, follow
-  that order (`PaintingSession.colorOrder`).
+  (trailing edge of wide windows) so every color shows at once; More › Palette chooses its lines
+  (`PaletteRows`) and order (`PaletteOrder`); picking the next color, and the Paint menu's `]`/`[`,
+  follow that order (`PaintingSession.colorOrder`).
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
   three-finger undo); the Pencil paints while fingers navigate (and only navigates them under "Only
@@ -133,12 +125,12 @@ synchronized folder would bundle it into the app.
   `PaintingSession.maxBrushRadius`).
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
   `PaintingMelody` note per fill; Core Haptics patterns, none on iPad. Settings' Sounds and Haptics
-  are master switches read live (`SettingsKey.sounds`, `SettingsKey.haptics`).
+  switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
   (`ColorNickname.seed(for:)`), so a painting's names are the same on every open (derived, never
-  stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil under Settings ›
-  Color Names › Plain, and outside English) feed the palette caption, current color, VoiceOver, the
-  swatch's long-press popover and the PDF key; `pbn names` prints a template's.
+  stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil outside English)
+  feed the palette caption, current color, VoiceOver, the swatch's long-press popover and the PDF
+  key; `pbn names` prints a template's.
 
 ## Giving feedback
 
@@ -185,21 +177,20 @@ Conventions).
 
 ## Line art rendering
 
-- Layered templates: edges draw in their `LineLayer`, interior strokes inside their cells, as
-  `LineAppearance` says (Settings › Advanced; its doc comment), turned into factors of a renderer's
-  classic line by `LineStyle`. Renderers read line data through `DrawableLineArt` (bad strokes are
-  dropped, counts that don't match the edges draw as classic) and `OutlineGeometry`.
-  `LineStyle.classic` keeps classic frames and pictures exactly as they were; `.print` prints every
-  layer in PDFs. The selected color's unpainted cells keep at least the classic selected outline.
-- Coloring books (`lineArt.style == .coloringBook`) are drawn alike everywhere (`ColoringBookLook`;
-  `docs/coloring-book.md`): every drawn layer in the paper's full ink, color edges never, the
-  drawing never dissolving under paint and nothing outlined for being selected (the fill's hatch
-  shows the selected color's cells). Only `LineAppearance.coloringBookWeight` (Line Weight) applies
-  to a book. `CanvasSnapshot` and the time-lapse draw the drawing even with outlines off, and
-  `TemplateRasterizer` draws it in every style (`drawBookOutlines`, after dotted color-edge guides
-  in `.print`, since paper has no hatch).
-- An open canvas follows a Line Appearance change at once (`PaintView`'s `@AppStorage`); pictures
-  show the 1× look. Constants live in `LineStyle`, `ColoringBookLook` and `Shaders.metal`.
+- A template with line art draws as a coloring book, alike everywhere (`ColoringBookLook`;
+  `docs/coloring-book.md`), whatever its `lineArt.style` (a template of the retired layered style
+  too): every drawn layer in the paper's full ink, color edges never, the drawing never dissolving
+  under paint and nothing outlined for being selected (the fill's hatch shows the selected color's
+  cells). Renderers read line data through `DrawableLineArt` (bad strokes are dropped, counts that
+  don't match the edges draw as classic) and `OutlineGeometry`. `CanvasSnapshot` and the
+  time-lapse draw the drawing even with outlines off, and `TemplateRasterizer` draws it in every
+  style (`drawBookOutlines`, after dotted color-edge guides in `.print`, since paper has no hatch).
+  Classic templates draw every edge alike (`ClassicLook` on the canvas), the selected color's
+  unpainted cells outlined.
+- Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
+  the painter sets: an open canvas follows a change at once (`PaintView`'s `@AppStorage`), and
+  pictures, the time-lapse and print read it (`LineWeight.stored`). Constants live in
+  `ClassicLook`, `ColoringBookLook` and `Shaders.metal`.
 
 ## Line art inputs
 
@@ -258,8 +249,8 @@ Conventions).
 
 - `PhotoSourceView`: the inline picker fills the page (Gotchas). Compact windows switch Photos and
   Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
-  picker in a card with a scrolling samples column beside it. "Browse All…" presents the full
-  picker.
+  picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
+  albums and search, so no second, full picker is offered.
 - Samples: Paintings then Photographs (`Sample.all(of:)`), in `library.json`'s order, titled from
   the catalog (`sample.<id>`); `Sample.starters` (a painting and a photograph) are prepared on first
   launch. Adding a picture: `docs/picture-library.md`.
@@ -278,9 +269,8 @@ Conventions).
 - Tuning: a drag renders drafts from the reduced photo, their line lengths scaled to the draft's
   canvas (`CreateModel.draftSettings`) so short strokes like eyes show as they will; a thumb
   resting `CreateModel.restDelay` renders the full resolution under the finger. The Lines slider
-  (book and layered line art) moves Settings › Advanced's thresholds and shortest line
-  (`CreateModel.lineArt(_:lines:)`; the middle is Advanced's, recorded with the painting like any
-  setting). `CompareView` zooms both layers alike (pinch, double tap, VoiceOver), the zoom held
+  moves the book's thresholds and shortest line (`CreateModel.lineArt(_:lines:)`; the middle is
+  the book's defaults), the line art recorded with the painting like any setting. `CompareView` zooms both layers alike (pinch, double tap, VoiceOver), the zoom held
   across slider changes.
 - Open in Paint by Moonlight: images from the share sheet and Files arrive through an image document
   type (`CFBundleDocumentTypes` in `Config/Info.plist`, Alternate rank, copied into
@@ -294,38 +284,26 @@ Conventions).
 ## Sharing and exports
 
 The time-lapse renders under `TimelapseExportSheet`/`TimelapseExportModel` (progress, Cancel, Try
-Again; its Pace picks Even or As painted, mapped by `TimelapseSchedule` from the strokes' recorded
-times) and goes to `ActivityShareSheet`, which reports when the share sheet closes so the movie is
-deleted. Every export lives in `tmp/Exports/<uuid>/` (`ArtworkExporter`); picture and template
-`ShareLink`s can't report completion, so they rely on the launch purge and the sweep of stale
-exports each new export runs (`ArtworkExporter.staleExportAge`). The completion share picture and
-the time-lapse stay on light paper (`CanvasSnapshot.Options`).
+Again; `TimelapseSchedule` eases the strokes in and out) and goes to `ActivityShareSheet`, which
+reports when the share sheet closes so the movie is deleted. Every export lives in
+`tmp/Exports/<uuid>/` (`ArtworkExporter`); picture and template `ShareLink`s can't report
+completion, so they rely on the launch purge and the sweep of stale exports each new export runs
+(`ArtworkExporter.staleExportAge`). The completion share picture and the time-lapse stay on light
+paper (`CanvasSnapshot.Options`).
 
 ## Settings
 
-- `Preferences` is the snapshot that code outside views reads (the create flow, Settings › Advanced,
-  a painting's session); views bind the other `SettingsKey`s with `@AppStorage`. Settings › Painting
-  Length (`PaintingLength`, Relaxed by default) is what suggestions aim for.
-- Settings › Advanced (Experimental; `Features/Settings/Advanced/`): `LineArtSettings`,
-  `LineAppearance` and `PipelineTuning` for testers, stored as they change (`Preferences.store`;
-  values equal to the defaults are removed, so better defaults reach them). Line Style offers
-  Classic, Layered and Coloring Book, each carrying its own defaults (`changing(to:)`), and every
-  reset, detent and effect is against the style's defaults; under the book
-  `AdvancedControl.applies(to:)` hides what the book ignores and `GenerationKey` canonicalizes the
-  settings so previews are shared. Adding a setting: `AdvancedControl`'s doc comment.
-- Advanced is pushed inside the settings sheet in compact widths, a full-screen cover in regular
-  ones. `AdvancedSettingsModel` prepares the chosen picture once
-  (`SettingsKey.advancedPreviewPicture`: a library picture or the most recent photo) and queues a
-  generation per `GenerationKey` (debounced, coalesced, kept in a small LRU); a changed setting's
-  effect is the preview's `AdvancedStats` against the same key with that setting reset. The preview
-  is the real `CanvasView` (`AdvancedPreviewCanvas`). `LineAppearance.stored(in:)` reads the stored
-  appearance off the main actor.
-- Copy Settings / Share with a Note hand over `AdvancedReport`; Paste Settings (the system
-  `PasteButton`, no prompt) reads it back (`AdvancedReport.settings(in:)`); the Presets row
-  (`AdvancedPreset`) sets all three groups (`docs/coloring-book.md` › Presets and settings as text).
-- Advanced's Sounds, Haptics and Sparkles & Shine sections (`PaintingEffectsSections`) put each
-  `PaintingEffect` on its own `@AppStorage` switch (absent means on), read where it plays
-  (`FeedbackEngine`, `CanvasView`); Try buttons play one once (`FeedbackEngine.preview`).
+- `Preferences` is the snapshot that code outside views reads (the create flow, a painting's
+  session); views bind the other `SettingsKey`s with `@AppStorage`. Settings › Painting Length
+  (`PaintingLength`, Relaxed by default) is what suggestions aim for. New paintings are coloring
+  books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in Settings
+  changes how a template is made.
+- Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
+- Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
+  switch per sound, haptic and flourish; Settings' paper size and Color Names; the Custom palette
+  order with every painting's arrangement) are removed at launch by
+  `Preferences.removeRetiredSettings`, Advanced's book Line Weight carried over to Settings ›
+  Line Weight first; a setting retired later joins `Preferences.retiredKeys`.
 
 ## Design
 
@@ -351,7 +329,6 @@ announcements of swatches, areas, the canvas and progress; the action and rotor 
 `CanvasView`, the spoken positions in `CanvasPosition`, the current-color label in `PaletteBar`, and
 `ColorNameText` holds the localizable color names. `PaletteMetrics` scales swatches with Dynamic
 Type up to 1.4×; the fixed-height bars clamp at `.xxLarge` and use the Large Content Viewer.
-Advanced's sliders are single adjustable VoiceOver elements stepping by
-`SliderSpec.accessibilityStep`, with a detent and haptic at the default. Reduce Motion reaches the
+Reduce Motion reaches the
 canvas through `CanvasView.reduceMotion` (instant fills and undos, no shine, stepped replay). UI
 tests query these identifiers.

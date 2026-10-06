@@ -35,7 +35,6 @@ final class GalleryActionsTests: XCTestCase {
 
         let title = app.staticTexts["Making Your Time-lapse"]
         XCTAssertTrue(title.waitForExistence(timeout: 10), "No time-lapse progress sheet")
-        XCTAssertTrue(app.descendants(matching: .any)["timelapse-pace"].exists, "The time-lapse sheet has no Pace control")
         attachScreenshot(of: app, named: "timelapse-progress")
         // The simulator may finish the movie first; then the share sheet is up instead.
         let cancel = app.buttons["Cancel"]

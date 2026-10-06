@@ -241,26 +241,6 @@ final class Library {
         persistMeta(artwork)
     }
 
-    /// Copies an artwork, progress included (restart the copy to paint it again).
-    @discardableResult
-    func duplicate(_ id: UUID) async throws -> Artwork {
-        guard let original = artwork(with: id) else { throw ArtworkStore.StoreError.notFound }
-        // A copy would need this app to rewrite the newer app's metadata.
-        guard !original.needsNewerApp else { throw OpenError.needsNewerApp }
-        var copy = original
-        copy.id = UUID()
-        copy.title = copyTitle(for: original.title)
-        copy.createdAt = .now
-        copy.modifiedAt = .now
-        let snapshot = copy
-        // In line with the original's writes, so none lands while its folder is being copied.
-        guard await enqueue(id, { try $0.duplicate(id, as: snapshot) }).value else {
-            throw CocoaError(.fileWriteUnknown)
-        }
-        insert(snapshot)
-        return snapshot
-    }
-
     func restart(_ id: UUID) async {
         guard artwork(with: id)?.needsNewerApp == false else { return }
         // The fresh progress is sized from the template: metadata can be stale, and progress
@@ -536,19 +516,6 @@ final class Library {
             try store.writeProgress(progress, for: id)
             try store.writeMeta(artwork)
         }
-    }
-
-    private func copyTitle(for title: String) -> String {
-        let titles = Set(artworks.map(\.title))
-        var candidate = String(localized: "library.copyTitle", defaultValue: "\(title) Copy",
-                               comment: "Title of a duplicated painting; the argument is the original's title")
-        var n = 2
-        while titles.contains(candidate) {
-            candidate = String(localized: "library.copyTitle.numbered", defaultValue: "\(title) Copy \(n)",
-                               comment: "Title of a second or later duplicate of a painting; the arguments are the original's title and the copy number (2, 3, …)")
-            n += 1
-        }
-        return candidate
     }
 
     /// Queues file work for one artwork behind its earlier writes; resolves to success.

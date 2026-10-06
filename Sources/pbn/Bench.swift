@@ -33,16 +33,13 @@ func runBench(_ options: Options) throws {
                 + String(format: "; median %.1f ms)", v.medianGap))
         }
         if let input = loadLineArt(options) {
-            for style in [LineArtSettings.Style.layered, .coloringBook] {
-                var drawn = options.settings
-                drawn.lineArt = lineArtSettings(style, fields: options.lineArtFields)
-                let v = measure(image, drawn, runs: options.runs, lineArt: input)
-                print(String(format: "  %-28@ ", "\(style.rawValue) \(v.size), \(v.regions) cells" as NSString) + stat(v.totals["total"]!)
-                    + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage + ")")
-                guard style == .layered else { continue }
-                for name in v.order where name.hasPrefix("lineArt") {
-                    print(String(format: "    %-26@ ", name as NSString) + stat(v.totals[name]!))
-                }
+            var book = options.settings
+            book.lineArt = lineArtSettings(.coloringBook, fields: options.lineArtFields)
+            let v = measure(image, book, runs: options.runs, lineArt: input)
+            print(String(format: "  %-28@ ", "coloringBook \(v.size), \(v.regions) cells" as NSString) + stat(v.totals["total"]!)
+                + String(format: "   worst gap %.1f ms (in ", v.gap.gap) + v.stage + ")")
+            for name in v.order where name.hasPrefix("lineArt") {
+                print(String(format: "    %-26@ ", name as NSString) + stat(v.totals[name]!))
             }
         }
         // Auto's suggestion as the create flow runs it, and its analysis alone.

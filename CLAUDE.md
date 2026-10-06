@@ -27,10 +27,10 @@ before planning app work).
   - `Model/`: `Template` + `TemplateCoding` (geometry conventions on `BoundaryEdge`, `Ring`,
     `FillMesh`, `Template.coordinateQuantum` and `points`), `GenerationSettings`, `Segmentation`,
     `LabelSizing`, `TemplateLineArt`, `RegionRemap`, `PaintingTime` (the one painting-time
-    estimate), `LineArtSettings` (`init(style:)` and `changing(to:)` carry each style's own
-    defaults; `normalized` keeps texture ≤ detail ≤ outline, and the generator reads normalized
-    values) and `PipelineTuning` (Settings › Advanced factors on `SegmentationParameters`' knobs:
-    exactly 1 leaves every knob bit for bit).
+    estimate), `LineArtSettings` (`init(style:)` carries each style's own defaults; `normalized`
+    keeps detail ≤ outline, and the generator reads normalized values) and `PipelineTuning`
+    (`pbn --tuning` factors on `SegmentationParameters`' knobs: exactly 1 leaves every knob bit
+    for bit; the app sets none, but a painting's recorded tuning regenerates as it was made).
   - `Segmentation/`: photo → region label map + palette (`Segmenter.segment`; stages in its doc
     comment). `SegmentationParameters` holds the knobs derived from the settings and canvas size;
     each stage's constants sit beside their use. After `RegionSimplifier.simplify`, later stages
@@ -85,16 +85,17 @@ before planning app work).
 (`LineArtInput`) into cells bounded by lines, each line in a `LineLayer`. Detect and trace read the
 edge map alone; eyes and the subjects' silhouettes enter at the layer stage (`LineLayering.addEyes`,
 `addObjects`), where `LineArtInput.contours` decides the outlines; `CellMap` splits the segmentation
-along the lines; lines inside cells become `InteriorStroke`s (`Template.lineArt`). The **coloring
-book** (`LineArtSettings.Style.coloringBook`: the default, and every template the app makes) is the
-same pipeline with the drawing as its only lines, on flatter paint
+along the lines; lines inside cells become `InteriorStroke`s (`Template.lineArt`). It makes the
+**coloring book** (`LineArtSettings.Style.coloringBook`: the default, and every template the app
+makes): the drawing as its only lines, on flatter paint
 (`SegmentationParameters.coloringBookFlattening`, by style, edge map or not), drawn in full ink over
-the paint (`docs/coloring-book.md`). Writing (`LineArtInput.writing`: the lines of text Vision
+the paint (`docs/coloring-book.md`). The layered style it grew from is retired: its templates keep
+decoding and draw as books, and its recorded settings decode as the book's defaults. Writing (`LineArtInput.writing`: the lines of text Vision
 found, `TextFinder`) is traced from the photo itself, painted out before segmenting and drawn as
 interior strokes with the numbers kept off it (`Writing`, `LabelKeepOut`; `keepWriting`;
-`docs/writing.md`, whose corpus every change to it is judged on). Without an edge map, layered or
-book settings generate a classic template; the same maps and settings give the same bytes on any
-core count.
+`docs/writing.md`, whose corpus every change to it is judged on). Without an edge map, book
+settings generate a classic template; the same maps and settings give the same bytes on any core
+count.
 
 ## Suggested settings
 
@@ -181,7 +182,9 @@ Saved paintings must open in every later build. The format history is documented
 - An artwork's recorded settings are what regeneration uses: a `meta.json` without `settings` or
   `lineArt` (saved before line art existed) means classic lines (`Artwork.settingsBeforeLineArt`,
   the `GenerationSettings` decoder), never the current default style. Its `lineArt` and `tuning`
-  decode tolerantly, like Settings › Advanced's JSON in UserDefaults; never rename a settings field.
+  decode tolerantly (a retired layered `lineArt` is the coloring book's defaults); never rename a
+  settings field. A setting the app retires leaves UserDefaults at launch
+  (`Preferences.removeRetiredSettings`), so nothing unseen shapes new paintings.
 - A file from a newer app is never reset or rewritten: it throws a "newer" error
   (`Template.CodingError.newerFormat` or `.requiredExtension`, whose `requiresNewerReader` is true;
   `PaintProgress.CodingError.newerVersion`) and the app says it needs an update. `PaintProgress`

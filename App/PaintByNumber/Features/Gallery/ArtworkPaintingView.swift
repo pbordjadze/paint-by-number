@@ -15,7 +15,6 @@ struct ArtworkPaintingView: View {
     @Environment(Library.self) private var library
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
-    @AppStorage(SettingsKey.colorNames) private var colorNames: ColorNameStyle = .default
     @State private var autosaver: PaintingAutosaver?
     @State private var failure: Library.OpenError?
     @State private var regeneration: Task<Void, Never>?
@@ -106,7 +105,6 @@ struct ArtworkPaintingView: View {
             if phase != .active { autosaver?.saveNow(refreshThumbnail: true) }
         }
         .onChange(of: autoAdvance) { _, value in autosaver?.session.autoAdvance = value }
-        .onChange(of: colorNames) { _, value in autosaver?.session.colorNameStyle = value }
         .onDisappear {
             regeneration?.cancel()
             autosaver?.saveNow(refreshThumbnail: true)

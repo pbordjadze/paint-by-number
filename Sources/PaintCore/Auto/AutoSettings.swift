@@ -392,7 +392,7 @@ public enum AutoSettings {
     /// parallel pipeline. Deterministic for the same image, importance, hints, preference,
     /// candidate count, line art and tuning.
     ///
-    /// `lineArt` and `tuning` (Settings › Advanced), when given, are carried by every candidate,
+    /// `lineArt` and `tuning` (the create flow's line art, `pbn --tuning`), when given, are carried by every candidate,
     /// so the decision's settings have them. The tuning changes the drafts and so the scores;
     /// line art only through a coloring book's flatter paint (drafts get no edge map, so their
     /// lines are classic).

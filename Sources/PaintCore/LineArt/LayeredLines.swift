@@ -1,39 +1,36 @@
-import Foundation
-
-/// Layered line art: an edge map (with eyes, subjects and contours) turned into cells bounded
-/// by lines, each line in a `LineLayer` by its strength. `LineArtSettings` holds every user-facing knob.
+/// Line art: an edge map (with eyes, subjects and contours) turned into the cells of a coloring
+/// book, bounded by its drawing, each line in a `LineLayer` by its strength. `LineArtSettings`
+/// holds every knob.
 ///
 /// Stages (timed as `lineArt.*`):
 /// 1. `detect`: the edge map resampled to the working size, its ridges, hysteresis and
-///    thinning (`LineDetection`). A coloring book extracts nothing below the detail
-///    threshold: it has no faint lines, so its texture layer stays empty.
+///    thinning (`LineDetection`). Nothing below the detail threshold is extracted: a coloring
+///    book has no faint lines, so the texture layer stays empty.
 /// 2. `trace`: the centerlines as a graph, cleaned (bubbles, spurs, specks, components under
 ///    `minimumStrokeLength`), gaps up to `gapBridging` bridged, ends led into the frame, and
 ///    joined into strokes smoothed by `lineSmoothing` (`StrokeGraph`).
-/// 3. `layer`: per point, hysteresis along the stroke against the outline, detail and
-///    texture thresholds, the outline threshold rising where lines crowd (`LineLayering`);
-///    stretches below texture are cut out. Eyes (`outlineEyes`) replace the lines inside them
-///    with their contours and irises as outlines and promote the lines around them; the
-///    subjects' silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
+/// 3. `layer`: per point, hysteresis along the stroke against the outline and detail
+///    thresholds, the outline threshold rising where lines crowd (`LineLayering`); stretches
+///    below detail are cut out. Eyes (`outlineEyes`) replace the lines inside them with their
+///    contours and irises as outlines and promote the lines around them; the subjects'
+///    silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
 ///    (`LineLayering.addObjects`). Lines on the writing (`Writing`, traced from the photo
 ///    before segmenting) are its smudged copy and go. Free ends reach for the nearest line,
-///    paint boundary or frame (`gapBridging` × 1.6 / 1.2 / 1 by layer), so open strokes close
+///    paint boundary or frame (`gapBridging` × 1.6 / 1.2 by layer), so open strokes close
 ///    cells.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
 ///    paints are within two palette steps.
-/// 5. `trim`: lines keep only the stretches that run along a cell boundary (a line dangling
-///    inside a cell is not drawn); eyes are kept whole. A coloring book keeps every line: it
-///    is a drawing, and a stretch that bounds no cell is still drawn (as an interior stroke).
-/// 6. `join`: same-paint neighbours join per `samePaint` (by default across texture lines),
-///    and the lines that end up inside a cell become interior strokes (stretches shorter than
-///    `LineLayering.minimumRun` are a boundary stretch's end point or a merged tiny cell's
-///    sliver, not drawing, and go). Paints no cell uses are dropped, cells renumbered. The
-///    writing is drawn inside the cells it crosses: it bounds none, so letters never become
-///    cells to number.
+/// 5. `join`: same-paint neighbours join per `samePaint` (by default across everything but
+///    outlines), and the lines that end up inside a cell become interior strokes (stretches
+///    shorter than `LineLayering.minimumRun` are a boundary stretch's end point or a merged
+///    tiny cell's sliver, not drawing, and go): a stretch that bounds no cell is still drawn,
+///    the book being a drawing. Paints no cell uses are dropped, cells renumbered. The writing
+///    is drawn inside the cells it crosses: it bounds none, so letters never become cells to
+///    number.
 /// After vectorizing, `annotate` gives each boundary edge the layer of the line along it
-/// (`color` where only the paint changes) and a weight, and stamps the template's line art
-/// with its style.
+/// (`color` where only the paint changes) and a weight, and stamps the template's line art as
+/// a coloring book.
 ///
 /// Lengths are canvas units (working pixels). `LineLayering.longOutline`, `objectNear`,
 /// `objectMinimumStretch` and `LineDetection.clutterWindow` are given for a 1500-px canvas and
@@ -69,8 +66,6 @@ enum LayeredLines {
         var boundaryLines: [DrawnLine]
         /// Lines drawn inside a cell, with that cell.
         var interiorLines: [(line: DrawnLine, region: Int)]
-        /// How the template's line art is drawn (`TemplateLineArt.style`).
-        var style: TemplateLineArt.Style
         var stats: LineArtStats
     }
 
@@ -79,16 +74,14 @@ enum LayeredLines {
         writing: Writing? = nil, cancel: CancellationCheck, clock: StageClock
     ) throws -> Plan {
         let s = settings.normalized.lineArt
-        let style = s.style.templateStyle ?? .layered
-        let book = style == .coloringBook
-        // A coloring book has no faint lines: nothing is drawn below the detail threshold, so
-        // its texture layer is empty (and `textureThreshold` unused).
-        let thresholds = [s.outlineThreshold, s.detailThreshold, book ? s.detailThreshold : s.textureThreshold]
+        // A coloring book has no faint lines: nothing is drawn below the detail threshold, so the
+        // texture layer is empty.
+        let thresholds = [s.outlineThreshold, s.detailThreshold, s.detailThreshold]
         let w = segmentation.width, h = segmentation.height
         var stats = LineArtStats()
         stats.segmentationRegions = segmentation.regionCount
         guard w >= 8, h >= 8, segmentation.regionCount > 0 else {
-            return Plan(segmentation: segmentation, boundaryLines: [], interiorLines: [], style: style, stats: stats)
+            return Plan(segmentation: segmentation, boundaryLines: [], interiorLines: [], stats: stats)
         }
         let mapScale = Float(max(w, h)) / Float(max(input.edges.width, input.edges.height))
         let unit = max(mapScale, 1)
@@ -188,22 +181,10 @@ enum LayeredLines {
         }
         try cancel.throwIfCancelled()
 
-        let trimmed = try clock.measure("lineArt.trim") { () throws -> [DrawnLine] in
-            // A coloring book draws every line, whether or not it bounds a cell.
-            if book { return lines }
-            let distance = Self.boundaryDistance(cells.label, width: w, height: h)
-            try cancel.throwIfCancelled()
-            return lines.flatMap { line -> [DrawnLine] in
-                guard !line.eye else { return [line] }
-                return line.pieces(keeping: Self.near(line, distance: distance, width: w), freeCuts: true)
-            }
-        }
-        try cancel.throwIfCancelled()
-
         let finalCells = try clock.measure("lineArt.join") { () throws -> CellMap in
             stats.cellsBeforeJoin = cells.count
             if s.samePaint != .split {
-                let drawn = LineLayering.walls(trimmed, width: w, height: h)
+                let drawn = LineLayering.walls(lines, width: w, height: h)
                 let near = CellMap.near(drawn.layer, width: w, height: h)
                 try cancel.throwIfCancelled()
                 let blocking = s.samePaint == .joinTexture ? [true, true, false] : [true, false, false]
@@ -231,7 +212,7 @@ enum LayeredLines {
         var boundary: [DrawnLine] = [], interior: [(DrawnLine, Int)] = []
         let distance = Self.boundaryDistance(final.label, width: w, height: h)
         try cancel.throwIfCancelled()
-        for line in trimmed {
+        for line in lines {
             let flags = Self.near(line, distance: distance, width: w)
             boundary += line.pieces(keeping: flags, freeCuts: true)
             // A piece shorter than the layering's minimum run is a boundary stretch's end
@@ -252,7 +233,7 @@ enum LayeredLines {
         }
         for line in boundary { stats.add(line, interior: false) }
         for (line, _) in interior { stats.add(line, interior: true) }
-        return Plan(segmentation: split, boundaryLines: boundary, interiorLines: interior, style: style, stats: stats)
+        return Plan(segmentation: split, boundaryLines: boundary, interiorLines: interior, stats: stats)
     }
 
     // MARK: - Annotation
@@ -332,7 +313,7 @@ enum LayeredLines {
                 pointStart: start, pointCount: UInt32(keep.count), layer: UInt8(layer),
                 weight: UInt8((min(max(mean, 0), 1) * 255).rounded()), region: UInt32(region)))
         }
-        return TemplateLineArt(edgeLayers: layers, edgeWeights: weights, strokePoints: points, strokes: strokes, style: plan.style)
+        return TemplateLineArt(edgeLayers: layers, edgeWeights: weights, strokePoints: points, strokes: strokes, style: .coloringBook)
     }
 
     // MARK: - Helpers

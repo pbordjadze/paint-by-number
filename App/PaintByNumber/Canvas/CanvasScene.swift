@@ -6,8 +6,8 @@ import PaintCore
 /// per-region colors. Built once when a canvas opens (a few flat copies — the template is
 /// already laid out for upload) and shared by every frame and offscreen render.
 ///
-/// The outline segments are `OutlineGeometry`'s: boundary edges, then for layered line art the
-/// strokes inside cells, every line with its layer and weight.
+/// The outline segments are `OutlineGeometry`'s: boundary edges, then for line art the strokes
+/// inside cells, every line with its layer.
 nonisolated final class CanvasScene: @unchecked Sendable {
     let canvasSize: SIMD2<Float>
     let regionCount: Int
@@ -20,11 +20,11 @@ nonisolated final class CanvasScene: @unchecked Sendable {
     let points: any MTLBuffer           // float2 boundary polyline points, then stroke points
     let segments: any MTLBuffer         // uint2 (first point, line) per segment
     let lineRegions: any MTLBuffer      // uint2 (left, right) per line (edge, then stroke)
-    let lineStyles: any MTLBuffer       // float2 (layer, weight) per line
+    let lineLayers: any MTLBuffer       // float LineLayer per line
     let segmentCount: Int
-    /// How the template's line art is drawn: layered (`CanvasUniforms.setLines` with a
-    /// `LineAppearance`), a coloring book (`setColoringBookLines`), or nil for classic lines.
-    let lineArtStyle: TemplateLineArt.Style?
+    /// Whether the template draws as a coloring book (`CanvasUniforms.setColoringBookLines`), not
+    /// with classic lines (`setClassicLines`).
+    let isColoringBook: Bool
 
     let glyphs: any MTLBuffer
     let glyphCount: Int
@@ -86,7 +86,7 @@ nonisolated final class CanvasScene: @unchecked Sendable {
               let points = CanvasScene.buffer(lines.points, device),
               let segments = CanvasScene.buffer(lines.segments, device),
               let lineRegions = CanvasScene.buffer(lines.lineRegions, device),
-              let lineStyles = CanvasScene.buffer(lines.lineStyles, device),
+              let lineLayers = CanvasScene.buffer(lines.lineLayers, device),
               let glyphs = CanvasScene.buffer(glyphList, device),
               let digitRects = CanvasScene.buffer(atlas.rects, device),
               let digitUVs = CanvasScene.buffer(atlas.uvs, device),
@@ -99,9 +99,9 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         self.points = points
         self.segments = segments
         self.lineRegions = lineRegions
-        self.lineStyles = lineStyles
+        self.lineLayers = lineLayers
         segmentCount = lines.segments.count
-        lineArtStyle = lines.lineArtStyle
+        isColoringBook = lines.isColoringBook
         self.glyphs = glyphs
         glyphCount = glyphList.count
         self.digitRects = digitRects

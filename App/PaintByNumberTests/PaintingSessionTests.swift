@@ -545,13 +545,10 @@ struct PaintingSessionTests {
         #expect(other.colorNicknames != session.colorNicknames)
     }
 
-    @Test func plainStyleHidesTheNicknames() {
+    @Test func colorsGoByTheirNicknames() {
         let session = PaintingSession(template: template, nicknameSeed: 7)
-        #expect(session.colorNameStyle == .playful)
-        #expect(session.nickname(of: 0) == session.colorNicknames[0])
+        #expect((0..<session.paletteCount).allSatisfy { session.nickname(of: $0) == session.colorNicknames[$0] })
         #expect(session.nickname(of: 0) != nil)
-        session.colorNameStyle = .plain
-        #expect((0..<session.paletteCount).allSatisfy { session.nickname(of: $0) == nil })
     }
 }
 

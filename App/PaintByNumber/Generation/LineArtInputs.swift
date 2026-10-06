@@ -3,7 +3,7 @@ import Foundation
 import os
 import PaintCore
 
-/// What layered and coloring-book line art draw from, computed once per photo: the line
+/// What a coloring book draws from, computed once per photo: the line
 /// drawing over the HED edge map, the HED map alone for the outlines (`EdgeDetector.maps`),
 /// the eyes (`EyeFinder`), the subjects' silhouettes (`ObjectFinder`) and the lines of text
 /// (`TextFinder`).
@@ -43,7 +43,7 @@ nonisolated enum LineArtInputs {
 
     /// The inputs for a template about to be generated: `make` (or `compute` when not
     /// `cached`, for a one-off template), except that a failure other than cancellation is
-    /// logged and gives nil, so a layered or coloring-book template comes out classic, as the
+    /// logged and gives nil, so a coloring book comes out classic, as the
     /// generator documents, rather than not at all. Nil for classic settings.
     static func forGeneration(of image: CGImage?, settings: LineArtSettings, cached: Bool) async throws -> LineArtInput? {
         guard settings.style.usesEdgeMap else { return nil }

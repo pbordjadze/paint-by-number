@@ -1,25 +1,19 @@
 import CoreTransferable
 import Foundation
 import PaintCore
-import Photos
 import UniformTypeIdentifiers
 
 /// Renders shareable files of an artwork (off the main actor).
 nonisolated enum ArtworkExporter {
     enum ExportError: LocalizedError {
         case renderFailed
-        case photosAccessDenied
         case timelapseFailed
 
         var errorDescription: String? {
             switch self {
             case .renderFailed:
                 String(localized: "export.error.renderFailed", defaultValue: "The picture couldn't be rendered.",
-                       comment: "Error when a painting's picture can't be rendered for sharing or saving")
-            case .photosAccessDenied:
-                String(localized: "export.error.photosAccessDenied",
-                       defaultValue: "Allow Paint by Moonlight to add photos in Settings to save your painting.",
-                       comment: "Error when saving to Photos is refused; tells the person to allow adding photos in the Settings app")
+                       comment: "Error when a painting's picture can't be rendered for sharing")
             case .timelapseFailed:
                 String(localized: "export.error.timelapseFailed", defaultValue: "The time-lapse couldn’t be made.",
                        comment: "Error when the time-lapse movie can't be created")
@@ -43,13 +37,10 @@ nonisolated enum ArtworkExporter {
     }
 
     /// The printable template. Its color key names the colors by their nicknames (the ones the
-    /// painting shows) unless `colorNames` is Plain.
-    static func templatePDF(
-        store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper, colorNames: ColorNameStyle
-    ) throws -> Data {
+    /// painting shows).
+    static func templatePDF(store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper) throws -> Data {
         let template = try store.readTemplate(artwork.id)
-        let nicknames = colorNames == .playful
-            ? ColorNameText.nicknames(for: template.palette, seed: ColorNickname.seed(for: artwork.id)) : []
+        let nicknames = ColorNameText.nicknames(for: template.palette, seed: ColorNickname.seed(for: artwork.id))
         return PDFExporter.document(for: template, title: artwork.title, paper: paper, nicknames: nicknames)
     }
 
@@ -120,14 +111,6 @@ nonisolated enum ArtworkExporter {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return cleaned.isEmpty ? String(localized: "Painting") : cleaned
     }
-
-    static func saveToPhotos(_ png: Data) async throws {
-        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
-        guard status == .authorized || status == .limited else { throw ExportError.photosAccessDenied }
-        try await PHPhotoLibrary.shared().performChanges {
-            PHAssetCreationRequest.forAsset().addResource(with: .photo, data: png, options: nil)
-        }
-    }
 }
 
 /// "Share Painting": a PNG rendered when the share sheet asks for it.
@@ -154,7 +137,6 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
     let store: ArtworkStore
     let artwork: Artwork
     let paper: PDFExporter.Paper
-    let colorNames: ColorNameStyle
 
     static var transferRepresentation: some TransferRepresentation {
         FileRepresentation(exportedContentType: .pdf) { item in
@@ -164,7 +146,7 @@ nonisolated struct PrintableTemplateFile: Transferable, Sendable {
 
     @concurrent
     func export() async throws -> URL {
-        let data = try ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper, colorNames: colorNames)
+        let data = try ArtworkExporter.templatePDF(store: store, artwork: artwork, paper: paper)
         return try ArtworkExporter.temporaryFile(data, name: ArtworkExporter.templateName(title: artwork.title), pathExtension: "pdf")
     }
 }
@@ -186,7 +168,7 @@ nonisolated struct TimelapseRequest: Identifiable, Sendable {
     /// Renders the movie into its own export folder. On failure or cancellation (checked every
     /// frame) the folder and the partial movie are removed.
     @concurrent
-    func render(longSide: Int = 1080, pace: TimelapsePace = .even, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> URL {
+    func render(longSide: Int = 1080, onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> URL {
         let template: Template, progress: PaintProgress
         switch source {
         case let .saved(store, artwork):
@@ -199,7 +181,7 @@ nonisolated struct TimelapseRequest: Identifiable, Sendable {
         let url = try ArtworkExporter.temporaryURL(name: ArtworkExporter.timelapseName(title: title), pathExtension: "mp4")
         do {
             try await TimelapseFrameRenderer.export(
-                template: template, progress: progress, to: url, longSide: longSide, pace: pace, onProgress: onProgress)
+                template: template, progress: progress, to: url, longSide: longSide, onProgress: onProgress)
         } catch {
             ArtworkExporter.removeExport(at: url)
             throw error

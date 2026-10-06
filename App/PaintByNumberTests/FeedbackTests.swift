@@ -101,6 +101,7 @@ struct FeedbackTests {
         #expect(mark.strokes.first?.points.first == [5, 10])
         #expect(report.painting.paintedRegions == [0])
         #expect(report.painting.selectedNumber == 2)
+        #expect(report.painting.lineWeight == "regular")
         #expect(report.painting.sample == "great-wave" && report.painting.photo == nil)
         #expect(report.painting.paints.map(\.number) == [1, 2, 3])
         #expect(report.painting.paints.first?.hex == "#FF0000")
@@ -140,7 +141,7 @@ struct FeedbackTests {
         let capture = FeedbackCapture(
             date: Date(timeIntervalSinceReferenceDate: 0), title: "Stripes", template: template, progress: session.progress,
             selectedColor: 1, nicknames: [nil, nil, nil], nicknameSeed: 7, showsNumbers: true, paper: .light,
-            darkInterface: false, lineAppearance: .default, visibleRect: CGRect(x: 0, y: 0, width: 60, height: 40),
+            darkInterface: false, lineWeight: .default, visibleRect: CGRect(x: 0, y: 0, width: 60, height: 40),
             pointsPerUnit: 8, displayScale: 2, relativeZoom: 1, app: "1.0 (1)", device: "iPad16,6", system: "iPadOS 26.0",
             source: FeedbackSource(sampleName: "great-wave"))
         let strokes = [stroke([SIMD2(5, 10), SIMD2(30, 10)], at: 1)]

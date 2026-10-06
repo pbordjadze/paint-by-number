@@ -401,7 +401,7 @@ them to Core ML and record where they come from.
 
 ### ControlNet HED
 
-Finds the outlines of a photo, for coloring books and layered line art.
+Finds the outlines of a photo, for coloring books.
 
 Lvmin Zhang (lllyasviel), ControlNet: ControlNetHED.pth from lllyasviel/Annotators
 
@@ -409,7 +409,7 @@ Apache License, Version 2.0
 
 ### Informative Drawings
 
-Draws a photo's lines, fur, petals and glass, for coloring books and layered line art.
+Draws a photo's lines, fur, petals and glass, for coloring books.
 
 Caroline Chan, Frédo Durand and Phillip Isola, Informative Drawings: sk_model.pth (contour style) from lllyasviel/Annotators
 

@@ -4,7 +4,7 @@ import os
 import simd
 import Vision
 
-/// People's eyes, which layered and coloring-book line art outline whatever their contrast: a
+/// People's eyes, which a coloring book outlines whatever their contrast: a
 /// face reads wrong when its eyes dissolve into the skin. From Vision's face landmarks: each
 /// eye's contour, smoothed into an almond, and its iris, a circle around the pupil sized from
 /// the eye's width and clipped to the contour (the lids cover the rest of it).
