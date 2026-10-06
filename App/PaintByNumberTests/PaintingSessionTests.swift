@@ -356,6 +356,37 @@ struct PaintingSessionTests {
         #expect(events() == [.hintShown(region: shown)])
     }
 
+    /// Zen Mode: a moment after a fill, the canvas is sent to an area of the selected color
+    /// still to paint; quick fills in a row send it once, from the last.
+    @Test func zenModeMovesOnAfterTheLastFill() async throws {
+        let session = PaintingSession(template: template)
+        session.autoAdvance = false
+        let canvas = RecordingCanvas()
+        session.canvas = canvas
+        session.flowsToNextArea = true
+        session.select(color: 4)
+        let areas = regions(ofColor: 4)
+        try #require(areas.count >= 3)
+        session.paint([areas[0]], from: .zero, animated: false)
+        session.paint([areas[1]], from: .zero, animated: false)
+        #expect(canvas.focused.isEmpty)
+        try await waitUntil(timeout: .seconds(5)) { !canvas.focused.isEmpty }
+        try await Task.sleep(for: PaintingSession.zenPause * 2)
+        #expect(canvas.focused.count == 1)
+        let next = try #require(canvas.focused.first)
+        #expect(session.colorOf(next) == 4 && !session.isPainted(next))
+    }
+
+    @Test func withoutZenModeAFillStaysPut() async throws {
+        let session = PaintingSession(template: template)
+        let canvas = RecordingCanvas()
+        session.canvas = canvas
+        session.select(color: 4)
+        session.paint([regions(ofColor: 4)[0]], from: .zero, animated: false)
+        try await Task.sleep(for: PaintingSession.zenPause * 2)
+        #expect(canvas.focused.isEmpty)
+    }
+
     @Test func hintWithNothingLeftStaysQuiet() {
         let session = PaintingSession(template: template)
         session.autoAdvance = false

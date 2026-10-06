@@ -6,6 +6,8 @@ enum SettingsKey {
     static let haptics = "hapticsEnabled"
     static let sounds = "soundsEnabled"
     static let autoAdvance = "autoAdvanceColors"
+    /// Zen Mode: fly on to the next area after each fill (the painting screen's More menu).
+    static let zenMode = "zenMode"
     static let paintingLength = "paintingLength"
     static let paperSize = "printPaperSize"
     static let timelapsePace = "timelapsePace"
