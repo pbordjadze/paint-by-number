@@ -365,7 +365,7 @@ struct PaintView: View {
                     .disabled(session.isComplete)
             }
             GlassIconButton(systemImage: "arrow.uturn.backward", label: "Undo", action: undo)
-                .disabled(session.progress.paintedCount == 0)
+                .disabled(!session.isStarted)
             if showsFeedback {
                 GlassIconButton(systemImage: "exclamationmark.bubble", label: "Give Feedback", action: startFeedback)
             }
@@ -398,7 +398,7 @@ struct PaintView: View {
 
     private func progressBadge(_ variant: BadgeVariant) -> some View {
         HStack(spacing: 10) {
-            progressGroup(showsTitle: variant.showsTitle, showsPercent: variant.showsPercent)
+            ProgressGroup(session: session, title: title, showsTitle: variant.showsTitle, showsPercent: variant.showsPercent)
             if variant.showsColor {
                 Capsule()
                     .fill(Color.primary.opacity(0.15))
@@ -416,59 +416,6 @@ struct PaintView: View {
         .padding(.horizontal, 14)
         .frame(height: Self.barHeight)
         .glassEffect(.regular, in: .capsule)
-    }
-
-    /// The ring fills in paint: each color's painted share of the areas, in palette order.
-    private var paintedArcs: [(paint: Color, start: Double, end: Double)] {
-        let total = Double(max(session.progress.regionCount, 1))
-        var start = 0.0
-        return (0..<session.paletteCount).compactMap { color -> (paint: Color, start: Double, end: Double)? in
-            let painted = session.totalByColor[color] - session.remainingByColor[color]
-            guard painted > 0 else { return nil }
-            let end = start + Double(painted) / total
-            defer { start = end }
-            return (PaletteBar.paint(session.template, color), start, end)
-        }
-    }
-
-    private func progressGroup(showsTitle: Bool, showsPercent: Bool) -> some View {
-        let fraction = session.fractionComplete
-        // Whole percent, rounded down: 100 only once the last area is painted.
-        let percent = Int(fraction * 100)
-        return HStack(spacing: 8) {
-            ZStack {
-                Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
-                ForEach(Array(paintedArcs.enumerated()), id: \.offset) { _, arc in
-                    Circle()
-                        .trim(from: arc.start, to: arc.end)
-                        .stroke(arc.paint, style: StrokeStyle(lineWidth: 3))
-                        .rotationEffect(.degrees(-90))
-                }
-            }
-            .frame(width: 18, height: 18)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: fraction)
-            if showsTitle {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
-                    .fixedSize()
-            }
-            if showsPercent {
-                Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
-                    .font(.subheadline.weight(.semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
-                    .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .snappy, value: percent)
-                    .lineLimit(1)
-                    .fixedSize()
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(title.isEmpty
-            ? PaintSpeech.percentPainted(percent)
-            : PaintSpeech.paintingProgress(title: title, percent: percent))
-        .accessibilityShowsLargeContentViewer()
     }
 
     /// `offersFeedback` when the bar has no room for Give Feedback.
@@ -654,4 +601,67 @@ struct PaintView: View {
         feedback.isReviewing = true
     }
     #endif
+}
+
+/// The progress badge's ring and percentage. They change with every fill, so they read the
+/// session in a view of their own: a fill re-renders them, not the painting screen around them.
+private struct ProgressGroup: View {
+    let session: PaintingSession
+    let title: String
+    let showsTitle: Bool
+    let showsPercent: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        let fraction = session.fractionComplete
+        // Whole percent, rounded down: 100 only once the last area is painted.
+        let percent = Int(fraction * 100)
+        HStack(spacing: 8) {
+            ZStack {
+                Circle().stroke(Color.primary.opacity(0.12), lineWidth: 3)
+                ForEach(Array(paintedArcs.enumerated()), id: \.offset) { _, arc in
+                    Circle()
+                        .trim(from: arc.start, to: arc.end)
+                        .stroke(arc.paint, style: StrokeStyle(lineWidth: 3))
+                        .rotationEffect(.degrees(-90))
+                }
+            }
+            .frame(width: 18, height: 18)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.4), value: fraction)
+            if showsTitle {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            if showsPercent {
+                Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(showsTitle ? Color.secondary : Color.primary)
+                    .contentTransition(.numericText())
+                    .animation(reduceMotion ? nil : .snappy, value: percent)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title.isEmpty
+            ? PaintSpeech.percentPainted(percent)
+            : PaintSpeech.paintingProgress(title: title, percent: percent))
+        .accessibilityShowsLargeContentViewer()
+    }
+
+    /// The ring fills in paint: each color's painted share of the areas, in palette order.
+    private var paintedArcs: [(paint: Color, start: Double, end: Double)] {
+        let total = Double(max(session.progress.regionCount, 1))
+        var start = 0.0
+        return (0..<session.paletteCount).compactMap { color -> (paint: Color, start: Double, end: Double)? in
+            let painted = session.totalByColor[color] - session.remainingByColor[color]
+            guard painted > 0 else { return nil }
+            let end = start + Double(painted) / total
+            defer { start = end }
+            return (PaletteBar.paint(session.template, color), start, end)
+        }
+    }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import QuartzCore
 import PaintCore
 import simd
@@ -550,6 +551,51 @@ struct PaintingSessionTests {
         #expect((0..<session.paletteCount).allSatisfy { session.nickname(of: $0) == session.colorNicknames[$0] })
         #expect(session.nickname(of: 0) != nil)
     }
+
+    /// Completion, the first fill and each finished color are written only when they flip, so
+    /// the painting screen's layout and controls, which read only these, aren't told about
+    /// every fill.
+    @Test func milestonesChangeOnlyWhenTheyFlip() throws {
+        let session = PaintingSession(template: template)
+        let color = try #require((0..<session.paletteCount).first { regions(ofColor: $0).count >= 3 })
+        let areas = regions(ofColor: color)
+        func notifies(_ change: () -> Void) -> Bool {
+            let observed = ObservedChange()
+            withObservationTracking {
+                _ = session.isComplete
+                _ = session.isStarted
+                _ = session.completedColors
+            } onChange: {
+                observed.fired = true
+            }
+            change()
+            return observed.fired
+        }
+        #expect(!session.isStarted && !session.isComplete && session.completedColors.isEmpty)
+        let started = notifies { _ = session.paint([areas[0]], from: .zero, animated: false) }
+        #expect(started && session.isStarted, "The first fill starts the painting")
+        let finishedNothing = notifies { _ = session.paint([areas[1]], from: .zero, animated: false) }
+        #expect(!finishedNothing && session.revision == 2 && !session.isColorComplete(color))
+        let finishedColor = notifies { _ = session.paint(Array(areas.dropFirst(2)), from: .zero, animated: false) }
+        #expect(finishedColor && session.isColorComplete(color) && session.completedColors == [color])
+        let undone = notifies { _ = session.undo() }
+        #expect(undone && !session.isColorComplete(color) && session.completedColors.isEmpty)
+        let finishedAll = notifies { _ = session.paint(Array(template.regions.indices), from: .zero, animated: false) }
+        #expect(finishedAll && session.isComplete && session.completedColors == Set(0..<session.paletteCount))
+        let restarted = notifies { session.reset() }
+        #expect(restarted && !session.isStarted && !session.isComplete && session.completedColors.isEmpty)
+        // Saved progress opens with them in step.
+        var progress = PaintProgress(regionCount: template.regions.count)
+        for r in areas { progress.paint(r) }
+        let resumed = try PaintingSession(template: template, progress: progress)
+        #expect(resumed.isStarted && !resumed.isComplete && resumed.completedColors == [color])
+    }
+}
+
+/// What a `withObservationTracking` change handler saw: the handler is `@Sendable`, and here it
+/// runs at once, on the main actor, inside the change.
+private final class ObservedChange: @unchecked Sendable {
+    var fired = false
 }
 
 @MainActor
