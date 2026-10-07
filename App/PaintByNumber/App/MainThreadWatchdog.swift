@@ -45,6 +45,7 @@ nonisolated enum MainThreadWatchdog {
         var pinged = false
         var stall = 0
         var nextSample: ContinuousClock.Instant?
+        var previous: [UInt] = []
         while true {
             Thread.sleep(forTimeInterval: 0.25)
             let now = clock.now
@@ -55,6 +56,7 @@ nonisolated enum MainThreadWatchdog {
                 if nextSample != nil {
                     Log.demo.error("Main thread answered after \(String(describing: now - answered), privacy: .public) (stall \(stall, privacy: .public))")
                     nextSample = nil
+                    previous = []
                 }
                 answered = now
             }
@@ -67,11 +69,33 @@ nonisolated enum MainThreadWatchdog {
             if nextSample == nil { stall += 1 }
             nextSample = now + interval
             let depth = sample(thread, stack: stack, into: frames)
+            let addresses = Array(frames.prefix(depth))
+            defer { previous = addresses }
+            guard addresses != previous else {
+                Log.demo.error("Main thread stuck for \(String(describing: gone), privacy: .public) (stall \(stall, privacy: .public)), at the same \(depth, privacy: .public) frames")
+                continue
+            }
             Log.demo.error("Main thread stuck for \(String(describing: gone), privacy: .public) (stall \(stall, privacy: .public)), \(depth, privacy: .public) frames:")
-            for (index, address) in frames.prefix(depth).enumerated() {
-                Log.demo.error("  stall \(stall, privacy: .public) #\(index, privacy: .public) \(describe(address), privacy: .public)")
+            for part in parts(addresses) {
+                Log.demo.error("  stall \(stall, privacy: .public) \(part, privacy: .public)")
             }
         }
+    }
+
+    /// The frames named, a few to a message: a message per frame outpaced the log, which
+    /// dropped most of them.
+    private static func parts(_ addresses: [UInt]) -> [String] {
+        var parts: [String] = [], part = ""
+        for (index, address) in addresses.enumerated() {
+            let frame = "#\(index) " + describe(address).prefix(240)
+            if !part.isEmpty, part.utf8.count + frame.utf8.count > 800 {
+                parts.append(part)
+                part = ""
+            }
+            part += part.isEmpty ? frame : " | " + frame
+        }
+        if !part.isEmpty { parts.append(part) }
+        return parts
     }
 
     /// The suspended thread's pc, lr and the return addresses up its frame records, innermost
