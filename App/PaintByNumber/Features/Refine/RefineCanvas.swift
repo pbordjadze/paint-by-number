@@ -143,6 +143,8 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     var onTap: ((SIMD2<Float>) -> Void)?
 
     static let maximumZoom: CGFloat = 6
+    /// Room around the picture at zoom 1, so it reads as a card.
+    static let margin: CGFloat = 12
 
     private let scrollView = UIScrollView()
     /// The picture at zoom 1, which the scroll view zooms: touches read in its coordinates.
@@ -184,7 +186,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         defer { isLayingOut = false }
         super.layoutSubviews()
         scrollView.frame = bounds
-        let fitted = CompareView.fitted(aspectRatio, in: bounds.size)
+        let fitted = CompareView.fitted(aspectRatio, in: bounds.insetBy(dx: Self.margin, dy: Self.margin).size)
         if fitted != fittedSize {
             fittedSize = fitted
             scrollView.zoomScale = 1

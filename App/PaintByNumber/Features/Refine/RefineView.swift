@@ -52,10 +52,24 @@ struct RefineView: View {
     private var canvas: some View {
         ZStack {
             if let photo = model.source?.preview {
-                RefinePicture(picture: showsPhoto ? nil : model.preview?.picture, photo: photo, rect: picture, zoom: zoom)
-                RefineMarks(
-                    refinements: shown, found: model.foundText, marking: marking, rect: picture,
-                    emphasizesText: tool == .text)
+                // A card, as the preview's comparison is; zoomed in, its corners leave the screen.
+                Self.card
+                    .fill(Theme.surface)
+                    .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 10)
+                    .frame(width: picture.width, height: picture.height)
+                    .position(x: picture.midX, y: picture.midY)
+                ZStack {
+                    RefinePicture(picture: showsPhoto ? nil : model.preview?.picture, photo: photo, rect: picture, zoom: zoom)
+                    RefineMarks(
+                        refinements: shown, found: model.foundText, marking: marking, rect: picture,
+                        emphasizesText: tool == .text)
+                }
+                // Brushing past the picture's edge stays on the picture.
+                .mask {
+                    Self.card
+                        .frame(width: picture.width, height: picture.height)
+                        .position(x: picture.midX, y: picture.midY)
+                }
             }
             RefineTouchSurface(
                 aspectRatio: aspectRatio,
@@ -76,6 +90,8 @@ struct RefineView: View {
         .accessibilityValue(Self.changes(model.refinements.changeCount))
         .accessibilityIdentifier("refine-canvas")
     }
+
+    private static let card = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
 
     /// The refinements with the stroke still under the finger.
     private var shown: TemplateRefinements {
