@@ -1,0 +1,79 @@
+Attributes: Application, 0x108e3e800, pid: 35723, label: 'Paint by Moonlight'
+Element subtree:
+ →Application, 0x108e3e800, pid: 35723, label: 'Paint by Moonlight'
+    Window (Main), 0x108e3e940, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x108e3ea80, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x108e3ebc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x108e3ed00, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x108e3ee40, {{0.0, 0.0}, {1032.0, 1376.0}}
+              Other, 0x108e3ef80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x108e3f0c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  NavigationBar, 0x108e3fc00, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight'
+                    Button, 0x108e3fd40, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+                    Button, 0x108e3fe80, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled
+                    Button, 0x1162a4b40, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+                    SearchField, 0x1162a5e00, {{778.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings'
+                      Image, 0x1162a48c0, {{790.0, 44.5}, {20.5, 18.5}}, identifier: 'magnifyingglass', label: 'Search'
+                    StaticText, 0x1162a75c0, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight'
+                  Other, 0x1162a5a40, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x1162a4f00, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      Other, 0x1162a4c80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                        Other, 0x1162a6bc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                          ScrollView, 0x1162a5180, {{516.0, 0.0}, {0.0, 1376.0}}
+                            Other, 0x1162a4a00, {{516.0, 138.0}, {0.0, 0.0}}
+                          Other, 0x1162a7c00, {{381.0, 504.0}, {270.0, 198.0}}
+                          StaticText, 0x1162a7ac0, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo'
+                          StaticText, 0x1162a7840, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+                          Button, 0x1162a7700, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+                            Image, 0x1162a5f40, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add'
+                            StaticText, 0x1162a7200, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+                  Other, 0x1162a4140, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x1162a4000, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x1162a4dc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x1162a7340, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x1162a5040, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x1162a6e40, {{0.0, 0.0}, {1032.0, 1376.0}}
+              NavigationBar, 0x1162a7480, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+                Button, 0x1162a6d00, {{10.0, 32.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'New Painting'
+                StaticText, 0x1162a4780, {{460.5, 43.5}, {111.0, 21.0}}, label: 'New Painting'
+                Other, 0x1162a7e80, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+                  Other, 0x1162a7d40, {{946.0, 36.0}, {72.0, 36.0}}
+                    Button, 0x1162a5b80, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+              Other, 0x1162a6580, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x1162a4500, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  Other, 0x116e0f200, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x116e0c140, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      Other, 0x116e0f5c0, {{39.0, 90.0}, {954.0, 715.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 50 percent photo
+                        Image, 0x116e0cdc0, {{39.0, 90.0}, {954.0, 715.5}}
+                        Image, 0x116e0cf00, {{39.0, 90.0}, {954.0, 715.5}}
+                        Image, 0x116e0d2c0, {{508.5, 443.5}, {15.0, 9.5}}, identifier: 'arrow.left.and.right', label: 'arrow.left.and.right'
+                        StaticText, 0x116e0d400, {{39.0, 90.0}, {954.0, 715.5}}, label: 'Photo'
+                        StaticText, 0x116e0d180, {{922.5, 107.0}, {48.5, 14.5}}, label: 'Painting'
+                      Image, 0x116e0cb40, {{274.0, 859.0}, {13.5, 13.5}}, identifier: 'pencil', label: 'Edit'
+                      TextField, 0x116e0ca00, {{299.5, 853.5}, {460.5, 24.0}}, identifier: 'painting-title', placeholderValue: 'October 7'
+                      Other, 0x116e0c000, {{258.0, 905.5}, {202.0, 44.0}}, identifier: 'settings-origin', label: 'Settings', value: Suggested for this...
+                        Image, 0x116e0cc80, {{271.5, 920.0}, {12.5, 15.0}}, identifier: 'sparkles', label: 'Sparkle'
+                        StaticText, 0x116e0d040, {{291.5, 919.5}, {156.5, 16.0}}, label: 'Suggested for this photo'
+                      StaticText, 0x116e0f700, {{258.0, 967.5}, {46.5, 18.0}}, label: 'Colors'
+                      StaticText, 0x116e0f840, {{755.5, 967.5}, {18.5, 18.0}}, label: '40'
+                      Slider, 0x116e0f980, {{258.0, 989.5}, {516.0, 31.0}}, label: 'Colors', value: 40
+                      StaticText, 0x116e0fac0, {{258.0, 1038.5}, {41.5, 18.0}}, label: 'Detail'
+                      StaticText, 0x116e0c8c0, {{717.0, 1038.5}, {57.0, 18.0}}, label: 'Detailed'
+                      Slider, 0x116e0ee40, {{258.0, 1060.5}, {516.0, 31.0}}, label: 'Detail', value: Detailed
+                      StaticText, 0x116e0d7c0, {{258.0, 1109.5}, {89.5, 18.0}}, label: 'Smoothness'
+                      StaticText, 0x116e0d680, {{720.5, 1109.5}, {53.5, 18.0}}, label: 'Smooth'
+                      Slider, 0x116e0df40, {{258.0, 1131.5}, {516.0, 31.0}}, label: 'Smoothness', value: Smooth
+                      StaticText, 0x116e0e080, {{258.0, 1180.5}, {38.0, 18.0}}, label: 'Lines'
+                      StaticText, 0x116e0e1c0, {{710.5, 1180.5}, {63.5, 18.0}}, label: 'Balanced'
+                      Slider, 0x116e0e940, {{258.0, 1202.5}, {516.0, 31.0}}, label: 'Lines', value: Balanced
+                      StaticText, 0x116e0d540, {{413.0, 1251.5}, {206.0, 16.0}}, label: '40 colors · 1,025 areas · ~50 min'
+                      Button, 0x116e0da40, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting'
+              Other, 0x116e0d900, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x116e0e300, {{0.0, 0.0}, {1032.0, 1376.0}}
+Path to element:
+ →Application, 0x108e3e800, pid: 35723, label: 'Paint by Moonlight'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x116e0c280, pid: 35723, label: 'Paint by Moonlight'
+  }

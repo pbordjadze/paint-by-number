@@ -1,0 +1,84 @@
+Attributes: Other, 0x108ce70c0, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker'
+Element subtree:
+ →Other, 0x108ce70c0, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker'
+Path to element:
+ →Other, 0x108ce70c0, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x108db1e00, pid: 35723, label: 'Paint by Moonlight'
+  }
+  ↪︎Find: Descendants matching type Any
+    Output: {
+      Window (Main), 0x116dae580, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116dafe80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116e0fd40, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116daf980, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116e0db80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116dafac0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116e0e6c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116daf840, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116e0fe80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116daea80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      NavigationBar, 0x116e0ea80, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+      Other, 0x116e0c280, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x108db1f40, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116daf200, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x116e0c780, {{10.0, 32.0}, {44.0, 44.0}}, identifier: 'BackButton', label: 'New Painting'
+      StaticText, 0x116e0e800, {{460.5, 43.5}, {111.0, 21.0}}, label: 'New Painting'
+      Other, 0x116e0de00, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+      Other, 0x116b2f200, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x108db1cc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      NavigationBar, 0x116dadcc0, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight'
+      Other, 0x116dafc00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116e0ed00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116e0fc00, {{946.0, 36.0}, {72.0, 36.0}}
+      Other, 0x116b2f480, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x116daef80, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+      Button, 0x116daf0c0, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled
+      Button, 0x116dae940, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+      SearchField, 0x116daf5c0, {{778.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings'
+      StaticText, 0x116dafd40, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight'
+      Other, 0x116daee40, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116e0ebc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Button, 0x116e0e440, {{946.0, 36.0}, {72.0, 36.0}}, identifier: 'refine', label: 'Refine', value: No changes
+      Other, 0x116b2f0c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Image, 0x116daf480, {{790.0, 44.5}, {20.5, 18.5}}, identifier: 'magnifyingglass', label: 'Search'
+      Other, 0x116dae1c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x116b2ee40, {{39.0, 90.0}, {954.0, 715.5}}, identifier: 'compare', label: 'Comparison of photo and template', value: 50 percent photo
+      Image, 0x108db17c0, {{274.0, 859.0}, {13.5, 13.5}}, identifier: 'pencil', label: 'Edit'
+      TextField, 0x108db12c0, {{299.5, 853.5}, {460.5, 24.0}}, identifier: 'painting-title', placeholderValue: 'October 7', value: October 7
+      Other, 0x108db0f00, {{258.0, 905.5}, {202.0, 44.0}}, identifier: 'settings-origin', label: 'Settings', value: Suggested for this...
+      StaticText, 0x108db0780, {{258.0, 967.5}, {46.5, 18.0}}, label: 'Colors'
+      StaticText, 0x108db1b80, {{755.5, 967.5}, {18.5, 18.0}}, label: '40'
+      Slider, 0x108db0640, {{258.0, 989.5}, {516.0, 31.0}}, label: 'Colors', value: 40
+      StaticText, 0x108db1540, {{258.0, 1038.5}, {41.5, 18.0}}, label: 'Detail'
+      StaticText, 0x108db0140, {{717.0, 1038.5}, {57.0, 18.0}}, label: 'Detailed'
+      Slider, 0x108db0000, {{258.0, 1060.5}, {516.0, 31.0}}, label: 'Detail', value: Detailed
+      StaticText, 0x108db1680, {{258.0, 1109.5}, {89.5, 18.0}}, label: 'Smoothness'
+      StaticText, 0x108db0b40, {{720.5, 1109.5}, {53.5, 18.0}}, label: 'Smooth'
+      Slider, 0x108db0dc0, {{258.0, 1131.5}, {516.0, 31.0}}, label: 'Smoothness', value: Smooth
+      StaticText, 0x108db1180, {{258.0, 1180.5}, {38.0, 18.0}}, label: 'Lines'
+      StaticText, 0x108db08c0, {{710.5, 1180.5}, {63.5, 18.0}}, label: 'Balanced'
+      Slider, 0x108db0a00, {{258.0, 1202.5}, {516.0, 31.0}}, label: 'Lines', value: Balanced
+      StaticText, 0x108db1a40, {{413.0, 1251.5}, {206.0, 16.0}}, label: '40 colors · 1,025 areas · ~50 min'
+      Button, 0x108db0280, {{258.0, 1285.5}, {516.0, 62.5}}, label: 'Start Painting'
+      Other, 0x116dae300, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Image, 0x116b2df40, {{39.0, 90.0}, {954.0, 715.5}}
+      Image, 0x116b2db80, {{39.0, 90.0}, {954.0, 715.5}}
+      Image, 0x116b2dcc0, {{508.5, 443.5}, {15.0, 9.5}}, identifier: 'arrow.left.and.right', label: 'arrow.left.and.right'
+      StaticText, 0x116b2e440, {{39.0, 90.0}, {954.0, 715.5}}, label: 'Photo'
+      StaticText, 0x108db1900, {{922.5, 107.0}, {48.5, 14.5}}, label: 'Painting'
+      Image, 0x108db1040, {{271.5, 920.0}, {12.5, 15.0}}, identifier: 'sparkles', label: 'Sparkle'
+      StaticText, 0x108db0c80, {{291.5, 919.5}, {156.5, 16.0}}, label: 'Suggested for this photo'
+      ScrollView, 0x116daed00, {{516.0, 0.0}, {0.0, 1376.0}}
+      Other, 0x116dae080, {{381.0, 504.0}, {270.0, 198.0}}
+      StaticText, 0x116dac780, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo'
+      StaticText, 0x116dac640, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+      Button, 0x116dad900, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+      Other, 0x116daebc0, {{516.0, 138.0}, {0.0, 0.0}}
+      Image, 0x116dada40, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add'
+      StaticText, 0x116e0f480, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+    }
+    ↪︎Find: Elements matching predicate 'identifier == "library-picker"'
+      ↪︎Find: First Match
