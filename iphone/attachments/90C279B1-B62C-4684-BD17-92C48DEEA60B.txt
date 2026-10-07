@@ -1,0 +1,127 @@
+Attributes: Application, 0x113ef57c0, pid: 58480, label: 'Paint by Moonlight'
+Element subtree:
+ →Application, 0x113ef57c0, pid: 58480, label: 'Paint by Moonlight'
+    Window (Main), 0x113ef5900, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x113ef5a40, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x113ef5b80, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x113ef5cc0, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x113ef5e00, {{0.0, 0.0}, {402.0, 874.0}}
+              Other, 0x113ef5f40, {{0.0, 0.0}, {402.0, 874.0}}
+                NavigationBar, 0x113ef6080, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Paint by Moonlight'
+                  Button, 0x113ef61c0, {{20.0, 66.0}, {36.0, 36.0}}, label: 'Settings'
+                  Button, 0x113ef6300, {{290.0, 66.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled
+                  Button, 0x113ef6440, {{346.0, 66.0}, {36.0, 36.0}}, label: 'New Painting'
+                  StaticText, 0x113ef6580, {{16.0, 119.7}, {315.0, 40.7}}, label: 'Paint by Moonlight'
+                Other, 0x113ef66c0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x113ef6800, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x113ef6940, {{0.0, 0.0}, {402.0, 874.0}}
+                      Other, 0x113ef6a80, {{0.0, 0.0}, {402.0, 874.0}}
+                        ScrollView, 0x113ef6bc0, {{201.0, 0.0}, {0.0, 874.0}}
+                          Other, 0x113ef6d00, {{201.0, 168.0}, {0.0, 0.0}}
+                        Other, 0x113ef6e40, {{66.0, 235.0}, {270.0, 198.0}}
+                        StaticText, 0x113ef6f80, {{55.8, 466.8}, {290.3, 67.7}}, label: 'Every painting starts with a photo'
+                        StaticText, 0x113ef70c0, {{46.5, 544.5}, {309.0, 42.3}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+                        Button, 0x113ef7200, {{105.7, 621.0}, {190.7, 60.3}}, label: 'New Painting'
+                          Image, 0x113ef7340, {{137.7, 644.0}, {14.3, 14.3}}, identifier: 'plus', label: 'Add'
+                          StaticText, 0x113ef7480, {{105.7, 621.0}, {190.7, 60.3}}, label: 'New Painting'
+                Other, 0x113ef75c0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x113ef7700, {{0.0, 0.0}, {402.0, 874.0}}
+                    Toolbar, 0x113ef7840, {{0.0, 788.0}, {402.0, 86.0}}, identifier: 'Toolbar', label: 'Toolbar'
+                      Other, 0x113ef7980, {{28.0, 798.0}, {346.0, 48.0}}
+                        Other, 0x113ef7ac0, {{28.0, 798.0}, {346.0, 48.0}}
+                          Other, 0x113ef7c00, {{28.0, 798.0}, {0.0, 0.0}}
+                            Other, 0x113ef7d40, {{28.0, 798.0}, {346.0, 48.0}}
+                              Other, 0x113ef7e80, {{28.0, 798.0}, {346.0, 48.0}}
+                                Other, 0x113ff92c0, {{33.0, 803.0}, {336.0, 38.0}}
+                                  SearchField, 0x113ff8140, {{33.0, 803.0}, {336.0, 38.0}}, label: 'Search paintings', placeholderValue: 'Search paintings'
+                                    Image, 0x113ff8280, {{46.0, 812.3}, {20.3, 18.7}}, identifier: 'magnifyingglass', label: 'Search'
+      Other, 0x113ff8dc0, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x113ff8c80, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x113ff8b40, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x113ff88c0, {{0.0, 0.0}, {402.0, 874.0}}
+              NavigationBar, 0x113ff83c0, {{0.0, 62.0}, {402.0, 54.0}}, identifier: 'New Painting'
+                Button, 0x113ff8500, {{20.0, 66.0}, {36.0, 36.0}}, label: 'Close'
+                StaticText, 0x113ff8640, {{145.3, 73.7}, {111.0, 20.7}}, label: 'New Painting'
+              Other, 0x113ffb700, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x113ed0b40, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x113ed0280, {{0.0, 0.0}, {402.0, 874.0}}
+                    Other, 0x113ed03c0, {{0.0, 0.0}, {402.0, 874.0}}
+                      StaticText, 0x113ed3980, {{24.0, 120.0}, {354.0, 38.0}}, label: 'Choose a photo with a clear subject and good light. It becomes your canvas.'
+                      SegmentedControl, 0x113ed3480, {{20.0, 172.0}, {362.0, 31.0}}, identifier: 'photo-source'
+                        Button, 0x113ed2d00, {{20.0, 172.0}, {181.0, 32.0}}, label: 'Photos', Selected
+                        Button, 0x113ed1540, {{201.0, 172.0}, {181.0, 32.0}}, label: 'Samples'
+                      Other, 0x113ed1cc0, {{0.0, 217.0}, {402.0, 623.0}}, identifier: 'library-picker'
+                        Other, 0x113ed1b80, {{0.0, 217.0}, {402.0, 623.0}}
+                          Other, 0x113ed17c0, {{0.0, 217.0}, {402.0, 623.0}}
+                            Other, 0x113ed1680, {{0.0, 217.0}, {402.0, 623.0}}
+                              Other, 0x113ed3840, {{0.0, 217.0}, {402.0, 623.0}}
+                                Other, 0x113ed2e40, {{0.0, 217.0}, {402.0, 623.0}}
+                                  Other, 0x113ed0780, {{0.0, 217.0}, {402.0, 623.0}}
+                                    Other, 0x113ed0140, {{0.0, 217.0}, {402.0, 623.0}}
+                                      Other, 0x113ed0dc0, {{0.0, 217.0}, {402.0, 623.0}}
+                                        Other, 0x113ed1f40, {{0.0, 217.0}, {402.0, 623.0}}
+                                          Other, 0x113ed0000, {{0.0, 217.0}, {402.0, 623.0}}
+                                            Other, 0x113ed2440, {{0.0, 217.0}, {402.0, 623.0}}
+                                              Other, 0x113ed1e00, {{0.0, 217.0}, {402.0, 623.0}}
+                                                Other, 0x113ed30c0, {{0.0, 217.0}, {402.0, 623.0}}
+                                                  Other, 0x113ed3700, {{0.0, 217.0}, {402.0, 623.0}}
+                                                    Other, 0x113ed3ac0, {{0.0, 217.0}, {402.0, 623.0}}
+                                                      NavigationBar, 0x113ed2f80, {{0.0, 227.0}, {402.0, 62.0}}, identifier: 'Photos'
+                                                        SegmentedControl, 0x113ed2940, {{106.0, 225.0}, {190.0, 48.0}}, label: 'Photos'
+                                                          Button, 0x113ed2800, {{106.0, 225.0}, {95.0, 48.0}}, label: 'Photos', Selected
+                                                          Button, 0x113ed2580, {{201.0, 225.0}, {95.0, 48.0}}, label: 'Collections'
+                                                      Other, 0x113ed1a40, {{0.0, 217.0}, {402.0, 623.0}}
+                                                        Other, 0x113ed08c0, {{0.0, 217.0}, {402.0, 623.0}}
+                                                          Other, 0x113ed1400, {{0.0, 217.0}, {402.0, 623.0}}
+                                                            Other, 0x113ed3d40, {{0.0, 217.0}, {402.0, 623.0}}, label: 'Photos'
+                                                              Other, 0x113ed3e80, {{0.0, 217.0}, {402.0, 623.0}}
+                                                                ScrollView, 0x1141ae440, {{0.0, 217.0}, {402.0, 623.0}}, identifier: 'photosView_content_scroll_view'
+                                                                  Other, 0x1141acf00, {{0.0, 289.0}, {402.0, 429.7}}, identifier: 'photos_layout'
+                                                                    Other, 0x1141ada40, {{0.0, 217.0}, {402.0, 623.0}}
+                                                                    Other, 0x1141ac000, {{0.0, 217.0}, {402.0, 623.0}}
+                                                                    Other, 0x1141acdc0, {{0.0, 217.0}, {402.0, 623.0}}
+                                                                    Other, 0x1141ad040, {{0.0, 289.0}, {402.0, 162.0}}, identifier: 'PXGSingleViewLayout-Group'
+                                                                      Other, 0x1141ac3c0, {{0.0, 289.0}, {402.0, 162.0}}, identifier: 'PXGSingleViewContainerView_AX', label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.'
+                                                                        Image, 0x1141ac640, {{32.0, 299.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                        Button, 0x1141ae580, {{350.0, 297.0}, {30.0, 22.0}}, label: 'Close'
+                                                                        Button, 0x1141aebc0, {{82.0, 406.7}, {99.7, 20.3}}, label: 'Learn More…'
+                                                                          StaticText, 0x1141aee40, {{82.0, 406.7}, {99.7, 20.3}}, label: 'Learn More…'
+                                                                    Other, 0x1141acc80, {{0.0, 289.0}, {402.0, 162.0}}, label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.'
+                                                                      Image, 0x1141af840, {{32.0, 299.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                      Button, 0x1141ac780, {{350.0, 297.0}, {30.0, 22.0}}, label: 'Close'
+                                                                      Button, 0x1141acb40, {{82.0, 406.7}, {99.7, 20.3}}, label: 'Learn More…'
+                                                                        StaticText, 0x1141aed00, {{82.0, 406.7}, {99.7, 20.3}}, label: 'Learn More…'
+                                                                    Other, 0x1141af980, {{0.0, 451.0}, {402.0, 267.7}}, identifier: 'photos_sectioned_layout'
+                                                                      Other, 0x1141ad2c0, {{0.0, 451.0}, {402.0, 267.7}}, identifier: 'PXAssetsSectionLayout-Group'
+                                                                        Other, 0x1141ad680, {{0.0, 451.0}, {402.0, 267.7}}, identifier: 'PXZoomablePhotosLayout-Group'
+                                                                          Other, 0x1141ad900, {{0.0, 451.0}, {402.0, 267.7}}, identifier: 'PXGZoomLayout-Group'
+                                                                            Other, 0x1141ae940, {{0.0, 451.0}, {402.0, 267.7}}, identifier: 'PXGDecoratingLayout-Group'
+                                                                              Other, 0x1141ad7c0, {{0.0, 451.0}, {402.0, 267.7}}, identifier: 'PXGGridLayout-Group', label: 'Photo, March 30, 2018, 7:14 PM, Photo, August 08, 2012, 9:55 PM, Photo, August 08, 2012, 9:29 PM, Photo, August 08, 2012, 6:52 PM, Photo, March 13, 2011, 12:17 AM, Photo, October 09, 2009, 9:09 PM'
+                                                                                Image, 0x1141ae6c0, {{0.0, 451.0}, {132.9, 133.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 30, 2018, 7:14 PM'
+                                                                                Image, 0x1141ae080, {{134.6, 451.0}, {132.9, 133.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:55 PM'
+                                                                                Image, 0x1141aea80, {{269.1, 451.0}, {132.9, 133.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:29 PM'
+                                                                                Image, 0x1141ad400, {{0.0, 585.7}, {132.9, 133.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 6:52 PM'
+                                                                                Image, 0x1141ac8c0, {{134.6, 585.7}, {132.9, 133.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 13, 2011, 12:17 AM'
+                                                                                Image, 0x1141ae1c0, {{269.1, 585.7}, {132.9, 133.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, October 09, 2009, 9:09 PM'
+                                                                          Other, 0x1141ae300, {{0.0, 234.0}, {402.0, 0.0}}, identifier: 'PXZoomableInlineHeadersLayout-Group'
+                                                                    Other, 0x1141ad540, {{369.0, 289.0}, {30.0, 551.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                      Other, 0x1141af340, {{396.0, 663.7}, {3.0, 424.3}}
+                                                                    Other, 0x1141adb80, {{0.0, 807.0}, {402.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                      Other, 0x1141adf40, {{3.0, 834.0}, {396.0, 3.0}}
+                                                                  Other, 0x1141ac500, {{369.0, 289.0}, {30.0, 551.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                    Other, 0x1141af5c0, {{396.0, 663.7}, {3.0, 424.3}}
+                                                                  Other, 0x1141ac280, {{0.0, 807.0}, {402.0, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                    Other, 0x1141ac140, {{3.0, 834.0}, {396.0, 3.0}}
+                                                      Other, 0x1141ade00, {{0.0, 217.0}, {402.0, 623.0}}
+                                                        Other, 0x1141aca00, {{0.0, 217.0}, {402.0, 623.0}}
+                                                Other, 0x1141af480, {{0.0, 217.0}, {402.0, 623.0}}
+                                                  Other, 0x1141adcc0, {{0.0, 217.0}, {402.0, 623.0}}
+              Other, 0x1141afac0, {{0.0, 0.0}, {402.0, 874.0}}
+                Other, 0x1141ae800, {{0.0, 0.0}, {402.0, 874.0}}
+Path to element:
+ →Application, 0x113ef57c0, pid: 58480, label: 'Paint by Moonlight'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x1141ad180, pid: 58480, label: 'Paint by Moonlight'
+  }
