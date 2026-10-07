@@ -86,17 +86,18 @@ struct LineArtPreviewTests {
         .frame(width: 300, height: 400)
         let renderer = ImageRenderer(content: view)
         renderer.scale = 1
-        let pixels = try #require(Self.pixels(of: try #require(renderer.cgImage)))
+        let image = try #require(renderer.cgImage)
+        let pixels = try #require(Self.pixels(of: image))
         #expect(pixels.width == 300 && pixels.height == 400)
         // The photo on the leading half (the divider starts in the middle)…
-        #expect(maxDifference(pixels[x: 60, y: 300], red) < 16)
+        #expect(maxDifference(pixels[60, 300], red) < 16)
         // …and on the trailing half, clear of the divider's handle and the caption, only paper
         // and ink.
         let paper = bytes(CanvasPalette.sheetPaperSRGB)
         var onPaper = 0, inked = 0, photoShowing = 0
         for y in stride(from: 60, to: 390, by: 2) {
             for x in stride(from: 185, to: 295, by: 2) {
-                let c = pixels[x: x, y: y]
+                let c = pixels[x, y]
                 if maxDifference(c, paper) < 10 {
                     onPaper += 1
                 } else if luma(c) < 120 {
