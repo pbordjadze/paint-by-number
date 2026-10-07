@@ -10,6 +10,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
+    @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
     @State private var path: [Destination] = []
 
     private let appInfo = AppInfo()
@@ -98,6 +99,19 @@ struct SettingsView: View {
                 } footer: {
                     Text(paintingLength.footer)
                         .accessibilityIdentifier("painting-length-footer")
+                }
+
+                Section {
+                    Picker(selection: $previewStyle) {
+                        ForEach(PreviewStyle.allCases) { style in
+                            Text(style.name).tag(style)
+                        }
+                    } label: {
+                        SwiftUI.Label("Preview", systemImage: "rectangle.split.2x1")
+                    }
+                    .accessibilityIdentifier("settings-preview")
+                } footer: {
+                    Text("Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them.")
                 }
 
                 Section {
