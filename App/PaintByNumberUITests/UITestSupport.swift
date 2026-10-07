@@ -36,6 +36,14 @@ extension XCTestCase {
         return condition()
     }
 
+    /// Waits for `element` to match `predicate`. Read right after the action that changes it, a
+    /// value or selection can still be the old one on CI's busy simulators, where XCUITest's wait
+    /// for an idle app gives up: the typed comment of `FeedbackUITests` once read empty.
+    @MainActor
+    func waitFor(_ element: XCUIElement, toMatch predicate: NSPredicate, timeout: TimeInterval = 10) -> Bool {
+        XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: element)], timeout: timeout) == .completed
+    }
+
     /// Opens Settings the way a person does: from the gallery's toolbar.
     @MainActor
     func openSettings() -> XCUIApplication {

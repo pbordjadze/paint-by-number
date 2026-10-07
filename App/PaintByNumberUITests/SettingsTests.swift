@@ -30,7 +30,7 @@ final class SettingsTests: XCTestCase {
         for credit in ["mapbox/earcut", "mapbox/polylabel", "Peter Selinger"] {
             let entry = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", credit)).firstMatch
             // Past every picture's credit.
-            scroll(app, to: entry, maxSwipes: 30)
+            scroll(app, to: entry, maxDrags: 30)
             XCTAssertTrue(entry.exists, "Acknowledgements doesn't credit \(credit)")
         }
         attachScreenshot(of: app, named: "acknowledgements")
@@ -124,13 +124,26 @@ final class SettingsTests: XCTestCase {
         return XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: chosen, object: picker)], timeout: 5) == .completed
     }
 
-    /// The form is a lazy list: rows below the fold exist once they are scrolled into view.
+    /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each
+    /// drag moves the list by four fifths of its frame, less than what shows below the navigation
+    /// bar, and rests before lifting, so it can't fling past a row and leaves nothing to settle:
+    /// swipes, with a second's wait for the row before each, took 138 s to reach the end of
+    /// Acknowledgements on iPad (a form sheet), past every picture's credit and license text.
     @MainActor
-    private func scroll(_ app: XCUIApplication, to element: XCUIElement, maxSwipes: Int = 6) {
-        var swipes = 0
-        while !element.waitForExistence(timeout: 1) && swipes < maxSwipes {
-            app.swipeUp()
-            swipes += 1
+    private func scroll(_ app: XCUIApplication, to element: XCUIElement, maxDrags: Int = 6) {
+        let list = app.collectionViews.firstMatch
+        let dragsList = list.exists
+        var drags = 0
+        while !element.exists && drags < maxDrags {
+            if dragsList {
+                list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9)).press(
+                    forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)),
+                    withVelocity: .default, thenHoldForDuration: 0.1)
+            } else {
+                app.swipeUp()
+            }
+            drags += 1
         }
+        _ = element.waitForExistence(timeout: 2)
     }
 }

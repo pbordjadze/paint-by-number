@@ -4,13 +4,17 @@ name: CI
 # screenshots, the pipeline quality regression under core/regression/, the string catalog
 # check under core/strings-check.log) to the ref `refs/ci-shots/<branch>`: outside refs/heads,
 # so a clone never downloads reports, and readable with plain git (see ci/fetch.sh).
-# Each simulator gets its own VM: two booted simulators on one 3-core runner thrash. The
-# simulator boots in the background while the app builds.
-# iPad is the primary device (Debug build, screenshots, tests on every push, then a Release
-# build checked for the privacy manifest and for Debug-only code that must not ship); iPhone
-# (the same, without the Release check) runs on the shipping branch, main, or on request.
-# The shipping branch also publishes an unsigned device IPA as a `build-<n>` prerelease and
-# a SideStore source listing the latest builds (branch `sidestore`).
+# The simulator work is one matrix (`apple`), each entry on a VM of its own (two booted
+# simulators on one 3-core runner thrash), its simulator booting while the app builds:
+#   ipad     Debug build, screenshots, unit tests and the Settings UI tests, then a Release
+#            build checked for the privacy manifest and for Debug-only code that must not ship,
+#            and the pipeline benchmark
+#   ipad-ui  Debug build, the other UI tests
+#   iphone   Debug build, screenshots, unit and UI tests: on the shipping branch, main, or on
+#            request (workflow_dispatch's `iphone`, or `[iphone]` in the pushed commit's message)
+# iPad is the primary device, its work split in two so a push waits for about half of it. The
+# shipping branch also publishes an unsigned device IPA as a `build-<n>` prerelease and a
+# SideStore source listing the latest builds (branch `sidestore`).
 
 on:
   push:
@@ -36,6 +40,7 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
   PROJECT: App/PaintByNumber.xcodeproj
   SCHEME: PaintByNumber
+  APP: build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
 
 jobs:
   core:
@@ -83,63 +88,124 @@ jobs:
         if: always()
         with: { name: core, path: out, if-no-files-found: ignore }
 
-  ipad:
-    name: iPad — Debug build, screenshots, tests, Release check, benchmark
+  apple:
+    name: ${{ matrix.job == 'ipad' && 'iPad — build, screenshots, unit tests, Release check' || matrix.job == 'ipad-ui' && 'iPad — UI tests' || 'iPhone — build, screenshots, tests' }}
     runs-on: macos-26
     timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        # iphone as the header says; the report job asks the same.
+        job: ${{ fromJSON((github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2 }
+      - name: Plan
+        # The entry's device and share of the work. ONLY and SKIP list the tests it runs or leaves
+        # out (`-only-testing`, `-skip-testing`; neither: all). The Settings UI tests run beside
+        # the unit tests, so that `ipad` and `ipad-ui` take about as long.
+        run: |
+          case "${{ matrix.job }}" in
+            ipad)    plan=(DEVICE=ipad SHOTS=1 RELEASE=1 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests" SKIP=) ;;
+            ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests SKIP=PaintByNumberUITests/SettingsTests) ;;
+            iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 ONLY= SKIP=) ;;
+          esac
+          printf '%s\n' "${plan[@]}" >> "$GITHUB_ENV"
       - name: Start simulator
         id: sim
         run: |
           # The first boot on a fresh runner takes minutes; it overlaps the build.
-          read -r _ UDID MODEL RUNTIME < <(ci/simulators.sh ipad)
+          read -r _ UDID MODEL RUNTIME < <(ci/simulators.sh "$DEVICE")
           echo "$MODEL $RUNTIME $UDID"
           mkdir -p out
           nohup xcrun simctl boot "$UDID" > out/boot.log 2>&1 &
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "runtime=$RUNTIME" >> "$GITHUB_OUTPUT"
       - name: Build for testing
         id: build
         run: |
+          # arm64 only: a generic destination builds every simulator architecture, and the
+          # runners are Apple silicon. No index store: nothing here reads it.
           set -o pipefail
           xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
             -IDEBuildingContinueBuildingAfterErrors=YES \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
+            ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
       - name: Wait for simulator
         id: boot
         run: |
           xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b > /dev/null
+          # A UI test's `XCUIDevice.shared.appearance` changes nothing on a simulator whose
+          # appearance was never set (DarkPaperTests, with no screenshots before it).
+          xcrun simctl ui "${{ steps.sim.outputs.udid }}" appearance dark || true
+          xcrun simctl ui "${{ steps.sim.outputs.udid }}" appearance light || true
+      - name: Demo caches key
+        id: demo-key
+        # Everything that makes the line-art maps and templates the demos and tests seed
+        # (ci/demo_caches.sh): a change to any of it starts from empty caches.
+        env:
+          INPUTS: ${{ hashFiles('Sources/PaintCore/**', 'App/PaintByNumber/Generation/**', 'App/PaintByNumber/Model/ArtworkFactory.swift', 'App/PaintByNumber/Model/DemoTemplateCache.swift', 'App/PaintByNumber/Model/Library.swift', 'App/PaintByNumber/Model/Sample.swift', 'App/PaintByNumber/Features/Create/CreateModel.swift', 'App/PaintByNumber/Resources/Samples/**', 'App/PaintByNumber/Resources/Models/**') }}
+        run: |
+          echo "key=demo-caches-${{ matrix.job }}-${{ steps.sim.outputs.runtime }}-$INPUTS" >> "$GITHUB_OUTPUT"
+      - name: Restore demo caches
+        id: demo-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: build/demo-caches
+          key: ${{ steps.demo-key.outputs.key }}
+      - name: Seed demo caches
+        if: steps.demo-cache.outputs.cache-hit == 'true'
+        # Caches only save time: a run without them makes what it needs.
+        continue-on-error: true
+        run: ci/demo_caches.sh in "${{ steps.sim.outputs.udid }}" "$APP" build/demo-caches
       - name: Screenshots
+        id: shots
+        if: env.SHOTS == '1'
         env:
           SCENARIOS: ${{ github.event.inputs.scenarios }}
         run: |
-          APP=build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
-          [ -d "$APP" ] || exit 0
-          ci/screenshots.sh "$APP" out/shots ipad "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
-      - name: Test
-        if: ${{ !cancelled() && steps.boot.outcome == 'success' }}
+          # One argument per scenario.
+          # shellcheck disable=SC2086
+          ci/screenshots.sh "$APP" out/shots "$DEVICE" "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
+      - name: Warm up demo caches
+        id: warmup
+        # Without screenshots before them, the UI tests would make the fixed pictures' templates
+        # and the previews' maps inside their own waits: on empty caches these scenarios do.
+        if: env.SHOTS == '0' && steps.demo-cache.outputs.cache-hit != 'true'
         run: |
+          ci/screenshots.sh "$APP" build/warm-up "$DEVICE" "${{ steps.sim.outputs.udid }}" \
+            gallery@300 gallery-favorites@300 create-preview@180 create-from-file@180
+          cp build/warm-up/*-steps.log out/warm-up-steps.log
+      - name: Test
+        id: test
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.boot.outcome == 'success' }}
+        run: |
+          # A failed test runs once more and counts as passed if that run passes; the report
+          # names it ("passed when run again"), as a flake still needs its cause found.
           set -o pipefail
+          SELECT=()
+          for test in $ONLY; do SELECT+=("-only-testing:$test"); done
+          for test in $SKIP; do SELECT+=("-skip-testing:$test"); done
           xcodebuild test-without-building -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
-            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
-            -resultBundlePath build/Tests.xcresult -quiet \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd "${SELECT[@]}" \
+            -retry-tests-on-failure -test-iterations 2 -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
       - name: Release build
+        id: release
         # Not `always()`: that runs on cancelled runs too (holding a runner for a superseded
         # commit) and would repeat the compiler errors of a failed Debug build.
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && env.RELEASE == '1' && steps.build.outcome == 'success' }}
         run: |
           # Debug-only code is compiled out of Release (`#if DEBUG`): build it, and check the
           # shipped app has the privacy manifest and none of that code.
           set -o pipefail
           xcodebuild build -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/release -quiet \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/release-build.log | tail -60
+            ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/release-build.log | tail -60
           ci/check_release.sh build/release/Build/Products/Release-iphonesimulator/PaintByNumber.app 2>&1 | tee out/release-check.log
       - name: Pipeline benchmark (Apple silicon)
-        if: ${{ !cancelled() }}
+        id: bench
+        if: ${{ !cancelled() && env.RELEASE == '1' }}
         run: |
           # Only when PaintCore differs from the shipping branch (on the shipping branch itself:
           # from the previous commit), so a feature branch's later app-only commits keep
@@ -155,92 +221,36 @@ jobs:
           S=Tests/Corpus
           .build/release/pbn bench $S/barn.jpg $S/espresso.jpg $S/hibiscus.jpg $S/lighthouse.jpg \
             $S/parrots.jpg $S/regatta.jpg --runs 3 | tee out/bench.txt
+      - name: Keep demo caches
+        id: demo-out
+        # After a full, passing run only: caches a run left half made would be kept as made.
+        continue-on-error: true
+        if: >-
+          ${{ !cancelled() && steps.demo-cache.outputs.cache-hit != 'true' && steps.test.outcome == 'success'
+          && steps.shots.outcome != 'failure' && steps.warmup.outcome != 'failure' }}
+        run: |
+          ci/demo_caches.sh out "${{ steps.sim.outputs.udid }}" "$APP" build/demo-caches
+          [[ -n "$(ls -A build/demo-caches)" ]]
+      - uses: actions/cache/save@v5
+        if: ${{ !cancelled() && steps.demo-out.outcome == 'success' }}
+        continue-on-error: true
+        with:
+          path: build/demo-caches
+          key: ${{ steps.demo-key.outputs.key }}
       - name: Collect diagnostics
         if: always()
-        run: |
-          mkdir -p out/attachments out/crashes
-          cp ~/Library/Logs/DiagnosticReports/PaintByNumber* out/crashes/ 2>/dev/null || true
-          # The app's log of the test run (seeding, opening paintings, the canvas, feedback, the create flow), should a test lose the app.
-          xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show --last 90m --info --style compact \
-            --predicate 'subsystem == "com.pbordjadze.paintbynumber" AND category IN {"feedback", "library", "demo", "canvas", "create"}' \
-            > out/test-app.log 2>/dev/null || true
-          grep -hE "error:|FAIL:" out/app-build.log out/app-test.log out/release-build.log out/release-check.log 2>/dev/null | sort -u > out/errors.txt || true
-          if [ -d build/Tests.xcresult ]; then
-            xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact > out/test-summary.json 2>/dev/null || true
-            xcrun xcresulttool get test-results tests --path build/Tests.xcresult --compact > out/test-results.json 2>/dev/null || true
-            xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path out/attachments >/dev/null 2>&1 || true
-            # Screen recordings are most of a report's bytes and can't be read from one; the PNGs stay.
-            find out/attachments \( -name '*.mp4' -o -name '*.mov' \) -delete 2>/dev/null || true
-          fi
-      - uses: actions/upload-artifact@v5
-        if: always()
-        with: { name: ipad, path: out, if-no-files-found: ignore }
-
-  iphone:
-    name: iPhone — Debug build, screenshots, tests
-    # Secondary device: on the shipping branch, or when requested (workflow_dispatch, or
-    # `[iphone]` in the pushed commit's message). The iPad job covers the Release build.
-    if: >-
-      github.ref_name == 'main' || github.event.inputs.iphone == 'true'
-      || contains(github.event.head_commit.message, '[iphone]')
-    runs-on: macos-26
-    timeout-minutes: 75
-    steps:
-      - uses: actions/checkout@v5
-      - name: Start simulator
-        id: sim
-        run: |
-          read -r _ UDID MODEL RUNTIME < <(ci/simulators.sh iphone)
-          echo "$MODEL $RUNTIME $UDID"
-          mkdir -p out
-          nohup xcrun simctl boot "$UDID" > out/boot.log 2>&1 &
-          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
-      - name: Build for testing
-        run: |
-          set -o pipefail
-          xcodebuild build-for-testing -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
-            -IDEBuildingContinueBuildingAfterErrors=YES \
-            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd -quiet \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-build.log | tail -120
-      - name: Wait for simulator
-        id: boot
-        run: |
-          xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b > /dev/null
-      - name: Screenshots
         env:
-          SCENARIOS: ${{ github.event.inputs.scenarios }}
+          OUTCOMES: >-
+            simulator=${{ steps.sim.outcome }} build=${{ steps.build.outcome }} boot=${{ steps.boot.outcome }}
+            screenshots=${{ steps.shots.outcome }} warm-up=${{ steps.warmup.outcome }} tests=${{ steps.test.outcome }}
+            release=${{ steps.release.outcome }} benchmark=${{ steps.bench.outcome }}
         run: |
-          APP=build/dd/Build/Products/Debug-iphonesimulator/PaintByNumber.app
-          [ -d "$APP" ] || exit 0
-          ci/screenshots.sh "$APP" out/shots iphone "${{ steps.sim.outputs.udid }}" ${SCENARIOS:-$(cat ci/scenarios.txt)}
-      - name: Test
-        if: ${{ !cancelled() && steps.boot.outcome == 'success' }}
-        run: |
-          set -o pipefail
-          xcodebuild test-without-building -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
-            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd \
-            -resultBundlePath build/Tests.xcresult -quiet \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
-      - name: Collect diagnostics
-        if: always()
-        run: |
-          mkdir -p out/attachments out/crashes
-          cp ~/Library/Logs/DiagnosticReports/PaintByNumber* out/crashes/ 2>/dev/null || true
-          # The app's log of the test run (seeding, opening paintings, the canvas, feedback, the create flow), should a test lose the app.
-          xcrun simctl spawn "${{ steps.sim.outputs.udid }}" log show --last 90m --info --style compact \
-            --predicate 'subsystem == "com.pbordjadze.paintbynumber" AND category IN {"feedback", "library", "demo", "canvas", "create"}' \
-            > out/test-app.log 2>/dev/null || true
-          grep -hE "error:" out/app-build.log out/app-test.log 2>/dev/null | sort -u > out/errors.txt || true
-          if [ -d build/Tests.xcresult ]; then
-            xcrun xcresulttool get test-results summary --path build/Tests.xcresult --compact > out/test-summary.json 2>/dev/null || true
-            xcrun xcresulttool get test-results tests --path build/Tests.xcresult --compact > out/test-results.json 2>/dev/null || true
-            xcrun xcresulttool export attachments --path build/Tests.xcresult --output-path out/attachments >/dev/null 2>&1 || true
-            # Screen recordings are most of a report's bytes and can't be read from one; the PNGs stay.
-            find out/attachments \( -name '*.mp4' -o -name '*.mov' \) -delete 2>/dev/null || true
-          fi
+          mkdir -p out
+          echo "$OUTCOMES" > out/outcomes.txt
+          ci/collect.sh "${{ steps.sim.outputs.udid }}"
       - uses: actions/upload-artifact@v5
         if: always()
-        with: { name: iphone, path: out, if-no-files-found: ignore }
+        with: { name: "${{ matrix.job }}", path: out, if-no-files-found: ignore }
 
   ipa:
     name: IPA for SideStore (unsigned device build)
@@ -312,30 +322,34 @@ jobs:
 
   report:
     name: Publish report
-    needs: [core, ipad, iphone, ipa]
+    needs: [core, apple, ipa]
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
+        with: { path: src, sparse-checkout: ci }
       - uses: actions/download-artifact@v5
         with: { path: report }
       - name: Write status and push to refs/ci-shots/${{ github.ref_name }}
+        env:
+          # The matrix's entries share its result; iphone only when the matrix ran it.
+          IPHONE: ${{ (github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && needs.apple.result || 'skipped' }}
         run: |
           mkdir -p report && cd report
-          for f in $(find . -name '*.log'); do
-            # Keep every diagnostic line plus the tail; full logs can be huge.
-            { grep -nE "error:|warning:|failed|FAIL|✘|Fatal|crash" "$f" | head -400; echo "----- tail -----"; tail -200 "$f"; } > "$f.trimmed"
-            mv "$f.trimmed" "$f"
+          find . -name '*.log' | while read -r f; do
+            # Long logs keep every diagnostic line plus the tail; the rest stay whole.
+            if [ "$(wc -l < "$f")" -gt 3000 ]; then
+              { grep -nE "error:|warning:|failed|FAIL|✘|Fatal|crash" "$f" | head -400; echo "----- tail -----"; tail -200 "$f"; } > "$f.trimmed"
+              mv "$f.trimmed" "$f"
+            fi
           done
           {
             echo "commit: ${GITHUB_SHA}"
             echo "run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            echo "core: ${{ needs.core.result }}"
-            if [ -f core/regression/regression.txt ]; then echo "regression: $(tail -n 1 core/regression/regression.txt)"; fi
-            if [ -f core/strings-check.log ]; then echo "strings: $(tail -n 1 core/strings-check.log)"; fi
-            echo "ipad: ${{ needs.ipad.result }}"
-            echo "iphone: ${{ needs.iphone.result }}"
-            echo "ipa: ${{ needs.ipa.result }}"
+            python3 ../src/ci/report.py . core=${{ needs.core.result }} ipad=${{ needs.apple.result }} \
+              ipad-ui=${{ needs.apple.result }} iphone="$IPHONE" ipa=${{ needs.ipa.result }}
           } > STATUS.md
+          cat STATUS.md
           echo "${GITHUB_SHA}" > COMMIT
           git init -q && git checkout -q -b shots
           git add -A

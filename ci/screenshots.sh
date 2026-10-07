@@ -59,4 +59,6 @@ for entry in "${SCENARIOS[@]}"; do
   fi
   seen_reports=$reports
 done
+# The tests that follow on this simulator start from the light appearance they'd find on a fresh one.
+if [[ "$appearance" != light ]]; then xcrun simctl ui "$UDID" appearance light || true; fi
 xcrun simctl spawn "$UDID" log show --last 15m --style compact --predicate 'process == "PaintByNumber"' > "$OUT/${KIND}-app.log" 2>/dev/null || true

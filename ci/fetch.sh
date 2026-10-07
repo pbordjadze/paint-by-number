@@ -2,10 +2,10 @@
 # Waits for the CI report of a commit and extracts it.
 #   [CI_BRANCH=<pushed-branch>] ci/fetch.sh [<commit-sha>] [<outdir>]   (defaults: HEAD, ./ci-report)
 # The report (published by .github/workflows/ci.yml to the ref refs/ci-shots/<branch>, outside
-# refs/heads) contains STATUS.md, trimmed logs (*.log), <device>/errors.txt, test results,
+# refs/heads) contains STATUS.md, logs (*.log, long ones trimmed), <job>/errors.txt, test results,
 # screenshots under */shots/*.png and the quality regression under core/regression/
 # (regression.txt, regression.json, sheets/*/*.jpg).
-# Polls every 30 s for up to 100 min (a full run takes about 70). Run it in the background and read the report when done.
+# Polls every 30 s for up to 100 min (a full run takes about 30). Run it in the background and read the report when done.
 set -euo pipefail
 SHA="${1:-$(git rev-parse HEAD)}"
 OUT="${2:-ci-report}"
