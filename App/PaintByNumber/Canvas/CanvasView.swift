@@ -1100,12 +1100,7 @@ final class CanvasView: UIView, PaintingCanvas {
     /// UIKit reads the whole array at once, so a rebuild between reads can't mismatch a count
     /// and an element lookup.
     override var accessibilityElements: [Any]? {
-        get {
-            #if DEBUG
-            MainThreadWatchdog.count("CanvasAccessibility")
-            #endif
-            return accessibleElements()
-        }
+        get { accessibleElements() }
         set {}
     }
 

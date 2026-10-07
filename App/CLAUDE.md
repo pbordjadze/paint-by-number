@@ -13,7 +13,10 @@ synchronized folder would bundle it into the app.
   on iPhone for its first ten seconds or so (`PhotoSourceView`; `CreateFlowTests` picks an inline
   photo on both devices).
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
-  turns off: they stole canvas gestures (`PaintingNavigationTests` guards this).
+  turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
+  painting only once the push has landed: the transition lays the screen out every frame, and
+  the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
+  answering UI tests for up to half a minute.
 - A presentation's content only sees state its presenter's body read: `AppShellView.body` reads the
   create flow's photo, title and identity up front, or the flow opens without its photo.
 - `CanvasUniforms`, `RegionState` and `GlyphInstance` are mirrored by hand in `Shaders.metal`:
