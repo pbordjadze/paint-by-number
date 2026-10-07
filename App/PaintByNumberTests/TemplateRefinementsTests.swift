@@ -85,7 +85,7 @@ struct TemplateRefinementsTests {
         #expect(refined.importance == nil && refined.lineArt?.edges == edges)
 
         let quantum = Float(TextFinder.quantum)
-        #expect(marked.count == 4 && marked.allSatisfy { ($0 * quantum).rounded() == $0 * quantum })
+        #expect(marked.count == 4 && marked.allSatisfy { ($0 * quantum).rounded(.toNearestOrEven) == $0 * quantum })
         #expect(marked[0].x < marked[1].x && marked[1].y < marked[2].y && marked[3].x == marked[0].x)
         #expect(abs(marked[0].x - 0.5) < 1 / quantum && abs(marked[2].y - 0.9) < 1 / quantum)
         #expect(!TemplateRefinements.sameLine(Self.found, marked))
