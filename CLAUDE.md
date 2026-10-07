@@ -251,9 +251,9 @@ Saved paintings must open in every later build. The format history is documented
   and `RootView`. A screenshotted scenario is one `name@seconds` line of `ci/scenarios.txt` (no
   comments; `@seconds` is only the timeout; the file merges as a union) and calls `DemoMode.markReady()` once its content is on
   screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `SyntheticTemplate`,
-  `LineArtMapsCache` and `DemoTemplateCache` are wrapped in `#if DEBUG`, and every other reference
-  (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`, `LineArtInputs`,
-  `ArtworkFactory`, …) sits in an `#if DEBUG`
+  `LineArtMapsCache`, `DemoTemplateCache` and `MainThreadWatchdog` are wrapped in `#if DEBUG`,
+  and every other reference (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`,
+  `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
   `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a Debug-only type name
   shows up in the Release binary.
@@ -293,8 +293,9 @@ any port of it, when changing the fitter: work from the paper.
    publishes to the ref `refs/ci-shots/<branch>` (not fetched by a clone) and unpacks it:
    `STATUS.md` (job results and verdicts, then per simulator job the steps that failed, its test
    counts, each failed test with its first message, tests that passed only when run again, scenarios
-   that never signalled readiness and crashes), logs (those over 3000 lines trimmed), `core/` (tests,
-   strings check, `regression/` with its table and `sheets/<regime>/<sample>.jpg`), and per job
+   that never signalled readiness, main-thread stalls and crashes), logs (those over 3000 lines
+   trimmed), `core/` (tests, strings check, `regression/` with its table and
+   `sheets/<regime>/<sample>.jpg`), and per job
    (`ipad`, `ipad-ui`, `iphone`) `errors.txt` (compiler errors), `shots/*.png`, `*-app.log` (the
    app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's library, demo,
    canvas and feedback lines during the run), test results and `attachments/`. iPad is the primary

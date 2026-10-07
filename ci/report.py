@@ -8,7 +8,8 @@ gives it (`needs.<job>.result`; a simulator job of the matrix gets the matrix's)
 lines keep the form `<job>: <result>` that readers of STATUS.md look for. A simulator job
 (its artifact holds `outcomes.txt`) gets its own result from its steps' outcomes, then a line
 of details below: its steps, its tests' counts, the tests that failed or passed only when run
-again, the screenshot scenarios that never signalled readiness, and its crash reports.
+again, the screenshot scenarios that never signalled readiness, the main thread's stalls and its
+crash reports.
 `--self-test` checks the parsing on made-up results.
 """
 import json
@@ -109,6 +110,45 @@ def screenshot_notes(job_dir):
     return notes
 
 
+STALL = re.compile(r"PaintByNumber\[(\d+):\w+\].* Main thread (stuck for|answered after) ([\d.]+) seconds \(stall (\d+)\)")
+
+
+def stalls(lines):
+    """{(pid, stall): (seconds, answered)} from the lines `MainThreadWatchdog` logs: the longest
+    it was seen stuck, and whether it answered before the app ended."""
+    found = {}
+    for line in lines:
+        match = STALL.search(line)
+        if match:
+            key = (match.group(1), match.group(4))
+            seconds, answered = found.get(key, (0.0, False))
+            found[key] = (max(seconds, float(match.group(3))), answered or match.group(2) == "answered after")
+    return found
+
+
+def stall_notes(job, job_dir):
+    """How long the main thread stalled (`+`: the app ended first) and the logs with the stacks."""
+    paths = [os.path.join(job_dir, "test-app.log")]
+    shots = os.path.join(job_dir, "shots")
+    if os.path.isdir(shots):
+        paths += [os.path.join(shots, name) for name in sorted(os.listdir(shots)) if name.endswith("-app.log")]
+    found, logs = {}, []
+    for path in paths:
+        try:
+            with open(path, errors="replace") as f:
+                these = stalls(f)
+        except OSError:
+            continue
+        if these:
+            found.update(these)
+            logs.append(os.path.join(job, os.path.relpath(path, job_dir)))
+    if not found:
+        return []
+    spans = [f"{seconds:.0f} s" + ("" if answered else "+") for seconds, answered in sorted(found.values(), reverse=True)]
+    shown = ", ".join(spans[:6]) + (", …" if len(spans) > 6 else "")
+    return [f"  main thread stalls: {len(found)} ({shown}); stacks in {', '.join(logs)}"]
+
+
 def simulator_lines(job, job_dir, steps):
     """The job's details: the steps that went wrong, its tests, and notes below."""
     parts = [", ".join(f"{step} {outcome}" for step, outcome in steps if outcome not in ("success", "skipped"))]
@@ -123,6 +163,7 @@ def simulator_lines(job, job_dir, steps):
             parts.append(f"test results unreadable ({error})")
     detail = "; ".join(part for part in parts if part) or "every step passed"
     notes += screenshot_notes(job_dir)
+    notes += stall_notes(job, job_dir)
     crashes = os.path.join(job_dir, "crashes")
     if os.path.isdir(crashes) and os.listdir(crashes):
         notes.append(f"  crash reports: {len(os.listdir(crashes))} in {job}/crashes/")
@@ -192,6 +233,12 @@ def self_test():
     assert job_result([("build", "success"), ("tests", "failure")], "failure") == "failure"
     assert job_result([("build", "success"), ("tests", "success"), ("release", "skipped")], "failure") == "success"
     assert job_result(None, "cancelled") == "cancelled"
+    log = "2026-10-07 11:55:06.6 E  PaintByNumber[55471:2513b] [com.pbordjadze.paintbynumber:demo] Main thread {} ({}), 3 frames:"
+    assert stalls([
+        log.format("stuck for 2.25 seconds", "stall 1"), log.format("stuck for 7.3 seconds", "stall 1"),
+        log.format("answered after 9.5 seconds", "stall 1"), log.format("stuck for 2.0 seconds", "stall 2"),
+        "2026-10-07 11:55:06.9 E  PaintByNumber[55471:2513b] [com.pbordjadze.paintbynumber:demo]   stall 2 #0 libsystem_kernel.dylib",
+    ]) == {("55471", "1"): (9.5, True), ("55471", "2"): (2.0, False)}
     print("report: self-test ok")
     return 0
 

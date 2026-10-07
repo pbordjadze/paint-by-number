@@ -44,7 +44,7 @@ synchronized folder would bundle it into the app.
 ## Layout (`App/PaintByNumber/`)
 
 - `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`,
-  `PreviewStyle`; DEBUG `DemoMode`, `ShellDemo`.
+  `PreviewStyle`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
   `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
@@ -86,6 +86,9 @@ synchronized folder would bundle it into the app.
   `DemoTemplateCache`, beside `LineArtMapsCache`'s maps; CI keeps both between runs, so a test
   that needs a photo no cache has seen makes one, as `LineArtInputsTests` does): the line-art
   models take 10 to 40 s a picture there, and a UI test waits for its seed.
+- Demo launches (screenshots, UI tests) run `MainThreadWatchdog`: a main thread that stops
+  answering for 2 s has its stack logged every 5 s until it answers (category `demo`, in
+  `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`). Demo launches and the test host

@@ -3,7 +3,8 @@
 #   ci/check_release.sh <path/to/PaintByNumber.app>
 # It carries the privacy manifest and export-compliance answer, and none of the Debug-only
 # code (`DemoMode`, the demo scenarios, the synthetic template, the maps and template caches of
-# demo and test launches): those types are compiled out of Release by `#if DEBUG`.
+# demo and test launches, their main-thread watchdog): those types are compiled out of Release by
+# `#if DEBUG`.
 set -euo pipefail
 APP="$1"
 BINARY="$APP/$(/usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$APP/Info.plist")"
@@ -23,7 +24,7 @@ plutil -lint "$APP/PrivacyInfo.xcprivacy" || fail "PrivacyInfo.xcprivacy is not 
 WORK="$(mktemp -d)"
 strip -S -x -o "$WORK/binary" "$BINARY"
 strings -a "$WORK/binary" > "$WORK/strings.txt"
-for symbol in DemoMode ShellDemo PaintDemoView SyntheticTemplate demo-ready DemoLibrary LineArtMaps DemoTemplate; do
+for symbol in DemoMode ShellDemo PaintDemoView SyntheticTemplate demo-ready DemoLibrary LineArtMaps DemoTemplate MainThreadWatchdog; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 [[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, no Debug-only code"
