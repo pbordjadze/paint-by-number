@@ -926,7 +926,7 @@
       "extractionState" : "manual"
     },
     "Done" : {
-      "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet, and Settings › Advanced where it covers the whole window (iPad)",
+      "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet and the enlarged create preview (iPhone)",
       "extractionState" : "manual"
     },
     "Double-tap the canvas to zoom in on it. Pinch to zoom back out." : {
@@ -943,6 +943,10 @@
     },
     "Each mark gets its own comment." : {
       "comment" : "Feedback's review sheet: footer under the list of marks, each with its close-up and a comment field",
+      "extractionState" : "manual"
+    },
+    "Enlarge Preview" : {
+      "comment" : "Create flow on iPhone: toolbar button that enlarges the comparison of photo and template, with the slider of one setting at a time below it",
       "extractionState" : "manual"
     },
     "Eraser" : {
@@ -1555,6 +1559,10 @@
     },
     "Line Weight" : {
       "comment" : "Settings picker choosing how heavy a painting's drawn lines are (Fine, Regular or Bold)",
+      "extractionState" : "manual"
+    },
+    "Line Art" : {
+      "comment" : "Settings › Preview's choice showing a new painting's drawing alone on blank paper, and the caption of that layer in the create flow's comparison with the photo",
       "extractionState" : "manual"
     },
     "Lines" : {
@@ -2170,11 +2178,19 @@
       }
     },
     "Painting" : {
-      "comment" : "Name of the painted layer in the create flow's picker and comparison caption; also the fallback title of a painting without one",
+      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; also the fallback title of a painting without one",
       "extractionState" : "manual"
     },
     "Painting Length" : {
       "comment" : "Settings picker: how long a painting the suggested settings of new paintings aim for (Quick, Relaxed, Detailed)",
+      "extractionState" : "manual"
+    },
+    "Preview" : {
+      "comment" : "Settings picker choosing what a new painting's preview shows beside the photo (Painting or Line Art)",
+      "extractionState" : "manual"
+    },
+    "Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them." : {
+      "comment" : "Footer under the Settings › Preview picker",
       "extractionState" : "manual"
     },
     "paintingLength.detailed" : {
@@ -3127,6 +3143,10 @@
     },
     "Settings" : {
       "comment" : "Gallery toolbar button, and the title of the Settings sheet",
+      "extractionState" : "manual"
+    },
+    "Setting" : {
+      "comment" : "VoiceOver label of the enlarged create preview's segmented control choosing which setting's slider shows (Colors, Detail, Smoothness or Lines)",
       "extractionState" : "manual"
     },
     "settings.paintingLength.footer.detailed" : {

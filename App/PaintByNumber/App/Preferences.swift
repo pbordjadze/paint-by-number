@@ -16,6 +16,8 @@ enum SettingsKey {
     static let paletteOrder = "paletteOrder"
     /// How heavy a coloring book's drawing is (`LineWeight`).
     nonisolated static let lineWeight = "lineWeight"
+    /// What the create flow's preview shows beside the photo (`PreviewStyle`).
+    nonisolated static let previewStyle = "previewStyle"
 }
 
 /// The preferences that code outside views reads (the create flow, a painting's session), with
@@ -25,11 +27,14 @@ struct Preferences {
     var autoAdvance: Bool
     /// How long a painting Suggested settings aim for in the create flow.
     var paintingLength: PaintingLength
+    /// What the create flow's preview shows beside the photo.
+    var previewStyle: PreviewStyle
 
     init(defaults: UserDefaults = .standard) {
         autoAdvance = defaults.object(forKey: SettingsKey.autoAdvance) as? Bool ?? true
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
             ?? .default
+        previewStyle = PreviewStyle.stored(in: defaults)
     }
 
     func apply(to session: PaintingSession) {

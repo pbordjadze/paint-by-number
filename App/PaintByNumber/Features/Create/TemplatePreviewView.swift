@@ -3,10 +3,15 @@ import PaintCore
 import SwiftUI
 
 /// Second step of the create flow: the generated template, compared with the photo,
-/// tuned live with a few simple controls, and the painting's name.
+/// tuned live with a few simple controls, and the painting's name. In compact windows (iPhone)
+/// the preview can be enlarged: the comparison then fills the page above the slider of one
+/// setting at a time, Lines first, to look closely while tuning the lines.
 struct TemplatePreviewView: View {
     @Bindable var model: CreateModel
     var onStart: () async throws -> Void
+    /// Closes the flow, where the preview is its first page (a sample or a photo opened from
+    /// elsewhere); the enlarged preview hides it.
+    var onClose: (() -> Void)?
 
     @State private var size: CGSize = .zero
     /// `size` with the keyboard's room given back: what the layout is chosen for.
@@ -15,7 +20,11 @@ struct TemplatePreviewView: View {
     @State private var editingLayout: (width: CGFloat, sideBySide: Bool)?
     @State private var isStarting = false
     @State private var startError: String?
+    @State private var isTuning = false
+    /// The setting the enlarged preview's slider tunes; nil until the painter picks one.
+    @State private var tunedSetting: Setting?
     @FocusState private var titleFocused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
@@ -42,18 +51,27 @@ struct TemplatePreviewView: View {
                     canvas
                         .padding(.horizontal, sidePadding)
                         .padding(.top, 4)
-                    controls
-                        // Not scrollable here, unlike the side panel: past this size the
-                        // controls would squeeze the preview away on a phone.
-                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-                        .frame(maxWidth: 560)
-                        .frame(maxWidth: .infinity)
-                        .background {
-                            UnevenRoundedRectangle(topLeadingRadius: 30, topTrailingRadius: 30, style: .continuous)
-                                .fill(Theme.surface)
-                                .shadow(color: .black.opacity(0.06), radius: 16, x: 0, y: -4)
-                                .ignoresSafeArea(edges: .bottom)
+                    // One card for both, so it changes height rather than being replaced.
+                    Group {
+                        if isEnlarged {
+                            tuningTray
+                                .transition(.opacity)
+                        } else {
+                            controls
+                                .transition(.opacity)
                         }
+                    }
+                    // Not scrollable here, unlike the side panel: past this size the
+                    // controls would squeeze the preview away on a phone.
+                    .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                    .frame(maxWidth: 560)
+                    .frame(maxWidth: .infinity)
+                    .background {
+                        UnevenRoundedRectangle(topLeadingRadius: 30, topTrailingRadius: 30, style: .continuous)
+                            .fill(Theme.surface)
+                            .shadow(color: .black.opacity(0.06), radius: 16, x: 0, y: -4)
+                            .ignoresSafeArea(edges: .bottom)
+                    }
                 }
             }
         }
@@ -68,9 +86,16 @@ struct TemplatePreviewView: View {
         .onChange(of: titleFocused) { _, focused in
             editingLayout = focused ? (size.width, chosenLayout) : nil
         }
+        // Side by side, the preview is as large as it gets already.
+        .onChange(of: isSideBySide) { _, beside in
+            if beside { isTuning = false }
+        }
         // The title field names the painting; the bar says which step this is.
         .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar { toolbar }
+        // Done is the way back from the enlarged preview.
+        .navigationBarBackButtonHidden(isEnlarged)
         .alert("Couldn’t Create Painting", isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -104,7 +129,39 @@ struct TemplatePreviewView: View {
     /// The card's rows sit closer stacked on a phone, where the card and the comparison share
     /// the screen's height: with four sliders, 18 pt between rows left the comparison 125 pt tall
     /// on an iPhone 17 Pro.
-    private var rowSpacing: CGFloat { !isSideBySide && size.width < 600 ? 12 : 18 }
+    private var rowSpacing: CGFloat { !isSideBySide && isCompact ? 12 : 18 }
+    /// A phone's width (or a narrow iPad window), where the stacked comparison is small.
+    private var isCompact: Bool { size.width < 600 }
+
+    /// The comparison can fill the page: stacked in a compact window, where the controls leave
+    /// it a fraction of the screen.
+    private var offersEnlarging: Bool { isCompact && !isSideBySide }
+    private var isEnlarged: Bool { isTuning && !isSideBySide }
+
+    private func setEnlarged(_ enlarged: Bool) {
+        titleFocused = false
+        withAnimation(reduceMotion ? nil : .snappy) { isTuning = enlarged }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        if let onClose, !isEnlarged {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark", action: onClose)
+            }
+        }
+        if isEnlarged {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done", systemImage: "checkmark") { setEnlarged(false) }
+            }
+        }
+        if offersEnlarging && !isEnlarged {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Enlarge Preview", systemImage: "arrow.up.left.and.arrow.down.right") { setEnlarged(true) }
+                    .disabled(model.preview == nil)
+            }
+        }
+    }
 
     private var photoAspect: CGFloat {
         guard let image = model.source?.image, image.width > 0, image.height > 0 else { return 4 / 3 }
@@ -144,8 +201,8 @@ struct TemplatePreviewView: View {
         VStack {
             if let source = model.source {
                 CompareView(
-                    photo: source.preview, after: model.preview?.painting, afterID: model.preview?.id.uuidString ?? "none",
-                    afterLabel: String(localized: "Painting"), aspectRatio: photoAspect)
+                    photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
+                    afterLabel: model.previewStyle.name, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
                     .overlay(alignment: .bottom) {
                         status.padding(14)
                     }
@@ -203,34 +260,11 @@ struct TemplatePreviewView: View {
         VStack(alignment: .leading, spacing: rowSpacing) {
             titleField
             originChip
-            SettingSlider(
-                title: "Colors", value: Self.colorPosition(model.colorCount),
-                onChange: { update(\.colorCount, Self.colorCount(at: $0)) },
-                valueText: Int(model.colorCount.rounded()).formatted(), isPending: model.isChoosingSettings,
-                detent: suggested.map { Self.colorPosition(Double($0.colorCount)) }, onEditing: model.setAdjusting)
-            SettingSlider(
-                title: "Detail", value: model.detail, onChange: { update(\.detail, $0) },
-                valueText: Self.detailWord(model.detail), isPending: model.isChoosingSettings,
-                detent: suggested.map { Double($0.detail) }, onEditing: model.setAdjusting)
-            SettingSlider(
-                title: "Smoothness", value: model.smoothness, onChange: { update(\.smoothness, $0) },
-                valueText: Self.smoothnessWord(model.smoothness), isPending: model.isChoosingSettings,
-                detent: suggested.map { Double($0.smoothness) }, onEditing: model.setAdjusting)
-            if hasLines {
-                SettingSlider(
-                    title: "Lines", value: model.lines, onChange: { update(\.lines, $0) },
-                    valueText: Self.linesWord(model.lines), isPending: model.isChoosingSettings,
-                    detent: 0.5, onEditing: model.setAdjusting)
-            }
-
-            Text(model.stats?.summary ?? " ")
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(.primary.opacity(0.7))
-                .monospacedDigit()
-                .contentTransition(.numericText())
-                .opacity(model.isFinal ? 1 : 0.7)
-                .animation(.easeInOut(duration: 0.25), value: model.stats)
-                .frame(maxWidth: .infinity, alignment: .center)
+            slider(.colors)
+            slider(.detail)
+            slider(.smoothness)
+            if hasLines { slider(.lines) }
+            summary
 
             Button(action: start) {
                 HStack(spacing: 10) {
@@ -249,6 +283,75 @@ struct TemplatePreviewView: View {
         .padding(.horizontal, 22)
         .padding(.top, 22)
         .padding(.bottom, isSideBySide ? 22 : 8)
+    }
+
+    /// The enlarged preview's controls: the slider of one setting, chosen above it, and the
+    /// template's summary. Lines comes first, the lines being what a large preview is for.
+    private var tuningTray: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Picker("Setting", selection: Binding(get: { shownSetting }, set: { tunedSetting = $0 })) {
+                Text("Colors").tag(Setting.colors)
+                Text("Detail").tag(Setting.detail)
+                Text("Smoothness").tag(Setting.smoothness)
+                if hasLines { Text("Lines").tag(Setting.lines) }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("tuned-setting")
+            slider(shownSetting)
+                // Another setting's slider, not this one's thumb sliding to its value.
+                .id(shownSetting)
+            summary
+        }
+        .padding(.horizontal, 22)
+        .padding(.top, 20)
+        .padding(.bottom, 8)
+    }
+
+    private var shownSetting: Setting {
+        if let tunedSetting, tunedSetting != .lines || hasLines { return tunedSetting }
+        return hasLines ? .lines : .detail
+    }
+
+    /// The settings a slider tunes.
+    private enum Setting: Hashable { case colors, detail, smoothness, lines }
+
+    @ViewBuilder
+    private func slider(_ setting: Setting) -> some View {
+        switch setting {
+        case .colors:
+            SettingSlider(
+                title: "Colors", value: Self.colorPosition(model.colorCount),
+                onChange: { update(\.colorCount, Self.colorCount(at: $0)) },
+                valueText: Int(model.colorCount.rounded()).formatted(), isPending: model.isChoosingSettings,
+                detent: suggested.map { Self.colorPosition(Double($0.colorCount)) }, onEditing: model.setAdjusting)
+        case .detail:
+            SettingSlider(
+                title: "Detail", value: model.detail, onChange: { update(\.detail, $0) },
+                valueText: Self.detailWord(model.detail), isPending: model.isChoosingSettings,
+                detent: suggested.map { Double($0.detail) }, onEditing: model.setAdjusting)
+        case .smoothness:
+            SettingSlider(
+                title: "Smoothness", value: model.smoothness, onChange: { update(\.smoothness, $0) },
+                valueText: Self.smoothnessWord(model.smoothness), isPending: model.isChoosingSettings,
+                detent: suggested.map { Double($0.smoothness) }, onEditing: model.setAdjusting)
+        case .lines:
+            SettingSlider(
+                title: "Lines", value: model.lines, onChange: { update(\.lines, $0) },
+                valueText: Self.linesWord(model.lines), isPending: model.isChoosingSettings,
+                detent: 0.5, onEditing: model.setAdjusting)
+        }
+    }
+
+    /// Colors, areas and painting time of the latest full-resolution template.
+    private var summary: some View {
+        Text(model.stats?.summary ?? " ")
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(.primary.opacity(0.7))
+            .monospacedDigit()
+            .contentTransition(.numericText())
+            .opacity(model.isFinal ? 1 : 0.7)
+            .animation(.easeInOut(duration: 0.25), value: model.stats)
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 
     /// The suggestion's settings, where each slider has a detent.

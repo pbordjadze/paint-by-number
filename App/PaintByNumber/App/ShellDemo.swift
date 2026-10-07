@@ -21,6 +21,8 @@ import Foundation
 /// - `create-samples-paintings`, `create-samples-photographs`: the Samples pane scrolled to its
 ///   Paintings or Photographs section.
 /// - `create-preview`, `create-preview-dark`: the painting starter generated, comparison at half.
+/// - `create-line-art`: `create-preview` with Settings › Preview on Line Art: the drawing alone
+///   beside the photo.
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
@@ -42,7 +44,7 @@ import Foundation
 enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
          galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
-         createSamplesPhotographs, createPreview, createSuggested, createCustom, createFromFile, settings,
+         createSamplesPhotographs, createPreview, createLineArt, createSuggested, createCustom, createFromFile, settings,
          settingsLongText, settingsAcknowledgements
 
     static let current: ShellDemo? = {
@@ -62,6 +64,7 @@ enum ShellDemo: Equatable {
         case "create-samples-paintings": .createSamplesPaintings
         case "create-samples-photographs": .createSamplesPhotographs
         case "create-preview", "create-preview-dark": .createPreview
+        case "create-line-art": .createLineArt
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
@@ -79,7 +82,8 @@ enum ShellDemo: Equatable {
     /// do (`Sample.all`, `Sample.starters`), so curating the library needs no edit here. The
     /// rest, and UI tests that name paintings (`-demoFixedPictures YES`), show `fixedPictures`.
     private var showsLibrary: Bool {
-        (self == .gallery || self == .createPreview || self == .createSuggested) && !DemoMode.usesFixedPictures
+        (self == .gallery || self == .createPreview || self == .createLineArt || self == .createSuggested)
+            && !DemoMode.usesFixedPictures
     }
 
     /// Six library pictures by name, whose titles UI tests look for, in the order the gallery
@@ -110,7 +114,8 @@ enum ShellDemo: Equatable {
     var sharesTimelapse: Bool { self == .galleryTimelapse || self == .galleryTimelapseLongText }
 
     var opensCreateFlow: Bool {
-        self == .create || opensSamples || self == .createPreview || self == .createSuggested || self == .createCustom
+        self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createSuggested
+            || self == .createCustom
     }
 
     /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).
@@ -132,7 +137,7 @@ enum ShellDemo: Equatable {
     var previewSample: Sample? {
         switch self {
         // A painting and a photograph: the library's starters, or the first two fixed pictures.
-        case .createPreview: showsLibrary ? Sample.starters.first : pictures.first
+        case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
         case .createCustom: pictures.first
         default: nil
@@ -141,6 +146,9 @@ enum ShellDemo: Equatable {
 
     /// The painter moves Detail once the suggestion is ready, so the settings become custom.
     var movesASlider: Bool { self == .createCustom }
+
+    /// Settings › Preview for the scenario's create flow; nil keeps the stored one.
+    var previewStyle: PreviewStyle? { self == .createLineArt ? .lineArt : nil }
 
     /// How long `create` and the `create-samples` scenarios give the library picker (and the
     /// sample tiles) to load before they signal readiness: the picker runs out of process and
@@ -178,8 +186,8 @@ enum ShellDemo: Equatable {
         case .galleryTimelapse, .galleryTimelapseLongText:
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
-             .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings, .settingsLongText,
-             .settingsAcknowledgements:
+             .createLineArt, .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings,
+             .settingsLongText, .settingsAcknowledgements:
             break
         }
     }

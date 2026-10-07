@@ -12,7 +12,7 @@ struct CreateFlowView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(Library.self) private var library
-    @State private var model = CreateModel()
+    @State private var model = CreateModel(previewStyle: Self.previewStyle)
     @State private var path: [Step] = []
 
     enum Step: Hashable { case preview }
@@ -58,17 +58,20 @@ struct CreateFlowView: View {
     @ViewBuilder
     private var root: some View {
         if droppedPhoto != nil || openingSample != nil {
-            TemplatePreviewView(model: model, onStart: start)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Close", systemImage: "xmark") { dismiss() }
-                    }
-                }
+            TemplatePreviewView(model: model, onStart: start, onClose: { dismiss() })
         } else {
             PhotoSourceView(model: model, initialPane: initialPane, onClose: { dismiss() }) {
                 path = [.preview]
             }
         }
+    }
+
+    /// Settings › Preview, or the scenario's (demo launches).
+    private static var previewStyle: PreviewStyle {
+        #if DEBUG
+        if let style = ShellDemo.current?.previewStyle { return style }
+        #endif
+        return Preferences().previewStyle
     }
 
     /// The `create-samples` demos open on the Samples pane; everything else starts on Photos.

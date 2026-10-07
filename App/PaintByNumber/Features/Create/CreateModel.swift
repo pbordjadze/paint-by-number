@@ -21,12 +21,19 @@ final class CreateModel {
     nonisolated struct Preview: Sendable, Identifiable {
         let id = UUID()
         let template: Template
-        /// All regions painted, under a coloring book's drawing (a classic template shows no lines).
-        let painting: CGImage
+        let picture: Picture
         /// Nil for a suggestion's first draft, shown before the settings are chosen.
         let settings: GenerationSettings?
         /// Generated from the reduced photo while adjusting.
         let isDraft: Bool
+    }
+
+    /// What the comparison shows of a template (`previewStyle`).
+    nonisolated enum Picture: Sendable {
+        /// All regions painted, under a coloring book's drawing (a classic template shows no lines).
+        case painting(CGImage)
+        /// The lines alone, drawn by the comparison at the size it shows them.
+        case lineArt(LineArtDrawing)
     }
 
     nonisolated struct Stats: Equatable, Sendable {
@@ -92,6 +99,8 @@ final class CreateModel {
     private(set) var decision: AutoDecision?
     /// What suggestions aim for (Settings › Painting Length).
     let paintingLength: PaintingLength
+    /// What the comparison shows beside the photo (Settings › Preview).
+    let previewStyle: PreviewStyle
     /// The line art the painting is made with before the Lines slider (the coloring book's
     /// defaults in the app), on top of the suggested or slider settings: every candidate of a
     /// suggestion carries it.
@@ -135,8 +144,12 @@ final class CreateModel {
     @ObservationIgnored private var loadID = 0
 
     /// The sliders start at the generator's defaults; a photo moves them to its suggestion.
-    init(paintingLength: PaintingLength = Preferences().paintingLength, lineArt: LineArtSettings = LineArtSettings()) {
+    init(
+        paintingLength: PaintingLength = Preferences().paintingLength, lineArt: LineArtSettings = LineArtSettings(),
+        previewStyle: PreviewStyle = Preferences().previewStyle
+    ) {
         self.paintingLength = paintingLength
+        self.previewStyle = previewStyle
         self.baseLineArt = lineArt.normalized
         let initial = GenerationSettings()
         colorCount = Double(initial.colorCount)
@@ -218,6 +231,10 @@ final class CreateModel {
         let load = loadID
         let preference = paintingLength
         let lineArt = baseLineArt
+        // A suggestion's candidates have no edge map: as line art the first would be every edge
+        // between its regions, which the painting won't draw, so line art waits for the winner.
+        let firstDraft: (@Sendable (Preview) -> Void)? =
+            previewStyle == .painting ? Self.firstDraftHandler(for: self, load: load) : nil
         loadTask = Task {
             do {
                 let decoded = try await decode()
@@ -234,8 +251,7 @@ final class CreateModel {
                 do {
                     chosen = try await Self.suggest(
                         prepared, sourceSize: (decoded.image.width, decoded.image.height), preference: preference,
-                        lineArt: lineArt, maxCandidates: Self.maxCandidates,
-                        firstDraft: Self.firstDraftHandler(for: self, load: load))
+                        lineArt: lineArt, maxCandidates: Self.maxCandidates, firstDraft: firstDraft)
                 } catch is CancellationError {
                     throw CancellationError()
                 } catch {
@@ -429,7 +445,7 @@ final class CreateModel {
             let made = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
             let result = try await Self.render(
                 input, importance: importance, lineArt: lineArtInput, settings: made, recorded: settings, isDraft: draft,
-                progress: draft ? nil : report)
+                style: previewStyle, progress: draft ? nil : report)
             try Task.checkCancellation()
             // A draft finishing after a newer generation began (the resting thumb's full
             // resolution) would replace it with less.
@@ -491,12 +507,13 @@ final class CreateModel {
     }
 
     /// Chooses settings for the photo on its draft. `sourceSize` is the photo's own size: it
-    /// sets the canvas the painting time is estimated for.
+    /// sets the canvas the painting time is estimated for. `firstDraft` gets the first candidate,
+    /// painted.
     @concurrent
     private static func suggest(
         _ prepared: Prepared, sourceSize: (width: Int, height: Int), preference: PaintingLength,
         lineArt: LineArtSettings, maxCandidates: Int,
-        firstDraft: @escaping @Sendable (Preview) -> Void
+        firstDraft: (@Sendable (Preview) -> Void)?
     ) async throws -> AutoDecision {
         // A task's cancellation shows only on the thread running it; the flag reaches every
         // candidate's thread at once.
@@ -508,7 +525,9 @@ final class CreateModel {
                 cancel: CancellationCheck { flag.isSet }
             ) { output in
                 // Rendered here, before the other candidates run: it is what the painter waits for.
-                guard let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true) else { return }
+                guard let firstDraft,
+                      let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true, style: .painting)
+                else { return }
                 firstDraft(preview)
             }
         } onCancel: {
@@ -529,13 +548,13 @@ final class CreateModel {
     @concurrent
     private static func render(
         _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, settings: GenerationSettings,
-        recorded: GenerationSettings, isDraft: Bool, progress: (@Sendable (Float) -> Void)?
+        recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle, progress: (@Sendable (Float) -> Void)?
     ) async throws -> Preview {
         let template = try TemplateGenerator(settings: settings)
             .generate(from: image, importance: importance, lineArt: lineArt, cancel: .task, progress: progress)
             .template
         try Task.checkCancellation()
-        return try makePreview(template, settings: recorded, isDraft: isDraft)
+        return try makePreview(template, settings: recorded, isDraft: isDraft, style: style)
     }
 
     /// A draft's settings: the line art's lengths in canvas pixels (the shortest line, the gaps
@@ -566,7 +585,9 @@ final class CreateModel {
         return art.normalized
     }
 
-    nonisolated private static func makePreview(_ template: Template, settings: GenerationSettings?, isDraft: Bool) throws -> Preview {
+    nonisolated private static func makePreview(
+        _ template: Template, settings: GenerationSettings?, isDraft: Bool, style: PreviewStyle
+    ) throws -> Preview {
         #if DEBUG
         // Debug builds (CI's simulator runs) check every final template's invariants,
         // legible numbers included.
@@ -575,11 +596,18 @@ final class CreateModel {
             if !report.isValid { assertionFailure("Generated template violates its invariants: \(report)") }
         }
         #endif
-        let long = max(template.width, template.height)
-        guard let painting = TemplateRasterizer.image(template, style: .painting, maxPixelSize: long) else {
-            throw CreateError.renderFailed
+        let picture: Picture
+        switch style {
+        case .painting:
+            let long = max(template.width, template.height)
+            guard let painting = TemplateRasterizer.image(template, style: .painting, maxPixelSize: long) else {
+                throw CreateError.renderFailed
+            }
+            picture = .painting(painting)
+        case .lineArt:
+            picture = .lineArt(LineArtDrawing(template))
         }
-        return Preview(template: template, painting: painting, settings: settings, isDraft: isDraft)
+        return Preview(template: template, picture: picture, settings: settings, isDraft: isDraft)
     }
 
     private static func photoTitle() -> String {

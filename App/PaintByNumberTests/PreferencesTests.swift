@@ -81,6 +81,27 @@ struct PreferencesTests {
         #expect(LineWeight.nearest(to: 0) == .regular && LineWeight.nearest(to: .nan) == .regular)
     }
 
+    /// Settings › Preview defaults to Painting, ignores anything it doesn't know, and is what the
+    /// create flow's comparison shows.
+    @Test func previewStyleDefaultsAndPersists() throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        #expect(Preferences(defaults: defaults).previewStyle == .painting && PreviewStyle.default == .painting)
+        for style in PreviewStyle.allCases {
+            defaults.set(style.rawValue, forKey: SettingsKey.previewStyle)
+            #expect(Preferences(defaults: defaults).previewStyle == style)
+            #expect(!style.name.isEmpty)
+        }
+        defaults.set("sketch", forKey: SettingsKey.previewStyle)
+        #expect(PreviewStyle.stored(in: defaults) == .painting)
+        // What `@AppStorage` and launch arguments (`-previewStyle lineArt`) use.
+        #expect(SettingsKey.previewStyle == "previewStyle")
+        #expect(Set(PreviewStyle.allCases.map(\.rawValue)) == ["painting", "lineArt"])
+        #expect(CreateModel(previewStyle: .lineArt).previewStyle == .lineArt)
+    }
+
     /// Settings › Advanced's stored settings are removed at launch, so nothing unseen shapes new
     /// paintings; its Line Weight carries over unless Settings › Line Weight already has one.
     @Test func retiredSettingsAreRemoved() throws {

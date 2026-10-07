@@ -43,8 +43,8 @@ synchronized folder would bundle it into the app.
 
 ## Layout (`App/PaintByNumber/`)
 
-- `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`;
-  DEBUG `DemoMode`, `ShellDemo`.
+- `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`,
+  `PreviewStyle`; DEBUG `DemoMode`, `ShellDemo`.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
   `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
@@ -264,10 +264,10 @@ Conventions).
 - Suggested settings (`CreateModel`): every photo (picker, camera, sample, drop, opened file) goes
   loading → analyzing (`SubjectImportance.analyze`: importance map plus `SubjectHints`, faces and
   animals, in one Vision pass, beside the line-art inputs) → suggesting (`AutoSettings.choose` on
-  the draft, `CreateModel.maxCandidates`; its first candidate shows as a draft at once, sliders and
-  Start wait) → the winner's draft (unless it is that candidate and the line art is classic) and its
-  full resolution. A new photo or closing the flow cancels it (a `withTaskCancellationHandler` flag
-  reaches every candidate's thread).
+  the draft, `CreateModel.maxCandidates`; its first candidate shows as a draft at once, unless the
+  preview is line art, sliders and Start wait) → the winner's draft (unless it is that candidate
+  and the line art is classic) and its full resolution. A new photo or closing the flow cancels it
+  (a `withTaskCancellationHandler` flag reaches every candidate's thread).
 - `settingsOrigin` is `.suggested` until the painter moves a slider (`.custom`, reported through
   `settingsChanged()`; back on every suggested value, the sliders' detents, it is `.suggested`
   again); `TemplatePreviewView`'s chip offers Reset to Suggested, which restores the kept
@@ -279,6 +279,16 @@ Conventions).
   moves the book's thresholds and shortest line (`CreateModel.lineArt(_:lines:)`; the middle is
   the book's defaults), the line art recorded with the painting like any setting. `CompareView` zooms both layers alike (pinch, double tap, VoiceOver), the zoom held
   across slider changes.
+- Settings › Preview (`PreviewStyle`) picks the comparison's other layer (`CreateModel.Picture`):
+  the painting (`TemplateRasterizer`'s `.painting`), or its line art: `LineArtDrawing`, the lines
+  `TemplateRasterizer` draws for a book (a classic template's every edge), which `CompareView`
+  strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
+  them for the picture's size against the window's. A suggestion's first candidate has no
+  drawing, so with line art the photo waits for the winner's draft.
+- Compact windows (iPhone) enlarge the preview from the toolbar (Done goes back): the comparison
+  fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
+  of it) above the slider of one setting at a time, Lines first (`TemplatePreviewView`'s
+  `tuningTray`). Side by side, the preview is as large as it gets already.
 - Open in Paint by Moonlight: images from the share sheet and Files arrive through an image document
   type (`CFBundleDocumentTypes` in `Config/Info.plist`, Alternate rank, copied into
   `Documents/Inbox`) and `.onOpenURL` → `AppShellView.openFile`. `IncomingFile` reads the file off
@@ -302,9 +312,10 @@ paper (`CanvasSnapshot.Options`).
 
 - `Preferences` is the snapshot that code outside views reads (the create flow, a painting's
   session); views bind the other `SettingsKey`s with `@AppStorage`. Settings › Painting Length
-  (`PaintingLength`, Relaxed by default) is what suggestions aim for. New paintings are coloring
-  books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in Settings
-  changes how a template is made.
+  (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
+  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting. New paintings
+  are coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing
+  in Settings changes how a template is made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
   switch per sound, haptic and flourish; Settings' paper size and Color Names; the Custom palette
