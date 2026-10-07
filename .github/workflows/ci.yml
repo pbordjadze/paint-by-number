@@ -6,9 +6,10 @@ name: CI
 # so a clone never downloads reports, and readable with plain git (see ci/fetch.sh).
 # The simulator work is one matrix (`apple`), each entry on a VM of its own (two booted
 # simulators on one 3-core runner thrash), its simulator booting while the app builds:
-#   ipad     Debug build, screenshots, unit tests, then a Release build checked for the privacy
-#            manifest and for Debug-only code that must not ship, and the pipeline benchmark
-#   ipad-ui  Debug build, UI tests
+#   ipad     Debug build, screenshots, unit tests and the Settings UI tests, then a Release
+#            build checked for the privacy manifest and for Debug-only code that must not ship,
+#            and the pipeline benchmark
+#   ipad-ui  Debug build, the other UI tests
 #   iphone   Debug build, screenshots, unit and UI tests: on the shipping branch, main, or on
 #            request (workflow_dispatch's `iphone`, or `[iphone]` in the pushed commit's message)
 # iPad is the primary device, its work split in two so a push waits for about half of it. The
@@ -100,13 +101,16 @@ jobs:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2 }
       - name: Plan
-        # The entry's device and share of the work (TESTS: the test target, empty for all).
+        # The entry's device and share of the work. ONLY and SKIP list the tests it runs or leaves
+        # out (`-only-testing`, `-skip-testing`; neither: all). The Settings UI tests run beside
+        # the unit tests, so that `ipad` and `ipad-ui` take about as long.
         run: |
           case "${{ matrix.job }}" in
-            ipad)    echo "DEVICE=ipad SHOTS=1 TESTS=PaintByNumberTests RELEASE=1" ;;
-            ipad-ui) echo "DEVICE=ipad SHOTS=0 TESTS=PaintByNumberUITests RELEASE=0" ;;
-            iphone)  echo "DEVICE=iphone SHOTS=1 TESTS= RELEASE=0" ;;
-          esac | tr ' ' '\n' >> "$GITHUB_ENV"
+            ipad)    plan=(DEVICE=ipad SHOTS=1 RELEASE=1 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests" SKIP=) ;;
+            ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests SKIP=PaintByNumberUITests/SettingsTests) ;;
+            iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 ONLY= SKIP=) ;;
+          esac
+          printf '%s\n' "${plan[@]}" >> "$GITHUB_ENV"
       - name: Start simulator
         id: sim
         run: |
@@ -131,6 +135,10 @@ jobs:
         id: boot
         run: |
           xcrun simctl bootstatus "${{ steps.sim.outputs.udid }}" -b > /dev/null
+          # A UI test's `XCUIDevice.shared.appearance` changes nothing on a simulator whose
+          # appearance was never set (DarkPaperTests, with no screenshots before it).
+          xcrun simctl ui "${{ steps.sim.outputs.udid }}" appearance dark || true
+          xcrun simctl ui "${{ steps.sim.outputs.udid }}" appearance light || true
       - name: Demo caches key
         id: demo-key
         # Everything that makes the line-art maps and templates the demos and tests seed
@@ -166,7 +174,7 @@ jobs:
         if: env.SHOTS == '0' && steps.demo-cache.outputs.cache-hit != 'true'
         run: |
           ci/screenshots.sh "$APP" build/warm-up "$DEVICE" "${{ steps.sim.outputs.udid }}" \
-            gallery-favorites@300 create-preview@180 create-from-file@180
+            gallery@300 gallery-favorites@300 create-preview@180 create-from-file@180
           cp build/warm-up/*-steps.log out/warm-up-steps.log
       - name: Test
         id: test
@@ -175,10 +183,11 @@ jobs:
           # A failed test runs once more and counts as passed if that run passes; the report
           # names it ("passed when run again"), as a flake still needs its cause found.
           set -o pipefail
-          ONLY=()
-          if [[ -n "$TESTS" ]]; then ONLY=("-only-testing:$TESTS"); fi
+          SELECT=()
+          for test in $ONLY; do SELECT+=("-only-testing:$test"); done
+          for test in $SKIP; do SELECT+=("-skip-testing:$test"); done
           xcodebuild test-without-building -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
-            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd "${ONLY[@]}" \
+            -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd "${SELECT[@]}" \
             -retry-tests-on-failure -test-iterations 2 -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
       - name: Release build

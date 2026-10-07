@@ -125,17 +125,19 @@ final class SettingsTests: XCTestCase {
     }
 
     /// The form is a lazy list: rows below the fold exist once they are scrolled into view. Each
-    /// drag moves the list by most of its height and rests before lifting, so it can't fling past
-    /// a row and leaves nothing to settle: swipes, with a second's wait for the row before each,
-    /// took 138 s to reach the end of Acknowledgements, past every picture and license text.
+    /// drag moves the list by four fifths of its frame, less than what shows below the navigation
+    /// bar, and rests before lifting, so it can't fling past a row and leaves nothing to settle:
+    /// swipes, with a second's wait for the row before each, took 138 s to reach the end of
+    /// Acknowledgements on iPad (a form sheet), past every picture's credit and license text.
     @MainActor
     private func scroll(_ app: XCUIApplication, to element: XCUIElement, maxDrags: Int = 6) {
         let list = app.collectionViews.firstMatch
+        let dragsList = list.exists
         var drags = 0
         while !element.exists && drags < maxDrags {
-            if list.exists {
-                list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).press(
-                    forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)),
+            if dragsList {
+                list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9)).press(
+                    forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)),
                     withVelocity: .default, thenHoldForDuration: 0.1)
             } else {
                 app.swipeUp()

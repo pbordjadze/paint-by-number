@@ -69,9 +69,9 @@ before planning app work).
   (the app's Core ML models from their source weights).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
-  screenshots, unit tests, Release check, benchmark; `ipad-ui`, the UI tests; on `main`: `iphone`,
-  all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report` (`ci/report.py` writes
-  `STATUS.md`).
+  screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
+  on `main`: `iphone`, all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
+  (`ci/report.py` writes `STATUS.md`).
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
   per-agent reports are not committed (they live on their branch and in commit messages); a
@@ -299,9 +299,10 @@ any port of it, when changing the fitter: work from the paper.
    app's os_log), `*-steps.log` (readiness, crashes), `test-app.log` (the app's library, demo,
    canvas and feedback lines during the run), test results and `attachments/`. iPad is the primary
    device, a 13" iPad Pro simulator, its work in two jobs on every push: `ipad` builds Debug,
-   screenshots, runs the unit tests, builds Release for `ci/check_release.sh` (problems land in
-   `ipad/errors.txt` too) and benchmarks the pipeline (`ipad/bench.txt`, only when `Sources/` or
-   `Package.swift` differ from `main`); `ipad-ui` builds Debug and runs the UI tests. `iphone` (an
+   screenshots, runs the unit tests and the Settings UI tests, builds Release for
+   `ci/check_release.sh` (problems land in `ipad/errors.txt` too) and benchmarks the pipeline
+   (`ipad/bench.txt`, only when `Sources/` or `Package.swift` differ from `main`); `ipad-ui` builds
+   Debug and runs the other UI tests (the Plan step in `ci.yml` divides them). `iphone` (an
    iPhone 17 Pro: screenshots, unit and UI tests) runs on `main`, via workflow_dispatch with
    `iphone: true`, or for a commit whose message contains `[iphone]`. Simulator builds are arm64
    only. A test that fails runs once more and passes if that run does (`-retry-tests-on-failure`);
