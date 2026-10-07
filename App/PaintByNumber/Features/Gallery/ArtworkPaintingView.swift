@@ -46,6 +46,9 @@ struct ArtworkPaintingView: View {
 
     var body: some View {
         ZStack {
+            #if DEBUG
+            let _ = MainThreadWatchdog.count("ArtworkPaintingView")
+            #endif
             Theme.paper.ignoresSafeArea()
             if let autosaver {
                 PaintView(session: autosaver.session, title: artwork?.title ?? "", onClose: close)

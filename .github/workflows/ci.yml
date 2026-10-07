@@ -337,9 +337,11 @@ jobs:
         run: |
           mkdir -p report && cd report
           find . -name '*.log' | while read -r f; do
-            # Long logs keep every diagnostic line plus the tail; the rest stay whole.
+            # Long logs keep every diagnostic line, the app's own lines and the tail; the rest stay whole.
             if [ "$(wc -l < "$f")" -gt 3000 ]; then
-              { grep -nE "error:|warning:|failed|FAIL|✘|Fatal|crash" "$f" | head -400; echo "----- tail -----"; tail -200 "$f"; } > "$f.trimmed"
+              { grep -nE "error:|warning:|failed|FAIL|✘|Fatal|crash" "$f" | head -400
+                echo "----- the app's own lines -----"; grep -n "com.pbordjadze.paintbynumber:" "$f" | head -2000
+                echo "----- tail -----"; tail -200 "$f"; } > "$f.trimmed"
               mv "$f.trimmed" "$f"
             fi
           done

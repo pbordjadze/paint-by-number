@@ -82,6 +82,9 @@ struct PaintView: View {
 
     var body: some View {
         GeometryReader { geo in
+            #if DEBUG
+            let _ = MainThreadWatchdog.count("PaintView")
+            #endif
             if canvasUnavailable {
                 CanvasUnavailableView(onClose: onClose)
             } else {
@@ -613,6 +616,9 @@ private struct ProgressGroup: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        #if DEBUG
+        let _ = MainThreadWatchdog.count("ProgressGroup")
+        #endif
         let fraction = session.fractionComplete
         // Whole percent, rounded down: 100 only once the last area is painted.
         let percent = Int(fraction * 100)

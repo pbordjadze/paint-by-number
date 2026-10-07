@@ -94,6 +94,9 @@ struct PaletteBar: View {
     private static let darkInkLuminance: Float = 0.36
 
     var body: some View {
+        #if DEBUG
+        let _ = MainThreadWatchdog.count("PaletteBar")
+        #endif
         let visible = Set(Self.visibleColors(session))
         let colors = order.filter(visible.contains)
         let count = max(colors.count, 1)
@@ -147,6 +150,9 @@ struct PaletteBar: View {
     }
 
     private func swatch(_ index: Int) -> some View {
+        #if DEBUG
+        MainThreadWatchdog.count("swatch")
+        #endif
         let template = session.template
         let total = session.totalByColor[index]
         let painted = total - session.remainingByColor[index]

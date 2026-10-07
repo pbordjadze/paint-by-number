@@ -20,6 +20,17 @@ nonisolated enum MainThreadWatchdog {
     private static let maximumFrames = 128
     /// Bumped by the main queue each time it answers a ping.
     private static let answers = Atomic<Int>(0)
+    /// How often each counted view has rendered, logged with each stall.
+    private static let counts = Mutex<[String: Int]>([:])
+
+    /// Counts one more render of `name`.
+    static func count(_ name: String) {
+        counts.withLock { $0[name, default: 0] += 1 }
+    }
+
+    private static var countsDescription: String {
+        counts.withLock { counts in counts.keys.sorted().map { "\($0) \(counts[$0] ?? 0)" }.joined(separator: ", ") }
+    }
 
     /// Call on the main thread.
     static func start() {
@@ -54,7 +65,7 @@ nonisolated enum MainThreadWatchdog {
                 seen = count
                 pinged = false
                 if nextSample != nil {
-                    Log.demo.error("Main thread answered after \(String(describing: now - answered), privacy: .public) (stall \(stall, privacy: .public))")
+                    Log.demo.error("Main thread answered after \(String(describing: now - answered), privacy: .public) (stall \(stall, privacy: .public)); renders: \(countsDescription, privacy: .public)")
                     nextSample = nil
                     previous = []
                 }
@@ -72,10 +83,10 @@ nonisolated enum MainThreadWatchdog {
             let addresses = Array(frames.prefix(depth))
             defer { previous = addresses }
             guard addresses != previous else {
-                Log.demo.error("Main thread stuck for \(String(describing: gone), privacy: .public) (stall \(stall, privacy: .public)), at the same \(depth, privacy: .public) frames")
+                Log.demo.error("Main thread stuck for \(String(describing: gone), privacy: .public) (stall \(stall, privacy: .public)), at the same \(depth, privacy: .public) frames; renders: \(countsDescription, privacy: .public)")
                 continue
             }
-            Log.demo.error("Main thread stuck for \(String(describing: gone), privacy: .public) (stall \(stall, privacy: .public)), \(depth, privacy: .public) frames:")
+            Log.demo.error("Main thread stuck for \(String(describing: gone), privacy: .public) (stall \(stall, privacy: .public)), \(depth, privacy: .public) frames; renders: \(countsDescription, privacy: .public)")
             for part in parts(addresses) {
                 Log.demo.error("  stall \(stall, privacy: .public) \(part, privacy: .public)")
             }
