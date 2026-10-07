@@ -250,6 +250,26 @@ struct CreateModelTests {
         #expect(model.lines == 0.5 && model.settings == suggested)
     }
 
+    /// Refining regenerates the template with the refinements (the preview isn't final until it
+    /// has them), Start saves them with the painting, and a new photo starts unrefined.
+    @Test func refiningRegeneratesAndTheDraftKeepsIt() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        var refinements = TemplateRefinements()
+        refinements.strokes = [TemplateRefinements.Stroke(kind: .less, radius: 0.2, points: [SIMD2(0.5, 0.5)])]
+        model.refine(refinements)
+        #expect(model.refinements == refinements && !model.isFinal)
+        try await waitUntil { model.isFinal }
+        #expect(model.preview?.refinements == refinements)
+        let draft = try await model.makeDraft()
+        #expect(draft.refinements == refinements)
+
+        model.load(sample: try #require(Sample.named("great-wave")))
+        #expect(model.refinements.isEmpty)
+        model.cancelAll()
+    }
+
     /// More lines lower the thresholds and shorten the shortest line, fewer raise and lengthen
     /// them; the middle and classic line art are left as they are.
     @Test func linesMapToTheLineArt() {

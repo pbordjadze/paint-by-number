@@ -49,20 +49,25 @@ nonisolated enum ArtworkFactory {
     /// the subjects. Polls task cancellation.
     @concurrent
     static func template(
-        from photo: RGBAImage, settings: GenerationSettings, progress: (@Sendable (Float) -> Void)?
+        from photo: RGBAImage, settings: GenerationSettings, refinements: TemplateRefinements = TemplateRefinements(),
+        progress: (@Sendable (Float) -> Void)?
     ) async throws -> Template {
-        try await template(from: photo, image: PhotoLoader.cgImage(from: photo), settings: settings, progress: progress)
+        try await template(
+            from: photo, image: PhotoLoader.cgImage(from: photo), settings: settings, refinements: refinements, progress: progress)
     }
 
     @concurrent
     private static func template(
-        from photo: RGBAImage, image: CGImage?, settings: GenerationSettings, progress: (@Sendable (Float) -> Void)?
+        from photo: RGBAImage, image: CGImage?, settings: GenerationSettings,
+        refinements: TemplateRefinements = TemplateRefinements(), progress: (@Sendable (Float) -> Void)?
     ) async throws -> Template {
         let importance = image.flatMap(SubjectImportance.map(for:))
         // Computed for this one template: the photo needn't take a place in the cache.
         let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
+        let inputs = refinements.refining(
+            importance: importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
         return try TemplateGenerator(settings: settings)
-            .generate(from: photo, importance: importance, lineArt: lineArt, cancel: .task, progress: progress)
+            .generate(from: photo, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
             .template
     }
 

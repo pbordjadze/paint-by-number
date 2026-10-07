@@ -50,14 +50,14 @@ synchronized folder would bundle it into the app.
   `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
   `Background`, `Log` (every logger; CI's `*-app.log`); DEBUG `DemoTemplateCache`.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
-  `ObjectFinder`, `TextFinder`, `LineArtInputs`; DEBUG `LineArtMapsCache`.
+  `ObjectFinder`, `TextFinder`, `LineArtInputs`, `TemplateRefinements`; DEBUG `LineArtMapsCache`.
 - `Canvas/`: `CanvasView`, `CanvasRenderer`, `CanvasScene`, `RenderContext`, `Shaders.metal`,
   `CanvasTypes.swift`, `LineStyle.swift` (`ClassicLook`, `ColoringBookLook`, `DrawableLineArt`),
   `CanvasSnapshot`, `TimelapseFrameRenderer`, `CanvasAccessibility`, `DigitAtlas`; DEBUG
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Gallery/` (`AppShellView` the shell, `GalleryView`, `ArtworkPaintingView`
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`); `Gallery/` (`AppShellView` the shell, `GalleryView`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
@@ -225,7 +225,8 @@ Conventions).
 
 - `Library` (@Observable) keeps `Artwork` metadata in memory; `ArtworkStore` does the file IO
   (`Application Support/Artworks/<uuid>/`: `meta.json`, LZFSE `template.pbnt`, `progress.bin`,
-  `source.jpg`, `thumbnail.png`; atomic writes, staging and trash folders). Writes are queued per
+  `source.jpg`, `thumbnail.png`, and `refinements.json` for a refined painting; atomic writes,
+  staging and trash folders). Writes are queued per
   artwork off the main actor; deletes are undoable.
 - `Library.loadForPainting` classifies failures (`Library.OpenError`: `needsNewerApp`,
   `damaged(canRegenerate:)`, or `unreadable`: a passing I/O error that changes nothing and offers no
@@ -285,6 +286,14 @@ Conventions).
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
+- Refine (optional, from the preview's toolbar; `RefineView`): one finger brushes areas for more
+  or less detail, or erases that brushing, and corrects the text the app found (a tap turns a
+  found line off or on, a drag marks one it missed); two fingers zoom and move (`RefineCanvas`:
+  an invisible scroll view, the canvas's way). `TemplateRefinements` change only the generator's
+  inputs (importance, the edge maps' gain, `LineArtInput.writing`), so drafts, sliders and Start
+  carry them (`CreateModel.refine`), and a refined painting's `refinements.json` lets
+  regeneration reproduce them. Nothing else reads them: a painting nobody refined is made as
+  before.
 - Compact windows (iPhone) enlarge the preview from the toolbar (Done goes back): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
   of it) above the slider of one setting at a time, Lines first (`TemplatePreviewView`'s

@@ -242,7 +242,7 @@
       "extractionState" : "manual"
     },
     "Cancel" : {
-      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label)",
+      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label), and the Refine screen's Cancel, which puts back what it opened with",
       "extractionState" : "manual"
     },
     "Can’t Find It?" : {
@@ -926,7 +926,7 @@
       "extractionState" : "manual"
     },
     "Done" : {
-      "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet and the enlarged create preview (iPhone)",
+      "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet, the enlarged create preview (iPhone) and the Refine screen",
       "extractionState" : "manual"
     },
     "Double-tap the canvas to zoom in on it. Pinch to zoom back out." : {
@@ -950,7 +950,7 @@
       "extractionState" : "manual"
     },
     "Eraser" : {
-      "comment" : "Feedback mode's tools on the painting screen: the eraser, which takes whole marks away (button label)",
+      "comment" : "Feedback mode's tools on the painting screen: the eraser, which takes whole marks away (button label); the Refine screen's eraser, which clears brushed areas",
       "extractionState" : "manual"
     },
     "Every painted area will be cleared." : {
@@ -1557,6 +1557,10 @@
       "comment" : "Header of what is shared: the settings text in Settings › Advanced › Share with a Note, and the list of what goes with feedback on a painting",
       "extractionState" : "manual"
     },
+    "Less Detail" : {
+      "comment" : "Refine screen: the brush that makes an area simpler, with fewer lines (button label for VoiceOver and the Large Content Viewer)",
+      "extractionState" : "manual"
+    },
     "Line Weight" : {
       "comment" : "Settings picker choosing how heavy a painting's drawn lines are (Fine, Regular or Bold)",
       "extractionState" : "manual"
@@ -1619,6 +1623,10 @@
     },
     "More" : {
       "comment" : "Accessibility label of the painting screen's More (…) menu",
+      "extractionState" : "manual"
+    },
+    "More Detail" : {
+      "comment" : "Refine screen: the brush that gives an area more detail and lines (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
     "Name" : {
@@ -2474,7 +2482,7 @@
       "extractionState" : "manual"
     },
     "Photo" : {
-      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control",
+      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's button that shows the photo in place of the template",
       "extractionState" : "manual"
     },
     "Photo Source" : {
@@ -2522,15 +2530,115 @@
       "extractionState" : "manual"
     },
     "Redo" : {
-      "comment" : "Feedback mode's top bar on the painting screen: button (its accessibility label) that puts back the last mark undone",
+      "comment" : "Feedback mode's top bar on the painting screen: button (its accessibility label) that puts back the last mark undone; the Refine screen's redo",
       "extractionState" : "manual"
     },
     "Reference" : {
       "comment" : "Label of the small picture of the finished painting on the color key page of a printed template",
       "extractionState" : "manual"
     },
+    "Refine" : {
+      "comment" : "Create flow: the toolbar button that opens the optional Refine step, and that screen's title, where areas are brushed for more or less detail and the photo's text is corrected",
+      "extractionState" : "manual"
+    },
+    "refine.canvas" : {
+      "comment" : "VoiceOver label of the Refine screen's picture, where areas are brushed and text is marked; its value counts the changes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Painting to refine"
+          }
+        }
+      }
+    },
+    "refine.changes" : {
+      "comment" : "VoiceOver value of the Refine button and the Refine screen's picture: how many strokes and text lines were changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld change"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld changes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "refine.changes.none" : {
+      "comment" : "VoiceOver value of the Refine button and the Refine screen's picture before anything was refined",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No changes"
+          }
+        }
+      }
+    },
+    "refine.hint.eraser" : {
+      "comment" : "Refine screen: how the Eraser works (it clears brushed areas), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brush over marked areas to clear them."
+          }
+        }
+      }
+    },
+    "refine.hint.less" : {
+      "comment" : "Refine screen: how the Less Detail brush works, shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brush where the painting should be simpler, with fewer lines. Two fingers zoom and move."
+          }
+        }
+      }
+    },
+    "refine.hint.more" : {
+      "comment" : "Refine screen: how the More Detail brush works, shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brush where the painting should have more detail and lines. Two fingers zoom and move."
+          }
+        }
+      }
+    },
+    "refine.hint.text" : {
+      "comment" : "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a line of text to keep or ignore it, or drag across a line the app missed."
+          }
+        }
+      }
+    },
     "Refining…" : {
-      "comment" : "Status shown while the template is regenerated at full quality after a settings change",
+      "comment" : "Status shown while the template is regenerated at full quality after a settings change; also on the Refine screen while a change regenerates the template",
       "extractionState" : "manual"
     },
     "Regenerate" : {
@@ -3341,6 +3449,10 @@
         }
       }
     },
+    "Text" : {
+      "comment" : "Refine screen: the tool that corrects the lines of text found in the photo, which a painting draws as writing (button label for VoiceOver and the Large Content Viewer)",
+      "extractionState" : "manual"
+    },
     "Thanks for the feedback!" : {
       "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared",
       "extractionState" : "manual"
@@ -3482,7 +3594,7 @@
       "extractionState" : "manual"
     },
     "Undo" : {
-      "comment" : "Undo button: the painting screen's undo button and feedback mode's undo of the last mark (their accessibility labels), and the action of the gallery's toast after a painting is deleted",
+      "comment" : "Undo button: the painting screen's undo button and feedback mode's undo of the last mark (their accessibility labels), and the action of the gallery's toast after a painting is deleted; the Refine screen's undo of the last stroke or text change",
       "extractionState" : "manual"
     },
     "Unfavorite" : {

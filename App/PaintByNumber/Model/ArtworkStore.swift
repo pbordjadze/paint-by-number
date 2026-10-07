@@ -13,6 +13,8 @@ import os
 ///                   progress.bin   `PaintProgress.encoded()`
 ///                   source.jpg     the photo (≤ 2048 px) for the photo peek and regeneration
 ///                   thumbnail.png  the current state of the painting
+///                   refinements.json  `TemplateRefinements`, only for a painting refined before
+///                                  painting, read again to regenerate it
 ///     <root>/.staging/  new artworks are assembled here and moved into place atomically
 ///     <root>/.trash/    deleted artworks wait here while the deletion can still be undone
 nonisolated struct ArtworkStore: Sendable {
@@ -28,6 +30,8 @@ nonisolated struct ArtworkStore: Sendable {
         case progress = "progress.bin"
         case source = "source.jpg"
         case thumbnail = "thumbnail.png"
+        /// Written only for a refined painting.
+        case refinements = "refinements.json"
     }
 
     static let sourceMaxPixelSize = 2048
@@ -178,11 +182,23 @@ nonisolated struct ArtworkStore: Sendable {
         ImageCodec.image(at: url(.source, of: id), maxPixelSize: maxPixelSize)
     }
 
+    // MARK: Refinements
+
+    /// The painting's refinements; none when it has no file, or one this app can't read (they
+    /// only shape a regeneration, which then makes the painting as first suggested).
+    func readRefinements(_ id: UUID) -> TemplateRefinements {
+        guard let data = try? Data(contentsOf: url(.refinements, of: id)) else { return TemplateRefinements() }
+        return (try? JSONDecoder().decode(TemplateRefinements.self, from: data)) ?? TemplateRefinements()
+    }
+
     // MARK: Lifecycle
 
     /// Writes a complete artwork into staging, then moves it into place, so a crash never
     /// leaves a half-written artwork in the library.
-    func create(_ artwork: Artwork, template: Template, progress: PaintProgress, sourceJPEG: Data?, thumbnailPNG: Data?) throws {
+    func create(
+        _ artwork: Artwork, template: Template, progress: PaintProgress, sourceJPEG: Data?, thumbnailPNG: Data?,
+        refinements: TemplateRefinements = TemplateRefinements()
+    ) throws {
         let staging = stagingRoot.appending(path: artwork.id.uuidString, directoryHint: .isDirectory)
         try? fm.removeItem(at: staging)
         try fm.createDirectory(at: staging, withIntermediateDirectories: true)
@@ -191,6 +207,9 @@ nonisolated struct ArtworkStore: Sendable {
             try progress.encoded().write(to: staging.appending(path: File.progress.rawValue), options: .atomic)
             try sourceJPEG?.write(to: staging.appending(path: File.source.rawValue), options: .atomic)
             try thumbnailPNG?.write(to: staging.appending(path: File.thumbnail.rawValue), options: .atomic)
+            if !refinements.isEmpty {
+                try JSONEncoder().encode(refinements).write(to: staging.appending(path: File.refinements.rawValue), options: .atomic)
+            }
             try writeMeta(artwork, in: staging)
             try fm.moveItem(at: staging, to: directory(for: artwork.id))
         } catch {

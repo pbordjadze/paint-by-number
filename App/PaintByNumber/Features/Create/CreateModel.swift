@@ -24,6 +24,8 @@ final class CreateModel {
         let picture: Picture
         /// Nil for a suggestion's first draft, shown before the settings are chosen.
         let settings: GenerationSettings?
+        /// What it was refined with (none for a suggestion's first draft).
+        let refinements: TemplateRefinements
         /// Generated from the reduced photo while adjusting.
         let isDraft: Bool
     }
@@ -112,6 +114,9 @@ final class CreateModel {
     var lineArt: LineArtSettings { Self.lineArt(baseLineArt, lines: lines) }
     /// What the coloring book draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
+    /// The painter's refinements of this photo's template (the optional Refine step): applied to
+    /// the generator's inputs, so every draft and the painting carry them. None until refined.
+    private(set) var refinements = TemplateRefinements()
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
     /// The sample's name, or the date for a photo.
@@ -171,10 +176,24 @@ final class CreateModel {
         }
     }
 
-    /// The preview matches the settings at full resolution.
+    /// The preview matches the settings and refinements at full resolution.
     var isFinal: Bool {
         guard let preview else { return false }
-        return !preview.isDraft && preview.settings == settings
+        return !preview.isDraft && preview.settings == settings && preview.refinements == refinements
+    }
+
+    /// The lines of text the app found in the photo, for Refine to show; none for classic line art.
+    var foundText: [[SIMD2<Float>]] { lineArtInput?.writing ?? [] }
+
+    /// Whether the template draws from the line-art inputs, where the text corrections apply.
+    var hasLineArtInput: Bool { lineArtInput != nil }
+
+    /// Takes the painter's refinements and regenerates: a draft at once, then the full resolution.
+    func refine(_ refinements: TemplateRefinements) {
+        guard refinements != self.refinements else { return }
+        self.refinements = refinements
+        guard source != nil, !isChoosingSettings else { return }
+        startGeneration(draftFirst: true)
     }
 
     // MARK: Choosing a photo
@@ -209,6 +228,7 @@ final class CreateModel {
         stats = nil
         decision = nil
         settingsOrigin = nil
+        refinements = TemplateRefinements()
         phase = .failed(error.localizedDescription)
     }
 
@@ -225,6 +245,7 @@ final class CreateModel {
         draftImage = nil
         decision = nil
         settingsOrigin = nil
+        refinements = TemplateRefinements()
         progress = 0
         phase = .loading
         loadID += 1
@@ -332,10 +353,13 @@ final class CreateModel {
             stopDrafts()
             await generate(draft: false, settings: settings)
         }
-        guard let preview, !preview.isDraft, preview.settings == settings else { throw CreateError.renderFailed }
+        guard let preview, !preview.isDraft, preview.settings == settings, preview.refinements == refinements else {
+            throw CreateError.renderFailed
+        }
         return ArtworkDraft(
             title: resolvedTitle, template: preview.template, settings: settings, settingsOrigin: settingsOrigin,
-            paintingLength: decision?.preference, photo: source.preview, sampleName: source.sampleName)
+            paintingLength: decision?.preference, photo: source.preview, sampleName: source.sampleName,
+            refinements: refinements)
     }
 
     /// Moves the sliders to the suggestion and generates it: the winner as a draft first unless
@@ -444,8 +468,9 @@ final class CreateModel {
         do {
             let made = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
             let result = try await Self.render(
-                input, importance: importance, lineArt: lineArtInput, settings: made, recorded: settings, isDraft: draft,
-                style: previewStyle, progress: draft ? nil : report)
+                input, importance: importance, lineArt: lineArtInput, refinements: refinements,
+                aspect: Float(source.image.width) / Float(source.image.height), settings: made, recorded: settings,
+                isDraft: draft, style: previewStyle, progress: draft ? nil : report)
             try Task.checkCancellation()
             // A draft finishing after a newer generation began (the resting thumb's full
             // resolution) would replace it with less.
@@ -526,7 +551,8 @@ final class CreateModel {
             ) { output in
                 // Rendered here, before the other candidates run: it is what the painter waits for.
                 guard let firstDraft,
-                      let preview = try? Self.makePreview(output.template, settings: nil, isDraft: true, style: .painting)
+                      let preview = try? Self.makePreview(
+                        output.template, settings: nil, refinements: TemplateRefinements(), isDraft: true, style: .painting)
                 else { return }
                 firstDraft(preview)
             }
@@ -543,18 +569,20 @@ final class CreateModel {
         }
     }
 
-    /// The template of `settings`, its preview recording `recorded` (the sliders' settings a
-    /// draft stands for).
+    /// The template of `settings` with `refinements` (`aspect`: the photo's width over height),
+    /// its preview recording `recorded` (the sliders' settings a draft stands for).
     @concurrent
     private static func render(
-        _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, settings: GenerationSettings,
-        recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle, progress: (@Sendable (Float) -> Void)?
+        _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, refinements: TemplateRefinements,
+        aspect: Float, settings: GenerationSettings, recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle,
+        progress: (@Sendable (Float) -> Void)?
     ) async throws -> Preview {
+        let inputs = refinements.refining(importance: importance, lineArt: lineArt, aspect: aspect)
         let template = try TemplateGenerator(settings: settings)
-            .generate(from: image, importance: importance, lineArt: lineArt, cancel: .task, progress: progress)
+            .generate(from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
             .template
         try Task.checkCancellation()
-        return try makePreview(template, settings: recorded, isDraft: isDraft, style: style)
+        return try makePreview(template, settings: recorded, refinements: refinements, isDraft: isDraft, style: style)
     }
 
     /// A draft's settings: the line art's lengths in canvas pixels (the shortest line, the gaps
@@ -586,7 +614,8 @@ final class CreateModel {
     }
 
     nonisolated private static func makePreview(
-        _ template: Template, settings: GenerationSettings?, isDraft: Bool, style: PreviewStyle
+        _ template: Template, settings: GenerationSettings?, refinements: TemplateRefinements, isDraft: Bool,
+        style: PreviewStyle
     ) throws -> Preview {
         #if DEBUG
         // Debug builds (CI's simulator runs) check every final template's invariants,
@@ -607,7 +636,7 @@ final class CreateModel {
         case .lineArt:
             picture = .lineArt(LineArtDrawing(template))
         }
-        return Preview(template: template, picture: picture, settings: settings, isDraft: isDraft)
+        return Preview(template: template, picture: picture, settings: settings, refinements: refinements, isDraft: isDraft)
     }
 
     private static func photoTitle() -> String {
