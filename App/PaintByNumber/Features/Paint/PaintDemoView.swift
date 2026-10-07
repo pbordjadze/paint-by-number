@@ -78,6 +78,8 @@ struct PaintDemoView: View {
             } else {
                 template = await Self.template(photo: photo)
             }
+            // The canvas needs it, made off the main thread (`ArtworkPaintingView` waits too).
+            _ = await RenderContext.ready()
             // Titles are the person's own words, which pseudo-localization doesn't lengthen.
             let title = scenario.hasSuffix("-long-text")
                 ? "Delicate Arch on Our Spring Trip Through Utah"

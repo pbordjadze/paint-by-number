@@ -16,6 +16,11 @@ struct ArtworkPaintingView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @State private var autosaver: PaintingAutosaver?
+    /// The push has finished. Only then does the painting replace its thumbnail: the zoom
+    /// transition lays the screen out afresh every frame, and the painting screen rendered at
+    /// each of them kept CI's simulator from answering for up to half a minute (hundreds of
+    /// renders in one push), where the thumbnail costs next to nothing.
+    @State private var hasLanded = false
     @State private var failure: Library.OpenError?
     @State private var regeneration: Task<Void, Never>?
     @State private var regenerationFailed = false
@@ -47,7 +52,7 @@ struct ArtworkPaintingView: View {
     var body: some View {
         ZStack {
             Theme.paper.ignoresSafeArea()
-            if let autosaver {
+            if let autosaver, hasLanded {
                 PaintView(session: autosaver.session, title: artwork?.title ?? "", onClose: close)
                     .environment(\.sourcePhotoLoader, SourcePhotoLoader { [library, artworkID] maxPixelSize in
                         await library.sourcePhoto(for: artworkID, maxPixelSize: maxPixelSize)
@@ -68,11 +73,13 @@ struct ArtworkPaintingView: View {
                     }
                     #endif
             } else if let artwork {
-                // Where the zoom transition lands while the template loads.
+                // What the zoom transition shows, and where it lands while the template loads.
                 ArtworkThumbnail(artwork: artwork, contentMode: .fit)
                     .aspectRatio(artwork.aspectRatio, contentMode: .fit)
                     .padding(20)
-                    .overlay { ProgressView().controlSize(.large) }
+                    .overlay {
+                        if autosaver == nil { ProgressView().controlSize(.large) }
+                    }
             }
         }
         // Below PaintView's top bar (6 pt inset + 44 pt buttons).
@@ -99,7 +106,7 @@ struct ArtworkPaintingView: View {
             if failed { Announcer.announce(String(localized: "Couldn’t save progress")) }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .background { CanvasGesturesOverZoomDismissal().frame(width: 0, height: 0) }
+        .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
         .task { await open() }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { autosaver?.saveNow(refreshThumbnail: true) }
@@ -146,9 +153,25 @@ struct ArtworkPaintingView: View {
         if let notice = document.notice { show(notice) }
         Log.library.notice("Opened \(artworkID.uuidString, privacy: .public): \(document.template.regions.count, privacy: .public) regions")
         #if DEBUG
-        if ShellDemo.current == .galleryOpen { DemoMode.markReady() }
+        markDemoReady()
         #endif
     }
+
+    /// The push finished: the painting, when loaded, takes the thumbnail's place.
+    private func land() {
+        guard !hasLanded else { return }
+        withAnimation(.easeOut(duration: 0.25)) { hasLanded = true }
+        #if DEBUG
+        markDemoReady()
+        #endif
+    }
+
+    #if DEBUG
+    /// `gallery-open` is ready once the painting is on screen.
+    private func markDemoReady() {
+        if autosaver != nil, hasLanded, ShellDemo.current == .galleryOpen { DemoMode.markReady() }
+    }
+    #endif
 
     private func show(_ openNotice: OpenNotice) {
         let shown = ShownNotice(notice: openNotice)
@@ -195,12 +218,22 @@ struct ArtworkPaintingView: View {
 /// switch for it, so this turns the recognizers behind those two gestures off on the pushed
 /// controller's view once it has appeared; the edge swipe back and the Close button keep
 /// working. The recognizers are found by their UIKit class names (`PaintingNavigationTests`
-/// notices if they change).
+/// notices if they change). It also tells `onAppear` that the push has finished (SwiftUI's own
+/// `onAppear` comes as it starts).
 private struct CanvasGesturesOverZoomDismissal: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> Controller { Controller() }
-    func updateUIViewController(_ controller: Controller, context: Context) {}
+    var onAppear: () -> Void
+
+    func makeUIViewController(context: Context) -> Controller {
+        let controller = Controller()
+        controller.onAppear = onAppear
+        return controller
+    }
+
+    func updateUIViewController(_ controller: Controller, context: Context) { controller.onAppear = onAppear }
 
     final class Controller: UIViewController {
+        var onAppear: () -> Void = {}
+
         private static let dismissalRecognizers: Set<String> = [
             "_UIContentSwipeDismissGestureRecognizer", "_UISwipeDownGestureRecognizer", "_UITransformGestureRecognizer",
         ]
@@ -209,6 +242,8 @@ private struct CanvasGesturesOverZoomDismissal: UIViewControllerRepresentable {
             super.viewDidAppear(animated)
             // The transition may install its recognizers just after the push completes.
             disableDismissalGestures()
+            // Next turn: SwiftUI may be mid-update when UIKit calls this.
+            Task { onAppear() }
             Task {
                 try? await Task.sleep(for: .milliseconds(400))
                 disableDismissalGestures()
