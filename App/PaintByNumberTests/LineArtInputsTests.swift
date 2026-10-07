@@ -306,6 +306,16 @@ struct LineArtInputsTests {
         return try #require(PhotoLoader.cgImage(from: photo))
     }
 
+    /// `photo(name)` with sixteen pixels' red changed at random: a photo no cache has seen. CI keeps
+    /// the maps cache (`LineArtMapsCache`) from run to run, and a cached photo's maps come back
+    /// at once, leaving nothing to cancel.
+    private static func unseenPhoto(_ name: String) throws -> CGImage {
+        let url = try #require(Bundle.main.url(forResource: name, withExtension: "jpg"))
+        var photo = try PhotoLoader.load(url: url, maxPixelSize: 640)
+        for pixel in 0..<16 { photo.pixels[pixel * 4] = UInt8.random(in: 0...255) }
+        return try #require(PhotoLoader.cgImage(from: photo))
+    }
+
     @Test func classicLineArtNeedsNoInputs() async throws {
         let image = try Self.photo()
         let classic = LineArtSettings(style: .classic)
@@ -335,7 +345,7 @@ struct LineArtInputsTests {
     }
 
     @Test func aCancelledRequestStopsTheComputation() async throws {
-        let image = try Self.photo("great-wave")
+        let image = try Self.unseenPhoto("great-wave")
         let request = Task { try await LineArtInputs.make(for: image, settings: Self.book) }
         request.cancel()
         await #expect(throws: CancellationError.self) { try await request.value }
