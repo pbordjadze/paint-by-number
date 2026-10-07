@@ -49,6 +49,11 @@ struct CreateFlowView: View {
                 model.settingsChanged()
                 return
             }
+            if ShellDemo.current?.refines == true, model.refinements.isEmpty {
+                // As a painter would in Refine; the preview opens it (`TemplatePreviewView`).
+                model.refine(ShellDemo.refinements)
+                return
+            }
             if openingSample != nil || ShellDemo.current == .createFromFile { DemoMode.markReady() }
         }
         #endif

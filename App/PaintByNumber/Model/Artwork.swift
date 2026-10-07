@@ -186,4 +186,7 @@ nonisolated struct ArtworkDraft: Sendable {
     var sampleName: String?
     var progress: PaintProgress?
     var date: Date = .now
+    /// What the painter refined before painting (the create flow's Refine step); kept with the
+    /// painting so regenerating it reproduces them.
+    var refinements = TemplateRefinements()
 }

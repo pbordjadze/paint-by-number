@@ -153,7 +153,9 @@ final class Library {
             let source = draft.photo.flatMap {
                 ImageCodec.jpegData(ImageCodec.downscaled($0, maxPixelSize: ArtworkStore.sourceMaxPixelSize), quality: 0.88)
             }
-            try store.create(artwork, template: draft.template, progress: progress, sourceJPEG: source, thumbnailPNG: thumbnail)
+            try store.create(
+                artwork, template: draft.template, progress: progress, sourceJPEG: source, thumbnailPNG: thumbnail,
+                refinements: draft.refinements)
         }
         insert(artwork)
         return artwork
@@ -404,13 +406,14 @@ final class Library {
             }
         }
         let store = self.store
-        let (old, savedProgress, photo) = try await Background.run { () throws -> (Template?, ArtworkStore.SavedProgress, RGBAImage) in
+        let (old, savedProgress, photo, refinements) = try await Background.run {
+            () throws -> (Template?, ArtworkStore.SavedProgress, RGBAImage, TemplateRefinements) in
             let old = try Library.readTemplate(id, from: store)
             // Progress from a newer app is never overwritten, even when the template is damaged.
             let saved = try Library.readProgress(id, regionCount: old?.regions.count ?? 0, from: store)
-            return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store))
+            return (old, saved, try ArtworkFactory.sourcePhoto(of: artwork, in: store), store.readRefinements(id))
         }
-        let template = try await ArtworkFactory.template(from: photo, settings: settings, progress: report)
+        let template = try await ArtworkFactory.template(from: photo, settings: settings, refinements: refinements, progress: report)
         let (progress, thumbnail) = await Background.run { () -> (PaintProgress, Data?) in
             let progress = old.map { savedProgress.progress.remapped(from: $0, to: template) }
                 ?? PaintProgress(regionCount: template.regions.count)

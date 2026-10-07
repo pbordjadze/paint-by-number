@@ -21,6 +21,7 @@ struct TemplatePreviewView: View {
     @State private var isStarting = false
     @State private var startError: String?
     @State private var isTuning = false
+    @State private var isRefining = false
     /// The setting the enlarged preview's slider tunes; nil until the painter picks one.
     @State private var tunedSetting: Setting?
     @FocusState private var titleFocused: Bool
@@ -96,6 +97,13 @@ struct TemplatePreviewView: View {
         .toolbar { toolbar }
         // Done is the way back from the enlarged preview.
         .navigationBarBackButtonHidden(isEnlarged)
+        .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
+        #if DEBUG
+        // `create-refine` shows the Refine screen once its painting is refined.
+        .onChange(of: model.refinements.isEmpty) { _, isEmpty in
+            if ShellDemo.current?.refines == true, !isEmpty { isRefining = true }
+        }
+        #endif
         .alert("Couldn’t Create Painting", isPresented: Binding(get: { startError != nil }, set: { if !$0 { startError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -153,6 +161,18 @@ struct TemplatePreviewView: View {
         if isEnlarged {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done", systemImage: "checkmark") { setEnlarged(false) }
+            }
+        }
+        if !isEnlarged {
+            // The optional Refine step: a text button, so it reads as a step and not a view.
+            ToolbarItem(placement: .primaryAction) {
+                Button("Refine") {
+                    titleFocused = false
+                    isRefining = true
+                }
+                .disabled(model.preview == nil || model.isChoosingSettings)
+                .accessibilityValue(RefineView.changes(model.refinements.changeCount))
+                .accessibilityIdentifier("refine")
             }
         }
         if offersEnlarging && !isEnlarged {

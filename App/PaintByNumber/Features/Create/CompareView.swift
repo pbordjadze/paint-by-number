@@ -346,9 +346,9 @@ private struct CompareFrame: Layout {
 }
 
 /// Line art on the canvas sheet's paper filling `picture` (frame coordinates), its lines stroked
-/// for the size they show at, so they stay crisp however far the comparison zooms. Equatable:
-/// dragging the divider leaves it alone instead of stroking every line again each frame.
-private struct LineArtLayer: View, Equatable {
+/// for the size they show at, so they stay crisp however far the comparison (or Refine) zooms.
+/// Equatable: dragging the divider leaves it alone instead of stroking every line again each frame.
+struct LineArtLayer: View, Equatable {
     let drawing: LineArtDrawing
     let picture: CGRect
     /// The picture's size relative to the painting fitted on its canvas.

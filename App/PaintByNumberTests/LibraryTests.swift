@@ -27,9 +27,11 @@ struct LibraryTests {
         #expect(library.artworks.map(\.id) == [artwork.id])
         #expect(artwork.regionCount == 3 && artwork.colorCount == 3)
         #expect(artwork.width == 60 && artwork.height == 40)
-        for file in ArtworkStore.File.allCases {
+        // Every file but the refinements, which only a refined painting has.
+        for file in ArtworkStore.File.allCases where file != .refinements {
             #expect(FileManager.default.fileExists(atPath: library.store.url(file, of: artwork.id).path), "\(file.rawValue)")
         }
+        #expect(!FileManager.default.fileExists(atPath: library.store.url(.refinements, of: artwork.id).path))
 
         let reloaded = makeLibrary()
         #expect(reloaded.artworks == [artwork])
@@ -37,6 +39,25 @@ struct LibraryTests {
         #expect(document.template == Fixtures.stripes())
         #expect(document.progress.paintedCount == 0)
         #expect(reloaded.store.source(artwork.id)?.width == 300)
+    }
+
+    /// A refined painting keeps its refinements beside it, through a regeneration too, which
+    /// reads them again.
+    @Test func refinementsAreKeptWithThePainting() async throws {
+        let library = makeLibrary()
+        var refinements = TemplateRefinements()
+        refinements.strokes = [TemplateRefinements.Stroke(kind: .more, radius: 0.1, points: [SIMD2(0.3, 0.3)])]
+        refinements.addedText = [TemplateRefinements.textLine(from: SIMD2(0.1, 0.1), to: SIMD2(0.4, 0.2))]
+        let photo = try #require(TemplateRasterizer.image(Fixtures.stripes(), style: .painting, maxPixelSize: 300))
+        var refined = draft(photo: photo)
+        refined.refinements = refinements
+        let artwork = try await library.create(refined)
+        #expect(library.store.readRefinements(artwork.id) == refinements)
+
+        _ = try await library.regenerate(artwork: artwork.id, settings: GenerationSettings(colorCount: 6, detail: 0))
+        #expect(library.store.readRefinements(artwork.id) == refinements, "Regenerating lost the refinements")
+        try Data("not json".utf8).write(to: library.store.url(.refinements, of: artwork.id))
+        #expect(library.store.readRefinements(artwork.id).isEmpty)
     }
 
     @Test func savesProgressCompletionAndThumbnail() async throws {
