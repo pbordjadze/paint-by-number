@@ -95,7 +95,7 @@ nonisolated struct LineChains {
     /// start.
     private let ends: [Key: [(line: Int, atStart: Bool)]]
 
-    private struct Key: Hashable {
+    nonisolated private struct Key: Hashable {
         let x: Int, y: Int
         init(_ p: CGPoint) {
             x = Int((p.x * 64).rounded())
