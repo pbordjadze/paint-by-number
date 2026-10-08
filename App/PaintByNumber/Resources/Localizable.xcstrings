@@ -269,6 +269,10 @@
       "comment" : "Status shown over the create preview while settings are being chosen for the photo (Suggested settings); also the sliders' VoiceOver value meanwhile",
       "extractionState" : "manual"
     },
+    "Clear Brushing" : {
+      "comment" : "Refine screen, with Settings › Detail Brushes on: the brush that clears areas brushed for more or less detail (button label for VoiceOver and the Large Content Viewer)",
+      "extractionState" : "manual"
+    },
     "Close" : {
       "comment" : "Button that closes the current screen or sheet (painting screen, create flow, time-lapse sheet)",
       "extractionState" : "manual"
@@ -917,6 +921,10 @@
       "comment" : "Create flow: label of the slider for how much detail the template has",
       "extractionState" : "manual"
     },
+    "Detail Brushes" : {
+      "comment" : "Settings switch: the Refine screen also offers brushes for more or less detail and corrections to the text the app found",
+      "extractionState" : "manual"
+    },
     "Discard" : {
       "comment" : "Button of that confirmation: throws the feedback away and returns to painting",
       "extractionState" : "manual"
@@ -950,7 +958,7 @@
       "extractionState" : "manual"
     },
     "Eraser" : {
-      "comment" : "Feedback mode's tools on the painting screen: the eraser, which takes whole marks away (button label); the Refine screen's eraser, which clears brushed areas",
+      "comment" : "Feedback mode's tools on the painting screen: the eraser, which takes whole marks away; the Refine screen's eraser, which takes lines out of a new painting's drawing (button label)",
       "extractionState" : "manual"
     },
     "Every painted area will be cleared." : {
@@ -2478,11 +2486,11 @@
       }
     },
     "Pen" : {
-      "comment" : "Feedback mode's tools on the painting screen: the pen, for circling and writing on the painting (button label)",
+      "comment" : "Feedback mode's tools on the painting screen: the pen, for circling and writing on the painting; the Refine screen's pen, which draws lines into a new painting's drawing (button label)",
       "extractionState" : "manual"
     },
     "Photo" : {
-      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's button that shows the photo in place of the template",
+      "comment" : "Name of the original photo: caption in the before/after comparison, and the painting screen's Photo control; the Refine screen's button that shows the photo beneath the drawing",
       "extractionState" : "manual"
     },
     "Photo Source" : {
@@ -2538,11 +2546,15 @@
       "extractionState" : "manual"
     },
     "Refine" : {
-      "comment" : "Create flow: the toolbar button that opens the optional Refine step, and that screen's title, where areas are brushed for more or less detail and the photo's text is corrected",
+      "comment" : "Create flow: the toolbar button that opens the optional Refine step, and that screen's title, where the painter draws and erases the template's lines",
+      "extractionState" : "manual"
+    },
+    "Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found." : {
+      "comment" : "Footer under the Detail Brushes switch in Settings",
       "extractionState" : "manual"
     },
     "refine.canvas" : {
-      "comment" : "VoiceOver label of the Refine screen's picture, where areas are brushed and text is marked; its value counts the changes",
+      "comment" : "VoiceOver label of the Refine screen's picture, where lines are drawn and erased; its value counts the changes",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2554,7 +2566,7 @@
       }
     },
     "refine.changes" : {
-      "comment" : "VoiceOver value of the Refine button and the Refine screen's picture: how many strokes and text lines were changed",
+      "comment" : "VoiceOver value of the Refine button and the Refine screen's picture: how many lines were drawn or erased, areas brushed and text lines changed",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2590,13 +2602,13 @@
       }
     },
     "refine.hint.eraser" : {
-      "comment" : "Refine screen: how the Eraser works (it clears brushed areas), shown while it is picked",
+      "comment" : "Refine screen: how the Eraser works (it takes lines out of the painting's drawing), shown while it is picked",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Brush over marked areas to clear them."
+            "value" : "Rub lines out with one finger, or tap a line to erase all of it. Two fingers zoom and move."
           }
         }
       }
@@ -2625,6 +2637,18 @@
         }
       }
     },
+    "refine.hint.pen" : {
+      "comment" : "Refine screen: how the Pen works (it draws lines into the painting's drawing), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draw lines with one finger: their ends join the lines they touch. Two fingers zoom and move, and a two-finger tap undoes."
+          }
+        }
+      }
+    },
     "refine.hint.text" : {
       "comment" : "Refine screen: how the Text tool works (lines of text in the photo are drawn as writing), shown while it is picked",
       "extractionState" : "manual",
@@ -2633,6 +2657,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap a line of text to keep or ignore it, or drag across a line the app missed."
+          }
+        }
+      }
+    },
+    "refine.hint.unbrush" : {
+      "comment" : "Refine screen: how Clear Brushing works (it clears areas brushed for more or less detail), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brush over marked areas to clear them."
           }
         }
       }
@@ -3363,6 +3399,10 @@
     },
     "Showing the photo" : {
       "comment" : "VoiceOver value of the canvas while the original photo is shown over it",
+      "extractionState" : "manual"
+    },
+    "Shrink Preview" : {
+      "comment" : "Create flow on iPhone: toolbar button of the enlarged preview that brings back the whole page (the title, every slider and Start Painting)",
       "extractionState" : "manual"
     },
     "Smoothness" : {

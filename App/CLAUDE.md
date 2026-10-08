@@ -60,7 +60,7 @@ synchronized folder would bundle it into the app.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`); `Gallery/` (`AppShellView` the shell, `GalleryView`, `ArtworkPaintingView`
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineGeometry`); `Gallery/` (`AppShellView` the shell, `GalleryView`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
@@ -292,15 +292,23 @@ Conventions).
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
-- Refine (optional, from the preview's toolbar; `RefineView`): one finger brushes areas for more
-  or less detail, or erases that brushing, and corrects the text the app found (a tap turns a
-  found line off or on, a drag marks one it missed); two fingers zoom and move (`RefineCanvas`:
-  an invisible scroll view, the canvas's way). `TemplateRefinements` change only the generator's
-  inputs (importance, the edge maps' gain, `LineArtInput.writing`), so drafts, sliders and Start
-  carry them (`CreateModel.refine`), and a refined painting's `refinements.json` lets
-  regeneration reproduce them. Nothing else reads them: a painting nobody refined is made as
-  before.
-- Compact windows (iPhone) enlarge the preview from the toolbar (Done goes back): the comparison
+- Refine (optional, from the preview's toolbar; `RefineView`): the drawing large, on its paper
+  or over the photo; one finger draws lines with the pen and takes them out with the eraser
+  (rubbing, or a tap on a line takes it from junction to junction, `LineChains`), two fingers
+  zoom and move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the
+  canvas's way). Each change regenerates at full resolution, no draft (`CreateModel.refine`);
+  meanwhile the changes the template on screen lacks draw over it in its own ink
+  (`RefineInkLayer`), and Undo brings back a template already made at once (`CreateModel`'s
+  `made`). Settings › Detail Brushes (`SettingsKey.detailBrushes`, off) adds the brushes for
+  more or less detail, clearing that brushing, and the text corrections (a tap turns a found
+  line off or on, a drag marks one it missed). `TemplateRefinements` change only the
+  generator's inputs (the line art's edits, `LineArtInput.edits`; importance, the edge maps'
+  gain, `LineArtInput.writing`), so drafts, sliders and Start carry them, and a refined
+  painting's `refinements.json` lets regeneration reproduce them. Nothing else reads them: a
+  painting nobody refined is made as before. PaintCore's `LineEdits` (root `CLAUDE.md` › Line
+  art) is where drawn lines join the drawing and erased ones leave it.
+- Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
+  Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
   of it) above the slider of one setting at a time, Lines first (`TemplatePreviewView`'s
   `tuningTray`). Side by side, the preview is as large as it gets already.
@@ -328,9 +336,11 @@ paper (`CanvasSnapshot.Options`).
 - `Preferences` is the snapshot that code outside views reads (the create flow, a painting's
   session); views bind the other `SettingsKey`s with `@AppStorage`. Settings › Painting Length
   (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
-  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting. New paintings
-  are coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing
-  in Settings changes how a template is made.
+  (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings ›
+  Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
+  `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test). New paintings are
+  coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in
+  Settings changes how a template is made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
   switch per sound, haptic and flourish; Settings' paper size and Color Names; the Custom palette

@@ -87,7 +87,7 @@ public struct TemplateGenerator: Sendable {
         // Drops the canvas-sized importance map before the vectorizer's own large buffers.
         weights = []
 
-        let keepOut = LabelKeepOut(rects: writing?.keepOut ?? [])
+        let keepOut = LabelKeepOut(rects: writing?.keepOut ?? [], lines: plan?.drawnInterior.map(LabelKeepOut.Line.init) ?? [])
         var vector = try clock.measure("vectorize") {
             try Vectorizer.vectorizeWithStats(segmentation, settings: settings, keepOut: keepOut, cancel: cancel, clock: clock)
         }

@@ -17,6 +17,9 @@ public struct LineArtStats: Sendable, Codable, Equatable {
     public var writingLength: Float = 0
     /// Every line of text the writing stage looked at, in the input's order.
     public var writing: [WritingAreaStats] = []
+    /// The painter's edits (`LineArtInput.edits`): pieces of drawn line kept, and eraser paths.
+    public var drawnLines = 0
+    public var erasures = 0
     /// Free ends extended to a line, paint boundary or the frame.
     public var endsClosed = 0
     /// Cells right after splitting the segmentation along the lines.

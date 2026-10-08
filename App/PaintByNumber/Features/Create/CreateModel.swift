@@ -22,6 +22,8 @@ final class CreateModel {
         let id = UUID()
         let template: Template
         let picture: Picture
+        /// The template's lines, which Refine draws and erases over whatever the preview shows.
+        let drawing: LineArtDrawing
         /// Nil for a suggestion's first draft, shown before the settings are chosen.
         let settings: GenerationSettings?
         /// What it was refined with (none for a suggestion's first draft).
@@ -147,6 +149,19 @@ final class CreateModel {
     @ObservationIgnored private var refiningID = 0
     /// Identifies the photo being loaded, so a late first draft of an earlier one is dropped.
     @ObservationIgnored private var loadID = 0
+    /// The photo's latest full-resolution templates and what they were made with, newest first:
+    /// stepping back to one (Refine's Undo, a slider put back) shows it again without
+    /// generating.
+    @ObservationIgnored private var made: [Made] = []
+
+    private struct Made {
+        let settings: GenerationSettings
+        let refinements: TemplateRefinements
+        let template: Template
+    }
+
+    /// How many full-resolution templates `made` keeps: a template is a megabyte or two.
+    static let madeKept = 6
 
     /// The sliders start at the generator's defaults; a photo moves them to its suggestion.
     init(
@@ -185,15 +200,18 @@ final class CreateModel {
     /// The lines of text the app found in the photo, for Refine to show; none for classic line art.
     var foundText: [[SIMD2<Float>]] { lineArtInput?.writing ?? [] }
 
-    /// Whether the template draws from the line-art inputs, where the text corrections apply.
+    /// Whether the template draws from the line-art inputs, where lines can be drawn and erased
+    /// and the text corrections apply.
     var hasLineArtInput: Bool { lineArtInput != nil }
 
-    /// Takes the painter's refinements and regenerates: a draft at once, then the full resolution.
+    /// Takes the painter's refinements and regenerates at full resolution: Refine shows what
+    /// the painter did over the last full template until the new one has it, so a draft would
+    /// only coarsen the lines meanwhile.
     func refine(_ refinements: TemplateRefinements) {
         guard refinements != self.refinements else { return }
         self.refinements = refinements
         guard source != nil, !isChoosingSettings else { return }
-        startGeneration(draftFirst: true)
+        startGeneration(draftFirst: false)
     }
 
     // MARK: Choosing a photo
@@ -229,6 +247,7 @@ final class CreateModel {
         decision = nil
         settingsOrigin = nil
         refinements = TemplateRefinements()
+        made = []
         phase = .failed(error.localizedDescription)
     }
 
@@ -246,6 +265,7 @@ final class CreateModel {
         decision = nil
         settingsOrigin = nil
         refinements = TemplateRefinements()
+        made = []
         progress = 0
         phase = .loading
         loadID += 1
@@ -466,11 +486,19 @@ final class CreateModel {
             }
         }
         do {
-            let made = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
-            let result = try await Self.render(
-                input, importance: importance, lineArt: lineArtInput, refinements: refinements,
-                aspect: Float(source.image.width) / Float(source.image.height), settings: made, recorded: settings,
-                isDraft: draft, style: previewStyle, progress: draft ? nil : report)
+            let refinements = self.refinements
+            let result: Preview
+            if !draft, let earlier = made.first(where: { $0.settings == settings && $0.refinements == refinements }) {
+                result = try await Self.preview(earlier.template, settings: settings, refinements: refinements, style: previewStyle)
+            } else {
+                let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
+                result = try await Self.render(
+                    input, importance: importance, lineArt: lineArtInput, refinements: refinements,
+                    aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
+                    isDraft: draft, style: previewStyle, progress: draft ? nil : report)
+            }
+            // Kept even if cancelled meanwhile: it is what these settings and refinements make.
+            if !draft { remember(result.template, settings: settings, refinements: refinements) }
             try Task.checkCancellation()
             // A draft finishing after a newer generation began (the resting thumb's full
             // resolution) would replace it with less.
@@ -486,6 +514,13 @@ final class CreateModel {
             Log.create.error("Generation failed: \(String(describing: error), privacy: .public)")
             phase = .failed(CreateError.renderFailed.localizedDescription)
         }
+    }
+
+    /// Keeps a full-resolution template for stepping back to it.
+    private func remember(_ template: Template, settings: GenerationSettings, refinements: TemplateRefinements) {
+        made.removeAll { $0.settings == settings && $0.refinements == refinements }
+        made.insert(Made(settings: settings, refinements: refinements, template: template), at: 0)
+        if made.count > Self.madeKept { made.removeLast(made.count - Self.madeKept) }
     }
 
     // MARK: Background work
@@ -585,6 +620,14 @@ final class CreateModel {
         return try makePreview(template, settings: recorded, refinements: refinements, isDraft: isDraft, style: style)
     }
 
+    /// The preview of a template made earlier, drawn again.
+    @concurrent
+    private static func preview(
+        _ template: Template, settings: GenerationSettings, refinements: TemplateRefinements, style: PreviewStyle
+    ) async throws -> Preview {
+        try makePreview(template, settings: settings, refinements: refinements, isDraft: false, style: style)
+    }
+
     /// A draft's settings: the line art's lengths in canvas pixels (the shortest line, the gaps
     /// closed) scaled from the full resolution's canvas to the draft's, a third of it or less, so
     /// a draft draws the short strokes the final will (an eye, a nostril), which the full lengths
@@ -625,6 +668,7 @@ final class CreateModel {
             if !report.isValid { assertionFailure("Generated template violates its invariants: \(report)") }
         }
         #endif
+        let drawing = LineArtDrawing(template)
         let picture: Picture
         switch style {
         case .painting:
@@ -634,9 +678,11 @@ final class CreateModel {
             }
             picture = .painting(painting)
         case .lineArt:
-            picture = .lineArt(LineArtDrawing(template))
+            picture = .lineArt(drawing)
         }
-        return Preview(template: template, picture: picture, settings: settings, refinements: refinements, isDraft: isDraft)
+        return Preview(
+            template: template, picture: picture, drawing: drawing, settings: settings, refinements: refinements,
+            isDraft: isDraft)
     }
 
     private static func photoTitle() -> String {

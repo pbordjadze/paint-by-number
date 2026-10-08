@@ -4,8 +4,9 @@ import PaintCore
 import Testing
 @testable import PaintByNumber
 
-/// The Refine step's refinements: the focus a brush paints, how it moves the importance and edge
-/// maps, the text corrections, their file, and what they do to a template.
+/// The Refine step's refinements: the lines drawn and erased, the focus a brush paints, how it
+/// moves the importance and edge maps, the text corrections, their file, and what they do to a
+/// template.
 struct TemplateRefinementsTests {
     static func stroke(
         _ kind: TemplateRefinements.Stroke.Kind, _ points: [SIMD2<Float>], radius: Float = 0.1
@@ -91,10 +92,33 @@ struct TemplateRefinementsTests {
         #expect(!TemplateRefinements.sameLine(Self.found, marked))
     }
 
-    /// The file round-trips, and a stroke or field it can't read (from a newer app) is left out
-    /// rather than costing the rest.
+    /// Lines drawn and erased join the line art's input as its edits, in their order, and count
+    /// as changes; without line art there is nothing to draw on.
+    @Test func linesBecomeTheLineArtsEdits() throws {
+        var refinements = TemplateRefinements()
+        refinements.lines = Self.lines
+        #expect(!refinements.isEmpty && refinements.changeCount == 3)
+        let edges = EdgeMap(width: 10, height: 10, values: [UInt8](repeating: 9, count: 100))
+        let refined = refinements.refining(importance: nil, lineArt: LineArtInput(edges: edges), aspect: 1)
+        let edits = try #require(refined.lineArt?.edits)
+        #expect(edits.map(\.kind) == [.draw, .erase, .eraseLine])
+        #expect(edits.map(\.points) == Self.lines.map(\.points) && edits.map(\.radius) == Self.lines.map(\.radius))
+        #expect(refined.importance == nil && refined.lineArt?.edges == edges)
+        #expect(refinements.refining(importance: nil, lineArt: nil, aspect: 1).lineArt == nil)
+    }
+
+    /// A line drawn, the eraser's pass and a line tapped away.
+    static let lines: [TemplateRefinements.Line] = [
+        .init(kind: .draw, radius: 0, points: [SIMD2(0.1, 0.1), SIMD2(0.4, 0.3)]),
+        .init(kind: .erase, radius: 0.02, points: [SIMD2(0.5, 0.5)]),
+        .init(kind: .eraseLine, radius: 0.003, points: [SIMD2(0.2, 0.6), SIMD2(0.7, 0.6)]),
+    ]
+
+    /// The file round-trips, and a line, stroke or field it can't read (from a newer app) is
+    /// left out rather than costing the rest.
     @Test func refinementsRoundTripAndDecodeTolerantly() throws {
         var refinements = TemplateRefinements()
+        refinements.lines = Self.lines
         refinements.strokes = [Self.stroke(.more, [SIMD2(0.2, 0.3), SIMD2(0.4, 0.5)]), Self.stroke(.erase, [SIMD2(0.3, 0.4)])]
         refinements.hiddenText = [Self.found]
         refinements.addedText = [TemplateRefinements.textLine(from: SIMD2(0.1, 0.6), to: SIMD2(0.4, 0.65))]
@@ -102,11 +126,35 @@ struct TemplateRefinementsTests {
         #expect(try JSONDecoder().decode(TemplateRefinements.self, from: data) == refinements)
 
         let newer = #"{"strokes":[{"kind":"blur","radius":0.1,"points":[[0.5,0.5]]},"#
-            + #"{"kind":"less","radius":0.1,"points":[[0.5,0.5]]}],"hiddenText":"?","future":1}"#
+            + #"{"kind":"less","radius":0.1,"points":[[0.5,0.5]]}],"hiddenText":"?","future":1,"#
+            + #""lines":[{"kind":"spray","radius":0,"points":[[0.5,0.5]]},{"kind":"draw","radius":0,"points":[[0.1,0.2],[0.3,0.4]]}]}"#
         let tolerant = try JSONDecoder().decode(TemplateRefinements.self, from: Data(newer.utf8))
         #expect(tolerant.strokes == [Self.stroke(.less, [SIMD2(0.5, 0.5)])])
+        #expect(tolerant.lines == [.init(kind: .draw, radius: 0, points: [SIMD2(0.1, 0.2), SIMD2(0.3, 0.4)])])
         #expect(tolerant.hiddenText.isEmpty && tolerant.addedText.isEmpty)
         #expect(try JSONDecoder().decode(TemplateRefinements.self, from: Data("{}".utf8)).isEmpty)
+    }
+
+    /// A line drawn on a template draws: one across the middle of a coloring book adds to its
+    /// drawing; erased again it is gone.
+    @Test func aDrawnLineShowsInTheTemplate() throws {
+        let url = try #require(Bundle.main.url(forResource: "great-wave", withExtension: "jpg"))
+        let photo = try PhotoLoader.load(url: url, maxPixelSize: 480)
+        let blank = EdgeMap(width: 64, height: 43, values: [UInt8](repeating: 0, count: 64 * 43))
+        let line: [SIMD2<Float>] = [SIMD2(0.1, 0.5), SIMD2(0.9, 0.5)]
+        func drawn(_ lines: [TemplateRefinements.Line]) throws -> Int {
+            var refinements = TemplateRefinements()
+            refinements.lines = lines
+            let inputs = refinements.refining(importance: nil, lineArt: LineArtInput(edges: blank), aspect: 1)
+            let template = try TemplateGenerator(settings: GenerationSettings(colorCount: 12, detail: 0.2))
+                .generate(from: photo, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .none)
+                .template
+            let art = try #require(template.lineArt)
+            return art.edgeLayers.filter { $0 != LineLayer.color.rawValue }.count + art.strokes.count
+        }
+        #expect(try drawn([]) == 0)
+        #expect(try drawn([.init(kind: .draw, radius: 0, points: line)]) > 0)
+        #expect(try drawn([.init(kind: .draw, radius: 0, points: line), .init(kind: .erase, radius: 0.03, points: line)]) == 0)
     }
 
     /// What is brushed shows in the template: more detail down one half leaves it more regions

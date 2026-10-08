@@ -251,6 +251,12 @@ struct RegionFills {
                     if !polyBuilt { shapes.polygon(r, into: &poly); polyBuilt = true }
                     let free = min(poly.signedDistance(Double(p.x), Double(p.y)), keepOut.distance(Double(p.x), Double(p.y)))
                     guard free >= max(Double(minRadius) * 0.8, Double(legible)) else { continue }
+                    // A spacious spot a drawn line runs past would squeeze its number beside the
+                    // line: one with room clear of it comes later.
+                    if !keepOut.lines.isEmpty {
+                        let spacious = Double(-c.key) / 4
+                        guard keepOut.lineDistance(Double(p.x), Double(p.y)) >= 0.8 * spacious else { continue }
+                    }
                     placed.append(p)
                     extras.append(Label(position: p, radius: Float(free), region: UInt32(r)))
                 }

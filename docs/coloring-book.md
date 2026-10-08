@@ -133,6 +133,47 @@ from the photo itself around the lines of text Vision found, painted out before 
 drawn in the book's ink inside the cells it crosses, with the numbers kept off it
 (`docs/writing.md`; `Writing`'s doc comment).
 
+## The painter's edits
+
+The app's Refine lets the painter draw lines and take them out before painting. The edits are
+an input of line art (`LineArtInput.edits`, in the order made; `pbn --line-edits edits.json`),
+never a change to a template, so every invariant holds for them as for the drawing's own lines,
+and regenerating a painting draws them again. `LineEdits` applies them at the layer stage, after
+eyes, subjects and the writing's cut and before free ends close:
+
+- A drawn line is an outline at full strength, so a closed shape walls off a cell even inside one
+  paint, as a silhouette does; an open one is drawn inside its cell. It is kept as drawn (the app
+  smooths the finger's path), cut where it leaves the canvas. Its ends meet what they were drawn
+  to: an end that crosses a line within the outline's closing reach (1.6 × `gapBridging`) and a
+  quarter of the line's length is trimmed back onto it, one beside a line or on the frame is
+  attached, and one that stops short stays free, which `closeFreeEnds` then leads into the line it
+  was heading for. A loop drawn past its start loses both tails. So a sloppy hand still closes a
+  shape cleanly, without spurs. Where it stays inside a cell, the cell's numbers keep off it
+  (`LabelKeepOut`, as they keep off writing): a number the line would cross out moves to the
+  spot of the cell farthest from its outline and the line, where that spot holds a legible one.
+- The eraser's pass takes out every point within its reach of the lines made before it (the
+  app's and those drawn earlier; a line drawn over an erased place stays), leaving no piece
+  shorter than `LineLayering.minimumRun`.
+- A line tapped away (`eraseLine`, the path its own) takes out only the points beside the path
+  that run along it (within 35°), up to its ends: what meets it at a junction or crosses it keeps
+  its points. The eraser's round reach would cut the line a branch ends on, and a gap there joins
+  the cells that line kept apart (`LineEditsTests.aLineErasedWholeLeavesItsJunctionsAlone`).
+- No free end reaches into a place erased after its line was drawn, so a line never reappears
+  where the painter took one out.
+- Where edits were (their reach plus `annotateNear`), `annotate` draws a template edge only where
+  a line runs along it, its drawn stretches as interior strokes over an undrawn edge, instead of
+  the whole edge by the most of it: otherwise a line erased along part of a boundary between two
+  paints stays drawn, and one drawn along part of an undrawn boundary doesn't show. Gaps and
+  stretches shorter than `minimumRun` follow their neighbours, so an edge still reaches its
+  junctions.
+
+On the lighthouse (24 colors, detail 0.5, the committed maps) a loop drawn round a cloud became a
+numbered cell, a line overshooting the horizon by 10 px stopped on it (the sky's numbers moving off
+it), one stopping 14 px short of the frame reached it, and erasing a stray cloud line and a stretch
+of the tower's outline left the tower's cells apart with that stretch undrawn: 7 more cells, the
+template valid, nothing else moved. Without edits the corpus books are byte for byte what they
+were.
+
 ## Measuring a book
 
 A book is judged the way its painter sees it. `pbn generate` writes, for a template with line

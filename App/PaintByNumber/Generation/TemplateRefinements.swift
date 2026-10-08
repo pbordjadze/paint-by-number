@@ -3,10 +3,12 @@ import Foundation
 import PaintCore
 
 /// What the painter refined in a new painting before painting it (the create flow's optional
-/// Refine step, `RefineView`): areas brushed for more or less detail, and corrections to the lines
-/// of text the app found. Refinements change what the generator reads, never a template, so they
-/// hold through every draft and slider, and regenerating the painting reproduces them (its
-/// `refinements.json`):
+/// Refine step, `RefineView`): lines drawn and erased, and, with Settings › Detail Brushes,
+/// areas brushed for more or less detail and corrections to the lines of text the app found.
+/// Refinements change what the generator reads, never a template, so they hold through every
+/// draft and slider, and regenerating the painting reproduces them (its `refinements.json`):
+/// - lines drawn and erased join the line art's input as the painter's edits
+///   (`LineArtInput.edits`, in order), which PaintCore lays out with its own lines (`LineEdits`);
 /// - more detail raises the importance map toward 1 and strengthens the edge maps (`moreLines`):
 ///   smaller regions, gentler smoothing, more lines, and so more cells in a coloring book;
 /// - less detail lowers it toward `lessImportance` and weakens the edge maps (`fewerLines`);
@@ -37,6 +39,27 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         var points: [SIMD2<Float>]
     }
 
+    /// A line drawn with the pen, the eraser's pass, or a line tapped away (`LineEdit`).
+    nonisolated struct Line: Codable, Equatable, Sendable {
+        nonisolated enum Kind: String, Codable, Sendable {
+            /// A line added to the drawing.
+            case draw
+            /// The lines under the path taken out.
+            case erase
+            /// The line along the path (its own) taken out from end to end.
+            case eraseLine
+        }
+
+        var kind: Kind
+        /// How far either side of its path the eraser reaches, a fraction of the photo's long
+        /// side; 0 for a drawn line.
+        var radius: Float
+        /// The path, normalized to the photo (0...1, origin top-left).
+        var points: [SIMD2<Float>]
+    }
+
+    /// The lines drawn and erased, in the order they were.
+    var lines: [Line] = []
     var strokes: [Stroke] = []
     /// Lines of text the app found that the painter turned off, as they were found.
     var hiddenText: [[SIMD2<Float>]] = []
@@ -46,10 +69,11 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     init() {}
 
-    var isEmpty: Bool { strokes.isEmpty && hiddenText.isEmpty && addedText.isEmpty }
+    var isEmpty: Bool { lines.isEmpty && strokes.isEmpty && hiddenText.isEmpty && addedText.isEmpty }
 
-    /// How many things the painter changed: strokes, and lines of text turned off or marked.
-    var changeCount: Int { strokes.count + hiddenText.count + addedText.count }
+    /// How many things the painter changed: lines drawn and erased, strokes, and lines of text
+    /// turned off or marked.
+    var changeCount: Int { lines.count + strokes.count + hiddenText.count + addedText.count }
 
     // MARK: Strengths
 
@@ -74,8 +98,8 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
     /// The generator's inputs refined. Importance moves toward 1 where more detail was brushed and
     /// toward `lessImportance` where less was, as far as the brush covers; without a map from
     /// Vision a neutral one (0.5, of `aspect`, the photo's width over height) stands in, brushed.
-    /// The edge maps gain `moreLines` or `fewerLines` there, and the text the app found is
-    /// corrected.
+    /// The edge maps gain `moreLines` or `fewerLines` there, the text the app found is
+    /// corrected, and the lines drawn and erased become the line art's edits.
     func refining(
         importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, aspect: Float
     ) -> (importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?) {
@@ -102,7 +126,20 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
             lineArt.writing = lineArt.writing.filter { found in !hidden.contains { Self.sameLine(found, $0) } }
                 + addedText.prefix(Self.maximumStrokes).filter(Self.isQuadrilateral)
         }
+        if !lines.isEmpty { lineArt.edits = edits }
         return (importance, lineArt)
+    }
+
+    /// The lines drawn and erased as PaintCore reads them (it checks and bounds them itself).
+    var edits: [LineEdit] {
+        lines.prefix(Self.maximumStrokes).map { line in
+            let kind: LineEdit.Kind = switch line.kind {
+            case .draw: .draw
+            case .erase: .erase
+            case .eraseLine: .eraseLine
+            }
+            return LineEdit(kind: kind, points: Array(line.points.prefix(Self.maximumPoints)), radius: line.radius)
+        }
     }
 
     /// `map` with the edge gain of the brushed focus.
@@ -240,12 +277,13 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     // MARK: Coding
 
-    private enum CodingKeys: String, CodingKey { case strokes, hiddenText, addedText }
+    private enum CodingKeys: String, CodingKey { case lines, strokes, hiddenText, addedText }
 
-    /// Tolerant: a field or stroke it can't read (a kind from a newer app) is left out rather
-    /// than costing the rest.
+    /// Tolerant: a field, line or stroke it can't read (a kind from a newer app) is left out
+    /// rather than costing the rest.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        lines = ((try? c.decodeIfPresent([Lossy<Line>].self, forKey: .lines)) ?? []).compactMap(\.value)
         strokes = ((try? c.decodeIfPresent([Lossy<Stroke>].self, forKey: .strokes)) ?? []).compactMap(\.value)
         hiddenText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .hiddenText)) ?? []
         addedText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .addedText)) ?? []

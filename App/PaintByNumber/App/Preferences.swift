@@ -18,6 +18,9 @@ enum SettingsKey {
     nonisolated static let lineWeight = "lineWeight"
     /// What the create flow's preview shows beside the photo (`PreviewStyle`).
     nonisolated static let previewStyle = "previewStyle"
+    /// Refine offers its brushes for more or less detail and its text corrections beside the
+    /// pen and the eraser (Settings › Detail Brushes; off by default).
+    static let detailBrushes = "refineDetailBrushes"
 }
 
 /// The preferences that code outside views reads (the create flow, a painting's session), with
@@ -29,12 +32,15 @@ struct Preferences {
     var paintingLength: PaintingLength
     /// What the create flow's preview shows beside the photo.
     var previewStyle: PreviewStyle
+    /// Refine offers its detail brushes and text corrections too.
+    var detailBrushes: Bool
 
     init(defaults: UserDefaults = .standard) {
         autoAdvance = defaults.object(forKey: SettingsKey.autoAdvance) as? Bool ?? true
         paintingLength = defaults.string(forKey: SettingsKey.paintingLength).flatMap(PaintingLength.init(rawValue:))
             ?? .default
         previewStyle = PreviewStyle.stored(in: defaults)
+        detailBrushes = defaults.bool(forKey: SettingsKey.detailBrushes)
     }
 
     func apply(to session: PaintingSession) {

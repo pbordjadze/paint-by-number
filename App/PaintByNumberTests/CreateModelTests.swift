@@ -270,6 +270,31 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A line drawn in Refine regenerates the template at full resolution, never a draft that
+    /// would coarsen the drawing meanwhile; taking it back brings the template it had again.
+    @Test func drawnLinesRegenerateAtFullResolutionAndUndoBringsTheTemplateBack() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        #expect(model.hasLineArtInput)
+        let before = try #require(model.preview?.template)
+        var refinements = TemplateRefinements()
+        refinements.lines = [.init(kind: .draw, radius: 0, points: [SIMD2(0.05, 0.5), SIMD2(0.5, 0.45), SIMD2(0.95, 0.5)])]
+        model.refine(refinements)
+        var sawDraft = false
+        try await waitUntil(polling: .milliseconds(5)) {
+            if model.preview?.isDraft == true { sawDraft = true }
+            return model.isFinal
+        }
+        #expect(!sawDraft, "Refining showed a draft")
+        #expect(model.preview?.refinements == refinements && model.preview?.template != before)
+
+        model.refine(TemplateRefinements())
+        try await waitUntil { model.isFinal }
+        #expect(model.preview?.template == before)
+        model.cancelAll()
+    }
+
     /// More lines lower the thresholds and shorten the shortest line, fewer raise and lengthen
     /// them; the middle and classic line art are left as they are.
     @Test func linesMapToTheLineArt() {

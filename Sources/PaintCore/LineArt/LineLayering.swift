@@ -341,9 +341,11 @@ enum LineLayering {
 
     /// Extends free ends along their tangent (cone ±40°) to the nearest line, boundary of
     /// the color segmentation (slightly less preferred) or frame within `reach` (per layer):
-    /// an open stroke then closes cells. Returns the number of ends extended.
+    /// an open stroke then closes cells. `blocked(line, pixel)`, when given, keeps a line's
+    /// extension off pixels (the painter's erased places, `LineEdits`). Returns the number of
+    /// ends extended.
     static func closeFreeEnds(
-        _ lines: inout [DrawnLine], walls: Walls, colorEdge: [Bool], reach: [Float]
+        _ lines: inout [DrawnLine], walls: Walls, colorEdge: [Bool], reach: [Float], blocked: ((Int, Int) -> Bool)? = nil
     ) -> Int {
         let w = walls.width, h = walls.height
         let cosCone = Float(cos(40 * Double.pi / 180))
@@ -387,7 +389,15 @@ enum LineLayering {
                             if along < 3 * r { continue }
                         }
                         let score = d * (1 + 2 * (1 - c)) * (owner < 0 && !frame ? 1.15 : 1)
-                        if best == nil || score < best!.score { best = (score, q) }
+                        guard best == nil || score < best!.score else { continue }
+                        if let blocked {
+                            var crosses = false
+                            segment(p, q) { x, y in
+                                if x >= 0 && y >= 0 && x < w && y < h && !crosses { crosses = blocked(k, y * w + x) }
+                            }
+                            if crosses { continue }
+                        }
+                        best = (score, q)
                     }
                 }
                 guard let q = best?.q else { continue }

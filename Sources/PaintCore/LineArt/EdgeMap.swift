@@ -89,16 +89,20 @@ public struct LineArtInput: Sendable, Equatable {
     /// `pbn --writing`). Their ink is traced from the photo and drawn legibly
     /// (`Writing`, `LineArtSettings.keepWriting`).
     public var writing: [[SIMD2<Float>]]
+    /// The lines the painter drew and erased, in the order they did (the app's Refine,
+    /// `pbn --line-edits`), applied over the lines the detectors found (`LineEdits`).
+    public var edits: [LineEdit]
 
     public init(
         edges: EdgeMap, eyes: [[SIMD2<Float>]] = [], objects: [[SIMD2<Float>]] = [], contours: EdgeMap? = nil,
-        writing: [[SIMD2<Float>]] = []
+        writing: [[SIMD2<Float>]] = [], edits: [LineEdit] = []
     ) {
         self.edges = edges
         self.eyes = eyes
         self.objects = objects
         self.contours = contours
         self.writing = writing
+        self.edits = edits
     }
 
     /// The input `detector` draws from when both maps exist: the drawing over the contours with
