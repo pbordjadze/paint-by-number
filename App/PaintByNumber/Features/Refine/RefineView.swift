@@ -23,8 +23,8 @@ enum RefineTool: Hashable {
 /// Each change regenerates the template at full resolution (`CreateModel.refine`); until the new
 /// template comes, what the painter did shows over the last one in the drawing's own ink
 /// (`RefineInkLayer`), so a line is there the moment it is drawn and gone the moment it is
-/// erased. Undo and Redo step through the changes (a template already made comes back at once),
-/// Cancel puts back what the screen opened with, Done keeps them.
+/// erased. Undo and Redo (⌘Z, ⇧⌘Z) step through the changes (a template already made comes back
+/// at once), Cancel puts back what the screen opened with, Done keeps them.
 struct RefineView: View {
     let model: CreateModel
 
