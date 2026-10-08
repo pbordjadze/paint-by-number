@@ -438,9 +438,11 @@ struct RefineView: View {
         ToolbarItemGroup(placement: .primaryAction) {
             Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
                 .disabled(undoStack.isEmpty)
+                .keyboardShortcut("z")
                 .accessibilityIdentifier("refine-undo")
             Button("Redo", systemImage: "arrow.uturn.forward", action: redo)
                 .disabled(redoStack.isEmpty)
+                .keyboardShortcut("z", modifiers: [.command, .shift])
                 .accessibilityIdentifier("refine-redo")
         }
         ToolbarItem(placement: .confirmationAction) {

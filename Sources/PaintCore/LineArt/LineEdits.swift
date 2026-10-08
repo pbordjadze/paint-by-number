@@ -58,10 +58,10 @@ enum LineEdits {
     static let maximumPoints = 4000
     /// The eraser's radius (of the long side) is clamped to this.
     static let radiusRange: ClosedRange<Float> = 0.0005...0.25
-    /// Bounds on what edits may cost: the drawn lines' total length, in canvas long sides, and
-    /// the area the eraser's paths are measured over, in canvases. Far beyond what a painter
-    /// draws.
-    static let maximumDrawnLength: Float = 400
+    /// Bounds on what edits may cost: the length of all their paths together, in photo widths
+    /// and heights, and the area the erasing paths are measured over, in canvases. Far beyond
+    /// what a painter draws.
+    static let maximumLength: Float = 400
     static let maximumErasedArea: Float = 64
     /// A line runs along an erased line's path where their directions are within this many
     /// degrees: lines meeting it at a junction, or crossing it, are farther off.
@@ -113,11 +113,8 @@ enum LineEdits {
         let erasedBy = erased.isEmpty ? nil : erased
         var out = lines
         var origin = [Int32](repeating: -1, count: lines.count)
-        var length: Float = 0
-        drawing: for (k, edit) in edits.enumerated() where edit.kind == .draw {
+        for (k, edit) in edits.enumerated() where edit.kind == .draw {
             for line in drawnLines(edit.points, width: w, height: h) {
-                length += line.length
-                guard length <= maximumDrawnLength * long else { break drawing }
                 out.append(line)
                 origin.append(Int32(k))
             }
@@ -129,23 +126,37 @@ enum LineEdits {
             blockedBy: blocked.isEmpty ? nil : blocked, erasures: erasures, drawn: origin.filter { $0 >= 0 }.count)
     }
 
-    /// The edits a file may hold, cut to size: finite points only, the eraser's radius clamped.
+    /// The edits a file may hold, cut to size: finite points within half a photo of it, no
+    /// more path than `maximumLength` in all, the eraser's radius clamped.
     static func sanitized(_ edits: [LineEdit]) -> [LineEdit] {
-        edits.prefix(maximumEdits).compactMap { edit in
-            var edit = edit
-            edit.points = edit.points.prefix(maximumPoints).filter { $0.x.isFinite && $0.y.isFinite }
-            guard !edit.points.isEmpty else { return nil }
-            edit.radius = edit.radius.isFinite
-                ? min(max(edit.radius, radiusRange.lowerBound), radiusRange.upperBound) : radiusRange.lowerBound
-            return edit
+        var left = maximumLength
+        var out: [LineEdit] = []
+        for var edit in edits.prefix(maximumEdits) {
+            var points: [SIMD2<Float>] = []
+            for p in edit.points.prefix(maximumPoints) where p.x.isFinite && p.y.isFinite {
+                let q = pointwiseMin(pointwiseMax(p, SIMD2(repeating: -0.5)), SIMD2(repeating: 1.5))
+                if let last = points.last {
+                    left -= simdLength(q - last)
+                    guard left >= 0 else { break }
+                }
+                points.append(q)
+            }
+            if !points.isEmpty {
+                edit.points = points
+                edit.radius = edit.radius.isFinite
+                    ? min(max(edit.radius, radiusRange.lowerBound), radiusRange.upperBound) : radiusRange.lowerBound
+                out.append(edit)
+            }
+            if left < 0 { break }
         }
+        return out
     }
 
-    /// Points normalized to the photo in pixel coordinates (pixel centres at integers), those
-    /// far off the photo brought within half a photo of it.
+    /// Points normalized to the photo (as `sanitized` leaves them) in pixel coordinates, pixel
+    /// centres at integers.
     static func pixelPoints(_ points: [SIMD2<Float>], width w: Int, height h: Int) -> [SIMD2<Float>] {
         let scale = SIMD2(Float(w), Float(h))
-        return points.map { pointwiseMin(pointwiseMax($0, SIMD2(repeating: -0.5)), SIMD2(repeating: 1.5)) * scale - 0.5 }
+        return points.map { $0 * scale - 0.5 }
     }
 
     /// A path normalized to the photo in pixel coordinates (`pixelPoints`), about one point

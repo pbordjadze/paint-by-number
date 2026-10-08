@@ -121,7 +121,7 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings-detail-brushes")
                 } footer: {
-                    Text("Refine also offers brushes for more or less detail in an area, and corrects the lines of text the app found.")
+                    Text("Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found.")
                 }
 
                 Section {

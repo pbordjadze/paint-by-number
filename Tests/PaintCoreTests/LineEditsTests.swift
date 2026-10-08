@@ -159,7 +159,8 @@ struct LineEditsTests {
     }
 
     /// What a hostile file could hold costs little and breaks nothing: points that aren't
-    /// numbers or lie far off, radii out of range, and more edits than are read.
+    /// numbers or lie far off, radii out of range, more edits than are read, and more path than
+    /// is drawn.
     @Test func hostileEditsAreHarmless() throws {
         let edits = [
             LineEdit(kind: .draw, points: [SIMD2(.nan, 0.5), SIMD2(1e30, -1e30), SIMD2(0.5, .infinity)]),
@@ -169,7 +170,14 @@ struct LineEditsTests {
         }
         let out = try Self.generate(edits)
         expectValid(out.template)
-        #expect(LineEdits.sanitized(edits).count == LineEdits.maximumEdits)
+        let read = LineEdits.sanitized(edits)
+        #expect(read.count < edits.count && read.allSatisfy { edit in edit.points.allSatisfy { all($0 .>= -0.5) && all($0 .<= 1.5) } })
+        let length = read.reduce(Float(0)) { sum, edit in
+            sum + zip(edit.points, edit.points.dropFirst()).reduce(0) { $0 + simdLength($1.1 - $1.0) }
+        }
+        #expect(length <= LineEdits.maximumLength)
+        let dabs = (0..<2_500).map { _ in LineEdit(kind: .erase, points: [SIMD2(0.5, 0.5)], radius: 0.01) }
+        #expect(LineEdits.sanitized(dabs).count == LineEdits.maximumEdits)
     }
 
     /// A free end reaches the line ahead of it, unless that place is blocked (erased after the
