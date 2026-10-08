@@ -74,6 +74,59 @@ struct LineEditsTests {
         #expect(Self.inkDistance(t, SIMD2(72, 23)) < 1.5)
     }
 
+    /// A line drawn inside a cell through its number moves the number off it, within the cell,
+    /// as the writing does: the line would cross it out.
+    @Test func aDrawnLineMovesTheNumberOffIt() throws {
+        let plain = try Self.generate([]).template
+        let sky = try #require(plain.region(at: SIMD2<Float>(100, 20)))
+        let pole = try #require(plain.labels.first { $0.region == UInt32(sky) }).position
+        let a = pole - SIMD2(7, 0), b = pole + SIMD2(7, 0)
+        let out = try Self.generate([Self.draw([a, b])])
+        let t = out.template
+        expectValid(t)
+        #expect(out.vectorStats.labelRoomUnmet == 0)
+        #expect(t.regions.count == plain.regions.count, "The line closed a cell")
+        #expect(t.lineArt!.strokes.count == plain.lineArt!.strokes.count + 1)
+        #expect(Self.inkDistance(t, pole) < 1.5)
+        for label in t.labels where label.region == UInt32(sky) {
+            #expect(t.region(at: label.position) == sky)
+            let ab = b - a, s = min(max(simdDot(label.position - a, ab) / simdLengthSquared(ab), 0), 1)
+            #expect(simdLength(label.position - (a + ab * s)) >= label.radius, "A number of the sky is on the line")
+        }
+    }
+
+    /// A line drawn through one of a large area's extra numbers leaves none squeezed beside it:
+    /// each keeps most of the room its spot has from the area's outline. On the scene's photo
+    /// four times over (a 768 × 576 canvas), whose sky holds a few dozen numbers; the spot
+    /// beside the line, spacious by its outline, kept one with a tenth of the others' room.
+    @Test func extraNumbersKeepTheirRoomBesideADrawnLine() throws {
+        let small = LineArtTests.photo(), k = 4
+        let w = small.width * k, h = small.height * k
+        var pixels = [UInt8](repeating: 0, count: w * h * 4)
+        for i in 0..<(w * h) {
+            let source = ((i / w / k) * small.width + i % w / k) * 4
+            for c in 0..<4 { pixels[i * 4 + c] = small.pixels[source + c] }
+        }
+        let photo = RGBAImage(width: w, height: h, pixels: pixels)
+        let canvas = SIMD2<Float>(768, 576), a = SIMD2<Float>(304.5, 64.5), b = SIMD2<Float>(304.5, 124.5)
+        let out = try LineArtTests.generate(
+            LineArtTests.settings(), photo: photo,
+            input: LineArtInput(edges: LineArtTests.edges(), edits: [LineEdit(kind: .draw, points: [a / canvas, b / canvas])]))
+        let t = out.template
+        expectValid(t)
+        #expect(t.width == 768 && t.height == 576)
+        let sky = try #require(t.region(at: SIMD2<Float>(400, 60)))
+        let labels = t.labels.filter { $0.region == UInt32(sky) }
+        #expect(labels.count > 10)
+        let outline = DistanceTransform.interiorDistance(labels: t.regionMap)
+        for label in labels {
+            let s = min(max(simdDot(label.position - a, b - a) / simdLengthSquared(b - a), 0), 1)
+            let line = simdLength(label.position - (a + (b - a) * s)) - Float(LabelKeepOut.lineHalfWidth)
+            let room = outline[Int(label.position.x), Int(label.position.y)]
+            #expect(line >= 0.75 * room, "A number at \(label.position) is squeezed beside the line: \(label.radius) of \(room)")
+        }
+    }
+
     /// An end that stops a little short of a line is led into it, as the drawing's own are.
     @Test func anEndShortOfALineReachesIt() throws {
         let plain = try Self.generate([]).template

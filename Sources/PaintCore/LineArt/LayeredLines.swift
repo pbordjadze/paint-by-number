@@ -71,6 +71,9 @@ enum LayeredLines {
         var stats: LineArtStats
         /// Where the painter's edits were (`LineEdits.footprint`); nil without any.
         var edited: [Bool]? = nil
+        /// The stretches of the painter's lines drawn inside a cell, in canvas units: numbers
+        /// keep off them (`LabelKeepOut`), as the cell's own pole may lie right on one.
+        var drawnInterior: [[SIMD2<Float>]] = []
     }
 
     static func apply(
@@ -224,17 +227,19 @@ enum LayeredLines {
         stats.paintsDropped = segmentation.palette.count - kept.count
 
         // Which stretches still bound cells after the joins, and which now run inside one.
-        var boundary: [DrawnLine] = [], interior: [(DrawnLine, Int)] = []
+        var boundary: [DrawnLine] = [], interior: [(DrawnLine, Int)] = [], drawnInterior: [[SIMD2<Float>]] = []
         let distance = Self.boundaryDistance(final.label, width: w, height: h)
         try cancel.throwIfCancelled()
-        for line in lines {
+        for (k, line) in lines.enumerated() {
             let flags = Self.near(line, distance: distance, width: w)
             boundary += line.pieces(keeping: flags, freeCuts: true)
+            let drawn = (edits?.origin[k] ?? -1) >= 0
             // A piece shorter than the layering's minimum run is a boundary stretch's end
             // point (every piece takes one point beyond its run) or the sliver a merged tiny
             // cell left, not a line drawn inside the cell.
             for piece in line.pieces(keeping: flags.map { !$0 }, freeCuts: true) where piece.length >= LineLayering.minimumRun {
                 interior += Self.byRegion(piece, labels: final.label, width: w, height: h)
+                if drawn { drawnInterior.append(piece.points.map { $0 + SIMD2(0.5, 0.5) }) }
             }
         }
         if let writing {
@@ -250,7 +255,9 @@ enum LayeredLines {
         for line in boundary { stats.add(line, interior: false) }
         for (line, _) in interior { stats.add(line, interior: true) }
         let edited = edits.map { LineEdits.footprint($0, lines: lines, near: annotateNear + 1, width: w, height: h) }
-        return Plan(segmentation: split, boundaryLines: boundary, interiorLines: interior, stats: stats, edited: edited)
+        return Plan(
+            segmentation: split, boundaryLines: boundary, interiorLines: interior, stats: stats, edited: edited,
+            drawnInterior: drawnInterior)
     }
 
     // MARK: - Annotation

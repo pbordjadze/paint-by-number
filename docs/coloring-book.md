@@ -148,7 +148,9 @@ eyes, subjects and the writing's cut and before free ends close:
   quarter of the line's length is trimmed back onto it, one beside a line or on the frame is
   attached, and one that stops short stays free, which `closeFreeEnds` then leads into the line it
   was heading for. A loop drawn past its start loses both tails. So a sloppy hand still closes a
-  shape cleanly, without spurs.
+  shape cleanly, without spurs. Where it stays inside a cell, the cell's numbers keep off it
+  (`LabelKeepOut`, as they keep off writing): a number the line would cross out moves to the
+  spot of the cell farthest from its outline and the line, where that spot holds a legible one.
 - The eraser's pass takes out every point within its reach of the lines made before it (the
   app's and those drawn earlier; a line drawn over an erased place stays), leaving no piece
   shorter than `LineLayering.minimumRun`.
@@ -166,10 +168,11 @@ eyes, subjects and the writing's cut and before free ends close:
   junctions.
 
 On the lighthouse (24 colors, detail 0.5, the committed maps) a loop drawn round a cloud became a
-numbered cell, a line overshooting the horizon by 10 px stopped on it, one stopping 14 px short of
-the frame reached it, and erasing a stray cloud line and a stretch of the tower's outline left the
-tower's cells apart with that stretch undrawn: 7 more cells, the template valid, nothing else
-moved. Without edits the corpus books are byte for byte what they were.
+numbered cell, a line overshooting the horizon by 10 px stopped on it (the sky's numbers moving off
+it), one stopping 14 px short of the frame reached it, and erasing a stray cloud line and a stretch
+of the tower's outline left the tower's cells apart with that stretch undrawn: 7 more cells, the
+template valid, nothing else moved. Without edits the corpus books are byte for byte what they
+were.
 
 ## Measuring a book
 

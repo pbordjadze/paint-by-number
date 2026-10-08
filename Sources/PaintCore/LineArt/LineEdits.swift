@@ -39,7 +39,8 @@ public struct LineEdit: Sendable, Equatable {
 ///   to: an end that crosses a line within `reach` (and within a quarter of its own length) is
 ///   trimmed back to it, one that touches a line or the frame is attached, and one that stops
 ///   short stays free, so `closeFreeEnds` leads it into the line it was heading for, as it
-///   does the drawing's own ends;
+///   does the drawing's own ends. Numbers keep off what stays inside a cell
+///   (`LayeredLines.Plan.drawnInterior`);
 /// - the eraser takes out every point of a line within its radius, of the app's lines and of
 ///   the lines drawn before it (a line drawn later over an erased place stays), leaving no
 ///   piece shorter than `LineLayering.minimumRun`; a line erased whole (`eraseLine`) takes out
