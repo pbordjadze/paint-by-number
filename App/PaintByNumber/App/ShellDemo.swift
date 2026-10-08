@@ -23,8 +23,9 @@ import Foundation
 /// - `create-preview`, `create-preview-dark`: the painting starter generated, comparison at half.
 /// - `create-line-art`: `create-preview` with Settings › Preview on Line Art: the drawing alone
 ///   beside the photo.
-/// - `create-refine`: The Great Wave's Refine screen, refined as a painter might (`refinements`):
-///   more detail across the wave's claws, less in the sky, the title's cartouche marked as text.
+/// - `create-refine`, `create-refine-dark`: The Great Wave's Refine screen, refined as a painter
+///   might (`refinements`): the big cloud's edge drawn in, the spray off the wave's crest rubbed
+///   out.
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
@@ -67,7 +68,7 @@ enum ShellDemo: Equatable {
         case "create-samples-photographs": .createSamplesPhotographs
         case "create-preview", "create-preview-dark": .createPreview
         case "create-line-art": .createLineArt
-        case "create-refine": .createRefine
+        case "create-refine", "create-refine-dark": .createRefine
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
@@ -157,14 +158,16 @@ enum ShellDemo: Equatable {
     /// shows the Refine screen.
     var refines: Bool { self == .createRefine }
 
-    /// What `create-refine` brushes and marks on The Great Wave (the first fixed picture).
+    /// What `create-refine` draws and erases on The Great Wave (the first fixed picture).
     static let refinements: TemplateRefinements = {
         var refinements = TemplateRefinements()
-        refinements.strokes = [
-            .init(kind: .more, radius: 0.05, points: [SIMD2(0.30, 0.34), SIMD2(0.40, 0.27), SIMD2(0.50, 0.30)]),
-            .init(kind: .less, radius: 0.07, points: [SIMD2(0.68, 0.10), SIMD2(0.80, 0.17), SIMD2(0.93, 0.12)]),
+        refinements.lines = [
+            .init(kind: .draw, radius: 0, points: [
+                SIMD2(0.53, 0.22), SIMD2(0.56, 0.15), SIMD2(0.62, 0.10), SIMD2(0.70, 0.09), SIMD2(0.77, 0.12),
+                SIMD2(0.82, 0.18), SIMD2(0.90, 0.22), SIMD2(1.02, 0.25),
+            ]),
+            .init(kind: .erase, radius: 0.02, points: [SIMD2(0.55, 0.40), SIMD2(0.58, 0.44), SIMD2(0.60, 0.48)]),
         ]
-        refinements.addedText = [TemplateRefinements.textLine(from: SIMD2(0.05, 0.06), to: SIMD2(0.10, 0.29))]
         return refinements
     }()
 

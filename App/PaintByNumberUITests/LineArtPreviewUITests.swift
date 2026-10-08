@@ -25,8 +25,8 @@ final class LineArtPreviewUITests: XCTestCase {
     }
 
     /// A phone's preview enlarges: the comparison grows, the title and Start give way to the
-    /// slider of one setting at a time, Lines first, and Done brings the page back with what
-    /// was tuned.
+    /// slider of one setting at a time, Lines first, and Shrink Preview (where Enlarge Preview
+    /// was) brings the page back with what was tuned.
     @MainActor
     func testEnlargedPreviewTunesOneSettingAtATime() throws {
         try XCTSkipIf(
@@ -61,8 +61,9 @@ final class LineArtPreviewUITests: XCTestCase {
         XCTAssertFalse(lines.exists, "Lines still shows beside Detail")
         attachScreenshot(of: app, named: "create-enlarged-detail")
 
-        app.buttons["Done"].tap()
-        XCTAssertTrue(app.buttons["Start Painting"].waitForExistence(timeout: 10), "Done didn't bring the page back")
+        XCTAssertFalse(app.buttons["Done"].exists, "The enlarged preview still offers Done")
+        app.buttons["Shrink Preview"].tap()
+        XCTAssertTrue(app.buttons["Start Painting"].waitForExistence(timeout: 10), "Shrink Preview didn't bring the page back")
         XCTAssertTrue(waitUntil { compare.frame.height < enlarged.height - 20 }, "The comparison stayed enlarged")
         XCTAssertEqual(app.sliders["Lines"].value as? String, "Most", "What the enlarged preview tuned didn't stay")
         XCTAssertEqual(app.buttons["settings-origin"].value as? String, "Custom")

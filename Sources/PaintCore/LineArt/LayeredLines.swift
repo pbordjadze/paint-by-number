@@ -15,9 +15,10 @@
 ///    contours and irises as outlines and promote the lines around them; the subjects'
 ///    silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
 ///    (`LineLayering.addObjects`). Lines on the writing (`Writing`, traced from the photo
-///    before segmenting) are its smudged copy and go. Free ends reach for the nearest line,
+///    before segmenting) are its smudged copy and go. The painter's edits (`LineEdits`) join:
+///    drawn lines as outlines, erased places taken out. Free ends reach for the nearest line,
 ///    paint boundary or frame (`gapBridging` × 1.6 / 1.2 by layer), so open strokes close
-///    cells.
+///    cells, but never into a place erased after their line was drawn.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
 ///    paints are within two palette steps.
@@ -30,7 +31,8 @@
 ///    number.
 /// After vectorizing, `annotate` gives each boundary edge the layer of the line along it
 /// (`color` where only the paint changes) and a weight, and stamps the template's line art as
-/// a coloring book.
+/// a coloring book. Near the painter's edits an edge only partly along a line is drawn only
+/// there, as interior strokes over an undrawn edge.
 ///
 /// Lengths are canvas units (working pixels). `LineLayering.longOutline`, `objectNear`,
 /// `objectMinimumStretch` and `LineDetection.clutterWindow` are given for a 1500-px canvas and
@@ -67,6 +69,8 @@ enum LayeredLines {
         /// Lines drawn inside a cell, with that cell.
         var interiorLines: [(line: DrawnLine, region: Int)]
         var stats: LineArtStats
+        /// Where the painter's edits were (`LineEdits.footprint`); nil without any.
+        var edited: [Bool]? = nil
     }
 
     static func apply(
@@ -123,6 +127,7 @@ enum LayeredLines {
         }
         try cancel.throwIfCancelled()
 
+        var edits: LineEdits.Applied?
         let lines = clock.measure("lineArt.layer") { () -> [DrawnLine] in
             var lines = LineLayering.layered(
                 strokes, thresholds: thresholds, clutter: mask.clutter, width: w, contours: contourStrength)
@@ -143,10 +148,20 @@ enum LayeredLines {
                     line.pieces(keeping: line.points.map { !near[LineLayering.pixelIndex(of: $0, width: w, height: h)] }, freeCuts: false)
                 }
             }
+            if !input.edits.isEmpty {
+                let applied = LineEdits.apply(input.edits, to: lines, width: w, height: h, reach: closeReach[0] * s.gapBridging)
+                lines = applied.lines
+                stats.drawnLines = applied.drawn
+                stats.erasures = applied.erasures.count
+                edits = applied
+            }
             let colorEdge = Self.boundaryPixels(segmentation.labels.storage, width: w, height: h)
             let first = LineLayering.walls(lines, width: w, height: h)
+            // No end reaches into a place erased after its line was drawn.
+            var blocked: ((Int, Int) -> Bool)?
+            if let origin = edits?.origin, let blockedBy = edits?.blockedBy { blocked = { blockedBy[$1] > origin[$0] } }
             stats.endsClosed = LineLayering.closeFreeEnds(
-                &lines, walls: first, colorEdge: colorEdge, reach: closeReach.map { $0 * s.gapBridging })
+                &lines, walls: first, colorEdge: colorEdge, reach: closeReach.map { $0 * s.gapBridging }, blocked: blocked)
             return lines
         }
         stats.strokes = lines.count
@@ -226,14 +241,16 @@ enum LayeredLines {
             stats.writingAreas = writing.areas
             stats.writingMarks = writing.marks
             stats.writing = writing.report
-            for line in writing.lines {
+            let written = edits.map { LineEdits.cut(writing.lines, by: $0, width: w, height: h) } ?? writing.lines
+            for line in written {
                 stats.writingLength += line.length
                 interior += Self.byRegion(line, labels: final.label, width: w, height: h)
             }
         }
         for line in boundary { stats.add(line, interior: false) }
         for (line, _) in interior { stats.add(line, interior: true) }
-        return Plan(segmentation: split, boundaryLines: boundary, interiorLines: interior, stats: stats)
+        let edited = edits.map { LineEdits.footprint($0, lines: lines, near: annotateNear + 1, width: w, height: h) }
+        return Plan(segmentation: split, boundaryLines: boundary, interiorLines: interior, stats: stats, edited: edited)
     }
 
     // MARK: - Annotation
@@ -254,10 +271,17 @@ enum LayeredLines {
         try cancel.throwIfCancelled()
         var layers = [UInt8](repeating: LineLayer.color.rawValue, count: t.edges.count)
         var weights = [UInt8](repeating: 0, count: t.edges.count)
+        // Near the painter's edits: each sample of an edge, and the drawn stretches of edges a
+        // line runs along only in part.
+        var samples: [EdgeSample] = []
+        var partial: [EdgeRun] = []
         for (k, e) in t.edges.enumerated() {
             var covered = SIMD4<Float>(repeating: 0)
             var strengthSum: Float = 0, strengthLength: Float = 0
             let pts = t.points(of: e)
+            let sampling = plan.edited != nil && e.right != BoundaryEdge.outside
+            var edited = false
+            samples.removeAll(keepingCapacity: true)
             var previous = pts.first!
             for p in pts.dropFirst() {
                 let length = simdLength(p - previous)
@@ -274,6 +298,10 @@ enum LayeredLines {
                         strengthSum += Float(strength[i]) * piece
                         strengthLength += piece
                     }
+                    if sampling {
+                        samples.append(EdgeSample(position: q, layer: layer, length: piece, strength: Float(strength[i])))
+                        edited = edited || plan.edited![i]
+                    }
                 }
                 previous = p
             }
@@ -281,7 +309,23 @@ enum LayeredLines {
             // edge has no line at all.
             var drawnBest = -1
             for l in 0..<3 where covered[l] > 0 && (drawnBest < 0 || covered[l] > covered[drawnBest]) { drawnBest = l }
-            let best = drawnBest >= 0 && covered[drawnBest] >= covered[3] ? drawnBest : 3
+            var best = drawnBest >= 0 && covered[drawnBest] >= covered[3] ? drawnBest : 3
+            if edited {
+                // Drawn where a line runs along it: whole, not at all, or in stretches over an
+                // undrawn edge.
+                let runs = Self.drawnRuns(samples)
+                if runs.isEmpty {
+                    best = 3
+                } else if runs.count == 1 && runs[0] == 0...(samples.count - 1) {
+                    best = drawnBest
+                } else {
+                    best = 3
+                    for run in runs {
+                        partial.append(Self.edgeRun(samples[run], from: run.lowerBound == 0 ? pts.first : nil,
+                                                    to: run.upperBound == samples.count - 1 ? pts.last : nil, region: e.left))
+                    }
+                }
+            }
             layers[k] = UInt8(best)
             if best < 3 {
                 weights[k] = UInt8(min(max(strengthSum / max(strengthLength, 1e-6), 0), 255).rounded())
@@ -313,7 +357,89 @@ enum LayeredLines {
                 pointStart: start, pointCount: UInt32(keep.count), layer: UInt8(layer),
                 weight: UInt8((min(max(mean, 0), 1) * 255).rounded()), region: UInt32(region)))
         }
+        for run in partial {
+            let keep = Self.simplify(run.points, epsilon: 0.3)
+            guard keep.count >= 2 else { continue }
+            let start = UInt32(points.count)
+            for i in keep {
+                let p = run.points[i]
+                let x = min(max(p.x, 0), Float(w)), y = min(max(p.y, 0), Float(h))
+                points.append(SIMD2((x / q).rounded() * q, (y / q).rounded() * q))
+            }
+            strokes.append(InteriorStroke(
+                pointStart: start, pointCount: UInt32(keep.count), layer: run.layer, weight: run.weight, region: run.region))
+        }
         return TemplateLineArt(edgeLayers: layers, edgeWeights: weights, strokePoints: points, strokes: strokes, style: .coloringBook)
+    }
+
+    /// A step along a template edge (`annotate`): where, the layer of the line within reach
+    /// (3: none), the step's length and the line's strength there.
+    struct EdgeSample {
+        var position: SIMD2<Float>
+        var layer: Int
+        var length: Float
+        var strength: Float
+    }
+
+    /// A drawn stretch of an edge, drawn as an interior stroke of the edge's left region.
+    struct EdgeRun {
+        var points: [SIMD2<Float>]
+        var layer: UInt8
+        var weight: UInt8
+        var region: UInt32
+    }
+
+    /// The sample ranges of an edge a line runs along: gaps in a line shorter than
+    /// `LineLayering.minimumRun` (where it meets a junction, or runs a little off the edge)
+    /// are drawn, and stretches that short beside undrawn ones are not.
+    static func drawnRuns(_ samples: [EdgeSample]) -> [ClosedRange<Int>] {
+        var drawn = samples.map { $0.layer < 3 }
+        guard drawn.contains(true) else { return [] }
+        func runs() -> [(range: ClosedRange<Int>, drawn: Bool, length: Float)] {
+            var out: [(range: ClosedRange<Int>, drawn: Bool, length: Float)] = []
+            var i = 0
+            while i < drawn.count {
+                var j = i, length = samples[i].length
+                while j + 1 < drawn.count && drawn[j + 1] == drawn[i] {
+                    j += 1
+                    length += samples[j].length
+                }
+                out.append((i...j, drawn[i], length))
+                i = j + 1
+            }
+            return out
+        }
+        for run in runs() where !run.drawn && run.length < LineLayering.minimumRun {
+            for i in run.range { drawn[i] = true }
+        }
+        let cleaned = runs()
+        if cleaned.count > 1 {
+            for run in cleaned where run.drawn && run.length < LineLayering.minimumRun {
+                for i in run.range { drawn[i] = false }
+            }
+        }
+        return runs().filter(\.drawn).map(\.range)
+    }
+
+    /// The stroke along `samples`, from the edge's end points where it reaches them: the
+    /// layer drawn along most of it (the stronger on ties) and its mean strength.
+    static func edgeRun(
+        _ samples: ArraySlice<EdgeSample>, from start: SIMD2<Float>?, to end: SIMD2<Float>?, region: UInt32
+    ) -> EdgeRun {
+        var points = samples.map(\.position)
+        if let start { points.insert(start, at: 0) }
+        if let end { points.append(end) }
+        var covered = SIMD3<Float>(repeating: 0)
+        var strengthSum: Float = 0, strengthLength: Float = 0
+        for sample in samples where sample.layer < 3 {
+            covered[sample.layer] += sample.length
+            strengthSum += sample.strength * sample.length
+            strengthLength += sample.length
+        }
+        var layer = 0
+        for l in 1..<3 where covered[l] > covered[layer] { layer = l }
+        let weight = UInt8(min(max(strengthSum / max(strengthLength, 1e-6), 0), 255).rounded())
+        return EdgeRun(points: points, layer: UInt8(layer), weight: weight, region: region)
     }
 
     // MARK: - Helpers

@@ -25,6 +25,21 @@ struct PreferencesTests {
         #expect(!session.autoAdvance)
     }
 
+    /// Settings › Detail Brushes is off until switched on, and reads a launch argument's `YES`
+    /// (`-refineDetailBrushes YES`, as UI tests set it) as on.
+    @Test func detailBrushesAreOffUntilSwitchedOn() throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        #expect(!Preferences(defaults: defaults).detailBrushes)
+        defaults.set(true, forKey: SettingsKey.detailBrushes)
+        #expect(Preferences(defaults: defaults).detailBrushes)
+        defaults.set("YES", forKey: SettingsKey.detailBrushes)
+        #expect(Preferences(defaults: defaults).detailBrushes)
+        #expect(SettingsKey.detailBrushes == "refineDetailBrushes")
+    }
+
     /// The Paper preference's key and raw values are what `@AppStorage` and launch arguments
     /// (`-paperAppearance dark`) use, and anything else isn't a paper.
     @Test func paperAppearanceKeyAndRawValues() {

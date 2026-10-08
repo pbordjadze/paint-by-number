@@ -22,6 +22,7 @@ struct Options {
     var eyes: String?
     var objects: String?
     var writing: String?
+    var lineEdits: String?
     /// How much of `--edges` goes under `--lines` when both are given (`EdgeMap.contourWeight`).
     var contourWeight = EdgeMap.contourWeight
 }
@@ -130,6 +131,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--eyes": o.eyes = value(a, &it)
         case "--objects": o.objects = value(a, &it)
         case "--writing": o.writing = value(a, &it)
+        case "--line-edits": o.lineEdits = value(a, &it)
         case "--contour-weight": o.contourWeight = number(a, &it)
         case "--line-style": o.lineStyle = choice(a, value(a, &it))
         case "--line-art": o.lineArtFields.append(value(a, &it))

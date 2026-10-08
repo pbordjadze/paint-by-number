@@ -1,33 +1,109 @@
 import SwiftUI
 import UIKit
 
-/// The refine screen's picture: the template as the preview shows it (painting or line art), or
-/// the photo, in `rect`, the part of the frame the touch surface has it in.
-struct RefinePicture: View {
-    let picture: CreateModel.Picture?
-    let photo: CGImage
+/// What the painter did on the Refine screen that the template doesn't show yet, in the order
+/// they did it, over the drawing in `rect` (view coordinates): lines drawn in the drawing's own
+/// ink and weight, and the eraser's passes and the lines tapped away showing the paper or the
+/// photo beneath, so whatever they took out is gone at once. `trace` is the pen's line or the
+/// eraser's pass still under the finger; while the eraser is down a ring shows its reach.
+struct RefineInkLayer: View {
+    let lines: [TemplateRefinements.Line]
+    let trace: [SIMD2<Float>]?
+    /// The trace is the eraser's, not the pen's.
+    let erasing: Bool
+    /// The eraser's reach either side of its pass, a fraction of the picture's long side.
+    let eraserRadius: Float
     let rect: CGRect
-    /// The picture's zoom (1 fits the frame), at which line art draws as the canvas would.
-    let zoom: CGFloat
+    /// The drawing's line width, in points.
+    let lineWidth: CGFloat
+    /// The photo, when it shows beneath the drawing; nil: the paper does.
+    let photo: CGImage?
 
     var body: some View {
-        switch picture {
-        case .painting(let painting)?:
-            layer(painting)
-        case .lineArt(let drawing)?:
-            LineArtLayer(drawing: drawing, picture: rect, scale: zoom)
-                .equatable()
-        case nil:
-            layer(photo)
+        let lines = lines, trace = trace, erasing = erasing, eraserRadius = eraserRadius, rect = rect
+        let lineWidth = lineWidth, photo = photo
+        Canvas { context, _ in
+            guard rect.width > 0, rect.height > 0 else { return }
+            let long = max(rect.width, rect.height)
+            func point(_ p: SIMD2<Float>) -> CGPoint {
+                CGPoint(x: rect.minX + CGFloat(p.x) * rect.width, y: rect.minY + CGFloat(p.y) * rect.height)
+            }
+            var canvas = context
+            canvas.clip(to: Path(rect))
+            // A single point (a dab) is a segment to nowhere, which a round cap still draws.
+            func polyline(_ points: [CGPoint]) -> Path {
+                var path = Path()
+                path.addLines(points.count == 1 ? [points[0], points[0]] : points)
+                return path
+            }
+            func ink(_ path: Path) {
+                if photo != nil {
+                    canvas.stroke(path, with: .color(.white.opacity(0.75)), style: Self.style(lineWidth + 2.5))
+                }
+                canvas.stroke(path, with: .color(LineArtDrawing.ink), style: Self.style(lineWidth))
+            }
+            // What lies beneath the drawing, over `covered`.
+            func uncover(_ covered: Path) {
+                var beneath = canvas
+                beneath.clip(to: covered)
+                if let photo {
+                    beneath.draw(Image(decorative: photo, scale: 1), in: rect)
+                } else {
+                    beneath.fill(Path(rect), with: .color(LineArtDrawing.paper))
+                }
+            }
+            func erase(_ path: Path, radius: Float) {
+                uncover(path.strokedPath(Self.style(2 * CGFloat(radius) * long)))
+            }
+            for line in lines where !line.points.isEmpty {
+                let path = polyline(line.points.map(point))
+                switch line.kind {
+                case .draw:
+                    ink(path)
+                case .erase:
+                    erase(path, radius: line.radius)
+                case .eraseLine:
+                    // The line itself, its own path, and not what meets it at its ends.
+                    let width = lineWidth + (photo == nil ? 1.5 : 4)
+                    uncover(path.strokedPath(StrokeStyle(lineWidth: width, lineCap: .butt, lineJoin: .round)))
+                }
+            }
+            if let trace, let last = trace.last {
+                let points = trace.map(point)
+                if erasing {
+                    erase(polyline(points), radius: eraserRadius)
+                    let r = CGFloat(eraserRadius) * long
+                    let ring = Path(ellipseIn: CGRect(x: point(last).x - r, y: point(last).y - r, width: 2 * r, height: 2 * r))
+                    canvas.fill(ring, with: .color(.white.opacity(0.25)))
+                    canvas.stroke(ring, with: .color(LineArtDrawing.ink.opacity(0.45)), lineWidth: 1)
+                } else {
+                    ink(Path(PenPath.path(points)))
+                }
+            }
         }
+        .allowsHitTesting(false)
     }
 
-    private func layer(_ image: CGImage) -> some View {
-        Image(decorative: image, scale: 1)
-            .resizable()
-            .interpolation(.high)
-            .frame(width: rect.width, height: rect.height)
-            .position(x: rect.midX, y: rect.midY)
+    nonisolated static func style(_ width: CGFloat) -> StrokeStyle {
+        StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
+    }
+}
+
+/// A line the eraser was tapped on, glowing in the signature color as it goes (its view fades it).
+struct RefineTappedLine: View {
+    let points: [SIMD2<Float>]
+    let rect: CGRect
+    let lineWidth: CGFloat
+
+    var body: some View {
+        Path { path in
+            path.addLines(points.map {
+                CGPoint(x: rect.minX + CGFloat($0.x) * rect.width, y: rect.minY + CGFloat($0.y) * rect.height)
+            })
+        }
+        .stroke(Theme.signature, style: RefineInkLayer.style(max(2.5 * lineWidth, 4)))
+        .shadow(color: Theme.signature.opacity(0.6), radius: 6)
+        .allowsHitTesting(false)
     }
 }
 
@@ -115,14 +191,15 @@ enum RefineTouch {
 }
 
 /// The refine canvas's touches: an invisible scroll view zooms and moves the picture with two
-/// fingers, with the system's feel (the painting canvas's way), while one finger draws or taps.
-/// Reports where the picture is in its frame and its zoom, and touches in picture coordinates
-/// (0…1, origin top-left).
+/// fingers, with the system's feel (the painting canvas's way), while one finger draws or taps;
+/// a tap of two fingers undoes, as in drawing apps. Reports where the picture is in its frame
+/// and its zoom, and touches in picture coordinates (0…1, origin top-left).
 struct RefineTouchSurface: UIViewRepresentable {
     var aspectRatio: CGFloat
     var onLayout: (CGRect, CGFloat) -> Void
     var onDraw: (RefineTouch, SIMD2<Float>) -> Void
     var onTap: (SIMD2<Float>) -> Void
+    var onUndo: () -> Void
 
     func makeUIView(context: Context) -> RefineSurfaceView { RefineSurfaceView() }
 
@@ -130,6 +207,7 @@ struct RefineTouchSurface: UIViewRepresentable {
         view.onLayout = onLayout
         view.onDraw = onDraw
         view.onTap = onTap
+        view.onUndo = onUndo
         view.aspectRatio = aspectRatio
     }
 }
@@ -141,6 +219,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     var onLayout: ((CGRect, CGFloat) -> Void)?
     var onDraw: ((RefineTouch, SIMD2<Float>) -> Void)?
     var onTap: ((SIMD2<Float>) -> Void)?
+    var onUndo: (() -> Void)?
 
     static let maximumZoom: CGFloat = 6
     /// Room around the picture at zoom 1, so it reads as a card.
@@ -177,6 +256,9 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         brush.delegate = self
         scrollView.addGestureRecognizer(brush)
         scrollView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(_:))))
+        let undo = UITapGestureRecognizer(target: self, action: #selector(handleUndo(_:)))
+        undo.numberOfTouchesRequired = 2
+        scrollView.addGestureRecognizer(undo)
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -258,6 +340,11 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     @objc private func handleTap(_ recognizer: UITapGestureRecognizer) {
         guard recognizer.state == .ended else { return }
         onTap?(normalized(recognizer.location(in: content)))
+    }
+
+    @objc private func handleUndo(_ recognizer: UITapGestureRecognizer) {
+        guard recognizer.state == .ended else { return }
+        onUndo?()
     }
 
     private func normalized(_ p: CGPoint) -> SIMD2<Float> {

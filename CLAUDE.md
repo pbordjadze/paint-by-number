@@ -45,7 +45,7 @@ before planning app work).
     calls `vectorizeWithStats`); `EdgeSmoother` repairs until `GeometryValidator` and every
     `LabelRoom` hold. `Template.validate` (`TemplateValidation.swift`) is the oracle of `pbn check`,
     the regression gate and the create flow's Debug check.
-  - `LineArt/` (`LayeredLines.apply` and `Writing`, see Line art), `Auto/` (`AutoSettings`, see Suggested
+  - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
@@ -95,7 +95,10 @@ the paint (`docs/coloring-book.md`). The layered style it grew from is retired: 
 decoding and draw as books, and its recorded settings decode as the book's defaults. Writing (`LineArtInput.writing`: the lines of text Vision
 found, `TextFinder`) is traced from the photo itself, painted out before segmenting and drawn as
 interior strokes with the numbers kept off it (`Writing`, `LabelKeepOut`; `keepWriting`;
-`docs/writing.md`, whose corpus every change to it is judged on). Without an edge map, book
+`docs/writing.md`, whose corpus every change to it is judged on). The painter's edits from the
+app's Refine (`LineArtInput.edits`, `pbn --line-edits`: lines drawn, the eraser's passes, lines
+tapped away, in order) join at the layer stage (`LineEdits`; `docs/coloring-book.md` › The
+painter's edits); without any, a template is byte for byte what it was. Without an edge map, book
 settings generate a classic template; the same maps and settings give the same bytes on any core
 count.
 

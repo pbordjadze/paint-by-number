@@ -11,6 +11,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
+    @AppStorage(SettingsKey.detailBrushes) private var detailBrushes = false
     @State private var path: [Destination] = []
 
     private let appInfo = AppInfo()
@@ -112,6 +113,15 @@ struct SettingsView: View {
                     .accessibilityIdentifier("settings-preview")
                 } footer: {
                     Text("Line Art shows a new painting’s drawing on blank paper instead of the finished painting, so its lines are easier to judge while you tune them.")
+                }
+
+                Section {
+                    Toggle(isOn: $detailBrushes) {
+                        SwiftUI.Label("Detail Brushes", systemImage: "paintbrush.pointed")
+                    }
+                    .accessibilityIdentifier("settings-detail-brushes")
+                } footer: {
+                    Text("Refine also offers brushes for more or less detail in an area, and corrects the lines of text the app found.")
                 }
 
                 Section {

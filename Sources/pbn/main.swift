@@ -5,7 +5,8 @@
 //   pbn generate <in.ppm> <outdir> [--colors N] [--detail F] [--smooth F] [--seed N] [--importance m.pgm]
 //       [--auto [--length quick|relaxed|detailed] [--hints hints.json] [--candidates N]]
 //       [--line-style classic|coloringBook --edges map.pgm [--lines drawing.pgm [--contour-weight W]]
-//        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json] [--line-art key=value]...]
+//        [--eyes eyes.json] [--objects mask.pgm|polygons.json] [--writing writing.json]
+//        [--line-edits edits.json] [--line-art key=value]...]
 //       [--tuning key=value]...
 //       --seed seeds the pipeline's stochastic steps and the paints' nicknames;
 //       --auto generates at the settings Auto suggests (stats.json gains `auto` and `analysis`);
@@ -16,8 +17,12 @@
 //       normalized to the photo, and the subjects (--objects) either the same or a mask image
 //       whose shapes MaskContours traces; writing.json holds the lines of text found in the photo
 //       the same way (a quadrilateral each), whose ink is traced from the photo and drawn
-//       legibly; --line-art sets a LineArtSettings field and --tuning a PipelineTuning factor by
-//       name
+//       legibly; edits.json the lines a painter drew and erased, in order, as the app's Refine
+//       makes them: [{"kind": "draw", "points": [[x, y], ...]}, {"kind": "erase", "radius": r,
+//       "points": [...]}, {"kind": "eraseLine", "radius": r, "points": [...]}] (a line drawn,
+//       the eraser's pass, a line tapped away along its own path; radius a fraction of the
+//       photo's long side); --line-art sets a LineArtSettings field and --tuning a
+//       PipelineTuning factor by name
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into

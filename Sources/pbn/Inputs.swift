@@ -43,8 +43,42 @@ func loadImportance(_ path: String?) -> Grid<Float>? {
 /// map, HED), `--lines` (a line drawing), or both combined as the app combines its two models
 /// (`EdgeMap.combined`, the contours alone then deciding the outlines, `--contour-weight` the
 /// weight), unless `--line-art detector=drawing|contours` keeps one of them; `--eyes`,
-/// `--objects` and `--writing`.
+/// `--objects`, `--writing` and `--line-edits`.
 func loadLineArt(_ options: Options) -> LineArtInput? {
+    var input = loadMaps(options)
+    input?.edits = options.lineEdits.map(loadLineEdits) ?? []
+    return input
+}
+
+/// The painter's edits from a JSON file: an array of `{"kind": "draw" | "erase" | "eraseLine",
+/// "points": [[x, y], ...], "radius": r}`, points normalized to the photo, `radius` (the
+/// eraser's reach, of the photo's long side) only for erasing.
+func loadLineEdits(_ path: String) -> [LineEdit] {
+    struct Edit: Decodable {
+        var kind: String
+        var points: [[Float]]
+        var radius: Float?
+    }
+    guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
+    let edits: [Edit]
+    do { edits = try JSONDecoder().decode([Edit].self, from: data) } catch { fail("cannot decode \(path): \(error)") }
+    return edits.map { edit in
+        let kind: LineEdit.Kind
+        switch edit.kind {
+        case "draw": kind = .draw
+        case "erase": kind = .erase
+        case "eraseLine": kind = .eraseLine
+        default: fail("\(path): kind is draw, erase or eraseLine, not \(edit.kind)")
+        }
+        let points = edit.points.map { p in
+            guard p.count == 2 else { fail("\(path): points are [x, y]") }
+            return SIMD2(p[0], p[1])
+        }
+        return LineEdit(kind: kind, points: points, radius: edit.radius ?? 0)
+    }
+}
+
+private func loadMaps(_ options: Options) -> LineArtInput? {
     func map(_ path: String) -> EdgeMap {
         let img = loadImage(path)
         return EdgeMap(width: img.width, height: img.height, values: redChannel(img))

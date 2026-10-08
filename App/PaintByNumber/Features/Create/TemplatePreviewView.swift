@@ -95,7 +95,7 @@ struct TemplatePreviewView: View {
         .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
-        // Done is the way back from the enlarged preview.
+        // Shrink Preview is the way back from the enlarged preview.
         .navigationBarBackButtonHidden(isEnlarged)
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
         #if DEBUG
@@ -159,8 +159,10 @@ struct TemplatePreviewView: View {
             }
         }
         if isEnlarged {
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Done", systemImage: "checkmark") { setEnlarged(false) }
+            // Where Enlarge Preview was, its mirror: a checkmark there read as accepting the
+            // painting.
+            ToolbarItem(placement: .primaryAction) {
+                Button("Shrink Preview", systemImage: "arrow.down.right.and.arrow.up.left") { setEnlarged(false) }
             }
         }
         if !isEnlarged {
@@ -170,7 +172,10 @@ struct TemplatePreviewView: View {
                     titleFocused = false
                     isRefining = true
                 }
-                .disabled(model.preview == nil || model.isChoosingSettings)
+                // Without line art there is nothing to draw on; the detail brushes still work.
+                .disabled(
+                    model.preview == nil || model.isChoosingSettings
+                        || !(model.hasLineArtInput || Preferences().detailBrushes))
                 .accessibilityValue(RefineView.changes(model.refinements.changeCount))
                 .accessibilityIdentifier("refine")
             }
