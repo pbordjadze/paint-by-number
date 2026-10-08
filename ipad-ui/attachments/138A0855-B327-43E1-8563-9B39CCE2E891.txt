@@ -1,0 +1,242 @@
+Application, 0x10af1ed00, pid: 37819, label: 'Paint by Moonlight' <App element pid: 37819>
+  Window (Main), 0x10af1e1c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4365993984.3>
+    Other, 0x10af1f0c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4435756032.4>
+      Other, 0x10af1e6c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4436017152.6>
+        Other, 0x10af1e800, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4435184704.8>
+          Other, 0x10af1e080, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4365992960.10>
+            Other, 0x10af1cc80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4434747712.12>
+              Other, 0x10af1c8c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4435187840.16>
+                NavigationBar, 0x10af1d180, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight' <AX element pid: 37819, elementOrHash.elementID: 4436099072.21>
+                  Button, 0x10af1e300, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings' <AX element pid: 37819, elementOrHash.elementID: 4614837888.25>
+                  Button, 0x10af1c140, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled <AX element pid: 37819, elementOrHash.elementID: 4614838528.26>
+                  Button, 0x10af1da40, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting' <AX element pid: 37819, elementOrHash.elementID: 4614839808.27>
+                  SearchField, 0x10af1e580, {{778.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings' <AX element pid: 37819, elementOrHash.elementID: 4366048768.28>
+                    Image, 0x10af1c3c0, {{790.0, 44.5}, {20.5, 18.5}}, identifier: 'magnifyingglass', label: 'Search' <AX element pid: 37819, elementOrHash.elementID: 4614864896.33>
+                  StaticText, 0x10af1d2c0, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight' <AX element pid: 37819, elementOrHash.elementID: 4365976448.29>
+                Other, 0x10af1f980, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4435188288.22>
+                  Other, 0x10acac140, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4433790272.30>
+                    Other, 0x10acaf340, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4365975552.34>
+                      Other, 0x117fac000, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4434653440.41>
+                        ScrollView, 0x117fac140, {{516.0, 0.0}, {0.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4436279296.45>
+                          Other, 0x117fac280, {{516.0, 138.0}, {0.0, 0.0}} <AX element pid: 37819, elementOrHash.elementID: 4435762176.56>
+                        Other, 0x117fac3c0, {{381.0, 504.0}, {270.0, 198.0}} <AX element pid: 37819, elementOrHash.elementID: 4434965184.46>
+                        StaticText, 0x117fac500, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo' <AX element pid: 37819, elementOrHash.elementID: 4434965632.47>
+                        StaticText, 0x117fac640, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.' <AX element pid: 37819, elementOrHash.elementID: 4434966528.48>
+                        Button, 0x117fac780, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting' <AX element pid: 37819, elementOrHash.elementID: 4435196352.49>
+                          Image, 0x117fac8c0, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add' <AX element pid: 37819, elementOrHash.elementID: 4434966976.57>
+                          StaticText, 0x117faca00, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting' <AX element pid: 37819, elementOrHash.elementID: 4434967872.58>
+                Other, 0x117facb40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4435759104.23>
+                  Other, 0x117facc80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4435761152.31>
+    Other, 0x117facdc0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4435767808.5>
+      Other, 0x117facf00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4366000128.7>
+        Other, 0x117fad040, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4434745472.9>
+          Other, 0x117fad180, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4434607424.11>
+            NavigationBar, 0x117fad2c0, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting' <AX element pid: 37819, elementOrHash.elementID: 4617127424.13>
+              Button, 0x117fad400, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close' <AX element pid: 37819, elementOrHash.elementID: 4616972928.17>
+              StaticText, 0x117fad540, {{460.5, 43.5}, {111.0, 21.0}}, label: 'New Painting' <AX element pid: 37819, elementOrHash.elementID: 4627382272.18>
+            Other, 0x117fad680, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4434119744.14>
+              Other, 0x117fad7c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4433789376.19>
+                Other, 0x117fad900, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4365978240.24>
+                  Other, 0x117fada40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4434912896.32>
+                    StaticText, 0x117fadb80, {{36.0, 90.0}, {521.5, 18.0}}, label: 'Choose a photo with a clear subject and good light. It becomes your canvas.' <AX element pid: 37819, elementOrHash.elementID: 4434717184.35>
+                    StaticText, 0x117fadcc0, {{36.0, 122.0}, {121.5, 24.0}}, label: 'Your Photos' <AX element pid: 37819, elementOrHash.elementID: 4434721216.36>
+                    Other, 0x117fade00, {{32.0, 158.0}, {566.5, 1174.0}}, identifier: 'library-picker' <AX element pid: 37819, elementOrHash.elementID: 4433900672.37>
+                      Other, 0x117fadf40, {{32.0, 158.0}, {566.5, 1174.0}} <AX element pid: 37819, elementOrHash.elementID: 4434714496.42>
+                        Other, 0x117fae080, {{32.0, 158.0}, {566.5, 1174.0}} <AX element pid: 37819, elementOrHash.elementID: 4436031232.50>
+                          Other, 0x117fae1c0, {{32.0, 158.0}, {566.5, 1174.0}} <AX element pid: 37819, elementOrHash.elementID: 4630077440.59>
+                            Other, 0x117fae300, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37819, elementOrHash.elementID: 313289762110927779.9999>
+                              Other, 0x117fae440, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4391889920.5>
+                                Other, 0x117fae580, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4393173632.6>
+                                  Other, 0x117fae6c0, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4391913216.7>
+                                    Other, 0x117fae800, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4391913664.8>
+                                      Other, 0x117fae940, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4391914112.9>
+                                        Other, 0x117faea80, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4391914560.10>
+                                          Other, 0x117faebc0, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4391911872.11>
+                                            Other, 0x117faed00, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4391916800.12>
+                                              Other, 0x117faee40, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328281344.13>
+                                                Other, 0x117faef80, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328283584.14>
+                                                  Other, 0x117faf0c0, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328284032.15>
+                                                    Other, 0x117faf200, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4406340864.17>
+                                                      Other, 0x117faf340, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328287616.19>
+                                                        NavigationBar, 0x117faf480, {{0.0, 10.0}, {566.5, 62.0}}, identifier: 'Photos' <AX element pid: 37831, elementOrHash.elementID: 4394804224.20>
+                                                          SegmentedControl, 0x117faf5c0, {{188.0, 8.0}, {190.0, 48.0}}, label: 'Photos' <AX element pid: 37831, elementOrHash.elementID: 4394795008.23>
+                                                            Button, 0x117faf700, {{188.0, 8.0}, {95.0, 48.0}}, label: 'Photos', Selected <AX element pid: 37831, elementOrHash.elementID: 4394795776.26>
+                                                            Button, 0x117faf840, {{283.0, 8.0}, {95.0, 48.0}}, label: 'Collections' <AX element pid: 37831, elementOrHash.elementID: 4394797312.27>
+                                                        Other, 0x117faf980, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328289856.21>
+                                                          Other, 0x117fafac0, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328390656.24>
+                                                            Other, 0x117fafc00, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328311424.28>
+                                                              Other, 0x117fafd40, {{0.0, 0.0}, {566.5, 1174.0}}, label: 'Photos' <AX element pid: 37831, elementOrHash.elementID: 4391925760.29>
+                                                                Other, 0x117fafe80, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4394796544.30>
+                                                                  ScrollView, 0x1186f0000, {{0.0, 0.0}, {566.5, 1174.0}}, identifier: 'photosView_content_scroll_view' <AX element pid: 37831, elementOrHash.elementID: 4325851136.31>
+                                                                    Other, 0x1186f0140, {{0.0, 72.0}, {566.5, 520.0}}, identifier: 'photos_layout' <AX element pid: 37831, elementOrHash.elementID: 4586246048.32>
+                                                                      Other, 0x1186f0280, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4327718912.35>
+                                                                      Other, 0x1186f03c0, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4325919744.36>
+                                                                      Other, 0x1186f0500, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4391927104.37>
+                                                                      Other, 0x1186f0640, {{0.0, 72.0}, {566.5, 142.5}}, identifier: 'PXGSingleViewLayout-Group' <AX element pid: 37831, elementOrHash.elementID: 4586246288.38>
+                                                                        Other, 0x1186f0780, {{0.0, 72.0}, {566.5, 142.5}}, identifier: 'PXGSingleViewContainerView_AX', label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.' <AX element pid: 37831, elementOrHash.elementID: 4628737088.43>
+                                                                          Image, 0x1186f08c0, {{32.0, 82.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon' <AX element pid: 37831, elementOrHash.elementID: 4407983616.44>
+                                                                          Button, 0x1186f0a00, {{514.5, 80.0}, {30.0, 22.0}}, label: 'Close' <AX element pid: 37831, elementOrHash.elementID: 4585168384.45>
+                                                                          Button, 0x1186f0b40, {{82.0, 170.0}, {99.5, 20.5}}, label: 'Learn More…' <AX element pid: 37831, elementOrHash.elementID: 4585170688.46>
+                                                                            StaticText, 0x1186f0c80, {{82.0, 170.0}, {99.5, 20.5}}, label: 'Learn More…' <AX element pid: 37831, elementOrHash.elementID: 4327897984.50>
+                                                                      Other, 0x1186f0dc0, {{0.0, 72.0}, {566.5, 142.5}}, label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.' <AX element pid: 37831, elementOrHash.elementID: 4587088384.39>
+                                                                        Image, 0x1186f0f00, {{32.0, 82.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon' <AX element pid: 37831, elementOrHash.elementID: 4407983616.44>
+                                                                        Button, 0x1186f1040, {{514.5, 80.0}, {30.0, 22.0}}, label: 'Close' <AX element pid: 37831, elementOrHash.elementID: 4585168384.45>
+                                                                        Button, 0x1186f1180, {{82.0, 170.0}, {99.5, 20.5}}, label: 'Learn More…' <AX element pid: 37831, elementOrHash.elementID: 4585170688.46>
+                                                                          StaticText, 0x1186f12c0, {{82.0, 170.0}, {99.5, 20.5}}, label: 'Learn More…' <AX element pid: 37831, elementOrHash.elementID: 4327897984.50>
+                                                                      Other, 0x1186f1400, {{0.0, 214.5}, {566.5, 377.5}}, identifier: 'photos_sectioned_layout' <AX element pid: 37831, elementOrHash.elementID: 4586249088.40>
+                                                                        Other, 0x1186f1540, {{0.0, 214.5}, {566.5, 377.5}}, identifier: 'PXAssetsSectionLayout-Group' <AX element pid: 37831, elementOrHash.elementID: 4701962880.47>
+                                                                          Other, 0x1186f1680, {{0.0, 214.5}, {566.5, 377.5}}, identifier: 'PXZoomablePhotosLayout-Group' <AX element pid: 37831, elementOrHash.elementID: 4701964240.51>
+                                                                            Other, 0x1186f17c0, {{0.0, 214.5}, {566.5, 377.5}}, identifier: 'PXGZoomLayout-Group' <AX element pid: 37831, elementOrHash.elementID: 4701964320.54>
+                                                                              Other, 0x1186f1900, {{0.0, 214.5}, {566.5, 377.5}}, identifier: 'PXGDecoratingLayout-Group' <AX element pid: 37831, elementOrHash.elementID: 4701964480.56>
+                                                                                Other, 0x1186f1a40, {{0.0, 214.5}, {566.5, 377.5}}, identifier: 'PXGGridLayout-Group', label: 'Photo, March 30, 2018, 7:14 PM, Photo, August 08, 2012, 9:55 PM, Photo, August 08, 2012, 9:29 PM, Photo, August 08, 2012, 6:52 PM, Photo, March 13, 2011, 12:17 AM, Photo, October 09, 2009, 9:09 PM' <AX element pid: 37831, elementOrHash.elementID: 4701964720.57>
+                                                                                  Image, 0x1186f1b80, {{0.0, 214.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 30, 2018, 7:14 PM' <AX element pid: 37831, elementOrHash.elementID: 4628735680.58>
+                                                                                  Image, 0x1186f1cc0, {{189.3, 214.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:55 PM' <AX element pid: 37831, elementOrHash.elementID: 4628738944.59>
+                                                                                  Image, 0x1186f1e00, {{378.7, 214.5}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:29 PM' <AX element pid: 37831, elementOrHash.elementID: 4628739136.60>
+                                                                                  Image, 0x1186f1f40, {{0.0, 404.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 6:52 PM' <AX element pid: 37831, elementOrHash.elementID: 4628739072.61>
+                                                                                  Image, 0x1186f2080, {{189.3, 404.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 13, 2011, 12:17 AM' <AX element pid: 37831, elementOrHash.elementID: 4628739008.62>
+                                                                                  Image, 0x1186f21c0, {{378.7, 404.0}, {187.8, 188.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, October 09, 2009, 9:09 PM' <AX element pid: 37831, elementOrHash.elementID: 4628739200.63>
+                                                                            Other, 0x1186f2300, {{0.0, 214.5}, {566.5, 0.0}}, identifier: 'PXZoomableInlineHeadersLayout-Group' <AX element pid: 37831, elementOrHash.elementID: 4701964400.55>
+                                                                      Other, 0x1186f2440, {{533.5, 72.0}, {30.0, 1102.0}}, label: 'Vertical scroll bar, 1 page', value: 0% <AX element pid: 37831, elementOrHash.elementID: 4585539584.33>
+                                                                        Other, 0x1186f2580, {{560.5, 948.5}, {3.0, 424.5}} <AX element pid: 37831, elementOrHash.elementID: 4328392000.41>
+                                                                      Other, 0x1186f26c0, {{0.0, 1141.0}, {566.5, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0% <AX element pid: 37831, elementOrHash.elementID: 4585538560.34>
+                                                                        Other, 0x1186f2800, {{3.0, 1168.0}, {1026.0, 3.0}} <AX element pid: 37831, elementOrHash.elementID: 4328391552.42>
+                                                                    Other, 0x1186f2940, {{533.5, 72.0}, {30.0, 1102.0}}, label: 'Vertical scroll bar, 1 page', value: 0% <AX element pid: 37831, elementOrHash.elementID: 4585539584.33>
+                                                                      Other, 0x1186f2a80, {{560.5, 948.5}, {3.0, 424.5}} <AX element pid: 37831, elementOrHash.elementID: 4328392000.41>
+                                                                    Other, 0x1186f2bc0, {{0.0, 1141.0}, {566.5, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0% <AX element pid: 37831, elementOrHash.elementID: 4585538560.34>
+                                                                      Other, 0x1186f2d00, {{3.0, 1168.0}, {1026.0, 3.0}} <AX element pid: 37831, elementOrHash.elementID: 4328391552.42>
+                                                        Other, 0x1186f2e40, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4406777344.22>
+                                                          Other, 0x1186f2f80, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4406779392.25>
+                                                  Other, 0x1186f30c0, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328284928.16>
+                                                    Other, 0x1186f3200, {{0.0, 0.0}, {566.5, 1174.0}} <AX element pid: 37831, elementOrHash.elementID: 4328285376.18>
+                            Other, 0x1186f3340, {{0.0, 0.0}, {0.0, 0.0}} <AX element pid: 37819, elementOrHash.elementID: 385117487899537854.9999>
+                    StaticText, 0x1186f3480, {{626.4, 122.0}, {84.5, 24.0}}, label: 'Samples' <AX element pid: 37819, elementOrHash.elementID: 4434722112.38>
+                    ScrollView, 0x1186f35c0, {{622.5, 158.0}, {377.5, 1174.0}} <AX element pid: 37819, elementOrHash.elementID: 4436291584.39>
+                      Other, 0x1186f3700, {{622.5, 158.0}, {377.5, 3471.0}} <AX element pid: 37819, elementOrHash.elementID: 4628810240.43>
+                        StaticText, 0x1186f3840, {{630.5, 162.0}, {82.0, 20.5}}, label: 'Paintings' <AX element pid: 37819, elementOrHash.elementID: 4434749056.51>
+                        Other, 0x1186f3980, {{626.5, 192.5}, {369.5, 1901.0}} <AX element pid: 37819, elementOrHash.elementID: 4434903488.52>
+                          Button, 0x1186f3ac0, {{626.5, 192.5}, {178.0, 133.5}}, label: 'Sample: The Great Wave, Katsushika Hokusai' <AX element pid: 37819, elementOrHash.elementID: 4434754880.60>
+                            Image, 0x1186f3c00, {{616.0, 192.5}, {199.0, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434753536.91>
+                            StaticText, 0x1186f3d40, {{638.5, 279.5}, {113.0, 18.0}}, label: 'The Great Wave' <AX element pid: 37819, elementOrHash.elementID: 4434753984.92>
+                            StaticText, 0x1186f3e80, {{638.5, 299.5}, {113.5, 14.5}}, label: 'Katsushika Hokusai' <AX element pid: 37819, elementOrHash.elementID: 4434754432.93>
+                          Button, 0x10ae08000, {{818.5, 192.5}, {177.5, 133.5}}, label: 'Sample: Wheat Field with Cypresses, Vincent van Gogh' <AX element pid: 37819, elementOrHash.elementID: 4434788800.61>
+                            Image, 0x10ae08140, {{818.5, 190.0}, {177.5, 138.5}} <AX element pid: 37819, elementOrHash.elementID: 4434671168.94>
+                            StaticText, 0x10ae08280, {{830.5, 259.5}, {110.0, 38.0}}, label: 'Wheat Field with Cypresses' <AX element pid: 37819, elementOrHash.elementID: 4435197248.95>
+                            StaticText, 0x10ae083c0, {{830.5, 299.5}, {102.5, 14.5}}, label: 'Vincent van Gogh' <AX element pid: 37819, elementOrHash.elementID: 4434788352.96>
+                          Button, 0x10ae08500, {{626.5, 340.0}, {178.0, 133.0}}, label: 'Sample: The Milkmaid, Johannes Vermeer' <AX element pid: 37819, elementOrHash.elementID: 4434791040.62>
+                            Image, 0x10ae08640, {{626.5, 306.5}, {178.0, 200.0}} <AX element pid: 37819, elementOrHash.elementID: 4434789696.97>
+                            StaticText, 0x10ae08780, {{638.5, 426.5}, {95.5, 18.0}}, label: 'The Milkmaid' <AX element pid: 37819, elementOrHash.elementID: 4434790144.98>
+                            StaticText, 0x10ae088c0, {{638.5, 446.5}, {108.5, 14.5}}, label: 'Johannes Vermeer' <AX element pid: 37819, elementOrHash.elementID: 4434790592.99>
+                          Button, 0x10ae08a00, {{818.5, 340.0}, {177.5, 133.0}}, label: 'Sample: Red Fuji, Katsushika Hokusai' <AX element pid: 37819, elementOrHash.elementID: 4434793280.63>
+                            Image, 0x10ae08b40, {{809.5, 340.0}, {195.5, 133.0}} <AX element pid: 37819, elementOrHash.elementID: 4434791488.100>
+                            StaticText, 0x10ae08c80, {{830.5, 426.5}, {57.0, 18.0}}, label: 'Red Fuji' <AX element pid: 37819, elementOrHash.elementID: 4434791936.101>
+                            StaticText, 0x10ae08dc0, {{830.5, 446.5}, {113.5, 14.5}}, label: 'Katsushika Hokusai' <AX element pid: 37819, elementOrHash.elementID: 4434792384.102>
+                          Button, 0x10ae08f00, {{626.5, 487.0}, {178.0, 133.5}}, label: 'Sample: Irises, Vincent van Gogh' <AX element pid: 37819, elementOrHash.elementID: 4434795968.64>
+                            Image, 0x10ae09040, {{626.5, 484.0}, {178.0, 139.5}} <AX element pid: 37819, elementOrHash.elementID: 4434793728.103>
+                            StaticText, 0x10ae09180, {{638.5, 574.0}, {39.0, 18.0}}, label: 'Irises' <AX element pid: 37819, elementOrHash.elementID: 4434794624.104>
+                            StaticText, 0x10ae092c0, {{638.5, 594.0}, {102.5, 14.5}}, label: 'Vincent van Gogh' <AX element pid: 37819, elementOrHash.elementID: 4434795072.105>
+                          Button, 0x10ae09400, {{818.5, 487.0}, {177.5, 133.5}}, label: 'Sample: Plum Garden at Kameido, Utagawa Hiroshige' <AX element pid: 37819, elementOrHash.elementID: 4434798208.65>
+                            Image, 0x10ae09540, {{818.5, 419.0}, {177.5, 269.5}} <AX element pid: 37819, elementOrHash.elementID: 4434796416.106>
+                            StaticText, 0x10ae09680, {{830.5, 554.0}, {96.0, 38.0}}, label: 'Plum Garden at Kameido' <AX element pid: 37819, elementOrHash.elementID: 4434796864.107>
+                            StaticText, 0x10ae097c0, {{830.5, 594.0}, {109.5, 14.5}}, label: 'Utagawa Hiroshige' <AX element pid: 37819, elementOrHash.elementID: 4434797760.108>
+                          Button, 0x10ae09900, {{626.5, 634.5}, {178.0, 133.5}}, label: 'Sample: Cranes, Kamisaka Sekka' <AX element pid: 37819, elementOrHash.elementID: 4434801344.66>
+                            Image, 0x10ae09a40, {{616.5, 634.5}, {198.0, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434799104.109>
+                            StaticText, 0x10ae09b80, {{638.5, 721.5}, {51.0, 18.0}}, label: 'Cranes' <AX element pid: 37819, elementOrHash.elementID: 4434799552.110>
+                            StaticText, 0x10ae09cc0, {{638.5, 741.5}, {93.5, 14.5}}, label: 'Kamisaka Sekka' <AX element pid: 37819, elementOrHash.elementID: 4434800448.111>
+                          Button, 0x10ae09e00, {{818.5, 634.5}, {177.5, 133.5}}, label: 'Sample: Sudden Shower over Shin-Ōhashi, Utagawa Hiroshige' <AX element pid: 37819, elementOrHash.elementID: 4434803584.67>
+                            Image, 0x10ae09f40, {{818.5, 563.0}, {177.5, 276.5}} <AX element pid: 37819, elementOrHash.elementID: 4434801792.112>
+                            StaticText, 0x10ae0a080, {{830.5, 701.5}, {151.0, 38.0}}, label: 'Sudden Shower over Shin-Ōhashi' <AX element pid: 37819, elementOrHash.elementID: 4434802240.113>
+                            StaticText, 0x10ae0a1c0, {{830.5, 741.5}, {109.5, 14.5}}, label: 'Utagawa Hiroshige' <AX element pid: 37819, elementOrHash.elementID: 4434803136.114>
+                          Button, 0x10ae0a300, {{626.5, 782.0}, {178.0, 133.0}}, label: 'Sample: Oleanders, Vincent van Gogh' <AX element pid: 37819, elementOrHash.elementID: 4434806528.68>
+                            Image, 0x10ae0a440, {{626.5, 776.0}, {178.0, 145.0}} <AX element pid: 37819, elementOrHash.elementID: 4434804736.115>
+                            StaticText, 0x10ae0a580, {{638.5, 868.5}, {73.5, 18.0}}, label: 'Oleanders' <AX element pid: 37819, elementOrHash.elementID: 4434805184.116>
+                            StaticText, 0x10ae0a6c0, {{638.5, 888.5}, {102.5, 14.5}}, label: 'Vincent van Gogh' <AX element pid: 37819, elementOrHash.elementID: 4434806080.117>
+                          Button, 0x10ae0a800, {{818.5, 782.0}, {177.5, 133.0}}, label: 'Sample: Paris Street; Rainy Day, Gustave Caillebotte' <AX element pid: 37819, elementOrHash.elementID: 4434808320.69>
+                            Image, 0x10ae0a940, {{818.5, 779.0}, {177.5, 139.0}} <AX element pid: 37819, elementOrHash.elementID: 4434806976.118>
+                            StaticText, 0x10ae0aa80, {{830.5, 848.5}, {92.0, 38.0}}, label: 'Paris Street; Rainy Day' <AX element pid: 37819, elementOrHash.elementID: 4434807424.119>
+                            StaticText, 0x10ae0abc0, {{830.5, 888.5}, {113.5, 14.5}}, label: 'Gustave Caillebotte' <AX element pid: 37819, elementOrHash.elementID: 4434807872.120>
+                          Button, 0x10ae0ad00, {{626.5, 929.0}, {178.0, 133.5}}, label: 'Sample: Still Life with Apples and Pears, Paul Cézanne' <AX element pid: 37819, elementOrHash.elementID: 4434810112.70>
+                            Image, 0x10ae0ae40, {{625.0, 929.0}, {181.0, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434808768.121>
+                            StaticText, 0x10ae0af80, {{638.5, 996.0}, {149.0, 38.0}}, label: 'Still Life with Apples and Pears' <AX element pid: 37819, elementOrHash.elementID: 4434809216.122>
+                            StaticText, 0x10ae0b0c0, {{638.5, 1036.0}, {78.5, 14.5}}, label: 'Paul Cézanne' <AX element pid: 37819, elementOrHash.elementID: 4434809664.123>
+                          Button, 0x10ae0b200, {{818.5, 929.0}, {177.5, 133.5}}, label: 'Sample: Wisteria, Kamisaka Sekka' <AX element pid: 37819, elementOrHash.elementID: 4434812352.71>
+                            Image, 0x10ae0b340, {{808.0, 929.0}, {198.5, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434811008.124>
+                            StaticText, 0x10ae0b480, {{830.5, 1016.0}, {59.0, 18.0}}, label: 'Wisteria' <AX element pid: 37819, elementOrHash.elementID: 4434811456.125>
+                            StaticText, 0x10ae0b5c0, {{830.5, 1036.0}, {93.5, 14.5}}, label: 'Kamisaka Sekka' <AX element pid: 37819, elementOrHash.elementID: 4434811904.126>
+                          Button, 0x10ae0b700, {{626.5, 1076.5}, {178.0, 133.0}}, label: 'Sample: Mont Sainte-Victoire, Paul Cézanne' <AX element pid: 37819, elementOrHash.elementID: 4434814592.72>
+                            Image, 0x10ae0b840, {{626.5, 1072.5}, {178.0, 141.0}} <AX element pid: 37819, elementOrHash.elementID: 4434812800.127>
+                            StaticText, 0x10ae0b980, {{638.5, 1163.0}, {147.5, 18.0}}, label: 'Mont Sainte-Victoire' <AX element pid: 37819, elementOrHash.elementID: 4434813248.128>
+                            StaticText, 0x10ae0bac0, {{638.5, 1183.0}, {78.5, 14.5}}, label: 'Paul Cézanne' <AX element pid: 37819, elementOrHash.elementID: 4434813696.129>
+                          Button, 0x10ae0bc00, {{818.5, 1076.5}, {177.5, 133.0}}, label: 'Sample: Jūmantsubo Plain at Fukagawa Susaki, Utagawa Hiroshige' <AX element pid: 37819, elementOrHash.elementID: 4434816384.73>
+                            Image, 0x10ae0bd40, {{818.5, 1006.5}, {177.5, 273.0}} <AX element pid: 37819, elementOrHash.elementID: 4434815040.130>
+                            StaticText, 0x10ae0be80, {{830.5, 1143.0}, {149.5, 38.0}}, label: 'Jūmantsubo Plain at Fukagawa Susaki' <AX element pid: 37819, elementOrHash.elementID: 4434815488.131>
+                            StaticText, 0x1186e4000, {{830.5, 1183.0}, {109.5, 14.5}}, label: 'Utagawa Hiroshige' <AX element pid: 37819, elementOrHash.elementID: 4434815936.132>
+                          Button, 0x1186e4140, {{626.5, 1223.5}, {178.0, 133.5}}, label: 'Sample: Snap the Whip, Winslow Homer' <AX element pid: 37819, elementOrHash.elementID: 4434818176.74>
+                            Image, 0x1186e4280, {{603.0, 1223.5}, {225.0, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434816832.133>
+                            StaticText, 0x1186e43c0, {{638.5, 1310.5}, {104.0, 18.0}}, label: 'Snap the Whip' <AX element pid: 37819, elementOrHash.elementID: 4434817280.134>
+                            StaticText, 0x1186e4500, {{638.5, 1330.5}, {90.5, 14.5}}, label: 'Winslow Homer' <AX element pid: 37819, elementOrHash.elementID: 4434817728.135>
+                          Button, 0x1186e4640, {{818.5, 1223.5}, {177.5, 133.5}}, label: 'Sample: Morning Glories, Suzuki Kiitsu' <AX element pid: 37819, elementOrHash.elementID: 4434820416.75>
+                            Image, 0x1186e4780, {{762.0, 1223.5}, {290.5, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434818624.136>
+                            StaticText, 0x1186e48c0, {{830.5, 1310.5}, {113.5, 18.0}}, label: 'Morning Glories' <AX element pid: 37819, elementOrHash.elementID: 4434819072.137>
+                            StaticText, 0x1186e4a00, {{830.5, 1330.5}, {75.0, 14.5}}, label: 'Suzuki Kiitsu' <AX element pid: 37819, elementOrHash.elementID: 4434819520.138>
+                          Button, 0x1186e4b40, {{626.5, 1371.0}, {178.0, 133.5}}, label: 'Sample: Low Tide at Pourville, Claude Monet' <AX element pid: 37819, elementOrHash.elementID: 4434854784.76>
+                            Image, 0x1186e4c80, {{625.0, 1371.0}, {181.0, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434960256.139>
+                            StaticText, 0x1186e4dc0, {{638.5, 1458.0}, {147.5, 18.0}}, label: 'Low Tide at Pourville' <AX element pid: 37819, elementOrHash.elementID: 4434853888.140>
+                            StaticText, 0x1186e4f00, {{638.5, 1478.0}, {80.5, 14.5}}, label: 'Claude Monet' <AX element pid: 37819, elementOrHash.elementID: 4434854336.141>
+                          Button, 0x1186e5040, {{818.5, 1371.0}, {177.5, 133.5}}, label: 'Sample: Jellyfish, Ernst Haeckel' <AX element pid: 37819, elementOrHash.elementID: 4434857024.77>
+                            Image, 0x1186e5180, {{818.5, 1312.5}, {177.5, 250.5}} <AX element pid: 37819, elementOrHash.elementID: 4434958912.142>
+                            StaticText, 0x1186e52c0, {{830.5, 1458.0}, {60.0, 18.0}}, label: 'Jellyfish' <AX element pid: 37819, elementOrHash.elementID: 4434855232.143>
+                            StaticText, 0x1186e5400, {{830.5, 1478.0}, {80.0, 14.5}}, label: 'Ernst Haeckel' <AX element pid: 37819, elementOrHash.elementID: 4434856128.144>
+                          Button, 0x1186e5540, {{626.5, 1518.5}, {178.0, 133.0}}, label: 'Sample: Outskirts of Paris, Henri Rousseau' <AX element pid: 37819, elementOrHash.elementID: 4434858368.78>
+                            Image, 0x1186e5680, {{626.5, 1512.5}, {178.0, 145.0}} <AX element pid: 37819, elementOrHash.elementID: 4434960704.145>
+                            StaticText, 0x1186e57c0, {{638.5, 1605.0}, {124.0, 18.0}}, label: 'Outskirts of Paris' <AX element pid: 37819, elementOrHash.elementID: 4434857472.146>
+                            StaticText, 0x1186e5900, {{638.5, 1625.0}, {91.0, 14.5}}, label: 'Henri Rousseau' <AX element pid: 37819, elementOrHash.elementID: 4434857920.147>
+                          Button, 0x1186e5a40, {{818.5, 1518.5}, {177.5, 133.0}}, label: 'Sample: Frankfort Rose, Pierre-Joseph Redouté' <AX element pid: 37819, elementOrHash.elementID: 4434859712.79>
+                            Image, 0x1186e5b80, {{818.5, 1477.0}, {177.5, 216.0}} <AX element pid: 37819, elementOrHash.elementID: 4434958016.148>
+                            StaticText, 0x1186e5cc0, {{830.5, 1605.0}, {105.5, 18.0}}, label: 'Frankfort Rose' <AX element pid: 37819, elementOrHash.elementID: 4434858816.149>
+                            StaticText, 0x1186e5e00, {{830.5, 1625.0}, {134.0, 14.5}}, label: 'Pierre-Joseph Redouté' <AX element pid: 37819, elementOrHash.elementID: 4434859264.150>
+                          Button, 0x1186e5f40, {{626.5, 1665.5}, {178.0, 133.5}}, label: 'Sample: Shore and Surf, Nassau, Winslow Homer' <AX element pid: 37819, elementOrHash.elementID: 4434861504.80>
+                            Image, 0x1186e6080, {{619.5, 1665.5}, {192.0, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434961152.151>
+                            StaticText, 0x1186e61c0, {{638.5, 1732.5}, {91.5, 38.0}}, label: 'Shore and Surf, Nassau' <AX element pid: 37819, elementOrHash.elementID: 4434860160.152>
+                            StaticText, 0x1186e6300, {{638.5, 1772.5}, {90.5, 14.5}}, label: 'Winslow Homer' <AX element pid: 37819, elementOrHash.elementID: 4434861056.153>
+                          Button, 0x1186e6440, {{818.5, 1665.5}, {177.5, 133.5}}, label: 'Sample: Flower Garden and Bungalow, Bermuda, Winslow Homer' <AX element pid: 37819, elementOrHash.elementID: 4434863744.81>
+                            Image, 0x1186e6580, {{806.0, 1665.5}, {202.5, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434962048.154>
+                            StaticText, 0x1186e66c0, {{830.5, 1732.5}, {142.5, 38.0}}, label: 'Flower Garden and Bungalow, Bermuda' <AX element pid: 37819, elementOrHash.elementID: 4434861952.155>
+                            StaticText, 0x1186e6800, {{830.5, 1772.5}, {90.5, 14.5}}, label: 'Winslow Homer' <AX element pid: 37819, elementOrHash.elementID: 4434862848.156>
+                          Button, 0x1186e6940, {{626.5, 1813.0}, {178.0, 133.5}}, label: 'Sample: Willow Bough, William Morris' <AX element pid: 37819, elementOrHash.elementID: 4434865984.82>
+                            Image, 0x1186e6a80, {{626.5, 1761.0}, {178.0, 237.5}} <AX element pid: 37819, elementOrHash.elementID: 4434957568.157>
+                            StaticText, 0x1186e6bc0, {{638.5, 1900.0}, {97.0, 18.0}}, label: 'Willow Bough' <AX element pid: 37819, elementOrHash.elementID: 4434864640.158>
+                            StaticText, 0x1186e6d00, {{638.5, 1920.0}, {82.5, 14.5}}, label: 'William Morris' <AX element pid: 37819, elementOrHash.elementID: 4434865088.159>
+                          Button, 0x1186e6e40, {{818.5, 1813.0}, {177.5, 133.5}}, label: 'Sample: Oriental Poppies, Alphonse Mucha' <AX element pid: 37819, elementOrHash.elementID: 4434868224.83>
+                            Image, 0x1186e6f80, {{818.5, 1747.0}, {177.5, 265.5}} <AX element pid: 37819, elementOrHash.elementID: 4434959808.160>
+                            StaticText, 0x1186e70c0, {{830.5, 1900.0}, {118.5, 18.0}}, label: 'Oriental Poppies' <AX element pid: 37819, elementOrHash.elementID: 4434866880.161>
+                            StaticText, 0x1186e7200, {{830.5, 1920.0}, {96.5, 14.5}}, label: 'Alphonse Mucha' <AX element pid: 37819, elementOrHash.elementID: 4434867776.162>
+                          Button, 0x1186e7340, {{626.5, 1960.5}, {178.0, 133.0}}, label: 'Sample: Dancing Fox, Ohara Koson' <AX element pid: 37819, elementOrHash.elementID: 4434903040.84>
+                            Image, 0x1186e7480, {{626.5, 1852.5}, {178.0, 349.0}} <AX element pid: 37819, elementOrHash.elementID: 4434961600.163>
+                            StaticText, 0x1186e75c0, {{638.5, 2047.0}, {88.0, 18.0}}, label: 'Dancing Fox' <AX element pid: 37819, elementOrHash.elementID: 4434868672.164>
+                            StaticText, 0x1186e7700, {{638.5, 2067.0}, {74.0, 14.5}}, label: 'Ohara Koson' <AX element pid: 37819, elementOrHash.elementID: 4434869120.165>
+                        StaticText, 0x1186e7840, {{630.5, 2118.5}, {111.0, 20.5}}, label: 'Photographs' <AX element pid: 37819, elementOrHash.elementID: 4434903936.53>
+                        Other, 0x1186e7980, {{626.5, 2149.0}, {369.5, 428.0}} <AX element pid: 37819, elementOrHash.elementID: 4434911552.54>
+                          Button, 0x1186e7ac0, {{626.5, 2149.0}, {178.0, 133.5}}, label: 'Sample: Delicate Arch, Neal Herbert' <AX element pid: 37819, elementOrHash.elementID: 4434905280.85>
+                            Image, 0x1186e7c00, {{626.5, 2147.0}, {178.0, 137.5}} <AX element pid: 37819, elementOrHash.elementID: 4434955776.166>
+                            StaticText, 0x1186e7d40, {{626.5, 2149.0}, {178.0, 133.5}}, label: 'Delicate Arch' <AX element pid: 37819, elementOrHash.elementID: 4434904832.167>
+                          Button, 0x1186e7e80, {{818.5, 2149.0}, {177.5, 133.5}}, label: 'Sample: Hawksbill Sea Turtle, Caroline S. Rogers' <AX element pid: 37819, elementOrHash.elementID: 4434906176.86>
+                            Image, 0x1186e8000, {{811.5, 2149.0}, {192.0, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434954432.168>
+                            StaticText, 0x1186e8140, {{818.5, 2149.0}, {177.5, 133.5}}, label: 'Hawksbill Sea Turtle' <AX element pid: 37819, elementOrHash.elementID: 4434905728.169>
+                          Button, 0x1186e8280, {{626.5, 2296.5}, {178.0, 133.0}}, label: 'Sample: Earthrise, William Anders' <AX element pid: 37819, elementOrHash.elementID: 4434907072.87>
+                            Image, 0x1186e83c0, {{626.5, 2274.0}, {178.0, 178.0}} <AX element pid: 37819, elementOrHash.elementID: 4434954880.170>
+                            StaticText, 0x1186e8500, {{626.5, 2296.5}, {178.0, 133.0}}, label: 'Earthrise' <AX element pid: 37819, elementOrHash.elementID: 4434906624.171>
+                          Button, 0x1186e8640, {{818.5, 2296.5}, {177.5, 133.0}}, label: 'Sample: Red Fox in Snow, Neal Herbert' <AX element pid: 37819, elementOrHash.elementID: 4434907968.88>
+                            Image, 0x1186e8780, {{807.5, 2296.5}, {199.5, 133.0}} <AX element pid: 37819, elementOrHash.elementID: 4434956672.172>
+                            StaticText, 0x1186e88c0, {{818.5, 2296.5}, {177.5, 133.0}}, label: 'Red Fox in Snow' <AX element pid: 37819, elementOrHash.elementID: 4434907520.173>
+                          Button, 0x1186e8a00, {{626.5, 2443.5}, {178.0, 133.5}}, label: 'Sample: The Blue Marble, Apollo 17 crew' <AX element pid: 37819, elementOrHash.elementID: 4434909312.89>
+                            Image, 0x1186e8b40, {{626.5, 2421.5}, {178.0, 178.0}} <AX element pid: 37819, elementOrHash.elementID: 4434957120.174>
+                            StaticText, 0x1186e8c80, {{626.5, 2443.5}, {178.0, 133.5}}, label: 'The Blue Marble' <AX element pid: 37819, elementOrHash.elementID: 4434908864.175>
+                          Button, 0x1186e8dc0, {{818.5, 2443.5}, {177.5, 133.5}}, label: 'Sample: Grand Prismatic Spring, National Park Service' <AX element pid: 37819, elementOrHash.elementID: 4434910656.90>
+                            Image, 0x1186e8f00, {{803.0, 2443.5}, {208.5, 133.5}} <AX element pid: 37819, elementOrHash.elementID: 4434955328.176>
+                            StaticText, 0x1186e9040, {{818.5, 2443.5}, {177.5, 133.5}}, label: 'Grand Prismatic Spring' <AX element pid: 37819, elementOrHash.elementID: 4434910208.177>
+                      Other, 0x1186e9180, {{967.0, 158.0}, {30.0, 1174.0}}, label: 'Vertical scroll bar, 3 pages', value: 0% <AX element pid: 37819, elementOrHash.elementID: 4628814848.44>
+                        Other, 0x1186e92c0, {{994.0, 1322.0}, {3.0, 7.0}} <AX element pid: 37819, elementOrHash.elementID: 4434571072.55>
+                      Other, 0x1186e9400, {{967.0, 158.0}, {30.0, 1174.0}}, label: 'Vertical scroll bar, 3 pages', value: 0% <AX element pid: 37819, elementOrHash.elementID: 4628814848.44>
+                        Other, 0x1186e9540, {{994.0, 1322.0}, {3.0, 7.0}} <AX element pid: 37819, elementOrHash.elementID: 4434571072.55>
+            Other, 0x1186e9680, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4616076288.15>
+              Other, 0x1186e97c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 37819, elementOrHash.elementID: 4435766272.20>
