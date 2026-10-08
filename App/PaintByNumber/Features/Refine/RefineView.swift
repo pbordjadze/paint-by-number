@@ -245,13 +245,21 @@ struct RefineView: View {
         }
     }
 
+    /// The shortest line the pen draws, in the template's canvas units: the template keeps no
+    /// stroke inside a cell shorter than 6 (`LineLayering.minimumRun`), so a shorter one would
+    /// show only until the template came.
+    static let shortestLine: CGFloat = 8
+
     /// The pen's line as it was drawn, smoothed and thinned on screen's terms; nil for a touch
-    /// too short to be a line.
+    /// too short to be a line, on screen or in the template.
     private func penLine(_ points: [SIMD2<Float>]) -> TemplateRefinements.Line? {
         let size = picture.size
         guard size.width > 0, size.height > 0 else { return nil }
         let onScreen = points.map { CGPoint(x: CGFloat($0.x) * size.width, y: CGFloat($0.y) * size.height) }
-        guard PenPath.length(onScreen) >= 4 else { return nil }
+        // The template's canvas units per point on screen.
+        let units = base.map { $0.drawing.size.width / size.width } ?? 0
+        let shortest = units > 0 ? max(4, Self.shortestLine / units) : 4
+        guard PenPath.length(onScreen) >= shortest else { return nil }
         let line = PenPath.simplified(PenPath.smoothed(onScreen, spacing: 2), tolerance: 0.3)
         return TemplateRefinements.Line(
             kind: .draw, radius: 0,
