@@ -51,7 +51,8 @@ nonisolated struct PaletteMetrics: Equatable, Sendable {
 
 /// The paint palette: circular swatches with their number and a progress ring per color;
 /// finished colors leave it. Swatches wrap into up to `lines` rows (columns when vertical)
-/// in `order`, and scroll when they still don't fit; the selected color is kept in view.
+/// in `order`, filling across the bar before along it (`lanes`), so the order reads along the
+/// way the bar scrolls; they scroll when they still don't fit, keeping the selected color in view.
 struct PaletteBar: View {
     let session: PaintingSession
     var axis: Axis = .horizontal
@@ -77,6 +78,13 @@ struct PaletteBar: View {
         (0..<session.paletteCount).filter { !session.isColorComplete($0) || session.selectedColor == $0 }
     }
 
+    /// `colors` cut into lanes of `lines` swatches: a bottom bar's columns, read top to bottom
+    /// (1 4 7 over 2 5 8 over 3 6 9), a side bar's rows, read leading to trailing.
+    static func lanes(_ colors: [Int], lines: Int) -> [[Int]] {
+        let size = max(lines, 1)
+        return stride(from: 0, to: colors.count, by: size).map { Array(colors[$0..<min($0 + size, colors.count)]) }
+    }
+
     /// The paint of palette color `index` as a SwiftUI color.
     static func paint(_ template: Template, _ index: Int) -> Color {
         let rgb = template.palette[index].rgb
@@ -98,7 +106,15 @@ struct PaletteBar: View {
         let colors = order.filter(visible.contains)
         let count = max(colors.count, 1)
         let lineCount = max(1, min(lines, count))
-        let columns = max(1, axis == .horizontal ? (count + lineCount - 1) / lineCount : lineCount)
+        let lanes = Self.lanes(colors, lines: lineCount)
+        let horizontal = axis == .horizontal
+        // Lanes run along the bar, each one swatch per line across it.
+        let along = horizontal
+            ? AnyLayout(HStackLayout(alignment: .top, spacing: PaletteMetrics.spacing))
+            : AnyLayout(VStackLayout(alignment: .leading, spacing: PaletteMetrics.spacing))
+        let across = horizontal
+            ? AnyLayout(VStackLayout(spacing: PaletteMetrics.spacing))
+            : AnyLayout(HStackLayout(spacing: PaletteMetrics.spacing))
         let caption = showsCurrentColor && axis == .horizontal
         let thickness = metrics.thickness(lines: lineCount, caption: caption)
         let radius = min(thickness / 2, 38)
@@ -114,10 +130,10 @@ struct PaletteBar: View {
             }
             ScrollViewReader { proxy in
                 ScrollView(axis == .horizontal ? .horizontal : .vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: PaletteMetrics.spacing) {
-                        ForEach(Array(stride(from: 0, to: colors.count, by: columns)), id: \.self) { start in
-                            HStack(spacing: PaletteMetrics.spacing) {
-                                ForEach(colors[start..<min(start + columns, colors.count)], id: \.self) { index in
+                    along {
+                        ForEach(lanes.indices, id: \.self) { lane in
+                            across {
+                                ForEach(lanes[lane], id: \.self) { index in
                                     swatch(index).id(index)
                                         .transition(transition)
                                 }

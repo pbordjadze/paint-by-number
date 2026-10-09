@@ -59,6 +59,14 @@ struct PaletteArrangementTests {
         #expect(Set(PaletteOrder.allCases.map(\.name)).count == PaletteOrder.allCases.count)
     }
 
+    /// Swatches fill across the bar before along it: three rows read 1 4 7 / 2 5 8 / 3 6 9.
+    @Test func swatchesFillAcrossTheBarFirst() {
+        #expect(PaletteBar.lanes(Array(0..<9), lines: 3) == [[0, 1, 2], [3, 4, 5], [6, 7, 8]])
+        #expect(PaletteBar.lanes([5, 2, 7, 0], lines: 3) == [[5, 2, 7], [0]])
+        #expect(PaletteBar.lanes([4, 1], lines: 1) == [[4], [1]])
+        #expect(PaletteBar.lanes([], lines: 2).isEmpty)
+    }
+
     @Test func theNextColorFollowsThePalettesOrder() {
         let template = Fixtures.mosaic
         let session = PaintingSession(template: template, nicknameSeed: 42)

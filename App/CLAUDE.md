@@ -114,7 +114,8 @@ synchronized folder would bundle it into the app.
   `PaintChromeState.observe` (undo registration, swatch shake, tips, VoiceOver announcements); the
   canvas also gets direct `PaintingCanvas` calls.
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
-  (trailing edge of wide windows) so every color shows at once; More › Palette chooses its lines
+  (trailing edge of wide windows) so every color shows at once, filling across the bar before
+  along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
   (`PaletteRows`) and order (`PaletteOrder`); picking the next color, and the Paint menu's `]`/`[`,
   follow that order (`PaintingSession.colorOrder`).
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused
