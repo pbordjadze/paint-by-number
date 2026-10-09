@@ -8,10 +8,12 @@ synchronized folder would bundle it into the app.
 ## Gotchas
 
 - The inline `PhotosPicker` runs out of process: never put it inside a ScrollView (UIKit can't
-  arbitrate their pans across the process boundary: neither scrolls). On compact widths it runs edge
-  to edge, flush with the window's left and top edges: inset from both, its photo grid ignores taps
-  on iPhone for its first ten seconds or so (`PhotoSourceView`; `CreateFlowTests` picks an inline
-  photo on both devices).
+  arbitrate their pans across the process boundary: neither scrolls). It stays flush with the page's
+  left edge, the window's unless a safe area insets it (edge to edge on compact widths, its card
+  docked there on wide ones): inset from both the left and the top, its photo grid ignores taps on
+  iPhone for its first ten seconds or so, and a painter's iPad ignored them too, though the iPad
+  simulator doesn't (`PhotoSourceView`; `CreateFlowTests` picks an inline photo on both devices
+  and checks the left edge).
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
@@ -264,7 +266,8 @@ Conventions).
 - `PhotoSourceView`: the inline picker fills the page (Gotchas). Compact windows switch Photos and
   Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
   picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
-  albums and search, so no second, full picker is offered.
+  albums and search; "Browse All…" presents the full system picker, the way in when the embedded
+  one doesn't take taps.
 - Samples: Paintings then Photographs (`Sample.all(of:)`), in `library.json`'s order, titled from
   the catalog (`sample.<id>`); `Sample.starters` (a painting and a photograph) are prepared on first
   launch. Adding a picture: `docs/picture-library.md`.

@@ -241,6 +241,14 @@
       "comment" : "Button on the screen shown when a painting can't be opened or the canvas can't be drawn: returns to the gallery",
       "extractionState" : "manual"
     },
+    "Browse all photos and albums" : {
+      "comment" : "Pointer hover help of the Browse All button",
+      "extractionState" : "manual"
+    },
+    "Browse All…" : {
+      "comment" : "Toolbar button of the photo step in the create flow: opens the full system photo picker",
+      "extractionState" : "manual"
+    },
     "Cancel" : {
       "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label), and the Refine screen's Cancel, which puts back what it opened with",
       "extractionState" : "manual"
