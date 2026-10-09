@@ -9,13 +9,16 @@ import UIKit
 /// The inline picker is the page's primary content and fills the remaining height. Compact
 /// windows switch between it and the samples with a segmented control; wide windows show the
 /// samples in a scrolling column beside it, in two sections: paintings, then photographs. The
-/// picker's own top bar reaches the albums and search.
+/// picker's own top bar reaches the albums and search; "Browse All…" presents the full system
+/// picker, a way in that doesn't depend on the embedded one taking taps.
 ///
-/// On compact widths the picker runs edge to edge: inset from both the window's left and top
-/// edge, the embedded picker's photo grid ignores taps on iPhone for its first ten seconds or
-/// so (its bar takes them at once), measured on the iOS 26 simulator, where every layout that
-/// keeps the picker flush with one of those edges picks a photo on the first tap. Wide windows
-/// (600 pt and wider, `isWide`: a full-screen iPad) don't suffer it and keep the picker's card.
+/// The picker meets the page's leading edge: inset from both the window's left and top edge,
+/// the embedded picker's photo grid ignores taps on iPhone for its first ten seconds or so (its
+/// bar takes them at once), measured on the iOS 26 simulator, where every layout that keeps the
+/// picker flush with one of those edges picks a photo on the first tap. Compact widths run it
+/// edge to edge; wide windows (600 pt and wider, `isWide`: a full-screen iPad) keep its card,
+/// docked to that edge. The iPad simulator takes taps on an inset card, but a painter's iPad
+/// didn't, so wide windows follow the same rule.
 struct PhotoSourceView: View {
     enum Pane: Hashable { case photos, samples }
 
@@ -25,6 +28,8 @@ struct PhotoSourceView: View {
 
     @State private var pane: Pane
     @State private var libraryItems: [PhotosPickerItem] = []
+    @State private var browsedItem: PhotosPickerItem?
+    @State private var isBrowsingAll = false
     @State private var isShowingCamera = false
     @State private var width: CGFloat = 0
     /// Tiles widen with the text size, so a caption keeps room at the largest sizes.
@@ -42,7 +47,8 @@ struct PhotoSourceView: View {
     private let paneSpacing: CGFloat = 24
     private var showsPhotos: Bool { isWide || pane == .photos }
     private var showsSamples: Bool { isWide || pane == .samples }
-    private var samplesWidth: CGFloat { max(0, (width - 2 * horizontalPadding - paneSpacing) * 0.4) }
+    /// Wide windows pad only the samples' side: the picker's card meets the leading edge.
+    private var samplesWidth: CGFloat { max(0, (width - horizontalPadding - paneSpacing) * 0.4) }
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
 
     var body: some View {
@@ -70,6 +76,10 @@ struct PhotoSourceView: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
             }
+            ToolbarItem(placement: .primaryAction) {
+                Button("Browse All…", systemImage: "photo.on.rectangle.angled") { isBrowsingAll = true }
+                    .help("Browse all photos and albums")
+            }
             if cameraAvailable {
                 ToolbarItem(placement: .primaryAction) {
                     Button("Take Photo", systemImage: "camera") { isShowingCamera = true }
@@ -80,9 +90,14 @@ struct PhotoSourceView: View {
             guard let item = items.first else { return }
             // Clearing the selection lets the same photo be picked again after coming back.
             libraryItems = []
-            model.load(item: item)
-            onPicked()
+            pick(item)
         }
+        .onChange(of: browsedItem) { _, item in
+            guard let item else { return }
+            browsedItem = nil
+            pick(item)
+        }
+        .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 model.load(imageData: data)
@@ -107,8 +122,8 @@ struct PhotoSourceView: View {
     /// One layout for both widths, so the picker keeps its identity (and its loaded grid and
     /// scroll position) across rotation and resizing. On compact widths the samples stack on
     /// top of the hidden picker; they are never an ancestor of it, and it takes no touches.
-    /// The page's horizontal padding is the panes' own: wide windows inset both, compact ones
-    /// only the samples, so the picker spans the window.
+    /// The page's horizontal padding is the samples' alone, so the picker reaches the window's
+    /// leading edge: on compact widths it spans the window.
     private var panes: some View {
         let layout = isWide
             ? AnyLayout(HStackLayout(alignment: .top, spacing: paneSpacing))
@@ -124,12 +139,12 @@ struct PhotoSourceView: View {
                     .padding(.horizontal, isWide ? 0 : horizontalPadding)
             }
         }
-        .padding(.horizontal, isWide ? horizontalPadding : 0)
+        .padding(.trailing, isWide ? horizontalPadding : 0)
     }
 
     private var photosPane: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if isWide { SectionTitle("Your Photos") }
+            if isWide { SectionTitle("Your Photos").padding(.leading, horizontalPadding) }
             // Continuous selection of at most one photo with the selection actions disabled:
             // a tap picks at once, with no Add button to confirm. The shared library gives the
             // items asset identifiers, which the embedded picker needs to show the reset to `[]`
@@ -148,16 +163,19 @@ struct PhotoSourceView: View {
             .photosPickerAccessoryVisibility(.hidden, edges: .bottom)
             .accessibilityIdentifier("library-picker")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // The card only on wide windows (see the type's doc comment), through the same
-            // modifiers in both cases so the picker keeps its identity when the width changes.
+            // The card only on wide windows, square where it meets the leading edge (see the
+            // type's doc comment), through the same modifiers in both cases so the picker keeps
+            // its identity when the width changes.
             .background(Theme.surface.opacity(isWide ? 1 : 0))
-            .clipShape(.rect(cornerRadius: isWide ? Theme.cardRadius : 0, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
-                    .strokeBorder(Theme.hairline, lineWidth: isWide ? 0.5 : 0)
-            }
+            .clipShape(cardShape)
+            .overlay { cardShape.strokeBorder(Theme.hairline, lineWidth: isWide ? 0.5 : 0) }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    private var cardShape: UnevenRoundedRectangle {
+        let radius = isWide ? Theme.cardRadius : 0
+        return UnevenRoundedRectangle(bottomTrailingRadius: radius, topTrailingRadius: radius, style: .continuous)
     }
 
     private var samplesPane: some View {
@@ -221,6 +239,12 @@ struct PhotoSourceView: View {
     private var tileWidth: CGFloat {
         let column = (isWide ? samplesWidth : width - 2 * horizontalPadding) - 8
         return column > 0 ? min(tileMinimumWidth, column) : tileMinimumWidth
+    }
+
+    /// Shared by the inline picker and Browse All.
+    private func pick(_ item: PhotosPickerItem) {
+        model.load(item: item)
+        onPicked()
     }
 }
 
