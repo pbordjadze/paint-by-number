@@ -19,6 +19,9 @@ synchronized folder would bundle it into the app.
   painting only once the push has landed: the transition lays the screen out every frame, and
   the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
   answering UI tests for up to half a minute.
+- The create flow's preview turns off iOS 26's swipe back from anywhere on a pushed screen
+  (`ContentSwipeBackOff` in `TemplatePreviewView`): it took the sliders' and the comparison's
+  drags and left for the photo step. The edge swipe and Back still go back.
 - A presentation's content only sees state its presenter's body read: `AppShellView.body` reads the
   create flow's photo, title and identity up front, or the flow opens without its photo.
 - `CanvasUniforms`, `RegionState` and `GlyphInstance` are mirrored by hand in `Shaders.metal`:

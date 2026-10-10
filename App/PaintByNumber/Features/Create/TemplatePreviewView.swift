@@ -1,6 +1,7 @@
 import Foundation
 import PaintCore
 import SwiftUI
+import UIKit
 
 /// Second step of the create flow: the generated template, compared with the photo,
 /// tuned live with a few simple controls, and the painting's name. In compact windows (iPhone)
@@ -97,6 +98,7 @@ struct TemplatePreviewView: View {
         .toolbar { toolbar }
         // Shrink Preview is the way back from the enlarged preview.
         .navigationBarBackButtonHidden(isEnlarged)
+        .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
         #if DEBUG
         // `create-refine` shows the Refine screen once its painting is refined.
@@ -579,5 +581,35 @@ private extension View {
             // A comfortable target without making the chip itself taller.
             .frame(minHeight: 44)
             .contentShape(.rect)
+    }
+}
+
+/// iOS 26 lets a swipe right from anywhere on a pushed screen go back. On the preview that took
+/// the drags meant for the sliders (one that missed the thumb, or met a slider waiting for the
+/// suggestion) and for the comparison, and left for the photo step. SwiftUI has no switch for
+/// it, so this turns that content-area recognizer off while the preview shows; the edge swipe
+/// and Back keep working (`CreateFlowTests.testSwipeAcrossSettingsStaysOnPreview`).
+private struct ContentSwipeBackOff: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> Controller { Controller() }
+
+    func updateUIViewController(_ controller: Controller, context: Context) {}
+
+    final class Controller: UIViewController {
+        private weak var disabled: UIGestureRecognizer?
+
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            guard let recognizer = navigationController?.interactiveContentPopGestureRecognizer,
+                  recognizer.isEnabled else { return }
+            recognizer.isEnabled = false
+            disabled = recognizer
+        }
+
+        // On again as the preview goes; an edge swipe called off halfway appears it again.
+        override func viewWillDisappear(_ animated: Bool) {
+            super.viewWillDisappear(animated)
+            disabled?.isEnabled = true
+            disabled = nil
+        }
     }
 }

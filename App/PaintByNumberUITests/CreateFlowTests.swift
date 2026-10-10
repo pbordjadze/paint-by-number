@@ -226,6 +226,44 @@ final class CreateFlowTests: XCTestCase {
         XCTAssertTrue(app.buttons["Start Painting"].waitForExistence(timeout: 60), "Picking a sample didn't open its preview")
     }
 
+    /// A swipe right across the preview's settings stays on the preview: iOS 26's swipe back from
+    /// anywhere on a pushed screen took the sliders' drags and left for the photo step. The edge
+    /// swipe still goes back.
+    @MainActor
+    func testSwipeAcrossSettingsStaysOnPreview() throws {
+        let (app, picker) = launchToPicker("create")
+        XCTAssertTrue(picker.exists, "No library picker")
+        if !isPad {
+            let samples = sourceControl(app).buttons["Samples"]
+            XCTAssertTrue(samples.waitForExistence(timeout: 10))
+            samples.tap()
+        }
+        let first = firstSample(app)
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        first.tap()
+        let start = app.buttons["Start Painting"]
+        XCTAssertTrue(start.waitForExistence(timeout: 60), "Picking a sample didn't open its preview")
+        let detail = app.sliders["Detail"]
+        XCTAssertTrue(detail.waitForExistence(timeout: 10), "The preview has no Detail slider")
+
+        // Along the slider from its leading end (the thumb is rarely there), then from its title.
+        let window = app.windows.firstMatch
+        let across = CGVector(dx: window.frame.width * 0.6, dy: 0)
+        let track = detail.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.5))
+        track.press(forDuration: 0.05, thenDragTo: track.withOffset(across))
+        let title = detail.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: -0.8))
+        title.press(forDuration: 0.05, thenDragTo: title.withOffset(across))
+        sleep(1)
+        attachScreenshot(of: app, named: "preview-after-swipes")
+        XCTAssertTrue(start.exists && start.isHittable, "A swipe across the settings left the preview")
+
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
+            .press(forDuration: 0.05, thenDragTo: window.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)))
+        let back = waitFor(start, toMatch: NSPredicate(format: "exists == false"))
+        attachScreenshot(of: app, named: "after-edge-swipe")
+        XCTAssertTrue(back, "The edge swipe didn't return to the photo step")
+    }
+
     /// At the largest text size the sample tiles widen for their captions (one column) but stay
     /// inside the window.
     @MainActor
