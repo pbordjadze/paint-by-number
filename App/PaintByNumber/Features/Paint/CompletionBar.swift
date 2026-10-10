@@ -12,6 +12,9 @@ struct CompletionBar: View {
     let session: PaintingSession
     let title: String
     let share: CompletionShare
+    /// The seal bounces each time this grows (`PaintView` bumps it once the bar is up: a bar
+    /// inserted with the painting's completion never sees that change).
+    let sealBounces: Int
     let onReplay: () -> Void
     let onShareTimelapse: () -> Void
     let onClose: (() -> Void)?
@@ -21,7 +24,7 @@ struct CompletionBar: View {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 28))
                 .foregroundStyle(.tint)
-                .symbolEffect(.bounce, value: session.isComplete)
+                .symbolEffect(.bounce, value: sealBounces)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Finished!").font(.headline)
                 Group {

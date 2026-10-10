@@ -36,6 +36,11 @@ enum PencilAction {
 /// next, zoom to next, hint, zoom to fit), an "Unpainted areas" rotor and three-finger page
 /// scrolling. `reduceMotion` makes fills land at once, drops the finishing shine and steps
 /// the replay.
+///
+/// Finishing the painting (`finish`): its last fill lingers, the camera then eases out to the
+/// whole painting, and a shine sweeps all of it as the camera lands. A flight to the whole
+/// painting follows layout changes on the way (the completion bar replacing the palette, a
+/// rotation) instead of stopping.
 final class CanvasView: UIView, PaintingCanvas {
     override class var layerClass: AnyClass { CAMetalLayer.self }
 
@@ -120,6 +125,12 @@ final class CanvasView: UIView, PaintingCanvas {
     private var photoTexture: (any MTLTexture)?
     private var photoTask: Task<Void, Never>?
     private var photoFade = Fade(from: 0, to: 0, duration: 0.2)
+    /// When every fill painted so far has landed (renderer clock).
+    private var fillsLand = CanvasClock.never
+    /// The finish's flight, waiting for the last fill to land (`finish`).
+    private var finishTask: Task<Void, Never>?
+    /// The painting was finished by a stroke still under way: the finish flies once it ends.
+    private var finishAwaitsStroke = false
 
     // Camera
     private var fitZoom: CGFloat = 1
@@ -162,6 +173,14 @@ final class CanvasView: UIView, PaintingCanvas {
     private static let tapTolerance: CGFloat = 14
     private static let brushRadius: CGFloat = 11
 
+    /// The finish (`finish`): the fill that finishes the painting spreads this much slower (0.9 s
+    /// at most), the camera rests on it this long once it has landed, then eases out to the whole
+    /// painting for `finishFlight` seconds, unless it is within `finishFitSlack` of it already.
+    private static let lastFillSlowdown: Float = 1.5
+    private static let finishPause: Float = 0.35
+    private static let finishFlight: CFTimeInterval = 0.8
+    private static let finishFitSlack: CGFloat = 0.05
+
     private struct Camera: Equatable {
         var zoom: CGFloat
         var origin: CGPoint
@@ -174,6 +193,8 @@ final class CanvasView: UIView, PaintingCanvas {
         var toOffset: CGPoint
         var start: CFTimeInterval
         var duration: CFTimeInterval
+        /// Heading for the whole painting: a layout change on the way retargets it to the new fit.
+        var fits: Bool
     }
 
     init(session: PaintingSession) {
@@ -344,9 +365,15 @@ final class CanvasView: UIView, PaintingCanvas {
         updateZoomLimits()
         restrictNavigationToFingers()
         let z = clampZoom(fitZoom * relative)
+        let flight = cameraAnimation
         cameraAnimation = nil
         apply(zoom: z, offset: offset(centering: center, zoom: z))
-        cameraDidSettle()
+        if let flight, flight.fits {
+            // On from here to the new fit, landing when it would have.
+            flyToFit(duration: max(0.2, flight.start + flight.duration - CACurrentMediaTime()))
+        } else {
+            cameraDidSettle()
+        }
     }
 
     /// The paper, backdrop and ink the next frame draws with.
@@ -422,7 +449,7 @@ final class CanvasView: UIView, PaintingCanvas {
         onZoomChange?(relativeZoom)
     }
 
-    private func animateCamera(zoom: CGFloat, offset: CGPoint, duration: CFTimeInterval) {
+    private func animateCamera(zoom: CGFloat, offset: CGPoint, duration: CFTimeInterval, fits: Bool = false) {
         if reduceMotion {
             cameraAnimation = nil
             apply(zoom: zoom, offset: offset)
@@ -431,7 +458,7 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         cameraAnimation = CameraAnimation(
             fromZoom: scrollView.zoomScale, toZoom: zoom, fromOffset: scrollView.contentOffset, toOffset: offset,
-            start: CACurrentMediaTime(), duration: duration)
+            start: CACurrentMediaTime(), duration: duration, fits: fits)
         requestRender()
     }
 
@@ -501,6 +528,9 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Zoom relative to the fitted canvas: 1 shows the whole painting.
     var relativeZoom: CGFloat { fitZoom > 0 ? scrollView.zoomScale / fitZoom : 1 }
 
+    /// Whether a camera flight is under way (tests and demos wait for one to land).
+    var isCameraFlying: Bool { cameraAnimation != nil }
+
     /// Where the camera looks (where a camera move in flight is heading), so a canvas of another
     /// template of the same size can open there.
     var camera: CanvasCamera {
@@ -520,15 +550,24 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     func zoomToFit(animated: Bool = true) {
-        let center = SIMD2(Float(template.width), Float(template.height)) / 2
-        let target = offset(centering: center, zoom: fitZoom)
         if animated {
-            animateCamera(zoom: fitZoom, offset: target, duration: 0.5)
+            flyToFit(duration: 0.5)
         } else {
             cameraAnimation = nil
-            apply(zoom: fitZoom, offset: target)
+            apply(zoom: fitZoom, offset: fitOffset)
             cameraDidSettle()
         }
+    }
+
+    /// The content offset that centres the whole painting at the fitted zoom.
+    private var fitOffset: CGPoint {
+        offset(centering: SIMD2(Float(template.width), Float(template.height)) / 2, zoom: fitZoom)
+    }
+
+    /// Flies to the whole painting; a layout change on the way retargets the flight to the new
+    /// fit (`layoutSubviews`).
+    private func flyToFit(duration: CFTimeInterval) {
+        animateCamera(zoom: fitZoom, offset: fitOffset, duration: duration, fits: true)
     }
 
     /// Keyboard zoom about the middle of the visible area.
@@ -791,6 +830,8 @@ final class CanvasView: UIView, PaintingCanvas {
     func replay() {
         guard let renderer, !session.progress.log.isEmpty else { return }
         replayTask?.cancel()
+        // The replay ends with a finish of its own.
+        cancelFinish()
         isReplaying = true
         numbersChanged()
         zoomToFit()
@@ -828,23 +869,93 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     /// Finishing a color sweeps a gloss over it once its last fill has landed; finishing the
-    /// painting sweeps the whole canvas (not under Reduce Motion).
+    /// painting flies out to all of it and sweeps the whole canvas (`finish`).
     private func celebrate(_ event: PaintEvent) {
-        guard !reduceMotion else { return }
-        let delay: Float
         switch event {
         case let .colorCompleted(color):
-            shineColor = color
-            delay = 0.35
+            // The fill that finishes the painting finishes a color too: the painting's shine is
+            // the one finale.
+            guard !session.isComplete else { return }
+            shine(color: color, after: 0.35)
         case .artworkCompleted:
-            shineColor = -1
-            delay = 0.6
+            finish()
+        case .strokeEnded:
+            guard finishAwaitsStroke else { return }
+            finishAwaitsStroke = false
+            scheduleFinishFlight()
         default:
             return
         }
+    }
+
+    /// Sweeps a gloss over `color`'s paint (-1: the whole painting) `delay` seconds from now;
+    /// nothing shines under Reduce Motion.
+    private func shine(color: Int, after delay: Float) {
+        guard !reduceMotion else { return }
+        shineColor = color
         shineStart = now() + delay
         activeUntil = max(activeUntil, shineStart + 1.2)
         requestRender()
+    }
+
+    /// The painting is finished (or its replay ended). Once the last fill has landed, and the
+    /// stroke that painted it has ended, the camera rests a moment, then eases out to the whole
+    /// painting, which shines as the camera lands; already showing about all of it, the camera
+    /// stays and the shine sweeps once the fill has landed. Under Reduce Motion the camera cuts
+    /// to the whole painting after the pause, so the last area is seen landing, and nothing
+    /// shines.
+    private func finish() {
+        cancelFinish()
+        guard abs(camera.zoom - 1) > Self.finishFitSlack else {
+            shine(color: -1, after: max(0.6, fillsLand - now()))
+            return
+        }
+        if session.isStroking {
+            finishAwaitsStroke = true
+        } else {
+            scheduleFinishFlight()
+        }
+    }
+
+    private func scheduleFinishFlight() {
+        finishTask?.cancel()
+        let wait = max(0, fillsLand - now()) + Self.finishPause
+        finishTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(Double(wait)))
+            guard let self, !Task.isCancelled else { return }
+            finishTask = nil
+            flyToFinish()
+        }
+    }
+
+    /// The finish's flight, unless the painting was undone meanwhile, a replay took over or
+    /// feedback's markup canvas leads the camera.
+    private func flyToFinish() {
+        guard session.isComplete, !isAnnotating, !isReplaying else { return }
+        // A stroke begun meanwhile (it paints nothing now): the canvas is the painter's, as
+        // after a pan.
+        guard !session.isStroking else {
+            shine(color: -1, after: 0)
+            return
+        }
+        // The fill moment's sparkles sit in view space: the flight would leave them behind.
+        for sparkle in sparkleLayers { sparkle.removeAnimation(forKey: "sparkle") }
+        flyToFit(duration: Self.finishFlight)
+        shine(color: -1, after: Float(Self.finishFlight))
+    }
+
+    private func cancelFinish() {
+        finishTask?.cancel()
+        finishTask = nil
+        finishAwaitsStroke = false
+    }
+
+    /// A pan or pinch before the finish flew: the camera stays the painter's, and the whole
+    /// painting shines at once (not under Reduce Motion).
+    private func finishYieldsCamera() {
+        guard finishTask != nil || finishAwaitsStroke else { return }
+        cancelFinish()
+        shine(color: -1, after: 0)
     }
 
     private func bump(_ region: Int) {
@@ -862,6 +973,9 @@ final class CanvasView: UIView, PaintingCanvas {
         let time = now()
         let zoom = Float(scrollView.zoomScale)
         let animate = animated && !reduceMotion
+        // The fill that finishes the painting lingers.
+        let finishes = session.isComplete
+        let pace = (finishes ? Self.lastFillSlowdown : 1) * fillDurationScale
         var longest: Float = 0
         for r in regions {
             guard animate else {
@@ -871,14 +985,16 @@ final class CanvasView: UIView, PaintingCanvas {
             let start = paintOrigin(for: r, near: origin)
             let radius = template.regions[r].bounds.farthestCorner(from: start)
             // Bigger on screen → a little longer, so every fill reads as one smooth stroke.
-            let duration = min(0.6, max(0.25, 0.2 + radius * zoom / 700)) * fillDurationScale
+            let duration = min(0.6, max(0.25, 0.2 + radius * zoom / 700)) * pace
             renderer.update(r, RegionState(
                 origin: start, start: time, duration: duration, radius: radius, painted: 1,
                 seed: RegionState.frontSeed(forRegion: r)))
             longest = max(longest, duration)
         }
         if animated { FeedbackEngine.shared.fillDuration = TimeInterval(longest) }
-        if animate, regions.count == 1 { popSparkles(at: regions[0], after: longest) }
+        // The finish has a shine of its own, and its flight would leave view-space sparkles behind.
+        if animate, regions.count == 1, !finishes { popSparkles(at: regions[0], after: longest) }
+        fillsLand = max(fillsLand, time + longest)
         activeUntil = max(activeUntil, time + longest + 0.75)
         if hoverRegion >= 0 && session.isPainted(hoverRegion) { hoverRegion = -1 }
         requestRender()
@@ -1356,11 +1472,13 @@ extension CanvasView: UIScrollViewDelegate {
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         cameraAnimation = nil
         pendingFocus = nil
+        finishYieldsCamera()
     }
 
     func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
         cameraAnimation = nil
         pendingFocus = nil
+        finishYieldsCamera()
     }
 
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {

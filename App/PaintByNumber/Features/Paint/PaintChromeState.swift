@@ -14,11 +14,11 @@ final class PaintChromeState {
     @ObservationIgnored weak var undoManager: UndoManager?
     @ObservationIgnored private var observed: ObjectIdentifier?
 
-    func observe(_ session: PaintingSession, controller: CanvasController) {
+    func observe(_ session: PaintingSession) {
         guard observed != ObjectIdentifier(session) else { return }
         observed = ObjectIdentifier(session)
         PaintTips.paintingOpened(hasProgress: session.progress.paintedCount > 0)
-        session.onEvent { [weak self, weak controller, weak session] event in
+        session.onEvent { [weak self, weak session] event in
             if let session, let signal = PaintTips.signal(for: event, isStroking: session.isStroking) {
                 PaintTips.record(signal)
             }
@@ -33,12 +33,14 @@ final class PaintChromeState {
                     self?.shakes[expected, default: 0] += 1
                 }
             case let .colorCompleted(color):
-                if let session {
+                // The fill that finishes the painting finishes a color too: only the painting is
+                // announced.
+                if let session, !session.isComplete {
                     Announcer.announce(PaintSpeech.colorFinished(number: color + 1, name: session.colorNames[color], nickname: session.nickname(of: color)))
                 }
             case .artworkCompleted:
+                // The canvas flies out to the whole painting (`CanvasView.finish`).
                 Announcer.announce(PaintSpeech.paintingFinished)
-                controller?.zoomToFit()
             default:
                 break
             }
