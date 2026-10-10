@@ -41,6 +41,16 @@ import Foundation
 ///   ```
 ///   Readers without it draw every edge alike, which is the classic look of the same cells;
 ///   readers before `style` draw a coloring book layered (every line drawn, cells faint).
+/// - `DETL` (optional; written only for a template with detail areas, see
+///   `Template.detailRegions`):
+///   ```
+///   UInt32 count                at least 1
+///   count × UInt32 region       strictly ascending, each below the region count
+///   ```
+///   Readers without it draw a detail area's number at the usual floor
+///   (`LabelSizing.minimumFontSize`), larger than its room, spilling over its outline: legible,
+///   untidy, and the painting otherwise the same. Their `validate(minLabelRadius:)` calls a
+///   detail area with less than the usual room cramped.
 ///
 /// **Safety.** PaintCore is compiled with `-Ounchecked`, so the decoder checks every count
 /// against the bytes left before allocating, and every span, reference and coordinate in
@@ -69,6 +79,7 @@ extension Template {
     enum Chunk {
         static let generator: UInt32 = 0x524E_4547  // "GENR"
         static let lines: UInt32 = 0x454E_494C  // "LINE"
+        static let detail: UInt32 = 0x4C54_4544  // "DETL"
         static let requiredFlag: UInt32 = 1
         /// Tag, flags and length.
         static let headerSize = 12
@@ -91,6 +102,11 @@ extension Template {
         generator.write(pipelineVersion)
         var chunks: [(tag: UInt32, flags: UInt32, payload: Data)] = [(Chunk.generator, 0, generator.data)]
         if let lineArt { chunks.append((Chunk.lines, 0, lineArt.encoded())) }
+        if !detailRegions.isEmpty {
+            var detail = BinaryWriter()
+            detail.writeArray(detailRegions)
+            chunks.append((Chunk.detail, 0, detail.data))
+        }
         w.write(UInt32(chunks.count))
         for chunk in chunks {
             w.write(chunk.tag)
@@ -276,6 +292,13 @@ extension Template {
                     if case .corrupt = error { throw error }
                     throw CodingError.corrupt(Chunk.name(tag))
                 }
+            case Chunk.detail:
+                guard seen.insert(tag).inserted else { throw CodingError.corrupt("duplicate chunk") }
+                // Indices are checked against the regions by `validateReferences`.
+                guard let regions: [UInt32] = try? payload.readArray(), !regions.isEmpty else {
+                    throw CodingError.corrupt(Chunk.name(tag))
+                }
+                detailRegions = regions
             default:
                 if flags & Chunk.requiredFlag != 0 { throw CodingError.requiredExtension(tag) }
             }
@@ -328,6 +351,12 @@ extension Template {
         else { throw corrupt("mesh vertex region") }
         let vertexCount = mesh.vertices.count
         guard mesh.indices.count % 3 == 0, mesh.indices.allSatisfy({ Int($0) < vertexCount }) else { throw corrupt("mesh index") }
+
+        var previous = -1
+        for r in detailRegions {
+            guard Int(r) > previous, Int(r) < regions.count else { throw corrupt("detail regions") }
+            previous = Int(r)
+        }
 
         if let lineArt {
             let layers = UInt8(LineLayer.allCases.count)

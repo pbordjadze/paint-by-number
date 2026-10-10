@@ -31,7 +31,8 @@ public enum SVGExport {
     private static let selectionColor = "#7b3f7e"
     /// Largest number size as a fraction of the canvas' long side; big regions get several
     /// numbers of this size rather than one huge one. Numbers are sized by `LabelSizing` and
-    /// never dropped: none is smaller than `LabelSizing.minimumFontSize`.
+    /// never dropped: none is smaller than `LabelSizing.minimumFontSize`, a detail area's than
+    /// its `detailMinimumFontSize`.
     private static let maxNumberSize: Float = 1.0 / 64
     /// A coloring book's line, as a factor on the outline width: the app draws it three times
     /// as heavy as a classic line with the painting fitted to the screen.
@@ -106,7 +107,8 @@ public enum SVGExport {
             s += "<g font-family=\"Helvetica Neue, Helvetica, Arial, DejaVu Sans, sans-serif\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"\(numberColor)\">\n"
             for label in t.labels {
                 let text = String(t.regions[Int(label.region)].colorIndex + 1)
-                let size = LabelSizing.fontSize(radius: label.radius, digits: text.count, maximum: maxSize)
+                let size = LabelSizing.fontSize(
+                    radius: label.radius, digits: text.count, maximum: maxSize, detail: t.isDetailRegion(Int(label.region)))
                 s += "<text x=\"\(fmt(label.position.x))\" y=\"\(fmt(label.position.y))\" font-size=\"\(fmt(size))\">\(text)</text>\n"
             }
             s += "</g>\n"

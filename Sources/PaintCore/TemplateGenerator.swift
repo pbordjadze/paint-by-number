@@ -76,8 +76,8 @@ public struct TemplateGenerator: Sendable {
         if let input {
             let result = try clock.measure("lineArt") {
                 try LayeredLines.apply(
-                    segmentation, input: input, importance: weights, settings: settings, writing: writing, cancel: cancel,
-                    clock: clock)
+                    segmentation, input: input, importance: weights, settings: settings, photo: image, writing: writing,
+                    cancel: cancel, clock: clock)
             }
             segmentation = result.segmentation
             plan = result
@@ -89,7 +89,9 @@ public struct TemplateGenerator: Sendable {
 
         let keepOut = LabelKeepOut(rects: writing?.keepOut ?? [], lines: plan?.drawnInterior.map(LabelKeepOut.Line.init) ?? [])
         var vector = try clock.measure("vectorize") {
-            try Vectorizer.vectorizeWithStats(segmentation, settings: settings, keepOut: keepOut, cancel: cancel, clock: clock)
+            try Vectorizer.vectorizeWithStats(
+                segmentation, settings: settings, keepOut: keepOut, detailRegions: plan?.detailRegions ?? [], cancel: cancel,
+                clock: clock)
         }
         vector.template.pipelineVersion = Self.pipelineVersion
         if let plan {

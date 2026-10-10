@@ -50,9 +50,11 @@ func loadLineArt(_ options: Options) -> LineArtInput? {
     return input
 }
 
-/// The painter's edits from a JSON file: an array of `{"kind": "draw" | "erase" | "eraseLine",
-/// "points": [[x, y], ...], "radius": r}`, points normalized to the photo, `radius` (the
-/// eraser's reach, of the photo's long side) only for erasing.
+/// The painter's edits from a JSON file: an array of `{"kind": "draw" | "erase" | "eraseLine" |
+/// "fill", "points": [[x, y], ...], "radius": r}`, points normalized to the photo (a fill's one
+/// point), `radius` (the eraser's reach, of the photo's long side) only for erasing. An edit of
+/// a kind this pbn doesn't know (a later app's) is left out with a warning, as the app's
+/// `TemplateRefinements` leaves it out.
 func loadLineEdits(_ path: String) -> [LineEdit] {
     struct Edit: Decodable {
         var kind: String
@@ -62,13 +64,16 @@ func loadLineEdits(_ path: String) -> [LineEdit] {
     guard let data = FileManager.default.contents(atPath: path) else { fail("cannot read \(path)") }
     let edits: [Edit]
     do { edits = try JSONDecoder().decode([Edit].self, from: data) } catch { fail("cannot decode \(path): \(error)") }
-    return edits.map { edit in
+    return edits.compactMap { edit in
         let kind: LineEdit.Kind
         switch edit.kind {
         case "draw": kind = .draw
         case "erase": kind = .erase
         case "eraseLine": kind = .eraseLine
-        default: fail("\(path): kind is draw, erase or eraseLine, not \(edit.kind)")
+        case "fill": kind = .fill
+        default:
+            FileHandle.standardError.write(Data("\(path): skipping an edit of kind \(edit.kind) (draw, erase, eraseLine or fill)\n".utf8))
+            return nil
         }
         let points = edit.points.map { p in
             guard p.count == 2 else { fail("\(path): points are [x, y]") }

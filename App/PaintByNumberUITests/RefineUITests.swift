@@ -1,12 +1,13 @@
 import XCTest
 
-/// The create flow's optional Refine step: the pens and the eraser, Undo and Redo (the buttons
-/// and a two-finger tap), Done and Cancel; with Settings › Detail Brushes, its brushes and text
-/// marks too.
+/// The create flow's optional Refine step: the pens, the eraser and Fill, Undo and Redo (the
+/// buttons and a two-finger tap), Done and Cancel; with Settings › Detail Brushes, its brushes
+/// and text marks too.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
-    /// too, the eraser rubs lines out (another change), Done keeps it all; the Smart Pen draws
-    /// another, and Cancel puts back what Refine opened with.
+    /// too, the eraser rubs lines out (another change), Fill fills a shape with a tap (a third),
+    /// Done keeps it all; the Smart Pen draws another, and Cancel puts back what Refine opened
+    /// with.
     @MainActor
     func testRefineDrawsErasesAndKeepsIt() throws {
         let app = launchPreview()
@@ -49,8 +50,16 @@ final class RefineUITests: XCTestCase {
             waitFor(canvas, toMatch: changes("2 changes")), "Rubbing out didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-erased")
 
+        let fill = app.buttons["refine-tool-fill"]
+        XCTAssertTrue(fill.exists, "Refine has no Fill")
+        fill.tap()
+        XCTAssertTrue(waitFor(fill, toMatch: NSPredicate(format: "isSelected == true")), "Fill didn't become the tool")
+        canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The fill didn't count: \(canvas.value ?? "")")
+        attachScreenshot(of: app, named: "refine-filled")
+
         app.buttons["refine-done"].tap()
-        XCTAssertTrue(waitFor(refine, toMatch: changes("2 changes")), "Done didn't keep the changes")
+        XCTAssertTrue(waitFor(refine, toMatch: changes("3 changes")), "Done didn't keep the changes")
 
         // Cancel puts back what Refine opened with. This time the Smart Pen draws.
         refine.tap()
@@ -60,10 +69,10 @@ final class RefineUITests: XCTestCase {
         smartPen.tap()
         XCTAssertTrue(waitFor(smartPen, toMatch: NSPredicate(format: "isSelected == true")), "The Smart Pen didn't become the tool")
         drag(on: canvas, from: CGVector(dx: 0.4, dy: 0.3), to: CGVector(dx: 0.7, dy: 0.35))
-        XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The Smart Pen's line didn't count")
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("4 changes")), "The Smart Pen's line didn't count")
         app.buttons["refine-cancel"].tap()
         XCTAssertTrue(
-            waitFor(refine, toMatch: changes("2 changes")),
+            waitFor(refine, toMatch: changes("3 changes")),
             "Cancel didn't put back what Refine opened with: \(refine.value ?? "")")
         XCTAssertTrue(
             waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120), "The refined preview can't be started")

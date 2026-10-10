@@ -1,7 +1,7 @@
 import Foundation
 
 /// A change the painter made to the drawing before painting (the app's Refine screen): a line
-/// drawn with the pen, the eraser dragged along a path, or a line tapped away.
+/// drawn with the pen, the eraser dragged along a path, a line tapped away, or a shape filled.
 /// `LineArtInput.edits` lists them in the order they were made; `LayeredLines` applies them
 /// where it lays out its own lines (`LineEdits`), so cells, numbers and every check of a
 /// template hold for them as for any line.
@@ -16,20 +16,65 @@ public struct LineEdit: Sendable, Equatable {
         /// line tapped away, the path its own): what only crosses the path, or goes on past its
         /// ends, stays.
         case eraseLine
+        /// The cell under the point (its one point) made an area of its own, painted the photo's
+        /// color there (`photoColor(at:in:)`) and kept whatever its size, its number allowed down
+        /// to `LabelSizing.detailMinimumRadius` (a detail area, `Template.detailRegions`). A
+        /// later fill of the same cell replaces an earlier one; a shape left open fills the cell
+        /// around it.
+        case fill
     }
 
     public var kind: Kind
-    /// The pen's or the eraser's path, or the erased line's, normalized to the photo (0...1,
-    /// origin top-left).
+    /// The pen's or the eraser's path, the erased line's, or the filled point, normalized to the
+    /// photo (0...1, origin top-left).
     public var points: [SIMD2<Float>]
     /// How far either side of its path the eraser reaches, a fraction of the photo's long side;
-    /// a drawn line has none.
+    /// a drawn line or a fill has none.
     public var radius: Float
 
     public init(kind: Kind, points: [SIMD2<Float>], radius: Float = 0) {
         self.kind = kind
         self.points = points
         self.radius = radius
+    }
+
+    /// How far around a filled point the photo's color is read (`photoColor(at:in:)`), a
+    /// fraction of the photo's long side, at least one pixel: 3 × 3 pixels of a 950-px photo, 11
+    /// × 11 of a 4032-px one. A star of ten pixels in the former (the painter's, on a Fra
+    /// Angelico) is read inside its gold, not across its outline into the blue around it.
+    public static let colorReach: Float = 1.0 / 800
+
+    /// The photo's color at a fill's point: the median, channel by channel in OKLab, of the
+    /// pixels within `colorReach` of it (a square), composited over white as the segmentation
+    /// reads them. The app's Refine shows it at the tap and the pipeline paints the cell with it
+    /// (or with a paint within a just-noticeable difference), from the same photo, so they agree.
+    /// The median ignores a speck of another color (a crack, a highlight) under the tap.
+    public static func photoColor(at point: SIMD2<Float>, in image: RGBAImage) -> SIMD3<Float> {
+        let w = image.width, h = image.height
+        guard w > 0, h > 0 else { return SIMD3(1, 0, 0) }
+        let p = SIMD2(point.x.isFinite ? point.x : 0.5, point.y.isFinite ? point.y : 0.5)
+        let cx = min(max(Int((p.x * Float(w)).rounded(.down)), 0), w - 1)
+        let cy = min(max(Int((p.y * Float(h)).rounded(.down)), 0), h - 1)
+        let k = max(1, Int((Float(max(w, h)) * colorReach).rounded()))
+        var l: [Float] = [], a: [Float] = [], b: [Float] = []
+        let lut = ColorScience.decodeLUT
+        for y in max(cy - k, 0)...min(cy + k, h - 1) {
+            for x in max(cx - k, 0)...min(cx + k, w - 1) {
+                let px = image[x, y]
+                var lin = SIMD3(lut[Int(px.x)], lut[Int(px.y)], lut[Int(px.z)])
+                if px.w != 255 {
+                    let alpha = Float(px.w) / 255
+                    lin = lin * alpha + SIMD3(repeating: 1 - alpha)
+                }
+                let lab = ColorScience.linearToOKLab(lin, space: image.colorSpace)
+                l.append(lab.x)
+                a.append(lab.y)
+                b.append(lab.z)
+            }
+        }
+        // The lower median of an even count (a window cut by the photo's edge).
+        func median(_ v: [Float]) -> Float { v.sorted()[(v.count - 1) / 2] }
+        return SIMD3(median(l), median(a), median(b))
     }
 }
 
@@ -52,6 +97,8 @@ public struct LineEdit: Sendable, Equatable {
 /// `LayeredLines.annotate` draws the template's edges near an edit (`footprint`) exactly where
 /// lines run along them, instead of each edge whole or not at all by the most of it, so a line
 /// drawn or erased along part of a boundary between two paints shows as it was drawn.
+/// Fills change no line: `fills` hands their points, in order, to `LayeredLines`, which keeps
+/// the cells they fall in once the lines have split the paint (`CellMap.fill`).
 ///
 /// Plain arithmetic in edit order: the same edits give the same lines on every device.
 enum LineEdits {
@@ -87,6 +134,8 @@ enum LineEdits {
         var erasures: [(path: [SIMD2<Float>], radius: Float)]
         /// The painter's lines kept, as pieces.
         var drawn: Int
+        /// The fills' points, normalized to the photo as given, in the order they were made.
+        var fills: [SIMD2<Float>] = []
     }
 
     static func apply(_ edits: [LineEdit], to lines: [DrawnLine], width w: Int, height h: Int) -> Applied {
@@ -96,7 +145,7 @@ enum LineEdits {
         var erasures: [(path: [SIMD2<Float>], radius: Float)] = []
         var erasedLines: [(index: Int32, path: [SIMD2<Float>], radius: Float)] = []
         var area: Float = 0
-        for (k, edit) in edits.enumerated() where edit.kind != .draw {
+        for (k, edit) in edits.enumerated() where edit.kind == .erase || edit.kind == .eraseLine {
             let path = edit.kind == .erase ? pixelPath(edit.points, width: w, height: h) : pixelPoints(edit.points, width: w, height: h)
             let radius = edit.radius * long
             area += boxArea(path, margin: radius)
@@ -124,7 +173,8 @@ enum LineEdits {
         cut(&out, origin: &origin, erasedBy: erasedBy, erasedLines: erasedLines, width: w, height: h)
         return Applied(
             lines: out, origin: origin, erasedBy: erasedBy, erasedLines: erasedLines,
-            blockedBy: blocked.isEmpty ? nil : blocked, erasures: erasures, drawn: origin.filter { $0 >= 0 }.count)
+            blockedBy: blocked.isEmpty ? nil : blocked, erasures: erasures, drawn: origin.filter { $0 >= 0 }.count,
+            fills: edits.filter { $0.kind == .fill }.map { $0.points[0] })
     }
 
     /// The edits a file may hold, cut to size: finite points within half a photo of it, no

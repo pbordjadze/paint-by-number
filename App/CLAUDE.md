@@ -313,7 +313,11 @@ Conventions).
   it looks), the Smart Pen straightens nearly straight lines (or one held at its end) and joins
   ends to lines within a fingertip, the line under the finger showing as it will be
   (`PenAssist`, `SnapLines`); the Eraser rubs out what it touches (a tap, a dab), the Smart
-  Eraser rubs too and a tap takes a line from junction to junction (`LineChains`). Two fingers
+  Eraser rubs too and a tap takes a line from junction to junction (`LineChains`); Fill's tap
+  makes the closed shape under it an area of its own in the photo's color there (a detail area,
+  its number down to half size; a swatch shows at the tap until the template has it, then the
+  area tinted in its paint under the drawing, `RefineFillLayer`), and a tap in a filled area
+  clears it (`RefineFills`). Refine zooms to 12× (`RefineSurfaceView.maximumZoom`). Two fingers
   zoom and move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the
   canvas's way); once an Apple Pencil touches the canvas the Pencil draws and one finger moves,
   and its double tap switches a kind's pen and eraser. PaintCore keeps a drawn line exactly as

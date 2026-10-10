@@ -256,6 +256,23 @@ struct PDFExporterTests {
         #expect(PDFExporter.keyLayout(count: 24, widestEntry: 120, in: a4).scale == 1)
     }
 
+    /// A detail area's number prints at its own floor: one detail label at that floor's room
+    /// takes the stripes onto more sheets, at a scale that prints it at
+    /// `minimumDetailNumberSize` and every other number at least as large as before.
+    @Test func detailAreasPrintAtTheirOwnFloor() throws {
+        var t = Fixtures.stripes(count: 3, stripeWidth: 700, height: 1400)
+        for k in t.labels.indices { t.labels[k].radius = LabelSizing.minimumRadius }
+        let usual = PDFExporter.sheets(for: t, paper: .letter)
+        let k = try #require(t.labels.indices.first { t.labels[$0].region == 1 })
+        t.labels[k].radius = LabelSizing.detailMinimumRadius
+        t.detailRegions = [1]
+        let sheets = PDFExporter.sheets(for: t, paper: .letter)
+        #expect(sheets.count > usual.count && sheets.scale > usual.scale)
+        #expect(CGFloat(LabelSizing.detailMinimumFontSize) * sheets.scale >= PDFExporter.minimumDetailNumberSize - 1e-6)
+        #expect(CGFloat(LabelSizing.minimumFontSize) * sheets.scale >= PDFExporter.minimumNumberSize)
+        #expect(PDFExporter.smallestNumberSize(t, detail: true) == CGFloat(LabelSizing.detailMinimumFontSize))
+    }
+
     @Test func largeTemplatesPrintOnSheetsWithLegibleNumbers() throws {
         // 2100 × 1400 canvas units whose labels have the minimum room: fitted to one page its
         // numbers would print at about 1.3 pt, so it goes on overlapping sheets at a scale

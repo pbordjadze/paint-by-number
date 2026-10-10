@@ -1,9 +1,11 @@
 import CoreGraphics
 import Foundation
+import PaintCore
 import Testing
 @testable import PaintByNumber
 
-/// Refine's geometry: the pen's line smoothed and thinned, and the line a tap of the eraser takes.
+/// Refine's geometry: the pen's line smoothed and thinned, the line a tap of the eraser takes,
+/// and what a tap of Fill does.
 struct RefineGeometryTests {
     /// A shaky line comes out smooth, from its first point to its last, and thinned to fewer
     /// points; a straight one to its two ends.
@@ -147,10 +149,44 @@ struct RefineGeometryTests {
         #expect(gone == [[CGPoint(x: 0, y: 30), CGPoint(x: 100, y: 30)]])
     }
 
-    /// The Pencil's double tap switches between a kind's pen and eraser.
+    /// The Pencil's double tap switches between a kind's pen and eraser; Fill has no partner.
     @Test func thePencilSwitchesPenAndEraser() {
         #expect(RefineTool.pen.pencilPartner == .eraser && RefineTool.eraser.pencilPartner == .pen)
         #expect(RefineTool.smartPen.pencilPartner == .smartEraser && RefineTool.smartEraser.pencilPartner == .smartPen)
         #expect(RefineTool.more.pencilPartner == nil && RefineTool.text.pencilPartner == nil)
+        #expect(RefineTool.fill.pencilPartner == nil && !RefineTool.fill.erases)
+    }
+
+    static func fill(_ x: Float, _ y: Float) -> TemplateRefinements.Line {
+        TemplateRefinements.Line(kind: .fill, radius: 0, points: [SIMD2(x, y)])
+    }
+
+    /// Before the template has a fill, a tap on its swatch (within reach, on either axis's
+    /// scale) takes it out again and a tap elsewhere is another fill; the lines drawn stay.
+    @Test func aTapOnAPendingFillsSwatchTakesItOut() {
+        let drawn = TemplateRefinements.Line(kind: .draw, radius: 0, points: [SIMD2(0.1, 0.1), SIMD2(0.2, 0.2)])
+        let reach = SIMD2<Float>(0.02, 0.04)
+        let first = RefineFills.tapped([drawn], at: SIMD2(0.5, 0.5), made: [], template: nil, reach: reach)
+        #expect(first == [drawn, Self.fill(0.5, 0.5)])
+        let second = RefineFills.tapped(first, at: SIMD2(0.6, 0.5), made: [], template: nil, reach: reach)
+        #expect(second == [drawn, Self.fill(0.5, 0.5), Self.fill(0.6, 0.5)])
+        #expect(RefineFills.tapped(second, at: SIMD2(0.51, 0.53), made: [], template: nil, reach: reach) == [drawn, Self.fill(0.6, 0.5)])
+        #expect(RefineFills.tapped(second, at: SIMD2(0.53, 0.5), made: [], template: nil, reach: reach).count == 4)
+    }
+
+    /// Once the template has a fill, a tap anywhere in the detail area it made takes out the
+    /// fills made there (not those elsewhere); a tap in another area is a new fill, and so is
+    /// one in a detail area while its fill isn't made yet (its swatch is what counts). On three
+    /// stripes 20 units wide, the middle one a detail area.
+    @Test func aTapInAFilledAreaClearsIt() {
+        var t = Fixtures.stripes(count: 3, stripeWidth: 20, height: 40)
+        t.detailRegions = [1]
+        let inMiddle = Self.fill(0.5, 0.5), again = Self.fill(0.45, 0.2), onLeft = Self.fill(0.1, 0.5)
+        let lines = [inMiddle, onLeft, again]
+        let reach = SIMD2<Float>(0.01, 0.01)
+        #expect(RefineFills.tapped(lines, at: SIMD2(0.6, 0.9), made: lines, template: t, reach: reach) == [onLeft])
+        #expect(RefineFills.tapped(lines, at: SIMD2(0.2, 0.5), made: lines, template: t, reach: reach) == lines + [Self.fill(0.2, 0.5)])
+        #expect(RefineFills.tapped([inMiddle], at: SIMD2(0.6, 0.9), made: [], template: t, reach: reach) == [inMiddle, Self.fill(0.6, 0.9)])
+        #expect(RefineFills.region(of: SIMD2(0.5, 0.5), in: t) == 1)
     }
 }

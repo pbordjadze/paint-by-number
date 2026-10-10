@@ -44,6 +44,11 @@ struct LabelRoom: Sendable {
     /// Per region: whether its pole is searched at `Vectorizer.smallRegionLabelPrecision`
     /// from the start (regions near the radius floor, whose radius sizes their number).
     let measureFinely: [Bool]
+    /// Per region: whether it is a detail area (`Template.detailRegions`), whose number is
+    /// legible from `LabelSizing.detailMinimumRadius`; none when empty.
+    var detail: [Bool] = []
+
+    func isDetail(_ region: Int) -> Bool { region < detail.count && detail[region] }
 }
 
 /// Per region: label position (pole of inaccessibility) and its free radius.

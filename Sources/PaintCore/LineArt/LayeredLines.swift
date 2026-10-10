@@ -22,7 +22,10 @@
 ///    painter's lines have none.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
-///    paints are within two palette steps.
+///    paints are within two palette steps. The painter's fills keep the cells they fall in as
+///    detail areas (`CellMap.fill`), painted the photo's color there (`LineEdit.photoColor`):
+///    no merge takes them, and their numbers may be as small as a detail area's
+///    (`LabelSizing.detailMinimumRadius`; `Plan.detailRegions`).
 /// 5. `join`: same-paint neighbours join per `samePaint` (by default across everything but
 ///    outlines), and the lines that end up inside a cell become interior strokes (stretches
 ///    shorter than `LineLayering.minimumRun` are a boundary stretch's end point or a merged
@@ -75,11 +78,14 @@ enum LayeredLines {
         /// The stretches of the painter's lines drawn inside a cell, in canvas units: numbers
         /// keep off them (`LabelKeepOut`), as the cell's own pole may lie right on one.
         var drawnInterior: [[SIMD2<Float>]] = []
+        /// The regions the painter's fills keep (`Template.detailRegions`), ascending.
+        var detailRegions: [UInt32] = []
     }
 
+    /// `photo` is the photo as given (any size), whose color a fill reads.
     static func apply(
         _ segmentation: Segmentation, input: LineArtInput, importance: [Float]?, settings: GenerationSettings,
-        writing: Writing? = nil, cancel: CancellationCheck, clock: StageClock
+        photo: RGBAImage, writing: Writing? = nil, cancel: CancellationCheck, clock: StageClock
     ) throws -> Plan {
         let s = settings.normalized.lineArt
         // A coloring book has no faint lines: nothing is drawn below the detail threshold, so the
@@ -171,9 +177,14 @@ enum LayeredLines {
         stats.strokes = lines.count
         try cancel.throwIfCancelled()
 
-        let palette = segmentation.palette.map(\.oklab)
+        // A fill may add paints (at the end, so no other number changes).
+        var paints = segmentation.palette
+        var palette = paints.map(\.oklab)
         let params = SegmentationParameters(settings: settings, width: w, height: h)
-        let need: (UInt32) -> Float = { params.minRadius(digits: LabelSizing.digitCount(colorIndex: $0)) }
+        let need: CellMap.Need = { paint, kept in
+            let digits = LabelSizing.digitCount(colorIndex: paint)
+            return kept ? SegmentationParameters.detailMinRadius(digits: digits) : params.minRadius(digits: digits)
+        }
         let walls = LineLayering.walls(lines, width: w, height: h)
         var cells = try clock.measure("lineArt.cells") { () throws -> CellMap in
             var cells = try clock.measure("lineArt.cells.split") { () throws -> CellMap in
@@ -181,6 +192,13 @@ enum LayeredLines {
                 return try CellMap.split(paint: paint, walls: walls, cancel: cancel)
             }
             stats.cellsSplit = cells.count
+            if let fills = edits?.fills, !fills.isEmpty {
+                stats.fills = fills.count
+                stats.fillPaints = cells.fill(
+                    points: LineEdits.pixelPoints(fills, width: w, height: h),
+                    colors: fills.map { LineEdit.photoColor(at: $0, in: photo) }, palette: &palette, paints: &paints,
+                    space: segmentation.colorSpace)
+            }
             stats.smallMerged = try clock.measure("lineArt.cells.small") {
                 try cells.mergeSmallWithinAreas(need: need, palette: palette, cancel: cancel)
             }
@@ -191,7 +209,7 @@ enum LayeredLines {
                 try cells.mergeTiny(need: need, palette: palette, near: near, cancel: cancel)
             }
             if !s.keepColorEdges {
-                let tolerance = mergeSteps * Self.paletteStep(palette)
+                let tolerance = mergeSteps * Self.paletteStep(segmentation.palette.map(\.oklab))
                 stats.closeColorsMerged = try clock.measure("lineArt.cells.colors") {
                     try cells.mergeCloseColors(tolerance: tolerance, palette: palette, near: near, cancel: cancel)
                 }
@@ -220,12 +238,14 @@ enum LayeredLines {
         }
         try cancel.throwIfCancelled()
         var final = finalCells
-        let kept = final.compactPalette(paletteCount: segmentation.palette.count)
+        let kept = final.compactPalette(paletteCount: paints.count)
         let split = Segmentation(
             labels: RegionMap(width: w, height: h, storage: final.label.map { UInt32($0) }),
-            regionColor: final.color, palette: kept.map { segmentation.palette[$0] }, colorSpace: segmentation.colorSpace)
+            regionColor: final.color, palette: kept.map { paints[$0] }, colorSpace: segmentation.colorSpace)
+        let detailRegions = final.kept.indices.filter { final.kept[$0] }.map { UInt32($0) }
         stats.cells = final.count
-        stats.paintsDropped = segmentation.palette.count - kept.count
+        stats.detailAreas = detailRegions.count
+        stats.paintsDropped = paints.count - kept.count
 
         // Which stretches still bound cells after the joins, and which now run inside one.
         var boundary: [DrawnLine] = [], interior: [(DrawnLine, Int)] = [], drawnInterior: [[SIMD2<Float>]] = []
@@ -258,7 +278,7 @@ enum LayeredLines {
         let edited = edits.map { LineEdits.footprint($0, lines: lines, near: annotateNear + 1, width: w, height: h) }
         return Plan(
             segmentation: split, boundaryLines: boundary, interiorLines: interior, stats: stats, edited: edited,
-            drawnInterior: drawnInterior)
+            drawnInterior: drawnInterior, detailRegions: detailRegions)
     }
 
     // MARK: - Annotation

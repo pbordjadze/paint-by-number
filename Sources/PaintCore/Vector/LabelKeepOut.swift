@@ -5,8 +5,8 @@
 ///
 /// A region's number moves off them to the spot of its polygon farthest from both its outline
 /// and the keep-out (`PolyLabel.find(_:precision:seed:keepOut:)`), sized for the room it has
-/// there, when that room still holds a legible number (`LabelSizing.minimumRadius(digits:)`) and
-/// the room the vectorizer promised it (`LabelRoom`); otherwise it stays at its pole. Extra
+/// there, when that room still holds a legible number (`LabelSizing.minimumRadius(digits:detail:)`)
+/// and the room the vectorizer promised it (`LabelRoom`); otherwise it stays at its pole. Extra
 /// labels are only placed off them, and not where a drawn line would squeeze one
 /// (`RegionFills.addExtraLabels`).
 struct LabelKeepOut: Sendable {
@@ -75,7 +75,7 @@ struct LabelKeepOut: Sendable {
             guard distance(Double(p.x), Double(p.y)) < Double(poles.radius[r]) else { continue }
             shapes.polygon(r, into: &poly)
             let digits = LabelSizing.digitCount(colorIndex: regionColor[r])
-            let need = Double(max(room.minRadius[r], LabelSizing.minimumRadius(digits: digits)))
+            let need = Double(max(room.minRadius[r], LabelSizing.minimumRadius(digits: digits, detail: room.isDetail(r))))
             let found = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: SIMD2(Double(p.x), Double(p.y)), keepOut: self)
             guard found.distance >= need else { continue }
             poles.position[r] = SIMD2<Float>(found.position)

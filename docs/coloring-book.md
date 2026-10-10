@@ -135,8 +135,8 @@ drawn in the book's ink inside the cells it crosses, with the numbers kept off i
 
 ## The painter's edits
 
-The app's Refine lets the painter draw lines and take them out before painting. The edits are
-an input of line art (`LineArtInput.edits`, in the order made; `pbn --line-edits edits.json`),
+The app's Refine lets the painter draw lines, take them out and fill shapes before painting. The
+edits are an input of line art (`LineArtInput.edits`, in the order made; `pbn --line-edits edits.json`),
 never a change to a template, so every invariant holds for them as for the drawing's own lines,
 and regenerating a painting draws them again. `LineEdits` applies them at the layer stage, after
 eyes, subjects and the writing's cut and before free ends close:
@@ -174,6 +174,36 @@ eyes, subjects and the writing's cut and before free ends close:
   paints stays drawn, and one drawn along part of an undrawn boundary doesn't show. Gaps and
   stretches shorter than `minimumRun` follow their neighbours, so an edge still reaches its
   junctions.
+- A fill (`LineEdit.Kind.fill`, one point) changes no line. Once the lines have split the paint
+  (`CellMap.split`), the cell under it is kept (`CellMap.fill`; on a line, the nearest cell
+  within 2 px): it takes the photo's color there (`LineEdit.photoColor`: the median, channel by
+  channel in OKLab, of the pixels within 1/800 of the photo's long side, as the app's swatch
+  shows it), as the paint within a just-noticeable difference of it (0.02) or else a new paint
+  of that color, added last so no other number changes. A later fill of the cell replaces an
+  earlier one. A kept cell is merged into nothing for its size, its thinness, a close paint or
+  its own paint (`mergeSmallWithinAreas`, `mergeTiny`, `mergeCloseColors`, `joinSamePaint`);
+  short of its room inside its enclosed area it takes its neighbours there in, so the shape the
+  painter closed becomes the area, and its line joins it (the walls beside a kept cell are its
+  own, `assignWalls`), so a star keeps its points. Its number needs only a detail area's room
+  (`LabelSizing.detailMinimumRadius`, 0.48 of the usual floor: a 3-digit detail number has a
+  1-digit number's usual room, `SegmentationParameters.detailMinRadius(digits:)` the raster's),
+  which the vectorizer's label room keeps (`LabelRoom`) and `validate` checks; a shape too small
+  even for that merges as any cell does, and no area is kept.
+  The template lists the kept areas (`Template.detailRegions`, the `DETL` chunk), so every
+  renderer draws their numbers down to that floor and the painter reads them zoomed in. A fill
+  in a shape left open keeps the cell around it: the area floods, plainly, and the painter takes
+  it back.
+
+A painter's Annunciation (Fra Angelico; 150 colors, detail 1, smoothness 0) has gold stars about
+10 px across in a 950-px photo, on a dark blue arch. She outlined them in Refine, and a star
+without room for its number went back into the arch, only her line drawn. On her photo with a
+blank edge map (her lines alone) and 21 star outlines about 12 units across, the outlines alone
+left 11 stars in the arch and the other 10 in brown or dark paints; filled, all 21 are areas of
+their own in the gold paints the palette had, and the one numbered 100 holds it in 4.02 units of
+room, short of the 4.39 a 3-digit number needs elsewhere. Outlined 15 units across, 6 had gone
+back; filled, all 21 are gold. On the corpus's lighthouse with six such stars painted into its sky (its committed
+maps, the same settings), the outlines alone made six cells, five in the sky's blue; filled, all
+six are gold. Without fills the corpus templates are byte for byte what they were.
 
 On the lighthouse (24 colors, detail 0.5, the committed maps) a loop drawn round a cloud became a
 numbered cell, and erasing a stray cloud line and a stretch of the tower's outline left the

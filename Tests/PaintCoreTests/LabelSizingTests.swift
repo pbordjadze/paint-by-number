@@ -46,6 +46,39 @@ struct LabelSizingTests {
         }
     }
 
+    /// A detail area meeting its raster room keeps its floor once smoothed, as any region does
+    /// its own; the room never exceeds a region's ordinary minimum, and the floor is about half
+    /// the usual one: a 3-digit detail number has exactly a 1-digit number's usual room.
+    @Test func detailMinimumRadiusIsAchievable() {
+        // Past the floor a spot holds its centre's four neighbours: its outline clears √2.5.
+        let floorClearance = Self.latticeWorst(SegmentationParameters.detailLatticeFloor)
+        #expect(abs(floorClearance - Float(2.5).squareRoot()) < 1e-5)
+        let tolerance = SegmentationParameters.vectorRadiusTolerance
+        for digits in 1...3 {
+            let raster = SegmentationParameters.detailMinRadius(digits: digits)
+            let guaranteed = min(tolerance * raster, Self.latticeWorst(raster))
+            #expect(guaranteed >= LabelSizing.minimumRadius(digits: digits, detail: true) - 1e-5, "\(digits) digits")
+            for detail in [Float(0), 0.5, 1] {
+                let p = SegmentationParameters(settings: GenerationSettings(detail: detail), width: 1000, height: 1000)
+                #expect(raster <= p.minRadius(digits: digits))
+            }
+        }
+        let ratio = LabelSizing.detailMinimumRadius / LabelSizing.minimumRadius
+        #expect(ratio > 0.45 && ratio < 0.55)
+        #expect(abs(LabelSizing.minimumRadius(digits: 3, detail: true) - LabelSizing.minimumRadius(digits: 1)) < 1e-5)
+        #expect(abs(LabelSizing.detailMinimumFontSize / LabelSizing.minimumFontSize - ratio) < 1e-5)
+    }
+
+    /// A detail area's number is drawn down to its own floor, and no further.
+    @Test func detailNumbersHaveTheirOwnFloor() {
+        let radius = 1.2 * LabelSizing.detailMinimumRadius
+        #expect(LabelSizing.fontSize(radius: radius, digits: 1, detail: true) == LabelSizing.fittedFontSize(radius: radius, digits: 1))
+        #expect(LabelSizing.fontSize(radius: radius, digits: 1) == LabelSizing.minimumFontSize)
+        #expect(LabelSizing.fontSize(radius: 0, digits: 3, detail: true) == LabelSizing.detailMinimumFontSize)
+        #expect(LabelSizing.minimumFontSize(detail: false) == LabelSizing.minimumFontSize)
+        #expect(LabelSizing.minimumRadius(digits: 2, detail: false) == LabelSizing.minimumRadius(digits: 2))
+    }
+
     @Test func minimalRegionsGetTheSameFontSize() {
         for digits in 1...3 {
             let size = LabelSizing.fittedFontSize(radius: LabelSizing.minimumRadius(digits: digits), digits: digits)
@@ -88,5 +121,15 @@ struct LabelSizingTests {
         }
         #expect(sizes.count == t.labels.count)
         #expect(sizes.allSatisfy { $0 >= LabelSizing.minimumFontSize - 0.01 })
+
+        // A detail area's number is drawn at its own, smaller floor.
+        var detailed = t
+        let island = try #require(t.region(at: SIMD2<Float>(10.5, 8.5)))
+        detailed.detailRegions = [UInt32(island)]
+        let marked = SVGExport.render(detailed)
+        #expect(marked.components(separatedBy: "<text").count - 1 == t.labels.count)
+        let label = try #require(t.labels(ofRegion: island).first)
+        let text = "<text x=\"\(SVGExport.fmt(label.position.x))\" y=\"\(SVGExport.fmt(label.position.y))\" font-size=\"\(SVGExport.fmt(LabelSizing.detailMinimumFontSize))\">"
+        #expect(marked.contains(text), "\(text)")
     }
 }

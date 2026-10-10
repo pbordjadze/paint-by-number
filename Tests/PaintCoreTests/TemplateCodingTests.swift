@@ -175,7 +175,7 @@ struct TemplateCodingTests {
 
     /// Every proper prefix of a file is rejected with a `CodingError` (never a trap).
     @Test func truncationAtEveryOffset() throws {
-        for name in ["template-v1.pbnt", "template-v2.pbnt", "template-v2-lines.pbnt", "template-v2-book.pbnt"] {
+        for name in ["template-v1.pbnt", "template-v2.pbnt", "template-v2-lines.pbnt", "template-v2-book.pbnt", "template-v2-detail.pbnt"] {
             let data = try TestFixtures.data(name)
             for length in 0..<data.count {
                 #expect(throws: Template.CodingError.self, "length \(length)") { try Template(encoded: data.prefix(length)) }
@@ -192,7 +192,7 @@ struct TemplateCodingTests {
 
     /// Seeded random byte flips: every case throws a `CodingError` or decodes to a template
     /// whose accessors and `validate()` run without trapping.
-    @Test(arguments: ["v1", "v2", "v2-lines", "v2-book", "blobs"])
+    @Test(arguments: ["v1", "v2", "v2-lines", "v2-book", "v2-detail", "blobs"])
     func randomCorruption(_ source: String) throws {
         let data: Data
         switch source {
@@ -200,6 +200,7 @@ struct TemplateCodingTests {
         case "v2": data = try TestFixtures.data("template-v2.pbnt")
         case "v2-lines": data = try TestFixtures.data("template-v2-lines.pbnt")
         case "v2-book": data = try TestFixtures.data("template-v2-book.pbnt")
+        case "v2-detail": data = try TestFixtures.data("template-v2-detail.pbnt")
         default:
             let s = VectorizerTests.blobMap(width: 64, height: 48, colors: 6, cell: 8, noise: 0.01, seed: 5)
             data = try VectorizerTests.vectorize(s).encoded()

@@ -121,6 +121,10 @@ func runCheck(_ options: Options) throws {
             print("\(style) lines: edges " + zip(layers, counts).map { "\($0) \($1)" }.joined(separator: ", ")
                 + "; \(lines.strokes.count) interior strokes (\(lines.strokePoints.count) points)")
         }
+        if !template.detailRegions.isEmpty {
+            print("detail areas: \(template.detailRegions.count) (regions " + template.detailRegions.prefix(20).map(String.init).joined(separator: ", ")
+                + (template.detailRegions.count > 20 ? ", …)" : ")"))
+        }
         let report = template.validate(minLabelRadius: options.minLabelRadius > 0 ? options.minLabelRadius : nil)
         print(report.isValid ? "valid" : "INVALID", report)
     } catch { fail("cannot decode: \(error)") }

@@ -107,6 +107,7 @@ struct LineArtCodingTests {
     static func chunkSectionStart(of t: Template) -> Int {
         var classic = t
         classic.lineArt = nil
+        classic.detailRegions = []
         return classic.encoded().count - 4 - 16
     }
 
@@ -114,6 +115,7 @@ struct LineArtCodingTests {
     static func file(_ t: Template, chunks: [(tag: UInt32, flags: UInt32, payload: Data)]) -> Data {
         var classic = t
         classic.lineArt = nil
+        classic.detailRegions = []
         var w = BinaryWriter()
         w.write(bytes: classic.encoded().prefix(chunkSectionStart(of: t)))
         w.write(UInt32(chunks.count))
