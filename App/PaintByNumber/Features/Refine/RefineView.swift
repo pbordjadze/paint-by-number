@@ -666,27 +666,47 @@ struct RefineView: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
+    /// The pens, erasers and Fill, then the photo: one row where it fits, else the pens and
+    /// erasers above Fill and the photo (a phone's width holds about five of these buttons).
     private var lineTools: some View {
-        GlassEffectContainer(spacing: 10) {
-            HStack(spacing: 8) {
-                toolButton(.pen, systemImage: "pencil.tip", label: Text("Pen"), id: "pen")
-                    .disabled(!model.hasLineArtInput)
-                toolButton(.smartPen, systemImage: "pencil.and.ruler", label: Text("Smart Pen"), id: "smart-pen")
-                    .disabled(!model.hasLineArtInput)
-                toolButton(.eraser, systemImage: "eraser", label: Text("Eraser"), id: "eraser")
-                    .disabled(!model.hasLineArtInput)
-                toolButton(.smartEraser, systemImage: "wand.and.stars", label: Text("Smart Eraser"), id: "smart-eraser")
-                    .disabled(!model.hasLineArtInput)
-                toolButton(.fill, systemImage: "drop.fill", label: Text("Fill"), id: "fill")
-                    .disabled(!model.hasLineArtInput)
-                Capsule()
-                    .fill(Color.primary.opacity(0.15))
-                    .frame(width: 1, height: 24)
-                    .padding(.horizontal, 4)
-                    .accessibilityHidden(true)
-                photoButton
+        ViewThatFits(in: .horizontal) {
+            GlassEffectContainer(spacing: 10) {
+                HStack(spacing: 8) {
+                    drawingTools
+                    fillAndPhoto
+                }
+            }
+            GlassEffectContainer(spacing: 10) {
+                VStack(spacing: 10) {
+                    HStack(spacing: 8) { drawingTools }
+                    HStack(spacing: 8) { fillAndPhoto }
+                }
             }
         }
+    }
+
+    @ViewBuilder
+    private var drawingTools: some View {
+        toolButton(.pen, systemImage: "pencil.tip", label: Text("Pen"), id: "pen")
+            .disabled(!model.hasLineArtInput)
+        toolButton(.smartPen, systemImage: "pencil.and.ruler", label: Text("Smart Pen"), id: "smart-pen")
+            .disabled(!model.hasLineArtInput)
+        toolButton(.eraser, systemImage: "eraser", label: Text("Eraser"), id: "eraser")
+            .disabled(!model.hasLineArtInput)
+        toolButton(.smartEraser, systemImage: "wand.and.stars", label: Text("Smart Eraser"), id: "smart-eraser")
+            .disabled(!model.hasLineArtInput)
+    }
+
+    @ViewBuilder
+    private var fillAndPhoto: some View {
+        toolButton(.fill, systemImage: "drop.fill", label: Text("Fill"), id: "fill")
+            .disabled(!model.hasLineArtInput)
+        Capsule()
+            .fill(Color.primary.opacity(0.15))
+            .frame(width: 1, height: 24)
+            .padding(.horizontal, 4)
+            .accessibilityHidden(true)
+        photoButton
     }
 
     private var detailTools: some View {
