@@ -142,15 +142,18 @@ and regenerating a painting draws them again. `LineEdits` applies them at the la
 eyes, subjects and the writing's cut and before free ends close:
 
 - A drawn line is an outline at full strength, so a closed shape walls off a cell even inside one
-  paint, as a silhouette does; an open one is drawn inside its cell. It is kept as drawn (the app
-  smooths the finger's path), cut where it leaves the canvas. Its ends meet what they were drawn
-  to: an end that crosses a line within the outline's closing reach (1.6 × `gapBridging`) and a
-  quarter of the line's length is trimmed back onto it, one beside a line or on the frame is
-  attached, and one that stops short stays free, which `closeFreeEnds` then leads into the line it
-  was heading for. A loop drawn past its start loses both tails. So a sloppy hand still closes a
-  shape cleanly, without spurs. Where it stays inside a cell, the cell's numbers keep off it
-  (`LabelKeepOut`, as they keep off writing): a number the line would cross out moves to the
-  spot of the cell farthest from its outline and the line, where that spot holds a legible one.
+  paint, as a silhouette does; an open one is drawn inside its cell. It is kept as the painter
+  drew it (the app smooths the finger's path), cut where it leaves the canvas: its ends are never
+  free, so `closeFreeEnds` passes them by (the drawing's own free ends may still be led into
+  it). An end on or beside a line, or on the frame, closes cells against it as it lies
+  (cells are 4-connected); one that stops short leaves the shape open, and a line drawn past the
+  one it meets goes on past it, but for a tail shorter than `LineLayering.minimumRun`, which no
+  line keeps inside a cell. Painters found their lines "connected" when ends were led up to
+  1.6 × `gapBridging` (26 px in a book) into the nearest line, paint boundary or frame, and
+  trimmed back from a line they crossed. Where it stays inside a cell, the cell's numbers keep
+  off it (`LabelKeepOut`, as they keep off writing): a number the line would cross out moves to
+  the spot of the cell farthest from its outline and the line, where that spot holds a legible
+  one.
 - The eraser's pass takes out every point within its reach of the lines made before it (the
   app's and those drawn earlier; a line drawn over an erased place stays), leaving no piece
   shorter than `LineLayering.minimumRun`.
@@ -168,11 +171,16 @@ eyes, subjects and the writing's cut and before free ends close:
   junctions.
 
 On the lighthouse (24 colors, detail 0.5, the committed maps) a loop drawn round a cloud became a
-numbered cell, a line overshooting the horizon by 10 px stopped on it (the sky's numbers moving off
-it), one stopping 14 px short of the frame reached it, and erasing a stray cloud line and a stretch
-of the tower's outline left the tower's cells apart with that stretch undrawn: 7 more cells, the
-template valid, nothing else moved. Without edits the corpus books are byte for byte what they
-were.
+numbered cell, and erasing a stray cloud line and a stretch of the tower's outline left the
+tower's cells apart with that stretch undrawn: 7 more cells, the template valid, nothing else
+moved. There too, with the ends kept as drawn, a line stopping 13 px short of the horizon, one
+across the sky 17 px off the tower and 15 px short of a cloud, a U whose legs stop 7 px short of
+the horizon and one whose leg stops 3 px short of it end where they were drawn, inside the sky
+(these six ends had been led into the nearest line, closing both Us), and one run 11 px into the
+tower is drawn there (it had been trimmed back to the outline). Lines ended on the horizon, or
+4 px past it (that tail undrawn), close their cells as before; one ended 3.5 px short of it no
+longer does. Every template stays valid. Without edits the corpus books are byte for byte what
+they were.
 
 ## Measuring a book
 

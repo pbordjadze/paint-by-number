@@ -43,12 +43,12 @@ struct LineEditsTests {
         return best
     }
 
-    /// A line drawn down the sky from the top of the frame to the horizon walls off the sky's
-    /// left: two cells of one paint, drawn as an outline. It overshoots the horizon a little,
-    /// and is trimmed back to it.
+    /// A line drawn down the sky from the top of the frame across the horizon walls off the
+    /// sky's left: two cells of one paint, drawn as an outline. It runs on 10 px past the
+    /// horizon, and is drawn there as it was drawn, inside the ground's cell, not trimmed back.
     @Test func aDrawnLineSplitsTheCellItCrosses() throws {
         let plain = try Self.generate([]).template
-        let out = try Self.generate([Self.draw([SIMD2(15, -8), SIMD2(15, 77)])])
+        let out = try Self.generate([Self.draw([SIMD2(15, -8), SIMD2(15, 82)])])
         let t = out.template
         expectValid(t)
         #expect(out.vectorStats.labelRoomUnmet == 0)
@@ -57,8 +57,24 @@ struct LineEditsTests {
         let left = try #require(t.region(at: SIMD2<Float>(5, 30))), right = try #require(t.region(at: SIMD2<Float>(25, 30)))
         #expect(left != right && t.regions[left].colorIndex == t.regions[right].colorIndex)
         #expect(Self.inkDistance(t, SIMD2(15.5, 30)) < 1.5)
-        // Nothing of it below the horizon.
-        #expect(Self.inkDistance(t, SIMD2(15.5, 77)) > 3)
+        #expect(t.region(at: SIMD2<Float>(5, 78)) == t.region(at: SIMD2<Float>(25, 78)), "The tail split the ground")
+        let tail = try #require(Self.stroke(in: t, near: SIMD2(15, 79)))
+        #expect(abs((tail.map(\.y).max() ?? 0) - 82) < 1, "\(tail)")
+    }
+
+    /// An end drawn a little past a line is not trimmed back to it: a line down from the top of
+    /// the frame walls off the sky on either side of it and runs on 9 px past the disc's
+    /// outline, drawn there inside the disc's cell.
+    @Test func anOvershootingEndIsNotTrimmed() throws {
+        let plain = try Self.generate([]).template
+        let out = try Self.generate([Self.draw([SIMD2(60, -8), SIMD2(60, 54)])])
+        let t = out.template
+        expectValid(t)
+        #expect(out.vectorStats.labelRoomUnmet == 0)
+        #expect(t.regions.count == plain.regions.count + 1)
+        let tail = try #require(Self.stroke(in: t, near: SIMD2(60, 51)))
+        #expect(abs((tail.map(\.y).max() ?? 0) - 54) < 1, "\(tail)")
+        #expect(t.region(at: SIMD2<Float>(60, 50)) == t.region(at: SIMD2<Float>(60, 72)))
     }
 
     /// A line that closes nothing is drawn inside its cell, and the cells stay as they were.
@@ -127,13 +143,40 @@ struct LineEditsTests {
         }
     }
 
-    /// An end that stops a little short of a line is led into it, as the drawing's own are.
-    @Test func anEndShortOfALineReachesIt() throws {
+    /// An end that stops a little short of a line stays where it was drawn, never led into the
+    /// line: the line closes no cell and is drawn inside the sky's.
+    @Test func anEndShortOfALineStaysWhereDrawn() throws {
         let plain = try Self.generate([]).template
-        let t = try Self.generate([Self.draw([SIMD2(15, -8), SIMD2(15, 66)])]).template
+        let out = try Self.generate([Self.draw([SIMD2(15, -8), SIMD2(15, 66)])])
+        let t = out.template
         expectValid(t)
-        #expect(t.regions.count == plain.regions.count + 1)
-        #expect(Self.inkDistance(t, SIMD2(15.5, 70)) < 1.5)
+        #expect(out.vectorStats.labelRoomUnmet == 0)
+        #expect(t.regions.count == plain.regions.count, "The line was led into the horizon")
+        let line = try #require(Self.stroke(in: t, near: SIMD2(15, 40)))
+        #expect(abs((line.map(\.y).max() ?? 0) - 66) < 1, "\(line)")
+        #expect(Self.inkDistance(t, SIMD2(15, 69)) > 2)
+    }
+
+    /// Lines with both ends free stay inside their cells as drawn, and the template holds: one
+    /// across the sky ending 5 px short of the disc and of the square (reaching both, it would
+    /// close a cell above the horizon), and a short stub.
+    @Test func freeEndedLinesStayInsideTheirCells() throws {
+        let plain = try Self.generate([]).template
+        let across = [SIMD2<Float>(89, 60), SIMD2(115, 60)], stub = [SIMD2<Float>(100, 20), SIMD2(108, 24)]
+        let out = try Self.generate([Self.draw(across), Self.draw(stub)])
+        let t = out.template
+        expectValid(t)
+        #expect(out.vectorStats.labelRoomUnmet == 0)
+        #expect(out.lineArtStats?.drawnLines == 2)
+        #expect(t.regions.count == plain.regions.count, "A line closed a cell")
+        #expect(t.lineArt!.strokes.count == plain.lineArt!.strokes.count + 2)
+        for (drawn, middle) in [(across, SIMD2<Float>(102, 60)), (stub, SIMD2<Float>(104, 22))] {
+            let line = try #require(Self.stroke(in: t, near: middle))
+            for end in drawn {
+                #expect(line.contains { simdLength($0 - end) < 1 }, "\(end) is not an end of \(line)")
+            }
+            #expect(line.allSatisfy { $0.x >= drawn[0].x - 1 && $0.x <= drawn[1].x + 1 }, "\(line) runs past its ends")
+        }
     }
 
     /// The eraser takes out the lines under it: the ground's detail line inside its cell, and
@@ -258,33 +301,60 @@ struct LineEditsTests {
         #expect(held[1].points == lines[1].points)
     }
 
-    /// A drawn line's ends: one crossing a line a little is trimmed back onto it, one beside a
-    /// line or on the frame is attached, one clear of everything stays free; a loop drawn past
-    /// its start loses both tails.
-    @Test func drawnEndsMeetWhatTheyWereDrawnTo() throws {
+    /// A drawn line's ends stay where the painter drew them, and none is free: one crossing a
+    /// line a little, one stopping short of it, the tails of a loop drawn past its start; one
+    /// run off the canvas ends on the frame. The drawing's own free ends are still led into a
+    /// drawn line.
+    @Test func drawnEndsStayWhereDrawn() throws {
         let w = 60, h = 40
-        let wall = DrawnLine(
-            points: (2...37).map { SIMD2(30, Float($0)) }, strength: [Float](repeating: 1, count: 36),
-            layer: [UInt8](repeating: 0, count: 36), closed: false, free: (false, false), links: [], eye: false)
+        func line(_ points: [SIMD2<Float>], free: (Bool, Bool)) -> DrawnLine {
+            DrawnLine(
+                points: points, strength: [Float](repeating: 1, count: points.count),
+                layer: [UInt8](repeating: LineLayer.outline.rawValue, count: points.count), closed: false, free: free,
+                links: [], eye: false)
+        }
+        let wall = line((2...37).map { SIMD2(30, Float($0)) }, free: (false, false))
         func applied(_ points: [SIMD2<Float>]) -> DrawnLine? {
             let normalized = points.map { ($0 + 0.5) / SIMD2(Float(w), Float(h)) }
-            let result = LineEdits.apply([LineEdit(kind: .draw, points: normalized)], to: [wall], width: w, height: h, reach: 8)
+            let result = LineEdits.apply([LineEdit(kind: .draw, points: normalized)], to: [wall], width: w, height: h)
             return result.lines.count == 2 ? result.lines[1] : nil
         }
         func near(_ p: SIMD2<Float>?, _ q: SIMD2<Float>) -> Bool { p.map { simdLength($0 - q) < 0.01 } ?? false }
-        // Crossing the wall by 4 pixels: trimmed onto it.
+        func held(_ line: DrawnLine?) -> Bool { line.map { !$0.free.0 && !$0.free.1 } ?? false }
+        // Crossing the wall by 4 pixels: kept.
         let crossing = applied([SIMD2(10, 20), SIMD2(34, 20)])
-        #expect(near(crossing?.points.last, SIMD2(30, 20)) && crossing?.free.1 == false && crossing?.free.0 == true)
-        // Stopping 5 pixels short: left free, for `closeFreeEnds`.
-        let short = applied([SIMD2(10, 20), SIMD2(25, 20)])
-        #expect(near(short?.points.last, SIMD2(25, 20)) && short?.free.1 == true)
-        // Run off the canvas: cut at the frame, and attached there.
+        #expect(near(crossing?.points.first, SIMD2(10, 20)) && near(crossing?.points.last, SIMD2(34, 20)) && held(crossing))
+        // Stopping 5 pixels short: kept, and not free for `closeFreeEnds` to lead on.
+        let short = try #require(applied([SIMD2(10, 20), SIMD2(25, 20)]))
+        #expect(near(short.points.last, SIMD2(25, 20)) && held(short))
+        // Run off the canvas: cut at the frame.
         let off = applied([SIMD2(10, 20), SIMD2(10, 50)])
-        #expect(off?.points.last?.y == Float(h - 1) && off?.free.1 == false)
-        // A loop past its start: both tails go, and the ends meet.
+        #expect(off?.points.last?.y == Float(h - 1) && held(off))
+        // A loop past its start: both tails stay.
         let loop = applied([SIMD2(4, 10), SIMD2(20, 10), SIMD2(20, 26), SIMD2(8, 26), SIMD2(8, 6)])
-        let ends = try #require(loop.map { ($0.points.first!, $0.points.last!) })
-        #expect(simdLength(ends.0 - ends.1) < 2, "\(ends)")
-        #expect(loop?.free.0 == false && loop?.free.1 == false)
+        #expect(near(loop?.points.first, SIMD2(4, 10)) && near(loop?.points.last, SIMD2(8, 6)) && held(loop))
+
+        // The drawing's own free end, 6 pixels above the short drawn line, reaches it; the drawn
+        // line stays as it was.
+        var lines = [wall, short, line((2...14).map { SIMD2(15, Float($0)) }, free: (false, true))]
+        let walls = LineLayering.walls(lines, width: w, height: h)
+        let colorEdge = [Bool](repeating: false, count: w * h)
+        #expect(LineLayering.closeFreeEnds(&lines, walls: walls, colorEdge: colorEdge, reach: [10, 10, 10]) == 1)
+        #expect(lines[1].points == short.points)
+        #expect(near(lines[2].points.last, SIMD2(15, 20)))
+    }
+
+    /// The points of the interior stroke passing within a pixel of `p`, if one does.
+    static func stroke(in t: Template, near p: SIMD2<Float>) -> [SIMD2<Float>]? {
+        let art = t.lineArt!
+        for s in art.strokes {
+            let points = Array(art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)])
+            for (a, b) in zip(points, points.dropFirst()) {
+                let ab = b - a
+                let u = min(max(simdDot(p - a, ab) / max(simdLengthSquared(ab), 1e-9), 0), 1)
+                if simdLength(p - (a + ab * u)) < 1 { return points }
+            }
+        }
+        return nil
     }
 }

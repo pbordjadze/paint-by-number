@@ -7,7 +7,8 @@ import Foundation
 /// template hold for them as for any line.
 public struct LineEdit: Sendable, Equatable {
     public enum Kind: UInt8, Sendable {
-        /// A line drawn: an outline, as heavy as the rest of the drawing.
+        /// A line drawn: an outline, as heavy as the rest of the drawing, where the painter drew
+        /// it (never led on into a line, nor trimmed back to one).
         case draw
         /// The lines under the eraser's path taken out.
         case erase
@@ -35,11 +36,11 @@ public struct LineEdit: Sendable, Equatable {
 /// The painter's edits (`LineArtInput.edits`) applied to the lines `LayeredLines` found, at its
 /// layer stage before free ends close:
 /// - a drawn line joins as an outline at full strength, so it walls cells off as a subject's
-///   silhouette does, cut where it leaves the canvas. Its ends meet the lines they were drawn
-///   to: an end that crosses a line within `reach` (and within a quarter of its own length) is
-///   trimmed back to it, one that touches a line or the frame is attached, and one that stops
-///   short stays free, so `closeFreeEnds` leads it into the line it was heading for, as it
-///   does the drawing's own ends. Numbers keep off what stays inside a cell
+///   silhouette does, and keeps the path the painter drew, cut where it leaves the canvas:
+///   its ends are never free, so `closeFreeEnds` leaves them where they are (the drawing's own
+///   free ends may still be led into it). An end on or beside a line, or on the frame, closes
+///   cells against it as it lies (cells are 4-connected); a line that stops short of one, or
+///   runs on past it, is drawn inside the cell there, and numbers keep off it
 ///   (`LayeredLines.Plan.drawnInterior`);
 /// - the eraser takes out every point of a line within its radius, of the app's lines and of
 ///   the lines drawn before it (a line drawn later over an erased place stays), leaving no
@@ -88,7 +89,7 @@ enum LineEdits {
         var drawn: Int
     }
 
-    static func apply(_ edits: [LineEdit], to lines: [DrawnLine], width w: Int, height h: Int, reach: Float) -> Applied {
+    static func apply(_ edits: [LineEdit], to lines: [DrawnLine], width w: Int, height h: Int) -> Applied {
         let edits = sanitized(edits)
         let long = Float(max(w, h))
         var erased: [Int32] = [], blocked: [Int32] = []
@@ -121,7 +122,6 @@ enum LineEdits {
             }
         }
         cut(&out, origin: &origin, erasedBy: erasedBy, erasedLines: erasedLines, width: w, height: h)
-        snapEnds(&out, origin: origin, width: w, height: h, reach: reach)
         return Applied(
             lines: out, origin: origin, erasedBy: erasedBy, erasedLines: erasedLines,
             blockedBy: blocked.isEmpty ? nil : blocked, erasures: erasures, drawn: origin.filter { $0 >= 0 }.count)
@@ -174,8 +174,9 @@ enum LineEdits {
         return dense
     }
 
-    /// The pieces of a drawn path that lie on the canvas, as outlines at full strength: an end
-    /// the painter drew is free, one where the path leaves the canvas lies on the frame.
+    /// The pieces of a drawn path that lie on the canvas, as outlines at full strength with no
+    /// free end: an end lies where the painter drew it, or on the frame where the path leaves
+    /// the canvas.
     static func drawnLines(_ points: [SIMD2<Float>], width w: Int, height h: Int) -> [DrawnLine] {
         let path = pixelPath(points, width: w, height: h)
         guard path.count >= 2 else { return [] }
@@ -183,7 +184,7 @@ enum LineEdits {
         let inside = path.map { all($0 .>= low) && all($0 .<= high) }
         let line = DrawnLine(
             points: path, strength: [Float](repeating: 1, count: path.count),
-            layer: [UInt8](repeating: LineLayer.outline.rawValue, count: path.count), closed: false, free: (true, true),
+            layer: [UInt8](repeating: LineLayer.outline.rawValue, count: path.count), closed: false, free: (false, false),
             links: [], eye: false)
         let last = SIMD2(Float(w - 1), Float(h - 1))
         return line.pieces(keeping: inside, freeCuts: false).compactMap { piece in
@@ -273,118 +274,6 @@ enum LineEdits {
         let ab = path[nearest + 1] - path[nearest]
         let cosine = abs(simdDot(direction, ab)) / (span * simdLength(ab))
         return cosine >= cos(alongAngle * .pi / 180)
-    }
-
-    // MARK: - Ends
-
-    /// Each free end the painter drew meets what it was drawn to: trimmed back to the first
-    /// line it crosses within `reach` of the end (and within a quarter of its line's length),
-    /// or attached where it touches a line or the frame. Ends that meet nothing stay free.
-    static func snapEnds(_ lines: inout [DrawnLine], origin: [Int32], width w: Int, height h: Int, reach: Float) {
-        guard origin.contains(where: { $0 >= 0 }) else { return }
-        // The line covering each pixel, and whether another covers it too.
-        var covering = [Int32](repeating: -1, count: w * h)
-        var covered = [Bool](repeating: false, count: w * h)
-        for (id, line) in lines.enumerated() {
-            visitPixels(of: line) { x, y in
-                guard x >= 0, y >= 0, x < w, y < h else { return }
-                let i = y * w + x
-                if covering[i] < 0 {
-                    covering[i] = Int32(id)
-                } else if covering[i] != Int32(id) {
-                    covered[i] = true
-                }
-            }
-        }
-        let owner = covering, shared = covered
-        for k in lines.indices where origin[k] >= 0 && !lines[k].closed {
-            for end in 0..<2 where end == 0 ? lines[k].free.0 : lines[k].free.1 {
-                let id = Int32(k)
-                let contact: (SIMD2<Float>) -> Contact = { p in
-                    let px = Int(p.x.rounded()), py = Int(p.y.rounded())
-                    if px <= 0 || py <= 0 || px >= w - 1 || py >= h - 1 { return .on }
-                    func other(_ i: Int) -> Bool { shared[i] || (owner[i] >= 0 && owner[i] != id) }
-                    if other(py * w + px) { return .on }
-                    for y in (py - 1)...(py + 1) {
-                        for x in (px - 1)...(px + 1) where other(y * w + x) { return .beside }
-                    }
-                    return .clear
-                }
-                snap(&lines[k], end: end, reach: reach, contact: contact)
-            }
-        }
-    }
-
-    /// Where a point of a drawn line is against the other lines: on one, beside one (a
-    /// neighbouring pixel), or clear of them.
-    enum Contact { case clear, beside, on }
-
-    /// Trims `line` back from `end` to the first point within `reach` (and a quarter of the
-    /// line) where it meets another line (`contact`; onto the line itself when the touch runs
-    /// onto it within a step or two) or crosses itself, and attaches it there.
-    static func snap(_ line: inout DrawnLine, end: Int, reach: Float, contact: (SIMD2<Float>) -> Contact) {
-        let n = line.points.count
-        guard n >= 2 else { return }
-        let arc = line.arcLength
-        let total = arc[n - 1]
-        let limit = min(reach, 0.25 * total)
-        let step = end == 0 ? 1 : -1
-        // A crossing with the line's own far part (a loop drawn past its start) counts too.
-        let apart = max(2 * limit, LineLayering.minimumRun)
-        func crossesItself(_ j: Int) -> Bool {
-            let p = line.points[j]
-            for m in 0..<n where abs(arc[m] - arc[j]) > apart && simdLengthSquared(line.points[m] - p) <= 2.25 { return true }
-            return false
-        }
-        var j = end == 0 ? 0 : n - 1
-        while (end == 0 ? arc[j] : total - arc[j]) <= limit {
-            let touch = contact(line.points[j])
-            if touch != .clear || crossesItself(j) {
-                var cut = j
-                if touch == .beside {
-                    var k = j + step
-                    while k >= 0 && k < n && abs(k - j) <= 2 && contact(line.points[k]) != .clear {
-                        if contact(line.points[k]) == .on {
-                            cut = k
-                            break
-                        }
-                        k += step
-                    }
-                }
-                trim(&line, to: cut, end: end)
-                return
-            }
-            j += step
-            guard j >= 0 && j < n else { return }
-        }
-    }
-
-    /// Drops the points beyond `j` at `end` (0: the start, 1: the end), which no longer is free.
-    static func trim(_ line: inout DrawnLine, to j: Int, end: Int) {
-        if end == 0 {
-            line.points.removeFirst(j)
-            line.strength.removeFirst(j)
-            line.layer.removeFirst(j)
-            line.links = line.links.filter { $0.index >= j }.map { ($0.index - j, $0.to) }
-            line.free.0 = false
-        } else {
-            let drop = line.points.count - 1 - j
-            line.points.removeLast(drop)
-            line.strength.removeLast(drop)
-            line.layer.removeLast(drop)
-            line.links = line.links.filter { $0.index <= j }
-            line.free.1 = false
-        }
-    }
-
-    /// The pixels `LineLayering.walls` rasterizes a line into.
-    static func visitPixels(of line: DrawnLine, _ body: (Int, Int) -> Void) {
-        let p = line.points
-        guard let first = p.first else { return }
-        if p.count == 1 { body(Int(first.x.rounded()), Int(first.y.rounded())) }
-        for k in 0..<(p.count - 1) { LineLayering.segment(p[k], p[k + 1], body) }
-        if line.closed && p.count > 2 { LineLayering.segment(p[p.count - 1], p[0], body) }
-        for l in line.links { LineLayering.segment(p[l.index], l.to, body) }
     }
 
     // MARK: - Areas
