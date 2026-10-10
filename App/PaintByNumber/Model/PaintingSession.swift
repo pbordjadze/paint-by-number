@@ -65,8 +65,10 @@ final class PaintingSession {
     /// Automatically select the next unfinished color when one is completed.
     @ObservationIgnored var autoAdvance = true
     /// Zen Mode: a moment after each fill the canvas flies to the nearest area left of the
-    /// selected color, as the hint does (`zenPause`).
+    /// selected color, as the hint does (`zenPause`, `zenShinePause`).
     @ObservationIgnored var flowsToNextArea = false
+    /// Reduce Motion: the canvas shines no finished color, so Zen Mode has none to wait out.
+    @ObservationIgnored var reduceMotion = false
     /// The palette's order on screen (`PaletteOrder`), which picking the next color follows;
     /// nil goes by number.
     @ObservationIgnored var colorOrder: [Int]?
@@ -207,7 +209,11 @@ final class PaintingSession {
         strokeFills = nil
         guard let last = fills.last else { return }
         emit(.strokeEnded(regions: fills))
-        if flowsToNextArea { showNextArea(near: template.labels(ofRegion: last).first?.position ?? .zero) }
+        if flowsToNextArea {
+            // A color it painted that has nothing left was finished by this stroke.
+            let finishedColor = fills.contains { remainingByColor[colorOf($0)] == 0 }
+            showNextArea(near: template.labels(ofRegion: last).first?.position ?? .zero, finishedColor: finishedColor)
+        }
     }
 
     var isStroking: Bool { strokeFills != nil }
@@ -238,7 +244,7 @@ final class PaintingSession {
             select(color: nextIncompleteColor(after: selected))
         }
         // A stroke flies on when it ends (`endStroke`).
-        if flowsToNextArea, !isStroking { showNextArea(near: origin) }
+        if flowsToNextArea, !isStroking { showNextArea(near: origin, finishedColor: !completed.isEmpty) }
         return event
     }
 
@@ -304,13 +310,18 @@ final class PaintingSession {
 
     /// How long a fill shows before Zen Mode flies on.
     static let zenPause: Duration = .milliseconds(350)
+    /// How long a fill that finished a color shows instead: the canvas sweeps a shine over the
+    /// color 0.35 s after it, for 1.1 s, and a flight leaving as it starts would hide it. Under
+    /// Reduce Motion nothing shines, and `zenPause` holds.
+    static let zenShinePause: Duration = .milliseconds(1300)
 
     /// Zen Mode's flight: the hint near `point`, unless something was painted, undone or
     /// finished meanwhile.
-    private func showNextArea(near point: SIMD2<Float>) {
+    private func showNextArea(near point: SIMD2<Float>, finishedColor: Bool) {
         let painted = revision
+        let pause = finishedColor && !reduceMotion ? Self.zenShinePause : Self.zenPause
         Task {
-            try? await Task.sleep(for: Self.zenPause)
+            try? await Task.sleep(for: pause)
             guard revision == painted, !progress.isComplete else { return }
             showHint(near: point)
         }

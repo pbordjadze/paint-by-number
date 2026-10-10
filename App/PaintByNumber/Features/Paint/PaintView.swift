@@ -34,6 +34,9 @@ struct PaintView: View {
     @State private var timelapse: TimelapseRequest?
     @State private var canvasUnavailable = false
     @State private var completionShare = CompletionShare()
+    /// Bumped once the completion bar is up after the painting was finished on this screen (not
+    /// for a painting opened finished): its seal bounces.
+    @State private var sealBounces = 0
     @State private var peek: PhotoPeek
     @State private var photoUnavailable = false
     @State private var tips: TipGroup?
@@ -99,13 +102,22 @@ struct PaintView: View {
             if tips == nil { tips = PaintTips.makeGroup() }
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
-            chrome.observe(session, controller: controller)
+            chrome.observe(session)
             RenderContext.prewarm()
         }
         .onChange(of: undoManager) { _, manager in chrome.undoManager = manager }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
         .onChange(of: zenMode, initial: true) { _, zen in session.flowsToNextArea = zen }
+        .onChange(of: reduceMotion, initial: true) { _, reduce in session.reduceMotion = reduce }
+        .onChange(of: session.isComplete) { _, complete in
+            guard complete, !reduceMotion else { return }
+            Task {
+                // As the completion bar settles.
+                try? await Task.sleep(for: .milliseconds(450))
+                sealBounces += 1
+            }
+        }
         .onDisappear { undoManager?.removeAllActions(withTarget: session) }
         .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
             Button("Restart", role: .destructive) {
@@ -217,6 +229,9 @@ struct PaintView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
         }
+        // The completion bar slides in for the palette (at the bottom or the side) as the
+        // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
+        .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
     }
 
     // MARK: Layout
@@ -476,8 +491,8 @@ struct PaintView: View {
         if session.isComplete {
             let transition: AnyTransition = reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity)
             CompletionBar(
-                session: session, title: title, share: completionShare, onReplay: controller.replay,
-                onShareTimelapse: shareTimelapse, onClose: onClose)
+                session: session, title: title, share: completionShare, sealBounces: sealBounces,
+                onReplay: controller.replay, onShareTimelapse: shareTimelapse, onClose: onClose)
                 .transition(transition)
         } else {
             PaletteBar(

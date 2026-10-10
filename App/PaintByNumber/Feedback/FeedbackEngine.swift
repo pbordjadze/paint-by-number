@@ -65,6 +65,10 @@ final class FeedbackEngine {
         case .rejected:
             if hapticsOn { haptics.reject() }
             if soundsOn { sounds.reject() }
+        case .colorCompleted where session.isComplete:
+            // The fill that finishes the painting finishes a color too: the painting's
+            // celebration is the one finale.
+            break
         case .colorCompleted:
             if hapticsOn { haptics.colorComplete() }
             if soundsOn { sounds.colorComplete() }

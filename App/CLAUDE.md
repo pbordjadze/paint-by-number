@@ -110,9 +110,16 @@ synchronized folder would bundle it into the app.
   per-fill views read the rest themselves (the badge's `ProgressGroup`, `PaletteBar`). The
   canvas draws on the main thread too: keep per-fill work in small views or off it.
 - Events: `PaintingSession.onEvent` has three observers registered when the screen appears:
-  `FeedbackEngine.attach` (haptics, sound), `CanvasView` (the finishing shine) and
+  `FeedbackEngine.attach` (haptics, sound), `CanvasView` (the shines, the finish) and
   `PaintChromeState.observe` (undo registration, swatch shake, tips, VoiceOver announcements); the
   canvas also gets direct `PaintingCanvas` calls.
+- Finishing: the last fill lingers; once it has landed (and the stroke that painted it has
+  ended), `CanvasView.finish` eases the camera out to the whole painting, which shines as the
+  camera lands (Reduce Motion: a cut after a pause, no shine). A flight to fit follows layout
+  changes on the way (`CanvasView.layoutSubviews`): the completion bar taking the palette's place
+  changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
+  haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
+  `isComplete`) and its seal bounces once it is up, for a painting finished on screen.
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
@@ -134,8 +141,9 @@ synchronized folder would bundle it into the app.
   generation.
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
-  hint does. A tap during any camera flight lands it and paints; only a tap on a fling just
-  stops it.
+  hint does, and `zenShinePause` after one that finished a color, whose shine shows first
+  (`zenPause` under Reduce Motion, `PaintingSession.reduceMotion`: nothing shines). A tap during
+  any camera flight lands it and paints; only a tap on a fling just stops it.
 - Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`, radius capped at
   `PaintingSession.maxBrushRadius`).
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one

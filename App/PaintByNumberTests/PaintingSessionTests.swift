@@ -243,7 +243,7 @@ struct PaintingSessionTests {
         undo.groupsByEvent = false
         let chrome = PaintChromeState()
         chrome.undoManager = undo
-        chrome.observe(session, controller: CanvasController())
+        chrome.observe(session)
         let color = try #require(template.palette.indices.first { regions(ofColor: $0).count >= 4 })
         let reds = regions(ofColor: color)
         session.select(color: color)
@@ -388,6 +388,35 @@ struct PaintingSessionTests {
         #expect(canvas.focused.isEmpty)
     }
 
+    /// Zen Mode stays on a fill or stroke that finished a color while the color shines, then
+    /// flies to the next color's areas; under Reduce Motion nothing shines and the usual pause
+    /// holds.
+    @Test(arguments: [false, true], [false, true])
+    func zenModeWaitsOutAFinishedColorsShine(reduceMotion: Bool, stroke: Bool) async throws {
+        let session = PaintingSession(template: template)
+        let canvas = RecordingCanvas()
+        session.canvas = canvas
+        session.flowsToNextArea = true
+        session.reduceMotion = reduceMotion
+        session.select(color: 4)
+        let clock = ContinuousClock()
+        let painted = clock.now
+        if stroke { session.beginStroke() }
+        session.paint(regions(ofColor: 4), from: .zero, animated: false)
+        if stroke { session.endStroke() }
+        #expect(session.isColorComplete(4))
+        let next = try #require(session.selectedColor)
+        try await waitUntil(timeout: .seconds(5)) { !canvas.focused.isEmpty }
+        let waited = clock.now - painted
+        if reduceMotion {
+            #expect(waited < PaintingSession.zenShinePause)
+        } else {
+            #expect(waited >= PaintingSession.zenShinePause)
+        }
+        let shown = try #require(canvas.focused.first)
+        #expect(session.colorOf(shown) == next && !session.isPainted(shown))
+    }
+
     @Test func hintWithNothingLeftStaysQuiet() {
         let session = PaintingSession(template: template)
         session.autoAdvance = false
@@ -489,6 +518,106 @@ struct PaintingSessionTests {
         #expect(abs(center.x - Float(template.width) / 2) < 1)
         #expect(abs(center.y - Float(template.height) / 2) < 1)
         #expect(session.canvas === view)
+    }
+
+    /// A canvas 400 × 800 pt under a top bar and a palette with its caption, zoomed 3× into the
+    /// middle, with every area but the last painted.
+    private func canvasBeforeTheLastArea(_ session: PaintingSession, reduceMotion: Bool = false) throws -> (CanvasView, last: Int) {
+        let view = CanvasView(session: session)
+        view.reduceMotion = reduceMotion
+        view.initialCamera = CanvasCamera(zoom: 3, center: SIMD2(Float(template.width), Float(template.height)) / 2)
+        view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        view.chromeInsets = UIEdgeInsets(top: 100, left: 0, bottom: 176, right: 0)
+        view.layoutIfNeeded()
+        let last = try #require(template.regions.indices.last)
+        session.paint(Array(template.regions.indices.dropLast()), from: .zero, animated: false)
+        return (view, last)
+    }
+
+    private func expectsTheWholePainting(_ view: CanvasView, sourceLocation: SourceLocation = #_sourceLocation) {
+        #expect(abs(view.relativeZoom - 1) < 0.001, sourceLocation: sourceLocation)
+        let center = view.visibleCenter
+        #expect(abs(center.x - Float(template.width) / 2) < 1, sourceLocation: sourceLocation)
+        #expect(abs(center.y - Float(template.height) / 2) < 1, sourceLocation: sourceLocation)
+    }
+
+    /// Finishing the painting zoomed in ends on the whole painting, though the completion bar
+    /// took the palette's place (other chrome insets) as it was finished: the last fill lingers,
+    /// the camera eases out once it has landed, and the whole painting shines as it lands.
+    @Test func finishFliesOutToTheWholePainting() async throws {
+        let session = PaintingSession(template: template)
+        let (view, last) = try canvasBeforeTheLastArea(session)
+        // The flight runs on the display link.
+        let scene = try #require(UIApplication.shared.connectedScenes.first as? UIWindowScene)
+        let window = UIWindow(windowScene: scene)
+        window.frame = view.frame
+        window.addSubview(view)
+        window.isHidden = false
+        defer { window.isHidden = true }
+        let painted = view.frameUniforms().time.x
+        session.paint([last], from: template.anchor(ofRegion: last), animated: true)
+        #expect(session.isComplete)
+        view.chromeInsets = UIEdgeInsets(top: 100, left: 0, bottom: 120, right: 0)
+        view.layoutIfNeeded()
+        #expect(abs(view.relativeZoom - 3) < 0.01 && !view.isCameraFlying, "the last area shows as it is painted")
+        try await waitUntil(timeout: .seconds(10)) { !view.isCameraFlying && abs(view.relativeZoom - 1) < 0.001 }
+        expectsTheWholePainting(view)
+        let shine = view.frameUniforms().shine
+        #expect(shine.y == -1, "the whole painting shines")
+        // After the lingering fill (0.375 s at least), the rest and the flight.
+        #expect(shine.x > painted + 1.2)
+    }
+
+    /// Under Reduce Motion the finish cuts to the whole painting a moment after the last fill,
+    /// and nothing shines.
+    @Test func finishCutsToTheWholePaintingUnderReduceMotion() async throws {
+        let session = PaintingSession(template: template)
+        let (view, last) = try canvasBeforeTheLastArea(session, reduceMotion: true)
+        session.paint([last], from: template.anchor(ofRegion: last), animated: true)
+        view.chromeInsets = UIEdgeInsets(top: 100, left: 0, bottom: 120, right: 0)
+        view.layoutIfNeeded()
+        #expect(abs(view.relativeZoom - 3) < 0.01, "the last area shows as it is painted")
+        try await waitUntil(timeout: .seconds(5)) { abs(view.relativeZoom - 1) < 0.001 }
+        expectsTheWholePainting(view)
+        #expect(view.shineStart == CanvasClock.never)
+    }
+
+    /// Finishing with the whole painting in view: no flight to wait for, and the whole painting
+    /// shines once the last fill has landed.
+    @Test func finishAtFitShinesWithoutAFlight() throws {
+        let session = PaintingSession(template: template)
+        let view = CanvasView(session: session)
+        view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        view.chromeInsets = UIEdgeInsets(top: 100, left: 0, bottom: 176, right: 0)
+        view.layoutIfNeeded()
+        let last = try #require(template.regions.indices.last)
+        session.paint(Array(template.regions.indices.dropLast()), from: .zero, animated: false)
+        let painted = view.frameUniforms().time.x
+        session.paint([last], from: template.anchor(ofRegion: last), animated: true)
+        let fill = try #require(view.regionState(last))
+        let shine = view.frameUniforms().shine
+        #expect(shine.y == -1)
+        #expect(shine.x >= painted + 0.6 - 0.001 && shine.x >= painted + fill.duration - 0.001)
+    }
+
+    /// Zoom to Fit keeps heading for the whole painting through a layout change on the way (a
+    /// rotation), rather than stopping where it was.
+    @Test func zoomToFitFollowsARotation() {
+        let view = CanvasView(session: PaintingSession(template: template))
+        view.initialCamera = CanvasCamera(zoom: 3, center: SIMD2(120, 160))
+        view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        view.chromeInsets = UIEdgeInsets(top: 100, left: 0, bottom: 120, right: 0)
+        view.layoutIfNeeded()
+        // Without a window no display link steps the flight: it stays under way.
+        view.zoomToFit()
+        #expect(view.isCameraFlying)
+        view.frame = CGRect(x: 0, y: 0, width: 800, height: 400)
+        view.layoutIfNeeded()
+        #expect(view.isCameraFlying, "the flight carries on")
+        let target = view.camera
+        #expect(abs(target.zoom - 1) < 0.001)
+        #expect(abs(target.center.x - Float(template.width) / 2) < 1)
+        #expect(abs(target.center.y - Float(template.height) / 2) < 1)
     }
 
     /// The completion bar's share picture renders once per completion, however often the bar

@@ -14,6 +14,8 @@ import simd
 /// - `paint-progress`: ~55 % painted color by color, the color in progress selected
 /// - `paint-zoom`: zoomed ~4× into the canvas, numbers and highlight visible
 /// - `paint-complete`: finished painting (line art dissolved)
+/// - `paint-finish`: everything but one area painted, zoomed ~3× onto it; after 1.5 s it is painted,
+///   and the camera eases out to the whole painting (ready once it lands)
 /// - `paint-dark`: `paint-progress` for dark appearance
 /// - `paint-dark-paper`: `paint-progress` on dark paper (the Paper setting at Dark)
 /// - `paint-fill`: fills frozen mid-animation to inspect the paint front
@@ -146,6 +148,8 @@ private final class Demo {
     /// Feedback scenarios: what feedback starts with, and where the painting came from.
     var feedback: FeedbackDemo?
     var feedbackSource: FeedbackSource?
+    /// `paint-finish`: the area left to paint.
+    private var lastArea: Int?
     private let scenario: String
 
     init(scenario: String, template t: Template, title: String, photo: String?) {
@@ -201,6 +205,17 @@ private final class Demo {
             camera = CanvasCamera(zoom: 4, center: target.map { Self.center(t, $0) } ?? middle)
         case "paint-complete", "paint-complete-long-text":
             paint(fraction: 1)
+        case "paint-finish":
+            // Everything but a mid-sized area near the middle, zoomed in on it.
+            let middle = SIMD2(Float(t.width), Float(t.height)) * 0.5
+            let last = t.regions.indices.filter { t.regions[$0].inscribedRadius > 6 }
+                .min { simd_distance(Self.center(t, $0), middle) < simd_distance(Self.center(t, $1), middle) }
+            if let last {
+                session.paint(order.filter { $0 != last }, from: .zero, animated: false)
+                session.select(color: session.colorOf(last))
+                camera = CanvasCamera(zoom: 3, center: Self.center(t, last))
+                lastArea = last
+            }
         case "paint-replay":
             paint(fraction: 1)
             // Slowed so the CI screenshot lands mid-replay.
@@ -350,6 +365,23 @@ private final class Demo {
         if scenario == PaintTips.demoScenario {
             // TipKit evaluates eligibility asynchronously; the popover is up well within this.
             try? await Task.sleep(for: .seconds(1.5))
+            return
+        }
+        if scenario == "paint-finish", let last = lastArea {
+            try? await Task.sleep(for: .seconds(1.5))
+            session.paint([last], from: Self.center(session.template, last), animated: true)
+            // Ready once the camera has landed on the whole painting.
+            let clock = ContinuousClock()
+            let deadline = clock.now + .seconds(10)
+            var zoom = 0.0
+            while clock.now < deadline {
+                if let canvas = session.canvas as? CanvasView {
+                    zoom = Double(canvas.relativeZoom)
+                    if !canvas.isCameraFlying && abs(zoom - 1) < 0.01 { break }
+                }
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+            Log.demo.notice("demo paint-finish: relative zoom \(zoom, privacy: .public)")
             return
         }
         if scenario == "paint-replay" {
