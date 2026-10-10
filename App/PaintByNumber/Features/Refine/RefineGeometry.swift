@@ -85,6 +85,233 @@ nonisolated enum PenPath {
     }
 }
 
+/// The help the pens give a line once it's smoothed (`PenPath`), in one space (the template's
+/// canvas units): the Smart Pen straightens a line that runs nearly straight, and both pens move
+/// an end onto a line it comes near (`SnapLines`), the Smart Pen from much farther.
+nonisolated enum PenAssist {
+    /// A line runs nearly straight when no point strays from its chord by more than this share
+    /// of the chord (or a floor the caller gives for short strokes): an arc bulges by about an
+    /// eighth of its turn (in radians) times its chord, so one turning more than 16° isn't.
+    static let straightness: CGFloat = 0.035
+    /// A line's end at a line's end (a break in it, or where it stops) counts as this much
+    /// nearer than a point along a line: a short stroke across a break joins the two ends.
+    static let endPreference: CGFloat = 0.5
+
+    /// The farthest any point lies from the segment between the first and the last.
+    static func deviation(_ points: [CGPoint]) -> CGFloat {
+        guard let a = points.first, let b = points.last else { return 0 }
+        return points.reduce(0) { max($0, PenPath.segmentDistance($1, a, b)) }
+    }
+
+    /// Whether `points` run nearly straight: no point farther from the chord than `straightness`
+    /// of its length (or `floor`, if more), and the line no longer than the chord by more than
+    /// twice that, so a stroke that doubles back along itself isn't.
+    static func isNearlyStraight(_ points: [CGPoint], floor: CGFloat) -> Bool {
+        guard let a = points.first, let b = points.last else { return false }
+        let chord = PenPath.distance(a, b)
+        guard chord > 0 else { return false }
+        let tolerance = max(straightness * chord, floor)
+        return deviation(points) <= tolerance && PenPath.length(points) <= chord + 2 * tolerance
+    }
+
+    /// `line`'s ends moved onto `lines` where they come within `reach`: onto a line's end when
+    /// `preferringEnds` (`SnapLines.join`; the line's own start too, for an end that closes a
+    /// loop), else onto the nearest point. A straight line moves its two ends; otherwise each
+    /// move eases in over `reach` of the line (half the line, if shorter), which the rest keeps.
+    /// Returns the line and the points its ends joined. A line the moves would fold to under
+    /// half its length keeps only its start's.
+    static func joined(
+        _ line: [CGPoint], to lines: SnapLines, reach: CGFloat, preferringEnds: Bool, straight: Bool
+    ) -> (line: [CGPoint], joins: [CGPoint]) {
+        guard line.count >= 2, reach > 0 else { return (line, []) }
+        let length = PenPath.length(line)
+        let span = min(reach, length / 2)
+        func target(for p: CGPoint, ends: [CGPoint]) -> CGPoint? {
+            preferringEnds ? lines.join(for: p, within: reach, ends: ends) : lines.nearestPoint(to: p, within: reach)
+        }
+        func move(_ points: [CGPoint], atStart: Bool, to target: CGPoint) -> [CGPoint] {
+            guard straight else { return moving(points, atStart: atStart, to: target, span: span) }
+            var points = points
+            points[atStart ? 0 : points.count - 1] = target
+            return points
+        }
+        var out = line
+        var joins: [CGPoint] = []
+        if let start = target(for: line[0], ends: []) {
+            out = move(out, atStart: true, to: start)
+            joins.append(start)
+        }
+        let started = out
+        // The line may close on its own start, if it's long enough to make a loop.
+        let own = length >= 3 * reach ? [out[0]] : []
+        if let end = target(for: line[line.count - 1], ends: own) {
+            out = move(out, atStart: false, to: end)
+            if PenPath.length(out) >= length / 2 {
+                joins.append(end)
+            } else {
+                out = started
+            }
+        }
+        return (out, joins)
+    }
+
+    /// `points` with an end (the first, or the last) moved to `target`, the move easing in over
+    /// `span` of the line from that end: all of it at the end, none `span` along, where a point
+    /// is added if none lies there, so the line before it stays as it was.
+    static func moving(_ points: [CGPoint], atStart: Bool, to target: CGPoint, span: CGFloat) -> [CGPoint] {
+        guard points.count >= 2 else { return points }
+        let p = atStart ? Array(points.reversed()) : points
+        let n = p.count
+        let offset = CGPoint(x: target.x - p[n - 1].x, y: target.y - p[n - 1].y)
+        // Each point's distance along the line from the end.
+        var along = [CGFloat](repeating: 0, count: n)
+        for i in stride(from: n - 2, through: 0, by: -1) { along[i] = along[i + 1] + PenPath.distance(p[i], p[i + 1]) }
+        func shifted(_ q: CGPoint, _ d: CGFloat) -> CGPoint {
+            let w = span > 0 ? max(0, 1 - d / span) : (d == 0 ? 1 : 0)
+            return CGPoint(x: q.x + offset.x * w, y: q.y + offset.y * w)
+        }
+        var out: [CGPoint] = []
+        for i in 0..<n {
+            if i > 0, along[i - 1] > span, along[i] < span {
+                let t = (along[i - 1] - span) / (along[i - 1] - along[i])
+                out.append(CGPoint(x: p[i - 1].x + (p[i].x - p[i - 1].x) * t, y: p[i - 1].y + (p[i].y - p[i - 1].y) * t))
+            }
+            out.append(shifted(p[i], along[i]))
+        }
+        return atStart ? out.reversed() : out
+    }
+}
+
+/// The lines on screen a pen's end may meet, in the template's canvas units: the drawing's
+/// lines, those drawn since, less what was erased since; with the ends where a line stops
+/// rather than goes on into another (a break in a line, or a line ending in the open).
+nonisolated struct SnapLines {
+    nonisolated struct Line {
+        let points: [CGPoint]
+        let bounds: CGRect
+    }
+
+    let lines: [Line]
+    let ends: [CGPoint]
+
+    init(_ polylines: [[CGPoint]]) {
+        var lines: [Line] = []
+        var count: [Key: Int] = [:]
+        for points in polylines where points.count >= 2 {
+            var low = points[0], high = points[0]
+            for p in points {
+                low = CGPoint(x: min(low.x, p.x), y: min(low.y, p.y))
+                high = CGPoint(x: max(high.x, p.x), y: max(high.y, p.y))
+            }
+            lines.append(Line(points: points, bounds: CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y)))
+            count[Key(points[0]), default: 0] += 1
+            count[Key(points[points.count - 1]), default: 0] += 1
+        }
+        self.lines = lines
+        ends = lines.flatMap { [$0.points[0], $0.points[$0.points.count - 1]] }.filter { count[Key($0)] == 1 }
+    }
+
+    /// A point to a 64th of a unit, so lines that meet share their ends exactly.
+    nonisolated private struct Key: Hashable {
+        let x: Int, y: Int
+        init(_ p: CGPoint) {
+            x = Int((p.x * 64).rounded())
+            y = Int((p.y * 64).rounded())
+        }
+    }
+
+    /// `polylines` less their points within reach of an erasure (its path and radius), split
+    /// there; near one their segments are measured every unit, so a pass between two of a line's
+    /// points cuts it too.
+    static func erasing(_ polylines: [[CGPoint]], by erasures: [(path: [CGPoint], radius: CGFloat)]) -> [[CGPoint]] {
+        guard !erasures.isEmpty else { return polylines }
+        let reaches = erasures.map { erasure -> CGRect in
+            let xs = erasure.path.map(\.x), ys = erasure.path.map(\.y)
+            return CGRect(
+                x: (xs.min() ?? 0) - erasure.radius, y: (ys.min() ?? 0) - erasure.radius,
+                width: (xs.max() ?? 0) - (xs.min() ?? 0) + 2 * erasure.radius,
+                height: (ys.max() ?? 0) - (ys.min() ?? 0) + 2 * erasure.radius)
+        }
+        func erased(_ p: CGPoint) -> Bool {
+            for (erasure, reach) in zip(erasures, reaches) where reach.contains(p) {
+                let path = erasure.path
+                if path.count == 1 {
+                    if PenPath.distance(p, path[0]) <= erasure.radius { return true }
+                    continue
+                }
+                for (a, b) in zip(path, path.dropFirst()) where PenPath.segmentDistance(p, a, b) <= erasure.radius { return true }
+            }
+            return false
+        }
+        var out: [[CGPoint]] = []
+        for line in polylines {
+            var piece: [CGPoint] = []
+            func keep(_ p: CGPoint) {
+                if erased(p) {
+                    if piece.count >= 2 { out.append(piece) }
+                    piece = []
+                } else {
+                    piece.append(p)
+                }
+            }
+            for (k, p) in line.enumerated() {
+                if k > 0 {
+                    let a = line[k - 1]
+                    let box = CGRect(x: min(a.x, p.x), y: min(a.y, p.y), width: abs(p.x - a.x), height: abs(p.y - a.y))
+                        .insetBy(dx: -1, dy: -1)
+                    let steps = Int(PenPath.distance(a, p).rounded(.up))
+                    // A unit at a time near an erasure; elsewhere the line's own points do.
+                    if steps > 1, reaches.contains(where: { $0.intersects(box) }) {
+                        for s in 1..<steps {
+                            let t = CGFloat(s) / CGFloat(steps)
+                            keep(CGPoint(x: a.x + (p.x - a.x) * t, y: a.y + (p.y - a.y) * t))
+                        }
+                    }
+                }
+                keep(p)
+            }
+            if piece.count >= 2 { out.append(piece) }
+        }
+        return out
+    }
+
+    /// The point on a line nearest `p`, if one lies within `reach`.
+    func nearestPoint(to p: CGPoint, within reach: CGFloat) -> CGPoint? {
+        var best: (point: CGPoint, distance: CGFloat)?
+        for line in lines where line.bounds.insetBy(dx: -reach, dy: -reach).contains(p) {
+            for (a, b) in zip(line.points, line.points.dropFirst()) {
+                let q = Self.closest(p, a, b)
+                let d = PenPath.distance(p, q)
+                if d <= reach, best == nil || d < best!.distance { best = (q, d) }
+            }
+        }
+        return best?.point
+    }
+
+    /// Where an end at `p` joins the lines within `reach`: a line's end (or one of `ends`, the
+    /// pen's own) counting as `PenAssist.endPreference` as far as it is, else the nearest point.
+    func join(for p: CGPoint, within reach: CGFloat, ends extra: [CGPoint] = []) -> CGPoint? {
+        var best: (point: CGPoint, score: CGFloat)?
+        for end in ends + extra {
+            let d = PenPath.distance(p, end)
+            if d <= reach, best == nil || d * PenAssist.endPreference < best!.score { best = (end, d * PenAssist.endPreference) }
+        }
+        if let q = nearestPoint(to: p, within: reach) {
+            let d = PenPath.distance(p, q)
+            if best == nil || d < best!.score { best = (q, d) }
+        }
+        return best?.point
+    }
+
+    /// The point of the segment `a`–`b` nearest `p`.
+    static func closest(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGPoint {
+        let ab = CGPoint(x: b.x - a.x, y: b.y - a.y)
+        let length = ab.x * ab.x + ab.y * ab.y
+        let t = length > 0 ? min(max(((p.x - a.x) * ab.x + (p.y - a.y) * ab.y) / length, 0), 1) : 0
+        return CGPoint(x: a.x + ab.x * t, y: a.y + ab.y * t)
+    }
+}
+
 /// The drawn line a tap of the line eraser takes out whole: the line of the drawing under the
 /// tap from junction to junction, as the painter sees it. A template's lines break wherever two
 /// paints meet along them; they continue through every point where just one other drawn line

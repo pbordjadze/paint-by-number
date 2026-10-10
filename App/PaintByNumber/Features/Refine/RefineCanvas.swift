@@ -5,10 +5,15 @@ import UIKit
 /// they did it, over the drawing in `rect` (view coordinates): lines drawn in the drawing's own
 /// ink and weight, and the eraser's passes and the lines tapped away showing the paper or the
 /// photo beneath, so whatever they took out is gone at once. `trace` is the pen's line or the
-/// eraser's pass still under the finger; while the eraser is down a ring shows its reach.
+/// eraser's pass still under the finger; while the eraser is down a ring shows its reach, and
+/// rings mark where the Smart Pen's ends will join (`joins`).
 struct RefineInkLayer: View {
     let lines: [TemplateRefinements.Line]
     let trace: [SIMD2<Float>]?
+    /// The trace is the line as it will be drawn (the Smart Pen's), not the finger's samples.
+    let traceIsDrawn: Bool
+    /// Where the pen's ends will join lines.
+    let joins: [SIMD2<Float>]
     /// The trace is the eraser's, not the pen's.
     let erasing: Bool
     /// The eraser's reach either side of its pass, a fraction of the picture's long side.
@@ -21,7 +26,8 @@ struct RefineInkLayer: View {
 
     var body: some View {
         let lines = lines, trace = trace, erasing = erasing, eraserRadius = eraserRadius, rect = rect
-        let lineWidth = lineWidth, photo = photo
+        let lineWidth = lineWidth, photo = photo, traceIsDrawn = traceIsDrawn, joins = joins
+        let joinColor = Theme.signature
         Canvas { context, _ in
             guard rect.width > 0, rect.height > 0 else { return }
             let long = max(rect.width, rect.height)
@@ -77,8 +83,15 @@ struct RefineInkLayer: View {
                     canvas.fill(ring, with: .color(.white.opacity(0.25)))
                     canvas.stroke(ring, with: .color(LineArtDrawing.ink.opacity(0.45)), lineWidth: 1)
                 } else {
-                    ink(Path(PenPath.path(points)))
+                    ink(traceIsDrawn ? polyline(points) : Path(PenPath.path(points)))
                 }
+            }
+            // A ring round each join, wider than the line, so the join shows through it.
+            let r = max(2.5 * lineWidth, 5)
+            for join in joins.map(point) {
+                let ring = Path(ellipseIn: CGRect(x: join.x - r, y: join.y - r, width: 2 * r, height: 2 * r))
+                canvas.fill(ring, with: .color(joinColor.opacity(0.18)))
+                canvas.stroke(ring, with: .color(joinColor), lineWidth: 1.5)
             }
         }
         .allowsHitTesting(false)
@@ -192,14 +205,18 @@ enum RefineTouch {
 
 /// The refine canvas's touches: an invisible scroll view zooms and moves the picture with two
 /// fingers, with the system's feel (the painting canvas's way), while one finger draws or taps;
-/// a tap of two fingers undoes, as in drawing apps. Reports where the picture is in its frame
-/// and its zoom, and touches in picture coordinates (0…1, origin top-left).
+/// a tap of two fingers undoes, as in drawing apps. Once an Apple Pencil touches it (or with
+/// Only Draw with Apple Pencil on), the Pencil draws and taps, and one finger moves the picture
+/// too, as on the painting canvas; the Pencil's double tap is reported. Reports where the
+/// picture is in its frame and its zoom, and touches in picture coordinates (0…1, origin
+/// top-left).
 struct RefineTouchSurface: UIViewRepresentable {
     var aspectRatio: CGFloat
     var onLayout: (CGRect, CGFloat) -> Void
     var onDraw: (RefineTouch, SIMD2<Float>) -> Void
     var onTap: (SIMD2<Float>) -> Void
     var onUndo: () -> Void
+    var onPencilTap: () -> Void
 
     func makeUIView(context: Context) -> RefineSurfaceView { RefineSurfaceView() }
 
@@ -208,6 +225,7 @@ struct RefineTouchSurface: UIViewRepresentable {
         view.onDraw = onDraw
         view.onTap = onTap
         view.onUndo = onUndo
+        view.onPencilTap = onPencilTap
         view.aspectRatio = aspectRatio
     }
 }
@@ -220,6 +238,11 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     var onDraw: ((RefineTouch, SIMD2<Float>) -> Void)?
     var onTap: ((SIMD2<Float>) -> Void)?
     var onUndo: (() -> Void)?
+    var onPencilTap: (() -> Void)?
+
+    /// The Pencil draws and fingers only move the picture: an Apple Pencil touched the canvas,
+    /// or Only Draw with Apple Pencil is on. Stays so while the screen is open.
+    private(set) var pencilDraws = false
 
     static let maximumZoom: CGFloat = 6
     /// Room around the picture at zoom 1, so it reads as a card.
@@ -229,6 +252,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// The picture at zoom 1, which the scroll view zooms: touches read in its coordinates.
     private let content = UIView()
     private let brush = UIPanGestureRecognizer()
+    private let tap = UITapGestureRecognizer()
     private var fittedSize: CGSize = .zero
     private var reported: (rect: CGRect, zoom: CGFloat)?
     private var isLayingOut = false
@@ -255,10 +279,35 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         brush.maximumNumberOfTouches = 1
         brush.delegate = self
         scrollView.addGestureRecognizer(brush)
-        scrollView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap(_:))))
+        tap.addTarget(self, action: #selector(handleTap(_:)))
+        scrollView.addGestureRecognizer(tap)
         let undo = UITapGestureRecognizer(target: self, action: #selector(handleUndo(_:)))
         undo.numberOfTouchesRequired = 2
         scrollView.addGestureRecognizer(undo)
+        addInteraction(UIPencilInteraction(delegate: self))
+        if UIPencilInteraction.prefersPencilOnlyDrawing { drawWithPencil() }
+    }
+
+    /// From now on the Pencil (and a pointer) draws and taps; one finger moves the picture, two
+    /// zoom it.
+    private func drawWithPencil() {
+        guard !pencilDraws else { return }
+        pencilDraws = true
+        let drawing = [UITouch.TouchType.pencil, .indirectPointer].map { NSNumber(value: $0.rawValue) }
+        brush.allowedTouchTypes = drawing
+        tap.allowedTouchTypes = drawing
+        scrollView.panGestureRecognizer.minimumNumberOfTouches = 1
+        scrollView.panGestureRecognizer.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.direct.rawValue)]
+        scrollView.pinchGestureRecognizer?.allowedTouchTypes = [UITouch.TouchType.direct, .indirectPointer]
+            .map { NSNumber(value: $0.rawValue) }
+    }
+
+    /// While the Pencil draws, a palm or a finger beside it neither moves the picture nor ends
+    /// the stroke.
+    private func holdPicture(_ held: Bool) {
+        guard pencilDraws else { return }
+        scrollView.panGestureRecognizer.isEnabled = !held
+        scrollView.pinchGestureRecognizer?.isEnabled = !held
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -312,6 +361,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     }
 
     /// Two fingers came down while one was drawing: they move the picture, and the stroke goes.
+    /// (The Pencil's stroke holds the picture still instead, `holdPicture`.)
     private func cancelDrawing() {
         guard brush.state == .began || brush.state == .changed else { return }
         brush.isEnabled = false
@@ -324,6 +374,7 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         let location = recognizer.location(in: content)
         switch recognizer.state {
         case .began:
+            holdPicture(true)
             // The stroke starts where the finger came down, before the pan's slop.
             let moved = recognizer.translation(in: content)
             onDraw?(.began, normalized(CGPoint(x: location.x - moved.x, y: location.y - moved.y)))
@@ -331,8 +382,10 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
         case .changed:
             onDraw?(.moved, normalized(location))
         case .ended:
+            holdPicture(false)
             onDraw?(.ended, normalized(location))
         default:
+            holdPicture(false)
             onDraw?(.cancelled, normalized(location))
         }
     }
@@ -357,4 +410,19 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
     ) -> Bool { true }
+
+    /// The first touch of an Apple Pencil hands drawing to it (the brush sees every touch until
+    /// then).
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if touch.type == .pencil { drawWithPencil() }
+        return true
+    }
+}
+
+extension RefineSurfaceView: UIPencilInteractionDelegate {
+    // Honour the Apple Pencil settings: the double tap may be turned off there.
+    func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {
+        guard UIPencilInteraction.preferredTapAction != .ignore else { return }
+        onPencilTap?()
+    }
 }

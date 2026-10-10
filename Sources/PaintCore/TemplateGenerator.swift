@@ -3,7 +3,7 @@ public struct TemplateGenerator: Sendable {
     /// Stamped into every generated template (`Template.pipelineVersion`). Bump in the same
     /// commit as any change that alters generated output for identical inputs and settings,
     /// so saved paintings record which pipeline drew them.
-    public static let pipelineVersion: UInt32 = 7
+    public static let pipelineVersion: UInt32 = 8
 
     public var settings: GenerationSettings
 

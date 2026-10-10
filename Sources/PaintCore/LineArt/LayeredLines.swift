@@ -16,9 +16,10 @@
 ///    silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
 ///    (`LineLayering.addObjects`). Lines on the writing (`Writing`, traced from the photo
 ///    before segmenting) are its smudged copy and go. The painter's edits (`LineEdits`) join:
-///    drawn lines as outlines, erased places taken out. Free ends reach for the nearest line,
-///    paint boundary or frame (`gapBridging` × 1.6 / 1.2 by layer), so open strokes close
-///    cells, but never into a place erased after their line was drawn.
+///    drawn lines as outlines where they were drawn, erased places taken out. Free ends reach
+///    for the nearest line, paint boundary or frame (`gapBridging` × 1.6 / 1.2 by layer), so
+///    open strokes close cells, but never into a place erased after their line was drawn; the
+///    painter's lines have none.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
 ///    paints are within two palette steps.
@@ -152,7 +153,7 @@ enum LayeredLines {
                 }
             }
             if !input.edits.isEmpty {
-                let applied = LineEdits.apply(input.edits, to: lines, width: w, height: h, reach: closeReach[0] * s.gapBridging)
+                let applied = LineEdits.apply(input.edits, to: lines, width: w, height: h)
                 lines = applied.lines
                 stats.drawnLines = applied.drawn
                 stats.erasures = applied.erasures.count

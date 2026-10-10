@@ -1,12 +1,12 @@
 import XCTest
 
-/// The create flow's optional Refine step: the pen and the eraser, Undo and Redo (the buttons
+/// The create flow's optional Refine step: the pens and the eraser, Undo and Redo (the buttons
 /// and a two-finger tap), Done and Cancel; with Settings › Detail Brushes, its brushes and text
 /// marks too.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
-    /// too, the eraser rubs lines out (another change), Done keeps it all; Cancel puts back what
-    /// Refine opened with.
+    /// too, the eraser rubs lines out (another change), Done keeps it all; the Smart Pen draws
+    /// another, and Cancel puts back what Refine opened with.
     @MainActor
     func testRefineDrawsErasesAndKeepsIt() throws {
         let app = launchPreview()
@@ -52,12 +52,15 @@ final class RefineUITests: XCTestCase {
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("2 changes")), "Done didn't keep the changes")
 
-        // Cancel puts back what Refine opened with.
+        // Cancel puts back what Refine opened with. This time the Smart Pen draws.
         refine.tap()
         XCTAssertTrue(canvas.waitForExistence(timeout: 10), "Refine didn't open again")
-        app.buttons["refine-tool-pen"].tap()
+        let smartPen = app.buttons["refine-tool-smart-pen"]
+        XCTAssertTrue(smartPen.exists && app.buttons["refine-tool-smart-eraser"].exists, "Refine has no smart tools")
+        smartPen.tap()
+        XCTAssertTrue(waitFor(smartPen, toMatch: NSPredicate(format: "isSelected == true")), "The Smart Pen didn't become the tool")
         drag(on: canvas, from: CGVector(dx: 0.4, dy: 0.3), to: CGVector(dx: 0.7, dy: 0.35))
-        XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The second line didn't count")
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The Smart Pen's line didn't count")
         app.buttons["refine-cancel"].tap()
         XCTAssertTrue(
             waitFor(refine, toMatch: changes("2 changes")),
