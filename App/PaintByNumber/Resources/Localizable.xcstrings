@@ -2610,13 +2610,13 @@
       }
     },
     "refine.hint.eraser" : {
-      "comment" : "Refine screen: how the Eraser works (it takes lines out of the painting's drawing), shown while it is picked",
+      "comment" : "Refine screen: how the Eraser works (it takes out exactly the parts of lines it touches), shown while it is picked",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rub lines out with one finger, or tap a line to erase all of it. Two fingers zoom and move."
+            "value" : "Rub out just what you touch, or tap to erase a spot. Two fingers zoom and move."
           }
         }
       }
@@ -2646,13 +2646,37 @@
       }
     },
     "refine.hint.pen" : {
-      "comment" : "Refine screen: how the Pen works (it draws lines into the painting's drawing), shown while it is picked",
+      "comment" : "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), shown while it is picked",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draw lines with one finger: their ends join the lines they touch. Two fingers zoom and move, and a two-finger tap undoes."
+            "value" : "Draw lines exactly as you draw them. Two fingers zoom and move, and a two-finger tap undoes."
+          }
+        }
+      }
+    },
+    "refine.hint.smartEraser" : {
+      "comment" : "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rub lines out, or tap a line to erase all of it. Two fingers zoom and move."
+          }
+        }
+      }
+    },
+    "refine.hint.smartPen" : {
+      "comment" : "Refine screen: how the Smart Pen works (it straightens lines and joins their ends to nearby lines of the painting's drawing), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draw lines that come out straight when nearly straight or when you hold at the end, and join the lines near their ends. Two fingers zoom and move."
           }
         }
       }
@@ -3411,6 +3435,14 @@
     },
     "Shrink Preview" : {
       "comment" : "Create flow on iPhone: toolbar button of the enlarged preview that brings back the whole page (the title, every slider and Start Painting)",
+      "extractionState" : "manual"
+    },
+    "Smart Eraser" : {
+      "comment" : "Refine screen: the Smart Eraser, which rubs lines out of a new painting's drawing or takes out a whole line with a tap (button label for VoiceOver and the Large Content Viewer)",
+      "extractionState" : "manual"
+    },
+    "Smart Pen" : {
+      "comment" : "Refine screen: the Smart Pen, which draws lines into a new painting's drawing that straighten and join the lines near their ends (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
     "Smoothness" : {

@@ -297,10 +297,16 @@ Conventions).
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
 - Refine (optional, from the preview's toolbar; `RefineView`): the drawing large, on its paper
-  or over the photo; one finger draws lines with the pen and takes them out with the eraser
-  (rubbing, or a tap on a line takes it from junction to junction, `LineChains`), two fingers
+  or over the photo; one finger draws lines and takes them out with exact and assisted tools:
+  the Pen draws as drawn (an end whose ink touches a line moves onto it, so the cell closes as
+  it looks), the Smart Pen straightens nearly straight lines (or one held at its end) and joins
+  ends to lines within a fingertip, the line under the finger showing as it will be
+  (`PenAssist`, `SnapLines`); the Eraser rubs out what it touches (a tap, a dab), the Smart
+  Eraser rubs too and a tap takes a line from junction to junction (`LineChains`). Two fingers
   zoom and move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the
-  canvas's way). Each change regenerates at full resolution, no draft (`CreateModel.refine`);
+  canvas's way); once an Apple Pencil touches the canvas the Pencil draws and one finger moves,
+  and its double tap switches a kind's pen and eraser. PaintCore keeps a drawn line exactly as
+  it arrives. Each change regenerates at full resolution, no draft (`CreateModel.refine`);
   meanwhile the changes the template on screen lacks draw over it in its own ink
   (`RefineInkLayer`), and Undo brings back a template already made at once (`CreateModel`'s
   `made`). Settings › Detail Brushes (`SettingsKey.detailBrushes`, off) adds the brushes for

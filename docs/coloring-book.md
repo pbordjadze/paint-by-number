@@ -142,18 +142,23 @@ and regenerating a painting draws them again. `LineEdits` applies them at the la
 eyes, subjects and the writing's cut and before free ends close:
 
 - A drawn line is an outline at full strength, so a closed shape walls off a cell even inside one
-  paint, as a silhouette does; an open one is drawn inside its cell. It is kept as the painter
-  drew it (the app smooths the finger's path), cut where it leaves the canvas: its ends are never
-  free, so `closeFreeEnds` passes them by (the drawing's own free ends may still be led into
-  it). An end on or beside a line, or on the frame, closes cells against it as it lies
-  (cells are 4-connected); one that stops short leaves the shape open, and a line drawn past the
-  one it meets goes on past it, but for a tail shorter than `LineLayering.minimumRun`, which no
-  line keeps inside a cell. Painters found their lines "connected" when ends were led up to
-  1.6 × `gapBridging` (26 px in a book) into the nearest line, paint boundary or frame, and
-  trimmed back from a line they crossed. Where it stays inside a cell, the cell's numbers keep
-  off it (`LabelKeepOut`, as they keep off writing): a number the line would cross out moves to
-  the spot of the cell farthest from its outline and the line, where that spot holds a legible
-  one.
+  paint, as a silhouette does; an open one is drawn inside its cell. It is kept as it arrives,
+  cut where it leaves the canvas (the app's help comes before: it smooths the finger's path, its
+  Pen moves an end whose ink touches a line onto it, and its Smart Pen straightens lines and
+  joins their ends to the lines on screen, `PenAssist`): its ends are never free, so
+  `closeFreeEnds` passes them by (the drawing's own free ends may still be led into it). An end
+  on or beside a line, or on the frame, closes cells against it as it lies (cells are
+  4-connected), and so does one on a line of the template shown: of 24 strokes across the
+  lighthouse book's cells ended exactly on its edges, 23 made as many cells as the same stroke
+  run 3 px past both lines, and the 24th differed only where the longer stroke led one of the
+  drawing's own free ends elsewhere. One that stops short leaves the shape open, and a line
+  drawn past the one it meets goes on past it, but for a tail shorter than
+  `LineLayering.minimumRun`, which no line keeps inside a cell. Painters found their lines
+  "connected" when ends were led up to 1.6 × `gapBridging` (26 px in a book) into the nearest
+  line, paint boundary or frame, and trimmed back from a line they crossed. Where it stays
+  inside a cell, the cell's numbers keep off it (`LabelKeepOut`, as they keep off writing): a
+  number the line would cross out moves to the spot of the cell farthest from its outline and
+  the line, where that spot holds a legible one.
 - The eraser's pass takes out every point within its reach of the lines made before it (the
   app's and those drawn earlier; a line drawn over an erased place stays), leaving no piece
   shorter than `LineLayering.minimumRun`.
