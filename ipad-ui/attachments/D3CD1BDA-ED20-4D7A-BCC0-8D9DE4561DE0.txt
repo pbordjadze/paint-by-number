@@ -1,0 +1,246 @@
+Attributes: Application, 0x114af2940, pid: 38396, label: 'Paint by Moonlight'
+Element subtree:
+ →Application, 0x114af2940, pid: 38396, label: 'Paint by Moonlight'
+    Window (Main), 0x114af2a80, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x114af2bc0, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x114af2d00, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x114af2e40, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x114af2f80, {{0.0, 0.0}, {1032.0, 1376.0}}
+              Other, 0x114af30c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x114af3200, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  NavigationBar, 0x114af3340, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight'
+                    Button, 0x114af3480, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings'
+                    Button, 0x114af35c0, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled
+                    Button, 0x114af3700, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting'
+                    SearchField, 0x114af3840, {{778.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings'
+                      Image, 0x114af3980, {{790.0, 44.5}, {20.5, 18.5}}, identifier: 'magnifyingglass', label: 'Search'
+                    StaticText, 0x114af3ac0, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight'
+                  Other, 0x114af3c00, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x114af3d40, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      Other, 0x114af3e80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                        Other, 0x106d28a00, {{0.0, 0.0}, {1032.0, 1376.0}}
+                          ScrollView, 0x106d29540, {{516.0, 0.0}, {0.0, 1376.0}}
+                            Other, 0x106d2b340, {{516.0, 138.0}, {0.0, 0.0}}
+                          Other, 0x106d2a940, {{381.0, 504.0}, {270.0, 198.0}}
+                          StaticText, 0x106d29900, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo'
+                          StaticText, 0x106ef8a00, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.'
+                          Button, 0x106ef9e00, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+                            Image, 0x106efb840, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add'
+                            StaticText, 0x106efad00, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting'
+                  Other, 0x106efb200, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x106ef8140, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x106efb980, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x106ef92c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x106ef8280, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x106efb700, {{0.0, 0.0}, {1032.0, 1376.0}}
+              NavigationBar, 0x106ef9f40, {{0.0, 32.0}, {1032.0, 54.0}}, identifier: 'New Painting'
+                Button, 0x106ef8b40, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Close'
+                StaticText, 0x106efae40, {{460.5, 43.5}, {111.0, 21.0}}, label: 'New Painting'
+                Button, 0x106ef8500, {{981.0, 36.0}, {37.0, 36.0}}, label: 'Browse All…'
+              Other, 0x106ef83c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x106ef9680, {{0.0, 0.0}, {1032.0, 1376.0}}
+                  Other, 0x106efaf80, {{0.0, 0.0}, {1032.0, 1376.0}}
+                    Other, 0x106efa080, {{0.0, 0.0}, {1032.0, 1376.0}}
+                      StaticText, 0x106efb0c0, {{36.0, 90.0}, {521.5, 18.0}}, label: 'Choose a photo with a clear subject and good light. It becomes your canvas.'
+                      StaticText, 0x106ef9b80, {{36.0, 122.0}, {121.5, 24.0}}, label: 'Your Photos'
+                      Other, 0x106efbe80, {{0.0, 158.0}, {585.5, 1174.0}}, identifier: 'library-picker'
+                        Other, 0x106efbac0, {{0.0, 158.0}, {585.5, 1174.0}}
+                          Other, 0x106ef9cc0, {{0.0, 158.0}, {585.5, 1174.0}}
+                            Other, 0x106efa6c0, {{0.0, 158.0}, {585.5, 1174.0}}
+                              Other, 0x106efb340, {{0.0, 158.0}, {585.5, 1174.0}}
+                                Other, 0x106ef88c0, {{0.0, 158.0}, {585.5, 1174.0}}
+                                  Other, 0x106efa440, {{0.0, 158.0}, {585.5, 1174.0}}
+                                    Other, 0x106ef9900, {{0.0, 158.0}, {585.5, 1174.0}}
+                                      Other, 0x106efa580, {{0.0, 158.0}, {585.5, 1174.0}}
+                                        Other, 0x106efa800, {{0.0, 158.0}, {585.5, 1174.0}}
+                                          Other, 0x106efa300, {{0.0, 158.0}, {585.5, 1174.0}}
+                                            Other, 0x106ef8000, {{0.0, 158.0}, {585.5, 1174.0}}
+                                              Other, 0x106efbd40, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                Other, 0x106efa1c0, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                  Other, 0x114b07d40, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                    Other, 0x114b07e80, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                      Other, 0x114b07c00, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                        Other, 0x114b07ac0, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                          NavigationBar, 0x114b07980, {{0.0, 168.0}, {585.5, 62.0}}, identifier: 'Photos'
+                                                            SegmentedControl, 0x114b07840, {{197.5, 166.0}, {190.0, 48.0}}, label: 'Photos'
+                                                              Button, 0x114b16f80, {{197.5, 166.0}, {95.0, 48.0}}, label: 'Photos', Selected
+                                                              Button, 0x114b170c0, {{292.5, 166.0}, {95.0, 48.0}}, label: 'Collections'
+                                                          Other, 0x114b16d00, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                            Other, 0x114b16580, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                              Other, 0x114b16440, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                                Other, 0x114b16300, {{0.0, 158.0}, {585.5, 1174.0}}, label: 'Photos'
+                                                                  Other, 0x114b152c0, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                                    ScrollView, 0x114b14b40, {{0.0, 158.0}, {585.5, 1174.0}}, identifier: 'photosView_content_scroll_view'
+                                                                      Other, 0x114b14500, {{0.0, 230.0}, {585.5, 532.0}}, identifier: 'photos_layout'
+                                                                        Other, 0x114b14640, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                                        Other, 0x114b16bc0, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                                        Other, 0x114b14000, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                                        Other, 0x114b16800, {{0.0, 230.0}, {585.5, 142.5}}, identifier: 'PXGSingleViewLayout-Group'
+                                                                          Other, 0x114b16a80, {{0.0, 230.0}, {585.5, 142.5}}, identifier: 'PXGSingleViewContainerView_AX', label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.'
+                                                                            Image, 0x114b16940, {{32.0, 240.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                            Button, 0x114b166c0, {{533.5, 238.0}, {30.0, 22.0}}, label: 'Close'
+                                                                            Button, 0x114b16e40, {{82.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                              StaticText, 0x114b15f40, {{82.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                        Other, 0x114b16080, {{0.0, 230.0}, {585.5, 142.5}}, label: 'Private Access to Photos, Your photo library is shown here, but “Paint by Moonlight” can only access the items you select.'
+                                                                          Image, 0x114b15cc0, {{32.0, 240.0}, {38.0, 38.0}}, identifier: 'PickerOnboardingHeaderViewIcon'
+                                                                          Button, 0x114b15e00, {{533.5, 238.0}, {30.0, 22.0}}, label: 'Close'
+                                                                          Button, 0x114b14f00, {{82.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                            StaticText, 0x114b15900, {{82.0, 328.0}, {99.5, 20.5}}, label: 'Learn More…'
+                                                                        Other, 0x114b14dc0, {{0.0, 372.5}, {585.5, 389.5}}, identifier: 'photos_sectioned_layout'
+                                                                          Other, 0x114b15040, {{0.0, 372.5}, {585.5, 389.5}}, identifier: 'PXAssetsSectionLayout-Group'
+                                                                            Other, 0x114b15180, {{0.0, 372.5}, {585.5, 389.5}}, identifier: 'PXZoomablePhotosLayout-Group'
+                                                                              Other, 0x114b157c0, {{0.0, 372.5}, {585.5, 389.5}}, identifier: 'PXGZoomLayout-Group'
+                                                                                Other, 0x114b15680, {{0.0, 372.5}, {585.5, 389.5}}, identifier: 'PXGDecoratingLayout-Group'
+                                                                                  Other, 0x114b143c0, {{0.0, 372.5}, {585.5, 389.5}}, identifier: 'PXGGridLayout-Group', label: 'Photo, March 30, 2018, 7:14 PM, Photo, August 08, 2012, 9:55 PM, Photo, August 08, 2012, 9:29 PM, Photo, August 08, 2012, 6:52 PM, Photo, March 13, 2011, 12:17 AM, Photo, October 09, 2009, 9:09 PM'
+                                                                                    Image, 0x114b148c0, {{-0.0, 214.5}, {194.2, 194.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 30, 2018, 7:14 PM'
+                                                                                    Image, 0x114b14780, {{195.7, 372.5}, {194.2, 194.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:55 PM'
+                                                                                    Image, 0x114b14280, {{391.3, 372.5}, {194.2, 194.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 9:29 PM'
+                                                                                    Image, 0x114b15400, {{-0.0, 410.0}, {194.2, 194.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, August 08, 2012, 6:52 PM'
+                                                                                    Image, 0x114b14140, {{195.7, 568.0}, {194.2, 194.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, March 13, 2011, 12:17 AM'
+                                                                                    Image, 0x114b175c0, {{391.3, 568.0}, {194.2, 194.0}}, identifier: 'PXGGridLayout-Info', label: 'Photo, October 09, 2009, 9:09 PM'
+                                                                              Other, 0x114b17700, {{0.0, 214.5}, {585.5, 0.0}}, identifier: 'PXZoomableInlineHeadersLayout-Group'
+                                                                        Other, 0x114b17340, {{552.5, 230.0}, {30.0, 1102.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                          Other, 0x114b17200, {{579.5, 1106.5}, {3.0, 424.5}}
+                                                                        Other, 0x114b15540, {{0.0, 1299.0}, {585.5, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                          Other, 0x114b161c0, {{3.0, 1326.0}, {1026.0, 3.0}}
+                                                                      Other, 0x114b14c80, {{552.5, 230.0}, {30.0, 1102.0}}, label: 'Vertical scroll bar, 1 page', value: 0%
+                                                                        Other, 0x114b15a40, {{579.5, 1106.5}, {3.0, 424.5}}
+                                                                      Other, 0x114b15b80, {{0.0, 1299.0}, {585.5, 30.0}}, label: 'Horizontal scroll bar, 1 page', value: 0%
+                                                                        Other, 0x114b17480, {{3.0, 1326.0}, {1026.0, 3.0}}
+                                                          Other, 0x114b14a00, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                            Other, 0x114ad4000, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                    Other, 0x114ad4140, {{0.0, 158.0}, {585.5, 1174.0}}
+                                                      Other, 0x114ad4280, {{0.0, 158.0}, {585.5, 1174.0}}
+                              Other, 0x114ad43c0, {{0.0, 0.0}, {0.0, 0.0}}
+                      StaticText, 0x114ad4500, {{613.6, 122.0}, {84.5, 24.0}}, label: 'Samples'
+                      ScrollView, 0x114ad4640, {{609.5, 158.0}, {390.5, 1174.0}}
+                        Other, 0x114ad4780, {{609.5, 158.0}, {390.5, 3582.0}}
+                          StaticText, 0x114ad48c0, {{617.5, 162.0}, {82.0, 20.5}}, label: 'Paintings'
+                          Other, 0x114ad4a00, {{613.5, 192.5}, {382.5, 1964.5}}
+                            Button, 0x114ad4b40, {{613.5, 192.5}, {184.5, 138.0}}, label: 'Sample: The Great Wave, Katsushika Hokusai'
+                              Image, 0x114ad4c80, {{603.0, 192.5}, {205.5, 138.0}}
+                              StaticText, 0x114ad4dc0, {{625.5, 284.0}, {113.0, 18.0}}, label: 'The Great Wave'
+                              StaticText, 0x114ad4f00, {{625.5, 304.0}, {113.5, 14.5}}, label: 'Katsushika Hokusai'
+                            Button, 0x114ad5040, {{812.0, 192.5}, {184.0, 138.0}}, label: 'Sample: Wheat Field with Cypresses, Vincent van Gogh'
+                              Image, 0x114ad5180, {{812.0, 189.5}, {184.0, 144.0}}
+                              StaticText, 0x114ad52c0, {{824.0, 264.0}, {110.0, 38.0}}, label: 'Wheat Field with Cypresses'
+                              StaticText, 0x114ad5400, {{824.0, 304.0}, {102.5, 14.5}}, label: 'Vincent van Gogh'
+                            Button, 0x114ad5540, {{613.5, 344.5}, {184.5, 138.5}}, label: 'Sample: The Milkmaid, Johannes Vermeer'
+                              Image, 0x114ad5680, {{613.5, 310.5}, {184.5, 206.5}}
+                              StaticText, 0x114ad57c0, {{625.5, 436.5}, {95.5, 18.0}}, label: 'The Milkmaid'
+                              StaticText, 0x114ad5900, {{625.5, 456.5}, {108.5, 14.5}}, label: 'Johannes Vermeer'
+                            Button, 0x114ad5a40, {{812.0, 344.5}, {184.0, 138.5}}, label: 'Sample: Red Fuji, Katsushika Hokusai'
+                              Image, 0x114ad5b80, {{802.5, 344.5}, {203.0, 138.5}}
+                              StaticText, 0x114ad5cc0, {{824.0, 436.5}, {57.0, 18.0}}, label: 'Red Fuji'
+                              StaticText, 0x114ad5e00, {{824.0, 456.5}, {113.5, 14.5}}, label: 'Katsushika Hokusai'
+                            Button, 0x114ad5f40, {{613.5, 497.0}, {184.5, 138.0}}, label: 'Sample: Irises, Vincent van Gogh'
+                              Image, 0x114ad6080, {{613.5, 493.5}, {184.5, 145.0}}
+                              StaticText, 0x114ad61c0, {{625.5, 588.5}, {39.0, 18.0}}, label: 'Irises'
+                              StaticText, 0x114ad6300, {{625.5, 608.5}, {102.5, 14.5}}, label: 'Vincent van Gogh'
+                            Button, 0x114ad6440, {{812.0, 497.0}, {184.0, 138.0}}, label: 'Sample: Plum Garden at Kameido, Utagawa Hiroshige'
+                              Image, 0x114ad6580, {{812.0, 426.5}, {184.0, 279.0}}
+                              StaticText, 0x114ad66c0, {{824.0, 568.5}, {96.0, 38.0}}, label: 'Plum Garden at Kameido'
+                              StaticText, 0x114ad6800, {{824.0, 608.5}, {109.5, 14.5}}, label: 'Utagawa Hiroshige'
+                            Button, 0x114ad6940, {{613.5, 649.0}, {184.5, 138.5}}, label: 'Sample: Cranes, Kamisaka Sekka'
+                              Image, 0x114ad6a80, {{603.0, 649.0}, {205.5, 138.5}}
+                              StaticText, 0x114ad6bc0, {{625.5, 741.0}, {51.0, 18.0}}, label: 'Cranes'
+                              StaticText, 0x114ad6d00, {{625.5, 761.0}, {93.5, 14.5}}, label: 'Kamisaka Sekka'
+                            Button, 0x114ad6e40, {{812.0, 649.0}, {184.0, 138.5}}, label: 'Sample: Sudden Shower over Shin-Ōhashi, Utagawa Hiroshige'
+                              Image, 0x114ad6f80, {{812.0, 575.0}, {184.0, 286.5}}
+                              StaticText, 0x114ad70c0, {{824.0, 721.0}, {151.0, 38.0}}, label: 'Sudden Shower over Shin-Ōhashi'
+                              StaticText, 0x114ad7200, {{824.0, 761.0}, {109.5, 14.5}}, label: 'Utagawa Hiroshige'
+                            Button, 0x114ad7340, {{613.5, 801.5}, {184.5, 138.0}}, label: 'Sample: Oleanders, Vincent van Gogh'
+                              Image, 0x114ad7480, {{613.5, 795.5}, {184.5, 150.0}}
+                              StaticText, 0x114ad75c0, {{625.5, 893.0}, {73.5, 18.0}}, label: 'Oleanders'
+                              StaticText, 0x114ad7700, {{625.5, 913.0}, {102.5, 14.5}}, label: 'Vincent van Gogh'
+                            Button, 0x114ad7840, {{812.0, 801.5}, {184.0, 138.0}}, label: 'Sample: Paris Street; Rainy Day, Gustave Caillebotte'
+                              Image, 0x114ad7980, {{812.0, 798.5}, {184.0, 144.0}}
+                              StaticText, 0x114ad7ac0, {{824.0, 873.0}, {92.0, 38.0}}, label: 'Paris Street; Rainy Day'
+                              StaticText, 0x114ad7c00, {{824.0, 913.0}, {113.5, 14.5}}, label: 'Gustave Caillebotte'
+                            Button, 0x114ad7d40, {{613.5, 953.5}, {184.5, 138.0}}, label: 'Sample: Still Life with Apples and Pears, Paul Cézanne'
+                              Image, 0x114ad7e80, {{612.0, 953.5}, {187.5, 138.0}}
+                              StaticText, 0x114b5c000, {{625.5, 1025.0}, {149.0, 38.0}}, label: 'Still Life with Apples and Pears'
+                              StaticText, 0x114b5c140, {{625.5, 1065.0}, {78.5, 14.5}}, label: 'Paul Cézanne'
+                            Button, 0x114b5c280, {{812.0, 953.5}, {184.0, 138.0}}, label: 'Sample: Wisteria, Kamisaka Sekka'
+                              Image, 0x114b5c3c0, {{801.5, 953.5}, {205.0, 138.0}}
+                              StaticText, 0x114b5c500, {{824.0, 1045.0}, {59.0, 18.0}}, label: 'Wisteria'
+                              StaticText, 0x114b5c640, {{824.0, 1065.0}, {93.5, 14.5}}, label: 'Kamisaka Sekka'
+                            Button, 0x114b5c780, {{613.5, 1105.5}, {184.5, 138.5}}, label: 'Sample: Mont Sainte-Victoire, Paul Cézanne'
+                              Image, 0x114b5c8c0, {{613.5, 1101.5}, {184.5, 146.5}}
+                              StaticText, 0x114b5ca00, {{625.5, 1197.5}, {147.5, 18.0}}, label: 'Mont Sainte-Victoire'
+                              StaticText, 0x114b5cb40, {{625.5, 1217.5}, {78.5, 14.5}}, label: 'Paul Cézanne'
+                            Button, 0x114b5cc80, {{812.0, 1105.5}, {184.0, 138.5}}, label: 'Sample: Jūmantsubo Plain at Fukagawa Susaki, Utagawa Hiroshige'
+                              Image, 0x114b5cdc0, {{812.0, 1033.0}, {184.0, 283.5}}
+                              StaticText, 0x114b5cf00, {{824.0, 1177.5}, {149.5, 38.0}}, label: 'Jūmantsubo Plain at Fukagawa Susaki'
+                              StaticText, 0x114b5d040, {{824.0, 1217.5}, {109.5, 14.5}}, label: 'Utagawa Hiroshige'
+                            Button, 0x114b5d180, {{613.5, 1258.0}, {184.5, 138.0}}, label: 'Sample: Snap the Whip, Winslow Homer'
+                              Image, 0x114b5d2c0, {{589.0, 1258.0}, {233.5, 138.0}}
+                              StaticText, 0x114b5d400, {{625.5, 1349.5}, {104.0, 18.0}}, label: 'Snap the Whip'
+                              StaticText, 0x114b5d540, {{625.5, 1369.5}, {90.5, 14.5}}, label: 'Winslow Homer'
+                            Button, 0x114b5d680, {{812.0, 1258.0}, {184.0, 138.0}}, label: 'Sample: Morning Glories, Suzuki Kiitsu'
+                              Image, 0x114b5d7c0, {{754.0, 1258.0}, {300.0, 138.0}}
+                              StaticText, 0x114b5d900, {{824.0, 1349.5}, {113.5, 18.0}}, label: 'Morning Glories'
+                              StaticText, 0x114b5da40, {{824.0, 1369.5}, {75.0, 14.5}}, label: 'Suzuki Kiitsu'
+                            Button, 0x114b5db80, {{613.5, 1410.0}, {184.5, 138.0}}, label: 'Sample: Low Tide at Pourville, Claude Monet'
+                              Image, 0x114b5dcc0, {{612.0, 1410.0}, {187.5, 138.0}}
+                              StaticText, 0x114b5de00, {{625.5, 1501.5}, {147.5, 18.0}}, label: 'Low Tide at Pourville'
+                              StaticText, 0x114b5df40, {{625.5, 1521.5}, {80.5, 14.5}}, label: 'Claude Monet'
+                            Button, 0x114b5e080, {{812.0, 1410.0}, {184.0, 138.0}}, label: 'Sample: Jellyfish, Ernst Haeckel'
+                              Image, 0x114b5e1c0, {{812.0, 1349.0}, {184.0, 260.0}}
+                              StaticText, 0x114b5e300, {{824.0, 1501.5}, {60.0, 18.0}}, label: 'Jellyfish'
+                              StaticText, 0x114b5e440, {{824.0, 1521.5}, {80.0, 14.5}}, label: 'Ernst Haeckel'
+                            Button, 0x114b5e580, {{613.5, 1562.0}, {184.5, 138.5}}, label: 'Sample: Outskirts of Paris, Henri Rousseau'
+                              Image, 0x114b5e6c0, {{613.5, 1556.0}, {184.5, 150.5}}
+                              StaticText, 0x114b5e800, {{625.5, 1654.0}, {124.0, 18.0}}, label: 'Outskirts of Paris'
+                              StaticText, 0x114b5e940, {{625.5, 1674.0}, {91.0, 14.5}}, label: 'Henri Rousseau'
+                            Button, 0x114b5ea80, {{812.0, 1562.0}, {184.0, 138.5}}, label: 'Sample: Frankfort Rose, Pierre-Joseph Redouté'
+                              Image, 0x114b5ebc0, {{812.0, 1519.5}, {184.0, 223.5}}
+                              StaticText, 0x114b5ed00, {{824.0, 1654.0}, {105.5, 18.0}}, label: 'Frankfort Rose'
+                              StaticText, 0x114b5ee40, {{824.0, 1674.0}, {134.0, 14.5}}, label: 'Pierre-Joseph Redouté'
+                            Button, 0x114b5ef80, {{613.5, 1714.5}, {184.5, 138.0}}, label: 'Sample: Shore and Surf, Nassau, Winslow Homer'
+                              Image, 0x114b5f0c0, {{606.5, 1714.5}, {198.5, 138.0}}
+                              StaticText, 0x114b5f200, {{625.5, 1786.0}, {91.5, 38.0}}, label: 'Shore and Surf, Nassau'
+                              StaticText, 0x114b5f340, {{625.5, 1826.0}, {90.5, 14.5}}, label: 'Winslow Homer'
+                            Button, 0x114b5f480, {{812.0, 1714.5}, {184.0, 138.0}}, label: 'Sample: Flower Garden and Bungalow, Bermuda, Winslow Homer'
+                              Image, 0x114b5f5c0, {{799.5, 1714.5}, {209.0, 138.0}}
+                              StaticText, 0x114b5f700, {{824.0, 1786.0}, {142.5, 38.0}}, label: 'Flower Garden and Bungalow, Bermuda'
+                              StaticText, 0x114b5f840, {{824.0, 1826.0}, {90.5, 14.5}}, label: 'Winslow Homer'
+                            Button, 0x114b5f980, {{613.5, 1866.5}, {184.5, 138.5}}, label: 'Sample: Willow Bough, William Morris'
+                              Image, 0x114b5fac0, {{613.5, 1813.0}, {184.5, 246.0}}
+                              StaticText, 0x114b5fc00, {{625.5, 1958.5}, {97.0, 18.0}}, label: 'Willow Bough'
+                              StaticText, 0x114b5fd40, {{625.5, 1978.5}, {82.5, 14.5}}, label: 'William Morris'
+                            Button, 0x114b5fe80, {{812.0, 1866.5}, {184.0, 138.5}}, label: 'Sample: Oriental Poppies, Alphonse Mucha'
+                              Image, 0x114b68000, {{812.0, 1798.0}, {184.0, 275.5}}
+                              StaticText, 0x114b68140, {{824.0, 1958.5}, {118.5, 18.0}}, label: 'Oriental Poppies'
+                              StaticText, 0x114b68280, {{824.0, 1978.5}, {96.5, 14.5}}, label: 'Alphonse Mucha'
+                            Button, 0x114b683c0, {{613.5, 2019.0}, {184.5, 138.0}}, label: 'Sample: Dancing Fox, Ohara Koson'
+                              Image, 0x114b68500, {{613.5, 1907.0}, {184.5, 362.0}}
+                              StaticText, 0x114b68640, {{625.5, 2110.5}, {88.0, 18.0}}, label: 'Dancing Fox'
+                              StaticText, 0x114b68780, {{625.5, 2130.5}, {74.0, 14.5}}, label: 'Ohara Koson'
+                          StaticText, 0x114b688c0, {{617.5, 2181.5}, {111.0, 20.5}}, label: 'Photographs'
+                          Other, 0x114b68a00, {{613.5, 2212.0}, {382.5, 290.5}}
+                            Button, 0x114b68b40, {{613.5, 2212.0}, {184.5, 138.0}}, label: 'Sample: Delicate Arch, Neal Herbert'
+                              Image, 0x114b68c80, {{613.5, 2210.0}, {184.5, 142.0}}
+                              StaticText, 0x114b68dc0, {{613.5, 2212.0}, {184.5, 138.0}}, label: 'Delicate Arch'
+                            Button, 0x114b68f00, {{812.0, 2212.0}, {184.0, 138.0}}, label: 'Sample: Hawksbill Sea Turtle, Caroline S. Rogers'
+                              Image, 0x114b69040, {{805.0, 2212.0}, {198.0, 138.0}}
+                              StaticText, 0x114b69180, {{812.0, 2212.0}, {184.0, 138.0}}, label: 'Hawksbill Sea Turtle'
+                            Button, 0x114b692c0, {{613.5, 2364.0}, {184.5, 138.5}}, label: 'Sample: Earthrise, William Anders'
+                              Image, 0x114b69400, {{613.5, 2341.0}, {184.5, 184.5}}
+                              StaticText, 0x114b69540, {{613.5, 2364.0}, {184.5, 138.5}}, label: 'Earthrise'
+                            Button, 0x114b69680, {{812.0, 2364.0}, {184.0, 138.5}}, label: 'Sample: Red Fox in Snow, Neal Herbert'
+                              Image, 0x114b697c0, {{800.0, 2364.0}, {208.0, 138.5}}
+                              StaticText, 0x114b69900, {{812.0, 2364.0}, {184.0, 138.5}}, label: 'Red Fox in Snow'
+                        Other, 0x114b69a40, {{967.0, 158.0}, {30.0, 1174.0}}, label: 'Vertical scroll bar, 4 pages', value: 0%
+                          Other, 0x114b69b80, {{994.0, 1322.0}, {3.0, 7.0}}
+                        Other, 0x114b69cc0, {{967.0, 158.0}, {30.0, 1174.0}}, label: 'Vertical scroll bar, 4 pages', value: 0%
+                          Other, 0x114b69e00, {{994.0, 1322.0}, {3.0, 7.0}}
+              Other, 0x114b69f40, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x114b6a080, {{0.0, 0.0}, {1032.0, 1376.0}}
+Path to element:
+ →Application, 0x114af2940, pid: 38396, label: 'Paint by Moonlight'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x114b6a1c0, pid: 38396, label: 'Paint by Moonlight'
+  }
