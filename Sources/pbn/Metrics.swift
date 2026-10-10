@@ -33,7 +33,8 @@ struct Metrics: Codable {
     /// Smallest free radius of any label (canvas units, measured on the vector polygons).
     var minLabelRadius: Float
     /// Smallest label radius divided by `LabelSizing.roomFactor` of its number: the
-    /// single-digit equivalent, comparable with `legibleLabelRadius`.
+    /// single-digit equivalent, comparable with `legibleLabelRadius` (a detail area's scaled from
+    /// its own floor, `LabelSizing.detailMinimumRadius`, to that one).
     var minLabelRoom: Float
     /// `LabelSizing.minimumRadius`: the single-digit room every label is guaranteed.
     var legibleLabelRadius: Float
@@ -41,7 +42,8 @@ struct Metrics: Codable {
     var minLabelFontSize: Float
     /// `LabelSizing.minimumFontSize`: numbers are never drawn smaller.
     var legibleFontSize: Float
-    /// Labels whose number would fit only below `legibleFontSize`; 0 for pipeline output.
+    /// Labels whose number would fit only below `legibleFontSize` (a detail area's, below
+    /// `LabelSizing.detailMinimumFontSize`); 0 for pipeline output.
     var labelsBelowLegibleSize: Int
     /// Edges the smoother left unfaired to keep the geometry valid.
     var smoothingFallbackEdges: Int
@@ -67,6 +69,10 @@ struct Metrics: Codable {
     var lineArt: LineArtReport?
     /// Non-default `PipelineTuning` factors the template was generated with.
     var tuning: PipelineTuning?
+    /// Detail areas (`Template.detailRegions`): shapes the painter filled (`--line-edits`),
+    /// whose numbers may be as small as `LabelSizing.detailMinimumRadius` allows, so they may
+    /// count among `regionsUnderRadius2` and `minLabelFontSize`.
+    var detailRegions: Int = 0
 }
 
 /// `stats.json`'s `auto`: the chosen settings, every candidate with its score terms, and the
@@ -123,10 +129,12 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
     var belowLegible = 0
     for label in t.labels {
         let digits = LabelSizing.digitCount(colorIndex: t.regions[Int(label.region)].colorIndex)
-        minLabelRoom = min(minLabelRoom, label.radius / LabelSizing.roomFactor(digits: digits))
+        let detail = t.isDetailRegion(Int(label.region))
+        let floor = detail ? LabelSizing.detailMinimumRadius / LabelSizing.minimumRadius : 1
+        minLabelRoom = min(minLabelRoom, label.radius / LabelSizing.roomFactor(digits: digits) / floor)
         let size = LabelSizing.fittedFontSize(radius: label.radius, digits: digits)
         minFontSize = min(minFontSize, size)
-        if size < LabelSizing.minimumFontSize - 1e-4 { belowLegible += 1 }
+        if size < LabelSizing.minimumFontSize(detail: detail) - 1e-4 { belowLegible += 1 }
     }
     let report = t.validate(minLabelRadius: LabelSizing.minimumRadius)
     return Metrics(
@@ -157,7 +165,7 @@ func metrics(_ out: TemplateGenerator.Output, working: RGBAImage, settings: Gene
         valid: report.isValid,
         validation: report.description,
         colorNames: t.palette.map(\.colorName.english),
-        colorNicknames: ColorNickname.assign(t.palette, seed: settings.seed))
+        colorNicknames: ColorNickname.assign(t.palette, seed: settings.seed), detailRegions: t.detailRegions.count)
 }
 
 func jsonEncoder() -> JSONEncoder {

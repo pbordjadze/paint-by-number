@@ -12,6 +12,9 @@ nonisolated enum RefineTool: Hashable {
     case eraser
     /// Rubs lines out, or takes out the one tapped, junction to junction (`LineChains`).
     case smartEraser
+    /// A tap makes the closed shape under it an area of its own in the photo's color there, or
+    /// clears that again (`RefineFills`).
+    case fill
     /// Settings › Detail Brushes: areas brushed for more or less detail, that brushing cleared,
     /// and the text the app found corrected.
     case more, less, unbrush, text
@@ -23,7 +26,7 @@ nonisolated enum RefineTool: Hashable {
         case .eraser: .pen
         case .smartPen: .smartEraser
         case .smartEraser: .smartPen
-        case .more, .less, .unbrush, .text: nil
+        case .fill, .more, .less, .unbrush, .text: nil
         }
     }
 
@@ -40,18 +43,26 @@ nonisolated enum RefineTool: Hashable {
 ///   shows as it will be, rings where its ends join;
 /// - the Eraser rubs out what it touches, and a tap takes out a dab;
 /// - the Smart Eraser rubs too, and a tap takes the line out from junction to junction
-///   (`LineChains`).
+///   (`LineChains`);
+/// - Fill: a tap inside a closed shape makes it an area of its own, painted the photo's color
+///   where it was tapped (`LineEdit.photoColor`), kept however small, its number allowed down to
+///   about half the usual size and read zoomed in (a detail area, `Template.detailRegions`); a
+///   tap in a filled area clears it (`RefineFills`). A shape left open fills the area around it,
+///   which shows at once, and Undo takes it back. Refine zooms in far
+///   (`RefineSurfaceView.maximumZoom`), so a Pencil outlines a star of a few pixels comfortably.
 /// Once an Apple Pencil touches the canvas (or with Only Draw with Apple Pencil on), the Pencil
-/// draws and one finger moves the picture, so a palm leaves no mark; its double tap switches
-/// between a kind's pen and eraser. With Settings › Detail Brushes one finger also brushes areas
-/// for more or less detail, clears that brushing, and corrects the text the app found (a tap
-/// turns a found line off or on again, a drag across a line marks it).
+/// draws and taps and one finger moves the picture, so a palm leaves no mark; its double tap
+/// switches between a kind's pen and eraser. With Settings › Detail Brushes one finger also
+/// brushes areas for more or less detail, clears that brushing, and corrects the text the app
+/// found (a tap turns a found line off or on again, a drag across a line marks it).
 ///
 /// Each change regenerates the template at full resolution (`CreateModel.refine`); until the new
 /// template comes, what the painter did shows over the last one in the drawing's own ink
 /// (`RefineInkLayer`), so a line is there the moment it is drawn and gone the moment it is
-/// erased. Undo and Redo (⌘Z, ⇧⌘Z) step through the changes (a template already made comes back
-/// at once), Cancel puts back what the screen opened with, Done keeps them.
+/// erased, and a fill shows as a swatch of its color where it was tapped (`RefineFillLayer`,
+/// which then tints the areas fills made in their paint, under the drawing). Undo and Redo (⌘Z,
+/// ⇧⌘Z) step through the changes (a template already made comes back at once), Cancel puts back
+/// what the screen opened with, Done keeps them.
 struct RefineView: View {
     let model: CreateModel
 
@@ -134,6 +145,10 @@ struct RefineView: View {
                         LineArtLayer(drawing: base.drawing, picture: picture, scale: zoom, overPhoto: showsPhoto)
                             .equatable()
                     }
+                    RefineFillLayer(
+                        base: base, fills: model.refinements.lines.filter { $0.kind == .fill }, photo: model.source?.image,
+                        rect: picture)
+                        .equatable()
                     let assisted = assistedTrace
                     RefineInkLayer(
                         lines: pending, trace: assisted?.points ?? trace, traceIsDrawn: assisted != nil,
@@ -179,9 +194,10 @@ struct RefineView: View {
     private static let card = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
 
     /// The lines drawn and erased that the template on screen doesn't have yet: those after
-    /// the ones it was made with.
+    /// the ones it was made with. Fills change no line (`RefineFillLayer` shows them).
     private var pending: [TemplateRefinements.Line] {
-        let lines = model.refinements.lines, made = base?.refinements.lines ?? []
+        let lines = model.refinements.lines.filter { $0.kind != .fill }
+        let made = (base?.refinements.lines ?? []).filter { $0.kind != .fill }
         var common = 0
         while common < lines.count && common < made.count && lines[common] == made[common] { common += 1 }
         return Array(lines[common...])
@@ -251,6 +267,8 @@ struct RefineView: View {
         case .pen, .smartPen, .eraser, .smartEraser: follow(touch, at: point)
         case .text: mark(touch, at: point)
         case .more, .less, .unbrush: brush(touch, at: point)
+        // A fill is a tap: a drag does nothing.
+        case .fill: break
         }
     }
 
@@ -365,6 +383,8 @@ struct RefineView: View {
             case .eraseLine:
                 // The line itself: what meets it keeps its junction.
                 lines = SnapLines.erasing(lines, by: [(inCanvas(line.points), 1.5)])
+            case .fill:
+                break
             }
         }
         return SnapLines(lines)
@@ -463,6 +483,8 @@ struct RefineView: View {
             commit { $0.lines.append(TemplateRefinements.Line(kind: .erase, radius: eraserRadius, points: [point])) }
         case .smartEraser:
             eraseLine(at: point)
+        case .fill:
+            fill(at: point)
         case .text:
             toggleText(at: point)
         case .more, .less, .unbrush:
@@ -498,6 +520,21 @@ struct RefineView: View {
             try? await Task.sleep(for: .milliseconds(60))
             withAnimation(.easeOut(duration: 0.45)) { flashes = false }
         }
+    }
+
+    /// How near (points on screen) a tap comes to a fill's swatch to clear it, before the
+    /// template has it: about a fingertip.
+    static let swatchReach: CGFloat = 16
+
+    /// Fills the shape under a tap, or clears a fill made there (`RefineFills`).
+    private func fill(at point: SIMD2<Float>) {
+        guard picture.width > 0, picture.height > 0 else { return }
+        let made = (base?.refinements.lines ?? []).filter { $0.kind == .fill }
+        let reach = SIMD2(Float(Self.swatchReach / picture.width), Float(Self.swatchReach / picture.height))
+        commit { refinements in
+            refinements.lines = RefineFills.tapped(refinements.lines, at: point, made: made, template: base?.template, reach: reach)
+        }
+        FeedbackEngine.shared.selectionChanged()
     }
 
     /// A marked line is unmarked; a found line is turned off, or on again.
@@ -629,25 +666,47 @@ struct RefineView: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
+    /// The pens, erasers and Fill, then the photo: one row where it fits, else the pens and
+    /// erasers above Fill and the photo (a phone's width holds about five of these buttons).
     private var lineTools: some View {
-        GlassEffectContainer(spacing: 10) {
-            HStack(spacing: 8) {
-                toolButton(.pen, systemImage: "pencil.tip", label: Text("Pen"), id: "pen")
-                    .disabled(!model.hasLineArtInput)
-                toolButton(.smartPen, systemImage: "pencil.and.ruler", label: Text("Smart Pen"), id: "smart-pen")
-                    .disabled(!model.hasLineArtInput)
-                toolButton(.eraser, systemImage: "eraser", label: Text("Eraser"), id: "eraser")
-                    .disabled(!model.hasLineArtInput)
-                toolButton(.smartEraser, systemImage: "wand.and.stars", label: Text("Smart Eraser"), id: "smart-eraser")
-                    .disabled(!model.hasLineArtInput)
-                Capsule()
-                    .fill(Color.primary.opacity(0.15))
-                    .frame(width: 1, height: 24)
-                    .padding(.horizontal, 4)
-                    .accessibilityHidden(true)
-                photoButton
+        ViewThatFits(in: .horizontal) {
+            GlassEffectContainer(spacing: 10) {
+                HStack(spacing: 8) {
+                    drawingTools
+                    fillAndPhoto
+                }
+            }
+            GlassEffectContainer(spacing: 10) {
+                VStack(spacing: 10) {
+                    HStack(spacing: 8) { drawingTools }
+                    HStack(spacing: 8) { fillAndPhoto }
+                }
             }
         }
+    }
+
+    @ViewBuilder
+    private var drawingTools: some View {
+        toolButton(.pen, systemImage: "pencil.tip", label: Text("Pen"), id: "pen")
+            .disabled(!model.hasLineArtInput)
+        toolButton(.smartPen, systemImage: "pencil.and.ruler", label: Text("Smart Pen"), id: "smart-pen")
+            .disabled(!model.hasLineArtInput)
+        toolButton(.eraser, systemImage: "eraser", label: Text("Eraser"), id: "eraser")
+            .disabled(!model.hasLineArtInput)
+        toolButton(.smartEraser, systemImage: "wand.and.stars", label: Text("Smart Eraser"), id: "smart-eraser")
+            .disabled(!model.hasLineArtInput)
+    }
+
+    @ViewBuilder
+    private var fillAndPhoto: some View {
+        toolButton(.fill, systemImage: "drop.fill", label: Text("Fill"), id: "fill")
+            .disabled(!model.hasLineArtInput)
+        Capsule()
+            .fill(Color.primary.opacity(0.15))
+            .frame(width: 1, height: 24)
+            .padding(.horizontal, 4)
+            .accessibilityHidden(true)
+        photoButton
     }
 
     private var detailTools: some View {
@@ -681,6 +740,10 @@ struct RefineView: View {
             String(localized: "refine.hint.smartEraser",
                    defaultValue: "Rub lines out, or tap a line to erase all of it. Two fingers zoom and move.",
                    comment: "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), shown while it is picked")
+        case .fill:
+            String(localized: "refine.hint.fill",
+                   defaultValue: "Tap inside a closed shape to make it an area of its own, in the photo’s color there. Tap it again to clear it. Two fingers zoom and move.",
+                   comment: "Refine screen: how the Fill tool works (a tap makes the closed shape of the drawing under it an area of its own, painted the photo's color where it was tapped; a tap in a filled area clears it), shown while it is picked")
         case .more:
             String(localized: "refine.hint.more",
                    defaultValue: "Brush where the painting should have more detail and lines. Two fingers zoom and move.",

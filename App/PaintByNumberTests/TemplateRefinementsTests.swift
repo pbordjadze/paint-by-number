@@ -92,26 +92,27 @@ struct TemplateRefinementsTests {
         #expect(!TemplateRefinements.sameLine(Self.found, marked))
     }
 
-    /// Lines drawn and erased join the line art's input as its edits, in their order, and count
-    /// as changes; without line art there is nothing to draw on.
+    /// Lines drawn and erased and shapes filled join the line art's input as its edits, in their
+    /// order, and count as changes; without line art there is nothing to draw on.
     @Test func linesBecomeTheLineArtsEdits() throws {
         var refinements = TemplateRefinements()
         refinements.lines = Self.lines
-        #expect(!refinements.isEmpty && refinements.changeCount == 3)
+        #expect(!refinements.isEmpty && refinements.changeCount == 4)
         let edges = EdgeMap(width: 10, height: 10, values: [UInt8](repeating: 9, count: 100))
         let refined = refinements.refining(importance: nil, lineArt: LineArtInput(edges: edges), aspect: 1)
         let edits = try #require(refined.lineArt?.edits)
-        #expect(edits.map(\.kind) == [.draw, .erase, .eraseLine])
+        #expect(edits.map(\.kind) == [.draw, .erase, .eraseLine, .fill])
         #expect(edits.map(\.points) == Self.lines.map(\.points) && edits.map(\.radius) == Self.lines.map(\.radius))
         #expect(refined.importance == nil && refined.lineArt?.edges == edges)
         #expect(refinements.refining(importance: nil, lineArt: nil, aspect: 1).lineArt == nil)
     }
 
-    /// A line drawn, the eraser's pass and a line tapped away.
+    /// A line drawn, the eraser's pass, a line tapped away and a shape filled.
     static let lines: [TemplateRefinements.Line] = [
         .init(kind: .draw, radius: 0, points: [SIMD2(0.1, 0.1), SIMD2(0.4, 0.3)]),
         .init(kind: .erase, radius: 0.02, points: [SIMD2(0.5, 0.5)]),
         .init(kind: .eraseLine, radius: 0.003, points: [SIMD2(0.2, 0.6), SIMD2(0.7, 0.6)]),
+        .init(kind: .fill, radius: 0, points: [SIMD2(0.25, 0.2)]),
     ]
 
     /// The file round-trips, and a line, stroke or field it can't read (from a newer app) is
@@ -131,6 +132,11 @@ struct TemplateRefinementsTests {
         let tolerant = try JSONDecoder().decode(TemplateRefinements.self, from: Data(newer.utf8))
         #expect(tolerant.strokes == [Self.stroke(.less, [SIMD2(0.5, 0.5)])])
         #expect(tolerant.lines == [.init(kind: .draw, radius: 0, points: [SIMD2(0.1, 0.2), SIMD2(0.3, 0.4)])])
+        // A fill reads as written beside a kind this app doesn't know (an app before fills left
+        // a fill out the same way).
+        let filled = #"{"lines":[{"kind":"fill","radius":0,"points":[[0.25,0.75]]},{"kind":"spray","radius":0,"points":[[0.5,0.5]]}]}"#
+        let fills = try JSONDecoder().decode(TemplateRefinements.self, from: Data(filled.utf8)).lines
+        #expect(fills == [.init(kind: .fill, radius: 0, points: [SIMD2(0.25, 0.75)])])
         #expect(tolerant.hiddenText.isEmpty && tolerant.addedText.isEmpty)
         #expect(try JSONDecoder().decode(TemplateRefinements.self, from: Data("{}".utf8)).isEmpty)
     }

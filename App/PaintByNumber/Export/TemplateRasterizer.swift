@@ -368,9 +368,11 @@ nonisolated enum TemplateRasterizer {
             guard region < painted.count, !painted[region] else { continue }
             let number = Int(t.regions[region].colorIndex) + 1
             let digits = LabelSizing.digitCount(of: number)
-            // The shared rule at any output scale: a number keeps to its region's room. Output
-            // media make sure that is legible (`PDFExporter` prints large templates on sheets).
-            let size = CGFloat(LabelSizing.fontSize(radius: label.radius, digits: digits, maximum: Float(maximumSize)))
+            // The shared rule at any output scale: a number keeps to its region's room, a detail
+            // area's down to its own floor. Output media make sure that is legible
+            // (`PDFExporter` prints large templates on sheets).
+            let size = CGFloat(LabelSizing.fontSize(
+                radius: label.radius, digits: digits, maximum: Float(maximumSize), detail: t.isDetailRegion(region)))
             let reach = size * CGFloat(digits)
             guard visible.insetBy(dx: -reach, dy: -reach).contains(CGPoint(label.position)) else { continue }
             let run = line(for: number)

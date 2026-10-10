@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import PaintCore
 
 /// The pen's line as Refine keeps it: a finger's samples smoothed into curves (quadratics
 /// through the midpoints between samples, so the corners of a shaky hand round off the way they
@@ -384,5 +385,38 @@ nonisolated struct LineChains {
             if closed { break }
         }
         return points
+    }
+}
+
+/// What a tap of the Fill tool does (`RefineView`), on the refinements' lines: a tap in a detail
+/// area of the template on screen takes out the fills that made it (those of `made`, the fills
+/// that template was made with, whose point lies in it); a tap on the swatch of a fill the
+/// template doesn't have yet, within `reach`, takes that one out; anywhere else the tap is a
+/// new fill. Points are normalized to the photo, as the template spans it.
+nonisolated enum RefineFills {
+    static func tapped(
+        _ lines: [TemplateRefinements.Line], at point: SIMD2<Float>, made: [TemplateRefinements.Line], template: Template?,
+        reach: SIMD2<Float>
+    ) -> [TemplateRefinements.Line] {
+        let fills = lines.indices.filter { lines[$0].kind == .fill && !lines[$0].points.isEmpty }
+        if let template, let area = region(of: point, in: template), template.isDetailRegion(area) {
+            let making = Set(fills.filter { made.contains(lines[$0]) && region(of: lines[$0].points[0], in: template) == area })
+            if !making.isEmpty { return lines.indices.filter { !making.contains($0) }.map { lines[$0] } }
+        }
+        if let pending = fills.last(where: { k in
+            guard !made.contains(lines[k]) else { return false }
+            let d = (lines[k].points[0] - point) / pointwiseMax(reach, SIMD2(repeating: 1e-6))
+            return (d * d).sum() <= 1
+        }) {
+            var kept = lines
+            kept.remove(at: pending)
+            return kept
+        }
+        return lines + [TemplateRefinements.Line(kind: .fill, radius: 0, points: [point])]
+    }
+
+    /// The template's region under a point normalized to the photo.
+    static func region(of point: SIMD2<Float>, in template: Template) -> Int? {
+        template.region(at: point * SIMD2(Float(template.width), Float(template.height)))
     }
 }

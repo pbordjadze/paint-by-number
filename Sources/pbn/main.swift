@@ -17,12 +17,14 @@
 //       normalized to the photo, and the subjects (--objects) either the same or a mask image
 //       whose shapes MaskContours traces; writing.json holds the lines of text found in the photo
 //       the same way (a quadrilateral each), whose ink is traced from the photo and drawn
-//       legibly; edits.json the lines a painter drew and erased, in order, as the app's Refine
-//       makes them: [{"kind": "draw", "points": [[x, y], ...]}, {"kind": "erase", "radius": r,
-//       "points": [...]}, {"kind": "eraseLine", "radius": r, "points": [...]}] (a line drawn,
-//       the eraser's pass, a line tapped away along its own path; radius a fraction of the
-//       photo's long side); --line-art sets a LineArtSettings field and --tuning a
-//       PipelineTuning factor by name
+//       legibly; edits.json the lines a painter drew and erased and the shapes filled, in order,
+//       as the app's Refine makes them: [{"kind": "draw", "points": [[x, y], ...]}, {"kind":
+//       "erase", "radius": r, "points": [...]}, {"kind": "eraseLine", "radius": r, "points":
+//       [...]}, {"kind": "fill", "points": [[x, y]]}] (a line drawn, the eraser's pass, a line
+//       tapped away along its own path, the cell under a point made a detail area of the
+//       photo's color there; radius a fraction of the photo's long side; a kind pbn doesn't
+//       know is skipped with a warning; stats.json gains `detailRegions`); --line-art sets a
+//       LineArtSettings field and --tuning a PipelineTuning factor by name
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into
@@ -40,8 +42,9 @@
 //   pbn check <template.pbnt> [--min-label-radius R]
 //       prints format and pipeline versions, validates a template's invariants, including
 //       every label's room for its number (single-digit minimum R, default
-//       LabelSizing.minimumRadius; R ≤ 0 skips that check) and line data, whose style, edges
-//       per layer and interior strokes it prints
+//       LabelSizing.minimumRadius, a detail area's scaled down as LabelSizing.detailMinimumRadius
+//       is; R ≤ 0 skips that check) and line data, whose style, edges per layer and interior
+//       strokes it prints, and the detail areas
 //   pbn names <template.pbnt> [--seed N]
 //       prints each palette color's nickname (seeded like the app's per-painting names; the
 //       default seed is generate's), structured name and hex

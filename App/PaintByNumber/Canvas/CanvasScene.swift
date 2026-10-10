@@ -38,7 +38,8 @@ nonisolated final class CanvasScene: @unchecked Sendable {
 
     /// Font size (canvas units) of each region's primary number, 0 without one.
     let labelSizes: [Float]
-    /// A small-but-typical number size (10th percentile): the max zoom makes these legible.
+    /// A small-but-typical number size (10th percentile), or a detail area's smallest when that
+    /// is smaller (`Template.detailRegions`, read zoomed in): the max zoom makes these legible.
     let smallLabelSize: Float
 
     init?(template t: Template, context: RenderContext) {
@@ -52,8 +53,8 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         let lines = OutlineGeometry(t)
 
         // Numbers: size each run by the shared `LabelSizing` rule (the same as thumbnails, PDFs
-        // and SVG), capped so huge regions don't shout, then emit one instance per digit
-        // placed with the atlas's real advances.
+        // and SVG; a detail area's down to its own floor), capped so huge regions don't shout,
+        // then emit one instance per digit placed with the atlas's real advances.
         let atlas = context.atlas
         let maxSize = 0.045 * Float(min(t.width, t.height))
         var glyphList: [GlyphInstance] = []
@@ -65,7 +66,8 @@ nonisolated final class CanvasScene: @unchecked Sendable {
             let number = Int(t.regions[region].colorIndex) + 1
             let digits = String(number).compactMap(\.wholeNumberValue)
             let w = atlas.runWidth(digits)
-            let size = LabelSizing.fontSize(radius: label.radius, digits: digits.count, maximum: maxSize)
+            let size = LabelSizing.fontSize(
+                radius: label.radius, digits: digits.count, maximum: maxSize, detail: t.isDetailRegion(region))
             if !primary[region] {
                 primary[region] = true
                 sizes[region] = size
@@ -78,7 +80,9 @@ nonisolated final class CanvasScene: @unchecked Sendable {
         }
         labelSizes = sizes
         let sorted = sizes.filter { $0 > 0 }.sorted()
-        smallLabelSize = sorted.isEmpty ? 1 : sorted[sorted.count / 10]
+        let typical = sorted.isEmpty ? 1 : sorted[sorted.count / 10]
+        let detail = t.detailRegions.compactMap { r in Int(r) < sizes.count && sizes[Int(r)] > 0 ? sizes[Int(r)] : nil }.min()
+        smallLabelSize = min(typical, detail ?? typical)
 
         guard let positions = CanvasScene.buffer(t.mesh.vertices, device),
               let vertexRegions = CanvasScene.buffer(t.mesh.vertexRegion, device),

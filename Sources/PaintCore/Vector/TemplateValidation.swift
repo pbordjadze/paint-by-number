@@ -15,10 +15,12 @@ extension Template {
         /// is checked, a label claiming more free radius than it has.
         public var badLabelRegions: [Int] = []
         /// Regions with a label whose free radius is short of the minimum for its number
-        /// (`validate(minLabelRadius:)`).
+        /// (`validate(minLabelRadius:)`; a detail area's, its own).
         public var crampedLabelRegions: [Int] = []
         /// Smallest free radius of any label divided by `LabelSizing.roomFactor` of its number
-        /// (the single-digit equivalent); infinite unless label room was checked.
+        /// (the single-digit equivalent), a detail area's scaled from its floor to the usual one
+        /// (by `minimumRadius / detailMinimumRadius`), so it compares with the floor either way;
+        /// infinite unless label room was checked.
         public var minLabelRoom: Float = .infinity
         /// |Σ region areas − canvas area|.
         public var canvasAreaError: Double = 0
@@ -46,8 +48,10 @@ extension Template {
     /// Checks the template's invariants.
     /// - Parameter minLabelRadius: When set, also requires every label to keep this free
     ///   radius from its region's outline (scaled per number by `LabelSizing.roomFactor`) and
-    ///   its stored radius to be honest. Pipeline outputs pass `LabelSizing.minimumRadius`;
-    ///   nil suits hand-made or synthetic templates (one-pixel regions, raster-derived radii).
+    ///   its stored radius to be honest; a detail area's (`detailRegions`) need keep only that
+    ///   scaled as `LabelSizing.detailMinimumRadius` is from `minimumRadius`. Pipeline outputs
+    ///   pass `LabelSizing.minimumRadius`; nil suits hand-made or synthetic templates (one-pixel
+    ///   regions, raster-derived radii).
     public func validate(minLabelRadius: Float? = nil) -> ValidationReport {
         var report = ValidationReport()
         report.canvasArea = width * height
@@ -109,6 +113,8 @@ extension Template {
 
             var labelOK = true, roomOK = true
             let digits = LabelSizing.digitCount(colorIndex: region.colorIndex)
+            let detail = LabelSizing.detailMinimumRadius / LabelSizing.minimumRadius
+            let floor = isDetailRegion(r) ? detail : 1
             for label in labels(ofRegion: r) {
                 var inside = false
                 for poly in polygons where Template.contains(poly, label.position) { inside.toggle() }
@@ -118,8 +124,8 @@ extension Template {
                 // The stored radius may exceed the measured one only by Float rounding.
                 if Double(label.radius) > free + 2e-3 { labelOK = false }
                 let factor = LabelSizing.roomFactor(digits: digits)
-                report.minLabelRoom = min(report.minLabelRoom, Float(free) / factor)
-                if free < Double(minLabelRadius * factor) - 1e-3 { roomOK = false }
+                report.minLabelRoom = min(report.minLabelRoom, Float(free) / factor / floor)
+                if free < Double(minLabelRadius * floor * factor) - 1e-3 { roomOK = false }
             }
             if !labelOK { report.badLabelRegions.append(r) }
             if !roomOK { report.crampedLabelRegions.append(r) }

@@ -152,6 +152,23 @@ struct CanvasRenderTests {
         }
     }
 
+    /// A detail area's number is sized down to its own floor, below the usual one, and the
+    /// canvas zooms deep enough to read it.
+    @Test func detailAreaNumbersHaveTheirOwnFloor() throws {
+        var t = Fixtures.mosaic
+        let r = try #require(t.regions.indices.first { t.regions[$0].labelCount > 0 })
+        let first = Int(t.regions[r].labelStart)
+        for k in first..<(first + Int(t.regions[r].labelCount)) { t.labels[k].radius = 0.5 * LabelSizing.minimumRadius }
+        t.detailRegions = [UInt32(r)]
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: t, context: context))
+        let digits = LabelSizing.digitCount(colorIndex: t.regions[r].colorIndex)
+        let size = LabelSizing.fontSize(radius: 0.5 * LabelSizing.minimumRadius, digits: digits, detail: true)
+        #expect(scene.labelSizes[r] == size)
+        #expect(size < LabelSizing.minimumFontSize && size >= LabelSizing.detailMinimumFontSize)
+        #expect(scene.smallLabelSize <= size)
+    }
+
     @Test func largeTemplateBuildsAndRendersQuickly() throws {
         let clock = ContinuousClock()
         var t0 = clock.now

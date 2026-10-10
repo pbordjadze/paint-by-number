@@ -1,3 +1,4 @@
+import PaintCore
 import SwiftUI
 import UIKit
 
@@ -72,6 +73,9 @@ struct RefineInkLayer: View {
                     // The line itself, its own path, and not what meets it at its ends.
                     let width = lineWidth + (photo == nil ? 1.5 : 4)
                     uncover(path.strokedPath(StrokeStyle(lineWidth: width, lineCap: .butt, lineJoin: .round)))
+                case .fill:
+                    // `RefineFillLayer` shows fills.
+                    break
                 }
             }
             if let trace, let last = trace.last {
@@ -99,6 +103,88 @@ struct RefineInkLayer: View {
 
     nonisolated static func style(_ width: CGFloat) -> StrokeStyle {
         StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
+    }
+}
+
+/// The painter's fills over the drawing in `rect` (view coordinates): each area a fill made in
+/// the template on screen (`base`'s detail areas holding a fill's point) tinted its paint,
+/// multiplied in so the drawing's ink stays on top and the paper or photo shows through, and a
+/// swatch of the photo's color (`LineEdit.photoColor`, what the pipeline paints it with) where
+/// each fill the template doesn't have yet was tapped, until the template that has it comes. An
+/// area whose fill was cleared since shows no more.
+struct RefineFillLayer: View, Equatable {
+    let base: CreateModel.Preview?
+    /// The fills of the refinements, in order.
+    let fills: [TemplateRefinements.Line]
+    /// The photo the pipeline reads, for the swatches' color; it is the same while Refine is open.
+    let photo: RGBAImage?
+    let rect: CGRect
+
+    /// How opaque an area's paint is laid over the drawing.
+    static let areaOpacity: Double = 0.75
+    /// A swatch's radius, in points on screen.
+    static let swatchRadius: CGFloat = 6
+
+    nonisolated static func == (a: RefineFillLayer, b: RefineFillLayer) -> Bool {
+        a.base?.id == b.base?.id && a.fills == b.fills && a.rect == b.rect && (a.photo == nil) == (b.photo == nil)
+    }
+
+    var body: some View {
+        let areas = Self.areas(base?.template, fills: fills), rect = rect
+        let made = (base?.refinements.lines ?? []).filter { $0.kind == .fill }
+        let swatches = fills.filter { !made.contains($0) && !$0.points.isEmpty }.compactMap { fill -> (SIMD2<Float>, Color)? in
+            guard let photo else { return nil }
+            let lab = LineEdit.photoColor(at: fill.points[0], in: photo)
+            let rgb = ColorScience.okLabToEncoded(lab, space: photo.colorSpace)
+            let color = Color(photo.colorSpace == .displayP3 ? .displayP3 : .sRGB, red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z))
+            return (fill.points[0], color)
+        }
+        let size = base.map { CGSize(width: $0.template.width, height: $0.template.height) } ?? .zero
+        let opacity = Self.areaOpacity, r = Self.swatchRadius
+        ZStack {
+            Canvas { context, _ in
+                guard size.width > 0, size.height > 0, rect.width > 0 else { return }
+                // Filled into the picture as the drawing is (`LineArtLayer`).
+                let s = max(rect.width / size.width, rect.height / size.height)
+                let origin = CGPoint(x: rect.midX - size.width * s / 2, y: rect.midY - size.height * s / 2)
+                var tinted = context
+                tinted.clip(to: Path(rect))
+                tinted.translateBy(x: origin.x, y: origin.y)
+                tinted.scaleBy(x: s, y: s)
+                for area in areas {
+                    var path = Path()
+                    for ring in area.rings where ring.count >= 3 {
+                        path.addLines(ring.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) })
+                        path.closeSubpath()
+                    }
+                    tinted.fill(path, with: .color(area.paint.opacity(opacity)), style: FillStyle(eoFill: true))
+                }
+            }
+            .blendMode(.multiply)
+            Canvas { context, _ in
+                for (point, color) in swatches {
+                    let centre = CGPoint(x: rect.minX + CGFloat(point.x) * rect.width, y: rect.minY + CGFloat(point.y) * rect.height)
+                    let dot = Path(ellipseIn: CGRect(x: centre.x - r, y: centre.y - r, width: 2 * r, height: 2 * r))
+                    context.fill(dot, with: .color(color))
+                    // A white ring edged in ink reads on paper, photo and paint alike.
+                    context.stroke(dot, with: .color(.white), lineWidth: 2)
+                    let edge = Path(ellipseIn: CGRect(x: centre.x - r - 1, y: centre.y - r - 1, width: 2 * r + 2, height: 2 * r + 2))
+                    context.stroke(edge, with: .color(LineArtDrawing.ink.opacity(0.4)), lineWidth: 0.75)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    /// The areas of `template` a fill made (its detail areas holding one of `fills`' points):
+    /// their rings in canvas units and their paint.
+    static func areas(_ template: Template?, fills: [TemplateRefinements.Line]) -> [(rings: [[SIMD2<Float>]], paint: Color)] {
+        guard let template, !template.detailRegions.isEmpty else { return [] }
+        var filled = Set<Int>()
+        for fill in fills where !fill.points.isEmpty {
+            if let r = RefineFills.region(of: fill.points[0], in: template), template.isDetailRegion(r) { filled.insert(r) }
+        }
+        return filled.sorted().map { (template.polygons(ofRegion: $0), PaletteBar.paint(template, Int(template.regions[$0].colorIndex))) }
     }
 }
 
@@ -244,7 +330,8 @@ final class RefineSurfaceView: UIView, UIScrollViewDelegate, UIGestureRecognizer
     /// or Only Draw with Apple Pencil is on. Stays so while the screen is open.
     private(set) var pencilDraws = false
 
-    static let maximumZoom: CGFloat = 6
+    /// Deep enough that a Pencil outlines a star of a few canvas units comfortably (to Fill it).
+    static let maximumZoom: CGFloat = 12
     /// Room around the picture at zoom 1, so it reads as a card.
     static let margin: CGFloat = 12
 

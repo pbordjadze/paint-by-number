@@ -11,7 +11,8 @@ import simd
 /// Numbers keep to their regions' room at every scale (`LabelSizing`), so a detailed
 /// template fitted to one page would print its smallest numbers at about 1 pt. Such a
 /// template is printed on several overlapping sheets instead (`Sheets`), after an overview
-/// page showing how they fit together.
+/// page showing how they fit together; a detail area's number (`Template.detailRegions`) has a
+/// print floor of its own, `minimumDetailNumberSize`.
 nonisolated enum PDFExporter {
     /// The paper a template is laid out for: the region's usual size (`default(for:)`).
     enum Paper: String, Sendable, CaseIterable {
@@ -34,13 +35,21 @@ nonisolated enum PDFExporter {
 
     /// Smallest number printed (points); smaller digits blur into specks on paper.
     static let minimumNumberSize: CGFloat = 2.6
+    /// Smallest number of a detail area printed (points): an area the painter filled, whose
+    /// number the canvas draws down to about half the usual floor, read zoomed in. At
+    /// `minimumNumberSize` one filled star would print a 150-color template on about four
+    /// times the sheets (the scale doubles); at 2 pt, digits about half a millimetre tall and
+    /// still six dots of a 300-dpi printer, on about two and a half times, read close up or
+    /// with a magnifier as the canvas is zoomed in.
+    static let minimumDetailNumberSize: CGFloat = 2
     /// How far neighbouring sheets overlap (points), room to tape them together. Numbers on
     /// sheets are at most this wide, so each one is whole on at least one sheet.
     static let sheetOverlap: CGFloat = 18
 
     /// How the template is printed: on one page when its smallest number comes out at
-    /// `minimumNumberSize` or larger there, otherwise on a grid of overlapping sheets at a
-    /// scale that makes it so (a 150-color detail-1 template takes about four).
+    /// `minimumNumberSize` or larger there (a detail area's at `minimumDetailNumberSize`),
+    /// otherwise on a grid of overlapping sheets at a scale that makes it so (a 150-color
+    /// detail-1 template takes about four, more with detail areas).
     struct Sheets: Equatable, Sendable {
         /// Points per canvas unit.
         var scale: CGFloat
@@ -70,10 +79,9 @@ nonisolated enum PDFExporter {
             Sheets(scale: scale, columns: columns, rows: rows, body: body, printed: CGSize(width: width * scale, height: height * scale))
         }
         let fitted = min(body.width / width, body.height / height)
-        guard let smallest = smallestNumberSize(t), fitted * smallest < minimumNumberSize else {
+        guard let needed = legibleScale(t), fitted < needed else {
             return make(scale: fitted, columns: 1, rows: 1)
         }
-        let needed = minimumNumberSize / smallest
         // n sheets with overlap o cover n·(w − o) + o.
         func count(_ extent: CGFloat, _ window: CGFloat) -> Int {
             max(1, Int(((extent * needed - sheetOverlap) / (window - sheetOverlap)).rounded(.up)))
@@ -86,14 +94,23 @@ nonisolated enum PDFExporter {
         return make(scale: scale, columns: columns, rows: rows)
     }
 
-    /// Size (canvas units) of the smallest number `TemplateRasterizer` prints, or nil
+    /// The scale (points per canvas unit) that prints the smallest number at
+    /// `minimumNumberSize` and a detail area's smallest at `minimumDetailNumberSize`, or nil
     /// without labels.
-    static func smallestNumberSize(_ t: Template) -> CGFloat? {
+    static func legibleScale(_ t: Template) -> CGFloat? {
+        let usual = smallestNumberSize(t, detail: false).map { minimumNumberSize / $0 }
+        let detail = smallestNumberSize(t, detail: true).map { minimumDetailNumberSize / $0 }
+        return [usual, detail].compactMap { $0 }.max()
+    }
+
+    /// Size (canvas units) of the smallest number `TemplateRasterizer` prints in the detail
+    /// areas, or in the others, or nil without labels there.
+    static func smallestNumberSize(_ t: Template, detail: Bool) -> CGFloat? {
         let maximum = Float(TemplateRasterizer.Style.printable.maximumNumberFraction) * Float(max(t.width, t.height))
         var smallest: Float?
-        for label in t.labels where Int(label.region) < t.regions.count {
+        for label in t.labels where Int(label.region) < t.regions.count && t.isDetailRegion(Int(label.region)) == detail {
             let digits = LabelSizing.digitCount(colorIndex: t.regions[Int(label.region)].colorIndex)
-            let size = LabelSizing.fontSize(radius: label.radius, digits: digits, maximum: maximum)
+            let size = LabelSizing.fontSize(radius: label.radius, digits: digits, maximum: maximum, detail: detail)
             smallest = min(smallest ?? size, size)
         }
         return smallest.map { CGFloat($0) }

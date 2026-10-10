@@ -217,6 +217,20 @@ struct SegmentationParameters: Sendable {
     /// its digit count (`LabelSizing`).
     func minRadius(digits: Int) -> Float { minRadius * LabelSizing.roomFactor(digits: digits) }
 
+    /// Raster room (`interiorDistance`) a detail area's number needs: as `minRadius(digits:)`
+    /// guarantees `LabelSizing.minimumRadius`, this guarantees `LabelSizing.detailMinimumRadius`
+    /// once smoothed (within `vectorRadiusTolerance`) and on the pixel outline around it, which
+    /// clears 1.58 for any room above `detailLatticeFloor` and 2.12 above 1.92
+    /// (`LabelSizingTests.detailMinimumRadiusIsAchievable`). The same at every detail: 1.6,
+    /// 1.7 and 2.36 by digit count, below every `minRadius(digits:)`.
+    static func detailMinRadius(digits: Int) -> Float {
+        max(LabelSizing.minimumRadius(digits: digits, detail: true) / vectorRadiusTolerance, detailLatticeFloor)
+    }
+
+    /// The least raster room of a detail area: past 1.5, where a spot may be a plus of five
+    /// pixels, whose outline comes within 0.71 of its centre.
+    static let detailLatticeFloor: Float = 1.6
+
     /// Per-pixel multiplier of `minArea`: important areas keep smaller regions; busy
     /// texture (dense label changes, `texture` 0...1) outside important areas needs larger
     /// ones, so knit, foliage or gravel become a few paintable shapes rather than crumbs.

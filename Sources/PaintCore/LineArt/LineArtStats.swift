@@ -20,6 +20,12 @@ public struct LineArtStats: Sendable, Codable, Equatable {
     /// The painter's edits (`LineArtInput.edits`): pieces of drawn line kept, and eraser paths.
     public var drawnLines = 0
     public var erasures = 0
+    /// The painter's fills read, the paints added for them (no paint lay within a
+    /// just-noticeable difference of the photo's color), and the detail areas they kept in the
+    /// template (a fill whose cell was too small even for a detail area's number keeps none).
+    public var fills = 0
+    public var fillPaints = 0
+    public var detailAreas = 0
     /// Free ends extended to a line, paint boundary or the frame.
     public var endsClosed = 0
     /// Cells right after splitting the segmentation along the lines.

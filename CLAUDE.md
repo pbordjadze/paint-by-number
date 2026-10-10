@@ -97,10 +97,12 @@ found, `TextFinder`) is traced from the photo itself, painted out before segment
 interior strokes with the numbers kept off it (`Writing`, `LabelKeepOut`; `keepWriting`;
 `docs/writing.md`, whose corpus every change to it is judged on). The painter's edits from the
 app's Refine (`LineArtInput.edits`, `pbn --line-edits`: lines drawn, the eraser's passes, lines
-tapped away, in order) join at the layer stage (`LineEdits`; `docs/coloring-book.md` › The
-painter's edits); without any, a template is byte for byte what it was. Without an edge map, book
-settings generate a classic template; the same maps and settings give the same bytes on any core
-count.
+tapped away, shapes filled, in order) join at the layer stage (`LineEdits`; `docs/coloring-book.md`
+› The painter's edits); without any, a template is byte for byte what it was. A fill keeps the
+cell under it, once the lines split the paint, as a detail area (`CellMap.fill`,
+`Template.detailRegions`): the photo's color there, merged into nothing, its number down to
+`LabelSizing.detailMinimumRadius`. Without an edge map, book settings generate a classic
+template; the same maps and settings give the same bytes on any core count.
 
 ## Suggested settings
 
@@ -171,7 +173,8 @@ Saved paintings must open in every later build. The format history is documented
 - Never change how an existing template format is read: `readPayloadV1` is frozen, and
   `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` / `template-v2-lines.pbnt`
   (the optional `LINE` chunk of layered templates) / `template-v2-book.pbnt` (the chunk's trailing
-  style byte, written only for coloring books) must keep decoding (they are never regenerated). Add
+  style byte, written only for coloring books) / `template-v2-detail.pbnt` (the optional `DETL`
+  chunk of detail areas) must keep decoding (they are never regenerated). Add
   a fixture file and decode test for every new `formatVersion`, chunk or trailing field.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
@@ -349,9 +352,12 @@ reports. Local `main` may lag: fetch before comparing.
 - Numbers are sized only by `LabelSizing` (`Model/LabelSizing.swift`): SVG, `TemplateRasterizer`
   (thumbnails, PDF) and the Metal canvas all use it and never drop a number. The pipeline gives
   every label room for its digit count (raster `minRadius(digits:)`, vector `LabelRoom`), so no
-  number is smaller than `LabelSizing.minimumFontSize`; `validate(minLabelRadius:)` checks it. Print
-  legibility is the PDF exporter's job, not a renderer floor: `PDFExporter.sheets` prints a detailed
-  template on overlapping sheets so the smallest number is at least 2.6 pt.
+  number is smaller than `LabelSizing.minimumFontSize`; `validate(minLabelRadius:)` checks it. A
+  detail area (`Template.detailRegions`, a shape the painter filled) has its own floor, about half
+  (`detailMinimumRadius`, `detailMinimumFontSize`): every renderer passes `detail:` for its
+  labels, and the pipeline and `validate` judge each region by its own. Print legibility is the
+  PDF exporter's job, not a renderer floor: `PDFExporter.sheets` prints a detailed template on
+  overlapping sheets so the smallest number is at least 2.6 pt (a detail area's 2 pt).
 - Canvas units = pixels of the working image (long side min(1100 + 1000 × detail, 1.5 × the
   photo's): `GenerationSettings.workingSize`); origin top-left, +y down.
 - Keep `PaintCore` free of Apple-only frameworks (guard any Accelerate/Metal use with

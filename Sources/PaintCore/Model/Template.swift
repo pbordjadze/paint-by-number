@@ -8,7 +8,7 @@
 public struct Template: Sendable, Equatable {
     /// Binary layout written by `encoded()`. Every version ever written stays readable:
     /// 1 = the original layout; 2 = the version-1 payload followed by extension chunks (see
-    /// `TemplateCoding.swift`), so later additions need no new version.
+    /// `TemplateCoding.swift`: `GENR`, `LINE`, `DETL`), so later additions need no new version.
     public static let formatVersion: UInt32 = 2
     /// Largest canvas (`width * height`) the decoder accepts. The generator caps the long side
     /// at 2100 units (≈ 3 M cells); the headroom is for `pbn trace` of large flat images, and
@@ -61,6 +61,12 @@ public struct Template: Sendable, Equatable {
     /// layer and weight per boundary edge, the lines drawn inside cells, and how it is drawn
     /// (`TemplateLineArt.style`). `nil` for classic templates, which draw every edge alike.
     public var lineArt: TemplateLineArt?
+
+    /// The detail areas, ascending: regions the painter filled in Refine (`LineEdit.Kind.fill`),
+    /// kept whatever their size, whose numbers may be as small as `LabelSizing`'s detail floor
+    /// (`detailMinimumRadius`, about half the usual) and are read zoomed in. Every renderer
+    /// sizes their labels with `detail: true` (`isDetailRegion`). Empty for most templates.
+    public var detailRegions: [UInt32] = []
 
     public init(
         width: Int, height: Int, colorSpace: RGBColorSpace,
@@ -272,6 +278,18 @@ extension Template {
     public func labels(ofRegion index: Int) -> ArraySlice<Label> {
         let r = regions[index]
         return labels[Int(r.labelStart)..<Int(r.labelStart) + Int(r.labelCount)]
+    }
+
+    /// Whether region `index` is a detail area (`detailRegions`).
+    public func isDetailRegion(_ index: Int) -> Bool {
+        guard !detailRegions.isEmpty, index >= 0, index <= Int(UInt32.max) else { return false }
+        var low = 0, high = detailRegions.count
+        let target = UInt32(index)
+        while low < high {
+            let mid = (low + high) / 2
+            if detailRegions[mid] < target { low = mid + 1 } else { high = mid }
+        }
+        return low < detailRegions.count && detailRegions[low] == target
     }
 
     /// Region under a canvas-space point, if inside the canvas.

@@ -1109,6 +1109,10 @@
         }
       }
     },
+    "Fill" : {
+      "comment" : "Refine screen: the Fill tool, whose tap makes the closed shape of a new painting's drawing under it an area of its own, painted the photo's color there (button label for VoiceOver and the Large Content Viewer)",
+      "extractionState" : "manual"
+    },
     "Finding the subject…" : {
       "comment" : "Status shown while the photo's main subject is detected before generating the template",
       "extractionState" : "manual"
@@ -2617,6 +2621,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rub out just what you touch, or tap to erase a spot. Two fingers zoom and move."
+          }
+        }
+      }
+    },
+    "refine.hint.fill" : {
+      "comment" : "Refine screen: how the Fill tool works (a tap makes the closed shape of the drawing under it an area of its own, painted the photo's color where it was tapped; a tap in a filled area clears it), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap inside a closed shape to make it an area of its own, in the photo’s color there. Tap it again to clear it. Two fingers zoom and move."
           }
         }
       }

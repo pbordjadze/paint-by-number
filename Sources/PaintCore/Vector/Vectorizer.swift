@@ -9,7 +9,8 @@
 ///    cross or touch another edge and it falls back to cruder but provably valid shapes.
 ///    Each region is labelled at the pole of inaccessibility of its smoothed polygon
 ///    (`PolyLabel`); where smoothing left a label less room than the raster promised
-///    (`LabelRoom`), the edges near it fall back the same way until it has enough.
+///    (`LabelRoom`; a detail area's, `Template.detailRegions`, by its own floor), the edges
+///    near it fall back the same way until it has enough.
 /// 3. Each region's rings are triangulated (`Earcut`, kept conforming along shared
 ///    boundaries), with extra labels spread over large regions.
 public enum Vectorizer {
@@ -33,7 +34,9 @@ public enum Vectorizer {
     }
 
     /// `vectorize`, also reporting what the vectorizer had to give up. Numbers keep off
-    /// `keepOut` where their regions have room elsewhere (`LabelKeepOut`).
+    /// `keepOut` where their regions have room elsewhere (`LabelKeepOut`); the regions of
+    /// `detailRegions` (ascending) are the template's detail areas, whose numbers need only
+    /// `LabelSizing.detailMinimumRadius`.
     public static func vectorizeWithStats(
         _ segmentation: Segmentation,
         settings: GenerationSettings,
@@ -47,6 +50,7 @@ public enum Vectorizer {
         _ segmentation: Segmentation,
         settings: GenerationSettings,
         keepOut: LabelKeepOut,
+        detailRegions: [UInt32] = [],
         cancel: CancellationCheck,
         clock: StageClock
     ) throws -> (template: Template, stats: VectorStats) {
@@ -70,22 +74,30 @@ public enum Vectorizer {
         try cancel.throwIfCancelled()
 
         // Label room: the segmentation promised each region a disc of its raster minimum
-        // (`SegmentationParameters.minRadius(digits:)`); the smoothed polygon may lose up to
-        // the tolerance of it, never more than the pixel outline would.
+        // (`SegmentationParameters.minRadius(digits:)`, a detail area's `detailMinRadius`); the
+        // smoothed polygon may lose up to the tolerance of it, never more than the pixel
+        // outline would.
+        let detail = { () -> [Bool] in
+            var detail = [Bool](repeating: false, count: regionCount)
+            for r in detailRegions where Int(r) < regionCount { detail[Int(r)] = true }
+            return detail
+        }()
         let room = clock.measure("vectorize.room") { () -> LabelRoom in
             let params = SegmentationParameters(settings: settings, width: w, height: h)
             let bands = Parallel.mapBands(regionCount, minimumBandSize: 256) { range -> [(SIMD2<Double>, Float)] in
                 range.map { r in
                     let pixel = Int(raster.bestPixel[r])
                     let digits = LabelSizing.digitCount(colorIndex: segmentation.regionColor[r])
-                    let required = SegmentationParameters.vectorRadiusTolerance * params.minRadius(digits: digits)
+                    let need = detail[r] ? SegmentationParameters.detailMinRadius(digits: digits) : params.minRadius(digits: digits)
+                    let required = SegmentationParameters.vectorRadiusTolerance * need
                     let clearance = RasterStats.latticeClearance(map, pixel: pixel, region: UInt32(r), limit: required)
                     return (SIMD2(Double(pixel % w) + 0.5, Double(pixel / w) + 0.5), min(required, clearance))
                 }
             }
             let all = Array(bands.joined())
             let small = (0..<regionCount).map { raster.bestDistance[$0] < Vectorizer.smallRegionRadius }
-            return LabelRoom(topology: topology, seeds: all.map(\.0), minRadius: all.map(\.1), measureFinely: small)
+            return LabelRoom(
+                topology: topology, seeds: all.map(\.0), minRadius: all.map(\.1), measureFinely: small, detail: detail)
         }
         try cancel.throwIfCancelled()
 
@@ -133,12 +145,13 @@ public enum Vectorizer {
             indexCursor += fills.indexCount[r]
         }
 
-        let template = Template(
+        var template = Template(
             width: w, height: h, colorSpace: segmentation.colorSpace, palette: segmentation.palette,
             regions: regions, points: geometry.points, edges: edges,
             ringEdges: topology.ringEdges, rings: topology.rings, labels: labels,
             mesh: FillMesh(vertices: fills.vertices, vertexRegion: fills.vertexRegion, indices: fills.indices),
             regionMap: map)
+        template.detailRegions = (0..<regionCount).filter { detail[$0] }.map { UInt32($0) }
         let stats = VectorStats(
             fallbackEdges: smoothing.repairs, labelRoomEdges: smoothing.labelRoomEdges,
             labelRoomRegions: smoothing.labelRoomRegions, labelRoomUnmet: smoothing.labelRoomUnmet)
