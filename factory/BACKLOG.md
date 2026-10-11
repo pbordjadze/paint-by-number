@@ -360,6 +360,27 @@ Claude's pet is a moth named **Colophon**. Hatch both with the `create-pet` skil
    reference carried over and what did not. Put both final contact sheets and a side-by-side of
    the two idle rows under `/root/factory-out/F18`.
 
+### F19 · The making-of at full size, with the real drawing
+Branch `codex/f19-making-of-full-size`. F16's renders used thumbnails (144 × 96 and 64 × 43), so
+the photo was a stamp on the paper and the worker towered over it. Render one corpus photo at its
+real working size, as a coloring book from its committed maps. Factory only; no app code.
+- `making_of.py` gains `--lines <drawing.pgm>`, passed to `pbn generate` as `--lines` beside
+  `--edges`, exactly as `tools/regression.py` passes the book regime's two maps (read it; reuse
+  its conversion of `tools/baseline/lines/<name>-{contours,drawing}.png` to PGM at the photo's
+  size, outside the repo).
+- Render `Tests/Corpus/parrots.jpg` (converted to PPM outside the repo) at full size with both
+  maps. Fix whatever full size breaks (memory, time, frame layout) without changing the look:
+  walking pace, figure size, card timing and fades stay the spec's defaults; those are the
+  Lamp's to judge, not ours.
+- **Report the numbers the Lamp needs:** frames and seconds per stage and in total, wall-clock
+  render time, the worker's height as a share of the photo's, and the paper size. If the movie
+  runs past three minutes, say so; don't shorten it.
+- A legible contact sheet: per stage, the frames at 0, 25, 50, 75 and 100 % of the wipe, cropped
+  to the paper's photo-and-figure area (so a 144-wide photo is no longer a stamp), plus one
+  full-resolution PNG of each stage's midpoint, all outside the repo.
+- Deterministic: two full runs give byte-identical frames (compare digests in the report). Tests
+  for the new flag and the cropped contact sheet on a small synthetic photo.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
