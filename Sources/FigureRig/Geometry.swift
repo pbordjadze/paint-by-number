@@ -46,7 +46,11 @@ public struct ArcPath: Sendable {
         var parser = PathParser(data)
         points = try parser.parse()
         var cumulative = [0.0]
-        for i in 1..<points.count { cumulative.append(cumulative.last! + (points[i] - points[i - 1]).length) }
+        for i in 1..<points.count {
+            let length = cumulative.last! + (points[i] - points[i - 1]).length
+            try FigureLimits.number(length, 0...FigureLimits.pathLength, "path.length")
+            cumulative.append(length)
+        }
         lengths = cumulative
         guard length > 1e-9 else {
             throw FigureInputError("path: length \(length); expected a nonzero length greater than 1e-9")
@@ -82,18 +86,24 @@ private struct PathParser {
         guard let value = Double(String(decoding: bytes[start..<index], as: UTF8.self)), value.isFinite else {
             throw FigureInputError("path: expected a finite coordinate at byte \(start)")
         }
+        try FigureLimits.number(value, -FigureLimits.coordinate...FigureLimits.coordinate, "path.coordinate at byte \(start)")
         return value
     }
     mutating func point() throws -> Point { let x = try number(); return Point(x, try number()) }
-    mutating func append(_ p: Point) { if points.last != p { points.append(p) } }
-    mutating func curve(_ a: Point, _ b: Point, _ c: Point, _ d: Point, _ depth: Int = 0) {
+    mutating func append(_ p: Point) throws {
+        if points.last != p {
+            guard points.count < FigureLimits.pathPoints else { throw FigureInputError("path.points: expected at most \(FigureLimits.pathPoints) flattened points") }
+            points.append(p)
+        }
+    }
+    mutating func curve(_ a: Point, _ b: Point, _ c: Point, _ d: Point, _ depth: Int = 0) throws {
         let chord = d - a
         let deviation = max(abs((b - a).dot(chord.unit.normal)), abs((c - a).dot(chord.unit.normal)))
         let excess = (b - a).length + (c - b).length + (d - c).length - chord.length
-        if (deviation <= 0.02 && excess <= 0.02) || depth == 18 { append(d); return }
+        if (deviation <= 0.02 && excess <= 0.02) || depth == 18 { try append(d); return }
         let ab = mix(a, b, 0.5), bc = mix(b, c, 0.5), cd = mix(c, d, 0.5)
         let abc = mix(ab, bc, 0.5), bcd = mix(bc, cd, 0.5), mid = mix(abc, bcd, 0.5)
-        curve(a, ab, abc, mid, depth + 1); curve(mid, bcd, cd, d, depth + 1)
+        try curve(a, ab, abc, mid, depth + 1); try curve(mid, bcd, cd, d, depth + 1)
     }
     mutating func parse() throws -> [Point] {
         var command: UInt8 = 0
@@ -105,16 +115,16 @@ private struct PathParser {
             }
             if command == 77 {
                 guard points.isEmpty else { throw FigureInputError("path: expected one continuous subpath") }
-                append(try point()); command = 76
+                try append(point()); command = 76
             } else if command == 90 {
                 guard let first = points.first else { throw FigureInputError("path: Z needs an initial M") }
-                append(first); command = 0
+                try append(first); command = 0
             } else {
                 guard let a = points.last else { throw FigureInputError("path: expected initial M") }
                 switch command {
-                case 76: append(try point())
-                case 67: let b = try point(), c = try point(), d = try point(); curve(a, b, c, d)
-                case 81: let b = try point(), d = try point(); curve(a, a + (b - a) * (2 / 3), d + (b - d) * (2 / 3), d)
+                case 76: try append(point())
+                case 67: let b = try point(), c = try point(), d = try point(); try curve(a, b, c, d)
+                case 81: let b = try point(), d = try point(); try curve(a, a + (b - a) * (2 / 3), d + (b - d) * (2 / 3), d)
                 default: throw FigureInputError("path: expected M L C Q Z at byte \(index)")
                 }
             }

@@ -31,7 +31,7 @@ func reveal(_ args: [String]) throws {
     }
     let snapshots = RevealSnapshots.present(in: URL(fileURLWithPath: args[1]))
     guard snapshots.count >= 2 else { throw FigureInputError("reveal: expected at least two named pbn snapshots") }
-    let out = URL(fileURLWithPath: args[2])
+    let output = try OutputDirectory(args[2]), out = output.url
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
     // Prepare every pair before writing, so a malformed later snapshot cannot leave
@@ -47,14 +47,22 @@ func reveal(_ args: [String]) throws {
     }
     try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
     for (name, pgm, json) in outputs {
-        try pgm.write(to: out.appendingPathComponent(name + ".pgm"))
-        try json.write(to: out.appendingPathComponent(name + ".json"))
+        try pgm.write(to: output.child(name + ".pgm"))
+        try json.write(to: output.child(name + ".json"))
     }
     print("\(outputs.count) reveal fields; \(out.path)")
 }
 
 func run() throws {
     let args = Array(CommandLine.arguments.dropFirst())
+    if args == ["--help"] || args == ["-h"] || args == ["render", "--help"] || args == ["reveal", "--help"] {
+        print("""
+        usage: figures render --spec <figure.json> --scene <scene.json> --out <directory>
+               figures reveal <snapshot-dir> <out-dir> [--seed left|center|strongest] [--steps K]
+        Output directories must be outside the repository, with no symlinked children.
+        """)
+        return
+    }
     if args.first == "reveal" { try reveal(args); return }
     guard args.first == "render", args.count == 7 else {
         throw FigureInputError("usage: figures render --spec S --scene C --out D")
@@ -76,7 +84,7 @@ func run() throws {
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
     let spec = try decoder.decode(FigureSpec.self, from: specData), scene = try decoder.decode(FigureScene.self, from: sceneData)
     let engine = try FigureEngine(spec: spec, scene: scene)
-    let out = URL(fileURLWithPath: outPath).standardizedFileURL, framesURL = out.appendingPathComponent("frames")
+    let output = try OutputDirectory(outPath), out = output.url, framesURL = try output.child("frames")
     let fm = FileManager.default
     var background: String?
     var backgroundData: Data?, backgroundName: String?
@@ -88,20 +96,16 @@ func run() throws {
         background = "../" + backgroundName!
     }
     try fm.createDirectory(at: framesURL, withIntermediateDirectories: true)
-    // Re-rendering into an existing output must not leave old frames in the clip.
-    for url in try fm.contentsOfDirectory(at: framesURL, includingPropertiesForKeys: nil) where url.pathExtension == "svg" || url.pathExtension == "png" {
-        try fm.removeItem(at: url)
-    }
-    if let backgroundData, let backgroundName { try backgroundData.write(to: out.appendingPathComponent(backgroundName)) }
+    try output.removePreviousFrames()
+    if let backgroundData, let backgroundName { try backgroundData.write(to: output.child(backgroundName)) }
     var frames: [FigureFrame] = [], motion: [MotionFrame] = []
     for index in 0..<engine.frameCount {
         let frame = engine.frame(index); frames.append(frame)
         motion.append(MotionFrame(frame: index, time: frame.time, actors: frame.actors))
-        let name = String(repeating: "0", count: max(0, 4 - String(index).count)) + String(index)
-        try Data(FigureSVG.write(frame, scene: scene, background: background).utf8).write(to: framesURL.appendingPathComponent(name + ".svg"))
+        try Data(FigureSVG.write(frame, scene: scene, background: background).utf8).write(to: output.child("frames/" + frameName(index) + ".svg"))
     }
     func write<T: Encodable>(_ value: T, _ name: String) throws {
-        var data = try encoder.encode(value); data.append(10); try data.write(to: out.appendingPathComponent(name))
+        var data = try encoder.encode(value); data.append(10); try data.write(to: output.child(name))
     }
     try write(engine.manifest(specSHA256: FigureSHA256.digest(Array(specData)), sceneSHA256: FigureSHA256.digest(Array(sceneData))), "manifest.json")
     try write(motion, "motion.json"); try write(engine.checks(frames), "checks.json")

@@ -6,11 +6,22 @@ public enum PropKind: String, Codable, Sendable, CaseIterable {
     var length: Double {
         switch self { case .broom: 0.70; case .brush: 0.50; case .mortar: 0.24; case .jar: 0.22 }
     }
+    /// Attachment distance from the drawn base, in standing figure heights.
+    var gripOffset: Double {
+        switch self { case .brush: 0.08; case .broom: 0.18; case .mortar, .jar: 0 }
+    }
 }
 
 public struct HeldProp: Codable, Sendable {
     public var kind: PropKind, grips: [String: Point], base: Point, axis: Point
     public var tip: Point
+
+    /// Use the same affine base/axis as the renderer, independently of recorded grips.
+    func renderedGrips(height: Double, twoHanded: Bool) -> [String: Point] {
+        var result = ["right": base + axis * (kind.gripOffset * height)]
+        if twoHanded { result["left"] = base + axis * ((kind.gripOffset - 0.12) * height) }
+        return result
+    }
 }
 
 extension InkRenderer {

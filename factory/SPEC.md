@@ -173,11 +173,22 @@ figure units before normalization; angles in degrees; times in seconds.
   `cadence` per full or partial stride, plus easing), so the spec's taste parameters set the timing; `cast` and `idle` take
   `duration`. The scene lasts until the last action ends, plus `tail`.
 
+Scene magnitudes are bounded before geometry allocation or integer conversion. Canvas
+dimensions are 1–100,000 units, with height/width 1/8–8 (at most 16,512 display pixels high).
+Standing figure height is 0.01–100,000 units; path coordinates are within ±1,000,000, total
+path length at most 1,000,000, and flattening at most 100,000 points. Times (`duration`,
+`tail`, `card.at`) and each actor's complete timeline including tail are at most 3,600 s;
+headings are within ±1,000,000°. Scenes have at most 1,024 actors and 10,000 actions per actor.
+Derived work is limited to 216,000 frames, 10,000 footfalls per walk, 864,000 heading samples
+per walk, and 1,000,000 ink samples per stroke. These practical limits allow an hour at 60 fps
+while preventing huge finite JSON numbers from overflowing conversions or driving unbounded
+work. Violations throw `FigureInputError` naming the field or derived count.
+
 ## Figure spec and scene (version 2)
 
 Figure spec version 2 has the same parameters, ranges and defaults as version 1; it accepts
 `"version": 2`. Version 1 keeps decoding and the committed hero's SVG frames, motion and checks
-keep their original bytes. The engine version is `1.0.0`; only the manifest's engine version changes
+keep their original bytes. The engine version is `1.0.1`; only the manifest's engine version changes
 for the hero. New scene fields and actions require scene version 2. A version 2 scene accepts
 one or more actors with unique, nonempty ids, and these additions:
 
@@ -203,7 +214,9 @@ it never silently stretches a bone. Poses and the growing stroke use the same qu
 The stroke follows exact flattened path vertices up to the tip, supports either travel direction,
 and stays drawn for later actions and the scene tail. Its seed is fixed per actor and action, so
 finished strokes stay still even when the figure's ink boils. Path-changing ink actions may start
-at their explicit `from`; later walk/sweep actions follow the worker's offset position.
+at their explicit `from`; later walk/sweep actions on the same path keep the worker's lateral
+offset. A switched walk/sweep path must start at the actor's current position and follows
+that path directly, resetting the inherited ink offset.
 
 Actors render far to near by the mean screen y of their ankles, ties by scene actor order.
 `motion.json` actors remain in scene order. Every actor has independent id-seeded wobble and
@@ -215,7 +228,7 @@ Version 2 adds these entries to `checks.json` (version 1 retains its original ch
 | Check | Limit | Computed by |
 | --- | --- | --- |
 | `brushTip`: greatest distance between solved brush tip and current ink path sample | ≤ 0.5 canvas px, every ink frame | rig |
-| `propGrip`: greatest distance between each held prop grip and its corresponding hand | ≤ 0.5 canvas px, every frame | rig |
+| `propGrip`: greatest distance from each rendered attachment to its hand or recorded grip; missing expected attachments fail | ≤ 0.5 canvas px, every frame | rig |
 | `actorSeparation`: smallest screen distance between any two pelvises | ≥ one normalized hip width in canvas px | rig |
 
 For a single actor, `actorSeparation` reports the canvas diagonal (no pairs). Existing checks
@@ -267,8 +280,12 @@ shrinks at the end. `glow` adds a blurred copy behind it.
 
 ## Citation card
 
-Line 1 is the authors and the year; line 2 is the title in italic, wrapped to at most two lines,
-no wider than 60% of the screen width. The app uses New York; the factory uses Bitstream Charter
+Authors and year precede the italic title; both wrap to as many lines as needed at 60% of the
+screen width. An unbreakable word may condense horizontally to a minimum scale of 0.85,
+preserving at least 85% of its glyph widths rather than squeezing arbitrarily. `cardSize`
+measures the smaller post-layout dimension (`size × minimum horizontal scale`) against 11 pt.
+An oversized word keeps that minimum scale; actual layout bounds can fail `cardOnScreen`.
+The app uses New York; the factory uses Bitstream Charter
 (installed here) as its stand-in, so the guardians judge the card's size, timing and placement,
 not its face. It appears at `card.at`, fades in over `fade`, holds for `holdBase + perWord ×
 words` (at least 2 s), then fades out.
@@ -283,6 +300,12 @@ words` (at least 2 s), then fades out.
 - `D/motion.json`: per frame and actor, every joint's screen position and which feet are
   planted.
 - `D/checks.json`: the geometry checks below.
+
+Both `figures render` and `figures reveal` require output outside the repository and reject
+any existing symlinked child, including dangling links, before writing. Render cleanup removes
+only the numbered SVG/PNG frame files identified by the prior manifest's frame count;
+unrelated images are preserved. Without a prior manifest, no existing frames are deleted.
+`figures --help` lists both commands and exits successfully without writing anything.
 
 `tools/factory/render.py S C D` runs that, then adds:
 
