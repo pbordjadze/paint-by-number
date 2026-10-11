@@ -18,8 +18,9 @@ driving manual and the state of play.
    checks yourself (`swift build`, the tests it names, determinism by rendering twice).
    First-pass reviews can go to a Sonnet subagent to save Claude budget; Claude reads the
    verdict and the risky parts.
-4. Good: push `codex/<id>-<slug>` with `[skip ci]`, merge into `claude/vibe-factory`, and note it
-   below. Not good: give Codex the review in the same worktree and run again; after two rounds,
+4. The runner (`run_item2.sh` in the scratchpad) pushes `codex/<id>-<slug>` as soon as the session
+   ends, but only if every commit says `[skip ci]`; the container can be wiped while idle. Good:
+   merge it into `claude/vibe-factory` and note it below. Not good: give Codex the review in the same worktree and run again; after two rounds,
    fix it yourself or park it with a note.
 5. One Codex session per item, at most three at once, on items that don't touch the same files.
 
@@ -37,8 +38,9 @@ driving manual and the state of play.
 | Item | State |
 | --- | --- |
 | v0 engine (8c5683e) | Merged. Claude checked: builds, 17 tests, checks pass, byte-identical renders. Its review is F1 in the backlog; the Charter credit doesn't break AboutTests (drift only, fixed in F1) |
-| F1 | Ready |
-| F2, F4, F5, F6, F7, F8, F12 | Ready |
+| F1, F2, F4 | Running (Codex, gpt-6.1-sol, high) |
+| F5, F6, F7, F8, F12 | Ready |
+| F13 | After F2 |
 | F3, F9, F10 | Need a spec from Claude |
 | F11 | Waits on CI minutes |
 

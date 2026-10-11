@@ -174,6 +174,37 @@ jury said, and whether Paul loved it.
   date-gated content bundled with a release.
 - The look follows the collection page (`tools/factory/collection_template.html`).
 
+### F13 · The design-loop kit
+Branch `codex/f13-loop-kit`. After F2. Turn the loop into a small kit any design question can
+use: primitives, tools and settings, documented.
+- **Settings per piece** (`pieces/<piece>/piece.toml`): rounds; jury size; proposers per round
+  and candidates each; scoring (`borda`, `approval` or `copeland`); veto policy (`quote` the
+  guards-against line, `free`, or `off`); the "everyone gets a slot" guarantee; caps; plants
+  (known-good and known-bad anchors); the model and effort for each role (proposer, juror,
+  writer); the rules version.
+- **Model-agnostic agent jobs.** The kit writes `jobs/<round>/<role>-<guardian>.json` (prompt,
+  reply schema, model, effort, images) and reads `replies/<…>.json`; it never calls a model
+  itself. Runners are separate:
+  - Claude subagents today, read back through `transcripts.py`;
+  - `codex exec`, which gives a second model family on the panel;
+  - an API runner later.
+
+  A reply that breaks its schema goes back to its agent once.
+- **Tools:**
+  - renderers: a text in use, swatch sheets, image contact sheets lettered per juror;
+  - the checkpoint page (Paul's veto, love and note, stored as on the Thirty-Six Colors page)
+    and the gallery page generators;
+  - calibration: score each juror and each proposer source against Paul's picks, and write the
+    factors the scoring reads;
+  - cost accounting: tokens and time per agent, from transcripts and Codex logs;
+  - replay: re-decide any run from its records.
+- **A CLI:** `loop new <piece>`, `loop draw|jobs|collect|decide <round>`, `loop replay`,
+  `loop report` (standings, ledger, costs).
+- **`taste/README.md`:** how to make a new piece, on one page, with the panel-name piece as the
+  worked example.
+- **Tests:** both recorded runs replay byte for byte; a toy piece runs end to end on canned
+  replies.
+
 ## Needs a spec first (Claude)
 
 - **F3 · The figure piece** for the taste loop: proposals edit the figure spec, the engine
