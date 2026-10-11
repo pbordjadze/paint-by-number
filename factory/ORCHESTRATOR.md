@@ -44,8 +44,10 @@ driving manual and the state of play.
 | F4 (d704433) | Merged. Claude checked: 271 tests; the v1 SHA-256 pin matches the base table; parrots pin unchanged; `pbn vocab check` works. The pin test shells out to `sha256sum`/`shasum` (Linux and macOS only) |
 | F1 (3206005) | Merged. Claude checked: byte-identical renders, all checks; review 118 s on a loaded container (42 s alone) |
 | F6 (65e2f7b) | Merged. Claude checked keyframe timings, reduced motion and tests; not yet seen in a browser with a real pet |
-| F13, F8, F5 | Running (Codex, gpt-6.1-sol, high); F5 rerun after the backlog said 45 pictures (there are 44) |
-| F12 | Ready after F13 (both build gallery pages) |
+| F5 (b0eaf34) | Merged: traffic.json over 44 pictures x 5 seeds; Linux pbn has no line detection, so it follows the default generator |
+| F13 (3a2d0c1) | Merged: the design-loop kit; 58 factory tests, both runs replay byte for byte; live model calls untested |
+| F8 (457dc29) | Merged: 275 tests; regression templates byte-identical to the base |
+| F12 | Running (Codex, gpt-6.1-sol, high) |
 | F7 | Claude runs it outside the sandbox: Codex sessions have no network, and the pilot needs `codex exec` itself |
 | F3, F9, F10 | Need a spec from Claude |
 | F11 | Waits on CI minutes |
