@@ -61,7 +61,8 @@ driving manual and the state of play.
 | F18 | Merged: Pip (13 generations, 17 min) and Colophon (15, 25 min), drawn as a family; nothing uploaded to the pets service. Both final sheets and Colophon's lamp clip are kept as assets of chapter 7's doc (`d2c048f8…`, `d0782166…`, `6f01832d…`), since the container can be wiped |
 | F20 | Merged: the makers' page after the guardians (`collection.py --pets`); checked in Chromium by Claude |
 | F21 | Done: a read-only audit, twelve findings (three high: job-ID paths, huge numbers trap the Swift CLI, symlinked output children), split into F22 (Swift) and F23 (Python) |
-| F19, F22, F23 | Running (Codex, gpt-6.1-sol, high) |
+| F23 | Merged: the audit's Python fixes; Claude fixed the guards' refusal of macOS's linked /tmp and /var |
+| F19, F22 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
