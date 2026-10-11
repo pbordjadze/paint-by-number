@@ -76,8 +76,8 @@ struct SmoothingResult {
 /// Turns lattice chains into smooth shared boundary polylines and guarantees the result
 /// is a valid planar subdivision.
 ///
-/// Interior edges are curve-fitted (`CurveFitter`) and faired (`CurveFairing`); border
-/// edges stay exactly on the canvas border. Coordinates are snapped to
+/// Interior edges are curve-fitted (`CurveFitter`) and faired (`CurveFairing`), or follow a
+/// painter's line as drawn (`EdgeGuides`); border edges stay exactly on the canvas border. Coordinates are snapped to
 /// `Template.coordinateQuantum` so every later geometric predicate is exact. Curves of
 /// very thin features may cross their neighbours; the repair loop detects any crossing,
 /// touching or change of edge order around a junction and steps just the offending edges
@@ -91,9 +91,11 @@ struct SmoothingResult {
 /// near its raster seed down the same chain until it holds.
 struct EdgeSmoother {
     /// Edge shapes in order of preference; the repair loop moves offending edges down.
-    enum Shape: UInt8 { case faired = 0, fitted = 1, midpoints = 2, lattice = 3 }
+    enum Shape: UInt8 { case drawn = 0, faired = 1, fitted = 2, midpoints = 3, lattice = 4 }
 
     let graph: BoundaryGraph
+    /// The paths of the edges that follow a painter's line (`EdgeGuides`), which start `drawn`.
+    let guided: [Int: [SIMD2<Double>]]
     let alphaMax: Double
     let minCornerAngle: Double
     let cornerRadius: Double
@@ -105,8 +107,9 @@ struct EdgeSmoother {
     /// 0.5 uses potrace's default corner threshold; above that corners are kept but rounded
     /// with growing fillets and curves are faired more strongly. (Raising the threshold
     /// instead would bend long straight sides into the curves around their corners.)
-    init(graph: BoundaryGraph, smoothness: Float) {
+    init(graph: BoundaryGraph, smoothness: Float, guides: [[SIMD2<Float>]] = []) {
         self.graph = graph
+        guided = EdgeGuides.paths(graph: graph, guides: guides)
         let s = Double(min(max(smoothness, 0), 1))
         alphaMax = 0.6 + 0.8 * min(s, 0.5)
         minCornerAngle = 35 + 40 * s
@@ -129,6 +132,7 @@ struct EdgeSmoother {
         var repairs = 0
         let edgeCount = graph.edgeCount
         var shapes = [UInt8](repeating: Shape.faired.rawValue, count: edgeCount)
+        for e in guided.keys { shapes[e] = Shape.drawn.rawValue }
         // Waves of edges keep cancellation responsive.
         var first: (points: [SIMD2<Float>], counts: [Int32]) = ([], [])
         for start in stride(from: 0, to: edgeCount, by: 1024) {
@@ -299,11 +303,14 @@ struct EdgeSmoother {
         w.scratch.removeAll(keepingCapacity: true)
         var shape = requested
         if graph.edgeRight[e] == BoundaryEdge.outside { shape = .lattice }
+        if shape == .drawn && guided[e] == nil { shape = .faired }
         if shape == .faired || shape == .fitted {
             let ok = closed ? w.fitter.fitClosed(lattice, into: &w.dense) : w.fitter.fitOpen(lattice, into: &w.dense)
             if !ok { shape = .midpoints }
         }
         switch shape {
+        case .drawn:
+            w.scratch.append(contentsOf: guided[e] ?? [])
         case .faired:
             w.fairing.fair(w.dense, closed: closed, into: &w.scratch)
         case .fitted:

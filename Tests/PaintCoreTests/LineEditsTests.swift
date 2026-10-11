@@ -370,6 +370,35 @@ struct LineEditsTests {
         }
     }
 
+    /// A shape the painter draws bounds its area as drawn, its points too, and its line is drawn
+    /// where it was drawn, not as the smoothed outline of the pixels it closes: a star filled in
+    /// the sky, five points 14 units out, its notches 6 in.
+    @Test func aDrawnShapeBoundsItsAreaAsDrawn() throws {
+        let centre = SIMD2<Float>(100, 26)
+        let star = (0...10).map { k -> SIMD2<Float> in
+            let a = Float(k % 10) * .pi / 5 - .pi / 2, r: Float = k % 2 == 0 ? 14 : 6
+            return centre + r * SIMD2(cos(a), sin(a))
+        }
+        let out = try Self.generate([Self.draw(star), LineEdit(kind: .fill, points: Self.path([centre]))])
+        let t = out.template
+        expectValid(t, minLabelRadius: LabelSizing.minimumRadius)
+        #expect(out.vectorStats.labelRoomUnmet == 0)
+        let area = try #require(t.region(at: centre))
+        #expect(t.isDetailRegion(area))
+        let outline = t.polygons(ofRegion: area).flatMap { $0 }
+        for corner in star.dropLast() {
+            #expect(outline.map { simdLength($0 - corner) }.min()! < 0.02, "The area's outline misses the star's point \(corner)")
+            #expect(Self.inkDistance(t, corner) < 0.02, "The drawing misses the star's point \(corner)")
+        }
+        func distance(_ p: SIMD2<Float>) -> Float {
+            zip(star, star.dropFirst()).map { a, b in
+                let ab = b - a, s = min(max(simdDot(p - a, ab) / simdLengthSquared(ab), 0), 1)
+                return simdLength(p - (a + ab * s))
+            }.min()!
+        }
+        #expect(outline.allSatisfy { distance($0) < 0.02 }, "The area's outline strays from the star")
+    }
+
     /// Points along every drawn line of a template (as `inkDistance` measures), about a unit
     /// apart.
     static func inkPoints(_ t: Template) -> [SIMD2<Float>] {

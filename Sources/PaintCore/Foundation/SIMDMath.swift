@@ -2,3 +2,6 @@
 @inline(__always) func simdDot(_ a: SIMD2<Float>, _ b: SIMD2<Float>) -> Float { a.x * b.x + a.y * b.y }
 @inline(__always) func simdLengthSquared(_ a: SIMD2<Float>) -> Float { a.x * a.x + a.y * a.y }
 @inline(__always) func simdLength(_ a: SIMD2<Float>) -> Float { simdLengthSquared(a).squareRoot() }
+@inline(__always) func simdDot(_ a: SIMD2<Double>, _ b: SIMD2<Double>) -> Double { a.x * b.x + a.y * b.y }
+@inline(__always) func simdLengthSquared(_ a: SIMD2<Double>) -> Double { a.x * a.x + a.y * a.y }
+@inline(__always) func simdLength(_ a: SIMD2<Double>) -> Double { simdLengthSquared(a).squareRoot() }

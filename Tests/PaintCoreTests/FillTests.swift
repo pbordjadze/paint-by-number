@@ -121,6 +121,24 @@ struct FillTests {
         #expect(t.regions[sky].colorIndex == plain.regions[plain.region(at: SIMD2<Float>(100, 20))!].colorIndex)
     }
 
+    /// A fill makes the whole shape it is in one area, whatever paints the shape held: a
+    /// rectangle drawn across the horizon, on a blank edge map (no line there but the
+    /// rectangle's), filled from the sky, is one detail area of the sky's color, ground and all.
+    @Test func aFillTakesTheWholeShape() throws {
+        let blank = EdgeMap(width: 128, height: 96, values: [UInt8](repeating: 0, count: 128 * 96))
+        let corners = [SIMD2<Float>(94, 60), SIMD2(114, 60), SIMD2(114, 84), SIMD2(94, 84), SIMD2(94, 60)]
+        let input = LineArtInput(edges: blank, edits: [LineEditsTests.draw(corners), Self.fill(SIMD2(104, 66))])
+        let plain = try LineArtTests.generate(LineArtTests.settings(), photo: Self.photo(), input: LineArtInput(edges: blank))
+        let t = try LineArtTests.generate(LineArtTests.settings(), photo: Self.photo(), input: input).template
+        expectValid(t)
+        let area = try #require(t.region(at: SIMD2<Float>(104, 66)))
+        #expect(t.region(at: SIMD2<Float>(104, 79)) == area, "The ground inside the rectangle stayed apart")
+        #expect(t.detailRegions == [UInt32(area)])
+        let sky = try #require(plain.template.region(at: SIMD2<Float>(104, 66)))
+        #expect(t.palette[Int(t.regions[area].colorIndex)] == plain.template.palette[Int(plain.template.regions[sky].colorIndex)])
+        #expect(t.region(at: SIMD2<Float>(104, 90)) != area && t.region(at: SIMD2<Float>(104, 55)) != area)
+    }
+
     /// Without fills a template is as it was, with no detail areas and no `DETL` chunk; fills
     /// off the canvas keep nothing; the same fills give the same bytes.
     @Test func withoutFillsNothingChanges() throws {

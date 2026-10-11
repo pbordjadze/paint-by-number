@@ -4,17 +4,15 @@ import UIKit
 
 /// What the painter did on the Refine screen that the template doesn't show yet, in the order
 /// they did it, over the drawing in `rect` (view coordinates): lines drawn in the drawing's own
-/// ink and weight, and the eraser's passes and the lines tapped away showing the paper or the
-/// photo beneath, so whatever they took out is gone at once. `trace` is the pen's line or the
-/// eraser's pass still under the finger; while the eraser is down a ring shows its reach, and
-/// rings mark where the Smart Pen's ends will join (`joins`).
+/// ink and weight, and the eraser's passes and the lines tapped away showing the paper, photo or
+/// painting beneath, so whatever they took out is gone at once. `trace` is the pen's line, the
+/// shape or the eraser's pass still under the finger; while the eraser is down a ring shows its
+/// reach.
 struct RefineInkLayer: View {
     let lines: [TemplateRefinements.Line]
     let trace: [SIMD2<Float>]?
-    /// The trace is the line as it will be drawn (the Smart Pen's), not the finger's samples.
+    /// The trace is the line as it will be drawn (a shape), not the finger's samples.
     let traceIsDrawn: Bool
-    /// Where the pen's ends will join lines.
-    let joins: [SIMD2<Float>]
     /// The trace is the eraser's, not the pen's.
     let erasing: Bool
     /// The eraser's reach either side of its pass, a fraction of the picture's long side.
@@ -22,13 +20,14 @@ struct RefineInkLayer: View {
     let rect: CGRect
     /// The drawing's line width, in points.
     let lineWidth: CGFloat
-    /// The photo, when it shows beneath the drawing; nil: the paper does.
-    let photo: CGImage?
+    /// The photo or the painting, when it shows beneath the drawing; nil: the paper does.
+    let beneath: CGImage?
+    /// The ink is edged in white, as the drawing is over the photo.
+    let halo: Bool
 
     var body: some View {
         let lines = lines, trace = trace, erasing = erasing, eraserRadius = eraserRadius, rect = rect
-        let lineWidth = lineWidth, photo = photo, traceIsDrawn = traceIsDrawn, joins = joins
-        let joinColor = Theme.signature
+        let lineWidth = lineWidth, beneath = beneath, halo = halo, traceIsDrawn = traceIsDrawn
         Canvas { context, _ in
             guard rect.width > 0, rect.height > 0 else { return }
             let long = max(rect.width, rect.height)
@@ -44,19 +43,19 @@ struct RefineInkLayer: View {
                 return path
             }
             func ink(_ path: Path) {
-                if photo != nil {
+                if halo {
                     canvas.stroke(path, with: .color(.white.opacity(0.75)), style: Self.style(lineWidth + 2.5))
                 }
                 canvas.stroke(path, with: .color(LineArtDrawing.ink), style: Self.style(lineWidth))
             }
             // What lies beneath the drawing, over `covered`.
             func uncover(_ covered: Path) {
-                var beneath = canvas
-                beneath.clip(to: covered)
-                if let photo {
-                    beneath.draw(Image(decorative: photo, scale: 1), in: rect)
+                var under = canvas
+                under.clip(to: covered)
+                if let beneath {
+                    under.draw(Image(decorative: beneath, scale: 1), in: rect)
                 } else {
-                    beneath.fill(Path(rect), with: .color(LineArtDrawing.paper))
+                    under.fill(Path(rect), with: .color(LineArtDrawing.paper))
                 }
             }
             func erase(_ path: Path, radius: Float) {
@@ -71,7 +70,7 @@ struct RefineInkLayer: View {
                     erase(path, radius: line.radius)
                 case .eraseLine:
                     // The line itself, its own path, and not what meets it at its ends.
-                    let width = lineWidth + (photo == nil ? 1.5 : 4)
+                    let width = lineWidth + (halo ? 4 : 1.5)
                     uncover(path.strokedPath(StrokeStyle(lineWidth: width, lineCap: .butt, lineJoin: .round)))
                 case .fill:
                     // `RefineFillLayer` shows fills.
@@ -90,13 +89,6 @@ struct RefineInkLayer: View {
                     ink(traceIsDrawn ? polyline(points) : Path(PenPath.path(points)))
                 }
             }
-            // A ring round each join, wider than the line, so the join shows through it.
-            let r = max(2.5 * lineWidth, 5)
-            for join in joins.map(point) {
-                let ring = Path(ellipseIn: CGRect(x: join.x - r, y: join.y - r, width: 2 * r, height: 2 * r))
-                canvas.fill(ring, with: .color(joinColor.opacity(0.18)))
-                canvas.stroke(ring, with: .color(joinColor), lineWidth: 1.5)
-            }
         }
         .allowsHitTesting(false)
     }
@@ -111,7 +103,8 @@ struct RefineInkLayer: View {
 /// multiplied in so the drawing's ink stays on top and the paper or photo shows through, and a
 /// swatch of the photo's color (`LineEdit.photoColor`, what the pipeline paints it with) where
 /// each fill the template doesn't have yet was tapped, until the template that has it comes. An
-/// area whose fill was cleared since shows no more.
+/// area whose fill was cleared since shows no more. Over the painting (`showsAreas` off) the
+/// areas are painted already: only the swatches show.
 struct RefineFillLayer: View, Equatable {
     let base: CreateModel.Preview?
     /// The fills of the refinements, in order.
@@ -119,6 +112,7 @@ struct RefineFillLayer: View, Equatable {
     /// The photo the pipeline reads, for the swatches' color; it is the same while Refine is open.
     let photo: RGBAImage?
     let rect: CGRect
+    var showsAreas = true
 
     /// How opaque an area's paint is laid over the drawing.
     static let areaOpacity: Double = 0.75
@@ -127,10 +121,11 @@ struct RefineFillLayer: View, Equatable {
 
     nonisolated static func == (a: RefineFillLayer, b: RefineFillLayer) -> Bool {
         a.base?.id == b.base?.id && a.fills == b.fills && a.rect == b.rect && (a.photo == nil) == (b.photo == nil)
+            && a.showsAreas == b.showsAreas
     }
 
     var body: some View {
-        let areas = Self.areas(base?.template, fills: fills), rect = rect
+        let areas = showsAreas ? Self.areas(base?.template, fills: fills) : [], rect = rect
         let made = (base?.refinements.lines ?? []).filter { $0.kind == .fill }
         let swatches = fills.filter { !made.contains($0) && !$0.points.isEmpty }.compactMap { fill -> (SIMD2<Float>, Color)? in
             guard let photo else { return nil }

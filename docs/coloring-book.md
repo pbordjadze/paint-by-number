@@ -172,6 +172,13 @@ the barn, 3 px. It costs a refined painting a second vectorizing, about 40% more
   inside a cell, the cell's numbers keep off it (`LabelKeepOut`, as they keep off writing): a
   number the line would cross out moves to the spot of the cell farthest from its outline and
   the line, where that spot holds a legible one.
+- A drawn line keeps its shape in the template: where it bounds a cell, the edge along it takes
+  its path (`EdgeGuides`: the edge's pixel outline keeps within `reach`, 1.75, of the line, and
+  its ends, the junctions it shares, within 2.5), joined to the edge's end corners, instead of
+  the curve fitted to the pixels, so a star keeps its points as outline and as painted area
+  (`LineEditsTests.aDrawnShapeBoundsItsAreaAsDrawn`); the repair loop steps such an edge down
+  like any other where the path would cross a neighbour. Inside a cell it is an interior stroke
+  along its own path.
 - The eraser's pass takes out every point within its reach of the lines made before it (the
   app's and those drawn earlier; a line drawn over an erased place stays), leaving no piece
   shorter than `LineLayering.minimumRun`. No edge is drawn where it passed but along a line drawn
@@ -190,11 +197,15 @@ the barn, 3 px. It costs a refined painting a second vectorizing, about 40% more
   undrawn ones goes (the reach of the lines meeting an edge's ends), then a gap that short is
   drawn (but where the painter erased), so an edge still reaches its junctions.
 - A fill (`LineEdit.Kind.fill`, one point) changes no line. Once the lines have split the paint
-  (`CellMap.split`), the cell under it is kept (`CellMap.fill`; on a line, the nearest cell
-  within 2 px): it takes the photo's color there (`LineEdit.photoColor`: the median, channel by
+  (`CellMap.split`), the shape under it becomes one kept cell (`CellMap.fill`; on a line, the
+  nearest cell within 2 px): every cell the lines enclose with it, whatever paints they had, so a
+  shape drawn across a boundary between two paints fills whole
+  (`FillTests.aFillTakesTheWholeShape`); where that area reaches the frame (a shape left open,
+  or none) only the cell under it, so a fill never runs into the paints of the background. It
+  takes the photo's color there (`LineEdit.photoColor`: the median, channel by
   channel in OKLab, of the pixels within 1/800 of the photo's long side, as the app's swatch
   shows it), as the paint within a just-noticeable difference of it (0.02) or else a new paint
-  of that color, added last so no other number changes. A later fill of the cell replaces an
+  of that color, added last so no other number changes. A later fill of the shape replaces an
   earlier one. A kept cell is merged into nothing for its size, its thinness, a close paint or
   its own paint (`mergeSmallWithinAreas`, `mergeTiny`, `mergeCloseColors`, `joinSamePaint`);
   short of its room inside its enclosed area it takes its neighbours there in, so the shape the
@@ -206,8 +217,8 @@ the barn, 3 px. It costs a refined painting a second vectorizing, about 40% more
   even for that merges as any cell does, and no area is kept.
   The template lists the kept areas (`Template.detailRegions`, the `DETL` chunk), so every
   renderer draws their numbers down to that floor and the painter reads them zoomed in. A fill
-  in a shape left open keeps the cell around it: the area floods, plainly, and the painter takes
-  it back.
+  in a shape left open keeps the cell around it: it floods, plainly, and the painter takes it
+  back.
 
 A painter's Annunciation (Fra Angelico; 150 colors, detail 1, smoothness 0) has gold stars about
 10 px across in a 950-px photo, on a dark blue arch. She outlined them in Refine, and a star

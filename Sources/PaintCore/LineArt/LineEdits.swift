@@ -16,11 +16,12 @@ public struct LineEdit: Sendable, Equatable {
         /// line tapped away, the path its own): what only crosses the path, or goes on past its
         /// ends, stays.
         case eraseLine
-        /// The cell under the point (its one point) made an area of its own, painted the photo's
-        /// color there (`photoColor(at:in:)`) and kept whatever its size, its number allowed down
-        /// to `LabelSizing.detailMinimumRadius` (a detail area, `Template.detailRegions`). A
-        /// later fill of the same cell replaces an earlier one; a shape left open fills the cell
-        /// around it.
+        /// The shape under the point (its one point) made an area of its own: everything the lines
+        /// enclose there, painted the photo's color at the point (`photoColor(at:in:)`) and kept
+        /// whatever its size, its number allowed down to `LabelSizing.detailMinimumRadius` (a
+        /// detail area, `Template.detailRegions`; `CellMap.fill`). A later fill of the same shape
+        /// replaces an earlier one; where the lines enclose nothing short of the frame (a shape
+        /// left open), the cell around the point.
         case fill
     }
 

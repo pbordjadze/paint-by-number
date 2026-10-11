@@ -356,16 +356,20 @@ struct LineArtLayer: View, Equatable {
     /// The picture's size relative to the painting fitted on its canvas.
     let scale: CGFloat
     var overPhoto = false
+    /// Over a painting (Refine's): no paper and no white edge.
+    var overPaint = false
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
 
     nonisolated static func == (a: LineArtLayer, b: LineArtLayer) -> Bool {
         a.drawing.id == b.drawing.id && a.picture == b.picture && a.scale == b.scale && a.overPhoto == b.overPhoto
+            && a.overPaint == b.overPaint
     }
 
     var body: some View {
         let drawing = drawing, picture = picture, scale = scale, lineWeight = lineWeight, overPhoto = overPhoto
+        let overPaint = overPaint
         Canvas { context, size in
-            if !overPhoto { context.fill(Path(picture), with: .color(LineArtDrawing.paper)) }
+            if !overPhoto && !overPaint { context.fill(Path(picture), with: .color(LineArtDrawing.paper)) }
             let units = drawing.size
             let shown = picture.intersection(CGRect(origin: .zero, size: size))
             guard units.width > 0, units.height > 0, !shown.isNull, !shown.isEmpty else { return }

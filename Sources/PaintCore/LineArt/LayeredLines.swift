@@ -90,6 +90,9 @@ enum LayeredLines {
         /// The stretches of the painter's lines drawn inside a cell, in canvas units: numbers
         /// keep off them (`LabelKeepOut`), as the cell's own pole may lie right on one.
         var drawnInterior: [[SIMD2<Float>]] = []
+        /// The painter's lines as the edits left them, in canvas units: the edges along them take
+        /// their path (`EdgeGuides`), so a shape bounds its area as drawn.
+        var guides: [[SIMD2<Float>]] = []
         /// The regions the painter's fills keep (`Template.detailRegions`), ascending.
         var detailRegions: [UInt32] = []
     }
@@ -325,7 +328,11 @@ enum LayeredLines {
             segmentation: split, boundaryLines: boundary, interiorLines: interior, drawingInterior: drawingInterior,
             stats: stats, exact: edited != nil,
             erased: edited.map { LineEdits.erasedPlaces($0.drawing, near: annotateNear, width: w, height: h) },
-            drawnInterior: drawnInterior, detailRegions: detailRegions)
+            drawnInterior: drawnInterior,
+            guides: edited.map { edited in
+                zip(edited.drawing.lines, edited.drawing.origin).filter { $0.1 >= 0 }.map { $0.0.points.map { $0 + SIMD2(0.5, 0.5) } }
+            } ?? [],
+            detailRegions: detailRegions)
     }
 
     /// The lines the template made from `plan` draws (`annotate`): its drawn edges and the

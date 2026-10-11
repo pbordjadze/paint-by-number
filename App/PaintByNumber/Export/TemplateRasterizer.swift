@@ -45,6 +45,8 @@ nonisolated enum TemplateRasterizer {
         var maximumNumberFraction: CGFloat = 1.0 / 64
         var paper = SIMD3<Float>(1, 1, 1)
         var lines = Lines.screen
+        /// Draw a coloring book's drawing (off: the paint alone, for a drawing laid over it).
+        var drawsDrawing = true
         /// How heavy a coloring book's drawing is; nil = Settings › Line Weight.
         var lineWeight: LineWeight?
 
@@ -57,6 +59,8 @@ nonisolated enum TemplateRasterizer {
             hidesOutlinesBetweenPainted: false)
         /// Painted preview (create flow): no outlines, only a coloring book's drawing.
         static let painting = Style(paintAll: true, outlineWidth: 0)
+        /// Every area in its paint and nothing else: Refine's painting, under its own drawing.
+        static let paintedAreas = Style(paintAll: true, outlineWidth: 0, drawsDrawing: false)
         /// Printable template (PDF): hairlines and small numbers. `PDFExporter` picks a scale
         /// at which the smallest number is still legible on paper.
         static let printable = Style(
@@ -122,7 +126,7 @@ nonisolated enum TemplateRasterizer {
         } else {
             drawVectorFills(t, painted: flags, style: style, in: ctx, scale: scale)
             if let lines = DrawableLineArt(t) {
-                drawBookOutlines(t, lines: lines, style: style, in: ctx, scale: scale)
+                if style.drawsDrawing { drawBookOutlines(t, lines: lines, style: style, in: ctx, scale: scale) }
             } else if style.outlineWidth > 0 {
                 drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale)
             }
