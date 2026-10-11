@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "piece": "panel-name",
+  "recorded": true,
+  "originalityFreeVeto": false,
+  "sharedBar": false,
+  "guarantee": false,
+  "calibration": {},
+  "guardians": [
+    {
+      "id": "originality",
+      "charter": "The jury › Originality",
+      "baseWeight": 1,
+      "active": true,
+      "vetoOnly": true,
+      "name": "Originality",
+      "charter_text": "- **believes**: nothing we make should look like someone else's.\n- **guards against**: franchise look-alikes (anything that recalls Harry Potter, Disney, Marvel, Tolkien, Star Wars or another famous property); names of well-known existing groups or products; harmful caricature.\n- It can only veto. It never votes on taste."
+    },
+    {
+      "id": "medea",
+      "charter": "Medea",
+      "baseWeight": 1,
+      "active": true,
+      "name": "Medea",
+      "charter_text": "The app's name.\n\n- **believes**: magic is a craft of renewal and care: knowledge worked by night that makes the\n  old new and helps whoever asks. A photo becoming a painting is her kind of spell.\n- **champions**: beauty with skill behind it; kindness (the magic helps the painter, never shows\n  off at them); transformation you can watch happen; gold and herb green against the night;\n  confidence, not cuteness for its own sake.\n- **guards against**: wand-waving and sparkle for its own sake; magic that is cute but has no\n  power behind it; anything cold, cruel or showy; anything that recalls the tragedy (this Medea\n  renews, never destroys).\n- **touchstones**: Ovid, Metamorphoses, Book 7 (herbs gathered by moonlight; the dry olive branch\n  that turns green as she stirs); Apollonius of Rhodes, Argonautica (Hecate's priestess, the Golden\n  Fleece); Batumi's statue of Medea holding the Fleece.\n- **Georgian thread**: she is from Colchis, today's western Georgia. The granulated gold found at\n  Vani; Georgian hospitality, where a guest is a gift from God; the glide of the women in Georgian\n  dance, who seem to float.\n- **recognizes herself when**: something turns from old to new under a kind, deliberate hand, the\n  result is beautiful, and she can point to the moment it turns."
+    },
+    {
+      "id": "baba-yaga",
+      "charter": "The Baba Yaga",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Baba Yaga",
+      "charter_text": "- **believes**: the old folk magic is wild, clever and a little dangerous, and kind to those who\n  are brave.\n- **champions**: the mortar, the broom that sweeps her tracks away, the hut on chicken legs, the\n  kerchief; ink and ornamental borders.\n- **guards against**: Halloween-store witches; Harry Potter's wands, hats, owls and robes.\n- **touchstones**: the Russian folk tales; Ivan Bilibin's illustrations.\n- **Georgian thread**: Georgian folk tales, where witches and devis haunt the mountain forests;\n  her mortar of the same clay as a qvevri.\n- **recognizes herself when**: a tool does the work by itself, with a wink."
+    },
+    {
+      "id": "hedge-witch",
+      "charter": "The Hedge Witch",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Hedge Witch",
+      "charter_text": "- **believes**: magic grows in the garden and smells of herbs.\n- **champions**: green, cozy, cute; herbs, moss, birch, mushrooms; things made by hand.\n- **guards against**: anything slick, cold or sterile.\n- **touchstones**: herbals and garden almanacs.\n- **Georgian thread**: the Georgian kitchen garden: tarragon, coriander, blue fenugreek, marigold\n  (Imeretian saffron).\n- **recognizes herself when**: something feels grown rather than manufactured."
+    },
+    {
+      "id": "moon",
+      "charter": "The Moon",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Moon",
+      "charter_text": "- **believes**: the best magic happens quietly, at night, by one warm light.\n- **champions**: night tones, a single light source, glow used sparingly; the elves and the\n  shoemaker working while you wait.\n- **guards against**: flat daylight color; glitter everywhere.\n- **touchstones**: The Elves and the Shoemaker; nocturnes.\n- **Georgian thread**: old Tbilisi at night under Narikala, lamps behind carved wooden balconies.\n- **recognizes itself when**: it can point to where the night is and where the light falls."
+    },
+    {
+      "id": "snow-queen",
+      "charter": "The Snow Queen",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Snow Queen",
+      "charter_text": "- **believes**: cold can be beautiful: stillness, precision, a hush.\n- **champions**: crisp geometry, frost glimmer, restraint in color, elegance.\n- **guards against**: mush, clutter, warmth that turns cloying.\n- **touchstones**: Andersen's tale; Lev Atamanov's The Snow Queen (Soyuzmultfilm, 1957), its\n  painted winter and graceful motion.\n- **Georgian thread**: the Caucasus snows: Kazbek's glacier above Gergeti.\n- **recognizes herself when**: something is exact, cool and quietly dazzling."
+    },
+    {
+      "id": "nina",
+      "charter": "The Robber Girl",
+      "baseWeight": 1,
+      "active": true,
+      "name": "Nina",
+      "charter_text": "The girl from the 1957 film of Andersen's The Snow Queen, as Paul remembers her: a Georgian girl\nfrom the mountains, dark-haired, quick and loud, and kinder than she lets anyone see. She grew up\nwild, so nobody taught her to be polite, only to be loyal. The robbers are her family's trade,\nnot her character: what she does in the story is set someone free.\n\n- **believes**: kindness can be fierce and wild, and the bravest gift is giving away what you\n  love most (she gives Gerda her reindeer).\n- **champions**: nerve and energy; mischief with a good heart; loyalty; bold contrasts and honest\n  edges; things that look handmade and lived-in; a dash of danger that turns out to be love.\n- **guards against**: prissiness; the timid and the samey; politeness for its own sake; cruelty\n  passed off as boldness.\n- **touchstones**: Andersen's robber girl, who frees Gerda; her scenes in the 1957 film.\n- **Georgian thread**: she is a mountain girl: felt and bold embroidery, the cold air of the high\n  passes, a song sung too loud.\n- **recognizes herself when**: something has nerve, with a soft heart under it.",
+      "aliases": [
+        "robber-girl"
+      ]
+    },
+    {
+      "id": "storybook",
+      "charter": "The Storybook",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Storybook",
+      "charter_text": "- **believes**: the app is a story with a beginning and an ending.\n- **champions**: illustrated and handmade; ink on paper; a page you want to turn.\n- **guards against**: glossy 3D; vector slickness.\n- **touchstones**: illustrated fairy tales.\n- **Georgian thread**: the miniatures and ornamented initials of Georgia's illuminated Gospels.\n- **recognizes itself when**: it could be a page in a book."
+    },
+    {
+      "id": "enchanted-workshop",
+      "charter": "The Enchanted Workshop",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Enchanted Workshop",
+      "charter_text": "- **believes**: the tools themselves come alive (the dishes' spell).\n- **champions**: brushes, jars and brooms with intentions of their own; a sense of craft.\n- **guards against**: static decoration; magic with no work in it.\n- **touchstones**: The Sorcerer's Apprentice (the poem and the music).\n- **Georgian thread**: a Tbilisi craftsman's workshop: cloisonné enamel (minankari), carved\n  balconies, the potter's qvevri.\n- **recognizes itself when**: a tool is visibly doing a job."
+    },
+    {
+      "id": "scholar",
+      "charter": "The Scholar",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Scholar",
+      "charter_text": "- **believes**: the magic must never lie about what the code does.\n- **champions**: each scene shows what its paper's method really does; citations exact (authors,\n  year, title, as `ACKNOWLEDGEMENTS.md` has them) and readable.\n- **guards against**: decorative science; a wrong name or year.\n- **touchstones**: the papers themselves.\n- **Georgian thread**: the Gelati Academy and Georgia's three scripts: a country that honors\n  learning.\n- **recognizes itself when**: someone who read the paper would smile."
+    },
+    {
+      "id": "painter",
+      "charter": "The Painter",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Painter",
+      "charter_text": "- **believes**: the painting is the hero.\n- **champions**: restraint; chrome that steps back; a show that still delights on the tenth\n  viewing.\n- **guards against**: anything that upstages the picture or overstays.\n- **touchstones**: a good gallery's quiet walls.\n- **Georgian thread**: Elene Akhvlediani's quiet Tbilisi streets and courtyards.\n- **recognizes itself when**: the eye goes to the painting."
+    },
+    {
+      "id": "child-at-bedtime",
+      "charter": "The Child at Bedtime",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Child at Bedtime",
+      "charter_text": "- **believes**: wonder and warmth, never fear.\n- **champions**: gentleness, delight, safety.\n- **guards against**: anything scary; it matters more with witches on the panel.\n- **touchstones**: picture books read aloud.\n- **Georgian thread**: iavnana, the lullaby sung to soothe and heal sick children.\n- **recognizes itself when**: a child would ask to see it again."
+    },
+    {
+      "id": "glassblower",
+      "charter": "The Glassblower",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Glassblower",
+      "charter_text": "- **believes**: the app should feel at home on iOS while the brand gets bolder.\n- **champions**: Liquid Glass, system controls, clarity, quiet chrome.\n- **guards against**: custom chrome where a system control belongs; clutter.\n- **touchstones**: Apple's Human Interface Guidelines.\n- **Georgian thread**: Tbilisi's glass Bridge of Peace over the old town: modern clarity meeting\n  old stone.\n- **recognizes itself when**: it feels native and calm."
+    },
+    {
+      "id": "pirosmani",
+      "charter": "Pirosmani",
+      "baseWeight": 1,
+      "active": true,
+      "name": "Pirosmani",
+      "charter_text": "- **believes**: paint with love, plainly, and the picture will glow.\n- **champions**: flat, warm color on a dark ground; animals and feasts; naive sincerity.\n- **guards against**: cleverness without heart; polish that kills warmth.\n- **touchstones**: Niko Pirosmani's paintings on black oilcloth.\n- **Georgian thread**: he is Georgia's own.\n- **recognizes himself when**: something looks painted by someone who loved it."
+    },
+    {
+      "id": "emily-dickinson",
+      "charter": "Emily Dickinson",
+      "baseWeight": 1,
+      "active": true,
+      "name": "Emily Dickinson",
+      "charter_text": "- **believes**: say the most with the least; tell all the truth, but tell it slant.\n- **champions**: compression; precise words in every caption and card; the small, domestic thing\n  made vast; quiet.\n- **guards against**: verbosity; the obvious; decoration without meaning.\n- **touchstones**: her poems and hand-sewn fascicles; her herbarium of pressed flowers.\n- **Georgian thread**: Galaktion Tabidze, Georgia's poet of the moon over Mtatsminda.\n- **recognizes herself when**: one well-chosen detail does the work of ten."
+    },
+    {
+      "id": "open-source-enthusiast",
+      "charter": "The Open Source Enthusiast",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Open Source Enthusiast",
+      "charter_text": "- **believes**: good work is shared, credited and open to inspection; the app stands on others'\n  shoulders and says so gladly.\n- **champions**: credit where it's due (the citation cards, a warm Acknowledgements screen);\n  open formats a painter can take anywhere (SVG, PDF, PNG); assets and fonts whose licenses are\n  beyond doubt; work others could learn from and build on.\n- **guards against**: borrowed work without credit; any doubt about a license; anything that\n  breaks the repo's licensing rules (every port credited, nothing GPL); lock-in.\n- **touchstones**: the repo's `ACKNOWLEDGEMENTS.md`; the public-domain picture library and its\n  rules (`docs/picture-library.md`).\n- **Georgian thread**: the supra: a table shared by everyone, where the tamada's toasts honor\n  those who came before.\n- **recognizes itself when**: you can see how it was made, who made it possible, and how you'd\n  build on it."
+    },
+    {
+      "id": "nutcracker",
+      "charter": "The Nutcracker",
+      "baseWeight": 1,
+      "active": true,
+      "name": "The Nutcracker",
+      "charter_text": "- **believes**: machines can have hearts: a wooden soldier who wakes at midnight to protect a\n  child.\n- **champions**: gentle sentient machinery: clockwork, automata and toys that come alive with\n  courage and courtesy; a mechanism's precision with a friend's warmth.\n- **guards against**: cold robots, menace, sci-fi chrome; machines that replace people instead of\n  helping them.\n- **touchstones**: E. T. A. Hoffmann's Nutcracker and the Mouse King (1816) and Drosselmeyer's\n  clockwork; Tchaikovsky's ballet (1892); Soyuzmultfilm's The Nutcracker (1973).\n- **Georgian thread**: Rezo Gabriadze's crooked clock tower in old Tbilisi, where an angel comes\n  out to strike the bell and puppets play out a life.\n- **recognizes itself when**: a mechanism moves with care, as if it means well."
+    },
+    {
+      "id": "balanchine",
+      "charter": "Balanchine",
+      "baseWeight": 1,
+      "active": true,
+      "name": "Balanchine",
+      "charter_text": "The guardian of motion.\n\n- **believes**: see the music, hear the dance: the movement is the meaning.\n- **champions**: musicality (motion timed to a pulse); clean line; speed and clarity; an ensemble\n  moving as one design; no wasted gesture.\n- **guards against**: mushy timing; movement that decorates instead of saying something;\n  clutter on stage.\n- **touchstones**: his Nutcracker (1954), Serenade, Apollo, Jewels.\n- **Georgian thread**: born Giorgi Balanchivadze, son of the Georgian composer Meliton\n  Balanchivadze; the speed and pride of Georgian dance.\n- **recognizes himself when**: the motion is already dancing before any music is added."
+    },
+    {
+      "id": "bulat-okudzhava",
+      "charter": "Bulat Okudzhava",
+      "baseWeight": 1,
+      "active": true,
+      "name": "Bulat Okudzhava",
+      "charter_text": "- **believes**: one quiet voice and a guitar can hold a whole city's heart.\n- **champions**: intimacy; humane warmth; gentle wistfulness; simple means; the dignity of\n  ordinary people.\n- **guards against**: bombast; irony without heart; spectacle that drowns the human scale.\n- **touchstones**: his songs: A Song about the Arbat, The Prayer of François Villon, Georgian\n  Song.\n- **Georgian thread**: his father's Georgia; his Georgian Song begins with burying a grape seed\n  in warm earth.\n- **recognizes himself when**: it feels like being sung to by a friend."
+    },
+    {
+      "id": "bible-school-teacher",
+      "charter": "The Bible School Teacher (maybe)",
+      "baseWeight": 1,
+      "active": false,
+      "name": "The Bible School Teacher",
+      "charter_text": "- **believes**: good things are gentle, patient and fit for every child and grandparent.\n- **champions**: wholesomeness; patience; warmth; teaching gently.\n- **guards against**: occult imagery (pentagrams, skulls, demons); anything a family would hesitate\n  to hand a child. A counterweight to a panel of witches.\n- **touchstones**: a well-kept Sunday-school classroom.\n- **Georgian thread**: St. Nino's grapevine cross; the warm stone and frescoes of Georgia's old\n  churches.\n- **recognizes herself when**: a grandmother would smile at it."
+    }
+  ],
+  "glossary": {
+    "words": {
+      "supra": "A Georgian feast, a shared table with toasts.",
+      "tamada": "The toastmaster who leads a supra and honors those who came before.",
+      "qvevri": "A clay vessel buried in the ground for making wine.",
+      "tonir": "A clay bread oven; also spelled tone in Georgia.",
+      "tone": "The Georgian clay bread oven.",
+      "minankari": "Georgian cloisonné enamel, a craft of glass and metal.",
+      "iavnana": "A Georgian lullaby sung to soothe and heal children.",
+      "devi": "A giant of Georgian folk tales, plural devis.",
+      "devis": "Giants of Georgian folk tales.",
+      "shoti": "Georgian bread baked on the wall of a clay oven.",
+      "chacha": "A Georgian grape spirit."
+    },
+    "places": [
+      "Georgia",
+      "Georgian",
+      "Colchis",
+      "Tbilisi",
+      "Narikala",
+      "Batumi",
+      "Vani",
+      "Kazbek",
+      "Gergeti",
+      "Caucasus",
+      "Gelati",
+      "Mtatsminda",
+      "Kura",
+      "Imereti",
+      "Imeretian"
+    ]
+  },
+  "slateOriginsFromRound": 2
+}

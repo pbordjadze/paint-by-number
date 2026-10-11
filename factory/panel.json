@@ -41,10 +41,13 @@
       "active": true
     },
     {
-      "id": "nina",
+      "id": "robber-girl",
       "charter": "The Robber Girl",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "aliases": [
+        "nina"
+      ]
     },
     {
       "id": "storybook",
