@@ -3,12 +3,20 @@ import SwiftUI
 
 /// The Marginarium: how Paint by Moonlight is made, told in chapters, with Pip, Codex's teapot,
 /// and Colophon, Claude's moth, near the top and one passage from each chapter and appendix
-/// (`MarginariumEntry`). A sheet from the gallery's toolbar.
+/// (`MarginariumEntry`). A sheet from the gallery's toolbar; each entry opens its native
+/// `MarginariumReaderView`, whose blocks come from the bundled MarginariumDocument manifest.
 struct MarginariumView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var path: [String] = []
+
+    init() {
+        #if DEBUG
+        if ShellDemo.current == .marginariumChapter { _path = State(initialValue: ["petForEveryGuardian"]) }
+        #endif
+    }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -28,14 +36,14 @@ struct MarginariumView: View {
                                     comment: "The Marginarium: the line above the list of chapters"))
                             .font(.callout)
                             .foregroundStyle(.secondary)
-                        ForEach(MarginariumEntry.chapters) { MarginariumEntryView(entry: $0) }
+                        ForEach(MarginariumEntry.chapters) { entryLink($0) }
                     }
 
                     VStack(alignment: .leading, spacing: 28) {
                         Text("Appendices")
                             .font(.display(.title2))
                             .accessibilityAddTraits(.isHeader)
-                        ForEach(MarginariumEntry.appendices) { MarginariumEntryView(entry: $0) }
+                        ForEach(MarginariumEntry.appendices) { entryLink($0) }
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -66,6 +74,12 @@ struct MarginariumView: View {
                 .frame(maxWidth: .infinity)
             }
             .background(Theme.paper)
+            .accessibilityIdentifier("marginarium-contents")
+            .navigationDestination(for: String.self) { id in
+                if let entry = (MarginariumEntry.chapters + MarginariumEntry.appendices).first(where: { $0.id == id }) {
+                    MarginariumReaderView(entry: entry)
+                }
+            }
             .navigationTitle("The Marginarium")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -76,6 +90,18 @@ struct MarginariumView: View {
         }
         .presentationDetents([.large])
         .tint(Theme.accent)
+        .transaction { transaction in
+            transaction.animation = nil
+            transaction.disablesAnimations = true
+        }
+    }
+
+    private func entryLink(_ entry: MarginariumEntry) -> some View {
+        NavigationLink(value: entry.id) {
+            MarginariumEntryView(entry: entry)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("marginarium-entry-\(entry.id)")
     }
 }
 
@@ -91,8 +117,14 @@ private struct MarginariumEntryView: View {
                     .font(.display(.title2))
                     .foregroundStyle(.tint)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.title)
-                        .font(.display(.title3, weight: .semibold))
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(entry.title)
+                            .font(.display(.title3, weight: .semibold))
+                        Image(systemName: "chevron.forward")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .accessibilityHidden(true)
+                    }
                     Text(entry.subtitle)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
