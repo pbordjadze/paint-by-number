@@ -31,7 +31,9 @@ nonisolated enum PaintingTimeText {
 
     /// "2 h 14 min", "35 min", "< 1 min".
     static func spent(_ seconds: TimeInterval) -> String {
-        let total = Int(seconds / 60)
+        let value = seconds / 60
+        // Double(Int.max) rounds up on 64-bit devices: test the bound before converting.
+        let total = value >= Double(Int.max) ? Int.max : (value > 0 ? Int(value) : 0)
         if total < 1 {
             return String(localized: "time.lessThanMinute", defaultValue: "< 1 min",
                           comment: "Painting time shorter than one minute")

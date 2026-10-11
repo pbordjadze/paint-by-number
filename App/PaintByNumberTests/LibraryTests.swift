@@ -201,6 +201,103 @@ struct LibraryTests {
         }
     }
 
+    @Test func damagedProgressTimesOpenAndAutosaveSafely() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(painted: [0, 2]))
+        let url = library.store.url(.progress, of: artwork.id)
+        var bytes = try Data(contentsOf: url)
+        withUnsafeBytes(of: Double(1e157)) { bytes.replaceSubrange(12..<20, with: $0) }
+        withUnsafeBytes(of: Float.greatestFiniteMagnitude) { bytes.replaceSubrange(28..<32, with: $0) }
+        try bytes.write(to: url)
+
+        let reloaded = makeLibrary()
+        let document = try await reloaded.loadForPainting(artwork.id)
+        #expect(document.notice == nil)
+        #expect(document.progress.log.map(\.region) == [0, 2])
+        #expect(document.progress.activeSeconds == PaintProgress.maximumActiveSeconds)
+        #expect(document.progress.log[0].time == Float(PaintProgress.maximumActiveSeconds))
+        let session = try PaintingSession(template: document.template, progress: document.progress)
+        reloaded.saveProgress(session.progress, for: artwork.id)
+        await reloaded.flush()
+
+        let nextLaunch = makeLibrary()
+        let card = try #require(nextLaunch.artwork(with: artwork.id))
+        #expect(card.paintedCount == 2 && card.activeSeconds == PaintProgress.maximumActiveSeconds)
+        #expect(!PaintingTimeText.spent(card.activeSeconds).isEmpty)
+        #expect(try await nextLaunch.loadForPainting(artwork.id).progress == document.progress)
+    }
+
+    @Test(arguments: [Artwork.currentFormat, 99])
+    func damagedMetadataTimesStillList(format: Int) async throws {
+        let artwork = try await makeLibrary().create(draft(painted: [0]))
+        let store = ArtworkStore(root: root)
+        let url = store.url(.meta, of: artwork.id)
+        let original = try Data(contentsOf: url)
+        let damagedSeconds: [Double] = [-10.0, 125 * 60, 1e157]
+        for seconds in damagedSeconds {
+            var fields = try #require(try JSONSerialization.jsonObject(with: original) as? [String: Any])
+            fields["activeSeconds"] = seconds
+            fields["format"] = format
+            let bytes = try JSONSerialization.data(withJSONObject: fields)
+            try bytes.write(to: url)
+            let reloaded = makeLibrary()
+            let card = try #require(reloaded.artwork(with: artwork.id))
+            #expect(card.activeSeconds == min(max(seconds, 0), PaintProgress.maximumActiveSeconds))
+            #expect(card.paintedCount == 1)
+            #expect(!PaintingTimeText.spent(card.activeSeconds).isEmpty)
+            if format == Artwork.currentFormat {
+                #expect(try await reloaded.loadForPainting(artwork.id).progress.isPainted(0))
+            } else {
+                await #expect(throws: Library.OpenError.needsNewerApp) { try await reloaded.loadForPainting(artwork.id) }
+            }
+            await reloaded.flush()
+            #expect(try Data(contentsOf: url) == bytes)
+        }
+    }
+
+    @Test func damagedRefinementPointsStillRegenerate() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft(painted: [0], photo: try stripesPhoto()))
+        let url = library.store.url(.refinements, of: artwork.id)
+        let bytes = Data(#"{"strokes":[{"kind":"more","radius":0.1,"points":[[1e16,0.5],[1e30,0.5]]}]}"#.utf8)
+        try bytes.write(to: url)
+
+        let reloaded = makeLibrary()
+        #expect(try await reloaded.loadForPainting(artwork.id).progress.isPainted(0))
+        let document = try await reloaded.regenerate(
+            artwork: artwork.id, settings: GenerationSettings(colorCount: 6, detail: 0,
+                                                             lineArt: LineArtSettings(style: .classic)))
+        #expect(document.template.regions.count > 0)
+        _ = try PaintingSession(template: document.template, progress: document.progress)
+        #expect(try Data(contentsOf: url) == bytes)
+        #expect(try await makeLibrary().loadForPainting(artwork.id).template == document.template)
+    }
+
+    @Test func templateDecompressionIsBounded() async throws {
+        let library = makeLibrary()
+        var item = draft()
+        item.template = Fixtures.stripes(count: 200, stripeWidth: 10)
+        let artwork = try await library.create(item)
+        let size = item.template.encoded().count
+        #expect(size > 64 * 1024, "Exercise growth beyond the initial decompression buffer")
+        #expect(try library.store.readTemplate(artwork.id, maximumBytes: size) == item.template)
+        #expect(throws: ArtworkStore.StoreError.unreadable("template decompression")) {
+            try library.store.readTemplate(artwork.id, maximumBytes: size - 1)
+        }
+        #expect(try await library.loadForPainting(artwork.id).template == item.template)
+
+        let oversized = Data(repeating: 0, count: 128 * 1024)
+        let compressed = try (oversized as NSData).compressed(using: .lzfse) as Data
+        try compressed.write(to: library.store.url(.template, of: artwork.id))
+        #expect(throws: ArtworkStore.StoreError.unreadable("template decompression")) {
+            try library.store.readTemplate(artwork.id, maximumBytes: 64 * 1024)
+        }
+        await #expect(throws: Library.OpenError.damaged(canRegenerate: false)) {
+            try await library.loadForPainting(artwork.id)
+        }
+        #expect(try Data(contentsOf: library.store.url(.template, of: artwork.id)) == compressed)
+    }
+
     /// Progress that exists but can't be read this time is not "missing": opening fails and
     /// nothing is written over it, so the painted areas survive to the next attempt.
     @Test func unreadableProgressIsKept() async throws {
