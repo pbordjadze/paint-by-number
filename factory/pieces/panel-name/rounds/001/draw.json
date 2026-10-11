@@ -1,0 +1,25 @@
+{
+  "round": 1,
+  "jury": [
+    "originality",
+    "baba-yaga",
+    "enchanted-workshop",
+    "nina",
+    "nutcracker",
+    "snow-queen"
+  ],
+  "proposers": [
+    "hedge-witch",
+    "storybook",
+    "scholar",
+    "open-source-enthusiast"
+  ],
+  "weights": {
+    "originality": 1.0,
+    "baba-yaga": 1.0,
+    "snow-queen": 1.0,
+    "nina": 1.0,
+    "enchanted-workshop": 1.0,
+    "nutcracker": 1.0
+  }
+}
