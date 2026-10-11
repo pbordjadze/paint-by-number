@@ -155,3 +155,92 @@ python3 -m unittest discover -s tools/factory -p test_taste.py
 python3 -m unittest discover -s tools/factory -p test_loop_kit.py
 # With pytest installed: python3 -m pytest tools/factory/test_taste.py tools/factory/test_loop_kit.py
 ```
+
+## Play before the Mac
+
+The `play` piece uses sequential turns rather than design candidates and a jury. Its settings
+are `factory/pieces/play/piece.toml` (move budget, recent-history length, player model and effort),
+with a brief and `moves.schema.json`. A session freezes these and the chosen guardian's charter.
+The kit's runners consume its jobs unchanged; the loop itself never calls a model.
+
+Moves are strict JSON objects, tagged with `do`. Unknown actions, extra or missing fields, wrong
+types, nonfinite numbers, and out-of-range area numbers are rejected with reasons:
+
+| Move | Example |
+| --- | --- |
+| Fill a numbered area | `{"do":"fill","area":1}` |
+| Tap an accessibility label | `{"do":"tap","label":"Paint 1"}` |
+| Drag in screenshot pixels | `{"do":"drag","from":{"x":20,"y":30},"to":{"x":80,"y":60},"steps":12}` |
+| Wait | `{"do":"wait","seconds":0.5}` |
+| Take another screenshot | `{"do":"screenshot"}` |
+
+Area and paint numbers are positive integers; `steps` is a positive integer. Coordinates and
+seconds are finite, nonnegative numbers. A driver state has exactly `screen` (nonempty string),
+`selected_paint` (positive paint number or `null`), `filled_areas` (unique area numbers starting at
+1), and `area_count` (nonnegative integer). Area numbers must fit the count. The move budget
+counts all accepted moves, including waits and screenshots. A session stops at that budget or
+when all areas are filled, including an initially complete picture.
+
+The portable `Driver` protocol in `play.py` exposes `screenshot() -> Path`, `state() -> dict`,
+`perform(move)`, and `settle()`. `perform` initiates the move; `settle` waits until screen and
+state can be read. A rejected move must leave the driver unchanged. The Mac's later driver
+implements this interface, including real wait timing. Python callers use
+`Session.create(outside_repo_path, driver, guardian_id, budget=100)`, then `job()` and `collect()`;
+`apply({"move":…, "reason":…})` is also available for canned playback.
+
+For Linux, a mock folder contains images and `recording.json`:
+
+```json
+{
+  "version": 1,
+  "initial": {
+    "screenshot": "000.png",
+    "state": {"screen":"painting", "selected_paint":1, "filled_areas":[], "area_count":1}
+  },
+  "turns": [{
+    "move": {"do":"fill", "area":1},
+    "screenshot": "001.png",
+    "state": {"screen":"painting", "selected_paint":1, "filled_areas":[1], "area_count":1}
+  }]
+}
+```
+
+Screenshot paths are relative to that folder and cannot escape it. The mock requires each
+recorded move exactly, advances on `settle`, and never sleeps for recorded waits. Unexpected
+moves and exhausted recordings are rejected. The CLI freezes the recording in the session's
+`driver/` folder so successive processes resume from the same inputs.
+
+```sh
+export LOOP_RUN=/root/factory-out/play-session
+factory/taste/loop play new --recording /root/factory-out/mock-picture --guardian moon --budget 100
+factory/taste/loop play jobs
+# Dispatch jobs/001/player-moon.json through a separate runner.
+# Save {"move":{"do":"fill","area":1},"reason":"Fill the first numbered area."}
+# as replies/001/player-moon.json, then:
+factory/taste/loop play collect
+# Repeat jobs/collect while session.json says active.
+factory/taste/loop play report
+factory/taste/loop --out /root/factory-out/play-replay play replay
+```
+
+Each job includes the charter, latest screenshot path and image, state, and recent moves/reasons.
+Replies have exactly `move` and a nonempty one-line `reason`. Missing replies exit 1 as waiting;
+a rejected reply records the reason and writes one repair job in `retries/NNN/`. The runners write
+its answer to `replies/NNN/player-<guardian>.retry.json`. A failed repair blocks the session.
+Rejected moves do not advance the mock or consume the budget.
+
+`initial.json`, `turns/NNN.json` and `screenshots/` preserve each observed state and original image
+bytes; turns also contain the guardian, move and reason. `session.json` reports `active`, `complete`
+or `budget`. `contact.png` shows the initial screen and every turn. Replay performs the recorded
+moves through the mock and compares initial/turn/session records, screenshots, frozen rules and
+contact sheet byte for byte in a fresh directory. Jobs, replies, rejections and costs remain source
+inputs. `play replay --recording <folder>` additionally checks against an independent recording.
+
+```sh
+TMPDIR=/root/factory-out PYTHONPYCACHEPREFIX=/root/factory-out/pycache \
+python3 -m unittest discover -s tools/factory -p test_play.py -v
+```
+
+Set `PLAY_DRY_RUN` to a fresh outside-repo directory to retain the canned three-area session,
+mock frames, contact sheet and independently checked replay. These are plumbing checks; no live
+guardian or app is run on Linux.

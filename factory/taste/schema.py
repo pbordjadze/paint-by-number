@@ -1,7 +1,7 @@
 """JSON Schema constructors and validator for the kit's deliberately small schema subset.
 
 Only type, properties, required, additionalProperties, items, min/maxItems, uniqueItems,
-minLength, minimum/maximum and enum are supported. Unknown keywords fail closed.
+minLength, minimum/maximum, enum and oneOf are supported. Unknown keywords fail closed.
 """
 import math
 
@@ -24,7 +24,7 @@ STRING = {'type': 'string', 'minLength': 1}
 CANDIDATE = obj({'name': STRING, 'why': STRING})
 
 KEYWORDS = {'type', 'properties', 'required', 'additionalProperties', 'items', 'minItems',
-            'maxItems', 'uniqueItems', 'minLength', 'enum', 'minimum', 'maximum'}
+            'maxItems', 'uniqueItems', 'minLength', 'enum', 'minimum', 'maximum', 'oneOf'}
 
 
 def check(rule):
@@ -40,6 +40,11 @@ def check(rule):
         check(child)
     if 'items' in rule:
         check(rule['items'])
+    if 'oneOf' in rule:
+        if not isinstance(rule['oneOf'], list) or not rule['oneOf']:
+            raise ValueError('oneOf must contain schemas')
+        for child in rule['oneOf']:
+            check(child)
 
 
 def validate(value, schema, path='$'):
@@ -52,6 +57,15 @@ def validate(value, schema, path='$'):
     if expected is not None and not any(type(value) in types[t] for t in choices):
         return [f'{path}: expected {expected}']
     errors = []
+    if 'oneOf' in schema:
+        alternatives = [validate(value, child, path) for child in schema['oneOf']]
+        if sum(not errors for errors in alternatives) != 1:
+            errors.append(f'{path}: expected exactly one allowed variant')
+            # Show the matching move variant's field errors when its tag is known.
+            matched = [child for child in schema['oneOf'] if isinstance(value, dict) and
+                       value.get('do') in child.get('properties', {}).get('do', {}).get('enum', [])]
+            if len(matched) == 1:
+                errors += validate(value, matched[0], path)
     if type(value) in (int, float):
         if (type(value) is float and not math.isfinite(value)) or not schema.get('minimum', -float('inf')) <= value <= schema.get('maximum', float('inf')):
             errors.append(f'{path}: number outside allowed range')
