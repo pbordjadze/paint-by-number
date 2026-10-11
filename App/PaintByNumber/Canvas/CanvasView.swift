@@ -660,6 +660,9 @@ final class CanvasView: UIView, PaintingCanvas {
 
     private func annotatingChanged() {
         accessibilityElementsHidden = isAnnotating
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-playHarness") { accessibilityElementsHidden = false }
+        #endif
         if isAnnotating {
             // The markup canvas starts from where the camera is: a flight would carry on alone.
             cameraAnimation = nil
@@ -1221,11 +1224,60 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     private func accessibleElements() -> [NSObject] {
+        #if DEBUG
+        // Read live: the camera and animation clock can change without a session event.
+        if ProcessInfo.processInfo.arguments.contains("-playHarness") { return playHarnessElements() }
+        #endif
         if let accessibleItems { return accessibleItems }
         let items = buildAccessibleElements()
         accessibleItems = items
         return items
     }
+
+    #if DEBUG
+    /// Wire-only elements for `PlayTests`: region IDs are one-based, paint numbers are the
+    /// palette index + 1. Frames use the same primary label anchor as the renderer.
+    private func playHarnessElements() -> [NSObject] {
+        func element(_ identifier: String, value: String, frame: CGRect) -> UIAccessibilityElement {
+            let item = UIAccessibilityElement(accessibilityContainer: self)
+            item.accessibilityIdentifier = identifier
+            item.accessibilityLabel = identifier
+            item.accessibilityValue = value
+            item.accessibilityFrameInContainerSpace = frame
+            return item
+        }
+        let state: [String: Any] = [
+            "screen": isAnnotating ? "feedback" : "painting",
+            "selected_paint": session.selectedColor.map { $0 + 1 } as Any? ?? NSNull(),
+            "filled_areas": template.regions.indices.filter { session.isPainted($0) }.map { $0 + 1 },
+            "area_count": template.regions.count,
+        ]
+        let json = (try? JSONSerialization.data(withJSONObject: state, options: .sortedKeys)) ?? Data()
+        let settled = laidOutSize != .zero && !needsRender && now() >= activeUntil
+            && cameraAnimation == nil && finishTask == nil && !finishAwaitsStroke
+            && !scrollView.isTracking && !scrollView.isDragging && !scrollView.isDecelerating
+            && !scrollView.isZooming && !scrollView.isZoomBouncing
+            && (zoomView.layer.animationKeys()?.isEmpty ?? true)
+            && (scrollView.layer.animationKeys()?.isEmpty ?? true)
+            && !session.isStroking && !isReplaying && photoTask == nil
+        var items: [NSObject] = [
+            element("play-state", value: String(decoding: json, as: UTF8.self), frame: bounds),
+            element("play-settled", value: settled ? "1" : "0", frame: bounds),
+            element("play-screen-scale", value: String(Double(contentScaleFactor)), frame: bounds),
+        ]
+        if !isAnnotating {
+            items += template.regions.indices.map { region in
+                let point = viewPoint(forCanvas: anchors[region])
+                let item = element(
+                    "area-\(region + 1)", value: String(session.colorOf(region) + 1),
+                    frame: CGRect(x: point.x - 1, y: point.y - 1, width: 2, height: 2))
+                item.accessibilityTraits = .button
+                return item
+            }
+        }
+        return items
+    }
+    #endif
 
     /// The unpainted areas of the selected color whose numbers are in view (at most
     /// `CanvasAccessibility.limit`, nearest the middle, in reading order), or one placeholder
