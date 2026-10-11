@@ -49,7 +49,7 @@ driving manual and the state of play.
 | F8 (457dc29) | Merged: 275 tests; regression templates byte-identical to the base |
 | F12 | Running (Codex, gpt-6.1-sol, high) |
 | F7 | Claude runs it outside the sandbox: Codex sessions have no network, and the pilot needs `codex exec` itself |
-| F3, F9, F10 | Need a spec from Claude |
+| F9, F10, F3 | Ready: specs written (after F8, F1 and F13) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul

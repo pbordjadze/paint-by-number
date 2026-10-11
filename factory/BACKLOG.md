@@ -209,14 +209,78 @@ use: primitives, tools and settings, documented.
 - **Tests:** both recorded runs replay byte for byte; a toy piece runs end to end on canned
   replies.
 
-## Needs a spec first (Claude)
+### F9 · Reveal fields
+Branch `codex/f9-reveal-fields`. For each pipeline stage the making-of show reveals, a map of
+*when* each pixel changes, which the wipe and the walking workers follow. Builds on F8's
+snapshots (`pbn generate --snapshots <dir>`). FigureRig and the `figures` CLI only; PaintCore,
+pbn and the app are untouched.
+- `RevealField.make(from: A, to: B, seed:)` for two consecutive snapshots of the same size. A
+  pixel *changes* when the pictures differ: OKLab distance ≥ 0.02 for color pictures, more than
+  8 of 255 for grayscale ones (structure, line art).
+- Time per changed pixel, in [0, 1]: geodesic distance over changed pixels (8-connected,
+  integer steps of 2 straight and 3 diagonal, breadth-first in raster order) from a seed set,
+  divided by the largest distance. Seeds by option: `left` (the changed pixels of the leftmost
+  column that has any; the default), `center` (the changed pixel nearest the center) or
+  `strongest` (the pixels whose change is largest). A changed pixel unreachable from the seeds
+  starts its own region at the largest time reached so far, regions in raster order. Unchanged
+  pixels carry no time.
+- **Worker paths:** split [0, 1] into K equal steps (default 12); for each step, the centroid of
+  the pixels whose time falls in it (skip empty steps); the path is those centroids in order,
+  smoothed with two rounds of Chaikin, written as absolute SVG path data in the snapshot's pixel
+  coordinates, ready to use as a scene path.
+- `figures reveal <snapshot-dir> <out-dir> [--seed left|center|strongest] [--steps K]` writes, for
+  each consecutive stage pair present: `<from>-<to>.pgm` (0 = unchanged, otherwise
+  1 + round(t × 254)) and `<from>-<to>.json` (`width`, `height`, `changed` fraction, `seed`,
+  `steps`, `path`).
+- `tools/factory/reveal_sheet.py <snapshot-dir> <reveal-dir> <out.png>`: per stage pair, six
+  frames of the wipe (B shown where t ≤ the frame's time, A elsewhere) with the path drawn.
+  Output outside the repo.
+- Tests: synthetic pictures (only the right half changes → times rise left to right; nothing
+  changes → empty field, no path; two separate blobs → both timed, raster order); every option;
+  byte-identical output across runs; the PGM encoding. Run it on one corpus photo's snapshots and
+  look at the sheet.
 
-- **F3 · The figure piece** for the taste loop: proposals edit the figure spec, the engine
-  renders, jurors judge the sheets. After F1 and F2.
-- **F9 · Reveal fields:** for each pipeline stage, a map of when each pixel changes, which the
-  show's wipes and the workers follow. After F8.
-- **F10 · Figure engine v1:** props (the broom, the mortar and pestle), actions (sweep; ink a line
-  with the brush tip pinned to it), several actors.
+### F10 · Figure engine v1: props, two actions, several actors
+Branch `codex/f10-engine-v1`. Extend `SPEC.md` (scene and spec version 2, documented beside
+version 1, which must keep decoding) and the engine. **The hero scene must render byte for byte
+as before** (a test pins its digests before the change).
+- **Props**, drawn in the figure's ink style from shapes defined in code: `broom` (stick and a
+  fan of bristles), `brush` (handle, ferrule, tip), `mortar` (bowl and pestle), `jar`. A scene
+  actor may hold one (`"holds": "broom"`): it follows the hands and the forearm's direction, its
+  length a fixed share of the figure's height. Props on the ground are scene items
+  (`"props": [{"kind": "jar", "at": {"path": "brook", "t": 0.4}}]`).
+- **`sweep`** `{ "do": "sweep", "path", "to" }`: walk the path holding the broom low in both hands;
+  the broom head swings across the heading once per footfall.
+- **`ink`** `{ "do": "ink", "path", "from", "to" }`: the actor walks beside the path, offset to its
+  left by a share of its height; the right hand's brush tip is pinned to the path at the current
+  arc length (two-bone IK to the tip; the walk sets the pace), and the inked stroke grows behind
+  the tip in the ink style, staying drawn afterwards.
+- **Several actors:** any number, each with its own seeded streams (wobble, particles); drawn far
+  to near by their feet's screen y, ties by actor order.
+- **Checks** (added to `checks.json`): the brush tip within 0.5 px of the inked path on every ink
+  frame; a held prop's grip within 0.5 px of its hand on every frame; no two actors' pelvises
+  closer than one hip width.
+- A second committed scene, `factory/scenes/workers.json`, on `hero.svg`: one worker inks the
+  brook while another sweeps along the hill. Render it with `render.py` and look at the sheets.
+- Bump the engine's version; update `SPEC.md`'s tables and the CLAUDE.md map line if it changes.
+
+### F3 · The figure piece
+Branch `codex/f3-figure-piece`. A design-loop kit piece (`factory/taste`, F13) whose candidates
+are figure specs. Codex builds the piece and dry-runs it; the Lamp runs it later, so no taste
+decision is made here.
+- `factory/pieces/figure/piece.toml` and a plug-in: a candidate is a patch of `FigureSpec` fields
+  within `SPEC.md`'s ranges (rejected otherwise, with the field named), applied to
+  `factory/specs/baseline.json`.
+- Craft is the engine's own checks: a candidate whose `checks.json` fails is out before any
+  juror sees it.
+- The renderer runs `render.py` on `hero.json` per candidate and gives jurors the contact,
+  at-size (light and dark) and silhouette sheets, each candidate's sheets under a shuffled
+  letter.
+- Proposer jobs ask for at most three patches with a one-line reason each; juror jobs carry the
+  sheets as image paths and the charter, and ask for a ranking, reasons and vetoes (rules v2).
+- A dry run with canned replies through `loop new/draw/jobs/collect/decide/replay`, and tests:
+  out-of-range patches rejected, a failing check excludes a candidate, ballots shuffled and
+  blind, replay byte-identical.
 
 ## Waits on CI (rationed macOS runners)
 
