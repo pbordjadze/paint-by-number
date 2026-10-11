@@ -80,6 +80,8 @@ before planning app work).
   shows all colors), with Paul's checkpoint replacements and the jury in its margins.
   `factory/taste/loop.py` is the deterministic taste library; its piece plug-ins, versioned run
   rules, transcript reader and CLI entry points are documented in `factory/taste/README.md`.
+  `factory/taste/play.py` runs guardian play jobs against a driver, records settled screens,
+  and replays sessions with its portable recorded-frame mock (the `play` piece).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;

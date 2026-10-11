@@ -1,0 +1,10 @@
+move_budget = 100
+history = 5
+
+[piece]
+id = "play"
+
+[roles.player]
+model = "haiku"
+effort = "low"
+enabled = true

@@ -1,0 +1,137 @@
+{
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "do": {
+          "type": "string",
+          "enum": [
+            "fill"
+          ]
+        },
+        "area": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "do",
+        "area"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "do": {
+          "type": "string",
+          "enum": [
+            "tap"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "do",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "do": {
+          "type": "string",
+          "enum": [
+            "drag"
+          ]
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "additionalProperties": false
+        },
+        "steps": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "do",
+        "from",
+        "to",
+        "steps"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "do": {
+          "type": "string",
+          "enum": [
+            "wait"
+          ]
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "do",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "do": {
+          "type": "string",
+          "enum": [
+            "screenshot"
+          ]
+        }
+      },
+      "required": [
+        "do"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 
-from . import accounting, calibration, kit, loop, pages
+from . import accounting, calibration, kit, loop, pages, play
 
 
 def report(run):
@@ -28,6 +28,7 @@ def main(argv=None):
     parser.add_argument('--out', type=Path, default=Path(os.environ.get('FACTORY_OUT', '/root/factory-out')) / 'loop',
                         help='render/scratch output, outside the repo')
     commands = parser.add_subparsers(dest='command', required=True)
+    play.add_parser(commands)
     create = commands.add_parser('new')
     create.add_argument('piece', help='piece ID under factory/pieces, or a directory containing piece.toml')
     create.add_argument('--calibration', type=Path)
@@ -45,7 +46,9 @@ def main(argv=None):
     if args.run is None:
         parser.error('provide --run or LOOP_RUN')
     try:
-        if args.command == 'new':
+        if args.command == 'play':
+            result = play.dispatch(args)
+        elif args.command == 'new':
             piece = Path(args.piece)
             if not piece.is_dir():
                 piece = loop.REPO / 'factory/pieces' / args.piece
@@ -61,9 +64,11 @@ def main(argv=None):
         else:
             result = {'page': str(pages.generate(args.run, kit.outside_repo(args.out) / f'{args.command}.html',
                       n=args.round, checkpoint=args.picks, gallery=args.command == 'gallery'))}
-    except (ValueError, OSError, KeyError) as error:
+    except (ValueError, OSError, KeyError, RuntimeError) as error:
         parser.exit(1, f'loop: {error}\n')
     print(json.dumps(result, indent=2, ensure_ascii=False))
+    if args.command == 'play' and args.play_command == 'collect' and result['status'] != 'accepted':
+        return 1
     if args.command == 'collect' and any(s != 'accepted' for s in result.values()):
         return 1
     return 0
