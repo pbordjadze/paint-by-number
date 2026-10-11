@@ -44,6 +44,10 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     var settingsOrigin: String?
     /// The `PaintingLength` raw value the create flow aimed for; nil before Suggested settings.
     var paintingLength: String?
+    /// Frozen vocabulary used for this painting's derived nicknames. Missing or unreadable
+    /// metadata means v1; keep unknown future versions as written, even if this build uses
+    /// its newest known vocabulary to display them.
+    var nicknameVersion: Int
 
     init(
         id: UUID = UUID(), title: String, createdAt: Date = .now, modifiedAt: Date? = nil,
@@ -57,6 +61,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         self.settings = settings
         self.settingsOrigin = settingsOrigin?.rawValue
         self.paintingLength = paintingLength?.rawValue
+        nicknameVersion = ColorNickname.currentVersion
         width = template.width
         height = template.height
         colorCount = template.palette.count
@@ -106,7 +111,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, title, createdAt, modifiedAt, completedAt, settings, width, height
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
-        case pipelineVersion, isFavorite, settingsOrigin, paintingLength
+        case pipelineVersion, isFavorite, settingsOrigin, paintingLength, nicknameVersion
     }
 
     /// What an artwork saved without settings was made with: classic lines, the only kind
@@ -115,6 +120,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        nicknameVersion = (try? c.decodeIfPresent(Int.self, forKey: .nicknameVersion)) ?? 1
         format = try c.decodeIfPresent(Int.self, forKey: .format) ?? Self.currentFormat
         guard format <= Self.currentFormat else {
             // A newer app may have changed any field; take what still reads so the gallery can

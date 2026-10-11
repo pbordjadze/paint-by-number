@@ -206,10 +206,14 @@ Saved paintings must open in every later build. The format history is documented
   progress file that can't be read right now (an I/O or protection error) throws
   `Library.OpenError.unreadable` and is kept, never replaced with fresh progress
   (`LibraryTests.unreadableProgressIsKept`).
-- Paint nicknames are derived at load, never stored (`ColorNickname.assign(_:seed:)`, seeded from
-  the artwork id): editing the vocabulary table, `ColorNickname`'s constants or `ColorName`'s
-  thresholds renames the colors of saved paintings, so treat them like a file format
-  (`ColorNicknameTests.parrotsPaletteGetsDistinctNicknames` pins one assignment).
+- Paint nicknames are derived at load, never stored (`ColorNickname.assign(_:seed:version:)`,
+  seeded from the artwork id), with the frozen vocabulary version recorded per artwork in
+  `meta.json` (`nicknameVersion`). Missing or unreadable means 1, never the current version;
+  new artworks record `ColorNickname.currentVersion`, regeneration keeps the recorded value,
+  and unknown future values round-trip unchanged while resolving to the newest known version.
+  Treat each version's table, math, draw and `ColorName` thresholds like a file format: never
+  edit them. `ColorNicknameTests` pins v1's table and an assignment; `ArtworkNicknameTests`
+  pins the same palette on Apple against names computed on Linux.
 
 ## App rules
 

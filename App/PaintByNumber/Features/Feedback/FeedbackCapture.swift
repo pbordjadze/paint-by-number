@@ -44,9 +44,10 @@ nonisolated struct FeedbackCapture: Sendable {
     /// The palette index the brush held (the canvas hatched its unpainted areas).
     var selectedColor: Int?
     /// The colors' nicknames as the painting named them (nil under plain names), and the seed
-    /// that picks them (`pbn names --seed` prints the same).
+    /// and vocabulary that pick them (`pbn names --seed … --vocabulary …` prints the same).
     var nicknames: [String?]
     var nicknameSeed: UInt64
+    var nicknameVersion: Int
     var showsNumbers: Bool
     var paper: PaperAppearance
     var darkInterface: Bool
@@ -80,7 +81,7 @@ extension FeedbackCapture {
         self.init(
             date: date, title: title, template: template, progress: session.progress, selectedColor: session.selectedColor,
             nicknames: (0..<session.paletteCount).map { session.nickname(of: $0) }, nicknameSeed: session.nicknameSeed,
-            showsNumbers: showsNumbers,
+            nicknameVersion: session.nicknameVersion, showsNumbers: showsNumbers,
             paper: paper, darkInterface: darkInterface, lineWeight: lineWeight,
             visibleRect: controller.visibleCanvasRect ?? CGRect(x: 0, y: 0, width: template.width, height: template.height),
             pointsPerUnit: controller.pointsPerUnit ?? 1, displayScale: displayScale,
