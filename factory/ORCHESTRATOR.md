@@ -31,6 +31,8 @@ driving manual and the state of play.
 - Never push `main`, `sidestore` or other people's branches. Every commit has `[skip ci]` (macOS
   runners are rationed).
 - Taste decisions are not Codex's: the Lamp and Paul decide (`ARCHITECTURE.md`).
+- Building is Codex's by default, app work included (Paul, Oct 11): Claude subagents are for the
+  Lamp, reviews and reading. Use a Claude agent to build only when there's a reason, and say it.
 - Paul's veto stands over everything but the Lamp's own name.
 - `CONSTITUTION.md` binds every session. A chapter Paul has read changes only out loud (say what
   and why), and a guardian's own words most carefully of all.
