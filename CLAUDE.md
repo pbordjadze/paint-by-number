@@ -12,7 +12,8 @@ before planning app work).
 
 ## Map
 
-- `Package.swift`: `PaintCore`, `pbn`, `PaintCoreTests`. The Xcode project builds PaintCore from
+- `Package.swift`: `PaintCore`, `pbn`, `PaintCoreTests`, and the separate factory targets
+  `FigureRig`, `figures`, `FigureRigTests`. The Xcode project builds PaintCore from
   this package (local reference `..`), so its flags change the app's builds too (release
   `-Ounchecked`); its iOS 18 / macOS 15 platforms are only a floor (the app's 26.0 is the
   project's).
@@ -52,6 +53,10 @@ before planning app work).
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
   `Commands.swift`, `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
+- `Sources/FigureRig`: the portable figure factory (`FigureEngine`): strict `FigureSpec` and
+  `FigureScene` decoding, arc-length paths, stateless rig/IK, filled ink, seeded particles,
+  Charter outline cards, SVG and geometry checks. `Sources/figures/main.swift` is its CLI;
+  `factory/SPEC.md` is the contract, `Tests/FigureRigTests` guards it. The app doesn't link it.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data);
   `layered-photo.ppm`, `layered-edges.pgm` and `shapes.ppm` are inputs that tests and the line
@@ -67,6 +72,10 @@ before planning app work).
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
   (the app's Core ML models from their source weights).
+  `factory/render.py` writes figure clips, review sheets and pixel checks (`--help`);
+  `factory/make_scene.py` rebuilds the committed hero images through pbn. Factory render output
+  stays outside the repo; `factory/specs/baseline.json` starts at the spec's defaults.
+  `factory/verify.py <outdir>` exercises the spec's acceptance list (run on four cores).
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;

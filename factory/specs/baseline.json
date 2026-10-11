@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "figure": {
+    "headSize": 0.16, "headAspect": 0.85, "neck": 0.03, "torso": 0.30, "hunch": 0.10,
+    "shoulderWidth": 0.12, "hipWidth": 0.07, "upperArm": 0.17, "forearm": 0.16,
+    "thigh": 0.23, "shin": 0.23, "foot": 0.05, "knobs": 0,
+    "hands": "dot", "headwear": "kerchief", "headwearSize": 1, "knot": 0.5,
+    "skirt": 0, "accent": null
+  },
+  "ink": {
+    "color": "#2B2622", "width": 0.035, "taper": 0.5, "pressure": 0.2,
+    "wobble": 0.006, "wobbleLength": 0.12, "boilFps": 8, "overshoot": 0
+  },
+  "motion": {
+    "fps": 24, "onTwos": true, "step": 0.18, "cadence": 2.0, "bounce": 0.03,
+    "sway": 0.01, "lean": 4, "armSwing": 25, "footLift": 0.05, "ease": 0.5,
+    "turnRate": 360, "headingSteps": 0, "anticipation": 0.25, "followThrough": 0.15, "settle": 0.3
+  },
+  "magic": {
+    "colors": ["#C9A227", "#6E9A5B"], "shape": "sparkle", "size": 0.035,
+    "trail": 4, "burst": 24, "life": 1.2, "drift": 0.25, "spread": 0.6, "twinkle": 3, "glow": 0
+  },
+  "view": { "depth": 0.5, "heightScale": 1 },
+  "card": {
+    "size": 15, "position": "bottomLeading", "backdrop": "none", "fade": 0.3,
+    "holdBase": 0.5, "perWord": 0.2
+  }
+}

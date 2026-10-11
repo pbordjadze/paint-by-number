@@ -11,6 +11,8 @@ let package = Package(
     products: [
         .library(name: "PaintCore", targets: ["PaintCore"]),
         .executable(name: "pbn", targets: ["pbn"]),
+        .library(name: "FigureRig", targets: ["FigureRig"]),
+        .executable(name: "figures", targets: ["figures"]),
     ],
     targets: [
         .target(
@@ -29,6 +31,9 @@ let package = Package(
             ]
         ),
         .testTarget(name: "PaintCoreTests", dependencies: ["PaintCore"], resources: [.copy("Fixtures")]),
+        .target(name: "FigureRig", dependencies: ["PaintCore"]),
+        .executableTarget(name: "figures", dependencies: ["FigureRig"]),
+        .testTarget(name: "FigureRigTests", dependencies: ["FigureRig"]),
     ],
     swiftLanguageModes: [.v6]
 )
