@@ -65,7 +65,8 @@ driving manual and the state of play.
 | F22 | Merged: the audit's Swift fixes; hero and workers digests unchanged, engine 1.0.1; 138 Python tests pass on the merged tree |
 | F24 | Merged: SimctlDriver and the mailbox contract (`pieces/play/README.md`) for M2's Swift test; tested against a fake xcrun only |
 | F25 | Codex's provider stopped it as a possible cybersecurity risk (it fuzzes our own decoders); not reworded to get past the filter. A Claude agent runs it instead, report at `/root/factory-out/F25-claude/audit.md` |
-| F19, F26 | Running (Codex, gpt-6.1-sol, high); F26 is a report only |
+| F26 | Done, report only: the six corpus photos in classic, book and Auto give identical template bytes (and stats, apart from timings) at 1, 2, 3 and 4 cores; 144 generations, all valid. Note for any future gate: `taskset` alone leaves Foundation's `activeProcessorCount` (so `Parallel.bandCount`) unchanged on Linux; Codex varied it with an external shim |
+| F19 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
