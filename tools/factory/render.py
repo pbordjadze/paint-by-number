@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the v0 figure clip, clips, review sheets, and pixel checks.
+"""Render figure clips, clips, review sheets, and pixel checks.
 
     tools/factory/render.py factory/specs/baseline.json factory/scenes/hero.json ~/factory-out/hero
 
@@ -35,12 +35,16 @@ def run(command):
 
 def key_frames(manifest, spec):
     actions, fps, last = manifest["actions"], manifest["fps"], manifest["frameCount"] - 1
-    walk = next((a for a in actions if a["kind"] == "walk"), None)
+    walk = next((a for a in actions if a["kind"] in {"walk", "ink", "sweep"}), None)
     cast = next((a for a in actions if a["kind"] == "cast"), None)
     moments = [("mid-walk", (walk["start"] + walk["end"]) / 2 if walk else 0),
                ("wind-up", cast["windUp"] if cast else 0),
                ("release", cast["release"] if cast else 0),
                ("settled", cast["end"] if cast else manifest["duration"])]
+    if walk and not cast:
+        moments = [("start-" + walk["kind"], walk["start"]),
+                   ("mid-" + walk["kind"], (walk["start"] + walk["end"]) / 2),
+                   ("end-" + walk["kind"], walk["end"]), ("settled", manifest["duration"])]
     # The first held pose at or after each key time, including animation on twos.
     quantum = 2 if spec.get("motion", {}).get("onTwos", True) else 1
     return [(name, min(last, int(math.ceil(t * fps / quantum)) * quantum)) for name, t in moments]
@@ -145,6 +149,10 @@ def compose(spec, scene, scene_file, out, manifest, motion, scratch):
         path = scratch / f"frame-{i}.svg"
         write_svg(isolated(tree, ["figure", "particles", "card"]), path)
         jobs.append({"input": str(path), "output": str(out / f"frames/{i:04d}.png"), "width": width})
+    if scene.get("background", "").lower().endswith(".svg"):
+        background_path = (scene_file.parent / scene["background"]).resolve()
+        scene = {**scene, "background": str(scratch / "scene-background.png")}
+        jobs.append({"input": str(background_path), "output": scene["background"], "width": width})
     moments = key_frames(manifest, spec)
     for j, (_, frame) in enumerate(moments):
         path = scratch / f"figure-{j}.svg"
@@ -173,7 +181,7 @@ def compose(spec, scene, scene_file, out, manifest, motion, scratch):
                 group.append(shape)
         for name, stroke in [("head", "#7B628D"), ("leftHand", "#B57644"), ("rightHand", "#A79444"),
                              ("leftAnkle", "#477B85"), ("rightAnkle", "#67834F")]:
-            coords = [motion[i]["actors"][0]["joints"][name] for i in selection]
+            coords = [next(actor for actor in motion[i]["actors"] if actor["id"] == action["actor"])["joints"][name] for i in selection]
             if coords:
                 d = "M" + " L".join(f"{p['x']:.4f},{p['y']:.4f}" for p in coords)
                 ET.SubElement(root, f"{{{SVG}}}path", {"d": d, "stroke": stroke, "stroke-width": "0.8", "fill": "none"})
@@ -181,7 +189,8 @@ def compose(spec, scene, scene_file, out, manifest, motion, scratch):
         write_svg(root, path)
         jobs.append({"input": str(path), "output": str(path.with_suffix(".png")), "width": 800})
         trail_pngs.append(path.with_suffix(".png"))
-        trail_labels.append(f"{action['kind']}  {action['start']:.2f}–{action['end']:.2f} s")
+        prefix = action['actor'] + "  " if len(scene["actors"]) > 1 else ""
+        trail_labels.append(f"{prefix}{action['kind']}  {action['start']:.2f}–{action['end']:.2f} s")
     (scratch / "jobs.json").write_text(json.dumps(jobs))
     run(["node", ROOT / "tools/factory/rasterize.mjs", scratch / "jobs.json"])
 

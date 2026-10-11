@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "seed": 1,
+  "canvas": { "width": 1100, "height": 825, "paper": "#F6F1E7", "paperDark": "#1E1B24" },
+  "background": "hero.svg",
+  "display": "ipad13",
+  "figureHeight": 50,
+  "paths": {
+    "brook": "M 160 560 C 300 540 560 580 830 565",
+    "hill": "M 210 366 C 355 372 460 418 650 376"
+  },
+  "actors": [
+    {
+      "id": "inker",
+      "holds": "brush",
+      "at": { "path": "brook", "t": 0 },
+      "timeline": [
+        { "do": "ink", "path": "brook", "from": 0, "to": 0.35 },
+        { "do": "idle", "duration": 0.6 }
+      ]
+    },
+    {
+      "id": "sweeper",
+      "holds": "broom",
+      "at": { "path": "hill", "t": 0 },
+      "timeline": [
+        { "do": "sweep", "path": "hill", "to": 0.5 },
+        { "do": "idle", "duration": 0.6 }
+      ]
+    }
+  ],
+  "props": [
+    { "kind": "jar", "at": { "path": "brook", "t": 0.42 } },
+    { "kind": "mortar", "at": { "path": "hill", "t": 0.62 } }
+  ],
+  "card": {
+    "authors": "Eduardo Gastal and Manuel Oliveira", "year": 2011,
+    "title": "Domain Transform for Edge-Aware Image and Video Processing", "at": 0.4
+  },
+  "tail": 0.5
+}

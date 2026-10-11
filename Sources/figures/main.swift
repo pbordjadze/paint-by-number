@@ -54,7 +54,7 @@ func run() throws {
     func write<T: Encodable>(_ value: T, _ name: String) throws {
         var data = try encoder.encode(value); data.append(10); try data.write(to: out.appendingPathComponent(name))
     }
-    try write(engine.manifest(specSHA256: SHA256.digest(Array(specData)), sceneSHA256: SHA256.digest(Array(sceneData))), "manifest.json")
+    try write(engine.manifest(specSHA256: FigureSHA256.digest(Array(specData)), sceneSHA256: FigureSHA256.digest(Array(sceneData))), "manifest.json")
     try write(motion, "motion.json"); try write(engine.checks(frames), "checks.json")
     print("\(engine.frameCount) frames, \(engine.duration) s; \(out.path)")
 }

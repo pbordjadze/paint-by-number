@@ -54,7 +54,7 @@ before planning app work).
   `Commands.swift`, `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
 - `Sources/FigureRig`: the portable figure factory (`FigureEngine`): strict `FigureSpec` and
-  `FigureScene` decoding, arc-length paths, stateless rig/IK, filled ink, seeded particles,
+  `FigureScene` decoding, arc-length paths, stateless rig/IK, held and ground props, sweep/ink actions, several actors, filled ink, seeded particles,
   Charter outline cards, SVG and geometry checks. `Sources/figures/main.swift` is its CLI;
   `factory/SPEC.md` is the contract, `Tests/FigureRigTests` guards it. The app doesn't link it.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
