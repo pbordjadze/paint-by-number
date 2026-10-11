@@ -36,7 +36,7 @@ public struct FigureCheck: Codable, Sendable {
 /// Figure engine v0. Version changes accompany any output change. All sampling is pure:
 /// SVG serialization, motion and checks are independent of invocation order and core count.
 public struct FigureEngine: Sendable {
-    public static let version = "0.1.0"
+    public static let version = "0.1.1"
     public let spec: FigureSpec, scene: FigureScene, card: CardLayout
     let rig: Rig, ink: InkRenderer, magic: MagicRenderer
     public var duration: Double { rig.duration }
@@ -77,7 +77,7 @@ public struct FigureEngine: Sendable {
                 }
             }
             previous = pose
-            knees += pose.kneeReverse ? 1 : 0; elbows += pose.elbowReverse ? 1 : 0; clamps += pose.ikClamps > 0 ? 1 : 0
+            knees += hasReversedKnee(pose) ? 1 : 0; elbows += hasReversedElbow(pose) ? 1 : 0; clamps += pose.ikClamps > 0 ? 1 : 0
             minimumInk = min(minimumInk, frame.minimumInkWidth * pts); alive = max(alive, frame.particles)
             for shape in frame.shapes where shape.layer == "figure" {
                 for point in shape.subpaths.joined() {

@@ -6,25 +6,30 @@ public struct ActionTiming: Codable, Sendable {
 }
 
 struct Foot: Sendable {
-    var ground: Point, up: Double = 0, heading: Double, planted = true
+    var ground: Point, base: Point, lateral: Point, up: Double = 0, heading: Double, planted = true
     var contact = 0
 }
 struct PlannedAction: Sendable {
     var timing: ActionTiming, path: ArcPath?, from: Double, to: Double, origin: Point
     var headingFrom: Double, headingTo: Double, feet: [Foot], endFeet: [Foot]
-    var distance: Double = 0, ramp: Double = 0, headings: [Double] = []
+    var distance: Double = 0, gaitDistance: Double = 0, stepLength: Double = 0, ramp: Double = 0, headings: [Double] = []
     var contactBase = 0
     var duration: Double { timing.end - timing.start }
     func travelled(_ t: Double) -> Double {
         let elapsed = clamp(t, 0, duration)
         guard distance > 0 else { return 0 }
-        let speed = distance / max(duration - ramp, 1e-12)
-        guard ramp > 0 else { return min(distance, elapsed * speed) }
+        let speed = gaitDistance / max(duration - ramp, 1e-12)
         func integral(_ u: Double) -> Double { u * u * u - 0.5 * u * u * u * u }
-        if elapsed < ramp { return speed * ramp * integral(elapsed / ramp) }
-        if elapsed > duration - ramp { return distance - speed * ramp * integral((duration - elapsed) / ramp) }
-        return speed * (elapsed - ramp * 0.5)
+        let progress: Double
+        if ramp == 0 { progress = min(gaitDistance, elapsed * speed) }
+        else if elapsed < ramp { progress = speed * ramp * integral(elapsed / ramp) }
+        else if elapsed > duration - ramp { progress = gaitDistance - speed * ramp * integral((duration - elapsed) / ramp) }
+        else { progress = speed * (elapsed - ramp * 0.5) }
+        // A short last stride gets a full swing interval instead of rushing to its target.
+        let lastStart = max(0, gaitDistance - stepLength)
+        return progress <= lastStart ? progress : mix(lastStart, distance, clamp((progress - lastStart) / stepLength))
     }
+
     func walkSample(_ distance: Double) -> (point: Point, heading: Double) {
         let sample = path!.sample(mix(from, to, self.distance > 0 ? clamp(distance / self.distance) : 0))
         return (sample.point, wrapHeading(sample.heading + (to < from ? 180 : 0)))
@@ -38,7 +43,7 @@ public struct ActorPose: Codable, Sendable {
     public var poseTime: Double
     var world: [String: Vector3] = [:]
     var origin = Point.zero
-    var ikClamps = 0, kneeReverse = false, elbowReverse = false
+    var ikClamps = 0
     var swingFoot = "left"
     var handsOpen = false
     enum CodingKeys: CodingKey { case id, action, heading, drawnHeading, joints, planted, contacts, poseTime }
@@ -66,7 +71,7 @@ struct Rig: Sendable {
         let k = unit, halfHip = spec.figure.hipWidth * k / 2, depth = spec.view.depth
         func foot(_ p: Point, _ heading: Double, _ side: Int) -> Foot {
             let lateral = headingVector(heading).normal * (side == 0 ? -halfHip : halfHip)
-            return Foot(ground: p + Point(lateral.x, lateral.y * depth), heading: heading)
+            return Foot(ground: p + Point(lateral.x, lateral.y * depth), base: p, lateral: lateral, heading: heading)
         }
         var feet = [foot(first.point, first.heading, 0), foot(first.point, first.heading, 1)]
         initialFeet = feet
@@ -89,7 +94,9 @@ struct Rig: Sendable {
                 action.path = path; action.from = fraction; action.to = input.to!
                 action.distance = abs(action.to - fraction) * path.length
                 let speed = spec.motion.step * k * spec.motion.cadence
-                let base = action.distance / speed
+                action.stepLength = spec.motion.step * k
+                action.gaitDistance = ceil(action.distance / action.stepLength) * action.stepLength
+                let base = action.gaitDistance / speed
                 action.ramp = min(spec.motion.ease, base)
                 action.timing.end += base + action.ramp
                 let count = Int(ceil(action.distance / (spec.motion.step * k)))
@@ -202,7 +209,7 @@ struct Rig: Sendable {
 
     private func footAt(_ p: Point, _ h: Double, _ side: Int) -> Foot {
         let offset = headingVector(h).normal * (spec.figure.hipWidth * unit / 2 * (side == 0 ? -1 : 1))
-        return Foot(ground: p + Point(offset.x, offset.y * spec.view.depth), heading: h)
+        return Foot(ground: p + Point(offset.x, offset.y * spec.view.depth), base: p, lateral: offset, heading: h)
     }
     private func footfall(_ action: PlannedAction, _ distance: Double, _ side: Int) -> Foot {
         let s = action.walkSample(distance)
@@ -211,12 +218,12 @@ struct Rig: Sendable {
         return foot
     }
     private func swinging(_ from: Foot, _ to: Foot, _ phase: Double, _ lift: Double) -> Foot {
-        // A brief double support leaves enough time for the rear foot to lift before
-        // an eased swing would stretch the leg beyond its two-bone reach.
+        // A brief double support brackets each eased swing.
         if phase <= 0.04 { return from }
         if phase >= 0.96 { return to }
         let u = (phase - 0.04) / 0.92
-        return Foot(ground: mix(from.ground, to.ground, cubic(u)), up: lift * sin(.pi * u),
+        return Foot(ground: mix(from.ground, to.ground, cubic(u)), base: mix(from.base, to.base, cubic(u)),
+                    lateral: mix(from.lateral, to.lateral, cubic(u)), up: lift * sin(.pi * u),
                     heading: wrapHeading(from.heading + headingDelta(from.heading, to.heading) * cubic(u)), planted: false)
     }
 
@@ -230,42 +237,60 @@ struct Rig: Sendable {
                              joints: [:], planted: ["left": feet[0].planted, "right": feet[1].planted],
                              contacts: ["left": feet[0].contact, "right": feet[1].contact], poseTime: time)
         pose.origin = origin; pose.swingFoot = swing == 0 ? "left" : "right"; pose.handsOpen = open
-        func local(_ a: Double, _ b: Double, _ c: Double) -> Vector3 { Vector3(origin + (forward * a + lateral * b) * k, c * k) }
         func project(_ p: Vector3) -> Point {
             Point(p.x, origin.y + (p.y - origin.y) * spec.view.depth - p.z * spec.view.heightScale)
         }
         let walking = action == "walk", idle = action == "idle"
         let sway = m.sway * (idle ? sin(time * 2 * .pi * 0.18) : (walking ? sin(phase * .pi) * (swing == 0 ? 1 : -1) * effort : 0))
-        let pelvisHeight = 0.97 * (f.thigh + f.shin) - m.bounce + (walking ? m.bounce * pow(sin(.pi * phase), 2) * effort : 0) - crouch
-        let pelvis = local(0, sway, pelvisHeight)
+        // Contacts are on the unsquashed painting. Carry its vertical displacement as
+        // terrain height, rather than dividing by depth (which is undefined at zero).
+        let ankles = feet.map { foot in
+            Vector3(foot.base + foot.lateral,
+                    (foot.base.y - origin.y) * (spec.view.depth - 1) / spec.view.heightScale + foot.up)
+        }
+        let center = mix(ankles[0].xy, ankles[1].xy, 0.5) + lateral * (sway * k)
+        let reach = 0.97 * (f.thigh + f.shin) * k
+        var pelvisHeight = (ankles[0].z + ankles[1].z) / 2 + reach
+        for side in 0..<2 {
+            let hipXY = center + lateral * ((side == 0 ? -1 : 1) * f.hipWidth * k / 2)
+            let horizontal = (hipXY - ankles[side].xy).length
+            pelvisHeight = min(pelvisHeight, ankles[side].z + sqrt(max(0, reach * reach - horizontal * horizontal)))
+        }
+        let bounce = walking ? m.bounce * (1 - pow(sin(.pi * phase), 2)) * effort : 0
+        let pelvis = Vector3(center, pelvisHeight - (bounce + crouch) * k)
         let breathing = idle ? 0.003 * sin(time * 2 * .pi * 0.3) : 0
-        let chest = pelvis + Vector3(forward * ((tan(radians(lean)) * f.torso + f.hunch * f.torso * 0.5) * k), (f.torso + breathing) * k)
-        let neck = chest + Vector3(forward * (f.hunch * f.neck * k), f.neck * k)
+        let hunch = f.hunch * (walking ? effort : (action == "cast" ? abs(sin(radians(armAngle))) : 0))
+        let torsoAngle = radians(lean) + hunch * 0.5 + breathing
+        let neckAngle = radians(lean) + hunch + breathing
+        let chest = pelvis + Vector3(forward * (sin(torsoAngle) * f.torso * k), cos(torsoAngle) * f.torso * k)
+        let neck = chest + Vector3(forward * (sin(neckAngle) * f.neck * k), cos(neckAngle) * f.neck * k)
         let head = neck + Vector3(0, 0, f.headSize * k / 2)
         pose.world = ["pelvis": pelvis, "chest": chest, "neck": neck, "head": head]
         for side in 0..<2 {
             let prefix = side == 0 ? "left" : "right", sign = side == 0 ? -1.0 : 1.0
             let hip = pelvis + Vector3(lateral * (sign * f.hipWidth * k / 2), 0)
-            // Ground contacts live on the painting. Unproject around the current root so the
-            // screen point stays fixed while the paper doll moves above it.
-            let foot = feet[side]
-            let depth = spec.view.depth
-            let ankle = Vector3(foot.ground.x, depth > 1e-9 ? origin.y + (foot.ground.y - origin.y) / depth : origin.y, foot.up)
-            let leg = twoBone(hip, ankle, f.thigh * k, f.shin * k, gaitForward)
-            pose.ikClamps += leg.clamped ? 1 : 0; pose.kneeReverse = pose.kneeReverse || leg.reverse
+            let foot = feet[side], depth = spec.view.depth
+            let leg = twoBone(hip, ankles[side], f.thigh * k, f.shin * k, gaitForward)
+            pose.ikClamps += leg.clamped ? 1 : 0
+            let ankle = leg.end
             let shoulder = chest + Vector3(lateral * (sign * f.shoulderWidth * k / 2), 0)
-            let angle = radians(walking ? armAngle * (side == 0 ? -1 : 1) : armAngle)
-            let hand = shoulder + Vector3(forward * (sin(angle) * (f.upperArm + f.forearm) * k * 0.94),
+            let degrees = walking ? armAngle * (side == 0 ? -1 : 1) : armAngle
+            let angle = radians(degrees)
+            let raised = action == "cast" ? cubic(degrees / 90) : 0
+            let direction = (forward * (1 - raised) + lateral * (sign * raised)).unit
+            let hand = shoulder + Vector3(direction * (sin(angle) * (f.upperArm + f.forearm) * k * 0.94),
                                           -cos(angle) * (f.upperArm + f.forearm) * k * 0.94)
-            let arm = twoBone(shoulder, hand, f.upperArm * k, f.forearm * k, Vector3(forward, 0))
-            pose.elbowReverse = pose.elbowReverse || arm.reverse
+            // Rotate the pole with the arm: back while hanging, outward when raised.
+            // It remains perpendicular to the arm axis through 90 degrees.
+            let pole = Vector3(direction * -cos(angle), -sin(angle))
+            let arm = twoBone(shoulder, hand, f.upperArm * k, f.forearm * k, pole)
             let toeDirection = headingVector(foot.heading)
             let toeLength = f.foot * k
             let toeOffset = Point(toeDirection.x * toeLength, toeDirection.y * toeLength)
             let toe = ankle + Vector3(toeOffset, 0)
             for (joint, point) in [("Hip", hip), ("Knee", leg.joint), ("Ankle", ankle), ("Toe", toe),
                                    ("Shoulder", shoulder), ("Elbow", arm.joint), ("Hand", hand)] { pose.world[prefix + joint] = point }
-            pose.joints[prefix + "Ankle"] = Point(foot.ground.x, foot.ground.y - foot.up * spec.view.heightScale)
+            pose.joints[prefix + "Ankle"] = leg.clamped ? project(ankle) : Point(foot.ground.x, foot.ground.y - foot.up * spec.view.heightScale)
             pose.joints[prefix + "Toe"] = pose.joints[prefix + "Ankle"]! + Point(toeOffset.x, toeOffset.y * depth)
         }
         for (name, point) in pose.world where pose.joints[name] == nil { pose.joints[name] = project(point) }
@@ -274,14 +299,40 @@ struct Rig: Sendable {
 }
 
 func twoBone(_ root: Vector3, _ end: Vector3, _ first: Double, _ second: Double, _ preferred: Vector3)
-    -> (joint: Vector3, clamped: Bool, reverse: Bool) {
+    -> (joint: Vector3, end: Vector3, clamped: Bool) {
     let vector = end - root, actual = vector.length
     let lower = abs(first - second) + 1e-10, upper = first + second - 1e-10
-    let distance = clamp(actual, lower, upper), axis = vector.unit
+    let distance = clamp(actual, lower, upper)
+    let axis = actual > 1e-12 ? vector.unit : Vector3(0, 0, -1)
     var bend = preferred - axis * preferred.dot(axis)
     if bend.length < 1e-9 { let fallback = Vector3(0, 0, 1); bend = fallback - axis * fallback.dot(axis) }
     let along = (first * first - second * second + distance * distance) / (2 * distance)
     let height = sqrt(max(0, first * first - along * along))
     let offset = bend.unit * height
-    return (root + axis * along + offset, actual < lower - 1e-8 || actual > upper + 1e-8, offset.dot(preferred) < -1e-8)
+    return (root + axis * along + offset, root + axis * distance, actual < lower - 1e-8 || actual > upper + 1e-8)
+}
+
+/// Judge the solved geometry independently of the IK pole.
+func bendOffset(_ root: Vector3, _ joint: Vector3, _ end: Vector3) -> Vector3 {
+    let axis = (end - root).unit, offset = joint - root
+    return offset - axis * offset.dot(axis)
+}
+func hasReversedKnee(_ pose: ActorPose) -> Bool {
+    let forward = Vector3(headingVector(pose.heading), 0)
+    return ["left", "right"].contains { side in
+        bendOffset(pose.world[side + "Hip"]!, pose.world[side + "Knee"]!, pose.world[side + "Ankle"]!).dot(forward) < -1e-8
+    }
+}
+func hasReversedElbow(_ pose: ActorPose) -> Bool {
+    let forward = headingVector(pose.drawnHeading), lateral = forward.normal
+    return ["left", "right"].contains { side in
+        let shoulder = pose.world[side + "Shoulder"]!, hand = pose.world[side + "Hand"]!
+        let axis = (hand - shoulder).unit
+        let outward = lateral * (side == "left" ? -1.0 : 1.0)
+        // The cast opens laterally. Infer that opening from the hand, not the solver.
+        let opening = clamp(axis.xy.dot(outward) / max(axis.xy.length, 1e-12))
+        let horizontal = (forward * (1 - opening) + outward * opening).unit
+        let expected = Vector3(horizontal * axis.z, -axis.xy.dot(horizontal))
+        return bendOffset(shoulder, pose.world[side + "Elbow"]!, hand).dot(expected) < -1e-8
+    }
 }

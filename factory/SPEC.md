@@ -100,7 +100,7 @@ figure units before normalization; angles in degrees; times in seconds.
 | `ink.overshoot` | 0 | 0–0.05 | Strokes run past their joints, sketch-like |
 | `motion.fps` | 24 | 12–60 | Frame rate |
 | `motion.onTwos` | true | bool | Poses change every second frame (particles and the card move every frame) |
-| `motion.step` | 0.18 | 0.08–0.4 | Distance between footfalls |
+| `motion.step` | 0.26 | 0.08–0.4 | Distance between footfalls |
 | `motion.cadence` | 2.0 | 0.8–3.5 | Footfalls per second; walking speed = step × cadence |
 | `motion.bounce` | 0.03 | 0–0.08 | Pelvis bob, lowest when both feet are down |
 | `motion.sway` | 0.01 | 0–0.04 | Pelvis side sway |
@@ -115,7 +115,7 @@ figure units before normalization; angles in degrees; times in seconds.
 | `motion.settle` | 0.3 | 0.1–1.0 | Seconds to come to rest |
 | `magic.colors` | `["#C9A227", "#6E9A5B"]` | 1–4 hex | Particles cycle through these |
 | `magic.shape` | `"sparkle"` | `sparkle`, `dot`, `leaf`, `star` | `sparkle` is a four-pointed star, as the app's `Sparkle` |
-| `magic.size` | 0.035 | 0.01–0.1 | |
+| `magic.size` | 0.07 | 0.01–0.1 | |
 | `magic.trail` | 4 | 0–20 | Particles per second from the feet while walking |
 | `magic.burst` | 24 | 0–80 | Particles from the hands at a cast's release |
 | `magic.life` | 1.2 | 0.3–3 | Seconds |
@@ -168,26 +168,30 @@ figure units before normalization; angles in degrees; times in seconds.
   for the card and the checks, and set the pixel size of the at-size sheets.
 - Paths are SVG path data (absolute `M L C Q Z`), flattened by arc length. `t` and `to` are
   fractions of a path's length.
-- Actions run in order. A walk's duration comes from the figure's gait (distance ÷ (step ×
-  cadence), plus easing), so the spec's taste parameters set the timing; `cast` and `idle` take
+- Actions run in order. A walk's duration comes from the figure's gait (one interval at
+  `cadence` per full or partial stride, plus easing), so the spec's taste parameters set the timing; `cast` and `idle` take
   `duration`. The scene lasts until the last action ends, plus `tail`.
 
 ## Rig
 
 - **Joints:** pelvis, chest, neck, head center; left and right shoulder, elbow, hand, hip, knee,
   ankle and toe.
-- **Walk:** the pelvis follows the path. Footfalls alternate every `step`, offset sideways by half
+- **Walk:** footfalls follow the path; the pelvis stays centered over the feet and lowers to keep
+  both legs within reach. Footfalls alternate every `step`, offset sideways by half
   the hip width. A planted foot does not move until it lifts; the swing foot travels to its next
   footfall on an eased arc `footLift` high. Legs are two-bone IK from hip to ankle, knees bending
-  forward along the heading. The standing pelvis height is 0.97 × (thigh + shin) less `bounce` at
-  double support. Arms swing opposite the legs, elbows slightly bent. The spine leans by `lean`
-  and curves forward at the chest by `hunch`.
+  forward along the heading. The standing pelvis height is 0.97 × (thigh + shin); `bounce` lowers
+  it at walking double support. Painting slopes are carried as terrain height so contacts stay fixed
+  even at zero view depth. The last partial stride keeps a full eased swing interval. Arms swing
+  opposite the legs, elbows bent back. The spine rotates by `lean` and `hunch` with the motion’s
+  effort, preserving torso and neck lengths; the standing skeleton
+  is upright and its scale is independent of bounce, lean and hunch.
 - **Turn:** the heading eases toward its target at up to `turnRate`, feet stepping in place.
-- **Cast:** key poses rest → wind-up (pelvis down, arms back and low) → release (arms up and toward
-  the heading, hands open; the burst leaves the hands here) → follow-through (past the release by
-  `followThrough`) → rest over `settle`. `anticipation` sets the wind-up's share of the duration.
+- **Cast:** key poses rest → wind-up (pelvis down, arms back and low) → release (arms up and
+  outward, hands above the head and spread beyond the shoulders, hands open; the burst leaves the hands here) →
+  follow-through (past the release by `followThrough`) → rest over `settle`. `anticipation` sets the wind-up's share of the duration.
   Cubic ease between key poses.
-- **Idle:** breathing (the chest rises slightly at about 0.3 Hz) and a slow weight shift.
+- **Idle:** breathing (a slight spine rotation at about 0.3 Hz) and a slow weight shift.
 - **On twos:** pose time is quantized to 2/fps when `onTwos` is true.
 
 ## Ink
@@ -233,7 +237,8 @@ words` (at least 2 s), then fades out.
 `tools/factory/render.py S C D` runs that, then adds:
 
 - `D/frames/NNNN.png` at the display's pixel size.
-- `D/clip.mp4` (H.264, yuv420p) and `D/clip.webp` (animated, for review pages).
+- `D/clip.mp4` (H.264, yuv420p, display pixels) and `D/clip.webp` (animated, display-point
+  resolution for review pages).
 - `D/sheets/contact.png`: 12 evenly spaced frames, 4 × 3, with timestamps.
 - `D/sheets/trail.png`: onion skin of every second frame of each action on plain paper, older
   frames fainter, with the paths of the hands, feet and head drawn as thin lines from

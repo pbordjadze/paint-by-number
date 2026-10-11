@@ -50,7 +50,7 @@ public struct FigureScene: Decodable, Sendable {
             case "walk": allowed = "do path to"
             case "turn": allowed = "do heading"
             case "cast", "idle": allowed = "do duration"
-            default: throw FigureInputError("\(decoder.codingPath.map(\.stringValue).joined(separator: ".")).do: expected walk turn cast idle")
+            default: throw FigureInputError("\(inputPath(decoder.codingPath)).do: expected walk turn cast idle")
             }
             let d = try Fields(decoder, allowed); self.kind = kind
             if kind == "walk" {

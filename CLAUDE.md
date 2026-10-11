@@ -305,6 +305,8 @@ implementation of the method in Selinger's paper "Potrace: a polygon-based traci
 GPL translation of potrace's source and is credited as a method. Never consult potrace's source, or
 any port of it, when changing the fitter: work from the paper.
 
+`Sources/FigureRig/Charter.swift` contains Bitstream Charter outlines under Bitstream’s license, factory only.
+
 ## CI feedback loop (no Xcode locally)
 
 1. Commit, push to a branch: `git push -u origin HEAD:<branch>` (CI runs on every branch).

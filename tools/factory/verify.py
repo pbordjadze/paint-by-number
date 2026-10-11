@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise SPEC.md's Done when list against the committed baseline and hero.
 
-Build static figures and pbn first (tools/swift.sh build -c release --static-swift-stdlib).
+Build static figures and pbn first (swift build -c release --static-swift-stdlib).
     taskset -c 0-3 tools/factory/verify.py /tmp/figure-v0-verification
 Runtime limits measure warm release binaries and the full review, excluding the build/tests.
 It also checks provenance hashes, PNG dimensions, animation and the video codec. All logs and
@@ -28,6 +28,12 @@ def timed(command, log=None):
 def require(condition, message):
     if not condition:
         raise RuntimeError(message)
+
+
+def protected_source_diff(root=ROOT):
+    base = subprocess.check_output(["git", "merge-base", "HEAD", "origin/claude/vibe-factory"], cwd=root, text=True).strip()
+    unchanged = subprocess.check_output(["git", "diff", base, "--", "Sources/PaintCore", "Sources/pbn", "Tests/PaintCoreTests"], cwd=root)
+    return unchanged
 
 
 def main():
@@ -65,10 +71,10 @@ def main():
     checks = json.loads((review / "checks.json").read_text())
     require(all(check["pass"] for check in checks), f"checks failed: {checks}")
     with (out / "swift-test.log").open("w") as log:
-        timed([ROOT / "tools/swift.sh", "test"], log)
+        timed(["swift", "test"], log)
     with (out / "python-test.log").open("w") as log:
         timed(["python3", "-m", "unittest", "discover", "-s", "tools/factory", "-p", "test_*.py"], log)
-    unchanged = subprocess.check_output(["git", "diff", "HEAD", "--", "Sources/PaintCore", "Sources/pbn", "Tests/PaintCoreTests"], cwd=ROOT)
+    unchanged = protected_source_diff()
     require(not unchanged, "PaintCore/pbn changed")
     print(f"Done when passed: engine {max(times):.2f} s; review {elapsed:.2f} s; {manifest['frameCount']} identical frames; "
           "all checks, Swift/Python tests, and protected-source checks passed")
