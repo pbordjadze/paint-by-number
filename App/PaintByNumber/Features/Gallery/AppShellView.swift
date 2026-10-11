@@ -3,8 +3,8 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The app's main navigation: gallery → painting (zoom transition), the create flow and
-/// settings.
+/// The app's main navigation: gallery → painting (zoom transition), the create flow,
+/// settings and The Marginarium.
 struct AppShellView: View {
     @Environment(Library.self) private var library
     @Namespace private var zoom
@@ -15,10 +15,12 @@ struct AppShellView: View {
     @State private var search = ShellDemo.current?.searchText ?? ""
     @State private var isCreating = ShellDemo.current?.opensCreateFlow ?? false
     @State private var isShowingSettings = ShellDemo.current?.opensSettings ?? false
+    @State private var isShowingMarginarium = ShellDemo.current?.opensMarginarium ?? false
     #else
     @State private var search = ""
     @State private var isCreating = false
     @State private var isShowingSettings = false
+    @State private var isShowingMarginarium = false
     #endif
     @State private var droppedPhoto: Data?
     @State private var droppedTitle: String?
@@ -86,6 +88,9 @@ struct AppShellView: View {
             SettingsView()
                 .environment(library)
         }
+        .sheet(isPresented: $isShowingMarginarium, onDismiss: presentIncomingImage) {
+            MarginariumView()
+        }
         .sheet(item: $timelapse, onDismiss: presentIncomingImage) { request in
             TimelapseExportSheet(request: request)
         }
@@ -123,6 +128,9 @@ struct AppShellView: View {
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
+        }
+        ToolbarItem(placement: .topBarLeading) {
+            Button("The Marginarium", systemImage: "book.pages") { isShowingMarginarium = true }
         }
         ToolbarItem(placement: .topBarTrailing) {
             Menu {
@@ -196,16 +204,17 @@ struct AppShellView: View {
     }
 
     /// Opens the create flow on the file once nothing stands in its way: on a cold launch the
-    /// first-launch samples are still being made, and the settings or time-lapse sheet has to
-    /// close first (its `onDismiss` comes back here; dismissing the time-lapse sheet cancels its
-    /// render). An open painting is dismissed (it saves as it disappears) and a create flow
-    /// already on screen starts over on the new photo. Not handled (untested): the gallery's
-    /// rename and delete dialogs and the painting screen's own sheets can be up when a file
-    /// arrives, and may keep the create flow from presenting.
+    /// first-launch samples are still being made, and the settings, Marginarium or time-lapse
+    /// sheet has to close first (its `onDismiss` comes back here; dismissing the time-lapse sheet
+    /// cancels its render). An open painting is dismissed (it saves as it disappears) and a
+    /// create flow already on screen starts over on the new photo. Not handled (untested): the
+    /// gallery's rename and delete dialogs and the painting screen's own sheets can be up when a
+    /// file arrives, and may keep the create flow from presenting.
     private func presentIncomingImage() {
         guard let image = incomingImage, library.placeholders.isEmpty else { return }
-        guard !isShowingSettings, timelapse == nil else {
+        guard !isShowingSettings, !isShowingMarginarium, timelapse == nil else {
             isShowingSettings = false
+            isShowingMarginarium = false
             timelapse = nil
             return
         }

@@ -69,7 +69,9 @@ synchronized folder would bundle it into the app.
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
-  Giving feedback); `Settings/`; `Share/`.
+  Giving feedback); `Marginarium/` (how the app is made, in chapters, with Pip, Codex's teapot:
+  `MarginariumView` from the gallery's toolbar, `MarginariumEntry`, `PipSprite` with its frames in
+  the asset catalog's `Pip/`); `Settings/`; `Share/`.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two

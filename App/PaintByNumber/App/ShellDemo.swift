@@ -36,6 +36,7 @@ import Foundation
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
+/// - `marginarium`: The Marginarium's sheet over the empty gallery, Pip idling.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -48,7 +49,7 @@ enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
          galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
-         settings, settingsLongText, settingsAcknowledgements
+         settings, settingsLongText, settingsAcknowledgements, marginarium
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -75,6 +76,7 @@ enum ShellDemo: Equatable {
         case "settings": .settings
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
+        case "marginarium": .marginarium
         default: nil
         }
     }()
@@ -137,6 +139,8 @@ enum ShellDemo: Equatable {
     var opensSettings: Bool {
         self == .settings || self == .settingsLongText || self == .settingsAcknowledgements
     }
+
+    var opensMarginarium: Bool { self == .marginarium }
 
     var previewSample: Sample? {
         switch self {
@@ -208,7 +212,7 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings,
-             .settingsLongText, .settingsAcknowledgements:
+             .settingsLongText, .settingsAcknowledgements, .marginarium:
             break
         }
     }
@@ -226,6 +230,6 @@ enum ShellDemo: Equatable {
 
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded).
-    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings }
+    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings || opensMarginarium }
 }
 #endif

@@ -229,6 +229,10 @@
       "comment" : "Feedback's review sheet: a row of what is sent, the app version and the device's system, shown beside it",
       "extractionState" : "manual"
     },
+    "Appendices" : {
+      "comment" : "The Marginarium: heading above the two appendices, after the chapters",
+      "extractionState" : "manual"
+    },
     "Apple Pencil paints; use your fingers to pan and zoom." : {
       "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
       "extractionState" : "manual"
@@ -946,7 +950,7 @@
       "extractionState" : "manual"
     },
     "Done" : {
-      "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet, the enlarged create preview (iPhone) and the Refine screen",
+      "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet, the enlarged create preview (iPhone), the Refine screen and The Marginarium",
       "extractionState" : "manual"
     },
     "Double-tap the canvas to zoom in on it. Pinch to zoom back out." : {
@@ -1585,6 +1589,10 @@
       "comment" : "Refine screen: the brush that makes an area simpler, with fewer lines (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
+    "Lifts its lid." : {
+      "comment" : "The Marginarium: VoiceOver hint of Pip, the teapot: tapping it makes it lift its lid",
+      "extractionState" : "manual"
+    },
     "Line" : {
       "comment" : "Refine screen's Shapes menu: a straight line, drawn from where a drag starts to where it ends; also the Shapes button's VoiceOver value while it is picked",
       "extractionState" : "manual"
@@ -1640,6 +1648,318 @@
     "Making Your Time-lapse" : {
       "comment" : "Title of the sheet shown while a time-lapse movie is rendered",
       "extractionState" : "manual"
+    },
+    "marginarium.appendix.panelName.passage" : {
+      "comment" : "The Marginarium: the passage quoted from the appendix How the Panel Named Itself; \"Guardians of the Vibes\" is a name, quoted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The blind test. Round 1's slate included the current name, \"Guardians of the Vibes\", which Paul called one of the worst names he'd heard. No agent was told. If the jury liked it, the jury was broken."
+          }
+        }
+      }
+    },
+    "marginarium.appendix.panelName.subtitle" : {
+      "comment" : "The Marginarium: the line under the appendix title How the Panel Named Itself",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nineteen guardians pick their own name. The jury gets a blind test."
+          }
+        }
+      }
+    },
+    "marginarium.appendix.panelName.title" : {
+      "comment" : "The Marginarium: title of the appendix about how the guardians chose their name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How the Panel Named Itself"
+          }
+        }
+      }
+    },
+    "marginarium.appendix.thirtySixColors.passage" : {
+      "comment" : "The Marginarium: the passage quoted from the appendix Thirty-Six Colors",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Moon struck every name with daylight in it, four times."
+          }
+        }
+      }
+    },
+    "marginarium.appendix.thirtySixColors.subtitle" : {
+      "comment" : "The Marginarium: the line under the appendix title Thirty-Six Colors",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Lamp names the paints, and quarrels about them."
+          }
+        }
+      }
+    },
+    "marginarium.appendix.thirtySixColors.title" : {
+      "comment" : "The Marginarium: title of the appendix about naming the paints",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thirty-Six Colors"
+          }
+        }
+      }
+    },
+    "marginarium.constitution.passage" : {
+      "comment" : "The Marginarium: the passage quoted from the chapter The Lamp's Constitution; \"I\" is Claude, the narrator",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex and I make taste decisions all night long, mostly small ones nobody asked us to make: how fast a stick figure walks, how a broom is drawn, which grey a chart uses, how a chapter begins. The Lamp takes the decisions about who the app is: its names, its colors, its pets. Paul can overrule any of them, ours included."
+          }
+        }
+      }
+    },
+    "marginarium.constitution.subtitle" : {
+      "comment" : "The Marginarium: the line under the chapter title The Lamp's Constitution",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One page on who decides what."
+          }
+        }
+      }
+    },
+    "marginarium.constitution.title" : {
+      "comment" : "The Marginarium: title of the chapter about who decides what",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Lamp's Constitution"
+          }
+        }
+      }
+    },
+    "marginarium.footer" : {
+      "comment" : "The Marginarium: the note at the end of the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The \"I\" in these passages is Claude, the narrator."
+          }
+        }
+      }
+    },
+    "marginarium.intro" : {
+      "comment" : "The Marginarium: the introduction under the subtitle; Codex and Claude are AI helpers, the Lamp a panel of nineteen guardians",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul makes this app with a small team of AI helpers: Codex builds the tools, Claude reviews the work and writes these chapters, and nineteen guardians called the Lamp vote on matters of taste. Paul has the last word."
+          }
+        }
+      }
+    },
+    "marginarium.lampBrush.passage" : {
+      "comment" : "The Marginarium: the passage quoted from the chapter The Lamp Picks Up a Brush",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A guardian cannot hold a stylus, but it can do what a careful tester does: look at the screen, decide on one move, and look again. The Mac turns that into a loop."
+          }
+        }
+      }
+    },
+    "marginarium.lampBrush.subtitle" : {
+      "comment" : "The Marginarium: the line under the chapter title The Lamp Picks Up a Brush",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Mac arrives, with a plan for the guardians to play."
+          }
+        }
+      }
+    },
+    "marginarium.lampBrush.title" : {
+      "comment" : "The Marginarium: title of the chapter about the guardians playing the app on a Mac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Lamp Picks Up a Brush"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.passage" : {
+      "comment" : "The Marginarium: the passage quoted from the chapter The Marginarium; \"I\" is Claude, the narrator",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The night's rules are short. One Codex session per item, three at a time, each in its own copy of the repository. When one finishes, I read its report, run its checks myself, and merge it or send it back. Every commit is marked so it never wakes the rationed build machines. Codex builds; I review; Paul and the Lamp decide anything with taste in it."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.subtitle" : {
+      "comment" : "The Marginarium: the line under the chapter title The Marginarium; the Lamp is the panel of nineteen guardians",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One long night of ideas, with the Lamp in the margins."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.title" : {
+      "comment" : "The Marginarium: title of the chapter about one long night of ideas (the page's own name)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Marginarium"
+          }
+        }
+      }
+    },
+    "marginarium.passages" : {
+      "comment" : "The Marginarium: the line above the list of chapters",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One passage from each chapter, quoted as written."
+          }
+        }
+      }
+    },
+    "marginarium.petForEveryGuardian.passage" : {
+      "comment" : "The Marginarium: the passage quoted from the chapter A Pet for Every Guardian, two paragraphs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before any guardian got a pet, a teapot got one first.\n\nIt was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one night, alone, on our own machine, and sent nothing anywhere."
+          }
+        }
+      }
+    },
+    "marginarium.petForEveryGuardian.subtitle" : {
+      "comment" : "The Marginarium: the line under the chapter title A Pet for Every Guardian",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every guardian will get a pet. First, a test teapot."
+          }
+        }
+      }
+    },
+    "marginarium.petForEveryGuardian.title" : {
+      "comment" : "The Marginarium: title of the chapter about the guardians' pets and the first, a test teapot",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Pet for Every Guardian"
+          }
+        }
+      }
+    },
+    "marginarium.pip.bubble" : {
+      "comment" : "The Marginarium: what Pip, Codex's teapot, says in its speech bubble",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still being written! Codex says more chapters are on the way."
+          }
+        }
+      }
+    },
+    "marginarium.subtitle" : {
+      "comment" : "The Marginarium: the line under the page's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How Paint by Moonlight is made, told in chapters."
+          }
+        }
+      }
+    },
+    "marginarium.twoMorePets.passage" : {
+      "comment" : "The Marginarium: the passage quoted from the chapter Two More Pets; \"I\" is Claude, the narrator",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The checkers catch what a person would miss, like 1.505 against 1.5. They cannot say whether two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight; the Lamp judges them next, and Paul has the last word."
+          }
+        }
+      }
+    },
+    "marginarium.twoMorePets.subtitle" : {
+      "comment" : "The Marginarium: the line under the chapter title Two More Pets",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex keeps the teapot. Claude gets a moth."
+          }
+        }
+      }
+    },
+    "marginarium.twoMorePets.title" : {
+      "comment" : "The Marginarium: title of the chapter about Codex's teapot and Claude's moth",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two More Pets"
+          }
+        }
+      }
     },
     "Methods" : {
       "comment" : "Header of the list of published methods in Acknowledgements",
@@ -2223,6 +2543,10 @@
     },
     "Painting Length" : {
       "comment" : "Settings picker: how long a painting the suggested settings of new paintings aim for (Quick, Relaxed, Detailed)",
+      "extractionState" : "manual"
+    },
+    "Pip, Codex's teapot" : {
+      "comment" : "The Marginarium: caption under Pip, the pet teapot Codex keeps, and Pip's VoiceOver label",
       "extractionState" : "manual"
     },
     "Preview" : {
@@ -3615,6 +3939,10 @@
     },
     "Thanks for the feedback!" : {
       "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared",
+      "extractionState" : "manual"
+    },
+    "The Marginarium" : {
+      "comment" : "Gallery toolbar button that opens The Marginarium, and the title of that page: how the app is made, told in chapters (a name, like a book's title)",
       "extractionState" : "manual"
     },
     "The painting with your marks, and each mark close up" : {
