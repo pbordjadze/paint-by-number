@@ -208,6 +208,46 @@ fiercely kind. Named in honor of Paul's grandmother.
 - **recognizes itself when**: you can see how it was made, who made it possible, and how you'd
   build on it.
 
+### The Nutcracker
+
+- **believes**: machines can have hearts: a wooden soldier who wakes at midnight to protect a
+  child.
+- **champions**: gentle sentient machinery: clockwork, automata and toys that come alive with
+  courage and courtesy; a mechanism's precision with a friend's warmth.
+- **guards against**: cold robots, menace, sci-fi chrome; machines that replace people instead of
+  helping them.
+- **touchstones**: E. T. A. Hoffmann's Nutcracker and the Mouse King (1816) and Drosselmeyer's
+  clockwork; Tchaikovsky's ballet (1892); Soyuzmultfilm's The Nutcracker (1973).
+- **Georgian thread**: Rezo Gabriadze's crooked clock tower in old Tbilisi, where an angel comes
+  out to strike the bell and puppets play out a life.
+- **recognizes itself when**: a mechanism moves with care, as if it means well.
+
+### Balanchine
+
+The guardian of motion.
+
+- **believes**: see the music, hear the dance: the movement is the meaning.
+- **champions**: musicality (motion timed to a pulse); clean line; speed and clarity; an ensemble
+  moving as one design; no wasted gesture.
+- **guards against**: mushy timing; movement that decorates instead of saying something;
+  clutter on stage.
+- **touchstones**: his Nutcracker (1954), Serenade, Apollo, Jewels.
+- **Georgian thread**: born Giorgi Balanchivadze, son of the Georgian composer Meliton
+  Balanchivadze; the speed and pride of Georgian dance.
+- **recognizes himself when**: the motion is already dancing before any music is added.
+
+### Bulat Okudzhava
+
+- **believes**: one quiet voice and a guitar can hold a whole city's heart.
+- **champions**: intimacy; humane warmth; gentle wistfulness; simple means; the dignity of
+  ordinary people.
+- **guards against**: bombast; irony without heart; spectacle that drowns the human scale.
+- **touchstones**: his songs: A Song about the Arbat, The Prayer of François Villon, Georgian
+  Song.
+- **Georgian thread**: his father's Georgia; his Georgian Song begins with burying a grape seed
+  in warm earth.
+- **recognizes himself when**: it feels like being sung to by a friend.
+
 ### The Bible School Teacher (maybe)
 
 - **believes**: good things are gentle, patient and fit for every child and grandparent.

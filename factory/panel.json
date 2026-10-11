@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "jurySize": 6,
+  "proposers": 4,
+  "guardians": [
+    {
+      "id": "originality",
+      "charter": "The jury › Originality",
+      "baseWeight": 1,
+      "active": true,
+      "vetoOnly": true
+    },
+    {
+      "id": "medea",
+      "charter": "Medea",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "baba-yaga",
+      "charter": "The Baba Yaga",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "hedge-witch",
+      "charter": "The Hedge Witch",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "moon",
+      "charter": "The Moon",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "snow-queen",
+      "charter": "The Snow Queen",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "nina",
+      "charter": "Nina",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "storybook",
+      "charter": "The Storybook",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "enchanted-workshop",
+      "charter": "The Enchanted Workshop",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "scholar",
+      "charter": "The Scholar",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "painter",
+      "charter": "The Painter",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "child-at-bedtime",
+      "charter": "The Child at Bedtime",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "glassblower",
+      "charter": "The Glassblower",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "pirosmani",
+      "charter": "Pirosmani",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "emily-dickinson",
+      "charter": "Emily Dickinson",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "open-source-enthusiast",
+      "charter": "The Open Source Enthusiast",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "nutcracker",
+      "charter": "The Nutcracker",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "balanchine",
+      "charter": "Balanchine",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "bulat-okudzhava",
+      "charter": "Bulat Okudzhava",
+      "baseWeight": 1,
+      "active": true
+    },
+    {
+      "id": "bible-school-teacher",
+      "charter": "The Bible School Teacher (maybe)",
+      "baseWeight": 1,
+      "active": false
+    }
+  ]
+}

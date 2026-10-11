@@ -170,11 +170,16 @@ helpful, beautiful.
 - The panel (Paul's picks): Medea, the Baba Yaga, the Hedge Witch, the Moon, the Snow Queen (in
   place of Elsa), Nina (the robber girl of the 1957 Snow Queen, named for Paul's
   grandmother), the Storybook, the Enchanted Workshop, the Scholar, the Painter, the Child at
-  Bedtime, the Glassblower, Pirosmani, Emily Dickinson, the Open Source Enthusiast, the Bible School Teacher
-  (maybe). Paul
+  Bedtime, the Glassblower, Pirosmani, Emily Dickinson, the Open Source Enthusiast, the Nutcracker, Balanchine,
+  Bulat Okudzhava, the Bible School Teacher (maybe). Paul
   singled out the Scholar.
-- 16 guardians on every decision would cost 16 agents a round, and everyone would wait many
+- 19 guardians on every decision would cost 19 agents a round, and everyone would wait many
   pieces to be represented; a jury of six drawn by the ledger keeps rounds small and fair.
+- More guardians don't cost more per round (the jury stays six); each one sits less often and
+  the design gets pulled more ways. Overlaps: the Nutcracker and the Enchanted Workshop (things
+  come alive), Balanchine and the Nutcracker. Prune after calibration shows which views help.
+- Paul: one day Caroline may run the panel, its charters and their weights; seats and base
+  weights are data for that (`panel.json`, `ARCHITECTURE.md`).
 - The animation stays stick figures for now: converge, see whether the factory works, then
   revisit.
 

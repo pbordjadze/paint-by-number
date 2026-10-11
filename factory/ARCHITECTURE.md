@@ -45,8 +45,9 @@ pipeline-stage scenes come later, each with its own small format and renderer.
    that juror, with every candidate's sheets. Each answers, for each candidate: where its idea
    lives in it (or that it doesn't), a veto with a reason or none, and a full ranking.
 5. **Decide.** Vetoed candidates are out. Each ranking scores points (n − 1 for first down to 0
-   for last), multiplied by the juror's weight: 1, plus 0.5 for each piece since the ledger last
-   found that guardian in a winner, capped at 2. The highest total wins; ties go to the candidate
+   for last), multiplied by the juror's weight: its base weight from `panel.json`, times 1 plus
+   0.5 for each piece since the ledger last found that guardian in a winner (capped at 2), times
+   its calibration factor once there is one. The highest total wins; ties go to the candidate
    more jurors ranked first, then to the champion. The winner becomes the champion.
 6. **Record.** The ledger gets each juror's line on where it lives in the winner.
 
@@ -73,6 +74,9 @@ it from there.
 factory/
   ARCHITECTURE.md  SPEC.md  GUARDIANS.md  NOTES.md
   STYLE.md                          Paul's approved rules (starts empty)
+  panel.json                        the seats: each guardian's id, charter heading, base weight
+                                    (1 by default) and whether it is active; whoever curates the
+                                    panel edits this, never the code
   pieces/<piece>/
     brief.md
     champion.json                   the current winner's parameters
