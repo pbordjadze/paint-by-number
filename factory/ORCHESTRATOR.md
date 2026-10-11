@@ -76,6 +76,19 @@ driving manual and the state of play.
 | Loop | Claude made the taste loop's JSON writes atomic after a half-written job file failed one test run |
 | F11 | Waits on CI minutes |
 
+
+App work now branches from `main` (runner `run_codex.sh <ID> <slug> main <prompt>`; prompts in
+Claude's scratchpad). Codex commits with `[skip ci]`; Claude pushes a merge to a `claude/` branch
+for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's own usage is tight
+(Paul's plan is shared): no Lamp runs, no Claude subagents, short reviews.
+
+| App item | State |
+| --- | --- |
+| Marginarium v1 (73a9600) | On `main`, build 1.0.294 in SideStore: Pip and one passage per chapter |
+| F29 Marginarium v2 | Running (Codex): people-first intro, Colophon, How the Lamp works |
+| F28 Damaged data never traps | Running (Codex) |
+| F30 Play harness, app half | Running (Codex): Debug hook, mailbox UI test, CI self-test |
+
 ## Waiting on Paul
 
 - Chapter 7, Two More Pets: https://claude.ai/code/artifact/a112d638-0555-4f24-9a6a-6a3fc5476adf.
