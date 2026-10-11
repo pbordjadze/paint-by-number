@@ -496,6 +496,37 @@ Factory only; no app code. Build on F17's `Driver` protocol in `factory/taste/pl
   recorded session with F17's mock driver. Nothing here may call a real `xcrun`.
 - `play.py` gains `--driver simctl` with the options above; the mock stays the default.
 
+### F25 · A read-only audit of the saved-painting decoders
+Report only, no repository changes. Saved paintings must open in every later build and decoders
+treat files as hostile (root `CLAUDE.md` › Saved data compatibility); PaintCore ships
+`-Ounchecked`, so a missed check is a silent out-of-bounds read on a user's device.
+- Read `Sources/PaintCore/Model/TemplateCoding.swift`, the `LINE` and `DETL` chunk readers, the
+  `PaintProgress` reader and everything they call, as a reviewer who will be blamed. For every
+  count, span, reference and coordinate: is it checked against the bytes left or the canvas, in
+  `Int` arithmetic, before anything allocates or indexes with it?
+- Fuzz them on Linux from a harness kept **outside the repo** (a scratch Swift package that
+  depends on PaintCore by path, built in release with `-Ounchecked` like the app, plus a debug
+  build so traps show): start from the five frozen fixtures in `Tests/PaintCoreTests/Fixtures/`
+  and from templates `pbn generate` writes, mutate (bit flips, truncation, length and count
+  fields set to boundary values, chunk tags swapped, chunks duplicated), and decode. A trap,
+  hang, huge allocation or out-of-bounds read under the debug build is a finding; record each
+  crashing input under `/root/factory-out/F25/crashes/`.
+- Write `/root/factory-out/F25/audit.md`: findings most severe first, each with file and line,
+  the input that triggers it, and a proposed fix; then what was fuzzed (inputs, iterations, time)
+  and found sound.
+
+### F26 · Determinism across core counts, checked
+Report only, no repository changes. Root `CLAUDE.md` promises the same maps and settings give the
+same bytes on any core count (`Parallel`'s doc comment is the contract).
+- Build `pbn` in release. For each `Tests/Corpus` photo, generate classic, the coloring book from
+  `tools/baseline/lines/` (as `tools/regression.py` does) and Auto's suggestion under
+  `taskset -c 0`, `0-1`, `0-2` and all cores, and compare the template bytes and stats.
+- Read `Sources/PaintCore` for floating-point reductions whose grouping follows the band or
+  core count (the convention's examples: `RegionAdjacency.boundarySteps`,
+  `RegionRuns.accumulate`), and any reading of `activeProcessorCount` that reaches output.
+- Write `/root/factory-out/F26/report.md`: the byte comparison table, every difference traced to
+  its code with a proposed fix, and the reductions you checked and found sound.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
