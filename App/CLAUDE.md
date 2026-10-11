@@ -408,3 +408,12 @@ Type up to 1.4×; the fixed-height bars clamp at `.xxLarge` and use the Large Co
 Reduce Motion reaches the
 canvas through `CanvasView.reduceMotion` (instant fills and undos, no shine, stepped replay). UI
 tests query these identifiers.
+
+Debug launches with `-playHarness` replace the canvas's accessibility children with one
+`area-N` button per region (one-based, including filled areas), centered on its primary label
+point and valued with its paint number. `play-state` reads the session as the version 1 mailbox
+state JSON; `play-settled` reports canvas/animation idleness, and `play-screen-scale` reports
+the canvas display scale for screenshot-pixel drags. These readouts stay live as the camera
+moves and never paint through accessibility activation. `PaintByNumberUITests/PlayTests`
+consumes `PLAY_MAILBOX`, or skips when unset; its temporary-mailbox self-test runs in CI's
+`ipad` group. All hooks and tests are guarded by `#if DEBUG`.
