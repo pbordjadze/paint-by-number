@@ -1,7 +1,7 @@
-// SHA-256 compression and padding from FIPS 180-4; kept in the host CLI so FigureRig
-// needs no crypto framework or package on iOS/Linux. Only input provenance uses it.
-enum SHA256 {
-    static func digest(_ input: [UInt8]) -> String {
+// SHA-256 compression and padding from FIPS 180-4, without a crypto framework or package.
+// Shared by CLI provenance and the frozen-hero digest tests.
+public enum FigureSHA256 {
+    public static func digest(_ input: [UInt8]) -> String {
         let constants: [UInt32] = [
             0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
             0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,

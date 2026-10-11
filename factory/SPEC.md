@@ -1,4 +1,4 @@
-# Figure engine v0: spec
+# Figure engine v1: spec
 
 The contract for whoever builds the engine (Codex on the homelab, or Claude). The engine renders
 a short clip of stick-figure workers from two small JSON files: a **figure spec**, which holds the
@@ -6,9 +6,9 @@ taste parameters the guardians tune, and a **scene**, which says where the figur
 they do. It writes the review sheets and the code checks the taste panel reads. Same inputs, same
 bytes.
 
-**v0 scope:** one figure; the actions walk, turn, cast (a spell gesture) and idle; one citation
-card; one test scene we draw ourselves. **Not in v0:** props, several actors, the pipeline-stage
-scenes, the app's renderer, the pipeline snapshot observer and the agent loop.
+**Version 1 scene scope (engine v0):** one figure; the actions walk, turn, cast (a spell gesture) and idle; one citation
+card; one test scene we draw ourselves. **Version 2 scenes (engine v1):** props, sweep and ink actions, and several actors. Pipeline-stage
+scenes, the app renderer, the snapshot observer and the agent loop remain separate work.
 
 ## Layout
 
@@ -65,7 +65,7 @@ commit `.build/` or render output). Commits carry `[skip ci]` until the branch n
 - `motion.headingSteps` 8 or 16 snaps the *drawn* heading to that many directions (the sprite
   look of the original idea); the feet still follow the path. 0 draws the true heading.
 
-## Figure spec (version 1)
+## Figure spec (version 1, retained)
 
 Unknown keys and out-of-range values are errors that name the field and its range, so an agent's
 typo fails loudly instead of doing nothing. Missing keys take their defaults. Lengths are in
@@ -73,7 +73,7 @@ figure units before normalization; angles in degrees; times in seconds.
 
 | Key | Default | Range | Meaning |
 | --- | --- | --- | --- |
-| `version` | 1 | 1 | Format version |
+| `version` | 1 | 1, 2 | Format version; omitted remains 1 |
 | `figure.headSize` | 0.16 | 0.10–0.26 | Head height |
 | `figure.headAspect` | 0.85 | 0.6–1.2 | Head width / height |
 | `figure.neck` | 0.03 | 0–0.08 | |
@@ -133,7 +133,7 @@ figure units before normalization; angles in degrees; times in seconds.
 | `card.holdBase` | 0.5 | 0.3–1.5 | Hold = holdBase + perWord × words, at least 2 s |
 | `card.perWord` | 0.2 | 0.12–0.35 | |
 
-## Scene (version 1)
+## Scene (version 1, retained)
 
 ```json
 {
@@ -172,6 +172,55 @@ figure units before normalization; angles in degrees; times in seconds.
 - Actions run in order. A walk's duration comes from the figure's gait (one interval at
   `cadence` per full or partial stride, plus easing), so the spec's taste parameters set the timing; `cast` and `idle` take
   `duration`. The scene lasts until the last action ends, plus `tail`.
+
+## Figure spec and scene (version 2)
+
+Figure spec version 2 has the same parameters, ranges and defaults as version 1; it accepts
+`"version": 2`. Version 1 keeps decoding and the committed hero's SVG frames, motion and checks
+keep their original bytes. The engine version is `1.0.0`; only the manifest's engine version changes
+for the hero. New scene fields and actions require scene version 2. A version 2 scene accepts
+one or more actors with unique, nonempty ids, and these additions:
+
+| Field | Default / range | Meaning |
+| --- | --- | --- |
+| `actors[].holds` | absent; `broom`, `brush`, `mortar`, `jar` | Held in the right hand along the forearm; sweep also grips the shaft with the left hand |
+| `props` | `[]` | Ground items, each `{ "kind": "jar", "at": { "path": "brook", "t": 0.4 } }`; same four kinds and location rules as actors |
+| `sweep` action | `{ "do": "sweep", "path": "hill", "to": 0.4 }` | Walk timing and footfalls; requires `holds: broom`; both hands low, head swings across the heading once per footfall, including a partial final stride |
+| `ink` action | `{ "do": "ink", "path": "brook", "from": 0, "to": 0.4 }` | Requires `holds: brush`; starts at `from`, uses walk timing, stands to the travel direction's left, brush tip on the path |
+
+Lengths below are fixed shares of the normalized standing figure height (before projection),
+rather than taste parameters. Broom length is 0.70, brush length 0.50 (grip to tip 0.42), mortar
+width 0.24 and jar height 0.22. Props use the figure's ink color, pressure, taper and seeded wobble.
+Shapes are defined in code: broom shaft and fan of bristles, brush handle/ferrule/tip, mortar bowl
+and pestle, jar rim and body. Ground props stand at their path sample and are drawn below actors.
+
+Ink walkers are offset 0.14 figure heights to their left in canvas coordinates and crouch by
+0.12 figure heights, adjusting the crouch when the terrain under the planted feet would put the
+brush tip outside the arm’s folded or extended reach (the body and both legs are solved again). Two-bone IK
+solves shoulder → elbow → tip, treating forearm plus brush as the second bone, then places the
+hand on that bone at the grip. An unreachable arm keeps the solved tip and fails `brushTip`;
+it never silently stretches a bone. Poses and the growing stroke use the same quantized time.
+The stroke follows exact flattened path vertices up to the tip, supports either travel direction,
+and stays drawn for later actions and the scene tail. Its seed is fixed per actor and action, so
+finished strokes stay still even when the figure's ink boils. Path-changing ink actions may start
+at their explicit `from`; later walk/sweep actions follow the worker's offset position.
+
+Actors render far to near by the mean screen y of their ankles, ties by scene actor order.
+`motion.json` actors remain in scene order. Every actor has independent id-seeded wobble and
+particle streams. Scene duration is the longest actor timeline plus tail; particles draw above
+all actors and the card above everything.
+
+Version 2 adds these entries to `checks.json` (version 1 retains its original check list):
+
+| Check | Limit | Computed by |
+| --- | --- | --- |
+| `brushTip`: greatest distance between solved brush tip and current ink path sample | ≤ 0.5 canvas px, every ink frame | rig |
+| `propGrip`: greatest distance between each held prop grip and its corresponding hand | ≤ 0.5 canvas px, every frame | rig |
+| `actorSeparation`: smallest screen distance between any two pelvises | ≥ one normalized hip width in canvas px | rig |
+
+For a single actor, `actorSeparation` reports the canvas diagonal (no pairs). Existing checks
+aggregate all actors; planted contacts are tracked by actor id. `factory/scenes/workers.json`
+on `hero.svg` inks the brook and sweeps the hill concurrently, with ground props.
 
 ## Rig
 

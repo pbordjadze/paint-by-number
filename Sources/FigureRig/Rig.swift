@@ -13,6 +13,7 @@ struct PlannedAction: Sendable {
     var timing: ActionTiming, path: ArcPath?, from: Double, to: Double, origin: Point
     var headingFrom: Double, headingTo: Double, feet: [Foot], endFeet: [Foot]
     var distance: Double = 0, gaitDistance: Double = 0, stepLength: Double = 0, ramp: Double = 0, headings: [Double] = []
+    var lateralOffset = 0.0
     var contactBase = 0
     var duration: Double { timing.end - timing.start }
     func travelled(_ t: Double) -> Double {
@@ -32,7 +33,8 @@ struct PlannedAction: Sendable {
 
     func walkSample(_ distance: Double) -> (point: Point, heading: Double) {
         let sample = path!.sample(mix(from, to, self.distance > 0 ? clamp(distance / self.distance) : 0))
-        return (sample.point, wrapHeading(sample.heading + (to < from ? 180 : 0)))
+        let heading = wrapHeading(sample.heading + (to < from ? 180 : 0))
+        return (sample.point - headingVector(heading).normal * lateralOffset, heading)
     }
 }
 
@@ -40,13 +42,15 @@ public struct ActorPose: Codable, Sendable {
     public var id: String, action: String, heading: Double, drawnHeading: Double
     public var joints: [String: Point], planted: [String: Bool]
     public var contacts: [String: Int]
+    public var prop: HeldProp?
+    public var inkPathPoint: Point?
     public var poseTime: Double
     var world: [String: Vector3] = [:]
     var origin = Point.zero
     var ikClamps = 0
     var swingFoot = "left"
     var handsOpen = false
-    enum CodingKeys: CodingKey { case id, action, heading, drawnHeading, joints, planted, contacts, poseTime }
+    enum CodingKeys: CodingKey { case id, action, heading, drawnHeading, joints, planted, contacts, poseTime, prop, inkPathPoint }
 }
 
 /// A stateless sampler: footfalls are absolute path samples, so a planted foot is identical
@@ -54,18 +58,20 @@ public struct ActorPose: Codable, Sendable {
 struct Rig: Sendable {
     let spec: FigureSpec, scene: FigureScene
     let unit: Double, actions: [PlannedAction]
+    let actorIndex: Int
+    var actor: FigureScene.Actor { scene.actors[actorIndex] }
     let initialOrigin: Point, initialHeading: Double, initialFeet: [Foot]
     var duration: Double { (actions.last?.timing.end ?? 0) + scene.tail }
 
-    init(spec: FigureSpec, scene: FigureScene) throws {
-        self.spec = spec; self.scene = scene; unit = spec.normalizationScale * scene.figureHeight
+    init(spec: FigureSpec, scene: FigureScene, actorIndex: Int = 0) throws {
+        self.spec = spec; self.scene = scene; self.actorIndex = actorIndex; unit = spec.normalizationScale * scene.figureHeight
         var paths: [String: ArcPath] = [:]
         for name in scene.paths.keys.sorted() {
             do { paths[name] = try ArcPath(scene.paths[name]!) }
             catch { throw FigureInputError("paths.\(name): \(error)") }
         }
-        let actor = scene.actors[0]
-        guard let firstPath = paths[actor.at.path] else { throw FigureInputError("actors[0].at.path: unknown path \(actor.at.path)") }
+        let actor = scene.actors[actorIndex]
+        guard let firstPath = paths[actor.at.path] else { throw FigureInputError("actors[\(actorIndex)].at.path: unknown path \(actor.at.path)") }
         let first = firstPath.sample(actor.at.t)
         initialOrigin = first.point; initialHeading = first.heading
         let k = unit, halfHip = spec.figure.hipWidth * k / 2, depth = spec.view.depth
@@ -76,6 +82,7 @@ struct Rig: Sendable {
         var feet = [foot(first.point, first.heading, 0), foot(first.point, first.heading, 1)]
         initialFeet = feet
         var origin = first.point, heading = first.heading, time = 0.0, fraction = actor.at.t, pathName = actor.at.path
+        var lateralOffset = 0.0
         var result: [PlannedAction] = []
         for (i, input) in actor.timeline.enumerated() {
             var action = PlannedAction(timing: ActionTiming(actor: actor.id, kind: input.kind, start: time, end: time), path: nil,
@@ -83,14 +90,25 @@ struct Rig: Sendable {
                                        headingFrom: heading, headingTo: heading, feet: feet, endFeet: feet)
             action.contactBase = (i + 1) * 1_000_000
             switch input.kind {
-            case "walk":
-                guard let path = paths[input.path!] else { throw FigureInputError("actors[0].timeline[\(i)].path: unknown path \(input.path!)") }
-                if pathName != input.path! {
+            case "walk", "sweep", "ink":
+                guard let path = paths[input.path!] else { throw FigureInputError("actors[\(actorIndex)].timeline[\(i)].path: unknown path \(input.path!)") }
+                if input.kind == "ink" {
+                    fraction = input.from!
+                    lateralOffset = scene.figureHeight * 0.14
+                    let start = path.sample(fraction)
+                    let h = wrapHeading(start.heading + (input.to! < fraction ? 180 : 0))
+                    origin = start.point - headingVector(h).normal * lateralOffset
+                    feet = [foot(origin, h, 0), foot(origin, h, 1)]
+                    for side in 0..<2 { feet[side].contact = action.contactBase + side }
+                    action.origin = origin; action.feet = feet; action.endFeet = feet
+                    action.headingFrom = h; heading = h
+                } else if pathName != input.path! {
                     guard (path.sample(0).point - origin).length < 1e-6 else {
-                        throw FigureInputError("actors[0].timeline[\(i)].path: new path must start at the actor's current position")
+                        throw FigureInputError("actors[\(actorIndex)].timeline[\(i)].path: new path must start at the actor's current position")
                     }
                     fraction = 0
                 }
+                action.lateralOffset = lateralOffset
                 action.path = path; action.from = fraction; action.to = input.to!
                 action.distance = abs(action.to - fraction) * path.length
                 let speed = spec.motion.step * k * spec.motion.cadence
@@ -117,7 +135,7 @@ struct Rig: Sendable {
                     action.headings.append(h)
                 }
                 action.headingTo = h
-                origin = path.sample(action.to).point; fraction = action.to; pathName = input.path!
+                origin = action.walkSample(action.distance).point; fraction = action.to; pathName = input.path!
             case "turn":
                 action.headingTo = wrapHeading(input.heading!)
                 let delta = headingDelta(heading, action.headingTo)
@@ -147,12 +165,12 @@ struct Rig: Sendable {
         let t = quantized ? floor(max(0, time) / quantum + 1e-9) * quantum : max(0, time)
         var origin = initialOrigin, heading = initialHeading, feet = initialFeet
         var phase = 0.0, armAngle = 0.0, crouch = 0.0, lean = 0.0, effort = 0.0, actionName = "idle", open = false
-        var swing = 0
+        var swing = 0, gaitCycle = 0.0
         let active = actions.first(where: { t >= $0.timing.start && t < $0.timing.end })
         if let action = active {
             actionName = action.timing.kind; origin = action.origin; heading = action.headingFrom; feet = action.feet
             let elapsed = t - action.timing.start
-            if actionName == "walk", action.distance > 0 {
+            if ["walk", "sweep", "ink"].contains(actionName), action.distance > 0 {
                 let distance = action.travelled(elapsed), step = spec.motion.step * unit
                 origin = action.walkSample(distance).point
                 let sample = elapsed * 240, index = min(action.headings.count - 2, Int(sample))
@@ -161,6 +179,7 @@ struct Rig: Sendable {
                 for i in 0..<segment { feet[i % 2] = footfall(action, min(action.distance, Double(i + 1) * step), i % 2) }
                 let span = min(step, action.distance - Double(segment) * step)
                 phase = clamp((distance - Double(segment) * step) / max(span, 1e-12)); swing = segment % 2
+                gaitCycle = Double(segment) + phase
                 feet[swing] = swinging(feet[swing], footfall(action, min(action.distance, Double(segment + 1) * step), swing), phase, spec.motion.footLift * unit)
                 effort = action.ramp > 0 ? min(cubic(elapsed / action.ramp), cubic((action.duration - elapsed) / action.ramp)) : 1
                 armAngle = spec.motion.armSwing * sin(2 * .pi * (Double(segment) + phase) / 2) * effort
@@ -200,11 +219,84 @@ struct Rig: Sendable {
                 open = elapsed >= wind && elapsed < settleStart
             }
         } else if let last = actions.last(where: { $0.timing.end <= t }) {
-            origin = last.path.map { $0.sample(last.to).point } ?? last.origin
+            origin = last.path != nil ? last.walkSample(last.distance).point : last.origin
             heading = last.headingTo; feet = last.endFeet
         }
-        return body(origin: origin, heading: heading, feet: feet, time: t, action: actionName,
-                    phase: phase, swing: swing, armAngle: armAngle, crouch: crouch, lean: lean, effort: effort, open: open)
+        if actionName == "ink" { crouch = 0.12 / spec.normalizationScale }
+        func sampledBody(_ crouch: Double) -> ActorPose {
+            body(origin: origin, heading: heading, feet: feet, time: t, action: actionName,
+                 phase: phase, swing: swing, armAngle: armAngle, crouch: crouch, lean: lean, effort: effort, open: open)
+        }
+        var pose = sampledBody(crouch)
+        if let kind = actor.holds {
+            if active?.timing.kind == "ink", let action = active {
+                let distance = action.travelled(t - action.timing.start)
+                let fraction = mix(action.from, action.to, action.distance > 0 ? distance / action.distance : 0)
+                let target = action.path!.sample(fraction).point
+                let tip = Vector3(target, (target.y - pose.origin.y) * (spec.view.depth - 1) / spec.view.heightScale)
+                let shoulder = pose.world["rightShoulder"]!
+                let first = spec.figure.upperArm * unit
+                let second = spec.figure.forearm * unit + 0.42 * scene.figureHeight
+                let reach = 0.97 * (first + second), foldedReach = abs(second - first) + scene.figureHeight * 0.01
+                let horizontal = (shoulder.xy - tip.xy).length
+                // Terrain can put the tip outside either end of the arm's reach interval.
+                // Adjust the crouch and solve both legs again; never extend an arm bone.
+                let low = sqrt(max(0, foldedReach * foldedReach - horizontal * horizontal))
+                let high = sqrt(max(0, reach * reach - horizontal * horizontal))
+                let vertical = shoulder.z - tip.z
+                let adjustment = vertical - clamp(vertical, low, high)
+                if abs(adjustment) > 1e-9 { pose = sampledBody(crouch + adjustment / unit) }
+                inkArm(&pose, target: target)
+            } else if active?.timing.kind == "sweep" {
+                sweepArms(&pose, cycle: gaitCycle)
+            }
+            attach(&pose, kind: kind)
+        }
+        return pose
+    }
+
+    private func project(_ point: Vector3, _ pose: ActorPose) -> Point {
+        Point(point.x, pose.origin.y + (point.y - pose.origin.y) * spec.view.depth - point.z * spec.view.heightScale)
+    }
+    private func setArm(_ pose: inout ActorPose, side: String, hand: Vector3) {
+        let shoulder = pose.world[side + "Shoulder"]!
+        let arm = twoBone(shoulder, hand, spec.figure.upperArm * unit, spec.figure.forearm * unit,
+                          Vector3(headingVector(pose.drawnHeading) * -1, 0))
+        for (name, point) in [("Elbow", arm.joint), ("Hand", arm.end)] {
+            pose.world[side + name] = point; pose.joints[side + name] = project(point, pose)
+        }
+    }
+    private func inkArm(_ pose: inout ActorPose, target: Point) {
+        // The target is on the unsquashed painting, using the same terrain convention as feet.
+        let tip = Vector3(target, (target.y - pose.origin.y) * (spec.view.depth - 1) / spec.view.heightScale)
+        let shoulder = pose.world["rightShoulder"]!, extensionLength = 0.42 * scene.figureHeight
+        let arm = twoBone(shoulder, tip, spec.figure.upperArm * unit, spec.figure.forearm * unit + extensionLength,
+                          Vector3(headingVector(pose.drawnHeading) * -1, 0))
+        let hand = arm.end - (arm.end - arm.joint).unit * extensionLength
+        for (name, point) in [("rightElbow", arm.joint), ("rightHand", hand)] {
+            pose.world[name] = point; pose.joints[name] = project(point, pose)
+        }
+        pose.inkPathPoint = target
+    }
+    private func sweepArms(_ pose: inout ActorPose, cycle: Double) {
+        let heading = pose.heading + 45 * sin(2 * .pi * cycle)
+        let direction = headingVector(heading), pelvis = pose.world["pelvis"]!
+        let hand = pelvis + Vector3(direction * (scene.figureHeight * 0.16), scene.figureHeight * 0.06)
+        setArm(&pose, side: "right", hand: hand)
+        let axis = (pose.world["rightHand"]! - pose.world["rightElbow"]!).unit
+        let leftGrip = pose.world["rightHand"]! - axis * (scene.figureHeight * 0.12)
+        setArm(&pose, side: "left", hand: leftGrip)
+    }
+    private func attach(_ pose: inout ActorPose, kind: PropKind) {
+        let hand = pose.world["rightHand"]!, axis = (hand - pose.world["rightElbow"]!).unit
+        let gripOffset = kind == .brush ? 0.08 : (kind == .broom ? 0.18 : 0)
+        let base = hand - axis * (gripOffset * scene.figureHeight)
+        let tip = base + axis * (kind.length * scene.figureHeight)
+        var grips = ["right": project(hand, pose)]
+        if pose.action == "sweep" { grips["left"] = project(hand - axis * (scene.figureHeight * 0.12), pose) }
+        let projectedBase = project(base, pose)
+        pose.prop = HeldProp(kind: kind, grips: grips, base: projectedBase,
+                             axis: project(base + axis, pose) - projectedBase, tip: project(tip, pose))
     }
 
     private func footAt(_ p: Point, _ h: Double, _ side: Int) -> Foot {
@@ -233,14 +325,14 @@ struct Rig: Sendable {
         let drawn = m.headingSteps == 0 ? heading : wrapHeading((heading / (360 / Double(m.headingSteps))).rounded() * (360 / Double(m.headingSteps)))
         let forward = headingVector(drawn), lateral = forward.normal
         let gaitForward = Vector3(headingVector(heading), 0)
-        var pose = ActorPose(id: scene.actors[0].id, action: action, heading: heading, drawnHeading: drawn,
+        var pose = ActorPose(id: actor.id, action: action, heading: heading, drawnHeading: drawn,
                              joints: [:], planted: ["left": feet[0].planted, "right": feet[1].planted],
                              contacts: ["left": feet[0].contact, "right": feet[1].contact], poseTime: time)
         pose.origin = origin; pose.swingFoot = swing == 0 ? "left" : "right"; pose.handsOpen = open
         func project(_ p: Vector3) -> Point {
             Point(p.x, origin.y + (p.y - origin.y) * spec.view.depth - p.z * spec.view.heightScale)
         }
-        let walking = action == "walk", idle = action == "idle"
+        let walking = ["walk", "sweep", "ink"].contains(action), idle = action == "idle"
         let sway = m.sway * (idle ? sin(time * 2 * .pi * 0.18) : (walking ? sin(phase * .pi) * (swing == 0 ? 1 : -1) * effort : 0))
         // Contacts are on the unsquashed painting. Carry its vertical displacement as
         // terrain height, rather than dividing by depth (which is undefined at zero).

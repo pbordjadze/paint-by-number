@@ -117,7 +117,7 @@ struct InkRenderer: Sendable {
         return drawing
     }
 
-    private func outline(_ input: [Point], seed: UInt64, closed: Bool) -> (shape: FilledShape, minimumWidth: Double) {
+    func outline(_ input: [Point], seed: UInt64, closed: Bool) -> (shape: FilledShape, minimumWidth: Double) {
         var chain = input
         if closed { chain.append(input[0]) }
         else if spec.ink.overshoot > 0 {

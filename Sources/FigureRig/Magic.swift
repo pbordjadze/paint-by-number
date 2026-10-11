@@ -9,7 +9,7 @@ struct MagicRenderer: Sendable {
     let spec: FigureSpec, scene: FigureScene, particles: [Particle]
     init(spec: FigureSpec, scene: FigureScene, rig: Rig) {
         self.spec = spec; self.scene = scene
-        let seed = actorSeed(scene.seed, scene.actors[0].id)
+        let seed = actorSeed(scene.seed, rig.actor.id)
         var result: [Particle] = []
         func emit(_ time: Double, _ start: Point, _ burst: Bool) {
             var rng = SplitMix64(seed: streamSeed(seed, 100, UInt64(result.count)))
@@ -23,7 +23,7 @@ struct MagicRenderer: Sendable {
                                    size: size, rotation: angle))
         }
         for action in rig.actions {
-            if action.timing.kind == "walk", spec.magic.trail > 0 {
+            if ["walk", "sweep", "ink"].contains(action.timing.kind), spec.magic.trail > 0 {
                 var tick = 1
                 while true {
                     let time = action.timing.start + Double(tick) / spec.magic.trail

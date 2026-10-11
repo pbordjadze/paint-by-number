@@ -48,7 +48,7 @@ struct FigureRigTests {
         (#"{"motion":{"cadence":7}}"#, "motion.cadence"), (#"{"motion":{"headingSteps":4}}"#, "motion.headingSteps"),
         (#"{"ink":{"color":"brown"}}"#, "ink.color"), (#"{"magic":{"colors":[]}}"#, "magic.colors"),
         (#"{"figure":{"hands":"dott"}}"#, "figure.hands"), (#"{"card":{"size":10}}"#, "card.size"),
-        (#"{"version":2}"#, "version"), (#"{"view":{"depth":null}}"#, "view.depth")
+        (#"{"version":3}"#, "version"), (#"{"view":{"depth":null}}"#, "view.depth")
     ])
     func invalidSpecNamesItsField(input: String, field: String) {
         do {

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Version 1 taste parameters. Each nested decoder rejects unknown keys and validates the
+/// Version 1 and 2 taste parameters (identical defaults and ranges). Each nested decoder rejects unknown keys and validates the
 /// ranges in factory/SPEC.md; omitted fields use the table's defaults, without normalization.
 public struct FigureSpec: Codable, Sendable {
     public var version = 1
@@ -13,7 +13,7 @@ public struct FigureSpec: Codable, Sendable {
     public init() {}
     public init(from decoder: any Decoder) throws {
         let d = try Fields(decoder, "version figure ink motion magic view card")
-        version = try d.integer("version", 1, 1...1)
+        version = try d.integer("version", 1, 1...2)
         figure = try d.value("figure", Figure()); ink = try d.value("ink", Ink())
         motion = try d.value("motion", Motion()); magic = try d.value("magic", Magic())
         view = try d.value("view", View()); card = try d.value("card", Card())
