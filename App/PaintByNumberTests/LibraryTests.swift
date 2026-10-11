@@ -233,7 +233,8 @@ struct LibraryTests {
         let store = ArtworkStore(root: root)
         let url = store.url(.meta, of: artwork.id)
         let original = try Data(contentsOf: url)
-        for seconds in [-10.0, 125 * 60, 1e157] {
+        let damagedSeconds: [Double] = [-10.0, 125 * 60, 1e157]
+        for seconds in damagedSeconds {
             var fields = try #require(try JSONSerialization.jsonObject(with: original) as? [String: Any])
             fields["activeSeconds"] = seconds
             fields["format"] = format
