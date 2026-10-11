@@ -48,8 +48,9 @@ driving manual and the state of play.
 | F13 (3a2d0c1) | Merged: the design-loop kit; 58 factory tests, both runs replay byte for byte; live model calls untested |
 | F8 (457dc29) | Merged: 275 tests; regression templates byte-identical to the base |
 | F12 (d23676b) | Merged: the palette gallery; follow-ups: "The Writer" wording, hide the writer's empty reasons; drops.json waits on Paul |
-| F10, F9, F3 | Running (Codex, gpt-6.1-sol, high) |
-| F7, F14 | Ready (next): F7 rewritten for the work-pets `create-pet` skill (v2 sheets), local only, no upload |
+| F9 (de4826c) | Merged: reveal fields and worker paths; follow-up: a one-centroid path is stationary |
+| F3 (876b406) | Merged: the figure piece, dry-run only; the Lamp runs it later |
+| F10, F7, F14 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
