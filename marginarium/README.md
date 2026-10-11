@@ -16,8 +16,9 @@ The Lamp decides the app's matters of taste by blind ballot: its names, its colo
 One seat, Originality, can only veto. Paul has the last word, and Claude and Codex make many
 smaller taste calls along the way.
 
-In the app, the Marginarium will be a section of its own, with its pictures moving. It is still
-being built. These are its first pages: one passage from each chapter, quoted as written.
+In the app, the Marginarium is a section of its own: the book in the gallery's toolbar, where
+Pip says hello. It is still being written. These are its first pages: one passage from each
+chapter, quoted as written.
 
 ## 1. The Marginarium
 
