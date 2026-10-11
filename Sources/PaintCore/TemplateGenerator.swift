@@ -32,12 +32,15 @@ public struct TemplateGenerator: Sendable {
     ///     book without it is a classic template over the book's flatter paint.
     ///   - cancel: Polled between and within stages.
     ///   - progress: Called with a rough 0...1 completion fraction.
+    ///   - observer: Synchronous making-of pictures in stage order, at most 1024 px on
+    ///     the long side. Nil skips all snapshot work; observing never changes the template.
     public func generate(
         from image: RGBAImage,
         importance: Grid<Float>? = nil,
         lineArt: LineArtInput? = nil,
         cancel: CancellationCheck = .task,
-        progress: (@Sendable (Float) -> Void)? = nil
+        progress: (@Sendable (Float) -> Void)? = nil,
+        observer: PipelineSnapshot.Observer? = nil
     ) throws -> Output {
         let clock = StageClock()
         progress?(0)
@@ -46,6 +49,7 @@ public struct TemplateGenerator: Sendable {
             try Resample.area(image, width: size.width, height: size.height, cancel: cancel)
         }
         try cancel.throwIfCancelled()
+        if let observer { try observer(SnapshotPictures.working(working, cancel: cancel)) }
         progress?(0.1)
 
         // Line art drawn from an edge map needs it; without one the template is classic.
@@ -67,7 +71,7 @@ public struct TemplateGenerator: Sendable {
         var (segmentation, weights) = try clock.measure("segment") {
             try Segmenter.segment(
                 working, importance: importance, parameters: parameters, cancel: cancel, clock: clock,
-                progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) })
+                progress: { progress?(0.1 + (segmentEnd - 0.1) * $0) }, observer: observer)
         }
         try cancel.throwIfCancelled()
         progress?(segmentEnd)
@@ -82,6 +86,7 @@ public struct TemplateGenerator: Sendable {
             segmentation = result.segmentation
             plan = result
             try cancel.throwIfCancelled()
+            if let observer { try observer(SnapshotPictures.lineArt(result)) }
             progress?(0.7)
         }
         // Drops the canvas-sized importance map before the vectorizer's own large buffers.
@@ -100,6 +105,7 @@ public struct TemplateGenerator: Sendable {
                 try LayeredLines.annotate(vector.template, plan: plan, cancel: cancel)
             }
         }
+        if let observer { try observer(SnapshotPictures.vectorized(vector.template)) }
         progress?(1)
         return Output(
             template: vector.template, segmentation: segmentation, vectorStats: vector.stats,

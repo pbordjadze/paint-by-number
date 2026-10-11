@@ -32,7 +32,8 @@ enum Segmenter {
         parameters p: SegmentationParameters,
         cancel: CancellationCheck,
         clock: StageClock,
-        progress: (Float) -> Void
+        progress: (Float) -> Void,
+        observer: PipelineSnapshot.Observer? = nil
     ) throws -> (segmentation: Segmentation, importance: [Float]) {
         let w = image.width, h = image.height
         guard w > 0, h > 0 else {
@@ -48,6 +49,7 @@ enum Segmenter {
             try StructureMap(lab, radius: p.structureRadius, cancel: cancel)
         }
         try cancel.throwIfCancelled()
+        if let observer { try observer(SnapshotPictures.structure(structure)) }
         let weights = try clock.measure("segment.importance") { try ImportanceMap.make(importance, structure: structure, cancel: cancel) }
         try cancel.throwIfCancelled()
         progress(0.05)
@@ -63,6 +65,9 @@ enum Segmenter {
                 edgeScale: edgeScale, stiffness: (weights, p.importanceSharpening), cancel: cancel)
         }
         try cancel.throwIfCancelled()
+        if let observer {
+            try observer(SnapshotPictures.smoothed(smooth, chromaScale: p.chromaScale, space: image.colorSpace))
+        }
         progress(0.25)
 
         let palette = try clock.measure("segment.palette") {
@@ -82,6 +87,10 @@ enum Segmenter {
             return labels
         }
         try cancel.throwIfCancelled()
+        if let observer {
+            try observer(SnapshotPictures.palette(
+                classes, width: w, height: h, colors: palette, chromaScale: p.chromaScale, space: image.colorSpace))
+        }
         progress(0.5)
 
         var labelling = classes
@@ -146,6 +155,7 @@ enum Segmenter {
             regionColor: regions.classOf,
             palette: finalPalette.map { PaletteColor(oklab: $0, space: image.colorSpace) },
             colorSpace: image.colorSpace)
+        if let observer { try observer(SnapshotPictures.simplified(segmentation)) }
         return (segmentation, weights)
     }
 }
