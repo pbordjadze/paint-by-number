@@ -54,7 +54,7 @@ rounded to 0.001, weights from a table).
 - **Names only first.** Hexes, order and the draw stay; v2 changes strings only, so coverage and
   draw behaviour don't move. Moving or adding anchors comes later.
 - **A batch** is about 20 anchors of one color family and lightness, ordered by traffic (how
-  often paints in the 45 library pictures draw them). Each anchor is a slot with five candidates:
+  often paints in the library pictures, 44 today, draw them). Each anchor is a slot with five candidates:
   the incumbent plus up to four proposals.
 - **Agents edit** `{"batch", "edits": [{"hex", "name", "why"}]}`. Code merges winners into a
   `champion.tsv` and writes the Swift table; the loop never edits Swift.

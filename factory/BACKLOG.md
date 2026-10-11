@@ -118,7 +118,7 @@ rename a saved painting". This item covers only PaintCore and pbn, no app change
 
 ### F5 · Nickname traffic
 Branch `codex/f5-nickname-traffic`. `tools/factory/nickname_traffic.py`:
-- make templates of the 45 library pictures (`App/PaintByNumber/Resources/Samples/`, converted
+- make templates of every library picture (`App/PaintByNumber/Resources/Samples/library.json`, 44 today; converted
   to PPM) with pbn at the app's default settings;
 - run `pbn names` with five seeds each;
 - count how often each anchor is drawn and write `factory/pieces/color-names/traffic.json`
