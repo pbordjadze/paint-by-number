@@ -1,0 +1,21 @@
+Attributes: Button, 0x118bf9680, {{738.0, 38.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+Element subtree:
+ →Button, 0x118bf9680, {{738.0, 38.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+Path to element:
+ →Application, 0x118bf8780, pid: 69366, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x118bf88c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x118bf8a00, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x118bf8b40, {{0.0, 0.0}, {1032.0, 1376.0}}
+     ↳Other, 0x118bf8c80, {{inf, inf}, {0.0, 0.0}}
+      ↳Other, 0x118bf8dc0, {{inf, inf}, {0.0, 0.0}}
+       ↳Other, 0x118bf8f00, {{inf, inf}, {0.0, 0.0}}
+        ↳Other, 0x118bf9040, {{inf, inf}, {0.0, 0.0}}
+         ↳Other, 0x118bf9180, {{inf, inf}, {0.0, 0.0}}
+          ↳Other, 0x118bf92c0, {{inf, inf}, {0.0, 0.0}}
+           ↳Other, 0x118bf9400, {{inf, inf}, {0.0, 0.0}}
+            ↳Other, 0x118bf9540, {{inf, inf}, {0.0, 0.0}}
+             ↳Button, 0x118bf9680, {{738.0, 38.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Button
+    ↪︎Find: Elements matching predicate '"Photo" IN identifiers'
