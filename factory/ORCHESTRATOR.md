@@ -85,9 +85,8 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 | App item | State |
 | --- | --- |
 | Marginarium v1 (73a9600) | On `main`, build 1.0.294 in SideStore: Pip and one passage per chapter |
-| F29 Marginarium v2 | Running (Codex): people-first intro, Colophon, How the Lamp works |
-| F28 Damaged data never traps | Running (Codex) |
-| F30 Play harness, app half | Running (Codex): Debug hook, mailbox UI test, CI self-test |
+| F29, F28, F30 | Green, combined on `claude/ship-marginarium-v2` (2025569: 340 unit tests, all UI tests); waits on Paul's "ship". F30 took two fix rounds (an XCUIScreen API; area identifiers lost when the canvas rebuilt its accessibility elements) |
+| Flaky UI tests seen today (each passed on retry; causes unknown) | AccessibilityUITests.testLongPressShowsTheColorDetails, CreateFlowTests.testBrowseAllPresentsSystemPickerAndDismisses, PaintingNavigationTests.testPhotoKey: a Codex item to root-cause |
 
 ## Waiting on Paul
 
