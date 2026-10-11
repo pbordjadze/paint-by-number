@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Lamp's Colors · The Marginarium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans+SC:wght@500&display=swap">
+<style>
+/* The collection's night ground, type and ink, with the jury in each color's margin. */
+:root {
+  --ground: #15110d; --card: #1e1913; --well: #262019;
+  --ink: #ede3cf; --muted: #b3a68e; --rule: #3a3026; --gold: #c9a227;
+  --display: "IM Fell English", "Iowan Old Style", Georgia, serif;
+  --body: "Alegreya Sans", "Gill Sans", "Segoe UI", sans-serif;
+  --label: "Alegreya Sans SC", "Alegreya Sans", "Gill Sans", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 18px/1.5 var(--body); }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 48px clamp(16px, 4vw, 40px) 64px; }
+.intro-block { max-width: 60ch; margin-bottom: 44px; }
+.eyebrow { font: 500 .85rem/1.4 var(--label); letter-spacing: .08em; color: var(--gold); }
+h1 { font: 400 clamp(2.6rem, 6vw, 4rem)/1.05 var(--display); margin: 16px 0; text-wrap: balance; }
+.lede { font-size: 1.2rem; }
+.count { color: var(--muted); font-size: .95rem; }
+.gallery { display: grid; gap: 28px; }
+.color-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border: 1px solid var(--rule); border-radius: 6px; background: var(--card); overflow: hidden; }
+.color-story { padding: clamp(20px, 3vw, 32px); min-width: 0; }
+.swatch { height: 150px; background: var(--swatch); border-radius: 4px; border: 1px solid #ffffff24; margin-bottom: 24px; }
+.label { font: 500 .85rem/1.4 var(--label); letter-spacing: .05em; color: var(--muted); margin: 0; }
+h2 { font: 400 clamp(1.9rem, 4vw, 2.6rem)/1.15 var(--display); margin: 10px 0; text-wrap: balance; }
+.maker { margin: 0; }
+.reason { font: italic 400 1.15rem/1.5 var(--display); margin: 24px 0; }
+.entrusted { color: var(--muted); font-size: .95rem; border-top: 1px solid var(--rule); padding-top: 16px; }
+.love { color: var(--muted); font-size: .95rem; margin-bottom: 0; }
+.loved { color: var(--gold); }
+.margin { background: var(--well); border-left: 1px solid var(--rule); padding: clamp(20px, 3vw, 32px); min-width: 0; }
+h3 { font: italic 400 1.25rem/1.2 var(--display); margin: 0 0 8px; }
+.tally { font-size: .9rem; color: var(--muted); margin: 0 0 22px; }
+.margin ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.margin li p + p { margin: 5px 0 0; }
+.margin li p { margin: 0; }
+.paul { border-top: 1px solid var(--rule); padding-top: 18px; }
+.paul .label { color: var(--gold); }
+details { margin-top: 20px; border-top: 1px solid var(--rule); padding-top: 16px; }
+summary { cursor: pointer; color: var(--muted); font: 500 .95rem/1.5 var(--label); }
+details[open] summary { margin-bottom: 20px; }
+.empty { font: italic 400 1.3rem/1.5 var(--display); padding-block: 32px; border-block: 1px solid var(--rule); }
+footer { color: var(--muted); font-size: .95rem; margin-top: 40px; }
+p, h2 { overflow-wrap: anywhere; }
+.skip { position: absolute; left: 16px; top: 8px; transform: translateY(-160%); color: var(--ink); background: var(--ground); padding: 8px; }
+.skip:focus { transform: none; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+@media (max-width: 680px) {
+  .color-card { grid-template-columns: minmax(0, 1fr); }
+  .margin { border-left: 0; border-top: 1px solid var(--rule); }
+  .wrap { padding-top: 32px; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#colors">Skip to the colors</a>
+<main class="wrap">
+  <header class="intro-block">
+    <p class="eyebrow">The Marginarium · a page from the Lamp</p>
+    <h1>The Lamp's Colors</h1>
+    <p class="lede">A swatch, a name, and the voices that gathered around it. The Lamp's guardians named these colors together; their reasons and disagreements live in the margins.</p>
+    <p class="count">{{NOTICE}}</p>
+  </header>
+  <section class="gallery" id="colors" aria-label="The revealed colors" tabindex="-1">
+    {{CARDS}}
+  </section>
+  <footer>Colors arrive a few at a time. Each keeps the story of how it got its name.</footer>
+</main>
+</body>
+</html>

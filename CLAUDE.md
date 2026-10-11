@@ -76,6 +76,8 @@ before planning app work).
   `factory/make_scene.py` rebuilds the committed hero images through pbn. Factory render output
   stays outside the repo; `factory/specs/baseline.json` starts at the spec's defaults.
   `factory/verify.py <outdir>` exercises the spec's acceptance list (run on four cores).
+  `factory/palette_gallery.py` builds the Marginarium's date-gated palette page (`--preview`
+  shows all colors), with Paul's checkpoint replacements and the jury in its margins.
   `factory/taste/loop.py` is the deterministic taste library; its piece plug-ins, versioned run
   rules, transcript reader and CLI entry points are documented in `factory/taste/README.md`.
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality

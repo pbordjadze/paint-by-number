@@ -85,6 +85,23 @@ The checkpoint saves `slot,name,veto,love,note,at` to `checkpoint/c<slot>` using
 owner/database interface as Thirty-Six Colors. It adds `round` for later rounds. Outside Claude it
 saves locally and exports `checkpoint.json`; it does not publish anything. Love and veto are
 exclusive. The gallery shows names, makers, proposer reasons, jury evidence and Paul's annotations.
+
+The Marginarium's palette page follows the collection page's night ground and puts each jury's
+notes beside its swatch. Build it with
+`python3 tools/factory/palette_gallery.py --out /root/factory-out/F12/gallery.html`, or add
+`--preview` to see all colors. It reads `pieces/color-names/run/` and Paul's `checkpoint.json`
+export (an array, a checkpoint-record map, or a `{ "by": "Paul", "picks": [...] }` envelope).
+Vetoed names use the export's `replacement`; the original name and veto remain in the margin.
+Reasons are quoted from proposals; jury reasons identify the name that juror preferred.
+
+Claude drafts `factory/pieces/color-names/drops.json` and Paul approves it. Its format is an array:
+`[{ "date": "2026-10-11", "colors": [1, 2] }]`, where colors are slot IDs, each listed at most once.
+This is a format example, not an approved schedule. Without a schedule, only preview builds work.
+Drops open at midnight UTC on their date; unscheduled and future colors are absent from the HTML.
+Rebuild the static page when a drop is due. `--as-of YYYY-MM-DD` pins the date for review;
+`--run`, `--checkpoint`, and `--drops` select other inputs. Output always stays outside the repo.
+The app's later section can use the same dates in bundled content; this generator changes no app code.
+
 Calibration compares every loved candidate against its alternatives (reversed for a veto). It scores
 jurors' rankings and proposer sources separately, with evidence counts and smoothed factors
 `0.5 + (agreements + 1)/(pairs + 2)`. Notes alone imply no preference. Factors affect future runs:
