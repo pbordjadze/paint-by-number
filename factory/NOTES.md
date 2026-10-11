@@ -220,6 +220,18 @@ helpful, beautiful.
   gallery live there; the margins of each decision (vetoes, runners-up, jurors' notes) are its
   natural content. The Snow Queen's caution stands: show the margins sparingly.
 
+## Paul's point 9: a Mac for the homelab
+
+- Paul bought a used M1 MacBook Air ($40 + $9.81 shipping, 2026-10-11). It is the first machine in
+  the project that can build and run the app, so the Lamp can play it (chapter 4:
+  https://claude.ai/code/artifact/a087b22e-d1f9-4ef7-b447-2a87fd347b66).
+- On arrival: Activation Lock off and no device-management profile, before anything else.
+- Then Xcode 26.6 (CI's version) with the iOS 26 simulator, Claude Code, and
+  `claude remote-control` in the repository folder, so a session runs on the Mac.
+- The Lamp's first wishes and worries are in `pieces/chapter-4/wishes/`. Their worries are the
+  harness's requirements: name areas by number, wait for the screen to settle, drag in many small
+  steps, read pixel values as well as pictures.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.

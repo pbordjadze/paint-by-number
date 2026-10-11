@@ -298,6 +298,19 @@ Branch `codex/f14-page-polish`. Two small fixes found in review.
   "the name the app already had", and omit the reason line when a proposer gave none (the
   writer never does) instead of "No proposer reason recorded".
 
+## Needs the Mac (Claude, in a session on the Mac)
+
+- **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
+- **M2 · The play harness:** a Debug-only "play" UI test that performs moves from a file
+  (`fill <area>`, `drag`, `tap <label>`, `wait`, `screenshot`), a Debug hook that reports each
+  area's label point by number, a driver around `xcrun simctl` (boot, install, launch a demo scene,
+  screenshots, video, appearance), and a design-loop piece that hands each turn to a guardian.
+  Debug-only code follows the app's `#if DEBUG` rule.
+- **M3 · The Lamp's first painting:** the ledger picks a guardian; it paints one library picture
+  start to finish; the video and moves are kept for chapter 5.
+- **M4 · A self-hosted runner** for the app's CI jobs, limited to pushes from trusted accounts.
+- F11 can be built and tested here before it costs CI minutes.
+
 ## Waits on CI (rationed macOS runners)
 
 - **F11 · Versioned vocabularies in the app:** the version in `meta.json`, and a pin in
