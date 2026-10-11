@@ -45,12 +45,18 @@
 //       LabelSizing.minimumRadius, a detail area's scaled down as LabelSizing.detailMinimumRadius
 //       is; R ≤ 0 skips that check) and line data, whose style, edges per layer and interior
 //       strokes it prints, and the detail areas
-//   pbn names <template.pbnt> [--seed N]
+//   pbn names <template.pbnt> [--seed N] [--vocabulary N | --nickname-table file.tsv]
 //       prints each palette color's nickname (seeded like the app's per-painting names; the
-//       default seed is generate's), structured name and hex
+//       default seed is generate's), structured name and hex; the default vocabulary is the
+//       current version, and unknown future versions use the newest known version. A proposed
+//       table uses the version 1 draw (RRGGBB<TAB>Name per line, no header; the frozen table's
+//       single-space separator is also accepted)
+//   pbn vocab check <table.tsv>
+//       reports the vocabulary's mechanical style-guide and gamut problems; exits nonzero
+//       if any fail. Proposed tables are not installed or written into templates
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|suggest|bench|trace|check|names ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
 switch args[1] {
@@ -59,6 +65,7 @@ case "suggest": try runSuggest(options)
 case "trace": try runTrace(options)
 case "check": try runCheck(options)
 case "names": try runNames(options)
+case "vocab": runVocabCheck(options)
 case "bench": try runBench(options)
 default:
     fail("unknown command \(args[1])")

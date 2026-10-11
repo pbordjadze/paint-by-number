@@ -18,6 +18,10 @@ public enum ColorNickname {
         public let oklab: SIMD3<Float>
     }
 
+    /// Version used for newly created paintings. Existing paintings without a version use 1.
+    public static let currentVersion = 1
+
+    // Version 1 draw constants are frozen along with its table.
     /// Anchors beyond this OKLab distance (ΔE) from a paint never name it.
     public static let maximumDistance: Float = 0.12
     /// How many of the nearest anchors a paint's name is drawn from.
@@ -33,11 +37,8 @@ public enum ColorNickname {
     /// earlier paints it works down this list before it falls back to its structured name.
     static let candidateLimit = 24
 
-    /// Every entry, in table order.
-    public static let vocabulary: [Entry] = table.split(separator: "\n").map { line in
-        let hex = UInt32(line.prefix(6), radix: 16) ?? 0
-        return Entry(name: String(line.dropFirst(7)), hex: hex, oklab: ColorScience.okLab(hex: hex))
-    }
+    /// Version 1 entries, in table order (kept for callers predating versioned vocabularies).
+    public static let vocabulary = Vocabulary(version: 1).entries
 
     private static let names: Set<String> = Set(vocabulary.map(\.name))
 
@@ -52,14 +53,21 @@ public enum ColorNickname {
     /// `exp(-d / falloff)` from `SplitMix64(seed ^ index)`. Paints are resolved in palette order:
     /// one whose draw is taken moves to its other candidates, nearest first, and one with none
     /// left (or none near) gets its structured name in English ("Dark grayish green"), so a
-    /// result is never empty. Weights are rounded to integers before the draw so a last-bit
-    /// difference in `exp` cannot change a name.
-    public static func assign(_ palette: [PaletteColor], seed: UInt64) -> [String] {
+    /// result is never empty. Version 1 rounds weights to integers before the draw. Its math
+    /// and draw are frozen; old callers and paintings with no recorded version use 1.
+    public static func assign(_ palette: [PaletteColor], seed: UInt64, version: Int = 1) -> [String] {
+        assign(palette, seed: seed, vocabulary: Vocabulary(version: version))
+    }
+
+    /// Assign from a proposed table using the frozen version 1 draw. Check `problems()` before
+    /// publishing a table; this overload also lets the taste loop render proposals in use.
+    public static func assign(_ palette: [PaletteColor], seed: UInt64, vocabulary: Vocabulary) -> [String] {
+        let entries = vocabulary.entries
         var taken = Set<Int>()
         var names: [String] = []
         names.reserveCapacity(palette.count)
         for (index, color) in palette.enumerated() {
-            let candidates = nearest(to: color.oklab)
+            let candidates = nearest(to: color.oklab, entries: entries)
             var rng = SplitMix64(seed: seed ^ UInt64(index))
             var order = candidates.map(\.index)
             let pool = candidates.prefix(poolSize).filter { $0.distance <= candidates[0].distance + window }
@@ -69,7 +77,7 @@ public enum ColorNickname {
             }
             if let pick = order.first(where: { !taken.contains($0) }) {
                 taken.insert(pick)
-                names.append(vocabulary[pick].name)
+                names.append(entries[pick].name)
             } else {
                 names.append(color.colorName.englishTitle)
             }
@@ -78,10 +86,10 @@ public enum ColorNickname {
     }
 
     /// The nearest anchors within `maximumDistance`, closest first (ties by table order).
-    static func nearest(to lab: SIMD3<Float>) -> [(index: Int, distance: Float)] {
+    static func nearest(to lab: SIMD3<Float>, entries: [Entry] = vocabulary) -> [(index: Int, distance: Float)] {
         guard lab.x.isFinite, lab.y.isFinite, lab.z.isFinite else { return [] }
         var found: [(index: Int, distance: Float)] = []
-        for (i, entry) in vocabulary.enumerated() {
+        for (i, entry) in entries.enumerated() {
             let d = ColorScience.distance(lab, entry.oklab)
             if d <= maximumDistance { found.append((i, d)) }
         }
@@ -103,8 +111,8 @@ public enum ColorNickname {
 
     /// Folds a UUID (an artwork's identity) into the 64-bit seed `assign` takes: the XOR of its
     /// two big-endian halves. The seed is stable, so a painting's names are the same on every
-    /// open; the names are derived, never stored, so editing the table, the draw constants or
-    /// `ColorName`'s thresholds renames saved paintings.
+    /// open; names are derived, never stored. Version 1's table, draw constants and
+    /// `ColorName` thresholds must stay frozen to preserve saved paintings' names.
     public static func seed(for id: UUID) -> UInt64 {
         let bytes = id.uuid
         let all = [bytes.0, bytes.1, bytes.2, bytes.3, bytes.4, bytes.5, bytes.6, bytes.7,
