@@ -54,8 +54,8 @@ driving manual and the state of play.
 | F5 (b0eaf34) | Merged: traffic.json over 44 pictures x 5 seeds; Linux pbn has no line detection, so it follows the default generator |
 | F13 (3a2d0c1) | Merged: the design-loop kit; 58 factory tests, both runs replay byte for byte; live model calls untested |
 | F8 (457dc29) | Merged: 275 tests; regression templates byte-identical to the base |
-| F12 (d23676b) | Merged: the palette gallery; follow-ups: "The Writer" wording, hide the writer's empty reasons; drops.json waits on Paul |
-| F9 (de4826c) | Merged: reveal fields and worker paths; follow-up: a one-centroid path is stationary |
+| F12 (d23676b) | Merged: the palette gallery; follow-ups: "The Writer" wording (Paul's call); empty reasons hidden by F34; drops.json waits on Paul |
+| F9 (de4826c) | Merged: reveal fields and worker paths; its one-centroid follow-up was fixed by F15 |
 | F3 (876b406) | Merged: the figure piece, dry-run only; the Lamp runs it later |
 | F10 (4859d5e) | Merged: engine v1 (props, sweep, ink, several actors); 307 tests with F9; hero digests unchanged |
 | F14 | Merged: v1 and v2 pet sheets on the collection page; gallery wording |
@@ -74,7 +74,8 @@ driving manual and the state of play.
 | F19 | Merged (Codex hit the two-hour limit in final verification; Claude committed and tested it). Two full renders: 8,112 byte-identical frames; the movie runs 338 s, the worker is 7.5% of the photo, and in line art the worker inks a straight line across the drawing: all for the Lamp's review. Output: `/root/factory-out/F19/first/` |
 | F27 | Merged: Int counts and bounded validation work; templates byte-identical, no timing change measured |
 | Loop | Claude made the taste loop's JSON writes atomic after a half-written job file failed one test run |
-| F11 | Waits on CI minutes |
+| F33 (fca29fb) | Merged: no deprecated Pillow calls; renders byte for byte |
+| F34 | Merged: the palette gallery hides empty and whitespace-only reasons; preview unchanged |
 
 
 App work now branches from `main` (runner `run_codex.sh <ID> <slug> main <prompt>`; prompts in
@@ -85,14 +86,16 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 | App item | State |
 | --- | --- |
 | Marginarium v1 (73a9600) | On `main`, build 1.0.294 in SideStore: Pip and one passage per chapter |
-| F29, F28, F30 | Green, combined on `claude/ship-marginarium-v2` (2025569: 340 unit tests, all UI tests); waits on Paul's "ship". F30 took two fix rounds (an XCUIScreen API; area identifiers lost when the canvas rebuilt its accessibility elements) |
-| Flaky UI tests seen today (each passed on retry; causes unknown) | AccessibilityUITests.testLongPressShowsTheColorDetails, CreateFlowTests.testBrowseAllPresentsSystemPickerAndDismisses, PaintingNavigationTests.testPhotoKey: a Codex item to root-cause |
+| F29, F28, F30 | Shipped: `main` 2025569, build 1.0.303. F30 took two fix rounds (an XCUIScreen API; area identifiers lost when the canvas rebuilt its accessibility elements) |
+| F31 (`claude/f31-flaky-ui-tests`) | The three flaky UI tests root-caused (swatch long press gets priority; the photo picker sits on the toolbar button; Browse All a hypothesis). Green once with no retries; a re-run confirms. Changes behavior: Paul hears it before shipping |
+| F4 + F27 (`claude/paintcore-f4-f27`) | PaintCore and pbn only, one commit off `main`; in CI |
+| F11 (`claude/f11-vocab-in-app`, on the PaintCore branch) | `nicknameVersion` in meta.json (missing means 1; future kept verbatim); an Apple-vs-Linux name pin; in CI |
+| F32 (`claude/f32-main-thread-stalls`) | Palette text and nicknames prepared off the main actor; `/root/factory-out/F32/stalls.md` accounts for 139 stalls (443 s), mostly framework and cold-simulator work needing a Mac profile; in CI. Conflicts with F11 in `PaintingSession.swift` when combined |
 
 ## Waiting on Paul
 
 - Chapter 7, Two More Pets: https://claude.ai/code/artifact/a112d638-0555-4f24-9a6a-6a3fc5476adf.
   Claude kept Colophon's eyes (a taste call, Paul's to veto).
-- CI minutes for F28 (the app traps on damaged data) batched with F11.
 - `pieces/color-names/drops.json`, the gallery's drop schedule; Okudzhava's Late Sunlight question.
 - The pets' style sheet: Paul's call who decides it (people he invites, or the Lamp as a proposal).
 - The making-of's look (Paul's call; the Lamp only if he wants its notes): 338 s long, a small worker, and a straight
