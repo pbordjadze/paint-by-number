@@ -42,7 +42,10 @@ pieces as plug-ins.
     qvevri, tonir, …) that Originality's prompt includes;
   - standings that report the broad favorite and the most-loved (most first places) separately;
   - a hook for a second jury on the finalists;
-  - proposers see their own past names and how they fared.
+  - proposers see their own past names and how they fared;
+  - the Georgian bar as a code check for name pieces (`GUARDIANS.md` › The shared bar): place
+    names at most one in fifty, Georgian words at most one in thirty, against a list in
+    `taste/glossary.json`; the prompts say the thread is felt, not named.
 - Tests (pytest, under `tools/factory/` beside `test_render.py`): replaying both recorded runs from
   their files reproduces their `decision.json` and ledger byte for byte; unit tests for draws,
   scoring, vetoes, uniqueness, caps and the guarantee.
@@ -107,6 +110,19 @@ without changing a single template byte.
 - `pbn generate --snapshots <dir>` writes them as PPM/PGM, named by stage. Update the usage
   header.
 - Determinism: snapshots are byte-identical across runs and core counts.
+
+### F12 · The palette gallery
+Branch `codex/f12-palette-gallery`. A page, and later a section of the app (issue #16), showing
+every color the Lamp named: the swatch, the name, who named it, the guardian's reason, what the
+jury said, and whether Paul loved it.
+- `tools/factory/palette_gallery.py` builds it from a run's records (`pieces/color-names/run/`:
+  `slots.json`, `decision.json`, `proposals/`, `verdicts/`) plus Paul's checkpoint picks
+  (`pieces/color-names/run/checkpoint.json`, which Claude exports when he is done).
+- **A slow drop.** The gallery reveals colors on a schedule, `pieces/color-names/drops.json`
+  (date, colors), which Claude drafts and Paul approves. The page shows only colors whose date
+  has passed; a `--preview` flag shows all. The app has no server, so in the app this becomes
+  date-gated content bundled with a release.
+- The look follows the collection page (`tools/factory/collection_template.html`).
 
 ## Needs a spec first (Claude)
 

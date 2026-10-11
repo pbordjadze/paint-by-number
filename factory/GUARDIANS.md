@@ -18,6 +18,12 @@ Every guardian carries a **Georgian thread** and, when judging, says where it sh
 literal: no flags or national symbols as decoration, no Georgian letters used as ornament, no
 tourist clichés. The touchstones inform; they are never copied.
 
+The thread is for the guardian, not for the work: a design carries what Georgia feels like (its
+materials, light, food and habits), almost never its names. Chapter 2 showed why: asked for a
+personal name, the guardians reached for place names (Under Narikala, Gergeti Snow, Kura River).
+So in any set, place names are rare (at most one in fifty) and Georgian words are few (at most
+one in thirty). Paul's loves stand: Tbilisi Stone is the set's one place name.
+
 ## The jury
 
 The whole panel serves, but each decision draws a jury of six: **Originality** (no franchise
