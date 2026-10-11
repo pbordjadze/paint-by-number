@@ -32,11 +32,11 @@ h1 { font: 400 clamp(2.4rem, 6vw, 3.6rem)/1.05 var(--display); margin: 0; text-w
 .card { background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; display: grid; gap: 12px; min-width: 0; }
 .card-head { display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center; }
 .pet { width: 52px; height: 52px; border-radius: 50%; background: var(--c); color: var(--ground); display: grid; place-items: center; font: 400 1.7rem/1 var(--display); }
-/* Quarter-size 192 × 208 cells, eight columns and nine rows; only the six idle cells animate. */
+/* Quarter-size 192 × 208 cells; each atlas sets its size, and only the six idle cells animate. */
 .pet-sprite {
   width: 48px; height: 52px; justify-self: center; border-radius: 0;
   background-color: transparent; background-repeat: no-repeat;
-  background-size: 384px 468px; background-position: 0 0;
+  background-position: 0 0;
   animation: pet-idle 1100ms steps(1, end) infinite;
 }
 /* Unequal holds: 280, 110, 110, 140, 140 and 320 ms. */

@@ -5,6 +5,7 @@ Available factory/pets/<id>/spritesheet.webp atlases are embedded in the page.
 """
 import base64, html, json, re, sys
 from pathlib import Path
+from PIL import Image
 
 repo, out = sys.argv[1], sys.argv[2]
 md = open(f"{repo}/factory/GUARDIANS.md").read()
@@ -80,9 +81,15 @@ for i, g in enumerate(panel["guardians"]):
     pid = f"pet-{g['id']}"
     atlas = Path(repo) / "factory" / "pets" / g["id"] / "spritesheet.webp"
     if atlas.is_file():
+        with Image.open(atlas) as image:
+            width, height = image.size
+        if (width, height) not in ((1536, 1872), (1536, 2288)):
+            sys.exit(f"collection: unsupported atlas size {width} × {height}: {atlas}; "
+                     "expected 1536 × 1872 (v1) or 1536 × 2288 (v2)")
         encoded = base64.b64encode(atlas.read_bytes()).decode("ascii")
         pet = (f'<div class="pet pet-sprite" aria-hidden="true" '
-               f'style="background-image: url(data:image/webp;base64,{encoded})"></div>')
+               f'style="background-image: url(data:image/webp;base64,{encoded}); '
+               f'background-size: {width // 4}px {height // 4}px"></div>')
     else:
         pet = f'<div class="pet" aria-hidden="true">{letter}</div>'
     cards.append(f"""
