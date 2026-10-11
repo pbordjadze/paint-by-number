@@ -1,0 +1,325 @@
+{
+  "word": "Marginarium",
+  "options": {
+    "A": "The Lamp's own name, in place of A Lamp Left Burning.",
+    "B": "The place in the app where the Lamp lives: its members, the story of its work told in chapters, and the gallery of the colors it named.",
+    "C": "The palette gallery alone: every color the Lamp named, who picked it and what the others said, released a few at a time.",
+    "D": "The margins of each decision: the vetoes, runners-up and jurors' notes kept beside every choice.",
+    "E": "The factory: the whole machine that proposes, renders, judges and keeps the ledger.",
+    "F": "The chapters: the written story of how the Lamp made each decision.",
+    "O": "Something else (say what).",
+    "N": "Nothing: it shouldn't name anything."
+  },
+  "replies": {
+    "originality": {
+      "guardian": "originality",
+      "found": "Searches for Marginarium return no product, app, brand, studio, book, band, shop or franchise using the word. The nearest kin are obscure: Marginariella, a genus of New Zealand brown algae (first named Marginaria, a name a fern genus already held), and Margin of the Strange, an adventure game by Future Cat Games under a different title. Neither is a widely known name, so neither is grounds for a veto.",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Marginariella",
+        "https://mobile.moegirl.org.cn/Margin_of_the_Strange"
+      ],
+      "veto": null,
+      "line": "No product, shop or band answers to this word; its nearest kin is a New Zealand seaweed, which keeps to the sea."
+    },
+    "medea": {
+      "guardian": "medea",
+      "score": 4,
+      "lives": "It lives in the margin itself: a note a guest leaves beside an old page renews it for whoever reads next, as a Georgian host counts each guest a gift, though the word never says magic.",
+      "favorite": "D",
+      "approve": [
+        "F",
+        "C"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "Keep the night's work in the margin beside every choice, so the turn from old to new can be pointed to."
+    },
+    "baba-yaga": {
+      "guardian": "baba-yaga",
+      "score": 4,
+      "lives": "It lives in margin, the ink and ornamental border the word is built on, and a little in -arium, a cellar where things keep and ripen like wine in a qvevri, which is where my Georgian thread shows.",
+      "favorite": "D",
+      "approve": [
+        "B",
+        "F"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "The margin is where ink runs wild and little drawings sneak in; this word knows the way, so I allow it."
+    },
+    "hedge-witch": {
+      "guardian": "hedge-witch",
+      "score": 4,
+      "lives": "It lives in marginalia, the hand-drawn sprigs a herbal keeps beside its plants, and the Georgian kitchen garden's tarragon and marigold grow in that same margin.",
+      "favorite": "D",
+      "approve": [
+        "C",
+        "F"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "The best sprigs in every herbal were drawn in the margins, where nobody was watching. Name the margins."
+    },
+    "moon": {
+      "guardian": "moon",
+      "score": 4,
+      "lives": "In the margin itself: the dim edge beside the lit text, where small notes are written by one low lamp while the page sleeps, like light behind a carved balcony screen.",
+      "favorite": "D",
+      "approve": [
+        "F",
+        "C"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "Keep the notes in the margin, by one small lamp; the best work is done while the house sleeps."
+    },
+    "snow-queen": {
+      "guardian": "snow-queen",
+      "score": 4,
+      "lives": "My idea lives in the -arium: a cold, orderly hall where each specimen is kept exact and still, while the margin itself is the crowded warmth I guard against.",
+      "favorite": "C",
+      "approve": [
+        "N"
+      ],
+      "other": "",
+      "veto": {
+        "option": "D",
+        "quote": "mush, clutter, warmth that turns cloying",
+        "why": "Kept beside every choice, the vetoes, runners-up and jurors' notes would fill each decision's margin until the page is clutter.",
+        "valid": true
+      },
+      "line": "Release the colors a few at a time, as snow settles, and keep the margin still."
+    },
+    "robber-girl": {
+      "guardian": "robber-girl",
+      "score": 4,
+      "lives": "It lives in the margin root: the margin is where handmade, lived-in notes get scribbled, the way bold embroidery runs right to the edge of the cloth.",
+      "favorite": "D",
+      "approve": [
+        "B",
+        "F"
+      ],
+      "other": "",
+      "veto": {
+        "option": "A",
+        "quote": "prissiness; the timid and the samey; politeness for its own sake; cruelty passed off as boldness.",
+        "why": "Swapping the Lamp's own warm, bold name for a glass-cabinet herbarium-style word is prissiness, a polite museum name chosen over the wild one it already has.",
+        "valid": true
+      },
+      "line": "Keep the vetoes in the margin, where the loud ones scribble. A lamp that hides its arguments is only polite."
+    },
+    "storybook": {
+      "guardian": "storybook",
+      "score": 4,
+      "lives": "It lives in the margins, where a reader inks notes and little drawings beside the text, as in the ornamented pages of Georgia's illuminated Gospels.",
+      "favorite": "D",
+      "approve": [
+        "F",
+        "B"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "Every book worth turning has marginalia; let the Lamp's vetoes and jurors' notes live where a reader would write them."
+    },
+    "enchanted-workshop": {
+      "guardian": "enchanted-workshop",
+      "score": 4,
+      "lives": "It lives in the margins as working parts: a veto stops a decision and a runner-up can be picked up again, so the notes beside each choice are tools doing a job.",
+      "favorite": "E",
+      "approve": [
+        "D"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "Let the margins work: the notes beside each choice should be the tools that made it."
+    },
+    "scholar": {
+      "guardian": "scholar",
+      "score": 4,
+      "lives": "It lives in 'margin': a note beside the text is where a careful reader checks the work, so the word promises the runners-up and vetoes kept beside every choice.",
+      "favorite": "D",
+      "approve": [
+        "F"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "A careful reader checks the margin before trusting the text; keep the vetoes and runners-up there, beside each choice."
+    },
+    "painter": {
+      "guardian": "painter",
+      "score": 4,
+      "lives": "It lives in the palette gallery, where each color's notes hang at its edge like marginalia and the painting stays the hero.",
+      "favorite": "C",
+      "approve": [
+        "D"
+      ],
+      "other": "",
+      "veto": {
+        "option": "B",
+        "quote": "anything that upstages the picture or overstays",
+        "why": "A place in the app with members, a chaptered story and a gallery would compete with the painting for the eye, and the story alone would overstay.",
+        "valid": true
+      },
+      "line": "Hang the colors a few at a time, like a courtyard's quiet walls: the picture stays the hero."
+    },
+    "child-at-bedtime": {
+      "guardian": "child-at-bedtime",
+      "score": 4,
+      "lives": "It lives in the margins, the small drawings and quiet notes beside each choice, with the hush an iavnana lullaby brings to a sleepy room.",
+      "favorite": "D",
+      "approve": [
+        "F",
+        "B",
+        "C"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "Tiny drawings in a book's edge, found at bedtime: yes, Marginarium, read it to me again."
+    },
+    "glassblower": {
+      "guardian": "glassblower",
+      "score": 4,
+      "lives": "It lives in the -arium: a calm room for keeping and looking, which fits B's native place, where quiet chrome and clarity meet old stone the way Tbilisi's Bridge of Peace meets the old town.",
+      "favorite": "B",
+      "approve": [
+        "C",
+        "F"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "Give the margins a room made of system chrome, and let the glass show the old stone beneath."
+    },
+    "pirosmani": {
+      "guardian": "pirosmani",
+      "score": 4,
+      "lives": "It lives in marginalia, the small drawings and notes a loving hand leaves at a page's edge, though the -arium makes it sound like a museum's cold coat.",
+      "favorite": "D",
+      "approve": [
+        "C"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "A margin is where a painter who loved the thing writes the small sheep he could not leave out."
+    },
+    "emily-dickinson": {
+      "guardian": "emily-dickinson",
+      "score": 4,
+      "lives": "It lives in margin, the small room beside a line where a note tells the truth slant; the -arium is the herbarium's pressing, more ending than the idea needs.",
+      "favorite": "D",
+      "approve": [
+        "C"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "A margin note keeps the whole truth, slant, the way a moon keeps the mountain it hangs over."
+    },
+    "open-source-enthusiast": {
+      "guardian": "open-source-enthusiast",
+      "score": 4,
+      "lives": "It lives in the margins, where the notes beside each decision credit those who came before and stay open for anyone to read, like toasts at a shared supra table.",
+      "favorite": "D",
+      "approve": [
+        "F",
+        "C"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "Keep the margins open: every note beside a decision honors who came before and shows how we built on them."
+    },
+    "nutcracker": {
+      "guardian": "nutcracker",
+      "score": 4,
+      "lives": "It lives in the margin itself: marginalia are the small notes a careful hand leaves beside its work, which is where a mechanism with a heart would show that it means well, the way an old street clock lets its small figures play out a life.",
+      "favorite": "D",
+      "approve": [
+        "F",
+        "B"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "A machine's heart shows in its margins: the little notes it leaves beside its choices, kind even when it said no."
+    },
+    "balanchine": {
+      "guardian": "balanchine",
+      "score": 2,
+      "lives": "Only in the margin itself, the wings where a dancer waits for the count; the -arium is a glass case that holds still, so the motion does not live in this word and the Georgian speed does not show in it.",
+      "favorite": "C",
+      "approve": [
+        "F"
+      ],
+      "other": "",
+      "veto": null,
+      "line": "Name what enters on the count. Colors arriving a few at a time are dancers; a glass case only stands."
+    },
+    "bulat-okudzhava": {
+      "guardian": "bulat-okudzhava",
+      "score": 4,
+      "lives": "It lives in the margins, the small penciled notes kept beside each choice, the way a family keeps its remarks in an old songbook; Georgia shows there too, in that habit of keeping, not in the word's Latin.",
+      "favorite": "D",
+      "approve": [
+        "C"
+      ],
+      "other": "",
+      "veto": {
+        "option": "A",
+        "quote": "bombast; irony without heart; spectacle that drowns the human scale",
+        "why": "As the Lamp's own name it would trade a humble lamp for a grand Latin hall, and that grandeur is the bombast that drowns the Lamp's human scale.",
+        "valid": true
+      },
+      "line": "Let each choice keep a friend's penciled note in its margin; that is where the heart is kept."
+    }
+  },
+  "missing": [],
+  "mean_score": 3.89,
+  "scores": {
+    "1": 0,
+    "2": 1,
+    "3": 0,
+    "4": 17,
+    "5": 0
+  },
+  "favorite": {
+    "D": 13,
+    "C": 3,
+    "E": 1,
+    "B": 1
+  },
+  "approve": {
+    "D": 15,
+    "C": 12,
+    "F": 12,
+    "B": 6,
+    "N": 1,
+    "E": 1
+  },
+  "vetoes": [
+    {
+      "guardian": "snow-queen",
+      "option": "D",
+      "quote": "mush, clutter, warmth that turns cloying",
+      "why": "Kept beside every choice, the vetoes, runners-up and jurors' notes would fill each decision's margin until the page is clutter.",
+      "valid": true
+    },
+    {
+      "guardian": "robber-girl",
+      "option": "A",
+      "quote": "prissiness; the timid and the samey; politeness for its own sake; cruelty passed off as boldness.",
+      "why": "Swapping the Lamp's own warm, bold name for a glass-cabinet herbarium-style word is prissiness, a polite museum name chosen over the wild one it already has.",
+      "valid": true
+    },
+    {
+      "guardian": "painter",
+      "option": "B",
+      "quote": "anything that upstages the picture or overstays",
+      "why": "A place in the app with members, a chaptered story and a gallery would compete with the painting for the eye, and the story alone would overstay.",
+      "valid": true
+    },
+    {
+      "guardian": "bulat-okudzhava",
+      "option": "A",
+      "quote": "bombast; irony without heart; spectacle that drowns the human scale",
+      "why": "As the Lamp's own name it would trade a humble lamp for a grand Latin hall, and that grandeur is the bombast that drowns the Lamp's human scale.",
+      "valid": true
+    }
+  ]
+}
