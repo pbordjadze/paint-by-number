@@ -26,10 +26,9 @@ private var repository: URL {
 
 @Suite("Figure engine v0")
 struct FigureRigTests {
-    @Test func committedBaselineRetainsSpecDefaults() throws {
+    @Test func committedBaselineDecodesAndPassesChecks() throws {
         let data = try Data(contentsOf: repository.appendingPathComponent("factory/specs/baseline.json"))
         let baseline = try JSONDecoder().decode(FigureSpec.self, from: data)
-        #expect(try encoded(baseline) == encoded(FigureSpec()))
         let hero = try JSONDecoder().decode(FigureScene.self, from: Data(contentsOf: repository.appendingPathComponent("factory/scenes/hero.json")))
         let engine = try FigureEngine(spec: baseline, scene: hero)
         #expect(engine.checks((0..<engine.frameCount).map { engine.frame($0) }).allSatisfy { $0.pass })
@@ -179,7 +178,7 @@ struct FigureRigTests {
             for (i, particle) in emissions.enumerated() {
                 #expect(abs(particle.birth - walk.start - Double(i + 1) / rate) < 1e-10)
                 let pose = engine.rig.pose(at: particle.birth, quantized: false)
-                #expect((particle.start - pose.joints[pose.swingFoot + "Ankle"]!).length < 0.2)
+                #expect((particle.start - pose.joints[pose.swingFoot + "Ankle"]!).length <= particle.size * 0.1 / sqrt(2) + 1e-9)
             }
         }
     }

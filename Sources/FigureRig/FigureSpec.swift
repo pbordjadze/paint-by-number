@@ -22,7 +22,7 @@ public struct FigureSpec: Codable, Sendable {
     /// Ground to the crown of the standing rig, before projection. The ink and clothing
     /// surround this skeleton; neither changes the gait's units.
     public var normalizationScale: Double {
-        1 / (0.97 * (figure.thigh + figure.shin) - motion.bounce + figure.torso + figure.neck + figure.headSize)
+        1 / (0.97 * (figure.thigh + figure.shin) + figure.torso + figure.neck + figure.headSize)
     }
 
     public struct Figure: Codable, Sendable {
@@ -66,7 +66,7 @@ public struct FigureSpec: Codable, Sendable {
         }
     }
     public struct Motion: Codable, Sendable {
-        public var fps = 24, onTwos = true, step = 0.18, cadence = 2.0, bounce = 0.03, sway = 0.01
+        public var fps = 24, onTwos = true, step = 0.26, cadence = 2.0, bounce = 0.03, sway = 0.01
         public var lean = 4.0, armSwing = 25.0, footLift = 0.05, ease = 0.5, turnRate = 360.0
         public var headingSteps = 0, anticipation = 0.25, followThrough = 0.15, settle = 0.3
         public init() {}
@@ -86,7 +86,7 @@ public struct FigureSpec: Codable, Sendable {
         }
     }
     public struct Magic: Codable, Sendable {
-        public var colors = ["#C9A227", "#6E9A5B"], shape = "sparkle", size = 0.035, trail = 4.0, burst = 24
+        public var colors = ["#C9A227", "#6E9A5B"], shape = "sparkle", size = 0.07, trail = 4.0, burst = 24
         public var life = 1.2, drift = 0.25, spread = 0.6, twinkle = 3.0, glow = 0.0
         public init() {}
         public init(from decoder: any Decoder) throws {

@@ -95,10 +95,14 @@ struct InkRenderer: Sendable {
         if f.headwear != "none" {
             let size = f.headwearSize
             var contour: [Point] = []
-            for i in 0...24 { let a = .pi + Double(i) * .pi / 24; contour.append(head + Point(cos(a) * rx * size, sin(a) * ry * size)) }
+            for i in 0...24 {
+                let a = .pi + Double(i) * .pi / 24
+                let y = f.headwear == "kerchief" ? -ry * 0.65 + sin(a) * ry * 0.55 * size : sin(a) * ry * size
+                contour.append(head + Point(cos(a) * rx * size, y))
+            }
             if f.headwear == "hood" {
                 contour += [head + Point(rx * size, ry * 0.8), head + Point(-rx * size, ry * 0.8)]
-            } else { contour.append(head + Point(0, ry * 0.2)) }
+            }
             if let accent = f.accent { headShapes.append(FilledShape(subpaths: [contour], color: accent)) }
             headShapes.append(stroke(contour, 7, closed: true))
             if f.headwear == "kerchief", sin(radians(pose.drawnHeading)) <= 0, f.knot > 0 {

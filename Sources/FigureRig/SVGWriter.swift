@@ -35,7 +35,8 @@ public enum FigureSVG {
                 for p in points.dropFirst() { path += "L\(svgNumber(p.x)),\(svgNumber(p.y))" }
                 path += "Z"
             }
-            output += "<path data-layer=\"\(shape.layer)\" d=\"\(path)\" fill=\"\(shape.color)\" fill-rule=\"evenodd\" opacity=\"\(svgNumber(shape.opacity))\""
+            let fillRule = shape.layer == "card" ? "evenodd" : "nonzero"
+            output += "<path data-layer=\"\(shape.layer)\" d=\"\(path)\" fill=\"\(shape.color)\" fill-rule=\"\(fillRule)\" opacity=\"\(svgNumber(shape.opacity))\""
             if shape.blur != nil { output += " filter=\"url(#blur\(i))\"" }
             output += "/>\n"
         }

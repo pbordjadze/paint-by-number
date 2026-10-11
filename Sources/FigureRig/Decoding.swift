@@ -13,13 +13,20 @@ struct FieldKey: CodingKey {
     init?(intValue: Int) { stringValue = String(intValue); self.intValue = intValue }
 }
 
+func inputPath(_ keys: [any CodingKey]) -> String {
+    keys.reduce("") { path, key in
+        if let index = key.intValue { return path + "[\(index)]" }
+        return path.isEmpty ? key.stringValue : path + "." + key.stringValue
+    }
+}
+
 struct Fields {
     let container: KeyedDecodingContainer<FieldKey>
     let path: String
 
     init(_ decoder: any Decoder, _ allowed: String) throws {
         container = try decoder.container(keyedBy: FieldKey.self)
-        path = decoder.codingPath.map { $0.intValue.map { "[\($0)]" } ?? $0.stringValue }.joined(separator: ".")
+        path = inputPath(decoder.codingPath)
         let keys = Set(allowed.split(separator: " ").map(String.init))
         if let key = container.allKeys.sorted(by: { $0.stringValue < $1.stringValue })
             .first(where: { !keys.contains($0.stringValue) }) {

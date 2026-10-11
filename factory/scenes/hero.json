@@ -10,7 +10,7 @@
     "id": "w1",
     "at": { "path": "brook", "t": 0 },
     "timeline": [
-      { "do": "walk", "path": "brook", "to": 0.085 },
+      { "do": "walk", "path": "brook", "to": 0.35 },
       { "do": "turn", "heading": 90 },
       { "do": "cast", "duration": 1.2 },
       { "do": "idle", "duration": 0.6 }

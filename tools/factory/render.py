@@ -3,13 +3,15 @@
 
     tools/factory/render.py factory/specs/baseline.json factory/scenes/hero.json ~/factory-out/hero
 
-Prerequisites: Pillow, node (npm ci --prefix tools), ffmpeg with libx264/libwebp_anim.
-Build the host executable first: tools/swift.sh build -c release --product figures
+Prerequisites: Pillow, DejaVu Sans (DejaVuSans.ttf), node (npm ci --prefix tools), ffmpeg with libx264/libwebp_anim.
+Build the host executable first: swift build -c release --product figures
 --static-swift-stdlib. FIGURES_BIN or --figures selects another executable. All rasterization
-runs in one node process; encoders use at most four threads. Runtime excludes building.
+runs in one node process on at most four threads; PNG composition uses at most four workers.
+Encoders use at most four threads; the WebP preview uses display-point resolution. Runtime excludes building.
 """
 import argparse
 import copy
+from concurrent.futures import ProcessPoolExecutor
 import json
 import math
 import os
@@ -109,12 +111,40 @@ def background_image(scene, scene_file, size):
     return paper
 
 
+_frame_background = None
+
+
+def init_compositor(path):
+    global _frame_background
+    with Image.open(path) as image:
+        _frame_background = image.convert("RGB")
+
+
+def composite_frame(path):
+    with Image.open(path) as overlay:
+        panel = _frame_background.copy()
+        panel.paste(overlay, (0, 0), overlay)
+        panel.save(path, compress_level=1)
+
+
+def composite_frames(paths, background, scratch):
+    path = scratch / "background.png"
+    background.save(path, compress_level=1)
+    # Independent processes keep PNG filtering and encoding on four cores.
+    with ProcessPoolExecutor(max_workers=4, initializer=init_compositor, initargs=(path,)) as workers:
+        list(workers.map(composite_frame, paths, chunksize=8))
+
+
 def compose(spec, scene, scene_file, out, manifest, motion, scratch):
     width, height, fps = manifest["pixelWidth"], manifest["pixelHeight"], manifest["fps"]
     count = manifest["frameCount"]
     trees = [ET.parse(out / f"frames/{i:04d}.svg").getroot() for i in range(count)]
-    jobs = [{"input": str(out / f"frames/{i:04d}.svg"), "output": str(out / f"frames/{i:04d}.png"), "width": width}
-            for i in range(count)]
+    # Rasterize moving layers alone; the static painting is decoded/resized once.
+    jobs = []
+    for i, tree in enumerate(trees):
+        path = scratch / f"frame-{i}.svg"
+        write_svg(isolated(tree, ["figure", "particles", "card"]), path)
+        jobs.append({"input": str(path), "output": str(out / f"frames/{i:04d}.png"), "width": width})
     moments = key_frames(manifest, spec)
     for j, (_, frame) in enumerate(moments):
         path = scratch / f"figure-{j}.svg"
@@ -155,6 +185,9 @@ def compose(spec, scene, scene_file, out, manifest, motion, scratch):
     (scratch / "jobs.json").write_text(json.dumps(jobs))
     run(["node", ROOT / "tools/factory/rasterize.mjs", scratch / "jobs.json"])
 
+    background = background_image(scene, scene_file, (width, height))
+    composite_frames([out / f"frames/{i:04d}.png" for i in range(count)], background, scratch)
+
     sheets = out / "sheets"
     sheets.mkdir(exist_ok=True)
     contact_indices = [round((count - 1) * i / 11) for i in range(12)]
@@ -192,11 +225,15 @@ def main():
     parser.add_argument("spec", type=Path); parser.add_argument("scene", type=Path); parser.add_argument("out", type=Path)
     parser.add_argument("--figures", type=Path, default=Path(os.environ.get("FIGURES_BIN", ROOT / ".build/release/figures")))
     args = parser.parse_args()
+    try:
+        ImageFont.truetype("DejaVuSans.ttf", 18)
+    except OSError:
+        parser.error("missing DejaVu Sans (DejaVuSans.ttf); install fonts-dejavu-core")
     for dependency in ["node", "ffmpeg"]:
         if not shutil.which(dependency):
             parser.error(f"missing {dependency}; see this script's prerequisites")
     if not args.figures.is_file():
-        parser.error("build figures first: tools/swift.sh build -c release --product figures --static-swift-stdlib")
+        parser.error("build figures first: swift build -c release --product figures --static-swift-stdlib")
     start = time.monotonic()
     out, spec_file, scene_file = args.out.resolve(), args.spec.resolve(), args.scene.resolve()
     if out == ROOT or ROOT in out.parents:
@@ -209,12 +246,15 @@ def main():
         compose(spec, scene, scene_file, out, manifest, motion, Path(temporary))
     input_flags = ["ffmpeg", "-v", "error", "-y", "-threads", "4", "-framerate", manifest["fps"], "-i", out / "frames/%04d.png"]
     run(input_flags + ["-an", "-c:v", "libx264", "-threads", "4", "-preset", "ultrafast", "-crf", "20", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out / "clip.mp4"])
-    run(input_flags + ["-an", "-c:v", "libwebp_anim", "-threads", "4", "-quality", "75", "-compression_level", "0", "-loop", "0", out / "clip.webp"])
+    preview_width = manifest["pixelWidth"] // (2 if scene.get("display", "ipad13") == "ipad13" else 3)
+    run(input_flags + ["-an", "-vf", f"scale={preview_width}:-2", "-c:v", "libwebp_anim", "-threads", "4", "-quality", "75", "-compression_level", "0", "-loop", "0", out / "clip.webp"])
     checks = json.loads((out / "checks.json").read_text())
     failed = [c["name"] for c in checks if not c["pass"]]
     print(f"Rendered {manifest['frameCount']} frames and all review artifacts in {time.monotonic() - start:.2f} s; "
           + ("checks pass" if not failed else f"failed checks: {', '.join(failed)}"))
 
+    return 1 if failed else 0
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
