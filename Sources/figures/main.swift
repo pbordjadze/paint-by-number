@@ -1,12 +1,61 @@
 // figures render --spec <figure.json> --scene <scene.json> --out <directory>
+// figures reveal <snapshot-dir> <out-dir> [--seed left|center|strongest] [--steps K]
+// Reveal writes a PGM arrival-time field and JSON worker path per consecutive present
+// pbn snapshot pair; default seed left, default steps 12. See RevealField for thresholds.
 // Outputs are deterministic review artifacts, never saved paintings. Paths in a scene are
 // resolved beside that scene. A local background copy gives every output directory the
 // same SVG references, and makes a review bundle portable.
 import Foundation
 import FigureRig
 
+func reveal(_ args: [String]) throws {
+    guard args.count >= 3, (args.count - 3) % 2 == 0 else {
+        throw FigureInputError("usage: figures reveal <snapshot-dir> <out-dir> [--seed left|center|strongest] [--steps K]")
+    }
+    var seed = RevealField.Seed.left, steps = 12, seen = Set<String>()
+    for i in stride(from: 3, to: args.count, by: 2) {
+        guard seen.insert(args[i]).inserted else { throw FigureInputError("duplicate option \(args[i])") }
+        switch args[i] {
+        case "--seed":
+            guard let value = RevealField.Seed(rawValue: args[i + 1]) else {
+                throw FigureInputError("reveal.seed: expected left, center or strongest")
+            }
+            seed = value
+        case "--steps":
+            guard let value = Int(args[i + 1]), value > 0 else {
+                throw FigureInputError("reveal.steps: expected a positive integer")
+            }
+            steps = value
+        default: throw FigureInputError("unknown option \(args[i])")
+        }
+    }
+    let snapshots = RevealSnapshots.present(in: URL(fileURLWithPath: args[1]))
+    guard snapshots.count >= 2 else { throw FigureInputError("reveal: expected at least two named pbn snapshots") }
+    let out = URL(fileURLWithPath: args[2])
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+    // Prepare every pair before writing, so a malformed later snapshot cannot leave
+    // a partial new bundle in the output directory.
+    var outputs: [(String, Data, Data)] = []
+    var previous = try RevealSnapshots.read(Data(contentsOf: snapshots[0]))
+    for i in 1..<snapshots.count {
+        let next = try RevealSnapshots.read(Data(contentsOf: snapshots[i]))
+        let field = try RevealField.make(from: previous, to: next, seed: seed)
+        let name = snapshots[i - 1].deletingPathExtension().lastPathComponent + "-" + snapshots[i].deletingPathExtension().lastPathComponent
+        var json = try encoder.encode(field.metadata(steps: steps)); json.append(10)
+        outputs.append((name, field.encodedPGM(), json)); previous = next
+    }
+    try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
+    for (name, pgm, json) in outputs {
+        try pgm.write(to: out.appendingPathComponent(name + ".pgm"))
+        try json.write(to: out.appendingPathComponent(name + ".json"))
+    }
+    print("\(outputs.count) reveal fields; \(out.path)")
+}
+
 func run() throws {
     let args = Array(CommandLine.arguments.dropFirst())
+    if args.first == "reveal" { try reveal(args); return }
     guard args.first == "render", args.count == 7 else {
         throw FigureInputError("usage: figures render --spec S --scene C --out D")
     }

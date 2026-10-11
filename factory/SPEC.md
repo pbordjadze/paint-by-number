@@ -14,11 +14,12 @@ scenes, the app's renderer, the pipeline snapshot observer and the agent loop.
 
 | Path | What |
 | --- | --- |
-| `Sources/FigureRig/` | Library: decoding, rig, ink, magic, card layout, checks. Pure Swift, Foundation for JSON only; depends on `PaintCore` for `SplitMix64` alone. It must build for iOS too: the app will draw its frames later. |
-| `Sources/figures/` | Executable: `figures render`. |
+| `Sources/FigureRig/` | Library: decoding, rig, ink, magic, card layout, checks, reveal fields. Pure Swift; uses `PaintCore`'s seeded RNG, snapshot pictures, color math and Netpbm writer. It must build for iOS too: the app will draw its frames later. |
+| `Sources/figures/` | Executable: `figures render`, `figures reveal`. |
 | `Tests/FigureRigTests/` | Swift Testing. |
 | `tools/factory/render.py` | Runs `figures`, rasterizes, encodes clips, composes sheets, adds the pixel checks. |
 | `tools/factory/rasterize.mjs` | Rasterizes a batch of SVGs in one node process with `@resvg/resvg-js` (already in `tools/package.json`), with transparent backgrounds and system fonts. |
+| `tools/factory/reveal_sheet.py` | Six wipe frames per snapshot pair with the worker path drawn. Requires Pillow. |
 | `factory/specs/`, `factory/scenes/` | Inputs: `baseline.json`, `hero.json`, `hero.svg`. |
 
 `Package.swift` gains the targets `FigureRig`, `figures` and `FigureRigTests`. The app doesn't link
@@ -248,6 +249,41 @@ words` (at least 2 s), then fades out.
 - `D/sheets/silhouette.png`: the same moments, the figure filled solid black on white.
 - `D/sheets/card.png`: the card at display size during its hold.
 - The pixel checks, appended to `checks.json`.
+
+### Pipeline reveal fields
+
+`figures reveal <snapshot-dir> <out-dir> [--seed left|center|strongest] [--steps K]`
+uses F8's `pbn generate --snapshots` pictures in this order: `working-image.ppm`,
+`structure.pgm`, `smoothed.ppm`, `palette.ppm`, `simplified.ppm`, `line-art.pgm`,
+`vectorized.pgm`. Absent stages are skipped; each adjacent pair of present stages is processed.
+Other files, including generate's full-size `working.ppm`, are ignored. Pictures in a pair must
+have the same positive dimensions. Input is binary 8-bit PPM/PGM.
+
+`RevealField.make(from:to:seed:)` marks changes at true OKLab distance ≥ 0.02 for color
+pairs, or absolute byte difference > 8 for two grayscale pictures. Mixed pairs promote gray to
+equal sRGB channels and use OKLab. The default seed, `left`, includes every changed pixel in the
+leftmost column with any changes. `center` chooses the changed pixel nearest the picture's
+center, breaking ties in raster order. `strongest` includes all changed pixels tied for the
+largest difference.
+
+Times are shortest geodesic distances on the 8-connected change mask, with integer costs 2 for
+straight and 3 for diagonal steps. Weighted breadth-first waves and seed ties run in raster
+order. An unreachable component starts at its first raster pixel, at the largest distance
+reached so far. All distances are then divided by the final maximum; if it is zero, changed
+pixels have time zero. Unchanged pixels have no time.
+
+For each pair, `<from>-<to>.pgm` reserves 0 for unchanged and encodes arrival time as
+`1 + round(t × 254)`. `<from>-<to>.json` contains `width`, `height`, `changed` (fraction),
+`seed`, `steps`, and `path`. Worker paths use K equal time bins (default 12, positive integer);
+t=1 belongs to the last bin. Nonempty bins contribute the centroid of their pixel centers.
+Two open Chaikin rounds, retaining endpoints, produce absolute SVG `M`/`L` data in snapshot
+pixel coordinates. No changes gives an empty path; a single centroid gives a stationary `M`
+(valid SVG, but the scene's walk-path parser requires nonzero length).
+
+`python3 tools/factory/reveal_sheet.py <snapshot-dir> <reveal-dir> <out.png>` shows each pair
+at times 0, 0.2, 0.4, 0.6, 0.8 and 1, with the path overlaid. It decodes the quantized PGM times;
+unchanged pixels stay on A. Keep all output outside the repo. Reveals leave the render engine's
+version, PaintCore, pbn and the app unchanged.
 
 ## Checks
 
