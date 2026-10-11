@@ -13,7 +13,10 @@ final class PlayTests: XCTestCase {
             #"{"do":"drag","from":{"x":20,"y":30},"to":{"x":80,"y":60},"steps":12}"#,
             #"{"do":"wait","seconds":0}"#, #"{"do":"screenshot"}"#,
         ]
-        for json in valid { XCTAssertNoThrow(try PlayMove(data: Data(json.utf8)), json) }
+        for json in valid {
+            do { _ = try PlayMove(data: Data(json.utf8)) }
+            catch { XCTFail("\(json): \(error)") }
+        }
         let invalid = [
             #"[]"#, #"{"do":"unknown"}"#, #"{"do":"screenshot","extra":0}"#,
             #"{"do":"fill"}"#, #"{"do":"fill","area":true}"#, #"{"do":"fill","area":0}"#,
@@ -25,7 +28,12 @@ final class PlayTests: XCTestCase {
             #"{"do":"drag","from":{"x":0,"y":0,"z":0},"to":{"x":1,"y":1},"steps":1}"#,
             #"{"do":"drag","from":{"x":0,"y":0},"to":{"x":1,"y":1},"steps":0}"#,
         ]
-        for json in invalid { XCTAssertThrowsError(try PlayMove(data: Data(json.utf8)), json) }
+        for json in invalid {
+            do {
+                _ = try PlayMove(data: Data(json.utf8))
+                XCTFail("Accepted invalid move: \(json)")
+            } catch {}
+        }
     }
 
     @MainActor
@@ -37,7 +45,6 @@ final class PlayTests: XCTestCase {
         let mailbox = URL(fileURLWithPath: path, isDirectory: true)
         try requireFreshMailbox(mailbox)
         let app = try await launchPainting()
-        defer { app.terminate() }
         // No idle deadline or move limit: the host ends this test with SIGINT.
         try await runMailbox(mailbox, app: app)
     }
@@ -48,7 +55,6 @@ final class PlayTests: XCTestCase {
         try FileManager.default.createDirectory(at: mailbox, withIntermediateDirectories: false)
         defer { try? FileManager.default.removeItem(at: mailbox) }
         let app = try await launchPainting()
-        defer { app.terminate() }
         // Start the real consumer in a task while this test supplies one outstanding move.
         // XCUITest interaction must remain on MainActor even in that task.
         let loop = Task { @MainActor in
@@ -95,7 +101,6 @@ final class PlayTests: XCTestCase {
         try FileManager.default.createDirectory(at: mailbox, withIntermediateDirectories: false)
         defer { try? FileManager.default.removeItem(at: mailbox) }
         let app = try await launchPainting()
-        defer { app.terminate() }
         let loop = Task { @MainActor in
             try await self.runMailbox(mailbox, app: app, moveLimit: 2, idleTimeout: 30)
         }
@@ -194,7 +199,7 @@ final class PlayTests: XCTestCase {
         case let .drag(from, to, steps):
             // UIImage.size may already be pixels in the test runner. Read the simulator's
             // actual canvas display scale instead of assuming the screenshot's UIImage scale.
-            let image = XCUIDevice.shared.screenshot().image
+            let image = XCUIScreen.main.screenshot().image
             guard let pixels = image.cgImage else { throw PlayFailure("Cannot read screenshot dimensions") }
             guard let scaleText = app.descendants(matching: .any)["play-screen-scale"].value as? String,
                   let scale = Double(scaleText), scale.isFinite, scale > 0 else {
