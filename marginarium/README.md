@@ -12,9 +12,10 @@ Paint by Moonlight is made by Paul Bordjadze with a small team of AI agents. Cod
 agent, builds the tools. Claude orchestrates the work, reviews every change and writes these
 chapters. The Lamp (in full, *A Lamp Left Burning*) is a panel of nineteen AI guardians, each
 with a written charter saying what it believes, what it champions and what it guards against.
-The Lamp decides the app's matters of taste by blind ballot: its names, its colors, its pets.
-One seat, Originality, can only veto. Paul has the last word, and Claude and Codex make many
-smaller taste calls along the way.
+The Lamp weighs in on smaller design questions by blind ballot, like the names of the paints;
+one seat, Originality, can only veto. The big creative choices stay with people: Paul, and the
+people he invites. A person's choice always wins over the AI's, and Claude and Codex make many
+smaller calls along the way.
 
 In the app, the Marginarium is a section of its own: the book in the gallery's toolbar, where
 Pip says hello. It is still being written. These are its first pages: one passage from each

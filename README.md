@@ -45,7 +45,8 @@ paint-by-numbers templates — entirely on-device — and makes painting them fl
 
 Paul Bordjadze makes Paint by Moonlight with a small team of AI agents: Codex builds the tools,
 Claude orchestrates, reviews and tells the story, and the Lamp, a panel of nineteen AI guardians,
-votes on matters of taste by blind ballot. Paul has the last word.
+weighs in on smaller design questions by blind ballot. The big creative choices stay with
+people: Paul, and the people he invites.
 
 The Marginarium is the app's
 storybook section, where the chapters tell how it was made: its first pages are in the app
