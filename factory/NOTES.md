@@ -246,6 +246,15 @@ helpful, beautiful.
   recruiter should be able to picture their own stakeholders, or agents those stakeholders set
   up, as the Lamp; the pattern could scale with funding, and runs today on Paul's own credits.
 
+## Paul's point 11: people first; the Lamp for smaller problems (Oct 11)
+
+- "Human creative choice should always trump AI, if desired." Paul wants his family and the
+  people close to him more involved, and that often means leaving the Lamp out entirely.
+- The Lamp is saved for smaller design problems, or runs under more oversight; its answers are
+  proposals. Big creative choices go to Paul first, who decides who weighs in.
+- `CONSTITUTION.md` (Who really decides) and `ORCHESTRATOR.md` (Rules) say so. People Paul brings
+  in are not named in project files until he says so.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.

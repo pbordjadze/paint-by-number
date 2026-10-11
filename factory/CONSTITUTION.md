@@ -13,9 +13,12 @@ why. Be most careful with anything a guardian said; those words are theirs.
 - Nothing is copied.
 - Nobody's saved painting ever changes.
 
-**Who really decides.** Claude and Codex make many taste decisions, mostly small ones (a figure's
-pace, a broom's shape, a chart's grey, a chapter's opening). The Lamp takes the ones about who the
-app is: its names, its colors, its pets. Paul can overrule any of them.
+**Who really decides.** People first. A human creative choice always wins over an AI one when a
+person wants it to (Paul, October 11). Paul decides, and he can hand any choice to his family and
+the people he invites, without the Lamp at all. The Lamp is for smaller design problems Paul or
+Claude give it, under that oversight, and its answers are proposals. Claude and Codex still make
+many small calls (a figure's pace, a broom's shape, a chart's grey), and say so; any person in
+the loop can overrule them.
 
 ## The chapters
 

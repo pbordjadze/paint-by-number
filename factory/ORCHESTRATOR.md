@@ -30,7 +30,10 @@ driving manual and the state of play.
 
 - Never push `main`, `sidestore` or other people's branches. Every commit has `[skip ci]` (macOS
   runners are rationed).
-- Taste decisions are not Codex's: the Lamp and Paul decide (`ARCHITECTURE.md`).
+- Taste decisions are not Codex's. People first: Paul, and the family and people he invites; a
+  human creative choice always wins over an AI one when a person wants it to. The Lamp gets only
+  smaller design problems, and its answers are proposals. Ask Paul before taking a big creative
+  choice to the Lamp.
 - Building is Codex's by default, app work included (Paul, Oct 11): Claude subagents are for the
   Lamp, reviews and reading. Use a Claude agent to build only when there's a reason, and say it.
 - Paul's veto stands over everything but the Lamp's own name.
@@ -79,6 +82,6 @@ driving manual and the state of play.
   Claude kept Colophon's eyes (a taste call, Paul's to veto).
 - CI minutes for F28 (the app traps on damaged data) batched with F11.
 - `pieces/color-names/drops.json`, the gallery's drop schedule; Okudzhava's Late Sunlight question.
-- The pets' style sheet run (the Lamp, then Paul), now that Pip and Colophon show the hand.
-- The making-of's look, after the Lamp watches it: 338 s long, a small worker, and a straight
+- The pets' style sheet: Paul's call who decides it (people he invites, or the Lamp as a proposal).
+- The making-of's look (Paul's call; the Lamp only if he wants its notes): 338 s long, a small worker, and a straight
   ink line across the drawing in the line-art stage.
