@@ -144,8 +144,7 @@ Proposed casting (first scope, 8 agents + 1 ranker per round):
 - Craft and originality are veto-only seats (code checks where possible), never outvoted on taste.
 - Guardian charter: name; what it believes; what it champions; what it guards against;
   touchstones; how it recognizes its idea in a design.
-- Draft roster for Paul to pick from: the Baba Yaga, the Hedge Witch, the Moon, the Frost, the
-  Storybook, the Enchanted Workshop, the Scholar, the Painter. Recommended: 5–6.
+- The panel Paul picked, its shared Georgian bar and the jury of six: `GUARDIANS.md`.
 
 ## Budget and where it runs (Oct 11)
 
@@ -163,8 +162,20 @@ Proposed casting (first scope, 8 agents + 1 ranker per round):
 ## Medea: the app's name and its design North Star
 
 Paul: she's witchy, Georgian (Colchis), all about aesthetics, cool, from mythology, kind,
-helpful, beautiful. She chairs the guardians: she must be present in every piece, the others
-are represented across the app, and she breaks ties (`GUARDIANS.md`).
+helpful, beautiful.
+
+- She is an equal seat on the panel. Georgia is the North Star instead, a bar every guardian
+  carries: if you know Georgia, the app reminds you of it; nobody else should notice it's
+  Georgian.
+- The panel (Paul's picks): Medea, the Baba Yaga, the Hedge Witch, the Moon, the Snow Queen (in
+  place of Elsa), the Robber Girl (to confirm: the Georgian girl Paul remembers from the 1957
+  Snow Queen), the Storybook, the Enchanted Workshop, the Scholar, the Painter, the Child at
+  Bedtime, the Glassblower, Pirosmani, Emily Dickinson, the Bible School Teacher (maybe). Paul
+  singled out the Scholar.
+- 15 guardians on every decision would cost 15 agents a round, and everyone would wait many
+  pieces to be represented; a jury of six drawn by the ledger keeps rounds small and fair.
+- The animation stays stick figures for now: converge, see whether the factory works, then
+  revisit.
 
 - Before the rename ships: a trademark search in the app's classes (software, games) and the App
   Store's name availability. Tyler Perry's Madea sounds nearly the same; include it in the
@@ -175,7 +186,6 @@ are represented across the app, and she breaks ties (`GUARDIANS.md`).
 - The rename touches the display name, gallery title, permission texts, PDF footer, string
   catalogs, the design system, the icon and the identity rules in CLAUDE.md. Nothing changes
   until the name clears.
-- Medea covers much of the Moon and the Hedge Witch; keep those only for what she doesn't bring.
 
 ## Open questions
 
