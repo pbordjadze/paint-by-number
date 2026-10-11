@@ -1,0 +1,416 @@
+{
+  "by": "Paul",
+  "picks": [
+    {
+      "slot": 1,
+      "hex": "C5A24A",
+      "owner": "medea",
+      "name": "Beeswax",
+      "source": "writer",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:32:47.855Z"
+    },
+    {
+      "slot": 2,
+      "hex": "8A9B4F",
+      "owner": "medea",
+      "name": "Willow Leaf",
+      "source": "medea",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:33:04.487Z"
+    },
+    {
+      "slot": 3,
+      "hex": "4C3A2B",
+      "owner": "baba-yaga",
+      "name": "Izba Wood",
+      "source": "baba-yaga",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:33:09.453Z"
+    },
+    {
+      "slot": 4,
+      "hex": "A59D92",
+      "owner": "baba-yaga",
+      "name": "Dusty Road",
+      "source": "incumbent",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:33:16.969Z"
+    },
+    {
+      "slot": 5,
+      "hex": "6B7B3A",
+      "owner": "hedge-witch",
+      "name": "Hedgerow",
+      "source": "hedge-witch",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:33:21.670Z"
+    },
+    {
+      "slot": 6,
+      "hex": "B6C9A0",
+      "owner": "hedge-witch",
+      "name": "Willow Mist",
+      "source": "hedge-witch",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:33:33.176Z"
+    },
+    {
+      "slot": 7,
+      "hex": "0B2147",
+      "owner": "moon",
+      "name": "Night Tide",
+      "source": "incumbent",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:33:38.526Z"
+    },
+    {
+      "slot": 8,
+      "hex": "E6E0D4",
+      "owner": "moon",
+      "name": "Lantern Paper",
+      "source": "moon",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:33:53.933Z"
+    },
+    {
+      "slot": 9,
+      "hex": "D6EAF5",
+      "owner": "snow-queen",
+      "name": "Hoarfrost",
+      "source": "snow-queen",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:01.592Z"
+    },
+    {
+      "slot": 10,
+      "hex": "A9B9D4",
+      "owner": "snow-queen",
+      "name": "Chambray",
+      "source": "writer",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:18.119Z"
+    },
+    {
+      "slot": 11,
+      "hex": "B5251E",
+      "owner": "nina",
+      "name": "Sealing Wax",
+      "source": "nina",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:22.005Z"
+    },
+    {
+      "slot": 12,
+      "hex": "E07B39",
+      "owner": "nina",
+      "name": "Kiln Glow",
+      "source": "nina",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:29.518Z"
+    },
+    {
+      "slot": 13,
+      "hex": "25364F",
+      "owner": "storybook",
+      "name": "Book Cloth",
+      "source": "storybook",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:32.801Z"
+    },
+    {
+      "slot": 14,
+      "hex": "EAD9B5",
+      "owner": "storybook",
+      "name": "Uncut Page",
+      "source": "storybook",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:36.018Z"
+    },
+    {
+      "slot": 15,
+      "hex": "C0703F",
+      "owner": "enchanted-workshop",
+      "name": "Hearth Tile",
+      "source": "enchanted-workshop",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:39.620Z"
+    },
+    {
+      "slot": 16,
+      "hex": "6E5A47",
+      "owner": "enchanted-workshop",
+      "name": "Barn Timber",
+      "source": "writer",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:41.908Z"
+    },
+    {
+      "slot": 17,
+      "hex": "5A4636",
+      "owner": "scholar",
+      "name": "Pinecone",
+      "source": "scholar",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:44.206Z"
+    },
+    {
+      "slot": 18,
+      "hex": "3B3F44",
+      "owner": "scholar",
+      "name": "Iron Gate",
+      "source": "incumbent",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:45.928Z"
+    },
+    {
+      "slot": 19,
+      "hex": "8E8A82",
+      "owner": "painter",
+      "name": "Tbilisi Stone",
+      "source": "painter",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:34:49.491Z"
+    },
+    {
+      "slot": 20,
+      "hex": "EDEBE6",
+      "owner": "painter",
+      "name": "Chalk Dust",
+      "source": "writer",
+      "love": false,
+      "veto": true,
+      "note": "",
+      "at": "2026-10-11T06:35:02.871Z",
+      "replacement": {
+        "name": "Salt Flat",
+        "source": "incumbent",
+        "score": 12.0
+      }
+    },
+    {
+      "slot": 21,
+      "hex": "F4C7D3",
+      "owner": "child-at-bedtime",
+      "name": "Apple Blossom",
+      "source": "writer",
+      "love": false,
+      "veto": true,
+      "note": "",
+      "at": "2026-10-11T06:35:11.208Z",
+      "replacement": {
+        "name": "Blossom Dust",
+        "source": "child-at-bedtime",
+        "score": 14.0
+      }
+    },
+    {
+      "slot": 22,
+      "hex": "F9E7A0",
+      "owner": "child-at-bedtime",
+      "name": "Lamplight",
+      "source": "child-at-bedtime",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:35:25.022Z"
+    },
+    {
+      "slot": 23,
+      "hex": "12A3A5",
+      "owner": "glassblower",
+      "name": "Glacier Lake",
+      "source": "glassblower",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:35:38.516Z"
+    },
+    {
+      "slot": 24,
+      "hex": "9DE3DC",
+      "owner": "glassblower",
+      "name": "Lagoon Shallows",
+      "source": "incumbent",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:35:50.717Z"
+    },
+    {
+      "slot": 25,
+      "hex": "191512",
+      "owner": "pirosmani",
+      "name": "Chimney Soot",
+      "source": "pirosmani",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:35:55.403Z"
+    },
+    {
+      "slot": 26,
+      "hex": "C68A4B",
+      "owner": "pirosmani",
+      "name": "Tonir Wall",
+      "source": "pirosmani",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:13.333Z"
+    },
+    {
+      "slot": 27,
+      "hex": "FBF5E6",
+      "owner": "emily-dickinson",
+      "name": "Herbarium Paper",
+      "source": "emily-dickinson",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:16.919Z"
+    },
+    {
+      "slot": 28,
+      "hex": "836A96",
+      "owner": "emily-dickinson",
+      "name": "Heather Moor",
+      "source": "incumbent",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:25.102Z"
+    },
+    {
+      "slot": 29,
+      "hex": "A31F34",
+      "owner": "open-source-enthusiast",
+      "name": "Pomegranate",
+      "source": "writer",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:29.198Z"
+    },
+    {
+      "slot": 30,
+      "hex": "E8957C",
+      "owner": "open-source-enthusiast",
+      "name": "Paper Lantern",
+      "source": "open-source-enthusiast",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:35.458Z"
+    },
+    {
+      "slot": 31,
+      "hex": "2A3B6B",
+      "owner": "nutcracker",
+      "name": "Night Ferry",
+      "source": "nutcracker",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:40.886Z"
+    },
+    {
+      "slot": 32,
+      "hex": "7B4A2F",
+      "owner": "nutcracker",
+      "name": "Roasted Chestnut",
+      "source": "incumbent",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:46.071Z"
+    },
+    {
+      "slot": 33,
+      "hex": "E7C1C6",
+      "owner": "balanchine",
+      "name": "Pointe Shoe",
+      "source": "balanchine",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:48.459Z"
+    },
+    {
+      "slot": 34,
+      "hex": "3F6FB8",
+      "owner": "balanchine",
+      "name": "Delft Tile",
+      "source": "incumbent",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:52.335Z"
+    },
+    {
+      "slot": 35,
+      "hex": "1A5FA8",
+      "owner": "bulat-okudzhava",
+      "name": "Still Water",
+      "source": "bulat-okudzhava",
+      "love": true,
+      "veto": false,
+      "note": "",
+      "at": "2026-10-11T06:36:54.940Z"
+    },
+    {
+      "slot": 36,
+      "hex": "EDB85A",
+      "owner": "bulat-okudzhava",
+      "name": "Golden Hour",
+      "source": "incumbent",
+      "love": false,
+      "veto": true,
+      "note": "",
+      "at": "2026-10-11T06:37:00.862Z",
+      "replacement": {
+        "name": "Late Sunlight",
+        "source": "writer",
+        "score": 11.0
+      }
+    }
+  ]
+}
