@@ -204,16 +204,21 @@ helpful, beautiful.
 
 - The app's Lamp section (issue #16) shows the members and the story of their work, in
   chapters. Chapter 1 is "How the Panel Named Itself".
-- Chapter 2, Claude's pick: **Thirty Characters**. The Lamp writes the App Store subtitle that
-  sits under the name Medea: at most 30 characters, Apple's limit. The current one, "Turn any
-  photo into a painting", is exactly 30.
-  - Productive: once the app is called Medea, the subtitle does all the explaining, and it is the
-    first sentence strangers read.
-  - The sequel: in chapter 1 the Lamp chose a poem that doesn't work in a sentence. Here poetry
-    has to do a job in 30 characters.
-  - New in this run: the eight fixes; a function seat, the Stranger (someone scrolling the App
-    Store who has never heard of Medea); a known-good incumbent instead of a known-bad one; the
-    bake-off (the Lamp against one writer, Paul picking blind); Paul's veto.
+- Chapter 2 is **Thirty-Six Colors** (Paul's pick over Claude's suggestion, an App Store subtitle):
+  the Lamp renames 36 paints, two per guardian, so everyone gets colors; vetoes make good content.
+  Paul's checkpoint: `pieces/color-names/run/checkpoint.json`.
+- Chapter 3 is **The Marginarium**: the story of the day the Lamp was made (11 October), told by
+  Claude in a wry, footnoted voice with a little of the Bartimaeus books' flavor, the Lamp writing
+  in the margins. Its purpose: show Paul's ideas and what each became.
+
+## Paul's point 8: the Marginarium
+
+- Paul asked the Lamp whether it liked the word Marginarium (`pieces/marginarium/`). It did, for the
+  margins of each decision, and vetoed it as its own name.
+- Paul's decision: **the Marginarium is the app's storybook section** (issue #16): "It's a coloring
+  book app, with a marginarium of stories!" The Lamp's members, its chapters and the palette
+  gallery live there; the margins of each decision (vetoes, runners-up, jurors' notes) are its
+  natural content. The Snow Queen's caution stands: show the margins sparingly.
 
 ## Open questions
 

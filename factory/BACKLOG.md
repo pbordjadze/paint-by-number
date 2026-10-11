@@ -172,7 +172,11 @@ jury said, and whether Paul loved it.
   (date, colors), which Claude drafts and Paul approves. The page shows only colors whose date
   has passed; a `--preview` flag shows all. The app has no server, so in the app this becomes
   date-gated content bundled with a release.
-- The look follows the collection page (`tools/factory/collection_template.html`).
+- The look follows the collection page (`tools/factory/collection_template.html`). The gallery is
+  part of the Marginarium, the app's storybook section (`NOTES.md` › Paul's point 8): each color's
+  jurors' notes are its margin. Vetoed colors show their `replacement` from `checkpoint.json`, and
+  the veto itself as a margin note. Build the page with the design-loop kit's page tools
+  (`factory/taste/pages.py`) where they fit.
 
 ### F13 · The design-loop kit
 Branch `codex/f13-loop-kit`. After F2. Turn the loop into a small kit any design question can
