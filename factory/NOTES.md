@@ -1,6 +1,6 @@
 # The vibe factory and the making-of animation: notes
 
-The engine contract is `SPEC.md`; the guardians and their charters are `GUARDIANS.md`.
+The architecture is `ARCHITECTURE.md`, the engine contract `SPEC.md`, the panel `GUARDIANS.md`.
 
 ## Decided so far
 
@@ -168,8 +168,8 @@ helpful, beautiful.
   carries: if you know Georgia, the app reminds you of it; nobody else should notice it's
   Georgian.
 - The panel (Paul's picks): Medea, the Baba Yaga, the Hedge Witch, the Moon, the Snow Queen (in
-  place of Elsa), the Robber Girl (to confirm: the Georgian girl Paul remembers from the 1957
-  Snow Queen), the Storybook, the Enchanted Workshop, the Scholar, the Painter, the Child at
+  place of Elsa), Nina (the robber girl of the 1957 Snow Queen, named for Paul's
+  grandmother), the Storybook, the Enchanted Workshop, the Scholar, the Painter, the Child at
   Bedtime, the Glassblower, Pirosmani, Emily Dickinson, the Open Source Enthusiast, the Bible School Teacher
   (maybe). Paul
   singled out the Scholar.
