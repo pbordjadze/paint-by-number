@@ -20,7 +20,55 @@ two runs are `pieces/panel-name` and `pieces/color-names`.
 ## Ready
 
 ### F1 · v0 review fixes
-*Depends on Claude's review of 8c5683e; Claude adds the list here.*
+Branch `codex/f1-v0-fixes`. From Claude's review of 8c5683e (a render plus a reading). Each fix
+comes with a test that fails before it and passes after.
+1. **Leg reach.** The pelvis leads both feet, so the trailing foot sits up to 1.04 steps behind
+   it, and the defaults use 99.65% of the leg (`Rig.swift:216-219, 253, 268`). `ikClamps` fails
+   for `motion.step` above about 0.184 (the spec allows 0.4), for path slopes above about 10° at
+   depth 0.5, for the spec's own example (`to` 0.6), and for paths toward the viewer.
+   - Center the pelvis over the feet, and lower it as the step lengthens.
+   - Under a clamp, draw the clamped ankle, never the unreached target (`Rig.swift:268`).
+   - Test: zero clamps over a sweep of step (0.08–0.4), depth (0–1), slope (up to 30°) and
+     heading (all 16).
+2. **Reverse checks that can't fire.** `kneeReverse`/`elbowReverse` compare a vector with its own
+   projection (`Rig.swift:286`), and `kneesBendForward` (Tests:100) is circular. Measure the bend
+   against the heading. Test: a pose built with a reversed knee fails.
+3. **Elbows.** They bend forward like knees, and pop by about 0.1 figure heights when a cast arm
+   crosses 90° (`Rig.swift:182, 260`). Elbows bend back for hanging and swinging arms and outward
+   for raised arms, with a pole that never flips. Test: the largest elbow jump between frames
+   stays under a small bound through a cast.
+4. **The cast must read from any heading.** Release raises the arms up and outward, hands above
+   the head and spread wider than the shoulders, not only toward the heading: facing the viewer,
+   the arms vanished behind the body. Test: at release, facing the viewer, the hands are above
+   the head and their screen spread is at least twice the shoulder width.
+5. **The kerchief reads as a blindfold:** a band across the middle of the face. Make it cover the
+   crown, with the knot behind when facing the viewer and the face clear. Test: no headwear
+   shape crosses the middle third of the head when facing the viewer.
+6. **Ink fill rule.** Use `nonzero` for ink (evenodd leaves holes where an outline folds over
+   itself: about 5% at a 150° fold, `SVGWriter.swift:38`). Keep evenodd for the card's glyphs.
+   Test: rasterize a hairpin stroke, no holes.
+7. **Proportions.** `normalizationScale` includes `motion.bounce` (`FigureSpec.swift:24`), so
+   tuning the bounce rescales the figure. `lean` and `hunch` are shears (`Rig.swift:242`), so
+   the spine stretches. Make both rotations that keep bone lengths. Tests: standing height is
+   exactly 1 at any bounce; bone lengths are unchanged by lean and hunch.
+8. **Defaults the Lamp can see.** `magic.size` 0.07 (sparkles were about 2 px), `motion.step`
+   0.26 once fix 1 lands. Update `SPEC.md`'s table and `baseline.json`, and make `hero.json`'s
+   walk cover a good stretch of the brook (`to` about 0.35).
+9. **The baseline test.** `committedBaselineRetainsSpecDefaults` pins `baseline.json` to the
+   defaults, but the baseline is meant to be tuned. Instead, test that it decodes and passes
+   every check.
+10. **Credits.** Drop the `ACKNOWLEDGEMENTS.md` section: the file is the app's credits, and the
+    app doesn't ship FigureRig. `Charter.swift` keeps Bitstream's notice. Add one line to the
+    root `CLAUDE.md` › Licensing and credits naming `Sources/FigureRig/Charter.swift`
+    (Bitstream Charter outlines, Bitstream's license, factory only).
+11. **Small:**
+    - `verify.py:71` diffs against `HEAD` (always empty after a commit); diff against the
+      merge-base.
+    - `render.py` exits 0 when a check fails; exit non-zero.
+    - `render.py` needs DejaVu Sans (line 89): say so in `--help`, or fail clearly.
+    - `Scene.swift:53` error paths read `actors.Index 0…`; print `actors[0].timeline[1].do`.
+    - The last partial walk step rushes the swing foot (`Rig.swift:155`); ease it like the
+      others.
 
 ### F2 · The taste loop as a library
 Branch `codex/f2-taste-loop`. Today `taste/taste.py` (the panel-name run) and `taste/colors.py`

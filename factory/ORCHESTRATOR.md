@@ -36,8 +36,8 @@ driving manual and the state of play.
 
 | Item | State |
 | --- | --- |
-| v0 engine (8c5683e) | Merged. Claude checked: builds, 17 tests, checks pass, byte-identical renders. Look issues for F1: the cast's arms vanish when facing the viewer (release must open up and out); the kerchief reads as a blindfold; the magic is too small; the default walk is slow. Charter credit vs. AboutTests: awaiting review |
-| F1 | Waits on the v0 review's list |
+| v0 engine (8c5683e) | Merged. Claude checked: builds, 17 tests, checks pass, byte-identical renders. Its review is F1 in the backlog; the Charter credit doesn't break AboutTests (drift only, fixed in F1) |
+| F1 | Ready |
 | F2, F4, F5, F6, F7, F8, F12 | Ready |
 | F3, F9, F10 | Need a spec from Claude |
 | F11 | Waits on CI minutes |
