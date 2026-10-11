@@ -158,6 +158,11 @@ python3 -m unittest discover -s tools/factory -p test_loop_kit.py
 
 ## Play before the Mac
 
+The simulator host driver and the Swift UI-test mailbox contract are documented in
+[the play piece README](../pieces/play/README.md). `play new --driver simctl` boots and installs
+the app, runs the test and collects guardian file replies in the foreground; the recorded mock
+remains the default. Both kinds of session replay offline through F17's mock.
+
 The `play` piece uses sequential turns rather than design candidates and a jury. Its settings
 are `factory/pieces/play/piece.toml` (move budget, recent-history length, player model and effort),
 with a brief and `moves.schema.json`. A session freezes these and the chosen guardian's charter.

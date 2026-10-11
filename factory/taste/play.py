@@ -6,6 +6,7 @@ relative screenshot paths so replay outputs compare byte for byte in another dir
 """
 import json
 import shutil
+import time
 import tomllib
 from pathlib import Path
 from typing import Protocol
@@ -335,10 +336,19 @@ def replay(run, out, recording=None):
 
 
 def add_parser(commands):
-    parser = commands.add_parser('play', help='guardian play jobs against a recorded driver')
+    parser = commands.add_parser('play', help='guardian play jobs against a mock or simulator driver')
     actions = parser.add_subparsers(dest='play_command', required=True)
     create = actions.add_parser('new')
-    create.add_argument('--recording', type=Path, required=True)
+    create.add_argument('--driver', choices=('mock', 'simctl'), default='mock')
+    create.add_argument('--recording', type=Path, help='required for the default mock driver')
+    create.add_argument('--app', type=Path, help='simctl: built Debug simulator .app')
+    create.add_argument('--xctestrun', type=Path, help='simctl: built UI-test .xctestrun file')
+    create.add_argument('--test', help='simctl: Target/Class/testMethod selector')
+    create.add_argument('--device', default='iPad Pro 13-inch (M5)', help='simctl: exact device name')
+    create.add_argument('--appearance', choices=('light', 'dark'), default='light')
+    create.add_argument('--mailbox', type=Path, help='simctl: empty host directory (default: --out/mailbox)')
+    create.add_argument('--timeout', type=float, default=60, help='simctl: command/hello/move timeout in seconds')
+    create.add_argument('--video', action='store_true', help='simctl: record --out/video.mp4 until session ends')
     create.add_argument('--guardian', required=True)
     create.add_argument('--budget', type=int)
     for action in ('jobs', 'collect', 'report'):
@@ -348,6 +358,35 @@ def add_parser(commands):
 
 def dispatch(args):
     if args.play_command == 'new':
+        if args.driver == 'simctl':
+            from .simctl import SimctlDriver
+            if args.app is None or args.xctestrun is None or args.test is None:
+                raise ValueError('--driver simctl requires --app, --xctestrun and --test')
+            if args.recording is not None:
+                raise ValueError('--recording belongs to --driver mock')
+            run, out = outside_repo(args.run), outside_repo(args.out)
+            if run == out or run in out.parents or out in run.parents:
+                raise ValueError('simulator output must be separate from the play run')
+            if run.exists() and any(run.iterdir()):
+                raise ValueError('new play session directory must be empty')
+            if args.mailbox is not None:
+                mailbox = outside_repo(args.mailbox)
+                if mailbox == run or run in mailbox.parents or mailbox in run.parents:
+                    raise ValueError('simulator mailbox must be separate from the play run')
+            with SimctlDriver(out, app=args.app, xctestrun=args.xctestrun, test=args.test,
+                              device=args.device, appearance=args.appearance, mailbox=args.mailbox,
+                              timeout=args.timeout, video=args.video) as driver:
+                session = Session.create(run, driver, args.guardian, budget=args.budget)
+                while session.status() == 'active':
+                    driver.check_alive()
+                    result = session.collect()  # Writes jobs and waits for external file replies.
+                    if result['status'] == 'blocked':
+                        raise RuntimeError(f'guardian reply blocked: {result["reason"]}')
+                    if result['status'] in ('waiting', 'rejected'):
+                        time.sleep(0.05)
+                return loop.load(run / 'session.json')
+        if args.recording is None:
+            raise ValueError('--driver mock requires --recording')
         driver = MockDriver(args.recording)
         session = Session.create(args.run, driver, args.guardian, budget=args.budget)
         driver.export(session.path / 'driver')
@@ -358,5 +397,9 @@ def dispatch(args):
         run = outside_repo(args.run)
         return {'session': loop.load(run / 'session.json'), 'costs': accounting.report(run),
                 'contact': str(run / 'contact.png')}
+    if not (Path(args.run) / 'driver/recording.json').exists():
+        if args.play_command == 'jobs':
+            return Session(args.run, None).job()
+        raise ValueError('simctl sessions collect replies in the running play new process')
     session = restore(args.run)
     return session.job() if args.play_command == 'jobs' else session.collect()
