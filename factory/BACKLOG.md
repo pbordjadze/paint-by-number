@@ -416,6 +416,59 @@ Write `/root/factory-out/F21/audit.md`: findings ranked most severe first, each 
 line, a one-line failure scenario, and a proposed fix; then a short list of what you checked
 and found sound. Don't fix anything; Claude turns the findings into backlog items.
 
+### F22 · Audit fixes, Swift (FigureRig and figures)
+Branch `codex/f22-audit-swift`. F21's read-only audit (`/root/factory-out/F21/audit.md`; a copy
+is in Claude's scratchpad if that is gone) found these in `Sources/FigureRig` and
+`Sources/figures`. Fix each with a test that fails before the fix. Swift only; Python is F23.
+- **Finding 2, huge finite numbers trap.** Bound canvas size, path coordinates and length,
+  durations, frame and gait counts at decode or before any Double-to-Int conversion; out of
+  range throws a field-specific `FigureInputError`. CLI tests for the three probes (canvas
+  height, idle duration, a path coordinate of `1e300`) exit nonzero with a message, no trap.
+  Scenes may later come from guardians' patches, so this is input validation, not paranoia.
+- **Finding 3, the CLI's part.** `figures render` and `figures reveal` refuse an output inside
+  the repository and any symlinked child (`frames/`, …) of the output; cleanup removes only the
+  frame files the run owns, never unrelated SVG/PNG.
+- **Finding 5, `propGrip` compares the hand with itself.** Derive each grip from the rendered
+  prop (base, axis, kind, attachment offsets) and compare that with the hand; a missing expected
+  attachment fails. Negative tests that move the drawn base or axis without touching the grip
+  metadata, including the two-handed broom.
+- **Finding 6, a new walk after ink drifts by the ink offset twice.** A switched walk path that
+  starts at the actor resets the inherited lateral offset; continuing on the same ink path keeps
+  it. Test the audit's ink-then-new-path scene (ends at y = 393, not 386) and same-path
+  continuation.
+- **Finding 7, cards squeeze without limit.** Wrap title and author lines to as many lines as
+  needed with a minimum horizontal scale (state it, and why), and fail `cardSize` on measured
+  post-layout size. The longest real citation, Douglas and Peucker's 1973 title in
+  `ACKNOWLEDGEMENTS.md`, must render legibly; test it and a pathological 150-word title.
+- **Finding 11, the Swift part:** `figures --help` lists `render` and `reveal` and exits 0.
+- Hero and workers digests stay byte for byte unless a fix must move them; if one moves, say
+  which fix and why in the report, and update the pin in the same commit.
+
+### F23 · Audit fixes, Python (taste kit and factory tools)
+Branch `codex/f23-audit-python`. The Python half of F21's findings. Python only, and don't touch
+`tools/factory/making_of.py` (F19 is changing it). Each fix with a test that fails before it.
+- **Finding 1, job IDs escape their directories.** IDs are nonempty safe slugs, rounds and
+  attempts are validated, and one helper resolves and checks every reply, cost and scratch path
+  (symlinks included) before writing; the legacy extract adapters use it too. Negative fixtures
+  for traversal and absolute IDs.
+- **Finding 3, the Python part.** `collection.py`, `reveal_sheet.py` and `render.py` refuse
+  repository outputs and symlinked output children, and remove only files they own.
+- **Finding 4, translucent ink passes the contrast check.** Measure the composited ink colour
+  over the actual paper (material opacity apart from edge antialiasing). Test `#55555580`
+  failing on the default paper.
+- **Findings 8–10.** The craft oracle rejects an empty or whitespace name; one identity hook per
+  piece used everywhere names are compared (within a slot, across the set, in repairs and the
+  legal-assignment search), with recorded runs replaying byte for byte; JSON-schema `enum` and
+  `uniqueItems` compare booleans apart from numbers (1 and 1.0 stay equal).
+- **Finding 11, the Python part.** Every public script parses arguments before importing
+  optional dependencies or writing anything; `--help` exits 0 with no side effects
+  (`card_font.py` must never regenerate `Charter.swift` on `--help`). A subprocess test runs
+  each script's `--help` and checks nothing changed.
+- **Finding 12.** `verify.py` and the nested Swift test in `test_render.py` honour `FIGURES_BIN`
+  and a Swift scratch path (an option or env var, documented in `factory/taste/README.md`), and
+  report a missing build clearly.
+- Recorded taste runs (`pieces/panel-name`, `pieces/color-names`) still replay byte for byte.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
