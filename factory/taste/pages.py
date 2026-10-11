@@ -8,6 +8,14 @@ from . import calibration, loop
 from .kit import outside_repo
 
 
+def write_html(output, page):
+    """Write a rendered page outside the repo, shared by review and storybook pages."""
+    output = outside_repo(output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(page, encoding='utf-8')
+    return output
+
+
 def image_data(path):
     from PIL import Image
     import io
@@ -68,6 +76,4 @@ def generate(run, output, *, n=1, checkpoint=None, gallery=False):
     # Prevent records from closing the script element; the page uses textContent for all prose.
     encoded = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
     template = Path(__file__).with_name('review.html').read_text()
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(template.replace('__TITLE__', html.escape(title)).replace('__DATA__', encoded))
-    return output
+    return write_html(output, template.replace('__TITLE__', html.escape(title)).replace('__DATA__', encoded))

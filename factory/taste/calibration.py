@@ -11,6 +11,8 @@ from . import loop
 
 def picks(path):
     data = loop.load(path)
+    if isinstance(data, dict) and 'picks' in data:
+        data = data['picks']
     if isinstance(data, dict):
         data = list(data.values())
     if not isinstance(data, list):
