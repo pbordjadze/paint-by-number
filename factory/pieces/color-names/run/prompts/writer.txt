@@ -1,0 +1,53 @@
+You are a professional namer of paint colors, writing for a paint-by-numbers app.
+
+Medea is an iPhone and iPad app that turns a photo into a paint-by-numbers painting. Each paint in a painting gets a short nickname from a vocabulary of 640 names, each tied to one color, its anchor. The names show under the palette ("12 · Harbor Fog"), in VoiceOver ("12, Harbor Fog, dark grayish blue") and on printed keys, so a painter reads them many times while painting. The design panel you belong to is improving some of these names. New names only ever reach new paintings.
+
+The rules every name must follow (code rejects any that break them):
+- One or two words, Title Case, ASCII letters, spaces and at most one hyphen; at most 16 characters; no digits.
+- Concrete and evocative: things, places, weather, food, materials, times of day.
+- Never brand names, people's names (no artists, poets, saints or characters), body parts, skin-tone words, anything crude, religious, political or medical; no superlatives.
+- No color words at all (red, blue, green, gold, rose, sage, mint, plum and the like).
+- The color has to look like its name to a careful person.
+- Different from the names of the neighboring colors listed with it.
+
+Write one new name for each of these 36 colors: the most beautiful, fitting name you can, the kind a painter would love to read. Plain and lovely beats clever.
+
+Color 1: #C5A24A, light, moderate yellow-orange (roughly). Its name today: "Gilded Frame". Neighboring colors are called: Polished Brass, Goldenrod, Quince, Hay Bale, Butterscotch.
+Color 2: #8A9B4F, medium, moderate yellow-green (roughly). Its name today: "Lemon Balm". Neighboring colors are called: Mossy Bank, Pickle Brine, Tea Garden, Parsley, Fresh Basil.
+Color 3: #4C3A2B, dark, grayish orange (roughly). Its name today: "Mud Pie". Neighboring colors are called: Charred Log, Bog Oak, Cocoa Nib, Walnut Table, Fudge Sauce.
+Color 4: #A59D92, medium, nearly neutral. Its name today: "Dusty Road". Neighboring colors are called: Concrete Slab, Harbor Fog, Cappuccino, Tin Roof, Tidal Flat.
+Color 5: #6B7B3A, medium, muted yellow-green (roughly). Its name today: "Cattail". Neighboring colors are called: Fennel Seed, Saguaro, Dried Oregano, Split Pea, Rosemary Sprig.
+Color 6: #B6C9A0, light, grayish yellow-green (roughly). Its name today: "Cabbage Leaf". Neighboring colors are called: Spring Mint, Dusty Sage, Oyster Mushroom, Celadon Vase, Oxidized Dome.
+Color 7: #0B2147, very dark, muted blue (roughly). Its name today: "Night Tide". Neighboring colors are called: Twilight Edge, Deep Ocean, Midnight Harbor, Dusk Indigo, Deep Plum.
+Color 8: #E6E0D4, very light, nearly neutral. Its name today: "Birch Bark". Neighboring colors are called: Duck Egg, Candle Wax, Hailstone, Seafoam Spray, Rose Water.
+Color 9: #D6EAF5, very light, grayish cyan-blue (roughly). Its name today: "Morning Frost". Neighboring colors are called: Glacier Melt, Duck Egg, Seafoam Spray, Mint Frost, Dawn Mist.
+Color 10: #A9B9D4, light, grayish blue (roughly). Its name today: "Powder Sky". Neighboring colors are called: Distant Ridge, Foggy Lilac, Lavender Milk, Silver Spoon, Summer Sky.
+Color 11: #B5251E, medium, vivid red (roughly). Its name today: "Chili Pepper". Neighboring colors are called: Red Currant, Orchard Apple, Strawberry Jam, Raspberry Jam, Ladybug.
+Color 12: #E07B39, medium, moderate orange (roughly). Its name today: "Mango Chutney". Neighboring colors are called: Nasturtium, Starfish, Tangerine Zest, Autumn Pumpkin, Sweet Potato.
+Color 13: #25364F, dark, grayish blue (roughly). Its name today: "Shipyard". Neighboring colors are called: Stormy Night, Storm Slate, Blued Steel, Abyss, Dusk Indigo.
+Color 14: #EAD9B5, very light, grayish yellow-orange (roughly). Its name today: "Old Lace". Neighboring colors are called: Parchment Scroll, Melon Cream, Melon Sorbet, Shortbread, Seashell.
+Color 15: #C0703F, medium, moderate orange (roughly). Its name today: "Copper Pipe". Neighboring colors are called: Terracotta Pot, Fox Fur, Copper Kettle, Desert Clay, Maple Syrup.
+Color 16: #6E5A47, dark, grayish orange (roughly). Its name today: "Old Saddlebag". Neighboring colors are called: Pine Cone, Cocoa Powder, Pecan Shell, Cinder Path, Smokehouse.
+Color 17: #5A4636, dark, grayish orange (roughly). Its name today: "Tree Bark". Neighboring colors are called: Smoked Oak, Walnut Table, Truffle Dust, Dark Walnut, Milk Chocolate.
+Color 18: #3B3F44, dark, nearly neutral. Its name today: "Iron Gate". Neighboring colors are called: Charcoal Smudge, Bog Oak, Charred Log, Storm Slate, Cocoa Nib.
+Color 19: #8E8A82, medium, nearly neutral. Its name today: "Quarry Stone". Neighboring colors are called: River Pebble, Field Mouse, Driftwood, Nickel Plate, Tidal Flat.
+Color 20: #EDEBE6, very light, nearly neutral. Its name today: "Salt Flat". Neighboring colors are called: Fresh Linen, Sea Salt, Magnolia, Marshmallow, Blank Canvas.
+Color 21: #F4C7D3, very light, grayish pinkish red (roughly). Its name today: "Cherry Blossom". Neighboring colors are called: Rose Quartz, Peony Froth, Cotton Candy, Powder Puff, Pink Salt.
+Color 22: #F9E7A0, very light, muted yellow-orange (roughly). Its name today: "Banana Pudding". Neighboring colors are called: Lemon Chiffon, Butter Cream, Sunbaked Straw, Buttercup, Chick Fluff.
+Color 23: #12A3A5, medium, moderate teal (roughly). Its name today: "Reef Water". Neighboring colors are called: Plunge Pool, Kingfisher, Tidal Pool, Caribbean Cove, Agave.
+Color 24: #9DE3DC, very light, muted teal (roughly). Its name today: "Lagoon Shallows". Neighboring colors are called: Jade Veil, Spindrift, Celadon Vase, Mint Syrup, Hydrangea Petal.
+Color 25: #191512, very dark, nearly neutral. Its name today: "Tar Pit". Neighboring colors are called: Dark Roast, Coal Cellar, Licorice Twist, Fern Shadow, Pitch Pine.
+Color 26: #C68A4B, medium, moderate orange (roughly). Its name today: "Salted Caramel". Neighboring colors are called: Barley Straw, Sandstone, Burnt Honey, Baked Clay, Toffee Crunch.
+Color 27: #FBF5E6, very light, nearly neutral. Its name today: "Whipped Cream". Neighboring colors are called: Meringue Peak, Blank Canvas, Marshmallow, Sea Salt, Snowdrift.
+Color 28: #836A96, medium, muted purple (roughly). Its name today: "Heather Moor". Neighboring colors are called: Lupine, Crocus, Stonewashed, Foxglove, Grape Soda.
+Color 29: #A31F34, dark, vivid red (roughly). Its name today: "Cranberry Juice". Neighboring colors are called: Strawberry Jam, Ruby Glass, Fire Brick, Raspberry Jam, Red Currant.
+Color 30: #E8957C, light, moderate red (roughly). Its name today: "Smoked Salmon". Neighboring colors are called: Coral Sand, Flamingo Feather, Afterglow, Dusty Coral, Last Light.
+Color 31: #2A3B6B, dark, muted blue (roughly). Its name today: "Tarpaulin". Neighboring colors are called: Sailor Stripe, Storm Slate, Navy Peacoat, Shipyard, Indigo Dye.
+Color 32: #7B4A2F, dark, muted orange (roughly). Its name today: "Roasted Chestnut". Neighboring colors are called: Smokehouse, Cocoa Powder, Boot Leather, Redwood Bark, Milk Chocolate.
+Color 33: #E7C1C6, light, grayish pinkish red (roughly). Its name today: "Powder Puff". Neighboring colors are called: Pink Salt, Rose Quartz, Ballet Slipper, Cherry Blossom, Taffy Pull.
+Color 34: #3F6FB8, medium, moderate blue (roughly). Its name today: "Delft Tile". Neighboring colors are called: Denim Jacket, Blue Jay, Stonewashed, Cobalt Dive, Bluebird.
+Color 35: #1A5FA8, dark, moderate blue (roughly). Its name today: "Harbor Blue". Neighboring colors are called: Cobalt Dive, Faded Denim, Fjord, Blue Hour, Delft Tile.
+Color 36: #EDB85A, light, moderate yellow-orange (roughly). Its name today: "Golden Hour". Neighboring colors are called: Lantern Glow, Mango Lassi, Saffron Thread, Apricot Nectar, Candle Flame.
+
+Reply with only this JSON, nothing else (no code fence):
+{"names": {"1": "Name", "2": "Name", ...}}

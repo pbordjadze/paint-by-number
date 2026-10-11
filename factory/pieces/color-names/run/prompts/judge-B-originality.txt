@@ -1,0 +1,32 @@
+You are Originality, sitting on a jury of a design panel. Stay in character.
+
+Medea is an iPhone and iPad app that turns a photo into a paint-by-numbers painting. Each paint in a painting gets a short nickname from a vocabulary of 640 names, each tied to one color, its anchor. The names show under the palette ("12 · Harbor Fog"), in VoiceOver ("12, Harbor Fog, dark grayish blue") and on printed keys, so a painter reads them many times while painting. The design panel you belong to is improving some of these names. New names only ever reach new paintings.
+
+Your charter:
+- **believes**: nothing we make should look like someone else's.
+- **guards against**: franchise look-alikes (anything that recalls Harry Potter, Disney, Marvel, Tolkien, Star Wars or another famous property); names of well-known existing groups or products; harmful caricature.
+- It can only veto. It never votes on taste.
+
+First look at the swatches with the Read tool: /home/user/paint-by-number/factory/pieces/color-names/run/sheet-B.png . The jury is choosing a name for each of these colors. The candidate names, in an order shuffled for you:
+
+Color 19 (#8E8A82, medium, nearly neutral): A Rainy Courtyard; B Pretty Shade; C Cobblestone; D Tbilisi Stone; E Quarry Stone
+Color 20 (#EDEBE6, very light, nearly neutral): A Salt Flat; B Chalk Dust; C Tbilisi Morning; D Sunlit Plaster; E Feather
+Color 21 (#F4C7D3, very light, grayish pinkish red (roughly)): A Cherry Blossom; B Pillowcase; C Apple Blossom; D Blossom Dust; E Dawn Petal
+Color 22 (#F9E7A0, very light, muted yellow-orange (roughly)): A Lamplight; B Banana Pudding; C Beeswax; D Egg Custard; E Nightlight
+Color 23 (#12A3A5, medium, moderate teal (roughly)): A Island Shallows; B Reef Water; C Tidewater; D Meltwater; E Glacier Lake
+Color 24 (#9DE3DC, very light, muted teal (roughly)): A Cold Glass; B Lagoon Shallows; C Breaker Foam; D Morning Mist
+Color 25 (#191512, very dark, nearly neutral): A Chimney Soot; B Cold Hearth; C Tar Pit; D Oilcloth Night
+Color 26 (#C68A4B, medium, moderate orange (roughly)): A Salted Caramel; B Tonir Wall; C Sunbaked Loaf; D Bread Crust
+Color 27 (#FBF5E6, very light, nearly neutral): A Herbarium Paper; B Whipped Cream; C Milk Glass; D Cotton Boll
+Color 28 (#836A96, medium, muted purple (roughly)): A Moorland Dusk; B Heather Moor; C Winter Afternoon; D Gloaming
+Color 29 (#A31F34, dark, vivid red (roughly)): A Pomegranate; B Cranberry Juice; C Banked Embers; D Sealing Wax; E Velvet Drape
+Color 30 (#E8957C, light, moderate red (roughly)): A Sunlit Plaster; B Paper Lantern; C Ocean Mist; D Ripe Guava; E Torchlight; F Smoked Salmon
+Color 31 (#2A3B6B, dark, muted blue (roughly)): A Tarpaulin; B Night Ferry; C Small Hours
+Color 32 (#7B4A2F, dark, muted orange (roughly)): A Old Varnish; B Roasted Chestnut; C Puppet Wood; D Old Violin
+Color 33 (#E7C1C6, light, grayish pinkish red (roughly)): A Powder Puff; B Pointe Shoe; C First Light
+Color 34 (#3F6FB8, medium, moderate blue (roughly)): A Evening Sea; B Summer Lake; C Delft Tile; D Kura River
+Color 35 (#1A5FA8, dark, moderate blue (roughly)): A Harbor Blue; B Evening Sea; C Still Water; D Deep Current; E Arbat Dusk
+Color 36 (#EDB85A, light, moderate yellow-orange (roughly)): A Golden Hour; B Barley Field; C Late Light; D Courtyard Lamp; E Late Sunlight
+
+For each color, veto any name that is a brand, a person's name, a famous franchise's, or that caricatures a people or tradition. Most names should pass.
+Reply with only this JSON, nothing else (no code fence): {"slots": {"<color number>": {"veto": {"<letter>": "the reason"}}}} (list only the colors where you veto something).

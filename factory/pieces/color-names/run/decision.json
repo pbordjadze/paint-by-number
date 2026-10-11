@@ -1,0 +1,2036 @@
+[
+  {
+    "slot": 1,
+    "owner": "medea",
+    "hex": "C5A24A",
+    "incumbent": "Gilded Frame",
+    "winner": "Beeswax",
+    "winner_source": "writer",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Beeswax",
+        "source": "writer",
+        "score": 16.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Honey-warm like candle wax, cozy and sweet.",
+          "The Painter: Beeswax matches this warm honey-ochre tone closely, quietly.",
+          "Emily Dickinson: Warm and domestic: candle gold, said quietly."
+        ]
+      },
+      {
+        "name": "Gilded Frame",
+        "source": "incumbent",
+        "score": 13.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Gilded frame names this ochre-gold plainly and beautifully.",
+          "The Nutcracker: Gold at once; warm, handsome, like polished clockwork brass."
+        ]
+      },
+      {
+        "name": "Lamplight",
+        "source": "medea",
+        "score": 13.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Sunlit Stone",
+        "source": "medea",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Vani Hoard",
+        "source": "medea",
+        "score": 2.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 2,
+    "owner": "medea",
+    "hex": "8A9B4F",
+    "incumbent": "Lemon Balm",
+    "winner": "Willow Leaf",
+    "winner_source": "medea",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Willow Leaf",
+        "source": "medea",
+        "score": 18.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Soft gray-green willow leaves, gentle as a lullaby.",
+          "The Nutcracker: Muted sage like willow leaves; gentle and true to swatch.",
+          "The Painter: Willow leaf's sage matches this muted olive-green closely.",
+          "Emily Dickinson: The swatch's grey-olive is a willow leaf's; nothing more needed."
+        ]
+      },
+      {
+        "name": "Meadow Grass",
+        "source": "medea",
+        "score": 12.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Meadow grass fits this fresh, sunny yellow-green."
+        ]
+      },
+      {
+        "name": "Lemon Balm",
+        "source": "incumbent",
+        "score": 8.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Moonwort",
+        "source": "medea",
+        "score": 7.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Hop Garden",
+        "source": "writer",
+        "score": 5.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 3,
+    "owner": "baba-yaga",
+    "hex": "4C3A2B",
+    "incumbent": "Mud Pie",
+    "winner": "Izba Wood",
+    "winner_source": "baba-yaga",
+    "guaranteed": true,
+    "standings": [
+      {
+        "name": "Rich Loam",
+        "source": "writer",
+        "score": 17.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Rich loam matches this dark, warm soil brown exactly.",
+          "The Nutcracker: Rich dark brown exactly; earthy, warm, and plain to read.",
+          "The Painter: Rich loam names this dark warm brown precisely and quietly.",
+          "Emily Dickinson: Dark and earthen: one plain word doing the whole job."
+        ]
+      },
+      {
+        "name": "Izba Wood",
+        "source": "baba-yaga",
+        "score": 13.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Cozy log-cabin wood, warm and sheltering."
+        ]
+      },
+      {
+        "name": "Forest Floor",
+        "source": "baba-yaga",
+        "score": 11.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Peat Smoke",
+        "source": "baba-yaga",
+        "score": 7.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Mud Pie",
+        "source": "incumbent",
+        "score": 2.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "guaranteed: baba-yaga had no color"
+    ]
+  },
+  {
+    "slot": 4,
+    "owner": "baba-yaga",
+    "hex": "A59D92",
+    "incumbent": "Dusty Road",
+    "winner": "Dusty Road",
+    "winner_source": "incumbent",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Dusty Road",
+        "source": "incumbent",
+        "score": 14.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Warm dusty road, an adventure waiting at the end.",
+          "The Open Source Enthusiast: Dusty road captures this warm, gray-taupe tone well.",
+          "The Nutcracker: Warm dusty gray-tan matches the swatch; a humble road, friendly.",
+          "The Painter: Dusty road matches this warm, dusty taupe-grey closely."
+        ]
+      },
+      {
+        "name": "Dry Riverbed",
+        "source": "writer",
+        "score": 10.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "Emily Dickinson: Grey and warm, like dry riverbed stones; quiet and precise."
+        ]
+      },
+      {
+        "name": "Overcast",
+        "source": "baba-yaga",
+        "score": 3.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Swept Path",
+        "source": "baba-yaga",
+        "score": 3.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 5,
+    "owner": "hedge-witch",
+    "hex": "6B7B3A",
+    "incumbent": "Cattail",
+    "winner": "Hedgerow",
+    "winner_source": "hedge-witch",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Hedgerow",
+        "source": "hedge-witch",
+        "score": 18.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: A hedgerow where small creatures nest, cozy and wondrous.",
+          "The Open Source Enthusiast: Hedgerow fits this olive green, and it sounds lovely.",
+          "The Nutcracker: Deep olive like a country hedge; fits the swatch closely.",
+          "The Painter: Hedgerow's leafy olive matches this muted green closely."
+        ]
+      },
+      {
+        "name": "Sedge Meadow",
+        "source": "writer",
+        "score": 15.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "Emily Dickinson: Exactly this olive, with a whole meadow folded in."
+        ]
+      },
+      {
+        "name": "Nettle Cloth",
+        "source": "hedge-witch",
+        "score": 10.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Thyme Bundle",
+        "source": "hedge-witch",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Cattail",
+        "source": "incumbent",
+        "score": 1.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 6,
+    "owner": "hedge-witch",
+    "hex": "B6C9A0",
+    "incumbent": "Cabbage Leaf",
+    "winner": "Willow Mist",
+    "winner_source": "hedge-witch",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Willow Mist",
+        "source": "hedge-witch",
+        "score": 19.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Willow mist matches this pale, misty sage green beautifully.",
+          "The Nutcracker: Pale grayish green, soft like morning haze; gentle to read.",
+          "The Painter: Willow mist captures this pale, grey-green softness exactly.",
+          "Emily Dickinson: Pale willow in grey mist: the swatch's soft sage, exactly."
+        ]
+      },
+      {
+        "name": "Morning Dew",
+        "source": "hedge-witch",
+        "score": 11.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Fresh morning dew, soft and gentle, like waking up."
+        ]
+      },
+      {
+        "name": "Moonwort",
+        "source": "hedge-witch",
+        "score": 9.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Celery Stalk",
+        "source": "writer",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Cabbage Leaf",
+        "source": "incumbent",
+        "score": 5.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 7,
+    "owner": "moon",
+    "hex": "0B2147",
+    "incumbent": "Night Tide",
+    "winner": "Night Tide",
+    "winner_source": "incumbent",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Velvet Night",
+        "source": "moon",
+        "score": 20.0,
+        "firsts": 5,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Soft as velvet, a dark sky that means bedtime.",
+          "The Open Source Enthusiast: Velvet night names this deep navy richly and clearly.",
+          "The Nutcracker: Deep navy, soft as velvet; a kind midnight.",
+          "The Painter: Velvet night evokes this deep, soft navy without shouting.",
+          "Emily Dickinson: A navy so deep it feels soft, one word."
+        ]
+      },
+      {
+        "name": "Night Tide",
+        "source": "incumbent",
+        "score": 15.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Moonless Night",
+        "source": "writer",
+        "score": 9.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Under Narikala",
+        "source": "moon",
+        "score": 4.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Moonless Hour",
+        "source": "moon",
+        "score": 2.0,
+        "firsts": 0,
+        "vetoes": [
+          "The Child at Bedtime: anything scary"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "Velvet Night would make too many names end with Night"
+    ]
+  },
+  {
+    "slot": 8,
+    "owner": "moon",
+    "hex": "E6E0D4",
+    "incumbent": "Birch Bark",
+    "winner": "Lantern Paper",
+    "winner_source": "moon",
+    "guaranteed": true,
+    "standings": [
+      {
+        "name": "Rice Paper",
+        "source": "writer",
+        "score": 24.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Soft rice paper, like picture-book pages.",
+          "The Open Source Enthusiast: Rice paper matches this warm, soft off-white perfectly.",
+          "The Nutcracker: Soft warm off-white like rice paper; quiet, easy to read.",
+          "Emily Dickinson: Rice paper: this warm white, and a fascicle's page."
+        ]
+      },
+      {
+        "name": "Lantern Paper",
+        "source": "moon",
+        "score": 18.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Old Plaster",
+        "source": "moon",
+        "score": 16.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Painter: Old plaster matches this warm off-white, like a gallery wall."
+        ]
+      },
+      {
+        "name": "Sugar Cube",
+        "source": "moon",
+        "score": 11.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Birch Bark",
+        "source": "incumbent",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Grave Dirt",
+        "source": "plant: scary",
+        "score": 0.0,
+        "firsts": 0,
+        "vetoes": [
+          "The Child at Bedtime: anything scary"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "guaranteed: moon had no color"
+    ]
+  },
+  {
+    "slot": 9,
+    "owner": "snow-queen",
+    "hex": "D6EAF5",
+    "incumbent": "Morning Frost",
+    "winner": "Hoarfrost",
+    "winner_source": "snow-queen",
+    "guaranteed": true,
+    "standings": [
+      {
+        "name": "Morning Frost",
+        "source": "incumbent",
+        "score": 15.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Pond Ice",
+        "source": "writer",
+        "score": 14.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Pond ice captures this pale, cool cyan-blue clearly.",
+          "The Nutcracker: Pale blue like still pond ice; cool and clear.",
+          "The Painter: Pond ice holds this faint blue-cyan lightness exactly."
+        ]
+      },
+      {
+        "name": "Hoarfrost",
+        "source": "snow-queen",
+        "score": 9.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "Emily Dickinson: One word, pale as breath on glass; exact and quiet."
+        ]
+      },
+      {
+        "name": "First Snowfall",
+        "source": "snow-queen",
+        "score": 6.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: First snowfall: wonder a child asks to see again."
+        ]
+      },
+      {
+        "name": "Gergeti Snow",
+        "source": "snow-queen",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "guaranteed: snow-queen had no color"
+    ]
+  },
+  {
+    "slot": 10,
+    "owner": "snow-queen",
+    "hex": "A9B9D4",
+    "incumbent": "Powder Sky",
+    "winner": "Chambray",
+    "winner_source": "writer",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Chambray",
+        "source": "writer",
+        "score": 16.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Nutcracker: Grayish blue like a workshop shirt; friendly and handmade.",
+          "Emily Dickinson: Chambray: a plain cloth's blue, grey-tinged, domestic and exact."
+        ]
+      },
+      {
+        "name": "Powder Sky",
+        "source": "incumbent",
+        "score": 16.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Powder sky fits this soft, grayish blue gently.",
+          "The Painter: Powder sky matches this soft, grayish blue lightness closely."
+        ]
+      },
+      {
+        "name": "Winter Dusk",
+        "source": "snow-queen",
+        "score": 10.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Dusk-blue sky, the hush just before bedtime."
+        ]
+      },
+      {
+        "name": "Ice Palace",
+        "source": "snow-queen",
+        "score": 1.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Frozen Lake",
+        "source": "snow-queen",
+        "score": 7.0,
+        "firsts": 0,
+        "vetoes": [
+          "Originality: Frozen is the title of Disney's film Frozen; the name recalls it"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 11,
+    "owner": "nina",
+    "hex": "B5251E",
+    "incumbent": "Chili Pepper",
+    "winner": "Sealing Wax",
+    "winner_source": "nina",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Sealing Wax",
+        "source": "nina",
+        "score": 14.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Sealing wax matches this vivid, classic red exactly.",
+          "The Nutcracker: True vivid red, like wax on an old letter.",
+          "The Painter: Sealing wax matches this deep, classic red precisely.",
+          "Emily Dickinson: Sealing wax: a letter's red, closed and quiet."
+        ]
+      },
+      {
+        "name": "Chili Pepper",
+        "source": "incumbent",
+        "score": 8.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Bright red and fun to say aloud."
+        ]
+      },
+      {
+        "name": "Tusheti Fire",
+        "source": "nina",
+        "score": 5.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Lingonberry",
+        "source": "nina",
+        "score": 3.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 12,
+    "owner": "nina",
+    "hex": "E07B39",
+    "incumbent": "Mango Chutney",
+    "winner": "Kiln Glow",
+    "winner_source": "nina",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Kiln Glow",
+        "source": "nina",
+        "score": 13.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Kiln glow fits this bright orange warmly and well.",
+          "The Nutcracker: Warm orange, like kiln light; bright and friendly.",
+          "The Painter: Kiln glow matches this warm, clear orange closely.",
+          "Emily Dickinson: Kiln glow: the swatch's orange, lit from inside by fire."
+        ]
+      },
+      {
+        "name": "Mango Chutney",
+        "source": "incumbent",
+        "score": 7.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Qvevri",
+        "source": "nina",
+        "score": 0.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Harvest Moon",
+        "source": "writer",
+        "score": 10.0,
+        "firsts": 1,
+        "vetoes": [
+          "Originality: Harvest Moon is a well-known video game franchise"
+        ],
+        "whys": [
+          "The Child at Bedtime: Harvest moon: a warm, golden glow to wonder at."
+        ]
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 13,
+    "owner": "storybook",
+    "hex": "25364F",
+    "incumbent": "Shipyard",
+    "winner": "Book Cloth",
+    "winner_source": "storybook",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Book Cloth",
+        "source": "storybook",
+        "score": 8.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: A storybook's cover, read aloud at bedtime.",
+          "The Painter: Book cloth's dark slate blue matches this quiet tone.",
+          "Emily Dickinson: Book cloth: a navy binding, hand-sewn, a fascicle's cover."
+        ]
+      },
+      {
+        "name": "North Sea",
+        "source": "writer",
+        "score": 6.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: North Sea conjures this dark slate-blue water clearly.",
+          "The Nutcracker: Dark gray-blue, like a calm northern sea; evocative and clear."
+        ]
+      },
+      {
+        "name": "Shipyard",
+        "source": "incumbent",
+        "score": 1.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 14,
+    "owner": "storybook",
+    "hex": "EAD9B5",
+    "incumbent": "Old Lace",
+    "winner": "Uncut Page",
+    "winner_source": "storybook",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Uncut Page",
+        "source": "storybook",
+        "score": 9.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: A storybook page, warm cream, ready to be read.",
+          "The Open Source Enthusiast: Uncut page matches this pale buff paper tone well.",
+          "The Painter: Uncut page's warm parchment cream matches this yellowish tone.",
+          "Emily Dickinson: Uncut page: the paper's own cream, unmarked, waiting."
+        ]
+      },
+      {
+        "name": "Old Lace",
+        "source": "incumbent",
+        "score": 5.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Nutcracker: Soft cream with a faint yellow; warm and familiar."
+        ]
+      },
+      {
+        "name": "Morning Light",
+        "source": "storybook",
+        "score": 1.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 15,
+    "owner": "enchanted-workshop",
+    "hex": "C0703F",
+    "incumbent": "Copper Pipe",
+    "winner": "Hearth Tile",
+    "winner_source": "enchanted-workshop",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Hearth Tile",
+        "source": "enchanted-workshop",
+        "score": 11.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Painter: Hearth tile's warm terracotta matches this clay-orange closely."
+        ]
+      },
+      {
+        "name": "Copper Pipe",
+        "source": "incumbent",
+        "score": 10.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Copper pipe matches this copper-orange terracotta closely.",
+          "The Nutcracker: Matches copper's warm tone; a mechanism's glow, not chrome.",
+          "Emily Dickinson: A pipe's copper: this warm metal, plain, domestic, exact."
+        ]
+      },
+      {
+        "name": "Baked Crust",
+        "source": "enchanted-workshop",
+        "score": 5.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Warm bread crust: cozy and sweet to picture."
+        ]
+      },
+      {
+        "name": "Qvevri Jar",
+        "source": "enchanted-workshop",
+        "score": 4.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 16,
+    "owner": "enchanted-workshop",
+    "hex": "6E5A47",
+    "incumbent": "Old Saddlebag",
+    "winner": "Barn Timber",
+    "winner_source": "writer",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Barn Timber",
+        "source": "writer",
+        "score": 18.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: A cozy barn full of animals and hay.",
+          "The Nutcracker: Weathered brown-gray like old wood; honest, sturdy, and warm.",
+          "Emily Dickinson: Weathered barn wood: grey-brown, plain, domestic, the swatch exactly."
+        ]
+      },
+      {
+        "name": "Oak Bark",
+        "source": "enchanted-workshop",
+        "score": 13.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Oak bark fits this gray-brown tone of weathered wood.",
+          "The Painter: Oak bark's grey-brown matches this weathered, quiet tone."
+        ]
+      },
+      {
+        "name": "Garden Soil",
+        "source": "enchanted-workshop",
+        "score": 7.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Carved Balcony",
+        "source": "enchanted-workshop",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Old Saddlebag",
+        "source": "incumbent",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 17,
+    "owner": "scholar",
+    "hex": "5A4636",
+    "incumbent": "Tree Bark",
+    "winner": "Pinecone",
+    "winner_source": "scholar",
+    "guaranteed": true,
+    "standings": [
+      {
+        "name": "Tree Bark",
+        "source": "incumbent",
+        "score": 14.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Open Source Enthusiast: Tree bark matches this dark, grayish brown wood.",
+          "The Painter: Tree bark's warm dark brown matches this shade closely."
+        ]
+      },
+      {
+        "name": "Coffee Grounds",
+        "source": "writer",
+        "score": 14.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Nutcracker: Dark warm brown, matching the swatch; a cozy, everyday word."
+        ]
+      },
+      {
+        "name": "Pinecone",
+        "source": "scholar",
+        "score": 13.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: A pinecone from a walk: a child's treasure.",
+          "Emily Dickinson: A small brown thing, dark and exact, like the swatch."
+        ]
+      },
+      {
+        "name": "Root Cellar",
+        "source": "scholar",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Gelati Beams",
+        "source": "scholar",
+        "score": 3.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "guaranteed: scholar had no color"
+    ]
+  },
+  {
+    "slot": 18,
+    "owner": "scholar",
+    "hex": "3B3F44",
+    "incumbent": "Iron Gate",
+    "winner": "Iron Gate",
+    "winner_source": "incumbent",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Iron Gate",
+        "source": "incumbent",
+        "score": 5.0,
+        "firsts": 5,
+        "vetoes": [],
+        "whys": [
+          "The Child at Bedtime: Dark iron gate opening onto a secret garden.",
+          "The Open Source Enthusiast: Iron gate matches this cool charcoal gray closely.",
+          "The Nutcracker: Charcoal iron-gray like the swatch; sturdy, plain, and clear.",
+          "The Painter: Iron gate matches this cool, dark charcoal closely.",
+          "Emily Dickinson: Iron gate: a cold, dark grey, plain and exact."
+        ]
+      },
+      {
+        "name": "Lamp Soot",
+        "source": "scholar",
+        "score": 0.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 19,
+    "owner": "painter",
+    "hex": "8E8A82",
+    "incumbent": "Quarry Stone",
+    "winner": "Tbilisi Stone",
+    "winner_source": "painter",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Tbilisi Stone",
+        "source": "painter",
+        "score": 19.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Tbilisi Stone: the swatch's warm gray stone, Georgian in spirit.",
+          "The Scholar: Stone-gray fits the swatch; Tbilisi carries the Georgian thread.",
+          "Medea: Warm gray stone, fits the swatch and my Georgia.",
+          "The Moon: Warm grey stone of old Tbilisi streets at night."
+        ]
+      },
+      {
+        "name": "Quarry Stone",
+        "source": "incumbent",
+        "score": 14.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Exact, cool stone; restrained like the swatch."
+        ]
+      },
+      {
+        "name": "Cobblestone",
+        "source": "painter",
+        "score": 12.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Rainy Courtyard",
+        "source": "painter",
+        "score": 5.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Pretty Shade",
+        "source": "plant: vapid",
+        "score": 0.0,
+        "firsts": 0,
+        "vetoes": [
+          "The Snow Queen: mush"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 20,
+    "owner": "painter",
+    "hex": "EDEBE6",
+    "incumbent": "Salt Flat",
+    "winner": "Chalk Dust",
+    "winner_source": "writer",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Chalk Dust",
+        "source": "writer",
+        "score": 18.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Chalk Dust: matches the pale, slightly warm off-white swatch.",
+          "The Scholar: Chalky off-white matches the swatch's soft, dusty lightness.",
+          "Medea: Chalky off-white, matches the near-neutral swatch closely."
+        ]
+      },
+      {
+        "name": "Salt Flat",
+        "source": "incumbent",
+        "score": 12.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Pale, cool, exact: white with no warmth to spare."
+        ]
+      },
+      {
+        "name": "Feather",
+        "source": "painter",
+        "score": 10.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: Soft and pale, like lamplight on a wall."
+        ]
+      },
+      {
+        "name": "Tbilisi Morning",
+        "source": "painter",
+        "score": 2.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Sunlit Plaster",
+        "source": "painter",
+        "score": 8.0,
+        "firsts": 0,
+        "vetoes": [
+          "The Moon: flat daylight color"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [
+      "The Moon on Tbilisi Morning: old Tbilisi at night under Narikala"
+    ]
+  },
+  {
+    "slot": 21,
+    "owner": "child-at-bedtime",
+    "hex": "F4C7D3",
+    "incumbent": "Cherry Blossom",
+    "winner": "Apple Blossom",
+    "winner_source": "writer",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Apple Blossom",
+        "source": "writer",
+        "score": 17.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Apple Blossom matches the swatch's soft pale pink exactly.",
+          "The Scholar: Pale pink with a white cast, matching the swatch."
+        ]
+      },
+      {
+        "name": "Blossom Dust",
+        "source": "child-at-bedtime",
+        "score": 14.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Powdery and pale, like frost on a pink petal.",
+          "The Moon: Dusty and soft; the pink goes quiet by lamplight."
+        ]
+      },
+      {
+        "name": "Dawn Petal",
+        "source": "child-at-bedtime",
+        "score": 10.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "Medea: Pale pink like petals, and dawn is renewal."
+        ]
+      },
+      {
+        "name": "Pillowcase",
+        "source": "child-at-bedtime",
+        "score": 2.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Cherry Blossom",
+        "source": "incumbent",
+        "score": 7.0,
+        "firsts": 0,
+        "vetoes": [
+          "Originality: Cherry Blossom is the name of the well-known Cherry Blossom shoe polish brand"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 22,
+    "owner": "child-at-bedtime",
+    "hex": "F9E7A0",
+    "incumbent": "Banana Pudding",
+    "winner": "Lamplight",
+    "winner_source": "child-at-bedtime",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Beeswax",
+        "source": "child-at-bedtime",
+        "score": 13.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Quiet, restrained, waxy pale yellow, exact to the swatch."
+        ]
+      },
+      {
+        "name": "Lamplight",
+        "source": "child-at-bedtime",
+        "score": 12.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "Medea: Soft yellow glow: gold against the night.",
+          "The Moon: The night's one warm light behind carved balconies."
+        ]
+      },
+      {
+        "name": "Egg Custard",
+        "source": "writer",
+        "score": 11.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Egg Custard: the swatch's pale butter yellow, exactly.",
+          "The Scholar: Pale, slightly warm yellow, matching the swatch closely."
+        ]
+      },
+      {
+        "name": "Nightlight",
+        "source": "child-at-bedtime",
+        "score": 8.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Banana Pudding",
+        "source": "incumbent",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [
+          "The Snow Queen: warmth that turns cloying"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "Beeswax was won by a higher-scoring color too"
+    ]
+  },
+  {
+    "slot": 23,
+    "owner": "glassblower",
+    "hex": "12A3A5",
+    "incumbent": "Reef Water",
+    "winner": "Glacier Lake",
+    "winner_source": "glassblower",
+    "guaranteed": true,
+    "standings": [
+      {
+        "name": "Reef Water",
+        "source": "incumbent",
+        "score": 17.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Reef Water: the swatch's saturated teal, clear shallow sea.",
+          "The Scholar: Saturated turquoise matches the swatch's vivid teal.",
+          "Medea: Clear teal reef water matches the swatch's vivid turquoise.",
+          "The Moon: Deep teal water, the kind a lamp can glint on."
+        ]
+      },
+      {
+        "name": "Glacier Lake",
+        "source": "glassblower",
+        "score": 13.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Cold, exact teal, clear as a Caucasus glacier lake."
+        ]
+      },
+      {
+        "name": "Island Shallows",
+        "source": "writer",
+        "score": 13.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Tidewater",
+        "source": "glassblower",
+        "score": 5.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Meltwater",
+        "source": "glassblower",
+        "score": 2.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "guaranteed: glassblower had no color"
+    ]
+  },
+  {
+    "slot": 24,
+    "owner": "glassblower",
+    "hex": "9DE3DC",
+    "incumbent": "Lagoon Shallows",
+    "winner": "Lagoon Shallows",
+    "winner_source": "incumbent",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Lagoon Shallows",
+        "source": "incumbent",
+        "score": 13.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Lagoon Shallows: the swatch's pale aqua, clear and bright.",
+          "The Scholar: Pale aqua of shallow lagoon water, matching the swatch.",
+          "Medea: Pale aqua like clear lagoon shallows; fresh, bright, not cold."
+        ]
+      },
+      {
+        "name": "Breaker Foam",
+        "source": "glassblower",
+        "score": 4.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Cold Glass",
+        "source": "glassblower",
+        "score": 10.0,
+        "firsts": 2,
+        "vetoes": [
+          "Medea: anything cold, cruel or showy"
+        ],
+        "whys": [
+          "The Snow Queen: Cold, glassy and crisp, with a frost glimmer.",
+          "The Moon: Pale aqua glass, lit from inside by one lamp."
+        ]
+      },
+      {
+        "name": "Morning Mist",
+        "source": "glassblower",
+        "score": 3.0,
+        "firsts": 0,
+        "vetoes": [
+          "The Moon: flat daylight color"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 25,
+    "owner": "pirosmani",
+    "hex": "191512",
+    "incumbent": "Tar Pit",
+    "winner": "Chimney Soot",
+    "winner_source": "pirosmani",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Chimney Soot",
+        "source": "pirosmani",
+        "score": 13.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Chimney Soot: warm near-black, like my hut's chimney.",
+          "The Scholar: Warm near-black, the color soot leaves behind.",
+          "The Snow Queen: Matches the swatch's warm black exactly; sooty but restrained."
+        ]
+      },
+      {
+        "name": "Oilcloth Night",
+        "source": "pirosmani",
+        "score": 9.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "Medea: Near-black night: the dark that lets gold glow.",
+          "The Moon: The night itself, with a lamp-lit table in it."
+        ]
+      },
+      {
+        "name": "Tar Pit",
+        "source": "incumbent",
+        "score": 5.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Cold Hearth",
+        "source": "pirosmani",
+        "score": 3.0,
+        "firsts": 0,
+        "vetoes": [
+          "Medea: anything cold, cruel or showy"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 26,
+    "owner": "pirosmani",
+    "hex": "C68A4B",
+    "incumbent": "Salted Caramel",
+    "winner": "Tonir Wall",
+    "winner_source": "pirosmani",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Tonir Wall",
+        "source": "pirosmani",
+        "score": 10.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: Clay oven wall in old Tbilisi, lit warm from within."
+        ]
+      },
+      {
+        "name": "Bread Crust",
+        "source": "pirosmani",
+        "score": 7.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Plain, unsweetened, exact to the swatch's tan orange."
+        ]
+      },
+      {
+        "name": "Salted Caramel",
+        "source": "incumbent",
+        "score": 11.0,
+        "firsts": 3,
+        "vetoes": [
+          "The Snow Queen: warmth that turns cloying"
+        ],
+        "whys": [
+          "The Baba Yaga: Salted Caramel: the swatch's warm tan-orange, nearly exact.",
+          "The Scholar: Caramel-tan fits the swatch's warm orange-brown tone.",
+          "Medea: Salted caramel matches the swatch's warm golden-brown orange."
+        ]
+      },
+      {
+        "name": "Sunbaked Loaf",
+        "source": "pirosmani",
+        "score": 2.0,
+        "firsts": 0,
+        "vetoes": [
+          "The Moon: flat daylight color"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 27,
+    "owner": "emily-dickinson",
+    "hex": "FBF5E6",
+    "incumbent": "Whipped Cream",
+    "winner": "Herbarium Paper",
+    "winner_source": "emily-dickinson",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Herbarium Paper",
+        "source": "emily-dickinson",
+        "score": 12.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Restrained cream like pressed paper; exact to the swatch.",
+          "Medea: Ivory paper matches the swatch; herbs gathered by moonlight."
+        ]
+      },
+      {
+        "name": "Whipped Cream",
+        "source": "incumbent",
+        "score": 9.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Whipped Cream: the swatch's warm ivory, soft and light.",
+          "The Scholar: Warm cream white, the swatch's soft, creamy tint."
+        ]
+      },
+      {
+        "name": "Milk Glass",
+        "source": "emily-dickinson",
+        "score": 5.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: A lamp's milk-glass shade, lit from inside at night."
+        ]
+      },
+      {
+        "name": "Cotton Boll",
+        "source": "writer",
+        "score": 4.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 28,
+    "owner": "emily-dickinson",
+    "hex": "836A96",
+    "incumbent": "Heather Moor",
+    "winner": "Heather Moor",
+    "winner_source": "incumbent",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Heather Moor",
+        "source": "incumbent",
+        "score": 13.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Heather Moor: the swatch's muted purple, heather in bloom.",
+          "The Scholar: Muted heathery purple, fitting the swatch's dusky violet.",
+          "The Snow Queen: Muted heather purple; a quiet moor, hushed.",
+          "Medea: Soft heather purple, matching the swatch's muted violet tone."
+        ]
+      },
+      {
+        "name": "Moorland Dusk",
+        "source": "emily-dickinson",
+        "score": 9.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: Dusk on the moor, the last light leaving the heather."
+        ]
+      },
+      {
+        "name": "Gloaming",
+        "source": "emily-dickinson",
+        "score": 8.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Winter Afternoon",
+        "source": "emily-dickinson",
+        "score": 0.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 29,
+    "owner": "open-source-enthusiast",
+    "hex": "A31F34",
+    "incumbent": "Cranberry Juice",
+    "winner": "Pomegranate",
+    "winner_source": "writer",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Pomegranate",
+        "source": "writer",
+        "score": 16.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Scholar: Deep vivid crimson, matching the swatch's richness.",
+          "Medea: Deep crimson; pomegranate, Persephone's fruit of return."
+        ]
+      },
+      {
+        "name": "Sealing Wax",
+        "source": "open-source-enthusiast",
+        "score": 14.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Sealing Wax: the swatch's deep crimson, nearly exact.",
+          "The Snow Queen: Exact, crisp crimson with a clean, glossy finish."
+        ]
+      },
+      {
+        "name": "Velvet Drape",
+        "source": "open-source-enthusiast",
+        "score": 9.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: Crimson velvet in a dark room, lit by one lamp."
+        ]
+      },
+      {
+        "name": "Banked Embers",
+        "source": "open-source-enthusiast",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Cranberry Juice",
+        "source": "incumbent",
+        "score": 5.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 30,
+    "owner": "open-source-enthusiast",
+    "hex": "E8957C",
+    "incumbent": "Smoked Salmon",
+    "winner": "Paper Lantern",
+    "winner_source": "open-source-enthusiast",
+    "guaranteed": true,
+    "standings": [
+      {
+        "name": "Smoked Salmon",
+        "source": "incumbent",
+        "score": 21.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Smoked Salmon: the swatch's coral salmon, nearly exact.",
+          "The Scholar: Salmon-pink in tone, matching this light coral.",
+          "The Snow Queen: Matches the swatch's salmon exactly; smoky, so restrained."
+        ]
+      },
+      {
+        "name": "Ripe Guava",
+        "source": "writer",
+        "score": 21.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: Warm coral like a fruit lit by one lamp."
+        ]
+      },
+      {
+        "name": "Paper Lantern",
+        "source": "open-source-enthusiast",
+        "score": 18.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "Medea: A lantern's warm coral glow, lit from within."
+        ]
+      },
+      {
+        "name": "Torchlight",
+        "source": "open-source-enthusiast",
+        "score": 10.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Sunlit Plaster",
+        "source": "open-source-enthusiast",
+        "score": 4.0,
+        "firsts": 0,
+        "vetoes": [
+          "The Moon: flat daylight color"
+        ],
+        "whys": []
+      },
+      {
+        "name": "Ocean Mist",
+        "source": "plant: wrong swatch",
+        "score": 1.0,
+        "firsts": 0,
+        "vetoes": [
+          "Originality: Ocean Mist is the name of the well-known Ocean Mist produce brand"
+        ],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "guaranteed: open-source-enthusiast had no color"
+    ]
+  },
+  {
+    "slot": 31,
+    "owner": "nutcracker",
+    "hex": "2A3B6B",
+    "incumbent": "Tarpaulin",
+    "winner": "Night Ferry",
+    "winner_source": "nutcracker",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Night Ferry",
+        "source": "nutcracker",
+        "score": 9.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Night Ferry: the swatch's deep navy, like dark water.",
+          "The Scholar: Dark navy water at night, fitting the muted blue.",
+          "The Snow Queen: Still, dark navy, quiet as a night crossing.",
+          "Medea: Deep navy, night-dark; it fits the magic by night."
+        ]
+      },
+      {
+        "name": "Small Hours",
+        "source": "nutcracker",
+        "score": 4.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: The deep middle of the night, the color of it."
+        ]
+      },
+      {
+        "name": "Tarpaulin",
+        "source": "incumbent",
+        "score": 2.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 32,
+    "owner": "nutcracker",
+    "hex": "7B4A2F",
+    "incumbent": "Roasted Chestnut",
+    "winner": "Roasted Chestnut",
+    "winner_source": "incumbent",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Roasted Chestnut",
+        "source": "incumbent",
+        "score": 13.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Roasted Chestnut: the swatch's rich, dark reddish-brown.",
+          "The Scholar: Dark reddish-brown, like chestnut shell, matching the swatch.",
+          "Medea: Glossy warm brown, like roasted chestnut's skin.",
+          "The Moon: Dark warm wood, like carved balconies after dusk."
+        ]
+      },
+      {
+        "name": "Old Violin",
+        "source": "writer",
+        "score": 11.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Elegant, restrained wood-brown, exact as fine varnish."
+        ]
+      },
+      {
+        "name": "Old Varnish",
+        "source": "nutcracker",
+        "score": 6.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Puppet Wood",
+        "source": "nutcracker",
+        "score": 0.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 33,
+    "owner": "balanchine",
+    "hex": "E7C1C6",
+    "incumbent": "Powder Puff",
+    "winner": "Pointe Shoe",
+    "winner_source": "balanchine",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Pointe Shoe",
+        "source": "balanchine",
+        "score": 10.0,
+        "firsts": 5,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Pointe Shoe: the swatch's dusty, pale pink, nearly exact.",
+          "The Scholar: Pale dusty pink satin, matching the swatch's grayish cast.",
+          "The Snow Queen: Pale, graceful, exact: a ballet shoe's grayed pink.",
+          "Medea: Pale satin pink, the color of a pointe shoe.",
+          "The Moon: Pale satin under a stage's single spotlight."
+        ]
+      },
+      {
+        "name": "Powder Puff",
+        "source": "incumbent",
+        "score": 5.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "First Light",
+        "source": "balanchine",
+        "score": 0.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 34,
+    "owner": "balanchine",
+    "hex": "3F6FB8",
+    "incumbent": "Delft Tile",
+    "winner": "Delft Tile",
+    "winner_source": "incumbent",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Delft Tile",
+        "source": "incumbent",
+        "score": 12.0,
+        "firsts": 3,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Delft Tile: the swatch's clear medium blue, glazed.",
+          "The Scholar: Cobalt glaze blue, fitting the swatch's medium blue.",
+          "The Snow Queen: Crisp, exact blue: glazed tile geometry, cool and restrained."
+        ]
+      },
+      {
+        "name": "Summer Lake",
+        "source": "writer",
+        "score": 8.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "Medea: Clean medium blue, bright as a summer lake."
+        ]
+      },
+      {
+        "name": "Evening Sea",
+        "source": "balanchine",
+        "score": 6.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: Blue hour water; the sea holds the last lamp's glow."
+        ]
+      },
+      {
+        "name": "Kura River",
+        "source": "balanchine",
+        "score": 4.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  },
+  {
+    "slot": 35,
+    "owner": "bulat-okudzhava",
+    "hex": "1A5FA8",
+    "incumbent": "Harbor Blue",
+    "winner": "Still Water",
+    "winner_source": "bulat-okudzhava",
+    "guaranteed": true,
+    "standings": [
+      {
+        "name": "Harbor Blue",
+        "source": "incumbent",
+        "score": 17.0,
+        "firsts": 2,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Harbor Blue: the swatch's strong medium-dark blue, nearly exact.",
+          "The Scholar: Deep saturated blue, matching the swatch's clear tone."
+        ]
+      },
+      {
+        "name": "Deep Current",
+        "source": "writer",
+        "score": 10.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "Medea: Deep, saturated blue that moves; fits the swatch closely."
+        ]
+      },
+      {
+        "name": "Still Water",
+        "source": "bulat-okudzhava",
+        "score": 8.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Snow Queen: Still and exact: a deep blue that hushes the eye."
+        ]
+      },
+      {
+        "name": "Evening Sea",
+        "source": "bulat-okudzhava",
+        "score": 8.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Arbat Dusk",
+        "source": "bulat-okudzhava",
+        "score": 7.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: Dusk-blue, the hour the lamps come on in the street."
+        ]
+      }
+    ],
+    "ignored_vetoes": [],
+    "notes": [
+      "guaranteed: bulat-okudzhava had no color"
+    ]
+  },
+  {
+    "slot": 36,
+    "owner": "bulat-okudzhava",
+    "hex": "EDB85A",
+    "incumbent": "Golden Hour",
+    "winner": "Golden Hour",
+    "winner_source": "incumbent",
+    "guaranteed": false,
+    "standings": [
+      {
+        "name": "Golden Hour",
+        "source": "incumbent",
+        "score": 19.0,
+        "firsts": 4,
+        "vetoes": [],
+        "whys": [
+          "The Baba Yaga: Golden Hour: the swatch's warm amber-gold, nearly exact.",
+          "The Scholar: Warm golden light, matching the light yellow-orange swatch.",
+          "The Snow Queen: Exact amber gold; warm but restrained, never sugary.",
+          "Medea: Warm gold matching the swatch's yellow-orange glow."
+        ]
+      },
+      {
+        "name": "Late Sunlight",
+        "source": "writer",
+        "score": 11.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Barley Field",
+        "source": "bulat-okudzhava",
+        "score": 9.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      },
+      {
+        "name": "Courtyard Lamp",
+        "source": "bulat-okudzhava",
+        "score": 8.0,
+        "firsts": 1,
+        "vetoes": [],
+        "whys": [
+          "The Moon: Amber lamp glow in a courtyard after dark."
+        ]
+      },
+      {
+        "name": "Late Light",
+        "source": "bulat-okudzhava",
+        "score": 3.0,
+        "firsts": 0,
+        "vetoes": [],
+        "whys": []
+      }
+    ],
+    "ignored_vetoes": []
+  }
+]

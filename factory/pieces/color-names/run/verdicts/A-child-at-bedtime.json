@@ -1,0 +1,180 @@
+{
+  "slots": {
+    "1": {
+      "ranking": [
+        "A",
+        "D",
+        "B",
+        "E",
+        "C"
+      ],
+      "why": "Honey-warm like candle wax, cozy and sweet."
+    },
+    "2": {
+      "ranking": [
+        "D",
+        "A",
+        "E",
+        "B",
+        "C"
+      ],
+      "why": "Soft gray-green willow leaves, gentle as a lullaby."
+    },
+    "3": {
+      "ranking": [
+        "C",
+        "A",
+        "E",
+        "D",
+        "B"
+      ],
+      "why": "Cozy log-cabin wood, warm and sheltering."
+    },
+    "4": {
+      "ranking": [
+        "A",
+        "C",
+        "D",
+        "B"
+      ],
+      "why": "Warm dusty road, an adventure waiting at the end."
+    },
+    "5": {
+      "ranking": [
+        "E",
+        "A",
+        "B",
+        "D",
+        "C"
+      ],
+      "why": "A hedgerow where small creatures nest, cozy and wondrous."
+    },
+    "6": {
+      "ranking": [
+        "E",
+        "A",
+        "D",
+        "B",
+        "C"
+      ],
+      "why": "Fresh morning dew, soft and gentle, like waking up."
+    },
+    "7": {
+      "ranking": [
+        "B",
+        "E",
+        "D",
+        "A",
+        "C"
+      ],
+      "why": "Soft as velvet, a dark sky that means bedtime.",
+      "veto": {
+        "C": "anything scary"
+      }
+    },
+    "8": {
+      "ranking": [
+        "A",
+        "E",
+        "D",
+        "B",
+        "C",
+        "F"
+      ],
+      "why": "Soft rice paper, like picture-book pages.",
+      "veto": {
+        "F": "anything scary"
+      }
+    },
+    "9": {
+      "ranking": [
+        "E",
+        "B",
+        "C",
+        "A",
+        "D"
+      ],
+      "why": "First snowfall: wonder a child asks to see again."
+    },
+    "10": {
+      "ranking": [
+        "C",
+        "E",
+        "D",
+        "B",
+        "A"
+      ],
+      "why": "Dusk-blue sky, the hush just before bedtime."
+    },
+    "11": {
+      "ranking": [
+        "B",
+        "C",
+        "D",
+        "A"
+      ],
+      "why": "Bright red and fun to say aloud."
+    },
+    "12": {
+      "ranking": [
+        "C",
+        "B",
+        "D",
+        "A"
+      ],
+      "why": "Harvest moon: a warm, golden glow to wonder at."
+    },
+    "13": {
+      "ranking": [
+        "C",
+        "B",
+        "A"
+      ],
+      "why": "A storybook's cover, read aloud at bedtime."
+    },
+    "14": {
+      "ranking": [
+        "C",
+        "A",
+        "B"
+      ],
+      "why": "A storybook page, warm cream, ready to be read."
+    },
+    "15": {
+      "ranking": [
+        "D",
+        "A",
+        "B",
+        "C"
+      ],
+      "why": "Warm bread crust: cozy and sweet to picture."
+    },
+    "16": {
+      "ranking": [
+        "A",
+        "C",
+        "E",
+        "D",
+        "B"
+      ],
+      "why": "A cozy barn full of animals and hay."
+    },
+    "17": {
+      "ranking": [
+        "D",
+        "A",
+        "B",
+        "E",
+        "C"
+      ],
+      "why": "A pinecone from a walk: a child's treasure."
+    },
+    "18": {
+      "ranking": [
+        "A",
+        "B"
+      ],
+      "why": "Dark iron gate opening onto a secret garden."
+    }
+  }
+}
