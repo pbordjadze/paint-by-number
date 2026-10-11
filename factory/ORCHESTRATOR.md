@@ -62,7 +62,7 @@ driving manual and the state of play.
 | F20 | Merged: the makers' page after the guardians (`collection.py --pets`); checked in Chromium by Claude |
 | F21 | Done: a read-only audit, twelve findings (three high: job-ID paths, huge numbers trap the Swift CLI, symlinked output children), split into F22 (Swift) and F23 (Python) |
 | F23 | Merged: the audit's Python fixes; Claude fixed the guards' refusal of macOS's linked /tmp and /var |
-| F19, F22 | Running (Codex, gpt-6.1-sol, high) |
+| F19, F22, F24 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul

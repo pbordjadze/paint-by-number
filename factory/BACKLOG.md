@@ -469,10 +469,37 @@ Branch `codex/f23-audit-python`. The Python half of F21's findings. Python only,
   report a missing build clearly.
 - Recorded taste runs (`pieces/panel-name`, `pieces/color-names`) still replay byte for byte.
 
+### F24 · The simulator driver, before the Mac
+Branch `codex/f24-simctl-driver`. M2's host half, so the Mac session only writes the Swift side.
+Factory only; no app code. Build on F17's `Driver` protocol in `factory/taste/play.py`.
+- **The mailbox contract**, written down in `factory/pieces/play/README.md` for the Mac session
+  to implement in Swift: the driver and the app's Debug-only play UI test talk through a host
+  directory (the simulator shares the host file system) whose path the test reads from the
+  environment (`xcodebuild` passes `TEST_RUNNER_PLAY_MAILBOX` to the runner as
+  `PLAY_MAILBOX`). The driver writes `move-<n>.json` atomically (temp file, then rename); the
+  test performs it and writes `done-<n>.json` with the resulting state (F17's state schema) once
+  the screen has settled, or `error-<n>.json` with a reason. A `hello.json` from the test says it
+  is ready. Numbers start at 1 and never repeat within a session.
+- **`factory/taste/simctl.py`**, a `SimctlDriver` implementing the protocol over `xcrun simctl`
+  and `xcodebuild`: find the device by name in `simctl list devices --json` (the default is CI's
+  13-inch iPad Pro), boot it and wait (`bootstatus -b`), set appearance, install an `.app`, and
+  start `xcodebuild test-without-building -xctestrun <file> -only-testing:<test>` with the
+  mailbox variable, waiting for `hello.json`. `perform` writes the move; `settle` waits for its
+  `done`/`error` file with a timeout and fails clearly if the runner exits first; `state` returns
+  the last settled state; `screenshot` uses `simctl io <udid> screenshot`. Optional video:
+  `simctl io recordVideo` from start to finish, stopped with SIGINT. Every command is built in
+  one place, logged, and run without a shell.
+- **Tests on Linux with a fake `xcrun`** on `PATH`: a script that records its arguments and
+  answers `simctl list`, `bootstatus`, `io screenshot` (writes a PNG) and `xcodebuild` (starts a
+  fake runner that answers the mailbox from a scripted folder). Cover a three-move session,
+  an `error-<n>.json`, a runner that dies, a timeout, a missing device, and a replay of the
+  recorded session with F17's mock driver. Nothing here may call a real `xcrun`.
+- `play.py` gains `--driver simctl` with the options above; the mock stays the default.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
-- **M2 · The play harness:** a Debug-only "play" UI test that performs moves from a file
+- **M2 · The play harness:** (host half: F24) a Debug-only "play" UI test that performs moves from a file
   (`fill <area>`, `drag`, `tap <label>`, `wait`, `screenshot`), a Debug hook that reports each
   area's label point by number, a driver around `xcrun simctl` (boot, install, launch a demo scene,
   screenshots, video, appearance), and a design-loop piece that hands each turn to a guardian.
