@@ -1,4 +1,9 @@
-# Guardians
+# A Lamp Left Burning
+
+The design panel's name, chosen by the panel itself in its first taste run
+(`factory/pieces/panel-name`); "the Lamp" for short. It is the one decision Paul left to the panel:
+he holds a veto over every other.
+
 
 Each guardian is a low-effort Opus that keeps one idea. For each option on a shortlist it says
 where its idea lives in it (or that it doesn't), whether the option betrays its idea (a veto, with
