@@ -1,13 +1,22 @@
 """Builds the Lamp's collection page from factory/GUARDIANS.md and factory/panel.json.
-Available factory/pets/<id>/spritesheet.webp atlases are embedded in the page.
+Available pet atlases are embedded in the page, including Pip and Colophon.
 
-  collection.py <repo> <out.html> <template.html>   (write the page outside the repo)
+  collection.py <repo> <out.html> <template.html> [--pets <dir>]
+  Without --pets, sheets come from factory/pets/<id>/spritesheet.webp.
+  Write the page outside the repo.
 """
-import base64, html, json, re, sys
+import argparse, base64, html, json, re, sys
 from pathlib import Path
 from PIL import Image
 
-repo, out = sys.argv[1], sys.argv[2]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("repo", type=Path)
+parser.add_argument("out", type=Path)
+parser.add_argument("template", type=Path)
+parser.add_argument("--pets", type=Path, help="read <dir>/<id>/spritesheet.webp")
+args = parser.parse_args()
+repo, out = args.repo, args.out
+pets_dir = args.pets if args.pets is not None else repo / "factory" / "pets"
 md = open(f"{repo}/factory/GUARDIANS.md").read()
 panel = json.load(open(f"{repo}/factory/panel.json"))
 
@@ -34,6 +43,27 @@ PETS = {
     "bible-school-teacher": "A small clay oil lamp with a kind glow and a curl of grapevine around its handle.",
 }
 COLORS = ["#C8963E", "#5E7F4A", "#8E3B2E", "#5D7186", "#B86A6A", "#B59A3A", "#3F6E68", "#9A7BA6"]
+
+# create-pet 0.1.6, references/animation-rows.md (v2, rows 3 and 8).
+MAKERS = (
+    ("pip", "Pip", "Codex's teapot. A plain white teapot, a little lopsided, with no face. Lift the lid and there is a blue dot underneath.",
+     "Pip, Codex's teapot. Tap to lift the lid.", 3, (140, 140, 140, 280)),
+    ("colophon", "Colophon", "Claude's moth. A small round moth with pale page wings. It circles the lamp once, at a safe distance, and lands beside the words like a bookmark.",
+     "Colophon, Claude's moth. Tap to fold the wings flat.", 8, (150, 150, 150, 150, 150, 280)),
+)
+
+def atlas_style(pet_id):
+    atlas = pets_dir / pet_id / "spritesheet.webp"
+    if not atlas.is_file():
+        return None
+    with Image.open(atlas) as image:
+        width, height = image.size
+    if (width, height) not in ((1536, 1872), (1536, 2288)):
+        sys.exit(f"collection: unsupported atlas size {width} × {height}: {atlas}; "
+                 "expected 1536 × 1872 (v1) or 1536 × 2288 (v2)")
+    encoded = base64.b64encode(atlas.read_bytes()).decode("ascii")
+    return (f"background-image: url(data:image/webp;base64,{encoded}); "
+            f"background-size: {width // 4}px {height // 4}px")
 
 def cap(text):
     return text[:1].upper() + text[1:]
@@ -79,17 +109,10 @@ for i, g in enumerate(panel["guardians"]):
     recog = next((v for k, v in f.items() if k.startswith("recognizes")), None)
     thread = f.get("Georgian thread")
     pid = f"pet-{g['id']}"
-    atlas = Path(repo) / "factory" / "pets" / g["id"] / "spritesheet.webp"
-    if atlas.is_file():
-        with Image.open(atlas) as image:
-            width, height = image.size
-        if (width, height) not in ((1536, 1872), (1536, 2288)):
-            sys.exit(f"collection: unsupported atlas size {width} × {height}: {atlas}; "
-                     "expected 1536 × 1872 (v1) or 1536 × 2288 (v2)")
-        encoded = base64.b64encode(atlas.read_bytes()).decode("ascii")
+    style = atlas_style(g["id"])
+    if style:
         pet = (f'<div class="pet pet-sprite" aria-hidden="true" '
-               f'style="background-image: url(data:image/webp;base64,{encoded}); '
-               f'background-size: {width // 4}px {height // 4}px"></div>')
+               f'style="{style}"></div>')
     else:
         pet = f'<div class="pet" aria-hidden="true">{letter}</div>'
     cards.append(f"""
@@ -113,8 +136,24 @@ for i, g in enumerate(panel["guardians"]):
   </div>
 </article>""")
 
+makers = []
+for pet_id, name, description, label, row, holds in MAKERS:
+    style = atlas_style(pet_id)
+    words = (f'<span class="maker-name">{name}</span>'
+             f'<span class="maker-description">{inline(description)}</span>')
+    if style:
+        entry = (f'<button type="button" class="maker" '
+                 f'aria-label="{html.escape(label, quote=True)}" '
+                 f'data-row="{row}" data-holds="{json.dumps(holds)}">'
+                 f'<span class="pet pet-sprite" aria-hidden="true" style="{style}"></span>'
+                 f'<span class="who">{words}</span></button>')
+    else:
+        entry = f'<div class="who">{words}</div>'
+    makers.append(f'<article class="card maker-card" id="{pet_id}">{entry}</article>')
+
 seated = sum(1 for g in panel["guardians"] if g["active"] and not g.get("vetoOnly"))
-page = open(f"{sys.argv[3]}").read()
+page = args.template.read_text()
 page = page.replace("{{CARDS}}", "".join(cards)).replace("{{SEATED}}", str(seated))
-open(out, "w").write(page)
-print(len(cards), "cards,", seated, "seated guardians")
+page = page.replace("{{MAKERS}}", "".join(makers))
+out.write_text(page)
+print(len(cards), "cards,", seated, "seated guardians,", len(makers), "makers")
