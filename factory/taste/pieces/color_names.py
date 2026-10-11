@@ -104,12 +104,13 @@ def describe(hexs):
 def guardians():
     return loop.seats(rules())
 
-def setup():
-    vocab = vocabulary()
+def build_slots(vocab, own_targets):
+    """Pure slot construction shared with new kit runs; no run files are written here."""
+    vocab = [dict(v) for v in vocab]
     for v in vocab: v["lab"] = oklab(v["hex"])
     taken, slots = set(), []
-    for gid, own_targets in targets().items():
-        for hexs, idea in own_targets:
+    for gid, pairs in own_targets.items():
+        for hexs, idea in pairs:
             t = oklab(hexs)
             best = min((v for v in vocab if v["index"] not in taken), key=lambda v: dist(v["lab"], t))
             taken.add(best["index"])
@@ -117,9 +118,13 @@ def setup():
             slots.append({"slot": len(slots) + 1, "owner": gid, "idea": idea, "index": best["index"], "hex": best["hex"],
                           "incumbent": best["name"], "describe": describe(best["hex"]),
                           "neighbors": [n["name"] for n in near]})
-    owners = list(targets())
+    owners = list(own_targets)
     half = {gid: ("A" if i < len(owners) // 2 else "B") for i, gid in enumerate(owners)}
     for s in slots: s["half"] = half[s["owner"]]
+    return slots
+
+def setup():
+    slots = build_slots(vocabulary(), targets())
     save(os.path.join(RUN, "slots.json"), slots)
     for s in slots:
         print(f'{s["slot"]:2} {s["half"]} {s["owner"]:22} #{s["hex"]} {s["incumbent"]:16} ({s["idea"]}; {s["describe"]})')

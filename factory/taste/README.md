@@ -1,68 +1,111 @@
-# The taste loop
+# The design-loop kit
 
-`loop.py` owns seeded ledger draws, individual blind ballots, weighted Borda scoring, vetoes,
-unique slot winners, whole-set caps, the optional owner guarantee and the representation ledger.
-`pieces/panel_name.py` and `pieces/color_names.py` supply the briefs, agent formats, craft checks,
-slots, tie preferences and rendering in use. `transcripts.py` reads the final `SubagentHandback`
-from a Claude Code `.output` file. The loop never launches agents or chooses taste itself.
+The kit draws a panel, writes model-agnostic jobs, checks replies, decides and replays. It never
+calls a model. Use `factory/taste/loop` (add `factory/taste` to PATH for `loop`), or
+`python3 -m factory.taste`. Python 3.11+ and Pillow are the only dependencies. Records are JSON;
+render output and runner scratch files belong outside the repo, normally `/root/factory-out`.
 
-The old entry points still work from any directory:
+## Make a piece: panel-name worked example
+
+A piece directory has `piece.toml` and a brief. The shipped `pieces/panel-name/piece.toml` uses
+the panel-name adapter's existing brief, craft checks and three examples of a name in use.
+Create a fresh run; this leaves the recorded panel run alone:
 
 ```sh
-TASTE_RUN=/path/to/run python3 factory/taste/taste.py draw 1
-TASTE_RUN=/path/to/run python3 factory/taste/taste.py proposals 1
-TASTE_RUN=/path/to/run python3 factory/taste/taste.py extract 1 proposals robber-girl /path/to/agent.output
-TASTE_RUN=/path/to/run python3 factory/taste/taste.py collect 1
-TASTE_RUN=/path/to/run python3 factory/taste/taste.py extract 1 verdicts moon /path/to/agent.output
-TASTE_RUN=/path/to/run python3 factory/taste/taste.py decide 1
-TASTE_RUN=/path/to/run python3 factory/taste/taste.py finalists 1
-TASTE_RUN=/path/to/run python3 factory/taste/taste.py decide-finalists 1
-COLORS_RUN=/path/to/run python3 factory/taste/colors.py setup
-COLORS_RUN=/path/to/run python3 factory/taste/colors.py prompts
-COLORS_RUN=/path/to/run python3 factory/taste/colors.py extract proposals robber-girl /path/to/agent.output
-COLORS_RUN=/path/to/run python3 factory/taste/colors.py collect
-COLORS_RUN=/path/to/run FACTORY_OUT=/root/factory-out python3 factory/taste/colors.py sheets
-COLORS_RUN=/path/to/run python3 factory/taste/colors.py judges
-COLORS_RUN=/path/to/run python3 factory/taste/colors.py decide
+export LOOP_RUN=/root/factory-out/panel-design
+export FACTORY_OUT=/root/factory-out/panel-review
+factory/taste/loop new panel-name
+factory/taste/loop draw 1
+factory/taste/loop jobs 1          # proposer jobs (and writer if enabled)
+# Dispatch jobs/001/*.json; put final JSON in replies/001/<job-id>.json.
+factory/taste/loop collect 1       # craft checks, slate, blind juror jobs
+# Dispatch the juror jobs; put final JSON in replies/001/juror-<guardian>.json.
+factory/taste/loop collect 1
+factory/taste/loop decide 1
+factory/taste/loop checkpoint     # checkpoint.html under FACTORY_OUT
+factory/taste/loop report         # standings, representation ledger, tokens and seconds
+# Repeat draw/jobs/collect/decide for rounds 2 and 3.
+factory/taste/loop --out /root/factory-out/panel-replay replay
 ```
 
-Between those commands, the orchestrator runs agents with the written prompts and extracts their
-replies. Color extraction also accepts an agent ID under `$TASTE_TASKS`. Render output belongs
-outside the repository. `FACTORY_OUT` defaults to `~/factory-out`.
+For a new question, copy that TOML, set `[piece] id = "garden-gates"`, `adapter = "generic"`,
+write `brief.md`, and add `slots.json`:
+`[{"slot":"1","incumbent":"Old Gate"},{"slot":"2","incumbent":"Other Gate"}]`.
+Run `loop new /path/to/garden-gates`. Optional `base.json` holds the rest of a set for uniqueness
+and caps. Slots may carry `hex` for swatches, `images` (paths relative to the piece), and `index`
+to join the base set. `[piece] context = ["{name} welcomes you through gate {slot}."]` renders
+text in use. A slot can supply `candidate_schema`, a JSON Schema object requiring `name` and
+`why`, plus `images` and/or a structured `value` for parameters. The default is name/why only.
+The supported schema keywords are documented in `schema.py`; unsupported keywords fail closed.
+Canned or agent replies may provide absolute image paths; contact sheets show only ballot letters.
+Render proposed parameter files with your piece's renderer before collecting them. Parameter values,
+images and the chosen design carry into the next round. The `panel-name` and `color-names` adapters
+reuse their own craft oracles. Generic pieces use schema validation and uniqueness as craft checks.
 
-Before the first draw or setup, `rules.json` freezes the version, seats (including charters and
-weights), calibration factors, glossary and, for colors, the input vocabulary. To configure a new
-run, call `loop.rules(run, piece)` before drawing and set its `calibration` factors or `guarantee`
-option before the run starts. Later commands read that snapshot. Unknown versions are errors.
+## Settings and jobs
 
-- Rules **v1** reproduce the panel run: any veto reason is accepted, ranking gaps go last, and
-  the incumbent breaks ties after points and first places. The original all-vetoed fallback is
-  retained for replay.
-- Rules **v2** require a quote from the charter's **guards against** line. Slot selection applies
-  uniqueness and the piece's caps before the optional guarantee. A guarantee cannot defeat a veto,
-  duplicate a name or break a cap. An impossible new selection fails explicitly.
-  When caps or representation require several substitutions together, new runs search for a
-  legal assignment in deterministic order, trying the current winners first.
-- The recorded color run had an Originality exemption, no shared-bar check, and ten cap-repair
-  attempts. Its snapshot records these historical settings (`recorded`, `originalityFreeVeto`,
-  `sharedBar`) so its decisions still replay exactly. New runs use v2, require quotes from
-  Originality too, and enforce the Georgian bar. Recorded output schemas stay unchanged;
-  new decisions report `broad_favorite` and `most_loved` separately. The panel CLI reports both
-  for old decisions too.
+TOML requires `rounds`, `jury_size` (including Originality), `proposers`, `candidates_each` per slot,
+`scoring = "borda"|"approval"|"copeland"`, `veto_policy = "quote"|"free"|"off"`, `guarantee`,
+and `rules_version = 1|2`. Each `[roles.proposer]`, `[roles.juror]`, `[roles.writer]` has a `model`,
+`effort` and `enabled`; proposer and juror are required, writer is optional and offers one candidate
+per slot. Model and effort strings are passed unchanged; choose identifiers your runner supports.
+`[caps]` supports `georgian` and maximum repeated two-word `lead`/`trail` counts. `plants` is an array
+of `{slot="1", name="Beeswax", quality="good"}` or `quality="bad"` anchors. Anchors bypass craft
+so deliberate defects reach the jury; their quality and source are hidden, and they cannot win.
+The color example's good anchor is the recorded jury's winner, not a claim about Paul's approval.
+`guarantee = true` requires a slot for each drawn proposer; vetoes, uniqueness and caps still hold.
 
-The existing panel ledger is unchanged. The color script previously wrote no ledger; its added
-ledger records the winning proposers and the jurors whose first-choice reasons support each winner.
-Both replay tests rebuild decisions and ledgers from inputs, compare bytes and verify idempotence.
-Historical `nina` IDs and the display name Nina remain in those snapshots; today's `robber-girl`
-seat has a `nina` alias, which also carries representation through to new draws.
+`new` freezes settings, brief, approved `factory/STYLE.md` if present, seats, glossary, initial
+slots, vocabulary and calibration in `rules.json`. Later piece/panel edits do not change the run.
+Jobs are `jobs/NNN/<role>-<guardian>.json`: `prompt`, `reply_schema`, `model`, `effort`, `images`,
+plus identity and attempt. They and blind ballots are immutable. Proposers see their past reception;
+jurors see shuffled letters and text/swatch/image sheets without proposer attribution. Replies
+must match the schema exactly, including every slot and a complete unrepeated ranking; approval
+also requires an explicit approval list (empty is allowed). Originality only vetoes.
+A malformed reply creates `retries/NNN/<job-id>.json` with the error and original reply. Send it
+back to the same agent once and write `replies/NNN/<job-id>.retry.json`. A failed repair blocks
+collection/decision explicitly. Waiting or rejected collection exits 1; it never guesses a reply.
 
-The Georgian check counts names in the final set, using whole terms from `glossary.json`: at most
-`floor(set size / 50)` place names and `floor(set size / 30)` Georgian words. For colors, the set
-is the entire vocabulary, including anchors outside the batch. For a one-name panel, both limits
-are zero. Glossary definitions go to Originality; all prompts say the thread is felt, not named.
-Proposers receive their own past names, points, first places, vetoes and wins. The finalist hook
-writes a separate jury, slate, blind ballots and prompts; its verdict and decision files never
-overwrite the first jury's records.
+## Runners, checkpoints and calibration
 
-Tests: `python3 -m pytest tools/factory/test_taste.py` (or the dependency-free equivalent
-`python3 -m unittest discover -s tools/factory -p test_taste.py`).
+Claude orchestration reads each job and dispatches its prompt/model/effort/images; the separate
+adapter imports the final `SubagentHandback` through `transcripts.py`. Codex uses read-only
+`codex exec --json --output-schema … --output-last-message …` in an outside-repo scratch root
+([official interface](https://developers.openai.com/codex/noninteractive/)). Run adapters explicitly:
+
+```sh
+python3 -m factory.taste.runners --run "$LOOP_RUN" claude "$LOOP_RUN/jobs/001/proposer-moon.json" /path/agent.output
+python3 -m factory.taste.runners --run "$LOOP_RUN" codex "$LOOP_RUN/jobs/001/juror-moon.json" --out /root/factory-out/codex-jobs
+factory/taste/loop calibrate /path/checkpoint.json    # writes calibration.json under FACTORY_OUT
+factory/taste/loop --run /root/factory-out/next new panel-name --calibration /path/calibration.json
+factory/taste/loop gallery --picks /path/checkpoint.json
+```
+
+The checkpoint saves `slot,name,veto,love,note,at` to `checkpoint/c<slot>` using the same Claude
+owner/database interface as Thirty-Six Colors. It adds `round` for later rounds. Outside Claude it
+saves locally and exports `checkpoint.json`; it does not publish anything. Love and veto are
+exclusive. The gallery shows names, makers, proposer reasons, jury evidence and Paul's annotations.
+Calibration compares every loved candidate against its alternatives (reversed for a veto). It scores
+jurors' rankings and proposer sources separately, with evidence counts and smoothed factors
+`0.5 + (agreements + 1)/(pairs + 2)`. Notes alone imply no preference. Factors affect future runs:
+juror factors multiply base weight and ledger boost, source factors multiply final candidate scores.
+Borda is n−1…0; approval awards one weighted point per approved candidate; weighted Copeland
+awards one point per pairwise win, half per tie, zero per loss. Originality never scores.
+Cost reports count tokens and elapsed seconds per agent/attempt from Claude transcripts and Codex
+JSONL, deduplicate streaming usage, include cached input, and mark unmeasured fields `null`.
+No dollar price is invented; an API runner can later consume the same jobs and reply paths.
+
+## Replay and checks
+
+`loop --run <records> --out <fresh-directory> replay` rebuilds decisions and ledger in a copy,
+including the two recorded runs. Legacy v1/v2 schemas and exceptions remain frozen; compatibility
+CLIs `taste.py` and `colors.py` still work. New runs default to v2: quoted guards-against vetoes,
+uniqueness/caps before the optional guarantee, deterministic repair of interacting constraints,
+and separate broad-favorite/most-loved standings. Unknown rules versions fail.
+
+```sh
+export TMPDIR=/root/factory-out    # keep test scratch output outside the repo
+python3 -m unittest discover -s tools/factory -p test_taste.py
+python3 -m unittest discover -s tools/factory -p test_loop_kit.py
+# With pytest installed: python3 -m pytest tools/factory/test_taste.py tools/factory/test_loop_kit.py
+```

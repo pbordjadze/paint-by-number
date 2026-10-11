@@ -51,18 +51,23 @@ def guardians():
             for g in load(REPO / "factory/panel.json")["guardians"]]
 
 
+def fresh_rules(piece, *, version=2, recorded=False, vocabulary=None):
+    record = {"version": version, "piece": piece, "recorded": recorded,
+              "originalityFreeVeto": recorded and version == 2,
+              "sharedBar": not recorded, "guarantee": piece == "color-names",
+              "calibration": {}, "guardians": guardians(),
+              "glossary": load(REPO / "factory/taste/glossary.json")}
+    if vocabulary is not None:
+        record["vocabulary"] = vocabulary
+    return record
+
+
 def rules(run, piece, *, version=2, recorded=False, vocabulary=None):
     """Create once, then always use the stored rule set. Unknown versions fail closed."""
     path = Path(run) / "rules.json"
     record = load(path)
     if record is None:
-        record = {"version": version, "piece": piece, "recorded": recorded,
-                  "originalityFreeVeto": recorded and version == 2,
-                  "sharedBar": not recorded, "guarantee": piece == "color-names",
-                  "calibration": {}, "guardians": guardians(),
-                  "glossary": load(REPO / "factory/taste/glossary.json")}
-        if vocabulary is not None:
-            record["vocabulary"] = vocabulary
+        record = fresh_rules(piece, version=version, recorded=recorded, vocabulary=vocabulary)
         save(path, record)
     if record["version"] not in (1, 2):
         raise ValueError(f"unsupported taste rules v{record['version']}")
@@ -131,6 +136,10 @@ def score(names, jury, ballots, verdicts, record, *, weights=None, ledger=None):
     notes = {n: [] for n in names}
     lives = {n: {} for n in names}
     ignored, problems = [], []
+    method = record.get("scoring", "borda")
+    if method not in ("borda", "approval", "copeland"):
+        raise ValueError(f"unknown scoring method: {method}")
+    pairs = {a: {b: 0.0 for b in names if b != a} for a in names}
     for gid in jury:
         b, v, g = ballots[gid], verdicts.get(gid), gs[gid]
         if v is None:
@@ -143,10 +152,13 @@ def score(names, jury, ballots, verdicts, record, *, weights=None, ledger=None):
             if quote:
                 q = " ".join(str(quote).split()).lower().strip('".')
                 guards = charter_line(g["charter_text"], "guards against").lower()
-                accepted = (record["version"] == 1 or
+                policy = record.get("vetoPolicy", "free" if record["version"] == 1 else "quote")
+                accepted = (policy == "free" or
                             (g.get("vetoOnly") and record.get("originalityFreeVeto", False)) or
                             (q and q in guards))
-                if accepted:
+                if policy == "off":
+                    pass
+                elif accepted:
                     vetoes[name].append(f"{g['name']}: {quote}")
                 else:
                     ignored.append(f"{g['name']} on {name}: {quote}")
@@ -164,10 +176,19 @@ def score(names, jury, ballots, verdicts, record, *, weights=None, ledger=None):
         w = (weights[gid] if weights is not None else
              weight(g, ledger or {"rounds": []}, record.get("calibration"), gs))
         for pos, letter in enumerate(rank):
-            scores[b[letter]] += w * (len(rank) - 1 - pos)
+            if method == "borda":
+                scores[b[letter]] += w * (len(rank) - 1 - pos)
+            elif method == "approval":
+                scores[b[letter]] += w * (letter in v.get("approval", []))
+            else:
+                for later in rank[pos + 1:]:
+                    pairs[b[letter]][b[later]] += w
         firsts[b[rank[0]]] += 1
         if v.get("note"):
             notes[b[rank[0]]].append(f"{g['name']}: {v['note']}")
+    if method == "copeland":
+        scores = {a: sum(1 if support > pairs[b][a] else 0.5 if support == pairs[b][a] else 0
+                         for b, support in pairs[a].items()) for a in names}
     return {"score": scores, "firsts": firsts, "vetoes": vetoes, "notes": notes,
             "lives": lives, "ignored": ignored, "problems": problems}
 
@@ -191,6 +212,15 @@ def history(run, gid, gs):
     lines = []
     for path in sorted(Path(run).glob("rounds/*/decision.json")):
         dec = load(path)
+        if "results" in dec:
+            for result in dec["results"]:
+                for standing in result["standings"]:
+                    if canonical(standing["source"], gs) == canonical(gid, gs):
+                        lines.append(f"- Round {dec['round']}, slot {result['slot']}: {standing['name']} — "
+                                     f"{standing['score']} points, {standing['firsts']} first places" +
+                                     ("; vetoed" if standing["vetoes"] else "") +
+                                     ("; won" if standing["name"] == result["winner"] else ""))
+            continue
         for standing in dec["standings"]:
             if canonical(standing.get("origin", standing["source"]), gs) == canonical(gid, gs):
                 lines.append(f"- Round {dec['round']}: {standing['name']} — {standing['score']} points, "
@@ -216,6 +246,10 @@ def glossary_prompt(record):
 
 
 def veto_instruction(record):
+    if record.get("vetoPolicy") == "off":
+        return "Vetoes are off: every veto must be null."
+    if record.get("vetoPolicy") == "free":
+        return "Veto only for a real problem and give its reason."
     if record["version"] == 1:
         return "Veto only for a real problem and give its reason."
     exemption = "Originality may give a reason instead." if record.get("originalityFreeVeto") else "This includes Originality."

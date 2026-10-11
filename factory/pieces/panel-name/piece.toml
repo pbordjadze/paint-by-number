@@ -1,0 +1,29 @@
+rounds = 3
+jury_size = 6
+proposers = 4
+candidates_each = 3
+scoring = "borda"
+veto_policy = "quote"
+guarantee = false
+rules_version = 2
+plants = []
+
+[piece]
+id = "panel-name"
+adapter = "panel-name"
+
+[caps]
+georgian = true
+
+[roles.proposer]
+model = "haiku"
+effort = "low"
+enabled = true
+[roles.juror]
+model = "opus"
+effort = "low"
+enabled = true
+[roles.writer]
+model = "opus"
+effort = "low"
+enabled = false

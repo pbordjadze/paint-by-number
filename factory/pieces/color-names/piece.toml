@@ -1,0 +1,34 @@
+rounds = 3
+jury_size = 6
+proposers = 4
+candidates_each = 3
+scoring = "borda"
+veto_policy = "quote"
+guarantee = true
+rules_version = 2
+plants = [
+  { slot = "1", name = "Pretty Shade", quality = "bad" },
+  { slot = "1", name = "Beeswax", quality = "good" },
+]
+
+[piece]
+id = "color-names"
+adapter = "color-names"
+
+[caps]
+georgian = true
+lead = 4
+trail = 6
+
+[roles.proposer]
+model = "haiku"
+effort = "low"
+enabled = true
+[roles.juror]
+model = "opus"
+effort = "low"
+enabled = true
+[roles.writer]
+model = "opus"
+effort = "low"
+enabled = true
