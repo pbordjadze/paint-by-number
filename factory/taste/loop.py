@@ -7,6 +7,7 @@ The two migrated runs retain their historical output schemas and Originality's v
 New v2 runs require a guards-against quote from every seat, including Originality.
 """
 import json
+import os
 import random
 import re
 from pathlib import Path
@@ -20,9 +21,19 @@ def load(path, default=None):
 
 
 def save(path, obj):
+    write_atomic(path, json.dumps(obj, indent=2, ensure_ascii=False))
+
+
+def write_atomic(path, text):
+    """Readers poll for these files (jobs, replies), so one must never see a half-written file."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(obj, indent=2, ensure_ascii=False))
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        temporary.write_text(text)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def charter_line(text, field):

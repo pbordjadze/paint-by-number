@@ -54,8 +54,7 @@ def codex(run, job_path, out):
         raise RuntimeError(f'codex exec exited {result.returncode}; see {scratch / "stderr.txt"}')
     target = destination(run, job)
     # Keep malformed replies for the kit to return to the agent once.
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(reply_path.read_text())
+    loop.write_atomic(target, reply_path.read_text())
     return target
 
 

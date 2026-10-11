@@ -135,7 +135,9 @@ class SimctlTests(unittest.TestCase):
 
             def checked_replace(source, target):
                 self.assertEqual(Path(source).parent, Path(target).parent)
-                published.append((Path(target).name, json.loads(Path(source).read_text())))
+                # Patching os.replace reaches every module; the session's own records are atomic too.
+                if Path(target).parent == (self.root / 'wire').resolve():
+                    published.append((Path(target).name, json.loads(Path(source).read_text())))
                 real_replace(source, target)
 
             with patch('factory.taste.simctl.os.replace', side_effect=checked_replace):
