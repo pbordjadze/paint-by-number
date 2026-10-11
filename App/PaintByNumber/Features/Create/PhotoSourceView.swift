@@ -79,6 +79,9 @@ struct PhotoSourceView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button("Browse All…", systemImage: "photo.on.rectangle.angled") { isBrowsingAll = true }
                     .help("Browse all photos and albums")
+                    // Give the full picker its own presenter rather than the inline picker's
+                    // ancestor: Browse All once stayed on the photo step with no sheet.
+                    .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
             }
             if cameraAvailable {
                 ToolbarItem(placement: .primaryAction) {
@@ -97,7 +100,6 @@ struct PhotoSourceView: View {
             browsedItem = nil
             pick(item)
         }
-        .photosPicker(isPresented: $isBrowsingAll, selection: $browsedItem, matching: .images, preferredItemEncoding: .current)
         .fullScreenCover(isPresented: $isShowingCamera) {
             CameraPicker { data in
                 model.load(imageData: data)
