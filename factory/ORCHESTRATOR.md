@@ -73,8 +73,10 @@ driving manual and the state of play.
 
 ## Waiting on Paul
 
-- Nothing. The chapter 2 checkpoint is in (`pieces/color-names/run/checkpoint.json`: 33 loved,
-  3 vetoed, runners-up recorded); chapter 2 is being written as a doc:
-  https://claude.ai/code/artifact/b2eeb9bd-321e-46fb-8c73-9a663c3a759d (chapter 1:
-  https://claude.ai/code/artifact/8007efa4-596c-476e-a087-accdeaba6355).
-- The pets' style sheet run needs the F7 pilot first.
+- Chapter 7, Two More Pets: https://claude.ai/code/artifact/a112d638-0555-4f24-9a6a-6a3fc5476adf.
+  Claude kept Colophon's eyes (a taste call, Paul's to veto).
+- CI minutes for F28 (the app traps on damaged data) batched with F11.
+- `pieces/color-names/drops.json`, the gallery's drop schedule; Okudzhava's Late Sunlight question.
+- The pets' style sheet run (the Lamp, then Paul), now that Pip and Colophon show the hand.
+- The making-of's look, after the Lamp watches it: 338 s long, a small worker, and a straight
+  ink line across the drawing in the line-art stage.
