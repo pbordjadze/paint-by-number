@@ -43,8 +43,8 @@ driving manual and the state of play.
 | F2 (2f65485) | Merged. Claude checked: 37 taste tests pass, both recorded runs replay byte for byte; `nina` is now `robber-girl` with an alias |
 | F4 (d704433) | Merged. Claude checked: 271 tests; the v1 SHA-256 pin matches the base table; parrots pin unchanged; `pbn vocab check` works. The pin test shells out to `sha256sum`/`shasum` (Linux and macOS only) |
 | F1 (3206005) | Merged. Claude checked: byte-identical renders, all checks; review 118 s on a loaded container (42 s alone) |
-| F13, F6, F8 | Running (Codex, gpt-6.1-sol, high) |
-| F5 | Ready (next) |
+| F6 (65e2f7b) | Merged. Claude checked keyframe timings, reduced motion and tests; not yet seen in a browser with a real pet |
+| F13, F8, F5 | Running (Codex, gpt-6.1-sol, high); F5 rerun after the backlog said 45 pictures (there are 44) |
 | F12 | Ready after F13 (both build gallery pages) |
 | F7 | Claude runs it outside the sandbox: Codex sessions have no network, and the pilot needs `codex exec` itself |
 | F3, F9, F10 | Need a spec from Claude |
