@@ -41,8 +41,11 @@ driving manual and the state of play.
 | --- | --- |
 | v0 engine (8c5683e) | Merged. Claude checked: builds, 17 tests, checks pass, byte-identical renders. Its review is F1 in the backlog; the Charter credit doesn't break AboutTests (drift only, fixed in F1) |
 | F2 (2f65485) | Merged. Claude checked: 37 taste tests pass, both recorded runs replay byte for byte; `nina` is now `robber-girl` with an alias |
-| F1, F4, F13 | Running (Codex, gpt-6.1-sol, high) |
-| F5, F6, F7, F8, F12 | Ready |
+| F4 (d704433) | Merged. Claude checked: 271 tests; the v1 SHA-256 pin matches the base table; parrots pin unchanged; `pbn vocab check` works. The pin test shells out to `sha256sum`/`shasum` (Linux and macOS only) |
+| F1, F13, F6 | Running (Codex, gpt-6.1-sol, high) |
+| F5, F8 | Ready (next) |
+| F12 | Ready after F13 (both build gallery pages) |
+| F7 | Claude runs it outside the sandbox: Codex sessions have no network, and the pilot needs `codex exec` itself |
 | F3, F9, F10 | Need a spec from Claude |
 | F11 | Waits on CI minutes |
 
