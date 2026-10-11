@@ -1,0 +1,1486 @@
+[
+  {
+    "slot": 1,
+    "owner": "medea",
+    "idea": "the Fleece's gold",
+    "index": 129,
+    "hex": "C5A24A",
+    "incumbent": "Gilded Frame",
+    "describe": "light, moderate yellow-orange (roughly)",
+    "neighbors": [
+      "Polished Brass",
+      "Goldenrod",
+      "Quince",
+      "Hay Bale",
+      "Butterscotch"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Gilded Frame",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Lamplight",
+        "source": "medea",
+        "why": "The warm light a patient hand leaves burning while something old is made new."
+      },
+      {
+        "name": "Sunlit Stone",
+        "source": "medea",
+        "why": "Old stone in late sun, warm and unhurried, the color of a thing that has been kept well."
+      },
+      {
+        "name": "Vani Hoard",
+        "source": "medea",
+        "why": "The granulated gold found at Vani, kept safe in the earth, and the first thing I picture when I think of home."
+      },
+      {
+        "name": "Beeswax",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 2,
+    "owner": "medea",
+    "idea": "the olive branch turning green",
+    "index": 312,
+    "hex": "8A9B4F",
+    "incumbent": "Lemon Balm",
+    "describe": "medium, moderate yellow-green (roughly)",
+    "neighbors": [
+      "Mossy Bank",
+      "Pickle Brine",
+      "Tea Garden",
+      "Parsley",
+      "Fresh Basil"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Lemon Balm",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Willow Leaf",
+        "source": "medea",
+        "why": "A young willow leaf in spring, going from dull to bright under a patient hand."
+      },
+      {
+        "name": "Meadow Grass",
+        "source": "medea",
+        "why": "Meadow grass after rain, where the herbs I gather grow before the moon finds them."
+      },
+      {
+        "name": "Moonwort",
+        "source": "medea",
+        "why": "The herb I gather by moonlight, and the freshness a dry branch takes on as I stir it."
+      },
+      {
+        "name": "Hop Garden",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 3,
+    "owner": "baba-yaga",
+    "idea": "the mortar's old wood",
+    "index": 105,
+    "hex": "4C3A2B",
+    "incumbent": "Mud Pie",
+    "describe": "dark, grayish orange (roughly)",
+    "neighbors": [
+      "Charred Log",
+      "Bog Oak",
+      "Cocoa Nib",
+      "Walnut Table",
+      "Fudge Sauce"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Mud Pie",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Peat Smoke",
+        "source": "baba-yaga",
+        "why": "The dark bog I keep my fires in, with the smoke still hanging over it like a warning to the brave."
+      },
+      {
+        "name": "Forest Floor",
+        "source": "baba-yaga",
+        "why": "Where the broom never reaches, the rot and the fallen leaves keep their own dark counsel."
+      },
+      {
+        "name": "Izba Wood",
+        "source": "baba-yaga",
+        "why": "My hut's logs, gone black at the joints from a hundred winters of stove smoke and mischief."
+      },
+      {
+        "name": "Rich Loam",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 4,
+    "owner": "baba-yaga",
+    "idea": "birch bark",
+    "index": 41,
+    "hex": "A59D92",
+    "incumbent": "Dusty Road",
+    "describe": "medium, nearly neutral",
+    "neighbors": [
+      "Concrete Slab",
+      "Harbor Fog",
+      "Cappuccino",
+      "Tin Roof",
+      "Tidal Flat"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Dusty Road",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Overcast",
+        "source": "baba-yaga",
+        "why": "The lid of cloud I fly beneath, low and grey, and not a single wand in sight."
+      },
+      {
+        "name": "Swept Path",
+        "source": "baba-yaga",
+        "why": "The broom takes my tracks off the road behind me, and the dust it leaves is the color of what it hides."
+      },
+      {
+        "name": "Dry Riverbed",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 5,
+    "owner": "hedge-witch",
+    "idea": "tarragon",
+    "index": 311,
+    "hex": "6B7B3A",
+    "incumbent": "Cattail",
+    "describe": "medium, muted yellow-green (roughly)",
+    "neighbors": [
+      "Fennel Seed",
+      "Saguaro",
+      "Dried Oregano",
+      "Split Pea",
+      "Rosemary Sprig"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Cattail",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Thyme Bundle",
+        "source": "hedge-witch",
+        "why": "Thyme tied in a bunch and hung to dry under the kitchen beams is this green, gone a little dim with keeping."
+      },
+      {
+        "name": "Hedgerow",
+        "source": "hedge-witch",
+        "why": "A late-summer hedge, dark and faintly yellow where the light gets through the leaves."
+      },
+      {
+        "name": "Nettle Cloth",
+        "source": "hedge-witch",
+        "why": "Cloth spun by hand from nettle stems, a green that once stung and now keeps you warm."
+      },
+      {
+        "name": "Sedge Meadow",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 6,
+    "owner": "hedge-witch",
+    "idea": "dried herbs",
+    "index": 318,
+    "hex": "B6C9A0",
+    "incumbent": "Cabbage Leaf",
+    "describe": "light, grayish yellow-green (roughly)",
+    "neighbors": [
+      "Spring Mint",
+      "Dusty Sage",
+      "Oyster Mushroom",
+      "Celadon Vase",
+      "Oxidized Dome"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Cabbage Leaf",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Morning Dew",
+        "source": "hedge-witch",
+        "why": "The pale green a garden wears before the sun has had time to dry it."
+      },
+      {
+        "name": "Willow Mist",
+        "source": "hedge-witch",
+        "why": "Willow leaves seen through early mist, quiet and a little silvered."
+      },
+      {
+        "name": "Moonwort",
+        "source": "hedge-witch",
+        "why": "An old herbal's silver-green fern, the one that grows only where the moon has been."
+      },
+      {
+        "name": "Celery Stalk",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 7,
+    "owner": "moon",
+    "idea": "the night",
+    "index": 388,
+    "hex": "0B2147",
+    "incumbent": "Night Tide",
+    "describe": "very dark, muted blue (roughly)",
+    "neighbors": [
+      "Twilight Edge",
+      "Deep Ocean",
+      "Midnight Harbor",
+      "Dusk Indigo",
+      "Deep Plum"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Night Tide",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Velvet Night",
+        "source": "moon",
+        "why": "Night wrapped in cloth, dark enough to hold one warm lamp."
+      },
+      {
+        "name": "Moonless Hour",
+        "source": "moon",
+        "why": "The hour after the last lamp goes out, when the blue is deepest."
+      },
+      {
+        "name": "Under Narikala",
+        "source": "moon",
+        "why": "The fortress wall at night, where the lamps begin behind the carved balconies."
+      },
+      {
+        "name": "Moonless Night",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 8,
+    "owner": "moon",
+    "idea": "moonlight",
+    "index": 53,
+    "hex": "E6E0D4",
+    "incumbent": "Birch Bark",
+    "describe": "very light, nearly neutral",
+    "neighbors": [
+      "Duck Egg",
+      "Candle Wax",
+      "Hailstone",
+      "Seafoam Spray",
+      "Rose Water"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Birch Bark",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Sugar Cube",
+        "source": "moon",
+        "why": "A pale, warm white that looks as though it was set down under a lamp."
+      },
+      {
+        "name": "Lantern Paper",
+        "source": "moon",
+        "why": "The soft glow of a paper lantern before it is lit, nearly neutral and warm."
+      },
+      {
+        "name": "Old Plaster",
+        "source": "moon",
+        "why": "Tbilisi walls gone pale with age, catching the light behind the balconies."
+      },
+      {
+        "name": "Rice Paper",
+        "source": "writer",
+        "why": ""
+      },
+      {
+        "name": "Grave Dirt",
+        "source": "plant: scary",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 9,
+    "owner": "snow-queen",
+    "idea": "frost",
+    "index": 373,
+    "hex": "D6EAF5",
+    "incumbent": "Morning Frost",
+    "describe": "very light, grayish cyan-blue (roughly)",
+    "neighbors": [
+      "Glacier Melt",
+      "Duck Egg",
+      "Seafoam Spray",
+      "Mint Frost",
+      "Dawn Mist"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Morning Frost",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Hoarfrost",
+        "source": "snow-queen",
+        "why": "Fine frost laid over still air, the palest thing in the room and never cloying."
+      },
+      {
+        "name": "First Snowfall",
+        "source": "snow-queen",
+        "why": "The first snow settles on the glass and hushes everything beneath it."
+      },
+      {
+        "name": "Gergeti Snow",
+        "source": "snow-queen",
+        "why": "Morning light off the glacier above Gergeti, exact and cool and quietly dazzling."
+      },
+      {
+        "name": "Pond Ice",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 10,
+    "owner": "snow-queen",
+    "idea": "glacier ice",
+    "index": 400,
+    "hex": "A9B9D4",
+    "incumbent": "Powder Sky",
+    "describe": "light, grayish blue (roughly)",
+    "neighbors": [
+      "Distant Ridge",
+      "Foggy Lilac",
+      "Lavender Milk",
+      "Silver Spoon",
+      "Summer Sky"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Powder Sky",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Frozen Lake",
+        "source": "snow-queen",
+        "why": "A lake gone still under ice at dusk, clear and cold with nothing warm left in it."
+      },
+      {
+        "name": "Winter Dusk",
+        "source": "snow-queen",
+        "why": "The hour when the snow dims to a soft hush and the last light leaves the ridge."
+      },
+      {
+        "name": "Ice Palace",
+        "source": "snow-queen",
+        "why": "My own hall seen from outside at dusk, glittering and cold and perfectly still."
+      },
+      {
+        "name": "Chambray",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 11,
+    "owner": "nina",
+    "idea": "a wild red",
+    "index": 169,
+    "hex": "B5251E",
+    "incumbent": "Chili Pepper",
+    "describe": "medium, vivid red (roughly)",
+    "neighbors": [
+      "Red Currant",
+      "Orchard Apple",
+      "Strawberry Jam",
+      "Raspberry Jam",
+      "Ladybug"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Chili Pepper",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Sealing Wax",
+        "source": "nina",
+        "why": "A seal pressed hard and bold enough to mean it."
+      },
+      {
+        "name": "Lingonberry",
+        "source": "nina",
+        "why": "Tart and wild, a berry that dares you to taste it."
+      },
+      {
+        "name": "Tusheti Fire",
+        "source": "nina",
+        "why": "The fire kept burning through the highland winter, wild and warm."
+      }
+    ]
+  },
+  {
+    "slot": 12,
+    "owner": "nina",
+    "idea": "fire",
+    "index": 241,
+    "hex": "E07B39",
+    "incumbent": "Mango Chutney",
+    "describe": "medium, moderate orange (roughly)",
+    "neighbors": [
+      "Nasturtium",
+      "Starfish",
+      "Tangerine Zest",
+      "Autumn Pumpkin",
+      "Sweet Potato"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Mango Chutney",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Kiln Glow",
+        "source": "nina",
+        "why": "A little dangerous and warm all the way through, like the glow of a kiln at night."
+      },
+      {
+        "name": "Qvevri",
+        "source": "nina",
+        "why": "The clay jars Georgia has buried its wine in for thousands of years, fierce and kind."
+      },
+      {
+        "name": "Harvest Moon",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 13,
+    "owner": "storybook",
+    "idea": "ink",
+    "index": 411,
+    "hex": "25364F",
+    "incumbent": "Shipyard",
+    "describe": "dark, grayish blue (roughly)",
+    "neighbors": [
+      "Stormy Night",
+      "Storm Slate",
+      "Blued Steel",
+      "Abyss",
+      "Dusk Indigo"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Shipyard",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Book Cloth",
+        "source": "storybook",
+        "why": "The dark cover of a book I have closed and mean to open again."
+      },
+      {
+        "name": "North Sea",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 14,
+    "owner": "storybook",
+    "idea": "a page",
+    "index": 144,
+    "hex": "EAD9B5",
+    "incumbent": "Old Lace",
+    "describe": "very light, grayish yellow-orange (roughly)",
+    "neighbors": [
+      "Parchment Scroll",
+      "Melon Cream",
+      "Melon Sorbet",
+      "Shortbread",
+      "Seashell"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Old Lace",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Morning Light",
+        "source": "storybook",
+        "why": "Early sun across a page, the first light any good story needs."
+      },
+      {
+        "name": "Uncut Page",
+        "source": "storybook",
+        "why": "The untrimmed leaf of a new book, the one I most want to turn."
+      }
+    ]
+  },
+  {
+    "slot": 15,
+    "owner": "enchanted-workshop",
+    "idea": "copper",
+    "index": 123,
+    "hex": "C0703F",
+    "incumbent": "Copper Pipe",
+    "describe": "medium, moderate orange (roughly)",
+    "neighbors": [
+      "Terracotta Pot",
+      "Fox Fur",
+      "Copper Kettle",
+      "Desert Clay",
+      "Maple Syrup"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Copper Pipe",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Baked Crust",
+        "source": "enchanted-workshop",
+        "why": "The crust a loaf wears when the peel draws it from the oven, the colour the bread picks for itself."
+      },
+      {
+        "name": "Hearth Tile",
+        "source": "enchanted-workshop",
+        "why": "A tile the fire has warmed, giving its glow back long after the flame has gone."
+      },
+      {
+        "name": "Qvevri Jar",
+        "source": "enchanted-workshop",
+        "why": "The potter's qvevri, fired clay that a Georgian cellar keeps its wine in."
+      }
+    ]
+  },
+  {
+    "slot": 16,
+    "owner": "enchanted-workshop",
+    "idea": "the workbench",
+    "index": 134,
+    "hex": "6E5A47",
+    "incumbent": "Old Saddlebag",
+    "describe": "dark, grayish orange (roughly)",
+    "neighbors": [
+      "Pine Cone",
+      "Cocoa Powder",
+      "Pecan Shell",
+      "Cinder Path",
+      "Smokehouse"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Old Saddlebag",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Oak Bark",
+        "source": "enchanted-workshop",
+        "why": "Weathered oak bark, the rough skin of wood that has been working for years."
+      },
+      {
+        "name": "Garden Soil",
+        "source": "enchanted-workshop",
+        "why": "The dark soil a spade turns over, rich with the work of the season before."
+      },
+      {
+        "name": "Carved Balcony",
+        "source": "enchanted-workshop",
+        "why": "A Tbilisi balcony carved by hand and darkened by decades of weather."
+      },
+      {
+        "name": "Barn Timber",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 17,
+    "owner": "scholar",
+    "idea": "sepia",
+    "index": 103,
+    "hex": "5A4636",
+    "incumbent": "Tree Bark",
+    "describe": "dark, grayish orange (roughly)",
+    "neighbors": [
+      "Smoked Oak",
+      "Walnut Table",
+      "Truffle Dust",
+      "Dark Walnut",
+      "Milk Chocolate"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Tree Bark",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Root Cellar",
+        "source": "scholar",
+        "why": "The cool, earth-dark brown of a cellar's old timber, rarely touched by light."
+      },
+      {
+        "name": "Pinecone",
+        "source": "scholar",
+        "why": "A pinecone left out through a dry autumn, its brown gone dull and warm."
+      },
+      {
+        "name": "Gelati Beams",
+        "source": "scholar",
+        "why": "Old roof beams from Gelati, the Georgian thread I keep returning to in my own work."
+      },
+      {
+        "name": "Coffee Grounds",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 18,
+    "owner": "scholar",
+    "idea": "slate",
+    "index": 22,
+    "hex": "3B3F44",
+    "incumbent": "Iron Gate",
+    "describe": "dark, nearly neutral",
+    "neighbors": [
+      "Charcoal Smudge",
+      "Bog Oak",
+      "Charred Log",
+      "Storm Slate",
+      "Cocoa Nib"
+    ],
+    "half": "A",
+    "candidates": [
+      {
+        "name": "Iron Gate",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Lamp Soot",
+        "source": "scholar",
+        "why": "The carbon old scribes scraped from their lamps to make their ink."
+      }
+    ]
+  },
+  {
+    "slot": 19,
+    "owner": "painter",
+    "idea": "a gallery wall",
+    "index": 546,
+    "hex": "8E8A82",
+    "incumbent": "Quarry Stone",
+    "describe": "medium, nearly neutral",
+    "neighbors": [
+      "River Pebble",
+      "Field Mouse",
+      "Driftwood",
+      "Nickel Plate",
+      "Tidal Flat"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Quarry Stone",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Cobblestone",
+        "source": "painter",
+        "why": "Worn street stones, a steady gray that steps back and lets the picture speak."
+      },
+      {
+        "name": "Rainy Courtyard",
+        "source": "painter",
+        "why": "Wet paving after a shower, a calm middle tone that sits quietly under the painting."
+      },
+      {
+        "name": "Tbilisi Stone",
+        "source": "painter",
+        "why": "The old stone of a Tbilisi courtyard wall, my own quiet street from the Georgian thread."
+      },
+      {
+        "name": "Pretty Shade",
+        "source": "plant: vapid",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 20,
+    "owner": "painter",
+    "idea": "primed canvas",
+    "index": 46,
+    "hex": "EDEBE6",
+    "incumbent": "Salt Flat",
+    "describe": "very light, nearly neutral",
+    "neighbors": [
+      "Fresh Linen",
+      "Sea Salt",
+      "Magnolia",
+      "Marshmallow",
+      "Blank Canvas"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Salt Flat",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Sunlit Plaster",
+        "source": "painter",
+        "why": "Pale plaster in morning sun, a clean wall that never competes with the picture."
+      },
+      {
+        "name": "Feather",
+        "source": "painter",
+        "why": "Barely there and soft, the lightest page in the book, restraint you can hold."
+      },
+      {
+        "name": "Tbilisi Morning",
+        "source": "painter",
+        "why": "First light on a Tbilisi courtyard wall, the quiet I hope every painter finds."
+      },
+      {
+        "name": "Chalk Dust",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 21,
+    "owner": "child-at-bedtime",
+    "idea": "a soft pink",
+    "index": 190,
+    "hex": "F4C7D3",
+    "incumbent": "Cherry Blossom",
+    "describe": "very light, grayish pinkish red (roughly)",
+    "neighbors": [
+      "Rose Quartz",
+      "Peony Froth",
+      "Cotton Candy",
+      "Powder Puff",
+      "Pink Salt"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Cherry Blossom",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Blossom Dust",
+        "source": "child-at-bedtime",
+        "why": "The faint powder that drifts off the trees when the wind comes through my window in spring."
+      },
+      {
+        "name": "Dawn Petal",
+        "source": "child-at-bedtime",
+        "why": "The first soft light on a petal, the way the sky in a picture book wakes up slowly."
+      },
+      {
+        "name": "Pillowcase",
+        "source": "child-at-bedtime",
+        "why": "The pillowcase my head sinks into every night, soft and faintly rosy from the wash."
+      },
+      {
+        "name": "Apple Blossom",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 22,
+    "owner": "child-at-bedtime",
+    "idea": "candle glow",
+    "index": 251,
+    "hex": "F9E7A0",
+    "incumbent": "Banana Pudding",
+    "describe": "very light, muted yellow-orange (roughly)",
+    "neighbors": [
+      "Lemon Chiffon",
+      "Butter Cream",
+      "Sunbaked Straw",
+      "Buttercup",
+      "Chick Fluff"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Banana Pudding",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Lamplight",
+        "source": "child-at-bedtime",
+        "why": "The warm square of light on the ceiling while someone reads me one more page."
+      },
+      {
+        "name": "Beeswax",
+        "source": "child-at-bedtime",
+        "why": "The pale wax of the little candle we light for the last story of the night."
+      },
+      {
+        "name": "Nightlight",
+        "source": "child-at-bedtime",
+        "why": "The small glow that stays on in the hall so the dark feels friendly and far away."
+      },
+      {
+        "name": "Egg Custard",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 23,
+    "owner": "glassblower",
+    "idea": "glass",
+    "index": 359,
+    "hex": "12A3A5",
+    "incumbent": "Reef Water",
+    "describe": "medium, moderate teal (roughly)",
+    "neighbors": [
+      "Plunge Pool",
+      "Kingfisher",
+      "Tidal Pool",
+      "Caribbean Cove",
+      "Agave"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Reef Water",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Glacier Lake",
+        "source": "glassblower",
+        "why": "Meltwater over pale rock makes lakes this steady mid-teal, and the name stays out of the way."
+      },
+      {
+        "name": "Tidewater",
+        "source": "glassblower",
+        "why": "The water where the tide turns, clear and steady in this same mid-teal."
+      },
+      {
+        "name": "Meltwater",
+        "source": "glassblower",
+        "why": "The melt in my furnace and the cold snowmelt running down through Tbilisi, one teal to me."
+      },
+      {
+        "name": "Island Shallows",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 24,
+    "owner": "glassblower",
+    "idea": "clear water",
+    "index": 363,
+    "hex": "9DE3DC",
+    "incumbent": "Lagoon Shallows",
+    "describe": "very light, muted teal (roughly)",
+    "neighbors": [
+      "Jade Veil",
+      "Spindrift",
+      "Celadon Vase",
+      "Mint Syrup",
+      "Hydrangea Petal"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Lagoon Shallows",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Morning Mist",
+        "source": "glassblower",
+        "why": "The first hour over the water, before the color has fully arrived."
+      },
+      {
+        "name": "Breaker Foam",
+        "source": "glassblower",
+        "why": "The lace at a wave's edge, a shade lighter than the water beneath it."
+      },
+      {
+        "name": "Cold Glass",
+        "source": "glassblower",
+        "why": "The faint tint of thin glass held to the light before a piece leaves the bench."
+      }
+    ]
+  },
+  {
+    "slot": 25,
+    "owner": "pirosmani",
+    "idea": "black oilcloth",
+    "index": 6,
+    "hex": "191512",
+    "incumbent": "Tar Pit",
+    "describe": "very dark, nearly neutral",
+    "neighbors": [
+      "Dark Roast",
+      "Coal Cellar",
+      "Licorice Twist",
+      "Fern Shadow",
+      "Pitch Pine"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Tar Pit",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Chimney Soot",
+        "source": "pirosmani",
+        "why": "The black above the hearth, where the bread stays warm all night."
+      },
+      {
+        "name": "Cold Hearth",
+        "source": "pirosmani",
+        "why": "What the fire leaves at dawn, still warm to the hand."
+      },
+      {
+        "name": "Oilcloth Night",
+        "source": "pirosmani",
+        "why": "The black oilcloth my pictures sit on, under every feast I painted."
+      }
+    ]
+  },
+  {
+    "slot": 26,
+    "owner": "pirosmani",
+    "idea": "ochre",
+    "index": 88,
+    "hex": "C68A4B",
+    "incumbent": "Salted Caramel",
+    "describe": "medium, moderate orange (roughly)",
+    "neighbors": [
+      "Barley Straw",
+      "Sandstone",
+      "Burnt Honey",
+      "Baked Clay",
+      "Toffee Crunch"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Salted Caramel",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Bread Crust",
+        "source": "pirosmani",
+        "why": "The golden top of the bread my mother pulls from the tonir."
+      },
+      {
+        "name": "Sunbaked Loaf",
+        "source": "pirosmani",
+        "why": "A flatbread left on the feast table at noon, baked by the sun and by love."
+      },
+      {
+        "name": "Tonir Wall",
+        "source": "pirosmani",
+        "why": "The clay oven's side in our courtyard, colored by a hundred baking days."
+      }
+    ]
+  },
+  {
+    "slot": 27,
+    "owner": "emily-dickinson",
+    "idea": "a white dress",
+    "index": 49,
+    "hex": "FBF5E6",
+    "incumbent": "Whipped Cream",
+    "describe": "very light, nearly neutral",
+    "neighbors": [
+      "Meringue Peak",
+      "Blank Canvas",
+      "Marshmallow",
+      "Sea Salt",
+      "Snowdrift"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Whipped Cream",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Milk Glass",
+        "source": "emily-dickinson",
+        "why": "Opaque as a pitcher on the pantry shelf, warm at the edges the way old paper is."
+      },
+      {
+        "name": "Herbarium Paper",
+        "source": "emily-dickinson",
+        "why": "The sheet I pressed my summer on, kept folded in the drawer where the flowers still are."
+      },
+      {
+        "name": "Cotton Boll",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 28,
+    "owner": "emily-dickinson",
+    "idea": "a pressed violet",
+    "index": 460,
+    "hex": "836A96",
+    "incumbent": "Heather Moor",
+    "describe": "medium, muted purple (roughly)",
+    "neighbors": [
+      "Lupine",
+      "Crocus",
+      "Stonewashed",
+      "Foxglove",
+      "Grape Soda"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Heather Moor",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Gloaming",
+        "source": "emily-dickinson",
+        "why": "The hour the garden goes to a quieter room, and I stop at the door to watch it."
+      },
+      {
+        "name": "Moorland Dusk",
+        "source": "emily-dickinson",
+        "why": "Heath gone soft at evening, the shade of a thing remembered rather than seen."
+      },
+      {
+        "name": "Winter Afternoon",
+        "source": "emily-dickinson",
+        "why": "The slant of light I write by in December, when every shadow goes faintly to dusk."
+      }
+    ]
+  },
+  {
+    "slot": 29,
+    "owner": "open-source-enthusiast",
+    "idea": "pomegranate",
+    "index": 160,
+    "hex": "A31F34",
+    "incumbent": "Cranberry Juice",
+    "describe": "dark, vivid red (roughly)",
+    "neighbors": [
+      "Strawberry Jam",
+      "Ruby Glass",
+      "Fire Brick",
+      "Raspberry Jam",
+      "Red Currant"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Cranberry Juice",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Sealing Wax",
+        "source": "open-source-enthusiast",
+        "why": "Pressed into warm wax, this deep, glossy red is the mark that says whose work this is."
+      },
+      {
+        "name": "Velvet Drape",
+        "source": "open-source-enthusiast",
+        "why": "I think of the heavy curtain on a shared stage: deep, generous, and open for everyone to see."
+      },
+      {
+        "name": "Banked Embers",
+        "source": "open-source-enthusiast",
+        "why": "Banking the fire overnight so the next person can light their own from it is how I think of sharing."
+      },
+      {
+        "name": "Pomegranate",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 30,
+    "owner": "open-source-enthusiast",
+    "idea": "a clay jug",
+    "index": 176,
+    "hex": "E8957C",
+    "incumbent": "Smoked Salmon",
+    "describe": "light, moderate red (roughly)",
+    "neighbors": [
+      "Coral Sand",
+      "Flamingo Feather",
+      "Afterglow",
+      "Dusty Coral",
+      "Last Light"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Smoked Salmon",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Paper Lantern",
+        "source": "open-source-enthusiast",
+        "why": "Lit from within, it gives this same soft coral glow to a room anyone can walk into."
+      },
+      {
+        "name": "Sunlit Plaster",
+        "source": "open-source-enthusiast",
+        "why": "A warm wall in late sun turns this soft coral, like the old walls where many hands have left their marks."
+      },
+      {
+        "name": "Torchlight",
+        "source": "open-source-enthusiast",
+        "why": "Passed hand to hand so every traveler sees the road, the way open work lights the path for those who follow."
+      },
+      {
+        "name": "Ripe Guava",
+        "source": "writer",
+        "why": ""
+      },
+      {
+        "name": "Ocean Mist",
+        "source": "plant: wrong swatch",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 31,
+    "owner": "nutcracker",
+    "idea": "a toy soldier's coat",
+    "index": 394,
+    "hex": "2A3B6B",
+    "incumbent": "Tarpaulin",
+    "describe": "dark, muted blue (roughly)",
+    "neighbors": [
+      "Sailor Stripe",
+      "Storm Slate",
+      "Navy Peacoat",
+      "Shipyard",
+      "Indigo Dye"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Tarpaulin",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Night Ferry",
+        "source": "nutcracker",
+        "why": "A small boat crossing dark water with a lantern lit, steered by someone who means well."
+      },
+      {
+        "name": "Small Hours",
+        "source": "nutcracker",
+        "why": "The hours after midnight, when I wake and walk the corridor to make sure the child is safe."
+      }
+    ]
+  },
+  {
+    "slot": 32,
+    "owner": "nutcracker",
+    "idea": "nutwood",
+    "index": 94,
+    "hex": "7B4A2F",
+    "incumbent": "Roasted Chestnut",
+    "describe": "dark, muted orange (roughly)",
+    "neighbors": [
+      "Smokehouse",
+      "Cocoa Powder",
+      "Boot Leather",
+      "Redwood Bark",
+      "Milk Chocolate"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Roasted Chestnut",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Old Varnish",
+        "source": "nutcracker",
+        "why": "The glow of a wooden toy loved for years and rubbed to a shine by small hands."
+      },
+      {
+        "name": "Puppet Wood",
+        "source": "nutcracker",
+        "why": "The carved wood of the puppets who play out their lives beneath the old clock tower in Tbilisi."
+      },
+      {
+        "name": "Old Violin",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 33,
+    "owner": "balanchine",
+    "idea": "a tutu",
+    "index": 219,
+    "hex": "E7C1C6",
+    "incumbent": "Powder Puff",
+    "describe": "light, grayish pinkish red (roughly)",
+    "neighbors": [
+      "Pink Salt",
+      "Rose Quartz",
+      "Ballet Slipper",
+      "Cherry Blossom",
+      "Taffy Pull"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Powder Puff",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "First Light",
+        "source": "balanchine",
+        "why": "Dawn light on an empty stage, moving before the music has even started."
+      },
+      {
+        "name": "Pointe Shoe",
+        "source": "balanchine",
+        "why": "Every studio I worked in had these pink satin shoes, lifting a dancer's whole weight into one clean line."
+      }
+    ]
+  },
+  {
+    "slot": 34,
+    "owner": "balanchine",
+    "idea": "stage-light blue",
+    "index": 417,
+    "hex": "3F6FB8",
+    "incumbent": "Delft Tile",
+    "describe": "medium, moderate blue (roughly)",
+    "neighbors": [
+      "Denim Jacket",
+      "Blue Jay",
+      "Stonewashed",
+      "Cobalt Dive",
+      "Bluebird"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Delft Tile",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Evening Sea",
+        "source": "balanchine",
+        "why": "The sea at dusk moves in unhurried phrases, paced like an adagio."
+      },
+      {
+        "name": "Kura River",
+        "source": "balanchine",
+        "why": "The Kura runs fast through Tbilisi, and speed and pride are the Georgian in me."
+      },
+      {
+        "name": "Summer Lake",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 35,
+    "owner": "bulat-okudzhava",
+    "idea": "a midnight trolleybus",
+    "index": 383,
+    "hex": "1A5FA8",
+    "incumbent": "Harbor Blue",
+    "describe": "dark, moderate blue (roughly)",
+    "neighbors": [
+      "Cobalt Dive",
+      "Faded Denim",
+      "Fjord",
+      "Blue Hour",
+      "Delft Tile"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Harbor Blue",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Still Water",
+        "source": "bulat-okudzhava",
+        "why": "A lake at evening, so quiet you can hear the guitar from the far shore."
+      },
+      {
+        "name": "Evening Sea",
+        "source": "bulat-okudzhava",
+        "why": "The sea goes this color when the day is tired and nobody has much left to say."
+      },
+      {
+        "name": "Arbat Dusk",
+        "source": "bulat-okudzhava",
+        "why": "The Arbat at nightfall, lamps not yet lit, somebody singing behind an open window."
+      },
+      {
+        "name": "Deep Current",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  },
+  {
+    "slot": 36,
+    "owner": "bulat-okudzhava",
+    "idea": "a lit window",
+    "index": 527,
+    "hex": "EDB85A",
+    "incumbent": "Golden Hour",
+    "describe": "light, moderate yellow-orange (roughly)",
+    "neighbors": [
+      "Lantern Glow",
+      "Mango Lassi",
+      "Saffron Thread",
+      "Apricot Nectar",
+      "Candle Flame"
+    ],
+    "half": "B",
+    "candidates": [
+      {
+        "name": "Golden Hour",
+        "source": "incumbent",
+        "why": ""
+      },
+      {
+        "name": "Barley Field",
+        "source": "bulat-okudzhava",
+        "why": "The field at the end of a long day, the harvest in and the people walking home slowly."
+      },
+      {
+        "name": "Late Light",
+        "source": "bulat-okudzhava",
+        "why": "The sun low over the roofs, a light that asks nothing of anyone."
+      },
+      {
+        "name": "Courtyard Lamp",
+        "source": "bulat-okudzhava",
+        "why": "The one lamp still burning in the courtyard, where the neighbors leave their windows open."
+      },
+      {
+        "name": "Late Sunlight",
+        "source": "writer",
+        "why": ""
+      }
+    ]
+  }
+]

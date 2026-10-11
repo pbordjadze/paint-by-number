@@ -1,0 +1,25 @@
+{
+  "round": 2,
+  "jury": [
+    "originality",
+    "child-at-bedtime",
+    "pirosmani",
+    "balanchine",
+    "medea",
+    "bulat-okudzhava"
+  ],
+  "proposers": [
+    "painter",
+    "emily-dickinson",
+    "moon",
+    "glassblower"
+  ],
+  "weights": {
+    "originality": 1.5,
+    "medea": 1.5,
+    "child-at-bedtime": 1.5,
+    "pirosmani": 1.5,
+    "balanchine": 1.5,
+    "bulat-okudzhava": 1.5
+  }
+}

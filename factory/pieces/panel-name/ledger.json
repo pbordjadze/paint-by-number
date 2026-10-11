@@ -1,0 +1,58 @@
+{
+  "rounds": [
+    {
+      "round": 1,
+      "winner": "The Marginalia",
+      "represented": [
+        "baba-yaga",
+        "nina",
+        "snow-queen",
+        "scholar"
+      ],
+      "lines": {
+        "baba-yaga": "ink borders crowded with wild creatures at the page's edge; clever and a little dangerous",
+        "enchanted-workshop": "absent",
+        "nina": "Mischief in the margins: wild creatures where the rules don't reach.",
+        "nutcracker": "absent",
+        "snow-queen": "A quiet, exact hand at the page's edge; hush without frost."
+      }
+    },
+    {
+      "round": 2,
+      "winner": "A Lamp Left Burning",
+      "represented": [
+        "child-at-bedtime",
+        "pirosmani",
+        "medea",
+        "bulat-okudzhava",
+        "moon"
+      ],
+      "lines": {
+        "child-at-bedtime": "a light kept on so no child is afraid of the dark.",
+        "pirosmani": "A lamp left burning for whoever comes: love waiting in the dark, warm and plain.",
+        "balanchine": "absent",
+        "medea": "Warm lamp kept burning through the night for whoever comes: night-worked help, freely given.",
+        "bulat-okudzhava": "a lamp in the window for someone still coming home: one quiet, warm light."
+      }
+    },
+    {
+      "round": 3,
+      "winner": "A Lamp Left Burning",
+      "represented": [
+        "hedge-witch",
+        "storybook",
+        "nutcracker",
+        "open-source-enthusiast",
+        "enchanted-workshop",
+        "moon"
+      ],
+      "lines": {
+        "hedge-witch": "A lamp left burning in the garden: warm, tended, cozy as a kitchen.",
+        "storybook": "A lamp left burning: a tale's suspense, a return promised before the last page.",
+        "nutcracker": "a lamp left burning for someone coming home: a faithful light keeping watch",
+        "open-source-enthusiast": "a lamp left lit for whoever comes after, to build by",
+        "enchanted-workshop": "A lamp left so the tools can finish their night's work unattended."
+      }
+    }
+  ]
+}

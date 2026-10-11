@@ -1,6 +1,6 @@
 # The vibe factory: architecture
 
-How the factory turns a design question into a decision Paul approves, and what gets built in
+How the factory turns a design question into a decision Paul approves. The panel is called A Lamp Left Burning ("the Lamp"); it named itself, the one decision Paul left to it, and what gets built in
 which order. The figure engine's contract is `SPEC.md`, the panel is `GUARDIANS.md`, and how
 we got here is in `NOTES.md`.
 
@@ -13,7 +13,7 @@ we got here is in `NOTES.md`.
 | Craft | Drops candidates that fail a code check | Code (`checks.json`) |
 | Jury | Six jurors judge the survivors blind | Low-effort Opus 5.5 |
 | Decision | Combines the verdicts, updates the ledger and the champion | Code |
-| Checkpoint | Paul picks among the best and says why | Paul, on a review page |
+| Checkpoint | Paul picks among the best and says why, and can veto any decision | Paul, on a review page |
 | Style | Paul's picks and reasons become rules everyone reads | Claude drafts, Paul approves |
 
 Every layer beyond the renderer joins on probation and stays only if it measurably helps: the

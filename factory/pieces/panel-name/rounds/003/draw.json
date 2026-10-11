@@ -1,0 +1,25 @@
+{
+  "round": 3,
+  "jury": [
+    "originality",
+    "hedge-witch",
+    "storybook",
+    "nutcracker",
+    "open-source-enthusiast",
+    "enchanted-workshop"
+  ],
+  "proposers": [
+    "emily-dickinson",
+    "painter",
+    "glassblower",
+    "balanchine"
+  ],
+  "weights": {
+    "originality": 2.0,
+    "hedge-witch": 2.0,
+    "storybook": 2.0,
+    "enchanted-workshop": 2.0,
+    "open-source-enthusiast": 2.0,
+    "nutcracker": 2.0
+  }
+}

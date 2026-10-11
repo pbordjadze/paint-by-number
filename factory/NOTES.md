@@ -193,6 +193,28 @@ helpful, beautiful.
   catalogs, the design system, the icon and the identity rules in CLAUDE.md. Nothing changes
   until the name clears.
 
+## Paul's point 6: the Lamp, and Paul's veto
+
+- The first taste run named the panel "A Lamp Left Burning". Claude preferred The Round Dance and
+  Paul agreed, but he let the panel keep its own name: "the Lamp" for short. Every other decision
+  is subject to his veto.
+- Pets go through the Lamp before Codex builds them (`pieces/pets/brief.md`).
+
+## Paul's point 7: the Lamp's story
+
+- The app's Lamp section (issue #16) shows the members and the story of their work, in
+  chapters. Chapter 1 is "How the Panel Named Itself".
+- Chapter 2, Claude's pick: **Thirty Characters**. The Lamp writes the App Store subtitle that
+  sits under the name Medea: at most 30 characters, Apple's limit. The current one, "Turn any
+  photo into a painting", is exactly 30.
+  - Productive: once the app is called Medea, the subtitle does all the explaining, and it is the
+    first sentence strangers read.
+  - The sequel: in chapter 1 the Lamp chose a poem that doesn't work in a sentence. Here poetry
+    has to do a job in 30 characters.
+  - New in this run: the eight fixes; a function seat, the Stranger (someone scrolling the App
+    Store who has never heard of Medea); a known-good incumbent instead of a known-bad one; the
+    bake-off (the Lamp against one writer, Paul picking blind); Paul's veto.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
