@@ -80,9 +80,13 @@ class ReviewFixTests(unittest.TestCase):
     def test_actual_hairpin_ink_has_no_raster_holes(self):
         with tempfile.TemporaryDirectory(prefix="f1-hairpin-", dir=TEST_OUT) as temporary:
             folder = Path(temporary)
-            subprocess.run(["swift", "test", "--skip-build", "--filter", "inkHairpinFillRule"],
-                           cwd=render.ROOT, env={**os.environ, "FIGURE_TEST_ARTIFACTS": temporary},
-                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)
+            command = verify.swift_test_command(skip_build=True, filter="inkHairpinFillRule")
+            result = subprocess.run(command, cwd=render.ROOT,
+                           env={**os.environ, "FIGURE_TEST_ARTIFACTS": temporary},
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            if result.returncode or not (folder / 'hairpin.svg').is_file():
+                self.fail('missing Swift test build or failed hairpin test; run swift test with the same '
+                          'SWIFT_SCRATCH_PATH first. Command: ' + ' '.join(command) + '\n' + result.stdout)
             tree = render.isolated(ET.parse(folder / "hairpin.svg").getroot(), "figure")
             tree.set("viewBox", "390 190 120 70"); tree.set("width", "120"); tree.set("height", "70")
             render.write_svg(tree, folder / "hairpin.svg")
@@ -105,7 +109,8 @@ class ReviewFixTests(unittest.TestCase):
                 (folder / (name + ".json")).write_text(json.dumps(data))
             args = ["render.py", str(folder / "spec.json"), str(folder / "scene.json"), temporary,
                     "--figures", str(Path(__file__))]
-            with patch("sys.argv", args), patch.object(render, "run"), patch.object(render, "compose"):
+            with patch("sys.argv", args), patch.object(render, "render_engine"), \
+                    patch.object(render, "run"), patch.object(render, "compose"):
                 self.assertEqual(render.main(), 1)
                 (folder / "checks.json").write_text('[{"name":"ikClamps","pass":true}]')
                 self.assertEqual(render.main(), 0)
@@ -127,11 +132,12 @@ class ReviewFixTests(unittest.TestCase):
                 (folder / (name + ".json")).write_text(json.dumps(data))
             args = ["render.py", str(folder / "spec.json"), str(folder / "scene.json"), temporary,
                     "--figures", str(Path(__file__)), "--frames-only"]
-            with patch("sys.argv", args), patch.object(render, "run") as run, patch.object(render, "compose") as compose:
+            with patch("sys.argv", args), patch.object(render, "run") as run, \
+                    patch.object(render, "render_engine") as engine, patch.object(render, "compose") as compose:
                 self.assertEqual(render.main(), 0)
                 compose.assert_called_once()
-                run.assert_called_once()
-                self.assertEqual(run.call_args.args[0][1], "render")
+                engine.assert_called_once()
+                run.assert_not_called()
 
     def test_protected_source_diff_detects_committed_changes(self):
         with tempfile.TemporaryDirectory(prefix="f1-git-", dir=TEST_OUT) as temporary:

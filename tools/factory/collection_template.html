@@ -32,7 +32,7 @@ h1 { font: 400 clamp(2.4rem, 6vw, 3.6rem)/1.05 var(--display); margin: 0; text-w
 .card { background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; display: grid; gap: 12px; min-width: 0; }
 .card-head { display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center; }
 .pet { width: 52px; height: 52px; border-radius: 50%; background: var(--c); color: var(--ground); display: grid; place-items: center; font: 400 1.7rem/1 var(--display); }
-/* Quarter-size 192 × 208 cells; each atlas sets its size, and only the six idle cells animate. */
+/* Quarter-size 192 × 208 cells; each atlas sets its size. Idle uses six row-0 cells. */
 .pet-sprite {
   width: 48px; height: 52px; justify-self: center; border-radius: 0;
   background-color: transparent; background-repeat: no-repeat;
@@ -70,6 +70,21 @@ dd { margin: 0; font-size: 0.95rem; }
 .copy { justify-self: start; font: 500 0.85rem/1 var(--label); letter-spacing: 0.05em; color: var(--ink); background: transparent; border: 1px solid var(--muted); border-radius: 999px; padding: 7px 12px; cursor: pointer; }
 .copy:hover { border-color: var(--ink); }
 .copy:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.makers { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--rule); }
+.makers > h2 { font-size: 2rem; }
+.makers .grid { margin-top: 18px; }
+.maker-card { padding: 0; overflow: hidden; }
+.maker-card > .who { padding: 20px; }
+.maker {
+  display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center;
+  width: 100%; padding: 20px; border: 0; background: transparent;
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.maker:hover { background: var(--well); }
+.maker:focus-visible { outline: 2px solid var(--gold); outline-offset: -3px; }
+.maker-name { font: 400 1.55rem/1.1 var(--display); }
+.maker-description { color: var(--muted); }
+.pet-sprite.is-playing { animation: none; }
 code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.88em; color: var(--ink); }
 footer { margin-top: 40px; color: var(--muted); font-size: 0.9rem; }
 @media (max-width: 520px) { .facts div { grid-template-columns: 1fr; gap: 2px; } }
@@ -91,10 +106,58 @@ footer { margin-top: 40px; color: var(--muted); font-size: 0.9rem; }
   <section class="grid" aria-label="The guardians">{{CARDS}}
   </section>
 
+  <section class="makers" aria-labelledby="makers-title">
+    <h2 id="makers-title">The makers</h2>
+    <div class="grid">{{MAKERS}}</div>
+  </section>
+
   <footer>Built from <code>factory/GUARDIANS.md</code> and <code>factory/panel.json</code> on the <code>claude/vibe-factory</code> branch.</footer>
 </main>
 
 <script>
+// V2 holds: create-pet 0.1.6/references/animation-rows.md.
+// Idle uses row 0's six frames above; actions play once, then restart idle.
+var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+document.querySelectorAll(".maker").forEach(function (button) {
+  var sprite = button.querySelector(".pet-sprite");
+  var row = Number(button.dataset.row);
+  var holds = JSON.parse(button.dataset.holds);
+  var playback = null;
+  var stillTimer = null;
+
+  function idle() {
+    if (playback) { playback.cancel(); playback = null; }
+    clearTimeout(stillTimer);
+    sprite.style.removeProperty("background-position");
+    sprite.classList.remove("is-playing");
+  }
+
+  button.addEventListener("click", function () {
+    idle();
+    sprite.classList.add("is-playing");
+    var width = sprite.offsetWidth;
+    var y = -row * sprite.offsetHeight;
+    function position(frame) { return (-frame * width) + "px " + y + "px"; }
+    if (reducedMotion.matches) {
+      sprite.style.backgroundPosition = position(Math.floor(holds.length / 2));
+      stillTimer = setTimeout(idle, 600);
+      return;
+    }
+    var duration = holds.reduce(function (sum, hold) { return sum + hold; }, 0);
+    var elapsed = 0;
+    var frames = holds.map(function (hold, frame) {
+      var keyframe = { backgroundPosition: position(frame), offset: elapsed / duration,
+                       easing: "steps(1, end)" };
+      elapsed += hold;
+      return keyframe;
+    });
+    frames.push({ backgroundPosition: position(holds.length - 1), offset: 1 });
+    playback = sprite.animate(frames, { duration: duration, iterations: 1, fill: "forwards" });
+    playback.onfinish = idle;
+  });
+  reducedMotion.addEventListener("change", idle);
+});
+
 document.querySelectorAll(".copy").forEach(function (button) {
   button.addEventListener("click", function () {
     var text = document.getElementById(button.dataset.target);

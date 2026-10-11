@@ -64,6 +64,7 @@ struct Rig: Sendable {
     var duration: Double { (actions.last?.timing.end ?? 0) + scene.tail }
 
     init(spec: FigureSpec, scene: FigureScene, actorIndex: Int = 0) throws {
+        try scene.validateLimits()
         self.spec = spec; self.scene = scene; self.actorIndex = actorIndex; unit = spec.normalizationScale * scene.figureHeight
         var paths: [String: ArcPath] = [:]
         for name in scene.paths.keys.sorted() {
@@ -85,6 +86,9 @@ struct Rig: Sendable {
         var lateralOffset = 0.0
         var result: [PlannedAction] = []
         for (i, input) in actor.timeline.enumerated() {
+            let field = "actors[\(actorIndex)].timeline[\(i)]"
+            if let duration = input.duration { try FigureLimits.number(duration, 0...FigureLimits.duration, field + ".duration") }
+            if let heading = input.heading { try FigureLimits.number(heading, -1_000_000...1_000_000, field + ".heading") }
             var action = PlannedAction(timing: ActionTiming(actor: actor.id, kind: input.kind, start: time, end: time), path: nil,
                                        from: fraction, to: fraction, origin: origin,
                                        headingFrom: heading, headingTo: heading, feet: feet, endFeet: feet)
@@ -107,17 +111,24 @@ struct Rig: Sendable {
                         throw FigureInputError("actors[\(actorIndex)].timeline[\(i)].path: new path must start at the actor's current position")
                     }
                     fraction = 0
+                    lateralOffset = 0
                 }
                 action.lateralOffset = lateralOffset
                 action.path = path; action.from = fraction; action.to = input.to!
                 action.distance = abs(action.to - fraction) * path.length
                 let speed = spec.motion.step * k * spec.motion.cadence
                 action.stepLength = spec.motion.step * k
+                let count = try FigureLimits.count(action.distance / action.stepLength, maximum: FigureLimits.gait, field: field + ".gaitCount")
                 action.gaitDistance = ceil(action.distance / action.stepLength) * action.stepLength
                 let base = action.gaitDistance / speed
                 action.ramp = min(spec.motion.ease, base)
                 action.timing.end += base + action.ramp
-                let count = Int(ceil(action.distance / (spec.motion.step * k)))
+                try FigureLimits.number(action.timing.end + scene.tail, 0...FigureLimits.duration, field + ".duration")
+                _ = try FigureLimits.count((action.timing.end + scene.tail) * Double(spec.motion.fps), maximum: FigureLimits.frames, field: field + ".frameCount")
+                if input.kind == "ink" {
+                    _ = try FigureLimits.count(action.distance / (0.01 * unit) + 2 * spec.ink.overshoot / 0.01,
+                                               maximum: FigureLimits.inkSamples, field: field + ".inkSamples")
+                }
                 if count > 0 {
                     for step in 0..<count {
                         let sample = action.walkSample(min(action.distance, Double(step + 1) * spec.motion.step * k))
@@ -127,7 +138,7 @@ struct Rig: Sendable {
                 }
                 // Fixed 240 Hz heading integration limits turns independently of output FPS.
                 var h = heading
-                let samples = max(1, Int(ceil(action.duration * 240)))
+                let samples = max(1, try FigureLimits.count(action.duration * 240, maximum: 864_000, field: field + ".headingSamples"))
                 action.headings = [h]
                 for sample in 1...samples {
                     let target = action.walkSample(action.travelled(min(action.duration, Double(sample) / 240))).heading
@@ -155,6 +166,8 @@ struct Rig: Sendable {
                 action.timing.settled = action.timing.end
             default: action.timing.end += input.duration!
             }
+            try FigureLimits.number(action.timing.end + scene.tail, 0...FigureLimits.duration, field + ".duration")
+            _ = try FigureLimits.count((action.timing.end + scene.tail) * Double(spec.motion.fps), maximum: FigureLimits.frames, field: field + ".frameCount")
             result.append(action); time = action.timing.end; feet = action.endFeet; heading = action.headingTo
         }
         actions = result
@@ -289,8 +302,7 @@ struct Rig: Sendable {
     }
     private func attach(_ pose: inout ActorPose, kind: PropKind) {
         let hand = pose.world["rightHand"]!, axis = (hand - pose.world["rightElbow"]!).unit
-        let gripOffset = kind == .brush ? 0.08 : (kind == .broom ? 0.18 : 0)
-        let base = hand - axis * (gripOffset * scene.figureHeight)
+        let base = hand - axis * (kind.gripOffset * scene.figureHeight)
         let tip = base + axis * (kind.length * scene.figureHeight)
         var grips = ["right": project(hand, pose)]
         if pose.action == "sweep" { grips["left"] = project(hand - axis * (scene.figureHeight * 0.12), pose) }

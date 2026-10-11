@@ -5,12 +5,12 @@ import re
 import shutil
 from pathlib import Path
 
-from . import loop, schema, settings
+from . import loop, paths, schema, settings
 from .pieces import color_names, figure, panel_name
 
 
 def outside_repo(path):
-    path = Path(path).resolve()
+    path = paths.contained(path)
     if path == loop.REPO or loop.REPO in path.parents:
         raise ValueError('render and scratch output must be outside the repository')
     return path
@@ -128,11 +128,13 @@ class Run:
         self.gs = loop.seats(self.record)
 
     def folder(self, n):
+        paths.round_number(n)
         if not 1 <= n <= self.config['rounds']:
             raise ValueError('round is outside the configured range')
-        return self.path / 'rounds' / f'{n:03}'
+        return paths.contained(self.path, 'rounds', f'{n:03}')
 
     def frozen(self, path, data):
+        path = paths.contained(self.path, Path(path).relative_to(self.path))
         old = loop.load(path)
         if old is not None and old != data:
             raise ValueError(f'{path.name} is frozen; use a new run for changed inputs')
@@ -164,17 +166,18 @@ class Run:
                 winner = next(r for r in results if r['slot'] == slot['slot'])
                 slot['incumbent'] = winner['winner']
                 previous = next(s for s in loop.load(self.folder(n - 1) / 'slate.json') if s['slot'] == slot['slot'])
-                candidate = next(c for c in previous['candidates'] if c['name'] == winner['winner'])
+                candidate = next(c for c in previous['candidates'] if self.identity(c['name']) == self.identity(winner['winner']))
                 slot['incumbent_candidate'] = {k: v for k, v in candidate.items() if k not in ('source', 'quality')}
                 slot['images'] = candidate.get('images', [])
         return slots
 
     def job(self, n, role, gid, prompt, reply_schema, images=()):
+        self.folder(n)
         job = {'id': f'{role}-{gid}', 'round': n, 'role': role, 'guardian': gid,
                'prompt': prompt, 'reply_schema': reply_schema,
                **{k: self.config['roles'][role][k] for k in ('model', 'effort')},
                'images': list(images), 'attempt': 0}
-        return self.frozen(self.path / 'jobs' / f'{n:03}' / f'{job["id"]}.json', job)
+        return self.frozen(paths.job_path(self.path, job, 'jobs'), job)
 
     def prompt(self, gid, *, history=True):
         g = self.gs.get(gid)
@@ -246,7 +249,7 @@ class Run:
                     blocks.append(f'Slot {sid}:\n' + '\n'.join(
                         f'[{letter}] ' + '\n'.join(self.context(name, slot)) for letter, name in b.items()))
                     for letter, name in b.items():
-                        candidate = next(c for c in slot['candidates'] if c['name'] == name)
+                        candidate = next(c for c in slot['candidates'] if self.identity(c['name']) == self.identity(name))
                         if 'value' in candidate:
                             blocks[-1] += f'\n[{letter}] Parameters: ' + json.dumps(candidate['value'], ensure_ascii=False)
                     text_sheet = self.out / f'{n:03}' / f'{gid}-{sid}-text.png'
@@ -288,11 +291,13 @@ class Run:
                 self.config['piece'].get('context', ['{slot} · {name}'])]
 
     def accept(self, job):
+        paths.validate_job(job)
         n, jid = job['round'], job['id']
-        reply = self.path / 'replies' / f'{n:03}' / f'{jid}.json'
-        retry = self.path / 'retries' / f'{n:03}' / f'{jid}.json'
+        self.folder(n)
+        reply = paths.job_path(self.path, job, 'replies')
+        retry = paths.job_path(self.path, job, 'retries')
         if retry.exists():
-            reply = reply.with_name(f'{jid}.retry.json')
+            reply = paths.job_path(self.path, {**job, 'attempt': 1}, 'replies')
         if not reply.exists():
             return None, 'waiting'
         try:
@@ -304,13 +309,13 @@ class Run:
             data, errors = None, [f'invalid JSON: {error}']
         if errors:
             if retry.exists():
-                loop.save(self.folder(n) / 'validation' / f'{jid}.json', {'status': 'rejected', 'errors': errors})
+                loop.save(paths.contained(self.path, 'rounds', f'{n:03}', 'validation', f'{jid}.json'), {'status': 'rejected', 'errors': errors})
                 return None, 'rejected'
             repair = {**job, 'attempt': 1, 'prompt': job['prompt'] + '\nYour reply broke its schema:\n' +
                       '\n'.join(errors) + '\nRepair it once. Your previous reply:\n' + reply.read_text()}
             loop.save(retry, repair)
             return None, 'retry'
-        self.frozen(self.folder(n) / 'accepted' / f'{jid}.json', data)
+        self.frozen(paths.contained(self.path, 'rounds', f'{n:03}', 'accepted', f'{jid}.json'), data)
         return data, 'accepted'
 
     def collect(self, n):
@@ -376,14 +381,24 @@ class Run:
         self.jobs(n)
         return status
 
+    def identity(self, name):
+        adapter = self.config['piece'].get('adapter', 'generic')
+        if adapter == 'panel-name':
+            return panel_name.identity(name)
+        if adapter == 'color-names':
+            return color_names.identity(name)
+        if adapter == 'figure':
+            return figure.identity(name)
+        return name.casefold()
+
     def craft(self, name, slot, taken):
         adapter = self.config['piece'].get('adapter', 'generic')
         if adapter == 'panel-name':
             return panel_name.craft(name, taken)
         if adapter == 'color-names':
-            names = {v['name'].lower() for v in self.record['vocabulary']}
-            return color_names.craft(name, slot, names), name.casefold()
-        return [], name.casefold()
+            names = {self.identity(v['name']) for v in self.record['vocabulary']}
+            return color_names.craft(name, slot, names), self.identity(name)
+        return ([] if name.strip() else ['nonempty name']), self.identity(name)
 
     def decide(self, n):
         folder = self.folder(n)
@@ -406,7 +421,7 @@ class Run:
             for name in names:
                 tally['score'][name] *= self.record['sourceCalibration'].get(sources[name], 1)
             order = sorted(names, key=lambda name: (bool(tally['vetoes'][name]), -tally['score'][name],
-                           -tally['firsts'][name], name != slot['incumbent'], name))
+                           -tally['firsts'][name], self.identity(name) != self.identity(slot['incumbent']), name))
             standings = [{'name': name, 'source': sources[name],
                           **{k: tally[k][name] for k in ('score', 'firsts', 'vetoes', 'notes', 'lives')}} for name in order]
             results.append({'slot': sid, 'owner': slot['owner'], 'winner': order[0],
@@ -425,13 +440,13 @@ class Run:
             selection.append({**result, 'standings': eligible, 'winner': eligible[0]['name'],
                               'winner_source': eligible[0]['source']})
         loop.select(selection, base, keys, Caps(self.record), owners=draw['proposers'],
-                    guarantee=self.record['guarantee'])
+                    guarantee=self.record['guarantee'], identity=self.identity)
         for result, selected in zip(results, selection):
             for key in ('winner', 'winner_source', 'guaranteed', 'notes'):
                 if key in selected:
                     result[key] = selected[key]
         for result in results:
-            winning = next(s for s in result['standings'] if s['name'] == result['winner'])
+            winning = next(s for s in result['standings'] if self.identity(s['name']) == self.identity(result['winner']))
             if winning['source'] in self.gs:
                 represented.append(winning['source'])
             for gid, line in winning['lives'].items():

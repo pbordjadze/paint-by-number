@@ -4,9 +4,10 @@ Agents do only what needs taste (propose, judge); everything else is code, seede
 replays exactly from its files. Usage:
   taste.py draw N | proposals N | collect N | decide N | status
 """
-import json, os, re, sys, unicodedata
+import argparse
+import json, os, re, unicodedata
 from pathlib import Path
-from .. import loop, transcripts
+from .. import loop, paths, transcripts
 from ..loop import load, save
 
 REPO = str(loop.REPO)
@@ -28,7 +29,7 @@ def roster():
 
 def ledger(): return load(os.path.join(RUN, "ledger.json"), {"rounds": []})
 
-def rdir(n): return os.path.join(RUN, "rounds", f"{n:03d}")
+def rdir(n): return str(paths.contained(RUN, "rounds", f"{paths.round_number(n):03}"))
 
 # Rendering a name "in context": the text renderer for this piece.
 def in_context(name):
@@ -37,6 +38,11 @@ def in_context(name):
 
 FRANCHISE = ["phoenix", "hogwarts", "galaxy", "avengers", "justice league", "fellowship", "x-men",
              "watchmen", "jedi", "sith", "wizengamot", "dumbledore", "death eaters", "round table", "illuminati"]
+
+def identity(name):
+    key = re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", name.lower()).encode("ascii", "ignore").decode())
+    return key[3:] if key.startswith("the") else key
+
 
 def craft(name, taken):
     """Code checks a candidate must pass before any juror sees it; returns the failures."""
@@ -47,14 +53,15 @@ def craft(name, taken):
     if any("Ⴀ" <= c <= "ჿ" or "Ა" <= c <= "Ჿ" for c in name): fails.append("no Georgian letters as ornament")
     if any(unicodedata.category(c)[0] not in "LZ" and c not in "'’-·&." for c in name): fails.append("letters only")
     if any(f in name.lower() for f in FRANCHISE): fails.append("names a famous franchise")
-    key = re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", name.lower()).encode("ascii", "ignore").decode())
-    key = key[3:] if key.startswith("the") else key
+    key = identity(name)
     if key in taken: fails.append("duplicate")
     return fails, key
 
 def draw(n):
     rules()
-    prev = load(os.path.join(rdir(n - 1), "draw.json"), {"jury": [], "proposers": []})
+    paths.round_number(n)
+    prev = load(os.path.join(rdir(n - 1), "draw.json"), {}) if n > 1 else {}
+    prev = {"jury": [], "proposers": [], **prev}
     # Only earlier entries count, even when replaying a completed run.
     prior = {"rounds": [r for r in ledger()["rounds"] if r["round"] < n]}
     d = loop.draw(guardians(), prior, f"draw-{n}", jury_size=JURY, proposers=PROPOSERS,
@@ -199,24 +206,24 @@ def decide(n):
     problems = tally["problems"]
     champ = load(os.path.join(RUN, "champion.json"), {"name": INCUMBENT})["name"]
     alive = [nm for nm in names if not vetoes[nm]] or sorted(names, key=lambda nm: len(vetoes[nm]))[:1]
-    order = sorted(names, key=lambda nm: (nm not in alive, -score[nm], -firsts[nm], nm != champ, nm))
+    order = sorted(names, key=lambda nm: (nm not in alive, -score[nm], -firsts[nm], identity(nm) != identity(champ), nm))
     winner = order[0]
     if not rules()["recorded"]:
         result = {"slot": 1, "owner": "panel", "winner": winner,
-                  "winner_source": next(s["source"] for s in slate if s["name"] == winner),
-                  "standings": [{"name": name, "source": next(s["source"] for s in slate if s["name"] == name),
+                  "winner_source": next(s["source"] for s in slate if identity(s["name"]) == identity(winner)),
+                  "standings": [{"name": name, "source": next(s["source"] for s in slate if identity(s["name"]) == identity(name)),
                                  "score": score[name], "vetoes": vetoes[name]} for name in order]}
-        loop.select([result], {0: champ}, {1: 0}, PanelCaps(rules()))
+        loop.select([result], {0: champ}, {1: 0}, PanelCaps(rules()), identity=identity)
         winner = result["winner"]
     absent = re.compile(r"^\s*absent\b", re.I)
     represented = [gid for gid, line in lives[winner].items() if not absent.match(line)]
     # Whoever proposed the winner lives in it too.
-    origin = next(s.get("origin", s["source"]) for s in slate if s["name"] == winner)
+    origin = next(s.get("origin", s["source"]) for s in slate if identity(s["name"]) == identity(winner))
     if origin in G and origin not in represented: represented.append(origin)
     standings = [{"name": nm, "score": round(score[nm], 2), "firsts": firsts[nm], "vetoed": vetoes[nm],
                   "notes": notes[nm], "lives": lives[nm],
-                  "source": next(s["source"] for s in slate if s["name"] == nm),
-                  "origin": next(s.get("origin", s["source"]) for s in slate if s["name"] == nm)} for nm in order]
+                  "source": next(s["source"] for s in slate if identity(s["name"]) == identity(nm)),
+                  "origin": next(s.get("origin", s["source"]) for s in slate if identity(s["name"]) == identity(nm))} for nm in order]
     decision = {"round": n, "winner": winner, "standings": standings, "problems": problems}
     if not rules()["recorded"]:
         decision.update(loop.favorites(standings, "vetoed"))
@@ -284,13 +291,26 @@ class PanelCaps:
 
 
 def main():
-    cmd, *rest = sys.argv[1:]
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest='command', required=True)
+    for command in ('draw', 'proposals', 'collect', 'decide', 'finalists', 'decide-finalists'):
+        commands.add_parser(command).add_argument('round', type=int)
+    for command in ('status',):
+        commands.add_parser(command)
+    extract_parser = commands.add_parser('extract')
+    extract_parser.add_argument('round', type=int)
+    extract_parser.add_argument('role', choices=('proposals', 'verdicts'))
+    extract_parser.add_argument('id')
+    extract_parser.add_argument('transcript')
+    args = parser.parse_args()
+    cmd = args.command
     if cmd == "extract":
         # extract <round> <proposals|verdicts> <seat> <transcript.output>
-        n, role, gid, path = rest
+        n, role, gid, path = args.round, args.role, args.id, args.transcript
         if role not in ("proposals", "verdicts"):
             raise ValueError("role must be proposals or verdicts")
-        save(os.path.join(rdir(int(n)), role, f"{gid}.json"), transcripts.extract(path))
+        target = paths.legacy_path(RUN, role, gid, int(n))
+        save(target, transcripts.extract(path))
     else:
         {"draw": draw, "proposals": proposals, "collect": collect, "decide": decide,
-         "status": status, "finalists": finalists, "decide-finalists": decide_finalists}[cmd](*(int(x) for x in rest))
+         "status": status, "finalists": finalists, "decide-finalists": decide_finalists}[cmd](*([args.round] if hasattr(args, 'round') else []))

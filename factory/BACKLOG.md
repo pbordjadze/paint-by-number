@@ -381,10 +381,156 @@ real working size, as a coloring book from its committed maps. Factory only; no 
 - Deterministic: two full runs give byte-identical frames (compare digests in the report). Tests
   for the new flag and the cropped contact sheet on a small synthetic photo.
 
+### F20 · The makers' page
+Branch `codex/f20-makers-page`. Chapter 7 gave the Marginarium a last page, after all the
+guardians, for the two who built and told it: Pip and Colophon (`pieces/pets/makers.md`).
+Add it to the collection page. Factory only; no app code.
+- `tools/factory/collection.py` gains `--pets <dir>`: read `<dir>/<id>/spritesheet.webp` instead
+  of `factory/pets/` (real pets stay out of the repo; their final sheets are under
+  `/root/factory-out/F18/{pip,colophon}/final/`). Keep the current behavior without the flag.
+- After the guardians, a closing section, **The makers**, with two entries and no letter
+  circles: **Pip**, "Codex's teapot. A plain white teapot, a little lopsided, with no face. Lift
+  the lid and there is a blue dot underneath." and **Colophon**, "Claude's moth. A small round
+  moth with pale page wings. It circles the lamp once, at a safe distance, and lands beside the
+  words like a bookmark." Use these words exactly. Each shows its idle row; a tap or click
+  plays one other row once and returns to idle: Pip's waving row (row 3, the lid lifts),
+  Colophon's review row (row 8, the wings fold flat). Take each row's frame count and timings
+  from the create-pet skill's v2 reference (`~/.codex/plugins/cache/openai-curated-remote/work-pets/0.1.6/skills/create-pet`),
+  and cite where in the report. Reduced motion: still first frames, and a tap shows the row's
+  middle frame for a moment instead of playing it. The entries are buttons with VoiceOver-style
+  labels ("Pip, Codex's teapot. Tap to lift the lid.").
+- A missing sheet leaves its entry as text only. Tests with generated placeholder v2 atlases
+  (never real pets): the flag, the section's order and words, the row and timing data, the
+  missing-sheet case. Build the page with the real sheets outside the repo and look at it in a
+  headless browser screenshot (idle, and mid-row after a click).
+
+### F21 · A read-only audit of the factory
+Branch none: report only, no code changes. Read `Sources/FigureRig`, `Sources/figures`,
+`tools/factory/*.py` and `factory/taste/*.py` end to end, as a reviewer who will be blamed for
+what ships. Look for: bugs (with the input that triggers each), nondeterminism (set or dict
+order, time, unseeded randomness, float sums that depend on chunking), unsafe file handling
+(paths from JSON written outside their directory, output written into the repo), dead code,
+duplicated helpers that have drifted apart, tests that cannot fail, and docstrings that no
+longer match the code. Run the test suites and the tools' `--help` to check claims.
+Write `/root/factory-out/F21/audit.md`: findings ranked most severe first, each with file and
+line, a one-line failure scenario, and a proposed fix; then a short list of what you checked
+and found sound. Don't fix anything; Claude turns the findings into backlog items.
+
+### F22 · Audit fixes, Swift (FigureRig and figures)
+Branch `codex/f22-audit-swift`. F21's read-only audit (`/root/factory-out/F21/audit.md`; a copy
+is in Claude's scratchpad if that is gone) found these in `Sources/FigureRig` and
+`Sources/figures`. Fix each with a test that fails before the fix. Swift only; Python is F23.
+- **Finding 2, huge finite numbers trap.** Bound canvas size, path coordinates and length,
+  durations, frame and gait counts at decode or before any Double-to-Int conversion; out of
+  range throws a field-specific `FigureInputError`. CLI tests for the three probes (canvas
+  height, idle duration, a path coordinate of `1e300`) exit nonzero with a message, no trap.
+  Scenes may later come from guardians' patches, so this is input validation, not paranoia.
+- **Finding 3, the CLI's part.** `figures render` and `figures reveal` refuse an output inside
+  the repository and any symlinked child (`frames/`, …) of the output; cleanup removes only the
+  frame files the run owns, never unrelated SVG/PNG.
+- **Finding 5, `propGrip` compares the hand with itself.** Derive each grip from the rendered
+  prop (base, axis, kind, attachment offsets) and compare that with the hand; a missing expected
+  attachment fails. Negative tests that move the drawn base or axis without touching the grip
+  metadata, including the two-handed broom.
+- **Finding 6, a new walk after ink drifts by the ink offset twice.** A switched walk path that
+  starts at the actor resets the inherited lateral offset; continuing on the same ink path keeps
+  it. Test the audit's ink-then-new-path scene (ends at y = 393, not 386) and same-path
+  continuation.
+- **Finding 7, cards squeeze without limit.** Wrap title and author lines to as many lines as
+  needed with a minimum horizontal scale (state it, and why), and fail `cardSize` on measured
+  post-layout size. The longest real citation, Douglas and Peucker's 1973 title in
+  `ACKNOWLEDGEMENTS.md`, must render legibly; test it and a pathological 150-word title.
+- **Finding 11, the Swift part:** `figures --help` lists `render` and `reveal` and exits 0.
+- Hero and workers digests stay byte for byte unless a fix must move them; if one moves, say
+  which fix and why in the report, and update the pin in the same commit.
+
+### F23 · Audit fixes, Python (taste kit and factory tools)
+Branch `codex/f23-audit-python`. The Python half of F21's findings. Python only, and don't touch
+`tools/factory/making_of.py` (F19 is changing it). Each fix with a test that fails before it.
+- **Finding 1, job IDs escape their directories.** IDs are nonempty safe slugs, rounds and
+  attempts are validated, and one helper resolves and checks every reply, cost and scratch path
+  (symlinks included) before writing; the legacy extract adapters use it too. Negative fixtures
+  for traversal and absolute IDs.
+- **Finding 3, the Python part.** `collection.py`, `reveal_sheet.py` and `render.py` refuse
+  repository outputs and symlinked output children, and remove only files they own.
+- **Finding 4, translucent ink passes the contrast check.** Measure the composited ink colour
+  over the actual paper (material opacity apart from edge antialiasing). Test `#55555580`
+  failing on the default paper.
+- **Findings 8–10.** The craft oracle rejects an empty or whitespace name; one identity hook per
+  piece used everywhere names are compared (within a slot, across the set, in repairs and the
+  legal-assignment search), with recorded runs replaying byte for byte; JSON-schema `enum` and
+  `uniqueItems` compare booleans apart from numbers (1 and 1.0 stay equal).
+- **Finding 11, the Python part.** Every public script parses arguments before importing
+  optional dependencies or writing anything; `--help` exits 0 with no side effects
+  (`card_font.py` must never regenerate `Charter.swift` on `--help`). A subprocess test runs
+  each script's `--help` and checks nothing changed.
+- **Finding 12.** `verify.py` and the nested Swift test in `test_render.py` honour `FIGURES_BIN`
+  and a Swift scratch path (an option or env var, documented in `factory/taste/README.md`), and
+  report a missing build clearly.
+- Recorded taste runs (`pieces/panel-name`, `pieces/color-names`) still replay byte for byte.
+
+### F24 · The simulator driver, before the Mac
+Branch `codex/f24-simctl-driver`. M2's host half, so the Mac session only writes the Swift side.
+Factory only; no app code. Build on F17's `Driver` protocol in `factory/taste/play.py`.
+- **The mailbox contract**, written down in `factory/pieces/play/README.md` for the Mac session
+  to implement in Swift: the driver and the app's Debug-only play UI test talk through a host
+  directory (the simulator shares the host file system) whose path the test reads from the
+  environment (`xcodebuild` passes `TEST_RUNNER_PLAY_MAILBOX` to the runner as
+  `PLAY_MAILBOX`). The driver writes `move-<n>.json` atomically (temp file, then rename); the
+  test performs it and writes `done-<n>.json` with the resulting state (F17's state schema) once
+  the screen has settled, or `error-<n>.json` with a reason. A `hello.json` from the test says it
+  is ready. Numbers start at 1 and never repeat within a session.
+- **`factory/taste/simctl.py`**, a `SimctlDriver` implementing the protocol over `xcrun simctl`
+  and `xcodebuild`: find the device by name in `simctl list devices --json` (the default is CI's
+  13-inch iPad Pro), boot it and wait (`bootstatus -b`), set appearance, install an `.app`, and
+  start `xcodebuild test-without-building -xctestrun <file> -only-testing:<test>` with the
+  mailbox variable, waiting for `hello.json`. `perform` writes the move; `settle` waits for its
+  `done`/`error` file with a timeout and fails clearly if the runner exits first; `state` returns
+  the last settled state; `screenshot` uses `simctl io <udid> screenshot`. Optional video:
+  `simctl io recordVideo` from start to finish, stopped with SIGINT. Every command is built in
+  one place, logged, and run without a shell.
+- **Tests on Linux with a fake `xcrun`** on `PATH`: a script that records its arguments and
+  answers `simctl list`, `bootstatus`, `io screenshot` (writes a PNG) and `xcodebuild` (starts a
+  fake runner that answers the mailbox from a scripted folder). Cover a three-move session,
+  an `error-<n>.json`, a runner that dies, a timeout, a missing device, and a replay of the
+  recorded session with F17's mock driver. Nothing here may call a real `xcrun`.
+- `play.py` gains `--driver simctl` with the options above; the mock stays the default.
+
+### F25 · A read-only audit of the saved-painting decoders
+Report only, no repository changes. Saved paintings must open in every later build and decoders
+treat files as hostile (root `CLAUDE.md` › Saved data compatibility); PaintCore ships
+`-Ounchecked`, so a missed check is a silent out-of-bounds read on a user's device.
+- Read `Sources/PaintCore/Model/TemplateCoding.swift`, the `LINE` and `DETL` chunk readers, the
+  `PaintProgress` reader and everything they call, as a reviewer who will be blamed. For every
+  count, span, reference and coordinate: is it checked against the bytes left or the canvas, in
+  `Int` arithmetic, before anything allocates or indexes with it?
+- Fuzz them on Linux from a harness kept **outside the repo** (a scratch Swift package that
+  depends on PaintCore by path, built in release with `-Ounchecked` like the app, plus a debug
+  build so traps show): start from the five frozen fixtures in `Tests/PaintCoreTests/Fixtures/`
+  and from templates `pbn generate` writes, mutate (bit flips, truncation, length and count
+  fields set to boundary values, chunk tags swapped, chunks duplicated), and decode. A trap,
+  hang, huge allocation or out-of-bounds read under the debug build is a finding; record each
+  crashing input under `/root/factory-out/F25/crashes/`.
+- Write `/root/factory-out/F25/audit.md`: findings most severe first, each with file and line,
+  the input that triggers it, and a proposed fix; then what was fuzzed (inputs, iterations, time)
+  and found sound.
+
+### F26 · Determinism across core counts, checked
+Report only, no repository changes. Root `CLAUDE.md` promises the same maps and settings give the
+same bytes on any core count (`Parallel`'s doc comment is the contract).
+- Build `pbn` in release. For each `Tests/Corpus` photo, generate classic, the coloring book from
+  `tools/baseline/lines/` (as `tools/regression.py` does) and Auto's suggestion under
+  `taskset -c 0`, `0-1`, `0-2` and all cores, and compare the template bytes and stats.
+- Read `Sources/PaintCore` for floating-point reductions whose grouping follows the band or
+  core count (the convention's examples: `RegionAdjacency.boundarySteps`,
+  `RegionRuns.accumulate`), and any reading of `activeProcessorCount` that reaches output.
+- Write `/root/factory-out/F26/report.md`: the byte comparison table, every difference traced to
+  its code with a proposed fix, and the reductions you checked and found sound.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
-- **M2 · The play harness:** a Debug-only "play" UI test that performs moves from a file
+- **M2 · The play harness:** (host half: F24) a Debug-only "play" UI test that performs moves from a file
   (`fill <area>`, `drag`, `tap <label>`, `wait`, `screenshot`), a Debug hook that reports each
   area's label point by number, a driver around `xcrun simctl` (boot, install, launch a demo scene,
   screenshots, video, appearance), and a design-loop piece that hands each turn to a guardian.

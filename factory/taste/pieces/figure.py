@@ -127,6 +127,8 @@ def apply(baseline, patch, fields):
 
 
 def identity(spec):
+    if isinstance(spec, str):
+        return spec
     return 'spec-' + hashlib.sha256(json.dumps(spec, sort_keys=True,
                          separators=(',', ':')).encode()).hexdigest()
 

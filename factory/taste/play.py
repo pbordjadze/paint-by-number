@@ -6,13 +6,13 @@ relative screenshot paths so replay outputs compare byte for byte in another dir
 """
 import json
 import shutil
+import time
 import tomllib
 from pathlib import Path
 from typing import Protocol
 
-from PIL import Image
 
-from . import accounting, loop, renderers, schema
+from . import accounting, loop, paths, renderers, schema
 from .kit import outside_repo
 from .pieces import play as piece
 
@@ -68,6 +68,7 @@ class MockDriver:
     only at settle; an unexpected move or exhausted recording is an explicit rejection.
     """
     def __init__(self, folder, *, recording=None):
+        from PIL import Image
         self.folder = Path(folder).resolve()
         self.recording = loop.load(self.folder / 'recording.json') if recording is None else recording
         data = self.recording
@@ -139,6 +140,7 @@ def config_read():
 
 
 def observe(driver, run, n):
+    from PIL import Image
     state = validate_state(driver.state())
     source = Path(driver.screenshot())
     # Decode as well as copy: an unreadable frame must never become a recorded turn.
@@ -228,7 +230,7 @@ class Session:
                'effort': self.rules['role']['effort'], 'images': [screenshot], 'attempt': 0,
                'reply_schema': self.rules['reply_schema'], 'state': latest['state'], 'history': history,
                'prompt': piece.prompt(self.rules['brief'], guardian, screenshot, latest['state'], history)}
-        path = self.path / 'jobs' / f'{n:03}' / f"{job['id']}.json"
+        path = paths.job_path(self.path, job, 'jobs')
         old = loop.load(path)
         if old is not None and old != job:
             raise ValueError('play job is frozen; use a new session')
@@ -260,14 +262,14 @@ class Session:
     def collect(self):
         job = self.job()
         folder = f"{job['round']:03}"
-        reply_path = self.path / 'replies' / folder / f"{job['id']}.json"
-        retry_path = self.path / 'retries' / folder / f"{job['id']}.json"
+        reply_path = paths.job_path(self.path, job, 'replies')
+        retry_path = paths.job_path(self.path, job, 'retries')
         repairing = retry_path.exists()
         if repairing:
-            rejection = loop.load(self.path / 'rejections' / folder / f"{job['id']}-1.json")
+            rejection = loop.load(paths.job_path(self.path, {**job, 'attempt': 1}, 'rejections'))
             if rejection is not None:
                 return {'status': 'blocked', 'reason': rejection['error']}
-            reply_path = reply_path.with_name(f"{job['id']}.retry.json")
+            reply_path = paths.job_path(self.path, {**job, 'attempt': 1}, 'replies')
         if not reply_path.exists():
             return {'status': 'waiting', 'reply': str(reply_path)}
         try:
@@ -279,7 +281,7 @@ class Session:
                 retry = {**job, 'attempt': 1, 'error': reason, 'reply': reply_path.read_text()}
                 retry['prompt'] += f'\nYour reply was rejected: {reason}. Repair it once.'
                 loop.save(retry_path, retry)
-            loop.save(self.path / 'rejections' / folder / f"{job['id']}-{int(repairing)}.json",
+            loop.save(paths.job_path(self.path, {**job, 'attempt': int(repairing)}, 'rejections'),
                       {'error': reason, 'reply': reply_path.read_text()})
             return {'status': 'blocked' if repairing else 'rejected', 'reason': reason}
         return {'status': 'accepted', 'turn': turn, 'session': self.status()}
@@ -334,10 +336,19 @@ def replay(run, out, recording=None):
 
 
 def add_parser(commands):
-    parser = commands.add_parser('play', help='guardian play jobs against a recorded driver')
+    parser = commands.add_parser('play', help='guardian play jobs against a mock or simulator driver')
     actions = parser.add_subparsers(dest='play_command', required=True)
     create = actions.add_parser('new')
-    create.add_argument('--recording', type=Path, required=True)
+    create.add_argument('--driver', choices=('mock', 'simctl'), default='mock')
+    create.add_argument('--recording', type=Path, help='required for the default mock driver')
+    create.add_argument('--app', type=Path, help='simctl: built Debug simulator .app')
+    create.add_argument('--xctestrun', type=Path, help='simctl: built UI-test .xctestrun file')
+    create.add_argument('--test', help='simctl: Target/Class/testMethod selector')
+    create.add_argument('--device', default='iPad Pro 13-inch (M5)', help='simctl: exact device name')
+    create.add_argument('--appearance', choices=('light', 'dark'), default='light')
+    create.add_argument('--mailbox', type=Path, help='simctl: empty host directory (default: --out/mailbox)')
+    create.add_argument('--timeout', type=float, default=60, help='simctl: command/hello/move timeout in seconds')
+    create.add_argument('--video', action='store_true', help='simctl: record --out/video.mp4 until session ends')
     create.add_argument('--guardian', required=True)
     create.add_argument('--budget', type=int)
     for action in ('jobs', 'collect', 'report'):
@@ -347,6 +358,35 @@ def add_parser(commands):
 
 def dispatch(args):
     if args.play_command == 'new':
+        if args.driver == 'simctl':
+            from .simctl import SimctlDriver
+            if args.app is None or args.xctestrun is None or args.test is None:
+                raise ValueError('--driver simctl requires --app, --xctestrun and --test')
+            if args.recording is not None:
+                raise ValueError('--recording belongs to --driver mock')
+            run, out = outside_repo(args.run), outside_repo(args.out)
+            if run == out or run in out.parents or out in run.parents:
+                raise ValueError('simulator output must be separate from the play run')
+            if run.exists() and any(run.iterdir()):
+                raise ValueError('new play session directory must be empty')
+            if args.mailbox is not None:
+                mailbox = outside_repo(args.mailbox)
+                if mailbox == run or run in mailbox.parents or mailbox in run.parents:
+                    raise ValueError('simulator mailbox must be separate from the play run')
+            with SimctlDriver(out, app=args.app, xctestrun=args.xctestrun, test=args.test,
+                              device=args.device, appearance=args.appearance, mailbox=args.mailbox,
+                              timeout=args.timeout, video=args.video) as driver:
+                session = Session.create(run, driver, args.guardian, budget=args.budget)
+                while session.status() == 'active':
+                    driver.check_alive()
+                    result = session.collect()  # Writes jobs and waits for external file replies.
+                    if result['status'] == 'blocked':
+                        raise RuntimeError(f'guardian reply blocked: {result["reason"]}')
+                    if result['status'] in ('waiting', 'rejected'):
+                        time.sleep(0.05)
+                return loop.load(run / 'session.json')
+        if args.recording is None:
+            raise ValueError('--driver mock requires --recording')
         driver = MockDriver(args.recording)
         session = Session.create(args.run, driver, args.guardian, budget=args.budget)
         driver.export(session.path / 'driver')
@@ -357,5 +397,9 @@ def dispatch(args):
         run = outside_repo(args.run)
         return {'session': loop.load(run / 'session.json'), 'costs': accounting.report(run),
                 'contact': str(run / 'contact.png')}
+    if not (Path(args.run) / 'driver/recording.json').exists():
+        if args.play_command == 'jobs':
+            return Session(args.run, None).job()
+        raise ValueError('simctl sessions collect replies in the running play new process')
     session = restore(args.run)
     return session.job() if args.play_command == 'jobs' else session.collect()

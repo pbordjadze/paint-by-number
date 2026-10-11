@@ -13,9 +13,9 @@ public struct FigureScene: Decodable, Sendable {
         version = try d.integer("version", 1, 1...2); seed = try d.value("seed", UInt64(1))
         canvas = try d.required("canvas"); background = try d.optional("background")
         display = try d.choice("display", "ipad13", "ipad13 iphone")
-        figureHeight = try d.number("figureHeight", 50, Double.leastNonzeroMagnitude...Double.greatestFiniteMagnitude)
+        figureHeight = try d.number("figureHeight", 50, 0.01...100_000)
         paths = try d.required("paths"); actors = try d.required("actors"); card = try d.required("card")
-        tail = try d.number("tail", 0.5, 0...Double.greatestFiniteMagnitude)
+        tail = try d.number("tail", 0.5, 0...FigureLimits.duration)
         props = try d.value("props", [])
         guard !actors.isEmpty else { throw FigureInputError("actors: expected at least 1 actor") }
         if version == 1 {
@@ -35,13 +35,30 @@ public struct FigureScene: Decodable, Sendable {
                 guard actor.holds == tool else { throw FigureInputError("\(field): requires holds: \(tool.rawValue)") }
             }
         }
+        try validateLimits()
+    }
+
+    // Rechecked by Rig because scenes are mutable values, also built directly by tests/tools.
+    func validateLimits() throws {
+        try FigureLimits.number(canvas.width, 1...100_000, "canvas.width")
+        try FigureLimits.number(canvas.height, 1...100_000, "canvas.height")
+        try FigureLimits.number(canvas.height / canvas.width, 0.125...8, "canvas.height/width")
+        try FigureLimits.number(figureHeight, 0.01...100_000, "figureHeight")
+        try FigureLimits.number(tail, 0...FigureLimits.duration, "tail")
+        try FigureLimits.number(card.at, 0...FigureLimits.duration, "card.at")
+        guard (1...1024).contains(actors.count) else { throw FigureInputError("actors: expected 1...1024 actors") }
+        for (i, actor) in actors.enumerated() {
+            guard actor.timeline.count <= 10_000 else {
+                throw FigureInputError("actors[\(i)].timeline: expected at most 10000 actions")
+            }
+        }
     }
     public struct Canvas: Decodable, Sendable {
         public var width: Double, height: Double, paper: String, paperDark: String
         public init(from decoder: any Decoder) throws {
             let d = try Fields(decoder, "width height paper paperDark")
-            width = try d.number("width", 1100, Double.leastNonzeroMagnitude...Double.greatestFiniteMagnitude)
-            height = try d.number("height", 825, Double.leastNonzeroMagnitude...Double.greatestFiniteMagnitude)
+            width = try d.number("width", 1100, 1...100_000)
+            height = try d.number("height", 825, 1...100_000)
             paper = try d.color("paper", "#F6F1E7"); paperDark = try d.color("paperDark", "#1E1B24")
         }
     }
@@ -88,9 +105,9 @@ public struct FigureScene: Decodable, Sendable {
                 if kind == "ink" { from = try d.number("from", 0, 0...1) }
             } else if kind == "turn" {
                 heading = try d.required("heading")
-                guard heading!.isFinite else { throw FigureInputError("\(d.field("heading")): expected finite degrees") }
+                try FigureLimits.number(heading!, -1_000_000...1_000_000, d.field("heading"))
             } else {
-                duration = try d.number("duration", 1, 0...Double.greatestFiniteMagnitude)
+                duration = try d.number("duration", 1, 0...FigureLimits.duration)
             }
         }
     }
@@ -100,7 +117,7 @@ public struct FigureScene: Decodable, Sendable {
         public init(from decoder: any Decoder) throws {
             let d = try Fields(decoder, "authors year title at")
             authors = try d.required("authors"); year = try d.required("year"); title = try d.required("title")
-            at = try d.number("at", 0, 0...Double.greatestFiniteMagnitude)
+            at = try d.number("at", 0, 0...FigureLimits.duration)
         }
     }
 }

@@ -29,7 +29,6 @@ from pathlib import Path
 import re
 import subprocess
 
-from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 LIBRARY = ROOT / "App/PaintByNumber/Resources/Samples/library.json"
@@ -80,6 +79,7 @@ def run(pbn, *arguments):
 
 
 def measure(pbn, work_dir, library=LIBRARY, anchors=None):
+    from PIL import Image
     work_dir = work_dir.resolve()
     if work_dir == ROOT or ROOT in work_dir.parents:
         raise ValueError("--work-dir must be outside the repository")

@@ -58,7 +58,15 @@ driving manual and the state of play.
 | F7 | Merged: a v2 teapot in 21 image generations and 18 min, validated, nothing uploaded; one Codex session per pet |
 | F17 (5ea39a2) | Merged: moves, driver interface, mock driver, play piece, replay |
 | F16 | Merged: the making-of movie; citations checked word for word; renders byte-identical. Test photos were thumbnails, so a full-size render is next |
-| F18 | Running (Codex, gpt-6.1-sol, high) |
+| F18 | Merged: Pip (13 generations, 17 min) and Colophon (15, 25 min), drawn as a family; nothing uploaded to the pets service. Both final sheets and Colophon's lamp clip are kept as assets of chapter 7's doc (`d2c048f8…`, `d0782166…`, `6f01832d…`), since the container can be wiped |
+| F20 | Merged: the makers' page after the guardians (`collection.py --pets`); checked in Chromium by Claude |
+| F21 | Done: a read-only audit, twelve findings (three high: job-ID paths, huge numbers trap the Swift CLI, symlinked output children), split into F22 (Swift) and F23 (Python) |
+| F23 | Merged: the audit's Python fixes; Claude fixed the guards' refusal of macOS's linked /tmp and /var |
+| F22 | Merged: the audit's Swift fixes; hero and workers digests unchanged, engine 1.0.1; 138 Python tests pass on the merged tree |
+| F24 | Merged: SimctlDriver and the mailbox contract (`pieces/play/README.md`) for M2's Swift test; tested against a fake xcrun only |
+| F25 | Codex's provider stopped it as a possible cybersecurity risk (it fuzzes our own decoders); not reworded to get past the filter. A Claude agent runs it instead, report at `/root/factory-out/F25-claude/audit.md` |
+| F26 | Done, report only: the six corpus photos in classic, book and Auto give identical template bytes (and stats, apart from timings) at 1, 2, 3 and 4 cores; 144 generations, all valid. Note for any future gate: `taskset` alone leaves Foundation's `activeProcessorCount` (so `Parallel.bandCount`) unchanged on Linux; Codex varied it with an external shim |
+| F19 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul

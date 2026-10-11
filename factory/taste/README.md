@@ -158,6 +158,11 @@ python3 -m unittest discover -s tools/factory -p test_loop_kit.py
 
 ## Play before the Mac
 
+The simulator host driver and the Swift UI-test mailbox contract are documented in
+[the play piece README](../pieces/play/README.md). `play new --driver simctl` boots and installs
+the app, runs the test and collects guardian file replies in the foreground; the recorded mock
+remains the default. Both kinds of session replay offline through F17's mock.
+
 The `play` piece uses sequential turns rather than design candidates and a jury. Its settings
 are `factory/pieces/play/piece.toml` (move budget, recent-history length, player model and effort),
 with a brief and `moves.schema.json`. A session freezes these and the chosen guardian's charter.
@@ -244,3 +249,31 @@ python3 -m unittest discover -s tools/factory -p test_play.py -v
 Set `PLAY_DRY_RUN` to a fresh outside-repo directory to retain the canned three-area session,
 mock frames, contact sheet and independently checked replay. These are plumbing checks; no live
 guardian or app is run on Linux.
+
+## Linux factory checks and build paths
+
+Use the host Swift toolchain. `FIGURES_BIN` selects the already built figures executable for
+`tools/factory/verify.py`, its review subprocess and the Python integration tests. Verification
+also accepts `--figures`. A missing executable is reported before any output is created.
+`SWIFT_SCRATCH_PATH` selects the Swift build/test directory for verification and the nested
+hairpin test in `test_render.py`; verification also accepts `--swift-scratch-path`. Build the
+Swift tests there before running Python tests, because the hairpin probe uses `--skip-build`.
+
+```sh
+export SWIFT_SCRATCH_PATH=/root/factory-out/swift-build
+swift build --scratch-path "$SWIFT_SCRATCH_PATH" -c release --static-swift-stdlib
+swift test --scratch-path "$SWIFT_SCRATCH_PATH"
+export FIGURES_BIN="$SWIFT_SCRATCH_PATH/release/figures"
+TMPDIR=/root/factory-out FACTORY_TEST_OUT=/root/factory-out PYTHONDONTWRITEBYTECODE=1 \
+python3 -m unittest discover -s tools/factory -p 'test_*.py'
+tools/factory/verify.py /root/factory-out/verification
+```
+
+Job IDs are nonempty ASCII slugs (letters/digits separated by `-` or `_`); rounds are positive
+integers and attempts are `0` or `1`. Runner replies, costs, scratch artifacts and legacy
+transcript extractions share the same containment checks and refuse symlinked paths.
+The panel-name piece compares its accent/punctuation/article-normalized identity, the color
+piece uses case folding, and generic pieces use case folding. These identities also govern
+whole-set repairs, guarantees and assignment search; displayed and recorded names stay verbatim.
+The kit and review CLI help exits before rendering, regenerating fonts or loading optional
+dependencies.

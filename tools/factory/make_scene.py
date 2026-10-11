@@ -11,7 +11,6 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -20,6 +19,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pbn", type=Path, default=ROOT / ".build/release/pbn")
     args = parser.parse_args()
+    from PIL import Image
     scene = ROOT / "factory/scenes"
     with tempfile.TemporaryDirectory(prefix="figure-hero-") as temporary:
         scratch = Path(temporary)
