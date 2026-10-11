@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 
 from . import loop, schema, settings
-from .pieces import color_names, panel_name
+from .pieces import color_names, figure, panel_name
 
 
 def outside_repo(path):
@@ -59,11 +59,14 @@ def new(piece, run, calibration=None):
             slot['slot'] = str(slot['slot'])
         brief = color_names.BRIEF + '\n\n' + color_names.RULES
         base = {str(v['index']): v['name'] for v in record['vocabulary']}
+    elif adapter == 'figure':
+        outside_repo(run)
+        slots, brief, base = figure.initialize(record, source, run, config)
     else:
         slots = loop.load(source / 'slots.json')
         brief = (source / 'brief.md').read_text()
         base = loop.load(source / 'base.json', {})
-    validate_slots(slots)
+    validate_slots(slots, parameter_candidates=adapter == 'figure')
     if not isinstance(base, dict) or not all(isinstance(value, str) for value in base.values()):
         raise ValueError('base.json must map slot keys to names')
     loop.draw(record['guardians'], {'rounds': []}, 'validate', jury_size=config['jury_size'],
@@ -88,7 +91,7 @@ def new(piece, run, calibration=None):
     return record
 
 
-def validate_slots(slots):
+def validate_slots(slots, *, parameter_candidates=False):
     if not isinstance(slots, list) or not slots:
         raise ValueError('slots.json must be a nonempty array')
     ids, keys = [], []
@@ -100,8 +103,9 @@ def validate_slots(slots):
         if 'candidate_schema' in slot:
             rule = slot['candidate_schema']
             schema.check(rule)
-            if rule.get('type') != 'object' or not {'name', 'why'} <= set(rule.get('required', [])):
-                raise ValueError('candidate_schema must require name and why')
+            required = {'patch', 'why'} if parameter_candidates else {'name', 'why'}
+            if rule.get('type') != 'object' or not required <= set(rule.get('required', [])):
+                raise ValueError('candidate_schema must require ' + ' and '.join(sorted(required)))
         ids.append(slot['slot'])
         keys.append(str(slot.get('index', slot['slot'])))
     if len(set(ids)) != len(ids):
@@ -187,6 +191,7 @@ class Run:
         slots = self.slots(n)
         slate = loop.load(folder / 'slate.json')
         jobs = []
+        is_figure = self.config['piece'].get('adapter') == 'figure'
         if slate is None:
             roles = [('proposer', gid) for gid in draw['proposers']]
             if self.config['roles']['writer']['enabled']:
@@ -199,6 +204,9 @@ class Run:
                 count = self.config['candidates_each'] if role == 'proposer' else 1
                 reply_schema = schema.obj({'slots': schema.obj({s['slot']: schema.array(s.get('candidate_schema', schema.CANDIDATE), count)
                                                                for s in slots})})
+                if is_figure:
+                    for rule in reply_schema['properties']['slots']['properties'].values():
+                        rule['minItems'] = 1
                 images = [p for s in slots for p in s.get('images', [])]
                 if any('hex' in s for s in slots):
                     sheet = self.out / f'{n:03}' / 'swatches.png'
@@ -206,6 +214,9 @@ class Run:
                     images.append(str(sheet))
                 prompt = self.prompt(gid) + f'Propose {count} different candidates for EACH slot.\n' + \
                     json.dumps(slots, ensure_ascii=False) + '\nReply with JSON matching the supplied schema.'
+                if is_figure:
+                    prompt = self.prompt(gid) + figure.proposer_prompt(self.record, count) + \
+                        '\nReply with JSON matching the supplied schema.'
                 jobs.append(self.job(n, role, gid, prompt, reply_schema, images))
         else:
             for gid in draw['jury']:
@@ -226,6 +237,12 @@ class Run:
                         if self.config['scoring'] == 'approval':
                             fields['approval'] = schema.array(letter_schema, unique=True)
                     properties[sid] = schema.obj(fields)
+                    if is_figure:
+                        block, attachments = figure.blind_sheets(b, slot['candidates'],
+                                         self.out / f'{n:03}' / 'jury' / gid / sid)
+                        blocks.append(f'Slot {sid}:\n' + block)
+                        images.extend(attachments)
+                        continue
                     blocks.append(f'Slot {sid}:\n' + '\n'.join(
                         f'[{letter}] ' + '\n'.join(self.context(name, slot)) for letter, name in b.items()))
                     for letter, name in b.items():
@@ -310,6 +327,8 @@ class Run:
             return status
         draw = loop.load(folder / 'draw.json')
         slots, rejected = self.slots(n), []
+        is_figure = self.config['piece'].get('adapter') == 'figure'
+        rendered = {}
         for slot in slots:
             sid = slot['slot']
             slot['owner'] = draw['proposers'][[s['slot'] for s in slots].index(sid) % len(draw['proposers'])]
@@ -317,7 +336,7 @@ class Run:
                            'images': slot.get('images', [])}]
             for job in jobs:
                 for candidate in accepted[job['id']]['slots'][sid]:
-                    candidates.append({**candidate, 'name': ' '.join(candidate['name'].split()),
+                    candidates.append({**candidate, 'name': '' if is_figure else ' '.join(candidate['name'].split()),
                                        'source': job['guardian'], 'images': candidate.get('images', slot.get('images', []))})
             # Plants are deliberately allowed through craft, including known-bad anchors.
             candidates += [{'name': p['name'], 'source': 'plant', 'quality': p['quality'], 'why': '',
@@ -325,8 +344,21 @@ class Run:
                            for p in self.config.get('plants', []) if p['slot'] == sid]
             seen, kept = {}, []
             for c in candidates:
-                failures, key = self.craft(c['name'], slot, seen)
-                if c['source'] in ('plant', 'incumbent'):
+                if is_figure:
+                    # Every figure, including the incumbent, goes through the same gate.
+                    # Cache only within this collection; incomplete renders never get reused.
+                    patch_key = json.dumps(c.get('patch', {}), sort_keys=True)
+                    if patch_key not in rendered:
+                        rendered[patch_key] = figure.craft(c, self.record,
+                            self.path / 'inputs/hero.json', self.out / f'{n:03}' / 'candidates')
+                    failures, key, artifacts = rendered[patch_key]
+                    failures = list(failures)
+                    if '\n' in c['why'] or '\r' in c['why']:
+                        failures.append('why: expected a one-line reason')
+                    c.update(artifacts, name=key)
+                else:
+                    failures, key = self.craft(c['name'], slot, seen)
+                if not is_figure and c['source'] in ('plant', 'incumbent'):
                     failures = []
                 if key in seen:
                     failures.append('duplicate in slot')
@@ -336,6 +368,9 @@ class Run:
                     seen[key] = True
                     kept.append(c)
             slot['candidates'] = kept
+            if is_figure and not kept:
+                self.frozen(folder / 'rejected.json', rejected)
+                raise ValueError('no figure candidate passed the engine checks; see rejected.json')
         self.frozen(folder / 'rejected.json', rejected)
         self.frozen(folder / 'slate.json', slots)
         self.jobs(n)

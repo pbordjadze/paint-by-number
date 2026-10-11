@@ -20,7 +20,7 @@ def validate(data):
     piece = data['piece']
     if set(piece) - {'id', 'adapter', 'context'} or not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', piece['id']):
         raise ValueError('piece needs a lowercase, hyphenated id')
-    if piece.get('adapter', 'generic') not in ('generic', 'panel-name', 'color-names'):
+    if piece.get('adapter', 'generic') not in ('generic', 'panel-name', 'color-names', 'figure'):
         raise ValueError('unknown piece adapter')
     for field in ('rounds', 'jury_size', 'proposers', 'candidates_each'):
         if type(data[field]) is not int or data[field] < 1:

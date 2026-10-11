@@ -55,6 +55,35 @@ so deliberate defects reach the jury; their quality and source are hidden, and t
 The color example's good anchor is the recorded jury's winner, not a claim about Paul's approval.
 `guarantee = true` requires a slot for each drawn proposer; vetoes, uniqueness and caps still hold.
 
+The `figure` adapter (`factory/pieces/figure/piece.toml`) accepts one to three
+`{"patch":{"figure":{"headSize":0.18}},"why":"One-line reason."}` candidates for slot `1`.
+It freezes `factory/specs/baseline.json`, the v1 field ranges, and the hero scene/background at
+`new`. Every patch applies to that baseline; omitted fields stay and arrays replace whole arrays.
+Collection rejects bad fields with their names, then runs `tools/factory/render.py` on every
+distinct patch, including the incumbent. All geometry and pixel checks in `checks.json` must
+pass. Rejections are recorded in `rounds/NNN/rejected.json` before juror jobs exist.
+Candidates use internal spec digests; jurors see only their own shuffled letters, charter and
+four image paths per candidate: contact, at-size light/dark, and silhouette. These sheets retain
+their native pixels with a letter header. No proposer names, reasons or patches reach the jury.
+Figure runs require rules v2, quoted vetoes, and no plants or writer that could bypass craft.
+
+Use the same `new figure`, `draw/jobs/collect/decide/replay` sequence above. On Linux, build with
+`swift build -c release --product figures --scratch-path /root/factory-out/figure-build`, and set
+`FIGURES_BIN=/root/factory-out/figure-build/release/figures` before collecting. The renderer needs
+node with `tools/node_modules`, Pillow, DejaVu Sans and ffmpeg. A canned CLI dry run, including a
+failed range, a failed engine check and byte-identical replay, can retain review artifacts:
+
+```sh
+TMPDIR=/root/factory-out PYTHONPYCACHEPREFIX=/root/factory-out/pycache \
+FIGURES_BIN=/root/factory-out/figure-build/release/figures \
+FIGURE_PIECE_REAL=1 FIGURE_PIECE_DRY_RUN=/root/factory-out/figure-dry-run \
+python3 tools/factory/test_figure_piece.py \
+  FigurePieceTests.test_canned_cli_dry_run_blind_sheets_and_byte_identical_replay -v
+```
+
+Choose a fresh dry-run directory. Its rankings are canned plumbing checks; the Lamp's later run
+makes the taste decision. Without `FIGURE_PIECE_REAL=1`, the tests use small stand-in sheets.
+
 `new` freezes settings, brief, approved `factory/STYLE.md` if present, seats, glossary, initial
 slots, vocabulary and calibration in `rules.json`. Later piece/panel edits do not change the run.
 Jobs are `jobs/NNN/<role>-<guardian>.json`: `prompt`, `reply_schema`, `model`, `effort`, `images`,
