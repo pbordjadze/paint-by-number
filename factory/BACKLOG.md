@@ -527,6 +527,22 @@ same bytes on any core count (`Parallel`'s doc comment is the contract).
 - Write `/root/factory-out/F26/report.md`: the byte comparison table, every difference traced to
   its code with a proposed fix, and the reductions you checked and found sound.
 
+### F27 · Validator counts that can't overflow (PaintCore)
+Branch `codex/f27-validator-counts`. From the decoder review (F25, Claude's notes at
+`/root/factory-out/F25-claude/audit.md`, finding 3): `GeometryValidator` keeps its bucket counts
+in `Int32` (`Sources/PaintCore/Vector/GeometryValidator.swift`, around lines 52-70), and a
+template with an unusual edge layout can push them past 2^31; the debug build traps, and the
+release build (`-Ounchecked`) would index wrongly. The same layout can make validation very slow.
+It is reachable through `pbn check`, the regression gate and the app's Debug create check.
+- First write a test in `Tests/PaintCoreTests` that builds such a template in code and shows
+  the overflow (or, if you find it can't overflow, say why in the report and stop there).
+- Then count in `Int`, and bound the work so validation of any template that decodes finishes in
+  time proportional to its size; a template over the bound fails validation with a clear reason
+  rather than running on.
+- Generated templates validate exactly as before: `swift test` all green, and
+  `tools/regression.py` (no `--update`) passes with no metric moved. No `pipelineVersion` bump
+  is needed (validation doesn't change output); say so if you find otherwise.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
@@ -541,6 +557,17 @@ same bytes on any core count (`Parallel`'s doc comment is the contract).
 - F11 can be built and tested here before it costs CI minutes.
 
 ## Waits on CI (rationed macOS runners)
+
+- **F28 · Damaged data never traps, in the app** (from F25's review, findings 1, 2 and 4;
+  confirmed by Claude reading the code): `PaintProgress.sanitized` keeps any finite positive
+  time, and `PaintingTimeText.spent` does `Int(seconds / 60)`, so one damaged `progress.bin`
+  (about 1e157 s) traps the gallery card at every launch once autosaved to `meta.json`. Clamp
+  the time on decode and in `meta.json`'s reader, and saturate before converting to `Int`.
+  `TemplateRefinements.focus` converts scaled brush points to `Int` unclamped, so a point like
+  `[1e16, 0.5]` traps on regeneration: clamp to -0.5...1.5 as `LineEdits.sanitized` does. Bound
+  the LZFSE output size when reading `template.pbnt`. Tests in `App/PaintByNumberTests` for each
+  (a damaged `progress.bin`, `meta.json` and `refinements.json` open without trapping), per
+  `LibraryTests`' pattern. Batch with F11 so one CI run checks both.
 
 - **F11 · Versioned vocabularies in the app:** the version in `meta.json`, and a pin in
   `App/PaintByNumberTests` so Apple's math is checked. After F4, and when Paul releases CI
