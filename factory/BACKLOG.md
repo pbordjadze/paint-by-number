@@ -338,6 +338,28 @@ the Mac only has to supply a real driver. Factory only; no app code.
   driver byte for byte, and a contact sheet of a session.
 - Tests with the mock driver: a session that fills a three-area picture, a rejected move, replay.
 
+### F18 · Pip and Colophon, the makers' pets
+Branch `codex/f18-makers-pets`. Chapter 7: Codex keeps the test teapot as its pet, named **Pip**;
+Claude's pet is a moth named **Colophon**. Hatch both with the `create-pet` skill exactly as in F7
+(`pieces/pets/pilot.md`): v2 sheets, the bundled scripts and validators, every file under
+`/root/factory-out/F18`, **no upload, no pet creation, no Library writes**.
+1. **Pip, first.** Codex's teapot, redrawn: a plain white teapot with a round lid, hand-drawn and a
+   little lopsided as if thrown by hand; **no face**; no steam; no pattern; no blue anywhere on the
+   outside. One small blue dot sits beneath the lid, seen only when the lid lifts (show it in the
+   waving or review row, where the lid lifts). Avoid: Mrs. Potts (*Beauty and the Beast*), the
+   stock 3D-graphics "Utah" teapot profile, blue-and-white china. It is an object, so it shows its
+   moods through posture and the lid, not a face.
+2. **Colophon, second, drawn with Pip's sheet as a family reference.** A small, round, soft moth,
+   never spindly; wings like two pale pages with a few hand-inked lines of invented marks: no real
+   letters or words, no eyespots, no skull marking, no glowing eyes. It circles a lamp's glass
+   once at a safe distance (never the flame, never singed); only the wing edge nearest the light
+   catches warmth; it lands beside the words, folding its wings flat like a bookmark. Avoid:
+   Mothra, Pokémon moths, the logo of The Moth, bookworm mascots.
+3. Write `factory/pieces/pets/makers.md`: commands, image generations and time for each, what
+   failed and how it was fixed, and **whether Colophon looks like Pip's family**, with what in the
+   reference carried over and what did not. Put both final contact sheets and a side-by-side of
+   the two idle rows under `/root/factory-out/F18`.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.

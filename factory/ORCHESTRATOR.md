@@ -57,7 +57,7 @@ driving manual and the state of play.
 | F15 | Merged: walkable reveal paths; renders byte-identical |
 | F7 | Merged: a v2 teapot in 21 image generations and 18 min, validated, nothing uploaded; one Codex session per pet |
 | F17 (5ea39a2) | Merged: moves, driver interface, mock driver, play piece, replay |
-| F16 | Running (Codex, gpt-6.1-sol, high) |
+| F16, F18 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
