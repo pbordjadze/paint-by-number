@@ -48,7 +48,9 @@ public struct ArcPath: Sendable {
         var cumulative = [0.0]
         for i in 1..<points.count { cumulative.append(cumulative.last! + (points[i] - points[i - 1]).length) }
         lengths = cumulative
-        guard length > 1e-9 else { throw FigureInputError("path: expected a nonzero length") }
+        guard length > 1e-9 else {
+            throw FigureInputError("path: length \(length); expected a nonzero length greater than 1e-9")
+        }
     }
     public func sample(_ fraction: Double) -> (point: Point, heading: Double) {
         let distance = clamp(fraction) * length
@@ -117,7 +119,8 @@ private struct PathParser {
                 }
             }
         }
-        guard points.count > 1 else { throw FigureInputError("path: expected at least two points") }
+        // A syntactically valid stationary path reaches ArcPath's length diagnostic.
+        guard !points.isEmpty else { throw FigureInputError("path: expected at least one point") }
         return points
     }
 }

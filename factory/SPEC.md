@@ -326,8 +326,13 @@ For each pair, `<from>-<to>.pgm` reserves 0 for unchanged and encodes arrival ti
 `seed`, `steps`, and `path`. Worker paths use K equal time bins (default 12, positive integer);
 t=1 belongs to the last bin. Nonempty bins contribute the centroid of their pixel centers.
 Two open Chaikin rounds, retaining endpoints, produce absolute SVG `M`/`L` data in snapshot
-pixel coordinates. No changes gives an empty path; a single centroid gives a stationary `M`
-(valid SVG, but the scene's walk-path parser requires nonzero length).
+pixel coordinates. No changes gives an empty path. A path shorter than one default stride
+(`FigureSpec`'s `motion.step × normalizationScale × 50`, for the scene's default figure height)
+becomes a short segment centered on the changed pixels' centroid. Its direction runs from the
+earliest pixels' centroid to the latest; simultaneous or symmetric wipes fall back to
+left-to-right. The segment includes a 0.02 px rounding margin and may extend outside the
+picture so even a single changed pixel has a walkable path. Rejected scene paths report their
+name and measured length when the length is zero or at most 1e-9 canvas units.
 
 `python3 tools/factory/reveal_sheet.py <snapshot-dir> <reveal-dir> <out.png>` shows each pair
 at times 0, 0.2, 0.4, 0.6, 0.8 and 1, with the path overlaid. It decodes the quantized PGM times;

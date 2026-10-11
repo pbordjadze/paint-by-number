@@ -57,6 +57,19 @@ struct FigureRigTests {
         } catch { #expect(String(describing: error).contains(field)) }
     }
 
+    @Test(arguments: [("M 0 0", "0.0"), ("M 0 0 L 0 0", "0.0"),
+                      ("M 0 0 L 0.0000000001 0", "1e-10")])
+    func refusedWalkPathNamesThePathAndLength(data: String, length: String) throws {
+        var s = try scene()
+        s.paths["brook"] = data
+        do {
+            _ = try FigureEngine(spec: FigureSpec(), scene: s)
+            Issue.record("accepted an unwalkable path")
+        } catch {
+            #expect(String(describing: error) == "paths.brook: path: length \(length); expected a nonzero length greater than 1e-9")
+        }
+    }
+
     @Test func deterministicFramesMotionAndChecks() throws {
         let spec = FigureSpec(), s = try scene()
         let first = try FigureEngine(spec: spec, scene: s), second = try FigureEngine(spec: spec, scene: s)

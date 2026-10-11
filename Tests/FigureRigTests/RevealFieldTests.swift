@@ -10,18 +10,18 @@ private func gray(_ width: Int, _ height: Int, _ values: [UInt8]) -> PipelineSna
 @Suite("Reveal fields")
 struct RevealFieldTests {
     @Test func rightHalfRisesFromLeftToRight() throws {
-        let a = gray(8, 3, Array(repeating: 0, count: 24))
-        let b = gray(8, 3, (0..<24).map { $0 % 8 >= 4 ? 255 : 0 })
+        let a = gray(80, 3, Array(repeating: 0, count: 240))
+        let b = gray(80, 3, (0..<240).map { $0 % 80 >= 40 ? 255 : 0 })
         let field = try RevealField.make(from: a, to: b)
         #expect(field.changed == 0.5)
         for y in 0..<3 {
-            for x in 0..<8 {
-                #expect(field.times[y * 8 + x] == (x < 4 ? nil : Double(x - 4) / 3))
+            for x in 0..<80 {
+                #expect(field.times[y * 80 + x] == (x < 40 ? nil : Double(x - 40) / 39))
             }
         }
-        let path = try ArcPath(field.workerPath(steps: 4))
-        #expect(path.points.first == Point(4.5, 1.5))
-        #expect(path.points.last == Point(7.5, 1.5))
+        let path = try ArcPath(field.workerPath(steps: 40))
+        #expect(path.points.first == Point(40.5, 1.5))
+        #expect(path.points.last == Point(79.5, 1.5))
     }
 
     @Test(arguments: RevealField.Seed.allCases)
@@ -79,7 +79,8 @@ struct RevealFieldTests {
         #expect(field.times == [nil, nil, 1, 0.5, 0, 0])
         let singleton = try RevealField.make(from: gray(1, 1, [100]), to: gray(1, 1, [91]))
         #expect(singleton.times == [0])
-        #expect(try singleton.workerPath() == "M 0.50 0.50")
+        let path = try ArcPath(singleton.workerPath())
+        #expect((path.sample(0.5).point - Point(0.5, 0.5)).length < 0.01)
     }
 
     @Test func colorUsesOKLabAndMixedPairsPromoteGray() throws {
@@ -102,15 +103,61 @@ struct RevealFieldTests {
     }
 
     @Test func workerBinsAndTwoChaikinRounds() throws {
-        let field = RevealField(width: 4, height: 1, seed: .left, times: [0, nil, 0.5, 1])
+        var times = [Double?](repeating: nil, count: 40)
+        times[0] = 0; times[20] = 0.5; times[30] = 1
+        let field = RevealField(width: 40, height: 1, seed: .left, times: times)
         let path = try ArcPath(field.workerPath(steps: 12))
         #expect(path.points.count == 12)
         #expect(path.points.first == Point(0.5, 0.5))
-        #expect(path.points[1] == Point(0.63, 0.5))
-        #expect(path.points[2] == Point(0.88, 0.5))
-        #expect(path.points.last == Point(3.5, 0.5))
-        #expect(try field.workerPath(steps: 1) == "M 2.17 0.50")
+        #expect(path.points[1] == Point(1.75, 0.5))
+        #expect(path.points[2] == Point(4.25, 0.5))
+        #expect(path.points.last == Point(30.5, 0.5))
         #expect(throws: FigureInputError.self) { try field.workerPath(steps: 0) }
+    }
+
+    @Test(arguments: RevealField.Seed.allCases)
+    func degeneratePathsHaveAFullStrideAndWorkInAScene(seed: RevealField.Seed) throws {
+        let cases = [
+            (gray(1, 1, [0]), gray(1, 1, [255]), Point(0.5, 0.5)),
+            // All strongest pixels seed at once; the field has one time bin.
+            (gray(3, 1, [0, 0, 0]), gray(3, 1, [255, 255, 255]), Point(1.5, 0.5)),
+            // Center-seeded radial waves have several bins with coincident centroids.
+            (gray(3, 3, Array(repeating: 0, count: 9)),
+             gray(3, 3, Array(repeating: 255, count: 9)), Point(1.5, 1.5))
+        ]
+        let spec = FigureSpec(), stride = spec.motion.step * spec.normalizationScale * 50
+        for (a, b, centroid) in cases {
+            let field = try RevealField.make(from: a, to: b, seed: seed)
+            let data = try field.workerPath(), path = try ArcPath(data)
+            #expect(path.length >= stride)
+            #expect((path.sample(0.5).point - centroid).length < 0.01)
+            #expect((path.points.last! - path.points.first!).unit.dot(Point(1, 0)) > 0.99)
+            #expect(try field.workerPath() == data)
+            let scene = try JSONDecoder().decode(FigureScene.self, from: Data("""
+                {"canvas":{"width":40,"height":40},"paths":{"reveal":"\(data)"},
+                 "actors":[{"id":"worker","at":{"path":"reveal","t":0},
+                            "timeline":[{"do":"walk","path":"reveal","to":1}]}],
+                 "card":{"authors":"","year":0,"title":""}}
+                """.utf8))
+            let engine = try FigureEngine(spec: spec, scene: scene)
+            #expect(engine.rig.actions[0].distance >= engine.rig.actions[0].stepLength)
+            #expect(engine.actions[0].end > 0)
+        }
+    }
+
+    @Test(arguments: [Point(1, 0), Point(-1, 0), Point(0, 1), Point(0, -1), Point(1, 1).unit])
+    func oneBinRetainsTheWipeDirection(direction: Point) throws {
+        var times = [Double?](repeating: nil, count: 9)
+        let dx = Int(direction.x.rounded()), dy = Int(direction.y.rounded())
+        times[(1 - dy) * 3 + 1 - dx] = 0
+        times[4] = 0.5
+        times[(1 + dy) * 3 + 1 + dx] = 1
+        let field = RevealField(width: 3, height: 3, seed: .left, times: times)
+        let path = try ArcPath(field.workerPath(steps: 1))
+        #expect((path.sample(0.5).point - Point(1.5, 1.5)).length < 0.01)
+        #expect((path.points.last! - path.points.first!).unit.dot(direction) > 0.99)
+        let spec = FigureSpec()
+        #expect(path.length >= spec.motion.step * spec.normalizationScale * 50)
     }
 
     @Test func pgmReservesZeroAndIncludesBothTimeEndpoints() throws {
