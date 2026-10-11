@@ -272,11 +272,11 @@ def georgian_caps(table, glossary):
             if sum(contains(n, terms) for n in names) > len(names) // denominator]
 
 
-def select(results, base, slot_keys, caps_hook, *, owners=(), guarantee=False, recorded=False):
+def select(results, base, slot_keys, caps_hook, *, owners=(), guarantee=False, recorded=False, identity=str.casefold):
     """Unique names, then whole-set caps, then an optional owner guarantee.
 
-    The hook returns violations as (kind, word) pairs. The piece supplies which winners
-    contribute to each violation. A guarantee never relaxes vetoes, uniqueness or caps.
+    The caps hook returns violations as (kind, word) pairs. The piece supplies which winners
+    contribute to each violation and the identity hook used for all name comparisons. A guarantee never relaxes vetoes, uniqueness or caps.
     If no legal assignment is available, report failure instead of silently breaking a rule.
     """
     def table(skip=None, name=None):
@@ -287,17 +287,17 @@ def select(results, base, slot_keys, caps_hook, *, owners=(), guarantee=False, r
 
     def fits(r, name, caps=True):
         t = table(r, name)
-        return list(t.values()).count(name) == 1 and not (caps and caps_hook(t))
+        return sum(identity(value) == identity(name) for value in t.values()) == 1 and not (caps and caps_hook(t))
 
     def take(r, st, note):
         r.setdefault("notes", []).append(note)
         r.update(winner=st["name"], winner_source=st["source"])
 
     def winner_score(r):
-        return next(st["score"] for st in r["standings"] if st["name"] == r["winner"])
+        return next(st["score"] for st in r["standings"] if identity(st["name"]) == identity(r["winner"]))
 
     for r in sorted(results, key=winner_score):
-        if list(table().values()).count(r["winner"]) > 1:
+        if sum(identity(value) == identity(r["winner"]) for value in table().values()) > 1:
             st = next((st for st in r["standings"] if not st["vetoes"] and fits(r, st["name"], caps=False)), None)
             if st:
                 take(r, st, f'{r["winner"]} was won by a higher-scoring color too')
@@ -305,7 +305,7 @@ def select(results, base, slot_keys, caps_hook, *, owners=(), guarantee=False, r
     seen = set()
     for _ in range(10 if recorded else sum(len(r["standings"]) for r in results) + 1):
         broken = caps_hook(table())
-        state = tuple(r["winner"] for r in results)
+        state = tuple(identity(r["winner"]) for r in results)
         if not broken or state in seen:
             break
         seen.add(state)
@@ -315,7 +315,7 @@ def select(results, base, slot_keys, caps_hook, *, owners=(), guarantee=False, r
         if not culprits:
             break
         r = min(culprits, key=winner_score)
-        st = next((st for st in r["standings"] if not st["vetoes"] and st["name"] != r["winner"] and fits(r, st["name"])), None)
+        st = next((st for st in r["standings"] if not st["vetoes"] and identity(st["name"]) != identity(r["winner"]) and fits(r, st["name"])), None)
         if not st:
             break
         take(r, st, f'{r["winner"]} would make too many names {"start" if pos == "lead" else "end"} with {word}')
@@ -338,23 +338,23 @@ def select(results, base, slot_keys, caps_hook, *, owners=(), guarantee=False, r
     # Greedy substitutions preserve the recorded run. For new runs, interacting caps or
     # guarantees may need more than one change at once; search only if the greedy set is illegal.
     if not recorded:
-        values = list(table().values())
+        values = [identity(value) for value in table().values()]
         missing = [gid for gid in owners if not any(r["winner_source"] == gid for r in results)] if guarantee else []
-        vetoed = any(next(st for st in r["standings"] if st["name"] == r["winner"])["vetoes"] for r in results)
+        vetoed = any(next(st for st in r["standings"] if identity(st["name"]) == identity(r["winner"]))["vetoes"] for r in results)
         if caps_hook(table()) or len(set(values)) != len(values) or missing or vetoed:
-            assignment = legal_assignment(results, base, slot_keys, caps_hook, owners if guarantee else ())
+            assignment = legal_assignment(results, base, slot_keys, caps_hook, owners if guarantee else (), identity=identity)
             if assignment is not None:
                 for r in results:
                     st = assignment[r["slot"]]
-                    if st["name"] != r["winner"]:
+                    if identity(st["name"]) != identity(r["winner"]):
                         take(r, st, "selected to satisfy uniqueness, caps and representation together")
                         r["guaranteed"] = guarantee and st["source"] == r["owner"]
     caps = [f"{word} ({pos})" for pos, word in caps_hook(table())]
     if not recorded:
-        values = list(table().values())
+        values = [identity(value) for value in table().values()]
         if caps or len(set(values)) != len(values):
             raise ValueError(f"no legal name set: caps={caps}, duplicates={len(values) - len(set(values))}")
-        if any(next(st for st in r["standings"] if st["name"] == r["winner"])["vetoes"] for r in results):
+        if any(next(st for st in r["standings"] if identity(st["name"]) == identity(r["winner"]))["vetoes"] for r in results):
             raise ValueError("no unvetoed winner available")
         if guarantee:
             missing = [gid for gid in owners if not any(r["winner_source"] == gid for r in results)]
@@ -363,34 +363,39 @@ def select(results, base, slot_keys, caps_hook, *, owners=(), guarantee=False, r
     return caps
 
 
-def legal_assignment(results, base, slot_keys, caps_hook, owners):
+def legal_assignment(results, base, slot_keys, caps_hook, owners, *, identity=str.casefold):
     """Deterministic fallback for interacting constraints; caps must count monotonically.
 
     Unassigned slots contain unique, non-word placeholders, keeping the whole-set size fixed
     for fractional caps. The most constrained slot goes first; current winners are tried first.
     """
     table = {key: value for key, value in base.items() if key not in slot_keys.values()}
-    if len(set(table.values())) != len(table):
+    if len({identity(value) for value in table.values()}) != len(table):
         return None
+    placeholders = {slot: object() for slot in slot_keys}
     for slot, key in slot_keys.items():
-        table[key] = f"\0{slot}"
+        table[key] = placeholders[slot]
+
+    def partial_caps():
+        return caps_hook({key: value if isinstance(value, str) else f"\0{key}" for key, value in table.items()})
+
     choices = {r["slot"]: sorted([s for s in r["standings"] if not s["vetoes"]],
-                                 key=lambda s: s["name"] != r["winner"]) for r in results}
+                                 key=lambda s: identity(s["name"]) != identity(r["winner"])) for r in results}
     assigned = {}
 
     def search(remaining):
         represented = {s["source"] for s in assigned.values()}
         if not remaining:
-            return set(owners) <= represented and not caps_hook(table)
+            return set(owners) <= represented and not partial_caps()
         viable = {}
         for slot in remaining:
             key = slot_keys[slot]
             viable[slot] = []
             for candidate in choices[slot]:
                 table[key] = candidate["name"]
-                if list(table.values()).count(candidate["name"]) == 1 and not caps_hook(table):
+                if sum(isinstance(value, str) and identity(value) == identity(candidate["name"]) for value in table.values()) == 1 and not partial_caps():
                     viable[slot].append(candidate)
-            table[key] = f"\0{slot}"
+            table[key] = placeholders[slot]
             if not viable[slot]:
                 return False
         forced = {}
@@ -415,7 +420,7 @@ def legal_assignment(results, base, slot_keys, caps_hook, owners):
             if search([s for s in remaining if s != slot]):
                 return True
         assigned.pop(slot, None)
-        table[key] = f"\0{slot}"
+        table[key] = placeholders[slot]
         return False
 
     return assigned if search([r["slot"] for r in results]) else None

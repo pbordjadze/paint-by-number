@@ -5,11 +5,11 @@ them, and half the panel judges the other half's colors. Agents answer in their 
 reads it from the agent's transcript. Usage:
   colors.py setup | prompts | extract <role> <name> <agent-id> | collect | sheets | judges | decide
 """
-import math, os, random, re, sys
+import argparse
+import math, os, random, re
 from pathlib import Path
-from .. import loop, transcripts
+from .. import loop, paths, transcripts
 from ..loop import load, save
-from PIL import Image, ImageDraw, ImageFont
 
 REPO = str(loop.REPO)
 RUN = os.environ.get("COLORS_RUN", os.path.join(REPO, "factory", "pieces", "color-names", "run"))
@@ -195,13 +195,19 @@ def extract(role, name, agent_id):
     """Reads an agent's final reply (its SubagentHandback message) from its transcript."""
     if role not in ("proposals", "verdicts"):
         raise ValueError("role must be proposals or verdicts")
-    path = agent_id if agent_id.endswith(".output") else os.path.join(TASKS, f"{agent_id}.output")
+    target = paths.legacy_path(RUN, role, name)
+    path = agent_id if agent_id.endswith(".output") else paths.contained(TASKS, f"{paths.slug(agent_id)}.output")
     data = transcripts.extract(path)
-    save(os.path.join(RUN, role, f"{name}.json"), data)
+    save(target, data)
     print(name, "ok" if "error" not in data else data["error"])
+
+def identity(name):
+    return name.casefold()
+
 
 def craft(name, slot, vocab_names):
     fails = []
+    if not name.strip(): fails.append("nonempty name")
     words = name.split(" ")
     if not 1 <= len(words) <= 2: fails.append("one or two words")
     if len(name) > 16: fails.append("at most 16 characters")
@@ -211,12 +217,12 @@ def craft(name, slot, vocab_names):
     parts = [p for p in re.split(r"[ -]", name.lower()) if p]
     if any(p in COLOR_WORDS for p in parts): fails.append("no color words")
     if any(p in FORBIDDEN for p in parts): fails.append("a forbidden word")
-    if name.lower() in vocab_names - {slot["incumbent"].lower()}: fails.append("another color's name")
+    if identity(name) in vocab_names - {identity(slot["incumbent"])}: fails.append("another color's name")
     return fails
 
 def collect():
     slots, vocab = load(os.path.join(RUN, "slots.json")), vocabulary()
-    vocab_names = {v["name"].lower() for v in vocab}
+    vocab_names = {identity(v["name"]) for v in vocab}
     writer = load(os.path.join(RUN, "proposals", "writer.json"), {}).get("names", {})
     rng = random.Random("plants")
     plant_slots = {}
@@ -238,10 +244,10 @@ def collect():
         kept, seen = [], set()
         for c in cands:
             fails = [] if c["source"] == "incumbent" else craft(c["name"], s, vocab_names)
-            if c["name"].lower() in seen: fails.append("duplicate in this slot")
+            if identity(c["name"]) in seen: fails.append("duplicate in this slot")
             if fails:
                 rejected.append({"slot": s["slot"], **c, "fails": fails}); continue
-            seen.add(c["name"].lower()); kept.append(c)
+            seen.add(identity(c["name"])); kept.append(c)
         s["candidates"] = kept
     save(os.path.join(RUN, "slots.json"), slots)
     save(os.path.join(RUN, "rejected.json"), rejected)
@@ -249,12 +255,14 @@ def collect():
     for r in rejected: print("  rejected", r["slot"], r["name"], r["source"], r["fails"])
 
 def font(size):
+    from PIL import ImageFont
     for p in ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/dejavu/DejaVuSans.ttf"):
         if os.path.exists(p): return ImageFont.truetype(p, size)
     return ImageFont.load_default()
 
 def sheets():
     """One sheet of numbered swatches per half, for the jurors to look at."""
+    from PIL import Image, ImageDraw
     slots = load(os.path.join(RUN, "slots.json"))
     for half in "AB":
         mine = [s for s in slots if s["half"] == half]
@@ -353,7 +361,7 @@ def decide():
             r.update(loop.favorites(r["standings"]))
     base = {v["index"]: v["name"] for v in vocabulary()}
     caps = loop.select(results, base, {s["slot"]: s["index"] for s in slots}, NameCaps(rules()),
-                       owners=targets(), guarantee=rules()["guarantee"], recorded=rules()["recorded"])
+                       owners=targets(), guarantee=rules()["guarantee"], recorded=rules()["recorded"], identity=identity)
     save(os.path.join(RUN, "caps.json"), caps)
     if caps: print("style-guide caps still broken:", caps)
     save(os.path.join(RUN, "decision.json"), results)
@@ -363,7 +371,7 @@ def decide():
         source = r["winner_source"]
         if source in G and source not in represented:
             represented.append(source)
-        for note in next(st["whys"] for st in r["standings"] if st["name"] == r["winner"]):
+        for note in next(st["whys"] for st in r["standings"] if identity(st["name"]) == identity(r["winner"])):
             display, _, line = note.partition(": ")
             gid = next((g for g in load(os.path.join(RUN, "juries", "A.json")) + load(os.path.join(RUN, "juries", "B.json")) if G[g]["name"] == display), None)
             if gid:
@@ -404,6 +412,15 @@ class NameCaps:
 
 
 def main():
-    cmd, *rest = sys.argv[1:]
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest='command', required=True)
+    for command in ('setup', 'prompts', 'collect', 'sheets', 'judges', 'decide'):
+        commands.add_parser(command)
+    extract_parser = commands.add_parser('extract')
+    extract_parser.add_argument('role', choices=('proposals', 'verdicts'))
+    extract_parser.add_argument('name')
+    extract_parser.add_argument('agent_id')
+    args = parser.parse_args()
+    rest = [args.role, args.name, args.agent_id] if args.command == 'extract' else []
     {"setup": setup, "prompts": prompts, "extract": extract, "collect": collect, "sheets": sheets,
-     "judges": judges, "decide": decide}[cmd](*rest)
+     "judges": judges, "decide": decide}[args.command](*rest)

@@ -10,13 +10,15 @@ import argparse
 import json
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+
+from output_paths import outside_repo
 
 STAGES = ("working-image.ppm", "structure.pgm", "smoothed.ppm", "palette.ppm",
           "simplified.ppm", "line-art.pgm", "vectorized.pgm")
 
 
 def wipe(before, after, field, time):
+    from PIL import Image
     if before.size != after.size or before.size != field.size:
         raise ValueError("snapshots and reveal field must have the same size")
     if field.mode != "L":
@@ -40,6 +42,8 @@ def path_points(path):
 
 
 def make_sheet(snapshot_dir, reveal_dir, output):
+    from PIL import Image, ImageDraw, ImageFont
+    output = outside_repo(output)
     snapshots = [snapshot_dir / name for name in STAGES if (snapshot_dir / name).is_file()]
     if len(snapshots) < 2:
         raise ValueError("expected at least two named pbn snapshots")

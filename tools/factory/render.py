@@ -22,11 +22,19 @@ import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+
+from output_paths import clean_frames, outside_repo
 
 ROOT = Path(__file__).resolve().parents[2]
 SVG = "http://www.w3.org/2000/svg"
 ET.register_namespace("", SVG)
+
+
+def __getattr__(name):
+    if name in ('Image', 'ImageDraw', 'ImageFont'):
+        from importlib import import_module
+        return import_module('PIL.' + name)
+    raise AttributeError(name)
 
 
 def run(command):
@@ -77,7 +85,11 @@ def luminance(rgb):
 
 
 def ink_contrast(background, masks, ink):
-    ink_luma, worst = luminance(color(ink)), math.inf
+    digits = ink[1:]
+    if len(digits) in (3, 4):
+        digits = ''.join(c * 2 for c in digits)
+    material = int(digits[6:8], 16) / 255 if len(digits) == 8 else 1
+    ink_rgb, worst = color(ink), math.inf
     pixels = background.convert("RGB")
     for mask in masks:
         alpha = mask.getchannel("A")
@@ -85,13 +97,17 @@ def ink_contrast(background, masks, ink):
         if bounds is None:
             continue
         for rgb, coverage in zip(pixels.crop(bounds).getdata(), alpha.crop(bounds).getdata()):
-            if coverage >= 128:
+            # Raster alpha includes material opacity. Recover edge coverage before thresholding.
+            if material and coverage / material >= 127.5:
                 light = luminance(rgb)
+                painted = tuple(round(fg * material + bg * (1 - material)) for fg, bg in zip(ink_rgb, rgb))
+                ink_luma = luminance(painted)
                 worst = min(worst, (max(light, ink_luma) + 0.05) / (min(light, ink_luma) + 0.05))
     return round(worst if math.isfinite(worst) else 1, 6)
 
 
 def labelled_grid(images, labels, columns, path, thumb=None):
+    from PIL import Image, ImageDraw, ImageFont
     font = ImageFont.truetype("DejaVuSans.ttf", 18)
     if thumb:
         images = [image.resize(thumb, Image.Resampling.LANCZOS) for image in images]
@@ -107,6 +123,7 @@ def labelled_grid(images, labels, columns, path, thumb=None):
 
 
 def background_image(scene, scene_file, size):
+    from PIL import Image
     paper = Image.new("RGB", size, color(scene["canvas"].get("paper", "#F6F1E7")))
     if scene.get("background"):
         with Image.open(scene_file.parent / scene["background"]) as original:
@@ -119,12 +136,14 @@ _frame_background = None
 
 
 def init_compositor(path):
+    from PIL import Image
     global _frame_background
     with Image.open(path) as image:
         _frame_background = image.convert("RGB")
 
 
 def composite_frame(path):
+    from PIL import Image
     with Image.open(path) as overlay:
         panel = _frame_background.copy()
         panel.paste(overlay, (0, 0), overlay)
@@ -140,6 +159,10 @@ def composite_frames(paths, background, scratch):
 
 
 def compose(spec, scene, scene_file, out, manifest, motion, scratch, overlay_dir=None, no_card=False):
+    from PIL import Image
+    out = outside_repo(out)
+    if overlay_dir is not None:
+        overlay_dir = outside_repo(overlay_dir)
     width, height, fps = manifest["pixelWidth"], manifest["pixelHeight"], manifest["fps"]
     count = manifest["frameCount"]
     trees = [ET.parse(out / f"frames/{i:04d}.svg").getroot() for i in range(count)]
@@ -202,8 +225,7 @@ def compose(spec, scene, scene_file, out, manifest, motion, scratch, overlay_dir
 
     if overlay_dir is not None:
         overlay_dir.mkdir(parents=True, exist_ok=True)
-        for path in overlay_dir.glob("*.png"):
-            path.unlink()
+        clean_frames(overlay_dir, ("png",))
         for i in range(count):
             shutil.copyfile(out / f"frames/{i:04d}.png", overlay_dir / f"{i:04d}.png")
 
@@ -244,6 +266,21 @@ def compose(spec, scene, scene_file, out, manifest, motion, scratch, overlay_dir
     checks_file.write_text(json.dumps(checks, indent=2, sort_keys=True) + "\n")
 
 
+def render_engine(binary, spec, scene, out):
+    out = outside_repo(out)
+    with tempfile.TemporaryDirectory(prefix='figure-engine-', dir=out) as temporary:
+        fresh = Path(temporary)
+        run([binary, "render", "--spec", spec, "--scene", scene, "--out", fresh])
+        if not (fresh / 'manifest.json').is_file():
+            raise RuntimeError('figures render did not produce manifest.json')
+        clean_frames(out / 'frames')
+        for source in sorted(fresh.rglob('*')):
+            if source.is_file():
+                target = out / source.relative_to(fresh)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("spec", type=Path); parser.add_argument("scene", type=Path); parser.add_argument("out", type=Path)
@@ -252,6 +289,7 @@ def main():
     parser.add_argument("--no-card", action="store_true", help="omit the card and its checks for an uncited stage")
     parser.add_argument("--frames-only", action="store_true", help="write frames, sheets and checks; skip individual clip encoders")
     args = parser.parse_args()
+    from PIL import ImageFont
     try:
         ImageFont.truetype("DejaVuSans.ttf", 18)
     except OSError:
@@ -262,15 +300,17 @@ def main():
     if not args.figures.is_file():
         parser.error("build figures first: swift build -c release --product figures --static-swift-stdlib")
     start = time.monotonic()
-    out, spec_file, scene_file = args.out.resolve(), args.spec.resolve(), args.scene.resolve()
-    if out == ROOT or ROOT in out.parents:
-        parser.error("render output must be outside the repository (CLAUDE.md)")
-    overlay_dir = args.overlay_dir.resolve() if args.overlay_dir else None
+    try:
+        out = outside_repo(args.out)
+        overlay_dir = outside_repo(args.overlay_dir) if args.overlay_dir else None
+    except ValueError as error:
+        parser.error(str(error))
+    spec_file, scene_file = args.spec.resolve(), args.scene.resolve()
     if overlay_dir is not None and (overlay_dir == ROOT or ROOT in overlay_dir.parents or
                                     overlay_dir == out or out in overlay_dir.parents or overlay_dir in out.parents):
         parser.error("overlay output must be outside the repository and the render output")
     out.mkdir(parents=True, exist_ok=True)
-    run([args.figures.resolve(), "render", "--spec", spec_file, "--scene", scene_file, "--out", out])
+    render_engine(args.figures.resolve(), spec_file, scene_file, out)
     spec, scene = json.loads(spec_file.read_text()), json.loads(scene_file.read_text())
     manifest, motion = json.loads((out / "manifest.json").read_text()), json.loads((out / "motion.json").read_text())
     with tempfile.TemporaryDirectory(prefix="figure-review-", dir=out) as temporary:

@@ -47,6 +47,18 @@ def check(rule):
             check(child)
 
 
+def equal(a, b):
+    if type(a) in (int, float) and type(b) in (int, float):
+        return a == b
+    if type(a) is not type(b):
+        return False
+    if isinstance(a, list):
+        return len(a) == len(b) and all(equal(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict):
+        return a.keys() == b.keys() and all(equal(a[key], b[key]) for key in a)
+    return a == b
+
+
 def validate(value, schema, path='$'):
     if set(schema) - KEYWORDS:
         raise ValueError('unsupported schema keyword')
@@ -63,13 +75,13 @@ def validate(value, schema, path='$'):
             errors.append(f'{path}: expected exactly one allowed variant')
             # Show the matching move variant's field errors when its tag is known.
             matched = [child for child in schema['oneOf'] if isinstance(value, dict) and
-                       value.get('do') in child.get('properties', {}).get('do', {}).get('enum', [])]
+                       any(equal(value.get('do'), tag) for tag in child.get('properties', {}).get('do', {}).get('enum', []))]
             if len(matched) == 1:
                 errors += validate(value, matched[0], path)
     if type(value) in (int, float):
         if (type(value) is float and not math.isfinite(value)) or not schema.get('minimum', -float('inf')) <= value <= schema.get('maximum', float('inf')):
             errors.append(f'{path}: number outside allowed range')
-    if 'enum' in schema and value not in schema['enum']:
+    if 'enum' in schema and not any(equal(value, allowed) for allowed in schema['enum']):
         errors.append(f'{path}: not one of {schema["enum"]}')
     if isinstance(value, dict):
         props = schema.get('properties', {})
@@ -84,7 +96,7 @@ def validate(value, schema, path='$'):
     if isinstance(value, list):
         if not schema.get('minItems', 0) <= len(value) <= schema.get('maxItems', float('inf')):
             errors.append(f'{path}: wrong item count')
-        if schema.get('uniqueItems') and any(v in value[:i] for i, v in enumerate(value)):
+        if schema.get('uniqueItems') and any(equal(v, prior) for i, v in enumerate(value) for prior in value[:i]):
             errors.append(f'{path}: repeated item')
         for i, item in enumerate(value):
             errors += validate(item, schema.get('items', {}), f'{path}[{i}]')

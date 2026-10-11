@@ -6,6 +6,7 @@
 
 Advisory: nothing is decided here. The Lamp's own name stays the Lamp's call; anything else is Paul's.
 """
+import argparse
 import json, os, random, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -150,4 +151,7 @@ def tally():
         print(f"{gid:22} {r.get('score', '-')!s:2} {r.get('favorite', '-')!s:2} {r.get('line', '')}")
 
 if __name__ == "__main__":
-    {"setup": setup, "tally": tally}[sys.argv[1]]()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command', choices=('setup', 'tally'))
+    args = parser.parse_args()
+    {"setup": setup, "tally": tally}[args.command]()

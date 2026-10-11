@@ -2,10 +2,10 @@
 import math
 import textwrap
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 
 def font(size):
+    from PIL import ImageFont
     for path in ('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
                  '/usr/share/fonts/dejavu/DejaVuSans.ttf'):
         if Path(path).exists():
@@ -22,6 +22,7 @@ def write(image, path):
 
 
 def text_in_use(lines, path):
+    from PIL import Image, ImageDraw
     wrapped = [part for line in lines for part in textwrap.wrap(line, 64)]
     image = Image.new('RGB', (960, max(120, 40 + 36 * len(wrapped))), '#f4f1ea')
     draw = ImageDraw.Draw(image)
@@ -31,6 +32,7 @@ def text_in_use(lines, path):
 
 
 def swatches(slots, path):
+    from PIL import Image, ImageDraw
     if not slots:
         raise ValueError('cannot render an empty swatch sheet')
     cols = min(4, len(slots))
@@ -45,6 +47,7 @@ def swatches(slots, path):
 
 def contacts(lettered_images, path):
     """Order and labels come from one juror's private ballot; never show source filenames."""
+    from PIL import Image, ImageDraw, ImageOps
     if not lettered_images:
         raise ValueError('cannot render an empty contact sheet')
     cols = min(3, len(lettered_images))

@@ -9,18 +9,18 @@ import subprocess
 import time
 from pathlib import Path
 
-from . import accounting, loop, transcripts
+from . import accounting, loop, paths, transcripts
 from .kit import outside_repo
 
 
 def destination(run, job):
-    suffix = '.retry' if job['attempt'] else ''
-    return Path(run) / 'replies' / f"{job['round']:03}" / f"{job['id']}{suffix}.json"
+    return paths.job_path(run, job, 'replies')
 
 
 def claude(run, job_path, transcript):
     job = loop.load(job_path)
     target = destination(run, job)
+    paths.job_path(run, job, 'costs')
     loop.save(target, transcripts.extract(transcript))
     accounting.record(run, job, transcript)
     return target
@@ -38,13 +38,16 @@ def codex_command(job, schema_path, reply_path, scratch):
 
 def codex(run, job_path, out):
     job = loop.load(job_path)
-    scratch = outside_repo(out) / f"{job['round']:03}" / f"{job['id']}-{job['attempt']}"
+    target = destination(run, job)
+    paths.job_path(run, job, 'costs')
+    scratch = paths.job_path(outside_repo(out), job, 'scratch')
     scratch.mkdir(parents=True, exist_ok=False)
-    schema_path, reply_path, log = scratch / 'schema.json', scratch / 'reply.json', scratch / 'codex.jsonl'
+    schema_path, reply_path, log = [paths.contained(scratch, name) for name in
+                                   ('schema.json', 'reply.json', 'codex.jsonl')]
     loop.save(schema_path, job['reply_schema'])
     command = codex_command(job, schema_path, reply_path, scratch)
     start = time.monotonic()
-    with log.open('w') as stdout, (scratch / 'stderr.txt').open('w') as stderr:
+    with log.open('w') as stdout, paths.contained(scratch, 'stderr.txt').open('w') as stderr:
         result = subprocess.run(command, input=job['prompt'], text=True, stdout=stdout, stderr=stderr, check=False)
     accounting.record(run, job, log, elapsed=time.monotonic() - start)
     if result.returncode:

@@ -10,9 +10,8 @@ import tomllib
 from pathlib import Path
 from typing import Protocol
 
-from PIL import Image
 
-from . import accounting, loop, renderers, schema
+from . import accounting, loop, paths, renderers, schema
 from .kit import outside_repo
 from .pieces import play as piece
 
@@ -68,6 +67,7 @@ class MockDriver:
     only at settle; an unexpected move or exhausted recording is an explicit rejection.
     """
     def __init__(self, folder, *, recording=None):
+        from PIL import Image
         self.folder = Path(folder).resolve()
         self.recording = loop.load(self.folder / 'recording.json') if recording is None else recording
         data = self.recording
@@ -139,6 +139,7 @@ def config_read():
 
 
 def observe(driver, run, n):
+    from PIL import Image
     state = validate_state(driver.state())
     source = Path(driver.screenshot())
     # Decode as well as copy: an unreadable frame must never become a recorded turn.
@@ -228,7 +229,7 @@ class Session:
                'effort': self.rules['role']['effort'], 'images': [screenshot], 'attempt': 0,
                'reply_schema': self.rules['reply_schema'], 'state': latest['state'], 'history': history,
                'prompt': piece.prompt(self.rules['brief'], guardian, screenshot, latest['state'], history)}
-        path = self.path / 'jobs' / f'{n:03}' / f"{job['id']}.json"
+        path = paths.job_path(self.path, job, 'jobs')
         old = loop.load(path)
         if old is not None and old != job:
             raise ValueError('play job is frozen; use a new session')
@@ -260,14 +261,14 @@ class Session:
     def collect(self):
         job = self.job()
         folder = f"{job['round']:03}"
-        reply_path = self.path / 'replies' / folder / f"{job['id']}.json"
-        retry_path = self.path / 'retries' / folder / f"{job['id']}.json"
+        reply_path = paths.job_path(self.path, job, 'replies')
+        retry_path = paths.job_path(self.path, job, 'retries')
         repairing = retry_path.exists()
         if repairing:
-            rejection = loop.load(self.path / 'rejections' / folder / f"{job['id']}-1.json")
+            rejection = loop.load(paths.job_path(self.path, {**job, 'attempt': 1}, 'rejections'))
             if rejection is not None:
                 return {'status': 'blocked', 'reason': rejection['error']}
-            reply_path = reply_path.with_name(f"{job['id']}.retry.json")
+            reply_path = paths.job_path(self.path, {**job, 'attempt': 1}, 'replies')
         if not reply_path.exists():
             return {'status': 'waiting', 'reply': str(reply_path)}
         try:
@@ -279,7 +280,7 @@ class Session:
                 retry = {**job, 'attempt': 1, 'error': reason, 'reply': reply_path.read_text()}
                 retry['prompt'] += f'\nYour reply was rejected: {reason}. Repair it once.'
                 loop.save(retry_path, retry)
-            loop.save(self.path / 'rejections' / folder / f"{job['id']}-{int(repairing)}.json",
+            loop.save(paths.job_path(self.path, {**job, 'attempt': int(repairing)}, 'rejections'),
                       {'error': reason, 'reply': reply_path.read_text()})
             return {'status': 'blocked' if repairing else 'rejected', 'reason': reason}
         return {'status': 'accepted', 'turn': turn, 'session': self.status()}
