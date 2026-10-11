@@ -55,7 +55,8 @@ driving manual and the state of play.
 | F10 (4859d5e) | Merged: engine v1 (props, sweep, ink, several actors); 307 tests with F9; hero digests unchanged |
 | F14 | Merged: v1 and v2 pet sheets on the collection page; gallery wording |
 | F15 | Merged: walkable reveal paths; renders byte-identical |
-| F7, F16 | Running (Codex, gpt-6.1-sol, high) |
+| F7 | Merged: a v2 teapot in 21 image generations and 18 min, validated, nothing uploaded; one Codex session per pet |
+| F16 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
