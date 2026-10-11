@@ -2,8 +2,8 @@ import Foundation
 import SwiftUI
 
 /// The Marginarium: how Paint by Moonlight is made, told in chapters, with Pip, Codex's teapot,
-/// near the top and one passage from each chapter and appendix (`MarginariumEntry`). A sheet
-/// from the gallery's toolbar.
+/// and Colophon, Claude's moth, near the top and one passage from each chapter and appendix
+/// (`MarginariumEntry`). A sheet from the gallery's toolbar.
 struct MarginariumView: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -17,11 +17,11 @@ struct MarginariumView: View {
                             .font(.display(.title3, weight: .semibold))
                             .foregroundStyle(.secondary)
                         Text(String(localized: "marginarium.intro",
-                                    defaultValue: "Paul makes this app with a small team of AI helpers: Codex builds the tools, Claude reviews the work and writes these chapters, and nineteen guardians called the Lamp vote on matters of taste. Paul has the last word.",
+                                    defaultValue: "Paul makes this app with a small team of AI helpers: Codex builds the tools, Claude reviews the work and writes these chapters, and nineteen guardians called the Lamp weigh in on smaller design questions. The big creative choices stay with people, and a person's choice always wins.",
                                     comment: "The Marginarium: the introduction under the subtitle; Codex and Claude are AI helpers, the Lamp a panel of nineteen guardians"))
                     }
 
-                    PipGreeting()
+                    MarginariumGreeting()
 
                     VStack(alignment: .leading, spacing: 28) {
                         Text(String(localized: "marginarium.passages", defaultValue: "One passage from each chapter, quoted as written.",
@@ -36,6 +36,21 @@ struct MarginariumView: View {
                             .font(.display(.title2))
                             .accessibilityAddTraits(.isHeader)
                         ForEach(MarginariumEntry.appendices) { MarginariumEntryView(entry: $0) }
+                    }
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("How the Lamp works")
+                            .font(.display(.title2))
+                            .accessibilityAddTraits(.isHeader)
+                        ForEach(Array(MarginariumLamp.lines.enumerated()), id: \.offset) { _, line in
+                            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                Image(systemName: "circle.fill")
+                                    .font(.system(size: 5))
+                                    .accessibilityHidden(true)
+                                Text(line)
+                            }
+                            .accessibilityElement(children: .combine)
+                        }
                     }
 
                     Text(String(localized: "marginarium.footer", defaultValue: "The \"I\" in these passages is Claude, the narrator.",
@@ -97,17 +112,49 @@ private struct MarginariumEntryView: View {
     }
 }
 
-/// Pip, Codex's teapot, with what it has to say. It idles on a loop of its sprite's frames
-/// (`PipSprite`); a tap plays its waving row once and goes back to idling. Under Reduce Motion
-/// it stands still on its first idle frame, and a tap shows the lid lifted for a moment.
-private struct PipGreeting: View {
+/// The pets sit together, with Pip's speech bubble below so captions and speech have room
+/// to wrap on narrow windows and at accessibility text sizes.
+private struct MarginariumGreeting: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 14) {
+                MarginariumSpritePlayer(animation: PipSprite.animation,
+                                        caption: String(localized: "Pip, Codex's teapot"),
+                                        hint: String(localized: "Lifts its lid."))
+                MarginariumSpritePlayer(animation: ColophonSprite.animation,
+                                        caption: String(localized: "Colophon, Claude's moth"),
+                                        hint: String(localized: "Folds its wings like a bookmark."))
+            }
+
+            Text(String(localized: "marginarium.pip.bubble", defaultValue: "Still being written! Codex says more chapters are on the way.",
+                        comment: "The Marginarium: what Pip, Codex's teapot, says in its speech bubble"))
+                .font(.callout)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .padding(.top, SpeechBubble.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(SpeechBubble().fill(Theme.surface))
+        }
+    }
+}
+
+/// One cancellable player for both pets. A new tap restarts the response; Reduce Motion
+/// shows one still pose, and closing the sheet cancels the loop.
+private struct MarginariumSpritePlayer: View {
+    let animation: SpriteAnimation
+    let caption: String
+    let hint: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    /// The frame on screen.
-    @State private var pose = PipSprite.idle[0]
-    /// Taps so far, and how many of them have had their wave: a new tap restarts the animation.
+    @State private var pose: SpriteFrame
     @State private var taps = 0
-    @State private var waved = 0
+    @State private var played = 0
+
+    init(animation: SpriteAnimation, caption: String, hint: String) {
+        self.animation = animation
+        self.caption = caption
+        self.hint = hint
+        _pose = State(initialValue: animation.idle[0])
+    }
 
     private struct Trigger: Equatable {
         let taps: Int
@@ -115,66 +162,46 @@ private struct PipGreeting: View {
     }
 
     var body: some View {
-        // Pip above its bubble at accessibility text sizes, beside it otherwise.
-        let stacked = dynamicTypeSize.isAccessibilitySize
-        let layout = stacked
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-            : AnyLayout(HStackLayout(alignment: .center, spacing: 14))
-        layout {
-            VStack(spacing: 6) {
-                Button {
-                    taps += 1
-                } label: {
-                    Image(pose.name)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 96, height: 104)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("Pip, Codex's teapot"))
-                .accessibilityHint(Text("Lifts its lid."))
-                // The button already says who Pip is.
-                Text("Pip, Codex's teapot")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .accessibilityHidden(true)
+        VStack(spacing: 6) {
+            Button {
+                taps += 1
+            } label: {
+                Image(pose.name)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 96, height: 104)
             }
-            .layoutPriority(1)
-
-            Text(String(localized: "marginarium.pip.bubble", defaultValue: "Still being written! Codex says more chapters are on the way.",
-                        comment: "The Marginarium: what Pip, Codex's teapot, says in its speech bubble"))
-                .font(.callout)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .padding(stacked ? Edge.Set.top : Edge.Set.leading, SpeechBubble.tail)
-                .background(SpeechBubble(tailOnTop: stacked).fill(Theme.surface))
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(caption))
+            .accessibilityHint(Text(hint))
+            // The button already says who the pet is.
+            Text(caption)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
         }
+        .frame(maxWidth: .infinity)
         .task(id: Trigger(taps: taps, reduceMotion: reduceMotion)) { await animate() }
     }
 
-    /// Idles until cancelled (by the next tap, a Reduce Motion change or the page closing),
-    /// after playing the waving row once if a tap hasn't had its wave yet.
     private func animate() async {
-        let waves = taps > waved
-        waved = taps
+        let responds = taps > played
+        played = taps
         do {
-            if reduceMotion {
-                if waves {
-                    pose = PipSprite.lidLifted
-                    try await Task.sleep(for: PipSprite.lidLifted.hold)
-                }
-                pose = PipSprite.idle[0]
-                return
-            }
-            if waves {
-                for step in PipSprite.waving {
+            if responds {
+                for step in animation.actionFrames(reduceMotion: reduceMotion) {
                     pose = step
                     try await Task.sleep(for: step.hold)
                 }
             }
+            if reduceMotion {
+                pose = animation.idle[0]
+                return
+            }
             while true {
-                for step in PipSprite.idle {
+                for step in animation.idle {
                     pose = step
                     try await Task.sleep(for: step.hold)
                 }
@@ -185,29 +212,20 @@ private struct PipGreeting: View {
     }
 }
 
-/// A rounded speech bubble whose tail points to its leading side (Pip beside it) or its top
-/// (Pip above it). Its content leaves `tail` of room on that side.
+/// A rounded speech bubble whose top tail points to Pip in the leading half of the pair.
+/// Its content leaves `tail` of room above it.
 nonisolated private struct SpeechBubble: Shape {
     static let tail: CGFloat = 10
-    var tailOnTop: Bool
 
     func path(in rect: CGRect) -> Path {
         let tail = Self.tail
-        let body = tailOnTop
-            ? CGRect(x: rect.minX, y: rect.minY + tail, width: rect.width, height: max(0, rect.height - tail))
-            : CGRect(x: rect.minX + tail, y: rect.minY, width: max(0, rect.width - tail), height: rect.height)
+        let body = CGRect(x: rect.minX, y: rect.minY + tail,
+                          width: rect.width, height: max(0, rect.height - tail))
         var path = Path(roundedRect: body, cornerRadius: 18, style: .continuous)
-        if tailOnTop {
-            let x = body.minX + 48
-            path.move(to: CGPoint(x: x - tail, y: body.minY))
-            path.addLine(to: CGPoint(x: x, y: rect.minY))
-            path.addLine(to: CGPoint(x: x + tail, y: body.minY))
-        } else {
-            let y = body.midY
-            path.move(to: CGPoint(x: body.minX, y: y - tail))
-            path.addLine(to: CGPoint(x: rect.minX, y: y))
-            path.addLine(to: CGPoint(x: body.minX, y: y + tail))
-        }
+        let x = body.minX + body.width / 4
+        path.move(to: CGPoint(x: x - tail, y: body.minY))
+        path.addLine(to: CGPoint(x: x, y: rect.minY))
+        path.addLine(to: CGPoint(x: x + tail, y: body.minY))
         path.closeSubpath()
         return path
     }

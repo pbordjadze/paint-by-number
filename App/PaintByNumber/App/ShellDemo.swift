@@ -36,7 +36,7 @@ import Foundation
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
-/// - `marginarium`: The Marginarium's sheet over the empty gallery, Pip idling.
+/// - `marginarium`: The Marginarium's sheet over the empty gallery, Pip and Colophon idling.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
