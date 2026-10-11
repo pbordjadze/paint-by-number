@@ -1,0 +1,15 @@
+{
+  "guardian": "balanchine",
+  "keep": true,
+  "new_pet": "",
+  "why": "The fork's turns dance on their own before the note sounds, so the motion carries the idea and the note only keeps its pulse.",
+  "favorite_place": "C",
+  "also": ["A", "E"],
+  "veto": {
+    "place": "B",
+    "quote": "mushy timing; movement that decorates instead of saying something; clutter on stage",
+    "why": "A figure dancing in the corner while someone paints is movement that decorates the one stage where the painting must be seen."
+  },
+  "style": "Every pet keeps time to a clear pulse, each gesture landing on the beat and no motion wasted.",
+  "making": "Each sprite needs the same frame rate and beat count per cycle, so the shared style sheet should fix timing as well as look."
+}
