@@ -121,6 +121,21 @@ class AuditTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             runners.destination(run, self.job)
 
+    def test_linked_ancestors_are_allowed_like_macos_tmp(self):
+        # macOS reaches /tmp and $TMPDIR through links; only what lies below the output counts.
+        from factory.taste import paths
+        import output_paths
+        real = self.root / 'private'
+        (real / 'out').mkdir(parents=True)
+        (self.root / 'tmp').symlink_to(real, target_is_directory=True)
+        linked = self.root / 'tmp/out'
+        self.assertEqual(output_paths.outside_repo(linked), (real / 'out').resolve())
+        self.assertEqual(paths.job_path(linked, self.job, 'replies'),
+                         (real / 'out/replies/001/proposer-moon.json').resolve())
+        (real / 'out/frames').symlink_to(self.root, target_is_directory=True)
+        with self.assertRaises(ValueError):
+            output_paths.outside_repo(linked)
+
     def test_legacy_extractors_reject_escaping_ids_and_symlinks(self):
         with patch.object(color_names, 'RUN', str(self.root)):
             for name in ('../escape', '/absolute', ''):

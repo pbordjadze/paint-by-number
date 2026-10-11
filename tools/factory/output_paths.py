@@ -6,12 +6,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def outside_repo(path, repository=ROOT):
-    original = Path(path).absolute()
-    # Check before resolving so dangling links and links to another external directory fail too.
-    for component in (original, *original.parents):
-        if component.is_symlink():
-            raise ValueError(f'symlinked output path: {component}')
-    output = original.resolve()
+    # The output may be reached through links (macOS's /tmp and /var are); what is written below
+    # it must not be, so children are checked and the resolved output is held outside the repo.
+    output = Path(path).resolve()
     for repo in (ROOT, Path(repository).resolve()):
         if output == repo or repo in output.parents:
             raise ValueError('output must be outside the repository')

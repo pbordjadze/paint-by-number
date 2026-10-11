@@ -25,11 +25,10 @@ def validate_job(job):
 
 
 def contained(root, *parts):
-    """Resolve against a trusted root; refuse every symlink below it before any write."""
-    original = Path(root).absolute()
-    if any(parent.is_symlink() for parent in (original, *original.parents)):
-        raise ValueError('symlinked artifact root')
-    root = original.resolve()
+    """Resolve against a trusted root; refuse every symlink below it before any write.
+
+    The root's own ancestors may be links (macOS's /tmp and /var are), so they aren't checked."""
+    root = Path(root).resolve()
     path = root
     for part in parts:
         part = Path(part)
