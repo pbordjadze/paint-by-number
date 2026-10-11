@@ -381,6 +381,41 @@ real working size, as a coloring book from its committed maps. Factory only; no 
 - Deterministic: two full runs give byte-identical frames (compare digests in the report). Tests
   for the new flag and the cropped contact sheet on a small synthetic photo.
 
+### F20 · The makers' page
+Branch `codex/f20-makers-page`. Chapter 7 gave the Marginarium a last page, after all the
+guardians, for the two who built and told it: Pip and Colophon (`pieces/pets/makers.md`).
+Add it to the collection page. Factory only; no app code.
+- `tools/factory/collection.py` gains `--pets <dir>`: read `<dir>/<id>/spritesheet.webp` instead
+  of `factory/pets/` (real pets stay out of the repo; their final sheets are under
+  `/root/factory-out/F18/{pip,colophon}/final/`). Keep the current behavior without the flag.
+- After the guardians, a closing section, **The makers**, with two entries and no letter
+  circles: **Pip**, "Codex's teapot. A plain white teapot, a little lopsided, with no face. Lift
+  the lid and there is a blue dot underneath." and **Colophon**, "Claude's moth. A small round
+  moth with pale page wings. It circles the lamp once, at a safe distance, and lands beside the
+  words like a bookmark." Use these words exactly. Each shows its idle row; a tap or click
+  plays one other row once and returns to idle: Pip's waving row (row 3, the lid lifts),
+  Colophon's review row (row 8, the wings fold flat). Take each row's frame count and timings
+  from the create-pet skill's v2 reference (`~/.codex/plugins/cache/openai-curated-remote/work-pets/0.1.6/skills/create-pet`),
+  and cite where in the report. Reduced motion: still first frames, and a tap shows the row's
+  middle frame for a moment instead of playing it. The entries are buttons with VoiceOver-style
+  labels ("Pip, Codex's teapot. Tap to lift the lid.").
+- A missing sheet leaves its entry as text only. Tests with generated placeholder v2 atlases
+  (never real pets): the flag, the section's order and words, the row and timing data, the
+  missing-sheet case. Build the page with the real sheets outside the repo and look at it in a
+  headless browser screenshot (idle, and mid-row after a click).
+
+### F21 · A read-only audit of the factory
+Branch none: report only, no code changes. Read `Sources/FigureRig`, `Sources/figures`,
+`tools/factory/*.py` and `factory/taste/*.py` end to end, as a reviewer who will be blamed for
+what ships. Look for: bugs (with the input that triggers each), nondeterminism (set or dict
+order, time, unseeded randomness, float sums that depend on chunking), unsafe file handling
+(paths from JSON written outside their directory, output written into the repo), dead code,
+duplicated helpers that have drifted apart, tests that cannot fail, and docstrings that no
+longer match the code. Run the test suites and the tools' `--help` to check claims.
+Write `/root/factory-out/F21/audit.md`: findings ranked most severe first, each with file and
+line, a one-line failure scenario, and a proposed fix; then a short list of what you checked
+and found sound. Don't fix anything; Claude turns the findings into backlog items.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
