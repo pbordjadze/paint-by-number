@@ -109,8 +109,8 @@ def render_card(run, slot, result, pick, names):
     if proposal.is_file():
         proposed = read(proposal)['names'].get(sid, [])
         if isinstance(proposed, list):
-            why = next((p['why'] for p in proposed if p['name'] == name), why)
-    maker = names.get(source, {'writer': 'The Writer', 'incumbent': 'The original vocabulary'}.get(source, source))
+            why = next((p.get('why', '') for p in proposed if p['name'] == name), why)
+    maker = names.get(source, {'writer': 'the outside writer', 'incumbent': 'the name the app already had'}.get(source, source))
     owner = names.get(slot['owner'], slot['owner'])
     standing = next(s for s in result['standings'] if s['name'] == name)
     loved = bool(pick and pick['love'] and not pick['veto'])
@@ -145,7 +145,7 @@ def render_card(run, slot, result, pick, names):
     <p class="label">Color {esc(sid)} · #{swatch}</p>
     <h2 id="name-{esc(sid)}">{esc(name)}</h2>
     <p class="maker">Named by {esc(maker)}</p>
-    <p class="reason">{esc(why) if why else 'No proposer reason recorded.'}</p>
+    {f'<p class="reason">{esc(why)}</p>' if why else ''}
     <p class="entrusted">Entrusted to {esc(owner + idea)}</p>
     <p class="love{' loved' if loved else ''}">{'♥ ' if loved else ''}{status}</p>
   </div>

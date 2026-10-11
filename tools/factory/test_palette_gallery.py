@@ -26,6 +26,7 @@ class Cards(HTMLParser):
     def __init__(self, page):
         super().__init__()
         self.cards = {}
+        self.reasons = {}
         self.current = None
         self.feed(page)
 
@@ -34,6 +35,9 @@ class Cards(HTMLParser):
         if tag == 'article':
             self.current = attrs['id']
             self.cards[self.current] = ''
+            self.reasons[self.current] = []
+        if tag == 'p' and attrs.get('class') == 'reason':
+            self.reasons[self.current].append(attrs)
 
     def handle_endtag(self, tag):
         if tag == 'article':
@@ -78,21 +82,40 @@ class PaletteGalleryTests(unittest.TestCase):
         self.assertEqual(page, self.build(preview=True))
         cards = Cards(page).cards
         self.assertEqual(len(cards), 36)
-        for sid, old, new, maker in ((20, 'Chalk Dust', 'Salt Flat', 'The original vocabulary'),
+        for sid, old, new, maker in ((20, 'Chalk Dust', 'Salt Flat', 'the name the app already had'),
                                     (21, 'Apple Blossom', 'Blossom Dust', 'The Child at Bedtime'),
                                     (30, 'Paper Lantern', 'Torchlight', 'The Open Source Enthusiast'),
-                                    (36, 'Golden Hour', 'Late Sunlight', 'The Writer')):
+                                    (36, 'Golden Hour', 'Late Sunlight', 'the outside writer')):
             self.assertIn(f'Paul vetoed {old}. Replaced by {new}.', cards[f'color-{sid}'])
             self.assertIn(f'Named by {maker}', cards[f'color-{sid}'])
             self.assertIn('Paul has not marked this name as loved', cards[f'color-{sid}'])
             self.assertIn(f'>{new}</h2>', page)
         self.assertIn('Loved by Paul', cards['color-2'])
         self.assertIn('A young willow leaf in spring', cards['color-2'])
-        self.assertIn('No proposer reason recorded.', cards['color-1'])
+        self.assertIn('Named by the outside writer', cards['color-1'])
+        self.assertNotIn('No proposer reason recorded', page)
+        parsed = Cards(page)
+        for sid in (1, 20, 36):
+            self.assertEqual(parsed.reasons[f'color-{sid}'], [])
+        self.assertEqual(len(parsed.reasons['color-2']), 1)
         self.assertIn('Near-duplicate of Lantern Paper', cards['color-30'])
         self.assertIn('Preferred Ripe Guava', cards['color-30'])
         self.assertIn('Warm coral like a fruit lit by one lamp.', cards['color-30'])
         self.assertIn('Paul · veto', cards['color-20'])
+
+    def test_missing_or_empty_proposer_reason_omits_the_line(self):
+        proposal = gallery.read(self.run / 'proposals/medea.json')
+        candidate = next(p for p in proposal['names']['2'] if p['name'] == 'Willow Leaf')
+        for why in (None, ''):
+            with self.subTest(why=why):
+                if why is None:
+                    candidate.pop('why')
+                else:
+                    candidate['why'] = why
+                self.save(self.run / 'proposals/medea.json', proposal)
+                parsed = Cards(self.build(preview=True))
+                self.assertEqual(parsed.reasons['color-2'], [])
+                self.assertNotIn('A young willow leaf in spring', parsed.cards['color-2'])
 
     def test_past_and_today_drop_but_future_and_unscheduled_records_are_absent(self):
         self.schedule([{'date': '2026-10-12', 'colors': [3]},

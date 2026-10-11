@@ -54,14 +54,14 @@ class CollectionTests(unittest.TestCase):
                        check=True, capture_output=True, text=True, cwd=self.folder)
         return output.read_text()
 
-    def atlas(self, guardian):
-        image = Image.new("RGBA", (192 * 8, 208 * 9))
+    def atlas(self, guardian, rows=9):
+        image = Image.new("RGBA", (192 * 8, 208 * rows))
         draw = ImageDraw.Draw(image)
-        for row in range(9):
+        for row in range(rows):
             for column in range(8):
                 draw.rectangle((column * 192, row * 208,
                                 (column + 1) * 192 - 1, (row + 1) * 208 - 1),
-                               fill=(20 + column * 30, 20 + row * 25, 100, 255))
+                               fill=(20 + column * 30, 20 + row * 20, 100, 255))
         path = self.repo / "factory" / "pets" / guardian / "spritesheet.webp"
         path.parent.mkdir(parents=True)
         image.save(path, lossless=True)
@@ -77,7 +77,8 @@ class CollectionTests(unittest.TestCase):
         self.assertIn('id="pet-robber-girl"', page)
 
     def test_available_atlases_replace_only_their_guardians_and_are_portable(self):
-        atlases = {guardian: self.atlas(guardian) for guardian in ("medea", "robber-girl")}
+        atlases = {guardian: self.atlas(guardian, rows)
+                   for guardian, rows in (("medea", 9), ("robber-girl", 11))}
         page = self.build()
         self.assertEqual(page, self.build())
         pets = Pets(page).cards
@@ -85,24 +86,37 @@ class CollectionTests(unittest.TestCase):
             pet = pets[guardian]
             self.assertEqual(pet["class"], "pet pet-sprite")
             self.assertEqual(pet["aria-hidden"], "true")
-            encoded = re.fullmatch(r"background-image: url\(data:image/webp;base64,(.+)\)",
-                                   pet["style"]).group(1)
+            encoded, sheet_width, sheet_height = re.fullmatch(
+                r"background-image: url\(data:image/webp;base64,(.+)\); "
+                r"background-size: (\d+)px (\d+)px", pet["style"]).groups()
+            sheet_size = (int(sheet_width), int(sheet_height))
+            expected_size = (1536, 1872 if guardian == "medea" else 2288)
+            self.assertEqual(sheet_size, tuple(side // 4 for side in expected_size))
             data = base64.b64decode(encoded, validate=True)
             self.assertEqual(data, path.read_bytes())
             with Image.open(io.BytesIO(data)) as image:
-                self.assertEqual(image.size, (1536, 1872))
+                self.assertEqual(image.size, expected_size)
                 self.assertNotEqual(image.getpixel((0, 0)), image.getpixel((192, 0)))
         self.assertEqual(pets["moon"]["class"], "pet")
+
+    def test_unsupported_atlas_sizes_fail_and_name_the_file(self):
+        path = self.repo / "factory/pets/medea/spritesheet.webp"
+        path.parent.mkdir(parents=True)
+        for size in ((1536, 2080), (768, 936), (1535, 2288)):
+            with self.subTest(size=size):
+                Image.new("RGBA", size).save(path, lossless=True)
+                with self.assertRaises(subprocess.CalledProcessError) as caught:
+                    self.build()
+                self.assertIn(str(path), caught.exception.stderr)
+                self.assertIn(f"unsupported atlas size {size[0]} × {size[1]}",
+                              caught.exception.stderr)
 
     def test_idle_uses_six_first_row_cells_with_the_specified_holds(self):
         page = self.build()
         sprite = re.search(r"\.pet-sprite\s*\{([^}]+)\}", page).group(1)
         width = float(re.search(r"width: ([\d.]+)px", sprite).group(1))
         height = float(re.search(r"height: ([\d.]+)px", sprite).group(1))
-        sheet_width, sheet_height = map(float, re.search(
-            r"background-size: ([\d.]+)px ([\d.]+)px", sprite).groups())
         self.assertEqual(width / height, 192 / 208)
-        self.assertEqual((sheet_width / width, sheet_height / height), (8, 9))
         duration = float(re.search(r"animation: pet-idle ([\d.]+)ms steps\(1, end\) infinite",
                                    sprite).group(1))
         keyframes = re.search(r"@keyframes pet-idle\s*\{(.*?)\n\}", page, re.S).group(1)
