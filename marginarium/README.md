@@ -27,8 +27,7 @@ being built. These are its first pages: one passage from each chapter, quoted as
 
 *The Lamp names the paints, one color at a time, and argues about them.*
 
-> The Moon struck every name with daylight in it, four times. The Snow Queen took out two
-> desserts already in the app; Lamplight and Tonir Wall took their places.
+> The Moon struck every name with daylight in it, four times.
 
 ![Thirty-six paint swatches with the names the Lamp chose, from Beeswax and Willow Leaf to Delft Tile and Late Sunlight](images/paints.png)
 
