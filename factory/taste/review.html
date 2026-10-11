@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{color-scheme:light dark;--paper:#f4f1ea;--ink:#2a2622;--card:#fffdf7;--line:#b7ad9b;--gold:#9b7525}
+@media(prefers-color-scheme:dark){:root{--paper:#211f1b;--ink:#eee7dc;--card:#302c25;--line:#756b58;--gold:#ddbb65}}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.5 system-ui}
+main{max-width:1100px;margin:auto;padding:32px 20px}h1,h2{font-family:Georgia,serif}h1{font-size:2.4rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}.card{background:var(--card);border:1px solid var(--line);padding:18px;border-radius:8px}
+.swatch{height:130px;border:1px solid var(--line)}img{max-width:100%;height:auto}button,select,textarea{font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:8px}
+button{cursor:pointer}button:disabled{cursor:default}textarea{width:100%;margin-top:12px}select{width:100%;margin-bottom:12px}
+.controls{display:flex;gap:10px}.veto[aria-pressed=true]{background:#a5352b;color:white}.love[aria-pressed=true]{background:var(--gold);color:var(--paper)}.loved{border:2px solid var(--gold)}.vetoed{border:2px solid #a5352b}
+small{display:block}summary{cursor:pointer}a{color:inherit}
+</style>
+<main><p>The Lamp · design checkpoint</p><h1>__TITLE__</h1><p id="intro"></p><p id="notice" role="status"></p>
+<button id="export" hidden>Export checkpoint.json</button><div class="grid" id="grid"></div></main>
+<script>
+const DATA = __DATA__;
+const state = Object.fromEntries(DATA.picks.map(p=>[String(p.slot),p]));
+const cards = {};
+const el=(tag,text)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;};
+const intro=document.getElementById('intro');
+intro.textContent=DATA.edit?'Veto a name, star one you love, and leave a note. Choose an alternative to record a pick for it.':'The chosen designs, their makers, and what the jury saw in them.';
+for(const item of DATA.cards){
+ const card=el('article');card.className='card';const sid=String(item.slot);
+ if(item.hex){const sw=el('div');sw.className='swatch';sw.style.backgroundColor='#'+item.hex;sw.setAttribute('role','img');sw.setAttribute('aria-label','Color '+item.hex);card.append(sw);}
+ let image=null;if(item.image||item.standings.some(c=>c.image)){image=el('img');image.alt='Design for slot '+sid;card.append(image);}
+ const title=el('h2',sid+' · '+item.name);card.append(title);
+ const author=el('p');card.append(author);const reason=el('p');card.append(reason);
+ const jury=el('div');card.append(jury);
+ const details=el('details');details.append(el('summary','Jury standings'));
+ for(const candidate of item.standings)details.append(el('p',candidate.name+' · '+candidate.score+' points · '+candidate.firsts+' first places'+(candidate.vetoes.length?' · Vetoed: '+candidate.vetoes.join('; '):'')));
+ card.append(details);
+ const controls=el('div');controls.className='controls';const veto=el('button','Veto');veto.className='veto';const love=el('button','★ Love it');love.className='love';
+ for(const button of [veto,love]){button.type='button';button.setAttribute('aria-pressed','false');button.disabled=true;controls.append(button);}
+ const select=el('select');select.setAttribute('aria-label','Candidate for slot '+sid);
+ for(const candidate of item.standings){const option=el('option',candidate.name);option.value=candidate.name;select.append(option);}
+ select.value=(state[sid]||{}).name||item.name;select.disabled=true;
+ const note=el('textarea');note.setAttribute('aria-label','Note on slot '+sid);note.placeholder='A note (optional)';note.disabled=true;
+ const status=el('small');status.setAttribute('role','status');
+ if(DATA.edit)card.append(select,controls,note,status);
+ else{card.append(status);if((state[sid]||{}).note)card.append(el('p',state[sid].note));}
+ cards[sid]={card,title,author,reason,jury,veto,love,note,status,select,item,image};document.getElementById('grid').append(card);
+}
+function paint(sid){
+ const k=cards[sid],p=state[sid]||{},name=p.name||k.item.name,c=k.item.standings.find(c=>c.name===name)||k.item.standings[0];
+ k.title.textContent=sid+' · '+name;k.author.textContent='Named by '+c.author;k.reason.textContent=c.why||'';
+ if(k.image){k.image.hidden=!c.image;k.image.src=c.image||'';}
+ k.jury.replaceChildren();for(const [juror,line] of Object.entries(c.lives||{}))k.jury.append(el('small',juror+': '+line));
+ for(const line of c.notes||[])k.jury.append(el('small',line));
+ k.veto.setAttribute('aria-pressed',String(!!p.veto));k.love.setAttribute('aria-pressed',String(!!p.love));
+ k.card.classList.toggle('vetoed',!!p.veto);k.card.classList.toggle('loved',!!p.love);
+ if(document.activeElement!==k.note)k.note.value=p.note||'';
+ k.status.textContent=p.veto?'Paul vetoed this.':p.love?'Paul loved this.':'';
+}
+Object.keys(cards).forEach(paint);
+(async()=>{
+ if(!DATA.edit)return;
+ const notice=document.getElementById('notice'),queues={};let db=null,owner=false;
+ try{db=window.claude&&window.claude.use?await window.claude.use('db'):null;
+ const user=window.claude&&window.claude.use?await window.claude.use('user'):null;owner=user?await user.isOwner():false;}catch(e){notice.textContent='Cloud saving is unavailable; use local saving and export.';}
+ const key='lamp-checkpoint-'+DATA.key;
+ if(db){
+  db.collection('checkpoint').onSnapshot(snap=>{for(const doc of snap.docs){const p=doc.data();if(p&&cards[String(p.slot)]&&(p.round===undefined||p.round===DATA.round)){state[String(p.slot)]=p;cards[String(p.slot)].select.value=p.name;paint(String(p.slot));}}},()=>{notice.textContent='Could not read saved picks.';});
+  if(!owner){notice.textContent='Only the signed-in owner can save picks.';return;}
+ }else{
+  notice.textContent='Picks save in this browser. Export checkpoint.json for the loop.';
+  try{Object.assign(state,JSON.parse(localStorage.getItem(key)||'{}'));Object.keys(cards).forEach(sid=>{cards[sid].select.value=(state[sid]||{}).name||cards[sid].item.name;paint(sid);});}catch(e){notice.textContent='Browser saving unavailable. Export your picks before closing.';}
+ }
+ const exportButton=document.getElementById('export');exportButton.hidden=false;
+ exportButton.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(Object.values(state),null,2)],{type:'application/json'}));const link=el('a');link.href=url;link.download='checkpoint.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ function save(sid){const k=cards[sid],p=state[sid]||{};
+ const body={slot:k.item.slot,name:k.select.value,veto:!!p.veto,love:!!p.love,note:k.note.value.trim(),at:new Date().toISOString(),round:DATA.round};state[sid]=body;
+ if(db){queues[sid]=(queues[sid]||Promise.resolve()).then(()=>db.doc('checkpoint/c'+sid).set(body)).then(()=>{k.status.textContent='Saved';},()=>{k.status.textContent='Not saved; try again.';});}
+ else{try{localStorage.setItem(key,JSON.stringify(state));k.status.textContent='Saved in this browser';}catch(e){k.status.textContent='Export to keep these picks.';}}
+ }
+ for(const [sid,k] of Object.entries(cards)){
+  k.veto.disabled=k.love.disabled=k.note.disabled=k.select.disabled=false;
+  k.select.onchange=()=>{state[sid]={name:k.select.value,veto:false,love:false,note:''};k.note.value='';paint(sid);save(sid);};
+  k.veto.onclick=()=>{state[sid]={...(state[sid]||{}),veto:!(state[sid]||{}).veto,love:false};paint(sid);save(sid);};
+  k.love.onclick=()=>{state[sid]={...(state[sid]||{}),love:!(state[sid]||{}).love,veto:false};paint(sid);save(sid);};
+  k.note.oninput=()=>save(sid);
+ }
+})();
+</script></html>
