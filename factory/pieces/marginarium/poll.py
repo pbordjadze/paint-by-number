@@ -9,8 +9,8 @@ Advisory: nothing is decided here. The Lamp's own name stays the Lamp's call; an
 import json, os, random, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, "..", "..", "taste"))
-import taste  # noqa: E402
+sys.path.insert(0, os.path.join(HERE, "..", "..", ".."))
+from factory.taste import loop  # noqa: E402
 
 WORD = "Marginarium"
 OPTIONS = {
@@ -30,7 +30,7 @@ ORIGINALITY = """- **believes**: nothing we make should look like someone else's
 - It can only veto. It never votes on taste."""
 
 def shared_bar():
-    text = open(os.path.join(taste.REPO, "factory", "GUARDIANS.md")).read()
+    text = (loop.REPO / "factory" / "GUARDIANS.md").read_text()
     return text.split("## The shared bar: Georgia\n", 1)[1].split("\n## ", 1)[0].strip()
 
 INTRO = """You are {name}, one guardian of A Lamp Left Burning ("the Lamp"), the design panel of Medea, an iPhone and iPad app that turns a photo into a paint-by-numbers painting. Each guardian keeps one idea. Yours is below: answer as that guardian, in its voice, and only for its idea.
@@ -94,9 +94,7 @@ A veto is {{"option": "all", "quote": your guards-against line word for word, "w
 """
 
 def voters():
-    # panel.json still says "nina" until F2 renames the seat; new records use the seat's name.
-    return [{**g, "id": "robber-girl" if g["id"] == "nina" else g["id"]}
-            for g in taste.guardians() if g["active"]]
+    return [g for g in loop.guardians() if g["active"]]
 
 def setup():
     os.makedirs(os.path.join(HERE, "prompts"), exist_ok=True)
@@ -141,8 +139,8 @@ def tally():
             approve[k] = approve.get(k, 0) + 1
     out["mean_score"] = round(sum(scores) / len(scores), 2) if scores else None
     out["scores"] = {str(s): scores.count(s) for s in range(1, 6)}
-    out["favorite"] = dict(sorted(favorite.items(), key=lambda kv: -kv[1]))
-    out["approve"] = dict(sorted(approve.items(), key=lambda kv: -kv[1]))
+    out["favorite"] = dict(sorted(favorite.items(), key=lambda kv: (-kv[1], kv[0])))
+    out["approve"] = dict(sorted(approve.items(), key=lambda kv: (-kv[1], kv[0])))
     out["vetoes"] = vetoes
     json.dump(out, open(os.path.join(HERE, "tally.json"), "w"), indent=2, ensure_ascii=False)
     print(json.dumps({k: out[k] for k in ("mean_score", "scores", "favorite", "approve", "missing")}, indent=1))
