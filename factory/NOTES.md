@@ -160,11 +160,15 @@ Proposed casting (first scope, 8 agents + 1 ranker per round):
 - Guardians on two model families: later, as a layer on probation. Varying the model and the vibe
   at once makes it impossible to tell which caused a disagreement.
 
-## Medea: guardian #1, and the app's new name pending clearance
+## Medea: the app's name and its design North Star
 
-- A name is protected by trademark, not copyright: a trademark search in the app's classes
-  (software, games) and the App Store's name availability decide it. Tyler Perry's Madea sounds
-  nearly the same; include it in the search.
+Paul: she's witchy, Georgian (Colchis), all about aesthetics, cool, from mythology, kind,
+helpful, beautiful. She chairs the guardians: she must be present in every piece, the others
+are represented across the app, and she breaks ties (`GUARDIANS.md`).
+
+- Before the rename ships: a trademark search in the app's classes (software, games) and the App
+  Store's name availability. Tyler Perry's Madea sounds nearly the same; include it in the
+  search.
 - Many people know Medea first from Euripides' play, in which she kills her children. Her charter
   says which Medea this is: Ovid's (Metamorphoses, Book 7), who gathers herbs by moonlight and
   makes the old young again.
