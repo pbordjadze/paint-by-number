@@ -15,6 +15,8 @@ REPO = taste.REPO
 RUN = os.environ.get("COLORS_RUN", os.path.join(REPO, "factory", "pieces", "color-names", "run"))
 TASKS = "/tmp/claude-0/-home-user-paint-by-number/b544b7d0-6f35-5e84-ae25-ffbb56af2da3/tasks"
 VOCAB = os.path.join(REPO, "Sources", "PaintCore", "Foundation", "ColorNicknameVocabulary.swift")
+# Render output (the jurors' swatch sheets) lives outside the repo, as ARCHITECTURE.md says.
+OUT = os.path.join(os.environ.get("FACTORY_OUT", os.path.expanduser("~/factory-out")), "color-names")
 
 # Two colors of each guardian's own idea; each takes the nearest anchor not yet owned.
 TARGETS = {
@@ -249,7 +251,8 @@ def sheets():
             x, y = pad + (i % cols) * (w + pad), pad + (i // cols) * (h + pad + 30)
             d.rectangle([x, y, x + w, y + h], fill="#" + s["hex"], outline="#9A948A")
             d.text((x, y + h + 6), f'Color {s["slot"]}', fill="#2A2622", font=font(20))
-        img.save(os.path.join(RUN, f"sheet-{half}.png"))
+        os.makedirs(OUT, exist_ok=True)
+        img.save(os.path.join(OUT, f"sheet-{half}.png"))
     print("sheets written")
 
 def judges():
@@ -290,7 +293,7 @@ Reply with only this JSON, nothing else (no code fence):
 Your charter:
 {g['charter_text']}
 
-First look at the swatches with the Read tool: {os.path.join(RUN, f'sheet-{half}.png')} . The jury is choosing a name for each of these colors. The candidate names, in an order shuffled for you:
+First look at the swatches with the Read tool: {os.path.join(OUT, f'sheet-{half}.png')} . The jury is choosing a name for each of these colors. The candidate names, in an order shuffled for you:
 
 {chr(10).join(blocks)}
 
