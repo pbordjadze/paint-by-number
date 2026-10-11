@@ -51,6 +51,7 @@ public enum Vectorizer {
         settings: GenerationSettings,
         keepOut: LabelKeepOut,
         detailRegions: [UInt32] = [],
+        guides: [[SIMD2<Float>]] = [],
         cancel: CancellationCheck,
         clock: StageClock
     ) throws -> (template: Template, stats: VectorStats) {
@@ -102,7 +103,8 @@ public enum Vectorizer {
         try cancel.throwIfCancelled()
 
         let smoothing = try clock.measure("vectorize.smooth") {
-            try EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness).run(labelRoom: room, cancel: cancel)
+            try EdgeSmoother(graph: graph, smoothness: settings.normalized.smoothness, guides: guides)
+                .run(labelRoom: room, cancel: cancel)
         }
         var poles = smoothing.poles
         let geometry = smoothing.geometry

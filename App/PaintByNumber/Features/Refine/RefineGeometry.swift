@@ -86,50 +86,18 @@ nonisolated enum PenPath {
     }
 }
 
-/// The help the pens give a line once it's smoothed (`PenPath`), in one space (the template's
-/// canvas units): the Smart Pen straightens a line that runs nearly straight, and both pens move
-/// an end onto a line it comes near (`SnapLines`), the Smart Pen from much farther.
+/// The help the Pen and Shapes give a line's ends, in the template's canvas units: an end whose
+/// ink touches a line of the drawing moves onto it (`SnapLines`), so the cell closes as it looks.
 nonisolated enum PenAssist {
-    /// A line runs nearly straight when no point strays from its chord by more than this share
-    /// of the chord (or a floor the caller gives for short strokes): an arc bulges by about an
-    /// eighth of its turn (in radians) times its chord, so one turning more than 16° isn't.
-    static let straightness: CGFloat = 0.035
-    /// A line's end at a line's end (a break in it, or where it stops) counts as this much
-    /// nearer than a point along a line: a short stroke across a break joins the two ends.
-    static let endPreference: CGFloat = 0.5
-
-    /// The farthest any point lies from the segment between the first and the last.
-    static func deviation(_ points: [CGPoint]) -> CGFloat {
-        guard let a = points.first, let b = points.last else { return 0 }
-        return points.reduce(0) { max($0, PenPath.segmentDistance($1, a, b)) }
-    }
-
-    /// Whether `points` run nearly straight: no point farther from the chord than `straightness`
-    /// of its length (or `floor`, if more), and the line no longer than the chord by more than
-    /// twice that, so a stroke that doubles back along itself isn't.
-    static func isNearlyStraight(_ points: [CGPoint], floor: CGFloat) -> Bool {
-        guard let a = points.first, let b = points.last else { return false }
-        let chord = PenPath.distance(a, b)
-        guard chord > 0 else { return false }
-        let tolerance = max(straightness * chord, floor)
-        return deviation(points) <= tolerance && PenPath.length(points) <= chord + 2 * tolerance
-    }
-
-    /// `line`'s ends moved onto `lines` where they come within `reach`: onto a line's end when
-    /// `preferringEnds` (`SnapLines.join`; the line's own start too, for an end that closes a
-    /// loop), else onto the nearest point. A straight line moves its two ends; otherwise each
-    /// move eases in over `reach` of the line (half the line, if shorter), which the rest keeps.
-    /// Returns the line and the points its ends joined. A line the moves would fold to under
-    /// half its length keeps only its start's.
-    static func joined(
-        _ line: [CGPoint], to lines: SnapLines, reach: CGFloat, preferringEnds: Bool, straight: Bool
-    ) -> (line: [CGPoint], joins: [CGPoint]) {
-        guard line.count >= 2, reach > 0 else { return (line, []) }
+    /// `line`'s ends moved onto the nearest point of `lines` where they come within `reach`, its
+    /// end onto its own start where it comes back that near it (a loop, at least three reaches
+    /// long), so the shape closes. A straight line moves its two ends; otherwise each move eases
+    /// in over `reach` of the line (half the line, if shorter), which the rest keeps. A line the
+    /// moves would fold to under half its length keeps only its start's.
+    static func joined(_ line: [CGPoint], to lines: SnapLines, reach: CGFloat, straight: Bool) -> [CGPoint] {
+        guard line.count >= 2, reach > 0 else { return line }
         let length = PenPath.length(line)
         let span = min(reach, length / 2)
-        func target(for p: CGPoint, ends: [CGPoint]) -> CGPoint? {
-            preferringEnds ? lines.join(for: p, within: reach, ends: ends) : lines.nearestPoint(to: p, within: reach)
-        }
         func move(_ points: [CGPoint], atStart: Bool, to target: CGPoint) -> [CGPoint] {
             guard straight else { return moving(points, atStart: atStart, to: target, span: span) }
             var points = points
@@ -137,23 +105,15 @@ nonisolated enum PenAssist {
             return points
         }
         var out = line
-        var joins: [CGPoint] = []
-        if let start = target(for: line[0], ends: []) {
-            out = move(out, atStart: true, to: start)
-            joins.append(start)
-        }
+        if let start = lines.nearestPoint(to: line[0], within: reach) { out = move(out, atStart: true, to: start) }
         let started = out
-        // The line may close on its own start, if it's long enough to make a loop.
-        let own = length >= 3 * reach ? [out[0]] : []
-        if let end = target(for: line[line.count - 1], ends: own) {
+        let last = line[line.count - 1]
+        let own = length >= 3 * reach && PenPath.distance(last, out[0]) <= reach ? out[0] : nil
+        if let end = own ?? lines.nearestPoint(to: last, within: reach) {
             out = move(out, atStart: false, to: end)
-            if PenPath.length(out) >= length / 2 {
-                joins.append(end)
-            } else {
-                out = started
-            }
+            if PenPath.length(out) < length / 2 { out = started }
         }
-        return (out, joins)
+        return out
     }
 
     /// `points` with an end (the first, or the last) moved to `target`, the move easing in over
@@ -183,9 +143,43 @@ nonisolated enum PenAssist {
     }
 }
 
+/// The Shapes tool's figures (`RefineShape`), in any one space: a rectangle across two corners,
+/// an oval filling the box they span, a curve bent through a point. A closed figure ends where
+/// it starts, so PaintCore takes it as a closed line (`EdgeGuides`).
+nonisolated enum ShapePath {
+    static func rectangle(from a: CGPoint, to b: CGPoint) -> [CGPoint] {
+        [a, CGPoint(x: b.x, y: a.y), b, CGPoint(x: a.x, y: b.y), a]
+    }
+
+    /// The oval in the box from `a` to `b`, its points at most `spacing` apart (at least 16).
+    static func oval(from a: CGPoint, to b: CGPoint, spacing: CGFloat) -> [CGPoint] {
+        let centre = PenPath.midpoint(a, b), rx = abs(b.x - a.x) / 2, ry = abs(b.y - a.y) / 2
+        // No arc of an angle's step is longer than the step on the larger radius.
+        let n = max(16, Int((2 * CGFloat.pi * max(rx, ry) / max(spacing, 0.1)).rounded(.up)))
+        let points = (0..<n).map { k -> CGPoint in
+            let angle = 2 * CGFloat.pi * CGFloat(k) / CGFloat(n)
+            return CGPoint(x: centre.x + rx * cos(angle), y: centre.y + ry * sin(angle))
+        }
+        return points + [points[0]]
+    }
+
+    /// The curve from `a` to `b` through `bend` (a quadratic passing through it halfway), its
+    /// points at most `spacing` apart.
+    static func curve(from a: CGPoint, to b: CGPoint, through bend: CGPoint, spacing: CGFloat) -> [CGPoint] {
+        let control = CGPoint(x: 2 * bend.x - (a.x + b.x) / 2, y: 2 * bend.y - (a.y + b.y) / 2)
+        // A quadratic moves at most twice its longer control leg per unit of its parameter.
+        let speed = 2 * max(PenPath.distance(a, control), PenPath.distance(control, b))
+        let n = max(2, Int((speed / max(spacing, 0.1)).rounded(.up)))
+        return (0...n).map { k -> CGPoint in
+            let t = CGFloat(k) / CGFloat(n), u = 1 - t
+            return CGPoint(
+                x: u * u * a.x + 2 * u * t * control.x + t * t * b.x, y: u * u * a.y + 2 * u * t * control.y + t * t * b.y)
+        }
+    }
+}
+
 /// The lines on screen a pen's end may meet, in the template's canvas units: the drawing's
-/// lines, those drawn since, less what was erased since; with the ends where a line stops
-/// rather than goes on into another (a break in a line, or a line ending in the open).
+/// lines, those drawn since, less what was erased since.
 nonisolated struct SnapLines {
     nonisolated struct Line {
         let points: [CGPoint]
@@ -193,31 +187,15 @@ nonisolated struct SnapLines {
     }
 
     let lines: [Line]
-    let ends: [CGPoint]
 
     init(_ polylines: [[CGPoint]]) {
-        var lines: [Line] = []
-        var count: [Key: Int] = [:]
-        for points in polylines where points.count >= 2 {
+        lines = polylines.filter { $0.count >= 2 }.map { points in
             var low = points[0], high = points[0]
             for p in points {
                 low = CGPoint(x: min(low.x, p.x), y: min(low.y, p.y))
                 high = CGPoint(x: max(high.x, p.x), y: max(high.y, p.y))
             }
-            lines.append(Line(points: points, bounds: CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y)))
-            count[Key(points[0]), default: 0] += 1
-            count[Key(points[points.count - 1]), default: 0] += 1
-        }
-        self.lines = lines
-        ends = lines.flatMap { [$0.points[0], $0.points[$0.points.count - 1]] }.filter { count[Key($0)] == 1 }
-    }
-
-    /// A point to a 64th of a unit, so lines that meet share their ends exactly.
-    nonisolated private struct Key: Hashable {
-        let x: Int, y: Int
-        init(_ p: CGPoint) {
-            x = Int((p.x * 64).rounded())
-            y = Int((p.y * 64).rounded())
+            return Line(points: points, bounds: CGRect(x: low.x, y: low.y, width: high.x - low.x, height: high.y - low.y))
         }
     }
 
@@ -285,21 +263,6 @@ nonisolated struct SnapLines {
                 let d = PenPath.distance(p, q)
                 if d <= reach, best == nil || d < best!.distance { best = (q, d) }
             }
-        }
-        return best?.point
-    }
-
-    /// Where an end at `p` joins the lines within `reach`: a line's end (or one of `ends`, the
-    /// pen's own) counting as `PenAssist.endPreference` as far as it is, else the nearest point.
-    func join(for p: CGPoint, within reach: CGFloat, ends extra: [CGPoint] = []) -> CGPoint? {
-        var best: (point: CGPoint, score: CGFloat)?
-        for end in ends + extra {
-            let d = PenPath.distance(p, end)
-            if d <= reach, best == nil || d * PenAssist.endPreference < best!.score { best = (end, d * PenAssist.endPreference) }
-        }
-        if let q = nearestPoint(to: p, within: reach) {
-            let d = PenPath.distance(p, q)
-            if best == nil || d < best!.score { best = (q, d) }
         }
         return best?.point
     }

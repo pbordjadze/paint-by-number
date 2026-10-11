@@ -126,8 +126,10 @@ synchronized folder would bundle it into the app.
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
-  (`PaletteRows`) and order (`PaletteOrder`); picking the next color, and the Paint menu's `]`/`[`,
-  follow that order (`PaintingSession.colorOrder`).
+  (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
+  (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch, finishing the
+  selected color selects the first color left (`firstIncompleteColor`; the finished swatch
+  leaves), and the Pencil's double tap and the Paint menu's `]`/`[` step along it.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
   three-finger undo); the Pencil paints while fingers navigate (and only navigates them under "Only
@@ -307,21 +309,23 @@ Conventions).
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
-- Refine (optional, from the preview's toolbar; `RefineView`): the drawing large, on its paper
-  or over the photo; one finger draws lines and takes them out with exact and assisted tools:
-  the Pen draws as drawn (an end whose ink touches a line moves onto it, so the cell closes as
-  it looks), the Smart Pen straightens nearly straight lines (or one held at its end) and joins
-  ends to lines within a fingertip, the line under the finger showing as it will be
-  (`PenAssist`, `SnapLines`); the Eraser rubs out what it touches (a tap, a dab), the Smart
-  Eraser rubs too and a tap takes a line from junction to junction (`LineChains`); Fill's tap
-  makes the closed shape under it an area of its own in the photo's color there (a detail area,
-  its number down to half size; a swatch shows at the tap until the template has it, then the
-  area tinted in its paint under the drawing, `RefineFillLayer`), and a tap in a filled area
-  clears it (`RefineFills`). Refine zooms to 12× (`RefineSurfaceView.maximumZoom`). Two fingers
-  zoom and move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the
-  canvas's way); once an Apple Pencil touches the canvas the Pencil draws and one finger moves,
-  and its double tap switches a kind's pen and eraser. PaintCore keeps a drawn line exactly as
-  it arrives. Each change regenerates at full resolution, no draft (`CreateModel.refine`);
+- Refine (optional, from the preview's toolbar; `RefineView`): the drawing large, on its paper,
+  over the photo, or over the painting finished (Painting: every area in its paint,
+  `TemplateRasterizer.Style.paintedAreas`, rendered when a template comes); one finger draws
+  lines and takes them out, and what it draws is what the painting gets (PaintCore keeps each
+  line as drawn, as the outline of the areas it closes too, `EdgeGuides`): the Pen draws as
+  drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks,
+  `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
+  drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Eraser rubs out what it
+  touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to
+  junction (`LineChains`); Fill's tap makes the closed shape under it an area of its own in the
+  photo's color there (a detail area, its number down to half size; a swatch shows at the tap
+  until the template has it, then the area tinted in its paint under the drawing,
+  `RefineFillLayer`), and a tap in a filled area clears it (`RefineFills`). Refine zooms to 12×
+  (`RefineSurfaceView.maximumZoom`). Two fingers zoom and move and a two-finger tap undoes
+  (`RefineCanvas`: an invisible scroll view, the canvas's way); once an Apple Pencil touches the
+  canvas the Pencil draws and one finger moves, and its double tap switches between drawing and
+  the Eraser. Each change regenerates at full resolution, no draft (`CreateModel.refine`);
   meanwhile the changes the template on screen lacks draw over it in its own ink
   (`RefineInkLayer`), and Undo brings back a template already made at once (`CreateModel`'s
   `made`). Settings › Detail Brushes (`SettingsKey.detailBrushes`, off) adds the brushes for
@@ -331,7 +335,8 @@ Conventions).
   gain, `LineArtInput.writing`), so drafts, sliders and Start carry them, and a refined
   painting's `refinements.json` lets regeneration reproduce them. Nothing else reads them: a
   painting nobody refined is made as before. PaintCore's `LineEdits` (root `CLAUDE.md` › Line
-  art) is where drawn lines join the drawing and erased ones leave it.
+  art) is where drawn lines join the drawing and erased ones leave it: the drawing as it showed,
+  so an edit adds or takes out just what the painter drew or erased.
 - Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all

@@ -144,12 +144,15 @@ struct PaletteBar: View {
                     .padding(axis == .horizontal ? .vertical : .horizontal, PaletteMetrics.padding)
                     .frame(minWidth: minLength, alignment: .center)
                 }
+                // No anchor: the bar moves only as far as brings the selected swatch into view, and
+                // not at all while it shows. Centring it pulled the palette to its middle at every
+                // change of color.
                 .onAppear {
-                    if let selected = session.selectedColor { proxy.scrollTo(selected, anchor: .center) }
+                    if let selected = session.selectedColor { proxy.scrollTo(selected) }
                 }
                 .onChange(of: session.selectedColor) { _, selected in
                     guard let selected else { return }
-                    withAnimation(reduceMotion ? nil : .smooth(duration: 0.35)) { proxy.scrollTo(selected, anchor: .center) }
+                    withAnimation(reduceMotion ? nil : .smooth(duration: 0.35)) { proxy.scrollTo(selected) }
                 }
             }
         }

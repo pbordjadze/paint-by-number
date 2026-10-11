@@ -3,7 +3,7 @@ public struct TemplateGenerator: Sendable {
     /// Stamped into every generated template (`Template.pipelineVersion`). Bump in the same
     /// commit as any change that alters generated output for identical inputs and settings,
     /// so saved paintings record which pipeline drew them.
-    public static let pipelineVersion: UInt32 = 8
+    public static let pipelineVersion: UInt32 = 10
 
     public var settings: GenerationSettings
 
@@ -90,8 +90,8 @@ public struct TemplateGenerator: Sendable {
         let keepOut = LabelKeepOut(rects: writing?.keepOut ?? [], lines: plan?.drawnInterior.map(LabelKeepOut.Line.init) ?? [])
         var vector = try clock.measure("vectorize") {
             try Vectorizer.vectorizeWithStats(
-                segmentation, settings: settings, keepOut: keepOut, detailRegions: plan?.detailRegions ?? [], cancel: cancel,
-                clock: clock)
+                segmentation, settings: settings, keepOut: keepOut, detailRegions: plan?.detailRegions ?? [],
+                guides: plan?.guides ?? [], cancel: cancel, clock: clock)
         }
         vector.template.pipelineVersion = Self.pipelineVersion
         if let plan {

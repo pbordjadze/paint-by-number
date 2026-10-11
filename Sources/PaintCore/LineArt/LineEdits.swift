@@ -16,11 +16,12 @@ public struct LineEdit: Sendable, Equatable {
         /// line tapped away, the path its own): what only crosses the path, or goes on past its
         /// ends, stays.
         case eraseLine
-        /// The cell under the point (its one point) made an area of its own, painted the photo's
-        /// color there (`photoColor(at:in:)`) and kept whatever its size, its number allowed down
-        /// to `LabelSizing.detailMinimumRadius` (a detail area, `Template.detailRegions`). A
-        /// later fill of the same cell replaces an earlier one; a shape left open fills the cell
-        /// around it.
+        /// The shape under the point (its one point) made an area of its own: everything the lines
+        /// enclose there, painted the photo's color at the point (`photoColor(at:in:)`) and kept
+        /// whatever its size, its number allowed down to `LabelSizing.detailMinimumRadius` (a
+        /// detail area, `Template.detailRegions`; `CellMap.fill`). A later fill of the same shape
+        /// replaces an earlier one; where the lines enclose nothing short of the frame (a shape
+        /// left open), the cell around the point.
         case fill
     }
 
@@ -78,25 +79,25 @@ public struct LineEdit: Sendable, Equatable {
     }
 }
 
-/// The painter's edits (`LineArtInput.edits`) applied to the lines `LayeredLines` found, at its
-/// layer stage before free ends close:
+/// The painter's edits (`LineArtInput.edits`) applied to the drawing the template without them
+/// draws (`LayeredLines.shownLines`: what the painter saw before editing, its free ends already
+/// closed), so an edit changes that drawing and nothing else does:
 /// - a drawn line joins as an outline at full strength, so it walls cells off as a subject's
 ///   silhouette does, and keeps the path the painter drew, cut where it leaves the canvas:
-///   its ends are never free, so `closeFreeEnds` leaves them where they are (the drawing's own
-///   free ends may still be led into it). An end on or beside a line, or on the frame, closes
-///   cells against it as it lies (cells are 4-connected); a line that stops short of one, or
-///   runs on past it, is drawn inside the cell there, and numbers keep off it
+///   nothing leads its ends on, nor the drawing's into it. An end on or beside a line, or on
+///   the frame, closes cells against it as it lies (cells are 4-connected); a line that stops
+///   short of one, or runs on past it, is drawn inside the cell there, and numbers keep off it
 ///   (`LayeredLines.Plan.drawnInterior`);
 /// - the eraser takes out every point of a line within its radius, of the app's lines and of
 ///   the lines drawn before it (a line drawn later over an erased place stays), leaving no
 ///   piece shorter than `LineLayering.minimumRun`; a line erased whole (`eraseLine`) takes out
 ///   only the points beside its path that run along it (within `alongAngle`), so the lines it
-///   meets keep their junction with each other. Cut ends stay where the eraser left them, and
-///   no free end reaches into a place erased after its line was drawn (`blockedBy` over
-///   `origin`, which `LayeredLines` hands `closeFreeEnds`).
-/// `LayeredLines.annotate` draws the template's edges near an edit (`footprint`) exactly where
-/// lines run along them, instead of each edge whole or not at all by the most of it, so a line
-/// drawn or erased along part of a boundary between two paints shows as it was drawn.
+///   meets keep their junction with each other. Cut ends stay where the eraser left them.
+/// `LayeredLines.annotate` then draws the template's edges exactly where these lines run along
+/// them (`LayeredLines.Plan.exact`), instead of each edge whole or not at all by the most of
+/// it: the cells an erased line kept apart may join and their edges change, a line drawn or
+/// erased along part of a boundary between two paints shows as it was drawn, and no stretch of
+/// line the template didn't draw before appears.
 /// Fills change no line: `fills` hands their points, in order, to `LayeredLines`, which keeps
 /// the cells they fall in once the lines have split the paint (`CellMap.fill`).
 ///
@@ -126,12 +127,8 @@ enum LineEdits {
         /// The lines erased whole: the edit's index, its path in pixel coordinates (as given)
         /// and its reach in pixels.
         var erasedLines: [(index: Int32, path: [SIMD2<Float>], radius: Float)]
-        /// Per pixel, the last edit that erased anything within reach of it (an eraser's pass or
-        /// an erased line's path), or -1; nil when nothing was erased.
-        var blockedBy: [Int32]?
-        /// The eraser's passes and the erased lines' paths, in pixel coordinates, with their
-        /// reach in pixels.
-        var erasures: [(path: [SIMD2<Float>], radius: Float)]
+        /// The eraser's passes and the lines erased whole.
+        var erasures: Int
         /// The painter's lines kept, as pieces.
         var drawn: Int
         /// The fills' points, normalized to the photo as given, in the order they were made.
@@ -141,8 +138,8 @@ enum LineEdits {
     static func apply(_ edits: [LineEdit], to lines: [DrawnLine], width w: Int, height h: Int) -> Applied {
         let edits = sanitized(edits)
         let long = Float(max(w, h))
-        var erased: [Int32] = [], blocked: [Int32] = []
-        var erasures: [(path: [SIMD2<Float>], radius: Float)] = []
+        var erased: [Int32] = []
+        var erasures = 0
         var erasedLines: [(index: Int32, path: [SIMD2<Float>], radius: Float)] = []
         var area: Float = 0
         for (k, edit) in edits.enumerated() where edit.kind == .erase || edit.kind == .eraseLine {
@@ -150,16 +147,14 @@ enum LineEdits {
             let radius = edit.radius * long
             area += boxArea(path, margin: radius)
             guard area <= maximumErasedArea * Float(w * h) else { break }
-            let isEraser = edit.kind == .erase
-            if blocked.isEmpty { blocked = [Int32](repeating: -1, count: w * h) }
-            if isEraser && erased.isEmpty { erased = [Int32](repeating: -1, count: w * h) }
-            // Later paths cover earlier ones: each pixel ends with the last that reaches it.
-            stamp(path, radius: radius, width: w, height: h) { i in
-                blocked[i] = Int32(k)
-                if isEraser { erased[i] = Int32(k) }
+            if edit.kind == .erase {
+                if erased.isEmpty { erased = [Int32](repeating: -1, count: w * h) }
+                // Later paths cover earlier ones: each pixel ends with the last that reaches it.
+                stamp(path, radius: radius, width: w, height: h) { erased[$0] = Int32(k) }
+            } else {
+                erasedLines.append((Int32(k), path, radius))
             }
-            if !isEraser { erasedLines.append((Int32(k), path, radius)) }
-            erasures.append((path, radius))
+            erasures += 1
         }
         let erasedBy = erased.isEmpty ? nil : erased
         var out = lines
@@ -172,8 +167,8 @@ enum LineEdits {
         }
         cut(&out, origin: &origin, erasedBy: erasedBy, erasedLines: erasedLines, width: w, height: h)
         return Applied(
-            lines: out, origin: origin, erasedBy: erasedBy, erasedLines: erasedLines,
-            blockedBy: blocked.isEmpty ? nil : blocked, erasures: erasures, drawn: origin.filter { $0 >= 0 }.count,
+            lines: out, origin: origin, erasedBy: erasedBy, erasedLines: erasedLines, erasures: erasures,
+            drawn: origin.filter { $0 >= 0 }.count,
             fills: edits.filter { $0.kind == .fill }.map { $0.points[0] })
     }
 
@@ -328,15 +323,26 @@ enum LineEdits {
 
     // MARK: - Areas
 
-    /// Where `annotate` follows the lines exactly: within `near` of the eraser's paths' reach and
-    /// of the painter's lines (`origin` 0 or more) as they were laid out.
-    static func footprint(_ applied: Applied, lines: [DrawnLine], near: Float, width w: Int, height h: Int) -> [Bool] {
-        var mask = [Bool](repeating: false, count: w * h)
-        for erasure in applied.erasures {
-            stamp(erasure.path, radius: erasure.radius + near, width: w, height: h) { mask[$0] = true }
+    /// `erasedPlaces`' mark where an eraser's pass took the lines out.
+    static let rubbedOut: UInt8 = 2
+
+    /// Per pixel, where the edits erased, for `LayeredLines.annotate`: `rubbedOut` within an
+    /// eraser's pass, but within `near` of a line drawn after it; 1 within reach of a line erased
+    /// whole (what crosses it stays drawn there); 0 elsewhere. A gap in a line the eraser cut
+    /// would otherwise close again when shorter than `LineLayering.minimumRun` plus the reach
+    /// of the template's edges for a line (`LayeredLines.annotateNear`, either side): a dab of a
+    /// few pixels, zoomed in, would take out nothing.
+    static func erasedPlaces(_ applied: Applied, near: Float, width w: Int, height h: Int) -> [UInt8] {
+        var mask = [UInt8](repeating: 0, count: w * h)
+        for erased in applied.erasedLines {
+            stamp(erased.path, radius: erased.radius, width: w, height: h) { mask[$0] = 1 }
         }
-        for (line, o) in zip(lines, applied.origin) where o >= 0 {
-            stamp(line.points, radius: near, width: w, height: h) { mask[$0] = true }
+        guard let erasedBy = applied.erasedBy else { return mask }
+        for i in mask.indices where erasedBy[i] >= 0 { mask[i] = rubbedOut }
+        for (line, o) in zip(applied.lines, applied.origin) where o >= 0 {
+            stamp(line.points, radius: near, width: w, height: h) { i in
+                if mask[i] == rubbedOut && erasedBy[i] < o { mask[i] = 1 }
+            }
         }
         return mask
     }

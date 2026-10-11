@@ -905,6 +905,10 @@
       "comment" : "Status shown while the template is first generated from the photo",
       "extractionState" : "manual"
     },
+    "Curve" : {
+      "comment" : "Refine screen's Shapes menu: a curve, whose ends a first drag places and a second drag bends; also the Shapes button's VoiceOver value while it is picked",
+      "extractionState" : "manual"
+    },
     "Custom" : {
       "comment" : "Create flow chip above the sliders once a slider was moved: the settings are the painter's own, not the suggestion; also the chip's VoiceOver value",
       "extractionState" : "manual"
@@ -1581,6 +1585,10 @@
       "comment" : "Refine screen: the brush that makes an area simpler, with fewer lines (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
+    "Line" : {
+      "comment" : "Refine screen's Shapes menu: a straight line, drawn from where a drag starts to where it ends; also the Shapes button's VoiceOver value while it is picked",
+      "extractionState" : "manual"
+    },
     "Line Weight" : {
       "comment" : "Settings picker choosing how heavy a painting's drawn lines are (Fine, Regular or Bold)",
       "extractionState" : "manual"
@@ -1699,6 +1707,10 @@
     },
     "Order" : {
       "comment" : "Picker in the painting screen's More › Palette menu and in Settings › Palette: the order of the palette's swatches",
+      "extractionState" : "manual"
+    },
+    "Oval" : {
+      "comment" : "Refine screen's Shapes menu: an oval, drawn filling the box a drag spans; also the Shapes button's VoiceOver value while it is picked",
       "extractionState" : "manual"
     },
     "Paint" : {
@@ -2206,7 +2218,7 @@
       }
     },
     "Painting" : {
-      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; also the fallback title of a painting without one",
+      "comment" : "Name of the painted layer: Settings › Preview's choice and the caption in the create flow's comparison with the photo; the Refine screen's button that shows the finished painting beneath the drawing; also the fallback title of a painting without one",
       "extractionState" : "manual"
     },
     "Painting Length" : {
@@ -2549,6 +2561,10 @@
       "comment" : "Status shown in the time-lapse sheet once the movie is ready to share",
       "extractionState" : "manual"
     },
+    "Rectangle" : {
+      "comment" : "Refine screen's Shapes menu: a rectangle, drawn across a drag from corner to corner; also the Shapes button's VoiceOver value while it is picked",
+      "extractionState" : "manual"
+    },
     "Redo" : {
       "comment" : "Feedback mode's top bar on the painting screen: button (its accessibility label) that puts back the last mark undone; the Refine screen's redo",
       "extractionState" : "manual"
@@ -2613,6 +2629,30 @@
         }
       }
     },
+    "refine.hint.curve" : {
+      "comment" : "Refine screen: how the Shapes tool's Curve works (a first drag places the curve's ends, a second bends it through the finger), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag from one end of the curve to the other, then drag to bend it. Two fingers zoom and move."
+          }
+        }
+      }
+    },
+    "refine.hint.curve.bend" : {
+      "comment" : "Refine screen: the Shapes tool's Curve once its ends are placed: a drag bends it through the finger, a tap keeps it a straight line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag to bend the curve, or tap to keep it straight."
+          }
+        }
+      }
+    },
     "refine.hint.eraser" : {
       "comment" : "Refine screen: how the Eraser works (it takes out exactly the parts of lines it touches), shown while it is picked",
       "extractionState" : "manual",
@@ -2649,6 +2689,18 @@
         }
       }
     },
+    "refine.hint.line" : {
+      "comment" : "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag to draw a straight line. Two fingers zoom and move."
+          }
+        }
+      }
+    },
     "refine.hint.more" : {
       "comment" : "Refine screen: how the More Detail brush works, shown while it is picked",
       "extractionState" : "manual",
@@ -2657,6 +2709,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Brush where the painting should have more detail and lines. Two fingers zoom and move."
+          }
+        }
+      }
+    },
+    "refine.hint.oval" : {
+      "comment" : "Refine screen: how the Shapes tool's Oval works (a drag spans the box the oval fills), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag across to draw an oval. Two fingers zoom and move."
           }
         }
       }
@@ -2673,6 +2737,18 @@
         }
       }
     },
+    "refine.hint.rectangle" : {
+      "comment" : "Refine screen: how the Shapes tool's Rectangle works (a drag spans the rectangle from one corner to the opposite one), shown while it is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag from corner to corner to draw a rectangle. Two fingers zoom and move."
+          }
+        }
+      }
+    },
     "refine.hint.smartEraser" : {
       "comment" : "Refine screen: how the Smart Eraser works (it takes lines out of the painting's drawing; a tap takes a whole line), shown while it is picked",
       "extractionState" : "manual",
@@ -2681,18 +2757,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rub lines out, or tap a line to erase all of it. Two fingers zoom and move."
-          }
-        }
-      }
-    },
-    "refine.hint.smartPen" : {
-      "comment" : "Refine screen: how the Smart Pen works (it straightens lines and joins their ends to nearby lines of the painting's drawing), shown while it is picked",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Draw lines that come out straight when nearly straight or when you hold at the end, and join the lines near their ends. Two fingers zoom and move."
           }
         }
       }
@@ -3393,6 +3457,10 @@
       "comment" : "Label of a row in a paint's details popover: the paint's plain color name, e.g. “dark grayish blue”",
       "extractionState" : "manual"
     },
+    "Shapes" : {
+      "comment" : "Refine screen: the Shapes tool, a menu of the shapes it draws (line, rectangle, oval, curve) into a new painting's drawing (button label for VoiceOver and the Large Content Viewer)",
+      "extractionState" : "manual"
+    },
     "Share" : {
       "comment" : "Accessibility label of the share menu in the completion bar, and the button that shares the settings text in Settings › Advanced › Share with a Note",
       "extractionState" : "manual"
@@ -3455,10 +3523,6 @@
     },
     "Smart Eraser" : {
       "comment" : "Refine screen: the Smart Eraser, which rubs lines out of a new painting's drawing or takes out a whole line with a tap (button label for VoiceOver and the Large Content Viewer)",
-      "extractionState" : "manual"
-    },
-    "Smart Pen" : {
-      "comment" : "Refine screen: the Smart Pen, which draws lines into a new painting's drawing that straighten and join the lines near their ends (button label for VoiceOver and the Large Content Viewer)",
       "extractionState" : "manual"
     },
     "Smoothness" : {

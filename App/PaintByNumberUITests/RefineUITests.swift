@@ -6,8 +6,8 @@ import XCTest
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
     /// too, the eraser rubs lines out (another change), Fill fills a shape with a tap (a third),
-    /// Done keeps it all; the Smart Pen draws another, and Cancel puts back what Refine opened
-    /// with.
+    /// the painting shows beneath the drawing, Done keeps it all; Shapes draws a rectangle, and
+    /// Cancel puts back what Refine opened with.
     @MainActor
     func testRefineDrawsErasesAndKeepsIt() throws {
         let app = launchPreview()
@@ -58,18 +58,32 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The fill didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-filled")
 
+        let painting = app.buttons["refine-painting"]
+        XCTAssertTrue(painting.exists, "Refine can't show the painting")
+        painting.tap()
+        XCTAssertTrue(waitFor(painting, toMatch: NSPredicate(format: "isSelected == true")), "The painting didn't show")
+        attachScreenshot(of: app, named: "refine-painting")
+        painting.tap()
+        XCTAssertTrue(waitFor(painting, toMatch: NSPredicate(format: "isSelected == false")), "The painting didn't go")
+
         app.buttons["refine-done"].tap()
         XCTAssertTrue(waitFor(refine, toMatch: changes("3 changes")), "Done didn't keep the changes")
 
-        // Cancel puts back what Refine opened with. This time the Smart Pen draws.
+        // Cancel puts back what Refine opened with. This time Shapes draws a rectangle.
         refine.tap()
         XCTAssertTrue(canvas.waitForExistence(timeout: 10), "Refine didn't open again")
-        let smartPen = app.buttons["refine-tool-smart-pen"]
-        XCTAssertTrue(smartPen.exists && app.buttons["refine-tool-smart-eraser"].exists, "Refine has no smart tools")
-        smartPen.tap()
-        XCTAssertTrue(waitFor(smartPen, toMatch: NSPredicate(format: "isSelected == true")), "The Smart Pen didn't become the tool")
-        drag(on: canvas, from: CGVector(dx: 0.4, dy: 0.3), to: CGVector(dx: 0.7, dy: 0.35))
-        XCTAssertTrue(waitFor(canvas, toMatch: changes("4 changes")), "The Smart Pen's line didn't count")
+        let shapes = app.buttons["refine-tool-shapes"]
+        XCTAssertTrue(shapes.exists && app.buttons["refine-tool-smart-eraser"].exists, "Refine has no Shapes or Smart Eraser")
+        shapes.tap()
+        let rectangle = app.buttons["Rectangle"]
+        XCTAssertTrue(rectangle.waitForExistence(timeout: 5), "Shapes offers no rectangle")
+        rectangle.tap()
+        XCTAssertTrue(
+            waitFor(app.staticTexts["refine-hint"], toMatch: NSPredicate(format: "label CONTAINS[c] 'rectangle'")),
+            "Shapes didn't become the tool with the rectangle")
+        drag(on: canvas, from: CGVector(dx: 0.4, dy: 0.3), to: CGVector(dx: 0.7, dy: 0.5))
+        XCTAssertTrue(waitFor(canvas, toMatch: changes("4 changes")), "The rectangle didn't count")
+        attachScreenshot(of: app, named: "refine-rectangle")
         app.buttons["refine-cancel"].tap()
         XCTAssertTrue(
             waitFor(refine, toMatch: changes("3 changes")),

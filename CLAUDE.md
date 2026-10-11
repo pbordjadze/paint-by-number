@@ -43,7 +43,7 @@ before planning app work).
     (`BandRings`): `docs/gradient-rings.md`.
   - `Vector/`: label map → shared smoothed boundaries, fill mesh, labels (`Vectorizer`; the pipeline
     calls `vectorizeWithStats`); `EdgeSmoother` repairs until `GeometryValidator` and every
-    `LabelRoom` hold. `Template.validate` (`TemplateValidation.swift`) is the oracle of `pbn check`,
+    `LabelRoom` hold; an edge along a painter's line takes the line's path (`EdgeGuides`). `Template.validate` (`TemplateValidation.swift`) is the oracle of `pbn check`,
     the regression gate and the create flow's Debug check.
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
@@ -97,8 +97,10 @@ found, `TextFinder`) is traced from the photo itself, painted out before segment
 interior strokes with the numbers kept off it (`Writing`, `LabelKeepOut`; `keepWriting`;
 `docs/writing.md`, whose corpus every change to it is judged on). The painter's edits from the
 app's Refine (`LineArtInput.edits`, `pbn --line-edits`: lines drawn, the eraser's passes, lines
-tapped away, shapes filled, in order) join at the layer stage (`LineEdits`; `docs/coloring-book.md`
-› The painter's edits); without any, a template is byte for byte what it was. A fill keeps the
+tapped away, shapes filled, in order) change the drawing the template without them draws, and
+nothing else (`LayeredLines.shownLines`, `LineEdits`; `docs/coloring-book.md` › The painter's
+edits); a line drawn stays as drawn, as the outline of the areas it closes too (`EdgeGuides`);
+without any, a template is byte for byte what it was. A fill keeps the
 cell under it, once the lines split the paint, as a detail area (`CellMap.fill`,
 `Template.detailRegions`): the photo's color there, merged into nothing, its number down to
 `LabelSizing.detailMinimumRadius`. Without an edge map, book settings generate a classic

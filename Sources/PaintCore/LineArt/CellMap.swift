@@ -75,19 +75,27 @@ struct CellMap {
 
     // MARK: - Fills
 
-    /// Keeps the cell under each fill, in order (`points` in pixel coordinates, `colors` their
-    /// photo colors in OKLab): it takes the paint nearest its color when one lies within a
-    /// just-noticeable difference (`SegmentationParameters.jnd`), else a new paint of that
-    /// color, appended to `palette` and `paints` (in `space`), so no other paint's number
-    /// changes. A fill on a line takes the nearest cell within `wallReach`; a later fill of a
-    /// cell replaces an earlier one. Returns the paints added.
+    /// Keeps the shape under each fill, in order (`points` in pixel coordinates, `colors` their
+    /// photo colors in OKLab), as one cell: every cell of the area the lines enclose around the
+    /// fill, whatever paints they had (`enclosed(around:)`), or, where that area reaches the
+    /// canvas's frame (no closed shape, or one left open), the cell under the fill alone. It takes
+    /// the paint nearest its color when one lies within a just-noticeable difference
+    /// (`SegmentationParameters.jnd`), else a new paint of that color, appended to `palette` and
+    /// `paints` (in `space`), so no other paint's number changes. A fill on a line takes the
+    /// nearest cell within `wallReach`; a later fill of a cell replaces an earlier one. Returns
+    /// the paints added.
     mutating func fill(
         points: [SIMD2<Float>], colors: [SIMD3<Float>], palette: inout [SIMD3<Float>], paints: inout [PaletteColor],
         space: RGBColorSpace
     ) -> Int {
         var added = 0
         for (point, lab) in zip(points, colors) {
-            guard let cell = cell(near: point) else { continue }
+            guard var cell = cell(near: point) else { continue }
+            if let area = enclosed(around: cell), area.count > 1 {
+                var target = Array(0..<count)
+                for c in area { target[c] = cell }
+                cell = Int(merge(target)[cell])
+            }
             var paint = -1
             var nearest = Float.infinity
             for (k, p) in palette.enumerated() {
@@ -108,6 +116,28 @@ struct CellMap {
             kept[cell] = true
         }
         return added
+    }
+
+    /// The cells of the area the lines enclose around `cell` (4-connected pixels off the walls,
+    /// which are unassigned until `assignWalls`), ascending; nil when the area reaches the
+    /// canvas's frame.
+    func enclosed(around cell: Int) -> [Int]? {
+        guard let start = label.firstIndex(of: Int32(cell)) else { return nil }
+        let w = width, h = height
+        var seen = [Bool](repeating: false, count: w * h)
+        var cells = Set<Int>()
+        var stack = [start]
+        seen[start] = true
+        while let i = stack.popLast() {
+            cells.insert(Int(label[i]))
+            let x = i % w, y = i / w
+            if x == 0 || y == 0 || x == w - 1 || y == h - 1 { return nil }
+            for j in [i - 1, i + 1, i - w, i + w] where !seen[j] && label[j] >= 0 {
+                seen[j] = true
+                stack.append(j)
+            }
+        }
+        return cells.sorted()
     }
 
     /// How far (pixels) a fill on a line looks for the cell it meant: past the line's width,

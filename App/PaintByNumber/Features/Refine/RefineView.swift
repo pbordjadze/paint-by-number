@@ -5,9 +5,8 @@ import SwiftUI
 nonisolated enum RefineTool: Hashable {
     /// Draws lines as they are drawn.
     case pen
-    /// Draws lines that come out straight when nearly straight, or held at the end, and whose
-    /// ends join the lines they come near (`PenAssist`).
-    case smartPen
+    /// Draws the shape picked (`RefineShape`) across a drag.
+    case shape
     /// Rubs out what it touches; a tap takes out a dab.
     case eraser
     /// Rubs lines out, or takes out the one tapped, junction to junction (`LineChains`).
@@ -19,13 +18,11 @@ nonisolated enum RefineTool: Hashable {
     /// and the text the app found corrected.
     case more, less, unbrush, text
 
-    /// The tool the Pencil's double tap switches to: a pen's eraser, an eraser's pen.
+    /// The tool the Pencil's double tap switches to: a drawing tool's eraser, an eraser's pen.
     var pencilPartner: RefineTool? {
         switch self {
-        case .pen: .eraser
-        case .eraser: .pen
-        case .smartPen: .smartEraser
-        case .smartEraser: .smartPen
+        case .pen, .shape: .eraser
+        case .eraser, .smartEraser: .pen
         case .fill, .more, .less, .unbrush, .text: nil
         }
     }
@@ -33,14 +30,43 @@ nonisolated enum RefineTool: Hashable {
     var erases: Bool { self == .eraser || self == .smartEraser }
 }
 
+/// The shapes Refine's Shapes tool draws (`ShapePath`): a straight line from where a drag starts
+/// to where it ends, a rectangle or an oval across it, and a curve: a drag for its ends, then a
+/// second drag bends it through the finger (a tap leaves it straight).
+nonisolated enum RefineShape: CaseIterable, Hashable {
+    case line, rectangle, oval, curve
+
+    var systemImage: String {
+        switch self {
+        case .line: "line.diagonal"
+        case .rectangle: "rectangle"
+        case .oval: "oval"
+        case .curve: "point.topleft.down.to.point.bottomright.curvepath"
+        }
+    }
+}
+
+/// What shows beneath the drawing on the Refine screen.
+nonisolated enum RefineBackdrop: Hashable {
+    /// The drawing's paper.
+    case paper
+    /// The photo.
+    case photo
+    /// The template painted, every area in its paint: the picture once it's finished.
+    case painting
+}
+
 /// The create flow's optional Refine step (`TemplateRefinements`): the drawing large, on its
-/// paper or over the photo, where one finger draws lines and takes them out, and two fingers
-/// zoom and move; a tap of two fingers undoes. Two kinds of tools, exact and assisted:
+/// paper, over the photo or over the painting finished (every area in its paint), where one
+/// finger draws lines and takes them out, and two fingers zoom and move; a tap of two fingers
+/// undoes. What the painter draws is what the painting gets: PaintCore keeps each line as it
+/// arrives, as the outline of the areas it closes too (`EdgeGuides`), and changes nothing the
+/// painter didn't touch (`LayeredLines.shownLines`):
 /// - the Pen draws a line as drawn (smoothed as it showed); only an end whose ink touches a
 ///   line's moves onto it, by no more than the ink's width, so the cell closes as it looks;
-/// - the Smart Pen straightens a nearly straight line, or one held still at its end, and joins
-///   each end to a line within `joinReach` (a break's ends first); the line under the finger
-///   shows as it will be, rings where its ends join;
+/// - Shapes draws a straight line, a rectangle, an oval or a curve across a drag
+///   (`RefineShape`, `ShapePath`), shown as it will be while the finger is down; a line's or a
+///   curve's ends move onto a line their ink touches, as the Pen's do;
 /// - the Eraser rubs out what it touches, and a tap takes out a dab;
 /// - the Smart Eraser rubs too, and a tap takes the line out from junction to junction
 ///   (`LineChains`);
@@ -52,7 +78,10 @@ nonisolated enum RefineTool: Hashable {
 ///   (`RefineSurfaceView.maximumZoom`), so a Pencil outlines a star of a few pixels comfortably.
 /// Once an Apple Pencil touches the canvas (or with Only Draw with Apple Pencil on), the Pencil
 /// draws and taps and one finger moves the picture, so a palm leaves no mark; its double tap
-/// switches between a kind's pen and eraser. With Settings › Detail Brushes one finger also
+/// switches between drawing and the Eraser. Photo and Painting show the photo, or the template
+/// painted (every area in its paint, `TemplateRasterizer.Style.paintedAreas`), beneath the
+/// drawing: the painting the changes make, once the template has them. With Settings › Detail
+/// Brushes one finger also
 /// brushes areas for more or less detail, clears that brushing, and corrects the text the app
 /// found (a tap turns a found line off or on again, a drag across a line marks it).
 ///
@@ -72,22 +101,23 @@ struct RefineView: View {
     /// Settings › Detail Brushes, as the screen opened (Settings isn't reachable from it).
     private let detailBrushes = Preferences().detailBrushes
     @State private var tool: RefineTool
-    @State private var showsPhoto = false
+    @State private var shape = RefineShape.line
+    @State private var backdrop = RefineBackdrop.paper
+    /// The template on screen painted, for `RefineBackdrop.painting`, with its preview's id.
+    @State private var painting: (preview: UUID, image: CGImage)?
     /// What the screen opened with: Cancel puts it back.
     @State private var opening: TemplateRefinements
     @State private var undoStack: [TemplateRefinements] = []
     @State private var redoStack: [TemplateRefinements] = []
     /// The template the screen draws over: the newest at full resolution.
     @State private var base: CreateModel.Preview?
-    /// The pen's line or the eraser's pass under the finger, until it lifts.
+    /// The pen's line or the eraser's pass under the finger, until it lifts; for Shapes, where
+    /// the drag began and where the finger is.
     @State private var trace: [SIMD2<Float>]?
     /// The lines a pen's ends may join, as its stroke began.
     @State private var snapLines: SnapLines?
-    /// The Smart Pen rested `holdDelay` at the end of its line: the line is straight.
-    @State private var held = false
-    /// Where the Smart Pen last came to rest, and a count of its rests (a hold checks its own).
-    @State private var restPoint: SIMD2<Float>?
-    @State private var rests = 0
+    /// A curve's ends, drawn and waiting for the drag that bends it.
+    @State private var curve: (from: SIMD2<Float>, to: SIMD2<Float>)?
     /// The brush stroke under the finger (detail brushes).
     @State private var stroke: TemplateRefinements.Stroke?
     /// The line of text being dragged out: where the drag began and where it is.
@@ -120,6 +150,7 @@ struct RefineView: View {
         .onChange(of: model.preview?.id) {
             if let preview = model.preview, !preview.isDraft || base == nil { base = preview }
         }
+        .task(id: backdrop == .painting ? base?.id : nil) { await paint() }
     }
 
     // MARK: Canvas
@@ -133,27 +164,37 @@ struct RefineView: View {
                     .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 10)
                     .frame(width: picture.width, height: picture.height)
                     .position(x: picture.midX, y: picture.midY)
+                let showsPhoto = backdrop == .photo || base == nil
+                let painted = backdrop == .painting && base != nil ? painting?.image : nil
                 ZStack {
-                    if showsPhoto || base == nil {
+                    if showsPhoto {
                         Image(decorative: photo, scale: 1)
+                            .resizable()
+                            .interpolation(.high)
+                            .frame(width: picture.width, height: picture.height)
+                            .position(x: picture.midX, y: picture.midY)
+                    } else if let painted {
+                        Image(decorative: painted, scale: 1)
                             .resizable()
                             .interpolation(.high)
                             .frame(width: picture.width, height: picture.height)
                             .position(x: picture.midX, y: picture.midY)
                     }
                     if let base {
-                        LineArtLayer(drawing: base.drawing, picture: picture, scale: zoom, overPhoto: showsPhoto)
+                        LineArtLayer(
+                            drawing: base.drawing, picture: picture, scale: zoom, overPhoto: showsPhoto,
+                            overPaint: painted != nil)
                             .equatable()
                     }
                     RefineFillLayer(
                         base: base, fills: model.refinements.lines.filter { $0.kind == .fill }, photo: model.source?.image,
-                        rect: picture)
+                        rect: picture, showsAreas: painted == nil)
                         .equatable()
-                    let assisted = assistedTrace
+                    let figure = shapeTrace
                     RefineInkLayer(
-                        lines: pending, trace: assisted?.points ?? trace, traceIsDrawn: assisted != nil,
-                        joins: assisted?.joins ?? [], erasing: tool.erases, eraserRadius: eraserRadius,
-                        rect: picture, lineWidth: lineWidth, photo: showsPhoto || base == nil ? photo : nil)
+                        lines: pending, trace: tool == .shape ? figure : trace, traceIsDrawn: tool == .shape, erasing: tool.erases,
+                        eraserRadius: eraserRadius, rect: picture, lineWidth: lineWidth,
+                        beneath: showsPhoto ? photo : painted, halo: showsPhoto)
                     if let tapped {
                         RefineTappedLine(points: tapped, rect: picture, lineWidth: lineWidth)
                             .opacity(flashes ? 1 : 0)
@@ -264,7 +305,8 @@ struct RefineView: View {
 
     private func draw(_ touch: RefineTouch, at point: SIMD2<Float>) {
         switch tool {
-        case .pen, .smartPen, .eraser, .smartEraser: follow(touch, at: point)
+        case .pen, .eraser, .smartEraser: follow(touch, at: point)
+        case .shape: drawShape(touch, at: point)
         case .text: mark(touch, at: point)
         case .more, .less, .unbrush: brush(touch, at: point)
         // A fill is a tap: a drag does nothing.
@@ -278,11 +320,8 @@ struct RefineView: View {
         switch touch {
         case .began:
             trace = [point]
-            held = false
             snapLines = tool.erases ? nil : currentSnapLines()
-            if tool == .smartPen { rest(at: point) }
         case .moved:
-            if tool == .smartPen { settle(at: point) }
             // Samples closer than a point add nothing the line shows.
             guard var current = trace, let last = current.last, onScreen(point - last) >= 1 else { return }
             current.append(point)
@@ -292,7 +331,7 @@ struct RefineView: View {
             current.append(point)
             let line: TemplateRefinements.Line? = tool.erases
                 ? TemplateRefinements.Line(kind: .erase, radius: eraserRadius, points: simplified(current, tolerance: 0.5))
-                : drawnLine(current, smart: tool == .smartPen, holding: held)?.line
+                : penLine(current)
             endStroke()
             guard let line else { return }
             commit { $0.lines.append(line) }
@@ -303,8 +342,6 @@ struct RefineView: View {
 
     private func endStroke() {
         trace = nil
-        held = false
-        restPoint = nil
         snapLines = nil
     }
 
@@ -312,57 +349,126 @@ struct RefineView: View {
     /// stroke inside a cell shorter than 6 (`LineLayering.minimumRun`), so a shorter one would
     /// show only until the template came.
     static let shortestLine: CGFloat = 8
-    /// How far (points on screen) the Smart Pen's ends reach for a line to join: about a
-    /// fingertip's width, so a line ended near another, or drawn across a break, meets it.
-    static let joinReach: CGFloat = 16
-    /// The Smart Pen's straightness floor (points on screen): a short stroke wandering this
-    /// little still counts as straight (`PenAssist.isNearlyStraight`).
-    static let straightFloor: CGFloat = 2
     /// The Pen's ends move onto a line whose ink theirs touches: within one ink width (half of
     /// each), and at least this many points.
     static let touchFloor: CGFloat = 2
-    /// The Smart Pen held this still (points on screen) for `holdDelay` at its end draws straight,
-    /// as Notes' pen does.
-    static let holdSlop: CGFloat = 3
-    static let holdDelay: Duration = .milliseconds(500)
-    /// A hold straightens only a line at least this long (points on screen): resting as the
-    /// stroke begins isn't one.
-    static let holdMinimum: CGFloat = 12
 
-    /// The Smart Pen's line under the finger as it will be drawn, with where its ends join.
-    private var assistedTrace: (points: [SIMD2<Float>], joins: [SIMD2<Float>])? {
-        guard tool == .smartPen, let trace, let drawn = drawnLine(trace, smart: true, holding: held) else { return nil }
-        return (drawn.line.points, drawn.joins)
+    /// The template's canvas units per point on screen (0 before there is a template).
+    private var unitsPerPoint: CGFloat {
+        let canvas = base?.drawing.size ?? .zero
+        return picture.width > 0 ? canvas.width / picture.width : 0
     }
 
-    /// A pen's line from its samples: smoothed and thinned on screen's terms as it showed. The
-    /// Smart Pen's comes out straight when nearly straight or `holding` (held at its end), and
-    /// its ends join the lines within `joinReach`; the Pen's only where its ink touches a line's
-    /// (`touchFloor`). Nil for a touch too short to be a line, on screen or in the template.
-    private func drawnLine(
-        _ points: [SIMD2<Float>], smart: Bool, holding: Bool
-    ) -> (line: TemplateRefinements.Line, joins: [SIMD2<Float>])? {
+    /// The shortest line on screen, in points (`shortestLine`).
+    private var shortestOnScreen: CGFloat {
+        unitsPerPoint > 0 ? max(4, Self.shortestLine / unitsPerPoint) : 4
+    }
+
+    /// A pen's line from its samples: smoothed and thinned on screen's terms as it showed, its
+    /// ends moved onto a line their ink touches (`touchFloor`). Nil for a touch too short to be a
+    /// line, on screen or in the template.
+    private func penLine(_ points: [SIMD2<Float>]) -> TemplateRefinements.Line? {
+        let line = points.map(onScreenPoint)
+        guard picture.width > 0, PenPath.length(line) >= shortestOnScreen else { return nil }
+        return drawnLine(touching(PenPath.simplified(PenPath.smoothed(line, spacing: 2), tolerance: 0.3), straight: false))
+    }
+
+    /// `line` (points on screen) with its ends moved onto a line of the drawing their ink touches.
+    private func touching(_ line: [CGPoint], straight: Bool) -> [CGPoint] {
+        let units = unitsPerPoint
+        guard let snapLines, units > 0 else { return line }
+        let reach = max(lineWidth, Self.touchFloor) * units
+        let inCanvas = line.map { CGPoint(x: $0.x * units, y: $0.y * units) }
+        return PenAssist.joined(inCanvas, to: snapLines, reach: reach, straight: straight)
+            .map { CGPoint(x: $0.x / units, y: $0.y / units) }
+    }
+
+    /// A line of points on screen, as the refinements keep it (normalized to the picture).
+    private func drawnLine(_ points: [CGPoint]) -> TemplateRefinements.Line {
         let size = picture.size
-        guard size.width > 0, size.height > 0 else { return nil }
-        let onScreen = points.map { CGPoint(x: CGFloat($0.x) * size.width, y: CGFloat($0.y) * size.height) }
-        // The template's canvas units per point on screen.
-        let canvas = base?.drawing.size ?? .zero
-        let units = canvas.width / size.width
-        let shortest = units > 0 ? max(4, Self.shortestLine / units) : 4
-        guard PenPath.length(onScreen) >= shortest else { return nil }
-        var line = PenPath.simplified(PenPath.smoothed(onScreen, spacing: 2), tolerance: 0.3)
-        let straight = smart && (holding || PenAssist.isNearlyStraight(line, floor: Self.straightFloor))
-        if straight { line = [line[0], line[line.count - 1]] }
-        var joins: [CGPoint] = []
-        if let snapLines, units > 0 {
-            let inCanvas = line.map { CGPoint(x: $0.x / size.width * canvas.width, y: $0.y / size.height * canvas.height) }
-            let reach = (smart ? Self.joinReach : max(lineWidth, Self.touchFloor)) * units
-            let joined = PenAssist.joined(inCanvas, to: snapLines, reach: reach, preferringEnds: smart, straight: straight)
-            line = joined.line.map { CGPoint(x: $0.x / canvas.width * size.width, y: $0.y / canvas.height * size.height) }
-            joins = joined.joins.map { CGPoint(x: $0.x / canvas.width * size.width, y: $0.y / canvas.height * size.height) }
+        return TemplateRefinements.Line(
+            kind: .draw, radius: 0, points: points.map { SIMD2(Float($0.x / size.width), Float($0.y / size.height)) })
+    }
+
+    /// A picture point on screen, in points from the picture's corner.
+    private func onScreenPoint(_ p: SIMD2<Float>) -> CGPoint {
+        CGPoint(x: CGFloat(p.x) * picture.width, y: CGFloat(p.y) * picture.height)
+    }
+
+    // MARK: Shapes
+
+    /// Shapes follows the drag: the shape spans from where it began to the finger, and joins the
+    /// refinements when it lifts. A curve takes two drags: its ends, then its bend.
+    private func drawShape(_ touch: RefineTouch, at point: SIMD2<Float>) {
+        switch touch {
+        case .began:
+            if curve == nil { snapLines = currentSnapLines() }
+            trace = [point, point]
+        case .moved:
+            guard let start = trace?.first else { return }
+            trace = [start, point]
+        case .ended:
+            guard let start = trace?.first else { return }
+            trace = [start, point]
+            let figure = shapeFigure()
+            trace = nil
+            if shape == .curve && curve == nil {
+                // The ends are down; the next drag bends the curve between them.
+                if let figure, figure.count == 2 {
+                    curve = (picturePoint(figure[0]), picturePoint(figure[1]))
+                }
+            } else {
+                curve = nil
+                snapLines = nil
+                if let figure { commit { $0.lines.append(drawnLine(figure)) } }
+            }
+        case .cancelled:
+            trace = nil
         }
-        func normalized(_ p: CGPoint) -> SIMD2<Float> { SIMD2(Float(p.x / size.width), Float(p.y / size.height)) }
-        return (TemplateRefinements.Line(kind: .draw, radius: 0, points: line.map(normalized)), joins.map(normalized))
+    }
+
+    /// The shape as it will be drawn (points on screen), from the drag under way (`trace`) and,
+    /// for a curve, its ends; nil while it is too small to draw.
+    private func shapeFigure() -> [CGPoint]? {
+        guard picture.width > 0, picture.height > 0 else { return nil }
+        if let curve {
+            let a = onScreenPoint(curve.from), b = onScreenPoint(curve.to)
+            guard let bend = trace?.last else { return [a, b] }
+            return ShapePath.curve(from: a, to: b, through: onScreenPoint(bend), spacing: 2)
+        }
+        guard let trace, let first = trace.first, let last = trace.last else { return nil }
+        let a = onScreenPoint(first), b = onScreenPoint(last)
+        let shortest = shortestOnScreen
+        switch shape {
+        case .line, .curve:
+            guard PenPath.distance(a, b) >= shortest else { return nil }
+            return touching([a, b], straight: true)
+        case .rectangle:
+            guard abs(b.x - a.x) >= shortest, abs(b.y - a.y) >= shortest else { return nil }
+            return ShapePath.rectangle(from: a, to: b)
+        case .oval:
+            guard abs(b.x - a.x) >= shortest, abs(b.y - a.y) >= shortest else { return nil }
+            return ShapePath.oval(from: a, to: b, spacing: 2)
+        }
+    }
+
+    /// The shape under the finger, or a curve waiting to be bent, as `RefineInkLayer` draws it.
+    private var shapeTrace: [SIMD2<Float>]? {
+        guard tool == .shape, trace != nil || curve != nil else { return nil }
+        return shapeFigure()?.map(picturePoint)
+    }
+
+    /// A point on screen as a picture point (0…1).
+    private func picturePoint(_ p: CGPoint) -> SIMD2<Float> {
+        SIMD2(Float(p.x / picture.width), Float(p.y / picture.height))
+    }
+
+    /// A curve whose ends are down and that wasn't bent joins the refinements straight.
+    private func finishCurve() {
+        guard let pending = curve else { return }
+        curve = nil
+        snapLines = nil
+        commit { $0.lines.append(drawnLine([onScreenPoint(pending.from), onScreenPoint(pending.to)])) }
     }
 
     /// The lines on screen, in the template's canvas units: its drawing, the lines drawn since,
@@ -390,26 +496,21 @@ struct RefineView: View {
         return SnapLines(lines)
     }
 
-    /// The Smart Pen came down, or moved off where it rested: it rests here now, and if it stays
-    /// (within `holdSlop`) for `holdDelay` at the end of a line at least `holdMinimum` long, the
-    /// line is straight from then on.
-    private func rest(at point: SIMD2<Float>) {
-        restPoint = point
-        rests += 1
-        let mine = rests
-        Task {
-            try? await Task.sleep(for: Self.holdDelay)
-            guard mine == rests, tool == .smartPen, !held, let trace, screenLength(trace) >= Self.holdMinimum else { return }
-            held = true
-            FeedbackEngine.shared.selectionChanged()
-        }
+    // MARK: Painting
+
+    /// The template on screen painted, for the painting beneath the drawing: every area in its
+    /// paint, with no line (the drawing goes over it), at up to twice the canvas's resolution.
+    private func paint() async {
+        guard backdrop == .painting, let base, painting?.preview != base.id else { return }
+        let template = base.template
+        let long = min(2 * max(template.width, template.height), Self.paintingPixels)
+        let image = await Background.run { TemplateRasterizer.image(template, style: .paintedAreas, maxPixelSize: long) }
+        guard !Task.isCancelled, let image else { return }
+        painting = (base.id, image)
     }
 
-    private func settle(at point: SIMD2<Float>) {
-        guard !held else { return }
-        if let restPoint, onScreen(point - restPoint) <= Self.holdSlop { return }
-        rest(at: point)
-    }
+    /// The painting's long side, in pixels, at most.
+    static let paintingPixels = 3200
 
     /// `points` thinned to within `tolerance` points on screen.
     private func simplified(_ points: [SIMD2<Float>], tolerance: CGFloat) -> [SIMD2<Float>] {
@@ -424,11 +525,6 @@ struct RefineView: View {
     /// A step between two picture points, in points on screen.
     private func onScreen(_ step: SIMD2<Float>) -> CGFloat {
         hypot(CGFloat(step.x) * picture.width, CGFloat(step.y) * picture.height)
-    }
-
-    /// The length of a trace on screen, in points.
-    private func screenLength(_ points: [SIMD2<Float>]) -> CGFloat {
-        zip(points, points.dropFirst()).reduce(0) { $0 + onScreen($1.1 - $1.0) }
     }
 
     private var brushKind: TemplateRefinements.Stroke.Kind {
@@ -476,8 +572,10 @@ struct RefineView: View {
 
     private func tap(at point: SIMD2<Float>) {
         switch tool {
-        case .pen, .smartPen:
+        case .pen:
             break
+        case .shape:
+            finishCurve()
         case .eraser:
             // A dab, of the eraser's own reach.
             commit { $0.lines.append(TemplateRefinements.Line(kind: .erase, radius: eraserRadius, points: [point])) }
@@ -576,8 +674,14 @@ struct RefineView: View {
     }
 
     private func undo() {
-        guard let previous = undoStack.popLast() else { return }
         trace = nil
+        // Undo while a curve waits to be bent takes the curve back, not the change before.
+        if curve != nil {
+            curve = nil
+            snapLines = nil
+            return
+        }
+        guard let previous = undoStack.popLast() else { return }
         redoStack.append(model.refinements)
         model.refine(previous)
     }
@@ -689,7 +793,7 @@ struct RefineView: View {
     private var drawingTools: some View {
         toolButton(.pen, systemImage: "pencil.tip", label: Text("Pen"), id: "pen")
             .disabled(!model.hasLineArtInput)
-        toolButton(.smartPen, systemImage: "pencil.and.ruler", label: Text("Smart Pen"), id: "smart-pen")
+        shapesButton
             .disabled(!model.hasLineArtInput)
         toolButton(.eraser, systemImage: "eraser", label: Text("Eraser"), id: "eraser")
             .disabled(!model.hasLineArtInput)
@@ -706,7 +810,9 @@ struct RefineView: View {
             .frame(width: 1, height: 24)
             .padding(.horizontal, 4)
             .accessibilityHidden(true)
-        photoButton
+        backdropButton(.photo, systemImage: "photo", label: Text("Photo"), id: "refine-photo")
+        backdropButton(.painting, systemImage: "paintpalette", label: Text("Painting"), id: "refine-painting")
+            .disabled(base == nil)
     }
 
     private var detailTools: some View {
@@ -728,10 +834,29 @@ struct RefineView: View {
             String(localized: "refine.hint.pen",
                    defaultValue: "Draw lines exactly as you draw them. Two fingers zoom and move, and a two-finger tap undoes.",
                    comment: "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), shown while it is picked")
-        case .smartPen:
-            String(localized: "refine.hint.smartPen",
-                   defaultValue: "Draw lines that come out straight when nearly straight or when you hold at the end, and join the lines near their ends. Two fingers zoom and move.",
-                   comment: "Refine screen: how the Smart Pen works (it straightens lines and joins their ends to nearby lines of the painting's drawing), shown while it is picked")
+        case .shape:
+            switch shape {
+            case .line:
+                String(localized: "refine.hint.line",
+                       defaultValue: "Drag to draw a straight line. Two fingers zoom and move.",
+                       comment: "Refine screen: how the Shapes tool's Line works (a drag draws a straight line from where it starts to where it ends), shown while it is picked")
+            case .rectangle:
+                String(localized: "refine.hint.rectangle",
+                       defaultValue: "Drag from corner to corner to draw a rectangle. Two fingers zoom and move.",
+                       comment: "Refine screen: how the Shapes tool's Rectangle works (a drag spans the rectangle from one corner to the opposite one), shown while it is picked")
+            case .oval:
+                String(localized: "refine.hint.oval",
+                       defaultValue: "Drag across to draw an oval. Two fingers zoom and move.",
+                       comment: "Refine screen: how the Shapes tool's Oval works (a drag spans the box the oval fills), shown while it is picked")
+            case .curve:
+                curve == nil
+                    ? String(localized: "refine.hint.curve",
+                             defaultValue: "Drag from one end of the curve to the other, then drag to bend it. Two fingers zoom and move.",
+                             comment: "Refine screen: how the Shapes tool's Curve works (a first drag places the curve's ends, a second bends it through the finger), shown while it is picked")
+                    : String(localized: "refine.hint.curve.bend",
+                             defaultValue: "Drag to bend the curve, or tap to keep it straight.",
+                             comment: "Refine screen: the Shapes tool's Curve once its ends are placed: a drag bends it through the finger, a tap keeps it a straight line")
+            }
         case .eraser:
             String(localized: "refine.hint.eraser",
                    defaultValue: "Rub out just what you touch, or tap to erase a spot. Two fingers zoom and move.",
@@ -784,32 +909,79 @@ struct RefineView: View {
         }
     }
 
-    /// Shows the photo beneath the drawing while it is on.
+    /// Shows the photo or the painting beneath the drawing while it is on (one at a time).
     @ViewBuilder
-    private var photoButton: some View {
-        let button = Button { showsPhoto.toggle() } label: {
-            Image(systemName: "photo")
+    private func backdropButton(_ kind: RefineBackdrop, systemImage: String, label: Text, id: String) -> some View {
+        let selected = backdrop == kind
+        let button = Button { backdrop = selected ? .paper : kind } label: {
+            Image(systemName: systemImage)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(showsPhoto ? Color.white : Color.primary)
+                .foregroundStyle(selected ? Color.white : Color.primary)
                 .frame(width: 30, height: 30)
         }
         .buttonBorderShape(.circle)
-        .accessibilityLabel(Text("Photo"))
-        .accessibilityAddTraits(showsPhoto ? .isSelected : [])
-        .accessibilityIdentifier("refine-photo")
-        .accessibilityShowsLargeContentViewer { Label("Photo", systemImage: "photo") }
-        if showsPhoto {
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier(id)
+        .accessibilityShowsLargeContentViewer { Label { label } icon: { Image(systemName: systemImage) } }
+        if selected {
             button.buttonStyle(.glassProminent).tint(Theme.signature)
         } else {
             button.buttonStyle(.glass)
         }
     }
 
+    /// Shapes: a menu of the shapes, each picking the tool with that shape; it shows the shape
+    /// last picked, prominent while it's the finger's.
+    @ViewBuilder
+    private var shapesButton: some View {
+        let selected = tool == .shape
+        let menu = Menu {
+            ForEach(RefineShape.allCases, id: \.self) { kind in
+                Button { pickShape(kind) } label: {
+                    Label { shapeName(kind) } icon: { Image(systemName: kind.systemImage) }
+                }
+            }
+        } label: {
+            Image(systemName: shape.systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(selected ? Color.white : Color.primary)
+                .frame(width: 30, height: 30)
+        }
+        .buttonBorderShape(.circle)
+        .accessibilityLabel(Text("Shapes"))
+        .accessibilityValue(shapeName(shape))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("refine-tool-shapes")
+        .accessibilityShowsLargeContentViewer { Label { Text("Shapes") } icon: { Image(systemName: shape.systemImage) } }
+        if selected {
+            menu.buttonStyle(.glassProminent).tint(Theme.signature)
+        } else {
+            menu.buttonStyle(.glass)
+        }
+    }
+
+    private func shapeName(_ kind: RefineShape) -> Text {
+        switch kind {
+        case .line: Text("Line")
+        case .rectangle: Text("Rectangle")
+        case .oval: Text("Oval")
+        case .curve: Text("Curve")
+        }
+    }
+
+    private func pickShape(_ kind: RefineShape) {
+        if kind != shape { finishCurve() }
+        shape = kind
+        pick(.shape)
+    }
+
     private func pick(_ tool: RefineTool) {
         guard tool != self.tool else { return }
         FeedbackEngine.shared.selectionChanged()
-        // A stroke under way was the other tool's.
+        // A stroke under way was the other tool's, and a curve waiting to be bent stays straight.
         endStroke()
+        finishCurve()
         self.tool = tool
     }
 
