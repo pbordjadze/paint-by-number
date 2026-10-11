@@ -168,8 +168,8 @@ helpful, beautiful.
   carries: if you know Georgia, the app reminds you of it; nobody else should notice it's
   Georgian.
 - The panel (Paul's picks): Medea, the Baba Yaga, the Hedge Witch, the Moon, the Snow Queen (in
-  place of Elsa), Nina (the robber girl of the 1957 Snow Queen, named for Paul's
-  grandmother), the Storybook, the Enchanted Workshop, the Scholar, the Painter, the Child at
+  place of Elsa), the Robber Girl (from the 1957 Snow Queen, as
+  Paul remembers her: a Georgian girl), the Storybook, the Enchanted Workshop, the Scholar, the Painter, the Child at
   Bedtime, the Glassblower, Pirosmani, Emily Dickinson, the Open Source Enthusiast, the Nutcracker, Balanchine,
   Bulat Okudzhava, the Bible School Teacher (maybe). Paul
   singled out the Scholar.

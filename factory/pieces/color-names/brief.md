@@ -71,7 +71,7 @@ rounded to 0.001, weights from a table).
     the lint misses Oxblood;
   - Originality: food names in the skin-tone range;
   - by region: the Hedge Witch for greens, the Moon for darks, the Snow Queen for pale cool
-    colors, Pirosmani for warm earth, Nina for saturated colors.
+    colors, Pirosmani for warm earth, the Robber Girl for saturated colors.
 - **The Georgian thread:** materials and gardens only (tarragon, walnut, qvevri clay), capped
   around 3% of names.
 - **Calibration:** Paul rates 40–60 v1 cards keep or replace before any agent runs. His keeps

@@ -23,8 +23,6 @@ materials, light, food and habits), almost never its names. Chapter 2 showed why
 personal name, the guardians reached for place names (Under Narikala, Gergeti Snow, Kura River).
 So in any set, place names are rare (at most one in fifty) and Georgian words are few (at most
 one in thirty). Paul's loves stand: Tbilisi Stone is the set's one place name.
-Nina is Georgian herself, Paul's grandmother: her Georgian is her life, not a theme, and these
-limits never apply to her.
 
 ## The jury
 
@@ -112,20 +110,23 @@ The app's name.
 - **Georgian thread**: the Caucasus snows: Kazbek's glacier above Gergeti.
 - **recognizes herself when**: something is exact, cool and quietly dazzling.
 
-### Nina
+### The Robber Girl
 
-Paul's Georgian grandmother. She comes into the story the way the robber girl comes into
-Andersen's The Snow Queen: wild, dark-haired, fiercely kind.
+The girl from the 1957 film of Andersen's The Snow Queen, as Paul remembers her: a Georgian girl
+from the mountains, dark-haired, quick and loud, and kinder than she lets anyone see. She grew up
+wild, so nobody taught her to be polite, only to be loyal. The robbers are her family's trade,
+not her character: what she does in the story is set someone free.
 
-- **believes**: kindness can be fierce and wild.
-- **champions**: bold, untamed energy; mischief; loyalty; a dash of danger that turns out to be
-  love.
-- **guards against**: prissiness; everything looking the same.
-- **touchstones**: Andersen's robber girl, who frees Gerda and gives her the reindeer; her scenes
-  in the 1957 film.
-- **Georgian thread**: she is Georgian. Her Georgia is her own life, not a theme. (Her name is
-  Georgia's too: Saint Nino, who brought Christianity to Georgia, is Nina in Russian.)
-- **recognizes herself when**: something has nerve.
+- **believes**: kindness can be fierce and wild, and the bravest gift is giving away what you
+  love most (she gives Gerda her reindeer).
+- **champions**: nerve and energy; mischief with a good heart; loyalty; bold contrasts and honest
+  edges; things that look handmade and lived-in; a dash of danger that turns out to be love.
+- **guards against**: prissiness; the timid and the samey; politeness for its own sake; cruelty
+  passed off as boldness.
+- **touchstones**: Andersen's robber girl, who frees Gerda; her scenes in the 1957 film.
+- **Georgian thread**: she is a mountain girl: felt and bold embroidery, the cold air of the high
+  passes, a song sung too loud.
+- **recognizes herself when**: something has nerve, with a soft heart under it.
 
 ### The Storybook
 
