@@ -76,6 +76,8 @@ before planning app work).
   `factory/make_scene.py` rebuilds the committed hero images through pbn. Factory render output
   stays outside the repo; `factory/specs/baseline.json` starts at the spec's defaults.
   `factory/verify.py <outdir>` exercises the spec's acceptance list (run on four cores).
+  `factory/taste/loop.py` is the deterministic taste library; its piece plug-ins, versioned run
+  rules, transcript reader and CLI entry points are documented in `factory/taste/README.md`.
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;

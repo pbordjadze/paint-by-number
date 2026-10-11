@@ -19,6 +19,11 @@ we got here is in `NOTES.md`.
 Every layer beyond the renderer joins on probation and stays only if it measurably helps: the
 jury agrees with Paul's picks more often, or he reaches a pick he likes in fewer rounds.
 
+The deterministic taste loop is `taste/loop.py`; `taste/pieces/` holds the panel-name and
+color-names plug-ins. Each run snapshots its rules and seats in `rules.json`, so older runs
+replay under their own rules. `taste/README.md` documents the CLI, transcript extraction,
+calibration factors, caps, owner guarantee and second-jury hook.
+
 ## Pieces
 
 A piece is one thing being designed. Each piece has:
