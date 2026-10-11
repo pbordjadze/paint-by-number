@@ -78,7 +78,7 @@ def jury_notes(run, slot, names):
             continue
         juror = path.stem[len(slot['half']) + 1:]
         ballot = read(run / 'ballots' / path.name)[str(slot['slot'])]
-        if verdict.get('why'):
+        if (verdict.get('why') or '').strip():
             ranking = verdict.get('ranking', [])
             preferred = ballot[ranking[0]] if ranking else None
             notes.append((names.get(juror, juror), preferred, verdict['why']))
@@ -123,14 +123,15 @@ def render_card(run, slot, result, pick, names):
     for entry in result['standings']:
         if entry['name'] in {name, original}:
             for veto in entry.get('vetoes', []):
-                margins.append(f'<li><p class="label">Jury veto · {esc(entry["name"])}</p><p>{esc(veto)}</p></li>')
+                if veto.strip():
+                    margins.append(f'<li><p class="label">Jury veto · {esc(entry["name"])}</p><p>{esc(veto)}</p></li>')
     if pick and pick['veto']:
         margins.append(f'<li class="paul"><p class="label">Paul · veto</p>'
                        f'<p>Paul vetoed {esc(original)}. Replaced by {esc(name)}.</p>'
-                       + (f'<p>{esc(pick["note"])}</p>' if pick['note'] else '') + '</li>')
-        if selected.get('why'):
+                       + (f'<p>{esc(pick["note"])}</p>' if pick['note'].strip() else '') + '</li>')
+        if (selected.get('why') or '').strip():
             margins.append(f'<li><p class="label">Replacement note</p><p>{esc(selected["why"])}</p></li>')
-    elif pick and pick['note']:
+    elif pick and pick['note'].strip():
         margins.append(f'<li class="paul"><p class="label">Paul</p><p>{esc(pick["note"])}</p></li>')
     if result.get('guaranteed'):
         margins.append(f'<li><p class="label">The Lamp</p><p>The jury chose {esc(original)} '
@@ -145,7 +146,7 @@ def render_card(run, slot, result, pick, names):
     <p class="label">Color {esc(sid)} · #{swatch}</p>
     <h2 id="name-{esc(sid)}">{esc(name)}</h2>
     <p class="maker">Named by {esc(maker)}</p>
-    {f'<p class="reason">{esc(why)}</p>' if why else ''}
+    {f'<p class="reason">{esc(why)}</p>' if (why or '').strip() else ''}
     <p class="entrusted">Entrusted to {esc(owner + idea)}</p>
     <p class="love{' loved' if loved else ''}">{'♥ ' if loved else ''}{status}</p>
   </div>

@@ -3,6 +3,7 @@
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/factory -p 'test_palette_gallery.py'
 """
 from datetime import date
+from html import escape
 from html.parser import HTMLParser
 import importlib.util
 import json
@@ -117,6 +118,38 @@ class PaletteGalleryTests(unittest.TestCase):
                 parsed = Cards(self.build(preview=True))
                 self.assertEqual(parsed.reasons['color-2'], [])
                 self.assertNotIn('A young willow leaf in spring', parsed.cards['color-2'])
+
+    def test_blank_reasons_are_hidden_everywhere_and_real_reasons_stay_verbatim(self):
+        records = {filename: gallery.read(self.run / filename) for filename in (
+            'slots.json', 'decision.json', 'checkpoint.json',
+            'proposals/medea.json', 'verdicts/A-painter.json')}
+        writer = next(c for c in records['slots.json'][0]['candidates'] if c['name'] == 'Beeswax')
+        proposal = next(c for c in records['proposals/medea.json']['names']['2']
+                        if c['name'] == 'Willow Leaf')
+        verdict = records['verdicts/A-painter.json']['slots']['1']
+        standing = next(s for s in records['decision.json'][0]['standings'] if s['name'] == 'Beeswax')
+        picks = records['checkpoint.json']['picks']
+        loved = next(p for p in picks if p['slot'] == 1)
+        vetoed = next(p for p in picks if p['slot'] == 36)
+        for reason in ('', ' \t\n\u00a0 ', ' \t Warm <gold> & "wax". \n '):
+            with self.subTest(reason=reason):
+                for record, key in ((writer, 'why'), (proposal, 'why'), (verdict, 'why'),
+                                    (loved, 'note'), (vetoed, 'note'), (vetoed['replacement'], 'why')):
+                    record[key] = reason
+                standing['vetoes'] = [reason]
+                for filename, record in records.items():
+                    self.save(self.run / filename, record)
+                page = self.build(preview=True)
+                parsed = Cards(page)
+                visible = bool(reason.strip())
+                self.assertEqual(page.count(f'<p class="reason">{escape(reason)}</p>'), 2 if visible else 0)
+                self.assertEqual(page.count(f'<p>{escape(reason)}</p>'), 5 if visible else 0)
+                for sid in (1, 2):
+                    self.assertEqual(len(parsed.reasons[f'color-{sid}']), 1 if visible else 0)
+                for label in ('The Painter · Preferred Beeswax', 'Jury veto · Beeswax'):
+                    self.assertEqual(label in parsed.cards['color-1'], visible)
+                self.assertEqual('Replacement note' in parsed.cards['color-36'], visible)
+                self.assertIn('Paul vetoed Golden Hour. Replaced by Late Sunlight.', parsed.cards['color-36'])
 
     def test_past_and_today_drop_but_future_and_unscheduled_records_are_absent(self):
         self.schedule([{'date': '2026-10-12', 'colors': [3]},
