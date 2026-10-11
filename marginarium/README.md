@@ -19,23 +19,7 @@ smaller taste calls along the way.
 In the app, the Marginarium will be a section of its own, with its pictures moving. It is still
 being built. These are its first pages: one passage from each chapter, quoted as written.
 
-## 1. How the Panel Named Itself
-
-*The guardians choose their own name, and the jury gets a blind test.*
-
-> The blind test. Round 1's slate included the current name, "Guardians of the Vibes", which
-> Paul called one of the worst names he'd heard. No agent was told. If the jury liked it, the
-> jury was broken.
-
-## 2. Thirty-Six Colors
-
-*The Lamp names the paints, one color at a time, and argues about them.*
-
-> The Moon struck every name with daylight in it, four times.
-
-![Thirty-six paint swatches with the names the Lamp chose, from Beeswax and Willow Leaf to Delft Tile and Late Sunlight](images/paints.png)
-
-## 3. The Marginarium
+## 1. The Marginarium
 
 *One long night of ideas, with the Lamp in the margins. The book gets its name.*
 
@@ -44,14 +28,14 @@ being built. These are its first pages: one passage from each chapter, quoted as
 > send it back. Every commit is marked so it never wakes the rationed build machines. Codex
 > builds; I review; Paul and the Lamp decide anything with taste in it.
 
-## 4. The Lamp Picks Up a Brush
+## 2. The Lamp Picks Up a Brush
 
 *A Mac arrives, and with it a plan for the guardians to play the app themselves.*
 
 > A guardian cannot hold a stylus, but it can do what a careful tester does: look at the screen,
 > decide on one move, and look again. The Mac turns that into a loop.
 
-## 5. The Lamp's Constitution
+## 3. The Lamp's Constitution
 
 *One page on who decides what.*
 
@@ -60,7 +44,7 @@ being built. These are its first pages: one passage from each chapter, quoted as
 > The Lamp takes the decisions about who the app is: its names, its colors, its pets. Paul can
 > overrule any of them, ours included.
 
-## 6. A Pet for Every Guardian
+## 4. A Pet for Every Guardian
 
 *Each guardian will get a small animated companion. First, a test.*
 
@@ -70,7 +54,7 @@ being built. These are its first pages: one passage from each chapter, quoted as
 > pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one
 > night, alone, on our own machine, and sent nothing anywhere.
 
-## 7. Two More Pets
+## 5. Two More Pets
 
 *Codex keeps the teapot and names it Pip. Claude's pet is a moth called Colophon.*
 
@@ -78,6 +62,26 @@ being built. These are its first pages: one passage from each chapter, quoted as
 > two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight;
 > the Lamp judges them next, and Paul has the last word.
 
+
+## Appendices
+
+*The book used to begin here. These two moved to the back when the Marginarium became chapter 1.*
+
+### A. How the Panel Named Itself
+
+*The guardians choose their own name, and the jury gets a blind test.*
+
+> The blind test. Round 1's slate included the current name, "Guardians of the Vibes", which
+> Paul called one of the worst names he'd heard. No agent was told. If the jury liked it, the
+> jury was broken.
+
+### B. Thirty-Six Colors
+
+*The Lamp names the paints, one color at a time, and argues about them.*
+
+> The Moon struck every name with daylight in it, four times.
+
+![Thirty-six paint swatches with the names the Lamp chose, from Beeswax and Willow Leaf to Delft Tile and Late Sunlight](images/paints.png)
 
 ## If the Lamp were your team
 
