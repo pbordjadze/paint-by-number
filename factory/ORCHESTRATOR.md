@@ -42,8 +42,9 @@ driving manual and the state of play.
 | v0 engine (8c5683e) | Merged. Claude checked: builds, 17 tests, checks pass, byte-identical renders. Its review is F1 in the backlog; the Charter credit doesn't break AboutTests (drift only, fixed in F1) |
 | F2 (2f65485) | Merged. Claude checked: 37 taste tests pass, both recorded runs replay byte for byte; `nina` is now `robber-girl` with an alias |
 | F4 (d704433) | Merged. Claude checked: 271 tests; the v1 SHA-256 pin matches the base table; parrots pin unchanged; `pbn vocab check` works. The pin test shells out to `sha256sum`/`shasum` (Linux and macOS only) |
-| F1, F13, F6 | Running (Codex, gpt-6.1-sol, high) |
-| F5, F8 | Ready (next) |
+| F1 (3206005) | Merged. Claude checked: byte-identical renders, all checks; review 118 s on a loaded container (42 s alone) |
+| F13, F6, F8 | Running (Codex, gpt-6.1-sol, high) |
+| F5 | Ready (next) |
 | F12 | Ready after F13 (both build gallery pages) |
 | F7 | Claude runs it outside the sandbox: Codex sessions have no network, and the pilot needs `codex exec` itself |
 | F3, F9, F10 | Need a spec from Claude |
@@ -51,8 +52,8 @@ driving manual and the state of play.
 
 ## Waiting on Paul
 
-- The chapter 2 checkpoint, colors 26–36: https://claude.ai/artifact/SeP74EBkMZVVtmXrp9Ao8k.
-  Then export his picks to `pieces/color-names/run/checkpoint.json`, replace vetoed names with
-  their runners-up, and write chapter 2 as a doc (chapter 1:
+- Nothing. The chapter 2 checkpoint is in (`pieces/color-names/run/checkpoint.json`: 33 loved,
+  3 vetoed, runners-up recorded); chapter 2 is being written as a doc:
+  https://claude.ai/code/artifact/b2eeb9bd-321e-46fb-8c73-9a663c3a759d (chapter 1:
   https://claude.ai/code/artifact/8007efa4-596c-476e-a087-accdeaba6355).
 - The pets' style sheet run needs the F7 pilot first.
