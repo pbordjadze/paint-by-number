@@ -63,7 +63,8 @@ driving manual and the state of play.
 | F21 | Done: a read-only audit, twelve findings (three high: job-ID paths, huge numbers trap the Swift CLI, symlinked output children), split into F22 (Swift) and F23 (Python) |
 | F23 | Merged: the audit's Python fixes; Claude fixed the guards' refusal of macOS's linked /tmp and /var |
 | F22 | Merged: the audit's Swift fixes; hero and workers digests unchanged, engine 1.0.1; 138 Python tests pass on the merged tree |
-| F19, F24 | Running (Codex, gpt-6.1-sol, high) |
+| F24 | Merged: SimctlDriver and the mailbox contract (`pieces/play/README.md`) for M2's Swift test; tested against a fake xcrun only |
+| F19 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
