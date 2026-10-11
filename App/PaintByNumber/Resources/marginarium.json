@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "chapters": [
+    {
+      "id": "marginarium",
+      "source": "docs/marginarium/marginarium.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.marginarium.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.marginarium.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.marginarium.passage"
+        }
+      ]
+    },
+    {
+      "id": "lampBrush",
+      "source": "docs/marginarium/lampBrush.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.lampBrush.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.lampBrush.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.lampBrush.passage"
+        }
+      ]
+    },
+    {
+      "id": "constitution",
+      "source": "docs/marginarium/constitution.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.constitution.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.constitution.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.constitution.passage"
+        }
+      ]
+    },
+    {
+      "id": "petForEveryGuardian",
+      "source": "docs/marginarium/petForEveryGuardian.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.petForEveryGuardian.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.petForEveryGuardian.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.petForEveryGuardian.passage"
+        }
+      ]
+    },
+    {
+      "id": "twoMorePets",
+      "source": "docs/marginarium/twoMorePets.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.twoMorePets.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.twoMorePets.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.twoMorePets.passage"
+        }
+      ]
+    },
+    {
+      "id": "panelName",
+      "source": "docs/marginarium/panelName.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.appendix.panelName.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.appendix.panelName.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.appendix.panelName.passage"
+        }
+      ]
+    },
+    {
+      "id": "thirtySixColors",
+      "source": "docs/marginarium/thirtySixColors.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.appendix.thirtySixColors.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.appendix.thirtySixColors.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.appendix.thirtySixColors.passage"
+        }
+      ]
+    }
+  ]
+}
