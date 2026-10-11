@@ -138,15 +138,28 @@ drawn in the book's ink inside the cells it crosses, with the numbers kept off i
 The app's Refine lets the painter draw lines, take them out and fill shapes before painting. The
 edits are an input of line art (`LineArtInput.edits`, in the order made; `pbn --line-edits edits.json`),
 never a change to a template, so every invariant holds for them as for the drawing's own lines,
-and regenerating a painting draws them again. `LineEdits` applies them at the layer stage, after
-eyes, subjects and the writing's cut and before free ends close:
+and regenerating a painting draws them again. Once the painter is in Refine they decide what is
+drawn: an edit changes the drawing as it showed, and nothing else changes. So the template made
+without the edits is vectorized and its drawing read back (`LayeredLines.shownLines`: its drawn
+edges and the drawing's interior strokes), `LineEdits` applies the edits to that drawing and,
+alike, to the lines it was made from (which still split the paint, so cells away from an edit
+stay as they were), and the cells and the template are made again, drawing exactly the edited
+drawing. Before, the edits joined the raw lines at the layer stage and the template decided again
+what to draw: on the lighthouse book (`tools/regression.py`'s book regime), of 25 lines tapped
+away, 14 brought up to 61 px of line the template hadn't drawn (stretches along an edge mostly
+without a line, drawn once the edit made the edge's drawing exact, or free ends led elsewhere
+once their line was gone), and 11 took out up to 26 px of line nobody erased. Now every edit
+changes nothing beyond its reach but the same few pixels the round trip moves (10 px added and
+14 lost, in specks, whatever the edit), for 25 lines tapped away, 12 rubbed out and 8 drawn; on
+the barn, 3 px. It costs a refined painting a second vectorizing, about 40% more time (400 →
+570 ms for the lighthouse):
 
 - A drawn line is an outline at full strength, so a closed shape walls off a cell even inside one
   paint, as a silhouette does; an open one is drawn inside its cell. It is kept as it arrives,
   cut where it leaves the canvas (the app's help comes before: it smooths the finger's path, its
   Pen moves an end whose ink touches a line onto it, and its Smart Pen straightens lines and
-  joins their ends to the lines on screen, `PenAssist`): its ends are never free, so
-  `closeFreeEnds` passes them by (the drawing's own free ends may still be led into it). An end
+  joins their ends to the lines on screen, `PenAssist`): nothing leads its ends on, and no line
+  of the drawing reaches into it (the drawing's free ends closed before the painter saw it). An end
   on or beside a line, or on the frame, closes cells against it as it lies (cells are
   4-connected), and so does one on a line of the template shown: of 24 strokes across the
   lighthouse book's cells ended exactly on its edges, 23 made as many cells as the same stroke
@@ -161,19 +174,21 @@ eyes, subjects and the writing's cut and before free ends close:
   the line, where that spot holds a legible one.
 - The eraser's pass takes out every point within its reach of the lines made before it (the
   app's and those drawn earlier; a line drawn over an erased place stays), leaving no piece
-  shorter than `LineLayering.minimumRun`.
+  shorter than `LineLayering.minimumRun`. No edge is drawn where it passed but along a line drawn
+  since, and no gap it left closes (`LineEdits.erasedPlaces`): a gap shorter than `minimumRun`
+  plus an edge's reach for a line either side (`annotateNear`, 3), 12 px, closed again, so a dab
+  zoomed in took out nothing (`LineEditsTests.aDabTakesOutWhatItTouches`).
 - A line tapped away (`eraseLine`, the path its own) takes out only the points beside the path
   that run along it (within 35°), up to its ends: what meets it at a junction or crosses it keeps
   its points. The eraser's round reach would cut the line a branch ends on, and a gap there joins
   the cells that line kept apart (`LineEditsTests.aLineErasedWholeLeavesItsJunctionsAlone`).
-- No free end reaches into a place erased after its line was drawn, so a line never reappears
-  where the painter took one out.
-- Where edits were (their reach plus `annotateNear`), `annotate` draws a template edge only where
-  a line runs along it, its drawn stretches as interior strokes over an undrawn edge, instead of
-  the whole edge by the most of it: otherwise a line erased along part of a boundary between two
-  paints stays drawn, and one drawn along part of an undrawn boundary doesn't show. Gaps and
-  stretches shorter than `minimumRun` follow their neighbours, so an edge still reaches its
-  junctions.
+- `annotate` draws each template edge only where a line of the edited drawing runs along it,
+  its drawn stretches as interior strokes over an undrawn edge, instead of the whole edge by the
+  most of it: otherwise a line erased along part of a boundary between two paints stays drawn,
+  one drawn along part of an undrawn boundary doesn't show, and the cells an erased line kept
+  apart, joining, would change which edges are drawn. A stretch shorter than `minimumRun` beside
+  undrawn ones goes (the reach of the lines meeting an edge's ends), then a gap that short is
+  drawn (but where the painter erased), so an edge still reaches its junctions.
 - A fill (`LineEdit.Kind.fill`, one point) changes no line. Once the lines have split the paint
   (`CellMap.split`), the cell under it is kept (`CellMap.fill`; on a line, the nearest cell
   within 2 px): it takes the photo's color there (`LineEdit.photoColor`: the median, channel by

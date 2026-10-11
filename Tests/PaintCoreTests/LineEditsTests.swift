@@ -276,35 +276,9 @@ struct LineEditsTests {
         #expect(LineEdits.sanitized(dabs).count == LineEdits.maximumEdits)
     }
 
-    /// A free end reaches the line ahead of it, unless that place is blocked (erased after the
-    /// line was drawn).
-    @Test func noEndReachesIntoABlockedPlace() {
-        let w = 40, h = 20
-        func line(_ points: [SIMD2<Float>], free: (Bool, Bool)) -> DrawnLine {
-            DrawnLine(
-                points: points, strength: [Float](repeating: 1, count: points.count),
-                layer: [UInt8](repeating: LineLayer.outline.rawValue, count: points.count), closed: false, free: free,
-                links: [], eye: false)
-        }
-        let lines = [
-            line((2...18).map { SIMD2(30, Float($0)) }, free: (false, false)),
-            line((5...24).map { SIMD2(Float($0), 10) }, free: (false, true)),
-        ]
-        let walls = LineLayering.walls(lines, width: w, height: h)
-        let colorEdge = [Bool](repeating: false, count: w * h)
-        var reached = lines
-        #expect(LineLayering.closeFreeEnds(&reached, walls: walls, colorEdge: colorEdge, reach: [10, 10, 10]) == 1)
-        #expect(reached[1].points.last == SIMD2(30, 10))
-        var held = lines
-        let blocked: (Int, Int) -> Bool = { k, i in k == 1 && i % w >= 27 }
-        #expect(LineLayering.closeFreeEnds(&held, walls: walls, colorEdge: colorEdge, reach: [10, 10, 10], blocked: blocked) == 0)
-        #expect(held[1].points == lines[1].points)
-    }
-
     /// A drawn line's ends stay where the painter drew them, and none is free: one crossing a
     /// line a little, one stopping short of it, the tails of a loop drawn past its start; one
-    /// run off the canvas ends on the frame. The drawing's own free ends are still led into a
-    /// drawn line.
+    /// run off the canvas ends on the frame.
     @Test func drawnEndsStayWhereDrawn() throws {
         let w = 60, h = 40
         func line(_ points: [SIMD2<Float>], free: (Bool, Bool)) -> DrawnLine {
@@ -333,15 +307,85 @@ struct LineEditsTests {
         // A loop past its start: both tails stay.
         let loop = applied([SIMD2(4, 10), SIMD2(20, 10), SIMD2(20, 26), SIMD2(8, 26), SIMD2(8, 6)])
         #expect(near(loop?.points.first, SIMD2(4, 10)) && near(loop?.points.last, SIMD2(8, 6)) && held(loop))
+    }
 
-        // The drawing's own free end, 6 pixels above the short drawn line, reaches it; the drawn
-        // line stays as it was.
-        var lines = [wall, short, line((2...14).map { SIMD2(15, Float($0)) }, free: (false, true))]
-        let walls = LineLayering.walls(lines, width: w, height: h)
-        let colorEdge = [Bool](repeating: false, count: w * h)
-        #expect(LineLayering.closeFreeEnds(&lines, walls: walls, colorEdge: colorEdge, reach: [10, 10, 10]) == 1)
-        #expect(lines[1].points == short.points)
-        #expect(near(lines[2].points.last, SIMD2(15, 20)))
+    /// An edit changes the drawing the painter saw and nothing else: a stretch of line the
+    /// template didn't draw stays undrawn beside an erasure. On a blank edge map with a line
+    /// detected along the disc's rim from 70° to 110°, too little of the rim's edge for the
+    /// edge to be drawn: a dab on that edge further round drew the stretch, as if a line had
+    /// come back.
+    @Test func anErasureRevealsNoHiddenLine() throws {
+        func rim(_ degrees: Float) -> SIMD2<Float> {
+            let a = degrees * .pi / 180
+            return SIMD2(60.75 + 27 * cos(a), 72.75 - 27 * sin(a))
+        }
+        // The stretch as a learned detector draws a line (σ = 2 px, 0.9 at its centre), in the
+        // photo's pixels.
+        let arc = stride(from: Float(70), through: 110, by: 0.25).map { (rim($0) - 0.75) / 1.5 }
+        var edges = EdgeMap(width: 128, height: 96, values: [UInt8](repeating: 0, count: 128 * 96))
+        for y in 0..<edges.height {
+            for x in 0..<edges.width {
+                let p = SIMD2(Float(x), Float(y))
+                let d2 = arc.map { simdLengthSquared(p - $0) }.min()!
+                edges.values[y * edges.width + x] = UInt8((0.9 * exp(-d2 / 8) * 255).rounded())
+            }
+        }
+        let plain = try Self.generate([], edges: edges)
+        #expect(plain.lineArtStats?.strokes == 1)
+        #expect(Self.inkDistance(plain.template, rim(90)) > 3, "The detected stretch is drawn without edits")
+        let t = try Self.generate([Self.erase([rim(155)], radius: 3)], edges: edges).template
+        expectValid(t)
+        #expect(Self.inkDistance(t, rim(90)) > 3, "The erasure drew the hidden stretch")
+    }
+
+    /// A dab takes out what it touches, however small: the gap it leaves in the square's top
+    /// edge stays open (shorter than a line's shortest run, it closed again).
+    @Test func aDabTakesOutWhatItTouches() throws {
+        let plain = try Self.generate([]).template
+        #expect(Self.inkDistance(plain, SIMD2(140, 45.5)) < 1.5)
+        let t = try Self.generate([Self.erase([SIMD2(140, 45)], radius: 3)]).template
+        expectValid(t)
+        #expect(Self.inkDistance(t, SIMD2(140, 45.5)) > 2)
+        #expect(Self.inkDistance(t, SIMD2(132, 45.5)) < 1.5 && Self.inkDistance(t, SIMD2(148, 45.5)) < 1.5)
+    }
+
+    /// Erasing a line takes out what the eraser touched and nothing else of the drawing goes or
+    /// comes: every stretch of the template's lines away from the eraser is drawn as it was,
+    /// and nothing is drawn that wasn't.
+    @Test func anErasureChangesNothingElse() throws {
+        let plain = try Self.generate([]).template
+        let path = [SIMD2<Float>(150, 40), SIMD2(150, 100)], radius: Float = 6
+        let t = try Self.generate([Self.erase(path, radius: radius)]).template
+        expectValid(t)
+        #expect(Self.inkDistance(t, SIMD2(150, 45.5)) > 3, "The square's top edge wasn't erased")
+        func distance(_ p: SIMD2<Float>) -> Float {
+            let ab = path[1] - path[0], s = min(max(simdDot(p - path[0], ab) / simdLengthSquared(ab), 0), 1)
+            return simdLength(p - (path[0] + ab * s))
+        }
+        for p in Self.inkPoints(plain) where distance(p) > radius + 3 {
+            #expect(Self.inkDistance(t, p) < 1.5, "The line at \(p) went")
+        }
+        for p in Self.inkPoints(t) {
+            #expect(Self.inkDistance(plain, p) < 1.5, "A line at \(p) came")
+        }
+    }
+
+    /// Points along every drawn line of a template (as `inkDistance` measures), about a unit
+    /// apart.
+    static func inkPoints(_ t: Template) -> [SIMD2<Float>] {
+        let art = t.lineArt!
+        var out: [SIMD2<Float>] = []
+        func visit(_ points: ArraySlice<SIMD2<Float>>) {
+            for (a, b) in zip(points, points.dropFirst()) {
+                let steps = max(1, Int(simdLength(b - a).rounded(.up)))
+                for s in 0..<steps { out.append(a + (b - a) * (Float(s) / Float(steps))) }
+            }
+        }
+        for (k, e) in t.edges.enumerated() where e.right != BoundaryEdge.outside && art.edgeLayers[k] != LineLayer.color.rawValue {
+            visit(t.points(of: e))
+        }
+        for s in art.strokes { visit(art.strokePoints[Int(s.pointStart)..<Int(s.pointStart + s.pointCount)]) }
+        return out
     }
 
     /// The points of the interior stroke passing within a pixel of `p`, if one does.

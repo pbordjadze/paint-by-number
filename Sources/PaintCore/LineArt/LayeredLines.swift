@@ -15,11 +15,9 @@
 ///    contours and irises as outlines and promote the lines around them; the subjects'
 ///    silhouettes (`outlineObjects`) fill the gaps in the drawing as outlines
 ///    (`LineLayering.addObjects`). Lines on the writing (`Writing`, traced from the photo
-///    before segmenting) are its smudged copy and go. The painter's edits (`LineEdits`) join:
-///    drawn lines as outlines where they were drawn, erased places taken out. Free ends reach
-///    for the nearest line, paint boundary or frame (`gapBridging` × 1.6 / 1.2 by layer), so
-///    open strokes close cells, but never into a place erased after their line was drawn; the
-///    painter's lines have none.
+///    before segmenting) are its smudged copy and go. Free ends reach for the nearest line,
+///    paint boundary or frame (`gapBridging` × 1.6 / 1.2 by layer), so open strokes close
+///    cells.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
 ///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
 ///    paints are within two palette steps. The painter's fills keep the cells they fall in as
@@ -35,8 +33,15 @@
 ///    number.
 /// After vectorizing, `annotate` gives each boundary edge the layer of the line along it
 /// (`color` where only the paint changes) and a weight, and stamps the template's line art as
-/// a coloring book. Near the painter's edits an edge only partly along a line is drawn only
-/// there, as interior strokes over an undrawn edge.
+/// a coloring book.
+///
+/// The painter's edits (`LineArtInput.edits`) change the drawing the painter saw, and only it:
+/// the template stages 4 and 5 make without them is vectorized and its drawing read back
+/// (`shownLines`, timed as `lineArt.shown`), the edits draw on it and erase from it
+/// (`LineEdits`), and stages 4 and 5 run again on the result, whose lines `annotate` draws
+/// exactly (`Plan.exact`): an edge only partly along a line is drawn only there, as interior
+/// strokes over an undrawn edge. Nothing leads a line's end on: the drawing's free ends were
+/// closed before the painter saw it, and the painter's lines have none.
 ///
 /// Lengths are canvas units (working pixels). `LineLayering.longOutline`, `objectNear`,
 /// `objectMinimumStretch` and `LineDetection.clutterWindow` are given for a 1500-px canvas and
@@ -70,11 +75,18 @@ enum LayeredLines {
         var segmentation: Segmentation
         /// Line stretches that bound cells (for the edges' layers).
         var boundaryLines: [DrawnLine]
-        /// Lines drawn inside a cell, with that cell.
+        /// Lines drawn inside a cell, with that cell: the drawing's first (`drawingInterior` of
+        /// them), then the writing's.
         var interiorLines: [(line: DrawnLine, region: Int)]
+        var drawingInterior = 0
         var stats: LineArtStats
-        /// Where the painter's edits were (`LineEdits.footprint`); nil without any.
-        var edited: [Bool]? = nil
+        /// The painter edited the drawing: `annotate` draws each edge exactly where a line runs
+        /// along it, not whole or not at all by the most of it, so the template draws the lines
+        /// as the edits left them and nothing else.
+        var exact = false
+        /// With `exact`, per pixel, where the painter erased (`LineEdits.erasedPlaces`): an edge
+        /// is drawn there only along a line drawn since, and a gap there is never closed.
+        var erased: [UInt8]? = nil
         /// The stretches of the painter's lines drawn inside a cell, in canvas units: numbers
         /// keep off them (`LabelKeepOut`), as the cell's own pole may lie right on one.
         var drawnInterior: [[SIMD2<Float>]] = []
@@ -137,7 +149,6 @@ enum LayeredLines {
         }
         try cancel.throwIfCancelled()
 
-        var edits: LineEdits.Applied?
         let lines = clock.measure("lineArt.layer") { () -> [DrawnLine] in
             var lines = LineLayering.layered(
                 strokes, thresholds: thresholds, clutter: mask.clutter, width: w, contours: contourStrength)
@@ -158,25 +169,59 @@ enum LayeredLines {
                     line.pieces(keeping: line.points.map { !near[LineLayering.pixelIndex(of: $0, width: w, height: h)] }, freeCuts: false)
                 }
             }
-            if !input.edits.isEmpty {
-                let applied = LineEdits.apply(input.edits, to: lines, width: w, height: h)
-                lines = applied.lines
-                stats.drawnLines = applied.drawn
-                stats.erasures = applied.erasures.count
-                edits = applied
-            }
             let colorEdge = Self.boundaryPixels(segmentation.labels.storage, width: w, height: h)
             let first = LineLayering.walls(lines, width: w, height: h)
-            // No end reaches into a place erased after its line was drawn.
-            var blocked: ((Int, Int) -> Bool)?
-            if let origin = edits?.origin, let blockedBy = edits?.blockedBy { blocked = { blockedBy[$1] > origin[$0] } }
             stats.endsClosed = LineLayering.closeFreeEnds(
-                &lines, walls: first, colorEdge: colorEdge, reach: closeReach.map { $0 * s.gapBridging }, blocked: blocked)
+                &lines, walls: first, colorEdge: colorEdge, reach: closeReach.map { $0 * s.gapBridging })
             return lines
         }
         stats.strokes = lines.count
         try cancel.throwIfCancelled()
 
+        let plan = try Self.plan(
+            segmentation, lines: lines, edited: nil, settings: settings, photo: photo, writing: writing, stats: stats,
+            cancel: cancel, clock: clock)
+        let edits = LineEdits.sanitized(input.edits)
+        guard !edits.isEmpty else { return plan }
+
+        // The painter edits the drawing as it showed: what the template without the edits draws,
+        // which the edits change and nothing else does. The lines it was drawn from, edited
+        // alike, still split the paint, so the cells away from the edits stay as they were.
+        let shown = try clock.measure("lineArt.shown") {
+            try Self.shownLines(plan, settings: settings, writing: writing, cancel: cancel)
+        }
+        try cancel.throwIfCancelled()
+        let edited = clock.measure("lineArt.edits") {
+            Edited(
+                walls: LineEdits.apply(edits, to: lines, width: w, height: h),
+                drawing: LineEdits.apply(edits, to: shown, width: w, height: h))
+        }
+        stats.drawnLines = edited.drawing.drawn
+        stats.erasures = edited.drawing.erasures
+        return try Self.plan(
+            segmentation, lines: edited.walls.lines, edited: edited, settings: settings, photo: photo, writing: writing,
+            stats: stats, cancel: cancel, clock: clock)
+    }
+
+    /// The painter's edits applied twice (`LineEdits.apply`): to the lines the drawing was made
+    /// from, which split the paint, and to the drawing as it showed (`shownLines`), which the
+    /// template draws.
+    struct Edited {
+        var walls: LineEdits.Applied
+        var drawing: LineEdits.Applied
+    }
+
+    /// Stages 4 and 5 (`apply`): `segmentation` split along `lines` into cells, joined, and the
+    /// lines sorted into those bounding cells and those drawn inside one. With the painter's
+    /// edits (`lines` the edited walls), the fills keep their cells and the lines sorted, which
+    /// the template draws exactly (`Plan.exact`), are the edited drawing.
+    static func plan(
+        _ segmentation: Segmentation, lines: [DrawnLine], edited: Edited?, settings: GenerationSettings,
+        photo: RGBAImage, writing: Writing?, stats: LineArtStats, cancel: CancellationCheck, clock: StageClock
+    ) throws -> Plan {
+        let s = settings.normalized.lineArt
+        let w = segmentation.width, h = segmentation.height
+        var stats = stats
         // A fill may add paints (at the end, so no other number changes).
         var paints = segmentation.palette
         var palette = paints.map(\.oklab)
@@ -192,7 +237,7 @@ enum LayeredLines {
                 return try CellMap.split(paint: paint, walls: walls, cancel: cancel)
             }
             stats.cellsSplit = cells.count
-            if let fills = edits?.fills, !fills.isEmpty {
+            if let fills = edited?.walls.fills, !fills.isEmpty {
                 stats.fills = fills.count
                 stats.fillPaints = cells.fill(
                     points: LineEdits.pixelPoints(fills, width: w, height: h),
@@ -251,10 +296,10 @@ enum LayeredLines {
         var boundary: [DrawnLine] = [], interior: [(DrawnLine, Int)] = [], drawnInterior: [[SIMD2<Float>]] = []
         let distance = Self.boundaryDistance(final.label, width: w, height: h)
         try cancel.throwIfCancelled()
-        for (k, line) in lines.enumerated() {
+        for (k, line) in (edited?.drawing.lines ?? lines).enumerated() {
             let flags = Self.near(line, distance: distance, width: w)
             boundary += line.pieces(keeping: flags, freeCuts: true)
-            let drawn = (edits?.origin[k] ?? -1) >= 0
+            let drawn = (edited?.drawing.origin[k] ?? -1) >= 0
             // A piece shorter than the layering's minimum run is a boundary stretch's end
             // point (every piece takes one point beyond its run) or the sliver a merged tiny
             // cell left, not a line drawn inside the cell.
@@ -263,11 +308,12 @@ enum LayeredLines {
                 if drawn { drawnInterior.append(piece.points.map { $0 + SIMD2(0.5, 0.5) }) }
             }
         }
+        let drawingInterior = interior.count
         if let writing {
             stats.writingAreas = writing.areas
             stats.writingMarks = writing.marks
             stats.writing = writing.report
-            let written = edits.map { LineEdits.cut(writing.lines, by: $0, width: w, height: h) } ?? writing.lines
+            let written = edited.map { LineEdits.cut(writing.lines, by: $0.walls, width: w, height: h) } ?? writing.lines
             for line in written {
                 stats.writingLength += line.length
                 interior += Self.byRegion(line, labels: final.label, width: w, height: h)
@@ -275,10 +321,49 @@ enum LayeredLines {
         }
         for line in boundary { stats.add(line, interior: false) }
         for (line, _) in interior { stats.add(line, interior: true) }
-        let edited = edits.map { LineEdits.footprint($0, lines: lines, near: annotateNear + 1, width: w, height: h) }
         return Plan(
-            segmentation: split, boundaryLines: boundary, interiorLines: interior, stats: stats, edited: edited,
+            segmentation: split, boundaryLines: boundary, interiorLines: interior, drawingInterior: drawingInterior,
+            stats: stats, exact: edited != nil,
+            erased: edited.map { LineEdits.erasedPlaces($0.drawing, near: annotateNear, width: w, height: h) },
             drawnInterior: drawnInterior, detailRegions: detailRegions)
+    }
+
+    /// The lines the template made from `plan` draws (`annotate`): its drawn edges and the
+    /// drawing's interior strokes (not the writing's, which joins on its own), in pixel
+    /// coordinates about a pixel apart, none with a free end: the drawing the painter sees and
+    /// edits. Vectorized as `TemplateGenerator` does, so the edges are the ones on screen.
+    static func shownLines(
+        _ plan: Plan, settings: GenerationSettings, writing: Writing?, cancel: CancellationCheck
+    ) throws -> [DrawnLine] {
+        let keepOut = LabelKeepOut(rects: writing?.keepOut ?? [], lines: plan.drawnInterior.map(LabelKeepOut.Line.init))
+        let vector = try Vectorizer.vectorizeWithStats(
+            plan.segmentation, settings: settings, keepOut: keepOut, detailRegions: plan.detailRegions, cancel: cancel,
+            clock: StageClock())
+        let t = vector.template
+        let art = try annotate(t, plan: plan, cancel: cancel)
+        var lines: [DrawnLine] = []
+        for (k, e) in t.edges.enumerated() where art.edgeLayers[k] != LineLayer.color.rawValue {
+            let corners = t.points(of: e).map { $0 - SIMD2(0.5, 0.5) }
+            guard var previous = corners.first else { continue }
+            var points = [previous]
+            for p in corners.dropFirst() {
+                let steps = max(1, Int(simdLength(p - previous).rounded(.up)))
+                for step in 1...steps { points.append(previous + (p - previous) * (Float(step) / Float(steps))) }
+                previous = p
+            }
+            guard points.count >= 2 else { continue }
+            lines.append(DrawnLine(
+                points: points, strength: [Float](repeating: Float(art.edgeWeights[k]) / 255, count: points.count),
+                layer: [UInt8](repeating: art.edgeLayers[k], count: points.count), closed: false, free: (false, false),
+                links: [], eye: false))
+        }
+        for (line, _) in plan.interiorLines.prefix(plan.drawingInterior) {
+            var line = line
+            line.free = (false, false)
+            line.links = []
+            lines.append(line)
+        }
+        return lines
     }
 
     // MARK: - Annotation
@@ -307,8 +392,7 @@ enum LayeredLines {
             var covered = SIMD4<Float>(repeating: 0)
             var strengthSum: Float = 0, strengthLength: Float = 0
             let pts = t.points(of: e)
-            let sampling = plan.edited != nil && e.right != BoundaryEdge.outside
-            var edited = false
+            let sampling = plan.exact && e.right != BoundaryEdge.outside
             samples.removeAll(keepingCapacity: true)
             var previous = pts.first!
             for p in pts.dropFirst() {
@@ -327,8 +411,10 @@ enum LayeredLines {
                         strengthLength += piece
                     }
                     if sampling {
-                        samples.append(EdgeSample(position: q, layer: layer, length: piece, strength: Float(strength[i])))
-                        edited = edited || plan.edited![i]
+                        let erased = plan.erased?[i] ?? 0
+                        samples.append(EdgeSample(
+                            position: q, layer: erased == LineEdits.rubbedOut ? 3 : layer, length: piece,
+                            strength: Float(strength[i]), erased: erased != 0))
                     }
                 }
                 previous = p
@@ -338,7 +424,7 @@ enum LayeredLines {
             var drawnBest = -1
             for l in 0..<3 where covered[l] > 0 && (drawnBest < 0 || covered[l] > covered[drawnBest]) { drawnBest = l }
             var best = drawnBest >= 0 && covered[drawnBest] >= covered[3] ? drawnBest : 3
-            if edited {
+            if sampling {
                 // Drawn where a line runs along it: whole, not at all, or in stretches over an
                 // undrawn edge.
                 let runs = Self.drawnRuns(samples)
@@ -407,6 +493,8 @@ enum LayeredLines {
         var layer: Int
         var length: Float
         var strength: Float
+        /// In a place the painter erased: a gap here stays open.
+        var erased = false
     }
 
     /// A drawn stretch of an edge, drawn as an interior stroke of the edge's left region.
@@ -417,9 +505,11 @@ enum LayeredLines {
         var region: UInt32
     }
 
-    /// The sample ranges of an edge a line runs along: gaps in a line shorter than
-    /// `LineLayering.minimumRun` (where it meets a junction, or runs a little off the edge)
-    /// are drawn, and stretches that short beside undrawn ones are not.
+    /// The sample ranges of an edge a line runs along: stretches shorter than
+    /// `LineLayering.minimumRun` beside undrawn ones are not drawn (the reach of the lines
+    /// meeting the edge's ends, which would otherwise join across a short edge no line runs
+    /// along), and then gaps that short in a line are (where it meets a junction, or runs a
+    /// little off the edge), unless the painter erased there.
     static func drawnRuns(_ samples: [EdgeSample]) -> [ClosedRange<Int>] {
         var drawn = samples.map { $0.layer < 3 }
         guard drawn.contains(true) else { return [] }
@@ -437,14 +527,15 @@ enum LayeredLines {
             }
             return out
         }
-        for run in runs() where !run.drawn && run.length < LineLayering.minimumRun {
-            for i in run.range { drawn[i] = true }
-        }
-        let cleaned = runs()
-        if cleaned.count > 1 {
-            for run in cleaned where run.drawn && run.length < LineLayering.minimumRun {
+        let found = runs()
+        if found.count > 1 {
+            for run in found where run.drawn && run.length < LineLayering.minimumRun {
                 for i in run.range { drawn[i] = false }
             }
+        }
+        guard drawn.contains(true) else { return [] }
+        for run in runs() where !run.drawn && run.length < LineLayering.minimumRun && !samples[run.range].contains(where: \.erased) {
+            for i in run.range { drawn[i] = true }
         }
         return runs().filter(\.drawn).map(\.range)
     }

@@ -97,8 +97,9 @@ found, `TextFinder`) is traced from the photo itself, painted out before segment
 interior strokes with the numbers kept off it (`Writing`, `LabelKeepOut`; `keepWriting`;
 `docs/writing.md`, whose corpus every change to it is judged on). The painter's edits from the
 app's Refine (`LineArtInput.edits`, `pbn --line-edits`: lines drawn, the eraser's passes, lines
-tapped away, shapes filled, in order) join at the layer stage (`LineEdits`; `docs/coloring-book.md`
-› The painter's edits); without any, a template is byte for byte what it was. A fill keeps the
+tapped away, shapes filled, in order) change the drawing the template without them draws, and
+nothing else (`LayeredLines.shownLines`, `LineEdits`; `docs/coloring-book.md` › The painter's
+edits); without any, a template is byte for byte what it was. A fill keeps the
 cell under it, once the lines split the paint, as a detail area (`CellMap.fill`,
 `Template.detailRegions`): the photo's color there, merged into nothing, its number down to
 `LabelSizing.detailMinimumRadius`. Without an edge map, book settings generate a classic

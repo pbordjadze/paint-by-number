@@ -331,7 +331,8 @@ Conventions).
   gain, `LineArtInput.writing`), so drafts, sliders and Start carry them, and a refined
   painting's `refinements.json` lets regeneration reproduce them. Nothing else reads them: a
   painting nobody refined is made as before. PaintCore's `LineEdits` (root `CLAUDE.md` › Line
-  art) is where drawn lines join the drawing and erased ones leave it.
+  art) is where drawn lines join the drawing and erased ones leave it: the drawing as it showed,
+  so an edit adds or takes out just what the painter drew or erased.
 - Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
