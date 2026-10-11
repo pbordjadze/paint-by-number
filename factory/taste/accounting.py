@@ -3,7 +3,7 @@ import datetime
 import json
 from pathlib import Path
 
-from . import loop
+from . import loop, paths
 
 
 def usage(path):
@@ -39,13 +39,14 @@ def usage(path):
 
 
 def record(run, job, log, elapsed=None):
+    target = paths.job_path(run, job, 'costs')
     measurements = usage(log)
     if elapsed is not None:
         measurements['seconds'] = elapsed
     item = {'job': job['id'], 'round': job['round'], 'attempt': job['attempt'],
             'role': job['role'], 'guardian': job['guardian'], 'model': job['model'],
             'log': str(Path(log).resolve()), **measurements}
-    loop.save(Path(run) / 'costs' / f"{job['round']:03}" / f"{job['id']}-{job['attempt']}.json", item)
+    loop.save(target, item)
     return item
 
 

@@ -4,12 +4,10 @@
 The renderer uses filled contours rather than platform text APIs. Retaining these outlines
 also fixes card metrics across font installations. Run from any directory.
 """
+import argparse
 import json
 from pathlib import Path
 
-from fontTools import agl
-from fontTools.pens.basePen import BasePen
-from fontTools.t1Lib import T1Font
 
 ROOT = Path(__file__).resolve().parents[2]
 LICENSE = """(c) Copyright 1989-1992, Bitstream Inc., Cambridge, MA.
@@ -25,42 +23,48 @@ Type 1 fonts.
 BITSTREAM CHARTER is a registered trademark of Bitstream Inc."""
 
 
-class Contours(BasePen):
-    def __init__(self, glyphs):
-        super().__init__(glyphs)
-        self.paths = []
-
-    def _moveTo(self, p):
-        self.paths.append([p])
-
-    def _lineTo(self, p):
-        self.paths[-1].append(p)
-
-    def _curveToOne(self, b, c, d):
-        def curve(a, b, c, d, depth=0):
-            chord = ((d[0] - a[0]) ** 2 + (d[1] - a[1]) ** 2) ** 0.5
-            polygon = sum(((v[0] - u[0]) ** 2 + (v[1] - u[1]) ** 2) ** 0.5
-                          for u, v in [(a, b), (b, c), (c, d)])
-            if polygon - chord < 0.5 or depth == 12:
-                self.paths[-1].append(d)
-                return
-            def mid(u, v):
-                return ((u[0] + v[0]) / 2, (u[1] + v[1]) / 2)
-            ab, bc, cd = mid(a, b), mid(b, c), mid(c, d)
-            abc, bcd = mid(ab, bc), mid(bc, cd)
-            m = mid(abc, bcd)
-            curve(a, ab, abc, m, depth + 1)
-            curve(m, bcd, cd, d, depth + 1)
-        curve(self._getCurrentPoint(), b, c, d)
-
-    def _closePath(self):
-        pass
-
-    def _endPath(self):
-        pass
-
-
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.parse_args()
+    from fontTools import agl
+    from fontTools.pens.basePen import BasePen
+    from fontTools.t1Lib import T1Font
+
+    class Contours(BasePen):
+        def __init__(self, glyphs):
+            super().__init__(glyphs)
+            self.paths = []
+
+        def _moveTo(self, p):
+            self.paths.append([p])
+
+        def _lineTo(self, p):
+            self.paths[-1].append(p)
+
+        def _curveToOne(self, b, c, d):
+            def curve(a, b, c, d, depth=0):
+                chord = ((d[0] - a[0]) ** 2 + (d[1] - a[1]) ** 2) ** 0.5
+                polygon = sum(((v[0] - u[0]) ** 2 + (v[1] - u[1]) ** 2) ** 0.5
+                              for u, v in [(a, b), (b, c), (c, d)])
+                if polygon - chord < 0.5 or depth == 12:
+                    self.paths[-1].append(d)
+                    return
+                def mid(u, v):
+                    return ((u[0] + v[0]) / 2, (u[1] + v[1]) / 2)
+                ab, bc, cd = mid(a, b), mid(b, c), mid(c, d)
+                abc, bcd = mid(ab, bc), mid(bc, cd)
+                m = mid(abc, bcd)
+                curve(a, ab, abc, m, depth + 1)
+                curve(m, bcd, cd, d, depth + 1)
+            curve(self._getCurrentPoint(), b, c, d)
+
+        def _closePath(self):
+            pass
+
+        def _endPath(self):
+            pass
+
+
     fonts = {}
     for style, file in [("roman", "c0648bt_.pfb"), ("italic", "c0649bt_.pfb")]:
         glyphs = T1Font(f"/usr/share/fonts/X11/Type1/{file}").getGlyphSet()
