@@ -336,10 +336,16 @@
       "owner": "open-source-enthusiast",
       "name": "Paper Lantern",
       "source": "open-source-enthusiast",
-      "love": true,
-      "veto": false,
-      "note": "",
-      "at": "2026-10-11T06:36:35.458Z"
+      "love": false,
+      "veto": true,
+      "note": "Near-duplicate of Lantern Paper (color 8); Paul kept Lantern Paper.",
+      "at": "2026-10-11T07:26:26.000Z",
+      "replacement": {
+        "name": "Torchlight",
+        "source": "open-source-enthusiast",
+        "score": 10.0,
+        "why": "the guardian's next-best name, so it keeps a color of its own"
+      }
     },
     {
       "slot": 31,
