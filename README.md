@@ -41,6 +41,19 @@ paint-by-numbers templates — entirely on-device — and makes painting them fl
 - **Details**: every paint gets a playful nickname ("Harbor Fog", "Apricot Jam") beside its
   plain name, a dark paper for painting in the evening, and Liquid Glass throughout.
 
+## The Marginarium: how it was made
+
+Paul Bordjadze makes Paint by Moonlight with a small team of AI agents: Codex builds the tools,
+Claude orchestrates, reviews and tells the story, and the Lamp, a panel of nineteen AI guardians,
+votes on matters of taste by blind ballot. Paul has the last word. The Marginarium is the app's
+storybook section, where the chapters tell how it was made. It is still being built for the
+app; its first pages are here: **[read the Marginarium](marginarium/README.md)**.
+
+![A test photo of two parrots becoming a paint-by-numbers template, stage by stage: the photo, its palette, the simplified regions, the finished outlines](marginarium/images/making-of.jpg)
+
+*The pipeline stage by stage, from the making-of movie the project renders of itself. Photo:
+Kodak Lossless True Color Image Suite.*
+
 ## Privacy
 
 Photos are turned into templates entirely on the device. The app has no accounts, no analytics
@@ -63,6 +76,7 @@ exports. Third-party credits and licenses are in
 | `tools/` | Evaluation harness, quality regression gate, string-catalog check, Core ML model converters |
 | `ci/`, `.github/workflows/` | macOS CI with simulator screenshots and a Release-build check |
 | `docs/` | Design notes, tuning logs and provenance records the code cites |
+| `marginarium/` | The Marginarium's first pages: one passage from each chapter, and its pictures |
 
 ## Building
 

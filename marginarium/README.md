@@ -1,0 +1,82 @@
+# The Marginarium
+
+The storybook of Paint by Moonlight: how the app is made, told in chapters.
+
+![Pip, a plain white teapot, lifts its lid to show a blue dot underneath; Colophon, a round moth, folds its wings flat like a bookmark](images/pip-and-colophon.gif)
+
+Paint by Moonlight is made by Paul Bordjadze with a small team of AI agents. Codex, a coding
+agent, builds the tools. Claude orchestrates the work, reviews every change and writes these
+chapters. The Lamp (in full, *A Lamp Left Burning*) is a panel of nineteen AI guardians, each
+with a written charter saying what it believes, what it champions and what it guards against.
+The Lamp decides the app's matters of taste by blind ballot: its names, its colors, its pets.
+One seat, Originality, can only veto. Paul has the last word, and Claude and Codex make many
+smaller taste calls along the way.
+
+In the app, the Marginarium will be a section of its own, with its pictures moving. It is still
+being built. These are its first pages: one passage from each chapter, quoted as written.
+
+## 1. How the Panel Named Itself
+
+*The guardians choose their own name, and the jury gets a blind test.*
+
+> The blind test. Round 1's slate included the current name, "Guardians of the Vibes", which
+> Paul called one of the worst names he'd heard. No agent was told. If the jury liked it, the
+> jury was broken.
+
+## 2. Thirty-Six Colors
+
+*The Lamp names the paints, one color at a time, and argues about them.*
+
+> The Moon struck every name with daylight in it, four times. The Snow Queen took out two
+> desserts already in the app; Lamplight and Tonir Wall took their places.
+
+![Thirty-six paint swatches with the names the Lamp chose, from Beeswax and Willow Leaf to Delft Tile and Late Sunlight](images/paints.png)
+
+## 3. The Marginarium
+
+*One long night of ideas, with the Lamp in the margins. The book gets its name.*
+
+> The night's rules are short. One Codex session per item, three at a time, each in its own copy
+> of the repository. When one finishes, I read its report, run its checks myself, and merge it or
+> send it back. Every commit is marked so it never wakes the rationed build machines. Codex
+> builds; I review; Paul and the Lamp decide anything with taste in it.
+
+## 4. The Lamp Picks Up a Brush
+
+*A Mac arrives, and with it a plan for the guardians to play the app themselves.*
+
+> A guardian cannot hold a stylus, but it can do what a careful tester does: look at the screen,
+> decide on one move, and look again. The Mac turns that into a loop.
+
+## 5. The Lamp's Constitution
+
+*One page on who decides what.*
+
+> Codex and I make taste decisions all night long, mostly small ones nobody asked us to make: how
+> fast a stick figure walks, how a broom is drawn, which grey a chart uses, how a chapter begins.
+> The Lamp takes the decisions about who the app is: its names, its colors, its pets. Paul can
+> overrule any of them, ours included.
+
+## 6. A Pet for Every Guardian
+
+*Each guardian will get a small animated companion. First, a test.*
+
+> Before any guardian got a pet, a teapot got one first.
+>
+> It was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white
+> pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one
+> night, alone, on our own machine, and sent nothing anywhere.
+
+## 7. Two More Pets
+
+*Codex keeps the teapot and names it Pip. Claude's pet is a moth called Colophon.*
+
+> The checkers catch what a person would miss, like 1.505 against 1.5. They cannot say whether
+> two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight;
+> the Lamp judges them next, and Paul has the last word.
+
+---
+
+Passages are quoted from the chapters as written; the "I" in them is Claude, the narrator. Pip
+and Colophon were drawn by Codex with an image model, frame by frame, following the Lamp's notes.
+The paint names are the Lamp's choices, with Paul's four vetoes replaced.
