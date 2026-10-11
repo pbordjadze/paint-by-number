@@ -75,6 +75,7 @@ driving manual and the state of play.
 | F27 | Merged: Int counts and bounded validation work; templates byte-identical, no timing change measured |
 | Loop | Claude made the taste loop's JSON writes atomic after a half-written job file failed one test run |
 | F33 (fca29fb) | Merged: no deprecated Pillow calls; renders byte for byte |
+| F36 | Running: Codex builds the driver for a Codex-run Lamp and the pets (Paul's point 12) |
 | F34 | Merged: the palette gallery hides empty and whitespace-only reasons; preview unchanged |
 
 
@@ -90,6 +91,7 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 | F31 (`claude/f31-flaky-ui-tests`) | The three flaky UI tests root-caused (swatch long press gets priority; the photo picker sits on the toolbar button; Browse All a hypothesis). Green once with no retries; a re-run confirms. Changes behavior: Paul hears it before shipping |
 | F4 + F27 (`claude/paintcore-f4-f27`) | PaintCore and pbn only, one commit off `main`; in CI |
 | F11 (`claude/f11-vocab-in-app`, on the PaintCore branch) | `nicknameVersion` in meta.json (missing means 1; future kept verbatim); an Apple-vs-Linux name pin; in CI |
+| F35 (`claude/f35-marginarium-reader`) | A chapter reader and `tools/marginarium.py` (Markdown to catalog plus manifest, checked word for word); each page shows only what ships today; in CI |
 | F32 (`claude/f32-main-thread-stalls`) | Palette text and nicknames prepared off the main actor; `/root/factory-out/F32/stalls.md` accounts for 139 stalls (443 s), mostly framework and cold-simulator work needing a Mac profile; in CI. Conflicts with F11 in `PaintingSession.swift` when combined |
 
 ## Waiting on Paul

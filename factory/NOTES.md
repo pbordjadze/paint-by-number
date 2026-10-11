@@ -255,6 +255,20 @@ helpful, beautiful.
 - `CONSTITUTION.md` (Who really decides) and `ORCHESTRATOR.md` (Rules) say so. People Paul brings
   in are not named in project files until he says so.
 
+## Paul's point 12: Codex runs the Lamp; all the pets now (Oct 11, evening)
+
+- Codex plays every seat of the Lamp for the pets, and the whole set is hatched now. Paul's
+  approval steps in the pets plan are waived for this run: the pets are whatever the Codex Lamp
+  decides and generates. Paul can still veto later.
+- It saves Claude usage, and it is an experiment: how a guardian's judgement and taste change with
+  the model underneath. The same charters and prompts go to two Codex models, and three pieces the
+  Claude-run Lamp already answered are re-posed to both, side by side.
+- A whole chapter is Codex's: Codex may write it, with Claude as a character, and it can include
+  the pets.
+- The driver is F36. Claude launches it outside Codex's sandbox: each seat is its own read-only
+  `codex exec`, each pet a normal Codex session. (Giving a Codex session network access and write
+  access to Codex's own folder, so it could launch the seats itself, was blocked as unsafe.)
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
