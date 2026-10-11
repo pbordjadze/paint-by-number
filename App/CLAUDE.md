@@ -126,8 +126,10 @@ synchronized folder would bundle it into the app.
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
-  (`PaletteRows`) and order (`PaletteOrder`); picking the next color, and the Paint menu's `]`/`[`,
-  follow that order (`PaintingSession.colorOrder`).
+  (`PaletteRows`) and order (`PaletteOrder`), which the selection follows
+  (`PaintingSession.colorOrder`): a painting opens on the palette's first swatch, finishing the
+  selected color selects the first color left (`firstIncompleteColor`; the finished swatch
+  leaves), and the Pencil's double tap and the Paint menu's `]`/`[` step along it.
 - `PaintCommands` is the Paint menu (iPadOS menu bar, single-key shortcuts) fed by the focused
   `PaintingFocus`; fills are registered with the window's `UndoManager` (⌘Z/⇧⌘Z, Edit menu,
   three-finger undo); the Pencil paints while fingers navigate (and only navigates them under "Only

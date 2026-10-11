@@ -293,16 +293,25 @@ struct PaintingSessionTests {
         #expect(allAnimated)
     }
 
-    @Test func completingAColorAdvancesToTheNextOne() {
+    /// Finishing the selected color selects the palette's first color left, not the one after
+    /// it: the finished swatch leaves, and picking from the middle of the palette jumped about.
+    @Test func completingAColorSelectsThePalettesFirstColorLeft() {
         let session = PaintingSession(template: template)
         session.select(color: 2)
         let events = recordEvents(session)
-        let all = regions(ofColor: 2)
-        session.paint(all, from: .zero, animated: false)
+        session.paint(regions(ofColor: 2), from: .zero, animated: false)
         #expect(session.isColorComplete(2))
         #expect(events().contains(.colorCompleted(2)))
-        #expect(session.selectedColor == session.nextIncompleteColor(after: 2))
-        #expect(session.selectedColor != 2)
+        #expect(session.selectedColor == 0)
+        // In the palette's order on screen: here backwards, so the last number leads.
+        let last = session.paletteCount - 1
+        session.colorOrder = Array((0..<session.paletteCount).reversed())
+        #expect(session.selectedColor == last, "The palette's first swatch wasn't selected as it showed")
+        session.select(color: 1)
+        session.paint(regions(ofColor: 1), from: .zero, animated: false)
+        #expect(session.selectedColor == last)
+        session.paint(regions(ofColor: last), from: .zero, animated: false)
+        #expect(session.selectedColor == last - 1)
     }
 
     @Test func paintingEverythingCompletesTheArtwork() {

@@ -62,7 +62,8 @@ final class PaintingSession {
     @ObservationIgnored private var observers: [(PaintEvent) -> Void] = []
     @ObservationIgnored private var lastInteraction: ContinuousClock.Instant?
     @ObservationIgnored private let clock = ContinuousClock()
-    /// Automatically select the next unfinished color when one is completed.
+    /// Automatically select the palette's first unfinished color when the selected one is
+    /// completed (`firstIncompleteColor`).
     @ObservationIgnored var autoAdvance = true
     /// Zen Mode: a moment after each fill the canvas flies to the nearest area left of the
     /// selected color, as the hint does (`zenPause`, `zenShinePause`).
@@ -70,8 +71,15 @@ final class PaintingSession {
     /// Reduce Motion: the canvas shines no finished color, so Zen Mode has none to wait out.
     @ObservationIgnored var reduceMotion = false
     /// The palette's order on screen (`PaletteOrder`), which picking the next color follows;
-    /// nil goes by number.
-    @ObservationIgnored var colorOrder: [Int]?
+    /// nil goes by number. Its first value (the screen showing the palette) moves the selection
+    /// the session opened with (the first color by number with areas left) to the palette's
+    /// first, as the swatches lead off; a color picked meanwhile stays.
+    @ObservationIgnored var colorOrder: [Int]? {
+        didSet {
+            guard oldValue == nil, selectedColor == remainingByColor.firstIndex(where: { $0 > 0 }) else { return }
+            select(color: firstIncompleteColor())
+        }
+    }
     /// Fixes the colors' nicknames, and keys the painting's custom palette order.
     let nicknameSeed: UInt64
     /// Fills of the stroke in progress (nil between strokes).
@@ -241,7 +249,8 @@ final class PaintingSession {
         if progress.isComplete {
             emit(.artworkCompleted)
         } else if autoAdvance, let selected = selectedColor, completed.contains(selected) {
-            select(color: nextIncompleteColor(after: selected))
+            // The finished color leaves the palette: the next is the first swatch left.
+            select(color: firstIncompleteColor())
         }
         // A stroke flies on when it ends (`endStroke`).
         if flowsToNextArea, !isStroking { showNextArea(near: origin, finishedColor: !completed.isEmpty) }
@@ -267,7 +276,7 @@ final class PaintingSession {
         revision += 1
         updateMilestones(colors: 0..<paletteCount)
         canvas?.session(self, didUnpaint: painted)
-        select(color: remainingByColor.firstIndex { $0 > 0 })
+        select(color: firstIncompleteColor())
     }
 
     /// Asks the canvas to reveal the unpainted region of the selected color nearest to
@@ -291,11 +300,22 @@ final class PaintingSession {
         }
     }
 
+    /// The palette's colors in their order on screen (`colorOrder`, when it fits the palette).
+    private var order: [Int] {
+        colorOrder.flatMap { $0.count == paletteCount ? $0 : nil } ?? Array(0..<paletteCount)
+    }
+
+    /// The first color with areas left in the palette's order: its first swatch, finished colors
+    /// having left it.
+    func firstIncompleteColor() -> Int? {
+        order.first { remainingByColor[$0] > 0 }
+    }
+
     /// The next color with areas left after `color` (before it when `backwards`), in the
     /// palette's order (`colorOrder`), coming round; from the start (or the end) when `color`
     /// is nil.
     func nextIncompleteColor(after color: Int?, backwards: Bool = false) -> Int? {
-        let order = colorOrder.flatMap { $0.count == paletteCount ? $0 : nil } ?? Array(0..<paletteCount)
+        let order = order
         let n = order.count
         guard n > 0 else { return nil }
         let start = color.flatMap { order.firstIndex(of: $0) } ?? (backwards ? 0 : n - 1)
