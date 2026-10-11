@@ -1,0 +1,412 @@
+"""Resumable, opt-in Lamp pet run; python -m factory.taste.codex_lamp --help.
+
+Each completed job is a durable record. Only the primary model enters decisions;
+comparison jobs receive identical prompts and schemas. No service pet is created.
+"""
+import argparse
+import ast
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import tempfile
+
+from . import loop, paths, runners, schema
+from .kit import outside_repo
+
+WORK = Path('/root/factory-out/F36')
+ROWS = ('idle', 'running-right', 'running-left', 'waving', 'jumping', 'failed',
+        'waiting', 'running', 'review')
+S = schema.STRING
+TEXT = {'type': 'string'}
+STYLE = schema.obj({
+    'name': S, 'preset': {'type': 'string', 'enum': ['auto', 'pixel', 'plush', 'clay', 'sticker',
+                                 'flat-vector', '3d-toy', 'painterly', 'brand-inspired']},
+    'style_notes': S, 'framing': S, 'palette': S, 'line': S, 'boundaries': S,
+    'rows': schema.obj(dict.fromkeys(ROWS, S)), 'why': S})
+BRIEF = schema.obj({'display_name': S, 'description': S, 'brief': S, 'pet_notes': S,
+                    'rows': schema.obj(dict.fromkeys(ROWS, S)),
+                    'do_not_resemble': schema.array(S), 'why': S})
+RULES = """Answer only in your reply as JSON matching the supplied schema. Do not write files.
+Read only the supplied prompt and explicitly supplied images/context. Do not inspect other jobs or replies.
+Use plain words. Name no real person beyond Paul and the guardians' namesakes in the charters.
+Paul waived the approval steps for this run and retains a later veto. All pets remain local.
+Preserve each seed's creature and personality; express it within the supported pet constraints.
+No floating effects, scene background, text, speech bubbles, shadows or new props in review.
+Native cells are 192 × 208. Nine animation rows must read distinctly; v2 adds sixteen looks.
+Every veto quotes the exact guards-against charter line, with a concrete reason. Originality
+only vetoes in juries and never ranks taste. The Painter also guards function: readability at
+192 × 208 in all nine rows. Function defects are flags with evidence, not invented charter quotes.
+"""
+
+
+def digest(value):
+    data = value if isinstance(value, bytes) else json.dumps(value, sort_keys=True, ensure_ascii=False).encode()
+    return hashlib.sha256(data).hexdigest()
+
+
+def frozen(path, value):
+    if path.exists():
+        if loop.load(path) != value:
+            raise ValueError(f'frozen input differs: {path}')
+    else:
+        loop.save(path, value)
+    return value
+
+
+@contextmanager
+def locked(run):
+    run = outside_repo(run)
+    run.mkdir(parents=True, exist_ok=True)
+    with paths.contained(run, '.lock').open('a') as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise ValueError(f'another driver is using {run}') from exc
+        yield run
+
+
+def parallel_map(function, items, workers):
+    # Settle every dispatched job before reporting a round error. Completed siblings survive.
+    results, errors = {}, []
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(function, item): i for i, item in enumerate(items)}
+        for future in as_completed(futures):
+            try:
+                results[futures[future]] = future.result()
+            except Exception as exc:
+                errors.append(exc)
+    if errors:
+        raise RuntimeError(f'{len(errors)} job(s) failed: {errors[0]}') from errors[0]
+    return [results[i] for i in range(len(items))]
+
+
+def execute(run, job, validate=None):
+    """Use the kit runner; retry invalid answers once with the identical prompt.
+
+    Transport crashes leave no completion and can resume. Invalid answers retain
+    both attempts. No comparison arm receives feedback unavailable to the other.
+    """
+    job_path = paths.job_path(run, job, 'jobs')
+    frozen(job_path, job)
+    record_path = paths.job_path(run, job, 'records')
+    if record_path.exists():
+        record = loop.load(record_path)
+        if record['job_sha256'] != digest(job):
+            raise ValueError(f'job changed after completion: {job_path}')
+        if validate:
+            validate(record['reply'])
+        return record
+    for attempt in (0, 1):
+        current = {**job, 'attempt': attempt}
+        current_path = job_path if not attempt else paths.job_path(run, current, 'retries')
+        frozen(current_path, current)
+        reply_path = runners.destination(run, current)
+        if not reply_path.exists():
+            scratch = paths.contained(run, 'dispatch')
+            scratch.mkdir(exist_ok=True)
+            out = Path(tempfile.mkdtemp(prefix=job['id'] + '-', dir=scratch))
+            runners.codex(run, current_path, out)
+        try:
+            reply = loop.load(reply_path)
+            errors = schema.validate(reply, job['reply_schema'])
+            if not errors and validate:
+                validate(reply)
+        except ValueError as exc:
+            errors = [str(exc)]
+        if not errors:
+            break
+        loop.save(paths.job_path(run, current, 'rejections'), {'errors': errors, 'raw_reply': reply_path.read_text()})
+        if attempt:
+            raise ValueError(f'{job["id"]}: rejected twice: {errors}')
+    record = {key: job[key] for key in ('id', 'round', 'guardian', 'model', 'effort', 'role', 'stage')}
+    record.update(job_sha256=digest(job), prompt_sha256=digest(job['prompt'].encode()),
+                  reply=reply, reply_bytes=reply_path.stat().st_size,
+                  reply_characters=len(reply_path.read_text()), attempt=attempt,
+                  costs=[loop.load(paths.job_path(run, {**job, 'attempt': n}, 'costs')) for n in range(attempt + 1)])
+    loop.save(record_path, record)
+    return record
+
+
+def source_snapshot():
+    # The collection page owns the current seeds. Read its literal without running its CLI.
+    tree = ast.parse((loop.REPO / 'tools/factory/collection.py').read_text())
+    seeds = next(ast.literal_eval(node.value) for node in ast.walk(tree)
+                 if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'PETS'
+                                                        for t in node.targets))
+    chapter = {p.stem: loop.load(p) for p in sorted((loop.REPO / 'factory/pieces/chapter-6/replies').glob('*.json'))}
+    avoid = {gid: ['No franchise look-alike, logo, real-person likeness or copied artwork.'] for gid in seeds}
+    for flag in chapter['originality']['flags']:
+        avoid[flag['pet']].append(flag['risk'] + ' ' + flag['fix'])
+    return {'guardians': loop.guardians(), 'seeds': seeds, 'chapter_6': chapter,
+            'glossary': loop.load(loop.REPO / 'factory/taste/glossary.json'), 'avoid': avoid,
+            'brief': (loop.REPO / 'factory/pieces/pets/brief.md').read_text(), 'rules': RULES}
+
+
+def ballot_schema(ids, ranking=True):
+    target = {'type': 'string', 'enum': ids}
+    veto = schema.obj({'target': target, 'quote': S, 'why': S})
+    flag = schema.obj({'target': target, 'why': S})
+    fields = {'vetoes': schema.array(veto), 'flags': schema.array(flag), 'why': S}
+    if ranking:
+        fields['ranking'] = schema.array(target, unique=True)
+    else:
+        fields['verdicts'] = schema.array(schema.obj({'target': target,
+                            'verdict': {'type': 'string', 'enum': ['keep', 'redo']}, 'why': S}), len(ids))
+    return schema.obj(fields)
+
+
+class Lamp:
+    def __init__(self, run, model, compare, effort, parallel, image_workers, skill_dir=None):
+        self.run, self.parallel, self.image_workers = run, parallel, image_workers
+        if run != WORK and WORK not in run.parents:
+            raise ValueError(f'run work must be under {WORK}')
+        from .lamp_hatch import find_skill, skill_hashes
+        existing = loop.load(paths.contained(run, 'run.json'))
+        config = {'version': 1, 'model': model, 'compare': compare, 'effort': effort,
+                  'skill_dir': str(find_skill(skill_dir or (existing or {}).get('skill_dir')))}
+        self.config = frozen(paths.contained(run, 'run.json'), config)
+        frozen(paths.contained(run, 'skill.json'), skill_hashes(Path(config['skill_dir'])))
+        inputs = paths.contained(run, 'inputs.json')
+        self.inputs = loop.load(inputs) if inputs.exists() else frozen(inputs, source_snapshot())
+        self.seats = {g['id']: g for g in self.inputs['guardians']}
+        self.models = list(dict.fromkeys([model] + ([compare] if compare else [])))
+        self.model, self.effort = model, effort
+
+    def jury(self, stage):
+        others = [g for g in self.seats if g not in ('originality', 'painter', 'bible-school-teacher')]
+        offset = (stage * 4) % len(others)
+        rotated = others[offset:] + others[:offset]
+        return ['originality', 'painter'] + rotated[:4]
+
+    def prompt(self, seat, task, context):
+        g = self.seats[seat]
+        text = (self.inputs['rules'] + f'\nYou are {g["name"]}.\nYour charter:\n{g["charter_text"]}\n'
+                + task + '\nContext:\n' + json.dumps(context, indent=2, ensure_ascii=False))
+        if seat == 'originality':
+            text += '\nOriginality glossary:\n' + json.dumps(self.inputs['glossary'], ensure_ascii=False)
+        return text
+
+    def round(self, number, stage, seats, task, context, rule, *, compare=False, images=()):
+        jobs = []
+        for seat in seats:
+            payload = context[seat] if stage in ('briefs', 'brief-repair') else context
+            prompt = self.prompt(seat, task, payload)
+            for index, model in enumerate(self.models if compare else [self.model]):
+                jobs.append(dict(id=f'{stage}-{seat}-m{index}', round=number, attempt=0,
+                                 role='guardian', stage=stage, guardian=seat, model=model,
+                                 effort=self.effort, images=list(images), prompt=prompt, reply_schema=rule))
+        records = parallel_map(lambda job: execute(self.run, job,
+            lambda reply: self.check(job['guardian'], reply, stage, context)), jobs, self.parallel)
+        primary = {r['guardian']: r['reply'] for r in records if r['model'] == self.model}
+        return primary
+
+    def check(self, seat, reply, stage, context):
+        if stage.startswith('style-proposals') and len(reply['style_notes'].split()) > 80:
+            raise ValueError('style notes exceed 80 words')
+        if stage in ('briefs', 'brief-repair'):
+            if not 150 <= len(reply['brief'].split()) <= 300 or not 50 <= len(reply['pet_notes'].split()) <= 80:
+                raise ValueError(f'{seat}: brief must be 150–300 words; pet notes 50–80')
+            if not set(self.inputs['avoid'][seat]) <= set(reply['do_not_resemble']):
+                raise ValueError(f'{seat}: omitted do-not-resemble entry')
+        if 'vetoes' in reply:
+            guard = loop.charter_line(self.seats[seat]['charter_text'], 'guards against')
+            for veto in reply['vetoes']:
+                if ' '.join(veto['quote'].split()) != guard:
+                    raise ValueError(f'{seat}: veto must quote the entire guards-against line verbatim')
+            if 'ranking' in reply:
+                expected = [] if seat == 'originality' else list(context['candidates'])
+                if sorted(reply['ranking']) != sorted(expected):
+                    raise ValueError(f'{seat}: incomplete ranking, or Originality voted')
+            if 'verdicts' in reply:
+                if sorted(v['target'] for v in reply['verdicts']) != sorted(context['candidates']):
+                    raise ValueError(f'{seat}: image review must cover every candidate once')
+
+    def tally(self, name, candidates, votes, count):
+        scores = dict.fromkeys(candidates, 0)
+        excluded = set()
+        for seat, reply in votes.items():
+            excluded.update(v['target'] for v in reply['vetoes'])
+            excluded.update(v['target'] for v in reply['flags'])
+            if seat != 'originality':
+                for place, target in enumerate(reply['ranking']):
+                    scores[target] += len(candidates) - place - 1
+        order = sorted((i for i in candidates if i not in excluded), key=lambda i: (-scores[i], i))
+        record = {'scores': scores, 'excluded': sorted(excluded), 'selected': order[:count], 'votes': votes}
+        loop.save(paths.contained(self.run, 'decisions', name + '.json'), record)
+        return order[:count]
+
+    def hatch_many(self, items):
+        from .lamp_hatch import hatch
+        return parallel_map(lambda item: hatch(self, **item), items, self.image_workers)
+
+    def run_plan(self):
+        print('1/7 Style proposals and shortlist', flush=True)
+        proposals = [g for g in self.seats if g != 'originality']
+        previous = None
+        for revision in range(2):
+            styles = self.round(1 + revision * 2, f'style-proposals-{revision}', proposals,
+                'Propose one complete family style sheet. Style notes at most 80 words. '
+                'Specify the nine rows, timing and the sixteen looks. Address the ink-versus-glass tension.',
+                {'seeds': self.inputs['seeds'], 'chapter_6': self.inputs['chapter_6'],
+                 'previous_rejection': previous}, STYLE, compare=True)
+            ids = {f'style-{i:02}': value for i, value in enumerate(styles.values())}
+            votes = self.round(2 + revision * 2, f'shortlist-{revision}', self.jury(0),
+                'Rank all style IDs; Originality returns an empty ranking. Veto only charter violations. '
+                'Flag only concrete technical or shared-boundary failures. Select two viable styles.',
+                {'candidates': ids}, ballot_schema(list(ids)), compare=True)
+            selected = self.tally(f'shortlist-{revision}', ids, votes, 2)
+            if len(selected) == 2:
+                break
+            previous = {'candidates': ids, 'votes': votes}
+        if len(selected) != 2:
+            raise ValueError('no two legal styles after two rounds; see decisions')
+        styles = {i: ids[i] for i in selected}
+        print('2/7 Four pilot hatches', flush=True)
+        pilots = self.hatch_many([dict(key=f'pilot-{sid}-{pet}', pet=pet, style=style,
+            brief={'seed': self.inputs['seeds'][pet], 'do_not_resemble': self.inputs['avoid'][pet]},
+            reference=None, redo=None) for sid, style in styles.items()
+            for pet in ('medea', 'bulat-okudzhava')])
+        viable = {sid: style for sid, style in styles.items()
+                  if all(p['status'] == 'validated' for p in pilots if p['key'].startswith(f'pilot-{sid}-'))}
+        if not viable:
+            raise ValueError('neither style has two validated pilots; failures recorded, no style guessed')
+        print('3/7 Image jury selects the style', flush=True)
+        images = [p['contact'] for p in pilots if p['status'] == 'validated']
+        votes = self.round(5, 'style-decision', self.jury(1),
+            'Inspect the attached native contact sheets (all frames in playback order). Choose the '
+            'style shared by the animal and object. Rank all viable styles; Originality ranks none. '
+            'Judge identity, gait, all nine rows and sixteen looks. Preview paths are available to read.',
+            {'candidates': viable, 'pilots': pilots}, ballot_schema(list(viable)), images=images)
+        chosen = self.tally('style', viable, votes, 1)
+        if not chosen:
+            raise ValueError('image jury rejected every pilot style')
+        style = viable[chosen[0]]
+        reference = next(p['contact'] for p in pilots if p['key'] == f'pilot-{chosen[0]}-medea')
+        print('4/7 Twenty guardian briefs', flush=True)
+        contexts = {seat: {'seed': self.inputs['seeds'][seat], 'style': style,
+                          'do_not_resemble': self.inputs['avoid'][seat]} for seat in self.seats}
+        brief_task = ('Draft your own pet: brief 150–300 words, pet_notes 50–80 words of appearance, '
+                      'plus one sentence for each of the nine rows. Include appearance, personality, '
+                      'physical expression, emotional range, signature behavior, boundaries and every '
+                      'do_not_resemble entry verbatim. Preserve the seed within the shared constraints.')
+        briefs = self.round(6, 'briefs', list(self.seats), brief_task, contexts, BRIEF, compare=True)
+        print('5/7 Set review and one repair of flagged briefs', flush=True)
+        review_rule = schema.obj({'vetoes': schema.array(schema.obj({
+            'target': {'type': 'string', 'enum': list(briefs)}, 'quote': S, 'why': S})),
+            'flags': schema.array(schema.obj({'target': {'type': 'string', 'enum': list(briefs)}, 'why': S})), 'why': S})
+        reviews = self.round(7, 'set-review', self.jury(2),
+            'Read the entire set side by side. Only flag off-style, broken boundaries, franchise '
+            'look-alikes, real-person likenesses or function defects. No taste rankings.',
+            {'style': style, 'candidates': briefs}, review_rule, compare=True)
+        flagged = sorted({v['target'] for r in reviews.values() for v in r['flags'] + r['vetoes']})
+        if flagged:
+            contexts = {s: {**contexts[s], 'previous': briefs[s], 'review': reviews} for s in flagged}
+            briefs.update(self.round(8, 'brief-repair', flagged, brief_task + ' Repair the flagged problems once.',
+                                     contexts, BRIEF, compare=True))
+        loop.save(paths.contained(self.run, 'decisions', 'briefs.json'),
+                  {'style': style, 'reference': reference, 'briefs': briefs, 'reviews': reviews, 'repaired': flagged})
+        print('6/7 Set hatches', flush=True)
+        # Establish a set reference before launching the remaining independent pets.
+        first = self.hatch_many([dict(key='set-medea', pet='medea', style=style, brief=briefs['medea'],
+                                     reference=reference, redo=None)])[0]
+        set_reference = first['contact'] if first['status'] == 'validated' else reference
+        pets = [first] + self.hatch_many([dict(key=f'set-{s}', pet=s, style=style, brief=b,
+            reference=set_reference, redo=None) for s, b in briefs.items() if s != 'medea'])
+        print('7/7 Image review and at most one redo per pet', flush=True)
+        candidates = {p['pet']: p for p in pets if p['status'] == 'validated'}
+        reviews = self.image_review(9, 'image-review', candidates, briefs, style)
+        redos = self.redos(reviews)
+        if redos:
+            replacements = self.hatch_many([dict(key=f'redo-{s}', pet=s, style=style, brief=briefs[s],
+                reference=set_reference, redo={'previous': candidates[s], 'reasons': reasons})
+                for s, reasons in redos.items()])
+            for pet in replacements:
+                candidates[pet['pet']] = pet
+            final_candidates = {p['pet']: p for p in replacements if p['status'] == 'validated'}
+            final_reviews = self.image_review(10, 'redo-review', final_candidates, briefs, style)
+            rejected = self.redos(final_reviews)
+        else:
+            final_reviews, rejected = {}, {}
+        from .lamp_hatch import publish
+        results = {}
+        for original in pets:
+            pet = candidates.get(original['pet'], original)
+            if pet['pet'] in rejected:
+                pet = {**pet, 'status': 'rejected', 'reasons': rejected[pet['pet']]}
+            if pet['status'] == 'validated':
+                publish(self, pet, briefs[pet['pet']], style)
+            results[pet['pet']] = pet
+        loop.save(paths.contained(self.run, 'decisions', 'images.json'),
+                  {'reviews': reviews, 'redos': redos, 'redo_reviews': final_reviews, 'pets': results})
+        summary = {'status': 'complete', 'model': self.model, 'pets': {s: p['status'] for s, p in results.items()}}
+        loop.save(paths.contained(self.run, 'summary.json'), summary)
+        return summary
+
+    def image_review(self, number, stage, candidates, briefs, style):
+        if not candidates:
+            return {}
+        return self.round(number, stage, self.jury(3),
+            'Inspect every attached contact sheet, each native cell and all nine rows plus sixteen looks. '
+            'Return keep or redo with a concrete reason per pet. Originality marks keep unless it '
+            'finds a charter violation; it does not score taste. Judge against the supplied owner '
+            'charters and briefs. The maker is a separate session. Each pet gets at most one redo.',
+            {'candidates': candidates, 'briefs': briefs, 'style': style,
+             'owner_charters': self.seats}, ballot_schema(list(candidates), ranking=False),
+            images=[p['contact'] for p in candidates.values()])
+
+    @staticmethod
+    def redos(reviews):
+        result = {}
+        for seat, reply in reviews.items():
+            reasons = reply['vetoes'] + reply['flags'] + [v for v in reply['verdicts'] if v['verdict'] == 'redo']
+            for item in reasons:
+                result.setdefault(item['target'], []).append({'seat': seat, **item})
+        return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest='command', required=True)
+    run = commands.add_parser('run', help='run or resume the seven pet steps')
+    run.add_argument('run_dir', type=Path)
+    run.add_argument('--model', required=True)
+    run.add_argument('--compare')
+    run.add_argument('--effort', default='high')
+    run.add_argument('--parallel', type=int, default=4)
+    run.add_argument('--image-workers', type=int, default=3)
+    run.add_argument('--skill-dir', type=Path, help='installed create-pet skill directory (auto-discovered)')
+    replay = commands.add_parser('replay', help='re-pose recorded main-round prompts unchanged')
+    replay.add_argument('run_dir', type=Path)
+    replay.add_argument('--pieces', default='chapter-6,renumber,front-door')
+    replay.add_argument('--models', default='gpt-6-astra,gpt-6.1-sol')
+    replay.add_argument('--effort', default='high')
+    replay.add_argument('--parallel', type=int, default=4)
+    compare = commands.add_parser('compare', help='write comparison.md and comparison.json without model calls')
+    compare.add_argument('run_dir', type=Path)
+    args = parser.parse_args()
+    if hasattr(args, 'parallel') and args.parallel < 1:
+        parser.error('--parallel must be positive')
+    if hasattr(args, 'image_workers') and not 1 <= args.image_workers <= 3:
+        parser.error('--image-workers must be between 1 and 3')
+    try:
+        with locked(args.run_dir) as directory:
+            if args.command == 'run':
+                result = Lamp(directory, args.model, args.compare, args.effort,
+                              args.parallel, args.image_workers, args.skill_dir).run_plan()
+            elif args.command == 'replay':
+                from .lamp_compare import replay_run
+                result = replay_run(directory, args.pieces.split(','), args.models.split(','), args.effort, args.parallel)
+            else:
+                from .lamp_compare import compare_run
+                result = compare_run(directory)
+            print(json.dumps(result, ensure_ascii=False))
+    except (ValueError, RuntimeError, OSError) as exc:
+        parser.exit(1, f'{exc}\n')
+
+
+if __name__ == '__main__':
+    main()

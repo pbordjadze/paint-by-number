@@ -29,10 +29,13 @@ def claude(run, job_path, transcript):
 def codex_command(job, schema_path, reply_path, scratch):
     command = ['codex', 'exec', '--json', '--ephemeral', '--sandbox', 'read-only',
                '--skip-git-repo-check', '--cd', str(scratch), '--model', job['model'],
+               '--config', 'approval_policy="never"',
                '--config', 'model_reasoning_effort=' + json.dumps(job['effort']),
                '--output-schema', str(schema_path), '--output-last-message', str(reply_path)]
     for path in job['images']:
         command += ['--image', path]
+    if job.get('transport_instructions'):
+        command += ['--config', 'developer_instructions=' + json.dumps(job['transport_instructions'])]
     return command + ['-']
 
 
