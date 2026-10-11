@@ -199,7 +199,8 @@ enum ShellDemo: Equatable {
                 DemoMode.markReady()
             })
         case .galleryOpen:
-            library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
+            let painted = ProcessInfo.processInfo.arguments.contains("-playHarness") ? 0.0 : 0.42
+            library.seed([Library.SeedItem(sample: pictures[0], painted: painted, photoMaxPixelSize: 560)])
         case .galleryDamaged:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)]) { _ in
                 // Synchronous on purpose: this runs in the same main-actor job that empties
