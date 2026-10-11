@@ -5,6 +5,28 @@ public struct FigureInputError: Error, CustomStringConvertible, Sendable {
     public init(_ description: String) { self.description = description }
 }
 
+/// Practical factory limits, checked before allocation or integer conversion. These leave
+/// room for a one-hour, 60 fps scene, but never allow JSON magnitudes to drive unbounded work.
+enum FigureLimits {
+    static let duration = 3600.0
+    static let frames = 216_000
+    static let gait = 10_000
+    static let pathPoints = 100_000
+    static let inkSamples = 1_000_000
+    static let coordinate = 1_000_000.0
+    static let pathLength = 1_000_000.0
+
+    static func number(_ value: Double, _ range: ClosedRange<Double>, _ field: String) throws {
+        guard value.isFinite, range.contains(value) else {
+            throw FigureInputError("\(field): expected \(range.lowerBound)...\(range.upperBound)")
+        }
+    }
+    static func count(_ value: Double, maximum: Int, field: String) throws -> Int {
+        try number(value, 0...Double(maximum), field)
+        return Int(ceil(value))
+    }
+}
+
 struct FieldKey: CodingKey {
     var stringValue: String
     var intValue: Int?

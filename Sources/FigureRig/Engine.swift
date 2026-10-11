@@ -36,7 +36,7 @@ public struct FigureCheck: Codable, Sendable {
 /// Figure engine v1. Version changes accompany any output change. All sampling is pure:
 /// SVG serialization, motion and checks are independent of invocation order and core count.
 public struct FigureEngine: Sendable {
-    public static let version = "1.0.0"
+    public static let version = "1.0.1"
     public let spec: FigureSpec, scene: FigureScene, card: CardLayout
     let rigs: [Rig], inks: [InkRenderer], magics: [MagicRenderer]
     let ground: InkDrawing
@@ -63,6 +63,7 @@ public struct FigureEngine: Sendable {
         }
         self.ground = ground
         card = CardLayout(spec: spec, scene: scene)
+        _ = try FigureLimits.count(duration * Double(spec.motion.fps), maximum: FigureLimits.frames, field: "frameCount")
     }
     public func pose(at time: Double) -> ActorPose { rig.pose(at: time) }
     public func frame(_ index: Int) -> FigureFrame {
@@ -125,10 +126,16 @@ public struct FigureEngine: Sendable {
                         brushError = max(brushError, (prop.tip - target).length)
                     } else { brushError = max(brushError, 1) }
                 }
-                if let prop = pose.prop {
-                    for (side, grip) in prop.grips {
-                        gripError = max(gripError, (grip - pose.joints[side + "Hand"]!).length)
-                    }
+                let expected = scene.actors.first { $0.id == pose.id }?.holds
+                if let expected {
+                    if let prop = pose.prop, prop.kind == expected {
+                        for (side, rendered) in prop.renderedGrips(height: scene.figureHeight, twoHanded: pose.action == "sweep") {
+                            guard let hand = pose.joints[side + "Hand"], let recorded = prop.grips[side] else {
+                                gripError = max(gripError, 1); continue
+                            }
+                            gripError = max(gripError, (rendered - hand).length, (recorded - rendered).length)
+                        }
+                    } else { gripError = max(gripError, 1) }
                 }
             }
             for i in frame.actors.indices {
@@ -144,6 +151,9 @@ public struct FigureEngine: Sendable {
             }
         }
         let height = scene.figureHeight * spec.view.heightScale * pts
+        // Projection subtracts/re-adds origins; suppress only floating point roundoff,
+        // far below the 0.01 px SVG quantum and the 0.5 px attachment limit.
+        if gripError < 1e-8 { gripError = 0 }
         let heightRange = scene.display == "ipad13" ? 24.0...56.0 : 18.0...40.0
         let requiredHold = max(2, spec.card.holdBase + spec.card.perWord * Double(scene.card.words))
         let visibleHold = min(card.hold, max(0, duration - card.holdStart))
@@ -154,7 +164,7 @@ public struct FigureEngine: Sendable {
                 upper("ikClamps", Double(clamps), 0), lower("inkWidth", minimumInk, 1),
                 FigureCheck(name: "figureHeight", value: .number(height), limit: .text("\(heightRange.lowerBound)...\(heightRange.upperBound)"), pass: heightRange.contains(height)),
                 FigureCheck(name: "inBounds", value: .flag(inBounds), limit: .flag(true), pass: inBounds), upper("particles", Double(alive), 200),
-                lower("cardHold", visibleHold, requiredHold), lower("cardSize", spec.card.size, 11),
+                lower("cardHold", visibleHold, requiredHold), lower("cardSize", card.minimumSizePoints, 11),
                 FigureCheck(name: "cardOnScreen", value: .flag(onScreen), limit: .flag(true), pass: onScreen)]
         if scene.version == 2 {
             checks += [upper("brushTip", brushError, 0.5), upper("propGrip", gripError, 0.5),

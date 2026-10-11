@@ -1,10 +1,14 @@
 import Foundation
 
 public struct CardLayout: Sendable {
+    /// Keep at least 85% of each glyph's width: mild condensation for an unbreakable word,
+    /// never arbitrary squeezing. The 11 pt gate also measures this narrower dimension.
+    public static let minimumHorizontalScale = 0.85
     public let shapes: [FilledShape]
     public let hold: Double, start: Double, end: Double
     public let minimum: Point, maximum: Point
     public let titleLines: [String]
+    public let authorLines: [String], minimumSizePoints: Double
     let fade: Double
     public func opacity(at time: Double) -> Double {
         if time <= start || time >= end { return 0 }
@@ -25,18 +29,27 @@ public struct CardLayout: Sendable {
             text.reduce(0) { $0 + (font[String($1)] ?? font["?"]!).advance * size }
         }
         let author = citation.authors + " · " + String(citation.year)
-        var lines: [String] = [], current = ""
-        for word in citation.title.split(whereSeparator: \.isWhitespace).map(String.init) {
-            let next = current.isEmpty ? word : current + " " + word
-            if lines.isEmpty && !current.isEmpty && width(next, italic) > maxWidth {
-                lines.append(current); current = word
-            } else { current = next }
+        func wrapped(_ text: String, _ font: [String: CardGlyph]) -> [String] {
+            var lines: [String] = [], current = ""
+            for word in text.split(whereSeparator: \.isWhitespace).map(String.init) {
+                let next = current.isEmpty ? word : current + " " + word
+                if !current.isEmpty && width(next, font) > maxWidth {
+                    lines.append(current); current = word
+                } else { current = next }
+            }
+            if !current.isEmpty { lines.append(current) }
+            return lines.isEmpty ? [""] : lines
         }
-        if !current.isEmpty { lines.append(current) }
-        if lines.isEmpty { lines = [""] }
+        let lines = wrapped(citation.title, italic), authors = wrapped(author, roman)
         titleLines = lines
-        let texts = [author] + lines
-        let textWidth = min(maxWidth, texts.enumerated().map { width($0.element, $0.offset == 0 ? roman : italic) }.max() ?? 0)
+        authorLines = authors
+        let texts = authors + lines
+        let measured = texts.enumerated().map { width($0.element, $0.offset < authors.count ? roman : italic) }
+        let scales = measured.map { max(Self.minimumHorizontalScale, min(1, maxWidth / max($0, 1e-9))) }
+        minimumSizePoints = settings.size * (scales.min() ?? 1)
+        // An oversized word retains the minimum scale and may fail cardOnScreen; bounds
+        // measure the actual laid-out width rather than pretending it fit the target.
+        let textWidth = zip(measured, scales).map(*).max() ?? 0
         let height = size * (Double(texts.count) * 1.25 + 0.3)
         let leading = settings.position.hasSuffix("Leading"), top = settings.position.hasPrefix("top")
         let x = leading ? margin : (scene.canvas.width - textWidth) / 2
@@ -54,9 +67,8 @@ public struct CardLayout: Sendable {
             output.append(FilledShape(subpaths: [border], color: scene.canvas.paper, opacity: 0.92, blur: size * 0.04, layer: "card"))
         }
         for (index, text) in texts.enumerated() {
-            let font = index == 0 ? roman : italic, measured = width(text, font)
-            let squeeze = min(1, maxWidth / max(measured, 1e-9))
-            var cursor = x + (leading ? 0 : (textWidth - measured * squeeze) / 2)
+            let font = index < authors.count ? roman : italic, squeeze = scales[index]
+            var cursor = x + (leading ? 0 : (textWidth - measured[index] * squeeze) / 2)
             let baseline = y + size * (1 + Double(index) * 1.25)
             for char in text {
                 let glyph = font[String(char)] ?? font["?"]!
