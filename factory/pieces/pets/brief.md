@@ -82,3 +82,18 @@ function. For pets, function means the pet reads at 192 × 208 and in all nine r
 Rough cost: about 50 Haiku agents on the Claude side (about 1.2 million Haiku tokens with replies
 instead of files), and on Codex's side about 40 pilot plus 200 set image generations, more for
 redos.
+
+## The Lamp's answers (chapter 6, 2026-10-11)
+
+Chapter 6: https://claude.ai/code/artifact/8a53579f-2e12-4e71-8e26-e81dfa8cd892; replies in
+`pieces/chapter-6/replies/`.
+- **Every guardian keeps its pet** (18 of 18).
+- **Where they live:** the Marginarium first (16 of 18 glad of it); keeping you company while a
+  template is made second (13). A companion beside the canvas split the Lamp (10 glad, 4 vetoes:
+  the Painter, the Glassblower, the Snow Queen, Balanchine). App icons were vetoed five times.
+- **Originality's look-alike list** (Baba Yaga, Hedge Witch, Snow Queen, Robber Girl, Enchanted
+  Workshop, Nutcracker, Pirosmani) goes into each pet's brief as a do-not-resemble list.
+- **The plan:** the Lamp writes the style sheet (open question: inked outlines vs the Glassblower's
+  clear glass) and Paul reads it; one reference pet first; Codex draws the rest three at a time,
+  each with its description, the style sheet, the reference pet and its do-not-resemble list; the
+  Lamp reviews every image against its charter; a provenance note beside each sheet.
