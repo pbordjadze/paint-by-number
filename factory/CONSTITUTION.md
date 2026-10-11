@@ -25,3 +25,4 @@ app is: its names, its colors, its pets. Paul can overrule any of them.
 4. The Lamp Picks Up a Brush: https://claude.ai/code/artifact/a087b22e-d1f9-4ef7-b447-2a87fd347b66
 5. The Lamp's Constitution: https://claude.ai/code/artifact/c0882849-16d2-4800-bbbd-023e0ff5350c
 6. A Pet for Every Guardian: https://claude.ai/code/artifact/8a53579f-2e12-4e71-8e26-e81dfa8cd892
+7. Two More Pets: https://claude.ai/code/artifact/a112d638-0555-4f24-9a6a-6a3fc5476adf

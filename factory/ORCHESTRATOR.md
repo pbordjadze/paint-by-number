@@ -58,7 +58,7 @@ driving manual and the state of play.
 | F7 | Merged: a v2 teapot in 21 image generations and 18 min, validated, nothing uploaded; one Codex session per pet |
 | F17 (5ea39a2) | Merged: moves, driver interface, mock driver, play piece, replay |
 | F16 | Merged: the making-of movie; citations checked word for word; renders byte-identical. Test photos were thumbnails, so a full-size render is next |
-| F18 | Merged: Pip (13 generations, 17 min) and Colophon (15, 25 min), drawn as a family; sheets under /root/factory-out/F18, nothing uploaded |
+| F18 | Merged: Pip (13 generations, 17 min) and Colophon (15, 25 min), drawn as a family; nothing uploaded to the pets service. Both final sheets and Colophon's lamp clip are kept as assets of chapter 7's doc (`d2c048f8…`, `d0782166…`, `6f01832d…`), since the container can be wiped |
 | F19 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
