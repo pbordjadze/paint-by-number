@@ -2,19 +2,26 @@
 """Render one photo's pipeline, with walking workers, arrival-time wipes and citations.
 
     tools/factory/making_of.py <photo.ppm> /root/factory-out/making-of
-    tools/factory/making_of.py <photo.ppm> /root/factory-out/book --edges contours.pgm
+    tools/factory/making_of.py <photo.ppm> /root/factory-out/book --edges contours.pgm --lines drawing.pgm
 
 Build first with Swift 6.2: swift build -c release (no Docker needed).
 Requires render.py's dependencies: Pillow, DejaVu Sans, node with tools/node_modules,
 and ffmpeg. PBN_BIN/FIGURES_BIN or --pbn/--figures select host executables.
 --edges optionally supplies a real edge map; without one pbn skips the line-art stage.
+--lines supplies the separate drawing map alongside --edges, as in regression.py's book regime.
 No models or synthetic edges are substituted. The spec is decoded from its defaults.
 
 Output: snapshots/, reveal/, scenes/, stages/<pair>/ (render.py's original paper
 reviews and checks), frames/ (the final composite), contact.png, manifest.json and
-making-of.mp4. Checks describe the paper reviews; photo/ink contrast is left for the
+making-of.mp4, midpoints/<stage>.png (full paper resolution), and report.json (timings
+and dimensions). The contact sheet has five photo-and-figure crops per stage, at
+0/25/50/75/100 percent of the wipe. Manifest and report are saved before encoding;
+report.movieEncoded marks successful encoding, so an interrupted movie does not
+lose the completed frames' measurements. Checks describe the paper reviews; photo/ink contrast is left for the
 Lamp's visual review. Render output stays outside the repository. Existing output
 must be empty, so stale stages/frames cannot enter a second run.
+Intermediate paper PNG frames are removed after composition; stage SVGs, review
+sheets, motion and checks remain alongside the final photo-and-worker PNGs.
 
 The photo keeps snapshot pixel coordinates, translated onto the default 1100-wide
 paper, downscaled only if needed to leave a figure-height margin. Portrait paper
@@ -26,6 +33,7 @@ stride) as Rig.swift, sampled at the worker's recorded poseTime. At completion w
 show the exact next snapshot, including subthreshold differences, so cuts join.
 """
 import argparse
+from concurrent.futures import ProcessPoolExecutor
 import hashlib
 import json
 import math
@@ -35,6 +43,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 from PIL import Image
 
@@ -152,6 +161,55 @@ def compose_picture(before, after, field, progress, box, size):
     return panel
 
 
+def contact_crop(box, size, figure_height=50):
+    """Photo plus one standing-figure height of room for workers and their props."""
+    sx, sy = size[0] / box["canvasWidth"], size[1] / box["canvasHeight"]
+    return (max(0, math.floor((box["x"] - figure_height) * sx)),
+            max(0, math.floor((box["y"] - figure_height) * sy)),
+            min(size[0], math.ceil((box["x"] + box["width"] + figure_height) * sx)),
+            min(size[1], math.ceil((box["y"] + box["height"] + figure_height) * sy)))
+
+
+def stage_review(frames, offset, progress, fps, stage, box, size, midpoint):
+    """Select actual rendered poses nearest each wipe fraction; keep the midpoint whole."""
+    selected = [min(range(len(progress)), key=lambda i: abs(progress[i] - target))
+                for target in (0, 0.25, 0.5, 0.75, 1)]
+    crop = contact_crop(box, size)
+    thumb = (440, round(440 * (crop[3] - crop[1]) / (crop[2] - crop[0])))
+    images, labels = [], []
+    for index in selected:
+        with Image.open(frames / f"{offset + index:06d}.png") as image:
+            images.append(image.crop(crop).resize(thumb, Image.Resampling.LANCZOS))
+        labels.append(f"{stage}  {index / fps:.2f} s  wipe {progress[index]:.0%}")
+    shutil.copyfile(frames / f"{offset + selected[2]:06d}.png", midpoint)
+    return images, labels, selected, crop
+
+
+_composite_inputs = None
+_last_picture = None
+
+
+def init_compositor(first, second, field_file, box, size):
+    global _composite_inputs, _last_picture
+    with Image.open(first) as before, Image.open(second) as after, Image.open(field_file) as field:
+        _composite_inputs = before.convert("RGB"), after.convert("RGB"), field.copy(), box, size
+    _last_picture = None
+
+
+def composite_frame(job):
+    global _last_picture
+    index, fraction, overlay_path, path = job
+    before, after, field, box, size = _composite_inputs
+    # Poses on twos and card holds reuse the wipe beneath their moving overlays.
+    if _last_picture is None or _last_picture[0] != fraction:
+        _last_picture = fraction, compose_picture(before, after, field, fraction, box, size)
+    panel = _last_picture[1].copy()
+    with Image.open(overlay_path) as overlay:
+        panel.paste(overlay, (0, 0), overlay)
+    panel.save(path, compress_level=6)
+    return index, hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def render_pair(first, second, field_file, metadata, scene_file, citation, out, frames, figures, offset):
     scene = json.loads(scene_file.read_text())
     # Export alpha before render.py composites its ordinary paper review artifacts.
@@ -166,26 +224,43 @@ def render_pair(first, second, field_file, metadata, scene_file, citation, out, 
         motion = json.loads((out / "motion.json").read_text())
         box = layout(metadata["width"], metadata["height"])
         size = (manifest["pixelWidth"], manifest["pixelHeight"])
-        hashes, progress = [], []
+        hashes, progress = [None] * len(motion), []
         with Image.open(first) as before, Image.open(second) as after, Image.open(field_file) as field:
             if before.size != (metadata["width"], metadata["height"]) or after.size != before.size or field.size != before.size:
                 raise ValueError("snapshot/reveal dimensions disagree")
-            for index, pose in enumerate(motion):
-                time = progress_at(pose["actors"][0]["poseTime"], manifest, scene)
-                panel = compose_picture(before, after, field, time, box, size)
-                with Image.open(overlays / f"{index:04d}.png") as overlay:
-                    panel.paste(overlay, (0, 0), overlay)
-                path = frames / f"{offset + index:06d}.png"
-                panel.save(path, compress_level=1)
-                hashes.append(hashlib.sha256(path.read_bytes()).hexdigest())
-                progress.append(time)
+        jobs, duplicates = [], []
+        previous_key = None
+        for index, pose in enumerate(motion):
+            fraction = progress_at(pose["actors"][0]["poseTime"], manifest, scene)
+            overlay_path = overlays / f"{index:04d}.png"
+            key = (fraction, hashlib.sha256(overlay_path.read_bytes()).digest())
+            if key == previous_key:
+                duplicates.append(index)
+            else:
+                jobs.append((index, fraction, overlay_path, frames / f"{offset + index:06d}.png"))
+            previous_key = key
+            progress.append(fraction)
+        # PNG filtering/compression dominated full-size composition. Bound the
+        # in-flight work to four processes, each with one cached wipe picture.
+        with ProcessPoolExecutor(max_workers=4, initializer=init_compositor,
+                                 initargs=(first, second, field_file, box, size)) as workers:
+            for index, digest in workers.map(composite_frame, jobs, chunksize=8):
+                hashes[index] = digest
+        for index in duplicates:
+            os.link(frames / f"{offset + index - 1:06d}.png", frames / f"{offset + index:06d}.png")
+            hashes[index] = hashes[index - 1]
+        for path in (out / "frames").glob("*.png"):
+            path.unlink()
     return manifest, hashes, progress
 
 
-def making_of(photo, out, pbn, figures, edges=None):
+def making_of(photo, out, pbn, figures, edges=None, lines=None):
+    started = time.monotonic()
     out = outside_repo(out)
     if out.exists() and any(out.iterdir()):
         raise ValueError(f"output directory must be empty: {out}")
+    if lines and not edges:
+        raise ValueError("--lines requires --edges for the coloring-book regime")
     # Fail before running the expensive pipeline if the reviewable citation map drifts.
     citations = load_citations()
     for executable in (pbn, figures):
@@ -196,16 +271,20 @@ def making_of(photo, out, pbn, figures, edges=None):
     generate = [pbn, "generate", photo, out / "painting", "--snapshots", snapshots]
     if edges:
         generate += ["--line-style", "coloringBook", "--edges", edges]
+    if lines:
+        generate += ["--lines", lines]
     render.run(generate)
     render.run([figures, "reveal", snapshots, fields])
     write_json(out / "spec.json", {"version": 2})  # All omitted fields are the engine's defaults.
-    scenes, stages, frames = out / "scenes", out / "stages", out / "frames"
-    for directory in (scenes, stages, frames):
+    scenes, stages, frames, midpoints = out / "scenes", out / "stages", out / "frames", out / "midpoints"
+    for directory in (scenes, stages, frames, midpoints):
         directory.mkdir()
     present = [snapshots / name for name in STAGES if (snapshots / name).is_file()]
     records, review_images, review_labels = [], [], []
+    stage_timings = []
     count = 0
     for first, second in zip(present, present[1:]):
+        stage_started = time.monotonic()
         name = first.stem + "-" + second.stem
         metadata = json.loads((fields / (name + ".json")).read_text())
         citation = citations[second.stem]
@@ -217,33 +296,51 @@ def making_of(photo, out, pbn, figures, edges=None):
         if records and (manifest["fps"], manifest["pixelWidth"], manifest["pixelHeight"]) != (
                 records[0]["fps"], records[0]["pixelWidth"], records[0]["pixelHeight"]):
             raise ValueError("stage video dimensions or frame rates differ")
-        # Include the default card's held pose and the exact completed snapshot.
-        walk = next((a for a in manifest["actions"] if a["kind"] in {"ink", "sweep"}), None)
-        end = min(manifest["frameCount"] - 1, math.ceil(walk["end"] * manifest["fps"])) if walk else 0
-        card_frame = min(manifest["frameCount"] - 1,
-                         round((manifest["cardHoldStart"] + manifest["cardHoldEnd"]) / 2 * manifest["fps"]))
-        selected = [0, card_frame if citation else end // 3, end // 2, manifest["frameCount"] - 1]
-        for index in selected:
-            with Image.open(frames / f"{count + index:06d}.png") as image:
-                review_images.append(image.copy())
-            review_labels.append(f"{second.stem}  {index / manifest['fps']:.2f} s  wipe {progress[index]:.0%}")
+        box = layout(metadata["width"], metadata["height"])
+        images, labels, selected, crop = stage_review(frames, count, progress, manifest["fps"],
+            second.stem, box, (manifest["pixelWidth"], manifest["pixelHeight"]), midpoints / (second.stem + ".png"))
+        review_images.extend(images)
+        review_labels.extend(labels)
         records.append({"pair": name, "stage": second.stem, "citation": citation,
                         "startFrame": count, "frameCount": manifest["frameCount"], "fps": manifest["fps"],
                         "pixelWidth": manifest["pixelWidth"], "pixelHeight": manifest["pixelHeight"],
+                        "seconds": manifest["frameCount"] / manifest["fps"],
+                        "contactFrames": selected, "contactCrop": crop,
+                        "midpoint": str(Path("midpoints") / (second.stem + ".png")),
                         "action": "ink" if second.stem == "line-art" else "sweep",
                         "frameSHA256": hashes, "wipeProgress": progress,
                         "checks": str(Path("stages") / name / "checks.json")})
         count += manifest["frameCount"]
-    render.labelled_grid(review_images, review_labels, 4, out / "contact.png",
-                         thumb=(440, round(440 * manifest["pixelHeight"] / manifest["pixelWidth"])))
-    render.run(["ffmpeg", "-v", "error", "-y", "-threads", "4", "-framerate", manifest["fps"],
-                "-i", frames / "%06d.png", "-frames:v", count, "-an", "-c:v", "libx264", "-threads", "4",
-                "-preset", "ultrafast", "-crf", "20", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2",
-                "-pix_fmt", "yuv420p", "-movflags", "+faststart", out / "making-of.mp4"])
+        stage_timings.append({"stage": second.stem, "wallSeconds": time.monotonic() - stage_started})
+    render.labelled_grid(review_images, review_labels, 5, out / "contact.png")
     write_json(out / "manifest.json", {"version": 1, "frameCount": count, "fps": manifest["fps"],
                "pixelWidth": manifest["pixelWidth"], "pixelHeight": manifest["pixelHeight"],
                "checkBackground": "default paper (stages/*/sheets); composite photo contrast is visual review",
                "stages": records})
+    seconds = count / manifest["fps"]
+    report = {"wallSeconds": time.monotonic() - started, "movieEncoded": False,
+               "stageTimings": stage_timings, "frameCount": count, "fps": manifest["fps"],
+               "seconds": seconds, "overThreeMinutes": seconds > 180,
+               "photoSize": [metadata["width"], metadata["height"]],
+               "paperSize": [box["canvasWidth"], box["canvasHeight"]],
+               "paperPixelSize": [manifest["pixelWidth"], manifest["pixelHeight"]],
+               "workerHeight": 50, "workerHeightShareOfPhoto": 50 / box["height"],
+               "frameSequenceSHA256": hashlib.sha256("".join(
+                   digest for record in records for digest in record["frameSHA256"]).encode("ascii")).hexdigest(),
+               "stages": [{key: record[key] for key in ("stage", "frameCount", "seconds")} for record in records]}
+    report["frameRenderWallSeconds"] = report["wallSeconds"]
+    write_json(out / "report.json", report)
+    if seconds > 180:
+        print(f"Movie runs past three minutes: {seconds:.2f} s (spec defaults retained)", flush=True)
+    print(f"{len(records)} stages, {count} frames; encoding movie", flush=True)
+    encode_started = time.monotonic()
+    render.run(["ffmpeg", "-v", "error", "-y", "-threads", "4", "-framerate", manifest["fps"],
+                "-i", frames / "%06d.png", "-frames:v", count, "-an", "-c:v", "libx264", "-threads", "4",
+                "-preset", "ultrafast", "-crf", "20", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+                "-pix_fmt", "yuv420p", "-movflags", "+faststart", out / "making-of.mp4"])
+    report.update(wallSeconds=time.monotonic() - started, movieEncoded=True,
+                  encodeWallSeconds=time.monotonic() - encode_started)
+    write_json(out / "report.json", report)
     print(f"{len(records)} stages, {count} frames; {out / 'making-of.mp4'}", flush=True)
     return records
 
@@ -255,13 +352,15 @@ def main():
     parser.add_argument("--pbn", type=Path, default=Path(os.environ.get("PBN_BIN", ROOT / ".build/release/pbn")))
     parser.add_argument("--figures", type=Path, default=Path(os.environ.get("FIGURES_BIN", ROOT / ".build/release/figures")))
     parser.add_argument("--edges", type=Path, help="optional supplied PGM edge map, enabling the line-art snapshot")
+    parser.add_argument("--lines", type=Path, help="drawing PGM supplied alongside --edges for a coloring book")
     args = parser.parse_args()
     try:
         for dependency in ("node", "ffmpeg"):
             if not shutil.which(dependency):
                 raise ValueError(f"missing {dependency}; see --help")
         making_of(args.photo.resolve(), args.out, args.pbn.resolve(), args.figures.resolve(),
-                  args.edges.resolve() if args.edges else None)
+                  args.edges.resolve() if args.edges else None,
+                  args.lines.resolve() if args.lines else None)
     except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
         parser.error(str(error))
 

@@ -27,9 +27,11 @@ class ReviewTests(unittest.TestCase):
             svg.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4">'
                            '<image href="background &amp; painting.png" width="4" height="4"/></svg>')
             jobs = folder / "jobs.json"
-            jobs.write_text(json.dumps([{ "input": str(svg), "output": str(folder / f"frame-{i}.png") } for i in range(4)]))
+            # More than four 16-job batches exercises worker recycling as well as
+            # relative image resolution and deterministic output across workers.
+            jobs.write_text(json.dumps([{ "input": str(svg), "output": str(folder / f"frame-{i}.png") } for i in range(70)]))
             subprocess.run(["node", str(render.ROOT / "tools/factory/rasterize.mjs"), str(jobs)], check=True, cwd="/tmp")
-            self.assertTrue(all((folder / f"frame-{i}.png").read_bytes() == (folder / "frame-0.png").read_bytes() for i in range(4)))
+            self.assertTrue(all((folder / f"frame-{i}.png").read_bytes() == (folder / "frame-0.png").read_bytes() for i in range(70)))
             with Image.open(folder / "frame-0.png") as image:
                 self.assertEqual(image.getpixel((2, 2)), (191, 211, 216, 255))
 

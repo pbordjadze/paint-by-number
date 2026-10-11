@@ -5,6 +5,7 @@ PBN_BIN=<build>/release/pbn FIGURES_BIN=<build>/release/figures \
 MAKING_OF_INTEGRATION=1 python3 -m unittest discover -s tools/factory -p test_making_of.py
 """
 import hashlib
+from concurrent.futures import ProcessPoolExecutor
 import json
 import math
 import os
@@ -12,6 +13,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 import xml.etree.ElementTree as ET
 
 from PIL import Image
@@ -90,6 +92,127 @@ class MakingOfTests(unittest.TestCase):
                 making_of.making_of(Path("photo.ppm"), root, Path("pbn"), Path("figures"))
             self.assertEqual((root / "old.png").read_text(), "keep me")
 
+    def test_lines_flag_reaches_the_book_pipeline_and_requires_edges(self):
+        with tempfile.TemporaryDirectory(dir=TEST_OUT) as temporary:
+            root = Path(temporary)
+            executable = root / "executable"
+            executable.touch()
+            photo, edges, lines = root / "photo.ppm", root / "contours.pgm", root / "drawing.pgm"
+            Image.new("RGB", (12, 8), "white").save(photo)
+            Image.new("L", (12, 8), 0).save(edges)
+            Image.new("L", (12, 8), 255).save(lines)
+            with patch("sys.argv", ["making_of.py", str(photo), str(root / "cli"),
+                                   "--edges", str(edges), "--lines", str(lines),
+                                   "--pbn", str(executable), "--figures", str(executable)]), \
+                    patch.object(making_of, "making_of") as invoke:
+                making_of.main()
+            self.assertEqual(invoke.call_args.args[-2:], (edges, lines))
+            with patch.object(render, "run", side_effect=RuntimeError("stop before pipeline")) as run:
+                with self.assertRaisesRegex(RuntimeError, "stop before pipeline"):
+                    making_of.making_of(photo, root / "book", executable, executable, edges, lines)
+            self.assertEqual(run.call_args.args[0][-6:],
+                             ["--line-style", "coloringBook", "--edges", edges, "--lines", lines])
+            with self.assertRaisesRegex(ValueError, "--lines requires --edges"):
+                making_of.making_of(photo, root / "invalid", executable, executable, lines=lines)
+            self.assertFalse((root / "invalid").exists())
+
+    def test_contact_crops_photo_and_worker_and_exports_whole_midpoint(self):
+        with tempfile.TemporaryDirectory(dir=TEST_OUT) as temporary:
+            root = Path(temporary)
+            box = making_of.layout(144, 96)
+            size = (1100, 825)
+            # Frame time is deliberately different from wipe progress: reviews must
+            # follow the eased wipe, including the held pose, rather than elapsed time.
+            progress = [0, 0.05, 0.25, 0.5, 0.75, 1, 1]
+            for i in range(len(progress)):
+                panel = Image.new("RGB", size, "#F6F1E7")
+                panel.paste(Image.new("RGB", (144, 96), (20 + i, 90, 120)), (478, 100))
+                panel.paste("black", (480, 65, 490, 110))  # worker above photo
+                panel.save(root / f"{i:06d}.png")
+            midpoint = root / "midpoint.png"
+            images, labels, selected, crop = making_of.stage_review(
+                root, 0, progress, 24, "smoothed", box, size, midpoint)
+            self.assertEqual(selected, [0, 2, 3, 4, 5])
+            self.assertEqual(len(images), 5)
+            self.assertEqual([label.split("wipe ")[1] for label in labels], ["0%", "25%", "50%", "75%", "100%"])
+            self.assertEqual(crop, (428, 50, 672, 246))
+            self.assertGreater(144 / (crop[2] - crop[0]), 0.5)
+            self.assertEqual(midpoint.read_bytes(), (root / "000003.png").read_bytes())
+            with Image.open(midpoint) as image:
+                self.assertEqual(image.size, size)
+            # The contact contains the worker as well as the photo.
+            self.assertLess(min(sum(images[0].getextrema(), ())), 10)
+            render.labelled_grid(images, labels, 5, root / "contact.png")
+            with Image.open(root / "contact.png") as image:
+                self.assertEqual(image.size, (5 * images[0].width, images[0].height + 32))
+
+    def test_parallel_composites_match_serial_bytes_with_shared_wipes(self):
+        with tempfile.TemporaryDirectory(dir=TEST_OUT) as temporary:
+            root = Path(temporary)
+            before = Image.new("RGB", (12, 8), (20, 90, 120))
+            after = Image.new("L", (12, 8), 220)
+            field = Image.new("L", (12, 8))
+            field.putdata([1 + (i % 12) * 23 for i in range(96)])
+            first, second, field_file = root / "first.ppm", root / "second.pgm", root / "field.pgm"
+            before.save(first); after.save(second); field.save(field_file)
+            box = {"x": 10, "y": 10, "width": 12, "height": 8, "canvasWidth": 40, "canvasHeight": 30}
+            size, jobs, expected = (80, 60), [], []
+            for index in range(12):
+                fraction = (index // 2) / 5
+                overlay_path, frame_path = root / f"overlay-{index}.png", root / f"frame-{index}.png"
+                overlay = Image.new("RGBA", size, (index * 20, 0, 0, 128))
+                overlay.save(overlay_path)
+                panel = making_of.compose_picture(before, after, field, fraction, box, size)
+                panel.paste(overlay, (0, 0), overlay)
+                serial = root / f"serial-{index}.png"
+                panel.save(serial, compress_level=6)
+                expected.append(serial.read_bytes())
+                jobs.append((index, fraction, overlay_path, frame_path))
+            with ProcessPoolExecutor(max_workers=4, initializer=making_of.init_compositor,
+                                     initargs=(first, second, field_file, box, size)) as workers:
+                results = list(workers.map(making_of.composite_frame, jobs, chunksize=2))
+            for index, digest in results:
+                actual = (root / f"frame-{index}.png").read_bytes()
+                self.assertEqual(actual, expected[index])
+                self.assertEqual(digest, hashlib.sha256(actual).hexdigest())
+
+    def test_completed_frame_measurements_survive_encoder_failure(self):
+        with tempfile.TemporaryDirectory(dir=TEST_OUT) as temporary:
+            root = Path(temporary)
+            executable = root / "executable"; executable.touch()
+            out = root / "render"
+            metadata = {"width": 12, "height": 8, "path": "M 1 4 L 11 4"}
+            def command(parts):
+                if parts[0] == "ffmpeg":
+                    raise subprocess.CalledProcessError(1, parts)
+                if parts[1] == "generate":
+                    snapshots = out / "snapshots"; snapshots.mkdir()
+                    Image.new("RGB", (12, 8), "white").save(snapshots / "working-image.ppm")
+                    Image.new("L", (12, 8), 0).save(snapshots / "structure.pgm")
+                else:
+                    fields = out / "reveal"; fields.mkdir()
+                    making_of.write_json(fields / "working-image-structure.json", metadata)
+            def pair(*args):
+                frames = args[7]
+                hashes = []
+                for index in range(2):
+                    path = frames / f"{index:06d}.png"
+                    Image.new("RGB", (110, 83), "white").save(path)
+                    hashes.append(hashlib.sha256(path.read_bytes()).hexdigest())
+                return {"frameCount": 2, "fps": 24, "pixelWidth": 110, "pixelHeight": 83}, hashes, [0, 1]
+            with patch.object(render, "run", side_effect=command), \
+                    patch.object(making_of, "render_pair", side_effect=pair):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    making_of.making_of(root / "photo.ppm", out, executable, executable)
+            manifest = json.loads((out / "manifest.json").read_text())
+            report = json.loads((out / "report.json").read_text())
+            self.assertEqual(manifest["frameCount"], 2)
+            self.assertEqual(len(manifest["stages"][0]["frameSHA256"]), 2)
+            self.assertFalse(report["movieEncoded"])
+            self.assertEqual(report["frameRenderWallSeconds"], report["wallSeconds"])
+            self.assertTrue((out / "contact.png").is_file())
+            self.assertTrue((out / "midpoints/structure.png").is_file())
+
 
 def sample(path, fraction):
     points = path_points(path)
@@ -122,6 +245,8 @@ class CorpusRenderTests(unittest.TestCase):
             self.assertEqual([action["kind"] for action in manifest["actions"]], ["idle"])
             self.assertTrue(hashes)
             self.assertEqual(progress, [1] * manifest["frameCount"])
+            self.assertFalse(list((stage / "frames").glob("*.png")))
+            self.assertTrue((stage / "sheets/contact.png").is_file())
             for svg in (stage / "frames").glob("*.svg"):
                 self.assertFalse(any(element.get("data-layer") == "card" for element in ET.parse(svg).getroot()))
             checks = json.loads((stage / "checks.json").read_text())
