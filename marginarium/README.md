@@ -2,6 +2,10 @@
 
 The storybook of Paint by Moonlight: how the app is made, told in chapters.
 
+It is written by the AI that reviews the app's code, about nineteen imaginary guardians who
+argue about paint names, a teapot that keeps a secret under its lid, and a moth that sits in
+the margins. All of it really happened.
+
 ![Pip, a plain white teapot, lifts its lid to show a blue dot underneath; Colophon, a round moth, folds its wings flat like a bookmark](images/pip-and-colophon.gif)
 
 Paint by Moonlight is made by Paul Bordjadze with a small team of AI agents. Codex, a coding
@@ -73,6 +77,24 @@ being built. These are its first pages: one passage from each chapter, quoted as
 > The checkers catch what a person would miss, like 1.505 against 1.5. They cannot say whether
 > two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight;
 > the Lamp judges them next, and Paul has the last word.
+
+
+## If the Lamp were your team
+
+The guardians are storybook characters because this is a storybook app. The machinery under
+them is plain, and it works the same with real people:
+
+- **Every seat has a charter**: what it believes, what it champions, what it guards against.
+- **Ballots are blind**: no seat sees how the others voted, so none follows the loudest.
+- **Every vote and veto is recorded with its reason**, so a decision can be read back later.
+- **Any seat can veto, but only by quoting its own charter**; one seat can do nothing else.
+- **A person has the last word.**
+
+Now picture your own stakeholders in those seats: design, brand, legal, accessibility, the
+product owner. Or picture the agents each of them sets up, each with its own charter, so a
+review that might take a week of meetings can take an afternoon, and leaves a paper trail. The Lamp runs
+today on one person's AI credits, a little at a time. With a budget behind it, the same pattern
+could sit in on every decision a product makes.
 
 ---
 

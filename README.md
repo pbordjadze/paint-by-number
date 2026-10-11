@@ -47,7 +47,9 @@ Paul Bordjadze makes Paint by Moonlight with a small team of AI agents: Codex bu
 Claude orchestrates, reviews and tells the story, and the Lamp, a panel of nineteen AI guardians,
 votes on matters of taste by blind ballot. Paul has the last word. The Marginarium will be the app's
 storybook section, where the chapters tell how it was made. It is still being built for the
-app; its first pages are here: **[read the Marginarium](marginarium/README.md)**.
+app; its first pages are here: **[read the Marginarium](marginarium/README.md)**. The Lamp is
+also a pattern you could staff with your own stakeholders, or with agents they set up:
+[if the Lamp were your team](marginarium/README.md#if-the-lamp-were-your-team).
 
 ![A test photo of two parrots becoming a paint-by-numbers template, stage by stage: the photo, its palette, the simplified regions, the finished outlines](marginarium/images/making-of.jpg)
 
