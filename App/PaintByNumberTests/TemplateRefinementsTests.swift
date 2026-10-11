@@ -40,6 +40,20 @@ struct TemplateRefinementsTests {
         #expect(refinements.changeCount == 3)
     }
 
+    @Test func damagedBrushPointsAreClampedBeforeScaling() throws {
+        var damaged = TemplateRefinements()
+        damaged.strokes = [Self.stroke(.more, [SIMD2(-1e16, 0.5), SIMD2(1e16, 0.5)]),
+                           Self.stroke(.less, [SIMD2(0.5, -Float.greatestFiniteMagnitude),
+                                               SIMD2(0.5, Float.greatestFiniteMagnitude)])]
+        var bounded = damaged
+        bounded.strokes[0].points = [SIMD2(-0.5, 0.5), SIMD2(1.5, 0.5)]
+        bounded.strokes[1].points = [SIMD2(0.5, -0.5), SIMD2(0.5, 1.5)]
+        let focus = try #require(damaged.focus(width: 1000, height: 100))
+        #expect(focus == bounded.focus(width: 1000, height: 100))
+        #expect(focus[50 * 1000 + 500] == -1)
+        #expect(focus[50 * 1000 + 100] == 1)
+    }
+
     /// More detail raises importance to 1 and strengthens the edge maps, contours too; less
     /// lowers it to `lessImportance` and weakens them; the rest is left as it was.
     @Test func moreAndLessMoveImportanceAndTheEdgeMaps() throws {

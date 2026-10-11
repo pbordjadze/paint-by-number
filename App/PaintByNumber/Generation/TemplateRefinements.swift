@@ -173,7 +173,7 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         for stroke in strokes.prefix(Self.maximumStrokes) {
             let points = stroke.points.prefix(Self.maximumPoints)
                 .filter { $0.x.isFinite && $0.y.isFinite }
-                .map { $0 * scale }
+                .map { pointwiseMin(pointwiseMax($0, SIMD2(repeating: -0.5)), SIMD2(repeating: 1.5)) * scale }
             guard let first = points.first, stroke.radius.isFinite else { continue }
             let radius = min(max(stroke.radius, Self.radiusRange.lowerBound), Self.radiusRange.upperBound) * long
             let target: Float = switch stroke.kind {

@@ -109,8 +109,14 @@ nonisolated struct PaintProgress: Sendable, Equatable {
         }
     }
 
-    /// Times feed the replay's pacing; a damaged value must not stall or break it.
-    private static func sanitized(_ seconds: Double) -> Double { seconds.isFinite && seconds > 0 ? seconds : 0 }
+    /// A century of active painting is far beyond a real painting, and fits both stroke
+    /// times (Float) and the gallery's whole minutes (Int).
+    static let maximumActiveSeconds: Double = 100 * 365 * 24 * 60 * 60
+
+    /// Shared with metadata decoding: damaged times must not break replay or the gallery.
+    static func sanitized(_ seconds: Double) -> Double {
+        seconds.isFinite && seconds > 0 ? min(seconds, maximumActiveSeconds) : 0
+    }
 
     // MARK: Regeneration
 

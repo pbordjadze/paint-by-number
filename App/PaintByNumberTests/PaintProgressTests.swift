@@ -78,4 +78,35 @@ struct PaintProgressTests {
         // Progress that doesn't belong to `old` can't be carried.
         #expect(PaintProgress(regionCount: 5).remapped(from: old, to: new) == PaintProgress(regionCount: 6))
     }
+
+    @Test(arguments: [0, -1, Double.nan, Double.infinity, -Double.infinity, 12.5,
+                      PaintProgress.maximumActiveSeconds, 1e157, Double.greatestFiniteMagnitude])
+    func damagedTimesAreBounded(seconds: Double) throws {
+        var progress = PaintProgress(regionCount: 1)
+        progress.activeSeconds = 12.5
+        progress.paint(0)
+        var bytes = progress.encoded()
+        withUnsafeBytes(of: seconds) { bytes.replaceSubrange(12..<20, with: $0) }
+        withUnsafeBytes(of: Float(seconds)) { bytes.replaceSubrange(28..<32, with: $0) }
+        let decoded = try PaintProgress(encoded: bytes)
+        let expected = seconds.isFinite && seconds > 0 ? min(seconds, PaintProgress.maximumActiveSeconds) : 0
+        #expect(decoded.activeSeconds == expected)
+        let stroke = Float(seconds)
+        let expectedStroke = stroke.isFinite && stroke > 0 ? min(stroke, Float(PaintProgress.maximumActiveSeconds)) : 0
+        #expect(decoded.log == [.init(region: 0, time: expectedStroke)])
+        #expect(decoded.isPainted(0))
+        #expect(try PaintProgress(encoded: decoded.encoded()) == decoded)
+    }
+
+    @Test func spentTimeSaturatesBeforeIntegerConversion() {
+        let saturated = PaintingTimeText.spent(Double(Int.max) * 60)
+        for seconds in [1e157, Double.greatestFiniteMagnitude, Double.infinity] {
+            #expect(PaintingTimeText.spent(seconds) == saturated)
+        }
+        #expect(!PaintingTimeText.spent(Double(Int.max).nextDown * 60).isEmpty)
+        for seconds in [Double.nan, -Double.infinity, -1e157, 0] {
+            #expect(PaintingTimeText.spent(seconds) == PaintingTimeText.spent(0))
+        }
+        #expect(PaintingTimeText.spent(134 * 60) == "2 h 14 min")
+    }
 }

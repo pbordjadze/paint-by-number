@@ -133,7 +133,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             colorCount = max(0, field(.colorCount, 0))
             regionCount = max(0, field(.regionCount, 0))
             paintedCount = max(0, field(.paintedCount, 0))
-            activeSeconds = field(.activeSeconds, 0)
+            activeSeconds = PaintProgress.sanitized(field(.activeSeconds, 0))
             thumbnailVersion = field(.thumbnailVersion, 0)
             sampleName = try? c.decodeIfPresent(String.self, forKey: .sampleName)
             pipelineVersion = field(.pipelineVersion, 0)
@@ -153,7 +153,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         colorCount = try c.decodeIfPresent(Int.self, forKey: .colorCount) ?? 0
         regionCount = try c.decode(Int.self, forKey: .regionCount)
         paintedCount = try c.decodeIfPresent(Int.self, forKey: .paintedCount) ?? 0
-        activeSeconds = try c.decodeIfPresent(Double.self, forKey: .activeSeconds) ?? 0
+        activeSeconds = PaintProgress.sanitized(try c.decodeIfPresent(Double.self, forKey: .activeSeconds) ?? 0)
         thumbnailVersion = try c.decodeIfPresent(Int.self, forKey: .thumbnailVersion) ?? 0
         sampleName = try c.decodeIfPresent(String.self, forKey: .sampleName)
         pipelineVersion = try c.decodeIfPresent(Int.self, forKey: .pipelineVersion) ?? 0
