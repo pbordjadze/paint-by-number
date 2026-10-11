@@ -26,115 +26,104 @@ struct ColorNicknameTests {
 
     // MARK: Vocabulary
 
-    @Test func vocabularySizeAndFormat() {
-        let vocabulary = ColorNickname.vocabulary
-        // The size range is from the design; raise the upper bound deliberately (adding names
-        // renames saved paintings).
-        #expect((480...640).contains(vocabulary.count), "\(vocabulary.count) entries")
-        #expect(ColorNickname.table.split(separator: "\n").count == vocabulary.count)
-        for line in ColorNickname.table.split(separator: "\n") {
-            #expect(line.count > 7 && line.dropFirst(6).first == " ", "\(line)")
-            #expect(line.prefix(6).allSatisfy(\.isHexDigit) && line.prefix(6).uppercased() == line.prefix(6), "\(line)")
-        }
-        #expect(Set(vocabulary.map(\.name)).count == vocabulary.count, "names are unique")
-        #expect(Set(vocabulary.map(\.hex)).count == vocabulary.count, "anchors are unique")
+    @Test func versionOneTableSHA256IsFrozen() throws {
+        let table = ColorNickname.Vocabulary(version: 1).table
+        let path = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: path) }
+        try Data(table.utf8).write(to: path)
+        // Use the host's SHA-256 utility so PaintCore keeps no crypto dependency.
+        let process = Process()
+        #if os(Linux)
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/sha256sum")
+        process.arguments = [path.path]
+        #else
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/shasum")
+        process.arguments = ["-a", "256", path.path]
+        #endif
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        try process.run()
+        let output = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        #expect(process.terminationStatus == 0)
+        let hash = String(decoding: output, as: UTF8.self).split(separator: " ").first
+        #expect(hash == "1291d9a047a81feda50e76f7fe255c29b7ee32a1e78ebe45dfa259eb03620064")
     }
 
-    @Test func namesFollowTheStyleGuide() {
-        let color: Set<String> = ["red", "orange", "yellow", "green", "blue", "purple", "pink", "brown", "gray", "grey",
-                                  "black", "white", "beige", "olive", "teal", "navy", "magenta", "violet", "indigo",
-                                  "lime", "aqua", "turquoise", "tan", "cyan", "maroon", "mauve", "crimson", "scarlet",
-                                  "lavender", "lilac", "coral", "peach", "cream", "ivory", "gold", "silver", "bronze",
-                                  "khaki", "fuchsia", "amber", "rose", "plum", "mint", "sage", "rust", "sand"]
-        var leading: [String: Int] = [:]
-        var trailing: [String: Int] = [:]
-        for entry in ColorNickname.vocabulary {
-            let name = entry.name
-            let words = name.split(separator: " ", omittingEmptySubsequences: false).map(String.init)
-            #expect((1...2).contains(words.count), "\(name): one or two words")
-            #expect(name.count <= 16, "\(name): at most 16 characters")
-            #expect(name.unicodeScalars.allSatisfy { $0.isASCII && ($0.properties.isAlphabetic || $0 == " " || $0 == "-") },
-                    "\(name): ASCII letters, spaces and a hyphen only")
-            #expect(name.filter { $0 == "-" }.count <= 1, "\(name): at most one hyphen")
-            for word in words {
-                #expect(word.first?.isUppercase == true && word.dropFirst().allSatisfy { $0.isLowercase || $0 == "-" },
-                        "\(name): Title Case")
-            }
-            if words.count == 1 {
-                #expect(!color.contains(name.lowercased()), "\(name): a plain color word alone")
-            } else {
-                leading[words[0], default: 0] += 1
-                trailing[words[1], default: 0] += 1
-            }
-        }
-        for (word, count) in leading { #expect(count <= 4, "\(count) names start with \(word)") }
-        for (word, count) in trailing { #expect(count <= 6, "\(count) names end with \(word)") }
+    @Test func vocabularyPassesTheLibraryOracle() {
+        #expect(ColorNickname.currentVersion == 1)
+        #expect(ColorNickname.Vocabulary(version: 1).problems().isEmpty)
     }
 
-    @Test func namesAvoidWhatTheStyleGuideForbids() {
-        let forbidden: Set<String> = [
-            // skin tones and body parts
-            "skin", "flesh", "nude", "tan", "blush", "ivory", "ebony", "porcelain", "fair", "bone", "cheek", "lip", "lips",
-            "hair", "blood", "heart", "eye", "eyes", "tooth", "teeth", "nail", "finger", "hand", "tongue", "vein", "bruise",
-            "breast", "comb", "foot", "face", "head", "belly", "bile", "scab", "rash", "vomit", "mucus",
-            // brands and people
-            "cola", "coke", "pepsi", "tiffany", "crayola", "sharpie", "lego", "kleenex", "popsicle", "creamsicle", "tabasco",
-            "nutella", "oreo", "starbucks", "pantone", "persian", "indian", "prussian", "sienna", "titian",
-            // religion, politics, medicine
-            "angel", "heaven", "saint", "monk", "pope", "cathedral", "church", "temple", "altar", "holy", "sacred", "easter",
-            "christmas", "cardinal", "royal", "liberty", "republic", "rebel", "revolution", "pill", "aspirin", "bandage",
-            "surgical", "hospital", "iodine", "calamine", "antiseptic", "tobacco", "nicotine",
-            // superlatives
-            "best", "perfect", "ultimate", "supreme", "greatest", "brightest", "darkest", "finest", "purest", "ultra",
-            "super", "mega", "most", "utmost",
-        ]
-        for entry in ColorNickname.vocabulary {
-            for word in entry.name.lowercased().split(whereSeparator: { $0 == " " || $0 == "-" }) {
-                #expect(!forbidden.contains(String(word)), "\(entry.name) uses “\(word)”")
+    @Test func tsvPreservesTableOrderAndAssignments() {
+        let original = ColorNickname.Vocabulary(version: 1)
+        let tsv = original.table.split(separator: "\n").map { line in
+            String(line.prefix(6)) + "\t" + line.dropFirst(7)
+        }.joined(separator: "\r\n") + "\r\n"
+        let proposed = ColorNickname.Vocabulary(table: tsv)
+        #expect(proposed.entries == original.entries)
+        #expect(proposed.problems().isEmpty)
+        for sample in ColorFixtures.samples {
+            let palette = ColorFixtures.palette(of: sample)
+            for seed in [1, 2, 0x5eed] as [UInt64] {
+                #expect(ColorNickname.assign(palette, seed: seed, vocabulary: proposed)
+                        == ColorNickname.assign(palette, seed: seed, version: 1))
             }
         }
     }
 
-    /// A name that contains a basic color word must be the color: "Teal Lagoon" is teal.
-    @Test func colorWordsInNamesMatchTheAnchor() {
-        let families: [String: Set<ColorName.Family>] = [
-            "red": [.red], "orange": [.orange], "yellow": [.yellow], "green": [.green, .olive], "blue": [.blue, .navy],
-            "purple": [.purple], "pink": [.pink], "brown": [.brown], "gray": [.gray], "grey": [.gray],
-            "black": [.black], "white": [.white], "beige": [.beige], "olive": [.olive, .green], "teal": [.teal],
-            "navy": [.navy], "magenta": [.magenta, .purple, .pink],
-        ]
-        for entry in ColorNickname.vocabulary {
-            let family = ColorName(oklab: entry.oklab).family
-            for word in entry.name.lowercased().split(whereSeparator: { $0 == " " || $0 == "-" }) {
-                if let allowed = families[String(word)] {
-                    #expect(allowed.contains(family), "\(entry.name) is a \(family) anchor (#\(String(entry.hex, radix: 16)))")
-                }
-            }
-        }
+    @Test func unknownVersionsUseTheNewestKnownVocabulary() {
+        let palette = ColorFixtures.palette(of: "parrots")
+        #expect(ColorNickname.Vocabulary(version: Int.max).entries
+                == ColorNickname.Vocabulary(version: ColorNickname.currentVersion).entries)
+        #expect(ColorNickname.assign(palette, seed: 77, version: Int.max)
+                == ColorNickname.assign(palette, seed: 77, version: ColorNickname.currentVersion))
     }
 
-    /// Every in-gamut color the pipeline can produce has at least five anchors within ΔE 0.10.
-    @Test func vocabularyCoversTheGamut() {
-        let anchors = ColorNickname.vocabulary.map(\.oklab)
-        let steps = 24
-        func value(_ i: Int, _ low: Float, _ high: Float) -> Float { low + (high - low) * Float(i) / Float(steps - 1) }
-        var samples = 0
-        var worst = Int.max
-        var failures: [String] = []
-        for l in 0..<steps {
-            for a in 0..<steps {
-                for b in 0..<steps {
-                    let point = SIMD3(value(l, 0, 1), value(a, -0.24, 0.285), value(b, -0.32, 0.21))
-                    guard Self.inGamut(point) else { continue }
-                    samples += 1
-                    let near = anchors.reduce(0) { $0 + (ColorScience.distance($1, point) <= 0.10 ? 1 : 0) }
-                    worst = min(worst, near)
-                    if near < 5 && failures.count < 8 { failures.append("\(point) has \(near)") }
-                }
-            }
-        }
-        #expect(samples > 2000)
-        #expect(worst >= 5, "\(failures)")
+    @Test(arguments: [
+        ("050507", "05050Z"), ("050507", "05050a"), ("050507 Void", "050507\t"),
+        ("050507 Void", "050507Void"), ("050507 Void", "050507\tVoid\tExtra"),
+    ])
+    func malformedTablesAreReported(edit: (String, String)) {
+        let table = ColorNickname.table.replacingOccurrences(of: edit.0, with: edit.1)
+        let vocabulary = ColorNickname.Vocabulary(table: table)
+        #expect(!vocabulary.problems().isEmpty)
+        #expect(!vocabulary.formatProblems.isEmpty)
+    }
+
+    @Test(arguments: [
+        ("Void", "Soot", "duplicate name"), ("050507", "0F0E0D", "duplicate anchor"),
+        ("Void", "void", "Title Case"), ("Void", "A Long Name", "one or two words"),
+        ("Void", "Extraordinarily Long", "at most 16 characters"),
+        ("Void", "Vöid", "ASCII letters"), ("Void", "Void2", "ASCII letters"),
+        ("Void", "Deep-Black-Sea", "at most one hyphen"), ("Void", "Blue", "a plain color word alone"),
+        ("Void", "Skin", "uses “skin”"), ("Void", "Blue Fog", "is a black anchor"),
+    ])
+    func oracleRejectsStyleViolations(edit: (String, String, String)) {
+        let table = ColorNickname.table.replacingOccurrences(of: edit.0, with: edit.1)
+        let vocabulary = ColorNickname.Vocabulary(table: table)
+        #expect(vocabulary.problems().contains { $0.contains(edit.2) })
+    }
+
+    @Test func oracleChecksWordCapsSizeAndGamut() {
+        let small = ColorNickname.Vocabulary(table: (1...8).map {
+            String(format: "%06X", $0) + "\tCommon Word"
+        }.joined(separator: "\n"))
+        let problems = small.problems()
+        #expect(problems.contains { $0.contains("expected 480...640") })
+        #expect(problems.contains { $0.contains("8 names start with Common") })
+        #expect(problems.contains { $0.contains("8 names end with Word") })
+        #expect(problems.contains { $0.hasPrefix("gamut:") })
+        #expect(problems == small.problems())
+    }
+
+    @Test func proposedNamesAreActuallyUsed() {
+        let proposed = ColorNickname.Vocabulary(table: "050507\tTest Anchor")
+        let palette = [paint(ColorScience.okLab(hex: 0x050507))]
+        #expect(ColorNickname.assign(palette, seed: 1, vocabulary: proposed) == ["Test Anchor"])
+        #expect(ColorNickname.assign([], seed: 1, vocabulary: proposed).isEmpty)
+        let empty = ColorNickname.Vocabulary(table: "")
+        #expect(ColorNickname.assign(palette, seed: 1, vocabulary: empty) == [palette[0].colorName.englishTitle])
     }
 
     /// A typical photo palette finds names close by, not just within the discard radius.

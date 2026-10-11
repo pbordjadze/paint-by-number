@@ -2,7 +2,7 @@ extension ColorNickname {
     /// The vocabulary, one entry per line: the sRGB hex of the color the name evokes, then the
     /// name. Hand-picked, in rough groups (neutrals, warm earth tones, reds and pinks through
     /// yellows, greens and teals, blues and purples, then names added for gamut gaps and
-    /// character). Style guide, enforced where mechanical by `ColorNicknameTests`:
+    /// character). Style guide, enforced where mechanical by `Vocabulary.problems()`:
     ///
     /// - One or two words, Title Case, ASCII letters, spaces and at most one hyphen; at most 16
     ///   characters; no digits.
@@ -14,13 +14,10 @@ extension ColorNickname {
     /// - The anchor has to look like its name to a careful person: pick the hex from the actual
     ///   object, material or weather, and check it on a swatch before adding it.
     ///
-    /// Anchors must also cover the sRGB gamut (`ColorNicknameTests.vocabularyCoversTheGamut`).
-    /// The table is at its size cap (`ColorNicknameTests.vocabularySizeAndFormat`) and any edit
-    /// renames existing paintings' colors, so a change is a deliberate rename: replace a name, or
-    /// raise the bound on purpose, never add a stretched duplicate of a neighbour. The exact
-    /// limits and the forbidden words live in `ColorNicknameTests` (`vocabularySizeAndFormat`,
-    /// `namesFollowTheStyleGuide`, `namesAvoidWhatTheStyleGuideForbids`,
-    /// `colorWordsInNamesMatchTheAnchor`).
+    /// Version 1 is frozen verbatim: names, hexes and order are saved-painting compatibility.
+    /// Add a new vocabulary version for edits. `Vocabulary.problems()` owns the mechanical
+    /// style-guide limits, forbidden words and sRGB gamut coverage; `ColorNicknameTests` pins
+    /// this table's SHA-256 and checks it with that same oracle.
     static let table = """
 050507 Void
 0F0E0D Soot

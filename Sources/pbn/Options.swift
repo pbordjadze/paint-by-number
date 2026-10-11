@@ -3,6 +3,8 @@ import PaintCore
 
 struct Options {
     var positional: [String] = []
+    var vocabulary: Int?
+    var nicknameTable: String?
     /// pbn draws lines only from an edge map it is handed (`--edges`, `--lines`), so it starts
     /// classic whatever the pipeline's default style; `--line-style` picks a style at its own
     /// defaults, and `--line-art` fields apply on top of it whatever their order.
@@ -116,6 +118,10 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--detail": o.settings.detail = number(a, &it)
         case "--smooth": o.settings.smoothness = number(a, &it)
         case "--seed": o.settings.seed = number(a, &it)
+        case "--vocabulary":
+            o.vocabulary = number(a, &it)
+            guard o.vocabulary! >= 1 else { fail("--vocabulary: at least 1") }
+        case "--nickname-table": o.nicknameTable = value(a, &it)
         case "--importance": o.importance = value(a, &it)
         case "--runs":
             o.runs = number(a, &it)
