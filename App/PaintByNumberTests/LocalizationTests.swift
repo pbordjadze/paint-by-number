@@ -60,11 +60,11 @@ struct LocalizationTests {
     @Test func nonEnglishLocalesShowTheStructuredName() throws {
         let palette = [PaletteColor(oklab: SIMD3(0.5, -0.03, -0.03), space: .sRGB)]
         let name = palette[0].colorName
-        let german = try #require(ColorNameText.nicknames(for: palette, seed: 1, languageCode: "de").first)
+        let german = try #require(ColorNameText.nicknames(for: palette, seed: 1, version: 1, languageCode: "de").first)
         #expect(german == nil)
         #expect(PaintSpeech.colorLabel(number: 3, name: name, nickname: german) == "3, \(name.english)")
         #expect(ColorNameText.numbered(number: 3, name: name, nickname: german) == "3 · \(name.englishTitle)")
-        let english = try #require(ColorNameText.nicknames(for: palette, seed: 1, languageCode: "en").first)
+        let english = try #require(ColorNameText.nicknames(for: palette, seed: 1, version: 1, languageCode: "en").first)
         #expect(english != nil)
         #expect(ColorNameText.numbered(number: 3, name: name, nickname: english) == "3 · \(english!)")
     }

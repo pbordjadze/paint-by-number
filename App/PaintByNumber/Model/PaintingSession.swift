@@ -53,7 +53,7 @@ final class PaintingSession {
     /// Names of the palette colors, index-aligned with `template.palette`.
     let colorNames: [ColorName]
     /// Playful nicknames of the palette colors, index-aligned (nil where the color has none or the
-    /// app doesn't run in English), fixed for the painting by `nicknameSeed`.
+    /// app doesn't run in English), fixed by `nicknameSeed` and `nicknameVersion`.
     let colorNicknames: [String?]
     /// Increments on every progress change; cheap to observe for autosave/thumbnails.
     private(set) var revision = 0
@@ -82,6 +82,8 @@ final class PaintingSession {
     }
     /// Fixes the colors' nicknames, and keys the painting's custom palette order.
     let nicknameSeed: UInt64
+    /// The artwork's recorded vocabulary version, kept even when newer than this build knows.
+    let nicknameVersion: Int
     /// Fills of the stroke in progress (nil between strokes).
     @ObservationIgnored private var strokeFills: [Int]?
 
@@ -92,28 +94,31 @@ final class PaintingSession {
     }
 
     /// A fresh painting of `template`. `nicknameSeed` (the artwork's `ColorNickname.seed(for:)`)
-    /// picks the colors' nicknames, the same on every open; they are derived, never stored, so
-    /// an edit to PaintCore's nickname table or draw renames saved paintings' colors.
-    convenience init(template: Template, nicknameSeed: UInt64 = 0) {
-        self.init(checked: template, progress: PaintProgress(regionCount: template.regions.count), nicknameSeed: nicknameSeed)
+    /// and recorded `nicknameVersion` pick its derived names. Defaults are for demos and tests;
+    /// a saved painting always supplies both from its artwork metadata.
+    convenience init(template: Template, nicknameSeed: UInt64 = 0, nicknameVersion: Int = 1) {
+        self.init(
+            checked: template, progress: PaintProgress(regionCount: template.regions.count),
+            nicknameSeed: nicknameSeed, nicknameVersion: nicknameVersion)
     }
 
     /// Resumes saved progress; throws instead of trapping when it does not fit the template.
-    convenience init(template: Template, progress: PaintProgress, nicknameSeed: UInt64 = 0) throws {
+    convenience init(template: Template, progress: PaintProgress, nicknameSeed: UInt64 = 0, nicknameVersion: Int = 1) throws {
         guard progress.regionCount == template.regions.count else {
             throw ProgressMismatch(templateRegions: template.regions.count, progressRegions: progress.regionCount)
         }
-        self.init(checked: template, progress: progress, nicknameSeed: nicknameSeed)
+        self.init(checked: template, progress: progress, nicknameSeed: nicknameSeed, nicknameVersion: nicknameVersion)
     }
 
-    private init(checked template: Template, progress: PaintProgress, nicknameSeed: UInt64) {
+    private init(checked template: Template, progress: PaintProgress, nicknameSeed: UInt64, nicknameVersion: Int) {
         self.template = template
         self.progress = progress
         let totals = template.regionCountsByColor
         totalByColor = totals
         colorNames = template.palette.map(\.colorName)
-        colorNicknames = ColorNameText.nicknames(for: template.palette, seed: nicknameSeed)
+        colorNicknames = ColorNameText.nicknames(for: template.palette, seed: nicknameSeed, version: nicknameVersion)
         self.nicknameSeed = nicknameSeed
+        self.nicknameVersion = nicknameVersion
         var remaining = totals
         for (i, region) in template.regions.enumerated() where progress.isPainted(i) {
             remaining[Int(region.colorIndex)] -= 1

@@ -16,7 +16,8 @@ import PaintCore
 ///   same size; `view.png`: what was on screen (the selected color hatched as the canvas showed
 ///   it); `mark-N.png`: each mark close up, about as large as the painter saw it (anything
 ///   written on the painting reads there).
-/// - `template.pbnt`: the template (`pbn check` and `pbn names --seed <nicknameSeed>` read it).
+/// - `template.pbnt`: the template (`pbn check` and
+///   `pbn names --seed <nicknameSeed> --vocabulary <nicknameVersion>` read it; absent version = 1).
 /// - `photo.jpg`: the painter's photo, only when they chose to include it. A library picture is
 ///   named instead (`painting.sample`, `App/PaintByNumber/Resources/Samples/<sample>.jpg`).
 ///
@@ -67,6 +68,8 @@ nonisolated struct FeedbackReport: Codable, Sendable {
         /// The Line Weight setting ("fine", "regular", "bold").
         var lineWeight: String
         var nicknameSeed: UInt64
+        /// The recorded version, not the resolved one; nil in bundles made before versioning (= 1).
+        var nicknameVersion: Int?
     }
 
     nonisolated struct Paint: Codable, Sendable {
@@ -158,7 +161,8 @@ nonisolated extension FeedbackReport {
                 activeSeconds: capture.progress.activeSeconds, selectedNumber: capture.selectedColor.map { $0 + 1 },
                 showsNumbers: capture.showsNumbers, paper: capture.paper.rawValue,
                 darkPaper: capture.paper.usesDarkPaper(interfaceIsDark: capture.darkInterface),
-                lineWeight: capture.lineWeight.rawValue, nicknameSeed: capture.nicknameSeed),
+                lineWeight: capture.lineWeight.rawValue, nicknameSeed: capture.nicknameSeed,
+                nicknameVersion: capture.nicknameVersion),
             view: OnScreen(
                 rect: Self.numbers(contents.layout.view.rect), relativeZoom: Self.rounded(capture.relativeZoom),
                 pointsPerUnit: Self.rounded(capture.pointsPerUnit), displayScale: Double(capture.displayScale),
