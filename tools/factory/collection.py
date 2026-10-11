@@ -1,8 +1,10 @@
 """Builds the Lamp's collection page from factory/GUARDIANS.md and factory/panel.json.
+Available factory/pets/<id>/spritesheet.webp atlases are embedded in the page.
 
   collection.py <repo> <out.html> <template.html>   (write the page outside the repo)
 """
-import html, json, re, sys
+import base64, html, json, re, sys
+from pathlib import Path
 
 repo, out = sys.argv[1], sys.argv[2]
 md = open(f"{repo}/factory/GUARDIANS.md").read()
@@ -15,7 +17,7 @@ PETS = {
     "hedge-witch": "A mossy little mushroom with a tarragon sprig for a hat feather and a basket of herbs. Cozy and sleepy; it smells like a kitchen garden.",
     "moon": "A small crescent moon carrying a warm lantern. It glows quietly while it waits and brightens when a task is done.",
     "snow-queen": "A small white ermine wearing a crown of frost crystals. Elegant and still; it leaves a faint glimmer of frost where it steps.",
-    "nina": "A spirited reindeer calf in a felt blanket stitched with bold mountain embroidery. Mischievous and loyal; it stamps a hoof when something needs you.",
+    "robber-girl": "A spirited reindeer calf in a felt blanket stitched with bold mountain embroidery. Mischievous and loyal; it stamps a hoof when something needs you.",
     "storybook": "A little book that flaps its covers like wings, its pages full of ink drawings that change as it flies.",
     "enchanted-workshop": "A paintbrush with tiny legs and a determined face, carrying a paint jar and doing small jobs all on its own.",
     "scholar": "A tiny inkpot wearing round spectacles, a quill tucked behind it like a pencil behind an ear. It nods thoughtfully and underlines things.",
@@ -76,10 +78,17 @@ for i, g in enumerate(panel["guardians"]):
     recog = next((v for k, v in f.items() if k.startswith("recognizes")), None)
     thread = f.get("Georgian thread")
     pid = f"pet-{g['id']}"
+    atlas = Path(repo) / "factory" / "pets" / g["id"] / "spritesheet.webp"
+    if atlas.is_file():
+        encoded = base64.b64encode(atlas.read_bytes()).decode("ascii")
+        pet = (f'<div class="pet pet-sprite" aria-hidden="true" '
+               f'style="background-image: url(data:image/webp;base64,{encoded})"></div>')
+    else:
+        pet = f'<div class="pet" aria-hidden="true">{letter}</div>'
     cards.append(f"""
 <article class="card" id="{g['id']}" style="--c: {COLORS[i % len(COLORS)]}">
   <header class="card-head">
-    <div class="pet" aria-hidden="true">{letter}</div>
+    {pet}
     <div class="who">
       <h2>{inline(name)}</h2>
       {f'<p class="intro">{inline(intro)}</p>' if intro else ''}
