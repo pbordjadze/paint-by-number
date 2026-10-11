@@ -321,6 +321,23 @@ stage's citation card. Factory only; no app code.
   look at the contact sheet. No taste decisions: timing and look use the spec's defaults, and the
   Lamp judges them later.
 
+### F17 · The play loop, before the Mac
+Branch `codex/f17-play-loop`. The half of the play harness (chapter 4, M2) that runs anywhere, so
+the Mac only has to supply a real driver. Factory only; no app code.
+- **Moves** as JSON with a schema: `fill {area}`, `tap {label}` (an accessibility label),
+  `drag {from, to, steps}`, `wait {seconds}` and `screenshot`. Unknown or malformed moves are
+  rejected with the reason.
+- **A driver interface** (`screenshot()`, `state()`, `perform(move)`, `settle()`), and a mock
+  driver that plays a recorded folder of frames and states so the loop can be tested on Linux.
+  `state()` reports the screen, the selected paint, the filled areas and the area count.
+- **A design-loop piece, `play`:** each turn writes a guardian's job (its charter, the latest
+  screenshot path, the state, the last few moves) and reads back one move and a one-line reason;
+  the loop performs it, waits for the screen to settle, and records the turn. A session ends at a
+  move budget or when every area is filled.
+- **Records:** every turn's move, reason, screenshot and state, replayable against the mock
+  driver byte for byte, and a contact sheet of a session.
+- Tests with the mock driver: a session that fills a three-area picture, a rejected move, replay.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
