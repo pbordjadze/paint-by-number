@@ -49,7 +49,7 @@ driving manual and the state of play.
 | F8 (457dc29) | Merged: 275 tests; regression templates byte-identical to the base |
 | F12 (d23676b) | Merged: the palette gallery; follow-ups: "The Writer" wording, hide the writer's empty reasons; drops.json waits on Paul |
 | F10, F9, F3 | Running (Codex, gpt-6.1-sol, high) |
-| F7 | Claude runs it outside the sandbox: Codex sessions have no network, and the pilot needs `codex exec` itself |
+| F7, F14 | Ready (next): F7 rewritten for the work-pets `create-pet` skill (v2 sheets), local only, no upload |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul

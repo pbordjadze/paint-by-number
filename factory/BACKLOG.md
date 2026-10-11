@@ -138,14 +138,19 @@ placeholder atlas; never commit a real pet as a fixture.
 
 ### F7 · Pet pilot
 Branch `codex/f7-pet-pilot`. Codex-native; uses Codex's image budget. Read the plan first,
-`pieces/pets/brief.md`.
-1. Does `codex exec` run the `hatch-pet` skill non-interactively? Try it.
-2. Hatch one throwaway test pet end to end: a plain, neutral teapot, not a guardian, with no
-   style decisions. Validate it with the skill's `validate_atlas.py`. Keep the files outside
-   the repo.
-3. Write `factory/pieces/pets/pilot.md`: the commands that worked, wall time, the number of image
-   generations, the usage meter before and after, what failed and how it was fixed, and whether
-   the skill can take shared style notes and reference images the way the plan assumes.
+`pieces/pets/brief.md`. The skill is `create-pet` from the `work-pets` plugin
+(`~/.codex/plugins/cache/openai-curated-remote/work-pets/<version>/skills/create-pet`), which
+makes **v2** sheets: 1536 × 2288, 192 × 208 cells, eight columns by eleven rows (nine animation
+states plus sixteen look directions); read its `references/sprite-sheet-contract.md`.
+1. Hatch one throwaway test pet end to end: a plain, neutral teapot, not a guardian, with no
+   style decisions. Use the skill's bundled scripts, including `validate_atlas.py --require-v2`
+   and `validate_pet_quality.py`. Keep every file under `/root/factory-out/F7`, never in the repo.
+2. **Do not upload, create, activate or update a pet, and do not save to any ChatGPT Library:**
+   stop after the local validation and previews.
+3. Write `factory/pieces/pets/pilot.md`: whether the skill ran non-interactively under
+   `codex exec`, the commands that worked, wall time, the number of image generations, what failed
+   and how it was fixed, and whether shared style notes and reference images can steer every pet
+   the way the plan assumes.
 
 ### F8 · Pipeline snapshots
 Branch `codex/f8-snapshots`. For the making-of show: the pipeline's intermediate pictures,
@@ -281,6 +286,17 @@ decision is made here.
 - A dry run with canned replies through `loop new/draw/jobs/collect/decide/replay`, and tests:
   out-of-range patches rejected, a failing check excludes a candidate, ballots shuffled and
   blind, replay byte-identical.
+
+### F14 · Marginarium page polish
+Branch `codex/f14-page-polish`. Two small fixes found in review.
+- **Collection page, v2 pets:** `tools/factory/collection.py` sizes every atlas as v1
+  (1536 × 1872). Read each `spritesheet.webp`'s size and accept v1 (1536 × 1872) and v2
+  (1536 × 2288) sheets, scaling the background to the matching quarter size (384 × 468 or
+  384 × 572); idle stays row 0. Reject any other size with a message naming the file. Tests
+  with generated placeholder atlases of both sizes.
+- **Palette gallery wording:** name the outside writer "the outside writer" and the incumbent
+  "the name the app already had", and omit the reason line when a proposer gave none (the
+  writer never does) instead of "No proposer reason recorded".
 
 ## Waits on CI (rationed macOS runners)
 
