@@ -121,6 +121,9 @@ public struct RevealField: Sendable, Equatable {
 
     /// Pixel centers, binned into equal time intervals (t=1 belongs to the last),
     /// with empty bins omitted. Two open Chaikin rounds retain the end points.
+    /// Short paths become a segment through the changed pixels' centroid, along
+    /// the earliest-to-latest wipe direction (left-to-right when it is undefined).
+    /// The minimum is one default stride at the scene's default 50 px figure height.
     public func workerPath(steps: Int = 12) throws -> String {
         guard steps > 0 else { throw FigureInputError("reveal.steps: expected a positive integer") }
         // Sparse bins also allow large step counts without allocating K buffers.
@@ -145,6 +148,31 @@ public struct RevealField: Sendable, Equatable {
                 smoothed.append(points[i - 1] * 0.25 + points[i] * 0.75)
             }
             smoothed.append(points.last!); points = smoothed
+        }
+        // Measure the coordinates the SVG actually carries, including rounding.
+        let rounded = points.map { Point(Double(svgNumber($0.x))!, Double(svgNumber($0.y))!) }
+        let length = zip(rounded, rounded.dropFirst()).reduce(0.0) { $0 + ($1.1 - $1.0).length }
+        let spec = FigureSpec(), stride = spec.motion.step * spec.normalizationScale * 50
+        if length < stride {
+            var firstTime = Double.infinity, lastTime = -Double.infinity
+            var first = Point.zero, last = Point.zero, center = Point.zero
+            var firstCount = 0, lastCount = 0, count = 0
+            // Raster-order sums keep the fallback independent of dictionary order.
+            for (i, time) in times.enumerated() {
+                guard let time else { continue }
+                let point = Point(Double(i % width) + 0.5, Double(i / width) + 0.5)
+                center = center + point; count += 1
+                if time < firstTime { firstTime = time; first = .zero; firstCount = 0 }
+                if time == firstTime { first = first + point; firstCount += 1 }
+                if time > lastTime { lastTime = time; last = .zero; lastCount = 0 }
+                if time == lastTime { last = last + point; lastCount += 1 }
+            }
+            center = center * (1 / Double(count))
+            let direction = (last * (1 / Double(lastCount)) - first * (1 / Double(firstCount))).unit
+            // Two-decimal endpoints can shorten a diagonal by up to sqrt(2)/100.
+            // Leave the segment unclipped: a 1 px picture still needs a full step.
+            let offset = direction * ((stride + 0.02) / 2)
+            points = [center - offset, center + offset]
         }
         return points.enumerated().map { index, point in
             "\(index == 0 ? "M" : "L") \(svgNumber(point.x)) \(svgNumber(point.y))"
