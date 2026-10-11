@@ -54,7 +54,7 @@ driving manual and the state of play.
 | F3 (876b406) | Merged: the figure piece, dry-run only; the Lamp runs it later |
 | F10 (4859d5e) | Merged: engine v1 (props, sweep, ink, several actors); 307 tests with F9; hero digests unchanged |
 | F14 | Merged: v1 and v2 pet sheets on the collection page; gallery wording |
-| F7 | Running (Codex, gpt-6.1-sol, high) |
+| F7, F15, F16 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul

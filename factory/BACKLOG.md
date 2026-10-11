@@ -298,6 +298,29 @@ Branch `codex/f14-page-polish`. Two small fixes found in review.
   "the name the app already had", and omit the reason line when a proposer gave none (the
   writer never does) instead of "No proposer reason recorded".
 
+### F15 · Reveal paths a figure can walk
+Branch `codex/f15-walkable-reveal-paths`. F9 emits a stationary `M x y` path when a field has a
+single centroid, which `FigureScene`'s walk parser rejects. Give every reveal path a walkable
+length (a short segment through the centroid along the wipe's direction, at least one step long),
+and make the walk parser's error name the path and its length when it still refuses one. Tests
+for both. Hero and workers renders stay byte for byte.
+
+### F16 · The first making-of render
+Branch `codex/f16-making-of`. The show the night began with: one picture, its pipeline stages
+revealed one after another, a worker walking each reveal path while the wipe follows it, and each
+stage's citation card. Factory only; no app code.
+- `tools/factory/making_of.py <photo.ppm> <out-dir>` runs `pbn generate --snapshots`, then
+  `figures reveal`, then writes one scene per stage pair (the worker inks for line-art stages and
+  sweeps for the others, using F10's actions) and renders them with `render.py`, joined into one
+  `making-of.mp4` with the wipe composited under the figures. Output outside the repo.
+- **Citations:** `factory/scenes/making-of/citations.json` maps each stage to the paper whose
+  method it runs, with authors, year and title copied exactly from `ACKNOWLEDGEMENTS.md`, and the
+  line of that file each came from. A stage with no matching entry gets no card. Claude reviews
+  this file before it is merged; never invent or reword a citation.
+- Deterministic: two runs give identical frames. Test with a small photo from `Tests/Corpus`;
+  look at the contact sheet. No taste decisions: timing and look use the spec's defaults, and the
+  Lamp judges them later.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
