@@ -32,6 +32,8 @@ driving manual and the state of play.
   runners are rationed).
 - Taste decisions are not Codex's: the Lamp and Paul decide (`ARCHITECTURE.md`).
 - Paul's veto stands over everything but the Lamp's own name.
+- `CONSTITUTION.md` binds every session. Above all: never edit a chapter once it is handed to Paul;
+  a new format or a correction goes into the next chapter.
 - Credentials: Codex is signed in to Paul's ChatGPT plan in this container only; never print or
   copy its auth file.
 
