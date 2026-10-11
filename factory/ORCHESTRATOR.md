@@ -52,7 +52,8 @@ driving manual and the state of play.
 | F12 (d23676b) | Merged: the palette gallery; follow-ups: "The Writer" wording, hide the writer's empty reasons; drops.json waits on Paul |
 | F9 (de4826c) | Merged: reveal fields and worker paths; follow-up: a one-centroid path is stationary |
 | F3 (876b406) | Merged: the figure piece, dry-run only; the Lamp runs it later |
-| F10, F7, F14 | Running (Codex, gpt-6.1-sol, high) |
+| F10 (4859d5e) | Merged: engine v1 (props, sweep, ink, several actors); 307 tests with F9; hero digests unchanged |
+| F7, F14 | Running (Codex, gpt-6.1-sol, high) |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
