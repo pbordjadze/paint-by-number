@@ -1776,7 +1776,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paul makes this app with a small team of AI helpers: Codex builds the tools, Claude reviews the work and writes these chapters, and nineteen guardians called the Lamp vote on matters of taste. Paul has the last word."
+            "value" : "Paul makes this app with a small team of AI helpers: Codex builds the tools, Claude reviews the work and writes these chapters, and nineteen guardians called the Lamp weigh in on smaller design questions. The big creative choices stay with people, and a person's choice always wins."
           }
         }
       }
@@ -2547,6 +2547,38 @@
     },
     "Pip, Codex's teapot" : {
       "comment" : "The Marginarium: caption under Pip, the pet teapot Codex keeps, and Pip's VoiceOver label",
+      "extractionState" : "manual"
+    },
+    "Colophon, Claude's moth" : {
+      "comment" : "The Marginarium: caption and VoiceOver label for Colophon, Claude's round moth",
+      "extractionState" : "manual"
+    },
+    "Folds its wings like a bookmark." : {
+      "comment" : "The Marginarium: VoiceOver hint for tapping Colophon to play its review pose",
+      "extractionState" : "manual"
+    },
+    "How the Lamp works" : {
+      "comment" : "The Marginarium: heading of the five principles after the appendices",
+      "extractionState" : "manual"
+    },
+    "Every seat has a charter: what it believes, what it champions, what it guards against." : {
+      "comment" : "The Marginarium: first principle in How the Lamp works, describing each guardian's charter",
+      "extractionState" : "manual"
+    },
+    "Ballots are blind: no seat sees how the others voted." : {
+      "comment" : "The Marginarium: second principle in How the Lamp works, describing blind ballots",
+      "extractionState" : "manual"
+    },
+    "Every vote and veto is written down with its reason." : {
+      "comment" : "The Marginarium: third principle in How the Lamp works, describing the record of decisions",
+      "extractionState" : "manual"
+    },
+    "Any seat can veto, but only by quoting its own charter." : {
+      "comment" : "The Marginarium: fourth principle in How the Lamp works, describing a guardian's veto",
+      "extractionState" : "manual"
+    },
+    "A person has the last word." : {
+      "comment" : "The Marginarium: fifth principle in How the Lamp works, keeping the final choice with people",
       "extractionState" : "manual"
     },
     "Preview" : {
