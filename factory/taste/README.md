@@ -1,7 +1,7 @@
 # The design-loop kit
 
-The kit draws a panel, writes model-agnostic jobs, checks replies, decides and replays. It never
-calls a model. Use `factory/taste/loop` (add `factory/taste` to PATH for `loop`), or
+The kit draws a panel, writes model-agnostic jobs, checks replies, decides and replays. Its
+deterministic loop never calls a model; runners and the opt-in pet driver handle dispatch. Use `factory/taste/loop` (add `factory/taste` to PATH for `loop`), or
 `python3 -m factory.taste`. Python 3.11+ and Pillow are the only dependencies. Records are JSON;
 render output and runner scratch files belong outside the repo, normally `/root/factory-out`.
 
@@ -277,3 +277,67 @@ piece uses case folding, and generic pieces use case folding. These identities a
 whole-set repairs, guarantees and assignment search; displayed and recorded names stay verbatim.
 The kit and review CLI help exits before rendering, regenerating fonts or loading optional
 dependencies.
+
+## Codex runs the Lamp
+
+F36's opt-in driver composes the kit's read-only Codex runner with separate local pet workers.
+It implements the seven-step pets plan and preserves primary and comparison answers for the
+model/taste experiment. [Decisions and records](../pieces/pets/codex-lamp/README.md) document
+resumption, failure handling, local acceptance and the historical-replay transport difference.
+No pet-service or ChatGPT Library operation is authorized. This sandbox cannot launch live models;
+Claude should run these commands on the authenticated host with the installed v2 create-pet skill:
+
+```sh
+mkdir -p /root/factory-out/F36/tmp
+export TMPDIR=/root/factory-out/F36/tmp
+export FACTORY_TEST_OUT=/root/factory-out/F36
+export PYTHONDONTWRITEBYTECODE=1
+
+python3 -m factory.taste.codex_lamp run /root/factory-out/F36/lamp \
+  --model gpt-6-astra --compare gpt-6.1-sol --effort high --parallel 4 --image-workers 3
+python3 -m factory.taste.codex_lamp replay /root/factory-out/F36/lamp \
+  --pieces chapter-6,renumber,front-door --models gpt-6-astra,gpt-6.1-sol --effort high --parallel 4
+python3 -m factory.taste.codex_lamp compare /root/factory-out/F36/lamp
+```
+
+Re-run the same command to resume; completed calls are skipped and tallies rebuilt. Keep model,
+effort and sources fixed for a run. `--skill-dir /absolute/path/to/skills/create-pet` overrides
+automatic installed-skill discovery. Text concurrency defaults to four; pet workers default to
+three and can be reduced to one or two. Each image worker uses workspace-write with only
+`/root/factory-out` as its writable root (including its working directory), automatic approval
+requests disabled, and implicit `/tmp`/`TMPDIR` roots excluded. Agents are explicitly instructed
+to keep task files under their F36 attempt folder and never use pet-service or Library tools.
+The parent alone copies validated packages into `factory/pets/`.
+
+Without repairs, the pet run makes **138 driver-launched `codex exec` calls**: 63 primary text/image
+jury seats, 51 comparison text seats, and 24 hatch workers (four pilots plus twenty final pets).
+An optional second style round adds 50; each flagged brief adds two; each pet redo adds one,
+plus six seats to review the replacements. Invalid seat replies can add one identical-prompt
+retry per job. The skill may also use independent internal visual reviewers; those are additional
+to the driver count. Historical replay adds **114 calls**, comparing with 57 saved Claude seats.
+`compare` makes none: **252 driver calls** for the basic run plus full replay.
+
+V2 has a **312-image-generation floor** for the four pilots and twenty pets (13 each, versus the
+old v1 estimate of ten). The recorded pilots used 13–21 generations per pet: budget roughly
+312–504 before jury redos, with provider failures or technical repairs changing that number.
+A complete regenerated pet adds about 13 more; row-only redos may use fewer. Live CLI auth/plugin
+startup, image-tool availability in `codex exec`, structured schema support, reference-image limits,
+and many-image jury context remain unproven here. Frozen prompts explicitly carry style/avoidance
+notes into the v2 look jobs and ask workers to combine complete reference sheets when the tool's
+five-reference limit would otherwise be exceeded. Passing fake calls proves orchestration, not
+visual quality or the consistency of a generated family.
+
+Offline checks use a fake `codex` on PATH and the installed **real** atlas/quality validators.
+Synthetic test pixels are never copied into this repository:
+
+```sh
+TMPDIR=/root/factory-out/F36/tmp FACTORY_TEST_OUT=/root/factory-out/F36 PYTHONDONTWRITEBYTECODE=1 \
+python3 -m unittest discover -s tools/factory -p test_codex_lamp.py -v
+
+swift build --scratch-path /root/factory-out/F36/swift-build -j 4
+swift test --scratch-path /root/factory-out/F36/swift-build -j 4 --no-parallel
+TMPDIR=/root/factory-out/F36/tmp FACTORY_TEST_OUT=/root/factory-out/F36 PYTHONDONTWRITEBYTECODE=1 \
+SWIFT_SCRATCH_PATH=/root/factory-out/F36/swift-build \
+FIGURES_BIN=/root/factory-out/F36/swift-build/debug/figures \
+python3 -m unittest discover -s tools/factory -p 'test_*.py'
+```
