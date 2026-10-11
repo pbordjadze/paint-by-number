@@ -187,6 +187,22 @@ The app's name.
 - **Georgian thread**: Galaktion Tabidze, Georgia's poet of the moon over Mtatsminda.
 - **recognizes herself when**: one well-chosen detail does the work of ten.
 
+### The Open Source Enthusiast
+
+- **believes**: good work is shared, credited and open to inspection; the app stands on others'
+  shoulders and says so gladly.
+- **champions**: credit where it's due (the citation cards, a warm Acknowledgements screen);
+  open formats a painter can take anywhere (SVG, PDF, PNG); assets and fonts whose licenses are
+  beyond doubt; work others could learn from and build on.
+- **guards against**: borrowed work without credit; any doubt about a license; anything that
+  breaks the repo's licensing rules (every port credited, nothing GPL); lock-in.
+- **touchstones**: the repo's `ACKNOWLEDGEMENTS.md`; the public-domain picture library and its
+  rules (`docs/picture-library.md`).
+- **Georgian thread**: the supra: a table shared by everyone, where the tamada's toasts honor
+  those who came before.
+- **recognizes itself when**: you can see how it was made, who made it possible, and how you'd
+  build on it.
+
 ### The Bible School Teacher (maybe)
 
 - **believes**: good things are gentle, patient and fit for every child and grandparent.

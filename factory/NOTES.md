@@ -170,9 +170,10 @@ helpful, beautiful.
 - The panel (Paul's picks): Medea, the Baba Yaga, the Hedge Witch, the Moon, the Snow Queen (in
   place of Elsa), the Robber Girl (to confirm: the Georgian girl Paul remembers from the 1957
   Snow Queen), the Storybook, the Enchanted Workshop, the Scholar, the Painter, the Child at
-  Bedtime, the Glassblower, Pirosmani, Emily Dickinson, the Bible School Teacher (maybe). Paul
+  Bedtime, the Glassblower, Pirosmani, Emily Dickinson, the Open Source Enthusiast, the Bible School Teacher
+  (maybe). Paul
   singled out the Scholar.
-- 15 guardians on every decision would cost 15 agents a round, and everyone would wait many
+- 16 guardians on every decision would cost 16 agents a round, and everyone would wait many
   pieces to be represented; a jury of six drawn by the ledger keeps rounds small and fair.
 - The animation stays stick figures for now: converge, see whether the factory works, then
   revisit.
