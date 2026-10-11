@@ -157,6 +157,10 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Reused across rebuilds so VoiceOver focus survives camera moves.
     private var areaElements: [Int: CanvasAreaElement] = [:]
     private lazy var placeholder = UIAccessibilityElement(accessibilityContainer: self)
+    #if DEBUG
+    /// Keep identities alive between UIKit's enumeration and attribute reads.
+    private var playElements: [String: UIAccessibilityElement] = [:]
+    #endif
     /// Where VoiceOver focus goes once the camera settles (after a hint or an action).
     private(set) var pendingFocus: PendingFocus?
     /// The last area "Zoom to next area" visited, in reading order over the whole canvas.
@@ -1239,7 +1243,8 @@ final class CanvasView: UIView, PaintingCanvas {
     /// palette index + 1. Frames use the same primary label anchor as the renderer.
     private func playHarnessElements() -> [NSObject] {
         func element(_ identifier: String, value: String, frame: CGRect) -> UIAccessibilityElement {
-            let item = UIAccessibilityElement(accessibilityContainer: self)
+            let item = playElements[identifier] ?? UIAccessibilityElement(accessibilityContainer: self)
+            playElements[identifier] = item
             item.accessibilityIdentifier = identifier
             item.accessibilityLabel = identifier
             item.accessibilityValue = value

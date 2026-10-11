@@ -120,10 +120,13 @@ final class PlayTests: XCTestCase {
     @MainActor
     private func launchPainting() async throws -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "paint", "-playHarness"]
+        app.launchArguments = ["-demo", "gallery-open", "-playHarness"]
         app.launch()
-        guard app.descendants(matching: .any)["play-state"].waitForExistence(timeout: 90) else {
+        guard app.buttons["Close"].waitForExistence(timeout: 90) else {
             throw PlayFailure("The demo painting did not open")
+        }
+        guard app.descendants(matching: .any)["play-state"].waitForExistence(timeout: 10) else {
+            throw PlayFailure("The painting has no play state readout")
         }
         _ = try await settle(app)
         return app
