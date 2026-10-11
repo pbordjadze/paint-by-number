@@ -117,6 +117,20 @@ class ReviewFixTests(unittest.TestCase):
             self.assertEqual(caught.exception.code, 2)
             self.assertIn("missing DejaVu Sans", "".join(call.args[0] for call in stderr.write.call_args_list))
 
+    def test_frames_only_keeps_the_render_and_checks_without_running_encoders(self):
+        with tempfile.TemporaryDirectory(prefix="f16-frames-", dir=TEST_OUT) as temporary:
+            folder = Path(temporary)
+            for name, data in [("spec", {}), ("scene", {}), ("manifest", {"frameCount": 1}),
+                               ("motion", []), ("checks", [{"name": "ikClamps", "pass": True}])]:
+                (folder / (name + ".json")).write_text(json.dumps(data))
+            args = ["render.py", str(folder / "spec.json"), str(folder / "scene.json"), temporary,
+                    "--figures", str(Path(__file__)), "--frames-only"]
+            with patch("sys.argv", args), patch.object(render, "run") as run, patch.object(render, "compose") as compose:
+                self.assertEqual(render.main(), 0)
+                compose.assert_called_once()
+                run.assert_called_once()
+                self.assertEqual(run.call_args.args[0][1], "render")
+
     def test_protected_source_diff_detects_committed_changes(self):
         with tempfile.TemporaryDirectory(prefix="f1-git-", dir=TEST_OUT) as temporary:
             root = Path(temporary)

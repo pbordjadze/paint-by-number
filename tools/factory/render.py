@@ -139,10 +139,16 @@ def composite_frames(paths, background, scratch):
         list(workers.map(composite_frame, paths, chunksize=8))
 
 
-def compose(spec, scene, scene_file, out, manifest, motion, scratch):
+def compose(spec, scene, scene_file, out, manifest, motion, scratch, overlay_dir=None, no_card=False):
     width, height, fps = manifest["pixelWidth"], manifest["pixelHeight"], manifest["fps"]
     count = manifest["frameCount"]
     trees = [ET.parse(out / f"frames/{i:04d}.svg").getroot() for i in range(count)]
+    if no_card:
+        for i, tree in enumerate(trees):
+            for element in list(tree):
+                if element.get("data-layer") == "card":
+                    tree.remove(element)
+            write_svg(tree, out / f"frames/{i:04d}.svg")
     # Rasterize moving layers alone; the static painting is decoded/resized once.
     jobs = []
     for i, tree in enumerate(trees):
@@ -194,6 +200,13 @@ def compose(spec, scene, scene_file, out, manifest, motion, scratch):
     (scratch / "jobs.json").write_text(json.dumps(jobs))
     run(["node", ROOT / "tools/factory/rasterize.mjs", scratch / "jobs.json"])
 
+    if overlay_dir is not None:
+        overlay_dir.mkdir(parents=True, exist_ok=True)
+        for path in overlay_dir.glob("*.png"):
+            path.unlink()
+        for i in range(count):
+            shutil.copyfile(out / f"frames/{i:04d}.png", overlay_dir / f"{i:04d}.png")
+
     background = background_image(scene, scene_file, (width, height))
     composite_frames([out / f"frames/{i:04d}.png" for i in range(count)], background, scratch)
 
@@ -225,6 +238,8 @@ def compose(spec, scene, scene_file, out, manifest, motion, scratch):
     contrast = ink_contrast(light, masks, spec.get("ink", {}).get("color", "#2B2622"))
     checks_file = out / "checks.json"
     checks = [c for c in json.loads(checks_file.read_text()) if c["name"] != "inkContrast"]
+    if no_card:
+        checks = [c for c in checks if c["name"] not in {"cardHold", "cardSize", "cardOnScreen"}]
     checks.append({"name": "inkContrast", "value": contrast, "limit": 3, "pass": contrast >= 3})
     checks_file.write_text(json.dumps(checks, indent=2, sort_keys=True) + "\n")
 
@@ -233,6 +248,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("spec", type=Path); parser.add_argument("scene", type=Path); parser.add_argument("out", type=Path)
     parser.add_argument("--figures", type=Path, default=Path(os.environ.get("FIGURES_BIN", ROOT / ".build/release/figures")))
+    parser.add_argument("--overlay-dir", type=Path, help="also save transparent moving layers here, outside the repo")
+    parser.add_argument("--no-card", action="store_true", help="omit the card and its checks for an uncited stage")
+    parser.add_argument("--frames-only", action="store_true", help="write frames, sheets and checks; skip individual clip encoders")
     args = parser.parse_args()
     try:
         ImageFont.truetype("DejaVuSans.ttf", 18)
@@ -247,16 +265,21 @@ def main():
     out, spec_file, scene_file = args.out.resolve(), args.spec.resolve(), args.scene.resolve()
     if out == ROOT or ROOT in out.parents:
         parser.error("render output must be outside the repository (CLAUDE.md)")
+    overlay_dir = args.overlay_dir.resolve() if args.overlay_dir else None
+    if overlay_dir is not None and (overlay_dir == ROOT or ROOT in overlay_dir.parents or
+                                    overlay_dir == out or out in overlay_dir.parents or overlay_dir in out.parents):
+        parser.error("overlay output must be outside the repository and the render output")
     out.mkdir(parents=True, exist_ok=True)
     run([args.figures.resolve(), "render", "--spec", spec_file, "--scene", scene_file, "--out", out])
     spec, scene = json.loads(spec_file.read_text()), json.loads(scene_file.read_text())
     manifest, motion = json.loads((out / "manifest.json").read_text()), json.loads((out / "motion.json").read_text())
     with tempfile.TemporaryDirectory(prefix="figure-review-", dir=out) as temporary:
-        compose(spec, scene, scene_file, out, manifest, motion, Path(temporary))
-    input_flags = ["ffmpeg", "-v", "error", "-y", "-threads", "4", "-framerate", manifest["fps"], "-i", out / "frames/%04d.png"]
-    run(input_flags + ["-an", "-c:v", "libx264", "-threads", "4", "-preset", "ultrafast", "-crf", "20", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out / "clip.mp4"])
-    preview_width = manifest["pixelWidth"] // (2 if scene.get("display", "ipad13") == "ipad13" else 3)
-    run(input_flags + ["-an", "-vf", f"scale={preview_width}:-2", "-c:v", "libwebp_anim", "-threads", "4", "-quality", "75", "-compression_level", "0", "-loop", "0", out / "clip.webp"])
+        compose(spec, scene, scene_file, out, manifest, motion, Path(temporary), overlay_dir, args.no_card)
+    if not args.frames_only:
+        input_flags = ["ffmpeg", "-v", "error", "-y", "-threads", "4", "-framerate", manifest["fps"], "-i", out / "frames/%04d.png"]
+        run(input_flags + ["-an", "-c:v", "libx264", "-threads", "4", "-preset", "ultrafast", "-crf", "20", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-pix_fmt", "yuv420p", "-movflags", "+faststart", out / "clip.mp4"])
+        preview_width = manifest["pixelWidth"] // (2 if scene.get("display", "ipad13") == "ipad13" else 3)
+        run(input_flags + ["-an", "-vf", f"scale={preview_width}:-2", "-c:v", "libwebp_anim", "-threads", "4", "-quality", "75", "-compression_level", "0", "-loop", "0", out / "clip.webp"])
     checks = json.loads((out / "checks.json").read_text())
     failed = [c["name"] for c in checks if not c["pass"]]
     print(f"Rendered {manifest['frameCount']} frames and all review artifacts in {time.monotonic() - start:.2f} s; "
