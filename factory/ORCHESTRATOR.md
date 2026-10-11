@@ -66,8 +66,9 @@ driving manual and the state of play.
 | F24 | Merged: SimctlDriver and the mailbox contract (`pieces/play/README.md`) for M2's Swift test; tested against a fake xcrun only |
 | F25 | Codex's provider stopped it as a possible cybersecurity risk; not reworded to get past the filter. A Claude agent reviewed the decoders by reading (its fuzzing never ran): the template reader is sound; two app traps on damaged data (painting time, refinement points) confirmed by Claude and queued as F28 (waits on CI); a validator overflow is F27 |
 | F26 | Done, report only: the six corpus photos in classic, book and Auto give identical template bytes (and stats, apart from timings) at 1, 2, 3 and 4 cores; 144 generations, all valid. Note for any future gate: `taskset` alone leaves Foundation's `activeProcessorCount` (so `Parallel.bandCount`) unchanged on Linux; Codex varied it with an external shim |
-| F19 | Codex hit the two-hour limit in final verification; Claude committed its work, merged the base in, and is testing it. Two full renders: 8,112 byte-identical frames, 338 s (over three minutes), worker 7.5% of the photo; the line-art worker inks a straight line across the drawing, for the Lamp |
-| F27 | Running (Codex, gpt-6.1-sol, high) |
+| F19 | Merged (Codex hit the two-hour limit in final verification; Claude committed and tested it). Two full renders: 8,112 byte-identical frames; the movie runs 338 s, the worker is 7.5% of the photo, and in line art the worker inks a straight line across the drawing: all for the Lamp's review. Output: `/root/factory-out/F19/first/` |
+| F27 | Merged: Int counts and bounded validation work; templates byte-identical, no timing change measured |
+| Loop | Claude made the taste loop's JSON writes atomic after a half-written job file failed one test run |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
