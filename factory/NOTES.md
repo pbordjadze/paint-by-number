@@ -232,6 +232,20 @@ helpful, beautiful.
   harness's requirements: name areas by number, wait for the screen to settle, drag in many small
   steps, read pixel values as well as pictures.
 
+## Paul's point 10: the book's order, and how chapters start (Oct 11, afternoon)
+
+- **The Marginarium is chapter 1.** Paul: "make chapter 3 be chapter 1, the stuff before that can
+  be appendices." Put to the Lamp (`pieces/renumber/`) with Paul's rule: it happens unless the
+  Lamp objects strongly and unanimously. Order: 1 The Marginarium, 2 The Lamp Picks Up a Brush,
+  3 The Lamp's Constitution, 4 A Pet for Every Guardian, 5 Two More Pets; Appendix A How the
+  Panel Named Itself, Appendix B Thirty-Six Colors. Renumbered chapters say so in a short note.
+- **How new chapters start:** when Paul has an idea for a chapter, he says what it should focus
+  on. A note like this one may become part of a chapter someday, not necessarily an existing one;
+  everything is logged so it can.
+- Also asked today, for the next chapter: the docs cute and funny (the Lamp can help later); a
+  recruiter should be able to picture their own stakeholders, or agents those stakeholders set
+  up, as the Lamp; the pattern could scale with funding, and runs today on Paul's own credits.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
