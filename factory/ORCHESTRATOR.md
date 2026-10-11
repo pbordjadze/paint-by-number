@@ -64,7 +64,8 @@ driving manual and the state of play.
 | F23 | Merged: the audit's Python fixes; Claude fixed the guards' refusal of macOS's linked /tmp and /var |
 | F22 | Merged: the audit's Swift fixes; hero and workers digests unchanged, engine 1.0.1; 138 Python tests pass on the merged tree |
 | F24 | Merged: SimctlDriver and the mailbox contract (`pieces/play/README.md`) for M2's Swift test; tested against a fake xcrun only |
-| F19, F25, F26 | Running (Codex, gpt-6.1-sol, high); F25 and F26 are reports only |
+| F25 | Codex's provider stopped it as a possible cybersecurity risk (it fuzzes our own decoders); not reworded to get past the filter. A Claude agent runs it instead, report at `/root/factory-out/F25-claude/audit.md` |
+| F19, F26 | Running (Codex, gpt-6.1-sol, high); F26 is a report only |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
