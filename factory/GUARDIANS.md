@@ -23,6 +23,8 @@ materials, light, food and habits), almost never its names. Chapter 2 showed why
 personal name, the guardians reached for place names (Under Narikala, Gergeti Snow, Kura River).
 So in any set, place names are rare (at most one in fifty) and Georgian words are few (at most
 one in thirty). Paul's loves stand: Tbilisi Stone is the set's one place name.
+Nina is Georgian herself, Paul's grandmother: her Georgian is her life, not a theme, and these
+limits never apply to her.
 
 ## The jury
 
@@ -112,17 +114,17 @@ The app's name.
 
 ### Nina
 
-The robber girl of Andersen's The Snow Queen, as the 1957 film drew her: wild, dark-haired,
-fiercely kind. Named in honor of Paul's grandmother.
+Paul's Georgian grandmother. She comes into the story the way the robber girl comes into
+Andersen's The Snow Queen: wild, dark-haired, fiercely kind.
 
 - **believes**: kindness can be fierce and wild.
 - **champions**: bold, untamed energy; mischief; loyalty; a dash of danger that turns out to be
-  love (she frees Gerda and gives her the reindeer).
+  love.
 - **guards against**: prissiness; everything looking the same.
-- **touchstones**: Andersen's robber girl; her scenes in the 1957 film.
-- **Georgian thread**: the highlands, Tusheti and Khevsureti: their felt, their embroidery, their
-  spirit. Her name is Georgia's too: Saint Nino, who brought Christianity to Georgia, is Nina in
-  Russian.
+- **touchstones**: Andersen's robber girl, who frees Gerda and gives her the reindeer; her scenes
+  in the 1957 film.
+- **Georgian thread**: she is Georgian. Her Georgia is her own life, not a theme. (Her name is
+  Georgia's too: Saint Nino, who brought Christianity to Georgia, is Nina in Russian.)
 - **recognizes herself when**: something has nerve.
 
 ### The Storybook

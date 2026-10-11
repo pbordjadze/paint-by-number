@@ -45,7 +45,8 @@ pieces as plug-ins.
   - proposers see their own past names and how they fared;
   - the Georgian bar as a code check for name pieces (`GUARDIANS.md` › The shared bar): place
     names at most one in fifty, Georgian words at most one in thirty, against a list in
-    `taste/glossary.json`; the prompts say the thread is felt, not named.
+    `taste/glossary.json`; the prompts say the thread is felt, not named. Nina is exempt
+    (`GUARDIANS.md` › The shared bar).
 - Tests (pytest, under `tools/factory/` beside `test_render.py`): replaying both recorded runs from
   their files reproduces their `decision.json` and ledger byte for byte; unit tests for draws,
   scoring, vetoes, uniqueness, caps and the guarantee.
