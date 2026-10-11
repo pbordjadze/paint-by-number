@@ -59,7 +59,8 @@ driving manual and the state of play.
 | F17 (5ea39a2) | Merged: moves, driver interface, mock driver, play piece, replay |
 | F16 | Merged: the making-of movie; citations checked word for word; renders byte-identical. Test photos were thumbnails, so a full-size render is next |
 | F18 | Merged: Pip (13 generations, 17 min) and Colophon (15, 25 min), drawn as a family; nothing uploaded to the pets service. Both final sheets and Colophon's lamp clip are kept as assets of chapter 7's doc (`d2c048f8…`, `d0782166…`, `6f01832d…`), since the container can be wiped |
-| F19, F20, F21 | Running (Codex, gpt-6.1-sol, high); F21 is a report only |
+| F20 | Merged: the makers' page after the guardians (`collection.py --pets`); checked in Chromium by Claude |
+| F19, F21 | Running (Codex, gpt-6.1-sol, high); F21 is a report only |
 | F11 | Waits on CI minutes |
 
 ## Waiting on Paul
