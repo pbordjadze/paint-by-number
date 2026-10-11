@@ -9,15 +9,22 @@ const [, , file] = process.argv;
 if (isMainThread && !file) throw new Error('usage: node tools/factory/rasterize.mjs jobs.json');
 const jobs = workerData ?? JSON.parse(readFileSync(file, 'utf8'));
 if (isMainThread) {
-  // One node process, at most four raster threads, with no shared mutable renderer.
+  // Native Resvg pixel buffers can outlive synchronous JS jobs until GC/finalizers
+  // run. Recycle workers after bounded batches so long, full-size clips cannot
+  // retain a movie's worth of buffers. Keep at most four raster threads alive.
   const count = Math.min(4, jobs.length);
-  await Promise.all(Array.from({ length: count }, (_, index) => new Promise((resolve, reject) => {
-    const worker = new Worker(new URL(import.meta.url), {
-      workerData: jobs.filter((_, jobIndex) => jobIndex % count === index),
-    });
-    worker.on('error', reject);
-    worker.on('exit', code => code === 0 ? resolve() : reject(new Error(`Raster worker exited ${code}`)));
-  })));
+  let next = 0;
+  await Promise.all(Array.from({ length: count }, async () => {
+    while (next < jobs.length) {
+      const batch = jobs.slice(next, next + 16);
+      next += batch.length;
+      await new Promise((resolve, reject) => {
+        const worker = new Worker(new URL(import.meta.url), { workerData: batch });
+        worker.on('error', reject);
+        worker.on('exit', code => code === 0 ? resolve() : reject(new Error(`Raster worker exited ${code}`)));
+      });
+    }
+  }));
 } else {
   const images = new Map();
   for (const job of jobs) {
