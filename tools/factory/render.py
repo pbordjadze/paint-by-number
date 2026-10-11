@@ -96,7 +96,8 @@ def ink_contrast(background, masks, ink):
         bounds = alpha.getbbox()
         if bounds is None:
             continue
-        for rgb, coverage in zip(pixels.crop(bounds).getdata(), alpha.crop(bounds).getdata()):
+        for rgb, coverage in zip(pixels.crop(bounds).get_flattened_data(),
+                                 alpha.crop(bounds).get_flattened_data()):
             # Raster alpha includes material opacity. Recover edge coverage before thresholding.
             if material and coverage / material >= 127.5:
                 light = luminance(rgb)

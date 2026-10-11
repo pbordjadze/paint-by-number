@@ -6,6 +6,7 @@ from datetime import date
 from html.parser import HTMLParser
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -50,7 +51,7 @@ class Cards(HTMLParser):
 
 class PaletteGalleryTests(unittest.TestCase):
     def setUp(self):
-        output = Path('/root/factory-out/F12')
+        output = Path(os.environ.get('FACTORY_TEST_OUT', tempfile.gettempdir()))
         output.mkdir(parents=True, exist_ok=True)
         temporary = tempfile.TemporaryDirectory(prefix='gallery-test-', dir=output)
         self.addCleanup(temporary.cleanup)
