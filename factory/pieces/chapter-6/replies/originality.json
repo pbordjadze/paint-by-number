@@ -1,0 +1,14 @@
+{
+  "guardian": "originality",
+  "flags": [
+    {"pet": "baba-yaga", "risk": "The name is John Wick's nickname in the film series, and a hut that walks on legs echoes Howl's Moving Castle.", "fix": "Keep the folk hut, legs and broom, but give it a display name of our own and draw its legs and roof pattern in our style, not a walking castle's."},
+    {"pet": "hedge-witch", "risk": "A hatted mushroom with a feather can read as one of the mushroom folk of Mario's Toads or the Smurfs' mushroom houses.", "fix": "Draw one mossy cap with no spots and no house, and let the tarragon and herb basket carry the character."},
+    {"pet": "snow-queen", "risk": "A crown of frost crystals with a glimmer left at every step is Elsa's ice magic from Disney's Frozen.", "fix": "Give the ermine a crown of its own shape, make the glimmer soft white dust rather than ice trails, and keep Frozen's ice-blue palette out."},
+    {"pet": "robber-girl", "risk": "A mountain-robber setting echoes Ronia, the Robber's Daughter, and a loyal reindeer sidekick echoes Sven in Frozen.", "fix": "Keep the reindeer calf and felt blanket, but give the embroidery a pattern of our own and let its mischief be its own rather than a sidekick's."},
+    {"pet": "enchanted-workshop", "risk": "Tools that work on their own doing chores are Fantasia's enchanted brooms and Beauty and the Beast's enchanted household objects.", "fix": "Keep the brush and paint jar, but give it painting-only jobs like rinsing and sorting brushes, and its own face rather than a fetch-water gag."},
+    {"pet": "nutcracker", "risk": "A wooden nutcracker soldier reads as the Nutcracker of the ballet and of Disney's film.", "fix": "Give it its own uniform and proportions rather than the ballet's classic nutcracker costume."},
+    {"pet": "pirosmani", "risk": "Flat warm animal pictures on oilcloth are closely tied to Pirosmani, so this giraffe could read as a copy of one of his paintings.", "fix": "Keep the warm flat palette as a light nod, but compose a new giraffe in its own pose and markings rather than a reproduction of his painting."}
+  ],
+  "veto": null,
+  "making": "Image models pull toward the most famous version of a name, so each Codex session needs the do-not-resemble list beside its pet's brief."
+}
