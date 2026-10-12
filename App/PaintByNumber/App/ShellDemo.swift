@@ -54,7 +54,7 @@ import PaintCore
 /// - `marginarium-whos-who`, with `-dark` and `-long-text`: Who's Who at its top (the people,
 ///   the helpers, the Lamp and its first teams); `marginarium-whos-who-teams` scrolled to the
 ///   Workshop and the teams after it.
-/// - `marginarium-guardian`, with `-dark` and `-long-text`: Dinotopia's brief, opened from Who's
+/// - `marginarium-guardian`, with `-dark` and `-long-text`: Dino's brief, opened from Who's
 ///   Who, its egg rocking.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.

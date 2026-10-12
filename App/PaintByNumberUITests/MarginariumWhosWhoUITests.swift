@@ -24,7 +24,7 @@ final class MarginariumWhosWhoUITests: XCTestCase {
         XCTAssertTrue(card.label.contains("Guards the storybook feel"), card.label)
         attachScreenshot(of: app, named: "marginarium-whos-who")
         card.tap()
-        XCTAssertTrue(app.navigationBars["Dinotopia"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Dino"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.descendants(matching: .any)["marginarium-egg"].exists)
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Teammates")).firstMatch.label
             .contains("The Storybook"))

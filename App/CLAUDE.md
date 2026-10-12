@@ -153,7 +153,7 @@ synchronized folder would bundle it into the app.
   `MarginariumReaderUITests` also captures margins and tables at accessibility text sizes.
   `marginarium-whos-who` (with `-dark`, `-long-text`) opens Who's Who at its top,
   `marginarium-whos-who-teams` scrolled to the Workshop, and `marginarium-guardian` (with `-dark`,
-  `-long-text`) Dinotopia's brief (`ShellDemo.marginariumPath`).
+  `-long-text`) Dino's brief (`ShellDemo.marginariumPath`).
 
 ## Painting screen
 

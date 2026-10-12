@@ -101,7 +101,7 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
 nonisolated enum MarginariumLamp {
     static let lines: [String] = [
         String(localized: "Every guardian has a charter: what it believes, what it loves and what it watches out for."),
-        String(localized: "Each guardian keeps its idea as a metaphor: Dinotopia never asks for dinosaurs, and the Snow Queen never asks for snow."),
+        String(localized: "Each guardian keeps its idea as a metaphor: Dino never asks for dinosaurs, and the Snow Queen never asks for snow."),
         String(localized: "Guardians work in teams of friends who care about similar things."),
         String(localized: "Each guardian votes alone: none sees how the others voted."),
         String(localized: "Every vote, yes or no, is written down with its reason."),

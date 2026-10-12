@@ -64,7 +64,7 @@ struct MarginariumTests {
     @Test func lampHasSevenPlainLinesInOrder() {
         #expect(MarginariumLamp.lines == [
             "Every guardian has a charter: what it believes, what it loves and what it watches out for.",
-            "Each guardian keeps its idea as a metaphor: Dinotopia never asks for dinosaurs, and the Snow Queen never asks for snow.",
+            "Each guardian keeps its idea as a metaphor: Dino never asks for dinosaurs, and the Snow Queen never asks for snow.",
             "Guardians work in teams of friends who care about similar things.",
             "Each guardian votes alone: none sees how the others voted.",
             "Every vote, yes or no, is written down with its reason.",

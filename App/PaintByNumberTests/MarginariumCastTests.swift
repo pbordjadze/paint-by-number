@@ -15,7 +15,7 @@ struct MarginariumCastTests {
         for guardian in MarginariumCast.guardians {
             #expect(MarginariumCast.team(of: guardian)?.members.contains { $0.id == guardian.id } == true)
         }
-        // Paul's pairings, and Dinotopia on the storybook feel.
+        // Paul's pairings, and Dino on the storybook feel.
         #expect(MarginariumCast.team(of: MarginariumCast.dinotopia)?.members.map(\.id) == ["dinotopia", "storybook"])
         #expect(MarginariumCast.team(of: MarginariumCast.painter)?.members.map(\.id) == ["painter", "pirosmani"])
         #expect(MarginariumCast.dinotopia.guards == "the storybook feel")
