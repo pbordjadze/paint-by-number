@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, lamp_inputs, lamp_restart, loop
+from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, lamp_inputs, lamp_restart, lamp_rules, loop
 from tools.factory.fixtures.strict_schema import check_strict
 
 
@@ -82,7 +82,7 @@ class LampTests(unittest.TestCase):
     def test_whole_run_resume_refusal_failure_redo_and_primary_only(self):
         with patch.dict(os.environ, {'FAKE_REFUSE': 'snow-queen', 'FAKE_FAIL': 'scholar',
                                      'FAKE_REDO': 'moon', 'FAKE_BRIEF_REPAIR': 'moon',
-                                     'FAKE_REJECT_FIRST_STYLES': '1'}):
+                                     'FAKE_REJECT_FIRST_STYLES': '1', 'FAKE_STYLE_FLAGS': '1'}):
             real_repo = Path(__file__).resolve().parents[2]
             command = [sys.executable, '-m', 'factory.taste.codex_lamp', 'run', str(self.run),
                        '--model', 'primary-test', '--compare', 'comparison-test', '--skill-dir', str(self.skill)]
@@ -105,6 +105,29 @@ class LampTests(unittest.TestCase):
             self.assertTrue(all(sum(p.stat().st_size for p in image.parent.iterdir()) <= 2_000_000 for image in images))
             self.assertEqual(loop.load(self.run / 'decisions/shortlist-0.json')['selected'], [])
             self.assertEqual(loop.load(self.run / 'decisions/shortlist-1.json')['selected'], ['style-00', 'style-01'])
+            decision = loop.load(self.run / 'decisions/style.json')
+            self.assertEqual(decision['selected'], ['style-00'])
+            self.assertEqual(decision['excluded'], [])
+            notes = lamp_rules.drawing_notes(self.run)
+            self.assertEqual({f['target'] for f in notes['flags']}, {'style-00'})
+            self.assertEqual({f['seat'] for f in notes['flags']}, {'originality', 'painter'})
+            self.assertEqual(loop.load(self.run / 'decisions/briefs.json')['repaired'], ['moon'])
+            for call in calls:
+                if '/hatches/' not in call['work']:
+                    continue
+                request = loop.load(Path(call['work']).parent / 'request.json')
+                if request['key'].startswith('pilot-'):
+                    self.assertNotIn('readability_notes', request)
+                else:
+                    self.assertEqual(request['readability_notes'], notes)
+                    self.assertIn(lamp_rules.READABILITY, call['prompt'])
+                    for flag in notes['flags']:
+                        self.assertIn(flag['why'], call['prompt'])
+                    package = Path(call['work']) / 'package/provenance.json'
+                    if package.exists():
+                        self.assertEqual(loop.load(package)['readability_notes'], notes)
+            reference_pet = loop.load(self.run / 'decisions/reference.json')['selected'][0].removeprefix('pilot-style-00-')
+            self.assertEqual(loop.load(self.repo / 'factory/pets' / reference_pet / 'provenance.json')['readability_notes'], notes)
             driver.run_plan()
             self.assertEqual(len(self.calls()), len(calls))
             stages = set()
@@ -142,6 +165,100 @@ class LampTests(unittest.TestCase):
         loop.save(base / 'result.json', result)
         (base / 'active-attempt.json').unlink()
         return {p: p.read_bytes() for p in Path(result['work']).rglob('*') if p.is_file()}
+
+    def test_style_policy_keeps_vetoes_and_other_steps_and_legacy_bytes(self):
+        driver = self.driver()
+        votes = {'painter': {'ranking': ['B', 'A'], 'vetoes': [],
+                             'flags': [{'target': 'B', 'why': 'Work resembles idle.'}]},
+                 'originality': {'ranking': [], 'vetoes': [],
+                                 'flags': [{'target': 'B', 'why': 'Clarify the pose.'}]}}
+        self.assertEqual(driver.tally('style', ['A', 'B'], votes, 1), ['B'])
+        self.assertEqual(driver.tally('shortlist-0', ['A', 'B'], votes, 1), ['A'])
+        votes['originality']['vetoes'] = [{'target': 'B', 'quote': 'Charter line.', 'why': 'Violation.'}]
+        self.assertEqual(driver.tally('style', ['A', 'B'], votes, 1), ['A'])
+        votes['painter']['vetoes'] = [{'target': 'A', 'quote': 'Charter line.', 'why': 'Violation.'}]
+        self.assertEqual(driver.tally('style', ['A', 'B'], votes, 1), [])
+        votes['painter']['vetoes'] = votes['originality']['vetoes'] = []
+        # A run without a rules file predates this policy. Loading it cannot opt it in.
+        (self.run / 'rules.json').unlink()
+        expected = lamp_rules.tally(['A', 'B'], votes, 1)
+        loop.save(self.run / 'decisions/style.json', expected)
+        before = (self.run / 'decisions/style.json').read_bytes()
+        self.assertEqual(self.driver().tally('style', ['A', 'B'], votes, 1), ['A'])
+        self.assertEqual((self.run / 'decisions/style.json').read_bytes(), before)
+        self.assertEqual(loop.load(self.run / 'rules.json'), lamp_rules.rules(1))
+
+    def test_retally_blocked_style_cli_and_dry_resume_preserve_all_calls_and_evidence(self):
+        # A frozen legacy run blocks on flags even with the updated executable.
+        loop.save(self.run / 'rules.json', lamp_rules.rules(1))
+        with patch.dict(os.environ, {'FAKE_STYLE_FLAGS': '1'}):
+            with self.assertRaisesRegex(ValueError, 'image jury rejected every pilot style'):
+                self.driver().run_plan()
+        loop.write_atomic(self.run / 'replay/unchanged.txt', 'Recorded historical evidence.')
+        lamp_compare.compare_run(self.run)
+        before = {p: p.read_bytes() for p in self.run.rglob('*') if p.is_file()}
+        calls = len(self.calls())
+        real_repo = Path(__file__).resolve().parents[2]
+        command = [sys.executable, '-m', 'factory.taste.codex_lamp', 'retally-style', str(self.run),
+                   '--reason', 'State-readability flags are drawing notes, not charter vetoes.']
+        result = subprocess.run(command, cwd=real_repo, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        event = json.loads(result.stdout)
+        self.assertEqual(event['selected'], ['style-00'])
+        self.assertEqual(event['revision']['step'], 3)
+        self.assertEqual(event['revision']['reason'], command[-1])
+        self.assertEqual((self.run / event['revision']['previous_decision']).read_bytes(),
+                         before[self.run / 'decisions/style.json'])
+        driver = self.driver()
+        dry = driver.run_plan(dry_resume=True)
+        self.assertEqual((dry['next_step'], dry['selected']), (4, ['style-00']))
+        self.assertEqual(len(dry['readability_notes']['flags']), 2)
+        self.assertEqual(len(self.calls()), calls)
+        self.assertFalse((self.run / 'jobs/006').exists())
+        lamp_compare.compare_run(self.run)
+        for path, content in before.items():
+            if path not in (self.run / 'provenance.json', self.run / 'decisions/style.json'):
+                self.assertEqual(path.read_bytes(), content, str(path))
+        # Retry after the rule commit but before the derived decision write.
+        after = (self.run / 'decisions/style.json').read_bytes()
+        (self.run / 'decisions/style.json').write_bytes(before[self.run / 'decisions/style.json'])
+        result = subprocess.run(command, cwd=real_repo, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.run / 'decisions/style.json').read_bytes(), after)
+        provenance = (self.run / 'provenance.json').read_bytes()
+        lamp_rules.retally_style(self.run, 'Repeated migration is a no-op.')
+        self.assertEqual((self.run / 'provenance.json').read_bytes(), provenance)
+        self.assertEqual(len(self.calls()), calls)
+        # The ordinary next run reaches step 4 with the exact same notes and ballots.
+        original_round = driver.round
+        def stop_at_briefs(number, stage, seats, task, context, rule, **kwargs):
+            if number == 6:
+                self.assertTrue(all(c['readability_notes'] == dry['readability_notes'] for c in context.values()))
+                raise RuntimeError('reached step 4 with notes')
+            return original_round(number, stage, seats, task, context, rule, **kwargs)
+        with patch.object(driver, 'round', side_effect=stop_at_briefs):
+            with self.assertRaisesRegex(RuntimeError, 'reached step 4 with notes'):
+                driver.run_plan()
+        self.assertEqual(len(self.calls()), calls)
+        lamp_inputs.bind_step(self.run, '4')
+        with self.assertRaisesRegex(ValueError, 'later step'):
+            lamp_rules.retally_style(self.run, 'Too late.')
+
+    def test_retally_refuses_completed_style_and_dry_resume_never_dispatches_missing_work(self):
+        driver = self.driver()
+        with self.assertRaisesRegex(ValueError, 'dry resume needs a completed job'):
+            driver.run_plan(dry_resume=True)
+        self.assertFalse(self.log.exists())
+        with self.assertRaisesRegex(ValueError, 'recorded style decision'):
+            lamp_rules.retally_style(self.run, 'No decision yet.')
+        loop.save(self.run / 'rules.json', lamp_rules.rules(1))
+        loop.save(self.run / 'decisions/style.json', {'selected': ['style-00']})
+        with self.assertRaisesRegex(ValueError, 'blocked legacy'):
+            lamp_rules.retally_style(self.run, 'Do not change a completed decision.')
+        driver.dry_resume = True
+        with self.assertRaisesRegex(ValueError, 'dry resume needs a completed hatch'):
+            lamp_hatch.hatch(driver, 'pilot-missing', 'moon', {}, {}, None, None)
+        self.assertFalse(self.log.exists())
 
     def test_resume_all_pilot_blockers_keeps_text_replay_comparison_and_reference(self):
         driver = self.driver()

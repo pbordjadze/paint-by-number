@@ -21,6 +21,11 @@ Paths written as `pieces/…` in older factory documents mean `factory/pieces/�
 3. A separate six-seat image jury chooses one surviving style and nominates a reference pilot
    for each style. The winning style's most nominated pilot becomes the fixed family reference;
    Originality abstains from reference nominations. Ties use stable pilot IDs.
+   Under decision rules v2, only vetoes exclude a style here. Flags remain attributed drawing
+   notes: every subsequent hatch and redo, including the reference guardian's final pet, receives
+   the winning style's flags as **readability notes from the image jury**. Waiting, focused work
+   and review must read differently from idle and each other at 192 × 208. The notes travel in
+   briefs' context, worker requests/prompts and pet provenance; the pilot art stays unchanged.
    All rejected/failed pilots remain in the run, not in `factory/pets/`.
 4. All twenty owners draft their own briefs: 150–300 words, 50–80 appearance-note words,
    nine row directions, plus the frozen do-not-resemble entries. Originality also has a pet.
@@ -77,7 +82,27 @@ All live and test scratch output belongs under `/root/factory-out/`. The live ru
 tests use `FACTORY_TEST_OUT` and `TMPDIR`. The run directory is
 locked against two simultaneous drivers. Model, effort, sources, skill hashes and jobs are
 immutable; changing those inputs requires a new run directory, except for explicitly refreshed
-guardian charters on unstarted or explicitly restarted steps. Parallel limits may change.
+guardian charters on unstarted or explicitly restarted steps, and the explicit blocked-step-3
+flag-policy revision below. Parallel limits may change.
+
+`rules.json` freezes the step-specific flag/veto policy. New runs use v2; existing runs without
+that file import v1, preserving their original tallies and decision bytes. Shortlist flags still
+exclude, set-review flags still return a brief to its guardian once, and image-review flags still
+request one redo. None of those policies change with v2.
+
+For a live legacy run blocked at step 3, use
+`codex_lamp retally-style <run> --reason 'State-readability flags are drawing notes, not vetoes.'`.
+This offline command checks the completed primary ballots, archives the previous decision
+verbatim in `records/style-policy/001/style.json`, and records the reason, timestamp and old/new rule
+hashes in `provenance.json`. Immutable snapshots in `rule-revisions/` override only step 3;
+the original rules, all jobs/replies, earlier decisions and historical replays remain intact.
+It refuses a completed style selection or any run that has started step 4 or later. Repeating
+the command recovers an interrupted decision write without making calls.
+
+`codex_lamp run <run> <original model/effort options> --dry-resume` requires completed jobs and
+pilot hatches, re-tallies through step 3 using frozen policies, and reports the style, fixed
+reference and attached notes at the step-4 boundary. It makes no model calls and writes no
+step-4 jobs. An ordinary `run` then continues with the same selection and notes.
 
 `codex_lamp refresh-inputs <run> --reason '…'` saves the current charter text in a new immutable
 input revision. `inputs.json` and all dispatched jobs/replies remain unchanged. The provenance
@@ -103,20 +128,23 @@ archive prefix. Already published repository packages retain the existing overwr
 
 ```text
 run.json                         primary/comparison models, effort, skill location, version
+rules.json                       frozen step-specific flag/veto policies (v1 legacy, v2 drawing notes)
+rule-revisions/<sha256>.json      immutable rules for an explicit style-policy revision
 inputs.json                      frozen charters, seeds, glossary, chapter-6 evidence and rules
 input-revisions/<sha256>.json     immutable full snapshots; refresh changes only charter text
-provenance.json                  current/initial hashes, step revisions, refresh/restart history
+provenance.json                  input hashes, step revisions, refresh/restart and style-policy history
 skill.json                       hashes of the installed generation/validation skill
 jobs/NNN/<stage>-<seat>-mN.json    own prompt, schema, model, effort and image attachments
 retries/NNN/<job>.json            second attempt with validation reasons and previous reply
 replies/NNN/<job>[.retry].json    raw schema answer from the kit runner
 records/NNN/<job>.json            durable completion: valid/invalid, errors, reply, hashes, lengths, costs
 records/superseded/<restart>/    manifest and unchanged artifacts superseded by a step restart
+records/style-policy/001/         original blocked style decision before the explicit rule revision
 rejections/NNN/<job>-N.json       invalid reply and validation reasons
 costs/NNN/<job>-N.json            measured tokens/time; unknown measurements remain null
 dispatch/<unique>/…              every invocation's schema, reply, JSONL and stderr
 hatches/<pilot|set|redo>-…/
-  request.json                   brief, style, avoidances, reference hash, redo reasons
+  request.json                   brief, style, avoidances, reference hash, readability notes, redo reasons
   active-attempt.json            current attempt, stable across an interrupted migration
   attempt-…/                     isolated worker directory, prompts, command and process log
     result.json                  archived original failure when the legacy pilot is retried
