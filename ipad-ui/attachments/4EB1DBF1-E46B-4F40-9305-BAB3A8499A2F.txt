@@ -1,0 +1,91 @@
+Attributes: Application, 0x10aa81cc0, pid: 35981, label: 'Paint by Moonlight'
+Element subtree:
+ →Application, 0x10aa81cc0, pid: 35981, label: 'Paint by Moonlight'
+    Window (Main), 0x10aa81e00, {{0.0, 0.0}, {1032.0, 1376.0}}
+      Other, 0x10aa83200, {{0.0, 0.0}, {1032.0, 1376.0}}
+        Other, 0x10aa830c0, {{0.0, 0.0}, {1032.0, 1376.0}}
+          Other, 0x10aa82f80, {{0.0, 0.0}, {1032.0, 1376.0}}
+            Other, 0x10aa82e40, {{0.0, 0.0}, {1032.0, 1376.0}}
+              Other, 0x10aa82d00, {{0.0, 0.0}, {1032.0, 1376.0}}
+                Other, 0x10aa82bc0, {{0.0, 0.0}, {1032.0, 1376.0}}, identifier: 'canvas', label: 'Painting'
+                  Button, 0x10aa82a80, {{534.4, 615.6}, {44.0, 44.0}}, identifier: 'canvas-area-96', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa82940, {{621.9, 602.8}, {44.0, 44.0}}, identifier: 'canvas-area-97', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa82800, {{642.9, 622.4}, {44.0, 44.0}}, identifier: 'canvas-area-148', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa826c0, {{693.4, 593.6}, {44.0, 44.0}}, identifier: 'canvas-area-87', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa82580, {{243.9, 665.0}, {44.0, 44.0}}, identifier: 'canvas-area-224', label: 'Area 18', value: not painted, left
+                  Button, 0x10aa82440, {{260.1, 644.1}, {44.0, 44.0}}, identifier: 'canvas-area-192', label: 'Area 18', value: not painted, left
+                  Button, 0x10aa82300, {{323.1, 631.3}, {44.0, 44.0}}, identifier: 'canvas-area-163', label: 'Area 18', value: not painted, left
+                  Button, 0x10aa821c0, {{346.7, 655.7}, {44.0, 44.0}}, identifier: 'canvas-area-204', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa82080, {{543.2, 659.4}, {44.0, 44.0}}, identifier: 'canvas-area-211', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa81f40, {{569.9, 660.2}, {44.0, 44.0}}, identifier: 'canvas-area-225', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa81900, {{610.8, 635.5}, {44.0, 44.0}}, identifier: 'canvas-area-161', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa81a40, {{664.7, 627.3}, {44.0, 44.0}}, identifier: 'canvas-area-114', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa81b80, {{692.4, 638.0}, {44.0, 44.0}}, identifier: 'canvas-area-171', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa817c0, {{754.4, 631.3}, {44.0, 44.0}}, identifier: 'canvas-area-141', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa81680, {{236.9, 679.1}, {44.0, 44.0}}, identifier: 'canvas-area-253', label: 'Area 18', value: not painted, left
+                  Button, 0x10aa81540, {{248.0, 690.1}, {44.0, 44.0}}, identifier: 'canvas-area-276', label: 'Area 18', value: not painted, left
+                  Button, 0x10aa812c0, {{256.5, 669.3}, {44.0, 44.0}}, identifier: 'canvas-area-236', label: 'Area 18', value: not painted, left
+                  Button, 0x10aa81400, {{300.0, 687.6}, {44.0, 44.0}}, identifier: 'canvas-area-216', label: 'Area 18', value: not painted, left
+                  Button, 0x10aa81040, {{341.3, 675.7}, {44.0, 44.0}}, identifier: 'canvas-area-247', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa81180, {{348.7, 692.9}, {44.0, 44.0}}, identifier: 'canvas-area-254', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa80f00, {{556.3, 709.2}, {44.0, 44.0}}, identifier: 'canvas-area-307', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa80b40, {{577.2, 677.4}, {44.0, 44.0}}, identifier: 'canvas-area-251', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa80dc0, {{581.6, 710.2}, {44.0, 44.0}}, identifier: 'canvas-area-309', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa80c80, {{605.9, 670.1}, {44.0, 44.0}}, identifier: 'canvas-area-239', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa80a00, {{673.2, 698.7}, {44.0, 44.0}}, identifier: 'canvas-area-271', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa808c0, {{713.9, 709.9}, {44.0, 44.0}}, identifier: 'canvas-area-304', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa80780, {{745.7, 696.5}, {44.0, 44.0}}, identifier: 'canvas-area-266', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa80640, {{773.9, 687.9}, {44.0, 44.0}}, identifier: 'canvas-area-257', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa80500, {{314.3, 712.8}, {44.0, 44.0}}, identifier: 'canvas-area-312', label: 'Area 18', value: not painted, left
+                  Button, 0x10aa803c0, {{339.5, 716.2}, {44.0, 44.0}}, identifier: 'canvas-area-310', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa80280, {{600.6, 721.1}, {44.0, 44.0}}, identifier: 'canvas-area-315', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa80140, {{610.6, 744.4}, {44.0, 44.0}}, identifier: 'canvas-area-337', label: 'Area 18', value: not painted, center
+                  Button, 0x10aa80000, {{669.1, 735.1}, {44.0, 44.0}}, identifier: 'canvas-area-320', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa83480, {{758.9, 741.6}, {44.0, 44.0}}, identifier: 'canvas-area-335', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa835c0, {{669.4, 764.1}, {44.0, 44.0}}, identifier: 'canvas-area-371', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa83700, {{684.5, 764.3}, {44.0, 44.0}}, identifier: 'canvas-area-367', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa83840, {{721.7, 778.0}, {44.0, 44.0}}, identifier: 'canvas-area-390', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa83980, {{765.4, 776.8}, {44.0, 44.0}}, identifier: 'canvas-area-380', label: 'Area 18', value: not painted, right
+                  Button, 0x10aa83ac0, {{678.2, 836.1}, {44.0, 44.0}}, identifier: 'canvas-area-440', label: 'Area 18', value: not painted, botto...
+                  Button, 0x10aa83c00, {{710.2, 857.3}, {44.0, 44.0}}, identifier: 'canvas-area-451', label: 'Area 18', value: not painted, botto...
+                Other, 0x10aa83d40, {{515.5, 678.5}, {1.0, 1.0}}
+                Button, 0x10aa83e80, {{17.0, 38.0}, {44.0, 44.0}}, identifier: 'xmark', label: 'Close'
+                StaticText, 0x1179dd900, {{86.5, 49.5}, {165.5, 21.0}}, label: 'Delicate Arch, 54 percent painted'
+                  StaticText, 0x1179ddf40, {{114.0, 51.0}, {96.0, 18.0}}, label: 'Delicate Arch'
+                  StaticText, 0x1179dfc00, {{218.0, 51.0}, {34.0, 18.0}}, label: '54%'
+                Other, 0x1179dfd40, {{262.0, 51.0}, {1.0, 18.0}}
+                StaticText, 0x1179dfe80, {{273.0, 51.0}, {76.5, 18.0}}, identifier: 'current-color', label: 'Current color', value: 18, Flint, grayish...
+                  StaticText, 0x1179df0c0, {{289.0, 51.0}, {60.5, 18.0}}, label: '18 · Flint'
+                Button, 0x1179dda40, {{738.0, 38.0}, {44.0, 44.0}}, identifier: 'Photo', label: 'Photo', value: Hidden
+                  Image, 0x1179de800, {{738.0, 38.0}, {44.0, 44.0}}, identifier: 'photo', label: 'Photo'
+                Button, 0x1179de940, {{795.0, 38.0}, {44.0, 44.0}}, identifier: 'lightbulb', label: 'Hint'
+                Button, 0x1179dea80, {{857.0, 38.0}, {44.0, 44.0}}, identifier: 'arrow.uturn.backward', label: 'Undo'
+                Button, 0x1179ded00, {{919.0, 38.0}, {44.0, 44.0}}, identifier: 'exclamationmark.bubble', label: 'Give Feedback'
+                Button, 0x1179dee40, {{976.0, 38.0}, {44.0, 44.0}}, label: 'More'
+                  Button, 0x1179def80, {{976.0, 38.0}, {44.0, 44.0}}
+                    Image, 0x1179de080, {{990.0, 58.0}, {16.0, 4.0}}, identifier: 'ellipsis', label: 'More'
+                ScrollView, 0x1179dd7c0, {{280.0, 1276.0}, {472.0, 76.0}}
+                  Other, 0x1179dfac0, {{280.0, 1276.0}, {472.0, 76.0}}
+                    Button, 0x1179df980, {{296.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-17', label: '17, Mountain Lake, grayish purple', value: 62 percent painted
+                    Other, 0x1179df840, {{296.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-17'
+                    Button, 0x1179df700, {{352.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-18', label: '18, Flint, grayish purple', value: 0 percent painted, Selected
+                    Other, 0x1179debc0, {{352.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-18'
+                    Button, 0x10a979540, {{408.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-19', label: '19, Slate Roof, grayish purple', value: 0 percent painted
+                    Other, 0x10a978f00, {{408.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-19'
+                    Button, 0x10a97b5c0, {{464.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-20', label: '20, Blued Steel, grayish purple', value: 0 percent painted
+                    Other, 0x10a979b80, {{464.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-20'
+                    Button, 0x10a97b980, {{520.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-21', label: '21, Cast Iron, black', value: 0 percent painted
+                    Other, 0x10a97bac0, {{520.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-21'
+                    Button, 0x10a97bc00, {{576.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-22', label: '22, Magnolia, white', value: 0 percent painted
+                    Other, 0x10a97bd40, {{576.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-22'
+                    Button, 0x10a97a800, {{632.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-23', label: '23, Burnt Toast, very dark grayish red', value: 0 percent painted
+                    Other, 0x10a97b200, {{632.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-23'
+                    Button, 0x10a97b340, {{688.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-24', label: '24, Obsidian, black', value: 0 percent painted
+                    Other, 0x10a97a940, {{688.0, 1290.0}, {48.0, 48.0}}, identifier: 'swatch-24'
+Path to element:
+ →Application, 0x10aa81cc0, pid: 35981, label: 'Paint by Moonlight'
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  Output: {
+    Application, 0x10a9788c0, pid: 35981, label: 'Paint by Moonlight'
+  }
