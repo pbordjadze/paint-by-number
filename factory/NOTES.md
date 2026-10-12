@@ -290,6 +290,20 @@ Paul's vision, not to build yet:
   Georgian glossary). It is already enshrined by the choice of the guardians: some are
   explicitly Georgian (the Robber Girl and Medea especially), others close to it.
 
+## Paul's point 15: chapter sign-off (Oct 12)
+
+Paul reviewed the chapters and signed off with these changes, all made in the docs:
+- The app is "the app" in the chapters, not Medea (the name isn't settled); Medea is the guardian.
+- Guardians named after real artists go by first name, with who they are after in the members
+  table: Emily, Niko, George, Bulat. Paul's own quoted words keep the full names.
+- Cut: the "Sorry" quote and its margin note; the praise of Paul (the "What Paul brought" paragraph,
+  the chart of his idea to frame, flattering lines); the Mac-lock step. The ideas table stays as
+  plain facts ("Ideas from the night").
+- Chapter 3 gained a dated people-first note; Appendix A lost its stale next steps; "Nina" is the
+  Robber Girl; footnote markers without footnotes are gone; a narrator's confession explains The
+  Round Dance (Claude's pick) versus The Round Table (what Paul read).
+- Next: Codex adds the pets to the chapters (in the app's chapter format), then they ship.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
