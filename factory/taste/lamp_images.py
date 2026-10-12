@@ -14,6 +14,7 @@ def history(run):
 
 
 def state(run):
+    from .lamp_resume import size_only_failure
     pets, settled = {}, {}
     for path, decision in history(run):
         for pet, result in decision['pets'].items():
@@ -21,8 +22,9 @@ def state(run):
                 raise ValueError(f'completed image decision differs: {path}/{pet}')
             pets[pet] = result
             # Failed set hatches may still become candidates on a later resume.
-            # A spent jury redo is final even when that hatch failed its gates.
-            if result['status'] in ('validated', 'rejected', 'refused', 'invalid') or pet in decision['redos']:
+            # A spent redo cannot draw again, but may still need local packaging.
+            if (result['status'] in ('validated', 'rejected', 'refused', 'invalid')
+                    or pet in decision['redos'] and not size_only_failure(result)):
                 settled[pet] = (path, decision)
     return pets, settled
 

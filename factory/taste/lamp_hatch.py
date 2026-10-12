@@ -166,6 +166,10 @@ def verify_package(lamp, record):
     for name, sha in record['package_hashes'].items():
         if digest(paths.contained(package, name).read_bytes()) != sha:
             raise ValueError(f'validated package changed: {record["key"]}/{name}')
+    if record.get('review_contact'):
+        contact = paths.contained(lamp.run, Path(record['review_contact']).relative_to(lamp.run))
+        if digest(contact.read_bytes()) != record['review_contact_sha256']:
+            raise ValueError(f'validated review contact changed: {record["key"]}')
 
 
 def hatch(lamp, key, pet, style, brief, reference, redo, maker=None):
@@ -382,14 +386,16 @@ Request:
                 # only when necessary. Native contacts remain in gate/ and previews/.
                 if size > LIMIT:
                     with Image.open(paths.contained(work, 'gate/contact.png')) as contact:
-                        for width in (1200, 900, 600):
+                        for width, quality in ((1200, 75), (900, 75), (600, 75),
+                                               (448, 60), (300, 50), (192, 40)):
                             if width >= contact.width:
                                 continue
                             preview = contact.convert('RGB')
                             preview.thumbnail((width, round(contact.height * width / contact.width)),
                                               Image.Resampling.LANCZOS)
-                            preview.save(paths.contained(package, 'contact-sheet.webp'), quality=75, method=6)
+                            preview.save(paths.contained(package, 'contact-sheet.webp'), quality=quality, method=6)
                             provenance['contact_preview'] = {'width': preview.width, 'height': preview.height,
+                                'quality': quality,
                                 'reason': 'fit package budget without changing validated atlas bytes'}
                             loop.save(paths.contained(package, 'provenance.json'), provenance)
                             size = sum(p.stat().st_size for p in package.iterdir())
@@ -399,6 +405,8 @@ Request:
                     raise ValueError(f'package is {size} bytes, exceeds {LIMIT}; no files published')
                 record.update(status='validated', package=str(package), bytes=size,
                     contact=str(package / 'contact-sheet.webp'),
+                    review_contact=str(work / 'gate/contact.png'),
+                    review_contact_sha256=digest((work / 'gate/contact.png').read_bytes()),
                     previews=str(old_work / 'previews' if plan['action'] == 'repackage' else work / 'previews'),
                     package_hashes={p.name: digest(p.read_bytes()) for p in sorted(package.iterdir())})
                 record.pop('failure_kind', None)

@@ -123,6 +123,17 @@ def gate_failure(record, work):
                               record.get('reason', ''))))
 
 
+def size_only_failure(record):
+    """A fully validated hatch may resize its preview once, regardless of kind."""
+    return (record.get('status') == 'failed'
+            and record.get('failure_kind') in (None, 'package')
+            and bool(record.get('atlas_sha256'))
+            and all(record.get('validators', {}).get(name) for name in ('atlas', 'quality'))
+            and bool(re.fullmatch(r'package is \d+ bytes, exceeds \d+; no files published',
+                                  record.get('reason', '')))
+            and record.get('resume_action') != 'repackage')
+
+
 def _decision(base):
     """Describe exactly one hatch invocation; never create files or call a model."""
     from .lamp_hatch import retryable_pilot
@@ -160,10 +171,10 @@ def _decision(base):
                            'continue preserved work with existing repair counts: ')
                           + (stop['evidence'][0]['message'] or stop['evidence'][0]['code']),
                 'provider_stop': stop['evidence']}
-    if (record.get('atlas_sha256') and record.get('validators')
-            and re.fullmatch(r'package is \d+ bytes, exceeds \d+; no files published', record.get('reason', ''))
-            and record.get('resume_action') != 'repackage'):
+    if size_only_failure(record):
         return {**info, 'action': 'repackage', 'reason': 'validated atlas; shrink contact preview to fit 2 MB'}
+    if record.get('resume_action') == 'repackage':
+        return {**info, 'reason': 'local repackage failed; no redraw authorized: ' + record['reason']}
     if retryable_pilot(record):
         return {**info, 'action': 'pilot_migration', 'model_call': True, 'reason': record['reason']}
     if base.name.startswith('set-') and gate_failure(record, work):
@@ -206,7 +217,7 @@ def listing(run, makers_call=None):
     panel.seats = {g['id']: g for g in inputs['guardians']}
     images = lamp_images.listing(run, panel.jury(3), config['model'])
     _, settled = lamp_images.state(run)
-    maker_results = loop.load(paths.contained(run, 'decisions/maker-images.json'), {}).get('pets', {})
+    _, maker_settled = lamp_maker.state(run)
     keys.update('redo-' + pet for pet in images.get('redos', {}))
     hatches = []
     for key in sorted(keys):
@@ -215,7 +226,7 @@ def listing(run, makers_call=None):
         if key.startswith(('set-', 'redo-')) and pet in settled:
             info.update(action='keep', model_call=False,
                         reason='completed image decision retained: ' + str(settled[pet][0]))
-        if key.startswith('maker-') and pet in maker_results:
+        if key.startswith('maker-') and pet in maker_settled:
             info.update(action='keep', model_call=False, reason='completed maker decision retained')
         hatches.append(info)
     maker = lamp_maker.listing(run, makers_call)

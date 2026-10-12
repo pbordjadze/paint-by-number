@@ -40,8 +40,9 @@ def prepare(run, data, number, reason, after):
         path = run / 'decisions' / (name + '.json')
         if owner >= number and path.exists():
             selected.add(path.relative_to(run).as_posix())
-    if number <= 7 and (run / 'decisions/image-resumes').exists():
-        selected.add('decisions/image-resumes')
+    for name in ('image-resumes', 'maker-image-resumes'):
+        if number <= 7 and (run / 'decisions' / name).exists():
+            selected.add('decisions/' + name)
     for name in ('summary.json', 'comparison.json', 'comparison.md'):
         if (run / name).exists():
             selected.add(name)

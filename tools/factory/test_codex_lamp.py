@@ -547,6 +547,7 @@ class LampTests(unittest.TestCase):
                 for kind in ('pilot', 'set', 'redo', 'maker'):
                     loop.save(self.run / 'hatches' / f'{kind}-moon' / 'request.json', {'kind': kind})
                 loop.save(self.run / 'decisions/image-resumes/000001.json', {'later': True})
+                loop.save(self.run / 'decisions/maker-image-resumes/000001.json', {'later': True})
                 for name in lamp_restart.DECISION_STEPS:
                     loop.save(self.run / 'decisions' / (name + '.json'), {'selected': ['old']})
                 loop.save(self.run / 'summary.json', {'status': 'complete'})
@@ -585,6 +586,7 @@ class LampTests(unittest.TestCase):
                                     ('makers-call', 7), ('maker-images', 7)):
                     self.assertEqual((self.run / 'decisions' / (name + '.json')).exists(), owner < number)
                 self.assertFalse((self.run / 'decisions/image-resumes').exists())
+                self.assertFalse((self.run / 'decisions/maker-image-resumes').exists())
                 self.assertFalse((self.run / 'summary.json').exists())
                 self.assertEqual(lamp_inputs.provenance(self.run), recovered)
 
@@ -1136,7 +1138,11 @@ class LampTests(unittest.TestCase):
 
     def test_repackage_preserves_atlas_old_package_and_all_records_without_calls(self):
         driver = self.driver()
-        key = 'set-moon'
+        for kind in ('pilot', 'set', 'redo', 'maker'):
+            with self.subTest(kind=kind):
+                self.check_repackage(driver, kind + '-moon')
+
+    def check_repackage(self, driver, key):
         old = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
         package = Path(old['package'])
         contact_size = (package / 'contact-sheet.webp').stat().st_size
@@ -1154,6 +1160,81 @@ class LampTests(unittest.TestCase):
         self.assertTrue(all(path.read_bytes() == data for path, data in before.items()))
         self.assertEqual(len(self.calls()), calls)
         self.assertEqual(lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None), result)
+        native = Path(result['review_contact'])
+        pixels = native.read_bytes()
+        native.write_bytes(b'changed jury image')
+        with self.assertRaisesRegex(ValueError, 'validated review contact changed'):
+            lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        native.write_bytes(pixels)
+
+    def test_repackage_requires_both_validators_and_never_redraws_after_failure(self):
+        driver = self.driver()
+        with patch.object(lamp_hatch, 'LIMIT', 1):
+            old = lamp_hatch.hatch(driver, 'maker-moon', 'moon', {}, {}, None, None)
+        base = self.run / 'hatches/maker-moon'
+        for invalid in ({**old, 'validators': {'atlas': old['validators']['atlas']}},
+                        {**old, 'failure_kind': 'gate'}, {**old, 'status': 'refused'}):
+            loop.save(base / 'result.json', invalid)
+            self.assertEqual(lamp_resume.decision(base)['action'], 'keep')
+        loop.save(base / 'result.json', old)
+        calls = len(self.calls())
+        with patch.object(lamp_hatch, 'LIMIT', 1):
+            result = lamp_hatch.hatch(driver, 'maker-moon', 'moon', {}, {}, None, None)
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['resume_action'], 'repackage')
+        self.assertEqual(lamp_resume.decision(base)['action'], 'keep')
+        self.assertEqual(lamp_hatch.hatch(driver, 'maker-moon', 'moon', {}, {}, None, None), result)
+        self.assertEqual(len(self.calls()), calls)
+
+    def test_tight_package_budget_keeps_native_jury_contact(self):
+        from PIL import Image
+        driver = self.driver()
+        with patch.object(lamp_hatch, 'LIMIT', 15_000):
+            result = lamp_hatch.hatch(driver, 'maker-moon', 'moon', {}, {}, None, None)
+        self.assertEqual(result['status'], 'validated', result['reason'])
+        self.assertLessEqual(result['bytes'], 15_000)
+        with Image.open(result['contact']) as preview, Image.open(result['review_contact']) as native:
+            self.assertLess(preview.width, 600)
+            self.assertEqual(native.size, (1536, 2530))
+        self.assertEqual((Path(result['package']) / 'spritesheet.webp').read_bytes(),
+                         (self.fixture / 'final/spritesheet.webp').read_bytes())
+
+    def test_repackage_gate_failure_cannot_spend_a_fresh_drawing_attempt(self):
+        driver = self.driver()
+        with patch.object(lamp_hatch, 'LIMIT', 1):
+            lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        calls = len(self.calls())
+        with patch.object(lamp_hatch, 'validate', side_effect=ValueError('validate_pet_quality.py failed; fixture')):
+            result = lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        self.assertEqual(result['status'], 'failed')
+        self.assertEqual(result['failure_kind'], 'gate')
+        self.assertEqual(lamp_resume.decision(self.run / 'hatches/set-moon')['action'], 'keep')
+        self.assertEqual(lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None), result)
+        self.assertEqual(len(self.calls()), calls)
+
+    def test_completed_redo_size_failure_still_repackages_and_gets_its_final_review(self):
+        driver = self.driver()
+        briefs = {'moon': {}}
+        loop.save(self.run / 'decisions/briefs.json', {'briefs': briefs, 'style': {}})
+        original = lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        with patch.dict(os.environ, {'FAKE_REDO': 'moon'}), patch.object(lamp_hatch, 'LIMIT', 1):
+            first = lamp_images.finish(driver, [original], briefs, {}, None, set())
+        self.assertEqual(first['moon']['key'], 'redo-moon')
+        self.assertEqual(first['moon']['failure_kind'], 'package')
+        before = {p: p.read_bytes() for p in self.run.rglob('*')
+                  if p.is_file() and p.name != 'active-attempt.json'}
+        listing = lamp_resume.listing(self.run)
+        self.assertEqual(listing['local_repackages'], 1)
+        self.assertEqual(listing['model_hatches'], 0)
+        calls = len(self.calls())
+        result = lamp_images.finish(driver, [original], briefs, {}, None, set())
+        self.assertEqual(result['moon']['status'], 'validated')
+        self.assertEqual(result['moon']['atlas_sha256'], first['moon']['atlas_sha256'])
+        self.assertEqual(len(self.calls()) - calls, 6)
+        self.assertTrue(all('/hatches/' not in call['work'] for call in self.calls()[calls:]))
+        self.assertTrue(all(p.read_bytes() == data for p, data in before.items()))
+        self.assertEqual(lamp_images.finish(driver, [original], briefs, {}, None, set()), result)
+        self.assertEqual(len(self.calls()) - calls, 6)
 
     def test_list_resume_cli_is_read_only_and_agrees_with_dispatch(self):
         driver = self.driver()
@@ -1364,6 +1445,84 @@ class LampTests(unittest.TestCase):
         loop.save(call_path, call)
         with self.assertRaisesRegex(ValueError, 'frozen maker call differs'):
             lamp_maker.finish(driver, call_path, results, briefs, {}, None)
+
+    def test_completed_maker_size_failure_repackages_then_resumes_only_its_missing_jury(self):
+        driver = self.driver()
+        driver.image_workers = 1
+        ids = ('baba-yaga', 'glassblower', 'hedge-witch', 'moon')
+        briefs = dict.fromkeys(ids, {})
+        loop.save(self.run / 'decisions/briefs.json', {'briefs': briefs, 'style': {}})
+        results = {pet: {'pet': pet, 'status': 'rejected'} for pet in ids}
+        loop.save(self.run / 'decisions/images.json', {'pets': results, 'redos': {}})
+        call_path = self.case / 'makers-call.json'
+        (self.case / 'makers-call.md').write_text('Repair the named defects once.')
+        loop.save(call_path, {'version': 1, 'maker': 'Codex', 'statement': 'makers-call.md', 'pets': [
+            {'pet': p, 'action': 'leave' if p == 'moon' else 'attempt',
+             'reason': 'Named defect.', 'instruction': 'Keep sound art.'} for p in ids]})
+        hatch = lamp_hatch.hatch
+        def legacy_hatch(driver, **item):
+            if item['pet'] == 'hedge-witch':
+                with patch.object(lamp_hatch, 'LIMIT', 1):
+                    return hatch(driver, **item)
+            return hatch(driver, **item)
+        with patch.object(lamp_hatch, 'hatch', legacy_hatch), \
+                patch.dict(os.environ, {'FAKE_FINAL_REJECT': 'glassblower'}):
+            first = lamp_maker.finish(driver, call_path, results, briefs, {}, None)
+        self.assertEqual({p: r['status'] for p, r in first.items()}, {
+            'baba-yaga': 'validated', 'glassblower': 'rejected', 'hedge-witch': 'failed', 'moon': 'left'})
+        self.assertEqual(first['hedge-witch']['failure_kind'], 'package')
+        before = {p: p.read_bytes() for p in self.run.rglob('*')
+                  if p.is_file() and p.name != 'active-attempt.json'}
+        calls = len(self.calls())
+        listing = lamp_resume.listing(self.run, call_path)
+        self.assertEqual(listing['local_repackages'], 1)
+        self.assertEqual(listing['model_hatches'], 0)
+        self.assertEqual(listing['makers_call']['review_after_repackage'], ['hedge-witch'])
+        self.assertEqual(listing['makers_call']['jury_calls_after_repackage'], 6)
+        self.assertEqual(next(h['action'] for h in listing['hatches'] if h['key'] == 'maker-hedge-witch'),
+                         'repackage')
+        image_review = driver.image_review
+        def partial_review(number, stage, candidates, briefs, style, *, seats):
+            image_review(number, stage, candidates, briefs, style, seats=seats[:2])
+            raise OSError('jury interrupted')
+        with patch.object(driver, 'image_review', partial_review):
+            with self.assertRaisesRegex(OSError, 'jury interrupted'):
+                lamp_maker.finish(driver, None, results, briefs, {}, None)
+        self.assertEqual(len(self.calls()) - calls, 2)
+        self.assertFalse((self.repo / 'factory/pets/hedge-witch').exists())
+        self.assertFalse((self.run / 'decisions/maker-image-resumes').exists())
+        listing = lamp_resume.listing(self.run)
+        self.assertEqual(listing['local_repackages'], 0)
+        self.assertEqual(listing['model_hatches'], 0)
+        self.assertEqual(listing['makers_call']['pending'], ['hedge-witch'])
+        self.assertEqual(listing['makers_call']['jury_calls'], 4)
+        ballots = {p: p.read_bytes() for p in self.run.glob('records/010/*.json')}
+        with patch.object(lamp_hatch, 'publish', side_effect=OSError('publication interrupted')):
+            with self.assertRaisesRegex(OSError, 'publication interrupted'):
+                lamp_maker.finish(driver, None, results, briefs, {}, None)
+        addition = loop.load(self.run / 'decisions/maker-image-resumes/000001.json')
+        self.assertEqual(list(addition['pets']), ['hedge-witch'])
+        self.assertEqual(len(self.calls()) - calls, 6)
+        final = lamp_maker.finish(driver, None, results, briefs, {}, None)
+        self.assertEqual(final['hedge-witch']['status'], 'validated')
+        self.assertEqual(final['hedge-witch']['atlas_sha256'], first['hedge-witch']['atlas_sha256'])
+        self.assertEqual(final['hedge-witch']['fresh_attempts'], 0)
+        for pet in ('baba-yaga', 'glassblower', 'moon'):
+            self.assertEqual(final[pet], first[pet])
+        self.assertTrue((self.repo / 'factory/pets/hedge-witch').exists())
+        self.assertTrue(all(p.read_bytes() == data for p, data in before.items()))
+        self.assertTrue(all(p.read_bytes() == data for p, data in ballots.items()))
+        for call in self.calls()[calls:]:
+            self.assertNotIn('/hatches/', call['work'])
+            context = json.JSONDecoder().raw_decode(call['prompt'].split('Context:\n', 1)[1])[0]
+            self.assertEqual(list(context['candidates']), ['hedge-witch'])
+            self.assertIn(final['hedge-witch']['review_contact'], call['args'])
+        self.assertEqual(lamp_maker.finish(driver, None, results, briefs, {}, None), final)
+        self.assertEqual(len(self.calls()) - calls, 6)
+        listing = lamp_resume.listing(self.run)
+        self.assertEqual(listing['makers_call']['jury_calls'], 0)
+        self.assertEqual(listing['makers_call']['review_after_repackage'], [])
+        self.assertFalse((self.run / 'decisions/maker-image-resumes/000002.json').exists())
 
     def test_maker_call_cannot_retry_provider_refusal_or_unspent_gate_attempt(self):
         driver = self.driver()
