@@ -103,7 +103,7 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 
 - Chapter 7, Two More Pets: https://claude.ai/code/artifact/a112d638-0555-4f24-9a6a-6a3fc5476adf.
   Claude kept Colophon's eyes (a taste call, Paul's to veto).
-- `pieces/color-names/drops.json`, the gallery's drop schedule; Okudzhava's Late Sunlight question.
+- `pieces/color-names/drops.json`, the gallery's drop schedule; Bulat's Late Sunlight question.
 - The pets' style sheet: Paul's call who decides it (people he invites, or the Lamp as a proposal).
 - The making-of's look (Paul's call; the Lamp only if he wants its notes): 338 s long, a small worker, and a straight
   ink line across the drawing in the line-art stage.

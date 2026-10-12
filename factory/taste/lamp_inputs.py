@@ -64,9 +64,15 @@ def refresh(run, reason):
     inputs = snapshot(run, before)
     guardians = {g['id']: g for g in loop.guardians()}
     if set(guardians) != {g['id'] for g in inputs['guardians']}:
-        raise ValueError('refresh changes charters only; a changed panel needs a new run')
-    inputs['guardians'] = [{**g, 'charter_text': guardians[g['id']]['charter_text']}
+        raise ValueError('a changed panel needs a new run')
+    inputs['guardians'] = [{**g, **{key: guardians[g['id']][key]
+                                  for key in ('name', 'charter', 'charter_text')}}
                            for g in inputs['guardians']]
+    for guardian in inputs['guardians']:
+        current = guardians[guardian['id']]
+        if 'description' in current:
+            guardian['description'] = current['description']
+    inputs.pop('glossary', None)
     after = digest(inputs)
     if after == before:
         return {'status': 'unchanged', 'inputs_sha256': before}

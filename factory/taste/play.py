@@ -180,12 +180,15 @@ class Session:
         budget = config['move_budget'] if budget is None else budget
         if type(budget) is not int or budget < 1:
             raise ValueError('move budget must be a positive integer')
-        seats = loop.seats(loop.fresh_rules('play'))
+        panel = loop.fresh_rules('play')
+        seats = loop.seats(panel)
         if guardian not in seats or not seats[guardian].get('active') or seats[guardian].get('vetoOnly'):
             raise ValueError(f'unknown or non-playing guardian: {guardian}')
         rules = {'playVersion': 1, 'piece': 'play', 'guardian': seats[guardian],
                  'budget': budget, 'history': config['history'], 'role': config['roles']['player'],
-                 'brief': (PIECE / 'brief.md').read_text(), 'reply_schema': REPLY_SCHEMA}
+                 'brief': (PIECE / 'brief.md').read_text() + '\n' +
+                          loop.names_prompt(panel['guardians']),
+                 'reply_schema': REPLY_SCHEMA}
         driver.settle()
         initial = observe(driver, run, 0)
         loop.save(run / 'rules.json', rules)

@@ -211,6 +211,7 @@ class LampTests(unittest.TestCase):
             self.assertEqual(len(self.calls()), len(calls))
 
     def test_new_proposals_include_exact_contract_and_unattended_decisions(self):
+        self.assertNotIn('glossary', self.inputs)
         driver = self.driver()
         with patch.object(driver, 'hatch_many', side_effect=RuntimeError('reached pilots')):
             with self.assertRaisesRegex(RuntimeError, 'reached pilots'):
@@ -223,8 +224,12 @@ class LampTests(unittest.TestCase):
                 self.assertIn('Do not invent frame counts, rows or alternate paint looks.', call['prompt'])
 
     def test_refresh_cli_keeps_started_steps_and_historical_replay_bytes(self):
+        self.inputs['glossary'] = {'words': {'supra': 'old glossary'}}
         for guardian in self.inputs['guardians']:
             guardian['charter_text'] += '\n- **Georgian thread**: old frozen field.'
+            if guardian['id'] == 'emily-dickinson':
+                guardian.update(name='Emily Dickinson', charter='Emily Dickinson')
+                guardian.pop('description', None)
         driver = self.driver()
         rule = lamp.schema.obj({'why': lamp.S})
         driver.round(1, 'before', ['moon'], 'Same task.', {}, rule)
@@ -251,6 +256,12 @@ class LampTests(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout)['status'], 'refreshed')
         provenance = loop.load(self.run / 'provenance.json')
         self.assertEqual(provenance['refreshes'][0]['preserved_steps'], {'1': provenance['initial']})
+        current = lamp_inputs.current(self.run)
+        self.assertNotIn('glossary', current)
+        emily = next(g for g in current['guardians'] if g['id'] == 'emily-dickinson')
+        self.assertEqual(emily['name'], 'Emily')
+        self.assertEqual(emily['charter'], 'Emily')
+        self.assertEqual(emily['description'], 'After the poet Emily Dickinson.')
         before = (self.run / 'provenance.json').read_bytes()
         result = subprocess.run(command, cwd=real_repo, capture_output=True, text=True)
         self.assertEqual(json.loads(result.stdout)['status'], 'unchanged')
@@ -258,11 +269,16 @@ class LampTests(unittest.TestCase):
         driver = self.driver()
         driver.round(1, 'before', ['moon', 'painter'], 'Same task.', {}, rule, compare=True)
         driver.round(2, 'still-step-one', ['moon'], 'Same task.', {}, rule)
-        driver.round(5, 'after', ['moon'], 'Same task.', {}, rule, compare=True)
+        driver.round(5, 'after', ['moon', 'emily-dickinson', 'originality'], 'Same task.', {}, rule, compare=True)
         self.assertTrue(all(p.read_bytes() == data for p, data in evidence.items()))
         for path in self.run.glob('jobs/*/*.json'):
             job = loop.load(path)
             self.assertEqual('Georgian thread' in job['prompt'], job['round'] < 5)
+            if job['round'] == 5:
+                self.assertNotIn('glossary', job['prompt'].lower())
+                self.assertIn('Emily; ', job['prompt'])
+                if job['guardian'] == 'emily-dickinson':
+                    self.assertIn('You are Emily.', job['prompt'])
         with patch.object(loop, 'guardians', side_effect=AssertionError('live charters used')):
             calls = len(self.calls())
             self.driver().round(5, 'after', ['moon'], 'Same task.', {}, rule, compare=True)
@@ -279,7 +295,8 @@ class LampTests(unittest.TestCase):
         record['inputs_sha256'] = provenance['initial']
         loop.save(record_path, record)
         lamp_compare.compare_run(self.run)
-        self.assertFalse(any(p['stage'] == 'after' for p in loop.load(self.run / 'comparison.json')['comparisons']))
+        self.assertFalse(any(p['stage'] == 'after' and p['guardian'] == 'moon'
+                             for p in loop.load(self.run / 'comparison.json')['comparisons']))
 
     def test_refresh_preserves_started_step_veto_validation_and_other_inputs(self):
         driver = self.driver()

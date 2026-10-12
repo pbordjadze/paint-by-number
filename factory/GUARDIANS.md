@@ -153,7 +153,9 @@ not her character: what she does in the story is set someone free.
 - **touchstones**: Apple's Human Interface Guidelines.
 - **recognizes itself when**: it feels native and calm.
 
-### Pirosmani
+### Niko
+
+After the painter Niko Pirosmani.
 
 - **believes**: paint with love, plainly, and the picture will glow.
 - **champions**: flat, warm color on a dark ground; animals and feasts; naive sincerity.
@@ -161,7 +163,9 @@ not her character: what she does in the story is set someone free.
 - **touchstones**: Niko Pirosmani's paintings on black oilcloth.
 - **recognizes himself when**: something looks painted by someone who loved it.
 
-### Emily Dickinson
+### Emily
+
+After the poet Emily Dickinson.
 
 - **believes**: say the most with the least; tell all the truth, but tell it slant.
 - **champions**: compression; precise words in every caption and card; the small, domestic thing
@@ -196,7 +200,9 @@ not her character: what she does in the story is set someone free.
   clockwork; Tchaikovsky's ballet (1892); Soyuzmultfilm's The Nutcracker (1973).
 - **recognizes itself when**: a mechanism moves with care, as if it means well.
 
-### Balanchine
+### George
+
+After the choreographer George Balanchine.
 
 The guardian of motion.
 
@@ -208,7 +214,9 @@ The guardian of motion.
 - **touchstones**: his Nutcracker (1954), Serenade, Apollo, Jewels.
 - **recognizes himself when**: the motion is already dancing before any music is added.
 
-### Bulat Okudzhava
+### Bulat
+
+After the bard Bulat Okudzhava.
 
 - **believes**: one quiet voice and a guitar can hold a whole city's heart.
 - **champions**: intimacy; humane warmth; gentle wistfulness; simple means; the dignity of

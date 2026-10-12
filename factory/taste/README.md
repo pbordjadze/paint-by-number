@@ -49,9 +49,7 @@ TOML requires `rounds`, `jury_size` (including Originality), `proposers`, `candi
 and `rules_version = 1|2`. Each `[roles.proposer]`, `[roles.juror]`, `[roles.writer]` has a `model`,
 `effort` and `enabled`; proposer and juror are required, writer is optional and offers one candidate
 per slot. Model and effort strings are passed unchanged; choose identifiers your runner supports.
-`[caps]` supports `georgian` (off by default) and maximum repeated two-word `lead`/`trail` counts.
-Opting into `georgian = true` caps place names at one in fifty and cultural words at one in thirty,
-using `glossary.json`. The glossary also explains ordinary cultural words to Originality.
+`[caps]` supports maximum repeated two-word `lead`/`trail` counts.
 `plants` is an array
 of `{slot="1", name="Beeswax", quality="good"}` or `quality="bad"` anchors. Anchors bypass craft
 so deliberate defects reach the jury; their quality and source are hidden, and they cannot win.
@@ -87,7 +85,7 @@ python3 tools/factory/test_figure_piece.py \
 Choose a fresh dry-run directory. Its rankings are canned plumbing checks; the Lamp's later run
 makes the taste decision. Without `FIGURE_PIECE_REAL=1`, the tests use small stand-in sheets.
 
-`new` freezes settings, prompt version, brief, approved `factory/STYLE.md` if present, seats, glossary, initial
+`new` freezes settings, prompt version, brief, approved `factory/STYLE.md` if present, seats, initial
 slots, vocabulary and calibration in `rules.json`. Later piece/panel edits do not change the run.
 Jobs are `jobs/NNN/<role>-<guardian>.json`: `prompt`, `reply_schema`, `model`, `effort`, `images`,
 plus identity and attempt. They and blind ballots are immutable. Proposers see their past reception;
@@ -129,7 +127,8 @@ notes beside its swatch. Build it with
 `--preview` to see all colors. It reads `pieces/color-names/run/` and Paul's `checkpoint.json`
 export (an array, a checkpoint-record map, or a `{ "by": "Paul", "picks": [...] }` envelope).
 Vetoed names use the export's `replacement`; the original name and veto remain in the margin.
-Reasons are quoted from proposals; jury reasons identify the name that juror preferred.
+Guardian labels use current display names and identify their namesakes; recorded words stay
+verbatim. Reasons are quoted from proposals; jury reasons identify the name that juror preferred.
 
 Claude drafts `factory/pieces/color-names/drops.json` and Paul approves it. Its format is an array:
 `[{ "date": "2026-10-11", "colors": [1, 2] }]`, where colors are slot IDs, each listed at most once.
@@ -152,8 +151,9 @@ No dollar price is invented; an API runner can later consume the same jobs and r
 ## Replay and checks
 
 `loop --run <records> --out <fresh-directory> replay` rebuilds decisions and ledger in a copy,
-including the two recorded runs. Legacy v1/v2 schemas and exceptions remain frozen; compatibility
-CLIs `taste.py` and `colors.py` still work. New runs default to v2: quoted guards-against vetoes,
+including the two recorded runs. Archived contracts live in `_legacy.py` and their frozen
+snapshots; new runs cannot select them. Legacy v1/v2 schemas and exceptions remain frozen;
+compatibility CLIs `taste.py` and `colors.py` still work. New runs default to v2: quoted guards-against vetoes,
 uniqueness/caps before the optional guarantee, deterministic repair of interacting constraints,
 and separate broad-favorite/most-loved standings. Unknown rules versions fail.
 
@@ -309,15 +309,15 @@ python3 -m factory.taste.codex_lamp compare /root/factory-out/F36/lamp
 ```
 
 Re-run the same command to resume; completed calls are skipped and tallies rebuilt. Keep model,
-effort and sources fixed for a run. To apply current guardian charters to steps that have not
-started, run `python3 -m factory.taste.codex_lamp refresh-inputs /root/factory-out/F36/lamp
+effort and sources fixed for a run. To apply current guardian names and charters to steps that
+have not started, run `python3 -m factory.taste.codex_lamp refresh-inputs /root/factory-out/F36/lamp
 --reason 'Use the revised guardian charters for remaining steps.'` before resuming.
 The original `inputs.json` stays intact. Immutable snapshots in `input-revisions/` and an atomic
 `provenance.json` record the reason, time, input hashes and started steps. A step freezes its
 revision before dispatch: partial rounds and unfinished model pairs retain that revision.
-Only charter text changes; seeds, rules, glossary and chapter evidence remain frozen. Repeating
-an unchanged refresh does nothing. Comparison reports separate input revisions in both paired
-results and aggregates. Historical replays continue to use their original sources.
+Display names and charters refresh, and retired inputs are dropped; seeds, rules and chapter
+evidence remain frozen. Repeating an unchanged refresh does nothing. Comparison reports separate
+input revisions in both paired results and aggregates. Historical replays continue to use their original sources.
 `--skill-dir /absolute/path/to/skills/create-pet` overrides
 automatic installed-skill discovery. Text concurrency defaults to four; pet workers default to
 three and can be reduced to one or two. Each image worker uses workspace-write with only

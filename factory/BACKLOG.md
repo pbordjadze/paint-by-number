@@ -86,14 +86,9 @@ pieces as plug-ins.
   their own rules. Rules v1 is the panel-name run's; v2 is the color-names run's: a veto must
   quote the charter's "guards against" line, and the guarantee runs after uniqueness and caps.
 - **Chapter 1's fixes** (`How the Panel Named Itself`, and `NOTES.md`):
-  - an Originality glossary (`taste/glossary.json`, ordinary cultural words: supra,
-    qvevri, tonir, …) that Originality's prompt includes;
   - standings that report the broad favorite and the most-loved (most first places) separately;
   - a hook for a second jury on the finalists;
   - proposers see their own past names and how they fared;
-  - optional code caps for name pieces (off by default): place
-    names at most one in fifty, Georgian words at most one in thirty, against a list in
-    `taste/glossary.json`;
   - rename the seat `nina` to `robber-girl` in `panel.json`, with an alias so the two recorded
     runs (which say `nina`) still replay byte for byte.
 - Tests (pytest, under `tools/factory/` beside `test_render.py`): replaying both recorded runs from

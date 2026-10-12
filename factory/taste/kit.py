@@ -18,7 +18,6 @@ def outside_repo(path):
 
 class Caps:
     def __init__(self, record):
-        self.record = record
         self.config = record['settings'].get('caps', {})
 
     def __call__(self, table):
@@ -27,14 +26,12 @@ class Caps:
             words = [name.split()[position] for name in table.values() if len(name.split()) == 2]
             failures += [(kind, word) for word in sorted(set(words))
                          if kind in self.config and words.count(word) > self.config[kind]]
-        if self.config.get('georgian'):
-            failures += loop.georgian_caps(table, self.record['glossary'])
         return failures
 
     def contributes(self, name, kind, word):
         if kind in ('lead', 'trail'):
             return len(name.split()) == 2 and name.split()[0 if kind == 'lead' else -1] == word
-        return bool(loop.georgian_caps({0: name}, self.record['glossary']))
+        return False
 
 
 def new(piece, run, calibration=None):
@@ -184,7 +181,7 @@ class Run:
         return (f"You are {g['name']}.\nYour charter:\n{g['charter_text']}\n" if g else
                 'You are an independent professional designer.\n') + self.record['brief'] + \
             '\nApproved style:\n' + self.record['style'] + '\n' + \
-            loop.caps_prompt(self.record, bool(self.config.get('caps', {}).get('georgian'))) + \
+            loop.names_prompt(self.record['guardians']) + \
             '\nWhole-set caps: ' + json.dumps(self.config.get('caps', {})) + '\n' + \
             (loop.history(self.path, gid, self.gs) if history else '') + '\n'
 
@@ -277,7 +274,6 @@ class Run:
                     prompt += '\nAlso list all letters you approve (possibly none).'
                 if self.gs[gid].get('vetoOnly'):
                     prompt += '\nYou only veto; do not rank.'
-                    prompt += '\n' + loop.glossary_prompt(self.record)
                 jobs.append(self.job(n, 'juror', gid, prompt, schema.obj({'slots': schema.obj(properties)}), images))
         return jobs
 

@@ -171,7 +171,7 @@ def source_snapshot():
     for flag in chapter['originality']['flags']:
         avoid[flag['pet']].append(flag['risk'] + ' ' + flag['fix'])
     return {'guardians': loop.guardians(), 'seeds': seeds, 'chapter_6': chapter,
-            'glossary': loop.load(loop.REPO / 'factory/taste/glossary.json'), 'avoid': avoid,
+            'avoid': avoid,
             'brief': (loop.REPO / 'factory/pieces/pets/brief.md').read_text(), 'rules': RULES}
 
 
@@ -219,8 +219,7 @@ class Lamp:
         text = (inputs['rules'] + '\n' + UNATTENDED + CONTRACT + MOTION_POLICY
                 + f'\nYou are {g["name"]}.\nYour charter:\n{g["charter_text"]}\n'
                 + task + '\nContext:\n' + json.dumps(context, indent=2, ensure_ascii=False))
-        if seat == 'originality':
-            text += '\nOriginality glossary:\n' + json.dumps(inputs['glossary'], ensure_ascii=False)
+        text += '\n' + loop.names_prompt(inputs['guardians'])
         return text
 
     def round(self, number, stage, seats, task, context, rule, *, compare=False, images=()):
@@ -470,9 +469,9 @@ def main():
     replay.add_argument('--parallel', type=int, default=4)
     compare = commands.add_parser('compare', help='write comparison.md and comparison.json without model calls')
     compare.add_argument('run_dir', type=Path)
-    refresh = commands.add_parser('refresh-inputs', help='refresh guardian charters for steps not yet started')
+    refresh = commands.add_parser('refresh-inputs', help='refresh guardian names and charters for steps not yet started')
     refresh.add_argument('run_dir', type=Path)
-    refresh.add_argument('--reason', default='Refresh guardian charters from factory/GUARDIANS.md.')
+    refresh.add_argument('--reason', default='Refresh guardian names and charters from factory/GUARDIANS.md.')
     args = parser.parse_args()
     if hasattr(args, 'parallel') and args.parallel < 1:
         parser.error('--parallel must be positive')

@@ -62,24 +62,28 @@ def guardians():
             for g in load(REPO / "factory/panel.json")["guardians"]]
 
 
-def fresh_rules(piece, *, version=2, recorded=False, vocabulary=None):
-    record = {"version": version, "piece": piece, "recorded": recorded,
-              "originalityFreeVeto": recorded and version == 2,
-              "sharedBar": False, "promptVersion": 1 if recorded else 2,
+def names_prompt(guardians):
+    return ("Refer to yourself and the other guardians by these display names; "
+            "seat IDs are only record keys:\n" +
+            "; ".join(g["name"] for g in guardians) + ".\n")
+
+
+def fresh_rules(piece, *, version=2, vocabulary=None):
+    record = {"version": version, "piece": piece, "recorded": False,
+              "originalityFreeVeto": False, "promptVersion": 3,
               "guarantee": piece == "color-names",
-              "calibration": {}, "guardians": guardians(),
-              "glossary": load(REPO / "factory/taste/glossary.json")}
+              "calibration": {}, "guardians": guardians()}
     if vocabulary is not None:
         record["vocabulary"] = vocabulary
     return record
 
 
-def rules(run, piece, *, version=2, recorded=False, vocabulary=None):
+def rules(run, piece, *, version=2, vocabulary=None):
     """Create once, then always use the stored rule set. Unknown versions fail closed."""
     path = Path(run) / "rules.json"
     record = load(path)
     if record is None:
-        record = fresh_rules(piece, version=version, recorded=recorded, vocabulary=vocabulary)
+        record = fresh_rules(piece, version=version, vocabulary=vocabulary)
         save(path, record)
     if record["version"] not in (1, 2):
         raise ValueError(f"unsupported taste rules v{record['version']}")
@@ -251,13 +255,6 @@ def history(run, gid, gs):
     return "Your past names and how they fared:\n" + ("\n".join(lines) or "None yet.")
 
 
-def glossary_prompt(record):
-    glossary = record["glossary"]
-    heading = "Cultural glossary" if record.get("promptVersion", 1) >= 2 else "Georgian glossary"
-    return heading + " (ordinary cultural words, not franchise references):\n" + "\n".join(
-        f"- {word}: {meaning}" for word, meaning in glossary["words"].items())
-
-
 def veto_instruction(record):
     if record.get("vetoPolicy") == "off":
         return "Vetoes are off: every veto must be null."
@@ -267,34 +264,6 @@ def veto_instruction(record):
         return "Veto only for a real problem and give its reason."
     exemption = "Originality may give a reason instead." if record.get("originalityFreeVeto") else "This includes Originality."
     return "Every veto must quote exact words from your charter's guards against line. " + exemption
-
-
-LEGACY_THREAD = ("The Georgian thread is felt, not named: use materials, light, gardens and habits. "
-          "Across the whole set, at most one name in fifty uses a Georgian place name, "
-          "and at most one in thirty uses a Georgian word.")
-
-
-def caps_prompt(record, enabled=None):
-    """Old frozen rules retain their exact prompt; new caps are an opt-in setting."""
-    if record.get("promptVersion", 1) == 1:
-        return LEGACY_THREAD if enabled is not False else ""
-    if enabled is None:
-        enabled = record.get("sharedBar", False)
-    if enabled:
-        return ("Across the whole set, at most one name in fifty uses a Georgian place name, "
-                "and at most one in thirty uses a Georgian word.")
-    return ""
-
-
-def georgian_caps(table, glossary):
-    """Count names, not occurrences; match whole terms (including multiword places)."""
-    def contains(name, terms):
-        return any(re.search(r"(?<![a-z])" + re.escape(term.lower()) + r"(?![a-z])", name.lower())
-                   for term in terms)
-    names = list(table.values())
-    return [(kind, "Georgian " + kind) for kind, terms, denominator in
-            (("places", glossary["places"], 50), ("words", glossary["words"], 30))
-            if sum(contains(n, terms) for n in names) > len(names) // denominator]
 
 
 def select(results, base, slot_keys, caps_hook, *, owners=(), guarantee=False, recorded=False, identity=str.casefold):
