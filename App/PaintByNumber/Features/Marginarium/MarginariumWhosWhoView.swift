@@ -127,7 +127,7 @@ private struct MarginariumGuardianCard: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            MarginariumGuardianPet(guardian: guardian, width: 72)
+            MarginariumGuardianPet(guardian: guardian, width: MarginariumPersonCard.petWidth)
                 // The card is the link; the pet only keeps it company here.
                 .allowsHitTesting(false)
             VStack(spacing: 2) {
@@ -155,19 +155,21 @@ private struct MarginariumGuardianCard: View {
 
 /// A person (a monogram) or an AI helper (its pet), with their role and one line.
 private struct MarginariumPersonCard: View {
+    static let petWidth: CGFloat = 88
     let person: MarginariumPerson
 
     var body: some View {
         VStack(spacing: 8) {
             if let pet = MarginariumPet.named(person.pet) {
-                MarginariumSpritePlayer(pet: pet, marginWidth: 72)
+                MarginariumSpritePlayer(pet: pet, marginWidth: Self.petWidth)
             } else {
+                // As tall as a pet beside it.
                 Text(String(person.name.prefix(1)))
                     .font(.display(.title))
                     .foregroundStyle(.white)
-                    .frame(width: 64, height: 64)
+                    .frame(width: 78, height: 78)
                     .background(Theme.signature, in: Circle())
-                    .padding(.vertical, 7)
+                    .frame(height: Self.petWidth * 104 / 96)
                     .accessibilityHidden(true)
             }
             VStack(spacing: 2) {
@@ -197,12 +199,12 @@ struct MarginariumGuardianPet: View {
     let guardian: MarginariumGuardian
     /// Nil for the small, captionless kind.
     var caption: String? = nil
-    var width: CGFloat = 96
+    let width: CGFloat
 
     var body: some View {
         if guardian.hatched, let pet = MarginariumPet.named(guardian.id) {
             if let caption {
-                MarginariumSpritePlayer(pet: pet, caption: caption)
+                MarginariumSpritePlayer(pet: pet, caption: caption, width: width)
             } else {
                 MarginariumSpritePlayer(pet: pet, marginWidth: width)
             }
@@ -226,7 +228,8 @@ struct MarginariumGuardianView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                MarginariumGuardianPet(guardian: guardian, caption: guardian.petCaption)
+                // The brief's picture: the pet at twice its size in the story.
+                MarginariumGuardianPet(guardian: guardian, caption: guardian.petCaption, width: 192)
                     .frame(maxWidth: .infinity)
 
                 VStack(alignment: .leading, spacing: 8) {

@@ -26,8 +26,8 @@ struct MarginariumSpritePlayer: View {
     @State private var taps = 0
     @State private var played = 0
 
-    init(pet: MarginariumPet, caption: String, identifier: String? = nil) {
-        self.init(pet: pet, caption: caption, width: 96, greeting: 0, identifier: identifier)
+    init(pet: MarginariumPet, caption: String, width: CGFloat = 120, identifier: String? = nil) {
+        self.init(pet: pet, caption: caption, width: width, greeting: 0, identifier: identifier)
     }
 
     init(pet: MarginariumPet, marginWidth: CGFloat, greeting: Int = 0) {
@@ -120,7 +120,9 @@ struct MarginariumSpritePlayer: View {
         Button {
             taps += 1
         } label: {
+            // A brief's picture draws a 192 × 208 cell at up to three times its pixels.
             image.resizable()
+                .interpolation(.high)
                 .scaledToFit()
                 .frame(width: width, height: height)
         }

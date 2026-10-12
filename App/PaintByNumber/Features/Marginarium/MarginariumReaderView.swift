@@ -356,7 +356,7 @@ private struct MarginariumBlockView: View {
                 .font(.display(headingStyle))
                 .padding(.top, 8)
                 .accessibilityAddTraits(.isHeader)
-        case .paragraph:
+        case .paragraph, .marginNote:
             text
         case .quote:
             MarginariumQuotation(text: text)
@@ -370,7 +370,7 @@ private struct MarginariumBlockView: View {
             .padding(.leading, CGFloat(min(block.depth, 6)) * 16)
             // Highlighted words stay their own links rather than merging into one element.
             .accessibilityElement(children: highlights.isEmpty ? .combine : .contain)
-        case .ordered, .marginNote:
+        case .ordered:
             MarginariumNumberedText(block: block, text: text)
                 .padding(.leading, CGFloat(min(block.depth, 6)) * 16)
         case .tableCell, .marginHeading:

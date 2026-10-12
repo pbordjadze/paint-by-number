@@ -47,7 +47,7 @@ The reader UI tests also attach pet screenshots, including at accessibility text
 
 ## Pets beside margin notes
 
-`MarginariumMarginNote` shows a small pet (40 pt wide, tappable, a tap waves it) for each
+`MarginariumMarginNote` shows a small pet (52 pt wide, tappable, a tap waves it) for each
 guardian who signed a margin note, once each, in the order they speak. The importer records
 every signature of a note as `speakers` (and the last as `speaker`), so the names are the
 chapter's own English signatures, never the localized text. `MarginariumSpeakers` is the one
