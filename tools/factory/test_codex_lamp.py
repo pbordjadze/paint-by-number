@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, lamp_inputs, lamp_restart, lamp_rules, lamp_resume, loop
+from factory.taste import lamp_images, lamp_maker
 from tools.factory.fixtures.strict_schema import check_strict
 
 
@@ -543,8 +544,9 @@ class LampTests(unittest.TestCase):
                     loop.save(self.run / 'dispatch' / f'job-{round}-scratch' / f'{round:03}' / 'work.json', job)
                     for kind in ('costs', 'retries', 'rejections'):
                         loop.save(self.run / kind / f'{round:03}' / f'job-{round}.json', job)
-                for kind in ('pilot', 'set', 'redo'):
+                for kind in ('pilot', 'set', 'redo', 'maker'):
                     loop.save(self.run / 'hatches' / f'{kind}-moon' / 'request.json', {'kind': kind})
+                loop.save(self.run / 'decisions/image-resumes/000001.json', {'later': True})
                 for name in lamp_restart.DECISION_STEPS:
                     loop.save(self.run / 'decisions' / (name + '.json'), {'selected': ['old']})
                 loop.save(self.run / 'summary.json', {'status': 'complete'})
@@ -576,11 +578,13 @@ class LampTests(unittest.TestCase):
                     # Step 1 owns rounds 1–4; step 2 has only pilots, and 6 only set hatches.
                     owner = 1 if round <= 4 else 3 if round == 5 else 4 if round == 6 else 5 if round <= 8 else 7
                     self.assertEqual((self.run / 'jobs' / f'{round:03}').exists(), owner < number)
-                for kind, owner in (('pilot', 2), ('set', 6), ('redo', 7)):
+                for kind, owner in (('pilot', 2), ('set', 6), ('redo', 7), ('maker', 7)):
                     self.assertEqual((self.run / 'hatches' / f'{kind}-moon').exists(), owner < number)
                 for name, owner in (('shortlist-0', 1), ('shortlist-1', 1), ('style', 3),
-                                    ('reference', 3), ('briefs', 5), ('images', 7)):
+                                    ('reference', 3), ('briefs', 5), ('images', 7),
+                                    ('makers-call', 7), ('maker-images', 7)):
                     self.assertEqual((self.run / 'decisions' / (name + '.json')).exists(), owner < number)
+                self.assertFalse((self.run / 'decisions/image-resumes').exists())
                 self.assertFalse((self.run / 'summary.json').exists())
                 self.assertEqual(lamp_inputs.provenance(self.run), recovered)
 
@@ -1197,6 +1201,184 @@ class LampTests(unittest.TestCase):
         calls = len(self.calls())
         driver.image_review(9, 'image-review', candidates, {'moon': {}, 'medea': {}}, {})
         self.assertEqual(len(self.calls()), calls)
+
+    def test_completed_step_seven_expands_without_changing_spent_redos(self):
+        driver = self.driver()
+        new_pets = ('storybook', 'painter', 'bible-school-teacher')
+        briefs = dict.fromkeys(('medea', 'baba-yaga', 'bulat-okudzhava', *new_pets), {})
+        loop.save(self.run / 'decisions/briefs.json', {'briefs': briefs, 'style': {}, 'reference': None})
+        items = [dict(key='set-' + p, pet=p, style={}, brief={}, reference=None, redo=None) for p in briefs]
+        with patch.dict(os.environ, {'FAKE_FAIL': ','.join(new_pets),
+                                     'FAKE_REDO': 'baba-yaga,bulat-okudzhava',
+                                     'FAKE_FINAL_REJECT': 'baba-yaga'}):
+            originals = driver.hatch_many(items)
+            first = lamp_images.finish(driver, originals, briefs, {}, None, set())
+        self.assertEqual(first['baba-yaga']['status'], 'rejected')
+        self.assertEqual(first['bulat-okudzhava']['key'], 'redo-bulat-okudzhava')
+        self.assertEqual(first['painter']['status'], 'failed')
+        first_bytes = (self.run / 'decisions/images.json').read_bytes()
+        originals = driver.hatch_many(items)  # The three fresh attempts now validate.
+        candidates = {p['pet']: p for p in originals}
+        # Reproduce the old driver: expanded jury changes old redo requests; an
+        # independent new redo can finish before parallel_map reports the error.
+        with patch.dict(os.environ, {'FAKE_REDO': 'baba-yaga,bulat-okudzhava,bible-school-teacher',
+                                     'FAKE_REVIEW_REASON': 'New expanded jury reasons.'}):
+            reviews = driver.image_review(9, 'image-review', candidates, briefs, {})
+        redos = driver.redos(reviews)
+        with self.assertRaisesRegex(ValueError, 'frozen input differs'):
+            lamp_hatch.hatch(driver, 'redo-bulat-okudzhava', 'bulat-okudzhava', {}, {}, None,
+                             {'previous': candidates['bulat-okudzhava'], 'reasons': redos['bulat-okudzhava']})
+        teacher = lamp_hatch.hatch(driver, 'redo-bible-school-teacher', 'bible-school-teacher', {}, {}, None,
+                                  {'previous': candidates['bible-school-teacher'],
+                                   'reasons': redos['bible-school-teacher']})
+        self.assertEqual(teacher['status'], 'validated')
+        before = {p: p.read_bytes() for p in self.run.rglob('*') if p.is_file()}
+        listing = lamp_resume.listing(self.run)
+        self.assertEqual(listing['model_hatches'], 0)
+        self.assertEqual(listing['images']['pending'], list(new_pets))
+        self.assertEqual(listing['images']['jury_calls'], 6)
+        self.assertEqual(listing['images']['redos']['bible-school-teacher']['action'], 'keep')
+        self.assertTrue(all(p.read_bytes() == data for p, data in before.items()))
+        calls = len(self.calls())
+        result = lamp_images.finish(driver, originals, briefs, {}, None, set())
+        self.assertEqual(len(self.calls()) - calls, 6)
+        for call in self.calls()[calls:]:
+            context = json.JSONDecoder().raw_decode(call['prompt'].split('Context:\n', 1)[1])[0]
+            self.assertEqual(list(context['candidates']), ['bible-school-teacher'])
+        for pet in ('medea', 'baba-yaga', 'bulat-okudzhava'):
+            self.assertEqual(result[pet], first[pet])
+        self.assertTrue(all(result[p]['status'] == 'validated' for p in new_pets))
+        self.assertFalse((self.repo / 'factory/pets/baba-yaga').exists())
+        self.assertEqual((self.run / 'decisions/images.json').read_bytes(), first_bytes)
+        self.assertTrue(all(p.read_bytes() == data for p, data in before.items()))
+        addition = loop.load(self.run / 'decisions/image-resumes/000001.json')
+        self.assertEqual(set(addition['pets']), set(new_pets))
+        self.assertEqual(set(addition['redos']), {'bible-school-teacher'})
+        lamp_images.finish(driver, originals, briefs, {}, None, set())
+        self.assertEqual(len(self.calls()) - calls, 6)
+        # Skipping spent work must not silently accept a genuinely edited request.
+        request_path = self.run / 'hatches/redo-bulat-okudzhava/request.json'
+        changed = loop.load(request_path)
+        saved = dict(changed)
+        changed['brief'] = {'changed': True}
+        loop.save(request_path, changed)
+        with self.assertRaisesRegex(ValueError, 'frozen input differs'):
+            lamp_images.finish(driver, originals, briefs, {}, None, set())
+        loop.save(request_path, saved)
+        job_path = next(self.run.glob('jobs/009/*.json'))
+        job = loop.load(job_path)
+        job['prompt'] += '\nChanged completed input.'
+        loop.save(job_path, job)
+        with self.assertRaisesRegex(ValueError, 'job changed after completion'):
+            lamp_images.finish(driver, originals, briefs, {}, None, set())
+
+    def test_new_candidates_only_and_interrupted_publication_keep_the_decision(self):
+        driver = self.driver()
+        briefs = {'moon': {}, 'scholar': {}}
+        with patch.dict(os.environ, {'FAKE_FAIL': 'scholar', 'FAKE_REDO': 'moon', 'FAKE_FINAL_REJECT': 'moon'}):
+            originals = [lamp_hatch.hatch(driver, 'set-' + p, p, {}, {}, None, None) for p in briefs]
+            first = lamp_images.finish(driver, originals, briefs, {}, None, set())
+        originals[1] = lamp_hatch.hatch(driver, 'set-scholar', 'scholar', {}, {}, None, None)
+        calls = len(self.calls())
+        with patch.dict(os.environ, {'FAKE_REDO': 'moon,scholar'}), \
+                patch.object(lamp_hatch, 'publish', side_effect=OSError('publication interrupted')):
+            with self.assertRaisesRegex(OSError, 'publication interrupted'):
+                lamp_images.finish(driver, originals, briefs, {}, None, set())
+        self.assertEqual(len(self.calls()) - calls, 13)  # Review, one new redo, final review.
+        for call in self.calls()[calls:]:
+            if '/hatches/' in call['work']:
+                self.assertIn('/redo-scholar/', call['work'])
+            else:
+                context = json.JSONDecoder().raw_decode(call['prompt'].split('Context:\n', 1)[1])[0]
+                self.assertEqual(list(context['candidates']), ['scholar'])
+        decision = self.run / 'decisions/image-resumes/000001.json'
+        before = decision.read_bytes()
+        result = lamp_images.finish(driver, originals, briefs, {}, None, set())
+        self.assertEqual(result['moon'], first['moon'])
+        self.assertEqual(result['scholar']['status'], 'validated')
+        self.assertEqual(decision.read_bytes(), before)
+        self.assertEqual(len(self.calls()) - calls, 13)
+        self.assertTrue((self.repo / 'factory/pets/scholar/spritesheet.webp').exists())
+
+    def test_pending_review_recovers_partial_ballots_and_rejects_changed_inputs(self):
+        driver = self.driver()
+        pet = lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        driver.image_review(9, 'image-review', {'moon': pet}, {'moon': {}}, {}, seats=driver.jury(3)[:2])
+        invalid_path = next(self.run.glob('records/009/*.json'))
+        invalid = loop.load(invalid_path)
+        invalid.update(status='invalid', errors=['Terminal invalid ballot fixture.'])
+        loop.save(invalid_path, invalid)
+        before = {p: p.read_bytes() for kind in ('jobs', 'records', 'replies')
+                  for p in (self.run / kind).rglob('*.json')}
+        calls = len(self.calls())
+        reviews, sources = lamp_images.review(driver, 9, 'image-review', {'moon': pet}, {'moon': {}}, {})
+        self.assertEqual(len(reviews), 5)  # Invalid completion is kept and excluded, never called again.
+        self.assertEqual(len(sources), 6)
+        self.assertEqual(len(self.calls()) - calls, 4)
+        self.assertTrue(all(p.read_bytes() == data for p, data in before.items()))
+        with self.assertRaisesRegex(ValueError, 'frozen image input differs'):
+            lamp_images.review(driver, 9, 'image-review', {'moon': pet}, {'moon': {'changed': True}}, {})
+
+    def test_maker_commission_is_explicit_bounded_and_keeps_lamp_verdicts(self):
+        driver = self.driver()
+        ids = ('baba-yaga', 'glassblower', 'hedge-witch', 'moon')
+        briefs = dict.fromkeys(ids, {})
+        originals = driver.hatch_many([dict(key='set-' + p, pet=p, style={}, brief={}, reference=None, redo=None)
+                                       for p in ids])
+        results = {p['pet']: {**p, 'status': 'rejected', 'reasons': [{'seat': 'painter', 'why': 'Recorded defect.'}]}
+                   for p in originals}
+        loop.save(self.run / 'decisions/images.json', {'pets': results, 'reviews': {}, 'redos': {}, 'redo_reviews': {}})
+        baseline = (self.run / 'decisions/images.json').read_bytes()
+        calls = len(self.calls())
+        self.assertIsNone(lamp_maker.finish(driver, None, results, briefs, {}, None))
+        self.assertEqual(len(self.calls()), calls)
+        call_path = self.case / 'makers-call.json'
+        (self.case / 'makers-call.md').write_text('My recorded decision, outside the Lamp budget.')
+        call = {'version': 1, 'maker': 'Codex', 'statement': 'makers-call.md', 'pets': [
+            {'pet': p, 'action': 'leave' if p == 'moon' else 'attempt',
+             'reason': 'A named drawing problem.', 'instruction': 'Repair only the named defect.'} for p in ids]}
+        loop.save(call_path, call)
+        before = {p: p.read_bytes() for p in self.run.rglob('*') if p.is_file()}
+        self.assertEqual(lamp_maker.listing(self.run, call_path)['model_hatches'], 3)
+        self.assertTrue(all(p.read_bytes() == data for p, data in before.items()))
+        with patch.dict(os.environ, {'FAKE_FINAL_REJECT': 'glassblower', 'FAKE_MAKER_FAIL': 'hedge-witch'}):
+            final = lamp_maker.finish(driver, call_path, results, briefs, {}, None)
+        self.assertEqual({p: r['status'] for p, r in final.items()}, {
+            'baba-yaga': 'validated', 'glassblower': 'rejected', 'hedge-witch': 'failed', 'moon': 'left'})
+        self.assertEqual(len(self.calls()) - calls, 9)  # Three makers, six jurors.
+        for pet in ids[:3]:
+            request = loop.load(self.run / 'hatches' / ('maker-' + pet) / 'request.json')
+            self.assertEqual(request['maker']['previous'], results[pet])
+            self.assertTrue(request['maker']['validator_reports'])
+            self.assertEqual(request['maker']['authority'], 'maker')
+        provenance = loop.load(self.repo / 'factory/pets/baba-yaga/provenance.json')
+        self.assertEqual(provenance['maker_attempt_count'], 1)
+        self.assertEqual(provenance['redo_count'], 0)
+        self.assertFalse((self.repo / 'factory/pets/glassblower').exists())
+        self.assertFalse((self.repo / 'factory/pets/hedge-witch').exists())
+        self.assertEqual((self.run / 'decisions/images.json').read_bytes(), baseline)
+        self.assertEqual(lamp_maker.finish(driver, None, results, briefs, {}, None), final)
+        self.assertEqual(len(self.calls()) - calls, 9)
+        self.assertEqual(lamp_maker.listing(self.run, None)['model_hatches'], 0)
+        call['pets'][0]['instruction'] = 'A different instruction.'
+        loop.save(call_path, call)
+        with self.assertRaisesRegex(ValueError, 'frozen maker call differs'):
+            lamp_maker.finish(driver, call_path, results, briefs, {}, None)
+
+    def test_maker_call_cannot_retry_provider_refusal_or_unspent_gate_attempt(self):
+        driver = self.driver()
+        with patch.dict(os.environ, {'FAKE_REFUSE': 'moon', 'FAKE_FAIL': 'hedge-witch'}):
+            results = {p: lamp_hatch.hatch(driver, 'set-' + p, p, {}, {}, None, None)
+                       for p in ('moon', 'hedge-witch')}
+        call_path = self.case / 'makers-call.json'
+        (self.case / 'makers-call.md').write_text('One maker attempt.')
+        for pet, error in (('moon', 'provider refusal is terminal'),
+                           ('hedge-witch', 'exhausted Lamp gate budget')):
+            loop.save(call_path, {'version': 1, 'maker': 'Codex', 'statement': 'makers-call.md', 'pets': [
+                {'pet': pet, 'action': 'attempt', 'reason': 'Try again.', 'instruction': 'Repair the defect.'}]})
+            with self.assertRaisesRegex(ValueError, error):
+                lamp_maker.commission(self.run, call_path, results)
+        self.assertFalse((self.run / 'decisions/makers-call.json').exists())
 
     def test_changed_config_and_symlinks_are_rejected(self):
         self.driver()

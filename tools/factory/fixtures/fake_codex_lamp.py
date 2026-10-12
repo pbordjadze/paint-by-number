@@ -80,7 +80,8 @@ if 'status' in props:
         assert args[args.index('--image') + 1] == request['reference']
         assert "family reference is the jury's chosen pilot" in prompt
     refused = request['pet'] == os.environ.get('FAKE_REFUSE') and request['key'].startswith('set-')
-    failed = request['pet'] == os.environ.get('FAKE_FAIL') and request['key'].startswith('set-')
+    failed = (request['pet'] in os.environ.get('FAKE_FAIL', '').split(',') and request['key'].startswith('set-')
+              or request['pet'] == os.environ.get('FAKE_MAKER_FAIL') and request['key'].startswith('maker-'))
     blocker = os.environ.get('FAKE_PILOT_BLOCKER') if request['key'].startswith('pilot-') else None
     if blocker:
         if blocker == 'all':
@@ -161,9 +162,11 @@ elif 'vetoes' in props:
         if os.environ.get('FAKE_REJECT_FIRST_STYLES') and 'shortlist-0-painter-' in str(work):
             reply['flags'] = [dict(target=x, why='Synthetic technical defect.') for x in ids]
     elif 'verdicts' in props:
-        redo = 'image-review-' in str(reply_path) and os.environ.get('FAKE_REDO') in ids
-        reply['verdicts'] = [dict(target=x, verdict='redo' if redo and x == os.environ['FAKE_REDO'] else 'keep',
-                                 why='Check the attached shape.') for x in ids]
+        redos = os.environ.get('FAKE_REDO', '').split(',') if 'image-review-' in str(reply_path) else []
+        if any(stage in str(reply_path) for stage in ('redo-review-', 'maker-review-')):
+            redos = os.environ.get('FAKE_FINAL_REJECT', '').split(',')
+        reply['verdicts'] = [dict(target=x, verdict='redo' if x in redos else 'keep',
+                                 why=os.environ.get('FAKE_REVIEW_REASON', 'Check the attached shape.')) for x in ids]
     elif os.environ.get('FAKE_BRIEF_REPAIR') in ids:
         reply['flags'] = [dict(target=os.environ['FAKE_BRIEF_REPAIR'], why='Clarify the attached prop boundary.')]
 else:

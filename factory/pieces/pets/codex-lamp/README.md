@@ -44,6 +44,17 @@ Paths written as `pieces/…` in older factory documents mean `factory/pieces/�
    flag or veto requests one redo. A final jury checks those replacements; a second rejection
    withholds the pet instead of triggering another generation. Only validated, kept pets copy
    into the repository. If no pilot style survives, the run stops with the evidence preserved.
+   Completed image decisions stay immutable. A later resume reviews only newly validated pets,
+   reuses their existing ballots when available, and appends its decisions. Earlier redos and
+   rejections cannot receive another Lamp attempt.
+
+The [maker's call](makers-call.md) is a separate F42 decision: one focused attempt each for
+Baba Yaga, Glassblower and Hedge Witch; leave Moon withheld. Passing
+`--makers-call factory/pieces/pets/codex-lamp/makers-call.json` explicitly records that commission.
+It changes no Lamp rule or verdict. These attempts still require the unchanged validators and
+a separate image jury, with no further jury redo. The commission, prior evidence and statement
+hash travel into each new package's provenance. An ordinary resume grants no maker attempt;
+an already recorded commission resumes without repeating the flag.
 
 Every jury contains Originality and the Painter, who explicitly guards function at 192 × 208
 in all nine animation states. Four other seats rotate deterministically through the active
@@ -157,7 +168,7 @@ records/style-policy/001/         original blocked style decision before the exp
 rejections/NNN/<job>-N.json       invalid reply and validation reasons
 costs/NNN/<job>-N.json            measured tokens/time; unknown measurements remain null
 dispatch/<unique>/…              every invocation's schema, reply, JSONL and stderr
-hatches/<pilot|set|redo>-…/
+hatches/<pilot|set|redo|maker>-…/
   request.json                   brief, style, avoidances, reference hash, readability notes, redo reasons
   active-attempt.json            current attempt, stable across an interrupted migration
   attempt-…/                     isolated worker directory, prompts, command and process log
@@ -169,8 +180,12 @@ hatches/<pilot|set|redo>-…/
     gate/                        independently executed validator commands/logs/reports/contact
     package/                     validated atlas, contact, pet.json and provenance.json
   result.json                    validated/failed/refused; package hashes or concrete failure
-decisions/                       freshly recomputed scores, selected style, briefs, image verdicts
-summary.json                     final status of every pet (complete may include failed/refused)
+decisions/                       scores, selected style and briefs
+decisions/images.json            immutable first completed image pass
+decisions/image-resumes/NNN.json  appended outcomes for previously unsettled pets, with ballot sources
+decisions/makers-call.json       explicit maker commission, statement, reasons and prior gate evidence
+decisions/maker-images.json      separate maker jury and outcomes; no change to Lamp verdicts
+summary.json                     Lamp pet statuses plus separate makers_call outcomes when commissioned
 replay/
   config.json, sources.json       frozen historical prompts, briefs and Claude replies
   inputs/<piece>/brief.md         read-only brief at a resolvable local path

@@ -353,7 +353,9 @@ Dispatched text prompts, replies, replays and comparison files stay intact on re
 
 `python3 -m factory.taste.codex_lamp list-resume <run>` lists known hatches and approved
 briefs with their next action and reason. It is strictly read-only: no lock file, input/rule
-initialization, skill discovery or model calls. Later jury redos depend on future reviews.
+initialization, skill discovery or model calls. Its `images` section also lists settled pets,
+pending candidates, source ballots, known redos, and missing jury calls. Later jury redos
+depend on future reviews.
 The listing and actual hatch dispatch use the same eligibility checks. A terminal provider
 usage/quota, rate/capacity or server error must appear in the attempt's JSONL events; a bare
 exit code or a worker quoting an error is insufficient. A complete event stream with no work
@@ -368,10 +370,35 @@ The first `hatches/<key>/result.json` stays unchanged. Later outcomes append to
 Each new attempt freezes `driver-request.json`, including the previous failure, provider
 evidence and fresh-attempt budget. This is separate from worker-owned reports. A provider
 stop before work does not consume the one fresh attempt, even when it interrupts that retry.
-An expanded image-review set gets distinct jobs, preserving any earlier jury jobs/replies.
+Completed step-7 decisions stay frozen in `decisions/images.json`; later outcomes append to
+`decisions/image-resumes/000001.json`, etc. Only newly validated, unsettled pets enter another
+review. A completed redo or rejection is never re-hatched. Existing completed ballots are
+reused per pet and seat, including ballots from a legacy expanded jury interrupted before its
+decision. Invalid ballots stay invalid and spend no new calls. The new decision links its
+source records; the original full ballots remain untouched. Spent redo requests are still
+checked against their original reasons, brief, style and reference; completed package hashes
+and job hashes are still checked. Publication can resume after the decision is recorded.
 Oversize packages with a validated atlas are repackaged locally in a new attempt: rerun the
 bundled gates on the unchanged atlas and shrink only the lossy contact preview as needed.
 Native contacts and previews stay available; the 2,000,000-byte package limit is unchanged.
+
+A maker can explicitly commission one attempt beyond an exhausted Lamp budget with
+`--makers-call <decisions.json>` on `run` or preview it with the same option on `list-resume`.
+F42's [maker statement](../pieces/pets/codex-lamp/makers-call.md) and
+[commission](../pieces/pets/codex-lamp/makers-call.json) choose attempts for Baba Yaga,
+Glassblower and Hedge Witch, and leave Moon withheld. The flag is optional; ordinary Lamp
+resumes grant no additional attempts. Once recorded, a commission resumes without the flag.
+Its JSON names the maker, a sibling Markdown statement, and each pet's `attempt` or `leave`,
+reason and instruction. The driver freezes the full statement and its hash, the decisions,
+prior Lamp outcomes, jury reasons and validator reports in `decisions/makers-call.json`.
+Changing it is an error. Provider refusals cannot be commissioned again.
+
+Maker workers use separate `maker-<pet>` hatches, keep the same family reference, briefs,
+validators and row-repair limits, and get no fresh gate retry. A separate `maker-review` jury
+can withhold them but cannot order another hatch. `decisions/maker-images.json` records their
+outcomes; `summary.json` keeps Lamp statuses in `pets` and reports these separately in
+`makers_call`. Accepted packages include the maker decision and evidence in provenance.
+All work stays local, and the original Lamp verdicts stay unchanged.
 
 Decision rules v2 treat step 3's flags as drawing notes; only vetoes exclude a style there.
 Every later hatch/redo receives the winning flags, attributed to their jurors, with instructions

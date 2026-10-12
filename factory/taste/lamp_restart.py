@@ -4,9 +4,9 @@ from datetime import datetime, timezone
 from . import loop, paths
 from .codex_lamp import digest, frozen
 
-HATCH_STEPS = {'pilot': 2, 'set': 6, 'redo': 7}
+HATCH_STEPS = {'pilot': 2, 'set': 6, 'redo': 7, 'maker': 7}
 DECISION_STEPS = {'shortlist-0': 1, 'shortlist-1': 1, 'style': 3, 'reference': 3,
-                  'briefs': 5, 'images': 7}
+                  'briefs': 5, 'images': 7, 'makers-call': 7, 'maker-images': 7}
 
 
 def prepare(run, data, number, reason, after):
@@ -40,6 +40,8 @@ def prepare(run, data, number, reason, after):
         path = run / 'decisions' / (name + '.json')
         if owner >= number and path.exists():
             selected.add(path.relative_to(run).as_posix())
+    if number <= 7 and (run / 'decisions/image-resumes').exists():
+        selected.add('decisions/image-resumes')
     for name in ('summary.json', 'comparison.json', 'comparison.md'):
         if (run / name).exists():
             selected.add(name)

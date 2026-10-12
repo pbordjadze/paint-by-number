@@ -35,7 +35,7 @@ def provenance(run):
         identity = job.get('inputs_sha256', data['steps'].get(key, sha))
         if data['steps'].setdefault(key, identity) != identity:
             raise ValueError('different inputs within Lamp step ' + key)
-    for prefix, key in (('pilot-', '2'), ('set-', '6'), ('redo-', '7')):
+    for prefix, key in (('pilot-', '2'), ('set-', '6'), ('redo-', '7'), ('maker-', '7')):
         if any(run.glob('hatches/' + prefix + '*/request.json')):
             data['steps'].setdefault(key, sha)
     return data

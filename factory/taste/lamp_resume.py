@@ -190,15 +190,37 @@ def decision(base):
     return info
 
 
-def listing(run):
+def listing(run, makers_call=None):
     run = Path(run).resolve()
     if not paths.contained(run, 'run.json').is_file():
         raise ValueError('list-resume requires an existing run.json')
     keys = {p.name for p in paths.contained(run, 'hatches').glob('*') if p.is_dir()}
     briefs = loop.load(paths.contained(run, 'decisions/briefs.json'), {})
     keys.update('set-' + pet for pet in briefs.get('briefs', {}))
-    hatches = [decision(paths.contained(run, 'hatches', paths.slug(key))) for key in sorted(keys)]
+    from .codex_lamp import Lamp
+    from . import lamp_images, lamp_maker
+    config = loop.load(paths.contained(run, 'run.json'))
+    # Jury rotation needs only the frozen panel; constructing Lamp would write.
+    inputs = loop.load(paths.contained(run, 'inputs.json'))
+    panel = object.__new__(Lamp)
+    panel.seats = {g['id']: g for g in inputs['guardians']}
+    images = lamp_images.listing(run, panel.jury(3), config['model'])
+    _, settled = lamp_images.state(run)
+    maker_results = loop.load(paths.contained(run, 'decisions/maker-images.json'), {}).get('pets', {})
+    keys.update('redo-' + pet for pet in images.get('redos', {}))
+    hatches = []
+    for key in sorted(keys):
+        info = decision(paths.contained(run, 'hatches', paths.slug(key)))
+        pet = key.split('-', 1)[1]
+        if key.startswith(('set-', 'redo-')) and pet in settled:
+            info.update(action='keep', model_call=False,
+                        reason='completed image decision retained: ' + str(settled[pet][0]))
+        if key.startswith('maker-') and pet in maker_results:
+            info.update(action='keep', model_call=False, reason='completed maker decision retained')
+        hatches.append(info)
+    maker = lamp_maker.listing(run, makers_call)
     return {'status': 'list-resume', 'run': str(run), 'hatches': hatches,
             'model_hatches': sum(h['model_call'] for h in hatches),
             'local_repackages': sum(h['action'] == 'repackage' for h in hatches),
-            'scope': 'Known hatches and approved briefs; later jury redos depend on future reviews.'}
+            'images': images, 'makers_call': maker,
+            'scope': 'Known hatches, pending image juries and explicit maker decisions; future verdicts may request redos.'}
