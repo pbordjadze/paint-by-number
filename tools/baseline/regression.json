@@ -16,7 +16,7 @@
       "p95DeltaE": 0.09569522,
       "regions": 460,
       "regionsUnderRadius3": 2,
-      "templateSHA1": "5d10fea348c206dacb54a5aa5a57e8df3892d4e1",
+      "templateSHA1": "477ffb32618febaab36c2fc2a2b16aeb3f462aff",
       "totalMs": 764.0
     },
     "book-c24-d0.5/espresso": {
@@ -34,7 +34,7 @@
       "p95DeltaE": 0.10488898,
       "regions": 172,
       "regionsUnderRadius3": 1,
-      "templateSHA1": "916c9fae0c3ac3663561ae8d80ee6332f67ce094",
+      "templateSHA1": "1f718b5bdfc1bf765878befb82c7fd77617d0986",
       "totalMs": 490.6
     },
     "book-c24-d0.5/hibiscus": {
@@ -52,7 +52,7 @@
       "p95DeltaE": 0.13929337,
       "regions": 517,
       "regionsUnderRadius3": 1,
-      "templateSHA1": "8ab8dcff80bdcf47779279634f1478ee705bbbb4",
+      "templateSHA1": "697ab327a33e4abd1a3bd7a54b5059910a9c35d5",
       "totalMs": 730.0
     },
     "book-c24-d0.5/lighthouse": {
@@ -70,7 +70,7 @@
       "p95DeltaE": 0.15166363,
       "regions": 423,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "9261593f855dae0bc34767333ea9a0b53c112561",
+      "templateSHA1": "6ad7d63d9fa3d4c31c002d4dc70b0d6841f45697",
       "totalMs": 755.1
     },
     "book-c24-d0.5/parrots": {
@@ -88,7 +88,7 @@
       "p95DeltaE": 0.08438272,
       "regions": 208,
       "regionsUnderRadius3": 1,
-      "templateSHA1": "2c5b8f92d9bffb3b56046aae5f5058b6fb0e0cec",
+      "templateSHA1": "6744416be85d469878dabf41fd3a1c2491ed1fbb",
       "totalMs": 682.8
     },
     "book-c24-d0.5/regatta": {
@@ -106,7 +106,7 @@
       "p95DeltaE": 0.09053155,
       "regions": 241,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "7b8655d0c9a9d46d03dde7254b6f123ef70331f1",
+      "templateSHA1": "5dfa93a64cd8023cd0465733bb3c442447cda8af",
       "totalMs": 819.6
     },
     "c12-d0/barn": {
@@ -119,7 +119,7 @@
       "p95DeltaE": 0.096754365,
       "regions": 138,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "4e5d06dd87511d3ff136a2904fe7ca5f95af1d98",
+      "templateSHA1": "543a1af99e12b7d0cf62c989742a182cf8728eca",
       "totalMs": 312.8
     },
     "c12-d0/espresso": {
@@ -132,7 +132,7 @@
       "p95DeltaE": 0.108587176,
       "regions": 91,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "afbf86ed93d1f08adc689b2d3f3c43948079c577",
+      "templateSHA1": "2bb733e766b9f79f22736721bb4ab8f8ff0cd933",
       "totalMs": 263.8
     },
     "c12-d0/hibiscus": {
@@ -145,7 +145,7 @@
       "p95DeltaE": 0.1258677,
       "regions": 191,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "2ebae0b2793cb774b228ab2ae2cc2d60412672d9",
+      "templateSHA1": "d739ce497918eba52302616573306082fd1bf464",
       "totalMs": 388.2
     },
     "c12-d0/lighthouse": {
@@ -158,7 +158,7 @@
       "p95DeltaE": 0.13760047,
       "regions": 168,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "326116724342b0eec877e2e97accfc4bd9d54484",
+      "templateSHA1": "f72b38531475f616d2178275cb42306277f31987",
       "totalMs": 399.2
     },
     "c12-d0/parrots": {
@@ -171,7 +171,7 @@
       "p95DeltaE": 0.093677826,
       "regions": 86,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "1ac0dc7a1be9b9d139ab96ae27df9a87da7c20b5",
+      "templateSHA1": "ef21a2baedbaf116b7dd18499f3413a9189fb2bc",
       "totalMs": 342.8
     },
     "c12-d0/regatta": {
@@ -184,85 +184,85 @@
       "p95DeltaE": 0.09774041,
       "regions": 110,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "fa1fa0d4960d70ca615567940d31c3ca5ebda3f3",
+      "templateSHA1": "6f9c1f7b0f87ba67ac06f9f1e7c55c1aa5d435f1",
       "totalMs": 363.3
     },
     "c150-d1/barn": {
-      "bandRings": 29,
+      "bandRings": 39,
       "colors": 140,
-      "encodedBytes": 2498304,
-      "meanDeltaE": 0.029443257,
+      "encodedBytes": 2692122,
+      "meanDeltaE": 0.028350404,
       "minInscribedRadius": 2.9777052,
-      "minPaletteDistance": 0.020202294,
-      "p95DeltaE": 0.08125467,
-      "regions": 839,
+      "minPaletteDistance": 0.020214863,
+      "p95DeltaE": 0.08014379,
+      "regions": 966,
       "regionsUnderRadius3": 1,
-      "templateSHA1": "9007f631a745ca97aa4e5a171deb01286dc67bda",
+      "templateSHA1": "d80dfb9a8df9d2ad8886d306a66e21fc643e6d50",
       "totalMs": 723.8
     },
     "c150-d1/espresso": {
-      "bandRings": 44,
-      "colors": 98,
-      "encodedBytes": 1234976,
-      "meanDeltaE": 0.028786924,
-      "minInscribedRadius": 2.5894535,
-      "minPaletteDistance": 0.02020219,
-      "p95DeltaE": 0.0915167,
-      "regions": 335,
-      "regionsUnderRadius3": 6,
-      "templateSHA1": "48a93d32879db2e9a3318736af6ad4129c8e3523",
+      "bandRings": 58,
+      "colors": 102,
+      "encodedBytes": 1443934,
+      "meanDeltaE": 0.027087333,
+      "minInscribedRadius": 2.7372103,
+      "minPaletteDistance": 0.02020435,
+      "p95DeltaE": 0.089220054,
+      "regions": 431,
+      "regionsUnderRadius3": 4,
+      "templateSHA1": "7b1db44e4ace063f4e13cf63ddc87abfec2275ee",
       "totalMs": 481.5
     },
     "c150-d1/hibiscus": {
-      "bandRings": 87,
-      "colors": 127,
-      "encodedBytes": 1706163,
-      "meanDeltaE": 0.030558003,
+      "bandRings": 119,
+      "colors": 126,
+      "encodedBytes": 2030032,
+      "meanDeltaE": 0.029169066,
       "minInscribedRadius": 2.816303,
-      "minPaletteDistance": 0.020201065,
-      "p95DeltaE": 0.112938024,
-      "regions": 695,
+      "minPaletteDistance": 0.020208107,
+      "p95DeltaE": 0.11018912,
+      "regions": 807,
       "regionsUnderRadius3": 3,
-      "templateSHA1": "123d78f71de4df93f98f85b0734c3a81ef056457",
+      "templateSHA1": "9295b628520895346549696000e57893546c15ef",
       "totalMs": 764.5
     },
     "c150-d1/lighthouse": {
-      "bandRings": 25,
-      "colors": 127,
-      "encodedBytes": 2122621,
-      "meanDeltaE": 0.030647231,
+      "bandRings": 47,
+      "colors": 131,
+      "encodedBytes": 2410798,
+      "meanDeltaE": 0.02960429,
       "minInscribedRadius": 2.7062802,
-      "minPaletteDistance": 0.02020031,
-      "p95DeltaE": 0.1081904,
-      "regions": 804,
+      "minPaletteDistance": 0.020203,
+      "p95DeltaE": 0.10708173,
+      "regions": 897,
       "regionsUnderRadius3": 3,
-      "templateSHA1": "bc1371991177eb207f1cbe85605939fd426eb27e",
+      "templateSHA1": "4ca896833b9247832b67f0c6af7844eab10880db",
       "totalMs": 841.2
     },
     "c150-d1/parrots": {
-      "bandRings": 168,
-      "colors": 128,
-      "encodedBytes": 1610758,
-      "meanDeltaE": 0.02572981,
+      "bandRings": 224,
+      "colors": 130,
+      "encodedBytes": 1847468,
+      "meanDeltaE": 0.023492796,
       "minInscribedRadius": 2.5958626,
-      "minPaletteDistance": 0.020220203,
-      "p95DeltaE": 0.07080057,
-      "regions": 381,
+      "minPaletteDistance": 0.020208111,
+      "p95DeltaE": 0.06748593,
+      "regions": 498,
       "regionsUnderRadius3": 1,
-      "templateSHA1": "1e35d2dd330cf873e9d012daeb6e37cb8a72dbf9",
+      "templateSHA1": "b3039f6139cc7720d96b6f158efd4a617ec0268a",
       "totalMs": 703.6
     },
     "c150-d1/regatta": {
-      "bandRings": 33,
+      "bandRings": 60,
       "colors": 98,
-      "encodedBytes": 1447330,
-      "meanDeltaE": 0.023416447,
+      "encodedBytes": 1791248,
+      "meanDeltaE": 0.021227224,
       "minInscribedRadius": 2.6060672,
-      "minPaletteDistance": 0.020200755,
-      "p95DeltaE": 0.076419994,
-      "regions": 444,
+      "minPaletteDistance": 0.020206667,
+      "p95DeltaE": 0.07567781,
+      "regions": 550,
       "regionsUnderRadius3": 2,
-      "templateSHA1": "4a98d51cdbad5ac18573d7e0d37d4939e44bf088",
+      "templateSHA1": "ecbfabfa05d92b88a815bfe6d0c282ca039d3d83",
       "totalMs": 670.9
     },
     "c24-d0.5/barn": {
@@ -275,7 +275,7 @@
       "p95DeltaE": 0.08644577,
       "regions": 391,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "d5e147ca29a4fc011b821e847351afa0862ae1b0",
+      "templateSHA1": "bfdd63e2b8d54fe36d5b19a0d45d4570fcd5dab0",
       "totalMs": 437.4
     },
     "c24-d0.5/espresso": {
@@ -288,7 +288,7 @@
       "p95DeltaE": 0.09080619,
       "regions": 184,
       "regionsUnderRadius3": 4,
-      "templateSHA1": "56f4d30119d7154952fe367f367fc79117029bd2",
+      "templateSHA1": "94699cf42917eab6295d480d5768b2dfddf12ee1",
       "totalMs": 288.2
     },
     "c24-d0.5/hibiscus": {
@@ -301,7 +301,7 @@
       "p95DeltaE": 0.107338026,
       "regions": 467,
       "regionsUnderRadius3": 4,
-      "templateSHA1": "dfb209c97977ce13ec46cdaf30763ca74488642e",
+      "templateSHA1": "80c97f3d52ee5925ea9ba3707ff77049ef16ebc5",
       "totalMs": 455.6
     },
     "c24-d0.5/lighthouse": {
@@ -314,7 +314,7 @@
       "p95DeltaE": 0.109414384,
       "regions": 563,
       "regionsUnderRadius3": 2,
-      "templateSHA1": "c7535bf0442cfd3ee33ee2111fb5ff3ed64c138d",
+      "templateSHA1": "feba7e302237b558032b5777f0dc3f52cfedea41",
       "totalMs": 453.3
     },
     "c24-d0.5/parrots": {
@@ -327,7 +327,7 @@
       "p95DeltaE": 0.07665925,
       "regions": 202,
       "regionsUnderRadius3": 3,
-      "templateSHA1": "ac3f06c821b6eb7e6264b6e14b51a1072c6010fb",
+      "templateSHA1": "53b429f801cc8ab903610023665ff2d62f98f5c3",
       "totalMs": 407.5
     },
     "c24-d0.5/regatta": {
@@ -340,7 +340,7 @@
       "p95DeltaE": 0.07825873,
       "regions": 239,
       "regionsUnderRadius3": 0,
-      "templateSHA1": "64ba26dc8c5f734b70bc66cbe3af192c069345cb",
+      "templateSHA1": "2bb931273346f5f8946203168c3c72a916ee456b",
       "totalMs": 451.2
     }
   },
