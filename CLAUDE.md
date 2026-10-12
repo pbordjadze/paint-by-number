@@ -89,6 +89,8 @@ before planning app work).
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
   per-agent reports are not committed (they live on their branch and in commit messages); a
   measurement the code relies on goes into its feature's doc or the constant's doc comment.
+  `docs/ideas.md` is the exception: Paul's product ideas in his words, not plans or specs; nothing
+  in it ships or goes into the Marginarium until he says so, and its wording stays his.
 - `marginarium/`: the public preview of the Marginarium, the app's storybook (one passage per
   chapter, quoted verbatim from the chapters, and its images); the README links it.
 - `ACKNOWLEDGEMENTS.md`: credits and license texts (also shown in the app). Tags
