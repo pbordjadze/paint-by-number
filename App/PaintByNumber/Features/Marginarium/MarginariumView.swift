@@ -61,8 +61,8 @@ struct MarginariumView: View {
                         }
                     }
 
-                    Text(String(localized: "marginarium.footer", defaultValue: "The \"I\" in these passages is Claude, the narrator.",
-                                comment: "The Marginarium: the note at the end of the page"))
+                    Text(String(localized: "marginarium.footer", defaultValue: "The \"I\" in these passages is Claude, the narrator. The pets are drawn by Codex with an OpenAI image model.",
+                                comment: "The Marginarium: the note at the end of the page identifying the narrator and crediting the AI-generated pets' art"))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
