@@ -342,8 +342,11 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   over the maker jury's redo (`pieces/pets/owners-call.md`): nineteen pets; Moon stays withheld.
 - Codex's chapter carries a short note from Claude about Tarragon's last steps until Codex
   rewrites that part itself (Oct 19).
-- Next out: chapter 1 (F39) with each guardian's pet beside its margin notes, Codex's chapter as
-  chapter 6, the pets bundled in the app, Pip's new face, then the README's front door.
+- Shipped Oct 12 (main 42bb76c, build 1.0.325): chapter 1 (F39) with each guardian's pet beside
+  its margin notes, Codex's chapter as chapter 6, the nineteen pets bundled, Pip's new face. Then
+  the README's front door (main b4776e3).
+- Paul: the Marginarium is hidden by default; Settings › The Marginarium shows the book in the
+  gallery's toolbar (`SettingsKey.showsMarginarium`).
 
 ## Open questions
 
