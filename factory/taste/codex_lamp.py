@@ -195,6 +195,9 @@ class Lamp:
             raise ValueError(f'run work must be under {WORK}')
         from .lamp_hatch import find_skill, skill_hashes
         existing = loop.load(paths.contained(run, 'run.json'))
+        from . import lamp_rules
+        lamp_rules.initialize(run, new=existing is None)
+        self.dry_resume = False
         config = {'version': 1, 'model': model, 'compare': compare, 'effort': effort,
                   'skill_dir': str(find_skill(skill_dir or (existing or {}).get('skill_dir')))}
         self.config = frozen(paths.contained(run, 'run.json'), config)
@@ -249,6 +252,10 @@ class Lamp:
                 for job in seat_jobs:
                     job['prompt'] = next(iter(saved_prompts))
             jobs.extend(seat_jobs)
+        if self.dry_resume:
+            for job in jobs:
+                if not paths.job_path(self.run, job, 'records').exists():
+                    raise ValueError(f'dry resume needs a completed job: {job["id"]}')
         records = parallel_map(lambda job: execute(self.run, job,
             lambda reply: self.check(job['guardian'], reply, stage, context, inputs)), jobs, self.parallel)
         primary = {r['guardian']: r['reply'] for r in records
@@ -283,18 +290,11 @@ class Lamp:
                     raise ValueError(f'{seat}: image review must cover every candidate once')
 
     def tally(self, name, candidates, votes, count):
-        scores = dict.fromkeys(candidates, 0)
-        excluded = set()
-        for seat, reply in votes.items():
-            excluded.update(v['target'] for v in reply['vetoes'])
-            excluded.update(v['target'] for v in reply['flags'])
-            if seat != 'originality':
-                for place, target in enumerate(reply['ranking']):
-                    scores[target] += len(candidates) - place - 1
-        order = sorted((i for i in candidates if i not in excluded), key=lambda i: (-scores[i], i)) if votes else []
-        record = {'scores': scores, 'excluded': sorted(excluded), 'selected': order[:count], 'votes': votes}
+        from . import lamp_rules
+        record = lamp_rules.tally(candidates, votes, count,
+                                 style_rules=lamp_rules.for_style(self.run) if name == 'style' else None)
         loop.save(paths.contained(self.run, 'decisions', name + '.json'), record)
-        return order[:count]
+        return record['selected']
 
     def hatch_many(self, items):
         from .lamp_hatch import hatch
@@ -303,7 +303,8 @@ class Lamp:
             bind_step(self.run, {'pilot': '2', 'set': '6', 'redo': '7'}[kind])
         return parallel_map(lambda item: hatch(self, **item), items, self.image_workers)
 
-    def run_plan(self):
+    def run_plan(self, *, dry_resume=False):
+        self.dry_resume = dry_resume
         print('1/7 Style proposals and shortlist', flush=True)
         proposals = [g for g in self.seats if g != 'originality']
         previous = None
@@ -349,8 +350,10 @@ class Lamp:
             'style shared by the animal and object. Rank all viable styles; Originality ranks none. '
             'For each style nominate its best pilot as the fixed family reference in reference_pilots. '
             'Originality returns null for each reference nomination and never votes on taste. '
+            'Only charter vetoes exclude a style at this step when the frozen rules use drawing notes. '
+            'Function flags become readability notes for subsequent hatches under that policy. '
             'Judge identity, gait, all nine rows and sixteen look directions. Preview paths are available to read.',
-            {'candidates': viable, 'pilots': pilots}, rule, images=images)
+            {'candidates': viable, 'pilots': pilots, 'decision_rules': self.style_rules()}, rule, images=images)
         chosen = self.tally('style', viable, votes, 1)
         if not chosen:
             raise ValueError('image jury rejected every pilot style')
@@ -362,8 +365,16 @@ class Lamp:
             raise ValueError('image jury supplied no reference pilot votes')
         reference = next(p['contact'] for p in pilots if p['key'] == selected_pilots[0])
         print('4/7 Twenty guardian briefs', flush=True)
+        from .lamp_rules import drawing_notes
+        notes = drawing_notes(self.run)
+        if dry_resume:
+            return {'status': 'dry-resume', 'next_step': 4, 'selected': chosen,
+                    'reference': reference, 'readability_notes': notes}
         contexts = {seat: {'seed': self.inputs['seeds'][seat], 'style': style,
                           'do_not_resemble': self.inputs['avoid'][seat]} for seat in self.seats}
+        if notes:
+            for context in contexts.values():
+                context['readability_notes'] = notes
         brief_task = ('Draft your own pet: brief 150–300 words, pet_notes 50–80 words of appearance, '
                       'plus one sentence for each of the nine rows. Include appearance, personality, '
                       'physical expression, emotional range, signature behavior, boundaries and every '
@@ -425,6 +436,10 @@ class Lamp:
         loop.save(paths.contained(self.run, 'summary.json'), summary)
         return summary
 
+    def style_rules(self):
+        from .lamp_rules import for_style
+        return for_style(self.run)['steps']['3']
+
     def image_review(self, number, stage, candidates, briefs, style):
         if not candidates:
             return {}
@@ -461,6 +476,8 @@ def main():
     run.add_argument('--parallel', type=int, default=4)
     run.add_argument('--image-workers', type=int, default=3)
     run.add_argument('--skill-dir', type=Path, help='installed create-pet skill directory (auto-discovered)')
+    run.add_argument('--dry-resume', action='store_true',
+                     help='use completed records only and stop before step 4; never call a model')
     replay = commands.add_parser('replay', help='re-pose recorded main-round prompts unchanged')
     replay.add_argument('run_dir', type=Path)
     replay.add_argument('--pieces', default='chapter-6,renumber,front-door')
@@ -474,6 +491,9 @@ def main():
     refresh.add_argument('--restart-step', type=int, choices=range(1, 8),
                          help='supersede this plan step and all later work (1–7)')
     refresh.add_argument('--reason', default='Refresh guardian names and charters from factory/GUARDIANS.md.')
+    retally = commands.add_parser('retally-style', help='treat blocked legacy step-3 flags as drawing notes, without calls')
+    retally.add_argument('run_dir', type=Path)
+    retally.add_argument('--reason', required=True)
     args = parser.parse_args()
     if hasattr(args, 'parallel') and args.parallel < 1:
         parser.error('--parallel must be positive')
@@ -483,13 +503,16 @@ def main():
         with locked(args.run_dir) as directory:
             if args.command == 'run':
                 result = Lamp(directory, args.model, args.compare, args.effort,
-                              args.parallel, args.image_workers, args.skill_dir).run_plan()
+                              args.parallel, args.image_workers, args.skill_dir).run_plan(dry_resume=args.dry_resume)
             elif args.command == 'replay':
                 from .lamp_compare import replay_run
                 result = replay_run(directory, args.pieces.split(','), args.models.split(','), args.effort, args.parallel)
             elif args.command == 'refresh-inputs':
                 from .lamp_inputs import refresh
                 result = refresh(directory, args.reason, args.restart_step)
+            elif args.command == 'retally-style':
+                from .lamp_rules import retally_style
+                result = retally_style(directory, args.reason)
             else:
                 from .lamp_compare import compare_run
                 result = compare_run(directory)

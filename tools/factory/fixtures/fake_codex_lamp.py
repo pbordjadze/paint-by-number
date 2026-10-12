@@ -140,6 +140,8 @@ elif 'vetoes' in props:
         reply['ranking'] = [] if originality else (list(reversed(ids)) if model == 'comparison-test' else ids)
         if 'reference_pilots' in props:
             reply['reference_pilots'] = {sid: None if originality else f'pilot-{sid}-bulat-okudzhava' for sid in ids}
+            if os.environ.get('FAKE_STYLE_FLAGS') and (originality or 'style-decision-painter-' in str(work)):
+                reply['flags'] = [dict(target=x, why='Waiting, work and review resemble idle; drawing note only.') for x in ids]
         if os.environ.get('FAKE_REJECT_FIRST_STYLES') and 'shortlist-0-painter-' in str(work):
             reply['flags'] = [dict(target=x, why='Synthetic technical defect.') for x in ids]
     elif 'verdicts' in props:

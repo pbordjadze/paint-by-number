@@ -349,6 +349,17 @@ failed solely on the old numeric jump-lift gate. Each gets one migration attempt
 failure, art and logs. Genuine validation failures and provider refusals remain failures.
 Dispatched text prompts, replies, replays and comparison files stay intact on resume.
 
+Decision rules v2 treat step 3's flags as drawing notes; only vetoes exclude a style there.
+Every later hatch/redo receives the winning flags, attributed to their jurors, with instructions
+to separate waiting, work and review from idle at 192 × 208; package provenance keeps the notes.
+Existing runs retain v1 semantics unless explicitly revised with
+`python3 -m factory.taste.codex_lamp retally-style <run> --reason '…'`. This reuses completed
+ballots without calls and only accepts a blocked step 3 with no later work. The original rules
+and decision remain recorded. Resume with the original `run` options plus `--dry-resume` to
+verify the selection and notes at step 4 without dispatching anything. See the
+[decision records](../pieces/pets/codex-lamp/README.md#records-under-the-chosen-run-directory)
+for policy provenance and recovery. Shortlist, set-review and final-review behavior is unchanged.
+
 Without repairs, the pet run makes **138 driver-launched `codex exec` calls**: 63 primary text/image
 jury seats, 51 comparison text seats, and 24 hatch workers (four pilots plus twenty final pets).
 An optional second style round adds 50; each flagged brief adds two; each pet redo adds one,

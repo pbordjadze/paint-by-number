@@ -151,6 +151,11 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
     request = dict(key=key, pet=pet, model=lamp.model, effort=lamp.effort, style=style,
                    brief=brief, reference=reference,
                    reference_sha256=digest(Path(reference).read_bytes()) if reference else None, redo=redo)
+    if not key.startswith('pilot-') and (lamp.run / 'decisions/style.json').exists():
+        from .lamp_rules import drawing_notes
+        notes = drawing_notes(lamp.run)
+        if notes:
+            request['readability_notes'] = notes
     frozen(paths.contained(base, 'request.json'), request)
     target = paths.contained(base, 'result.json')
     previous = None
@@ -164,6 +169,8 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
         if not retryable_pilot(record):
             return record
         previous = record
+    if lamp.dry_resume:
+        raise ValueError(f'dry resume needs a completed hatch: {key}')
     record = dict(key=key, pet=pet, model=lamp.model, effort=lamp.effort, status='failed',
                   worker_policy=WORKER_POLICY, motion_policy=MOTION_POLICY)
     if previous:
@@ -257,6 +264,8 @@ Request:
         prompt += (f'\nPrevious attempt evidence: {old_work}. Preserve those files. Reuse suitable '
                    'source art in this new attempt and finish the required pipeline. Previous failure: '
                    + previous['reason'] + '\n')
+    if 'readability_notes' in request:
+        prompt += '\n' + request['readability_notes']['instruction'] + '\n'
     try:
         reply, errors = worker_reply(lamp, work, prompt, reference)
         if errors:
