@@ -64,6 +64,8 @@ final class Library {
     }
 
     @ObservationIgnored let store: ArtworkStore
+    /// The create flow's unfinished painting, kept in a folder of the store's root.
+    @ObservationIgnored let drafts: Drafts
     @ObservationIgnored private var writes: [UUID: Task<Bool, Never>] = [:]
     @ObservationIgnored private var purge: Task<Void, Never>?
     /// The newest progress submitted per artwork, kept until a write of exactly that
@@ -90,6 +92,7 @@ final class Library {
 
     init(store: ArtworkStore) {
         self.store = store
+        drafts = Drafts(store: DraftStore(root: store.root.appending(path: "Drafts", directoryHint: .isDirectory)))
         store.purgeStaging()
         store.purgeTrash()
         artworks = store.loadAll().sorted(by: Self.newestFirst)

@@ -54,7 +54,8 @@ synchronized folder would bundle it into the app.
 - `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`,
   `PreviewStyle`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
-  `ArtworkFactory` (photo → template), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
+  `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
+  see Create flow), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
   `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
   `Background`, `Log` (every logger; CI's `*-app.log`); DEBUG `DemoTemplateCache`.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
@@ -65,7 +66,7 @@ synchronized folder would bundle it into the app.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineGeometry`); `Gallery/` (`AppShellView` the shell, `GalleryView`, `ArtworkPaintingView`
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineGeometry`); `Gallery/` (`AppShellView` the shell, `GalleryView`, `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
@@ -264,7 +265,8 @@ Conventions).
   (`Application Support/Artworks/<uuid>/`: `meta.json`, LZFSE `template.pbnt`, `progress.bin`,
   `source.jpg`, `thumbnail.png`, and `refinements.json` for a refined painting; atomic writes,
   staging and trash folders). Writes are queued per
-  artwork off the main actor; deletes are undoable.
+  artwork off the main actor; deletes are undoable. The create flow's draft lives in
+  `Artworks/Drafts/` (not an artwork: `loadAll` skips it).
 - `Library.loadForPainting` classifies failures (`Library.OpenError`: `needsNewerApp`,
   `damaged(canRegenerate:)`, or `unreadable`: a passing I/O error that changes nothing and offers no
   regeneration), resets unusable progress with a one-time `OpenNotice` and repairs stale metadata.
@@ -352,6 +354,27 @@ Conventions).
   painting nobody refined is made as before. PaintCore's `LineEdits` (root `CLAUDE.md` › Line
   art) is where drawn lines join the drawing and erased ones leave it: the drawing as it showed,
   so an edit adds or takes out just what the painter drew or erased.
+- Draft (`CreateDraft`, kept by `Drafts`, `library.drafts`): the one new painting the painter
+  refined and didn't start, so closing the flow, or iOS ending the app, loses nothing. A flow has
+  a draft (`CreateModel.draft`) once its photo has refinements, and not while its settings are
+  being chosen; `CreateFlowView` hands every change of it (refinements, title, sliders) to
+  `Drafts.keep`, which writes it `Drafts.delay` (1 s) after the last, and at once when the flow
+  disappears or the scene leaves the foreground, off the main actor and one job after another.
+  `Artworks/Drafts/Current/` holds `draft.json` (photo id, titles, settings, the Lines slider,
+  sample name), `refinements.json` (an artwork's encoding) and `source.jpg` (the photo as the
+  flow holds it, encoded with a photo's first draft and copied after, never encoded twice), built
+  in `Drafts/.staging` and swapped in atomically (`DraftStore.write`). It goes when the painting
+  starts (`CreateFlowView.start`) or the refinements are undone to nothing (`Drafts.drop`, which
+  removes only its own photo's draft) and by Discard on the gallery's `DraftRow` (confirmation).
+  A different new painting leaves the draft alone and replaces it only once its own photo is
+  refined; so does choosing another photo in the flow. The row tops the gallery (hidden while a
+  filter or a search narrows it, like placeholders); Continue Refining reads the draft off the
+  main actor (`Drafts.open`) and opens the create flow on its preview (`CreateFlowView.resuming`,
+  `CreateModel.load(draft:photo:)`): the photo goes through the usual steps including the
+  suggestion (Reset to Suggested, the detents), but the draft's settings are what is generated,
+  with its refinements, at full resolution. Refine's undo and redo stacks are not kept. A draft
+  with any file missing or unreadable, or a photo that won't decode, is no draft: logged and
+  removed, never a failure of the gallery (`DraftTests`; `gallery-draft` is its screenshot).
 - Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all

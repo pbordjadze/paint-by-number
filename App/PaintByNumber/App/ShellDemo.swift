@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import PaintCore
 
 /// Demo scenarios owned by the app shell (see `DemoMode`). Each uses a throwaway library
 /// seeded deterministically from the library's pictures (`pictures`): the ones a viewer judges
@@ -15,6 +16,9 @@ import Foundation
 /// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
 ///   with every localized string twice as long.
 /// - `gallery-empty`: the empty state.
+/// - `gallery-draft`, `gallery-draft-long-text`: three paintings below the create flow's draft
+///   (The Great Wave, refined as in `create-refine`), with its photo, "Continue Refining" and
+///   Discard; the second with every localized string twice as long.
 /// - `create`: the photo picker step of the create flow.
 /// - `create-samples`, `create-samples-long-text`: the same step on its Samples pane (iPhone;
 ///   iPad shows both); the second with every localized string twice as long.
@@ -48,8 +52,8 @@ import Foundation
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
-    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
-         galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryDraft,
+         galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter
 
@@ -61,6 +65,7 @@ enum ShellDemo: Equatable {
         case "gallery-no-favorites-long-text": .galleryNoFavorites
         case "gallery-long-text": .galleryLongText
         case "gallery-empty": .galleryEmpty
+        case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
         case "gallery-damaged": .galleryDamaged
         case "gallery-timelapse": .galleryTimelapse
@@ -201,6 +206,13 @@ enum ShellDemo: Equatable {
                 if let id = library.finished.last?.id { library.delete(id) }
                 DemoMode.markReady()
             })
+        case .galleryDraft:
+            library.seed(Array(galleryItems.prefix(3))) { _ in
+                Task {
+                    await seedDraft(in: library)
+                    DemoMode.markReady()
+                }
+            }
         case .galleryOpen:
             let painted = ProcessInfo.processInfo.arguments.contains("-playHarness") ? 0.0 : 0.42
             library.seed([Library.SeedItem(sample: pictures[0], painted: painted, photoMaxPixelSize: 560)])
@@ -219,6 +231,20 @@ enum ShellDemo: Equatable {
              .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter:
             break
         }
+    }
+
+    /// The create flow's draft: the first picture refined as `create-refine` does it, kept the way
+    /// the flow keeps one.
+    private func seedDraft(in library: Library) async {
+        guard let sample = pictures.first, let url = sample.url,
+              let photo = await Background.run({ try? PhotoLoader.load(url: url, maxPixelSize: 560) }),
+              let image = PhotoLoader.cgImage(from: photo) else { return }
+        library.drafts.keep(
+            CreateDraft(
+                photoID: UUID(), title: "", defaultTitle: sample.title, settings: GenerationSettings(), lines: 0.5,
+                sampleName: sample.id, refinements: Self.refinements),
+            photo: image)
+        await library.drafts.flush()
     }
 
     /// The first six pictures painted to various stages: four in progress, two finished

@@ -321,6 +321,10 @@
       "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
       "extractionState" : "manual"
     },
+    "Continue Refining" : {
+      "comment" : "Button on the gallery's draft row: reopens the create flow on the new painting the painter refined and didn't start, to refine it again",
+      "extractionState" : "manual"
+    },
     "colorName.chroma.grayish" : {
       "comment" : "Color name chroma modifier (a dull, desaturated color)",
       "extractionState" : "manual",
@@ -973,6 +977,14 @@
       "comment" : "Button of that confirmation: throws the feedback away and returns to painting",
       "extractionState" : "manual"
     },
+    "Discard Draft" : {
+      "comment" : "Icon-only button on the gallery's draft row (its text is the VoiceOver label): throws away the unfinished new painting, after a confirmation",
+      "extractionState" : "manual"
+    },
+    "Discard this draft?" : {
+      "comment" : "Title of the confirmation dialog for discarding the create flow's draft",
+      "extractionState" : "manual"
+    },
     "Discard Your Feedback?" : {
       "comment" : "Title of the confirmation before leaving feedback mode on the painting screen when marks or a note would be lost",
       "extractionState" : "manual"
@@ -1245,6 +1257,30 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "gallery.draft.caption" : {
+      "comment" : "Caption of the gallery's draft row: a new painting refined and not started yet; the argument is how many changes the painter made in Refine, e.g. 3 changes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draft · %@"
+          }
+        }
+      }
+    },
+    "gallery.draft.discard.confirm" : {
+      "comment" : "Destructive button of the draft's discard confirmation; the argument is the draft's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard “%@”"
           }
         }
       }
@@ -2127,6 +2163,10 @@
     },
     "Its template, settings and progress" : {
       "comment" : "Feedback's review sheet: a row of what is sent, the painting's data",
+      "extractionState" : "manual"
+    },
+    "Its photo and everything you changed in Refine will be lost." : {
+      "comment" : "Message of the confirmation dialog for discarding the create flow's draft",
       "extractionState" : "manual"
     },
     "Made from a library picture: no photo needed" : {
