@@ -6,7 +6,9 @@ import SwiftUI
 /// one VoiceOver element in either layout; no column can be read apart from its partner.
 struct MarginariumTableView: View {
     let section: MarginariumDocument.Section
-    @State private var width: CGFloat = 0
+    /// Supplied by the reader before layout: measuring this table into State first laid out
+    /// stacked rows, then shrank them into columns and displaced the lazy reader's scroll target.
+    let width: CGFloat
     @ScaledMetric(relativeTo: .body) private var minimumTableWidth: CGFloat = 480
 
     private var stacked: Bool { width < minimumTableWidth }
@@ -42,7 +44,6 @@ struct MarginariumTableView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(stacked ? "marginarium-table-stacked" : "marginarium-table-columns")
     }
