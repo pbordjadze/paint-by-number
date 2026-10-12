@@ -367,8 +367,7 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   `loop.team_seats`). The Bible School Teacher, whose pet shipped, is seated on the Hearth.
 - Later: a gentle, kind way to give some guardians more power and some less, which stays cute
   even when the Snow Queen is unhappy about it (`GUARDIANS.md` › Wicks, a proposal).
-- For Oct 19 if Paul agrees: Codex hatches Dinotopia's pet (its brief is in
-  `tools/factory/collection.py`), and the Moon's redraw.
+- For Oct 19 if Paul agrees: the Moon's redraw. Dino's pet came from Paul instead (point 23).
 
 ## Paul's point 20: the four-year-old in the design loop (Oct 12)
 
@@ -396,6 +395,15 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   contributed what may be traced one day; this is the general shape.
 - Caroline is probably the Marginarium's first reader: it should flatter her, and she has earned
   it.
+
+## Paul's point 23: Dino hatches (Oct 12)
+
+- Dinotopia is called Dino, like Niko and Emily: "After James Gurney's Dinotopia books." stays
+  under the name; the id stays `dinotopia`.
+- Its pet is Paul's own Dino, a teal long-necked dinosaur he made in the Codex app before Dino
+  joined the Lamp. His sheet passed the v2 contract as it was; `factory/pets/dinotopia/` keeps it
+  lossless with its provenance, and the app ships it on `claude/dino-hatches`. It wasn't drawn in
+  the Warm Oilcloth family style, and Paul chose it anyway: his pet, his call.
 
 ## Open questions
 
