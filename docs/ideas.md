@@ -35,8 +35,9 @@ It's a four-year-old; she's no good at designing a game.
 Maybe if I make that game, they should pay *me*, for designing thoughtful and intentional ways to
 bring AI agents into creative professions.
 
-If you have read this far into the notes of a paint-by-numbers app, you are probably one of
-"they". Hi. This one was for you.
+If you have read this far into the notes of a genuinely entirely vibe-coded app, you've gotta be
+curious about me and these systems I'm cooking up here. I think I can do way more for your company
+than just develop apps like this.
 
 — Paul
 
