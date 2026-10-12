@@ -53,8 +53,7 @@ def command(model, effort, work, schema_path, reply_path, images):
 
 def refusal(work):
     """Only explicit provider signals; a prompt quoting the prohibition is not a refusal."""
-    log = work / 'codex.jsonl'
-    if log.exists():
+    for log in work.glob('codex*.jsonl'):
         for line in log.read_text().splitlines():
             try:
                 event = json.loads(line)
@@ -71,6 +70,46 @@ def refusal(work):
             if explicit(event):
                 return True
     return False
+
+
+def worker_reply(lamp, work, prompt, reference):
+    """Repair only a worker's JSON report once; keep its artwork and both replies."""
+    errors, raw_reply = [], ''
+    for attempt in (0, 1):
+        suffix = '.retry' if attempt else ''
+        reply_path = paths.contained(work, f'reply{suffix}.json')
+        if not reply_path.exists():
+            current = schema.repair_prompt(prompt, errors, raw_reply) if attempt else prompt
+            if attempt:
+                current += '\nOnly correct the JSON report using existing evidence. Do not generate or change artwork.'
+            loop.write_atomic(paths.contained(work, f'prompt{suffix}.txt'), current)
+            loop.save(paths.contained(work, 'schema.json'), schema.transport(RESULT))
+            args = command(lamp.model, lamp.effort, work, work / 'schema.json', reply_path,
+                           [reference] if reference else [])
+            loop.save(paths.contained(work, f'command{suffix}.json'), args)
+            start = time.monotonic()
+            with paths.contained(work, f'codex{suffix}.jsonl').open('w') as out, paths.contained(work, f'stderr{suffix}.txt').open('w') as err:
+                result = subprocess.run(args, input=current, text=True, stdout=out, stderr=err, check=False)
+            loop.save(paths.contained(work, f'process{suffix}.json'),
+                      {'returncode': result.returncode, 'seconds': time.monotonic() - start})
+            if refusal(work):
+                return {'status': 'refused', 'reason': 'explicit provider refusal; see codex logs'}, []
+            if result.returncode:
+                raise ValueError(f'codex exec exited {result.returncode}; see {work}/stderr{suffix}.txt')
+        raw_reply = reply_path.read_text()
+        reply = None
+        try:
+            reply = loop.load(reply_path)
+            # A refusal never authorizes another call, even with a malformed report.
+            if isinstance(reply, dict) and reply.get('status') == 'refused':
+                return reply, []
+            errors = schema.validate(reply, RESULT)
+        except ValueError as exc:
+            errors = [str(exc)]
+        if not errors:
+            return reply, []
+        loop.save(paths.contained(work, f'rejection{suffix}.json'), {'errors': errors, 'raw_reply': raw_reply})
+    return reply, errors
 
 
 def hatch(lamp, key, pet, style, brief, reference, redo):
@@ -140,27 +179,12 @@ Request:
 {json.dumps(request, indent=2, ensure_ascii=False)}
 """
     try:
-        reply_path = paths.contained(work, 'reply.json')
-        if not reply_path.exists():
-            loop.write_atomic(paths.contained(work, 'prompt.txt'), prompt)
-            loop.save(paths.contained(work, 'schema.json'), RESULT)
-            args = command(lamp.model, lamp.effort, work, work / 'schema.json', reply_path,
-                           [reference] if reference else [])
-            loop.save(paths.contained(work, 'command.json'), args)
-            start = time.monotonic()
-            with paths.contained(work, 'codex.jsonl').open('w') as out, paths.contained(work, 'stderr.txt').open('w') as err:
-                result = subprocess.run(args, input=prompt, text=True, stdout=out, stderr=err, check=False)
-            loop.save(paths.contained(work, 'process.json'),
-                      {'returncode': result.returncode, 'seconds': time.monotonic() - start})
-            if refusal(work):
-                record.update(status='refused', reason='explicit provider refusal; see codex.jsonl')
-            elif result.returncode:
-                raise ValueError(f'codex exec exited {result.returncode}; see {work}/stderr.txt')
-        if record['status'] != 'refused':
-            reply = loop.load(reply_path, {})
-            errors = schema.validate(reply, RESULT)
-            if errors:
-                raise ValueError(f'invalid worker reply: {errors}')
+        reply, errors = worker_reply(lamp, work, prompt, reference)
+        if errors:
+            record.update(status='invalid', reason='invalid worker reply after one repair', errors=errors)
+        elif reply['status'] == 'refused':
+            record.update(status='refused', reason=reply.get('reason', 'provider refusal'))
+        else:
             record.update(status=reply['status'], reason=reply['reason'],
                           image_generations=reply['image_generations'], repairs=reply['repairs'])
             if reply['status'] == 'complete':

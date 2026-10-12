@@ -9,7 +9,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from . import accounting, loop, paths, transcripts
+from . import accounting, loop, paths, schema, transcripts
 from .kit import outside_repo
 
 
@@ -47,7 +47,7 @@ def codex(run, job_path, out):
     scratch.mkdir(parents=True, exist_ok=False)
     schema_path, reply_path, log = [paths.contained(scratch, name) for name in
                                    ('schema.json', 'reply.json', 'codex.jsonl')]
-    loop.save(schema_path, job['reply_schema'])
+    loop.save(schema_path, schema.transport(job['reply_schema']))
     command = codex_command(job, schema_path, reply_path, scratch)
     start = time.monotonic()
     with log.open('w') as stdout, paths.contained(scratch, 'stderr.txt').open('w') as stderr:

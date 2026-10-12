@@ -110,6 +110,11 @@ factory/taste/loop --run /root/factory-out/next new panel-name --calibration /pa
 factory/taste/loop gallery --picks /path/checkpoint.json
 ```
 
+The Codex runner derives a strict transport schema at dispatch: required, closed objects,
+types, enums and `anyOf` unions. Uniqueness, bounds, string lengths and exclusive `oneOf`
+checks stay in the full `reply_schema` used by collection. Frozen jobs are never rewritten
+for transport changes, so completed replies remain reusable on resume.
+
 The checkpoint saves `slot,name,veto,love,note,at` to `checkpoint/c<slot>` using the same Claude
 owner/database interface as Thirty-Six Colors. It adds `round` for later rounds. Outside Claude it
 saves locally and exports `checkpoint.json`; it does not publish anything. Love and veto are
@@ -312,8 +317,8 @@ The parent alone copies validated packages into `factory/pets/`.
 Without repairs, the pet run makes **138 driver-launched `codex exec` calls**: 63 primary text/image
 jury seats, 51 comparison text seats, and 24 hatch workers (four pilots plus twenty final pets).
 An optional second style round adds 50; each flagged brief adds two; each pet redo adds one,
-plus six seats to review the replacements. Invalid seat replies can add one identical-prompt
-retry per job. The skill may also use independent internal visual reviewers; those are additional
+plus six seats to review the replacements. Invalid replies can add one repair call per job,
+with the validation errors and previous reply. The skill may also use independent internal visual reviewers; those are additional
 to the driver count. Historical replay adds **114 calls**, comparing with 57 saved Claude seats.
 `compare` makes none: **252 driver calls** for the basic run plus full replay.
 

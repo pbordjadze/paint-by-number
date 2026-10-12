@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, loop
+from tools.factory.fixtures.strict_schema import check_strict
 
 
 class LampTests(unittest.TestCase):
@@ -22,6 +23,7 @@ class LampTests(unittest.TestCase):
         cls.bin.mkdir()
         fake = cls.bin / 'codex'
         shutil.copyfile(loop.REPO / 'tools/factory/fixtures/fake_codex_lamp.py', fake)
+        shutil.copyfile(loop.REPO / 'tools/factory/fixtures/strict_schema.py', cls.bin / 'strict_schema.py')
         fake.chmod(0o755)
         cls.skill = lamp_hatch.find_skill()
         cls.fixture = cls.root / 'fixture'
@@ -79,7 +81,8 @@ class LampTests(unittest.TestCase):
 
     def test_whole_run_resume_refusal_failure_redo_and_primary_only(self):
         with patch.dict(os.environ, {'FAKE_REFUSE': 'snow-queen', 'FAKE_FAIL': 'scholar',
-                                     'FAKE_REDO': 'moon', 'FAKE_BRIEF_REPAIR': 'moon'}):
+                                     'FAKE_REDO': 'moon', 'FAKE_BRIEF_REPAIR': 'moon',
+                                     'FAKE_REJECT_FIRST_STYLES': '1'}):
             real_repo = Path(__file__).resolve().parents[2]
             command = [sys.executable, '-m', 'factory.taste.codex_lamp', 'run', str(self.run),
                        '--model', 'primary-test', '--compare', 'comparison-test', '--skill-dir', str(self.skill)]
@@ -100,18 +103,24 @@ class LampTests(unittest.TestCase):
             images = list((self.repo / 'factory/pets').glob('*/spritesheet.webp'))
             self.assertEqual(len(images), 18)
             self.assertTrue(all(sum(p.stat().st_size for p in image.parent.iterdir()) <= 2_000_000 for image in images))
-            self.assertEqual(loop.load(self.run / 'decisions/shortlist-0.json')['selected'], ['style-00', 'style-01'])
+            self.assertEqual(loop.load(self.run / 'decisions/shortlist-0.json')['selected'], [])
+            self.assertEqual(loop.load(self.run / 'decisions/shortlist-1.json')['selected'], ['style-00', 'style-01'])
             driver.run_plan()
             self.assertEqual(len(self.calls()), len(calls))
+            stages = set()
             for path in self.run.glob('jobs/*/*.json'):
                 job = loop.load(path)
+                stages.add(job['stage'])
                 if job['model'] == 'comparison-test':
                     primary = loop.load(path.with_name(path.name.replace('-m1', '-m0')))
                     self.assertEqual(job['prompt'], primary['prompt'])
                 if job['stage'] in ('style-decision', 'image-review', 'redo-review'):
                     self.assertTrue(job['images'])
+            self.assertEqual(stages, {'style-proposals-0', 'style-proposals-1', 'shortlist-0', 'shortlist-1',
+                                     'style-decision', 'briefs', 'set-review', 'brief-repair', 'image-review', 'redo-review'})
             for call in calls:
                 args = call['args']
+                check_strict(loop.load(Path(args[args.index('--output-schema') + 1])))
                 if '-s' in args:
                     self.assertEqual(args[args.index('-s') + 1], 'workspace-write')
                     self.assertIn('sandbox_workspace_write.writable_roots=["/root/factory-out"]', args)
@@ -180,7 +189,7 @@ class LampTests(unittest.TestCase):
         self.assertTrue(loop.load(work / 'gate/atlas.json')['ok'])
         self.assertFalse(loop.load(work / 'gate/quality.json')['ok'])
 
-    def test_invalid_reply_retries_identical_prompt_once(self):
+    def test_invalid_reply_retries_with_reason_once(self):
         job = dict(id='invalid-first', round=1, attempt=0, role='guardian', stage='test',
                    guardian='moon', model='primary-test', effort='high', images=[],
                    prompt='Only this seat prompt.', reply_schema=lamp.schema.obj({'why': lamp.S}))
@@ -189,10 +198,133 @@ class LampTests(unittest.TestCase):
         self.assertEqual(record['attempt'], 1)
         calls = self.calls()
         self.assertEqual(len(calls), 2)
-        self.assertEqual(calls[0]['prompt'], calls[1]['prompt'])
+        self.assertTrue(calls[1]['prompt'].startswith(calls[0]['prompt']))
+        self.assertIn('$.why: missing', calls[1]['prompt'])
         self.assertTrue((self.run / 'rejections/001/invalid-first-0.json').exists())
         lamp.execute(self.run, job)
         self.assertEqual(len(self.calls()), 2)
+
+    def test_transport_keeps_full_checks_and_does_not_mutate_frozen_schema(self):
+        rule = lamp.schema.obj({'ranking': lamp.schema.array({'type': 'string', 'enum': ['A', 'B']}, 2, True),
+            'veto': lamp_compare.nullable(lamp.schema.obj({'why': lamp.S})),
+            'count': {'type': 'integer', 'minimum': 0, 'maximum': 3}})
+        before = json.dumps(rule)
+        wire = lamp.schema.transport(rule)
+        check_strict(wire)
+        self.assertEqual(json.dumps(rule), before)
+        self.assertIn('anyOf', wire['properties']['veto'])
+        self.assertEqual(wire['properties']['veto']['anyOf'][1], {'type': 'null'})
+        bad = {'ranking': ['A', 'A'], 'veto': None, 'count': -1}
+        # The wire schema admits duplicate entries; the frozen full schema rejects them.
+        self.assertNotIn('uniqueItems', wire['properties']['ranking'])
+        self.assertEqual(lamp.schema.validate(bad['ranking'], wire['properties']['ranking']), [])
+        self.assertEqual(lamp.schema.validate(bad, rule), ['$.ranking: repeated item', '$.count: number outside allowed range'])
+        for full in (lamp.STYLE, lamp.BRIEF, lamp_hatch.RESULT):
+            check_strict(lamp.schema.transport(full))
+        with self.assertRaisesRegex(AssertionError, 'unsupported keywords'):
+            check_strict(rule)
+
+    def test_duplicate_ranking_repair_and_terminal_invalid_do_not_block_round(self):
+        driver = self.driver()
+        candidates = {'A': {}, 'B': {}}
+        rule = lamp.ballot_schema(list(candidates))
+        with patch.dict(os.environ, {'FAKE_REPEAT_RANKING': 'shortlist-test-painter', 'FAKE_INVALID_TWICE': '1'}):
+            votes = driver.round(2, 'shortlist-test', ['painter', 'moon'], 'Rank all IDs.',
+                                 {'candidates': candidates}, rule, compare=True)
+        self.assertEqual(set(votes), {'moon'})
+        selected = driver.tally('test', candidates, votes, 1)
+        self.assertEqual(selected, ['A'])
+        invalid = loop.load(self.run / 'records/002/shortlist-test-painter-m0.json')
+        self.assertEqual((invalid['status'], invalid['attempt']), ('invalid', 1))
+        self.assertEqual(invalid['errors'], ['$.ranking: repeated item'])
+        self.assertEqual(len(invalid['costs']), 2)
+        calls = self.calls()
+        self.assertEqual(len(calls), 6)
+        for call in calls:
+            if call['work'].endswith('-1'):
+                self.assertIn('$.ranking: repeated item', call['prompt'])
+        driver.round(2, 'shortlist-test', ['painter', 'moon'], 'Rank all IDs.',
+                     {'candidates': candidates}, rule, compare=True)
+        self.assertEqual(len(self.calls()), len(calls))
+        lamp_compare.compare_run(self.run)
+        report = loop.load(self.run / 'comparison.json')
+        self.assertEqual(len(report['replies']), 4)
+        self.assertEqual(len(report['comparisons']), 1)
+        self.assertEqual(report['comparisons'][0]['guardian'], 'moon')
+        self.assertEqual(sum(s['invalid'] for s in report['seats']), 2)
+        with patch.dict(os.environ, {'FAKE_REPEAT_RANKING': 'shortlist-repair-painter'}):
+            repaired = driver.round(3, 'shortlist-repair', ['painter'], 'Rank all IDs.',
+                                    {'candidates': candidates}, rule)
+        self.assertEqual(repaired['painter']['ranking'], ['A', 'B'])
+        self.assertEqual(loop.load(self.run / 'records/003/shortlist-repair-painter-m0.json')['attempt'], 1)
+
+    def test_resume_after_strict_rejection_preserves_legacy_completions(self):
+        driver = self.driver()
+        with patch.dict(os.environ, {'FAKE_SHORTLIST_TRANSPORT_ERROR': '1'}):
+            with self.assertRaisesRegex(RuntimeError, '12 job'):
+                driver.run_plan()
+        # Pre-fix records have no status/errors fields; their job hash is unchanged.
+        for path in self.run.glob('records/*/*.json'):
+            record = loop.load(path)
+            record.pop('status')
+            record.pop('errors')
+            loop.save(path, record)
+        completed = {p: p.read_bytes() for folder in ('records', 'replies', 'jobs')
+                     for p in (self.run / folder).glob('*/*.json')}
+        self.assertEqual(len(list(self.run.glob('records/*/*.json'))), 38)
+        before = len(self.calls())
+        with patch.object(driver, 'hatch_many', side_effect=RuntimeError('reached pilots')):
+            with self.assertRaisesRegex(RuntimeError, 'reached pilots'):
+                driver.run_plan()
+        self.assertTrue(all(p.read_bytes() == data for p, data in completed.items()))
+        self.assertEqual(len(self.calls()) - before, 12)
+        self.assertTrue(all('shortlist-' in call['work'] for call in self.calls()[before:]))
+
+    def test_replay_invalid_reply_is_recorded_and_excluded_from_comparison(self):
+        real_repo = Path(__file__).resolve().parents[2]
+        with patch.object(loop, 'REPO', real_repo), patch.dict(os.environ,
+                {'FAKE_REPEAT_ALSO': 'chapter-6-moon-m0', 'FAKE_INVALID_TWICE': '1'}):
+            result = lamp_compare.replay_run(self.run, ['chapter-6'], ['primary-test'], 'high', 4)
+        self.assertEqual(result['replayed_jobs'], 19)
+        record = loop.load(self.run / 'replay/records/001/chapter-6-moon-m0.json')
+        self.assertEqual(record['status'], 'invalid')
+        self.assertEqual(record['errors'], ['$.also: repeated item'])
+        lamp_compare.compare_run(self.run)
+        report = loop.load(self.run / 'comparison.json')
+        self.assertEqual(len(report['replies']), 38)
+        self.assertEqual(len(report['comparisons']), 18)
+
+    def test_worker_report_is_repaired_once_without_losing_original(self):
+        driver = self.driver()
+        for key, twice in [('repair-moon', ''), ('invalid-moon', '1')]:
+            with self.subTest(key=key), patch.dict(os.environ, {'FAKE_BAD_WORKER': key, 'FAKE_INVALID_TWICE': twice}):
+                result = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+            self.assertEqual(result['status'], 'invalid' if twice else 'validated')
+            work = Path(result['work'])
+            self.assertEqual(loop.load(work / 'reply.json')['image_generations'], -1)
+            self.assertIn('$.image_generations: number outside allowed range', (work / 'prompt.retry.txt').read_text())
+            before = len(self.calls())
+            self.assertEqual(lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None), result)
+            self.assertEqual(len(self.calls()), before)
+        self.assertEqual(len(self.calls()), 4)
+
+    def test_invalid_briefs_and_failed_brief_repairs_withhold_pets(self):
+        driver = self.driver()
+        hatches = []
+        def hatch_many(items):
+            hatches.extend(items)
+            return [dict(key=item['key'], pet=item['pet'],
+                         status='validated' if item['key'].startswith('pilot-') else 'failed',
+                         contact=str(self.fixture / 'final/spritesheet.webp')) for item in items]
+        with patch.object(driver, 'hatch_many', side_effect=hatch_many), patch.dict(os.environ,
+                {'FAKE_BAD_BRIEF': 'briefs-medea-m0,brief-repair-moon-m0', 'FAKE_BRIEF_REPAIR': 'moon'}):
+            summary = driver.run_plan()
+        self.assertEqual(len(summary['pets']), 20)
+        self.assertEqual(summary['pets']['medea'], 'invalid')
+        self.assertEqual(summary['pets']['moon'], 'invalid')
+        self.assertEqual(len([h for h in hatches if h['key'].startswith('set-')]), 18)
+        self.assertFalse(any(h['key'] in ('set-medea', 'set-moon') for h in hatches))
+        self.assertEqual(loop.load(self.run / 'decisions/briefs.json')['invalid'], ['medea', 'moon'])
 
     def test_historical_originality_veto_retains_its_recorded_shape(self):
         rule = lamp_compare.historical_schema('chapter-6', 'originality')
