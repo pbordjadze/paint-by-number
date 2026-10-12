@@ -273,13 +273,19 @@ helpful, beautiful.
 
 Paul's vision, not to build yet:
 - The Marginarium lists every member of the Lamp, each with its pet (issue #16's members page:
-  name, belief, Georgian thread, pet).
+  name, belief, pet).
 - In a chapter, where a guardian says something, its pet appears beside the words.
 - Sometimes a pet just wanders through, so the book feels inhabited.
 - New animations for the pets we have (good walks first), so they can move around the screen.
 - The pets' art is credited in the app as drawn by Codex with an OpenAI image model (Paul
   approved; OpenAI's Terms of Use give the output to its user and forbid presenting it as
   human-made).
+
+## Paul's point 14: no Georgian thread (Oct 12)
+
+- The guardians no longer each carry a Georgian thread: it was too much. It was removed quietly
+  from the chapters (no new chapter about it), and from the charters and the taste code going
+  forward. Records of past runs stay as they were.
 
 ## Open questions
 
