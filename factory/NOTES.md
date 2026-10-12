@@ -370,6 +370,15 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
 - For Oct 19 if Paul agrees: Codex hatches Dinotopia's pet (its brief is in
   `tools/factory/collection.py`), and the Moon's redraw.
 
+## Paul's point 20: the four-year-old in the design loop (Oct 12)
+
+- A product vision, in Paul's words on main in `docs/ideas.md` (Paul's ideas): a fully automated
+  game with a four-year-old making every design decision, every agent and human choice documented.
+  Not in the Marginarium yet. Its last paragraph is a deliberate Easter egg behind a "But."
+  disclosure, for whoever reads that far.
+- Addendum: people will like the human creative touch, and value knowing who or what is
+  responsible for which choices, and where a human's vision was.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
