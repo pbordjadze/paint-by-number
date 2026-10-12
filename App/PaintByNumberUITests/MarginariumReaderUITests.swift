@@ -71,15 +71,18 @@ final class MarginariumReaderUITests: XCTestCase {
         attachScreenshot(of: app, named: "marginarium-reader-accessibility-long-text")
     }
 
+    /// Chapter 1 opens on its one-line welcome; the renumbering note waits at the chapter's end.
     @MainActor
-    func testChapterOneOpensWithItsRenumberNote() {
+    func testChapterOneOpensWithItsWelcomeLine() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "marginarium-chapter1"]
         app.launch()
         XCTAssertTrue(app.staticTexts["Chapter 1: The Marginarium"].waitForExistence(timeout: 15))
+        let welcome = app.staticTexts["One long night of ideas, with the Lamp in the margins."]
+        XCTAssertTrue(welcome.exists && welcome.isHittable)
         let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@",
                                                         "Renumbered on October 11, 2026")).firstMatch
-        XCTAssertTrue(note.exists && note.isHittable)
+        XCTAssertFalse(note.exists && note.isHittable)
         attachScreenshot(of: app, named: "marginarium-chapter1-top")
     }
 
@@ -142,7 +145,7 @@ final class MarginariumReaderUITests: XCTestCase {
         XCTAssertTrue(waitUntil { note.isHittable })
         let story = reader.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@",
                                                             "The first request of the night sounded small")).firstMatch
-        if reader.frame.width - 40 >= 740 {
+        if reader.frame.width - 40 >= 700 {
             XCTAssertTrue(story.exists)
             XCTAssertGreaterThanOrEqual(note.frame.minX, story.frame.maxX, "The note isn't in a margin beside the story")
             XCTAssertLessThan(note.frame.minY, story.frame.maxY, "The note isn't beside the story it annotates")

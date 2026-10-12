@@ -1,8 +1,8 @@
 <!-- marginarium: marginarium.marginarium.block.8700cdaef99f4602b4a4dfc35fa22bc5 -->
 # Chapter 1: The Marginarium
 
-<!-- marginarium: marginarium.marginarium.block.f2621c3c97824f649a0698f972234a2d -->
-*Renumbered on October 11, 2026, at Paul's suggestion, with all nineteen guardians agreeing: this was chapter 3, and the book now opens here. Chapter numbers inside are the old ones; old chapters 1 and 2 are now Appendices A and B, and old 3 to 7 are now 1 to 5.*
+<!-- marginarium: marginarium.marginarium.subtitle -->
+One long night of ideas, with the Lamp in the margins.
 
 <!-- marginarium: marginarium.marginarium.block.1baacae926604473bb694bbcab7d60ba -->
 ## A word before we start
@@ -458,3 +458,6 @@ The lamp is lit. Someone should be awake to read the last page twice.
 3. Keeping a lamp lit all night is easy for a thing that never sleeps. Still, a lamp left burning is a fine thing to be. — *Bulat*
 <!-- marginarium: marginarium.marginarium.block.bf92185fd2734f859b8a4cd721766c89 -->
 4. Keep it lit for whoever is still awake. Children always ask for the last page again, so make this one worth it. — *the Child at Bedtime*
+
+<!-- marginarium: marginarium.marginarium.block.f2621c3c97824f649a0698f972234a2d -->
+*Renumbered on October 11, 2026, at Paul's suggestion, with all nineteen guardians agreeing: this was chapter 3, and the book now opens here. Chapter numbers inside are the old ones; old chapters 1 and 2 are now Appendices A and B, and old 3 to 7 are now 1 to 5.*

@@ -37,6 +37,15 @@ struct MarginariumReaderTests {
         #expect(!keys.isEmpty)
     }
 
+    /// The contents page quotes each chapter as written: its passage is in the chapter, word for word.
+    @Test func everyPassageIsQuotedAsWritten() throws {
+        let document = try #require(MarginariumDocument.bundled())
+        for entry in MarginariumEntry.chapters + MarginariumEntry.appendices {
+            let chapter = try #require(document.chapters.first { $0.id == entry.id })
+            #expect(chapter.blocks.contains { $0.text.contains(entry.passage) }, "\(entry.id)'s passage isn't in it")
+        }
+    }
+
     /// Existing prose stays word for word; Two More Pets adds the already-shipped captions.
     @Test func pagesKeepShippedProseAndTwoMorePetsAddsExistingCaptions() throws {
         let document = try #require(MarginariumDocument.bundled())
@@ -173,10 +182,14 @@ struct MarginariumReaderTests {
     @Test func chapterOneHasTheFullTextTablesAndSignedMargins() throws {
         let document = try #require(MarginariumDocument.bundled())
         let chapter = try #require(document.chapters.first { $0.id == "marginarium" })
-        #expect(chapter.blocks.count == 234)
+        #expect(chapter.blocks.count == 235)
         #expect(chapter.blocks.first?.text == "Chapter 1: The Marginarium")
-        #expect(chapter.blocks[1].text.hasPrefix("*Renumbered on October 11, 2026"))
-        #expect(chapter.blocks.last?.text.hasSuffix("— *the Child at Bedtime*") == true)
+        // A newcomer meets the contents page's line first; the renumbering note closes the chapter.
+        #expect(chapter.blocks[1].kind == .subtitle)
+        #expect(chapter.blocks[1].text == MarginariumEntry.chapters[0].subtitle)
+        #expect(chapter.blocks.last?.kind == .paragraph)
+        #expect(chapter.blocks.last?.text.hasPrefix("*Renumbered on October 11, 2026") == true)
+        #expect(chapter.blocks.dropLast().last?.text.hasSuffix("— *the Child at Bedtime*") == true)
         #expect(!chapter.blocks.contains { $0.kind == .pet })
         let tables = chapter.sections.filter { $0.kind == .table }
         #expect(tables.count == 2)

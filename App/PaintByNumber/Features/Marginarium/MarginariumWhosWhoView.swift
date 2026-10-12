@@ -3,11 +3,14 @@ import SwiftUI
 
 /// Who's Who: everyone the chapters mention, with their pets (`MarginariumCast`). The people and
 /// the AI helpers come first, then what the Lamp is, then its guardians team by team; a guardian's
-/// card opens its brief (`MarginariumGuardianView`). Teams are lazy rows, and cards play small
+/// card opens its brief (`MarginariumGuardianView`). Teams are lazy grid cells, and cards play small
 /// copies of their pets' cells (`MarginariumSpritePlayer(pet:marginWidth:)`), so a screenful of
 /// pets never holds their full sheets.
 struct MarginariumWhosWhoView: View {
     @ScaledMetric(relativeTo: .body) private var cardMinimum: CGFloat = 150
+    /// Groups (the people, the helpers, each team) sit two to a row where a page has room for
+    /// two cards in each, as on iPad, and one to a row on iPhone.
+    @ScaledMetric(relativeTo: .body) private var groupMinimum: CGFloat = 360
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -18,12 +21,13 @@ struct MarginariumWhosWhoView: View {
                         .font(.display(.title3, weight: .semibold))
                         .foregroundStyle(.secondary)
 
-                    group(Text("The people")) {
-                        ForEach(MarginariumCast.people) { MarginariumPersonCard(person: $0) }
-                    }
-
-                    group(Text("The helpers")) {
-                        ForEach(MarginariumCast.helpers) { MarginariumPersonCard(person: $0) }
+                    LazyVGrid(columns: groupColumns, alignment: .leading, spacing: 36) {
+                        group(Text("The people")) {
+                            ForEach(MarginariumCast.people) { MarginariumPersonCard(person: $0) }
+                        }
+                        group(Text("The helpers")) {
+                            ForEach(MarginariumCast.helpers) { MarginariumPersonCard(person: $0) }
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -31,17 +35,19 @@ struct MarginariumWhosWhoView: View {
                             .font(.display(.title2))
                             .accessibilityAddTraits(.isHeader)
                         Text(String(localized: "lamp.about",
-                                    defaultValue: "The Lamp is a panel of imaginary guardians. Each one guards a single idea about how the app should feel, the way a dragon guards one treasure. They look at design choices, write in the margins, and work in teams of friends who care about similar things. They give advice; a person always decides.",
+                                    defaultValue: "The Lamp is a panel of imaginary guardians. Each one guards a single idea about how the app should feel, the way a dragon guards one treasure. They look at design choices, write in the margins, and work in teams of friends who care about similar things. One of them, Originality, can only say no. They give advice; a person always decides.",
                                     comment: "The Marginarium, Who is Who: what the Lamp is, above its teams of guardians"))
-                        Text(String(localized: "lamp.about.tap", defaultValue: "Tap a guardian to read its brief.",
+                        Text(String(localized: "lamp.about.tap", defaultValue: "Tap a guardian to read about it.",
                                     comment: "The Marginarium, Who is Who: the hint above the guardians' cards"))
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
 
-                    ForEach(MarginariumCast.teams) { team in
-                        teamView(team)
-                            .id("team-" + team.id)
+                    LazyVGrid(columns: groupColumns, alignment: .leading, spacing: 36) {
+                        ForEach(MarginariumCast.teams) { team in
+                            teamView(team)
+                                .id("team-" + team.id)
+                        }
                     }
                 }
                 .frame(maxWidth: 860, alignment: .leading)
@@ -60,13 +66,20 @@ struct MarginariumWhosWhoView: View {
         }
     }
 
+    private var groupColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: groupMinimum), spacing: 24, alignment: .top)]
+    }
+
+    private var cardColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: cardMinimum), spacing: 12, alignment: .top)]
+    }
+
     private func group<Cards: View>(_ title: Text, @ViewBuilder cards: () -> Cards) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             title
                 .font(.display(.title2))
                 .accessibilityAddTraits(.isHeader)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: cardMinimum), spacing: 12, alignment: .top)],
-                      alignment: .leading, spacing: 12, content: cards)
+            LazyVGrid(columns: cardColumns, alignment: .leading, spacing: 12, content: cards)
         }
     }
 
@@ -81,8 +94,7 @@ struct MarginariumWhosWhoView: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: cardMinimum), spacing: 12, alignment: .top)],
-                      alignment: .leading, spacing: 12) {
+            LazyVGrid(columns: cardColumns, alignment: .leading, spacing: 12) {
                 ForEach(team.members) { guardian in
                     NavigationLink(value: MarginariumCast.destination(of: guardian)) {
                         MarginariumGuardianCard(guardian: guardian)
@@ -108,7 +120,8 @@ struct MarginariumWhosWhoView: View {
     #endif
 }
 
-/// A guardian's card: its pet (or egg), its name and what it guards, one VoiceOver element.
+/// A guardian's card: its pet (or egg), its name, who it is named after if anyone, and what it
+/// guards, one VoiceOver element.
 private struct MarginariumGuardianCard: View {
     let guardian: MarginariumGuardian
 
@@ -117,11 +130,18 @@ private struct MarginariumGuardianCard: View {
             MarginariumGuardianPet(guardian: guardian, width: 72)
                 // The card is the link; the pet only keeps it company here.
                 .allowsHitTesting(false)
-            Text(guardian.name)
-                .font(.display(.headline, weight: .semibold))
+            VStack(spacing: 2) {
+                Text(guardian.name)
+                    .font(.display(.headline, weight: .semibold))
+                if let after = guardian.after {
+                    Text(after)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
             Text(MarginariumGuardianView.guardsLine(guardian))
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tint)
         }
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
@@ -192,8 +212,9 @@ struct MarginariumGuardianPet: View {
     }
 }
 
-/// A guardian's brief, its charter in plain words: its pet, who it is named after, its team, what
-/// it guards, and what it believes, loves, watches out for, looks up to and is happiest seeing.
+/// A guardian's brief, its charter in plain words: its pet, who it is named after or who it is, its
+/// team, what it guards, and what it believes, loves, watches out for, looks up to and is happiest
+/// seeing.
 struct MarginariumGuardianView: View {
     let guardian: MarginariumGuardian
 
@@ -214,6 +235,10 @@ struct MarginariumGuardianView: View {
                         .accessibilityAddTraits(.isHeader)
                     if let after = guardian.after {
                         Text(after)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let portrait = guardian.portrait {
+                        Text(portrait)
                             .foregroundStyle(.secondary)
                     }
                     Text(Self.guardsLine(guardian))

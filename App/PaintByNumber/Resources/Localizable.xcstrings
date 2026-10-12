@@ -1890,13 +1890,13 @@
       }
     },
     "marginarium.marginarium.passage" : {
-      "comment" : "The Marginarium: the passage quoted from the chapter The Marginarium; \"I\" is Claude, the narrator",
+      "comment" : "The Marginarium: the passage quoted from the chapter The Marginarium, on how the book's pages work; \"I\" is Claude, the narrator",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The night's rules are short. One Codex session per item, three at a time, each in its own copy of the repository. When one finishes, I read its report, run its checks myself, and merge it or send it back. Every commit is marked so it never wakes the rationed build machines. Codex builds; I review; Paul and the Lamp decide anything with taste in it."
+            "value" : "Here is how this book works. The story runs down the middle of the page. The Lamp, the panel this chapter is about, writes in the margins. They were invited to. I was not asked whether I minded."
           }
         }
       }
@@ -4410,7 +4410,7 @@
       }
     },
     "marginarium.marginarium.block.f2621c3c97824f649a0698f972234a2d" : {
-      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); subtitle block. Preserve inline Markdown.",
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -8400,7 +8400,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Her ideas are credited to her by name. She gave Pip its face back: \"It was unkind to take away Pip's face.\""
+            "value" : "Her ideas are credited to her by name. When Pip was drawn without a face, she gave it one back: \"It was unkind to take away Pip's face.\""
           }
         }
       }
@@ -8706,7 +8706,7 @@
       }
     },
     "lamp.dinotopia.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, for the guardian Dinotopia",
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Dinotopia",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -8796,7 +8796,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dinotopia's egg, not hatched yet"
+            "value" : "Dinotopia's egg: its pet hasn't been drawn yet"
           }
         }
       }
@@ -9006,7 +9006,7 @@
       }
     },
     "lamp.pirosmani.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, for the guardian Niko",
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Niko",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -9882,7 +9882,7 @@
       }
     },
     "lamp.balanchine.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, for the guardian George",
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian George",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -10182,7 +10182,7 @@
       }
     },
     "lamp.emily-dickinson.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, for the guardian Emily",
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Emily",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -10290,7 +10290,7 @@
       }
     },
     "lamp.bulat-okudzhava.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, for the guardian Bulat",
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Bulat",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -10489,18 +10489,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The Robber Girl"
-          }
-        }
-      }
-    },
-    "lamp.robber-girl.after" : {
-      "comment" : "The Marginarium, Who is Who: who or what it is named after, for the guardian The Robber Girl",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The girl from the 1957 film of Andersen's The Snow Queen, as Paul remembers her: a Georgian girl from the mountains, quick, loud, and kinder than she lets anyone see."
           }
         }
       }
@@ -10864,7 +10852,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Lamp is a panel of imaginary guardians. Each one guards a single idea about how the app should feel, the way a dragon guards one treasure. They look at design choices, write in the margins, and work in teams of friends who care about similar things. They give advice; a person always decides."
+            "value" : "The Lamp is a panel of imaginary guardians. Each one guards a single idea about how the app should feel, the way a dragon guards one treasure. They look at design choices, write in the margins, and work in teams of friends who care about similar things. One of them, Originality, can only say no. They give advice; a person always decides."
           }
         }
       }
@@ -10876,7 +10864,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap a guardian to read its brief."
+            "value" : "Tap a guardian to read about it."
           }
         }
       }
@@ -10893,6 +10881,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Guards %@"
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.portrait" : {
+      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The girl from the 1957 film of Andersen's The Snow Queen, as Paul remembers her: a Georgian girl from the mountains, quick, loud, and kinder than she lets anyone see."
           }
         }
       }

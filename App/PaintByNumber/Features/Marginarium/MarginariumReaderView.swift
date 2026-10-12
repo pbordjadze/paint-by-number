@@ -12,8 +12,9 @@ struct MarginariumReaderView: View {
     let entry: MarginariumEntry
     @State private var chapter: MarginariumDocument.Chapter?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    /// The narrowest page (inside its padding) that takes a margin column; it grows with the text.
-    @ScaledMetric(relativeTo: .body) private var marginColumnMinimum: CGFloat = 740
+    /// The narrowest page (inside its padding) that takes a margin column, about the 11" iPad's
+    /// sheet: 444 pt of story beside 224 of margin. It grows with the text.
+    @ScaledMetric(relativeTo: .body) private var marginColumnMinimum: CGFloat = 700
     #if DEBUG
     @State private var readerFrame: CGRect = .zero
     @State private var demoTargetFrame: CGRect = .zero
