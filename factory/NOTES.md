@@ -302,6 +302,17 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   Round Dance (Claude's pick) versus The Round Table (what Paul read).
 - Next: Codex adds the pets to the chapters (in the app's chapter format), then they ship.
 
+## Paul's point 16: the Marginarium waits for the pets (Oct 12)
+
+- Hold the Marginarium's chapters and margin notes completely until the guardians' pets exist.
+  Chapter 1 in full (F39, with its fix: tables, margin notes with speakers, a page-sized sheet on
+  iPad) stays parked on `claude/f39-chapter1-in-app`; nothing of it ships before the pets.
+- Codex hit its usage limit on October 12 ("try again at Oct 18th, 2026 4:12 AM"), on every model.
+  The pets run stopped in step 6 with 2 of 20 pets validated (Originality, the Snow Queen). Its state
+  is saved on branch `factory-state/pets-run` (records and final sheets; how to restore is in its
+  README). When Codex is back: restore if needed, resume the run, give each failed pet one fresh
+  attempt, then put each guardian's pet beside its margin notes in chapter 1.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.

@@ -95,7 +95,8 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 | F29, F28, F30 | Shipped: `main` 2025569, build 1.0.303. F30 took two fix rounds (an XCUIScreen API; area identifiers lost when the canvas rebuilt its accessibility elements) |
 | Ship 2 (`main` 656d8d5, build 1.0.311, both SideStore sources) | F4 + F27, F11 (with v2 names: integer arithmetic, identical on every platform; v1 frozen as each platform computes it, Apple's pinned), F32 (palette prepared off the main actor; merged with F11 by hand), F35 (chapter reader), F37 (pets in chapters, the pets' credit line), F31 (three flaky UI tests). Combined CI: 364 iPad tests, all UI tests, no retries |
 | Flaky tests still open | EyeFinderTests.findsBothEyesOfAFaceWithTheirIrises (once, on F11); GalleryActionsTests.testTimelapseShowsProgressAndCancels (passed on retry, PaintCore branch) |
-| F36 pets run | Codex plays the Lamp (Astra decides, Sol compared). Style 12 won 3–2; the jury's flags are drawing notes. On step 4 of 7 (briefs) |
+| F36 pets run | Paused by Codex's usage limit until Oct 18: 2 of 20 pets validated (Originality, the Snow Queen), 5 failed their gates, 13 not started; state saved on `factory-state/pets-run` |
+| F39 chapter 1 in full | Parked on `claude/f39-chapter1-in-app` until the pets exist (Paul's point 16) |
 
 ## Waiting on Paul
 
