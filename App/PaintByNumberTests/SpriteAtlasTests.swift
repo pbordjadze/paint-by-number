@@ -53,6 +53,19 @@ struct SpriteAtlasTests {
         #expect(atlas.image(at: .init(row: 11, column: 0)) == nil)
     }
 
+    /// A margin player keeps only these: the idle loop's cells and the waving row, redrawn small.
+    @Test func thumbnailsAreSmallCopiesOfExactlyTheCellsThePlayerShows() async throws {
+        let url = try fixtureURL()
+        let atlas = try #require(await Background.run { SpriteAtlas.load(at: url) })
+        let thumbnails = atlas.thumbnails(maxPixelSize: 104)
+        let played = (0..<6).map { SpriteAtlas.Cell(row: 0, column: $0) } + (0..<4).map { SpriteAtlas.Cell(row: 3, column: $0) }
+        #expect(Set(thumbnails.keys) == Set(played))
+        for (cell, image) in thumbnails {
+            #expect(image.width == 96 && image.height == 104)
+            #expect(PixelReader(image)[48, 52] == SIMD3(15 + cell.row * 20, 11 + cell.column * 27, 100))
+        }
+    }
+
     @Test func missingCorruptAndWrongSizeSheetsFailWithoutFrames() async throws {
         let root = Fixtures.temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: root) }

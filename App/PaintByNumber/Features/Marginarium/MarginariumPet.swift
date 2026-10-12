@@ -1,8 +1,9 @@
 import Foundation
 
 /// Pet identifiers shared by the chapter tool and the reader. Pip and Colophon retain their
-/// imagesets and timing. Future guardians bundle one uniquely named `pet-<id>.webp` resource;
-/// the chapter says `![description](pet:<id>)`. No guardian art ships yet.
+/// imagesets and timing. Each guardian's pet is one uniquely named `pet-<id>.webp` resource;
+/// the chapter says `![description](pet:<id>)`, and `MarginariumSpeakers` maps a margin
+/// note's signature to the id.
 struct MarginariumPet {
     enum Art {
         case imagesets(SpriteAnimation)

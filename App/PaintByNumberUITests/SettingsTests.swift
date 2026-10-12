@@ -1,7 +1,7 @@
 import XCTest
 
-/// Settings: About (version, acknowledgements), Paper, Line Weight, Painting Length, Preview and
-/// Detail Brushes.
+/// Settings: About (version, acknowledgements), Paper, Line Weight, Painting Length, Preview,
+/// Detail Brushes and The Marginarium.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -157,6 +157,42 @@ final class SettingsTests: XCTestCase {
                 for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '0'"), object: toggle)], timeout: 5)
                 == .completed,
             "Detail Brushes didn't switch off: \(toggle.value ?? "")")
+    }
+
+    /// The Marginarium is hidden until its switch puts the book in the gallery's toolbar.
+    @MainActor
+    func testMarginariumSwitchShowsTheBook() throws {
+        let app = openSettings()
+        let book = app.buttons["The Marginarium"]
+        let toggle = app.switches["settings-marginarium"]
+        scroll(app, to: toggle)
+        XCTAssertTrue(toggle.exists, "Settings has no Marginarium switch")
+        XCTAssertEqual(toggle.value as? String, "0", "The Marginarium doesn't start hidden")
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        XCTAssertTrue(
+            XCTWaiter.wait(
+                for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)], timeout: 5)
+                == .completed,
+            "The Marginarium didn't switch on: \(toggle.value ?? "")")
+        attachScreenshot(of: app, named: "settings-marginarium")
+        app.navigationBars["Settings"].buttons["Done"].tap()
+        XCTAssertTrue(book.waitForExistence(timeout: 10), "The gallery's toolbar has no Marginarium once it is on")
+        book.tap()
+        XCTAssertTrue(app.navigationBars["The Marginarium"].waitForExistence(timeout: 10), "The book didn't open the Marginarium")
+        // Stored in the simulator's defaults: hidden again for the other tests.
+        app.terminate()
+        let again = openSettings()
+        let off = again.switches["settings-marginarium"]
+        scroll(again, to: off)
+        off.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        XCTAssertTrue(
+            XCTWaiter.wait(
+                for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '0'"), object: off)], timeout: 5)
+                == .completed,
+            "The Marginarium didn't switch off: \(off.value ?? "")")
+        again.navigationBars["Settings"].buttons["Done"].tap()
+        XCTAssertTrue(again.buttons["Settings"].waitForExistence(timeout: 10))
+        XCTAssertFalse(again.buttons["The Marginarium"].exists, "The book stayed in the toolbar once hidden")
     }
 
     /// The picker's label and value together: how a menu picker's row reads.

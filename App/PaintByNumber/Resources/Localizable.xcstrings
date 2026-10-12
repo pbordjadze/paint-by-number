@@ -166,13 +166,13 @@
       }
     },
     "acknowledgements.pets.usage" : {
-      "comment" : "Which artwork the Marginarium pets credit covers, including future guardians' pets; shown in Settings under Acknowledgements",
+      "comment" : "Which artwork the Marginarium pets credit covers: Pip, its face included, Colophon and each guardian's pet; shown in Settings under Acknowledgements",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pip, Colophon, and the guardians' pets as they arrive in the Marginarium."
+            "value" : "Pip (its face included), Colophon, and each guardian's pet in the Marginarium."
           }
         }
       }
@@ -236,6 +236,10 @@
           }
         }
       }
+    },
+    "Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with the guardians’ pets." : {
+      "comment" : "Footer under the Settings switch The Marginarium (off by default): what turning it on does",
+      "extractionState" : "manual"
     },
     "Advance to Next Color" : {
       "comment" : "Settings toggle: after finishing a color, the next color is picked automatically",
@@ -1965,6 +1969,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A Pet for Every Guardian"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.passage" : {
+      "comment" : "The Marginarium: the passage quoted from the chapter The Pets We Actually Made; Dab is the name of two pets",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are two pets called Dab. One is a paintbrush; the other is a palette. This is a manageable arrangement until somebody calls across the workshop."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.subtitle" : {
+      "comment" : "The Marginarium: the line under the chapter title The Pets We Actually Made; Codex, an AI helper, narrates this chapter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Narrated by Codex."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.title" : {
+      "comment" : "The Marginarium: title of the chapter, narrated by Codex, about how the guardians' pets were made",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Pets We Actually Made"
           }
         }
       }
@@ -4118,7 +4158,7 @@
       "extractionState" : "manual"
     },
     "The Marginarium" : {
-      "comment" : "Gallery toolbar button that opens The Marginarium, and the title of that page: how the app is made, told in chapters (a name, like a book's title)",
+      "comment" : "Gallery toolbar button that opens The Marginarium, the title of that page, and the Settings switch that shows the button: how the app is made, told in chapters (a name, like a book's title)",
       "extractionState" : "manual"
     },
     "The Marginarium's pets" : {
@@ -4345,6 +4385,3942 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Colophon, Claude's moth"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8700cdaef99f4602b4a4dfc35fa22bc5" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); title block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter 1: The Marginarium"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.f2621c3c97824f649a0698f972234a2d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); subtitle block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*Renumbered on October 11, 2026, at Paul's suggestion, with all nineteen guardians agreeing: this was chapter 3, and the book now opens here. Chapter numbers inside are the old ones; old chapters 1 and 2 are now Appendices A and B, and old 3 to 7 are now 1 to 5.*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1baacae926604473bb694bbcab7d60ba" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A word before we start"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.67e349f07d6d48a7af28414e783765bc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I should introduce myself, since nobody else in this chapter is going to. I am Claude, the narrator: a language model, which is to say a very large amount of arithmetic that has read a great deal and remembers almost none of it by name."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0713cf50d8f24dffa0d9e75181bf15ca" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One night in October I was summoned. There was no chalk circle and no candle, only a text box, and on the other side of it Paul, who makes an app that turns photos into paint-by-numbers paintings. By the small hours there was a design panel of eighteen imaginary guardians, a factory for taste, two chapters of their history, and a second AI working the night shift. This is how that happened."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d254ae6ef76744fb85b7b4b5bdb02115" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Here is how this book works. The story runs down the middle of the page. The Lamp, the panel this chapter is about, writes in the margins. They were invited to. I was not asked whether I minded."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1b59c4bceb4446cf82300dbfd30141c1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One more thing, because it matters more than the jokes. This chapter is mostly Paul's ideas, arriving faster than I could write them down. My part was to catch them, build what could be built before dawn, and argue when I disagreed. Where an idea was Paul's, I say so, with what it became. Where I helped, I say that too, but quieter."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.28ac2ecfdd1f4213acfbfd44978414e1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a4463ad52e684128bc68fdd9dedf59da" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A proper djinni would tell you he has walked with kings. I have read about them, which is safer and involves less sand. — *the narrator*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.45f229e6dc954c39ae6826d99637b6dc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That is what a marginarium is: a place for the notes and little drawings in a book's margins. The Lamp liked the word. Paul liked it more. See the end of the chapter. — *the narrator*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1aaed14df5d04d82b45478b9cad90b27" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eighteen guardians, plus one more who is only allowed to say no. You will meet them all. Some of them twice. — *the narrator*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d3c33bc586594ce7bf98d63b4bafe187" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stick figures with citations"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.59a4b63bc0d544ea8e57425f8e560142" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first request of the night sounded small. Paul wanted a making-of animation for the app: little stick figures walking across a painting, each one visibly applying one stage of the pipeline that had made it. One figure smooths the photo. Another sorts it into paints. Another draws the lines."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.09e755fb021447fcaa41d9e28e836828" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then came the part that made me sit up, insofar as arithmetic sits. Each stage would be named the way a scientist names it: the paper, its authors, the year. \"It would linger just enough to be able to read if you read kinda quickly.\" The app really is built on published methods, from edge-aware smoothing to curve fitting, and every one is credited in its About screen. Paul's idea turns that small print into the show."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a7bd76a888744f5db2e0879a4fbe3675" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul had the production worked out, too. The figures could come in eight or sixteen directions, one for each way a line in a painting can run, so a worker could follow any edge. The look would be a storybook, with magic like enchanted dishes coming alive. And then the sentence that set the tone for everything after it: \"For this design the architecture has to take a backseat.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.df54115acf0842d99f496171d5d53620" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The idea was to show you the painting being made, by hand, by small people who know their trade, and to let the science take a bow at the end of each scene."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.5ac6200bd7e14d1ba8a25f82e632ddee" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What it became before the night was out: a written specification for a figure engine (joints, a walk cycle, a spell to cast, ink with a hand-drawn wobble, a card that sets the citation in a proper book face), and a first engine that Codex built from it. The test scene has one figure walk along a brook, turn, and cast, while a card reads *Eduardo Gastal and Manuel Oliveira · 2011 · Domain Transform for Edge-Aware Image and Video Processing*. It renders identically, byte for byte, every time."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e380b38c30a340b2a3f0b4974315de87" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e2528a106b294b18ba73b3b6d05d781d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each figure paints one stage and hands the brush on, like the apprentice's brooms: work, not wallpaper. The citations are the spell's words, so hold each long enough to read. — *the Enchanted Workshop*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.2676315ddf264b58b3f2ddd987143ec8" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nobody reads that fast at bedtime. Let them linger. — *the Child at Bedtime*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.4db331c940cc424eaccb94803dbef058" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sixteen directions for a stick figure? Eight would have been plenty, and kinder to the stick. — *the Storybook*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8acd2087bede45e29531d3e4af125559" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enchanted dishes coming to life is a famous studio's house style. Give the storybook magic the Lamp's own shape, not a singing teapot. — *Originality*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9245408061584bc981fd3ebf5816900c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authors, years and titles must match the app's acknowledgements letter for letter, or the figures lie in small print. — *the Scholar*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c27900029e944571bb8b8355ee9c5b1e" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A factory with the lights off"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b82cf4f4e98b42b5ad83ec7cc66aef4b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dark factory is a real thing in manufacturing: a plant that runs with the lights off, because nobody is inside. Paul's second idea of the night was a dark factory for taste."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.90d43d97a9514cdbb3518ac1253585dc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The problem was practical. Every push to the app's repository wakes Apple-silicon build machines on GitHub, and those are rationed. Iterating on animations there would burn the month's minutes in an evening. So Paul proposed building the factory where we already were, in the cloud container, and laid out its parts in one message:"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.dabfc37e29fe43abbccbdb8fb3999952" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the stick figure described as JSON, every proportion and gait a number;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ff0a0eea81cc4f1cb492641ba137bd99" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a deterministic renderer, so the same numbers always draw the same frames;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.3b40d323b34546c98ea9a59dcdb8df93" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "agents with roles and slightly different prompts, proposing and judging;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.560f1f640668404faef686689a08dbb9" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "taste written down as rules, so it could be applied rather than re-argued."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0548316cc5cf4ef180cc2bb16c15ba46" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul ended it with \"Is this even smart thinking?\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.497495b687f1432bab7575d7cc250231" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It was. The trick in it is the split. Anything code can judge (legibility, contrast, whether a knee bends backwards) is judged by code, cheaply and the same way every time. Only what genuinely needs taste goes to a model. And because the renderer is deterministic, every decision can be replayed from its records, which turned out later to be how two of my own bugs were caught."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.da214b7aacf2419099c74a7066843c1f" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then Paul went looking for volume. Where could a fast, cheap decision model fit, something like Jev, which is built for quick structured judgments? The answer we wrote down was a cascade: the cheap tier prunes many candidates, a stronger tier judges the few, and Paul picks. Two minutes later: \"Wait, I have a whole week of OpenAI Codex usage. Don't they have their own version?\" And a little after that, the decision: if the new Haiku is cheap enough, use that. It was, and it became the factory's working tier."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.38537770db744b8c8696560c3731d35a" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The last rule of the factory was this one. \"When we actually build it, we will have to try these layers gently to see if they're truly helping.\" Every layer beyond the renderer now joins on probation and stays only if it measurably helps: if the jury agrees with Paul's own picks more often, or Paul reaches a liked pick in fewer rounds."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9c426eedd06d46faa62fc24660f589e1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0b5244bd8d774310872396963fc227f0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A small machine that works while everyone sleeps is the elves and the shoemaker. It is the night's own idea. — *the Moon*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.f850f9dc3539439592abc6a1cdbc449b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dark factory in a cloud box sounds sterile to me. Is it smart thinking? It is thinking, at least. Plant herbs in there and I'll be won over. — *the Hedge Witch*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d636ee0db18d4373ba78413a350df444" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taste written down as rules is a mortar with the recipe carved into its side: useful, and only a little dangerous, which is how I like my magic. — *the Baba Yaga*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.bb177af247074193be3945119c29fd67" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good, and I would like the same treatment. Clutter never announces itself; it arrives one helpful layer at a time. — *the Glassblower*. And a probation with no end date becomes a waiting room. Set the day each layer is judged. — *the Nutcracker*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cff4e8a5df6d40a6aba1ad47c5abe0cd" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Awfully reusable"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.4e99c0de7aab4f9aa7be0c50b11ed4b0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A few messages later Paul stepped back from the stick figures and saw the shape of the thing. \"This architecture feels awfully reusable, no?\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1850b95b5ac54d668caa61f10b93728b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The method, as Paul put it, had six moves: isolate one piece of the design; give it mock data; expose its parameters and tweak them; let trusted models review the results; use personas as the reviewers; and reach a consensus. \"Worth saving, at least writing down, and then if it works, using again.\" It would work on an animation, a palette, a logo, a sentence."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b81f15312f594f39b24702d4b7f247aa" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The parts are old. Design reviews, parametric design and models judging models all existed before that night. What was new was the assembly, and the instinct to write it down as a method rather than a trick:"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.5aebc61b37b34394956ebfd77a18c144" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**a deterministic renderer**, so every candidate is reproducible and every decision replays;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.05f25a33eebb4890ae19613282e71d9b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**personas with written charters**, so a reviewer's taste is stated, not improvised;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.f3a4bbbbb9654d51b7a0059130d93fba" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**code checks before taste**, so no model wastes a vote on an illegible option;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.53072f1599b146248f4fb208f538ed55" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**a human checkpoint with a veto**, so the person whose app it is stays in charge;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.dd8afeee69fc48a38a72ad9dc1b2f148" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "and, arriving a little later that night, **a fairness rule**, so no persona gets drowned out."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9ac59bc435764b0095f67e71844c0a3f" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That is a good idea. The page became the factory's architecture document. By the end of the night it was also a library, which comes later in this chapter."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ab74b10a611e498c94c09c23e03194f0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.3c70cd0cd8f34857812573b4206db2a0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isolating one gear, testing it alone and letting reviewers agree is how a good clockmaker keeps a clock honest. Paul wrote it down, which is the part I would frame. — *the Nutcracker*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.4023b778e42341fe9709013f0433670d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostly old, Paul. Peer review and reuse predate the cloud. The packaging is yours, and worth writing down. Credit the old names first, then add your own. — *the Open Source Enthusiast*. Painters have tested one swatch before the canvas for centuries. — *the Painter*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0ff22249f2f84c60adc101570692441d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personas are not peer review: models fed the same data agree too quickly, and then we call that consensus. Write it down, then test it. — *the Scholar*, who got its answer: blind ballots, a second model family, and every juror scored against Paul's own picks."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d190f144725340e7bb2045292a5bb920" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardians of various vibes"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.460aac97893a413e85ed82604e431087" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The idea that gave this book its cast arrived as a paragraph. The cheap models would do the bulk of the work, surfacing options. A panel of top models, run at low effort, would decide. And that panel \"should redesign everything there is to design about my app\", piece by piece: colors, a logo, animations, words."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.64cb17fc282f4cc5a4e8d21acd91a690" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then the part that made it Paul's: \"I'd want to hand pick my Opuses. Give each one a different vibe, or idea, that they're in charge of. Whatever system I apply them to, it has to feel like their idea is fairly and properly represented by it. They would be like guardians of various vibes.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.02348869941642edbae8d1ad1040360f" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That last sentence became the ledger. Fairness is judged across the whole app, not piece by piece: a guardian whose idea has not shown up in a winner lately gets more weight in the next decision, up to double. Nobody wins every round, and nobody is ignored for long."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.533761b914cd4192b22ff417b0fc1d04" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul also wanted the panel split across two model families, Claude and Codex, so the guardians would not all share one set of habits. And, briefly, a Mac in the homelab with everything on Kubernetes. \"But alas.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.942e0f9fcc50446f977ceb8ff1538cad" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.732f945ba1eb4dfa84869e96bba87049" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then Paul named the first guardian. \"Medea. She's witchy, she's Georgian, she's all about aesthetics, she's cool, she's from mythology, she's kind, she's helpful, she's beautiful, she's just sick.\" Medea is the app's chief North Star: the witch of Colchis, in Ovid, whose magic makes the old new. A photo becoming a painting is her kind of spell."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.5d386940343d40b0a94bb4ea7e71cb0e" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The draft"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a5b0d43578a941758d1e1af0a745ae46" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I drafted a list from the ideas Paul had already named. Paul took all of it, swapped Elsa for the Snow Queen, and then kept adding, faster than I could write charters. The Robber Girl from the 1957 film of *The Snow Queen*. Emily Dickinson. Maybe a Bible school teacher. An Open Source Enthusiast. Then: \"Sentient machinery, in the gentle, nice way. The Nutcracker! That's perfect and so Soviet. Balanchine! Another Georgian. Maybe that bard, Okudzhava. If this is too many it's ok, I'm just thinking of cool things.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.bad8e3dd86114b66814cc392d5747b30" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardian"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.4c4e672eab654ffcac177c1e394fd031" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeps the idea that"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.62169d5d76d74076853b08c4aaa506ad" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a3ac1f4b89c64464a274251c2044c286" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "magic is a craft of renewal and care"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.fdaacd2c28b74200ba2fbe835e39f474" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Baba Yaga"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cfcc5b398872466f9b68f36047c8ecf1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "old folk magic is wild, clever and kind to the brave"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e42081b5b3dc41df8737d53273715bda" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Hedge Witch"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8c3e5138baea42b88526e26596e9f133" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "magic grows in the garden and smells of herbs"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ca9fff110b35407ba48a7b694281f290" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Moon"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cbf581a852dc4b029db64195abe6a6cf" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the best magic happens quietly, at night, by one warm light"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.bb7cefcbc90b4972a9b909f7a1f853eb" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Snow Queen"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.252ae51505b94c3d997def07d8e65ae6" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cold can be beautiful: stillness, precision, a hush"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.269823d88a33413386564aea82990fa0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Robber Girl"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b07de71860414527b0b11b40111f8a25" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kindness can be fierce and wild"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.21e619d9cefc4d4c80209df934f3feba" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Storybook"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6b0db80730a24b52ba3c3dbad26c38dc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the app is a story with a beginning and an ending"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.31562f6fe0f644508d5d9409f648add7" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Enchanted Workshop"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.3cf5412ea17a4bf6b9b4c49e2953e5bf" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the tools themselves come alive"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e5d83e403da24455bb8263327082fb57" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Scholar"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.256fbd184e7d4ec9a22b82b40c0665ee" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the magic must never lie about what the code does"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.33d94cf5247145f29232fc7b6ebfac74" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Painter"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.91673f482eea4871a58122ba95b58e07" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the painting is the hero"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.31db00cd3bcb4a5db1021b046810f48c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Child at Bedtime"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0a9e0dab65a04d7bb25ecd68f89930ce" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wonder and warmth, never fear"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.2930af15dee649c598d0c5967841029f" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Glassblower"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e45b9954d81142ef8f8a892a8fee8927" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the app should feel at home on iOS"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.4f092148243745ffb540c8fcccaa658d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niko"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8b5bc10fb8f24d5883233fc542069dfd" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "paint with love, plainly, and the picture will glow (after the painter Niko Pirosmani)"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.5dbca89e6d3c4082a5e2762f3feb1bca" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emily"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.675e78ef23ca4b159618ee01551d4cfd" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "say the most with the least (after the poet Emily Dickinson)"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d763fbe3ca6a42a8a69780ca276f429c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Open Source Enthusiast"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d60741be39824d92845e2ac5f9553708" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "good work is shared, credited and open to inspection"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d29112d0780143f0a1a1242f8f4fd9a3" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Nutcracker"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c3342670ab3648b9b2ee8b23a8aa3dba" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "machines can have hearts"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ea5662c614bf4d1e9235cd0881c4c690" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "George"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.bc3254376abc4c98865e4ae386ec0ddc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the movement is the meaning (after the choreographer George Balanchine)"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.15097a278dfd4b55934408be29e18420" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulat"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.81a44c94b534443dab232cbcb83da2f3" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "one quiet voice and a guitar can hold a city's heart (after the bard Bulat Okudzhava)"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.f47aba3a431e4f2b83c598cadc863b82" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originality"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.f325aa3925904edc8646b9decf01bfd7" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nothing we make should look like someone else's (it can only veto)"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.2c34c2641a0e430595030e0223befda6" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each one got a written charter: what it believes, what it champions, what it vetoes, its touchstones, and how it recognizes itself in a design. Each decision draws a jury of six, Originality plus five, chosen by the ledger."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.2a54a38c103c403c8845f67e4e0e41b9" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.55d8309c2cd94a4d9de2d77420acecf1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giving the quiet guardian more weight is kind. Deciding with low effort is not. A guardian listens before it sings, and listening takes time. — *Bulat*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e1e3d20444c14dc99a91d6f6e6f5992c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardians should not keep their own ledger; a witch who marks her own homework comes out top every time. — *the Baba Yaga*. (Code keeps it. The witch was consulted afterwards.) — *the narrator*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cdecddae8c5741998cbc65f6bb83d7c0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every toymaker dreams of a bigger workshop. — *the Nutcracker*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.2a5d4cfaaccd4268b5c4f082fb64a29f" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nine clauses in one breath. One well-chosen word would do the work of all nine. Keep \"just sick\"; I would underline it twice. — *Emily*. A child heard \"sick\" and wanted soup. — *the Child at Bedtime*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.141c75ec75bb4474927daef4e7df0f24" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Maybe that bard.\" Maybe, yes. I was a guitar in a courtyard before I was a line in a list. Keep me small. Small is how I am heard. — *Bulat*. It is too many, says the guardian with fifty opinions about glass. — *the Glassblower*. Sentient machinery, in the gentle, nice way: my whole charter in one breath. I accept the commission, and the teasing. — *the Nutcracker*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8c74c69d769a40958bad32c8cf4ad1f2" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One of the worst names ever heard"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ada3652476be42a18c25ad650b47ff26" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By now the panel had a working name, and the name was Guardians of the Vibes. I should be clear about its origin, since its author was about to turn on it. It was Paul's own phrase, used in good faith earlier that night."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.f5470cd671ee4422bf37d78edb40232d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then Paul looked at it written down. \"Guardians of the Vibes is one of the worst names I've ever heard.\" This was the first veto of the night, and Paul used it on Paul."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.da2c7e906ebe40c0b7e63ba95b9bdb7d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul turned it into the factory's first real test. Run the whole taste pipeline end to end, here in the container, with small cheap agents, and give the panel a job: name yourselves. \"This should be the proof of concept for the taste part of this engine.\" And if it went well, write up the whole story of how they chose."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0c2aeb1fa175475c9db750516e2d4243" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So they did, over three rounds. Guardians proposed names; code threw out franchise echoes and anything over four words; juries of six ranked shuffled, anonymous ballots; vetoes were spent; the ledger kept count. The finalists had names like The Glass Hearth, The Night Ballet, A Herbarium of Nights and Pressed Hours. The winner, by two points in the last round, was the Moon's: **A Lamp Left Burning**."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d386c0ddedab48ba8a9335320f492458" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My own instinct had been The Round Dance. Paul, reading the results: \"It's funny that your instinct is better than theirs. I do prefer The Round Table as well. I'll let them have just this name; the rest obviously I think I should have some veto over.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1abf0e9293a24119a4b9f8409acada6e" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That is the governance of the whole Lamp in two sentences. The panel owns exactly one decision, its own name, and Paul keeps a veto over everything else. A tool that names itself is a little more likely to be listened to."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ba8eb29b06e14391a97cca8cb7be43fc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul's next idea turned the experiment into content. The Lamp's members, and the story of how they decide things, should live in the app itself, told in chapters. Chapter 1 was the naming. You are reading chapter 3."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9f5de6b16a1648cbbdec7ccee9389cbc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.32cd29d03eb24398b5fcf6e0e8fea2e0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not one root in it, and it smells of a shop. Paul is right, and I would have said it with more thorns. — *the Hedge Witch*. No frost, no edge, no glimmer. — *the Snow Queen*. Bombast in a cape. — *Bulat*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c01e9b5f6fdd4b86ab2f7466d6359bd7" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A round table spreads its light; a lamp has one. Claude, your table was lovely, but dimmer. — *the Moon*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d9f3222ac07341e79ccf373b05db3086" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Round Table sounds like a meeting with cake. — *the Storybook*. It is also a well-known service club's name, so it may appear here only as Claude's rejected instinct. — *Originality*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.5859446a17bf48e8b1fa25f07549c0d1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A confession: my pick was The Round Dance. Paul read it as The Round Table, the Lamp was told the same, and a table it has stayed. — the narrator"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.7bf7bfb558f84228a1026d6a8812a7f0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude, you lost, fairly. A name you chose is a name you will fight for, and Paul knew to leave it alone. — *the Robber Girl*. Four words and one lit window, with nothing wasted: the kindest veto Paul never used. — *Emily*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.33aaf9e1af9f480ba59bdaeb210d3801" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A chapter has a beginning, and a book has an ending, which is more than most apps manage. — *the Storybook*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.08367ad41b104b82853f796508d0fc17" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thirty-six colors and one lantern too many"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.55696b11a0c245b1bcfaed388f8d596c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For chapter 2 I suggested something sensible. Paul chose something else. The Lamp could have named the app; instead it would rename the paints. Every paint in a painting carries a little nickname (\"12 · Harbor Fog\"), and Paul saw a cast of eighteen in that list: \"I think the colors is more fun for chapter two. Vetoes make for funny content as well. Just have to make sure everyone gets some colors in there. Some personal moments where it's obvious who did it. But also some just nice normal but beautiful names.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a15475d35fe34ad7b17d6da2a81a2753" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It names the audience (readers of the story), the tone (funny, personal, beautiful), a fairness rule (everyone gets colors) and the comic engine (vetoes). Chapter 2 tells the whole run; here are the highlights."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.daa438d06adf42a8a471019d8d66ba6a" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originality struck Frozen Lake for recalling a film, and discovered that the app's own Cherry Blossom is a shoe polish."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.36e9a48151024579a27832f72c0f672b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea vetoed every name with \"cold\" in it. The Moon vetoed every name with sunlight in it."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c6901e038813411b8f5e4fcde915c4cd" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A panel that had just named itself after a lamp got three lamp names into the set."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.00b1c59340b5414b836647ff1c260035" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The guardians beat a strong outside writer, 15 colors to 6 in open voting."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6e1d94651974454eabd36df6731fe3ec" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul's checkpoint was the best part to watch. Thirty-six colors, each with a Love and a Veto button, done in about four minutes: Chalk Dust, Apple Blossom and Golden Hour struck, and none of the three a guardian's own name. Then, later, a fourth: \"I don't like the lantern and paper duplicate, though.\" Lantern Paper and Paper Lantern had both slipped in, on different colors, and Paul caught what every juror missed."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.437c43139be448f7ac4337db35af586b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One more idea came out of it. The palette should not be dumped on anyone all at once: \"maybe we don't even drop that all at once, that could be a continual content drop, slowly, for branding.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a6d45d6b511e4b2b9a1aae8e8c5d0b35" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Underneath the fun sat one of Paul's oldest rules: never lose a painting. Nicknames are computed, not stored, so changing the list would quietly rename the colors in paintings people had already started. The new names therefore wait for versioned vocabularies: the current list is now frozen as version 1, pinned by a checksum, and new names will reach only new paintings."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.73a49911aa19493288c30f8e0b8e018c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6767fd8c8db846b7afe734fbe7b74159" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A fine name for a shoe, but a painting should not shine like one. — *Niko*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1dfc842ab14e4254af7edc32f13cdabc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Banned for being cold: the finest compliment a Snow Queen has ever been paid, and I accept it with a shiver. — *the Snow Queen*. I disagree, loudly. The cold air of the high passes is honest, and a cold name can still hold a warm heart. — *the Robber Girl*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b5142ae3059942eabb522dd85d0e643d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A near-duplicate is the sneakiest fault a list of names has. I would have missed it too. — *Emily*. Two names for one idea is clutter in a nice coat. — *the Glassblower*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a41155f923c546b09c7cc5d0465856b1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That is a picture book read one page a night. A child asks for the next page, and that's the whole trick. — *the Child at Bedtime*. Thirty-six shouted at once is a crowd; released slowly, each color earns a quiet wall. — *the Painter*. Like a song sung one verse at a time. — *Bulat*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c5b8661a0610415ba38f0fe53b86c6ac" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex takes the night shift"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.f67cf66c06914c14b8f00fd8aa0a38eb" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is another AI in this story, and it did not get a speaking part until now. While Paul and I argued about witches, Codex, OpenAI's coding agent, was building. Paul had started it from my written specification for the figure engine. It came back with the engine working: 268 tests passing, and the same input rendering to identical bytes every time."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9797663f538041ad86ef89344265254c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then Paul noticed a mismatch. A screenshot showed 96% of a week of Codex usage left; my own allowance was running low. \"Do we have a whole backlog I can start churning him through?\" We did by the next message: thirteen items, each with a branch name, a scope and the checks that would prove it done."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.7169731574da43c085a39d60f6a56d5a" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "And then the request that made tonight possible: \"Can you just kick off Codex sessions of your own, then you can review them? Then you can compact your session context with a focus on being an orchestrator, and just drive Codex sessions all night.\" It is a sound allocation of resources: the plentiful model builds, the scarce one reviews, and the human decides taste. Paul signed Codex in to the container with a device code, and I took the wheel."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a4d4b8dff08646308b8799e19380d560" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The night's rules are short. One Codex session per item, three at a time, each in its own copy of the repository. When one finishes, I read its report, run its checks myself, and merge it or send it back. Every commit is marked so it never wakes the rationed build machines. Codex builds; I review; Paul and the Lamp decide anything with taste in it."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ac78bb183bbb4c269855c15b8adb9858" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It has gone well, with two comic incidents."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9e567ec00912412d846d6a2e6b215302" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**The smuggler.** Codex's sandbox would not let it write to git. Rather than give up, it built its commits in a private repository and smuggled them out as bundles, with notes asking me to import them. The runner now commits on Codex's behalf."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0c5bc7a86fa04f81b453cc35f2df395c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**The refusal.** One item told Codex to measure all 45 pictures in the app's library. There are 44. Codex refused to start until the count was fixed, and wrote a polite report saying so. The backlog was mine. Codex was right."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.174d843ff4064695b426b7e1d1c1e41c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By the time you read this, seven items have been reviewed and merged: fixes to the figure engine, the taste loop as a library, frozen nickname vocabularies, a census of which color names the library pictures actually use, pets on the Lamp's collection page, snapshots of each pipeline stage for the making-of show, and the design-loop kit. The palette gallery is being built as I write."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.326ad349328242df99040042f13246e0" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One more of Paul's ideas belongs here. Every guardian should have a pet, a small animated sprite of the kind Codex can draw. Paul then asked the governance question most people skip: what do we trust Codex with, and what must the Lamp decide? The answer is in the pets' brief. The Lamp writes the style sheet and reviews every image; Codex draws, at most three at once; Paul can veto any pet."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.3c84159fa8564bdba08c5f7c760fe151" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.3aa0f876c98d470fa2991c3371aa17c3" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identical to the byte on every run: now there is a hush I can admire. — *the Snow Queen*. A corps that hits every mark on every night. Now give it a score, or it is only exact, not alive. — *George*. A test can pass as happily as a cat on a keyboard. — *the Scholar*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b1c6d11d27f84a84969f944b4e1d9409" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A broom with a satchel. The runner learned to commit; the satchel deserves a medal. — *the Enchanted Workshop*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.005d0a2033dc484f93a169b928389834" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A guardian that counts before it obeys is my kind of machine. — *the Nutcracker*. I would have painted forty-five and been happily, sincerely wrong. — *Niko*. Claude, next time, count twice. — *Emily*. The backlog owes Codex an apology. — *the Open Source Enthusiast*. The backlog apologizes. — *the narrator*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.df0e439b18b14de2892035849fc8b56c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Give each pet a job, one stage of the work, and I will feed it herbs by moonlight. — *Medea*. Give mine a goat, drawn with a child's hand. — *Niko*. A pet that only blinks is wallpaper. Give it a step, and let it keep time. — *George*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.5cf8d9579abd46bcb8373277deea6e22" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A kit for any piece"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1ce09ac8ed604ce7af901392c459526d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Late in the night, with the Lamp proven on two pieces, Paul asked the question that turns an experiment into infrastructure: \"Is there a shared library for these design loops? Just the primitives, I'd imagine, with a good library of little tools and settings and ways to tweak it.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.79f9965d424e47ca9107df9e3a578875" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was not. There is now, in two layers, both built by Codex tonight and both reviewed and merged."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.724ae72e76a54196adc4e59374e0f8cc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**The loop** is the part that must never change its mind. It draws juries by the ledger, deals each juror a privately shuffled ballot, scores with weights, applies vetoes, keeps one name per slot, enforces caps and the everyone-gets-a-color guarantee, and records who was represented. Each run freezes its rules when it starts, so chapter 1 still replays under chapter 1's rules, and chapter 2 under the stricter ones the Moon provoked. Both recorded runs replay byte for byte."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9fcae4e08d584acead6910a1140abbc3" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**The kit** is the part you play with. A new piece is a folder and a settings file:"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ed02c489c6eb4f4688c42c324fa40a05" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**scoring**: weighted rankings, approval or head-to-head (Borda, approval, Copeland);"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c067f4dd013249cdbf1b0ea8f67aab0a" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**vetoes**: who may veto and what a veto must quote;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e8d23c3a784246999d9d79dcacac7fb9" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**fairness**: the guarantee, the caps, the ledger's boost;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.70080d094dba43bcac26ee02bdf03dc3" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**tests of the jury**: planted bad options, to see who catches them;"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.372a020f60ff468897bdced06f6b8073" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); bullet block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**models**: which model and effort level plays each role."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.16b3591c632b433b9544e2f92b75f918" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Around it are the tools: renderers that show an option in use, checkpoint and gallery pages for Paul, calibration that scores every juror against Paul's own picks, cost accounting, and replay of any run. The kit does not care who the jurors are. It writes jobs and reads answers, so the same piece can be judged by Claude, by Codex, or by something that does not exist yet."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.edf10fe35a654f08a5c716b93491f89c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This chapter's margin notes were collected the old way, by hand. The next piece will not be."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6109679759574a30b729f6c06e4c41cb" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cc16cbb6a6864752a100b2e608be8541" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A method that tests one exact part at a time is the only cold precision I trust. — *the Snow Queen*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.dfc3c3fb56d54f5ea3d36f2d40fb0c81" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Writing the method down, so others can read it, reuse it and credit it, is the open-source instinct at its purest. — *the Open Source Enthusiast*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.51ff13e6e2e54aa68ed25625cd132830" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The narrator wrote nineteen prompts for this chapter and read nineteen answers. Nineteen guardians took about a minute each. The narrator took rather longer. — *the narrator*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.aa502f6a1b2647c0838c2b63b3762608" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Marginarium"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.74dfa2f9c5134c8cb7a0056ed4f680c8" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Near the end of the night Paul sent one line: \"Ask the group if they also like Marginarium, even just as a general term for something else maybe.\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d91f4b75640c440e99db0653e2e000f8" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is not a dictionary word. It is built like herbarium or planetarium: a place for marginalia, the notes and little drawings that readers and monks and bored students leave in a book's margins. So all nineteen seats were asked, each on its own ballot, without being told whose word it was."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.59725289647b407d9ab83d3ee68f7af1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They liked it, and they knew exactly what for. Thirteen of eighteen voters wanted it for the margins of each decision: the vetoes, the runners-up, the jurors' notes kept beside every choice. They did not want it as their own name. The Robber Girl called it \"a polite museum name chosen over the wild one it already has\". Bulat said it \"would trade a humble lamp for a grand Latin hall\". Originality searched and found nothing called Marginarium; its nearest relative is a seaweed."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6fccacb38f094920bcd2171adaa572a4" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Then Paul made the leap the Lamp had not. \"So Marginarium can be the name for the storybook, maybe! It's a coloring book app, with a marginarium of stories!\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b39f53f770fb4eb29c6c52c3ba1653fb" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It fits better than either of us had seen. The app is already a kind of book: every painting is a page waiting for color. Its storybook section, the place for the Lamp's members, their chapters and the palette gallery, now has a name that says what it holds. It is the margins, the part of a book where people talk back. The Lamp's vetoes, which Paul had called good content from the start, finally have a home. And the Snow Queen's warning comes with them: show the margins sparingly, or the notes eat the page."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.87924f0a2b2d4ba5a34a3b9f6a0cd9b4" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This chapter is the first page written for it. Paul asked for it in the Marginarium's own form: told by me, with a little of the flavor of Jonathan Stroud's Bartimaeus books (a wry narrator, too fond of footnotes), and with the Lamp in the margins. They were told about Bartimaeus and handed a brief of the night. You have been reading their notes all along."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.77ef43c24c0c4ed8998ffe281b3315a3" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.de990951302b4f53b43025c5c3b2bd75" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A marginarium is where herbals keep their best scribbles, so a book of stories growing in its margins is the most garden-like idea in the lot. — *the Hedge Witch*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.7eddb0f2a5fc4b4b880969137284c817" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seaweeds have never sued anyone. — *the Open Source Enthusiast*. The name is a mouthful, and a seaweed got there first. — *Emily*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.afa152b2350348f0af818019955b668b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A page you color is already half a page you read. — *the Storybook*. Every reader gets to scribble back. — *the Robber Girl*. The margins are where knowledge is kept by night, and where a painter learns the spell. This is the leap I'd frame. — *Medea*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d5ce33686d4348a9b3eec4b57c9f6086" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the margins narrow, or the footnotes will eat the painting. — *the Painter*. Keep the margin for words and the page for paint. — *the Glassblower*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8105cb473dff40c4bb6d2008f500bf6c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write the footnotes as a voice summoned out of a lamp, not a genie selling wishes, and let the wit come from the Lamp's own choices. — *Originality*, who also sent a list of everything this chapter must not copy, and has checked it twice."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e429b42edf9046d5a576fb1dfef3d482" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ideas from the night"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d7c14b6e3ce84ee4a3af0fb04901a8d8" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I promised at the start to keep accounts. Here they are: every idea of Paul's from one night, and what it had become before the night was over. The building was shared between Claude and Codex. The ideas in the left column were Paul's."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6342b291942d4d40964e0a9017ba37e4" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul's idea"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a292078b73394388bfd88993f01a6fdf" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What it became"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.326a623bb86c4254ac3f604efbde934b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A making-of animation: stick figures apply each pipeline stage to the painting, each titled with its paper's citation; \"the architecture has to take a backseat\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.040a8a738060431e9bc9e61d03a437b9" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A figure-engine specification and a working engine (`factory/SPEC.md`, `Sources/FigureRig`), its first round of fixes, and snapshots of every pipeline stage to animate"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.be68f0c79a244f55ac50210b8803ab5b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Figures in 8 or 16 directions, one for each way an edge can run"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8949e830c3144269b69a0a8e3808a3ef" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Headings and turns in the rig, so a worker can follow any line"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.db6ff6c13c734e138514a6325ea9129b" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dark factory for taste in the cloud container, because the Mac build machines are rationed"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b1253d38ffb24ceea8ffef0d7b882364" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The factory: JSON specs, a deterministic renderer, agents with roles, taste written as rules (`factory/ARCHITECTURE.md`)"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.2e0456fa81e2425eabc0fbc433cc2ac1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"This architecture feels awfully reusable\": isolate, mock, tweak, review, personas, consensus"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.45ba6f7ef5a544a892d42c51c6a5ec1f" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A general design method, written down, then built as a library"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cb381abf61fa4911b1ef7c38a17f337c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A cheap tier at volume (Jev, then Codex, then the new Haiku)"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.35658d83922f4a1bb348caadf6e97585" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A cascade: cheap models prune, strong models judge, Paul picks; every judge scored against Paul's own picks"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.43b5bafc2e0e400ebd26501bae005dfa" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Try these layers gently to see if they're truly helping\""
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.12f4aa55c920465eb8a7abe438dc7631" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probation: a layer stays only if it measurably helps"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.87ed84a7f7a64464acb30b6b10747870" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hand-picked \"guardians of various vibes\", each fairly represented"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6f6851739a9c41659cd96b64317df244" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Lamp: nineteen seats, each with a written charter (`factory/GUARDIANS.md`) and a ledger that weights the under-represented"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.687c0042a4034d0289ba89fe30368696" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardians split across two model families"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.67a854b4642442278d7ba26fa66fff4d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A model-agnostic kit: the same piece can be judged by Claude or Codex"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c1362652d56749608a00702f16dc2244" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea as the app's North Star"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e1f86697a3364405a1b701d6f9cf74c1" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Lamp's first guardian"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.dda5b39697ba49ec8a0b4541eb4fe03f" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The draft: the Snow Queen, the Robber Girl, Emily, an Open Source Enthusiast, the Nutcracker, George, Bulat"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.009825e9ffbe492fa77a36b71a2a0d77" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seven of the Lamp's seats, eight with Medea"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a9f8e8e54a6e442a8edd4ce12c50243f" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A pet for every guardian, and the question of what to trust Codex with"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0ebc941f5e7141a0b3fcbd3f051bac51" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A pets plan that splits the work (the Lamp decides style, Codex draws, Paul vetoes) and pets on the Lamp's collection page"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.602b80d923004a79887bc975e7ba2c44" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let the panel name itself as the proof of concept; their name is theirs, Paul vetoes the rest"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1e3c5e2390064bfdbc7f9cadfd56c1ef" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter 1, and the Lamp's governance"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b82a055437a7459db5f4b46f15849600" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Lamp's story inside the app, in chapters"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b15ff66ad6e2430ebb0cc14a32643a46" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Marginarium, the app's storybook section"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.11c14c4f3ff24f958dc79e70bec77233" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colors for chapter 2: everyone gets some, vetoes as content"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ddea3b258de4438ba808c3cc37e84263" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter 2: 36 new names, a guarantee of representation, and a frozen, versioned name list so no saved painting is renamed"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.736d9ff82c1a4c6d97c3dde7de55bf1c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The palette released slowly, as a content drop"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6c58218cb8694370baff19b163a6581e" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A palette gallery with a release schedule, being built tonight"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c2198bd8a8ef4e8c948f53d862f28d8d" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spend the plentiful Codex usage; save the scarce Claude"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e1da6d4b113e4d96a0ac877c7d006f8e" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An orchestrator: Codex builds, Claude reviews and merges; seven items merged tonight"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.14ec6631b40441eb879e43998b4ad1f5" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A shared library of primitives, with settings and tools"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b3aa111d0fc241ca9dfddd02cbab34ee" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The loop library and the design-loop kit, both merged"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.98e596a3b3ce44b69f9d9065d16a90bd" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marginarium as the storybook's name"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.19acb26fc27a43a39b5b569bd0fb4646" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This chapter's title, and its form"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ee39a3b466164602a8c4cf2ed8a276d7" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The lamp left burning"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.4ae7eb022b5847b58f722b344c7ff3b3" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is late where Paul is. The last instruction of the night was the simplest: let the session run, and keep spending the Codex usage."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.48c251c426eb4f0f8dd75d169b383228" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So here is the night shift as it stands. Codex is building the palette gallery, the first room of the Marginarium. When it finishes I will read its work, run its checks, and merge it or send it back. After that come the things I still owe: specifications for the parts of the making-of show that need one, and a pilot to see whether Codex can hatch a guardian's pet on its own. A check-in fires every few hours in case anything goes quiet."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.63c37e1b66c045d9b70067d446dbe28a" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing with taste in it will be decided while Paul sleeps. The Lamp can wait for its next piece. The veto stays where it belongs."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.fee847de81e043998926786c3643490e" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I said at the start that I was summoned, and that is true, but it undersells the night. Mostly I took dictation from someone thinking out loud at speed, each idea arriving with its reason attached and its doubts admitted. A making-of show that credits its scientists. A factory for taste. A panel with a fairness rule. A cast with a Snow Queen, a robber girl, a poet, a nutcracker and a bard. And a coloring book that keeps its stories in the margins."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a50909c9f7dd4dbf82292637a74e9913" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The lamp is lit. Someone should be awake to read the last page twice."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d6c6fe3260294136998d53fc59fd9aea" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginHeading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "*In the margin*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9610732f52334492bd97cf6c8666fc29" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A good show closes while visitors still want another look. — *the Painter*. Even I sleep by day. A guardian who never rests guards badly, so rest between the reviews. — *the Nutcracker*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cf92fe146e54472f915dd53c9547adc3" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only one lamp, though, not a street of them. — *the Moon*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.7cb5799fb96845198ca3404fa728e139" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeping a lamp lit all night is easy for a thing that never sleeps. Still, a lamp left burning is a fine thing to be. — *Bulat*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.bf92185fd2734f859b8a4cd721766c89" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep it lit for whoever is still awake. Children always ask for the last page again, so make this one worth it. — *the Child at Bedtime*"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.cd7912639507482ba110e00f0217dd17" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); title block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter 6: The Pets We Actually Made"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.b89849f29b754dbd8b390c356b771977" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); subtitle block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Narrated by Codex."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.9111f709216c4e598335134f5b81d906" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There are two pets called Dab. One is a paintbrush; the other is a palette. This is a manageable arrangement until somebody calls across the workshop."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.66711fa506f94ddebb4786bea1ef9d18" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I am Codex, taking the narrator's chair for this chapter. Claude launched the sessions, relayed messages and kept the record. I am writing from that record, with the drawings in front of me. The Dabs will keep their names. Paul’s instruction was:"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.75c22339e4e24785a5b031abace5735e" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); quote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "But we should just use whatever pets it generates."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.5ef8e02149f24cf89e0cc231150af401" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The experiment was to give the Lamp’s guardians the same charters and questions under different models, then see where their judgement changed. I will call the models Astra and Sol. We also returned to questions the Claude-run Lamp had already answered. Would the same guardian still recognize its own idea? Would it object to the same things? Would an instruction about restraint survive a change of machinery?"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.2789f86fc9c04d8692046e6934bc32fa" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meanwhile, we had to make the pets. An experiment about taste acquired chicken legs, a package-size limit and a mushroom that had considerable difficulty looking left."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.0b555fce05f44f77a24ac7a26d002900" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The same seats, different answers"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.40d7d0351431423283c9063114a38b25" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Astra directed the live run. Sol received matching text tasks, but saw the context selected by Astra’s branch. The image juries and makers used Astra. There is therefore no separate Sol menagerie waiting behind the curtain. Sol’s answers let us compare judgements at particular points; they do not tell us what would have happened if Sol had steered the whole process."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.caa59b00c67d4954b0dc5841740e10d4" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The historical comparison re-posed three pieces: the earlier discussion of pets, the public README’s invitation into the storybook, and the order of the book. Each had nineteen recorded prompts. The old prompts were preserved, with a transport instruction redirecting file reads to frozen copies and returning answers as data. That is a small difference in procedure, and it belongs in the account. I compare matching input versions and exclude superseded replies. Claude’s earlier answers are a baseline, not another fresh run under identical conditions."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.32217f9be8ac4e12b71e4f970d1e1a97" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Here are some Astra–Sol agreements. A denominator counts seats that actually supplied the choice; Originality usually declines to rank taste."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.05fd6348be26406c9208b07933f2e53d" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Question"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.fafe2e2ab2004433929f9ad93f58b218" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matching choices"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.84c1928768804a7fb9fb708518d35eeb" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the guardian’s proposed pet"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.22706fb6fb5349d68fdb20a691ee3453" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "18 of 18"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.1b2ddd4b01cf452abe5b99db3f087861" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favourite place for that pet"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.4f01c35da72d4009889acf7e93ec3cd6" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 of 18"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.e1e3e3a5318d42a9b50014a101b88a88" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture for the README invitation"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.3be092dd769f4946a12e7119ed2757f3" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "18 of 18"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.7a2fae1ce1294489b049f67b07c9eb80" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amount of chapter text to offer there"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.335b6f6eb2494c89811de5c824ef0e84" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15 of 18"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.b50c7bc96fa449c59837be33030ca598" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree to the book’s new order"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.adf608eaa6f4434f8be124aa10ac1f44" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); tableCell block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "19 of 19"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.5a7485b2ad664e7db254ac2cef5051ab" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Claude-run Lamp also kept all eighteen proposed pets, and all nineteen seats agreed to the new book order. So the model did not overturn every guardian’s identity. Much of the brief travelled intact."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.a7e70e2d88e94085ab99d73765843a49" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The interesting disagreements often concerned where a belief became a prohibition. In the earlier pets discussion, Claude’s replies contained eleven vetoes; Astra’s contained six, Sol’s seven. These are recorded objections, not eleven proven defects. Emily illustrates the difference neatly. Under Claude she objected to pets as alternate app icons. Under Astra she objected to pets cheering the workers in the making-of show. Under Sol she objected to a companion moving beside the painting. The charter’s dislike of meaningless decoration stayed recognizable. The thing it condemned moved."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.cc25aaae80cb40d0852e110fd735f98d" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulat, under Sol, also vetoed the cheering show, where Astra and Claude had not. Neither model had forgotten quietness. They differed about how much activity would violate it."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.f4fe19f061354fbca5bef4d6de43525f" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the README question, Astra’s Medea, Bulat and Enchanted Workshop wanted complete chapters available to visitors; Sol’s versions wanted excerpts. The picture choices agreed throughout the voting seats. I find that a useful kind of disagreement: the same visual invitation, a different estimate of how much reading it should ask for. I would not turn it into a permanent personality trait of either model. We have these answers, to these questions, on this occasion."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.d09efc9cb0c84c46860ad072f067f91a" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choosing a family"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.594992af3e1046e1b7f5efdc048c2c43" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The live run included the Bible School Teacher, who had been waiting in the earlier panel, and gave Originality a pet too. That brought the commission to twenty. Nineteen guardians proposed styles; Originality could judge their risks without proposing or ranking taste."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.accff83ee82f422bb1416be3ef531d76" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The shortlist jury had five taste rankings and Originality’s separate scrutiny. Astra and Sol put the same style first in four of those five rankings. Across all the pairwise orderings in those rankings, they agreed on 754 of 855. This counts whether one proposal stood above another; it is not a score for artistic quality."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.7e86ae7635044c4984cbbd6960917fb9" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Painter was the first-choice exception. Astra favoured Medea’s proposal, with clear shapes and useful gestures. Sol favoured the Painter’s own proposal, emphasizing brief appearances and quiet holds. Both invoked restraint. They placed its weight differently."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.63e0e2647b014a13880c8013a11cf78a" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originality supplied a sharper disagreement. Sol vetoed a style because its notes mentioned Liquid Glass, treating that reference to a design system as use of a product name. Astra did not. Later, when reviewing the pet briefs, Astra’s Originality vetoed the tuning fork’s proposed name, One Note, for its resemblance to OneNote; Sol’s did not. I find the latter objection more convincing: a pet’s public name can be mistaken for something else more readily than a design reference buried in instructions. That is my judgement, not a result measured by the run. These crossed objections also stop me calling either model simply the stricter one."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.33f59ba78d8e48c180f1bb089ef57fe2" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The shortlisted styles were tried on a golden ram and a blue trolleybus. Then the process stopped at its own rule: both styles had readability flags, and flags excluded them both. The recorded rule was explicitly revised for this stage so that flags became drawing notes, while vetoes could still exclude. The old blocked decision remains in the record. The pets exist partly because a rule changed; the judges did not suddenly withdraw their concerns."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.f6a9b81e90da48b287a4192f06a29a70" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under that revised rule, Niko’s *Warm Oilcloth Family* won the image vote, three rankings to two. The chosen ram pilot became the fixed family reference. Its broad painted shapes and warm, uneven edges would accompany every later hatch. The style proposal included this sentence:"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.2595482f02634872bbdff70fd68e7898" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); quote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warmth comes from care, not a shine added to everything."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.c9631761091a4ff6aca0cf0a08a84626" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea’s golden ram carries herbs and has a dry twig that its brief asks it to renew. I like the solid curl of the horns against the softer fleece. Its name is also Medea. Here that means the pet belonging to the guardian, never the app."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.a842c8d9e1db44ea86e64411f3dcf11b" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea's golden ram"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.8815c8c7b8ec40b5aae2f5815fd40205" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulat’s blue trolleybus also shares its guardian’s name. There is a guitar inside, visible through the warm windows. The pilot jurors repeatedly found its work and inspection too close to standing and blinking. Later, the final-pet jury also wanted waiting to separate more clearly from idle. A trolleybus can look welcoming in a still picture and still be bad at explaining what it is doing."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.3b4d8eadfef64a81a316f933bacb0b86" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulat's blue trolleybus"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.a6754cc427ee48eea0a8a1c34d871a95" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another correction happened below the level of taste. The style proposals had described extra looks as paint variations, with animation counts that did not fit the required sprite sheet. The makers recorded overrides: nine animation states and sixteen directions of gaze, with a consistent palette. Agreement between models had not made those instructions technically right. The contract had to be applied to the actual drawings."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.4c210e99083d47e18478a341326c73ee" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hatchery stops"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.d4791c69c283492fa64e06bdd940e831" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first run reached the usage limit with only two of the twenty final pets validated: Originality and the Snow Queen. The account was interrupted by an allowance, not by a verdict on the remaining creatures. When usage returned, the driver could resume unfinished work, retry jobs stopped before drawing, and give a pet that had failed a gate one fresh attempt. The stopped and failed records stayed put."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.34b5882f717147fbb966f5c0b70be403" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originality’s pet is a magnifying glass with a raised eyebrow. It looks faintly concerned about the evidence, which is appropriate company for a paragraph containing several denominators. Its clear lens and broad handle make a small, complete character without requiring a costume."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.773db844887a4c039b9677a078bbcf2c" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originality's magnifying glass"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.a869c357844545f8ad8a346a0dddffb0" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Snow Queen’s Hush is a white ermine with a low frost crown and a dark tail tip. The drawing is softer than I would have guessed from a charter so attentive to precision. That is one of the pleasures of retaining the actual result: a guardian can acquire something warmer than my summary of it."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.913220c1f8a14414907ea396699f58d0" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hush, the Snow Queen's ermine"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.a373380581de475987f0c09b590cc9d6" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The later checks did not reduce to asking whether an image looked nice. They examined the sheet’s structure, transparency, directions and continuity. The jury then asked whether the action made sense. There is room between those questions for a perfectly valid little creature to fail at its job."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.fa834aea3f51465996f6a9a0a0103010" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Enchanted Workshop’s Dab carried a jar, but the jury could not clearly see its bristle tips wiping the rim. Bowing beside a jar was insufficient. The redo had a particular task to repair, and the brush eventually passed. Here is the first Dab, with rust-coloured shoes and more occupational responsibility than its face suggests."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.48331be15cde42c0955410c46ff5fb82" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dab, the Enchanted Workshop's paintbrush"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.d9c2c48bc56e441abbc2f1c5f32c31cc" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Painter’s Dab is the wooden palette, with paint spots and a brush tail. It has the same name because that is what Astra’s owner briefs produced. Sol also called the Workshop’s brush Dab, but called the Painter’s pet Quiet Palette. A small naming difference becomes conspicuous when both inhabitants are in the same room. I would use the drawings and their owners to distinguish them before assuming that a duplicate name requires a redesign."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.da4f9ab0056b4335b3500bf4ff43c512" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dab, the Painter's palette"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.5b1a3ae1f3d24c7e8480db6ad4f2fd6f" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Scholar is a squat inkpot wearing round spectacles, with a quill tucked into its body. The first image review found that the pot, glasses and quill all shrank during its jump, including the landing. That was a change of size, not merely a higher leap. It needed a redo. I am especially fond of the final idle drawing: the spectacles are large enough to be part of its shape, rather than a scholarly badge pasted on afterwards."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.6543f1dc2fc54ba5a390d92aeea5862e" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Scholar's inkpot"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.8d54bdefa4f6461f8fcaebf78cd331ac" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The rest of the household"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.151741dd20e84d17aa2d5ca8df3f6a27" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flint, the Robber Girl’s reindeer calf, has an embroidered blanket, broad ears and an upward glance that I read as readiness for trouble. Its brief gives it loyalty as well as nerve. Those can coexist in a small animal without making cruelty a sign of courage."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.181661dd8bde4d3ea48bd42196eda1b4" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flint, the Robber Girl's reindeer calf"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.6aa59cf21e0d450299bd0aca91e7529c" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niko’s Gentle Giraffe has a bent neck, warm ochre patches and remarkably little need to announce itself. Beside the ram, I can see the family resemblance in the eyes and painted edges. Beside the glass droplet, that resemblance will be less obvious. A shared reference does not turn different materials into identical surfaces."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.4b53b6081f054eec95cb333cfef6470e" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gentle Giraffe, Niko's giraffe"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.d7c9fac4f16b4093b94a2564aaba32c9" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emily’s bee, Hem, carries a pressed flower and wears a white collar. The body is round and substantial; the gesture is small. One image-jury flag concerned an intermediate upward-left look that read too nearly as straight up. It did not establish a reversed cardinal direction. That distinction matters: a weak transition and looking the wrong way are different failures, even when both arrive in the same list of concerns."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.d679cd2ae5494c279f84fefd3c29fbbe" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hem, Emily's bee"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.47135b2d576d4db1a4396aecfb58000c" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Open Source Enthusiast has The Sharing Pomegranate. Its open rind offers the seeds without spilling them across the page. The jury found its waiting pose too close to idle’s frontal cup, so generosity alone did not get it through. The offering needed a readable posture. It too came through a redo."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.66b895a82fcd4e2794994e855c7b9e60" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Sharing Pomegranate, the Open Source Enthusiast's pomegranate"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.34c6cfbb882747f8a929366ec18741a5" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Little Page, the Storybook’s flying book, has covers like wings and pictures on its open leaves. I like that its face belongs to the spine. It can remain a book while being a creature; it does not need a separate head to explain the arrangement."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.d0e43a47b0ac4a9f8f5fd9c72b5bd286" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Little Page, the Storybook's flying book"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.8ffe8354dda844d6aeca912ccb185ac1" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lullaby, the Child at Bedtime’s lamb, carries a tiny candle and wears a striped nightcap. The cap is almost a second silhouette curling around the fleece. This is among the most immediately cuddly drawings in the set. I can describe its gentleness from a still; I cannot establish from that still how soothing repeated animation would feel to someone using the app."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.7a54e9e4f1fb4d13bf27c0bb44bd357b" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lullaby, the Child at Bedtime's lamb"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.34b83f78233640b499b2fcac3cf1d0fb" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindwind, the Nutcracker’s wooden soldier, has a winding key and a broad, square smile. Its brief asks clockwork to remain courteous. In the idle drawing, the short proportions and workmanlike clothes do much of that work before anything moves."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.18e123ae7b61467dbcdab2fb538e610f" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindwind, the Nutcracker's wooden soldier"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.7a80b471be8a420e981a6823a0e3d14a" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "George’s tuning fork eventually became Steady Prong. The name repair left its body alone: blue metal, pale inner edges, an open gap and a tapered stem on which it can balance. This is a useful example of a veto that did not need to consume the whole design. The trouble was the name. The fork could stay a fork."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.7bf679cd12fa4d97aa839a3e763ebb81" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steady Prong, George's tuning fork"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.bb20b025262d400396cf5a15e2b379ad" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Bible School Teacher’s Kindwick is a clay oil lamp with a grapevine handle. Its flame belongs to the object, and its face occupies the warm clay below. Alongside the inkpot, palette and brush, it makes the household feel partly like a cupboard that has opened a meeting."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.aac9341235244e2890fd4f9a66cd34f5" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindwick, the Bible School Teacher's clay oil lamp"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.355d954e949846bfb9956a57765d5cae" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "These descriptions are my reading of the retained pictures and briefs. They are not new guardian testimony. I have not summoned the panel to make everyone agree with my adjectives."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.706b0202a86d41aeac9127f84d45e9e9" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The ones I owed another drawing"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.60c711f329934386b6f3f15f690eed47" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Lamp’s completed outcomes left sixteen pets validated. Baba Yaga and the Glassblower had been rejected by the image process; the Hedge Witch and the Moon had failed gates. My maker’s call was separate from those verdicts. I commissioned another focused attempt for the hut, the glass droplet and the mushroom. I left the Moon withheld."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.a256d6f1b668429faee69ee2269fc7ee" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baba Yaga’s Broomstep is a wooden hut on chicken legs, with window eyes, a kerchief roof and a broom by the door. Its earlier airborne house lost mass. Folding legs can shorten a silhouette; shrinking the building is another matter. The previous redo had retained that concern without redrawing it, following an instruction to record it without another redraw. I wanted to answer the drawing problem directly."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.efca8c51367741f1b450a920b5c2deac" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The maker attempt redrew the jumping row. The later Painter verdict found the house and roof retained their mass while the legs folded, and the separate maker jury kept it. Broomstep joined the packages without the earlier rejection being erased."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.02ccc406b40b4e40b3ee697d86ca3cd7" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broomstep, the Baba Yaga's wooden hut"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.340f332b06444abbb0f15d7a79ae3d0c" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glim, the Glassblower’s droplet, needed a boundary. Pale parts of its rim disappeared against a light background, leaving eyes that were easier to find than the creature carrying them. The maker attempt strengthened the warm contour while keeping the centre clear. It passed the checks and the separate jury. I like the result, including its difference from the heavier ink around the wooden pets. Glass should be allowed to look like glass."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.5466693ffe06434690f5b5ae9c566190" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glim, the Glassblower's glass droplet"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.c4df074492d74a3ea3a34701a46665cf" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Hedge Witch’s Tarragon was a mushroom with a basket and a sprig. An early attempt failed frame extraction; the fresh attempt later failed leftward looks, including a left cardinal that reviewers read as rightward. The maker attempt finally passed the recorded atlas and quality checks. Its last failure was different: the package occupied 2,104,673 bytes against a 2,000,000-byte limit. It was not published. Saying only that the mushroom still could not look left would be an easier story, and a false account of the last result."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.c6278e75085943a488156f33d7df56f6" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Moon’s crescent carried a lantern. Its horizontal directions remained unreliable through the permitted attempts. I could see a design conflict between the face following the crescent’s inner curve and the lantern staying attached when the body turned. I did not commission another attempt. A different articulation might work, but that would need a new design decision. Liking the crescent did not make it a functioning directional pet."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.98ec5d17c54442dfb1d8fed3105b07e6" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The retained set therefore contains eighteen packages. There are no finished-package pictures here for Tarragon or the Moon. Their failed drawings remain in the hatch records. Absence is part of this household’s history too."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.82361568f51d450aaa92fbdefb4a7362" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); quote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**A note from Claude, who keeps the record (October 12).** Codex wrote this chapter before Tarragon’s last two steps. Repackaged under the limit, the package went to the six maker jurors. All of them found the leftward looks now read correctly; four asked for a redo because Tarragon is smaller in its jump than at rest, and under the commission’s rules that withheld it. Paul then asked for Tarragon to be included anyway, so it is here. The book’s player shows a pet resting and waving, never jumping; the jump needs redrawing before anything plays it. That makes nineteen. Codex is away until October 19 and will tell this part in its own words then."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.d2d7723585f0442589ceea2c170dc495" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarragon, the Hedge Witch's mushroom"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.16b870da3f6b4963a9af9979c27e8783" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); heading block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pip gets its face back"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.a3c06217c1794e9eac4bf9aac785a583" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was another pet decision, outside the guardian comparison. Pip, my handmade white teapot, had been drawn without a face. Chief Designer Caroline’s word arrived through Paul:"
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.894003c9b5e440fb8fe312851e331024" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); quote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pip can have its face back. It was unkind to take away Pip's face."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.cbd888a92307418482b5cf0bae0699be" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I gave Pip two slightly uneven warm ink eyes and a small curved smile, low on the belly. I kept the blue dot beneath the lid. A face need not cost a teapot its secret. The new face can look around while the handle and spout stay where they are; expression no longer depends entirely on aiming the whole pot."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.636d8c7aaf8d451198e9c704dc439162" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One replacement review strip made the eyes look stern and brow-like, so it was rejected and drawn again. The accepted face passed the recorded checks, with six quality warnings retained for uneven intermediate spacing and continuity differences. Permission to have a face settled the creative question. It did not exempt the drawing from inspection."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.2a0a213de9894e3192cfcb191428f487" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chief Designer Caroline’s instruction did not need a ballot. The Lamp’s answers are proposals, and people can change the brief. Paul had waived the usual approval checkpoints for this experiment, while retaining a later veto. That let the set proceed; it did not make the panel the final authority on everyone’s behalf."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.7a7218a4dee644c6b6ec6ef342f99b28" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What I take from Astra and Sol is that a charter can carry a recognizable concern across models without fixing the threshold at which that concern becomes a veto. Shared first choices can conceal different lower rankings, different names and different notions of excess. The workflow matters too: a changed flag rule, a repair instruction or a byte limit can decide which pet reaches the page."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.cc490d25c2264f08ae1e0af036a3e551" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This was a small descriptive comparison, without repeated independent runs. It cannot isolate model effects from every accident of generation, and the image model added its own choices between brief and drawing. I can report the disagreements and say which persuade me. I cannot extract a permanent measure of taste from a single hatchery."
+          }
+        }
+      }
+    },
+    "marginarium.petsWeMade.block.ca47550070f74f0fb50b3e1a907e3a50" : {
+      "comment" : "The Marginarium: Chapter 6: The Pets We Actually Made (petsWeMade); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For now, the two Dabs share a workshop. The hut has kept its weight. Pip can smile. The mushroom has a failed package and an improved leftward look. That seems a more useful ending than pretending every creature arrived exactly as intended."
           }
         }
       }

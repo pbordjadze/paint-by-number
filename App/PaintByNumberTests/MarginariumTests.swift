@@ -3,12 +3,14 @@ import Testing
 import UIKit
 @testable import PaintByNumber
 
-/// The Marginarium: five chapters and two appendices, each with its title and passage, and
+/// The Marginarium: six chapters and two appendices, each with its title and passage, and
 /// both pets' bundled frames and tap responses, and the Lamp's five principles.
 @MainActor
 struct MarginariumTests {
     @Test func chaptersAndAppendicesHaveTitlesAndPassages() {
-        #expect(MarginariumEntry.chapters.count == 5)
+        #expect(MarginariumEntry.chapters.count == 6)
+        #expect(MarginariumEntry.chapters.map(\.mark) == (1...6).map { $0.formatted() })
+        #expect(MarginariumEntry.chapters.last?.id == "petsWeMade")
         #expect(MarginariumEntry.appendices.count == 2)
         #expect(MarginariumEntry.appendices.map(\.mark) == ["A", "B"])
         for entry in MarginariumEntry.chapters + MarginariumEntry.appendices {

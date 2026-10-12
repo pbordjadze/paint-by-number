@@ -72,7 +72,8 @@ synchronized folder would bundle it into the app.
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Marginarium/` (how the app is made, in chapters, with Pip, Codex's teapot,
-  and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar, `MarginariumEntry`,
+  and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar once Settings › The
+  Marginarium is on (`SettingsKey.showsMarginarium`, off by default; demos open it directly), `MarginariumEntry`,
   `MarginariumLamp`, and the shared `MarginariumSpritePlayer`; `PipSprite` and `ColophonSprite`
   carry the frames in the asset catalog's `Pip/` and `Colophon/`). Entries open
   `MarginariumReaderView`: native blocks decoded by `MarginariumDocument`, with catalog
@@ -82,7 +83,20 @@ synchronized folder would bundle it into the app.
   atlas contract and size budget: `docs/marginarium-pets.md`. `tools/marginarium.py` is the import/check manual;
   `Resources/marginarium.json` is bundled, its `docs/marginarium/` sources and tool fixtures are
   not. `MarginariumReaderTests` checks keys, initial content, inline markup and unknown-kind
-  skipping; `SpriteAtlasTests` checks a generated WebP in the test bundle only, and
+  skipping. Chapter 1 is imported in full from its approved Docs prose: `tableCell` blocks keep
+  row/column/header metadata; numbered `marginNote` blocks keep every signature as `speakers`
+  (the last as `speaker`). `Chapter.sections` groups those blocks for
+  `MarginariumStructuredViews`: tables align in two columns where the scaled reading measure
+  allows, otherwise each row stacks its heading and text; VoiceOver reads a whole row at a time.
+  Margins use footnote type and the contents page's passage rule, and `MarginariumMarginNote`
+  shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
+  VoiceOver; `MarginariumSpritePlayer(pet:marginWidth:)` keeps only small copies of the cells it
+  plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
+  Colophon, Codex is Pip, the Moon has none), and a test fails on an unmapped speaker. Chapter 6,
+  The Pets We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
+  nineteen guardians' pets, bundled as `Resources/pet-<id>.webp` within the budget in
+  `docs/marginarium-pets.md`; the Moon's pet is withheld. `SpriteAtlasTests` checks a generated
+  WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
   `MarginariumReaderUITests` opens chapters, pets and appendices. `Settings/`; `Share/`.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
@@ -118,6 +132,12 @@ synchronized folder would bundle it into the app.
   show the library by position; the rest use `ShellDemo.fixedPictures`.
   `marginarium-chapter`, `marginarium-chapter-dark` and `marginarium-chapter-long-text` open the
   reader on Two More Pets; readiness comes when its Pip block appears after the manifest loads.
+  `marginarium-chapter1`, `-margin`, `-guardians` and `-table` open Chapter 1 at the top, the
+  first margin group (the narrator's notes), the second (five guardians' notes, each with its
+  pet) and the guardians table; `marginarium-chapter6` opens Chapter 6 at Medea's ram. All have
+  `-dark` and `-long-text` variants. Readiness follows the requested section entering the
+  reader's viewport once the sheet has stopped moving, so these scenarios wait up to 30 s;
+  `MarginariumReaderUITests` also captures margins and tables at accessibility text sizes.
 
 ## Painting screen
 
@@ -451,7 +471,8 @@ paper (`CanvasSnapshot.Options`).
   (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
   (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings ›
   Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
-  `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test). New paintings are
+  `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
+  puts the book in the gallery's toolbar (off by default). New paintings are
   coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in
   Settings changes how a template is made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).

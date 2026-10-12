@@ -1,6 +1,7 @@
 import XCTest
 
-/// Both sections of the contents page open native reader pages, including at large text sizes.
+/// Both sections of the contents page open native reader pages, including at large text sizes;
+/// Chapter 6 shows the guardians' pets, and Chapter 1's margin notes carry them beside the words.
 final class MarginariumReaderUITests: XCTestCase {
     @MainActor
     func testChapterAndAppendixOpenFromContents() {
@@ -67,6 +68,125 @@ final class MarginariumReaderUITests: XCTestCase {
         XCTAssertTrue(passage.exists)
         XCTAssertTrue(passage.isHittable)
         attachScreenshot(of: app, named: "marginarium-reader-accessibility-long-text")
+    }
+
+    @MainActor
+    func testChapterOneOpensWithItsRenumberNote() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "marginarium-chapter1"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Chapter 1: The Marginarium"].waitForExistence(timeout: 15))
+        let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@",
+                                                        "Renumbered on October 11, 2026")).firstMatch
+        XCTAssertTrue(note.exists && note.isHittable)
+        attachScreenshot(of: app, named: "marginarium-chapter1-top")
+    }
+
+    @MainActor
+    func testMarginNotesKeepTheirSignaturesAtAccessibilitySize() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "marginarium-chapter1-margin-long-text", "-NSDoubleLocalizedStrings", "YES",
+                               "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch()
+        let reader = app.scrollViews["marginarium-reader"]
+        let note = reader.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "marginarium-note-", "A proper djinni")).firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 15))
+        XCTAssertTrue(note.label.contains("the narrator"))
+        XCTAssertTrue(waitUntil { note.isHittable })
+        XCTAssertGreaterThanOrEqual(note.frame.minX, reader.frame.minX)
+        XCTAssertLessThanOrEqual(note.frame.maxX, reader.frame.maxX)
+        attachScreenshot(of: app, named: "marginarium-chapter1-margin-accessibility-long-text")
+    }
+
+    /// The five notes of the second margin group are five guardians'; each has a pet beside it.
+    @MainActor
+    func testGuardiansNotesShowTheirPets() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "marginarium-chapter1-guardians"]
+        app.launch()
+        let reader = app.scrollViews["marginarium-reader"]
+        let note = reader.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "marginarium-note-", "Each figure paints one stage")).firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 15))
+        XCTAssertTrue(note.label.contains("the Enchanted Workshop"))
+        XCTAssertTrue(waitUntil { note.isHittable })
+        // The pets are hidden from VoiceOver (the note names its speaker), but XCUITest's tree
+        // still lists them (CI found 15), so this checks what a sighted reader gets: the
+        // Enchanted Workshop's brush beside its note, and a tap that doesn't disturb the note.
+        let brush = reader.descendants(matching: .any)["marginarium-pet-enchanted-workshop"]
+        XCTAssertTrue(brush.waitForExistence(timeout: 10), "The Enchanted Workshop's note has no pet beside it")
+        XCTAssertGreaterThan(brush.frame.minX, note.frame.minX, "The pet isn't beside the note")
+        brush.tap()
+        XCTAssertTrue(note.exists)
+        XCTAssertGreaterThanOrEqual(note.frame.minX, reader.frame.minX)
+        XCTAssertLessThanOrEqual(note.frame.maxX, reader.frame.maxX)
+        attachScreenshot(of: app, named: "marginarium-chapter1-guardians")
+    }
+
+    @MainActor
+    func testChapterSixOpensFromContentsWithItsPets() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "marginarium"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["The Marginarium"].waitForExistence(timeout: 15))
+        openEntry("petsWeMade", in: app)
+        XCTAssertTrue(app.navigationBars["The Pets We Actually Made"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Chapter 6: The Pets We Actually Made"].waitForExistence(timeout: 10))
+        let reader = app.scrollViews["marginarium-reader"]
+        let ram = app.buttons["marginarium-pet-medea"]
+        for _ in 0..<12 {
+            if ram.exists && ram.isHittable { break }
+            reader.swipeUp()
+        }
+        XCTAssertTrue(ram.waitForExistence(timeout: 10))
+        XCTAssertEqual(ram.label, "Medea's golden ram")
+        XCTAssertTrue(ram.isHittable)
+        ram.tap()
+        attachScreenshot(of: app, named: "marginarium-chapter6-medea")
+    }
+
+    @MainActor
+    func testTableReadsByRowAndFitsTheReadingWidth() {
+        checkChapterOneTable(longText: false)
+    }
+
+    @MainActor
+    func testTableStacksAtAccessibilitySizeWithLongText() {
+        checkChapterOneTable(longText: true)
+    }
+
+    @MainActor
+    private func checkChapterOneTable(longText: Bool) {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", longText ? "marginarium-chapter1-table-long-text" : "marginarium-chapter1-table"]
+        if longText {
+            app.launchArguments += ["-NSDoubleLocalizedStrings", "YES", "-UIPreferredContentSizeCategoryName",
+                                    "UICTContentSizeCategoryAccessibilityXXXL"]
+        }
+        app.launch()
+        let reader = app.scrollViews["marginarium-reader"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 15))
+        let row = reader.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "marginarium-table-row-", "Medea")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        // A VoiceOver element contains the name followed by what that guardian keeps.
+        XCTAssertTrue(row.label.contains("magic is a craft of renewal and care"))
+        XCTAssertTrue(row.label.hasPrefix("Medea"))
+        let layout = longText || reader.frame.width - 40 < 480
+            ? "marginarium-table-stacked" : "marginarium-table-columns"
+        XCTAssertTrue(reader.descendants(matching: .any)[layout].exists)
+        for _ in 0..<6 {
+            if row.isHittable { break }
+            reader.swipeUp()
+        }
+        XCTAssertTrue(row.isHittable)
+        XCTAssertGreaterThanOrEqual(row.frame.minX, reader.frame.minX)
+        XCTAssertLessThanOrEqual(row.frame.maxX, reader.frame.maxX)
+        attachScreenshot(of: app, named: longText ? "marginarium-chapter1-table-accessibility-long-text" : "marginarium-chapter1-table")
     }
 
     @MainActor

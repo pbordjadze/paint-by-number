@@ -8,7 +8,13 @@ Keep the block's key marker when editing or moving it. Import and validate with
 `tools/marginarium.py` as described in its docstring.
 
 Pip and Colophon use their existing imagesets, idle timings and tap responses everywhere.
-Two More Pets embeds them with the contents page's captions. No guardian artwork is bundled.
+Two More Pets embeds them with the contents page's captions. Pip's imagesets (`pip-idle-0...5`
+from atlas row 0, `pip-wave-0...3` from row 3, 192 × 208 at the same 2x slot) are Pip's face
+as Codex redrew it, so its lid-lift tap and timings are unchanged.
+
+The nineteen guardians' pets are bundled as `pet-<id>.webp` (the table below); chapter 6 shows
+each in a pet block, and chapter 1's margin notes show them beside the words (next section).
+The Moon's pet is withheld: no `pet-moon.webp` ships and its notes show no pet.
 To add a future atlas pet, place its sheet in
 `App/PaintByNumber/Resources/pet-<id>.webp`, with a lowercase alphanumeric/hyphen identifier,
 then use `pet:<id>` in the chapter. The unique filename survives Xcode's flattened resource
@@ -31,28 +37,86 @@ return nil. No force-unwrapping is used in the decoder.
 `SpriteAtlasTests` exercises the actual WebP/ImageIO path, all cell rectangles and crop pixels,
 bad resources, cache reuse and Reduce Motion plans. Its 2.2 KiB `pet-fixture.webp` contains only
 colored geometry and belongs to the test bundle. Reproduce it with
-`tools/tests/fixtures/make_sprite_atlas.py <scratch-output.webp>`. The chapter screenshot demos
-(`marginarium-chapter`, `-dark`, `-long-text`) open Two More Pets with Pip visible; the reader UI
-tests also attach pet screenshots, including at accessibility text sizes.
+`tools/tests/fixtures/make_sprite_atlas.py <scratch-output.webp>`. Its `thumbnails` test checks
+the small cells a margin player keeps. The chapter screenshot demos (`marginarium-chapter`,
+`-dark`, `-long-text`) open Two More Pets with Pip visible; `marginarium-chapter6` (also `-dark`
+and `-long-text`) scrolls chapter 6 to Medea's ram, and `marginarium-chapter1-margin` and
+`-guardians` show the narrator's notes with Colophon and five guardians' notes with their pets.
+The reader UI tests also attach pet screenshots, including at accessibility text sizes.
+
+## Pets beside margin notes
+
+`MarginariumMarginNote` shows a small pet (40 pt wide, tappable, a tap waves it) for each
+guardian who signed a margin note, once each, in the order they speak. The importer records
+every signature of a note as `speakers` (and the last as `speaker`), so the names are the
+chapter's own English signatures, never the localized text. `MarginariumSpeakers` is the one
+table from a signature to a pet identifier: "the narrator" is Colophon because chapter 1
+says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" is listed as having none.
+`MarginariumSpeakersTests` fails when a speaker in the bundled chapters is in neither the
+table nor the list of voices without a pet, or maps to a pet that doesn't resolve.
+
+The pet is beside the note at ordinary text sizes and in a row under it at accessibility
+sizes, so the words keep the line. It is hidden from VoiceOver: the note, which names its
+speaker, is one element, and the pet adds nothing to repeat. Reduce Motion rests on idle
+cell 0 and answers a tap with the still pose, as in chapters. A margin player keeps only the
+cells it plays (`SpriteAtlas.thumbnails`: idle row 0 and waving row 3, redrawn to its size) and
+lets go of the 14 MiB decoded sheet, which only the bounded cache keeps, so a page of notes by
+five guardians holds five small sets, not five sheets. The slot is reserved before the sheet
+arrives, so a note doesn't change shape.
 
 ## Bundled size budget
 
-Measured on 2026-10-12 from the factory's Medea pilot `spritesheet.webp`
-(`pilot-style-00-medea/attempt-pz1lsvml/final`, SHA-256
-`aaeeebd7304eea0c545a4d5bae84f784c13b6836dadcb08fe93be2e368c33d0b`):
+Budget: **1 MiB (1,048,576 bytes) encoded per guardian and 20 MiB total** for the nineteen,
+kept as WebP resources instead of expanding every frame into an imageset. This disk budget is
+separate from the decoded-memory cache limit above. `BundledPetsTests` checks both limits on
+the shipped files, that every sheet loads through `SpriteAtlas` with the v2 contract, and that
+its unused cells are transparent.
 
-| Measure | Bytes |
-| --- | ---: |
-| Original v2 WebP | 585,444 |
-| ZIP DEFLATE level 9 payload | 585,013 |
-| One ZIP member, including archive/member headers | 585,191 |
-| Twenty at the same compressed payload size | 11,700,260 |
+The factory's lossless v2 sheets (`factory/pets/<id>/spritesheet.webp`, 1536 × 2288) total
+25,641,918 bytes, most between 1.0 and 1.9 MB. Five are already under 1 MiB and are copied
+unchanged. The other fourteen are written as lossy WebP with the alpha channel kept lossless,
+same 1536 × 2288 layout, at the highest Pillow quality (100 down) whose file fits 1 MiB:
 
-One such guardian would add about **0.56 MiB** to the IPA; twenty comparable sheets would add
-about **11.16 MiB**. This measures a raw bundled resource's ZIP contribution, not a signed Xcode
-archive. WebP compresses little further in ZIP; final IPA packaging and signatures add overhead.
-The pilot is a size sample, not approval to ship that art or a guarantee of the other pets' sizes.
+```python
+Image.open(source).convert("RGBA").save(
+    target, "WEBP", lossless=False, quality=q, method=6, alpha_quality=100)
+```
 
-Proposed budget: **1 MiB encoded per guardian and 20 MiB total for twenty**. Measure the final
-approved sheets together before bundling; keep them as WebP resources instead of expanding every
-frame into an imageset. This disk budget is separate from the decoded-memory cache limit above.
+(Pillow 12.3.0, libwebp 1.6.0.) Eleven fit at quality 100, two at 98 (`hedge-witch`, `medea`)
+and `robber-girl` at 93. Against the lossless sheets the alpha channel is bit-identical, the
+unused cells stay fully transparent, and the mean absolute error over the whole sheet is
+0.3 to 1.4 of 255 (largest for `robber-girl`), concentrated on hard ink edges. Idle and
+waving cells inspected at native size and at 5x, on white and dark backgrounds, showed no
+banding, no halo at the alpha edge (the glass droplet's soft rim and the eyes included) and no
+colour fringe; the white ermine is among the five sheets kept lossless.
+
+| Pet id | Source SHA-256 (`factory/pets/<id>/spritesheet.webp`) | App bytes | Encoding |
+| --- | --- | ---: | --- |
+| `baba-yaga` | `34b2be11506b45bf518ba5736b5631c74e64c9a40d5d5905f05542f99962f854` | 718,710 | lossless, copied unchanged |
+| `balanchine` | `f4d7625cd1859228e3672497313735731f3e07a90be6add935b4657b25ead83f` | 843,370 | lossless, copied unchanged |
+| `bible-school-teacher` | `a657aa4af6dd65c6c17d83c515b6d5d477a6734265f494071ee714f40f0fa5f3` | 798,748 | lossy WebP q100 |
+| `bulat-okudzhava` | `a81a4ab70d2c28edff5717a6c1f6ea65319887dd6bc16de0a08cb663704b6eb3` | 976,192 | lossy WebP q100 |
+| `child-at-bedtime` | `1885b30bf5f1c1d32ca2e205251ab2295287959f78fc1d1009f940697a3f13d8` | 602,310 | lossless, copied unchanged |
+| `emily-dickinson` | `2fbcb5368fdfa4e69617d8afc52f8c34891d665c173fc3e59f09fb5e81d183fa` | 781,558 | lossy WebP q100 |
+| `enchanted-workshop` | `949f77dcede148f31e8e06aa12f853e169ce5812843c8799a8f24bdb3ec8835d` | 771,484 | lossy WebP q100 |
+| `glassblower` | `be734ac03874e040997e1b393abc0483b14684d3990f8d239d7d654f8faff49b` | 984,672 | lossy WebP q100 |
+| `hedge-witch` | `7dde65e0562b8963f517deeac4230b4ee913c8287d9f422a9401dc54bc4e19b9` | 1,019,202 | lossy WebP q98 |
+| `medea` | `384ee328a25e8e59205f7f8b4cce29083ed7640ea5131d08781857c8db29a2af` | 1,035,302 | lossy WebP q98 |
+| `nutcracker` | `5139e69baa40fdf79a6bc7f033e12ed8d445e51e1398879979aa40e38c3df258` | 857,576 | lossy WebP q100 |
+| `open-source-enthusiast` | `e65baf20d2646a4766e3eedb2aab01040ae3a4b269a7b56666e34cd28d0e360a` | 907,624 | lossy WebP q100 |
+| `originality` | `041937c51452bbacf19d0218b712ed716e3402182185537726b350adcfd15955` | 674,790 | lossy WebP q100 |
+| `painter` | `06415260a6eadfd84e0c48e5cf385c75567a954a3991f066afd3c2420c7f72ff` | 852,478 | lossy WebP q100 |
+| `pirosmani` | `f914f776aab8d192e2b46b166dba50c9de7d0200e1b3dd9ba655d8b75f5f6c4c` | 912,802 | lossless, copied unchanged |
+| `robber-girl` | `096b6e2b8499ef46ec32587fe5783e0e68993db78b737970d240c1a273e6d332` | 1,025,788 | lossy WebP q93 |
+| `scholar` | `76077a95bf847119fced4ef0406b33c00203f37d1cf99c0abc3fe99afbe0760c` | 1,028,674 | lossy WebP q100 |
+| `snow-queen` | `60e2057e81601ba9ceca48226e1a86517f24d109dbbc4f029fc5d4842c799979` | 1,033,114 | lossless, copied unchanged |
+| `storybook` | `bc13623107ed5a5c83f75c4afd685750f87b050b5e0b083282479a8345e5beba` | 1,016,746 | lossy WebP q100 |
+| **Nineteen sheets** | | **16,841,140** | factory lossless total 25,641,918 |
+
+The sheets in the app total **16,841,140 bytes (16.06 MiB)**, 8,800,778 bytes fewer than the
+lossless originals: 4,110,306 in the five copied sheets and 12,730,834 in the fourteen lossy
+ones; the largest is `medea` at 1,035,302 bytes. Zipped at DEFLATE level 9 the nineteen add
+16,820,351 bytes of payload (16.04 MiB; the archive with headers is 16,822,611), because WebP
+compresses almost no further. That measures the raw resources' ZIP contribution, not a signed
+Xcode archive; final IPA packaging and signatures add overhead. Pip's ten replacement frames
+add about 20 KB over the faceless ones.
