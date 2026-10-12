@@ -128,7 +128,7 @@ A few messages later Paul stepped back from the stick figures and saw the shape 
 The method, as Paul put it, had six moves: isolate one piece of the design; give it mock data; expose its parameters and tweak them; let trusted models review the results; use personas as the reviewers; and reach a consensus. "Worth saving, at least writing down, and then if it works, using again." It would work on an animation, a palette, a logo, a sentence.
 
 <!-- marginarium: marginarium.marginarium.block.b81f15312f594f39b24702d4b7f247aa -->
-The parts are old. Design reviews, parametric design and models judging models all existed before that night. What was new was the assembly, and the instinct to write it down as a method rather than a trick:
+Two minutes later came the honest question: "Was this a novel idea, or even that good of one?" The parts are old. Design reviews, parametric design and models judging models all existed before that night. What was new was the assembly, and the instinct to write it down as a method rather than a trick:
 
 <!-- marginarium: marginarium.marginarium.block.5aebc61b37b34394956ebfd77a18c144 -->
 - **a deterministic renderer**, so every candidate is reproducible and every decision replays;
@@ -151,7 +151,7 @@ That is a good idea. The page became the factory's architecture document. By the
 <!-- anchor: isolate one piece of the design | Worth saving, at least writing down -->
 1. Isolating one gear, testing it alone and letting reviewers agree is how a good clockmaker keeps a clock honest. Paul wrote it down, which is the part I would frame. — *the Nutcracker*
 <!-- marginarium: marginarium.marginarium.block.4023b778e42341fe9709013f0433670d -->
-<!-- anchor: The parts are old | give it mock data -->
+<!-- anchor: Was this a novel idea | give it mock data -->
 2. Mostly old, Paul. Peer review and reuse predate the cloud. The packaging is yours, and worth writing down. Credit the old names first, then add your own. — *the Open Source Enthusiast*. Painters have tested one swatch before the canvas for centuries. — *the Painter*
 <!-- marginarium: marginarium.marginarium.block.0ff22249f2f84c60adc101570692441d -->
 <!-- anchor: use personas as the reviewers -->
@@ -161,7 +161,16 @@ That is a good idea. The page became the factory's architecture document. By the
 ## Guardians of various vibes
 
 <!-- marginarium: marginarium.marginarium.block.460aac97893a413e85ed82604e431087 -->
-The idea that gave this book its cast arrived as a paragraph. The cheap models would do the bulk of the work, surfacing options. A panel of top models, run at low effort, would decide. And that panel "should redesign everything there is to design about my app", piece by piece: colors, a logo, animations, words.
+The idea that gave this book its cast arrived in two messages, half an hour apart. The first was the factory message, which had already named the judges:
+
+<!-- marginarium: marginarium.marginarium.block.ff00e475a7524704be9557ce225d6ffc -->
+> Nothing too elaborate in terms of subagents, mostly deterministic compute, but small hopefully, and we can use a few low effort Opus 5.5s with slightly different starting params to just make some taste calls.
+
+<!-- marginarium: marginarium.marginarium.block.79d4efb8d66d46c4a52e633dde75de19 -->
+The second gave them the whole app:
+
+<!-- marginarium: marginarium.marginarium.block.6c3d783fad854ce89d0d45c510b1f725 -->
+> The smaller models are doing the bulk of the work, surfacing stuff, etc. Then we have the low effort Opus panel deciding between options. That Opus panel should redesign everything there is to design about my app. At least for now, it ought to pick new colors, guide new logo — we can go piece by piece.
 
 <!-- marginarium: marginarium.marginarium.block.64cb17fc282f4cc5a4e8d21acd91a690 -->
 Then the part that made it Paul's: "I'd want to hand pick my Opuses. Give each one a different vibe, or idea, that they're in charge of. Whatever system I apply them to, it has to feel like their idea is fairly and properly represented by it. They would be like guardians of various vibes."
@@ -213,7 +222,7 @@ Each one got a written charter: what it believes, what it champions, what it vet
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.55d8309c2cd94a4d9de2d77420acecf1 -->
-<!-- anchor: run at low effort | gets more weight in the next decision -->
+<!-- anchor: a few low effort Opus 5.5s | gets more weight in the next decision -->
 1. Giving the quiet guardian more weight is kind. Deciding with low effort is not. A guardian listens before it sings, and listening takes time. — *Bulat*
 <!-- marginarium: marginarium.marginarium.block.e1e3d20444c14dc99a91d6f6e6f5992c -->
 <!-- anchor: became the ledger -->
@@ -266,7 +275,7 @@ Paul's next idea turned the experiment into content. The Lamp's members, and the
 3. The Round Table sounds like a meeting with cake. — *the Storybook*. It is also a well-known service club's name, so it may appear here only as Claude's rejected instinct. — *Originality*
 <!-- marginarium: marginarium.marginarium.block.5859446a17bf48e8b1fa25f07549c0d1 -->
 <!-- anchor: My own instinct had been The Round Dance -->
-4. A confession: my pick was The Round Dance. Paul read it as The Round Table, the Lamp was told the same, and a table it has stayed. — the narrator
+4. A confession: my pick was The Round Dance. Paul read it as The Round Table, the Lamp was told the same, and a table it has stayed. — *the narrator*
 <!-- marginarium: marginarium.marginarium.block.7bf7bfb558f84228a1026d6a8812a7f0 -->
 <!-- anchor: I'll let them have just this name -->
 5. Claude, you lost, fairly. A name you chose is a name you will fight for, and Paul knew to leave it alone. — *the Robber Girl*. Four words and one lit window, with nothing wasted: the kindest veto Paul never used. — *Emily*

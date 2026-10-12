@@ -182,7 +182,7 @@ struct MarginariumReaderTests {
     @Test func chapterOneHasTheFullTextTablesAndSignedMargins() throws {
         let document = try #require(MarginariumDocument.bundled())
         let chapter = try #require(document.chapters.first { $0.id == "marginarium" })
-        #expect(chapter.blocks.count == 236)
+        #expect(chapter.blocks.count == 239)
         #expect(chapter.blocks.first?.text == "Chapter 1: The Marginarium")
         // A newcomer meets the contents page's line first; the renumbering note closes the chapter.
         #expect(chapter.blocks[1].kind == .subtitle)
