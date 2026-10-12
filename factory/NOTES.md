@@ -388,6 +388,15 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   time full equals, in high roles, and drawn as people rather than cartoon creatures (their own
   look beside the pets, still allowed to be a little cute).
 
+## Paul's point 22: made together (Oct 12)
+
+- Long before the Marginarium, many of Paul's design choices were informed by Caroline's
+  feedback; he has been doing the big-picture thinking. Her Who's Who card says they have made
+  the app together from the start, without the Pip's-face story (that stays in Chapter 6). Who
+  contributed what may be traced one day; this is the general shape.
+- Caroline is probably the Marginarium's first reader: it should flatter her, and she has earned
+  it.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.

@@ -34,12 +34,13 @@ and is represented across the app.
 
 ## Who decides
 
-- **Paul** is the Chief Architect. He has the last word on everything, the Lamp's decisions
-  included.
-- **Caroline** is the Chief Designer. Her ideas are credited to her by name, never folded into
-  Paul's (Paul, October 12, 2026). Her first on the record: "Pip can have its face back. It was
-  unkind to take away Pip's face." One day she may run the panel, its charters and their weights
-  (`NOTES.md` › Medea: the app's name and its design North Star).
+- **Paul** is the Chief Architect. He does the big-picture thinking and has the last word on
+  everything, the Lamp's decisions included.
+- **Caroline** is the Chief Designer. She and Paul have made the app together from the start:
+  long before the Marginarium, her feedback shaped many of his design choices. Her ideas are
+  credited to her by name, never folded into Paul's (Paul, October 12, 2026). One day she may run
+  the panel, its charters and their weights (`NOTES.md` › Medea: the app's name and its design
+  North Star).
 - The Lamp advises. A person always decides.
 
 ## The Marginarium is for everyone
