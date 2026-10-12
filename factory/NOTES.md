@@ -379,6 +379,15 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
 - Addendum: people will like the human creative touch, and value knowing who or what is
   responsible for which choices, and where a human's vision was.
 
+## Paul's point 21: where the humans go (Oct 12)
+
+- In `docs/ideas.md` on main (Where the humans go), his words verbatim in a fold: be deliberate
+  about where people go in a system of agents, and treat people and agents with the same dignity
+  and respect. No implementation work yet.
+- When Paul and Caroline join the Marginarium's cast: near-equals of the Lamp and the helpers, in
+  time full equals, in high roles, and drawn as people rather than cartoon creatures (their own
+  look beside the pets, still allowed to be a little cute).
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
