@@ -35,7 +35,10 @@ Paths written as `pieces/…` in older factory documents mean `factory/pieces/�
    The reference pet already exists before these hatches; no final pet replaces it mid-set.
    Each pet has a separate workspace-write session; image generation within a worker is
    sequential, with at most three pet workers. Technical repairs within a session are bounded
-   to two per failing row. Persistent failures and provider refusals are terminal for that pet.
+   to two per failing row. On resume, a set pet that failed a gate gets one fresh attempt
+   with the prior failure in its request; a second gate failure is terminal. Provider refusals
+   are always terminal. Recorded provider stops before work spend no attempt; stops after
+   work can continue using preserved art and the cumulative row-repair counts.
 7. Six separate image jurors receive the actual contact sheets through `--image`, with every
    frame in playback order at native cell size, owner charters and preview paths. Any redo,
    flag or veto requests one redo. A final jury checks those replacements; a second rejection
@@ -103,6 +106,17 @@ the command recovers an interrupted decision write without making calls.
 pilot hatches, re-tallies through step 3 using frozen policies, and reports the style, fixed
 reference and attached notes at the step-4 boundary. It makes no model calls and writes no
 step-4 jobs. An ordinary `run` then continues with the same selection and notes.
+
+`codex_lamp list-resume <run>` instead lists the next action for each known hatch and approved
+brief without writing any file or calling a model. It distinguishes provider retries before
+work, continuations of partial art, the one fresh set attempt, local repackaging and terminal
+records. Eligibility comes from the same checks used by hatch dispatch; an exit code alone
+never grants a provider retry. The initial hatch `result.json` is immutable; subsequent
+outcomes append to `resume-results/000001.json`, etc., and link to the previous completion
+with `resumed_from`. New attempt `driver-request.json` files preserve the previous failure,
+provider event evidence and attempt budget. Both art and worker reports remain in their
+original attempt directories. Validated atlases that only exceed the package budget can be
+repackaged with a smaller contact preview; atlas bytes and the 2 MB limit stay unchanged.
 
 `codex_lamp refresh-inputs <run> --reason '…'` saves the current charter text in a new immutable
 input revision. `inputs.json` and all dispatched jobs/replies remain unchanged. The provenance

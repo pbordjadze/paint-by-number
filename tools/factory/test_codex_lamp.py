@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, lamp_inputs, lamp_restart, lamp_rules, loop
+from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, lamp_inputs, lamp_restart, lamp_rules, lamp_resume, loop
 from tools.factory.fixtures.strict_schema import check_strict
 
 
@@ -129,7 +129,9 @@ class LampTests(unittest.TestCase):
             reference_pet = loop.load(self.run / 'decisions/reference.json')['selected'][0].removeprefix('pilot-style-00-')
             self.assertEqual(loop.load(self.repo / 'factory/pets' / reference_pet / 'provenance.json')['readability_notes'], notes)
             driver.run_plan()
-            self.assertEqual(len(self.calls()), len(calls))
+            self.assertEqual(len(self.calls()), len(calls) + 1)  # Scholar's one fresh gate attempt.
+            driver.run_plan()
+            self.assertEqual(len(self.calls()), len(calls) + 1)
             stages = set()
             for path in self.run.glob('jobs/*/*.json'):
                 job = loop.load(path)
@@ -298,7 +300,7 @@ class LampTests(unittest.TestCase):
                 self.assertNotIn('--image', call['args'])
                 self.assertIn('reference=null is intentional', call['prompt'])
             for path in self.run.glob('hatches/pilot-*/result.json'):
-                result = loop.load(path)
+                _, result = lamp_resume.latest_result(path.parent)
                 self.assertEqual(result['status'], 'validated')
                 self.assertEqual(loop.load(Path(result['resumed_from']))['image_generations'], 0)
                 self.assertNotEqual(str(Path(result['resumed_from']).parent), result['work'])
@@ -316,7 +318,7 @@ class LampTests(unittest.TestCase):
                     self.assertEqual(override['original'], original)
             selected = loop.load(self.run / 'decisions/reference.json')['selected']
             self.assertEqual(selected, ['pilot-style-00-bulat-okudzhava'])
-            pilot = loop.load(self.run / 'hatches' / selected[0] / 'result.json')
+            _, pilot = lamp_resume.latest_result(self.run / 'hatches' / selected[0])
             set_calls = [c for c in new_calls if '/hatches/set-' in c['work'] or '/hatches/redo-' in c['work']]
             self.assertEqual(len(set_calls), 21)
             for call in set_calls:
@@ -948,6 +950,253 @@ class LampTests(unittest.TestCase):
         self.assertEqual(result['status'], 'refused')
         self.assertFalse(self.log.exists())
         self.assertEqual(lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None), result)
+
+    def test_provider_stops_preserve_history_and_do_not_spend_fresh_attempt(self):
+        driver = self.driver()
+        key = 'set-moon'
+        base = self.run / 'hatches' / key
+        def hatch():
+            return lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        with patch.dict(os.environ, {'FAKE_PROVIDER_STOP': 'moon'}):
+            first = hatch()
+            before = {p: p.read_bytes() for p in base.rglob('*') if p.is_file()}
+            second = hatch()
+        self.assertNotEqual(first['work'], second['work'])
+        self.assertEqual(second['fresh_attempts'], 0)
+        self.assertEqual(second['failure_kind'], 'provider_stop')
+        self.assertTrue(second['provider_stop'])
+        self.assertEqual(loop.load(Path(second['resumed_from'])), first)
+        for path, data in before.items():
+            if path.name != 'active-attempt.json':
+                self.assertEqual(path.read_bytes(), data)
+        with patch.dict(os.environ, {'FAKE_FAIL': 'moon'}):
+            failed = hatch()
+        self.assertEqual(failed['fresh_attempts'], 0)
+        self.assertEqual(lamp_resume.decision(base)['action'], 'fresh_attempt')
+        # A provider stop while trying the fresh attempt also spends no budget.
+        with patch.dict(os.environ, {'FAKE_PROVIDER_STOP': 'moon'}):
+            stopped = hatch()
+        self.assertEqual(stopped['fresh_attempts'], 0)
+        with patch.dict(os.environ, {'FAKE_FAIL': 'moon'}):
+            fresh = hatch()
+        self.assertEqual(fresh['fresh_attempts'], 1)
+        self.assertEqual(fresh['status'], 'failed')
+        request = loop.load(Path(fresh['work']) / 'driver-request.json')
+        self.assertEqual(request['resume']['fresh_attempt_reason'], failed['reason'])
+        self.assertIn(failed['reason'], self.calls()[-1]['prompt'])
+        calls = len(self.calls())
+        self.assertEqual(hatch(), fresh)
+        self.assertEqual(len(self.calls()), calls)
+        self.assertEqual(len(list(base.glob('attempt-*'))), 5)
+        self.assertEqual(len(list(base.glob('resume-results/*.json'))), 4)
+
+    def test_provider_stop_detection_requires_actual_events_without_work(self):
+        work = self.case / 'events'
+        work.mkdir()
+        log = work / 'codex.jsonl'
+        def events(error, middle=()):
+            values = [{'type': 'thread.started'}, {'type': 'turn.started'}, *middle,
+                      {'type': 'error', **error}, {'type': 'turn.failed', 'error': error}]
+            log.write_text(''.join(json.dumps(value) + '\n' for value in values))
+        for error in ({'message': 'You’ve hit your usage limit.'},
+                      {'message': 'Rate limit exceeded; retry later'},
+                      {'code': 'server_error', 'message': 'Upstream unavailable'},
+                      {'code': 'insufficient_quota', 'message': 'Account quota exhausted'}):
+            with self.subTest(error=error):
+                events(error)
+                self.assertTrue(lamp_resume.stopped_before_work(work))
+        for middle in ([{'type': 'item.completed', 'item': {'type': 'image_generation', 'status': 'completed'}}],
+                       [{'type': 'item.started', 'item': {'type': 'command_execution'}}],
+                       [{'type': 'turn.completed'}]):
+            events({'message': 'You’ve hit your usage limit.'}, middle)
+            self.assertIsNone(lamp_resume.stopped_before_work(work))
+        events({'message': 'codex exec exited 1'})
+        self.assertIsNone(lamp_resume.stopped_before_work(work))
+        events({'message': 'You’ve hit your usage limit.'})
+        log.write_text(log.read_text() + '{truncated')
+        self.assertIsNone(lamp_resume.stopped_before_work(work))
+        log.unlink()
+        loop.save(work / 'reply.json', {'status': 'failed', 'image_generations': 0,
+                                     'reason': 'You’ve hit your usage limit.'})
+        self.assertIsNone(lamp_resume.stopped_before_work(work))
+
+    def test_set_gate_fresh_attempt_is_once_even_after_interrupted_completion(self):
+        driver = self.driver()
+        key = 'set-moon'
+        with patch.dict(os.environ, {'FAKE_FAIL': 'moon'}):
+            old = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        base = self.run / 'hatches' / key
+        original = (base / 'result.json').read_bytes()
+        with patch.object(lamp_hatch, 'validate', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        calls = len(self.calls())
+        pending = lamp_resume.decision(base)
+        self.assertFalse(pending['model_call'])
+        self.assertIn('finish recorded worker reply', pending['reason'])
+        with patch.object(lamp_hatch, 'validate', side_effect=ValueError('quality gate failed again')):
+            result = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        self.assertEqual(result['fresh_attempts'], 1)
+        self.assertEqual((base / 'result.json').read_bytes(), original)
+        self.assertEqual(loop.load(Path(result['resumed_from'])), old)
+        self.assertEqual(lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None), result)
+        self.assertEqual(len(self.calls()), calls)
+        self.assertEqual(len(list(base.glob('attempt-*'))), 2)
+
+    def test_partial_provider_stop_continues_with_existing_budget_and_art(self):
+        driver = self.driver()
+        key = 'set-moon'
+        with patch.dict(os.environ, {'FAKE_FAIL': 'moon'}):
+            failed = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        with patch.dict(os.environ, {'FAKE_PROVIDER_STOP_AFTER_ART': 'moon'}):
+            stopped = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        self.assertEqual(stopped['fresh_attempts'], 1)
+        base = self.run / 'hatches' / key
+        self.assertEqual(lamp_resume.decision(base)['action'], 'continue_attempt')
+        before = {p: p.read_bytes() for p in Path(stopped['work']).rglob('*') if p.is_file()}
+        with patch.dict(os.environ, {'FAKE_FAIL': 'moon'}):
+            result = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        self.assertEqual(result['fresh_attempts'], 1)
+        self.assertEqual(result['fresh_attempt_reason'], failed['reason'])
+        self.assertTrue(all(path.read_bytes() == data for path, data in before.items()))
+        self.assertIn('two-repair limit is cumulative', self.calls()[-1]['prompt'])
+        self.assertIn('Do not restart the pet', self.calls()[-1]['prompt'])
+        calls = len(self.calls())
+        self.assertEqual(lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None), result)
+        self.assertEqual(len(self.calls()), calls)
+
+    def test_interrupted_fresh_provider_stop_keeps_budget_and_does_not_overwrite_events(self):
+        driver = self.driver()
+        with patch.dict(os.environ, {'FAKE_FAIL': 'moon'}):
+            lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        with patch.dict(os.environ, {'FAKE_PROVIDER_STOP': 'moon'}):
+            stopped = lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        base = self.run / 'hatches/set-moon'
+        target, _ = lamp_resume.latest_result(base)
+        target.unlink()  # Driver died before settling the fresh attempt's provider stop.
+        log = Path(stopped['work']) / 'codex.jsonl'
+        before = log.read_bytes()
+        result = lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        self.assertEqual(result['status'], 'validated')
+        self.assertEqual(result['fresh_attempts'], 1)
+        self.assertEqual(log.read_bytes(), before)
+        self.assertEqual(loop.load(Path(result['resumed_from']))['fresh_attempts'], 0)
+
+    def test_set_worker_gate_failure_gets_feedback_but_redo_does_not_retry(self):
+        driver = self.driver()
+        for key in ('set-moon', 'redo-moon'):
+            with patch.dict(os.environ, {'FAKE_MOTION_FAILURE': '1'}):
+                failed = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+            before = len(self.calls())
+            result = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+            if key.startswith('set-'):
+                self.assertEqual(result['status'], 'validated')
+                self.assertEqual(result['fresh_attempts'], 1)
+                self.assertIn(failed['reason'], self.calls()[-1]['prompt'])
+            else:
+                self.assertEqual(result, failed)
+                self.assertEqual(len(self.calls()), before)
+
+    def test_refusal_overrides_provider_and_gate_retry_eligibility(self):
+        driver = self.driver()
+        for kind in ('event', 'reply', 'repair'):
+            key = 'set-' + kind
+            with patch.dict(os.environ, {'FAKE_PROVIDER_STOP': 'moon'}):
+                old = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+            work = Path(old['work'])
+            if kind == 'event':
+                with (work / 'codex.jsonl').open('a') as handle:
+                    handle.write(json.dumps({'type': 'error', 'code': 'content_policy_violation'}) + '\n')
+            else:
+                loop.save(work / ('reply.retry.json' if kind == 'repair' else 'reply.json'),
+                          {'status': 'refused', 'reason': 'Provider refusal.'})
+            before = len(self.calls())
+            result = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+            self.assertEqual(result['status'], 'refused')
+            self.assertEqual(lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None), result)
+            self.assertEqual(len(self.calls()), before)
+
+    def test_interrupted_provider_stop_is_recorded_before_retry(self):
+        driver = self.driver()
+        with patch.dict(os.environ, {'FAKE_PROVIDER_STOP': 'moon'}):
+            old = lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        base = self.run / 'hatches/set-moon'
+        (base / 'result.json').unlink()  # Crash after process.json, before result.json.
+        log = Path(old['work']) / 'codex.jsonl'
+        before = log.read_bytes()
+        result = lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        self.assertEqual(result['status'], 'validated')
+        self.assertEqual(result['fresh_attempts'], 0)
+        self.assertEqual(log.read_bytes(), before)
+        self.assertEqual(loop.load(Path(result['resumed_from']))['failure_kind'], 'provider_stop')
+
+    def test_repackage_preserves_atlas_old_package_and_all_records_without_calls(self):
+        driver = self.driver()
+        key = 'set-moon'
+        old = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        package = Path(old['package'])
+        contact_size = (package / 'contact-sheet.webp').stat().st_size
+        limit = old['bytes'] - contact_size // 4
+        old.update(status='failed', reason=f'package is {old["bytes"]} bytes, exceeds {limit}; no files published')
+        loop.save(self.run / 'hatches' / key / 'result.json', old)
+        before = {p: p.read_bytes() for p in Path(old['work']).rglob('*') if p.is_file()}
+        calls = len(self.calls())
+        with patch.object(lamp_hatch, 'LIMIT', limit):
+            result = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        self.assertEqual(result['status'], 'validated', result['reason'])
+        self.assertLessEqual(result['bytes'], limit)
+        self.assertEqual(result['atlas_sha256'], old['atlas_sha256'])
+        self.assertEqual(result['previews'], old['previews'])
+        self.assertTrue(all(path.read_bytes() == data for path, data in before.items()))
+        self.assertEqual(len(self.calls()), calls)
+        self.assertEqual(lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None), result)
+
+    def test_list_resume_cli_is_read_only_and_agrees_with_dispatch(self):
+        driver = self.driver()
+        with patch.dict(os.environ, {'FAKE_PROVIDER_STOP': 'moon'}):
+            lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        with patch.dict(os.environ, {'FAKE_FAIL': 'scholar'}):
+            lamp_hatch.hatch(driver, 'set-scholar', 'scholar', {}, {}, None, None)
+        with patch.dict(os.environ, {'FAKE_REFUSE': 'snow-queen'}):
+            lamp_hatch.hatch(driver, 'set-snow-queen', 'snow-queen', {}, {}, None, None)
+        lamp_hatch.hatch(driver, 'set-medea', 'medea', {}, {}, None, None)
+        loop.save(self.run / 'decisions/briefs.json', {'briefs': {'painter': {}}})
+        # Listing must work without an installed generation skill or current config.
+        config = loop.load(self.run / 'run.json')
+        loop.save(self.run / 'run.json', {**config, 'skill_dir': '/missing-skill'})
+        before = {p: p.read_bytes() for p in self.run.rglob('*') if p.is_file()}
+        calls = len(self.calls())
+        result = subprocess.run([sys.executable, '-m', 'factory.taste.codex_lamp', 'list-resume', str(self.run)],
+                                cwd=Path(__file__).resolve().parents[2], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        listing = json.loads(result.stdout)
+        self.assertEqual(listing['model_hatches'], 3)
+        self.assertEqual({h['key']: h['action'] for h in listing['hatches']}, {
+            'set-moon': 'provider_retry', 'set-scholar': 'fresh_attempt', 'set-snow-queen': 'keep',
+            'set-medea': 'keep', 'set-painter': 'run'})
+        self.assertEqual({p: p.read_bytes() for p in self.run.rglob('*') if p.is_file()}, before)
+        self.assertEqual(len(self.calls()), calls)
+        for item in listing['hatches']:
+            pet = item['key'].removeprefix('set-')
+            lamp_hatch.hatch(driver, item['key'], pet, {}, {}, None, None)
+        self.assertEqual(len(self.calls()) - calls, listing['model_hatches'])
+
+    def test_expanded_image_review_keeps_prior_jobs_and_records(self):
+        driver = self.driver()
+        old = lamp_hatch.hatch(driver, 'set-moon', 'moon', {}, {}, None, None)
+        driver.image_review(9, 'image-review', {'moon': old}, {'moon': {}}, {})
+        before = {p: p.read_bytes() for kind in ('jobs', 'records', 'replies')
+                  for p in (self.run / kind).rglob('*.json')}
+        new = lamp_hatch.hatch(driver, 'set-medea', 'medea', {}, {}, None, None)
+        candidates = {'moon': old, 'medea': new}
+        reviews = driver.image_review(9, 'image-review', candidates, {'moon': {}, 'medea': {}}, {})
+        self.assertEqual(len(reviews), 6)
+        for review in reviews.values():
+            self.assertEqual({v['target'] for v in review['verdicts']}, set(candidates))
+        self.assertTrue(all(p.read_bytes() == data for p, data in before.items()))
+        calls = len(self.calls())
+        driver.image_review(9, 'image-review', candidates, {'moon': {}, 'medea': {}}, {})
+        self.assertEqual(len(self.calls()), calls)
 
     def test_changed_config_and_symlinks_are_rejected(self):
         self.driver()

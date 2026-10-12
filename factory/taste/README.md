@@ -346,8 +346,32 @@ record target versus observed motion in their decisions rather than spending rep
 numbers. No worker asks for clarification. Rerunning a stopped legacy run retries zero-generation
 pilots blocked by the old reference, contract or clarification instructions, and the pilot that
 failed solely on the old numeric jump-lift gate. Each gets one migration attempt, preserving the
-failure, art and logs. Genuine validation failures and provider refusals remain failures.
+failure, art and logs. Set pets that fail a gate get exactly one fresh attempt on resume,
+with the old failure reason in the new attempt's request. Pilot migrations and jury redos
+retain their separate limits. Provider refusals are always terminal.
 Dispatched text prompts, replies, replays and comparison files stay intact on resume.
+
+`python3 -m factory.taste.codex_lamp list-resume <run>` lists known hatches and approved
+briefs with their next action and reason. It is strictly read-only: no lock file, input/rule
+initialization, skill discovery or model calls. Later jury redos depend on future reviews.
+The listing and actual hatch dispatch use the same eligibility checks. A terminal provider
+usage/quota, rate/capacity or server error must appear in the attempt's JSONL events; a bare
+exit code or a worker quoting an error is insufficient. A complete event stream with no work
+items proves the worker never began and permits a replacement without spending the fresh
+attempt. If work items exist, only a continuation is allowed: reuse preserved art and carry
+forward all row repairs, without restarting the pet. Incomplete or ambiguous logs authorize
+no such retry. No replacement is dispatched automatically in a loop when a provider stops;
+another invocation is needed. Interrupted completion writes are settled before resuming.
+
+The first `hatches/<key>/result.json` stays unchanged. Later outcomes append to
+`resume-results/000001.json`, etc., linked by `resumed_from`; the latest is current.
+Each new attempt freezes `driver-request.json`, including the previous failure, provider
+evidence and fresh-attempt budget. This is separate from worker-owned reports. A provider
+stop before work does not consume the one fresh attempt, even when it interrupts that retry.
+An expanded image-review set gets distinct jobs, preserving any earlier jury jobs/replies.
+Oversize packages with a validated atlas are repackaged locally in a new attempt: rerun the
+bundled gates on the unchanged atlas and shrink only the lossy contact preview as needed.
+Native contacts and previews stay available; the 2,000,000-byte package limit is unchanged.
 
 Decision rules v2 treat step 3's flags as drawing notes; only vetoes exclude a style there.
 Every later hatch/redo receives the winning flags, attributed to their jurors, with instructions

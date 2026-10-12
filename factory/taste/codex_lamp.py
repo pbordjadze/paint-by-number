@@ -445,6 +445,15 @@ class Lamp:
             return {}
         from .lamp_inputs import for_step
         _, inputs = for_step(self.run, number)
+        images = [p['contact'] for p in candidates.values()]
+        rule = ballot_schema(list(candidates), ranking=False)
+        # A paused set can already have review jobs for its few successful pets.
+        # Keep those jobs/replies immutable; an expanded set needs its own jury.
+        saved = [loop.load(paths.contained(self.run, p.relative_to(self.run)))
+                 for p in (self.run / 'jobs' / f'{number:03}').glob(f'{stage}-*.json')]
+        if any(job['stage'] == stage and (job['images'] != images or job['reply_schema'] != rule)
+               for job in saved):
+            stage += '-resume-' + digest(candidates)[:16]
         return self.round(number, stage, self.jury(3),
             'Inspect every attached contact sheet, each native cell and all nine rows plus sixteen looks. '
             'Return keep or redo with a concrete reason per pet. Originality marks keep unless it '
@@ -452,8 +461,7 @@ class Lamp:
             'charters and briefs. The maker is a separate session. Each pet gets at most one redo.',
             {'candidates': candidates, 'briefs': briefs, 'style': style,
              'owner_charters': {g['id']: g for g in inputs['guardians']}},
-            ballot_schema(list(candidates), ranking=False),
-            images=[p['contact'] for p in candidates.values()])
+            rule, images=images)
 
     @staticmethod
     def redos(reviews):
@@ -478,6 +486,9 @@ def main():
     run.add_argument('--skill-dir', type=Path, help='installed create-pet skill directory (auto-discovered)')
     run.add_argument('--dry-resume', action='store_true',
                      help='use completed records only and stop before step 4; never call a model')
+    listing = commands.add_parser('list-resume',
+        help='read-only: list known hatches the next resume would run and why; no model calls')
+    listing.add_argument('run_dir', type=Path)
     replay = commands.add_parser('replay', help='re-pose recorded main-round prompts unchanged')
     replay.add_argument('run_dir', type=Path)
     replay.add_argument('--pieces', default='chapter-6,renumber,front-door')
@@ -500,6 +511,12 @@ def main():
     if hasattr(args, 'image_workers') and not 1 <= args.image_workers <= 3:
         parser.error('--image-workers must be between 1 and 3')
     try:
+        if args.command == 'list-resume':
+            from .lamp_resume import listing
+            # Do not construct Lamp or acquire its writing lock: even .lock, frozen
+            # inputs, skill discovery and policy initialization must remain untouched.
+            print(json.dumps(listing(args.run_dir), indent=2, ensure_ascii=False))
+            return
         with locked(args.run_dir) as directory:
             if args.command == 'run':
                 result = Lamp(directory, args.model, args.compare, args.effort,
