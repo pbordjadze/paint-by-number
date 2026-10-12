@@ -15,15 +15,19 @@ Paths written as `pieces/…` in older factory documents mean `factory/pieces/�
    Vetoed or technically flagged styles cannot win. If fewer than two survive, a second and
    final proposal/shortlist round receives the rejection evidence.
 2. Four local v2 pilots: the golden ram and trolleybus in each shortlisted style. Identity
-   and rightward gait come first. Both pilots must validate for their style to remain eligible.
-3. A separate six-seat image jury chooses one surviving style. The chosen ram is the initial
-   family reference. All rejected/failed pilots remain in the run, not in `factory/pets/`.
+   and rightward gait come first. Pilots have no family reference: each creates its own base,
+   then grounds its remaining jobs in that base. Both pilots must validate for their style to
+   remain eligible.
+3. A separate six-seat image jury chooses one surviving style and nominates a reference pilot
+   for each style. The winning style's most nominated pilot becomes the fixed family reference;
+   Originality abstains from reference nominations. Ties use stable pilot IDs.
+   All rejected/failed pilots remain in the run, not in `factory/pets/`.
 4. All twenty owners draft their own briefs: 150–300 words, 50–80 appearance-note words,
    nine row directions, plus the frozen do-not-resemble entries. Originality also has a pet.
 5. Six seats read the whole set. Every flagged brief returns to its owner once. The primary
    model's revised brief goes to the maker; the final image jury checks whether it worked.
-6. Hatch the final ram first, using its pilot reference. Its validated contact becomes the
-   reference for the other nineteen; if it fails, keep the validated pilot reference.
+6. Hatch all twenty final pets using the jury's chosen pilot contact as their family reference.
+   The reference pet already exists before these hatches; no final pet replaces it mid-set.
    Each pet has a separate workspace-write session; image generation within a worker is
    sequential, with at most three pet workers. Technical repairs within a session are bounded
    to two per failing row. Persistent failures and provider refusals are terminal for that pet.
@@ -39,6 +43,15 @@ panel. Originality never ranks taste. Vetoes must quote the full normalized guar
 line exactly. Function flags carry concrete evidence separately. Ties use stable candidate IDs.
 Originality receives the glossary; the collection page's current seeds, all charters, chapter-6
 replies and Originality's seven risk/fix entries are frozen before any calls.
+
+New text prompts state the v2 contract: 192 × 208 cells, eight columns by eleven rows,
+nine animation rows with 6/8/8/4/5/8/6/6/6 frames, then sixteen clockwise look directions.
+Looks are poses with a consistent palette, not alternate paint treatments. Hatch workers apply
+the contract over conflicting technical numbers or look meanings in existing sheets, preserving
+their preset, notes, palette, line, framing, boundaries and motion intent. Each override records
+its source field, original text, replacement and reason in the worker reply and pet provenance.
+Workers never ask questions or wait for clarification: they decide within the supplied brief,
+style and contract and record their choices. This also overrides the skill's interactive steps.
 
 The comparison model receives identical prompts and output schemas for proposals, shortlist,
 briefs, repairs and set review. It sees the primary model's selected context and is recorded
@@ -74,7 +87,9 @@ costs/NNN/<job>-N.json            measured tokens/time; unknown measurements rem
 dispatch/<unique>/…              every invocation's schema, reply, JSONL and stderr
 hatches/<pilot|set|redo>-…/
   request.json                   brief, style, avoidances, reference hash, redo reasons
+  active-attempt.json            current attempt, stable across an interrupted migration
   attempt-…/                     isolated worker directory, prompts, command and process log
+    result.json                  archived original failure when the legacy pilot is retried
     reply[.retry].json           original report and at most one JSON repair
     final/spritesheet.webp       exact v2 encoding submitted to local validation
     qa/                          chroma, frames, directions and continuity evidence
@@ -97,7 +112,15 @@ in-flight calls may repeat. If a raw reply arrived before the record was written
 uses it without a new call. Tallies and comparison outputs are derived again from saved replies.
 Transport conversion leaves job hashes unchanged; records made before the status field are
 treated as valid completions. Schema fixes therefore resume a stopped run at its unfinished jobs.
-Hatch failures are saved, skipped on resume and never silently retried. Re-running verification
+Dispatched text prompts remain frozen across driver changes, including partially completed
+primary/comparison pairs. Replays and comparison artifacts are untouched by `run`.
+Hatch failures are normally terminal. The one migration exception is a legacy pilot with zero
+image generations blocked by a missing family reference, a v2 conflict or unanswered
+clarification. Rerunning the same command archives its old result alongside its original logs
+and starts a fresh attempt under the corrected policy. That attempt survives interruption;
+if it fails, it is terminal. Provider refusals (including events and repaired replies) never
+authorize a retry, nor do unrelated failures or failures after any image generation.
+Re-running verification
 checks package hashes before copying anything. Existing differing repository pet files cause
 an explicit error rather than being overwritten; identical partial copies can resume.
 
@@ -106,8 +129,9 @@ The entire four-file package must be at most **2,000,000 bytes**. The parent run
 `validate_atlas.py --require-v2` with the actual chroma key, then `validate_pet_quality.py` on
 that exact WebP and its evidence. Both reports must pass and match the final hash. The contact
 is rendered from those bytes by the bundled script and compressed independently. Provenance
-includes the brief, style, reference/hash, model/effort, reported generation count, technical
-repairs, jury redo and validator paths. Large source art, previews and logs stay outside the repo.
+includes the brief, unchanged style, reference/hash, model/effort, reported generation count,
+contract overrides, autonomous decisions, technical repairs, jury redo and validator paths.
+Large source art, previews and logs stay outside the repo.
 Generation totals are explicitly worker-reported; raw tool events are retained for auditing.
 
 ## Historical replay and its limits

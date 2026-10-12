@@ -135,6 +135,156 @@ class LampTests(unittest.TestCase):
             self.assertLessEqual(peak, 3)
             self.assertEqual(live, 0)
 
+    def legacy_failure(self, result):
+        """Model the old driver's durable zero-image report, retaining all raw evidence."""
+        result.pop('worker_policy')
+        base = self.run / 'hatches' / result['key']
+        loop.save(base / 'result.json', result)
+        (base / 'active-attempt.json').unlink()
+        return {p: p.read_bytes() for p in Path(result['work']).rglob('*') if p.is_file()}
+
+    def test_resume_all_pilot_blockers_keeps_text_replay_comparison_and_reference(self):
+        driver = self.driver()
+        original_prompt = driver.prompt
+        def legacy_prompt(*args):
+            return original_prompt(*args).replace(lamp.UNATTENDED, '').replace(lamp.CONTRACT, '')
+        with patch.object(driver, 'prompt', side_effect=legacy_prompt), patch.dict(os.environ,
+                {'FAKE_PILOT_BLOCKER': 'all', 'FAKE_CONFLICTING_STYLES': '1'}):
+            with self.assertRaisesRegex(ValueError, 'neither style'):
+                driver.run_plan()
+        evidence = {}
+        for path in self.run.glob('hatches/pilot-*/result.json'):
+            result = loop.load(path)
+            self.assertEqual(result['image_generations'], 0)
+            evidence.update(self.legacy_failure(result))
+        self.assertEqual(len(list(self.run.glob('hatches/pilot-*'))), 4)
+        real_repo = Path(__file__).resolve().parents[2]
+        with patch.object(loop, 'REPO', real_repo):
+            lamp_compare.replay_run(self.run, ['renumber'], ['primary-test', 'comparison-test'], 'high', 4)
+        lamp_compare.compare_run(self.run)
+        for folder in ('jobs', 'records', 'replies', 'replay'):
+            evidence.update({p: p.read_bytes() for p in (self.run / folder).rglob('*') if p.is_file()})
+        for name in ('comparison.json', 'comparison.md'):
+            evidence[self.run / name] = (self.run / name).read_bytes()
+        before = len(self.calls())
+        with patch.dict(os.environ, {'FAKE_REDO': 'moon'}):
+            summary = self.driver().run_plan()
+            calls = self.calls()
+            self.assertEqual(set(summary['pets'].values()), {'validated'})
+            self.assertTrue(all(p.read_bytes() == data for p, data in evidence.items()))
+            new_calls = calls[before:]
+            self.assertFalse(any('style-proposals-' in c['work'] or 'shortlist-' in c['work']
+                                 or '/replay/' in c['work'] for c in new_calls))
+            pilot_calls = [c for c in new_calls if '/hatches/pilot-' in c['work']]
+            self.assertEqual(len(pilot_calls), 4)
+            for call in pilot_calls:
+                self.assertNotIn('--image', call['args'])
+                self.assertIn('reference=null is intentional', call['prompt'])
+            for path in self.run.glob('hatches/pilot-*/result.json'):
+                result = loop.load(path)
+                self.assertEqual(result['status'], 'validated')
+                self.assertEqual(loop.load(Path(result['resumed_from']))['image_generations'], 0)
+                self.assertNotEqual(str(Path(result['resumed_from']).parent), result['work'])
+                self.assertEqual(len(list(path.parent.glob('attempt-*'))), 2)
+                provenance = loop.load(Path(result['package']) / 'provenance.json')
+                self.assertEqual({o['source'] for o in provenance['contract_overrides']},
+                                 {'style.framing', 'style.palette', 'style.rows.idle'})
+                self.assertTrue(provenance['decisions'])
+                request = loop.load(path.parent / 'request.json')
+                self.assertEqual(provenance['style'], request['style'])
+                for override in provenance['contract_overrides']:
+                    original = request
+                    for field in override['source'].split('.'):
+                        original = original[field]
+                    self.assertEqual(override['original'], original)
+            selected = loop.load(self.run / 'decisions/reference.json')['selected']
+            self.assertEqual(selected, ['pilot-style-00-bulat-okudzhava'])
+            pilot = loop.load(self.run / 'hatches' / selected[0] / 'result.json')
+            set_calls = [c for c in new_calls if '/hatches/set-' in c['work'] or '/hatches/redo-' in c['work']]
+            self.assertEqual(len(set_calls), 21)
+            for call in set_calls:
+                self.assertEqual(call['args'][call['args'].index('--image') + 1], pilot['contact'])
+                provenance = loop.load(Path(call['work']) / 'package/provenance.json')
+                self.assertEqual(provenance['reference'], pilot['contact'])
+                self.assertEqual(provenance['reference_sha256'], lamp.digest(Path(pilot['contact']).read_bytes()))
+            self.driver().run_plan()
+            self.assertEqual(len(self.calls()), len(calls))
+
+    def test_new_proposals_include_exact_contract_and_unattended_decisions(self):
+        driver = self.driver()
+        with patch.object(driver, 'hatch_many', side_effect=RuntimeError('reached pilots')):
+            with self.assertRaisesRegex(RuntimeError, 'reached pilots'):
+                driver.run_plan()
+        for call in self.calls():
+            self.assertIn(lamp.UNATTENDED, call['prompt'])
+            self.assertIn(lamp.CONTRACT, call['prompt'])
+            if 'style-proposals-' in call['work']:
+                self.assertIn('Do not invent frame counts, rows or alternate paint looks.', call['prompt'])
+
+    def test_resume_unfinished_model_pair_uses_the_original_prompt(self):
+        driver = self.driver()
+        rule = lamp.schema.obj({'why': lamp.S})
+        driver.round(1, 'test', ['moon'], 'Old frozen task.', {}, rule)
+        record = (self.run / 'records/001/test-moon-m0.json').read_bytes()
+        driver.round(1, 'test', ['moon'], 'New unattended task.', {}, rule, compare=True)
+        calls = self.calls()
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0]['prompt'], calls[1]['prompt'])
+        self.assertEqual((self.run / 'records/001/test-moon-m0.json').read_bytes(), record)
+
+    def test_pilot_migration_is_bounded_and_survives_interrupted_completion(self):
+        driver = self.driver()
+        for blocker in ('reference', 'frames', 'looks', 'clarification'):
+            key = 'pilot-' + blocker
+            with self.subTest(blocker=blocker), patch.dict(os.environ, {'FAKE_PILOT_BLOCKER': blocker}):
+                old = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+                evidence = self.legacy_failure(old)
+                failed = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+                before = len(self.calls())
+                self.assertEqual(lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None), failed)
+                self.assertEqual(len(self.calls()), before)
+                self.assertTrue(all(p.read_bytes() == data for p, data in evidence.items()))
+        key = 'pilot-interrupted'
+        with patch.dict(os.environ, {'FAKE_PILOT_BLOCKER': 'reference'}):
+            old = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        self.legacy_failure(old)
+        with patch.object(lamp_hatch, 'validate', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        before = len(self.calls())
+        result = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+        self.assertEqual(result['status'], 'validated')
+        self.assertEqual(len(self.calls()), before)
+        self.assertEqual(len(list((self.run / 'hatches' / key).glob('attempt-*'))), 2)
+
+    def test_migration_never_retries_refusals_generated_or_unrelated_failures(self):
+        driver = self.driver()
+        for case in ('provider-event', 'refused-reply', 'refused-repair', 'refused-result',
+                     'generated', 'unrelated', 'set-pet'):
+            with self.subTest(case=case):
+                key = 'set-moon' if case == 'set-pet' else 'pilot-' + case
+                base = self.run / 'hatches' / key
+                work = base / 'attempt-old'
+                work.mkdir(parents=True)
+                record = dict(key=key, pet='moon', model=driver.model, effort=driver.effort,
+                              status='failed', reason='Required family reference is null.',
+                              image_generations=0, repairs=[], work=str(work))
+                if case == 'generated':
+                    record['image_generations'] = 1
+                elif case == 'unrelated':
+                    record['reason'] = 'Image tool is unavailable.'
+                elif case == 'refused-result':
+                    record['status'] = 'refused'
+                elif case.startswith('refused-'):
+                    name = 'reply.retry.json' if case == 'refused-repair' else 'reply.json'
+                    loop.save(work / name, {'status': 'refused'})
+                elif case == 'provider-event':
+                    (work / 'codex.jsonl').write_text(json.dumps({'type': 'error', 'code': 'content_policy_violation'}))
+                loop.save(base / 'result.json', record)
+                result = lamp_hatch.hatch(driver, key, 'moon', {}, {}, None, None)
+                self.assertEqual(result['status'], 'refused' if case.startswith(('provider-', 'refused-')) else 'failed')
+                self.assertFalse(self.log.exists())
+
     def test_actual_mid_round_process_crash_and_resume(self):
         # Separate process is killed by the fake after several durable jobs have completed.
         source = Path(__file__).resolve().parents[2]

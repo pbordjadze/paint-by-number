@@ -20,6 +20,23 @@ from .kit import outside_repo
 WORK = Path('/root/factory-out/F36')
 ROWS = ('idle', 'running-right', 'running-left', 'waving', 'jumping', 'failed',
         'waiting', 'running', 'review')
+# Geometry and row order from work-pets/references/sprite-sheet-contract.md.
+CONTRACT = """The v2 sprite-sheet contract fixes 192 × 208 cells, eight columns by eleven rows,
+one transparent 1536 × 2288 atlas. The nine animation rows (0–8) have these exact frame counts:
+idle 6, running-right 8, running-left 8, waving 4, jumping 5, failed 8, waiting 6,
+running 6 (focused work, not locomotion), review 6. Unused cells stay fully transparent.
+Rows 9 and 10 hold sixteen look directions, eight per row, clockwise in screen coordinates:
+row 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5;
+row 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5.
+000 is up, 090 right, 180 down, 270 left. These are gaze/pose directions with the same
+palette and treatment, not sixteen palette variants, paint treatments or separate animations.
+"""
+UNATTENDED = """This is an unattended codex exec run; nobody can answer questions.
+Never ask for clarification or wait for an answer. Decide within the brief, style sheet and v2
+contract, and record each assumption or technical decision in your reply (why for text jurors,
+decisions for hatch workers). Technical choices (resolution, frames, export) belong to Codex;
+the v2 contract overrides conflicting technical numbers while the sheet's taste stays binding.
+"""
 S = schema.STRING
 TEXT = {'type': 'string'}
 STYLE = schema.obj({
@@ -36,7 +53,7 @@ Use plain words. Name no real person beyond Paul and the guardians' namesakes in
 Paul waived the approval steps for this run and retains a later veto. All pets remain local.
 Preserve each seed's creature and personality; express it within the supported pet constraints.
 No floating effects, scene background, text, speech bubbles, shadows or new props in review.
-Native cells are 192 × 208. Nine animation rows must read distinctly; v2 adds sixteen looks.
+Native cells are 192 × 208. Nine animation rows must read distinctly; v2 adds sixteen look directions.
 Every veto quotes the exact guards-against charter line, with a concrete reason. Originality
 only vetoes in juries and never ranks taste. The Painter also guards function: readability at
 192 × 208 in all nine rows. Function defects are flags with evidence, not invented charter quotes.
@@ -191,7 +208,8 @@ class Lamp:
 
     def prompt(self, seat, task, context):
         g = self.seats[seat]
-        text = (self.inputs['rules'] + f'\nYou are {g["name"]}.\nYour charter:\n{g["charter_text"]}\n'
+        text = (self.inputs['rules'] + '\n' + UNATTENDED + CONTRACT
+                + f'\nYou are {g["name"]}.\nYour charter:\n{g["charter_text"]}\n'
                 + task + '\nContext:\n' + json.dumps(context, indent=2, ensure_ascii=False))
         if seat == 'originality':
             text += '\nOriginality glossary:\n' + json.dumps(self.inputs['glossary'], ensure_ascii=False)
@@ -202,10 +220,23 @@ class Lamp:
         for seat in seats:
             payload = context[seat] if stage in ('briefs', 'brief-repair') else context
             prompt = self.prompt(seat, task, payload)
+            seat_jobs, saved_prompts = [], set()
             for index, model in enumerate(self.models if compare else [self.model]):
-                jobs.append(dict(id=f'{stage}-{seat}-m{index}', round=number, attempt=0,
-                                 role='guardian', stage=stage, guardian=seat, model=model,
-                                 effort=self.effort, images=list(images), prompt=prompt, reply_schema=rule))
+                job = dict(id=f'{stage}-{seat}-m{index}', round=number, attempt=0,
+                           role='guardian', stage=stage, guardian=seat, model=model,
+                           effort=self.effort, images=list(images), prompt=prompt, reply_schema=rule)
+                saved = loop.load(paths.job_path(self.run, job, 'jobs'))
+                if saved:
+                    saved_prompts.add(saved['prompt'])
+                seat_jobs.append(job)
+            if len(saved_prompts) > 1:
+                raise ValueError(f'primary/comparison prompts differ: {stage}/{seat}')
+            # Keep dispatched prompts across driver fixes, including an unfinished model pair.
+            # execute still checks all other job inputs and the completion hash.
+            if saved_prompts:
+                for job in seat_jobs:
+                    job['prompt'] = next(iter(saved_prompts))
+            jobs.extend(seat_jobs)
         records = parallel_map(lambda job: execute(self.run, job,
             lambda reply: self.check(job['guardian'], reply, stage, context)), jobs, self.parallel)
         primary = {r['guardian']: r['reply'] for r in records
@@ -213,6 +244,10 @@ class Lamp:
         return primary
 
     def check(self, seat, reply, stage, context):
+        if stage == 'style-decision':
+            nominations = reply['reference_pilots'].values()
+            if any((pilot is None) != (seat == 'originality') for pilot in nominations):
+                raise ValueError('taste jurors must nominate reference pilots; Originality must abstain with null')
         if stage.startswith('style-proposals') and len(reply['style_notes'].split()) > 80:
             raise ValueError('style notes exceed 80 words')
         if stage in ('briefs', 'brief-repair'):
@@ -258,7 +293,9 @@ class Lamp:
         for revision in range(2):
             styles = self.round(1 + revision * 2, f'style-proposals-{revision}', proposals,
                 'Propose one complete family style sheet. Style notes at most 80 words. '
-                'Specify the nine rows, timing and the sixteen looks. Address the ink-versus-glass tension.',
+                'Describe expression and timing within the contract\'s fixed frame counts, nine animation '
+                'rows and sixteen look directions. Do not invent frame counts, rows or alternate paint '
+                'looks. Address the ink-versus-glass tension.',
                 {'seeds': self.inputs['seeds'], 'chapter_6': self.inputs['chapter_6'],
                  'previous_rejection': previous}, STYLE, compare=True)
             ids = {f'style-{i:02}': value for i, value in enumerate(styles.values())}
@@ -284,16 +321,29 @@ class Lamp:
             raise ValueError('neither style has two validated pilots; failures recorded, no style guessed')
         print('3/7 Image jury selects the style', flush=True)
         images = [p['contact'] for p in pilots if p['status'] == 'validated']
+        reference_choices = {sid: [p['key'] for p in pilots if p['key'].startswith(f'pilot-{sid}-')]
+                             for sid in viable}
+        rule = ballot_schema(list(viable))
+        rule['properties']['reference_pilots'] = schema.obj({sid: {'oneOf': [
+            {'type': 'string', 'enum': keys}, {'type': 'null'}]} for sid, keys in reference_choices.items()})
+        rule['required'].append('reference_pilots')
         votes = self.round(5, 'style-decision', self.jury(1),
             'Inspect the attached native contact sheets (all frames in playback order). Choose the '
             'style shared by the animal and object. Rank all viable styles; Originality ranks none. '
-            'Judge identity, gait, all nine rows and sixteen looks. Preview paths are available to read.',
-            {'candidates': viable, 'pilots': pilots}, ballot_schema(list(viable)), images=images)
+            'For each style nominate its best pilot as the fixed family reference in reference_pilots. '
+            'Originality returns null for each reference nomination and never votes on taste. '
+            'Judge identity, gait, all nine rows and sixteen look directions. Preview paths are available to read.',
+            {'candidates': viable, 'pilots': pilots}, rule, images=images)
         chosen = self.tally('style', viable, votes, 1)
         if not chosen:
             raise ValueError('image jury rejected every pilot style')
         style = viable[chosen[0]]
-        reference = next(p['contact'] for p in pilots if p['key'] == f'pilot-{chosen[0]}-medea')
+        reference_votes = {seat: {'ranking': [reply['reference_pilots'][chosen[0]]], 'vetoes': [], 'flags': []}
+                           for seat, reply in votes.items() if seat != 'originality'}
+        selected_pilots = self.tally('reference', reference_choices[chosen[0]], reference_votes, 1)
+        if not selected_pilots:
+            raise ValueError('image jury supplied no reference pilot votes')
+        reference = next(p['contact'] for p in pilots if p['key'] == selected_pilots[0])
         print('4/7 Twenty guardian briefs', flush=True)
         contexts = {seat: {'seed': self.inputs['seeds'][seat], 'style': style,
                           'do_not_resemble': self.inputs['avoid'][seat]} for seat in self.seats}
@@ -324,19 +374,16 @@ class Lamp:
                   {'style': style, 'reference': reference, 'briefs': briefs, 'reviews': reviews,
                    'repaired': flagged, 'invalid': sorted(invalid_briefs)})
         print('6/7 Set hatches', flush=True)
-        # Establish a set reference before launching the remaining independent pets.
-        first = self.hatch_many([dict(key='set-medea', pet='medea', style=style, brief=briefs['medea'],
-                                     reference=reference, redo=None)]) if 'medea' in briefs else []
-        set_reference = first[0]['contact'] if first and first[0]['status'] == 'validated' else reference
-        pets = first + self.hatch_many([dict(key=f'set-{s}', pet=s, style=style, brief=b,
-            reference=set_reference, redo=None) for s, b in briefs.items() if s != 'medea'])
+        # The jury's validated pilot is already the first reference pet; never replace it mid-set.
+        pets = self.hatch_many([dict(key=f'set-{s}', pet=s, style=style, brief=b,
+            reference=reference, redo=None) for s, b in briefs.items()])
         print('7/7 Image review and at most one redo per pet', flush=True)
         candidates = {p['pet']: p for p in pets if p['status'] == 'validated'}
         reviews = self.image_review(9, 'image-review', candidates, briefs, style)
         redos = self.redos(reviews)
         if redos:
             replacements = self.hatch_many([dict(key=f'redo-{s}', pet=s, style=style, brief=briefs[s],
-                reference=set_reference, redo={'previous': candidates[s], 'reasons': reasons})
+                reference=reference, redo={'previous': candidates[s], 'reasons': reasons})
                 for s, reasons in redos.items()])
             for pet in replacements:
                 candidates[pet['pet']] = pet
