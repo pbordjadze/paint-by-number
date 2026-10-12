@@ -300,10 +300,10 @@ class Lamp:
         from .lamp_hatch import hatch
         from .lamp_inputs import bind_step
         for kind in sorted({item['key'].split('-')[0] for item in items}):
-            bind_step(self.run, {'pilot': '2', 'set': '6', 'redo': '7'}[kind])
+            bind_step(self.run, {'pilot': '2', 'set': '6', 'redo': '7', 'maker': '7'}[kind])
         return parallel_map(lambda item: hatch(self, **item), items, self.image_workers)
 
-    def run_plan(self, *, dry_resume=False):
+    def run_plan(self, *, dry_resume=False, makers_call=None):
         self.dry_resume = dry_resume
         print('1/7 Style proposals and shortlist', flush=True)
         proposals = [g for g in self.seats if g != 'originality']
@@ -406,33 +406,13 @@ class Lamp:
         pets = self.hatch_many([dict(key=f'set-{s}', pet=s, style=style, brief=b,
             reference=reference, redo=None) for s, b in briefs.items()])
         print('7/7 Image review and at most one redo per pet', flush=True)
-        candidates = {p['pet']: p for p in pets if p['status'] == 'validated'}
-        reviews = self.image_review(9, 'image-review', candidates, briefs, style)
-        redos = self.redos(reviews)
-        if redos:
-            replacements = self.hatch_many([dict(key=f'redo-{s}', pet=s, style=style, brief=briefs[s],
-                reference=reference, redo={'previous': candidates[s], 'reasons': reasons})
-                for s, reasons in redos.items()])
-            for pet in replacements:
-                candidates[pet['pet']] = pet
-            final_candidates = {p['pet']: p for p in replacements if p['status'] == 'validated'}
-            final_reviews = self.image_review(10, 'redo-review', final_candidates, briefs, style)
-            rejected = self.redos(final_reviews)
-        else:
-            final_reviews, rejected = {}, {}
-        from .lamp_hatch import publish
-        results = {s: {'pet': s, 'status': 'invalid', 'reason': 'No valid owner brief after one reply repair.'}
-                   for s in sorted(invalid_briefs)}
-        for original in pets:
-            pet = candidates.get(original['pet'], original)
-            if pet['pet'] in rejected:
-                pet = {**pet, 'status': 'rejected', 'reasons': rejected[pet['pet']]}
-            if pet['status'] == 'validated':
-                publish(self, pet, briefs[pet['pet']], style)
-            results[pet['pet']] = pet
-        loop.save(paths.contained(self.run, 'decisions', 'images.json'),
-                  {'reviews': reviews, 'redos': redos, 'redo_reviews': final_reviews, 'pets': results})
+        from .lamp_images import finish
+        results = finish(self, pets, briefs, style, reference, invalid_briefs)
         summary = {'status': 'complete', 'model': self.model, 'pets': {s: p['status'] for s, p in results.items()}}
+        from .lamp_maker import finish as finish_makers
+        maker_results = finish_makers(self, makers_call, results, briefs, style, reference)
+        if maker_results is not None:
+            summary['makers_call'] = {s: p['status'] for s, p in maker_results.items()}
         loop.save(paths.contained(self.run, 'summary.json'), summary)
         return summary
 
@@ -440,27 +420,33 @@ class Lamp:
         from .lamp_rules import for_style
         return for_style(self.run)['steps']['3']
 
-    def image_review(self, number, stage, candidates, briefs, style):
+    def image_review(self, number, stage, candidates, briefs, style, *, seats=None):
         if not candidates:
             return {}
         from .lamp_inputs import for_step
         _, inputs = for_step(self.run, number)
         images = [p['contact'] for p in candidates.values()]
         rule = ballot_schema(list(candidates), ranking=False)
-        # A paused set can already have review jobs for its few successful pets.
-        # Keep those jobs/replies immutable; an expanded set needs its own jury.
+        # Different pending cohorts need distinct job IDs. lamp_images handles
+        # completed ballot reuse and excludes pets whose decisions are settled.
         saved = [loop.load(paths.contained(self.run, p.relative_to(self.run)))
                  for p in (self.run / 'jobs' / f'{number:03}').glob(f'{stage}-*.json')]
         if any(job['stage'] == stage and (job['images'] != images or job['reply_schema'] != rule)
                for job in saved):
             stage += '-resume-' + digest(candidates)[:16]
-        return self.round(number, stage, self.jury(3),
+        maker_context = {}
+        if stage.startswith('maker-review'):
+            maker_context['makers_call'] = loop.load(paths.contained(self.run, 'decisions/makers-call.json'))
+        return self.round(number, stage, seats or self.jury(3),
             'Inspect every attached contact sheet, each native cell and all nine rows plus sixteen looks. '
             'Return keep or redo with a concrete reason per pet. Originality marks keep unless it '
             'finds a charter violation; it does not score taste. Judge against the supplied owner '
-            'charters and briefs. The maker is a separate session. Each pet gets at most one redo.',
+            'charters and briefs. The maker is a separate session. '
+            + ('This is the recorded maker commission outside the Lamp budget. Judge the named repairs '
+               'and the whole pet normally; any redo, flag or veto withholds it with no further attempt.'
+               if maker_context else 'Each pet gets at most one redo.'),
             {'candidates': candidates, 'briefs': briefs, 'style': style,
-             'owner_charters': {g['id']: g for g in inputs['guardians']}},
+             'owner_charters': {g['id']: g for g in inputs['guardians']}, **maker_context},
             rule, images=images)
 
     @staticmethod
@@ -489,6 +475,9 @@ def main():
     listing = commands.add_parser('list-resume',
         help='read-only: list known hatches the next resume would run and why; no model calls')
     listing.add_argument('run_dir', type=Path)
+    for command in (run, listing):
+        command.add_argument('--makers-call', type=Path,
+                             help='explicit maker decisions JSON; frozen separately from Lamp rules')
     replay = commands.add_parser('replay', help='re-pose recorded main-round prompts unchanged')
     replay.add_argument('run_dir', type=Path)
     replay.add_argument('--pieces', default='chapter-6,renumber,front-door')
@@ -515,12 +504,13 @@ def main():
             from .lamp_resume import listing
             # Do not construct Lamp or acquire its writing lock: even .lock, frozen
             # inputs, skill discovery and policy initialization must remain untouched.
-            print(json.dumps(listing(args.run_dir), indent=2, ensure_ascii=False))
+            print(json.dumps(listing(args.run_dir, args.makers_call), indent=2, ensure_ascii=False))
             return
         with locked(args.run_dir) as directory:
             if args.command == 'run':
                 result = Lamp(directory, args.model, args.compare, args.effort,
-                              args.parallel, args.image_workers, args.skill_dir).run_plan(dry_resume=args.dry_resume)
+                              args.parallel, args.image_workers, args.skill_dir).run_plan(
+                                  dry_resume=args.dry_resume, makers_call=args.makers_call)
             elif args.command == 'replay':
                 from .lamp_compare import replay_run
                 result = replay_run(directory, args.pieces.split(','), args.models.split(','), args.effort, args.parallel)

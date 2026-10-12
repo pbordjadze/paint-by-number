@@ -142,13 +142,8 @@ def retryable_pilot(record):
                  or ('clarification' in reason and 'unanswered' in reason)))
 
 
-def hatch(lamp, key, pet, style, brief, reference, redo):
-    from . import lamp_resume
-    paths.slug(key)
-    base = paths.contained(lamp.run, 'hatches', key)
-    base.mkdir(parents=True, exist_ok=True)
-    skill = Path(lamp.config['skill_dir'])
-    frozen(paths.contained(lamp.run, 'skill.json'), skill_hashes(skill))
+def hatch_request(lamp, key, pet, style, brief, reference, redo, maker=None):
+    """Build the expected input even when a settled hatch must never run again."""
     request = dict(key=key, pet=pet, model=lamp.model, effort=lamp.effort, style=style,
                    brief=brief, reference=reference,
                    reference_sha256=digest(Path(reference).read_bytes()) if reference else None, redo=redo)
@@ -157,16 +152,37 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
         notes = drawing_notes(lamp.run)
         if notes:
             request['readability_notes'] = notes
+    if maker is not None:
+        request['maker'] = maker
+    return request
+
+
+def verify_package(lamp, record):
+    if record['status'] not in ('validated', 'rejected') and not record.get('package_hashes'):
+        return
+    if not record.get('package_hashes'):
+        raise ValueError(f'validated package has no hashes: {record["key"]}')
+    package = paths.contained(lamp.run, Path(record['package']).relative_to(lamp.run))
+    for name, sha in record['package_hashes'].items():
+        if digest(paths.contained(package, name).read_bytes()) != sha:
+            raise ValueError(f'validated package changed: {record["key"]}/{name}')
+
+
+def hatch(lamp, key, pet, style, brief, reference, redo, maker=None):
+    from . import lamp_resume
+    paths.slug(key)
+    base = paths.contained(lamp.run, 'hatches', key)
+    base.mkdir(parents=True, exist_ok=True)
+    skill = Path(lamp.config['skill_dir'])
+    frozen(paths.contained(lamp.run, 'skill.json'), skill_hashes(skill))
+    request = hatch_request(lamp, key, pet, style, brief, reference, redo, maker)
     frozen(paths.contained(base, 'request.json'), request)
     previous_path, previous = lamp_resume.latest_result(base)
     plan = lamp_resume.decision(base)
     if previous:
         record = previous
         if record['status'] == 'validated':
-            package = paths.contained(lamp.run, Path(record['package']).relative_to(lamp.run))
-            for name, sha in record['package_hashes'].items():
-                if digest(paths.contained(package, name).read_bytes()) != sha:
-                    raise ValueError(f'validated package changed: {key}/{name}')
+            verify_package(lamp, record)
         if plan['action'] == 'keep':
             return record
     if lamp.dry_resume:
@@ -202,7 +218,7 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
         if plan['action'] == 'provider_retry':
             record['image_generations'] = 0
         frozen(target, record)
-        return hatch(lamp, key, pet, style, brief, reference, redo)
+        return hatch(lamp, key, pet, style, brief, reference, redo, maker)
     if active.exists():
         work = paths.contained(base, loop.load(active)['directory'])
     else:
@@ -289,6 +305,13 @@ Request:
                    'the gate reason. Report cumulative image generations and repairs with their sources.\n')
     if 'readability_notes' in request:
         prompt += '\n' + request['readability_notes']['instruction'] + '\n'
+    if maker is not None:
+        prompt += ('\nThis is the explicitly recorded maker\'s attempt outside the Lamp\'s budget. '
+                   'It does not reverse the Lamp decision or relax any validator. Read maker in the '
+                   'request, including the prior jury and gate evidence. Preserve earlier attempts; '
+                   'reuse sound art and repair only the named defects. One attempt with at most two '
+                   'repairs per failing row; no further fresh attempt. The result still needs the '
+                   'independent validators and a separate image jury before publication.\n')
     try:
         if plan['action'] == 'repackage':
             # Work in a new attempt; the validated atlas, reports and old package
@@ -313,7 +336,7 @@ Request:
                 if stop['before_work']:
                     record.update(image_generations=0, fresh_attempts=(previous or {}).get('fresh_attempts', 0))
                 frozen(target, record)
-                return hatch(lamp, key, pet, style, brief, reference, redo)
+                return hatch(lamp, key, pet, style, brief, reference, redo, maker)
             reply, errors = worker_reply(lamp, work, prompt, reference)
         if errors:
             record.update(status='invalid', reason='invalid worker reply after one repair', errors=errors)
@@ -350,6 +373,8 @@ Request:
                               'atlas_sha256': record['atlas_sha256'], 'validators': record['validators'],
                               'image_generations_source': 'worker report; raw events and generation logs retained',
                               'redo_count': int(redo is not None), 'local_only': True}
+                if maker is not None:
+                    provenance['maker_attempt_count'] = 1
                 loop.save(paths.contained(package, 'provenance.json'), provenance)
                 size = sum(p.stat().st_size for p in package.iterdir())
                 # Contact sheets are lossy review derivatives, not accepted artwork.
