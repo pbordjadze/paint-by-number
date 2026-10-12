@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import SwiftUI
 
@@ -102,16 +103,23 @@ nonisolated struct MarginariumSelection: Equatable, Sendable {
     }
 }
 
-/// Draws a block's highlights into its text: a wash of the tint that deepens where several
-/// guardians wrote about the same words (two passes of a highlighter), a thin underline, and a
-/// link that opens their notes. The words a reader opened wash deeper still. The wash leaves the
-/// spaces out: a space where a line wraps would carry it on to the margin.
+/// Marks a block's highlights: a wash of the tint that deepens where several guardians wrote
+/// about the same words (two passes of a highlighter), a thin underline, and a link that opens
+/// their notes. The words a reader opened wash deeper still. `MarginariumWashRenderer` draws
+/// the wash, which a background color can't: one on a space where a line wraps runs on to the
+/// margin.
 enum MarginariumHighlighter {
     /// A stretch of text covered by the same highlights; `voices` counts their notes.
     struct Piece: Equatable {
         let range: Range<Int>
         let notes: [String]
         let voices: Int
+    }
+
+    /// A stretch of a block's text: plain, or a highlight's words or the spaces between them.
+    struct Segment {
+        let text: AttributedString
+        let wash: MarginariumWash?
     }
 
     nonisolated static func pieces(_ highlights: [MarginariumAnnotations.Highlight]) -> [Piece] {
@@ -125,43 +133,130 @@ enum MarginariumHighlighter {
         }
     }
 
+    /// The block's text with its highlights, for a view drawn by `MarginariumWashRenderer`. It
+    /// joins the segments by interpolation, which keeps each one's wash (`+` is deprecated).
     static func text(_ base: AttributedString, block: String, highlights: [MarginariumAnnotations.Highlight],
-                     selection: Set<String>) -> AttributedString {
-        var text = base
-        let characters = Array(text.characters)
-        func index(_ offset: Int) -> AttributedString.Index {
-            text.characters.index(text.characters.startIndex, offsetBy: offset)
+                     selection: Set<String>) -> Text {
+        let parts = segments(base, block: block, highlights: highlights, selection: selection)
+        var joined = LocalizedStringKey.StringInterpolation(literalCapacity: 0, interpolationCount: parts.count)
+        for part in parts {
+            let words = Text(part.text)
+            joined.appendInterpolation(part.wash.map { words.customAttribute($0) } ?? words)
         }
+        return Text(LocalizedStringKey(stringInterpolation: joined))
+    }
+
+    static func segments(_ base: AttributedString, block: String, highlights: [MarginariumAnnotations.Highlight],
+                         selection: Set<String>) -> [Segment] {
+        let characters = Array(base.characters)
+        func index(_ offset: Int) -> AttributedString.Index {
+            base.characters.index(base.characters.startIndex, offsetBy: offset)
+        }
+        var segments: [Segment] = []
+        var cursor = 0
         for piece in pieces(highlights) where piece.range.upperBound <= characters.count {
+            if cursor < piece.range.lowerBound {
+                segments.append(Segment(text: AttributedString(base[index(cursor) ..< index(piece.range.lowerBound)]), wash: nil))
+            }
             let opened = !selection.isDisjoint(with: piece.notes)
             var link = AttributeContainer()
             link[AttributeScopes.SwiftUIAttributes.UnderlineStyleAttribute.self] =
                 Text.LineStyle(pattern: .solid, color: Theme.accent.opacity(opened ? 1 : 0.6))
             link[AttributeScopes.FoundationAttributes.LinkAttribute.self] =
                 MarginariumSelection(block: block, notes: piece.notes).url
-            let range = index(piece.range.lowerBound) ..< index(piece.range.upperBound)
-            text[range].mergeAttributes(link)
-            var washed = AttributeContainer()
-            washed[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] =
-                Theme.accent.opacity(wash(voices: piece.voices, opened: opened))
+            let opacity = wash(voices: piece.voices, opened: opened)
             var start = piece.range.lowerBound
             while start < piece.range.upperBound {
-                guard !characters[start].isWhitespace else {
-                    start += 1
-                    continue
-                }
-                var end = start
-                while end < piece.range.upperBound, !characters[end].isWhitespace { end += 1 }
-                let word = index(start) ..< index(end)
-                text[word].mergeAttributes(washed)
+                let isSpace = characters[start].isWhitespace
+                var end = start + 1
+                while end < piece.range.upperBound, characters[end].isWhitespace == isSpace { end += 1 }
+                var words = AttributedString(base[index(start) ..< index(end)])
+                words.mergeAttributes(link)
+                segments.append(Segment(text: words, wash: MarginariumWash(opacity: opacity, isSpace: isSpace)))
                 start = end
             }
+            cursor = piece.range.upperBound
         }
-        return text
+        if cursor < characters.count {
+            segments.append(Segment(text: AttributedString(base[index(cursor)...]), wash: nil))
+        }
+        return segments
     }
 
     /// One voice is a light wash, each more a little deeper, up to three.
     nonisolated static func wash(voices: Int, opened: Bool) -> Double {
         0.04 + 0.1 * Double(min(max(voices, 1), 3)) + (opened ? 0.16 : 0)
+    }
+}
+
+/// How deep to wash a highlight's words, or the spaces between them.
+nonisolated struct MarginariumWash: TextAttribute {
+    let opacity: Double
+    let isSpace: Bool
+}
+
+/// Washes the highlighted words of each line (`MarginariumWash`), then draws the line over
+/// them. Neighbouring words join into one band with rounded ends, the spaces between them
+/// filled; a space with no washed word after it on its line, where a highlight wraps, is left
+/// out, so the band ends with the line's last word.
+nonisolated struct MarginariumWashRenderer: TextRenderer {
+    /// One line's band of washed words and the depths along it.
+    struct Band: Equatable {
+        var rect: CGRect
+        var parts: [Part]
+    }
+
+    struct Part: Equatable {
+        var minX: CGFloat
+        var maxX: CGFloat
+        let opacity: Double
+    }
+
+    let color: Color
+
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        for line in layout {
+            for band in Self.bands(line.map { (rect: $0.typographicBounds.rect, wash: $0[MarginariumWash.self]) }) {
+                var washed = context
+                washed.clip(to: Path(roundedRect: band.rect, cornerRadius: 3))
+                for part in band.parts {
+                    let rect = CGRect(x: part.minX, y: band.rect.minY, width: part.maxX - part.minX, height: band.rect.height)
+                    washed.fill(Path(rect), with: .color(color.opacity(part.opacity)))
+                }
+            }
+            context.draw(line)
+        }
+    }
+
+    /// A line's bands, from its runs in order: each stretch of washed runs, less the spaces at
+    /// its ends, with runs of the same depth joined.
+    static func bands(_ runs: [(rect: CGRect, wash: MarginariumWash?)]) -> [Band] {
+        var bands: [Band] = []
+        var stretch: [(rect: CGRect, wash: MarginariumWash)] = []
+        func close() {
+            while stretch.last?.wash.isSpace == true { stretch.removeLast() }
+            while stretch.first?.wash.isSpace == true { stretch.removeFirst() }
+            guard let first = stretch.first else { return }
+            var band = Band(rect: first.rect, parts: [])
+            for run in stretch {
+                band.rect = band.rect.union(run.rect)
+                if let last = band.parts.last, last.opacity == run.wash.opacity {
+                    band.parts[band.parts.count - 1].maxX = max(last.maxX, run.rect.maxX)
+                } else {
+                    band.parts.append(Part(minX: run.rect.minX, maxX: run.rect.maxX, opacity: run.wash.opacity))
+                }
+            }
+            bands.append(band)
+            stretch = []
+        }
+        for run in runs {
+            if let wash = run.wash {
+                stretch.append((rect: run.rect, wash: wash))
+            } else {
+                close()
+            }
+        }
+        close()
+        return bands
     }
 }

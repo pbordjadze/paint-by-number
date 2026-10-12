@@ -94,8 +94,10 @@ synchronized folder would bundle it into the app.
   otherwise every section is its own lazy row. Each note names the words it is about (the
   source's `<!-- anchor: … -->` line, `anchorBlocks` and the catalog's `<note>.anchor`;
   `tools/marginarium.py`'s docstring), and `MarginariumAnnotations` finds them in the text the
-  reader shows; `MarginariumHighlighter` washes them in the tint, deeper where more voices meet,
-  as links (`MarginariumSelection`) the reader's `openURL` handles. Beside a margin column a tap
+  reader shows; `MarginariumHighlighter` marks them as links (`MarginariumSelection`) the
+  reader's `openURL` handles, and `MarginariumWashRenderer` (a `TextRenderer`) washes them in the
+  tint, deeper where more voices meet, ending each line's band at its last word (a background
+  color on a wrapped space runs on to the margin). Beside a margin column a tap
   picks out the notes (and each note shows its words, quoted); without one it opens
   `MarginariumNoteCard` under the paragraph, and only notes whose words weren't found (a
   translation that moved them; `-NSDoubleLocalizedStrings` finds none) keep a card after their

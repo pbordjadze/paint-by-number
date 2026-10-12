@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import SwiftUI
 import Testing
@@ -94,27 +95,49 @@ struct MarginariumAnnotationsTests {
     }
 
     @Test func highlightedWordsLinkToTheirNotesAndNothingElseDoes() throws {
-        let text = MarginariumHighlighter.text(Self.inline("A *brave* little world"), block: "story",
-                                               highlights: [.init(range: 2 ..< 12, notes: ["n1", "n2"])],
-                                               selection: [])
-        #expect(String(text.characters) == "A brave little world")
-        var linked: [String] = []
-        for run in text.runs {
-            let words = String(text[run.range].characters)
-            if let url = run.link {
-                linked.append(words)
-                #expect(MarginariumSelection(url: url) == MarginariumSelection(block: "story", notes: ["n1", "n2"]))
-                #expect(run[AttributeScopes.SwiftUIAttributes.UnderlineStyleAttribute.self] != nil)
-                // The wash leaves out spaces, which could carry it on to the margin at a line's end.
-                let washed = run[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] != nil
-                #expect(washed == !words.contains { $0.isWhitespace }, "\(words)")
-            } else {
-                #expect(run[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] == nil)
+        let segments = MarginariumHighlighter.segments(Self.inline("A *brave* little world"), block: "story",
+                                                       highlights: [.init(range: 2 ..< 12, notes: ["n1", "n2"])],
+                                                       selection: [])
+        // Words and the spaces between them wash apart, so a line's last space can be left out.
+        #expect(segments.map { String($0.text.characters) } == ["A ", "brave", " ", "litt", "le world"])
+        #expect(segments.map { $0.wash?.isSpace } == [nil, false, true, false, nil])
+        #expect(Set(segments.compactMap { $0.wash?.opacity }) == [MarginariumHighlighter.wash(voices: 2, opened: false)])
+        for segment in segments {
+            for run in segment.text.runs {
+                if segment.wash == nil {
+                    #expect(run.link == nil)
+                } else {
+                    let url = try #require(run.link)
+                    #expect(MarginariumSelection(url: url) == MarginariumSelection(block: "story", notes: ["n1", "n2"]))
+                    #expect(run[AttributeScopes.SwiftUIAttributes.UnderlineStyleAttribute.self] != nil)
+                }
             }
         }
-        // The emphasis and the unwashed space split the runs but not the highlight.
-        #expect(linked.joined() == "brave litt")
-        #expect(linked == ["brave", " ", "litt"])
+        // The emphasis stays.
+        #expect(segments[1].text.runs.first?.inlinePresentationIntent == .emphasized)
+    }
+
+    @Test func theWashFillsTheSpacesBetweenWordsAndEndsWithALinesLastWord() {
+        typealias Band = MarginariumWashRenderer.Band
+        typealias Part = MarginariumWashRenderer.Part
+        func rect(_ x: CGFloat, _ width: CGFloat) -> CGRect { CGRect(x: x, y: 0, width: width, height: 20) }
+        let one = MarginariumWash(opacity: 0.14, isSpace: false), space = MarginariumWash(opacity: 0.14, isSpace: true)
+        let two = MarginariumWash(opacity: 0.24, isSpace: false)
+        // "Paul had ⟨the idea⟩ ⟨⟨twice⟩⟩ then ⟨again⟩", wrapping after "again ".
+        let bands = MarginariumWashRenderer.bands([
+            (rect(0, 40), nil),
+            (rect(40, 30), one), (rect(70, 5), space), (rect(75, 30), two), (rect(105, 5), space),
+            (rect(110, 30), nil),
+            (rect(140, 30), one), (rect(170, 5), space),
+        ])
+        #expect(bands == [
+            Band(rect: rect(40, 65), parts: [Part(minX: 40, maxX: 75, opacity: 0.14), Part(minX: 75, maxX: 105, opacity: 0.24)]),
+            Band(rect: rect(140, 30), parts: [Part(minX: 140, maxX: 170, opacity: 0.14)]),
+        ])
+        // A line that starts with a highlight's space washes from its first word; spaces alone, not at all.
+        #expect(MarginariumWashRenderer.bands([(rect(0, 5), space), (rect(5, 20), one)])
+            == [Band(rect: rect(5, 20), parts: [Part(minX: 5, maxX: 25, opacity: 0.14)])])
+        #expect(MarginariumWashRenderer.bands([(rect(0, 5), space), (rect(5, 20), nil)]).isEmpty)
     }
 
     @Test func aSelectionRoundTripsThroughItsLinkAndOtherLinksAreLeftAlone() throws {

@@ -216,13 +216,13 @@ struct MarginariumMarginNote: View {
 struct MarginariumNumberedText: View {
     let block: MarginariumDocument.Block
     /// The block's text with its highlights, where it has any.
-    var text: AttributedString?
+    var text: Text?
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(block.number.formatted())
                 .font(.display(block.kind == .marginNote ? .footnote : .body, weight: .regular))
-            Text(text ?? block.attributedText)
+            (text ?? Text(block.attributedText))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
