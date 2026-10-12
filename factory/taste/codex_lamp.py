@@ -425,7 +425,7 @@ class Lamp:
             return {}
         from .lamp_inputs import for_step
         _, inputs = for_step(self.run, number)
-        images = [p['contact'] for p in candidates.values()]
+        images = [p.get('review_contact', p['contact']) for p in candidates.values()]
         rule = ballot_schema(list(candidates), ranking=False)
         # Different pending cohorts need distinct job IDs. lamp_images handles
         # completed ballot reuse and excludes pets whose decisions are settled.

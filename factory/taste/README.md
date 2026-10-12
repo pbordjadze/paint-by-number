@@ -378,9 +378,12 @@ decision. Invalid ballots stay invalid and spend no new calls. The new decision 
 source records; the original full ballots remain untouched. Spent redo requests are still
 checked against their original reasons, brief, style and reference; completed package hashes
 and job hashes are still checked. Publication can resume after the decision is recorded.
-Oversize packages with a validated atlas are repackaged locally in a new attempt: rerun the
-bundled gates on the unchanged atlas and shrink only the lossy contact preview as needed.
-Native contacts and previews stay available; the 2,000,000-byte package limit is unchanged.
+Size-only failures after both atlas and quality validation are repackaged locally once for
+every hatch kind, including completed redo and maker failures: rerun the bundled gates on
+the unchanged atlas and shrink only the lossy contact preview as needed. A failed repackage
+never authorizes another drawing. Native contact sheets go to the image jury even when the
+package preview must be very small; native previews stay available. The 2,000,000-byte
+package limit is unchanged, and any image jury still owed must finish before publication.
 
 A maker can explicitly commission one attempt beyond an exhausted Lamp budget with
 `--makers-call <decisions.json>` on `run` or preview it with the same option on `list-resume`.
@@ -396,7 +399,11 @@ Changing it is an error. Provider refusals cannot be commissioned again.
 Maker workers use separate `maker-<pet>` hatches, keep the same family reference, briefs,
 validators and row-repair limits, and get no fresh gate retry. A separate `maker-review` jury
 can withhold them but cannot order another hatch. `decisions/maker-images.json` records their
-outcomes; `summary.json` keeps Lamp statuses in `pets` and reports these separately in
+outcomes; later packaging and jury outcomes append to `decisions/maker-image-resumes/000001.json`,
+etc. Completed maker verdicts stay fixed; only newly validated candidates enter the jury,
+reusing any recorded ballots for that candidate and seat after interruption. `list-resume`
+reports pending maker ballots and the jury calls still needed after a successful repackage.
+`summary.json` keeps Lamp statuses in `pets` and reports these separately in
 `makers_call`. Accepted packages include the maker decision and evidence in provenance.
 All work stays local, and the original Lamp verdicts stay unchanged.
 
