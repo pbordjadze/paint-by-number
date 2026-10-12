@@ -243,6 +243,86 @@ tower is drawn there (it had been trimmed back to the outline). Lines ended on t
 longer does. Every template stays valid. Without edits the corpus books are byte for byte what
 they were.
 
+### Edits made to the template itself (`TemplateEditor`)
+
+Regenerating for every edit, as above, keeps every invariant but not the painter's hand: on the
+lighthouse book drawn lines ended up 1.7 to 3.2 px off their path in stretches, one lost 8 px of
+ink, `smoothingFallbackEdges` grew with the edits, strips beside walls were repainted, numbers
+moved and the palette changed, because each edit ran the whole pipeline again (segmentation,
+smoothing, fitting). `TemplateEditor.apply(_:to:)` (`Sources/PaintCore/Edit/`, `pbn edit`) is
+Refine without it: the edit is made to the finished template, with no photo, edge map,
+segmentation, smoothing or fitting, so a line is the line drawn and everything the edit does not
+reach is bit for bit what it was. All points are canvas units; the edits are `draw(points, closed)`,
+`erase(path, radius)`, `eraseLine(at, reach)` and `fill(at, color)`.
+
+- **Exact.** Geometry is decided in `Int64` on the quantum grid (`Lattice`: orientation, segment
+  contact, containment), so an edit gives the same bytes on every device and core count. A
+  point the editor computes (two lines crossing, the eraser's edge) is the lattice point
+  nearest the true one, by one rule whichever way round it is asked; nothing depends on the order
+  of a `Set` or a `Dictionary`.
+- **Draw.** The polyline is laid on the template as drawn, quantized and nothing else: parts off
+  the canvas are cut away, an end within `inkWidth` (3 units) of ink (an edge, a stroke, the
+  frame) is moved onto it (to its nearest vertex within `vertexSnap`, else to the nearest point,
+  which becomes a vertex of that ink), an end near the other end closes the line. The line is cut
+  at every point it meets the drawing (edges, itself, the strokes it touches: a stroke is ink for
+  the next line, so a shape drawn in two strokes closes) and each stretch between is a *chain*.
+  The chains in a region, with its outline, cut it exactly where they close off part of it
+  (`EditWork.splitRegion`: the faces of the planar graph, traced at each vertex along the sharpest
+  turn toward the region, as `BoundaryGraph` does on the lattice): each piece keeps the region's
+  paint, has its own number, and the new boundary is an edge, inked as an outline at weight 255,
+  whose points are the chain's verbatim. A stretch that closes nothing (a dangling end, a slit
+  from a ring to its hole) is an interior stroke, verbatim. Where inserting a crossing nudges ink
+  off its path (by under a quantum) and so makes it meet another line, the lines are noded again
+  until they meet only at vertices (`EditWork.node`); a crossing within a step of an end of either
+  line is that end (a stub a step long would be two edges one on the other), and an edit whose
+  lines lie closer than that is made again with the reach of that rule grown, to 27 steps (0.1
+  unit) at most, before it is given up.
+- **The tiny-piece rule.** A piece gets the numbers `LabelSizing` asks of its paint (the label
+  search of the pipeline, `PolyLabel`, kept where the old number still has 85% of the room, away
+  from the lines it left inside). A piece with room for a detail area's number
+  (`LabelSizing.detailMinimumRadius`) and not for the usual one becomes a detail area
+  (`Template.detailRegions`); one with less is not cut off: the chains round it go back to being
+  strokes and the cell stays as it was (`Outcome.tooSmall` says where). A line through a crowd
+  cuts what it can.
+- **Erase.** Ink within the radius of the path is cut out exactly at the edge of the reach
+  (stadium by stadium; the cut is the lattice point nearest the circle). Ink between two regions
+  that this breaks lets the paint through: the regions merge (the larger by area keeps its index
+  and its paint), the stretches of that boundary the eraser left are strokes in the merged
+  region, and the undrawn edges between them are nothing. Undrawn (paint) edges are never drawn
+  and never merge regions: only broken ink does. A tapped line (`eraseLine`) goes from junction to
+  junction (`LineChains`, on the template's drawn edges and strokes) and merges the same way.
+- **Fill.** The shape under the point is flooded across undrawn edges and stopped by ink (the
+  tapped region alone if the flood reaches the frame: a fill never runs into the background); its
+  regions become one, painted with the nearest paint within `SegmentationParameters.jnd`, else a
+  new paint appended last (the palette is never reordered), and a detail area, kept whatever its
+  size, as `CellMap.fill` made it.
+- **What stays.** Regions, outlines, fill triangles, numbers, edges, strokes and paints the edit
+  does not reach are copied as they were (`EditWork.finish` lays the survivors out again, so
+  indices after a merged region shift). Neighbours of an edit gain a vertex where a line meets
+  their outline: their fill is triangulated again (`RegionFills`) and their numbers checked.
+  `regionMap` follows the outlines: the pixels of a cut region go to the piece whose outline holds
+  their centre (those the old outline left to a neighbour stay where the pixels were), those of a
+  merged region to the merged one, and a stroke that has no pixel of its region beside it takes
+  the nearest one (`Template.validate` asks); no other region's pixels move.
+- **Limits.** An edit that cannot be made is declined (`Outcome.declined`: the template comes
+  back as it was, and every result is checked by `Template.validate` first): a line that doubles
+  back on itself, a fill whose paint's number (a new paint may need a digit more) or an area
+  that a line's vertex has narrowed has no room for it, lines closer than the lattice can tell
+  apart. Of 10,000 random edits on crowded templates 9 were declined: 3 doubling back, 4 fills,
+  1 area beside a line and 1 pair of lines. A line laid exactly along ink adds nothing but
+  vertices. A line crossing a stroke the generator made with a self-crossing is cut by it but
+  does not close a shape with it. Without line art (a classic template) there is nothing to
+  edit.
+- **Measured.** `pbn edit` on the lighthouse book (423 regions) with 10 edits (a loop round open
+  sky later tapped away, a dangling line, a line from the frame to the tower's lantern, a line
+  across a cloud, an eraser pass over the cloud's outline, a star drawn and filled, a loop too
+  small for a number, a fill of the tower): the ink strays at most 0.002 from the lines drawn (the
+  quantum is 0.0039; an end that joined ink moved 1.9 at most), 408 of 423 regions are bit for
+  bit as they were and no edit changed a region it did not touch, merge or sit beside
+  (`unexpectedChanges`), the palette gains one paint, `labelsBelowLegibleSize` is 0 and the
+  template validates. An edit takes 25 to 50 ms, its validation included; a line of 300 points
+  across the whole book, cutting 61 regions, and an eraser pass over 90 regions, 0.24 s together.
+
 ## Measuring a book
 
 A book is judged the way its painter sees it. `pbn generate` writes, for a template with line

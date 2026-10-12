@@ -48,9 +48,12 @@ before planning app work).
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
+  - `Edit/`: `TemplateEditor`, the painter's pen, eraser, line eraser and fill made to a finished
+    coloring-book `Template` exactly and with no image processing (`Lattice` is its exact
+    arithmetic; `docs/coloring-book.md` › Edits made to the template itself).
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
-  `Commands.swift`, `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
+  `Commands.swift`, `Edit.swift` (`pbn edit`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data);
