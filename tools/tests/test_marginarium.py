@@ -15,6 +15,8 @@ import strings_check
 
 FIXTURE = Path(__file__).parent / "fixtures/marginarium.md"
 TOOL = Path(m.__file__)
+DOCS_FIXTURE = FIXTURE.with_name("marginarium-docs.json")
+DOCS_MARKDOWN = FIXTURE.with_name("marginarium-docs.md")
 
 
 class MarginariumTests(unittest.TestCase):
@@ -246,7 +248,7 @@ class MarginariumTests(unittest.TestCase):
         self.assertEqual(self.catalog()["strings"][key]["localizations"]["de"]["stringUnit"]["state"], "needs_review")
 
     def test_bad_syntax_and_duplicate_or_foreign_keys_fail(self):
-        for body in ("```swift\ncode\n```", "<div>HTML</div>", "1. Ordered", "![No image](https://example.org/a.png)",
+        for body in ("```swift\ncode\n```", "<div>HTML</div>", "1) Ordered", "![No image](https://example.org/a.png)",
                      "![](fixture-circle)", "---", "> ## Nested heading", "Text ![inline](fixture-circle)",
                      "<!-- marginarium: invalid -->\nParagraph.",
                      "<!-- marginarium: marginarium.other.block.x -->\nParagraph.",
@@ -296,6 +298,82 @@ class MarginariumTests(unittest.TestCase):
         self.canonical().write_text(self.canonical().read_text().replace("last paragraph", "changed paragraph"))
         findings, _, _ = strings_check.run(self.root)
         self.assertTrue(any("English differs" in str(f) for f in findings))
+
+    def test_docs_conversion_preserves_words_markup_and_structure(self):
+        source = m.from_docs(m.load_json(DOCS_FIXTURE))
+        self.assertEqual(source, DOCS_MARKDOWN.read_text())
+        chapter = self.imported(source)
+        blocks = m.parse(self.canonical().read_text())
+        self.assertEqual([b.text for b in blocks], [b.text for b in m.parse(source)])
+        self.assertEqual([b.metadata for b in blocks if b.kind == "tableCell"], [
+            {"row": row, "column": column, "header": row == 0}
+            for row in range(3) for column in range(2)])
+        notes = [b for b in blocks if b.kind == "marginNote"]
+        self.assertEqual([b.metadata["speaker"] for b in notes], ["George", "the narrator"])
+        self.assertEqual([b.metadata["number"] for b in notes], [1, 2])
+        self.assertEqual([b.kind for b in blocks[-3:]], ["paragraph", "ordered", "bullet"])
+        self.assertIn("*the Moon*. Then — *George*, who", notes[0].text)
+        paths = [self.root / m.CATALOG, self.root / m.MANIFEST, self.canonical()]
+        before = [p.read_bytes() for p in paths]
+        self.assertEqual(self.reimport(), chapter)
+        self.assertEqual([p.read_bytes() for p in paths], before)
+        m.validate(self.root)
+
+    def test_docs_cli_and_check_against_original(self):
+        converted = self.root / "converted.md"
+        command = [sys.executable, "-B", str(TOOL), "--root", str(self.root)]
+        result = subprocess.run(command + ["from-docs", str(DOCS_FIXTURE), "--out", str(converted)],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(converted.read_text(), DOCS_MARKDOWN.read_text())
+        self.imported(converted.read_text())
+        check = command + ["check", "--docs", str(DOCS_FIXTURE), "--id", "fixture"]
+        self.assertEqual(subprocess.run(check, capture_output=True).returncode, 0)
+        # A consistent source/catalog/manifest edit must still fail against the signed-off Doc.
+        self.canonical().write_text(self.canonical().read_text().replace("100% quiet", "99% quiet"))
+        self.reimport()
+        result = subprocess.run(check, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("differs from Docs", result.stderr)
+
+    def test_table_cell_edit_and_move_keep_keys_and_other_cells(self):
+        self.imported(DOCS_MARKDOWN.read_text())
+        original = m.parse(self.canonical().read_text())
+        cells = [b for b in original if b.kind == "tableCell"]
+        lines = self.canonical().read_text().splitlines()
+        row = next(i for i, line in enumerate(lines) if "*The Moon* |" in line)
+        lines[row], lines[row + 1] = lines[row + 1], lines[row]
+        self.canonical().write_text("\n".join(lines).replace("100% quiet", "100% still") + "\n")
+        self.reimport()
+        updated = [b for b in m.parse(self.canonical().read_text()) if b.kind == "tableCell"]
+        self.assertEqual([b.key for b in updated], [b.key for b in cells[:2] + cells[4:] + cells[2:4]])
+        self.assertIn("100% still", m.english(self.catalog()["strings"][cells[3].key]))
+        m.validate(self.root)
+
+    def test_new_metadata_is_checked_and_broken_structure_is_rejected(self):
+        self.imported(DOCS_MARKDOWN.read_text())
+        path = self.root / m.MANIFEST
+        original = m.load_json(path)
+        for field, value in (("speaker", "wrong"), ("number", 9), ("row", 9), ("column", 1), ("header", False)):
+            changed = deepcopy(original)
+            block = next(b for b in changed["chapters"][0]["blocks"] if field in b)
+            block[field] = value
+            m.write_json(path, changed)
+            with self.subTest(field=field), self.assertRaisesRegex(ValueError, "manifest differs"):
+                m.validate(self.root)
+        for body in ("| A | B |\n| a | b |", "| A | B | C |\n| --- | --- | --- |\n| a | b | c |",
+                     "| A | B |\n| --- | --- |", "| A | B |\n| --- | --- |\n| a | |",
+                     "*In the margin*\n\n1. Unsigned."):
+            with self.subTest(body=body), self.assertRaises(ValueError):
+                m.parse("# Title\n\nSubtitle.\n\n" + body)
+
+    def test_docs_rejects_unsupported_content_instead_of_dropping_it(self):
+        for xml in ("<image/>", "<paragraph><mention name='Keep me'/></paragraph>",
+                    "<paragraph><text><strikethrough>Keep me</strikethrough></text></paragraph>",
+                    "<table><row><cell><paragraph><text>Not a header</text></paragraph></cell></row></table>"):
+            with self.subTest(xml=xml), self.assertRaises(ValueError):
+                m.from_docs({"data": {"xml": "<doc><paragraph heading='1'><text>Title</text></paragraph>"
+                                          "<paragraph><text>Subtitle.</text></paragraph>" + xml + "</doc>"}})
 
 
 if __name__ == "__main__":

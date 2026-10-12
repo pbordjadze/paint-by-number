@@ -11,7 +11,7 @@ struct MarginariumView: View {
 
     init() {
         #if DEBUG
-        if ShellDemo.current == .marginariumChapter { _path = State(initialValue: ["twoMorePets"]) }
+        if let id = ShellDemo.current?.marginariumEntryID { _path = State(initialValue: [id]) }
         #endif
     }
 
