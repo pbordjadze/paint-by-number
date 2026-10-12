@@ -7,7 +7,8 @@ import os
 /// A new painting the painter refined and didn't start: what the create flow needs to pick up
 /// where it was left (`Drafts` keeps one on disk, `CreateModel.load(draft:photo:)` resumes it).
 /// The template is not kept: it is generated again from the photo, the settings and the
-/// refinements, as Refine does for every change.
+/// refinements' generator inputs, and the painter's edits (`TemplateRefinements.edits`) are laid
+/// on it again, in order, as Refine laid them.
 nonisolated struct CreateDraft: Equatable, Codable, Sendable {
     /// Names the photo, so a draft replaces its own earlier saves and the stored photo is
     /// encoded once (`DraftStore.write`).

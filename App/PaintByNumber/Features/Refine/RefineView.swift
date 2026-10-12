@@ -12,7 +12,7 @@ nonisolated enum RefineTool: Hashable {
     /// Rubs lines out, or takes out the one tapped, junction to junction (`LineChains`).
     case smartEraser
     /// A tap makes the closed shape under it an area of its own in the photo's color there, or
-    /// clears that again (`RefineFills`).
+    /// clears that again (`EditFills`).
     case fill
     /// Settings › Detail Brushes: areas brushed for more or less detail, that brushing cleared,
     /// and the text the app found corrected.
@@ -44,6 +44,9 @@ nonisolated enum RefineShape: CaseIterable, Hashable {
         case .curve: "point.topleft.down.to.point.bottomright.curvepath"
         }
     }
+
+    /// The figure ends where it starts.
+    var isClosed: Bool { self == .rectangle || self == .oval }
 }
 
 /// What shows beneath the drawing on the Refine screen.
@@ -59,23 +62,26 @@ nonisolated enum RefineBackdrop: Hashable {
 /// The create flow's optional Refine step (`TemplateRefinements`): the drawing large, on its
 /// paper, over the photo or over the painting finished (every area in its paint), where one
 /// finger draws lines and takes them out, and two fingers zoom and move; a tap of two fingers
-/// undoes. What the painter draws is what the painting gets: PaintCore keeps each line as it
-/// arrives, as the outline of the areas it closes too (`EdgeGuides`), and changes nothing the
-/// painter didn't touch (`LayeredLines.shownLines`):
+/// undoes. What the painter does is made by hand to the template (PaintCore's `TemplateEditor`,
+/// `CreateModel.edit(_:)`): no image processing, no new template. A line is the line drawn, as the
+/// outline of the areas it closes too, and nothing the painter didn't touch changes:
 /// - the Pen draws a line as drawn (smoothed as it showed); only an end whose ink touches a
 ///   line's moves onto it, by no more than the ink's width, so the cell closes as it looks;
 /// - Shapes draws a straight line, a rectangle, an oval or a curve across a drag
 ///   (`RefineShape`, `ShapePath`), shown as it will be while the finger is down; a line's or a
 ///   curve's ends move onto a line their ink touches, as the Pen's do;
-/// - the Eraser rubs out what it touches, and a tap takes out a dab;
-/// - the Smart Eraser rubs too, and a tap takes the line out from junction to junction
-///   (`LineChains`);
+/// - the Eraser rubs out what it touches (ink within its reach is cut at the edge of it), and a
+///   tap takes out a dab;
+/// - the Smart Eraser rubs too, and a tap takes the line out from junction to junction;
 /// - Fill: a tap inside a closed shape makes it an area of its own, painted the photo's color
 ///   where it was tapped (`LineEdit.photoColor`), kept however small, its number allowed down to
 ///   about half the usual size and read zoomed in (a detail area, `Template.detailRegions`); a
-///   tap in a filled area clears it (`RefineFills`). A shape left open fills the area around it,
+///   tap in a filled area clears it (`EditFills`). A shape left open fills the area around it,
 ///   which shows at once, and Undo takes it back. Refine zooms in far
 ///   (`RefineSurfaceView.maximumZoom`), so a Pencil outlines a star of a few pixels comfortably.
+/// An edit the template can't take (a line that doubles back on itself) changes nothing and says
+/// so, in a toast VoiceOver announces; so does a shape a line closed that has no room for a
+/// number (the line stays).
 /// Once an Apple Pencil touches the canvas (or with Only Draw with Apple Pencil on), the Pencil
 /// draws and taps and one finger moves the picture, so a palm leaves no mark; its double tap
 /// switches between drawing and the Eraser. Photo and Painting show the photo, or the template
@@ -85,13 +91,15 @@ nonisolated enum RefineBackdrop: Hashable {
 /// brushes areas for more or less detail, clears that brushing, and corrects the text the app
 /// found (a tap turns a found line off or on again, a drag across a line marks it).
 ///
-/// Each change regenerates the template at full resolution (`CreateModel.refine`); until the new
-/// template comes, what the painter did shows over the last one in the drawing's own ink
-/// (`RefineInkLayer`), so a line is there the moment it is drawn and gone the moment it is
-/// erased, and a fill shows as a swatch of its color where it was tapped (`RefineFillLayer`,
-/// which then tints the areas fills made in their paint, under the drawing). Undo and Redo (⌘Z,
-/// ⇧⌘Z) step through the changes (a template already made comes back at once), Cancel puts back
-/// what the screen opened with, Done keeps them.
+/// An edit lands in a few hundredths of a second, off the main actor, and the screen then shows
+/// the new template with no crossfade; until it does, the edit shows over the last template in the
+/// drawing's own ink (`RefineInkLayer`), so a line is there the moment it is drawn and gone the
+/// moment it is erased, and a fill shows as a swatch of its color where it was tapped
+/// (`RefineFillLayer`, which then tints the areas fills made in their paint, under the drawing).
+/// The brushes and the text corrections still make the template again, as the sliders do, and the
+/// edits are laid on the new one. Undo and Redo (⌘Z, ⇧⌘Z) step through the changes
+/// (`CreateModel.history`; an edit taken back or put back comes at once from the templates kept),
+/// Cancel puts back what the screen opened with, Done keeps them.
 struct RefineView: View {
     let model: CreateModel
 
@@ -105,12 +113,10 @@ struct RefineView: View {
     @State private var backdrop = RefineBackdrop.paper
     /// The template on screen painted, for `RefineBackdrop.painting`, with its preview's id.
     @State private var painting: (preview: UUID, image: CGImage)?
-    /// What the screen opened with: Cancel puts it back.
-    @State private var opening: TemplateRefinements
-    @State private var undoStack: [TemplateRefinements] = []
-    @State private var redoStack: [TemplateRefinements] = []
     /// The template the screen draws over: the newest at full resolution.
     @State private var base: CreateModel.Preview?
+    /// The edits sent that `base` doesn't show yet, which the screen draws over it.
+    @State private var submitted: [Submitted] = []
     /// The pen's line or the eraser's pass under the finger, until it lifts; for Shapes, where
     /// the drag began and where the finger is.
     @State private var trace: [SIMD2<Float>]?
@@ -132,7 +138,6 @@ struct RefineView: View {
 
     init(model: CreateModel) {
         self.model = model
-        _opening = State(initialValue: model.refinements)
         _base = State(initialValue: model.preview)
         // Without a drawing to draw on (its line art failed), only the brushes are left.
         _tool = State(initialValue: model.hasLineArtInput ? .pen : .more)
@@ -147,10 +152,29 @@ struct RefineView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { toolbar }
         }
-        .onChange(of: model.preview?.id) {
-            if let preview = model.preview, !preview.isDraft || base == nil { base = preview }
+        .onAppear { model.beginRefining() }
+        .onDisappear { model.dismissNote() }
+        .task(id: Landing(preview: model.preview?.id, settled: model.settledEdits, showsPainting: backdrop == .painting)) {
+            await land()
         }
-        .task(id: backdrop == .painting ? base?.id : nil) { await paint() }
+    }
+
+    /// An edit sent to the model, which draws it until the template on screen has it.
+    private struct Submitted: Identifiable {
+        /// Its number (`CreateModel.edit(_:)`).
+        let id: Int
+        let edit: TemplateEditor.Edit
+        /// A line tapped away, as the tap found it, normalized.
+        var chain: [SIMD2<Float>]?
+        /// A swatch of the photo's color shows where a fill was tapped, until the template has it.
+        var showsSwatch = false
+    }
+
+    /// What the screen draws over: when any of it changes, `land` brings `base` up to date.
+    private struct Landing: Hashable {
+        var preview: UUID?
+        var settled: Int
+        var showsPainting: Bool
     }
 
     // MARK: Canvas
@@ -187,8 +211,8 @@ struct RefineView: View {
                             .equatable()
                     }
                     RefineFillLayer(
-                        base: base, fills: model.refinements.lines.filter { $0.kind == .fill }, photo: model.source?.image,
-                        rect: picture, showsAreas: painted == nil)
+                        base: base, fills: filledPoints, swatches: swatches, space: model.source?.image.colorSpace, rect: picture,
+                        showsAreas: painted == nil)
                         .equatable()
                     let figure = shapeTrace
                     RefineInkLayer(
@@ -222,7 +246,9 @@ struct RefineView: View {
         }
         .clipped()
         .overlay(alignment: .bottom) { status.padding(12) }
+        .overlay(alignment: .top) { RefineNoteToast(note: model.note).padding(.top, 12) }
         .animation(.easeInOut(duration: 0.2), value: model.phase)
+        .animation(reduceMotion ? nil : .snappy, value: model.note)
         .onGeometryChange(for: CGSize.self) { $0.size } action: { canvasSize = $0 }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(String(
@@ -234,14 +260,56 @@ struct RefineView: View {
 
     private static let card = RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
 
-    /// The lines drawn and erased that the template on screen doesn't have yet: those after
-    /// the ones it was made with. Fills change no line (`RefineFillLayer` shows them).
+    /// The template's canvas, in canvas units (zero before there is a template).
+    private var templateSize: CGSize { base?.drawing.size ?? .zero }
+
+    /// A picture point (0…1) in the template's canvas units.
+    private func canvasPoint(_ p: SIMD2<Float>) -> SIMD2<Float> {
+        let size = templateSize
+        return SIMD2(p.x * Float(size.width), p.y * Float(size.height))
+    }
+
+    /// The edits sent that the template on screen doesn't show yet, as the lines the ink layer
+    /// draws (normalized to the picture). Fills change no line (`RefineFillLayer` shows them).
     private var pending: [TemplateRefinements.Line] {
-        let lines = model.refinements.lines.filter { $0.kind != .fill }
-        let made = (base?.refinements.lines ?? []).filter { $0.kind != .fill }
-        var common = 0
-        while common < lines.count && common < made.count && lines[common] == made[common] { common += 1 }
-        return Array(lines[common...])
+        let size = templateSize
+        guard size.width > 0, size.height > 0 else { return [] }
+        let long = Float(max(size.width, size.height))
+        func normalized(_ p: SIMD2<Float>) -> SIMD2<Float> { SIMD2(p.x / Float(size.width), p.y / Float(size.height)) }
+        var lines: [TemplateRefinements.Line] = []
+        for item in submitted {
+            switch item.edit {
+            case .draw(let points, let closed):
+                lines.append(.init(kind: .draw, radius: 0, points: (closed ? points + points.prefix(1) : points).map(normalized)))
+            case .erase(let path, let radius):
+                lines.append(.init(kind: .erase, radius: radius / long, points: path.map(normalized)))
+            case .eraseLine:
+                if let chain = item.chain { lines.append(.init(kind: .eraseLine, radius: 0, points: chain)) }
+            case .fill:
+                break
+            }
+        }
+        return lines
+    }
+
+    /// Where the fills the template on screen has were tapped (normalized to the picture): its
+    /// edits', and the lines builds before them filled through the generator.
+    private var filledPoints: [SIMD2<Float>] {
+        guard let base else { return [] }
+        let size = SIMD2(Float(base.template.width), Float(base.template.height))
+        var points = base.refinements.lines.filter { $0.kind == .fill }.compactMap(\.points.first)
+        for case .fill(let at, _) in base.refinements.edits { points.append(at / size) }
+        return points
+    }
+
+    /// The fills sent that the template on screen doesn't show yet, normalized to the picture.
+    private var swatches: [RefineFillLayer.Swatch] {
+        let size = SIMD2(Float(templateSize.width), Float(templateSize.height))
+        guard size.x > 0, size.y > 0 else { return [] }
+        return submitted.compactMap { item in
+            guard item.showsSwatch, case .fill(let at, let color) = item.edit else { return nil }
+            return RefineFillLayer.Swatch(point: at / size, color: color)
+        }
     }
 
     /// The detail brushing and text corrections show while their tools are offered, or once
@@ -314,8 +382,8 @@ struct RefineView: View {
         }
     }
 
-    /// The pen's line or the eraser's pass follows the finger; when it lifts, it joins the
-    /// refinements, the pen's as it showed.
+    /// The pen's line or the eraser's pass follows the finger; when it lifts, it is laid on the
+    /// template, the pen's as it showed.
     private func follow(_ touch: RefineTouch, at point: SIMD2<Float>) {
         switch touch {
         case .began:
@@ -329,15 +397,18 @@ struct RefineView: View {
         case .ended:
             guard var current = trace else { return }
             current.append(point)
-            let line: TemplateRefinements.Line? = tool.erases
-                ? TemplateRefinements.Line(kind: .erase, radius: eraserRadius, points: simplified(current, tolerance: 0.5))
-                : penLine(current)
+            let edit = tool.erases ? eraserEdit(current) : penEdit(current)
             endStroke()
-            guard let line else { return }
-            commit { $0.lines.append(line) }
+            if let edit { submit(edit) }
         case .cancelled:
             endStroke()
         }
+    }
+
+    /// Sends an edit to the template (`CreateModel.edit(_:)`), which draws it in a moment; until
+    /// then it shows over the template (`pending`).
+    private func submit(_ edit: TemplateEditor.Edit, chain: [SIMD2<Float>]? = nil) {
+        submitted.append(Submitted(id: model.edit(edit), edit: edit, chain: chain))
     }
 
     private func endStroke() {
@@ -345,9 +416,8 @@ struct RefineView: View {
         snapLines = nil
     }
 
-    /// The shortest line the pen draws, in the template's canvas units: the template keeps no
-    /// stroke inside a cell shorter than 6 (`LineLayering.minimumRun`), so a shorter one would
-    /// show only until the template came.
+    /// The shortest line the pen draws, in the template's canvas units: a touch shorter than a
+    /// fingertip's slip is no line.
     static let shortestLine: CGFloat = 8
     /// The Pen's ends move onto a line whose ink theirs touches: within one ink width (half of
     /// each), and at least this many points.
@@ -367,10 +437,19 @@ struct RefineView: View {
     /// A pen's line from its samples: smoothed and thinned on screen's terms as it showed, its
     /// ends moved onto a line their ink touches (`touchFloor`). Nil for a touch too short to be a
     /// line, on screen or in the template.
-    private func penLine(_ points: [SIMD2<Float>]) -> TemplateRefinements.Line? {
+    private func penEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
         let line = points.map(onScreenPoint)
         guard picture.width > 0, PenPath.length(line) >= shortestOnScreen else { return nil }
-        return drawnLine(touching(PenPath.simplified(PenPath.smoothed(line, spacing: 2), tolerance: 0.3), straight: false))
+        return drawEdit(touching(PenPath.simplified(PenPath.smoothed(line, spacing: 2), tolerance: 0.3), straight: false))
+    }
+
+    /// The eraser's pass as an edit: its path in canvas units, and its reach there, the radius it
+    /// has on screen.
+    private func eraserEdit(_ points: [SIMD2<Float>]) -> TemplateEditor.Edit? {
+        let size = templateSize
+        guard size.width > 0, size.height > 0 else { return nil }
+        let path = simplified(points, tolerance: 0.5).map(canvasPoint)
+        return .erase(path: path, radius: eraserRadius * Float(max(size.width, size.height)))
     }
 
     /// `line` (points on screen) with its ends moved onto a line of the drawing their ink touches.
@@ -383,11 +462,13 @@ struct RefineView: View {
             .map { CGPoint(x: $0.x / units, y: $0.y / units) }
     }
 
-    /// A line of points on screen, as the refinements keep it (normalized to the picture).
-    private func drawnLine(_ points: [CGPoint]) -> TemplateRefinements.Line {
-        let size = picture.size
-        return TemplateRefinements.Line(
-            kind: .draw, radius: 0, points: points.map { SIMD2(Float($0.x / size.width), Float($0.y / size.height)) })
+    /// A line of points on screen as the edit that draws it, in the template's canvas units. A
+    /// closed figure ends where it starts: the edit has that point once and says it is closed.
+    private func drawEdit(_ points: [CGPoint], closed: Bool = false) -> TemplateEditor.Edit? {
+        let units = unitsPerPoint
+        guard units > 0 else { return nil }
+        let canvas = points.map { SIMD2(Float($0.x * units), Float($0.y * units)) }
+        return .draw(points: closed ? Array(canvas.dropLast()) : canvas, closed: closed)
     }
 
     /// A picture point on screen, in points from the picture's corner.
@@ -397,8 +478,8 @@ struct RefineView: View {
 
     // MARK: Shapes
 
-    /// Shapes follows the drag: the shape spans from where it began to the finger, and joins the
-    /// refinements when it lifts. A curve takes two drags: its ends, then its bend.
+    /// Shapes follows the drag: the shape spans from where it began to the finger, and is laid on
+    /// the template when it lifts. A curve takes two drags: its ends, then its bend.
     private func drawShape(_ touch: RefineTouch, at point: SIMD2<Float>) {
         switch touch {
         case .began:
@@ -420,7 +501,7 @@ struct RefineView: View {
             } else {
                 curve = nil
                 snapLines = nil
-                if let figure { commit { $0.lines.append(drawnLine(figure)) } }
+                if let figure, let edit = drawEdit(figure, closed: shape.isClosed) { submit(edit) }
             }
         case .cancelled:
             trace = nil
@@ -463,32 +544,32 @@ struct RefineView: View {
         SIMD2(Float(p.x / picture.width), Float(p.y / picture.height))
     }
 
-    /// A curve whose ends are down and that wasn't bent joins the refinements straight.
+    /// A curve whose ends are down and that wasn't bent is laid straight.
     private func finishCurve() {
         guard let pending = curve else { return }
         curve = nil
         snapLines = nil
-        commit { $0.lines.append(drawnLine([onScreenPoint(pending.from), onScreenPoint(pending.to)])) }
+        if let edit = drawEdit([onScreenPoint(pending.from), onScreenPoint(pending.to)]) { submit(edit) }
     }
 
     /// The lines on screen, in the template's canvas units: its drawing, the lines drawn since,
-    /// less what was erased since (`pending`).
+    /// less what was erased since (the edits sent that it doesn't show yet).
     private func currentSnapLines() -> SnapLines? {
         guard let drawing = base?.drawing else { return nil }
-        let size = drawing.size, long = max(size.width, size.height)
-        func inCanvas(_ points: [SIMD2<Float>]) -> [CGPoint] {
-            points.map { CGPoint(x: CGFloat($0.x) * size.width, y: CGFloat($0.y) * size.height) }
-        }
+        let size = drawing.size
         var lines = drawing.lines.map(\.points)
-        for line in pending {
-            switch line.kind {
-            case .draw:
-                lines.append(inCanvas(line.points))
-            case .erase:
-                lines = SnapLines.erasing(lines, by: [(inCanvas(line.points), CGFloat(line.radius) * long)])
+        for item in submitted {
+            switch item.edit {
+            case .draw(let points, let closed):
+                lines.append((closed ? points + points.prefix(1) : points).map { CGPoint($0) })
+            case .erase(let path, let radius):
+                lines = SnapLines.erasing(lines, by: [(path.map { CGPoint($0) }, CGFloat(radius))])
             case .eraseLine:
                 // The line itself: what meets it keeps its junction.
-                lines = SnapLines.erasing(lines, by: [(inCanvas(line.points), 1.5)])
+                if let chain = item.chain {
+                    let inCanvas = chain.map { CGPoint(x: CGFloat($0.x) * size.width, y: CGFloat($0.y) * size.height) }
+                    lines = SnapLines.erasing(lines, by: [(inCanvas, 1.5)])
+                }
             case .fill:
                 break
             }
@@ -496,17 +577,28 @@ struct RefineView: View {
         return SnapLines(lines)
     }
 
-    // MARK: Painting
+    // MARK: Landing
 
-    /// The template on screen painted, for the painting beneath the drawing: every area in its
-    /// paint, with no line (the drawing goes over it), at up to twice the canvas's resolution.
-    private func paint() async {
-        guard backdrop == .painting, let base, painting?.preview != base.id else { return }
-        let template = base.template
-        let long = min(2 * max(template.width, template.height), Self.paintingPixels)
-        let image = await Background.run { TemplateRasterizer.image(template, style: .paintedAreas, maxPixelSize: long) }
-        guard !Task.isCancelled, let image else { return }
-        painting = (base.id, image)
+    /// Brings `base` up to date with the model's template, and with it the painting beneath the
+    /// drawing (every area in its paint, with no line, at up to twice the canvas's resolution),
+    /// then takes the edits the template shows off the ones still drawn over it. They change
+    /// together, so an edit's ink never goes before the template that has it comes, and the
+    /// painting never lags the drawing.
+    private func land() async {
+        let preview = model.preview, settled = model.settledEdits
+        if let preview, !preview.isDraft || base == nil {
+            var image = painting
+            if backdrop == .painting, painting?.preview != preview.id {
+                let template = preview.template
+                let long = min(2 * max(template.width, template.height), Self.paintingPixels)
+                let made = await Background.run { TemplateRasterizer.image(template, style: .paintedAreas, maxPixelSize: long) }
+                guard !Task.isCancelled else { return }
+                if let made { image = (preview.id, made) }
+            }
+            base = preview
+            painting = image
+        }
+        submitted.removeAll { $0.id <= settled }
     }
 
     /// The painting's long side, in pixels, at most.
@@ -550,7 +642,7 @@ struct RefineView: View {
             guard var current = stroke else { return }
             current.points.append(point)
             stroke = nil
-            commit { $0.strokes.append(current) }
+            model.change(.stroke(current))
         case .cancelled:
             stroke = nil
         }
@@ -578,7 +670,7 @@ struct RefineView: View {
             finishCurve()
         case .eraser:
             // A dab, of the eraser's own reach.
-            commit { $0.lines.append(TemplateRefinements.Line(kind: .erase, radius: eraserRadius, points: [point])) }
+            if let edit = eraserEdit([point]) { submit(edit) }
         case .smartEraser:
             eraseLine(at: point)
         case .fill:
@@ -587,32 +679,28 @@ struct RefineView: View {
             toggleText(at: point)
         case .more, .less, .unbrush:
             // A dab.
-            commit { $0.strokes.append(TemplateRefinements.Stroke(kind: brushKind, radius: brushRadius, points: [point])) }
+            model.change(.stroke(TemplateRefinements.Stroke(kind: brushKind, radius: brushRadius, points: [point])))
         }
     }
 
-    /// How far either side of a tapped line's path its line is taken out, in the template's
-    /// canvas units: past the template's own reach for drawing an edge along a line
-    /// (`LayeredLines.annotateNear`, 3), so the line the edges were drawn for goes whole.
-    static let tapReach: CGFloat = 4.5
+    /// A finger's reach on screen, in points: how near a tap must come to a line to take it out.
+    static let fingerReach: CGFloat = 16
 
-    /// Takes out the drawn line under a tap from junction to junction (`LineChains`): the lines
-    /// it meets stay whole (`LineEdit.Kind.eraseLine`). The line glows as it goes.
+    /// Takes out the drawn line under a tap from junction to junction (`LineChains` finds it for
+    /// the flash and the ink laid over it; the template's editor decides what goes): the lines it
+    /// meets stay whole. The line glows as it goes.
     private func eraseLine(at point: SIMD2<Float>) {
         guard let drawing = base?.drawing, picture.width > 0 else { return }
         let size = drawing.size
         let tap = CGPoint(x: CGFloat(point.x) * size.width, y: CGFloat(point.y) * size.height)
         // A finger's width on screen, in canvas units.
-        let unitsPerPoint = size.width / picture.width
-        guard let chain = LineChains(drawing).chain(near: tap, tolerance: 16 * unitsPerPoint) else { return }
-        let points = PenPath.simplified(chain, tolerance: 0.25).map {
-            SIMD2(Float($0.x / size.width), Float($0.y / size.height))
-        }
-        let long = max(size.width, size.height)
-        commit { $0.lines.append(TemplateRefinements.Line(kind: .eraseLine, radius: Float(Self.tapReach / long), points: points)) }
+        let reach = Self.fingerReach * size.width / picture.width
+        guard let chain = LineChains(drawing).chain(near: tap, tolerance: reach) else { return }
+        let normalized = chain.map { SIMD2(Float($0.x / size.width), Float($0.y / size.height)) }
+        submit(.eraseLine(at: canvasPoint(point), reach: Float(reach)), chain: normalized)
         FeedbackEngine.shared.selectionChanged()
         guard !reduceMotion else { return }
-        tapped = chain.map { SIMD2(Float($0.x / size.width), Float($0.y / size.height)) }
+        tapped = normalized
         flashes = true
         Task {
             try? await Task.sleep(for: .milliseconds(60))
@@ -620,40 +708,31 @@ struct RefineView: View {
         }
     }
 
-    /// How near (points on screen) a tap comes to a fill's swatch to clear it, before the
-    /// template has it: about a fingertip.
-    static let swatchReach: CGFloat = 16
-
-    /// Fills the shape under a tap, or clears a fill made there (`RefineFills`).
+    /// Fills the shape under a tap, or clears a fill made there (`EditFills`; the model decides, in
+    /// its turn, on the template as the edits before it left it). A swatch of the photo's color
+    /// shows where a fill will be, unless the tap clears one.
     private func fill(at point: SIMD2<Float>) {
-        guard picture.width > 0, picture.height > 0 else { return }
-        let made = (base?.refinements.lines ?? []).filter { $0.kind == .fill }
-        let reach = SIMD2(Float(Self.swatchReach / picture.width), Float(Self.swatchReach / picture.height))
-        commit { refinements in
-            refinements.lines = RefineFills.tapped(refinements.lines, at: point, made: made, template: base?.template, reach: reach)
-        }
+        guard picture.width > 0, templateSize.width > 0, let photo = model.source?.image else { return }
+        let color = LineEdit.photoColor(at: point, in: photo)
+        let at = canvasPoint(point)
+        let clears = base.map { !EditFills.cleared(by: at, edits: $0.refinements.edits, on: $0.template).isEmpty } ?? false
+        submitted.append(Submitted(id: model.fill(at: at, color: color), edit: .fill(at: at, color: color), showsSwatch: !clears))
         FeedbackEngine.shared.selectionChanged()
     }
 
     /// A marked line is unmarked; a found line is turned off, or on again.
     private func toggleText(at point: SIMD2<Float>) {
-        if let index = model.refinements.addedText.lastIndex(where: { Self.line($0, contains: point) }) {
-            commit { $0.addedText.remove(at: index) }
+        if let marked = model.refinements.addedText.last(where: { Self.line($0, contains: point) }) {
+            model.change(.unmarkText(marked))
         } else if let line = model.foundText.first(where: { Self.line($0, contains: point) }) {
-            commit { refinements in
-                if let hidden = refinements.hiddenText.firstIndex(where: { TemplateRefinements.sameLine(line, $0) }) {
-                    refinements.hiddenText.remove(at: hidden)
-                } else {
-                    refinements.hiddenText.append(line)
-                }
-            }
+            model.change(.toggleFound(line))
         }
     }
 
     /// Marks the line dragged out from `a` to `b`, unless the drag was too small to hold one.
     private func mark(from a: SIMD2<Float>, to b: SIMD2<Float>) {
         guard abs(a.x - b.x) * Float(picture.width) >= 12, abs(a.y - b.y) * Float(picture.height) >= 6 else { return }
-        commit { $0.addedText.append(TemplateRefinements.textLine(from: a, to: b)) }
+        model.change(.markText(TemplateRefinements.textLine(from: a, to: b)))
     }
 
     /// Whether a tap at `point` falls on `line`, give or take a little for the finger.
@@ -664,15 +743,6 @@ struct RefineView: View {
 
     // MARK: Changes
 
-    private func commit(_ change: (inout TemplateRefinements) -> Void) {
-        var refinements = model.refinements
-        change(&refinements)
-        guard refinements != model.refinements else { return }
-        undoStack.append(model.refinements)
-        redoStack.removeAll()
-        model.refine(refinements)
-    }
-
     private func undo() {
         trace = nil
         // Undo while a curve waits to be bent takes the curve back, not the change before.
@@ -681,19 +751,11 @@ struct RefineView: View {
             snapLines = nil
             return
         }
-        guard let previous = undoStack.popLast() else { return }
-        redoStack.append(model.refinements)
-        model.refine(previous)
-    }
-
-    private func redo() {
-        guard let next = redoStack.popLast() else { return }
-        undoStack.append(model.refinements)
-        model.refine(next)
+        model.undo()
     }
 
     private func cancel() {
-        model.refine(opening)
+        model.cancelRefining()
         dismiss()
     }
 
@@ -719,11 +781,11 @@ struct RefineView: View {
         }
         ToolbarItemGroup(placement: .primaryAction) {
             Button("Undo", systemImage: "arrow.uturn.backward", action: undo)
-                .disabled(undoStack.isEmpty)
+                .disabled(!model.canUndo)
                 .keyboardShortcut("z")
                 .accessibilityIdentifier("refine-undo")
-            Button("Redo", systemImage: "arrow.uturn.forward", action: redo)
-                .disabled(redoStack.isEmpty)
+            Button("Redo", systemImage: "arrow.uturn.forward", action: model.redo)
+                .disabled(!model.canRedo)
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .accessibilityIdentifier("refine-redo")
         }

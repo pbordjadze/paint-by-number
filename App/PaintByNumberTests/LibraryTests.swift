@@ -60,6 +60,28 @@ struct LibraryTests {
         #expect(library.store.readRefinements(artwork.id).isEmpty)
     }
 
+    /// A painting refined by hand regenerates the way it was made: the template from the photo and
+    /// the settings, then the painter's edits laid on it in order, as the create flow showed them.
+    @Test func regeneratingARefinedPaintingLaysItsEditsAgain() async throws {
+        let library = makeLibrary()
+        let settings = GenerationSettings(colorCount: 6, detail: 0)
+        let edit = TemplateEditor.Edit.draw(points: [SIMD2(20, 60), SIMD2(90, 56), SIMD2(160, 62)])
+        var refinements = TemplateRefinements()
+        refinements.edits = [edit]
+        var refined = draft(photo: try stripesPhoto())
+        refined.refinements = refinements
+        let artwork = try await library.create(refined)
+
+        let document = try await library.regenerate(artwork: artwork.id, settings: settings)
+        let photo = try ArtworkFactory.sourcePhoto(of: artwork, in: library.store)
+        let base = try await ArtworkFactory.template(from: photo, settings: settings, progress: nil)
+        #expect(base.lineArt != nil, "The coloring book has no drawing to edit")
+        let expected = try ArtworkFactory.laying([edit], on: base)
+        #expect(document.template == expected)
+        #expect(document.template != base, "The edit wasn't laid")
+        #expect(library.store.readRefinements(artwork.id) == refinements)
+    }
+
     @Test func savesProgressCompletionAndThumbnail() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft())

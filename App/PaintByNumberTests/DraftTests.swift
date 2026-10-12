@@ -22,6 +22,11 @@ struct DraftTests {
             .init(kind: .draw, radius: 0, points: [SIMD2(0.2, 0.4), SIMD2(0.7, 0.45)]),
             .init(kind: .erase, radius: 0.02, points: [SIMD2(0.5, 0.5)]),
         ]
+        refinements.edits = [
+            .draw(points: [SIMD2(220, 290), SIMD2(480, 262), SIMD2(770, 330)], closed: false),
+            .erase(path: [SIMD2(500, 400)], radius: 12),
+            .fill(at: SIMD2(300, 150), color: SIMD3(0.6, 0.05, 0.05)),
+        ]
         refinements.strokes = [TemplateRefinements.Stroke(kind: .more, radius: 0.1, points: [SIMD2(0.3, 0.3)])]
         refinements.addedText = [TemplateRefinements.textLine(from: SIMD2(0.1, 0.1), to: SIMD2(0.4, 0.2))]
         return refinements
@@ -49,6 +54,7 @@ struct DraftTests {
         try store.write(saved, photo: try photo())
         for file in DraftStore.File.allCases { #expect(exists(file), "\(file.rawValue)") }
         #expect(try store.read() == saved)
+        #expect(try store.read()?.refinements.edits == refinements().edits, "The draft's edits weren't kept in its refinements.json")
         #expect(photoWidth() == 300)
         #expect(try !store.photoData().isEmpty)
         #expect(try FileManager.default.contentsOfDirectory(atPath: root.appending(path: "Drafts/.staging").path).isEmpty)
@@ -284,5 +290,41 @@ struct DraftTests {
         let made = try await resumed.makeDraft()
         #expect(made.title == "Winter Fox" && made.refinements == saved.refinements && made.settings == saved.settings)
         #expect(made.sampleName == "red-fox")
+    }
+
+    /// The edits a draft keeps are laid again on resuming it, in order, as the editor lays them:
+    /// the template shown is the editor's result on the template the generator makes, which
+    /// clearing the edits shows.
+    @Test func resumingADraftLaysItsEditsAgain() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let template = try #require(model.preview?.template)
+        let w = Float(template.width), h = Float(template.height)
+        let edit = TemplateEditor.Edit.draw(points: [SIMD2(0.42 * w, 0.5 * h), SIMD2(0.5 * w, 0.46 * h), SIMD2(0.58 * w, 0.5 * h)])
+        let serial = model.edit(edit)
+        try await waitUntil { model.settledEdits >= serial && model.isFinal }
+        let saved = try #require(model.draft)
+        #expect(saved.refinements.edits == [edit])
+
+        let store = store
+        let photo = try #require(model.source?.preview)
+        try store.write(saved, photo: photo)
+        let stored = try store.read()
+        let read = try #require(stored)
+        #expect(read == saved && read.refinements.edits == [edit])
+
+        let resumed = CreateModel()
+        resumed.load(draft: read, photo: try store.photoData())
+        try await waitUntil { resumed.isFinal }
+        #expect(resumed.refinements.edits == [edit] && resumed.draft == read)
+        let laid = try #require(resumed.preview?.template)
+        resumed.refine(TemplateRefinements())
+        try await waitUntil { resumed.refinements.isEmpty && resumed.isFinal }
+        let base = try #require(resumed.preview?.template)
+        #expect(laid != base)
+        #expect(try TemplateEditor.apply(edit, to: base).template == laid)
+        model.cancelAll()
+        resumed.cancelAll()
     }
 }

@@ -10,6 +10,12 @@ import SwiftUI
 /// settings: the first candidate shows as a draft at once, the winner swaps in), and
 /// regenerates the template as the settings change — quick reduced-size drafts while a slider
 /// is being dragged, the full resolution once it settles — always discarding stale work.
+///
+/// The template shown at full resolution is the one the generator makes from the photo, the
+/// settings and the refinements' generator inputs (the base), with the painter's manual edits laid
+/// on it in order (`EditTrail`, `refinements.edits`). Refine's edits are made to that template
+/// alone (`edit(_:)`, `fill(at:color:)`: no regeneration), its brushes and the sliders make the
+/// base again and the edits are laid on the new one. `MARK: Refine` says how.
 @Observable
 final class CreateModel {
     struct Source {
@@ -26,7 +32,8 @@ final class CreateModel {
         let drawing: LineArtDrawing
         /// Nil for a suggestion's first draft, shown before the settings are chosen.
         let settings: GenerationSettings?
-        /// What it was refined with (none for a suggestion's first draft).
+        /// What it was refined with (none for a suggestion's first draft); a full-resolution
+        /// template has these edits laid.
         let refinements: TemplateRefinements
         /// Generated from the reduced photo while adjusting.
         let isDraft: Bool
@@ -116,9 +123,17 @@ final class CreateModel {
     var lineArt: LineArtSettings { Self.lineArt(baseLineArt, lines: lines) }
     /// What the coloring book draws from, computed once per photo; nil for classic line art.
     @ObservationIgnored private(set) var lineArtInput: LineArtInput?
-    /// The painter's refinements of this photo's template (the optional Refine step): applied to
-    /// the generator's inputs, so every draft and the painting carry them. None until refined.
+    /// The painter's refinements of this photo's template (the optional Refine step): the
+    /// generator's inputs apply to every draft and the painting, and the edits are laid on each
+    /// full-resolution template. None until refined.
     private(set) var refinements = TemplateRefinements()
+    /// What Undo and Redo step through on the Refine screen, and what Cancel puts back.
+    private(set) var history = RefineHistory()
+    /// The newest edit sent (`edit(_:)`, `fill(at:color:)`) whose result `preview` shows, or that
+    /// did nothing: Refine draws the edits sent after it over the template on screen.
+    private(set) var settledEdits = 0
+    /// What Refine tells the painter: an edit that could not be made, edits that no longer fit.
+    private(set) var note: RefineNote?
     /// The painting's name as typed; empty means `defaultTitle`.
     var title = ""
     /// The sample's name, or the date for a photo.
@@ -157,16 +172,38 @@ final class CreateModel {
     @ObservationIgnored private var refiningID = 0
     /// Identifies the photo being loaded, so a late first draft of an earlier one is dropped.
     @ObservationIgnored private var loadID = 0
-    /// The photo's latest full-resolution templates and what they were made with, newest first:
-    /// stepping back to one (Refine's Undo, a slider put back) shows it again without
-    /// generating.
+    /// The photo's latest full-resolution templates as the generator made them (no edits) and
+    /// what they were made with, newest first: stepping back to one (a brush undone, a slider put
+    /// back) lays the edits on it again without generating.
     @ObservationIgnored private var made: [Made] = []
 
     private struct Made {
         let settings: GenerationSettings
+        /// The generator inputs it was made with (`TemplateRefinements.generatorInputs`).
         let refinements: TemplateRefinements
         let template: Template
     }
+
+    /// What a base template is made of: the settings and the refinements' generator inputs.
+    private struct BaseKey: Equatable {
+        let settings: GenerationSettings
+        let inputs: TemplateRefinements
+    }
+
+    private var currentKey: BaseKey { BaseKey(settings: settings, inputs: refinements.generatorInputs) }
+
+    /// The base template on screen with the edits laid on it, and what it is the base of.
+    @ObservationIgnored private var trail: EditTrail?
+    @ObservationIgnored private var trailKey: BaseKey?
+    /// Edits numbered as sent, and the newest whose turn has come (`MARK: Refine`).
+    @ObservationIgnored private var sentEdits = 0
+    @ObservationIgnored private var handledEdits = 0
+    /// How many edits the newest base left out, as the painter was last told.
+    @ObservationIgnored private var leftOutEdits = 0
+    /// Refine's changes run one after another (`enqueue`); a new photo makes the ones waiting moot.
+    @ObservationIgnored private var refineQueue: Task<Void, Never>?
+    @ObservationIgnored private var refineEpoch = 0
+    @ObservationIgnored private var noteTask: Task<Void, Never>?
 
     /// How many full-resolution templates `made` keeps: a template is a megabyte or two.
     static let madeKept = 6
@@ -212,14 +249,12 @@ final class CreateModel {
     /// and the text corrections apply.
     var hasLineArtInput: Bool { lineArtInput != nil }
 
-    /// Takes the painter's refinements and regenerates at full resolution: Refine shows what
-    /// the painter did over the last full template until the new one has it, so a draft would
-    /// only coarsen the lines meanwhile.
+    /// Takes refinements as they are: a change to the generator's inputs makes the template again
+    /// at full resolution (Refine shows what the painter did over the last full template until the
+    /// new one has it, so a draft would only coarsen the lines meanwhile); a change to the edits
+    /// alone lays them on the template on screen, without generating (`converge`).
     func refine(_ refinements: TemplateRefinements) {
-        guard refinements != self.refinements else { return }
-        self.refinements = refinements
-        guard source != nil, !isChoosingSettings else { return }
-        startGeneration(draftFirst: false)
+        if take(refinements) { enqueue { [self] in await converge() } }
     }
 
     // MARK: Choosing a photo
@@ -265,6 +300,7 @@ final class CreateModel {
         settingsOrigin = nil
         refinements = TemplateRefinements()
         made = []
+        forgetEdits()
         phase = .failed(error.localizedDescription)
     }
 
@@ -287,6 +323,7 @@ final class CreateModel {
         settingsOrigin = nil
         refinements = saved?.refinements ?? TemplateRefinements()
         made = []
+        forgetEdits()
         progress = 0
         phase = .loading
         loadID += 1
@@ -383,13 +420,15 @@ final class CreateModel {
         loadTask?.cancel()
         loadTask = nil
         fullTask?.cancel()
+        refineQueue?.cancel()
         stopDrafts()
     }
 
     /// The full-resolution template for the current settings, generating it if needed.
     func makeDraft() async throws -> ArtworkDraft {
-        // Settings still being chosen are chosen first.
+        // Settings still being chosen are chosen first, and the edits sent are laid.
         _ = await loadTask?.value
+        _ = await refineQueue?.value
         guard let source else { throw CreateError.unreadable }
         let settings = self.settings
         if !isFinal {
@@ -523,26 +562,44 @@ final class CreateModel {
         }
         do {
             let refinements = self.refinements
-            let result: Preview
-            if !draft, let earlier = made.first(where: { $0.settings == settings && $0.refinements == refinements }) {
-                result = try await Self.preview(earlier.template, settings: settings, refinements: refinements, style: previewStyle)
+            let inputs = refinements.generatorInputs
+            var shown: Shown
+            if !draft, let earlier = made.first(where: { $0.settings == settings && $0.refinements == inputs }) {
+                shown = try await Self.laid(earlier.template, settings: settings, refinements: refinements, style: previewStyle)
             } else {
                 let used = draft ? Self.draftSettings(settings, draft: input, source: source.image) : settings
-                result = try await Self.render(
+                shown = try await Self.render(
                     input, importance: importance, lineArt: lineArtInput, refinements: refinements,
                     aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
                     isDraft: draft, style: previewStyle, progress: draft ? nil : report)
             }
-            // Kept even if cancelled meanwhile: it is what these settings and refinements make.
-            if !draft { remember(result.template, settings: settings, refinements: refinements) }
+            // Kept even if cancelled meanwhile: it is what these settings and inputs make.
+            if let base = shown.trail?.base { remember(base, settings: settings, refinements: inputs) }
             try Task.checkCancellation()
             // A draft finishing after a newer generation began (the resting thumb's full
             // resolution) would replace it with less.
             if draft, generation != id { return }
+            // Edits sent while this was being made are laid before it shows, so it never takes
+            // one back.
+            var left = shown.replay.left
+            while let trail = shown.trail, self.refinements.edits != shown.preview.refinements.edits {
+                guard self.refinements.generatorInputs == inputs else { return }
+                shown = try await Self.follow(trail, to: self.refinements, settings: settings, style: previewStyle)
+                left += shown.replay.left
+                try Task.checkCancellation()
+            }
             // Drafts follow the finger as they come: a crossfade would blur one into the next.
             withAnimation(draft ? nil : .easeInOut(duration: 0.35)) {
-                preview = result
-                if !draft { stats = Stats(result.template) }
+                preview = shown.preview
+                if !draft { stats = Stats(shown.preview.template) }
+            }
+            if let current = shown.trail {
+                trail = current
+                trailKey = BaseKey(settings: settings, inputs: inputs)
+                settledEdits = handledEdits
+                // Told once: not again while the same edits stay out.
+                if left != leftOutEdits, left > 0 { say(.left(left)) }
+                leftOutEdits = left
             }
             if generation == id { phase = .ready }
         } catch is CancellationError {
@@ -552,11 +609,263 @@ final class CreateModel {
         }
     }
 
-    /// Keeps a full-resolution template for stepping back to it.
+    /// Keeps a full-resolution base template (made with the generator inputs `refinements`) for
+    /// stepping back to it.
     private func remember(_ template: Template, settings: GenerationSettings, refinements: TemplateRefinements) {
         made.removeAll { $0.settings == settings && $0.refinements == refinements }
         made.insert(Made(settings: settings, refinements: refinements, template: template), at: 0)
         if made.count > Self.madeKept { made.removeLast(made.count - Self.madeKept) }
+    }
+
+    // MARK: Refine
+
+    // The painter's changes in Refine are made one after another, in the order they were sent
+    // (`enqueue`), each from the state the ones before it left:
+    //
+    // - An edit (`edit(_:)`, `fill(at:color:)`) is laid on the template on screen off the main
+    //   actor (`EditTrail`: tens of milliseconds, no regeneration) and shows at once, without a
+    //   crossfade. An edit that is declined (`EditTrail.Verdict.declined`) or has nothing to
+    //   change changes nothing: it is not kept, takes no step of the history, and a declined one
+    //   says so (`note`). A shape a line closed that has no room for a number is cut off by nothing,
+    //   but the line stays, and says so.
+    // - A brush or a correction of the text (`change(_:)`), and every Undo, Redo and Cancel that
+    //   crosses one, changes the generator's inputs: the base is made again (`startGeneration`) and
+    //   the edits are laid on it, those that no longer fit left out and counted (`note`). The
+    //   sliders do the same with the settings. A base made before is reused (`made`).
+    // - While the base is being made again, an edit is kept with the others and the new template
+    //   has it laid before it shows (`generate`).
+    //
+    // `settledEdits` says which edits sent the template on screen already shows, so Refine draws
+    // only the ones after it.
+
+    /// How long a note stays up.
+    static let noteDuration: Duration = .seconds(4)
+
+    /// Lays a manual edit on the template on screen, in its turn. Returns its number: Refine draws
+    /// the edit over the template until `settledEdits` reaches it.
+    @discardableResult
+    func edit(_ edit: TemplateEditor.Edit) -> Int {
+        sentEdits += 1
+        let serial = sentEdits
+        enqueue { [self] in await lay(edit, serial: serial, tapped: false) }
+        return serial
+    }
+
+    /// A tap of Fill. In an area a fill made it takes that fill out (the area goes back to what the
+    /// drawing makes of it), anywhere else it fills the shape under `point` with `color` (OKLab).
+    /// Numbered as `edit(_:)` is.
+    @discardableResult
+    func fill(at point: SIMD2<Float>, color: SIMD3<Float>) -> Int {
+        sentEdits += 1
+        let serial = sentEdits
+        enqueue { [self] in await lay(.fill(at: point, color: color), serial: serial, tapped: true) }
+        return serial
+    }
+
+    /// A brush or a correction of the text, in its turn.
+    func change(_ change: RefineChange) {
+        enqueue { [self] in
+            var next = refinements
+            change.apply(to: &next)
+            guard next != refinements else { return }
+            history.push(refinements)
+            take(next)
+        }
+    }
+
+    /// Takes back the newest change, in its turn.
+    func undo() {
+        enqueue { [self] in
+            guard let previous = history.undo.popLast() else { return }
+            history.redo.append(refinements)
+            await settle(on: previous)
+        }
+    }
+
+    /// Puts back the change taken back last.
+    func redo() {
+        enqueue { [self] in
+            guard let next = history.redo.popLast() else { return }
+            history.undo.append(refinements)
+            await settle(on: next)
+        }
+    }
+
+    var canUndo: Bool { !history.undo.isEmpty }
+    var canRedo: Bool { !history.redo.isEmpty }
+
+    /// Refine opened: its history starts here.
+    func beginRefining() {
+        enqueue { [self] in
+            history = RefineHistory(opening: refinements)
+            dismissNote()
+        }
+    }
+
+    /// Refine's Cancel: back to what it opened with.
+    func cancelRefining() {
+        enqueue { [self] in
+            let opening = history.opening
+            history = RefineHistory(opening: opening)
+            await settle(on: opening)
+        }
+    }
+
+    func dismissNote() {
+        noteTask?.cancel()
+        note = nil
+    }
+
+    private func say(_ kind: RefineNote.Kind) {
+        let next = RefineNote(kind: kind)
+        note = next
+        Announcer.announce(next.text)
+        noteTask?.cancel()
+        noteTask = Task {
+            try? await Task.sleep(for: Self.noteDuration)
+            guard !Task.isCancelled, note?.id == next.id else { return }
+            note = nil
+        }
+    }
+
+    /// Runs `work` after the changes enqueued before it, unless another photo has come since.
+    private func enqueue(_ work: @escaping @MainActor @Sendable () async -> Void) {
+        let previous = refineQueue
+        let epoch = refineEpoch
+        refineQueue = Task {
+            _ = await previous?.value
+            guard epoch == refineEpoch else { return }
+            await work()
+        }
+    }
+
+    /// A new photo, or none: nothing of the last one's changes is left.
+    private func forgetEdits() {
+        refineEpoch += 1
+        refineQueue = nil
+        trail = nil
+        trailKey = nil
+        history = RefineHistory()
+        sentEdits = 0
+        handledEdits = 0
+        leftOutEdits = 0
+        settledEdits = 0
+        dismissNote()
+    }
+
+    /// Takes `new` as the refinements. True when only the edits differ from the template on
+    /// screen's and it should follow them (`converge`); a change to the generator's inputs makes
+    /// the base again, and the edits with it.
+    @discardableResult
+    private func take(_ new: TemplateRefinements) -> Bool {
+        guard new != refinements else { return false }
+        let remake = new.generatorInputs != refinements.generatorInputs
+        refinements = new
+        guard source != nil, !isChoosingSettings else { return false }
+        if remake {
+            startGeneration(draftFirst: false)
+            return false
+        }
+        return true
+    }
+
+    private func settle(on target: TemplateRefinements) async {
+        if take(target) { await converge() }
+    }
+
+    /// The edit numbered `serial` has had its turn; `shown` when the template on screen shows
+    /// what it did (or it did nothing).
+    private func handled(_ serial: Int, shown: Bool = true) {
+        handledEdits = serial
+        if shown { settledEdits = serial }
+    }
+
+    /// Shows a template with its edits laid. No crossfade: an edit is there the moment it lands.
+    private func show(_ shown: Shown) {
+        preview = shown.preview
+        stats = Stats(shown.preview.template)
+        trail = shown.trail
+    }
+
+    /// Makes the template on screen the base with the edits of the current refinements laid: from
+    /// the templates kept where they part from the ones laid now, so taking an edit back or
+    /// putting it back lays nothing.
+    private func converge() async {
+        guard let current = trail, let key = trailKey, key == currentKey else { return }
+        let target = refinements
+        guard current.edits != target.edits || preview?.refinements != target else { return }
+        do {
+            let moved = try await Self.follow(current, to: target, settings: key.settings, style: previewStyle)
+            // Another change is in line behind this one: it shows then.
+            guard refinements == target, trailKey == key else { return }
+            show(moved)
+            settledEdits = handledEdits
+        } catch is CancellationError {
+        } catch {
+            Log.create.error("Following the edits failed: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    private func lay(_ edit: TemplateEditor.Edit, serial: Int, tapped: Bool) async {
+        let before = refinements
+        guard let current = trail, let key = trailKey, key == currentKey else {
+            // The template on screen is being made again: it has the edit laid with the others.
+            if before.edits.count < TemplateRefinements.maximumEdits {
+                history.push(before)
+                refinements.edits.append(edit)
+            }
+            handled(serial, shown: false)
+            return
+        }
+        // A tap in an area a fill made takes that fill out, with any other that made it.
+        if tapped, case .fill(let point, _) = edit {
+            let cleared = EditFills.cleared(by: point, edits: before.edits, on: current.template)
+            if !cleared.isEmpty {
+                var next = before
+                next.edits = before.edits.indices.filter { !cleared.contains($0) }.map { before.edits[$0] }
+                history.push(before)
+                await settle(on: next)
+                handled(serial)
+                return
+            }
+        }
+        guard before.edits.count < TemplateRefinements.maximumEdits else {
+            say(.init(declined: edit))
+            handled(serial)
+            return
+        }
+        var next = before
+        next.edits.append(edit)
+        do {
+            let laid = try await Self.laying(edit, on: current, settings: key.settings, refinements: next, style: previewStyle)
+            guard refinements == before, trailKey == key else {
+                // Something else changed the refinements meanwhile: the edit joins them.
+                history.push(refinements)
+                refinements.edits.append(edit)
+                await converge()
+                handled(serial)
+                return
+            }
+            switch laid.verdict {
+            case .made(let tooSmall):
+                history.push(before)
+                refinements = next
+                if let preview = laid.preview { show(Shown(preview: preview, trail: laid.trail)) }
+                handled(serial)
+                if tooSmall { say(.tooSmall) }
+            case .nothing:
+                handled(serial)
+            case .declined(let why):
+                Log.create.info("An edit was declined: \(why, privacy: .public)")
+                say(.init(declined: edit))
+                handled(serial)
+            }
+        } catch {
+            if !(error is CancellationError) {
+                Log.create.error("Laying an edit failed: \(String(describing: error), privacy: .public)")
+            }
+            handled(serial)
+        }
     }
 
     // MARK: Background work
@@ -640,28 +949,85 @@ final class CreateModel {
         }
     }
 
-    /// The template of `settings` with `refinements` (`aspect`: the photo's width over height),
-    /// its preview recording `recorded` (the sliders' settings a draft stands for).
+    /// A preview, with the trail its template came from: the base the generator made and the
+    /// edits laid on it (none for a draft, which has no edits), and what laying them did.
+    nonisolated struct Shown: Sendable {
+        var preview: Preview
+        var trail: EditTrail?
+        var replay = EditTrail.Replay()
+    }
+
+    /// The template of `settings` made from the generator inputs of `refinements` (`aspect`: the
+    /// photo's width over height), with its edits laid unless it is a draft, its preview recording
+    /// `recorded` (the sliders' settings a draft stands for).
     @concurrent
     private static func render(
         _ image: RGBAImage, importance: PaintCore.Grid<Float>?, lineArt: LineArtInput?, refinements: TemplateRefinements,
         aspect: Float, settings: GenerationSettings, recorded: GenerationSettings, isDraft: Bool, style: PreviewStyle,
         progress: (@Sendable (Float) -> Void)?
-    ) async throws -> Preview {
+    ) async throws -> Shown {
         let inputs = refinements.refining(importance: importance, lineArt: lineArt, aspect: aspect)
         let template = try TemplateGenerator(settings: settings)
             .generate(from: image, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
             .template
         try Task.checkCancellation()
-        return try makePreview(template, settings: recorded, refinements: refinements, isDraft: isDraft, style: style)
+        return try composed(template, settings: recorded, refinements: refinements, isDraft: isDraft, style: style)
     }
 
-    /// The preview of a template made earlier, drawn again.
+    /// A base template made earlier, with the edits of `refinements` laid on it and drawn again.
     @concurrent
-    private static func preview(
-        _ template: Template, settings: GenerationSettings, refinements: TemplateRefinements, style: PreviewStyle
-    ) async throws -> Preview {
-        try makePreview(template, settings: settings, refinements: refinements, isDraft: false, style: style)
+    private static func laid(
+        _ base: Template, settings: GenerationSettings, refinements: TemplateRefinements, style: PreviewStyle
+    ) async throws -> Shown {
+        try composed(base, settings: settings, refinements: refinements, isDraft: false, style: style)
+    }
+
+    nonisolated private static func composed(
+        _ base: Template, settings: GenerationSettings, refinements: TemplateRefinements, isDraft: Bool, style: PreviewStyle
+    ) throws -> Shown {
+        guard !isDraft else {
+            return Shown(preview: try makePreview(base, settings: settings, refinements: refinements, isDraft: true, style: style))
+        }
+        var trail = EditTrail(base: base)
+        let replay = try trail.move(to: refinements.edits, cancel: .task)
+        try Task.checkCancellation()
+        let preview = try makePreview(trail.template, settings: settings, refinements: refinements, isDraft: false, style: style)
+        return Shown(preview: preview, trail: trail, replay: replay)
+    }
+
+    /// `trail` with its edits made those of `refinements` and the result drawn (a list taken back,
+    /// put back or changed in the middle; edits sent while a template was being made).
+    @concurrent
+    private static func follow(
+        _ trail: EditTrail, to refinements: TemplateRefinements, settings: GenerationSettings, style: PreviewStyle
+    ) async throws -> Shown {
+        var trail = trail
+        let replay = try trail.move(to: refinements.edits, cancel: .task)
+        try Task.checkCancellation()
+        let preview = try makePreview(trail.template, settings: settings, refinements: refinements, isDraft: false, style: style)
+        return Shown(preview: preview, trail: trail, replay: replay)
+    }
+
+    /// One edit laid on `trail`, and the result drawn when it changed the template.
+    nonisolated struct Laid: Sendable {
+        var trail: EditTrail
+        var verdict: EditTrail.Verdict
+        var preview: Preview?
+    }
+
+    /// `edit` laid on `trail`; `refinements` are the ones the template will have been made with,
+    /// the edit among them.
+    @concurrent
+    private static func laying(
+        _ edit: TemplateEditor.Edit, on trail: EditTrail, settings: GenerationSettings, refinements: TemplateRefinements,
+        style: PreviewStyle
+    ) async throws -> Laid {
+        var trail = trail
+        let verdict = trail.add(edit)
+        guard verdict.isMade else { return Laid(trail: trail, verdict: verdict, preview: nil) }
+        try Task.checkCancellation()
+        let preview = try makePreview(trail.template, settings: settings, refinements: refinements, isDraft: false, style: style)
+        return Laid(trail: trail, verdict: verdict, preview: preview)
     }
 
     /// A draft's settings: the line art's lengths in canvas pixels (the shortest line, the gaps

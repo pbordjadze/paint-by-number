@@ -3213,6 +3213,78 @@
         }
       }
     },
+    "refine.note.left" : {
+      "comment" : "Refine screen toast after the sliders or a brush made the template again: how many of the painter's edits no longer apply to it; the argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld edit no longer fits the new drawing and was left out."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld edits no longer fit the new drawing and were left out."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "refine.note.notDrawn" : {
+      "comment" : "Refine screen toast: a line the painter drew could not be added to the drawing (it doubled back on itself, or lay too close to other lines); nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That line couldn’t be drawn there."
+          }
+        }
+      }
+    },
+    "refine.note.notErased" : {
+      "comment" : "Refine screen toast: an erasure the painter made could not be carried out; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That couldn’t be erased."
+          }
+        }
+      }
+    },
+    "refine.note.notFilled" : {
+      "comment" : "Refine screen toast: a Fill tap could not make its shape an area (no room for the number of its paint); nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That shape couldn’t be filled."
+          }
+        }
+      }
+    },
+    "refine.note.tooSmall" : {
+      "comment" : "Refine screen toast: a shape the painter closed with a line has no room for a number, so it did not become an area of its own; the line stays",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That shape is too small for a number."
+          }
+        }
+      }
+    },
     "Refining…" : {
       "comment" : "Status shown while the template is regenerated at full quality after a settings change; also on the Refine screen while a change regenerates the template",
       "extractionState" : "manual"
