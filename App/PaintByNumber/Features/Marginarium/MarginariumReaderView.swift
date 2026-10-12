@@ -11,85 +11,119 @@ struct MarginariumReaderView: View {
     @State private var chapter: MarginariumDocument.Chapter?
     #if DEBUG
     @State private var readerFrame: CGRect = .zero
+    @State private var demoTargetFrame: CGRect = .zero
     #endif
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
-                    if let chapter {
-                        ForEach(chapter.sections) { section in
-                            sectionView(section)
-                                .id(section.id)
+        GeometryReader { geometry in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 20) {
+                        if let chapter {
+                            ForEach(chapter.sections) { section in
+                                sectionView(section, width: min(620, max(0, geometry.size.width - 40)))
+                                    .id(section.id)
+                            }
+                        } else {
+                            Text(entry.title)
+                                .font(.display(.largeTitle))
+                                .accessibilityAddTraits(.isHeader)
+                            Text(entry.subtitle)
+                                .font(.title3)
+                                .foregroundStyle(.secondary)
+                            MarginariumQuotation(text: AttributedString(entry.passage))
                         }
-                    } else {
-                        Text(entry.title)
-                            .font(.display(.largeTitle))
-                            .accessibilityAddTraits(.isHeader)
-                        Text(entry.subtitle)
-                            .font(.title3)
-                            .foregroundStyle(.secondary)
-                        MarginariumQuotation(text: AttributedString(entry.passage))
                     }
+                    .frame(maxWidth: 620, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 48)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: 620, alignment: .leading)
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                .padding(.bottom, 48)
-                .frame(maxWidth: .infinity)
-            }
-            .background(Theme.paper)
-            .navigationTitle(entry.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .accessibilityIdentifier("marginarium-reader")
-            #if DEBUG
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { readerFrame = $0 }
-            .onChange(of: chapter?.id, initial: true) {
-                if let target = demoTarget { proxy.scrollTo(target, anchor: .top) }
-            }
-            .onChange(of: readerFrame) {
-                if let target = demoTarget { proxy.scrollTo(target, anchor: .top) }
-            }
-            #endif
-            .transaction { transaction in
-                transaction.animation = nil
-                transaction.disablesAnimations = true
-            }
-            .task(id: entry.id) {
-                let id = entry.id
-                let loaded = await Background.run {
-                    MarginariumDocument.bundled()?.chapters.first { $0.id == id }
+                .background(Theme.paper)
+                .navigationTitle(entry.title)
+                .navigationBarTitleDisplayMode(.inline)
+                .accessibilityIdentifier("marginarium-reader")
+                #if DEBUG
+                .onGeometryChange(for: CGRect.self) { geometry in
+                    let frame = geometry.frame(in: .global)
+                    let insets = geometry.safeAreaInsets
+                    return CGRect(x: frame.minX + insets.leading, y: frame.minY + insets.top,
+                                  width: max(0, frame.width - insets.leading - insets.trailing),
+                                  height: max(0, frame.height - insets.top - insets.bottom))
+                } action: { readerFrame = $0 }
+                .task(id: demoTarget) { await scrollDemoToTarget(using: proxy) }
+                #endif
+                .transaction { transaction in
+                    transaction.animation = nil
+                    transaction.disablesAnimations = true
                 }
-                guard !Task.isCancelled else { return }
-                chapter = loaded
-                if loaded == nil {
-                    Log.library.fault("Marginarium chapter missing or unreadable: \(id, privacy: .public)")
+                .task(id: entry.id) {
+                    let id = entry.id
+                    let loaded = await Background.run {
+                        MarginariumDocument.bundled()?.chapters.first { $0.id == id }
+                    }
+                    guard !Task.isCancelled else { return }
+                    chapter = loaded
+                    if loaded == nil {
+                        Log.library.fault("Marginarium chapter missing or unreadable: \(id, privacy: .public)")
+                    }
                 }
             }
         }
     }
 
     @ViewBuilder
-    private func sectionView(_ section: MarginariumDocument.Section) -> some View {
+    private func sectionView(_ section: MarginariumDocument.Section, width: CGFloat) -> some View {
         Group {
             switch section.kind {
-            case .table: MarginariumTableView(section: section)
+            case .table: MarginariumTableView(section: section, width: width)
             case .margin: MarginariumMarginView(section: section)
             case .prose:
                 ForEach(section.blocks) { block in MarginariumBlockView(block: block) }
             }
         }
         #if DEBUG
-        .onGeometryChange(for: Bool.self) { geometry in
-            let top = geometry.frame(in: .global).minY
-            return !readerFrame.isEmpty && top >= readerFrame.minY && top < readerFrame.maxY
-        } action: { visible in
-            if visible, section.id == demoTarget { DemoMode.markReady() }
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+            if section.id == demoTarget { demoTargetFrame = frame }
+        }
+        .onDisappear {
+            if section.id == demoTarget { demoTargetFrame = .zero }
         }
         #endif
     }
 
     #if DEBUG
+    /// Lazy stacks estimate distant offsets. Re-resolve the ID after layout until the start of
+    /// the requested section is visibly settled; a timeout must never manufacture readiness.
+    private func scrollDemoToTarget(using proxy: ScrollViewProxy) async {
+        guard let target = demoTarget else { return }
+        var previousFrame: CGRect?
+        var previousViewport: CGRect?
+        for _ in 0..<50 {
+            do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
+            guard !readerFrame.isEmpty else { continue }
+            let frame = demoTargetFrame
+            let visible = !frame.isEmpty && frame.minY >= readerFrame.minY - 1
+                && frame.minY + min(44, frame.height) <= readerFrame.maxY
+                && frame.minX >= readerFrame.minX - 1 && frame.maxX <= readerFrame.maxX + 1
+            if visible {
+                if frame == previousFrame, readerFrame == previousViewport {
+                    Log.demo.notice("Marginarium target visible: \(target, privacy: .public)")
+                    DemoMode.markReady()
+                    return
+                }
+                previousFrame = frame
+                previousViewport = readerFrame
+            } else {
+                previousFrame = nil
+                previousViewport = nil
+                proxy.scrollTo(target, anchor: .top)
+            }
+        }
+        Log.demo.error("Marginarium target did not enter the viewport: \(target, privacy: .public)")
+    }
+
     private var demoTarget: String? {
         guard entry.id == "marginarium", let sections = chapter?.sections else { return nil }
         switch ShellDemo.current {

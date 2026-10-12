@@ -1,12 +1,14 @@
 import CoreTransferable
 import Foundation
 import SwiftUI
+import UIKit
 import UniformTypeIdentifiers
 
 /// The app's main navigation: gallery → painting (zoom transition), the create flow,
 /// settings and The Marginarium.
 struct AppShellView: View {
     @Environment(Library.self) private var library
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Namespace private var zoom
     @State private var path: [UUID] = []
     /// The gallery's Show filter, remembered per window, and the text of its search field.
@@ -89,7 +91,12 @@ struct AppShellView: View {
                 .environment(library)
         }
         .sheet(isPresented: $isShowingMarginarium, onDismiss: presentIncomingImage) {
-            MarginariumView()
+            if UIDevice.current.userInterfaceIdiom == .pad, sizeClass == .regular {
+                MarginariumView()
+                    .presentationSizing(.page)
+            } else {
+                MarginariumView()
+            }
         }
         .sheet(item: $timelapse, onDismiss: presentIncomingImage) { request in
             TimelapseExportSheet(request: request)
