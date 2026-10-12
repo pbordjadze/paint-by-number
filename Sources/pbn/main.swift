@@ -25,6 +25,24 @@
 //       photo's color there; radius a fraction of the photo's long side; a kind pbn doesn't
 //       know is skipped with a warning; stats.json gains `detailRegions`); --line-art sets a
 //       LineArtSettings field and --tuning a PipelineTuning factor by name
+//   pbn edit <template.pbnt> <edits.json> --out <dir>
+//       applies manual edits to a finished coloring-book template, in order, as the app's Refine
+//       does (TemplateEditor): no photo, no edge map, no segmentation. edits.json: [{"kind":
+//       "draw", "points": [[x, y], ...], "closed": false}, {"kind": "erase", "radius": r,
+//       "points": [...]}, {"kind": "eraseLine", "points": [[x, y]], "reach": r}, {"kind": "fill",
+//       "points": [[x, y]], "color": [L, a, b] | "paint": n}], all in canvas units (the
+//       template's, origin top-left; unlike --line-edits, which is normalized to the photo): a
+//       line drawn exactly as given and cutting the cell it closes, the eraser's pass cutting the
+//       ink at the edge of its reach (the cells it frees merging), a line tapped away from
+//       junction to junction, the shape under a point made one detail area of a paint (the
+//       color's, within a just-noticeable difference, else a new one); a kind pbn doesn't know is
+//       skipped with a warning. Writes the edited template.pbnt, the same previews as generate
+//       (raster.ppm, boundaries.ppm, painted.svg, template.svg, painted-outlined.svg) and
+//       stats.json: the template's counts and validation, per edit what it did (a draw: how far
+//       the ink strays from the line, `maxDeviation`, in the middle of the line, and how far an
+//       end moved onto ink, `maxEndShift`; `unexpectedChanges`, 0: regions the edit changed that
+//       it neither touched, merged nor sat beside) and how many regions are bit for bit as
+//       they were (`identicalRegions`)
 //   pbn suggest <image> [--importance m.pgm] [--hints hints.json] [--length relaxed] [--candidates 5]
 //       [--out dir]
 //       runs Auto at the draft size, prints the candidate table and writes decision.json (into
@@ -44,21 +62,33 @@
 //       every label's room for its number (single-digit minimum R, default
 //       LabelSizing.minimumRadius, a detail area's scaled down as LabelSizing.detailMinimumRadius
 //       is; R ≤ 0 skips that check) and line data, whose style, edges per layer and interior
-//       strokes it prints, and the detail areas
-//   pbn names <template.pbnt> [--seed N]
+//       strokes (and how many are writing) it prints, and the detail areas
+//   pbn names <template.pbnt> [--seed N] [--vocabulary N | --nickname-table file.tsv]
 //       prints each palette color's nickname (seeded like the app's per-painting names; the
-//       default seed is generate's), structured name and hex
+//       default seed is generate's), structured name and hex; the default vocabulary is
+//       --vocabulary 2: identical stored OKLab, seed and palette order give identical nicknames
+//       on every platform (canonical anchors and integer arithmetic, including the fallback).
+//       --vocabulary 1 preserves the original platform's libm behavior: Linux names can differ
+//       from Apple; old artworks with missing metadata keep 1. Unknown future versions use 2.
+//       A proposed table uses the version 1 draw (RRGGBB<TAB>Name per line, no header; the frozen table's
+//       single-space separator is also accepted)
+//   pbn vocab check [<table.tsv> | --vocabulary N]
+//       reports the vocabulary's mechanical style-guide and gamut problems; exits nonzero
+//       if any fail. Without a table it checks the built-in vocabulary (default 2), including
+//       its canonical anchors. Proposed tables are not installed or written into templates
 
 let args = CommandLine.arguments
-guard args.count >= 2 else { fail("usage: pbn generate|suggest|bench|trace|check|names ...") }
+guard args.count >= 2 else { fail("usage: pbn generate|edit|suggest|bench|trace|check|names|vocab ...") }
 let options = parse(args.dropFirst(2))
 
 switch args[1] {
 case "generate": try runGenerate(options)
+case "edit": try runEdit(options)
 case "suggest": try runSuggest(options)
 case "trace": try runTrace(options)
 case "check": try runCheck(options)
 case "names": try runNames(options)
+case "vocab": runVocabCheck(options)
 case "bench": try runBench(options)
 default:
     fail("unknown command \(args[1])")

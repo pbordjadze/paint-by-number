@@ -48,9 +48,14 @@ before planning app work).
   - `LineArt/` (`LayeredLines.apply`, `Writing` and `LineEdits`, see Line art), `Auto/` (`AutoSettings`, see Suggested
     settings), `Export/` (`SVGExport`: the headless preview pbn writes for `tools/eval.py`; the app
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
+  - `Edit/`: `TemplateEditor`, the painter's pen, eraser, line eraser and fill made to a finished
+    coloring-book `Template` exactly and with no image processing (`Lattice` is its exact
+    arithmetic; `docs/coloring-book.md` › Edits made to the template itself); `EditTrail`, a base
+    with a list of edits laid on it, with undo and redo from kept templates; `EditCoding`, the
+    shape of an edit in a file (the app's `refinements.json`).
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
-  `Commands.swift`, `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
+  `Commands.swift`, `Edit.swift` (`pbn edit`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data);
@@ -66,7 +71,12 @@ before planning app work).
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
-  (the app's Core ML models from their source weights).
+  (the app's Core ML models from their source weights). `marginarium.py` imports approved chapter
+  Markdown from `docs/marginarium/` into the catalog and bundled `Resources/marginarium.json`;
+  its docstring defines the supported blocks and stable key markers. `marginarium.py check`
+  checks them word for word; `python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'`
+  exercises every block kind and key stability (fixtures never ship). Chapter `pet:` blocks and
+  the shared imageset/v2-atlas player: `docs/marginarium-pets.md`.
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
@@ -97,7 +107,10 @@ the paint (`docs/coloring-book.md`). The layered style it grew from is retired: 
 decoding and draw as books, and its recorded settings decode as the book's defaults. Writing (`LineArtInput.writing`: the lines of text Vision
 found, `TextFinder`) is traced from the photo itself, painted out before segmenting and drawn as
 interior strokes with the numbers kept off it (`Writing`, `LabelKeepOut`; `keepWriting`;
-`docs/writing.md`, whose corpus every change to it is judged on). The painter's edits from the
+`docs/writing.md`, whose corpus every change to it is judged on); text under 48 px is read on a
+finer window and the template marks its strokes (`TemplateLineArt.writingStrokes`, the `WRIT`
+chunk), which renderers draw in the paper's tone over a painted dark paint
+(`Template.writesOnDarkPaint`). The painter's edits from the
 app's Refine (`LineArtInput.edits`, `pbn --line-edits`: lines drawn, the eraser's passes, lines
 tapped away, shapes filled, in order) change the drawing the template without them draws, and
 nothing else (`LayeredLines.shownLines`, `LineEdits`; `docs/coloring-book.md` › The painter's
@@ -178,7 +191,8 @@ Saved paintings must open in every later build. The format history is documented
   `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` / `template-v2-lines.pbnt`
   (the optional `LINE` chunk of layered templates) / `template-v2-book.pbnt` (the chunk's trailing
   style byte, written only for coloring books) / `template-v2-detail.pbnt` (the optional `DETL`
-  chunk of detail areas) must keep decoding (they are never regenerated). Add
+  chunk of detail areas) / `template-v2-writing.pbnt` (the optional `WRIT` chunk of writing
+  strokes) must keep decoding (they are never regenerated). Add
   a fixture file and decode test for every new `formatVersion`, chunk or trailing field.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when
@@ -208,10 +222,20 @@ Saved paintings must open in every later build. The format history is documented
   progress file that can't be read right now (an I/O or protection error) throws
   `Library.OpenError.unreadable` and is kept, never replaced with fresh progress
   (`LibraryTests.unreadableProgressIsKept`).
-- Paint nicknames are derived at load, never stored (`ColorNickname.assign(_:seed:)`, seeded from
-  the artwork id): editing the vocabulary table, `ColorNickname`'s constants or `ColorName`'s
-  thresholds renames the colors of saved paintings, so treat them like a file format
-  (`ColorNicknameTests.parrotsPaletteGetsDistinctNicknames` pins one assignment).
+- Paint nicknames are derived at load, never stored (`ColorNickname.assign(_:seed:version:)`,
+  seeded from the artwork id), with the frozen vocabulary version recorded per artwork in
+  `meta.json` (`nicknameVersion`). Missing or unreadable means 1, never the current version;
+  new artworks record `ColorNickname.currentVersion`, regeneration keeps the recorded value,
+  and unknown future values round-trip unchanged while resolving to the newest known version.
+  Treat each version's table, math, draw and fallback like a file format: never edit them.
+  v1 preserves each platform's original libm behavior, not agreement across platforms:
+  `ArtworkNicknameTests` pins Apple's current names against a future iOS libm change;
+  `ColorNicknameTests` keeps Linux's different v1 pin. `ColorName` remains frozen for v1.
+  v2 uses the same table with canonical Q16 anchors and integer distances, weights, multiply-high
+  RNG mapping and structured fallback (`ColorNicknameV2`): identical stored OKLab bits, seed and
+  palette order give identical nicknames everywhere. New artworks record 2; no migration of v1.
+  `ColorNicknameV2Tests` and the app read the same `nickname-v2.json` pins; CI runs the core v2
+  suite on Linux and macOS, and the app pins on iOS. `pbn names` and `pbn vocab check` default to 2.
 
 ## App rules
 
@@ -247,8 +271,13 @@ Saved paintings must open in every later build. The format history is documented
   durations, percentages and numbers go through `.formatted(...)` or `PaintingTimeText`'s catalog
   units, never concatenation; errors are `LocalizedError`; no conditional or `+` of literals in a
   SwiftUI literal position (one call per literal). Helper views taking a `LocalizedStringKey` are
-  listed in `WRAPPERS` and counted in `KEY_TYPE_DECLARATIONS` of the checker. The one runtime key
-  family is `sample.<id>`, the library's titles (checked against `library.json`). A new string needs
+  listed in `WRAPPERS` and counted in `KEY_TYPE_DECLARATIONS` of the checker. Runtime key families
+  are `sample.<id>`, the library's titles (checked against `library.json`), and the stable block
+  keys in `marginarium.json` (`marginarium.<id>.block.<uuid>` plus the existing
+  title/subtitle/passage keys). The latter are unformatted Bundle lookups (literal percent signs);
+  `strings_check.py` calls `marginarium.py` to check the manifest and catalog against
+  `docs/marginarium/*.md`. Keep each Markdown block's key marker with it when editing or moving
+  it. The Markdown and tool fixtures are not bundled. A new string needs
   its catalog entry, written by hand (`"comment"`, `"extractionState": "manual"`; an explicit key
   also `localizations.en`, with plural forms for a count): Xcode extracts nothing
   (`STRING_CATALOG_GENERATE_SYMBOLS = NO`: "Finished" and "Finished!" would collide).

@@ -7,14 +7,17 @@ import SwiftUI
 /// Preview): a coloring book's drawing (its drawn edges and strokes, the lines
 /// `TemplateRasterizer` draws for it), or a classic template's every edge between regions, in
 /// canvas units. They are drawn as vectors at the zoom shown, so they stay crisp, and as heavy as
-/// the canvas draws them (`ColoringBookLook`, `ClassicLook`).
+/// the canvas draws them (`ColoringBookLook`, `ClassicLook`). Over the finished painting, writing
+/// over a paint too dark for the ink is drawn in the paper's tone (`paths(within:overPaint:)`).
 nonisolated struct LineArtDrawing: Sendable, Identifiable {
     /// A polyline and its bounds, padded by a unit so straight lines get a box with area.
     nonisolated struct Line: Sendable {
         let points: [CGPoint]
         let bounds: CGRect
+        /// Writing over a paint too dark for the ink (`DrawableLineArt.lightWriting`).
+        let onDarkPaint: Bool
 
-        init?(_ points: ArraySlice<SIMD2<Float>>) {
+        init?(_ points: ArraySlice<SIMD2<Float>>, onDarkPaint: Bool = false) {
             guard points.count >= 2, let first = points.first else { return nil }
             var low = first, high = first
             for p in points {
@@ -25,6 +28,7 @@ nonisolated struct LineArtDrawing: Sendable, Identifiable {
             bounds = CGRect(
                 x: CGFloat(low.x) - 1, y: CGFloat(low.y) - 1, width: CGFloat(high.x - low.x) + 2,
                 height: CGFloat(high.y - low.y) + 2)
+            self.onDarkPaint = onDarkPaint
         }
     }
 
@@ -34,8 +38,13 @@ nonisolated struct LineArtDrawing: Sendable, Identifiable {
     /// Drawn as a coloring book (full ink, the book's weight), else as classic lines.
     let isColoringBook: Bool
     let lines: [Line]
-    /// Every line in one path, for a frame showing most of the canvas. Immutable once built.
+    /// Every line in one path, for a frame showing most of the canvas, and over the painting the
+    /// lines apart from the writing over dark paint, and that writing. Immutable once built.
     private let whole: UncheckedSendable<CGPath>
+    private let wholeInk: UncheckedSendable<CGPath>
+    private let wholeLight: UncheckedSendable<CGPath>
+    /// Whether any line is writing over a paint too dark for the ink.
+    let hasLightWriting: Bool
 
     init(_ t: Template) {
         size = CGSize(width: t.width, height: t.height)
@@ -47,14 +56,20 @@ nonisolated struct LineArtDrawing: Sendable, Identifiable {
             if let line = Line(t.points(of: edge)) { lines.append(line) }
         }
         if let drawable {
-            for stroke in drawable.strokes where DrawableLineArt.isDrawn(stroke.layer) {
-                if let line = Line(drawable.points(of: stroke)) { lines.append(line) }
+            for (k, stroke) in drawable.strokes.enumerated() where DrawableLineArt.isDrawn(stroke.layer) {
+                if let line = Line(drawable.points(of: stroke), onDarkPaint: drawable.lightWriting[k]) { lines.append(line) }
             }
         }
         self.lines = lines
-        let path = CGMutablePath()
-        for line in lines { path.addLines(between: line.points) }
+        let path = CGMutablePath(), ink = CGMutablePath(), light = CGMutablePath()
+        for line in lines {
+            path.addLines(between: line.points)
+            (line.onDarkPaint ? light : ink).addLines(between: line.points)
+        }
         whole = UncheckedSendable(path.copy() ?? path)
+        wholeInk = UncheckedSendable(ink.copy() ?? ink)
+        wholeLight = UncheckedSendable(light.copy() ?? light)
+        hasLightWriting = lines.contains(where: \.onDarkPaint)
     }
 
     /// The lines that pass through `rect` (canvas units): zoomed in, a frame strokes only what
@@ -65,6 +80,21 @@ nonisolated struct LineArtDrawing: Sendable, Identifiable {
         var path = Path()
         for line in lines where line.bounds.intersects(rect) { path.addLines(line.points) }
         return path
+    }
+
+    /// `path(within:)` over the finished painting, where writing over a paint too dark for the ink
+    /// is drawn in the paper's tone: the lines apart from that writing, and that writing. Without
+    /// `overPaint` (on paper or a photo), all of them in the first.
+    func paths(within rect: CGRect, overPaint: Bool) -> (ink: Path, light: Path) {
+        guard overPaint, hasLightWriting else { return (path(within: rect), Path()) }
+        if rect.width * rect.height >= 0.5 * size.width * size.height {
+            return (Path(wholeInk.value), Path(wholeLight.value))
+        }
+        var ink = Path(), light = Path()
+        for line in lines where line.bounds.intersects(rect) {
+            if line.onDarkPaint { light.addLines(line.points) } else { ink.addLines(line.points) }
+        }
+        return (ink, light)
     }
 
     /// The lines' width on screen (points) for a picture `scale` times the size the painting's

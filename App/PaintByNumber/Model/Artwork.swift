@@ -44,6 +44,10 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     var settingsOrigin: String?
     /// The `PaintingLength` raw value the create flow aimed for; nil before Suggested settings.
     var paintingLength: String?
+    /// Frozen vocabulary used for this painting's derived nicknames. Missing or unreadable
+    /// metadata means v1; keep unknown future versions as written, even if this build uses
+    /// its newest known vocabulary to display them.
+    var nicknameVersion: Int
 
     init(
         id: UUID = UUID(), title: String, createdAt: Date = .now, modifiedAt: Date? = nil,
@@ -57,6 +61,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         self.settings = settings
         self.settingsOrigin = settingsOrigin?.rawValue
         self.paintingLength = paintingLength?.rawValue
+        nicknameVersion = ColorNickname.currentVersion
         width = template.width
         height = template.height
         colorCount = template.palette.count
@@ -106,7 +111,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, title, createdAt, modifiedAt, completedAt, settings, width, height
         case colorCount, regionCount, paintedCount, activeSeconds, thumbnailVersion, sampleName, format
-        case pipelineVersion, isFavorite, settingsOrigin, paintingLength
+        case pipelineVersion, isFavorite, settingsOrigin, paintingLength, nicknameVersion
     }
 
     /// What an artwork saved without settings was made with: classic lines, the only kind
@@ -115,6 +120,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
 
     init(from decoder: any Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        nicknameVersion = (try? c.decodeIfPresent(Int.self, forKey: .nicknameVersion)) ?? 1
         format = try c.decodeIfPresent(Int.self, forKey: .format) ?? Self.currentFormat
         guard format <= Self.currentFormat else {
             // A newer app may have changed any field; take what still reads so the gallery can
@@ -133,7 +139,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
             colorCount = max(0, field(.colorCount, 0))
             regionCount = max(0, field(.regionCount, 0))
             paintedCount = max(0, field(.paintedCount, 0))
-            activeSeconds = field(.activeSeconds, 0)
+            activeSeconds = PaintProgress.sanitized(field(.activeSeconds, 0))
             thumbnailVersion = field(.thumbnailVersion, 0)
             sampleName = try? c.decodeIfPresent(String.self, forKey: .sampleName)
             pipelineVersion = field(.pipelineVersion, 0)
@@ -153,7 +159,7 @@ nonisolated struct Artwork: Identifiable, Hashable, Codable, Sendable {
         colorCount = try c.decodeIfPresent(Int.self, forKey: .colorCount) ?? 0
         regionCount = try c.decode(Int.self, forKey: .regionCount)
         paintedCount = try c.decodeIfPresent(Int.self, forKey: .paintedCount) ?? 0
-        activeSeconds = try c.decodeIfPresent(Double.self, forKey: .activeSeconds) ?? 0
+        activeSeconds = PaintProgress.sanitized(try c.decodeIfPresent(Double.self, forKey: .activeSeconds) ?? 0)
         thumbnailVersion = try c.decodeIfPresent(Int.self, forKey: .thumbnailVersion) ?? 0
         sampleName = try c.decodeIfPresent(String.self, forKey: .sampleName)
         pipelineVersion = try c.decodeIfPresent(Int.self, forKey: .pipelineVersion) ?? 0

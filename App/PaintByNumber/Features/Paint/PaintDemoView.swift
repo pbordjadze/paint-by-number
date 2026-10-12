@@ -88,7 +88,7 @@ struct PaintDemoView: View {
             let title = scenario.hasSuffix("-long-text")
                 ? "Delicate Arch on Our Spring Trip Through Utah"
                 : (template == nil ? "Mosaic" : (book ? "Red Fox" : "Delicate Arch"))
-            demo = Demo(
+            demo = await Demo(
                 scenario: scenario, template: template ?? SyntheticTemplate.make(), title: title,
                 photo: template == nil ? nil : photo)
         }
@@ -152,11 +152,11 @@ private final class Demo {
     private var lastArea: Int?
     private let scenario: String
 
-    init(scenario: String, template t: Template, title: String, photo: String?) {
+    init(scenario: String, template t: Template, title: String, photo: String?) async {
         self.scenario = scenario
         self.title = title
         self.photo = photo
-        session = PaintingSession(template: t)
+        session = await PaintingSession.make(template: t)
 
         // Paint colors in palette order (how people tend to work), each color top to bottom.
         let order = t.regions.indices.sorted {

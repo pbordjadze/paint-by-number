@@ -3,20 +3,29 @@ import Foundation
 import PaintCore
 
 /// What the painter refined in a new painting before painting it (the create flow's optional
-/// Refine step, `RefineView`): lines drawn and erased, shapes filled, and, with Settings ›
-/// Detail Brushes, areas brushed for more or less detail and corrections to the lines of text
-/// the app found.
-/// Refinements change what the generator reads, never a template, so they hold through every
-/// draft and slider, and regenerating the painting reproduces them (its `refinements.json`):
-/// - lines drawn and erased join the line art's input as the painter's edits
-///   (`LineArtInput.edits`, in order), which PaintCore lays out with its own lines (`LineEdits`);
-///   so do the shapes filled, each cell filled an area of its own in the photo's color there (a
-///   detail area, `Template.detailRegions`);
-/// - more detail raises the importance map toward 1 and strengthens the edge maps (`moreLines`):
-///   smaller regions, gentler smoothing, more lines, and so more cells in a coloring book;
-/// - less detail lowers it toward `lessImportance` and weakens the edge maps (`fewerLines`);
-/// - the text corrections edit `LineArtInput.writing`: lines the app found and the painter turned
-///   off go, lines the painter marked join.
+/// Refine step, `RefineView`): lines drawn and erased and shapes filled by hand, and, with
+/// Settings › Detail Brushes, areas brushed for more or less detail and corrections to the lines
+/// of text the app found.
+/// Two kinds, by what they act on:
+/// - `edits` are made by hand to the finished template (PaintCore's `TemplateEditor`), one after
+///   another, with no image processing: a line is the line drawn, and nothing the edit does not
+///   reach changes. The template on screen is the one the generator makes from the photo, the
+///   settings and the rest of the refinements, with the edits laid on it in order (`EditTrail`);
+///   a painting's `refinements.json` lets regeneration make it again the same way;
+/// - the rest change what the generator reads, never a template, so they hold through every
+///   draft and slider:
+///   - `lines`, the lines drawn and erased and the shapes filled by builds that refined through
+///     the generator, join the line art's input as the painter's edits (`LineArtInput.edits`, in
+///     order), which PaintCore lays out with its own lines (`LineEdits`); so do the shapes filled,
+///     each cell filled an area of its own in the photo's color there (a detail area,
+///     `Template.detailRegions`). Paintings and drafts refined that way regenerate that way:
+///     what they mean never changes, and nothing refines by it any more;
+///   - more detail raises the importance map toward 1 and strengthens the edge maps
+///     (`moreLines`): smaller regions, gentler smoothing, more lines, and so more cells in a
+///     coloring book;
+///   - less detail lowers it toward `lessImportance` and weakens the edge maps (`fewerLines`);
+///   - the text corrections edit `LineArtInput.writing`: lines the app found and the painter
+///     turned off go, lines the painter marked join.
 /// A painting nobody refined has none, and its generation is untouched.
 ///
 /// The strengths were measured with `pbn` on the corpus's parrots, lighthouse and barn, a box of
@@ -64,8 +73,13 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         var points: [SIMD2<Float>]
     }
 
-    /// The lines drawn and erased and the shapes filled, in the order they were.
+    /// The lines drawn and erased and the shapes filled by builds that refined through the
+    /// generator, in the order they were (the generator's input; see above).
     var lines: [Line] = []
+    /// The pen, eraser and fill, made to the template itself, in the order they were (canvas
+    /// units, the template's). An edit that did nothing on a template, or no longer fits a
+    /// regenerated one, stays here and does nothing again (`EditTrail`).
+    var edits: [TemplateEditor.Edit] = []
     var strokes: [Stroke] = []
     /// Lines of text the app found that the painter turned off, as they were found.
     var hiddenText: [[SIMD2<Float>]] = []
@@ -75,11 +89,19 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     init() {}
 
-    var isEmpty: Bool { lines.isEmpty && strokes.isEmpty && hiddenText.isEmpty && addedText.isEmpty }
+    var isEmpty: Bool { lines.isEmpty && edits.isEmpty && strokes.isEmpty && hiddenText.isEmpty && addedText.isEmpty }
 
     /// How many things the painter changed: lines drawn and erased, shapes filled, strokes, and
     /// lines of text turned off or marked.
-    var changeCount: Int { lines.count + strokes.count + hiddenText.count + addedText.count }
+    var changeCount: Int { lines.count + edits.count + strokes.count + hiddenText.count + addedText.count }
+
+    /// What the generator reads: these refinements without the edits, which are laid on the
+    /// template it makes. Two refinements with the same generator inputs make the same base.
+    var generatorInputs: TemplateRefinements {
+        var inputs = self
+        inputs.edits = []
+        return inputs
+    }
 
     // MARK: Strengths
 
@@ -96,6 +118,8 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
     static let radiusRange: ClosedRange<Float> = 0.002...0.25
     static let maximumStrokes = 2000
     static let maximumPoints = 4000
+    /// How many edits are kept and laid: each is a pass over the template, tens of milliseconds.
+    static let maximumEdits = 2000
     /// The neutral importance map's long side when Vision gave none, as `SubjectImportance`'s.
     static let neutralResolution = 256
 
@@ -132,13 +156,13 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
             lineArt.writing = lineArt.writing.filter { found in !hidden.contains { Self.sameLine(found, $0) } }
                 + addedText.prefix(Self.maximumStrokes).filter(Self.isQuadrilateral)
         }
-        if !lines.isEmpty { lineArt.edits = edits }
+        if !lines.isEmpty { lineArt.edits = lineEdits }
         return (importance, lineArt)
     }
 
     /// The lines drawn and erased and the shapes filled as PaintCore reads them (it checks and
     /// bounds them itself).
-    var edits: [LineEdit] {
+    var lineEdits: [LineEdit] {
         lines.prefix(Self.maximumStrokes).map { line in
             let kind: LineEdit.Kind = switch line.kind {
             case .draw: .draw
@@ -173,7 +197,7 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
         for stroke in strokes.prefix(Self.maximumStrokes) {
             let points = stroke.points.prefix(Self.maximumPoints)
                 .filter { $0.x.isFinite && $0.y.isFinite }
-                .map { $0 * scale }
+                .map { pointwiseMin(pointwiseMax($0, SIMD2(repeating: -0.5)), SIMD2(repeating: 1.5)) * scale }
             guard let first = points.first, stroke.radius.isFinite else { continue }
             let radius = min(max(stroke.radius, Self.radiusRange.lowerBound), Self.radiusRange.upperBound) * long
             let target: Float = switch stroke.kind {
@@ -285,13 +309,17 @@ nonisolated struct TemplateRefinements: Codable, Equatable, Sendable {
 
     // MARK: Coding
 
-    private enum CodingKeys: String, CodingKey { case lines, strokes, hiddenText, addedText }
+    private enum CodingKeys: String, CodingKey { case lines, edits, strokes, hiddenText, addedText }
 
-    /// Tolerant: a field, line or stroke it can't read (a kind from a newer app) is left out
-    /// rather than costing the rest.
+    /// Tolerant: a field, line, edit or stroke it can't read (a kind from a newer app) is left out
+    /// rather than costing the rest, and a file without `edits` (a painting refined before they
+    /// were made by hand) is the refinements it was.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         lines = ((try? c.decodeIfPresent([Lossy<Line>].self, forKey: .lines)) ?? []).compactMap(\.value)
+        edits = Array(
+            ((try? c.decodeIfPresent([Lossy<TemplateEditor.Edit>].self, forKey: .edits)) ?? []).compactMap(\.value)
+                .prefix(Self.maximumEdits))
         strokes = ((try? c.decodeIfPresent([Lossy<Stroke>].self, forKey: .strokes)) ?? []).compactMap(\.value)
         hiddenText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .hiddenText)) ?? []
         addedText = (try? c.decodeIfPresent([[SIMD2<Float>]].self, forKey: .addedText)) ?? []

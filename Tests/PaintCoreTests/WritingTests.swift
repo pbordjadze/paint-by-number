@@ -218,6 +218,142 @@ struct WritingTests {
         #expect(Self.covered(note.letters, by: found.lines, within: 2.5) >= 0.9)
     }
 
+    // MARK: - Small, heavy, light text
+
+    /// "HUBIE" in a heavy, light sans on a dark red ground, as on a pin photographed close: 26 px
+    /// high with a pen 2.6 px wide, the letters 3 px apart and soft by a pixel's blur, the B's
+    /// counters 3 px across.
+    struct Button {
+        var image: RGBAImage
+        /// The letters' centrelines (pixels).
+        var letters: [[SIMD2<Float>]]
+        /// The recognizer's box around the line, normalized.
+        var area: [SIMD2<Float>]
+    }
+
+    static func button(height: Float = 26) -> Button {
+        let (w, h) = (230, 130)
+        func arc(_ cx: Float, _ cy: Float, _ rx: Float, _ ry: Float, from a0: Float, to a1: Float) -> [(Float, Float)] {
+            (0...16).map { k in
+                let a = (a0 + (a1 - a0) * Float(k) / 16) * .pi / 180
+                return (cx + rx * cos(a), cy + ry * sin(a))
+            }
+        }
+        // Letters in units of the line height (y up from the baseline), and their advance.
+        let glyphs: [([[(Float, Float)]], Float)] = [
+            ([[(0, 0), (0, 1)], [(0.5, 0), (0.5, 1)], [(0, 0.5), (0.5, 0.5)]], 0.78),  // H
+            ([[(0, 1), (0, 0.3)] + arc(0.25, 0.3, 0.25, 0.3, from: 180, to: 360) + [(0.5, 1)]], 0.78),  // U
+            ([[(0, 0), (0, 1)],
+              [(0, 1), (0.26, 1)] + arc(0.26, 0.76, 0.2, 0.24, from: 90, to: -90) + [(0, 0.52)],
+              [(0, 0.52), (0.3, 0.52)] + arc(0.3, 0.26, 0.22, 0.26, from: 90, to: -90) + [(0, 0)]], 0.74),  // B
+            ([[(0, 0), (0, 1)]], 0.3),  // I
+            ([[(0.5, 1), (0, 1), (0, 0), (0.5, 0)], [(0, 0.5), (0.4, 0.5)]], 0.6),  // E
+        ]
+        var letters: [[SIMD2<Float>]] = []
+        var x: Float = 30
+        let baseline: Float = 80
+        for (strokes, advance) in glyphs {
+            for stroke in strokes { letters.append(stroke.map { SIMD2(x + $0.0 * height, baseline - $0.1 * height) }) }
+            x += advance * height
+        }
+        let pen = 0.1 * height
+        var cover = [Float](repeating: 0, count: w * h)
+        for y in 0..<h {
+            for px in 0..<w {
+                let p = SIMD2(Float(px), Float(y))
+                var d = Float.infinity
+                for l in letters { for k in l.indices.dropFirst() { d = min(d, Self.distance(p, l[k - 1], l[k])) } }
+                cover[y * w + px] = min(max(pen / 2 + 0.5 - d, 0), 1)
+            }
+        }
+        // A pixel's blur, twice [¼ ½ ¼] each way.
+        for _ in 0..<2 {
+            for horizontal in [true, false] {
+                var next = cover
+                for y in 1..<(h - 1) {
+                    for px in 1..<(w - 1) {
+                        let i = y * w + px, step = horizontal ? 1 : w
+                        next[i] = 0.25 * cover[i - step] + 0.5 * cover[i] + 0.25 * cover[i + step]
+                    }
+                }
+                cover = next
+            }
+        }
+        let ground = SIMD3<Float>(52, 8, 6), ink = SIMD3<Float>(200, 190, 196)
+        var rng = SplitMix64(seed: 5)
+        var bytes = [UInt8](repeating: 255, count: w * h * 4)
+        for i in 0..<(w * h) {
+            let c = ground + (ink - ground) * cover[i] + SIMD3(repeating: (rng.nextFloat() - 0.5) * 2.4)
+            for k in 0..<3 { bytes[i * 4 + k] = UInt8(min(max(c[k].rounded(), 0), 255)) }
+        }
+        let box: [SIMD2<Float>] = [SIMD2(30, baseline - height), SIMD2(x - 0.3 * height, baseline - height),
+                                   SIMD2(x - 0.3 * height, baseline), SIMD2(30, baseline)]
+        return Button(
+            image: RGBAImage(width: w, height: h, pixels: bytes), letters: letters,
+            area: box.map { SIMD2($0.x / Float(w), $0.y / Float(h)) })
+    }
+
+    /// The pieces and the holes (background enclosed by the lines) of `lines` drawn 2 px wide on a
+    /// grid `scale` times finer.
+    static func shape(of lines: [DrawnLine], scale: Int) -> (pieces: Int, holes: Int) {
+        let points = lines.flatMap(\.points)
+        guard let first = points.first else { return (0, 0) }
+        let low = points.reduce(first, pointwiseMin) - SIMD2(repeating: 6), high = points.reduce(first, pointwiseMax) + SIMD2(repeating: 6)
+        let w = Int((high.x - low.x) * Float(scale)), h = Int((high.y - low.y) * Float(scale))
+        var ink = [Bool](repeating: false, count: w * h)
+        for line in lines {
+            for k in line.points.indices.dropFirst() {
+                let a = (line.points[k - 1] - low) * Float(scale), b = (line.points[k] - low) * Float(scale)
+                let steps = max(Int(simdLength(b - a)) * 2, 1)
+                for s in 0...steps {
+                    let p = a + (b - a) * (Float(s) / Float(steps))
+                    for dy in -scale...scale {
+                        for dx in -scale...scale {
+                            let x = Int(p.x) + dx, y = Int(p.y) + dy
+                            if x >= 0 && y >= 0 && x < w && y < h { ink[y * w + x] = true }
+                        }
+                    }
+                }
+            }
+        }
+        let pieces = Writing.Patch.components(ink, width: w, height: h).count
+        let holes = Writing.Patch.components(ink.map { !$0 }, width: w, height: h).count { c in
+            !c.contains { $0 % w == 0 || $0 % w == w - 1 || $0 / w == 0 || $0 / w == h - 1 } && c.count > 4 * scale * scale
+        }
+        return (pieces, holes)
+    }
+
+    @Test func smallHeavyLightTextKeepsItsLettersApartAndItsCountersClosed() throws {
+        let button = Self.button()
+        var image = button.image
+        let found = try Writing.find(in: &image, areas: [button.area], minRadius: 3, cancel: .none)
+        #expect(found.report.map(\.verdict) == ["kept"])
+        // Measured in canvas pixels, whatever the window: the pen is 2.6 px wide.
+        #expect(found.report[0].pen > 2 && found.report[0].pen < 5, "pen \(found.report[0].pen)")
+        // Every letter is drawn, and nothing but the letters.
+        #expect(Self.covered(button.letters, by: found.lines, within: 2) >= 0.95)
+        let truth = button.letters.map {
+            DrawnLine(points: $0, strength: [], layer: [], closed: false, free: (false, false), links: [], eye: false)
+        }
+        #expect(Self.covered(found.lines.map(\.points), by: truth, within: 2) >= 0.95)
+        // Five letters stay five pieces, none grown into its neighbour, and the B's two counters
+        // stay loops.
+        let shape = Self.shape(of: found.lines, scale: 4)
+        #expect(shape.pieces == 5 && shape.holes == 2, "\(shape)")
+    }
+
+    @Test func textLowerThanAWindowIsTracedFinerAndTallTextAtTheCanvas() throws {
+        func frame(_ height: Float, length: Float = 0.5, canvas: Int = 1000) throws -> Writing.Frame {
+            let top: Float = 0.1, bottom = top + height / Float(canvas), right = 0.1 + length
+            return try #require(Writing.Frame(
+                [SIMD2(0.1, top), SIMD2(right, top), SIMD2(right, bottom), SIMD2(0.1, bottom)], width: canvas, height: canvas))
+        }
+        #expect(try Writing.scale(of: frame(26)) == 3 && Writing.scale(of: frame(12)) == Writing.maximumScale)
+        #expect(try Writing.scale(of: frame(47)) == 2 && Writing.scale(of: frame(48)) == 1 && Writing.scale(of: frame(200)) == 1)
+        // A very long line of small text is traced less fine, to bound the window.
+        #expect(try Writing.scale(of: frame(12, length: 0.8, canvas: 4000)) == 2)
+    }
+
     @Test func tooSmallOrNoInkIsNoWriting() throws {
         var note = Self.note()
         // A box over blank paper: no ink.

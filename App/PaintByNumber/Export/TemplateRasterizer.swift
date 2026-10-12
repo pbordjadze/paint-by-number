@@ -126,7 +126,7 @@ nonisolated enum TemplateRasterizer {
         } else {
             drawVectorFills(t, painted: flags, style: style, in: ctx, scale: scale)
             if let lines = DrawableLineArt(t) {
-                if style.drawsDrawing { drawBookOutlines(t, lines: lines, style: style, in: ctx, scale: scale) }
+                if style.drawsDrawing { drawBookOutlines(t, lines: lines, painted: flags, style: style, in: ctx, scale: scale) }
             } else if style.outlineWidth > 0 {
                 drawVectorOutlines(t, painted: flags, style: style, in: ctx, scale: scale)
             }
@@ -221,9 +221,13 @@ nonisolated enum TemplateRasterizer {
     /// A coloring book's lines (`ColoringBookLook`): the drawing (every drawn layer, edges and
     /// strokes alike) in full ink, `widthFactor` times the style's line (a style without lines
     /// still gets it at the finished picture's width: the drawing is part of the picture), never
-    /// hidden by paint. On paper (`.print`), where no highlight shows a color's cells, the color
-    /// edges go underneath first, as dotted guides.
-    private static func drawBookOutlines(_ t: Template, lines: DrawableLineArt, style: Style, in ctx: CGContext, scale: CGFloat) {
+    /// hidden by paint, except writing over a painted paint too dark for the ink
+    /// (`DrawableLineArt.lightWriting`), which is in the style's paper tone, as on the canvas. On
+    /// paper (`.print`), where no highlight shows a color's cells and nothing is painted, the
+    /// color edges go underneath first, as dotted guides.
+    private static func drawBookOutlines(
+        _ t: Template, lines: DrawableLineArt, painted: [Bool], style: Style, in ctx: CGContext, scale: CGFloat
+    ) {
         let visible = ctx.boundingBoxOfClipPath
         let units = 1 / max(scale, 0.0001)
         let weight = (style.lineWeight ?? .stored()).factor
@@ -249,17 +253,23 @@ nonisolated enum TemplateRasterizer {
                 ctx.setLineDash(phase: 0, lengths: [])
             }
         }
-        let drawing = CGMutablePath()
+        let drawing = CGMutablePath(), light = CGMutablePath()
         for (e, edge) in t.edges.enumerated() where edge.right != BoundaryEdge.outside && DrawableLineArt.isDrawn(lines.edgeLayers[e]) {
             addPolyline(t.points(of: edge), to: drawing, within: visible)
         }
-        for stroke in lines.strokes where DrawableLineArt.isDrawn(stroke.layer) {
-            addPolyline(lines.points(of: stroke), to: drawing, within: visible)
+        for (k, stroke) in lines.strokes.enumerated() where DrawableLineArt.isDrawn(stroke.layer) {
+            let onPaint = style.lines == .screen && lines.lightWriting[k] && painted[Int(stroke.region)]
+            addPolyline(lines.points(of: stroke), to: onPaint ? light : drawing, within: visible)
         }
         ctx.setStrokeColor(cgColor(ColoringBookLook.ink, space: t.colorSpace))
         ctx.setLineWidth(base * CGFloat(ColoringBookLook.widthFactor * weight) * units)
         ctx.addPath(drawing)
         ctx.strokePath()
+        if !light.isEmpty {
+            ctx.setStrokeColor(cgColor(SIMD4(style.paper, 1), space: t.colorSpace))
+            ctx.addPath(light)
+            ctx.strokePath()
+        }
         ctx.restoreGState()
     }
 

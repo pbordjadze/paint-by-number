@@ -28,11 +28,14 @@ extension Template {
         /// the edges', unknown layers, interior strokes with a bad span, a point outside the
         /// canvas, or a point away from the stroke's region. Nil for classic templates.
         public var badLines: [String]?
+        /// Validation stopped before expanding spans or testing pairs beyond its linear
+        /// work budget. This is a failure even when no bad edge was found yet.
+        public var workLimitReason: String?
 
         public var isValid: Bool {
             invalidEdges.isEmpty && badRingRegions.isEmpty && badMeshRegions.isEmpty && badLabelRegions.isEmpty
                 && crampedLabelRegions.isEmpty && canvasAreaError <= 1e-3 * Double(max(1, canvasArea))
-                && (badLines ?? []).isEmpty
+                && (badLines ?? []).isEmpty && workLimitReason == nil
         }
         var canvasArea: Int = 0
 
@@ -41,11 +44,13 @@ extension Template {
                 + "labels \(badLabelRegions.count) canvasAreaError \(canvasAreaError) cramped \(crampedLabelRegions.count)"
             if minLabelRoom.isFinite { text += " minLabelRoom " + String(format: "%.3f", Double(minLabelRoom)) }
             if let badLines { text += " lines \(badLines.count)" + (badLines.isEmpty ? "" : " (\(badLines.prefix(3).joined(separator: "; ")))") }
+            if let workLimitReason { text += " validation work limit exceeded: \(workLimitReason)" }
             return text
         }
     }
 
-    /// Checks the template's invariants.
+    /// Checks the template's invariants. Excessive bucket expansion, candidate pairs or
+    /// repeated spans fail with `ValidationReport.workLimitReason` before superlinear work.
     /// - Parameter minLabelRadius: When set, also requires every label to keep this free
     ///   radius from its region's outline (scaled per number by `LabelSizing.roomFactor`) and
     ///   its stored radius to be honest; a detail area's (`detailRegions`) need keep only that
@@ -55,14 +60,29 @@ extension Template {
     public func validate(minLabelRadius: Float? = nil) -> ValidationReport {
         var report = ValidationReport()
         report.canvasArea = width * height
+        var work = ValidationWorkBudget(counts: [
+            regions.count, points.count, edges.count, ringEdges.count, rings.count,
+            labels.count, mesh.vertices.count, mesh.indices.count,
+            lineArt?.strokePoints.count ?? 0, lineArt?.strokes.count ?? 0,
+        ])
+        func exceeded(_ stage: String) -> ValidationReport {
+            var stopped = report
+            stopped.workLimitReason = "\(stage) (limit \(work.limit))"
+            return stopped
+        }
         var badEdges = Set<Int>()
         for (i, e) in edges.enumerated() {
             let sidesOK = e.left != e.right && Int(e.left) < regions.count
                 && (e.right == BoundaryEdge.outside || Int(e.right) < regions.count)
             if !sidesOK || e.pointCount < 2 || Int(e.pointStart) + Int(e.pointCount) > points.count { badEdges.insert(i) }
         }
-        if badEdges.isEmpty { badEdges.formUnion(GeometryValidator.invalidEdges(points: points, edges: edges)) }
-        report.invalidEdges = badEdges.sorted()
+        if badEdges.isEmpty {
+            let geometry = GeometryValidator.check(points: points, edges: edges)
+            report.workLimitReason = geometry.workLimitReason
+            badEdges.formUnion(geometry.invalidEdges)
+        }
+        report.invalidEdges = edges.indices.filter { badEdges.contains($0) }
+        guard report.workLimitReason == nil else { return report }
         guard report.invalidEdges.isEmpty else { return report }
 
         var totalArea = 0.0
@@ -70,13 +90,18 @@ extension Template {
             let region = regions[r]
             var ringsOK = region.ringCount >= 1
             var polygons: [[SIMD2<Float>]] = []
+            var polygonPoints = 0
             for k in 0..<Int(region.ringCount) {
+                guard work.consume(1) else { return exceeded("region ring spans") }
                 let ring = rings[Int(region.ringStart) + k]
                 if ring.edgeCount == 0 || (k == 0) == ring.isHole { ringsOK = false; continue }
                 for q in 0..<Int(ring.edgeCount) {
                     let ref = ringEdges[Int(ring.edgeStart) + q]
                     let next = ringEdges[Int(ring.edgeStart) + (q + 1) % Int(ring.edgeCount)]
                     let e = edges[Int(ref.edge)], n = edges[Int(next.edge)]
+                    // Charge before polygon(of:) expands references, including repeated edges.
+                    guard work.consume(Int(e.pointCount)) else { return exceeded("ring point spans") }
+                    polygonPoints += Int(e.pointCount) - 1
                     if (ref.reversed ? e.right : e.left) != UInt32(r) { ringsOK = false }
                     let end = ref.reversed ? points[Int(e.pointStart)] : points[Int(e.pointStart) + Int(e.pointCount) - 1]
                     let start = next.reversed ? points[Int(n.pointStart) + Int(n.pointCount) - 1] : points[Int(n.pointStart)]
@@ -94,6 +119,7 @@ extension Template {
             var meshArea = 0.0
             var meshOK = region.indexCount % 3 == 0
             let lo = Int(region.indexStart), hi = Int(region.indexStart) + Int(region.indexCount)
+            guard work.consume(Int(region.indexCount)) else { return exceeded("region mesh spans") }
             var used = Set<SIMD2<Float>>()
             for t in stride(from: lo, to: hi, by: 3) where meshOK {
                 let a = mesh.vertices[Int(mesh.indices[t])], b = mesh.vertices[Int(mesh.indices[t + 1])]
@@ -115,6 +141,10 @@ extension Template {
             let digits = LabelSizing.digitCount(colorIndex: region.colorIndex)
             let detail = LabelSizing.detailMinimumRadius / LabelSizing.minimumRadius
             let floor = isDetailRegion(r) ? detail : 1
+            // Each label scans all polygon points, twice when measuring outline distance.
+            guard work.consume(max(1, polygonPoints), times: Int(region.labelCount)),
+                  minLabelRadius == nil || work.consume(polygonPoints, times: Int(region.labelCount))
+            else { return exceeded("label polygon checks") }
             for label in labels(ofRegion: r) {
                 var inside = false
                 for poly in polygons where Template.contains(poly, label.position) { inside.toggle() }
@@ -131,7 +161,13 @@ extension Template {
             if !roomOK { report.crampedLabelRegions.append(r) }
         }
         report.canvasAreaError = abs(totalArea - Double(width * height))
-        if let lineArt { report.badLines = validateLines(lineArt) }
+        if let lineArt {
+            // The decoder permits many strokes to reuse the same point span.
+            for stroke in lineArt.strokes {
+                guard work.consume(Int(stroke.pointCount)) else { return exceeded("line stroke spans") }
+            }
+            report.badLines = validateLines(lineArt)
+        }
         return report
     }
 
@@ -144,6 +180,14 @@ extension Template {
             problems.append("\(lines.edgeLayers.count) layers and \(lines.edgeWeights.count) weights for \(edges.count) edges")
         }
         if let bad = lines.edgeLayers.firstIndex(where: { $0 >= layers }) { problems.append("edge \(bad) layer") }
+        var previousWriting = -1
+        for s in lines.writingStrokes {
+            guard Int(s) > previousWriting, Int(s) < lines.strokes.count else {
+                problems.append("writing strokes")
+                break
+            }
+            previousWriting = Int(s)
+        }
         let w = Float(width), h = Float(height)
         for (k, stroke) in lines.strokes.enumerated() {
             let start = Int(stroke.pointStart), count = Int(stroke.pointCount)
@@ -207,5 +251,30 @@ extension Template {
             j = i
         }
         return inside
+    }
+}
+
+/// Bounds amplification per stored element, independently of canvas size. A large empty
+/// raster must not buy quadratic geometry or label work. 128 leaves room for ordinary
+/// shared boundaries, labels and bucket occupancy while bounding each expanded pass.
+/// A 4096-operation starting allowance covers the canvas border at the generator's maximum
+/// working size even when a flat image stores only a handful of boundary points.
+struct ValidationWorkBudget {
+    let limit: Int
+    private var remaining: Int
+
+    init(counts: [Int]) {
+        let cap = Int.max / 128
+        var size = 32
+        for count in counts { size += min(count, cap - size) }
+        limit = size * 128
+        remaining = limit
+    }
+
+    mutating func consume(_ count: Int, times: Int = 1) -> Bool {
+        guard count >= 0, times >= 0 else { return false }
+        guard times == 0 || count <= remaining / times else { return false }
+        remaining -= count * times
+        return true
     }
 }

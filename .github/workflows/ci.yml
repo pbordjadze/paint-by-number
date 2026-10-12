@@ -83,6 +83,8 @@ jobs:
           set -o pipefail
           mkdir -p out
           python3 tools/strings_check.py --self-test
+          python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'
+          python3 tools/marginarium.py check
           python3 tools/strings_check.py | tee out/strings-check.log
       - uses: actions/upload-artifact@v5
         if: always()
@@ -102,12 +104,12 @@ jobs:
         with: { fetch-depth: 2 }
       - name: Plan
         # The entry's device and share of the work. ONLY and SKIP list the tests it runs or leaves
-        # out (`-only-testing`, `-skip-testing`; neither: all). The Settings UI tests run beside
-        # the unit tests, so that `ipad` and `ipad-ui` take about as long.
+        # out (`-only-testing`, `-skip-testing`; neither: all). The Settings and play mailbox UI
+        # tests run beside the unit tests, so that `ipad` and `ipad-ui` take about as long.
         run: |
           case "${{ matrix.job }}" in
-            ipad)    plan=(DEVICE=ipad SHOTS=1 RELEASE=1 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests" SKIP=) ;;
-            ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests SKIP=PaintByNumberUITests/SettingsTests) ;;
+            ipad)    plan=(DEVICE=ipad SHOTS=1 RELEASE=1 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests" SKIP=) ;;
+            ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests "SKIP=PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests") ;;
             iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 ONLY= SKIP=) ;;
           esac
           printf '%s\n' "${plan[@]}" >> "$GITHUB_ENV"
@@ -203,6 +205,11 @@ jobs:
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/release -quiet \
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/release-build.log | tail -60
           ci/check_release.sh build/release/Build/Products/Release-iphonesimulator/PaintByNumber.app 2>&1 | tee out/release-check.log
+      - name: Nickname v2 platform contract (macOS)
+        if: ${{ !cancelled() && matrix.job == 'ipad' }}
+        run: |
+          set -o pipefail
+          swift test --filter ColorNicknameV2Tests 2>&1 | tee out/nickname-v2-test.log | tail -60
       - name: Pipeline benchmark (Apple silicon)
         id: bench
         if: ${{ !cancelled() && env.RELEASE == '1' }}

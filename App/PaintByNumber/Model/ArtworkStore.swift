@@ -1,3 +1,4 @@
+import Compression
 import CoreGraphics
 import Foundation
 import PaintCore
@@ -36,6 +37,9 @@ nonisolated struct ArtworkStore: Sendable {
 
     static let sourceMaxPixelSize = 2048
     static let thumbnailMaxPixelSize = 1024
+    /// Far above templates made at the app's working resolution; bounds decompression of
+    /// damaged files before the template decoder can check their contents.
+    static let maximumTemplateBytes = 256 * 1024 * 1024
 
     let root: URL
     /// Failures to inject into in-place writes; only tests set it.
@@ -105,15 +109,32 @@ nonisolated struct ArtworkStore: Sendable {
 
     // MARK: Template
 
-    func readTemplate(_ id: UUID) throws -> Template {
+    func readTemplate(_ id: UUID, maximumBytes: Int = Self.maximumTemplateBytes) throws -> Template {
         let compressed = try Data(contentsOf: url(.template, of: id), options: .mappedIfSafe)
-        let raw: Data
-        do {
-            raw = try (compressed as NSData).decompressed(using: .lzfse) as Data
-        } catch {
+        guard !compressed.isEmpty, maximumBytes > 0, maximumBytes <= Self.maximumTemplateBytes else {
             throw StoreError.unreadable("template decompression")
         }
-        return try Template(encoded: raw)
+        // One extra byte distinguishes a file exactly at the limit from an oversized one.
+        var capacity = min(64 * 1024, maximumBytes + 1)
+        while true {
+            var raw = Data(count: capacity)
+            let count = raw.withUnsafeMutableBytes { destination in
+                compressed.withUnsafeBytes { source in
+                    compression_decode_buffer(
+                        destination.bindMemory(to: UInt8.self).baseAddress!, capacity,
+                        source.bindMemory(to: UInt8.self).baseAddress!, compressed.count,
+                        nil, COMPRESSION_LZFSE)
+                }
+            }
+            guard count > 0, count <= maximumBytes else {
+                throw StoreError.unreadable("template decompression")
+            }
+            if count < capacity {
+                raw.count = count
+                return try Template(encoded: raw)
+            }
+            capacity = min(capacity * 2, maximumBytes + 1)
+        }
     }
 
     private func writeTemplate(_ template: Template, in dir: URL) throws {

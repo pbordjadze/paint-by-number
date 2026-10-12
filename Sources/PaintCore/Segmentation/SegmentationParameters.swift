@@ -25,6 +25,15 @@ struct SegmentationParameters: Sendable {
     /// (`flattenForColoringBook`): fewer cells on the ten pictures the book's defaults were
     /// measured on (`docs/coloring-book.md`, Defaults); the Pipeline factors multiply that.
     static let coloringBookFlattening: Float = 1.5
+    /// The palette size past which `BandMerging` fuses less. Its tolerances are fixed OKLab
+    /// spreads (two or more just-noticeable differences), while a larger palette's paints sit
+    /// closer (`GenerationSettings.minPaletteDistance`: 0.031 at 40 paints, one just-noticeable
+    /// difference from 96), so each further paint was fused back into its neighbours' bands and
+    /// extra Colors only recolored the same cells. Past the knee the tolerances shrink as
+    /// knee / colors, so the extra paints stay areas of their own. 40 is the most paints
+    /// Relaxed suggests (`PaintingLength.colorBand`): its suggestions and every setting up to
+    /// 40 colors are unchanged; Detailed's (up to 72) are not.
+    static let bandFusionKnee: Float = 40
 
     var colorCount: Int
     var seed: UInt64
@@ -192,9 +201,10 @@ struct SegmentationParameters: Sendable {
         // modelling is worth its regions and its colour error is the one people see. Bold
         // templates fuse more gradation than fine ones, so the detail slider keeps its
         // meaning. Bokeh rings are a few percent of the frame wide, a sky band far more.
-        bandNearTolerance = 0.045 * lerp(1.3, 0.8, d)
+        let fineShades = min(1, Self.bandFusionKnee / Float(s.colorCount))
+        bandNearTolerance = 0.045 * lerp(1.3, 0.8, d) * fineShades
         bandNearImportantTolerance = 0.5 * bandNearTolerance
-        bandTolerance = 0.1 * lerp(1.4, 0.7, d)
+        bandTolerance = 0.1 * lerp(1.4, 0.7, d) * fineShades
         bandWidth = side * 0.02
         bandContrast = 0.25
         boundaryRadius = sm > 0.66 ? 3 : 2

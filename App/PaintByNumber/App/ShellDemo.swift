@@ -1,5 +1,7 @@
 #if DEBUG
+import CoreGraphics
 import Foundation
+import PaintCore
 
 /// Demo scenarios owned by the app shell (see `DemoMode`). Each uses a throwaway library
 /// seeded deterministically from the library's pictures (`pictures`): the ones a viewer judges
@@ -15,6 +17,9 @@ import Foundation
 /// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
 ///   with every localized string twice as long.
 /// - `gallery-empty`: the empty state.
+/// - `gallery-draft`, `gallery-draft-long-text`: three paintings below the create flow's draft
+///   (The Great Wave, refined as in `create-refine`), with its photo, "Continue Refining" and
+///   Discard; the second with every localized string twice as long.
 /// - `create`: the photo picker step of the create flow.
 /// - `create-samples`, `create-samples-long-text`: the same step on its Samples pane (iPhone;
 ///   iPad shows both); the second with every localized string twice as long.
@@ -24,8 +29,8 @@ import Foundation
 /// - `create-line-art`: `create-preview` with Settings › Preview on Line Art: the drawing alone
 ///   beside the photo.
 /// - `create-refine`, `create-refine-dark`: The Great Wave's Refine screen, refined as a painter
-///   might (`refinements`): the big cloud's edge drawn in, the spray off the wave's crest rubbed
-///   out.
+///   might (`refinements(canvas:)`, edits made to the template by hand): the big cloud's edge drawn
+///   in, exactly as drawn, the spray off the wave's crest rubbed out.
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
@@ -36,7 +41,9 @@ import Foundation
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
-/// - `marginarium`: The Marginarium's sheet over the empty gallery, Pip idling.
+/// - `marginarium`: The Marginarium's sheet over the empty gallery, Pip and Colophon idling.
+/// - `marginarium-chapter`, `marginarium-chapter-dark`, `marginarium-chapter-long-text`: the
+///   reader opened to Two More Pets, with Pip and Colophon inside the chapter.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -46,10 +53,10 @@ import Foundation
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
-    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
-         galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryDraft,
+         galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
-         settings, settingsLongText, settingsAcknowledgements, marginarium
+         settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -59,6 +66,7 @@ enum ShellDemo: Equatable {
         case "gallery-no-favorites-long-text": .galleryNoFavorites
         case "gallery-long-text": .galleryLongText
         case "gallery-empty": .galleryEmpty
+        case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
         case "gallery-damaged": .galleryDamaged
         case "gallery-timelapse": .galleryTimelapse
@@ -77,6 +85,7 @@ enum ShellDemo: Equatable {
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
         case "marginarium": .marginarium
+        case "marginarium-chapter", "marginarium-chapter-dark", "marginarium-chapter-long-text": .marginariumChapter
         default: nil
         }
     }()
@@ -140,7 +149,7 @@ enum ShellDemo: Equatable {
         self == .settings || self == .settingsLongText || self == .settingsAcknowledgements
     }
 
-    var opensMarginarium: Bool { self == .marginarium }
+    var opensMarginarium: Bool { self == .marginarium || self == .marginariumChapter }
 
     var previewSample: Sample? {
         switch self {
@@ -158,22 +167,30 @@ enum ShellDemo: Equatable {
     /// Settings › Preview for the scenario's create flow; nil keeps the stored one.
     var previewStyle: PreviewStyle? { self == .createLineArt ? .lineArt : nil }
 
-    /// The create flow refines its painting (`refinements`) once the suggestion is ready, and
-    /// shows the Refine screen.
+    /// The create flow refines its painting (`refinements(canvas:)`) once the suggestion is ready,
+    /// and shows the Refine screen.
     var refines: Bool { self == .createRefine }
 
-    /// What `create-refine` draws and erases on The Great Wave (the first fixed picture).
-    static let refinements: TemplateRefinements = {
+    /// What `create-refine` draws and erases on The Great Wave (the first fixed picture), for the
+    /// canvas of `template`.
+    static func refinements(for template: Template) -> TemplateRefinements {
+        refinements(canvas: CGSize(width: template.width, height: template.height))
+    }
+
+    /// The same for a canvas of `size`, in canvas units: laid on the template by hand, as Refine
+    /// does.
+    static func refinements(canvas size: CGSize) -> TemplateRefinements {
+        func at(_ x: Float, _ y: Float) -> SIMD2<Float> { SIMD2(x * Float(size.width), y * Float(size.height)) }
         var refinements = TemplateRefinements()
-        refinements.lines = [
-            .init(kind: .draw, radius: 0, points: [
-                SIMD2(0.53, 0.22), SIMD2(0.56, 0.15), SIMD2(0.62, 0.10), SIMD2(0.70, 0.09), SIMD2(0.77, 0.12),
-                SIMD2(0.82, 0.18), SIMD2(0.90, 0.22), SIMD2(1.02, 0.25),
+        refinements.edits = [
+            .draw(points: [
+                at(0.53, 0.22), at(0.56, 0.15), at(0.62, 0.10), at(0.70, 0.09), at(0.77, 0.12), at(0.82, 0.18), at(0.90, 0.22),
+                at(1.02, 0.25),
             ]),
-            .init(kind: .erase, radius: 0.02, points: [SIMD2(0.55, 0.40), SIMD2(0.58, 0.44), SIMD2(0.60, 0.48)]),
+            .erase(path: [at(0.55, 0.40), at(0.58, 0.44), at(0.60, 0.48)], radius: 0.02 * Float(max(size.width, size.height))),
         ]
         return refinements
-    }()
+    }
 
     /// How long `create` and the `create-samples` scenarios give the library picker (and the
     /// sample tiles) to load before they signal readiness: the picker runs out of process and
@@ -198,8 +215,16 @@ enum ShellDemo: Equatable {
                 if let id = library.finished.last?.id { library.delete(id) }
                 DemoMode.markReady()
             })
+        case .galleryDraft:
+            library.seed(Array(galleryItems.prefix(3))) { _ in
+                Task {
+                    await seedDraft(in: library)
+                    DemoMode.markReady()
+                }
+            }
         case .galleryOpen:
-            library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)])
+            let painted = ProcessInfo.processInfo.arguments.contains("-playHarness") ? 0.0 : 0.42
+            library.seed([Library.SeedItem(sample: pictures[0], painted: painted, photoMaxPixelSize: 560)])
         case .galleryDamaged:
             library.seed([Library.SeedItem(sample: pictures[0], painted: 0.42, photoMaxPixelSize: 560)]) { _ in
                 // Synchronous on purpose: this runs in the same main-actor job that empties
@@ -212,9 +237,26 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings,
-             .settingsLongText, .settingsAcknowledgements, .marginarium:
+             .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter:
             break
         }
+    }
+
+    /// The create flow's draft: the first picture refined as `create-refine` does it, kept the way
+    /// the flow keeps one.
+    private func seedDraft(in library: Library) async {
+        guard let sample = pictures.first, let url = sample.url,
+              let photo = await Background.run({ try? PhotoLoader.load(url: url, maxPixelSize: 560) }),
+              let image = PhotoLoader.cgImage(from: photo) else { return }
+        // The canvas the draft's settings make of its photo, which is what resuming lays the edits on.
+        let settings = GenerationSettings()
+        let canvas = settings.workingSize(sourceWidth: photo.width, sourceHeight: photo.height)
+        library.drafts.keep(
+            CreateDraft(
+                photoID: UUID(), title: "", defaultTitle: sample.title, settings: settings, lines: 0.5,
+                sampleName: sample.id, refinements: Self.refinements(canvas: CGSize(width: canvas.width, height: canvas.height))),
+            photo: image)
+        await library.drafts.flush()
     }
 
     /// The first six pictures painted to various stages: four in progress, two finished
@@ -230,6 +272,6 @@ enum ShellDemo: Equatable {
 
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded).
-    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings || opensMarginarium }
+    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings || self == .marginarium }
 }
 #endif

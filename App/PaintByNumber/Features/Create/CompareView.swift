@@ -385,7 +385,7 @@ struct LineArtLayer: View, Equatable {
             lines.clip(to: Path(picture))
             lines.translateBy(x: origin.x, y: origin.y)
             lines.scaleBy(x: s, y: s)
-            let path = drawing.path(within: inView)
+            let (path, light) = drawing.paths(within: inView, overPaint: overPaint)
             if overPhoto {
                 lines.stroke(
                     path, with: .color(.white.opacity(0.75)),
@@ -394,6 +394,12 @@ struct LineArtLayer: View, Equatable {
             lines.stroke(
                 path, with: .color(LineArtDrawing.ink.opacity(drawing.inkOpacity(scale: scale))),
                 style: StrokeStyle(lineWidth: width / s, lineCap: .round, lineJoin: .round))
+            // Writing over a dark paint, over the painting: in the paper's tone, so it reads.
+            if !light.isEmpty {
+                lines.stroke(
+                    light, with: .color(LineArtDrawing.paper),
+                    style: StrokeStyle(lineWidth: width / s, lineCap: .round, lineJoin: .round))
+            }
         }
         .allowsHitTesting(false)
     }

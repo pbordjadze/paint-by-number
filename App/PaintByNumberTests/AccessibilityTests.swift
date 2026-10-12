@@ -114,16 +114,16 @@ struct PaintSpeechTests {
             #expect(!ColorNameText.nicknamesAvailable(languageCode: code), "\(code)")
         }
         let palette = (0..<6).map { PaletteColor(oklab: SIMD3(0.2 + Float($0) * 0.12, Float($0 % 2) * 0.05, 0.03), space: .sRGB) }
-        let english = ColorNameText.nicknames(for: palette, seed: 9, languageCode: "en")
+        let english = ColorNameText.nicknames(for: palette, seed: 9, version: 1, languageCode: "en")
         #expect(english.count == palette.count && english.allSatisfy { $0 != nil })
-        #expect(english == ColorNameText.nicknames(for: palette, seed: 9, languageCode: "en-GB"))
-        #expect(ColorNameText.nicknames(for: palette, seed: 9, languageCode: "de") == Array(repeating: nil, count: palette.count))
+        #expect(english == ColorNameText.nicknames(for: palette, seed: 9, version: 1, languageCode: "en-GB"))
+        #expect(ColorNameText.nicknames(for: palette, seed: 9, version: 1, languageCode: "de") == Array(repeating: nil, count: palette.count))
     }
 
     /// A color the vocabulary can't name keeps its structured name: it has no nickname to show.
     @Test func colorsWithoutAVocabularyNameHaveNoNickname() {
         let far = PaletteColor(oklab: SIMD3(0.5, 0.6, 0.6), rgb: SIMD3(1, 0, 1))
-        #expect(ColorNameText.nicknames(for: [far], seed: 1, languageCode: "en") == [nil])
+        #expect(ColorNameText.nicknames(for: [far], seed: 1, version: 1, languageCode: "en") == [nil])
     }
 }
 

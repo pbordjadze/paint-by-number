@@ -51,6 +51,14 @@ import Foundation
 ///   (`LabelSizing.minimumFontSize`), larger than its room, spilling over its outline: legible,
 ///   untidy, and the painting otherwise the same. Their `validate(minLabelRadius:)` calls a
 ///   detail area with less than the usual room cramped.
+/// - `WRIT` (optional; written only for a template whose line art has writing, see
+///   `TemplateLineArt.writingStrokes`):
+///   ```
+///   UInt32 count                at least 1
+///   count × UInt32 stroke       strictly ascending, each below the `LINE` chunk's stroke count
+///   ```
+///   Readers without it draw the writing like the rest of the drawing, in the one ink: which
+///   vanishes on a dark paint once it is painted, and the painting is otherwise the same.
 ///
 /// **Safety.** PaintCore is compiled with `-Ounchecked`, so the decoder checks every count
 /// against the bytes left before allocating, and every span, reference and coordinate in
@@ -80,6 +88,7 @@ extension Template {
         static let generator: UInt32 = 0x524E_4547  // "GENR"
         static let lines: UInt32 = 0x454E_494C  // "LINE"
         static let detail: UInt32 = 0x4C54_4544  // "DETL"
+        static let writing: UInt32 = 0x5449_5257  // "WRIT"
         static let requiredFlag: UInt32 = 1
         /// Tag, flags and length.
         static let headerSize = 12
@@ -106,6 +115,11 @@ extension Template {
             var detail = BinaryWriter()
             detail.writeArray(detailRegions)
             chunks.append((Chunk.detail, 0, detail.data))
+        }
+        if let lineArt, !lineArt.writingStrokes.isEmpty {
+            var writing = BinaryWriter()
+            writing.writeArray(lineArt.writingStrokes)
+            chunks.append((Chunk.writing, 0, writing.data))
         }
         w.write(UInt32(chunks.count))
         for chunk in chunks {
@@ -275,6 +289,7 @@ extension Template {
     private mutating func readExtensions(_ r: inout BinaryReader) throws {
         let count = try r.readCount(elementSize: Chunk.headerSize)
         var seen = Set<UInt32>()
+        var writingStrokes: [UInt32] = []
         for _ in 0..<count {
             let tag = try r.read(UInt32.self)
             let flags = try r.read(UInt32.self)
@@ -299,9 +314,21 @@ extension Template {
                     throw CodingError.corrupt(Chunk.name(tag))
                 }
                 detailRegions = regions
+            case Chunk.writing:
+                guard seen.insert(tag).inserted else { throw CodingError.corrupt("duplicate chunk") }
+                // Indices are checked against the strokes by `validateReferences`.
+                guard let strokes: [UInt32] = try? payload.readArray(), !strokes.isEmpty else {
+                    throw CodingError.corrupt(Chunk.name(tag))
+                }
+                writingStrokes = strokes
             default:
                 if flags & Chunk.requiredFlag != 0 { throw CodingError.requiredExtension(tag) }
             }
+        }
+        if !writingStrokes.isEmpty {
+            // The strokes are the `LINE` chunk's, which may come after the writing's.
+            guard lineArt != nil else { throw CodingError.corrupt(Chunk.name(Chunk.writing)) }
+            lineArt?.writingStrokes = writingStrokes
         }
     }
 
@@ -369,6 +396,11 @@ extension Template {
                       stroke.layer < layers, Int(stroke.region) < regions.count
                 else { throw corrupt("line stroke") }
             }
+            var previousStroke = -1
+            for s in lineArt.writingStrokes {
+                guard Int(s) > previousStroke, Int(s) < lineArt.strokes.count else { throw corrupt("writing strokes") }
+                previousStroke = Int(s)
+            }
         }
     }
 }
@@ -409,6 +441,8 @@ extension TemplateLineArt {
         }
         self.strokes = strokes
         style = r.remaining >= 1 ? (Style(rawValue: try r.read(UInt8.self)) ?? .layered) : .layered
+        // The writing's strokes come in their own chunk (`WRIT`).
+        writingStrokes = []
     }
 }
 

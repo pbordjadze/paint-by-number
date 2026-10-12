@@ -172,7 +172,6 @@ struct PaletteBar: View {
         let fraction = 1 - Double(session.remainingByColor[index]) / Double(max(total, 1))
         let complete = session.isColorComplete(index)
         let selected = session.selectedColor == index
-        let name = session.colorNames[index]
         let nickname = session.nickname(of: index)
         return Button {
             // A long press that opened the details also ends in a release over the swatch.
@@ -190,13 +189,15 @@ struct PaletteBar: View {
                 .modifier(Shake(amount: CGFloat(shakes[index] ?? 0)))
         }
         .buttonStyle(.plain)
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
+        // Details take precedence over the button's selection gesture. Recognizing both
+        // simultaneously let a held swatch select its color instead of opening the popover.
+        .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
         .popover(isPresented: detailsBinding(index), arrowEdge: axis == .horizontal ? .bottom : .trailing) {
             SwatchDetails(
-                number: index + 1, nickname: nickname, name: name, hex: template.palette[index].hexCode)
+                number: index + 1, nickname: nickname, shade: session.colorTitles[index], hex: template.palette[index].hexCode)
                 .presentationCompactAdaptation(.popover)
         }
-        .accessibilityLabel(PaintSpeech.colorLabel(number: index + 1, name: name, nickname: nickname))
+        .accessibilityLabel(session.colorLabels[index])
         .accessibilityValue(PaintSpeech.colorProgress(painted: painted, total: total))
         .accessibilityHint(PaintSpeech.swatchHint(selected: selected))
         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -205,7 +206,7 @@ struct PaletteBar: View {
         .popoverTip(selected ? tip : nil, arrowEdge: axis == .horizontal ? .bottom : .trailing)
         .accessibilityIdentifier("swatch-\(index + 1)")
         .accessibilityShowsLargeContentViewer {
-            Text(ColorNameText.numbered(number: index + 1, name: name, nickname: nickname))
+            Text(session.numberedColorNames[index])
         }
     }
 
@@ -219,14 +220,14 @@ struct PaletteBar: View {
 private struct SwatchDetails: View {
     let number: Int
     let nickname: String?
-    let name: ColorName
+    let shade: String
     let hex: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             row(Text("Number"), "\(number)", id: "number")
             if let nickname { row(Text("Name"), nickname, id: "name") }
-            row(Text("Shade"), ColorNameText.title(name), id: "shade")
+            row(Text("Shade"), shade, id: "shade")
             row(Text("Hex"), hex, id: "hex")
         }
         .padding(16)
@@ -256,14 +257,12 @@ struct CurrentColorLabel: View {
 
     var body: some View {
         if let color = session.selectedColor {
-            let name = session.colorNames[color]
-            let nickname = session.nickname(of: color)
             HStack(spacing: 6) {
                 Circle()
                     .fill(PaletteBar.paint(session.template, color))
                     .frame(width: 10, height: 10)
                     .overlay(Circle().strokeBorder(Color.primary.opacity(0.25), lineWidth: 0.5))
-                Text(ColorNameText.numbered(number: color + 1, name: name, nickname: nickname))
+                Text(session.numberedColorNames[color])
                     .font(font)
                     .lineLimit(1)
                     // Translated names can run long; the caption's height is fixed.
@@ -272,7 +271,7 @@ struct CurrentColorLabel: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(String(localized: "paint.currentColor", defaultValue: "Current color",
                                        comment: "VoiceOver label of the selected color's name shown on screen"))
-            .accessibilityValue(PaintSpeech.colorLabel(number: color + 1, name: name, nickname: nickname))
+            .accessibilityValue(session.colorLabels[color])
             .accessibilityIdentifier("current-color")
             // Text to read, not a control: no touch target to size.
             .accessibilityAddTraits(.isStaticText)

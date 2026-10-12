@@ -684,6 +684,42 @@ struct PaintingSessionTests {
         #expect(other.colorNicknames != session.colorNicknames)
     }
 
+    @Test func preparedSessionKeepsProgressAndPaletteText() async throws {
+        var progress = PaintProgress(regionCount: template.regions.count)
+        for region in regions(ofColor: 0) { progress.paint(region) }
+        progress.activeSeconds = 17
+        let seed: UInt64 = 42
+        let session = try await PaintingSession.make(template: template, progress: progress, nicknameSeed: seed)
+        let synchronous = try PaintingSession(template: template, progress: progress, nicknameSeed: seed)
+        #expect(session.progress == progress)
+        #expect(session.totalByColor == synchronous.totalByColor)
+        #expect(session.remainingByColor == synchronous.remainingByColor)
+        #expect(session.completedColors == synchronous.completedColors)
+        #expect(session.selectedColor == synchronous.selectedColor)
+        #expect(session.isComplete == synchronous.isComplete)
+        #expect(session.isStarted == synchronous.isStarted)
+        #expect(session.colorNames == synchronous.colorNames)
+        #expect(session.colorNicknames == synchronous.colorNicknames)
+        for color in template.palette.indices {
+            let name = template.palette[color].colorName
+            let nickname = session.nickname(of: color)
+            #expect(session.colorTitles[color] == ColorNameText.title(name))
+            #expect(session.numberedColorNames[color] == ColorNameText.numbered(number: color + 1, name: name, nickname: nickname))
+            #expect(session.colorLabels[color] == PaintSpeech.colorLabel(number: color + 1, name: name, nickname: nickname))
+        }
+        let fresh = await PaintingSession.make(template: template, nicknameSeed: seed)
+        #expect(fresh.progress == PaintProgress(regionCount: template.regions.count))
+        #expect(fresh.colorLabels == session.colorLabels)
+    }
+
+    @Test func preparedSessionRejectsMismatchedProgress() async throws {
+        let wrong = PaintProgress(regionCount: template.regions.count + 1)
+        await #expect(throws: PaintingSession.ProgressMismatch(
+            templateRegions: template.regions.count, progressRegions: wrong.regionCount)) {
+                try await PaintingSession.make(template: template, progress: wrong)
+            }
+    }
+
     @Test func colorsGoByTheirNicknames() {
         let session = PaintingSession(template: template, nicknameSeed: 7)
         #expect((0..<session.paletteCount).allSatisfy { session.nickname(of: $0) == session.colorNicknames[$0] })

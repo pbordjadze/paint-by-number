@@ -178,8 +178,21 @@ final class PaintingNavigationTests: XCTestCase {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")
         let app = openSeededPainting()
         let photo = app.buttons["Photo"]
+        // Close exists before the photo control's accessibility properties have been built.
+        // Read the initial state first: the first key once landed during that work and was
+        // lost; waiting for Showing afterwards cannot recover an input that never arrived.
+        guard wait(for: photo, value: "Hidden"), photo.isEnabled && photo.isHittable else {
+            attachTree(of: app, named: "photo-key-not-ready-tree")
+            XCTFail("The photo control isn't ready for its keyboard shortcut")
+            return
+        }
         app.typeKey("p", modifierFlags: [])
-        XCTAssertTrue(wait(for: photo, value: "Showing"), "p didn't show the photo")
+        guard wait(for: photo, value: "Showing") else {
+            attachScreenshot(of: app, named: "photo-key-missed")
+            attachTree(of: app, named: "photo-key-missed-tree")
+            XCTFail("p didn't show the photo")
+            return
+        }
         app.typeKey("p", modifierFlags: [])
         XCTAssertTrue(wait(for: photo, value: "Hidden"), "p didn't hide the photo")
     }

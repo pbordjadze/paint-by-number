@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import PaintCore
+import os
 
 /// Turns photos into ready-to-save artwork drafts, off the main actor.
 nonisolated enum ArtworkFactory {
@@ -46,7 +47,8 @@ nonisolated enum ArtworkFactory {
     /// The template of `photo`, generated the way the create flow does it: subject importance
     /// from Vision (when available) guides colors and detail, and line art (the coloring book by
     /// default) draws from the photo's `LineArtInputs`: the drawing, the contours, the eyes and
-    /// the subjects. Polls task cancellation.
+    /// the subjects. The painter's `refinements` come with it: the generator's inputs shape the
+    /// template, and the edits are laid on it in order (`laying`). Polls task cancellation.
     @concurrent
     static func template(
         from photo: RGBAImage, settings: GenerationSettings, refinements: TemplateRefinements = TemplateRefinements(),
@@ -66,9 +68,21 @@ nonisolated enum ArtworkFactory {
         let lineArt = try await LineArtInputs.forGeneration(of: image, settings: settings.lineArt, cached: false)
         let inputs = refinements.refining(
             importance: importance, lineArt: lineArt, aspect: Float(photo.width) / Float(max(photo.height, 1)))
-        return try TemplateGenerator(settings: settings)
+        let base = try TemplateGenerator(settings: settings)
             .generate(from: photo, importance: inputs.importance, lineArt: inputs.lineArt, cancel: .task, progress: progress)
             .template
+        return try laying(refinements.edits, on: base)
+    }
+
+    /// `base` with the painter's edits laid on it, in order, exactly as the create flow shows
+    /// them (`EditTrail`): the same base and edits give the same template. An edit that doesn't
+    /// fit the base is left out (and logged), as it is on screen.
+    static func laying(_ edits: [TemplateEditor.Edit], on base: Template) throws -> Template {
+        guard !edits.isEmpty else { return base }
+        var trail = EditTrail(base: base)
+        let replay = try trail.move(to: edits, cancel: .task)
+        if replay.left > 0 { Log.library.info("\(replay.left) of the painting's edits no longer fit it") }
+        return trail.template
     }
 
     /// The photo an artwork was made from, as the create flow loaded it: the stored

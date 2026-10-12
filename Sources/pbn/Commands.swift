@@ -119,7 +119,8 @@ func runCheck(_ options: Options) throws {
             let counts = layers.map { layer in lines.edgeLayers.filter { $0 == layer.rawValue }.count }
             let style = lines.style == .coloringBook ? "coloring book" : "layered"
             print("\(style) lines: edges " + zip(layers, counts).map { "\($0) \($1)" }.joined(separator: ", ")
-                + "; \(lines.strokes.count) interior strokes (\(lines.strokePoints.count) points)")
+                + "; \(lines.strokes.count) interior strokes (\(lines.strokePoints.count) points)"
+                + (lines.writingStrokes.isEmpty ? "" : ", \(lines.writingStrokes.count) of them writing"))
         }
         if !template.detailRegions.isEmpty {
             print("detail areas: \(template.detailRegions.count) (regions " + template.detailRegions.prefix(20).map(String.init).joined(separator: ", ")
@@ -132,16 +133,46 @@ func runCheck(_ options: Options) throws {
 
 func runNames(_ options: Options) throws {
     guard let path = options.positional.first, let data = FileManager.default.contents(atPath: path) else {
-        fail("usage: pbn names <template.pbnt> [--seed N]")
+        fail("usage: pbn names <template.pbnt> [--seed N] [--vocabulary N | --nickname-table file.tsv]")
     }
+    guard options.vocabulary == nil || options.nicknameTable == nil else {
+        fail("--vocabulary and --nickname-table are mutually exclusive")
+    }
+    let vocabulary = options.nicknameTable.map(loadNicknameTable)
+        ?? ColorNickname.Vocabulary(version: options.vocabulary ?? ColorNickname.currentVersion)
     do {
         let template = try Template(encoded: data)
-        let nicknames = ColorNickname.assign(template.palette, seed: options.settings.seed)
+        let nicknames = ColorNickname.assign(template.palette, seed: options.settings.seed, vocabulary: vocabulary)
         for (index, color) in template.palette.enumerated() {
             print(String(format: "%3d  %@  ·  %@  ·  #%@", index + 1, nicknames[index].padding(toLength: 18, withPad: " ", startingAt: 0),
                          color.colorName.english, color.hexDigits.uppercased()))
         }
     } catch { fail("cannot decode: \(error)") }
+}
+
+/// Reading and validation share the library oracle with the test suite.
+func loadNicknameTable(_ path: String) -> ColorNickname.Vocabulary {
+    let table: String
+    do { table = try String(contentsOfFile: path, encoding: .utf8) }
+    catch { fail("cannot read nickname table \(path): \(error)") }
+    let vocabulary = ColorNickname.Vocabulary(table: table)
+    guard vocabulary.formatProblems.isEmpty else { fail(vocabulary.formatProblems.joined(separator: "\n")) }
+    return vocabulary
+}
+
+func runVocabCheck(_ options: Options) {
+    guard (1...2).contains(options.positional.count), options.positional[0] == "check",
+          options.nicknameTable == nil else {
+        fail("usage: pbn vocab check [<table.tsv> | --vocabulary N]")
+    }
+    guard options.positional.count == 1 || options.vocabulary == nil else {
+        fail("a proposed table and --vocabulary are mutually exclusive")
+    }
+    let vocabulary = options.positional.count == 2 ? loadNicknameTable(options.positional[1])
+        : ColorNickname.Vocabulary(version: options.vocabulary ?? ColorNickname.currentVersion)
+    let problems = vocabulary.problems()
+    guard problems.isEmpty else { fail(problems.joined(separator: "\n")) }
+    print("valid: \(vocabulary.entries.count) entries")
 }
 
 /// Auto's decision for `image` (reduced to the draft size inside), and how long it took.

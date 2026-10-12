@@ -34,9 +34,15 @@ Forms scanned (comments and string contents are skipped by a small Swift lexer):
    specifier (`%@` for strings, `%lld` for integers, `%1$@ %2$lld` when there are several).
 3. `String(localized: "literal")` without `defaultValue`: the literal is the key, like form 1.
 
-The titles of the library's pictures are the one exception: `Sample` looks each one up at
+The titles of the library's pictures are one exception: `Sample` looks each one up at
 runtime as `sample.<id>`, so every record of `Resources/Samples/library.json` counts as a use of
 that key with the record's `title` as its English default.
+The other runtime family is Marginarium blocks: `Resources/marginarium.json` records stable
+keys (marginarium.<id>.block.<uuid>, plus the original title/subtitle/passage keys). Every
+manifest key counts as a use, with its exact Markdown text as the English default. These are
+unformatted Bundle lookups: percent signs are literal, not printf placeholders. marginarium.py
+validates source Markdown, manifest structure, images and catalog together; no blanket prefix
+exemption hides unused block keys.
 
 `Text(verbatim:)`, `Text(someString)` and other non-literal arguments are not localized by
 SwiftUI and are not scanned: build such strings with form 2 or 3 first.
@@ -48,6 +54,8 @@ import plistlib
 import re
 import sys
 from pathlib import Path
+
+import marginarium
 
 APP_SOURCES = "App/PaintByNumber"
 CATALOG = "App/PaintByNumber/Resources/Localizable.xcstrings"
@@ -390,9 +398,10 @@ class Finding:
 class Usage:
     """A key the sources look up, where, and (for explicit keys) the English default."""
 
-    def __init__(self, key, path, line, default=None, interpolations=0, comment=None):
+    def __init__(self, key, path, line, default=None, interpolations=0, comment=None, raw=False):
         self.key, self.path, self.line = key, path, line
         self.default, self.interpolations, self.comment = default, interpolations, comment
+        self.raw = raw
 
 
 def literal_of(arg_tokens):
@@ -668,8 +677,9 @@ def check_entry_value(path, key, en, default, findings):
         if unit.get("state") != "translated":
             findings.append(Finding(path, 0, f'"{key}": en state must be "translated"'))
         value = unit.get("value", "")
-        check_specifiers(path, key, "en", value, default.interpolations, findings)
-        if normalize_catalog(value) != wanted:
+        if not default.raw:
+            check_specifiers(path, key, "en", value, default.interpolations, findings)
+        if (value if default.raw else normalize_catalog(value)) != wanted:
             findings.append(Finding(path, 0, f'"{key}": English differs from the code\'s defaultValue: "{value}" vs "{shorten(default.default, 200)}"'))
         return
     plural = (variations or {}).get("plural")
@@ -748,6 +758,11 @@ def run(root):
         return [Finding(APP_SOURCES, 0, "no Swift sources found")], 0, 0
     usages, scan_findings = scan_sources(sources)
     findings += scan_findings
+    try:
+        _, blocks = marginarium.validate(root)
+        usages += [Usage(key, str(marginarium.MANIFEST), 0, default=value, raw=True) for key, value in blocks]
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        findings.append(Finding(str(marginarium.MANIFEST), 0, str(error)))
     library_path = root / LIBRARY
     if not library_path.exists():
         findings.append(Finding(LIBRARY, 0, "missing"))

@@ -87,14 +87,58 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
     ]
 }
 
+/// The five principles shown after the appendices, in their reading order.
+nonisolated enum MarginariumLamp {
+    static let lines: [String] = [
+        String(localized: "Every seat has a charter: what it believes, what it champions, what it guards against."),
+        String(localized: "Ballots are blind: no seat sees how the others voted."),
+        String(localized: "Every vote and veto is written down with its reason."),
+        String(localized: "Any seat can veto, but only by quoting its own charter."),
+        String(localized: "A person has the last word."),
+    ]
+}
+
+/// A sprite cell and its hold, shared by the two pets' playback plans.
+nonisolated struct SpriteFrame: Sendable {
+    enum Source: Equatable, Sendable {
+        case asset(String)
+        case cell(SpriteAtlas.Cell)
+    }
+
+    let source: Source
+    let hold: Duration
+
+    init(source: Source, hold: Duration) {
+        self.source = source
+        self.hold = hold
+    }
+
+    init(name: String, hold: Duration) {
+        self.init(source: .asset(name), hold: hold)
+    }
+}
+
+/// Idle loops and tap responses; the extra hold keeps Colophon's bookmark pose on screen.
+nonisolated struct SpriteAnimation: Sendable {
+    let idle: [SpriteFrame]
+    let action: [SpriteFrame]
+    let reducedMotionAction: SpriteFrame
+    var actionEndHold: Duration? = nil
+
+    func actionFrames(reduceMotion: Bool) -> [SpriteFrame] {
+        if reduceMotion { return [reducedMotionAction] }
+        if let actionEndHold, let last = action.last {
+            return action + [SpriteFrame(source: last.source, hold: actionEndHold)]
+        }
+        return action
+    }
+}
+
 /// Pip, Codex's teapot: the cells of its sprite sheet in the asset catalog (`Pip/`), each with
 /// how long it holds. Pip idles on a loop, and a tap plays its waving row once: the lid lifts
 /// and shows a blue dot.
 enum PipSprite {
-    struct Frame {
-        let name: String
-        let hold: Duration
-    }
+    typealias Frame = SpriteFrame
 
     static let idle: [Frame] = [
         Frame(name: "pip-idle-0", hold: .milliseconds(280)),
@@ -115,4 +159,32 @@ enum PipSprite {
     /// What a tap shows under Reduce Motion instead of the waving row: its lid-lifted frame,
     /// held for a moment.
     static let lidLifted = Frame(name: "pip-wave-1", hold: .milliseconds(600))
+
+    static let animation = SpriteAnimation(idle: idle, action: waving, reducedMotionAction: lidLifted)
+}
+
+/// Colophon, Claude's moth: only its idle and review cells ship (`Colophon/`). A review folds
+/// its wings like a bookmark, then holds that pose before returning to idle.
+enum ColophonSprite {
+    static let idle: [SpriteFrame] = [
+        SpriteFrame(name: "colophon-idle-0", hold: .milliseconds(280)),
+        SpriteFrame(name: "colophon-idle-1", hold: .milliseconds(110)),
+        SpriteFrame(name: "colophon-idle-2", hold: .milliseconds(110)),
+        SpriteFrame(name: "colophon-idle-3", hold: .milliseconds(140)),
+        SpriteFrame(name: "colophon-idle-4", hold: .milliseconds(140)),
+        SpriteFrame(name: "colophon-idle-5", hold: .milliseconds(320)),
+    ]
+
+    static let review: [SpriteFrame] = [
+        SpriteFrame(name: "colophon-review-0", hold: .milliseconds(150)),
+        SpriteFrame(name: "colophon-review-1", hold: .milliseconds(150)),
+        SpriteFrame(name: "colophon-review-2", hold: .milliseconds(150)),
+        SpriteFrame(name: "colophon-review-3", hold: .milliseconds(150)),
+        SpriteFrame(name: "colophon-review-4", hold: .milliseconds(150)),
+        SpriteFrame(name: "colophon-review-5", hold: .milliseconds(280)),
+    ]
+
+    static let bookmark = SpriteFrame(name: "colophon-review-5", hold: .milliseconds(800))
+    static let animation = SpriteAnimation(idle: idle, action: review,
+                                           reducedMotionAction: bookmark, actionEndHold: .milliseconds(800))
 }
