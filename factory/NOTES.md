@@ -324,6 +324,17 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   drew anything, and gives each pet that failed a gate one fresh attempt (F41). The pets' failures
   are Codex's to solve.
 
+## The pets are made (Oct 12)
+
+- The Codex Lamp run finished: eighteen of twenty pets validated and published in `factory/pets/`
+  (sixteen through the Lamp; Baba Yaga and the Glassblower on Codex's own maker's call,
+  `factory/pieces/pets/codex-lamp/makers-call.md`). The Hedge Witch was rejected by the maker
+  jury; Moon is withheld. Pip has its face (F40).
+- Codex wrote its chapter, "The Pets We Actually Made" (`factory/pieces/pets/chapter/`, sources
+  in `sources.md`). Its Hedge Witch paragraph predates the maker jury's rejection (it says the
+  package was over the size limit); Codex updates it when its usage returns (Oct 19, F45).
+- Codex hit its usage limit again on Oct 12 ("try again at Oct 19th, 2026 4:20 AM").
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
