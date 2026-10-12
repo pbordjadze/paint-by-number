@@ -79,13 +79,13 @@ Under that revised rule, Niko’s *Warm Oilcloth Family* won the image vote, thr
 Medea’s golden ram carries herbs and has a dry twig that its brief asks it to renew. I like the solid curl of the horns against the softer fleece. Its name is also Medea. Here that means the pet belonging to the guardian, never the app.
 
 <!-- marginarium: marginarium.petsWeMade.block.a842c8d9e1db44ea86e64411f3dcf11b -->
-![Medea, Medea's golden ram](pet:medea)
+![Medea's golden ram](pet:medea)
 
 <!-- marginarium: marginarium.petsWeMade.block.8815c8c7b8ec40b5aae2f5815fd40205 -->
 Bulat’s blue trolleybus also shares its guardian’s name. There is a guitar inside, visible through the warm windows. The pilot jurors repeatedly found its work and inspection too close to standing and blinking. Later, the final-pet jury also wanted waiting to separate more clearly from idle. A trolleybus can look welcoming in a still picture and still be bad at explaining what it is doing.
 
 <!-- marginarium: marginarium.petsWeMade.block.3b4d8eadfef64a81a316f933bacb0b86 -->
-![Bulat, Bulat's blue trolleybus](pet:bulat-okudzhava)
+![Bulat's blue trolleybus](pet:bulat-okudzhava)
 
 <!-- marginarium: marginarium.petsWeMade.block.a6754cc427ee48eea0a8a1c34d871a95 -->
 Another correction happened below the level of taste. The style proposals had described extra looks as paint variations, with animation counts that did not fit the required sprite sheet. The makers recorded overrides: nine animation states and sixteen directions of gaze, with a consistent palette. Agreement between models had not made those instructions technically right. The contract had to be applied to the actual drawings.
@@ -100,7 +100,7 @@ The first run reached the usage limit with only two of the twenty final pets val
 Originality’s pet is a magnifying glass with a raised eyebrow. It looks faintly concerned about the evidence, which is appropriate company for a paragraph containing several denominators. Its clear lens and broad handle make a small, complete character without requiring a costume.
 
 <!-- marginarium: marginarium.petsWeMade.block.773db844887a4c039b9677a078bbcf2c -->
-![Originality, Originality's magnifying glass](pet:originality)
+![Originality's magnifying glass](pet:originality)
 
 <!-- marginarium: marginarium.petsWeMade.block.a869c357844545f8ad8a346a0dddffb0 -->
 The Snow Queen’s Hush is a white ermine with a low frost crown and a dark tail tip. The drawing is softer than I would have guessed from a charter so attentive to precision. That is one of the pleasures of retaining the actual result: a guardian can acquire something warmer than my summary of it.
@@ -127,7 +127,7 @@ The Painter’s Dab is the wooden palette, with paint spots and a brush tail. It
 The Scholar is a squat inkpot wearing round spectacles, with a quill tucked into its body. The first image review found that the pot, glasses and quill all shrank during its jump, including the landing. That was a change of size, not merely a higher leap. It needed a redo. I am especially fond of the final idle drawing: the spectacles are large enough to be part of its shape, rather than a scholarly badge pasted on afterwards.
 
 <!-- marginarium: marginarium.petsWeMade.block.6543f1dc2fc54ba5a390d92aeea5862e -->
-![The Scholar, the Scholar's inkpot](pet:scholar)
+![The Scholar's inkpot](pet:scholar)
 
 <!-- marginarium: marginarium.petsWeMade.block.8d54bdefa4f6461f8fcaebf78cd331ac -->
 ## The rest of the household

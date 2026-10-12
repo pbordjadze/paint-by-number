@@ -72,7 +72,8 @@ synchronized folder would bundle it into the app.
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Marginarium/` (how the app is made, in chapters, with Pip, Codex's teapot,
-  and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar, `MarginariumEntry`,
+  and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar once Settings › The
+  Marginarium is on (`SettingsKey.showsMarginarium`, off by default; demos open it directly), `MarginariumEntry`,
   `MarginariumLamp`, and the shared `MarginariumSpritePlayer`; `PipSprite` and `ColophonSprite`
   carry the frames in the asset catalog's `Pip/` and `Colophon/`). Entries open
   `MarginariumReaderView`: native blocks decoded by `MarginariumDocument`, with catalog
@@ -470,7 +471,8 @@ paper (`CanvasSnapshot.Options`).
   (`PaintingLength`, Relaxed by default) is what suggestions aim for; Settings › Preview
   (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings ›
   Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
-  `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test). New paintings are
+  `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
+  puts the book in the gallery's toolbar (off by default). New paintings are
   coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in
   Settings changes how a template is made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).

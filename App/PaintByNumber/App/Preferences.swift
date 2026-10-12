@@ -21,6 +21,9 @@ enum SettingsKey {
     /// Refine offers its brushes for more or less detail and its text corrections beside the
     /// pen and the eraser (Settings › Detail Brushes; off by default).
     static let detailBrushes = "refineDetailBrushes"
+    /// The gallery's toolbar offers The Marginarium, the storybook of how the app was made
+    /// (Settings › The Marginarium; off by default).
+    static let showsMarginarium = "showsMarginarium"
 }
 
 /// The preferences that code outside views reads (the create flow, a painting's session), with

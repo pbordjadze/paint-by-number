@@ -237,6 +237,10 @@
         }
       }
     },
+    "Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with the guardians’ pets." : {
+      "comment" : "Footer under the Settings switch The Marginarium (off by default): what turning it on does",
+      "extractionState" : "manual"
+    },
     "Advance to Next Color" : {
       "comment" : "Settings toggle: after finishing a color, the next color is picked automatically",
       "extractionState" : "manual"
@@ -4154,7 +4158,7 @@
       "extractionState" : "manual"
     },
     "The Marginarium" : {
-      "comment" : "Gallery toolbar button that opens The Marginarium, and the title of that page: how the app is made, told in chapters (a name, like a book's title)",
+      "comment" : "Gallery toolbar button that opens The Marginarium, the title of that page, and the Settings switch that shows the button: how the app is made, told in chapters (a name, like a book's title)",
       "extractionState" : "manual"
     },
     "The Marginarium's pets" : {
@@ -7632,7 +7636,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Medea, Medea's golden ram"
+            "value" : "Medea's golden ram"
           }
         }
       }
@@ -7656,7 +7660,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bulat, Bulat's blue trolleybus"
+            "value" : "Bulat's blue trolleybus"
           }
         }
       }
@@ -7716,7 +7720,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Originality, Originality's magnifying glass"
+            "value" : "Originality's magnifying glass"
           }
         }
       }
@@ -7824,7 +7828,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Scholar, the Scholar's inkpot"
+            "value" : "The Scholar's inkpot"
           }
         }
       }

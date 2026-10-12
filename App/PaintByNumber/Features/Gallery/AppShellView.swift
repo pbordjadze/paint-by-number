@@ -9,6 +9,7 @@ import UniformTypeIdentifiers
 struct AppShellView: View {
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
     @Namespace private var zoom
     @State private var path: [UUID] = []
     /// The gallery's Show filter, remembered per window, and the text of its search field.
@@ -144,8 +145,10 @@ struct AppShellView: View {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
         }
-        ToolbarItem(placement: .topBarLeading) {
-            Button("The Marginarium", systemImage: "book.pages") { isShowingMarginarium = true }
+        if showsMarginarium {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("The Marginarium", systemImage: "book.pages") { isShowingMarginarium = true }
+            }
         }
         ToolbarItem(placement: .topBarTrailing) {
             Menu {

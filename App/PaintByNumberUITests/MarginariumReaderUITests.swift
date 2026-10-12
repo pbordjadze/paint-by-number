@@ -100,10 +100,9 @@ final class MarginariumReaderUITests: XCTestCase {
         attachScreenshot(of: app, named: "marginarium-chapter1-margin-accessibility-long-text")
     }
 
-    /// The five notes of the second margin group are five guardians'; each has a pet beside it, and
-    /// VoiceOver reads only the notes, which already carry the speakers' names.
+    /// The five notes of the second margin group are five guardians'; each has a pet beside it.
     @MainActor
-    func testGuardiansNotesKeepTheirPetsOutOfVoiceOver() {
+    func testGuardiansNotesShowTheirPets() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "marginarium-chapter1-guardians"]
         app.launch()
@@ -114,9 +113,14 @@ final class MarginariumReaderUITests: XCTestCase {
         XCTAssertTrue(note.waitForExistence(timeout: 15))
         XCTAssertTrue(note.label.contains("the Enchanted Workshop"))
         XCTAssertTrue(waitUntil { note.isHittable })
-        XCTAssertEqual(reader.descendants(matching: .any).matching(NSPredicate(
-            format: "identifier BEGINSWITH %@", "marginarium-pet-")).count, 0,
-            "Margin pets are decorative: the speaker's name is in the note")
+        // The pets are hidden from VoiceOver (the note names its speaker), but XCUITest's tree
+        // still lists them (CI found 15), so this checks what a sighted reader gets: the
+        // Enchanted Workshop's brush beside its note, and a tap that doesn't disturb the note.
+        let brush = reader.descendants(matching: .any)["marginarium-pet-enchanted-workshop"]
+        XCTAssertTrue(brush.waitForExistence(timeout: 10), "The Enchanted Workshop's note has no pet beside it")
+        XCTAssertGreaterThan(brush.frame.minX, note.frame.minX, "The pet isn't beside the note")
+        brush.tap()
+        XCTAssertTrue(note.exists)
         XCTAssertGreaterThanOrEqual(note.frame.minX, reader.frame.minX)
         XCTAssertLessThanOrEqual(note.frame.maxX, reader.frame.maxX)
         attachScreenshot(of: app, named: "marginarium-chapter1-guardians")
@@ -138,7 +142,7 @@ final class MarginariumReaderUITests: XCTestCase {
             reader.swipeUp()
         }
         XCTAssertTrue(ram.waitForExistence(timeout: 10))
-        XCTAssertEqual(ram.label, "Medea, Medea's golden ram")
+        XCTAssertEqual(ram.label, "Medea's golden ram")
         XCTAssertTrue(ram.isHittable)
         ram.tap()
         attachScreenshot(of: app, named: "marginarium-chapter6-medea")

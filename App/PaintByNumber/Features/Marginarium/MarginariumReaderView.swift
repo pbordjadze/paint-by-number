@@ -91,10 +91,10 @@ struct MarginariumReaderView: View {
     /// Lazy stacks estimate distant offsets. Re-resolve the ID after layout until the start of
     /// the requested section is visibly settled; a timeout must never manufacture readiness.
     /// The sheet is still arriving at first, so nothing is judged until the viewport holds still.
-    /// The viewport is the scroll view's own frame, which runs under the navigation bar; testing
-    /// against its safe-area-inset rectangle left the title and first-table scenarios never ready
-    /// on CI. A section counts as seen once it starts at least 32 pt below that frame's top (the
-    /// bar is taller).
+    /// The viewport is the scroll view's own frame, which starts below the navigation bar, and
+    /// `scrollTo(_:anchor: .top)` lands a section's top on that edge, give or take a fraction of a
+    /// point (CI logged 106 against 106, and 105.97). A section counts as seen once its top is in
+    /// the frame, within a point, with 44 pt of it (or all of a shorter one) above the bottom.
     private func scrollDemoToTarget(using proxy: ScrollViewProxy) async {
         guard let target = demoTarget else { return }
         var previousFrame: CGRect?
@@ -110,7 +110,7 @@ struct MarginariumReaderView: View {
                 previousFrame = nil
                 continue
             }
-            let visible = !frame.isEmpty && frame.minY >= viewport.minY + 32
+            let visible = !frame.isEmpty && frame.minY >= viewport.minY - 1
                 && frame.minY + min(44, frame.height) <= viewport.maxY
                 && frame.minX >= viewport.minX - 1 && frame.maxX <= viewport.maxX + 1
             if visible {
