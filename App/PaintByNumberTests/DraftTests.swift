@@ -268,7 +268,8 @@ struct DraftTests {
         model.refine(refinements())
         try await waitUntil { model.isFinal }
         let saved = try #require(model.draft)
-        let jpeg = try #require(ImageCodec.jpegData(try #require(model.source).preview, quality: 0.88))
+        let source = try #require(model.source)
+        let jpeg = try #require(ImageCodec.jpegData(source.preview, quality: 0.88))
 
         let resumed = CreateModel()
         resumed.load(draft: saved, photo: jpeg)
