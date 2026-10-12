@@ -85,6 +85,17 @@ class CollectionTests(unittest.TestCase):
         self.assertIn('<div class="pet" aria-hidden="true">M</div>', page)
         self.assertIn('id="pet-robber-girl"', page)
 
+    def test_artist_cards_use_first_names_and_explain_namesakes(self):
+        page = self.build()
+        for gid, name, namesake in (
+                ('emily-dickinson', 'Emily', 'the poet Emily Dickinson'),
+                ('pirosmani', 'Niko', 'the painter Niko Pirosmani'),
+                ('balanchine', 'George', 'the choreographer George Balanchine'),
+                ('bulat-okudzhava', 'Bulat', 'the bard Bulat Okudzhava')):
+            card = re.search(r'<article[^>]*id="' + gid + r'"(.*?)</article>', page, re.S)[1]
+            self.assertIn('<h2>' + name + '</h2>', card)
+            self.assertIn('After ' + namesake + '.', card)
+
     def test_available_atlases_replace_only_their_guardians_and_are_portable(self):
         atlases = {guardian: self.atlas(guardian, rows)
                    for guardian, rows in (("medea", 9), ("robber-girl", 11))}

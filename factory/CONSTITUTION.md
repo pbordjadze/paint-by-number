@@ -9,7 +9,6 @@ why. Be most careful with anything a guardian said; those words are theirs.
 - Its name is its own: A Lamp Left Burning changes only if the Lamp wants it to.
 - Paul can overrule anything else.
 - Everyone gets a turn: a guardian not heard lately gets a little more weight.
-- Georgia is felt, not named.
 - Nothing is copied.
 - Nobody's saved painting ever changes.
 

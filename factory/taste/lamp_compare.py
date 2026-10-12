@@ -139,17 +139,26 @@ def agreement(a, b):
 
 
 def compare_run(run):
+    from . import lamp_inputs
+    provenance = loop.load(paths.contained(run, 'provenance.json'), {})
+    initial = provenance.get('initial')
+    if initial is None and (run / 'inputs.json').exists():
+        initial = digest(loop.load(run / 'inputs.json'))
     records = []
     for source, pattern in [('pets', 'records/*/*.json'), ('replay', 'replay/records/*/*.json'),
                             ('replay', 'replay/baselines/*/*.json')]:
         for path in sorted(run.glob(pattern)):
             record = loop.load(path)
-            records.append({**record, 'source': source})
+            identity = record.get('inputs_sha256')
+            if identity is None and source == 'pets':
+                identity = provenance.get('steps', {}).get(lamp_inputs.step(record['round']), initial)
+            records.append({**record, 'source': source,
+                            'inputs_sha256': identity or record['prompt_sha256']})
     grouped = defaultdict(list)
     summaries = defaultdict(lambda: {'jobs': 0, 'invalid': 0, 'vetoes': 0, 'reply_characters': 0, 'votes': [], 'reasons': []})
     for record in records:
-        grouped[(record['source'], record['stage'], record['guardian'])].append(record)
-        key = (record['guardian'], record['model'])
+        grouped[(record['source'], record['stage'], record['guardian'], record['inputs_sha256'])].append(record)
+        key = (record['guardian'], record['model'], record['inputs_sha256'])
         summary = summaries[key]
         summary['jobs'] += 1
         summary['reply_characters'] += record['reply_characters']
@@ -161,35 +170,38 @@ def compare_run(run):
                                   'values': votes(record['reply'])})
         summary['reasons'] = (summary['reasons'] + reasons(record['reply']))[:3]
     comparisons = []
-    for (source, stage, seat), rows in sorted(grouped.items()):
+    for (source, stage, seat, identity), rows in sorted(grouped.items()):
         for a, b in combinations([r for r in rows if r.get('status') != 'invalid'], 2):
             if a['model'] == b['model']:
                 continue
             if a['prompt_sha256'] != b['prompt_sha256']:
                 raise ValueError('cannot compare different prompts as matched jobs')
             comparisons.append({'source': source, 'stage': stage, 'guardian': seat,
+                                'inputs_sha256': identity,
                                 'models': [a['model'], b['model']], **agreement(a['reply'], b['reply'])})
     seats = []
-    for (seat, model), summary in sorted(summaries.items()):
-        paired = [p for p in comparisons if p['guardian'] == seat and model in p['models']]
-        seats.append({'guardian': seat, 'model': model, **summary, 'agreement': paired})
+    for (seat, model, identity), summary in sorted(summaries.items()):
+        paired = [p for p in comparisons if p['guardian'] == seat and model in p['models']
+                  and p['inputs_sha256'] == identity]
+        seats.append({'guardian': seat, 'model': model, 'inputs_sha256': identity, **summary, 'agreement': paired})
     report = {'version': 1, 'method': 'Matched prompts; categorical equality and ranking pair agreement. '
               'Free prose is quoted, not scored. Missing vote fields and invalid replies have no denominator. '
               'Pet comparison replies observe primary context; they are not an independent branch. '
               'Repairs include each reply\'s own validation errors. '
+              'Charter input revisions are reported separately and never paired across a refresh. '
               'Claude lengths are JSON-normalized; Codex lengths are raw reply characters.',
               'seats': seats, 'comparisons': comparisons,
               'replies': [{**{k: r[k] for k in ('source', 'stage', 'guardian', 'model', 'effort',
-                                           'reply', 'reply_characters', 'prompt_sha256')},
+                                           'reply', 'reply_characters', 'prompt_sha256', 'inputs_sha256')},
                           'status': r.get('status', 'valid'), 'errors': r.get('errors', [])} for r in records]}
     loop.save(paths.contained(run, 'comparison.json'), report)
     lines = ['# The Lamp across models', '', report['method'], '',
-             '| Seat | Model | Jobs | Invalid | Vetoes | Mean reply characters |', '| --- | --- | ---: | ---: | ---: | ---: |']
+             '| Seat | Model | Inputs | Jobs | Invalid | Vetoes | Mean reply characters |', '| --- | --- | --- | ---: | ---: | ---: | ---: |']
     for row in seats:
-        lines.append(f'| {row["guardian"]} | {row["model"]} | {row["jobs"]} | {row["invalid"]} | {row["vetoes"]} | '
+        lines.append(f'| {row["guardian"]} | {row["model"]} | {row["inputs_sha256"][:12]} | {row["jobs"]} | {row["invalid"]} | {row["vetoes"]} | '
                      f'{row["reply_characters"] / row["jobs"]:.0f} |')
-    for (source, stage, seat), rows in sorted(grouped.items()):
-        lines += ['', f'## {seat} · {source}/{stage}', '']
+    for (source, stage, seat, identity), rows in sorted(grouped.items()):
+        lines += ['', f'## {seat} · {source}/{stage}', '', f'Inputs: `{identity}`', '']
         for row in rows:
             lines += [f'**{row["model"]}** (effort: {row["effort"] or "not recorded"})', '']
             if row.get('status') == 'invalid':
@@ -200,7 +212,7 @@ def compare_run(run):
             for reason in reasons(row['reply']):
                 lines += ['> ' + reason.replace('\n', '\n> '), '']
         for pair in comparisons:
-            if (pair['source'], pair['stage'], pair['guardian']) == (source, stage, seat):
+            if (pair['source'], pair['stage'], pair['guardian'], pair['inputs_sha256']) == (source, stage, seat, identity):
                 lines += [f'Agreement {pair["models"][0]} / {pair["models"][1]}: `'
                           + json.dumps({k: pair[k] for k in ('votes', 'veto_targets_equal')}) + '`', '']
     loop.write_atomic(paths.contained(run, 'comparison.md'), '\n'.join(lines) + '\n')

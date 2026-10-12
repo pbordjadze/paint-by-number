@@ -85,7 +85,7 @@ def jury_notes(run, slot, names):
     return notes
 
 
-def render_card(run, slot, result, pick, names):
+def render_card(run, slot, result, pick, names, *, attributions=None):
     esc = html.escape
     sid = str(slot['slot'])
     swatch = slot['hex'].lstrip('#')
@@ -124,7 +124,7 @@ def render_card(run, slot, result, pick, names):
         if entry['name'] in {name, original}:
             for veto in entry.get('vetoes', []):
                 if veto.strip():
-                    margins.append(f'<li><p class="label">Jury veto · {esc(entry["name"])}</p><p>{esc(veto)}</p></li>')
+                    margins.append(f'<li><p class="label">Jury veto · {esc(entry["name"])}</p><p>{esc(relabel_veto(veto, attributions or {}))}</p></li>')
     if pick and pick['veto']:
         margins.append(f'<li class="paul"><p class="label">Paul · veto</p>'
                        f'<p>Paul vetoed {esc(original)}. Replaced by {esc(name)}.</p>'
@@ -159,6 +159,20 @@ def render_card(run, slot, result, pick, names):
 </article>'''
 
 
+def guardian_label(guardian):
+    description = guardian.get('description', '').removesuffix('.')
+    if description:
+        description = description[:1].lower() + description[1:]
+        return f"{guardian['name']} ({description})"
+    return guardian['name']
+
+
+def relabel_veto(text, attributions):
+    # Only the speaker prefix is a label; the guardian's recorded words stay verbatim.
+    speaker, separator, quote = text.partition(': ')
+    return attributions.get(speaker, speaker) + separator + quote
+
+
 def build(run, output, *, checkpoint=None, drops=None, preview=False, as_of=None):
     run = Path(run)
     as_of = as_of or datetime.now(timezone.utc).date()
@@ -174,8 +188,12 @@ def build(run, output, *, checkpoint=None, drops=None, preview=False, as_of=None
         raise ValueError(f'drop schedule missing: {schedule}; supply an approved schedule or use --preview')
     released = released_slots(read(schedule), slots, as_of) if schedule.is_file() else set()
     visible = slots.keys() if preview else released
-    names = {gid: g['name'] for gid, g in loop.seats(read(run / 'rules.json')).items()}
-    cards = [render_card(run, slot, decisions[sid], picks.get(sid), names)
+    recorded = loop.seats(read(run / 'rules.json'))
+    names = {gid: g['name'] for gid, g in recorded.items()}
+    current = loop.seats({'guardians': loop.guardians()})
+    names.update({gid: guardian_label(g) for gid, g in current.items()})
+    attributions = {g['name']: names[gid] for gid, g in recorded.items()}
+    cards = [render_card(run, slot, decisions[sid], picks.get(sid), names, attributions=attributions)
              for sid, slot in slots.items() if sid in visible]
     template = Path(__file__).with_name('palette_gallery_template.html').read_text(encoding='utf-8')
     notice = 'Preview · all colors' if preview else f'{len(cards)} colors revealed · {as_of.isoformat()} UTC'

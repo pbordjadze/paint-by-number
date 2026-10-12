@@ -32,7 +32,6 @@ class KitTests(unittest.TestCase):
         config = config.replace('jury_size = 6', 'jury_size = 3').replace('proposers = 4', 'proposers = 2')
         config = config.replace('candidates_each = 3', 'candidates_each = 2')
         config = config.replace('id = "panel-name"', 'id = "toy"').replace('adapter = "panel-name"', 'adapter = "generic"')
-        config = config.replace('georgian = true', 'georgian = false')
         (self.piece / 'piece.toml').write_text(config)
         (self.piece / 'brief.md').write_text('Name two garden gates. Concrete, kind and clear.')
         loop.save(self.piece / 'slots.json', [{'slot': '1', 'incumbent': 'Old Gate'},
@@ -110,6 +109,35 @@ class KitTests(unittest.TestCase):
             for path, contents in original.items():
                 self.assertEqual((replayed / path).read_bytes(), contents, str(path))
             self.assertEqual((source / 'ledger.json').read_bytes(), original[Path('ledger.json')])
+
+    def test_new_runs_have_no_georgian_option_or_glossary(self):
+        self.assertNotIn('glossary', self.record)
+        self.assertNotIn('sharedBar', self.record)
+        for piece in ('panel-name', 'color-names', 'figure'):
+            config = settings.read(loop.REPO / 'factory/pieces' / piece / 'piece.toml')
+            self.assertNotIn('georgian', config.get('caps', {}))
+        for guardian in self.record['guardians']:
+            prompt = self.run.prompt(guardian['id'])
+            self.assertIn('You are ' + guardian['name'] + '.', prompt)
+            self.assertNotIn('one name in fifty', prompt)
+            self.assertNotIn('Georgian thread', prompt)
+        for value in (True, False):
+            self.record['settings']['caps']['georgian'] = value
+            with self.assertRaisesRegex(ValueError, 'unknown caps'):
+                settings.validate(self.record['settings'])
+            loop.save(self.run_path / 'rules.json', self.record)
+            with self.assertRaisesRegex(ValueError, 'unknown caps'):
+                kit.Run(self.run_path, self.out)
+        self.record['settings']['caps'].pop('georgian')
+        loop.save(self.run_path / 'rules.json', self.record)
+        self.assertFalse(kit.Caps(self.record)({0: 'Tbilisi', 1: 'Supra'}))
+        self.assertFalse(kit.Caps(self.record).contributes('Supra', 'words', 'Georgian words'))
+        self.complete()
+        prompt = loop.load(self.run_path / 'jobs/001/juror-originality.json')['prompt']
+        self.assertNotIn('glossary', prompt.lower())
+        self.assertNotIn('one name in fifty', prompt)
+        self.assertIn('Emily; ', prompt)
+        self.assertIn('George; Bulat;', prompt)
 
     def test_settings_are_frozen_and_invalid_settings_fail(self):
         first = self.run.draw(1)
@@ -271,7 +299,7 @@ class KitTests(unittest.TestCase):
         text = (self.piece / 'piece.toml').read_text().replace('guarantee = false', 'guarantee = true')
         text = text.replace('plants = []', 'plants = [{slot="1", name="Perfect Anchor", quality="good"}, '
                             '{slot="2", name="Dull Anchor", quality="bad"}]')
-        text = text.replace('georgian = false', 'georgian = false\nlead = 1\ntrail = 1')
+        text = text.replace('[caps]', '[caps]\nlead = 1\ntrail = 1')
         (self.piece / 'piece.toml').write_text(text)
         self.new()
         for job in self.run.jobs(1):

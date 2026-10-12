@@ -4,8 +4,8 @@ One pet per member of the Lamp (the 18 seated guardians, Originality, and the Bi
 Teacher while she waits for a seat): 20 animated companions hatched with the Codex app's `hatch-pet` skill. They
 are the jurors' faces on review pages and the collection page, and maybe one day in the app (issue
 #16, after the Originality and Open Source guardians have checked OpenAI's terms). Each starts from
-the one-line seed already on the collection page (Medea's golden ram, Pirosmani's giraffe,
-Okudzhava's trolleybus, …).
+the one-line seed already on the collection page (Medea's golden ram, Niko's giraffe,
+Bulat's trolleybus, …).
 
 ## Who decides what
 
@@ -19,6 +19,8 @@ Okudzhava's trolleybus, …).
 
 Codex never changes a pet's creature, personality, boundaries or the style sheet. When a brief
 doesn't work as an image, it says so and proposes; the Lamp decides.
+Motion numbers in a style sheet guide the drawing. Differences belong in provenance; only the
+skill's validators gate a pet. The image jury still judges the resulting character and motion.
 
 ## What a pet is (research, 2026-10-11)
 
@@ -57,7 +59,7 @@ doesn't work as an image, it says so and proposes; the Lamp decides.
    cell height on a flat baseline); palette rules; line; the set's boundaries. A jury of six
    shortlists two.
 2. **Pilot hatch:** Codex hatches the same two pets in each shortlisted style, an animal and an
-   object (Medea's golden ram and Okudzhava's trolleybus). That's about 40 image generations, spent
+   object (Medea's golden ram and Bulat's trolleybus). That's about 40 image generations, spent
    before the 200. Hatch idle and running-right first as the identity and gait check, and pilot
    `codex exec` on the way.
 3. **Style decision:** a jury of six looks at the pilots' contact sheets and preview GIFs and picks
@@ -69,15 +71,15 @@ doesn't work as an image, it says so and proposes; the Lamp decides.
    off-style, a broken boundary, a franchise look-alike, a real person's likeness. A flagged brief
    goes back to its guardian once. Paul approves the set.
 6. **Hatch:** Codex, coordinator plus one agent per pet, at most three image workers at a time.
-   Each pet is gated on the skill's `validate_atlas.py`. Codex returns `factory/pets/<id>/`
+   Each pet is gated on the skill's `validate_atlas.py` and `validate_pet_quality.py`.
+   Codex returns `factory/pets/<id>/`
    (`pet.json`, `spritesheet.webp`, the contact sheet) and a log of what each pet was made from.
 7. **Image review:** a jury of six looks at the contact sheets and says keep, or redo with one
    line why. Codex redoes; Paul has the last word.
 
 Before the run, apply the first run's fixes (`How the Panel Named Itself`): agents answer in
 their reply instead of writing files (about a third of the tokens), the shared brief stays plain,
-a veto must quote the charter line it breaks, Originality gets a glossary, and one seat guards
-function. For pets, function means the pet reads at 192 × 208 and in all nine rows.
+a veto must quote the charter line it breaks, and one seat guards function. For pets, function means the pet reads at 192 × 208 and in all nine rows.
 
 Rough cost: about 50 Haiku agents on the Claude side (about 1.2 million Haiku tokens with replies
 instead of files), and on Codex's side about 40 pilot plus 200 set image generations, more for

@@ -14,7 +14,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from factory.taste import loop, transcripts
+from factory.taste import _legacy, loop, transcripts
 from factory.taste.pieces import color_names, panel_name
 
 
@@ -66,7 +66,7 @@ class TasteTests(unittest.TestCase):
         shutil.copytree(src, dest)
         for name in ("slots.json", "decision.json", "ledger.json", "caps.json", "rejected.json"):
             (dest / name).unlink()
-        with patch.object(color_names, "RUN", str(dest)), patch.object(color_names, "current_vocabulary", side_effect=AssertionError("live table used")):
+        with patch.object(color_names, "RUN", str(dest)), patch.object(color_names, "current_vocabulary", side_effect=AssertionError("live table used")), patch.object(loop, "guardians", side_effect=AssertionError("live seats used")):
             for function in (color_names.setup, color_names.collect, color_names.judges, color_names.decide):
                 self.quiet(function)
             for path in [Path(n) for n in ("slots.json", "decision.json", "ledger.json", "caps.json", "rejected.json")] + [
@@ -75,6 +75,19 @@ class TasteTests(unittest.TestCase):
             before = (dest / "ledger.json").read_bytes()
             self.quiet(color_names.decide)
             self.assertEqual(before, (dest / "ledger.json").read_bytes())
+
+    def test_artist_names_keep_seat_ids_and_namesake_descriptions(self):
+        seats = loop.seats({'guardians': loop.guardians()})
+        for gid, name, namesake in (
+                ('emily-dickinson', 'Emily', 'the poet Emily Dickinson'),
+                ('pirosmani', 'Niko', 'the painter Niko Pirosmani'),
+                ('balanchine', 'George', 'the choreographer George Balanchine'),
+                ('bulat-okudzhava', 'Bulat', 'the bard Bulat Okudzhava')):
+            self.assertEqual(seats[gid]['name'], name)
+            self.assertEqual(seats[gid]['description'], 'After ' + namesake + '.')
+            self.assertIn('After ' + namesake + '.', seats[gid]['charter_text'])
+        self.assertIn('a Georgian girl', seats['robber-girl']['charter_text'])
+        self.assertIn("Batumi's statue", seats['medea']['charter_text'])
 
     def test_draw_is_seeded_disjoint_and_includes_originality(self):
         led = {"rounds": []}
@@ -189,7 +202,7 @@ class TasteTests(unittest.TestCase):
 
     def select(self, results, *, base=None, caps=None, guarantee=False):
         return loop.select(results, base or {}, {r["slot"]: r["slot"] for r in results},
-                           caps or panel_name.PanelCaps({"sharedBar": False}),
+                           caps or (lambda table: []),
                            owners=list(dict.fromkeys(r["owner"] for r in results)), guarantee=guarantee)
 
     def test_uniqueness_keeps_duplicate_where_it_scored_higher(self):
@@ -204,20 +217,20 @@ class TasteTests(unittest.TestCase):
         self.assertEqual(a["winner"], "First")
 
     def test_caps_hook_replaces_lowest_scoring_new_name(self):
-        caps = color_names.NameCaps({"sharedBar": False})
+        caps = color_names.NameCaps(loop.fresh_rules("color-names"))
         a = self.result(1, "g0", [("Quiet Garden", "writer", 10, []), ("First", "incumbent", 5, [])])
         base = {i + 10: f"Quiet {word}" for i, word in enumerate(("Window", "Room", "Harbor", "Gate"))}
         self.select([a], base=base, caps=caps)
         self.assertEqual(a["winner"], "First")
 
     def test_style_guide_counts_leads_and_trails_only_for_two_words(self):
-        caps = color_names.NameCaps({"sharedBar": False})
+        caps = color_names.NameCaps(loop.fresh_rules("color-names"))
         self.assertEqual(caps({i: f"Quiet {i}" for i in range(5)}), [("lead", "Quiet")])
         self.assertEqual(caps({i: f"{i} Room" for i in range(7)}), [("trail", "Room")])
         self.assertFalse(caps({i: "Quiet" for i in range(9)}))
 
     def test_guarantee_runs_after_caps_and_uniqueness(self):
-        caps = color_names.NameCaps({"sharedBar": False})
+        caps = color_names.NameCaps(loop.fresh_rules("color-names"))
         a = self.result(1, "g0", [("First", "writer", 20, []), ("Quiet Garden", "g0", 18, []),
                                    ("Own", "g0", 16, [])])
         b = self.result(2, "g1", [("Second", "g1", 20, [])])
@@ -240,7 +253,7 @@ class TasteTests(unittest.TestCase):
         self.assertEqual((a["winner"], b["winner"]), ("First", "Other"))
 
     def test_interacting_caps_can_require_two_changes_at_once(self):
-        caps = color_names.NameCaps({"sharedBar": False})
+        caps = color_names.NameCaps(loop.fresh_rules("color-names"))
         a = self.result(1, "g0", [("Quiet Garden", "writer", 20, []), ("First", "incumbent", 10, [])])
         b = self.result(2, "g1", [("Inside Room", "writer", 20, []), ("Second", "incumbent", 10, [])])
         base = {i + 10: f"Quiet {word}" for i, word in enumerate(("Window", "Harbor", "Gate", "Hearth"))}
@@ -262,23 +275,36 @@ class TasteTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unvetoed"):
             self.select([a])
 
-    def test_georgian_caps_use_whole_names_and_whole_terms(self):
-        glossary = loop.load(loop.REPO / "factory/taste/glossary.json")
+    def test_legacy_georgian_caps_use_whole_names_and_whole_terms(self):
+        record = loop.load(loop.REPO / "factory/pieces/color-names/run/rules.json")
+        record["sharedBar"] = True
+        caps = _legacy.GeorgianCaps(record)
         table = {i: f"Ordinary {i}" for i in range(100)}
         table[0], table[1] = "Tbilisi Stone", "Under Narikala"
         table[2], table[3], table[4] = "Supra Table", "Qvevri Clay", "Tonir Hearth"
-        self.assertFalse(loop.georgian_caps(table, glossary))
+        self.assertFalse(caps(table))
         table[5] = "Vani Hoard"
-        self.assertIn(("places", "Georgian places"), loop.georgian_caps(table, glossary))
+        self.assertIn(("places", "Georgian places"), caps(table))
         table[6] = "Iavnana"
-        self.assertIn(("words", "Georgian words"), loop.georgian_caps(table, glossary))
-        self.assertFalse(loop.georgian_caps({i: "Stone" for i in range(100)}, glossary))
+        self.assertIn(("words", "Georgian words"), caps(table))
+        self.assertFalse(caps({i: "Stone" for i in range(100)}))
 
-    def test_new_panel_selection_filters_georgian_name(self):
-        caps = panel_name.PanelCaps({"sharedBar": True, "glossary": loop.load(loop.REPO / "factory/taste/glossary.json")})
-        a = self.result(1, "g0", [("Supra", "g0", 20, []), ("Lamp", "g0", 10, [])])
-        self.select([a], caps=caps)
-        self.assertEqual(a["winner"], "Lamp")
+    def test_new_pieces_cannot_enable_legacy_caps_or_glossary(self):
+        for piece in ('panel-name', 'color-names', 'generic'):
+            for version in (1, 2):
+                record = loop.fresh_rules(piece, version=version)
+                self.assertNotIn('glossary', record)
+                self.assertNotIn('sharedBar', record)
+                record['sharedBar'] = True  # Retired keys cannot turn them on.
+                self.assertEqual(_legacy.caps_prompt(record), '')
+                self.assertEqual(_legacy.glossary_prompt(record), '')
+                caps = color_names.NameCaps(record)
+                self.assertFalse(caps({0: 'Supra', 1: 'Tbilisi'}))
+                self.assertFalse(caps.contributes('Supra', 'words', 'Georgian words'))
+                candidate = self.result(1, 'g0', [('Supra', 'g0', 20, []), ('Lamp', 'g0', 10, [])])
+                self.select([candidate], caps=caps)
+                self.assertEqual(candidate['winner'], 'Supra')
+        self.assertFalse(panel_name.craft('თბილისი', {})[0])
 
     def test_rule_snapshot_ignores_changed_panel_and_rejects_unknown_version(self):
         first = loop.rules(self.folder, "panel-name")
@@ -321,6 +347,26 @@ class TasteTests(unittest.TestCase):
         prompt = (dest / "rounds/003/prompts/propose-painter.txt").read_text()
         self.assertIn("Your past names", prompt)
         self.assertIn("Courtyard Lanterns", prompt)
+
+    def test_fresh_compatibility_cli_prompts_use_current_charters_without_caps(self):
+        panel = self.folder / 'new-panel'
+        with patch.object(panel_name, 'RUN', str(panel)):
+            self.quiet(panel_name.draw, 1)
+            self.quiet(panel_name.proposals, 1)
+        colors = self.folder / 'new-colors'
+        with patch.object(color_names, 'RUN', str(colors)):
+            self.quiet(color_names.setup)
+            self.quiet(color_names.prompts)
+        for folder in (panel, colors):
+            self.assertNotIn('sharedBar', loop.load(folder / 'rules.json'))
+            self.assertNotIn('glossary', loop.load(folder / 'rules.json'))
+            prompts = list(folder.rglob('*.txt'))
+            self.assertTrue(prompts)
+            for path in prompts:
+                self.assertNotIn('Georgian thread', path.read_text())
+                self.assertNotIn('one name in fifty', path.read_text())
+                self.assertIn('Emily; ', path.read_text())
+                self.assertIn('George; Bulat;', path.read_text())
 
     def test_piece_craft_and_rendering(self):
         self.assertFalse(panel_name.craft("A Lamp", {})[0])

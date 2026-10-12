@@ -144,7 +144,7 @@ Proposed casting (first scope, 8 agents + 1 ranker per round):
 - Craft and originality are veto-only seats (code checks where possible), never outvoted on taste.
 - Guardian charter: name; what it believes; what it champions; what it guards against;
   touchstones; how it recognizes its idea in a design.
-- The panel Paul picked, its shared Georgian bar and the jury of six: `GUARDIANS.md`.
+- The panel Paul picked and the jury of six: `GUARDIANS.md`.
 
 ## Budget and where it runs (Oct 11)
 
@@ -164,9 +164,7 @@ Proposed casting (first scope, 8 agents + 1 ranker per round):
 Paul: she's witchy, Georgian (Colchis), all about aesthetics, cool, from mythology, kind,
 helpful, beautiful.
 
-- She is an equal seat on the panel. Georgia is the North Star instead, a bar every guardian
-  carries: if you know Georgia, the app reminds you of it; nobody else should notice it's
-  Georgian.
+- She is an equal seat on the panel.
 - The panel (Paul's picks): Medea, the Baba Yaga, the Hedge Witch, the Moon, the Snow Queen (in
   place of Elsa), the Robber Girl (from the 1957 Snow Queen, as
   Paul remembers her: a Georgian girl), the Storybook, the Enchanted Workshop, the Scholar, the Painter, the Child at

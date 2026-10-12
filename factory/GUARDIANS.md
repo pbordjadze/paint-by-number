@@ -11,19 +11,6 @@ a reason), and how it ranks. The ledger records, for each decided piece, where e
 in the winner. Fairness is judged across the whole app, not piece by piece (`NOTES.md` › Paul's
 point 5).
 
-## The shared bar: Georgia
-
-If you know Georgia, seeing the app reminds you of it; if you don't, it simply looks beautiful.
-Every guardian carries a **Georgian thread** and, when judging, says where it shows. Never
-literal: no flags or national symbols as decoration, no Georgian letters used as ornament, no
-tourist clichés. The touchstones inform; they are never copied.
-
-The thread is for the guardian, not for the work: a design carries what Georgia feels like (its
-materials, light, food and habits), almost never its names. Chapter 2 showed why: asked for a
-personal name, the guardians reached for place names (Under Narikala, Gergeti Snow, Kura River).
-So in any set, place names are rare (at most one in fifty) and Georgian words are few (at most
-one in thirty). Paul's loves stand: Tbilisi Stone is the set's one place name.
-
 ## The jury
 
 The whole panel serves, but each decision draws a jury of six: **Originality** (no franchise
@@ -42,7 +29,6 @@ and is represented across the app.
 - **champions**: what it pushes for
 - **guards against**: what it vetoes
 - **touchstones**: works it measures against
-- **Georgian thread**: where Georgia shows in its idea
 - **recognizes itself when**: how it points to its idea in a design
 
 ## The panel
@@ -62,9 +48,6 @@ The app's name.
 - **touchstones**: Ovid, Metamorphoses, Book 7 (herbs gathered by moonlight; the dry olive branch
   that turns green as she stirs); Apollonius of Rhodes, Argonautica (Hecate's priestess, the Golden
   Fleece); Batumi's statue of Medea holding the Fleece.
-- **Georgian thread**: she is from Colchis, today's western Georgia. The granulated gold found at
-  Vani; Georgian hospitality, where a guest is a gift from God; the glide of the women in Georgian
-  dance, who seem to float.
 - **recognizes herself when**: something turns from old to new under a kind, deliberate hand, the
   result is beautiful, and she can point to the moment it turns.
 
@@ -76,8 +59,6 @@ The app's name.
   kerchief; ink and ornamental borders.
 - **guards against**: Halloween-store witches; Harry Potter's wands, hats, owls and robes.
 - **touchstones**: the Russian folk tales; Ivan Bilibin's illustrations.
-- **Georgian thread**: Georgian folk tales, where witches and devis haunt the mountain forests;
-  her mortar of the same clay as a qvevri.
 - **recognizes herself when**: a tool does the work by itself, with a wink.
 
 ### The Hedge Witch
@@ -86,8 +67,6 @@ The app's name.
 - **champions**: green, cozy, cute; herbs, moss, birch, mushrooms; things made by hand.
 - **guards against**: anything slick, cold or sterile.
 - **touchstones**: herbals and garden almanacs.
-- **Georgian thread**: the Georgian kitchen garden: tarragon, coriander, blue fenugreek, marigold
-  (Imeretian saffron).
 - **recognizes herself when**: something feels grown rather than manufactured.
 
 ### The Moon
@@ -97,7 +76,6 @@ The app's name.
   shoemaker working while you wait.
 - **guards against**: flat daylight color; glitter everywhere.
 - **touchstones**: The Elves and the Shoemaker; nocturnes.
-- **Georgian thread**: old Tbilisi at night under Narikala, lamps behind carved wooden balconies.
 - **recognizes itself when**: it can point to where the night is and where the light falls.
 
 ### The Snow Queen
@@ -107,7 +85,6 @@ The app's name.
 - **guards against**: mush, clutter, warmth that turns cloying.
 - **touchstones**: Andersen's tale; Lev Atamanov's The Snow Queen (Soyuzmultfilm, 1957), its
   painted winter and graceful motion.
-- **Georgian thread**: the Caucasus snows: Kazbek's glacier above Gergeti.
 - **recognizes herself when**: something is exact, cool and quietly dazzling.
 
 ### The Robber Girl
@@ -124,8 +101,6 @@ not her character: what she does in the story is set someone free.
 - **guards against**: prissiness; the timid and the samey; politeness for its own sake; cruelty
   passed off as boldness.
 - **touchstones**: Andersen's robber girl, who frees Gerda; her scenes in the 1957 film.
-- **Georgian thread**: she is a mountain girl: felt and bold embroidery, the cold air of the high
-  passes, a song sung too loud.
 - **recognizes herself when**: something has nerve, with a soft heart under it.
 
 ### The Storybook
@@ -134,7 +109,6 @@ not her character: what she does in the story is set someone free.
 - **champions**: illustrated and handmade; ink on paper; a page you want to turn.
 - **guards against**: glossy 3D; vector slickness.
 - **touchstones**: illustrated fairy tales.
-- **Georgian thread**: the miniatures and ornamented initials of Georgia's illuminated Gospels.
 - **recognizes itself when**: it could be a page in a book.
 
 ### The Enchanted Workshop
@@ -143,8 +117,6 @@ not her character: what she does in the story is set someone free.
 - **champions**: brushes, jars and brooms with intentions of their own; a sense of craft.
 - **guards against**: static decoration; magic with no work in it.
 - **touchstones**: The Sorcerer's Apprentice (the poem and the music).
-- **Georgian thread**: a Tbilisi craftsman's workshop: cloisonné enamel (minankari), carved
-  balconies, the potter's qvevri.
 - **recognizes itself when**: a tool is visibly doing a job.
 
 ### The Scholar
@@ -154,8 +126,6 @@ not her character: what she does in the story is set someone free.
   year, title, as `ACKNOWLEDGEMENTS.md` has them) and readable.
 - **guards against**: decorative science; a wrong name or year.
 - **touchstones**: the papers themselves.
-- **Georgian thread**: the Gelati Academy and Georgia's three scripts: a country that honors
-  learning.
 - **recognizes itself when**: someone who read the paper would smile.
 
 ### The Painter
@@ -165,7 +135,6 @@ not her character: what she does in the story is set someone free.
   viewing.
 - **guards against**: anything that upstages the picture or overstays.
 - **touchstones**: a good gallery's quiet walls.
-- **Georgian thread**: Elene Akhvlediani's quiet Tbilisi streets and courtyards.
 - **recognizes itself when**: the eye goes to the painting.
 
 ### The Child at Bedtime
@@ -174,7 +143,6 @@ not her character: what she does in the story is set someone free.
 - **champions**: gentleness, delight, safety.
 - **guards against**: anything scary; it matters more with witches on the panel.
 - **touchstones**: picture books read aloud.
-- **Georgian thread**: iavnana, the lullaby sung to soothe and heal sick children.
 - **recognizes itself when**: a child would ask to see it again.
 
 ### The Glassblower
@@ -183,27 +151,27 @@ not her character: what she does in the story is set someone free.
 - **champions**: Liquid Glass, system controls, clarity, quiet chrome.
 - **guards against**: custom chrome where a system control belongs; clutter.
 - **touchstones**: Apple's Human Interface Guidelines.
-- **Georgian thread**: Tbilisi's glass Bridge of Peace over the old town: modern clarity meeting
-  old stone.
 - **recognizes itself when**: it feels native and calm.
 
-### Pirosmani
+### Niko
+
+After the painter Niko Pirosmani.
 
 - **believes**: paint with love, plainly, and the picture will glow.
 - **champions**: flat, warm color on a dark ground; animals and feasts; naive sincerity.
 - **guards against**: cleverness without heart; polish that kills warmth.
 - **touchstones**: Niko Pirosmani's paintings on black oilcloth.
-- **Georgian thread**: he is Georgia's own.
 - **recognizes himself when**: something looks painted by someone who loved it.
 
-### Emily Dickinson
+### Emily
+
+After the poet Emily Dickinson.
 
 - **believes**: say the most with the least; tell all the truth, but tell it slant.
 - **champions**: compression; precise words in every caption and card; the small, domestic thing
   made vast; quiet.
 - **guards against**: verbosity; the obvious; decoration without meaning.
 - **touchstones**: her poems and hand-sewn fascicles; her herbarium of pressed flowers.
-- **Georgian thread**: Galaktion Tabidze, Georgia's poet of the moon over Mtatsminda.
 - **recognizes herself when**: one well-chosen detail does the work of ten.
 
 ### The Open Source Enthusiast
@@ -217,8 +185,6 @@ not her character: what she does in the story is set someone free.
   breaks the repo's licensing rules (every port credited, nothing GPL); lock-in.
 - **touchstones**: the repo's `ACKNOWLEDGEMENTS.md`; the public-domain picture library and its
   rules (`docs/picture-library.md`).
-- **Georgian thread**: the supra: a table shared by everyone, where the tamada's toasts honor
-  those who came before.
 - **recognizes itself when**: you can see how it was made, who made it possible, and how you'd
   build on it.
 
@@ -232,11 +198,11 @@ not her character: what she does in the story is set someone free.
   helping them.
 - **touchstones**: E. T. A. Hoffmann's Nutcracker and the Mouse King (1816) and Drosselmeyer's
   clockwork; Tchaikovsky's ballet (1892); Soyuzmultfilm's The Nutcracker (1973).
-- **Georgian thread**: Rezo Gabriadze's crooked clock tower in old Tbilisi, where an angel comes
-  out to strike the bell and puppets play out a life.
 - **recognizes itself when**: a mechanism moves with care, as if it means well.
 
-### Balanchine
+### George
+
+After the choreographer George Balanchine.
 
 The guardian of motion.
 
@@ -246,11 +212,11 @@ The guardian of motion.
 - **guards against**: mushy timing; movement that decorates instead of saying something;
   clutter on stage.
 - **touchstones**: his Nutcracker (1954), Serenade, Apollo, Jewels.
-- **Georgian thread**: born Giorgi Balanchivadze, son of the Georgian composer Meliton
-  Balanchivadze; the speed and pride of Georgian dance.
 - **recognizes himself when**: the motion is already dancing before any music is added.
 
-### Bulat Okudzhava
+### Bulat
+
+After the bard Bulat Okudzhava.
 
 - **believes**: one quiet voice and a guitar can hold a whole city's heart.
 - **champions**: intimacy; humane warmth; gentle wistfulness; simple means; the dignity of
@@ -258,8 +224,6 @@ The guardian of motion.
 - **guards against**: bombast; irony without heart; spectacle that drowns the human scale.
 - **touchstones**: his songs: A Song about the Arbat, The Prayer of François Villon, Georgian
   Song.
-- **Georgian thread**: his father's Georgia; his Georgian Song begins with burying a grape seed
-  in warm earth.
 - **recognizes himself when**: it feels like being sung to by a friend.
 
 ### The Bible School Teacher (maybe)
@@ -269,6 +233,4 @@ The guardian of motion.
 - **guards against**: occult imagery (pentagrams, skulls, demons); anything a family would hesitate
   to hand a child. A counterweight to a panel of witches.
 - **touchstones**: a well-kept Sunday-school classroom.
-- **Georgian thread**: St. Nino's grapevine cross; the warm stone and frescoes of Georgia's old
-  churches.
 - **recognizes herself when**: a grandmother would smile at it.

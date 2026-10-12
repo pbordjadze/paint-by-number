@@ -105,6 +105,19 @@ class PaletteGalleryTests(unittest.TestCase):
         self.assertIn('Warm coral like a fruit lit by one lamp.', cards['color-30'])
         self.assertIn('Paul · veto', cards['color-20'])
 
+    def test_artist_labels_use_current_names_without_rewriting_evidence(self):
+        before = {p: p.read_bytes() for p in self.run.rglob('*.json')}
+        page = self.build(preview=True)
+        for name, namesake in (('Emily', 'the poet Emily Dickinson'), ('Niko', 'the painter Niko Pirosmani'),
+                               ('George', 'the choreographer George Balanchine'), ('Bulat', 'the bard Bulat Okudzhava')):
+            self.assertIn('Entrusted to ' + name + ' (after ' + namesake + ')', page)
+        self.assertNotIn('Named by Pirosmani', page)
+        self.assertNotIn('Bulat Okudzhava · Preferred', page)
+        self.assertEqual(before, {p: p.read_bytes() for p in self.run.rglob('*.json')})
+        text = 'Emily Dickinson: words about Bulat Okudzhava stay verbatim.'
+        self.assertEqual(gallery.relabel_veto(text, {'Emily Dickinson': 'Emily'}),
+                         'Emily: words about Bulat Okudzhava stay verbatim.')
+
     def test_missing_or_empty_proposer_reason_omits_the_line(self):
         proposal = gallery.read(self.run / 'proposals/medea.json')
         candidate = next(p for p in proposal['names']['2'] if p['name'] == 'Willow Leaf')

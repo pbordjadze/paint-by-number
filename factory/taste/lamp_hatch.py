@@ -1,6 +1,7 @@
 """Local-only pet workers and independently rerun bundled acceptance gates."""
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -9,7 +10,7 @@ import tempfile
 import time
 
 from . import loop, paths, schema
-from .codex_lamp import CONTRACT, UNATTENDED, digest, frozen
+from .codex_lamp import CONTRACT, MOTION_POLICY, UNATTENDED, digest, frozen
 
 RESULT = schema.obj({'status': {'type': 'string', 'enum': ['complete', 'failed', 'refused']},
                      'reason': schema.STRING, 'image_generations': {'type': 'integer', 'minimum': 0},
@@ -20,7 +21,7 @@ RESULT = schema.obj({'status': {'type': 'string', 'enum': ['complete', 'failed',
                      'decisions': schema.array(schema.STRING)})
 REQUIRED = ('validate_atlas.py', 'validate_pet_quality.py', 'make_contact_sheet.py')
 LIMIT = 2_000_000
-WORKER_POLICY = 2
+WORKER_POLICY = 3
 
 
 def find_skill(explicit=None):
@@ -117,11 +118,25 @@ def worker_reply(lamp, work, prompt, reference):
     return reply, errors
 
 
+def motion_guidance_failure(record):
+    """Recognize the old worker's specific extra gate, not general quality failures."""
+    return bool(re.fullmatch(
+        r'(?:Stopped after )?jumping exhausted both permitted repairs: its extracted peak remains '
+        r'\d+ pixels above baseline, exceeding the preserved \d+[–-]\d+-pixel lift\.?'
+        r'(?: No final v2 WebP was produced\. All sources, prompts, generation logs, authentic '
+        r'standard-frame inspection, contact sheet and nine diagnostic GIFs remain local\.)?',
+        record.get('reason', '').strip(), re.I))
+
+
 def retryable_pilot(record):
-    """Only the old prompt's pre-generation blockers get one migration attempt."""
+    """One migration for pre-generation blockers or the old style-motion gate."""
+    if not record['key'].startswith('pilot-') or record['status'] != 'failed':
+        return False
+    policy = record.get('worker_policy', 1)
+    if policy < 3 and motion_guidance_failure(record):
+        return True
     reason = record.get('reason', '').lower()
-    return (record['key'].startswith('pilot-') and record['status'] == 'failed'
-            and record.get('image_generations') == 0 and record.get('worker_policy', 1) < WORKER_POLICY
+    return (record.get('image_generations') == 0 and policy < 2
             and (('family reference' in reason and ('null' in reason or 'missing' in reason))
                  or ('v2' in reason and ('conflict' in reason or 'exceed' in reason))
                  or ('clarification' in reason and 'unanswered' in reason)))
@@ -150,7 +165,7 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
             return record
         previous = record
     record = dict(key=key, pet=pet, model=lamp.model, effort=lamp.effort, status='failed',
-                  worker_policy=WORKER_POLICY)
+                  worker_policy=WORKER_POLICY, motion_policy=MOTION_POLICY)
     if previous:
         old_work = paths.contained(base, Path(previous['work']).relative_to(base))
         frozen(paths.contained(old_work, 'result.json'), previous)
@@ -172,6 +187,8 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
             loop.save(target, record)
             return record
     active = paths.contained(base, 'active-attempt.json')
+    if previous and active.exists() and loop.load(active)['directory'] == old_work.name:
+        active.unlink()
     if active.exists():
         work = paths.contained(base, loop.load(active)['directory'])
     else:
@@ -195,6 +212,10 @@ nested image workers. Other pets may already be generating concurrently. Indepen
 visual reviewers are permitted. No real person beyond Paul and guardian namesakes in the charters.
 {UNATTENDED}
 {CONTRACT}
+{MOTION_POLICY}
+Keep the intended action, character and rhythm. Never enforce a style sheet's numeric motion
+target as a separate acceptance threshold. Record target versus observed movement and why it
+still expresses the intent in decisions; run all bundled validators on the finished atlas.
 The contract overrides ANY frame count, row count, resolution or "look" number/meaning in a style
 sheet or brief. Remap motion beats to the required frames and interpret looks as directions.
 Keep the sheet's taste: preset, style_notes, palette, line, framing and boundaries, and this pet's
@@ -218,7 +239,8 @@ combine the COMPLETE family and standard contact sheets in one labeled reference
 any required visual. Keep genuine transparency and no labels in generated art.
 Run the bundled preparation, extraction, inspections, assembly, one despill per candidate,
 continuity and QA scripts. Do not invent validators or write success reports in place of scripts.
-Bound internal visual repairs to two per failing row; after persistent failure return failed.
+Bound repairs to two per row that fails the skill's checks; after persistent failure return failed.
+Do not reject or repair a row solely to hit a style sheet's motion numbers.
 A jury-requested redo is ONE attempt, with the existing brief and style preserved. Repair only
 its identified defects. No further whole-pet redo is authorized.
 Output final/spritesheet.webp (v2 1536 × 2288) and these authentic reports:
@@ -231,6 +253,10 @@ prompts, inputs, references, generation counts and redos in local logs. Never fa
 Request:
 {json.dumps(request, indent=2, ensure_ascii=False)}
 """
+    if previous:
+        prompt += (f'\nPrevious attempt evidence: {old_work}. Preserve those files. Reuse suitable '
+                   'source art in this new attempt and finish the required pipeline. Previous failure: '
+                   + previous['reason'] + '\n')
     try:
         reply, errors = worker_reply(lamp, work, prompt, reference)
         if errors:
@@ -241,7 +267,8 @@ Request:
             record.update(status=reply['status'], reason=reply['reason'],
                           image_generations=reply['image_generations'], repairs=reply['repairs'],
                           contract_overrides=reply['contract_overrides'], decisions=reply['decisions'])
-            if reply['status'] == 'complete':
+            if reply['status'] == 'complete' or (reply['status'] == 'failed' and motion_guidance_failure(reply)
+                                                and paths.contained(work, 'final/spritesheet.webp').is_file()):
                 record.update(validate(work, skill))
                 metadata = {'id': pet, 'displayName': brief.get('display_name', pet),
                             'description': brief.get('description', brief.get('seed', pet)),
@@ -255,6 +282,9 @@ Request:
                 loop.save(paths.contained(package, 'pet.json'), metadata)
                 provenance = {**request, 'worker_reply': reply, 'work': str(work),
                               'worker_policy': WORKER_POLICY, 'contract': CONTRACT,
+                              'motion_policy': MOTION_POLICY,
+                              'motion_guidance_difference': reply['reason'] if motion_guidance_failure(reply)
+                                  else previous['reason'] if previous and motion_guidance_failure(previous) else None,
                               'contract_overrides': reply['contract_overrides'], 'decisions': reply['decisions'],
                               'resumed_from': record.get('resumed_from'),
                               'atlas_sha256': record['atlas_sha256'], 'validators': record['validators'],

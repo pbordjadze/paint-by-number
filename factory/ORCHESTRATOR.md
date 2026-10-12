@@ -41,6 +41,11 @@ driving manual and the state of play.
   and why), and a guardian's own words most carefully of all.
 - Credentials: Codex is signed in to Paul's ChatGPT plan in this container only; never print or
   copy its auth file.
+- For updated guardian charters during the pets run, use
+  `python3 -m factory.taste.codex_lamp refresh-inputs /root/factory-out/F36/lamp --reason 'Updated guardian charters.'`
+  before resuming the usual run command. Started steps retain their frozen inputs; provenance
+  records the revision for subsequent steps. Motion numbers guide the drawing; only the skill's
+  validators gate a pet, with measured differences recorded in provenance.
 
 ## State of play
 
@@ -98,7 +103,7 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 
 - Chapter 7, Two More Pets: https://claude.ai/code/artifact/a112d638-0555-4f24-9a6a-6a3fc5476adf.
   Claude kept Colophon's eyes (a taste call, Paul's to veto).
-- `pieces/color-names/drops.json`, the gallery's drop schedule; Okudzhava's Late Sunlight question.
+- `pieces/color-names/drops.json`, the gallery's drop schedule; Bulat's Late Sunlight question.
 - The pets' style sheet: Paul's call who decides it (people he invites, or the Lamp as a proposal).
 - The making-of's look (Paul's call; the Lamp only if he wants its notes): 338 s long, a small worker, and a straight
   ink line across the drawing in the line-art stage.

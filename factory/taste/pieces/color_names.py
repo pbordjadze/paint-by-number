@@ -8,7 +8,7 @@ reads it from the agent's transcript. Usage:
 import argparse
 import math, os, random, re
 from pathlib import Path
-from .. import loop, paths, transcripts
+from .. import _legacy, loop, paths, transcripts
 from ..loop import load, save
 
 REPO = str(loop.REPO)
@@ -164,7 +164,7 @@ You were given these two colors because they are near your own idea:
 
 {RULES}
 
-{loop.THREAD}
+{(_legacy.caps_prompt(rules()) if _legacy.frozen(rules()) else loop.names_prompt(rules()["guardians"]))}
 
 {loop.history(RUN, gid, G)}
 
@@ -180,7 +180,7 @@ Reply with only this JSON, nothing else (no code fence):
 
 {RULES}
 
-{loop.THREAD}
+{(_legacy.caps_prompt(rules()) if _legacy.frozen(rules()) else loop.names_prompt(rules()["guardians"]))}
 
 Write one new name for each of these 36 colors: the most beautiful, fitting name you can, the kind a painter would love to read. Plain and lovely beats clever.
 
@@ -317,9 +317,9 @@ Reply with only this JSON, nothing else (no code fence):
 Your charter:
 {g['charter_text']}
 
-{loop.THREAD}
+{(_legacy.caps_prompt(rules()) if _legacy.frozen(rules()) else loop.names_prompt(rules()["guardians"]))}
 
-{loop.glossary_prompt(rules()) if g.get("vetoOnly") else ""}
+{_legacy.glossary_prompt(rules()) if g.get("vetoOnly") else ""}
 
 First look at the swatches with the Read tool: {os.path.join(OUT, f'sheet-{half}.png')} . The jury is choosing a name for each of these colors. The candidate names, in an order shuffled for you:
 
@@ -388,9 +388,9 @@ def decide():
     print("wins:", wins)
 
 class NameCaps:
-    """The style guide's whole-vocabulary limits, plus the shared bar for new runs."""
+    """Whole-vocabulary limits, with the recorded v2 contract kept private."""
     def __init__(self, record):
-        self.record = record
+        self.legacy = _legacy.GeorgianCaps(record)
 
     def __call__(self, table):
         lead, trail = {}, {}
@@ -400,14 +400,11 @@ class NameCaps:
                 lead[words[0]] = lead.get(words[0], 0) + 1
                 trail[words[1]] = trail.get(words[1], 0) + 1
         caps = [("lead", w) for w, n in lead.items() if n > 4] + [("trail", w) for w, n in trail.items() if n > 6]
-        if self.record["sharedBar"]:
-            caps += loop.georgian_caps(table, self.record["glossary"])
-        return caps
+        return caps + self.legacy(table)
 
     def contributes(self, name, pos, word):
         if pos in ("places", "words"):
-            terms = self.record["glossary"][pos]
-            return any(re.search(r"(?<![a-z])" + re.escape(t.lower()) + r"(?![a-z])", name.lower()) for t in terms)
+            return self.legacy.contributes(name, pos, word)
         return (name.split(" ")[0] if pos == "lead" else name.split(" ")[-1]) == word
 
 

@@ -7,7 +7,7 @@ replays exactly from its files. Usage:
 import argparse
 import json, os, re, unicodedata
 from pathlib import Path
-from .. import loop, paths, transcripts
+from .. import _legacy, loop, paths, transcripts
 from ..loop import load, save
 
 REPO = str(loop.REPO)
@@ -50,7 +50,6 @@ def craft(name, taken):
     words = name.split()
     if not 1 <= len(words) <= 4: fails.append("1 to 4 words")
     if len(name) > 32: fails.append("at most 32 characters")
-    if any("Ⴀ" <= c <= "ჿ" or "Ა" <= c <= "Ჿ" for c in name): fails.append("no Georgian letters as ornament")
     if any(unicodedata.category(c)[0] not in "LZ" and c not in "'’-·&." for c in name): fails.append("letters only")
     if any(f in name.lower() for f in FRANCHISE): fails.append("names a famous franchise")
     key = identity(name)
@@ -70,12 +69,16 @@ def draw(n):
     save(os.path.join(rdir(n), "draw.json"), d)
     print(json.dumps({"jury": d["jury"], "proposers": d["proposers"]}))
 
-BRIEF = """Medea is an iPhone and iPad app that turns a photo into a paint-by-numbers painting, made on the device, that you then paint with your finger or Apple Pencil. It is named for Medea of Colchis (today's western Georgia): a kind, helpful witch whose magic makes the old new. Its look should remind anyone who knows Georgia of Georgia, without being obviously Georgian (no flags, no Georgian letters as decoration, no tourist cliches). It must never look like Harry Potter, Disney or any other famous franchise.
+BRIEF = """Medea is an iPhone and iPad app that turns a photo into a paint-by-numbers painting, made on the device, that you then paint with your finger or Apple Pencil. It is named for Medea of Colchis: a kind, helpful witch whose magic makes the old new. It must never look like Harry Potter, Disney or any other famous franchise.
 
 Every design decision for the app (colors, logo, animations, words) is judged by a panel of guardians. Each guardian keeps one idea and judges every design for it; for each decision a jury of six is drawn from the panel. These are the guardians:
 {roster}
 
 The panel needs a name for itself: what the guardians are called together. The name appears on review pages and in the record of decisions ("This palette was chosen by ..."), and it may one day be seen by the app's users, so it should be beautiful, memorable and true to the panel."""
+
+
+def brief():
+    return (_legacy.PANEL_BRIEF if _legacy.frozen(rules()) else BRIEF).format(roster=roster())
 
 def proposals(n):
     d = load(os.path.join(rdir(n), "draw.json"))
@@ -97,14 +100,14 @@ def proposals(n):
         out = os.path.join(rdir(n), "proposals", f"{gid}.json")
         text = f"""You are {g['name']}, one of the guardians on a design panel. Stay in character: you see everything through your idea.
 
-{BRIEF.format(roster=roster())}
+{brief()}
 
 Your charter:
 {g['charter_text']}
 
 {context}
 
-{loop.THREAD}
+{(_legacy.caps_prompt(rules()) if _legacy.frozen(rules()) else loop.names_prompt(guardians()))}
 
 {loop.history(RUN, gid, G)}
 
@@ -125,6 +128,7 @@ def collect(n):
     taken, slate, rejected = {}, [], []
     def add(name, source, why, origin=None):
         fails, key = craft(name, taken)
+        fails += _legacy.panel_craft(name, rules())
         if fails:
             rejected.append({"name": name, "source": source, "fails": fails}); return
         taken[key] = True
@@ -170,14 +174,14 @@ Reply with only this JSON, nothing else (no code fence):
 (one entry per letter; the ranking lists every letter exactly once)"""
         text = f"""You are {g['name']}, sitting on a jury of the design panel. Stay in character: you judge through your idea.
 
-{BRIEF.format(roster=roster())}
+{brief()}
 
 Your charter:
 {g['charter_text']}
 
-{loop.THREAD}
+{(_legacy.caps_prompt(rules()) if _legacy.frozen(rules()) else loop.names_prompt(guardians()))}
 
-{loop.glossary_prompt(rules()) if g.get("vetoOnly") else ""}
+{_legacy.glossary_prompt(rules()) if g.get("vetoOnly") else ""}
 
 The jury is choosing the panel's name. The candidates, each shown as it would read in use, in an order shuffled for you alone:
 
@@ -213,7 +217,7 @@ def decide(n):
                   "winner_source": next(s["source"] for s in slate if identity(s["name"]) == identity(winner)),
                   "standings": [{"name": name, "source": next(s["source"] for s in slate if identity(s["name"]) == identity(name)),
                                  "score": score[name], "vetoes": vetoes[name]} for name in order]}
-        loop.select([result], {0: champ}, {1: 0}, PanelCaps(rules()), identity=identity)
+        loop.select([result], {0: champ}, {1: 0}, lambda table: [], identity=identity)
         winner = result["winner"]
     absent = re.compile(r"^\s*absent\b", re.I)
     represented = [gid for gid, line in lives[winner].items() if not absent.match(line)]
@@ -256,8 +260,8 @@ def write_finalist_prompts(n, draw):
         g = guardian_by_id()[gid]
         b = load(os.path.join(folder, "ballots", f"{gid}.json"))
         listing = "\n".join(f"[{letter}] {name}\n" + "\n".join(in_context(name)) for letter, name in b.items())
-        text = (f"You are {g['name']}.\n{BRIEF.format(roster=roster())}\nYour charter:\n{g['charter_text']}\n"
-                f"{loop.THREAD}\n" + (loop.glossary_prompt(rules()) if g.get("vetoOnly") else "") +
+        text = (f"You are {g['name']}.\n{brief()}\nYour charter:\n{g['charter_text']}\n"
+                f"{(_legacy.caps_prompt(rules()) if _legacy.frozen(rules()) else loop.names_prompt(guardians()))}\n" + (_legacy.glossary_prompt(rules()) if g.get("vetoOnly") else "") +
                 f"\nFinalists:\n{listing}\nReply with candidates (lives, veto), ranking and note as JSON. " +
                 loop.veto_instruction(rules()) + " Originality only vetoes.")
         path = os.path.join(folder, "prompts", f"{gid}.txt")
@@ -277,17 +281,6 @@ def decide_finalists(n):
     if not order or result["vetoes"][order[0]]:
         raise ValueError("no unvetoed finalist")
     save(os.path.join(folder, "decision.json"), {"winner": order[0], "tally": result})
-
-
-class PanelCaps:
-    def __init__(self, record):
-        self.record = record
-
-    def __call__(self, table):
-        return loop.georgian_caps(table, self.record["glossary"]) if self.record["sharedBar"] else []
-
-    def contributes(self, name, pos, word):
-        return bool(loop.georgian_caps({0: name}, self.record["glossary"]))
 
 
 def main():

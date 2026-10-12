@@ -10,14 +10,14 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, loop
+from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, lamp_inputs, loop
 from tools.factory.fixtures.strict_schema import check_strict
 
 
 class LampTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp = tempfile.TemporaryDirectory(dir='/root/factory-out/F36')
+        cls.temp = tempfile.TemporaryDirectory(dir=os.environ.get('FACTORY_TEST_OUT', '/root/factory-out'))
         cls.root = Path(cls.temp.name)
         cls.bin = cls.root / 'bin'
         cls.bin.mkdir()
@@ -211,6 +211,7 @@ class LampTests(unittest.TestCase):
             self.assertEqual(len(self.calls()), len(calls))
 
     def test_new_proposals_include_exact_contract_and_unattended_decisions(self):
+        self.assertNotIn('glossary', self.inputs)
         driver = self.driver()
         with patch.object(driver, 'hatch_many', side_effect=RuntimeError('reached pilots')):
             with self.assertRaisesRegex(RuntimeError, 'reached pilots'):
@@ -218,8 +219,162 @@ class LampTests(unittest.TestCase):
         for call in self.calls():
             self.assertIn(lamp.UNATTENDED, call['prompt'])
             self.assertIn(lamp.CONTRACT, call['prompt'])
+            self.assertIn(lamp.MOTION_POLICY, call['prompt'])
             if 'style-proposals-' in call['work']:
                 self.assertIn('Do not invent frame counts, rows or alternate paint looks.', call['prompt'])
+
+    def test_refresh_cli_keeps_started_steps_and_historical_replay_bytes(self):
+        self.inputs['glossary'] = {'words': {'supra': 'old glossary'}}
+        for guardian in self.inputs['guardians']:
+            guardian['charter_text'] += '\n- **Georgian thread**: old frozen field.'
+            if guardian['id'] == 'emily-dickinson':
+                guardian.update(name='Emily Dickinson', charter='Emily Dickinson')
+                guardian.pop('description', None)
+        driver = self.driver()
+        rule = lamp.schema.obj({'why': lamp.S})
+        driver.round(1, 'before', ['moon'], 'Same task.', {}, rule)
+        # Exercise migration of records made before input identities were recorded.
+        job_path = self.run / 'jobs/001/before-moon-m0.json'
+        record_path = self.run / 'records/001/before-moon-m0.json'
+        job, record = loop.load(job_path), loop.load(record_path)
+        job.pop('inputs_sha256')
+        record.pop('inputs_sha256')
+        record['job_sha256'] = lamp.digest(job)
+        loop.save(job_path, job)
+        loop.save(record_path, record)
+        (self.run / 'provenance.json').unlink()
+        real_repo = Path(__file__).resolve().parents[2]
+        with patch.object(loop, 'REPO', real_repo):
+            lamp_compare.replay_run(self.run, ['renumber'], ['primary-test'], 'high', 4)
+        evidence = {p: p.read_bytes() for folder in ('jobs', 'records', 'replies', 'replay')
+                    for p in (self.run / folder).rglob('*') if p.is_file()}
+        evidence[self.run / 'inputs.json'] = (self.run / 'inputs.json').read_bytes()
+        command = [sys.executable, '-m', 'factory.taste.codex_lamp', 'refresh-inputs', str(self.run),
+                   '--reason', 'Use the revised guardian charters for remaining steps.']
+        result = subprocess.run(command, cwd=real_repo, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['status'], 'refreshed')
+        provenance = loop.load(self.run / 'provenance.json')
+        self.assertEqual(provenance['refreshes'][0]['preserved_steps'], {'1': provenance['initial']})
+        current = lamp_inputs.current(self.run)
+        self.assertNotIn('glossary', current)
+        emily = next(g for g in current['guardians'] if g['id'] == 'emily-dickinson')
+        self.assertEqual(emily['name'], 'Emily')
+        self.assertEqual(emily['charter'], 'Emily')
+        self.assertEqual(emily['description'], 'After the poet Emily Dickinson.')
+        before = (self.run / 'provenance.json').read_bytes()
+        result = subprocess.run(command, cwd=real_repo, capture_output=True, text=True)
+        self.assertEqual(json.loads(result.stdout)['status'], 'unchanged')
+        self.assertEqual((self.run / 'provenance.json').read_bytes(), before)
+        driver = self.driver()
+        driver.round(1, 'before', ['moon', 'painter'], 'Same task.', {}, rule, compare=True)
+        driver.round(2, 'still-step-one', ['moon'], 'Same task.', {}, rule)
+        driver.round(5, 'after', ['moon', 'emily-dickinson', 'originality'], 'Same task.', {}, rule, compare=True)
+        self.assertTrue(all(p.read_bytes() == data for p, data in evidence.items()))
+        for path in self.run.glob('jobs/*/*.json'):
+            job = loop.load(path)
+            self.assertEqual('Georgian thread' in job['prompt'], job['round'] < 5)
+            if job['round'] == 5:
+                self.assertNotIn('glossary', job['prompt'].lower())
+                self.assertIn('Emily; ', job['prompt'])
+                if job['guardian'] == 'emily-dickinson':
+                    self.assertIn('You are Emily.', job['prompt'])
+        with patch.object(loop, 'guardians', side_effect=AssertionError('live charters used')):
+            calls = len(self.calls())
+            self.driver().round(5, 'after', ['moon'], 'Same task.', {}, rule, compare=True)
+            self.assertEqual(len(self.calls()), calls)
+        lamp_compare.compare_run(self.run)
+        report = loop.load(self.run / 'comparison.json')
+        self.assertEqual({r['inputs_sha256'] for r in report['replies'] if r['source'] == 'pets'},
+                         {provenance['initial'], provenance['current']})
+        self.assertEqual(len([r for r in report['seats'] if r['guardian'] == 'moon'
+                              and r['model'] == 'primary-test']), 3)  # two revisions plus historical replay
+        # Even identical prompts cannot pair across explicitly different inputs.
+        record_path = self.run / 'records/005/after-moon-m1.json'
+        record = loop.load(record_path)
+        record['inputs_sha256'] = provenance['initial']
+        loop.save(record_path, record)
+        lamp_compare.compare_run(self.run)
+        self.assertFalse(any(p['stage'] == 'after' and p['guardian'] == 'moon'
+                             for p in loop.load(self.run / 'comparison.json')['comparisons']))
+
+    def test_refresh_preserves_started_step_veto_validation_and_other_inputs(self):
+        driver = self.driver()
+        old_sha, old = lamp_inputs.for_step(self.run, 7)
+        lamp_inputs.for_step(self.run, 9)
+        guardians = json.loads(json.dumps(self.inputs['guardians']))
+        for guardian in guardians:
+            guardian['charter_text'] = '- **guards against**: changed guard.'
+        with patch.object(loop, 'guardians', return_value=guardians):
+            lamp_inputs.refresh(self.run, 'Revised charters.')
+        driver = self.driver()
+        new = lamp_inputs.current(self.run)
+        self.assertEqual({k: v for k, v in old.items() if k != 'guardians'},
+                         {k: v for k, v in new.items() if k != 'guardians'})
+        self.assertEqual(lamp_inputs.for_step(self.run, 8), (old_sha, old))
+        old_guard = loop.charter_line(next(g for g in old['guardians'] if g['id'] == 'moon')['charter_text'], 'guards against')
+        reply = {'vetoes': [{'target': 'A', 'quote': old_guard, 'why': 'Evidence.'}]}
+        driver.check('moon', reply, 'set-review', {}, old)
+        with self.assertRaisesRegex(ValueError, 'guards-against'):
+            driver.check('moon', reply, 'set-review', {}, new)
+        driver.image_review(10, 'redo-review',
+                            {'moon': {'contact': str(self.fixture / 'final/spritesheet.webp')}}, {}, {})
+        for call in self.calls():
+            context = json.JSONDecoder().raw_decode(call['prompt'].split('Context:\n', 1)[1])[0]
+            self.assertEqual(context['owner_charters'], {g['id']: g for g in old['guardians']})
+
+    def test_refresh_cannot_change_a_locked_run(self):
+        self.driver()
+        before = {p.relative_to(self.run): p.read_bytes() for p in self.run.rglob('*') if p.is_file()}
+        command = [sys.executable, '-m', 'factory.taste.codex_lamp', 'refresh-inputs', str(self.run)]
+        with lamp.locked(self.run):
+            result = subprocess.run(command, cwd=Path(__file__).resolve().parents[2],
+                                    capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('another driver is using', result.stderr)
+        self.assertTrue(all((self.run / p).read_bytes() == data for p, data in before.items()))
+        self.assertFalse((self.run / 'provenance.json').exists())
+
+    def test_motion_guidance_failure_retries_once_with_active_attempt_and_keeps_evidence(self):
+        driver = self.driver()
+        key = 'pilot-motion'
+        with patch.dict(os.environ, {'FAKE_MOTION_FAILURE': '1'}):
+            old = lamp_hatch.hatch(driver, key, 'medea', {}, {}, None, None)
+        self.assertEqual(old['status'], 'failed')
+        old['worker_policy'] = 2
+        self.assertFalse(lamp_hatch.retryable_pilot({**old, 'reason': old['reason'] + ' Clipping also failed.'}))
+        loop.save(self.run / 'hatches' / key / 'result.json', old)
+        evidence = {p: p.read_bytes() for p in Path(old['work']).rglob('*') if p.is_file()}
+        with patch.object(lamp_hatch, 'validate', side_effect=KeyboardInterrupt):
+            with self.assertRaises(KeyboardInterrupt):
+                lamp_hatch.hatch(driver, key, 'medea', {}, {}, None, None)
+        before = len(self.calls())
+        result = lamp_hatch.hatch(driver, key, 'medea', {}, {}, None, None)
+        self.assertEqual(result['status'], 'validated')
+        self.assertNotEqual(result['work'], old['work'])
+        self.assertEqual(loop.load(Path(result['resumed_from'])), old)
+        self.assertTrue(all(p.read_bytes() == data for p, data in evidence.items()))
+        provenance = loop.load(Path(result['package']) / 'provenance.json')
+        self.assertEqual(provenance['motion_guidance_difference'], old['reason'])
+        self.assertEqual(provenance['motion_policy'], lamp_hatch.MOTION_POLICY)
+        lamp_hatch.hatch(driver, key, 'medea', {}, {}, None, None)
+        self.assertEqual(len(self.calls()), before)
+        for status in ('failed', 'refused'):
+            self.assertFalse(lamp_hatch.retryable_pilot({**old, 'status': status, 'worker_policy': 3}))
+
+    def test_motion_numbers_do_not_gate_but_actual_skill_failures_do(self):
+        driver = self.driver()
+        # The real validators accept the fixture's 30px jump despite the style's 10–14px.
+        style = {'rows': {'jumping': 'Rise 10–14 pixels.'}}
+        with patch.dict(os.environ, {'FAKE_MOTION_FAILURE': 'with-atlas'}):
+            result = lamp_hatch.hatch(driver, 'pilot-guidance', 'medea', style, {}, None, None)
+        self.assertEqual(result['status'], 'validated')
+        self.assertIn('Only the skill\'s validators gate a pet', self.calls()[-1]['prompt'])
+        self.assertIn('31 pixels', loop.load(Path(result['package']) / 'provenance.json')['motion_guidance_difference'])
+        with patch.dict(os.environ, {'FAKE_MOTION_FAILURE': 'with-atlas', 'FAKE_FAIL': 'medea'}):
+            result = lamp_hatch.hatch(driver, 'set-bad-atlas', 'medea', style, {}, None, None)
+        self.assertEqual(result['status'], 'failed')
+        self.assertIn('validate_atlas.py failed', result['reason'])
 
     def test_resume_unfinished_model_pair_uses_the_original_prompt(self):
         driver = self.driver()
