@@ -230,6 +230,43 @@ struct MarginariumReaderTests {
         #expect(sections.map(\.id) == ["a", "e", "g", "i", "k", "l"])
     }
 
+    /// A margin column sits beside the story it annotates: each margin group joins the sections
+    /// since the previous one, and the story after the last group stands alone.
+    @Test func spreadsJoinEachMarginGroupToTheStoryBeforeIt() throws {
+        let data = Data(#"""
+            {"version":1,"chapters":[{"id":"fixture","blocks":[
+              {"kind":"heading","key":"a"},
+              {"kind":"paragraph","key":"b"},
+              {"kind":"marginHeading","key":"c"},
+              {"kind":"marginNote","key":"d","speaker":"the Moon","number":1},
+              {"kind":"marginHeading","key":"e"},
+              {"kind":"marginNote","key":"f","speaker":"George","number":1},
+              {"kind":"paragraph","key":"g"},
+              {"kind":"tableCell","key":"h","row":0,"column":0,"header":true},
+              {"kind":"paragraph","key":"i"}
+            ]}]}
+            """#.utf8)
+        let chapter = try #require(try JSONDecoder().decode(MarginariumDocument.self, from: data).chapters.first)
+        let spreads = chapter.spreads
+        #expect(spreads.map { $0.story.map(\.id) } == [["a", "b"], [], ["g", "h", "i"]])
+        #expect(spreads.map { $0.margin?.id } == ["c", "e", nil])
+        #expect(Set(spreads.map(\.id)).count == spreads.count)
+        // Nothing is dropped, duplicated or reordered on the way into spreads.
+        let keys = spreads.flatMap { ($0.story + [$0.margin].compactMap { $0 }).flatMap(\.blocks) }.map(\.key)
+        #expect(keys == chapter.readableBlocks.map(\.key))
+    }
+
+    @Test func chapterOneSetsEveryMarginGroupBesideItsStory() throws {
+        let document = try #require(MarginariumDocument.bundled())
+        let chapter = try #require(document.chapters.first { $0.id == "marginarium" })
+        let withMargins = chapter.spreads.filter { $0.margin != nil }
+        #expect(withMargins.count == chapter.sections.filter { $0.kind == .margin }.count)
+        #expect(withMargins.allSatisfy { !$0.story.isEmpty })
+        // Chapter 6's pets stay one lazy row each: it has no margin groups to join them.
+        let six = try #require(document.chapters.first { $0.id == "petsWeMade" })
+        #expect(six.spreads.allSatisfy { $0.margin == nil })
+    }
+
     @Test func signaturesKeepTheirItalicsIncludingNamesSplitIntoDocsRuns() throws {
         let document = try #require(MarginariumDocument.bundled())
         let chapter = try #require(document.chapters.first { $0.id == "marginarium" })

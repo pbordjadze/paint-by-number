@@ -4,7 +4,7 @@ import UIKit
 @testable import PaintByNumber
 
 /// The Marginarium: six chapters and two appendices, each with its title and passage, and
-/// both pets' bundled frames and tap responses, and the Lamp's five principles.
+/// both pets' bundled frames and tap responses, and how the Lamp works.
 @MainActor
 struct MarginariumTests {
     @Test func chaptersAndAppendicesHaveTitlesAndPassages() {
@@ -60,13 +60,15 @@ struct MarginariumTests {
         #expect(PipSprite.animation.actionFrames(reduceMotion: false).map(\.source) == PipSprite.waving.map(\.source))
     }
 
-    @Test func lampHasFiveLinesInOrder() {
-        #expect(MarginariumLamp.lines.count == 5)
+    /// The Lamp's ways, in plain words for any reader (Chief Architect Paul's rule for the book).
+    @Test func lampHasSevenPlainLinesInOrder() {
         #expect(MarginariumLamp.lines == [
-            "Every seat has a charter: what it believes, what it champions, what it guards against.",
-            "Ballots are blind: no seat sees how the others voted.",
-            "Every vote and veto is written down with its reason.",
-            "Any seat can veto, but only by quoting its own charter.",
+            "Every guardian has a charter: what it believes, what it loves and what it watches out for.",
+            "Each guardian keeps its idea as a metaphor: Dinotopia never asks for dinosaurs, and the Snow Queen never asks for snow.",
+            "Guardians work in teams of friends who care about similar things.",
+            "Each guardian votes alone: none sees how the others voted.",
+            "Every vote, yes or no, is written down with its reason.",
+            "A guardian can say no, but only by quoting its own charter.",
             "A person has the last word.",
         ])
     }

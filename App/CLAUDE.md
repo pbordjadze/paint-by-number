@@ -88,7 +88,11 @@ synchronized folder would bundle it into the app.
   (the last as `speaker`). `Chapter.sections` groups those blocks for
   `MarginariumStructuredViews`: tables align in two columns where the scaled reading measure
   allows, otherwise each row stacks its heading and text; VoiceOver reads a whole row at a time.
-  Margins use footnote type and the contents page's passage rule, and `MarginariumMarginNote`
+  `Chapter.spreads` joins each margin group to the story since the previous one: where the page
+  is wide enough (`marginColumnMinimum`, scaled; not at accessibility sizes) and the chapter has
+  margins, the reader sets each spread as one row, story column beside margin column, top-aligned;
+  otherwise every section is its own lazy row and a margin group follows its story as a card.
+  Margins use footnote type (beside the story, the contents page's passage rule), and `MarginariumMarginNote`
   shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
   VoiceOver; `MarginariumSpritePlayer(pet:marginWidth:)` keeps only small copies of the cells it
   plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
@@ -97,7 +101,16 @@ synchronized folder would bundle it into the app.
   nineteen guardians' pets, bundled as `Resources/pet-<id>.webp` within the budget in
   `docs/marginarium-pets.md`; the Moon's pet is withheld. `SpriteAtlasTests` checks a generated
   WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
-  `MarginariumReaderUITests` opens chapters, pets and appendices. `Settings/`; `Share/`.
+  `MarginariumReaderUITests` opens chapters, pets and appendices. Who's Who
+  (`MarginariumWhosWhoView`, from the contents page's New here? box) shows `MarginariumCast`: the
+  people (Paul, Chief Architect; Caroline, Chief Designer, whose ideas are credited to her), the
+  AI helpers with Pip and Colophon, and the Lamp's guardians in their teams, each card opening
+  `MarginariumGuardianView`, its brief (the charter in `factory/GUARDIANS.md` in plain words, ids
+  from `factory/panel.json`); a guardian whose pet hasn't hatched shows `MarginariumEgg`.
+  `MarginariumCastTests` and `MarginariumWhosWhoUITests` cover them. Chief Architect Paul's rule
+  for the whole Marginarium: anyone who opens it should have a nice time and roughly follow what's
+  going on, so a new page says who people are and what the Lamp's words mean (or links Who's Who),
+  in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
@@ -138,6 +151,9 @@ synchronized folder would bundle it into the app.
   `-dark` and `-long-text` variants. Readiness follows the requested section entering the
   reader's viewport once the sheet has stopped moving, so these scenarios wait up to 30 s;
   `MarginariumReaderUITests` also captures margins and tables at accessibility text sizes.
+  `marginarium-whos-who` (with `-dark`, `-long-text`) opens Who's Who at its top,
+  `marginarium-whos-who-teams` scrolled to the Workshop, and `marginarium-guardian` (with `-dark`,
+  `-long-text`) Dinotopia's brief (`ShellDemo.marginariumPath`).
 
 ## Painting screen
 

@@ -54,17 +54,20 @@ struct MarginariumTableView: View {
     }
 }
 
-/// The Lamp's numbered asides keep their signatures, with the contents page's passage tint.
-/// A note is one VoiceOver element, its pets (`MarginariumSpeakers`) aside; the group stays a
-/// container rather than one long utterance.
+/// The Lamp's numbered asides keep their signatures. In a margin column beside the story they
+/// sit behind the contents page's passage rule; between paragraphs (iPhone, accessibility sizes)
+/// they are a card, so the story visibly steps around them. A note is one VoiceOver element, its
+/// pets (`MarginariumSpeakers`) aside; the group stays a container rather than one long utterance.
 struct MarginariumMarginView: View {
     let section: MarginariumDocument.Section
+    var besideStory = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let notes = VStack(alignment: .leading, spacing: 12) {
             ForEach(section.blocks) { block in
                 if block.kind == .marginHeading {
                     Text(block.attributedText)
+                        .foregroundStyle(.secondary)
                         .accessibilityAddTraits(.isHeader)
                 } else {
                     MarginariumMarginNote(block: block)
@@ -72,12 +75,23 @@ struct MarginariumMarginView: View {
             }
         }
         .font(.footnote)
-        .padding(.leading, 16)
-        .overlay(alignment: .leading) {
-            Capsule()
-                .fill(.tint.opacity(0.45))
-                .frame(width: 3)
-                .accessibilityHidden(true)
+
+        Group {
+            if besideStory {
+                notes
+                    .padding(.leading, 16)
+                    .overlay(alignment: .leading) {
+                        Capsule()
+                            .fill(.tint.opacity(0.45))
+                            .frame(width: 3)
+                            .accessibilityHidden(true)
+                    }
+            } else {
+                notes
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("marginarium-margin-\(section.id)")

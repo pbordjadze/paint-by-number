@@ -34,6 +34,30 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
             }
             return result
         }
+
+        /// Each margin group with the story since the previous one, which it annotates; the
+        /// story after the last group has none.
+        var spreads: [Spread] {
+            var result: [Spread] = []
+            var story: [Section] = []
+            for section in sections {
+                if section.kind == .margin {
+                    result.append(Spread(story: story, margin: section))
+                    story = []
+                } else {
+                    story.append(section)
+                }
+            }
+            if !story.isEmpty { result.append(Spread(story: story, margin: nil)) }
+            return result
+        }
+    }
+
+    /// A stretch of story and the margin notes written about it, which a wide reader sets beside it.
+    struct Spread: Identifiable, Sendable {
+        let story: [Section]
+        let margin: Section?
+        var id: String { "spread-" + (story.first?.id ?? margin?.id ?? "") }
     }
 
     struct Section: Identifiable, Sendable {

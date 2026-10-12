@@ -1,7 +1,8 @@
 import XCTest
 
 /// Both sections of the contents page open native reader pages, including at large text sizes;
-/// Chapter 6 shows the guardians' pets, and Chapter 1's margin notes carry them beside the words.
+/// Chapter 6 shows the guardians' pets, and Chapter 1's margin notes carry them beside the words,
+/// in a margin column beside the story where the page has room.
 final class MarginariumReaderUITests: XCTestCase {
     @MainActor
     func testChapterAndAppendixOpenFromContents() {
@@ -124,6 +125,33 @@ final class MarginariumReaderUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(note.frame.minX, reader.frame.minX)
         XCTAssertLessThanOrEqual(note.frame.maxX, reader.frame.maxX)
         attachScreenshot(of: app, named: "marginarium-chapter1-guardians")
+    }
+
+    /// On a page wide enough for a margin column (the iPad), a margin note stands beside the story
+    /// it annotates; on a narrower one (the iPhone) it follows that story.
+    @MainActor
+    func testMarginNotesStandBesideTheStoryWhereThereIsRoom() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "marginarium-chapter1-guardians"]
+        app.launch()
+        let reader = app.scrollViews["marginarium-reader"]
+        let note = reader.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "marginarium-note-", "Each figure paints one stage")).firstMatch
+        XCTAssertTrue(note.waitForExistence(timeout: 15))
+        XCTAssertTrue(waitUntil { note.isHittable })
+        let story = reader.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@",
+                                                            "The first request of the night sounded small")).firstMatch
+        if reader.frame.width - 40 >= 740 {
+            XCTAssertTrue(story.exists)
+            XCTAssertGreaterThanOrEqual(note.frame.minX, story.frame.maxX, "The note isn't in a margin beside the story")
+            XCTAssertLessThan(note.frame.minY, story.frame.maxY, "The note isn't beside the story it annotates")
+        } else if story.exists {
+            // Scrolled to the notes, the story above them may already have left the lazy stack.
+            XCTAssertGreaterThanOrEqual(note.frame.minY, story.frame.maxY, "The note doesn't follow its story")
+        }
+        XCTAssertLessThanOrEqual(note.frame.maxX, reader.frame.maxX)
+        attachScreenshot(of: app, named: "marginarium-chapter1-margin-column")
     }
 
     @MainActor

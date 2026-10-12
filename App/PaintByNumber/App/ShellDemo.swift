@@ -51,6 +51,11 @@ import PaintCore
 ///   target reaching the scroll viewport.
 /// - `marginarium-chapter6`, with `-dark` and `-long-text`: Chapter 6, The Pets We Actually
 ///   Made, scrolled to its first pet (Medea's ram).
+/// - `marginarium-whos-who`, with `-dark` and `-long-text`: Who's Who at its top (the people,
+///   the helpers, the Lamp and its first teams); `marginarium-whos-who-teams` scrolled to the
+///   Workshop and the teams after it.
+/// - `marginarium-guardian`, with `-dark` and `-long-text`: Dinotopia's brief, opened from Who's
+///   Who, its egg rocking.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -65,7 +70,8 @@ enum ShellDemo: Equatable {
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
-         marginariumChapterOneTable, marginariumChapterSix
+         marginariumChapterOneTable, marginariumChapterSix, marginariumWhosWho, marginariumWhosWhoTeams,
+         marginariumGuardian
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -103,6 +109,9 @@ enum ShellDemo: Equatable {
         case "marginarium-chapter1-table", "marginarium-chapter1-table-dark",
              "marginarium-chapter1-table-long-text": .marginariumChapterOneTable
         case "marginarium-chapter6", "marginarium-chapter6-dark", "marginarium-chapter6-long-text": .marginariumChapterSix
+        case "marginarium-whos-who", "marginarium-whos-who-dark", "marginarium-whos-who-long-text": .marginariumWhosWho
+        case "marginarium-whos-who-teams": .marginariumWhosWhoTeams
+        case "marginarium-guardian", "marginarium-guardian-dark", "marginarium-guardian-long-text": .marginariumGuardian
         default: nil
         }
     }()
@@ -166,7 +175,16 @@ enum ShellDemo: Equatable {
         self == .settings || self == .settingsLongText || self == .settingsAcknowledgements
     }
 
-    var opensMarginarium: Bool { self == .marginarium || marginariumEntryID != nil }
+    var opensMarginarium: Bool { self == .marginarium || !marginariumPath.isEmpty }
+
+    /// The Marginarium's navigation stack at launch: a chapter, or Who's Who and a guardian.
+    var marginariumPath: [String] {
+        switch self {
+        case .marginariumWhosWho, .marginariumWhosWhoTeams: [MarginariumCast.whosWho]
+        case .marginariumGuardian: [MarginariumCast.whosWho, MarginariumCast.destination(of: MarginariumCast.dinotopia)]
+        default: marginariumEntryID.map { [$0] } ?? []
+        }
+    }
 
     var marginariumEntryID: String? {
         switch self {
@@ -266,7 +284,8 @@ enum ShellDemo: Equatable {
              .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings,
              .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
              .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
-             .marginariumChapterOneTable, .marginariumChapterSix:
+             .marginariumChapterOneTable, .marginariumChapterSix, .marginariumWhosWho, .marginariumWhosWhoTeams,
+             .marginariumGuardian:
             break
         }
     }

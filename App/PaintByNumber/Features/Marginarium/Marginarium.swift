@@ -97,13 +97,15 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
     ]
 }
 
-/// The five principles shown after the appendices, in their reading order.
+/// How the Lamp works, in plain words, shown after the appendices in their reading order.
 nonisolated enum MarginariumLamp {
     static let lines: [String] = [
-        String(localized: "Every seat has a charter: what it believes, what it champions, what it guards against."),
-        String(localized: "Ballots are blind: no seat sees how the others voted."),
-        String(localized: "Every vote and veto is written down with its reason."),
-        String(localized: "Any seat can veto, but only by quoting its own charter."),
+        String(localized: "Every guardian has a charter: what it believes, what it loves and what it watches out for."),
+        String(localized: "Each guardian keeps its idea as a metaphor: Dinotopia never asks for dinosaurs, and the Snow Queen never asks for snow."),
+        String(localized: "Guardians work in teams of friends who care about similar things."),
+        String(localized: "Each guardian votes alone: none sees how the others voted."),
+        String(localized: "Every vote, yes or no, is written down with its reason."),
+        String(localized: "A guardian can say no, but only by quoting its own charter."),
         String(localized: "A person has the last word."),
     ]
 }
