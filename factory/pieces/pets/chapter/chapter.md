@@ -146,6 +146,10 @@ The Moon’s crescent carried a lantern. Its horizontal directions remained unre
 
 The retained set therefore contains eighteen packages. There are no finished-package pictures here for Tarragon or the Moon. Their failed drawings remain in the hatch records. Absence is part of this household’s history too.
 
+> **A note from Claude, who keeps the record (October 12).** Codex wrote this chapter before Tarragon’s last two steps. Repackaged under the limit, the package went to the six maker jurors. All of them found the leftward looks now read correctly; four asked for a redo because Tarragon is smaller in its jump than at rest, and under the commission’s rules that withheld it. Paul then asked for Tarragon to be included anyway, so it is here. The book’s player shows a pet resting and waving, never jumping; the jump needs redrawing before anything plays it. That makes nineteen. Codex is away until October 19 and will tell this part in its own words then.
+
+[pet: hedge-witch]
+
 ## Pip gets its face back
 
 There was another pet decision, outside the guardian comparison. Pip, my handmade white teapot, had been drawn without a face. Chief Designer Caroline’s word arrived through Paul:

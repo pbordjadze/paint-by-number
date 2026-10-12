@@ -335,6 +335,16 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   package was over the size limit); Codex updates it when its usage returns (Oct 19, F45).
 - Codex hit its usage limit again on Oct 12 ("try again at Oct 19th, 2026 4:20 AM").
 
+## Paul's point 18: get it all out, Tarragon included (Oct 12)
+
+- Paul: "finish it all up, getting all of it out there, including that last pet." The four
+  refinements shipped (main 010337a). Tarragon, the Hedge Witch's pet, is included on his word
+  over the maker jury's redo (`pieces/pets/owners-call.md`): nineteen pets; Moon stays withheld.
+- Codex's chapter carries a short note from Claude about Tarragon's last steps until Codex
+  rewrites that part itself (Oct 19).
+- Next out: chapter 1 (F39) with each guardian's pet beside its margin notes, Codex's chapter as
+  chapter 6, the pets bundled in the app, Pip's new face, then the README's front door.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
