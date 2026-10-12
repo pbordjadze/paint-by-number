@@ -8790,13 +8790,13 @@
       }
     },
     "lamp.dinotopia.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption of Dino's egg, standing in for a pet that hasn't hatched",
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Dino",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino's egg: its pet hasn't been drawn yet"
+            "value" : "Dino, the long-necked dinosaur Paul hatched in Codex"
           }
         }
       }
@@ -10804,10 +10804,62 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The story runs down the middle of each page, and the guardians write in its margins. Tap any pet to say hello."
+            "value" : "The story runs down the middle of each page. Highlighted words have notes from the guardians: tap one to read them. Tap any pet to say hello."
           }
         }
       }
+    },
+    "marginarium.note.words" : {
+      "comment" : "The Marginarium: the words of the story a margin note is about, quoted above the note in the margin column; the argument is the words",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”"
+          }
+        }
+      }
+    },
+    "marginarium.note.wordsStart" : {
+      "comment" : "The Marginarium: the first words of a long phrase of the story a margin note is about, quoted above the note in the margin column; the argument is the first words",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@…”"
+          }
+        }
+      }
+    },
+    "marginarium.goodnight.colophon" : {
+      "comment" : "The Marginarium: under the last line of a chapter Claude narrates, beside its pet; Colophon is the pet's name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The end. Colophon, Claude's moth, says goodnight."
+          }
+        }
+      }
+    },
+    "marginarium.goodnight.pip" : {
+      "comment" : "The Marginarium: under the last line of Codex's chapter, beside its pet; Pip is the pet's name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The end. Pip, Codex's teapot, says goodnight."
+          }
+        }
+      }
+    },
+    "In the margin" : {
+      "comment" : "The Marginarium: heading of the card of margin notes that opens under the highlighted words a reader tapped",
+      "extractionState" : "manual"
     },
     "marginarium.welcome.rule" : {
       "comment" : "The Marginarium: the last line of the New here? box, Paul's rule for the book",
@@ -10924,6 +10976,570 @@
     "Happiest when" : {
       "comment" : "The Marginarium, a guardian's brief: label above when the guardian is happiest; the text under it is a sentence",
       "extractionState" : "manual"
+    },
+    "marginarium.marginarium.block.a4463ad52e684128bc68fdd9dedf59da.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "has read a great deal and remembers almost none of it by name"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.45f229e6dc954c39ae6826d99637b6dc.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "writes in the margins"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1aaed14df5d04d82b45478b9cad90b27.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a design panel of eighteen imaginary guardians"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e2528a106b294b18ba73b3b6d05d781d.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "each one visibly applying one stage of the pipeline | It would linger just enough to be able to read if you read kinda quickly"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.2676315ddf264b58b3f2ddd987143ec8.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It would linger just enough to be able to read if you read kinda quickly"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.4db331c940cc424eaccb94803dbef058.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eight or sixteen directions"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8acd2087bede45e29531d3e4af125559.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "magic like enchanted dishes coming alive"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9245408061584bc981fd3ebf5816900c.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the paper, its authors, the year"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0b5244bd8d774310872396963fc227f0.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a plant that runs with the lights off, because nobody is inside"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.f850f9dc3539439592abc6a1cdbc449b.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a dark factory for taste | Is this even smart thinking?"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d636ee0db18d4373ba78413a350df444.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "taste written down as rules"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.bb177af247074193be3945119c29fd67.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "try these layers gently | joins on probation"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.3c70cd0cd8f34857812573b4206db2a0.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "isolate one piece of the design | Worth saving, at least writing down"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.4023b778e42341fe9709013f0433670d.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The parts are old | give it mock data"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.0ff22249f2f84c60adc101570692441d.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "use personas as the reviewers"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.55d8309c2cd94a4d9de2d77420acecf1.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "run at low effort | gets more weight in the next decision"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.e1e3d20444c14dc99a91d6f6e6f5992c.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "became the ledger"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cdecddae8c5741998cbc65f6bb83d7c0.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a Mac in the homelab with everything on Kubernetes"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.2a5d4cfaaccd4268b5c4f082fb64a29f.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "she's just sick"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.141c75ec75bb4474927daef4e7df0f24.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maybe that bard, Okudzhava | If this is too many it's ok | Sentient machinery, in the gentle, nice way"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.32cd29d03eb24398b5fcf6e0e8fea2e0.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "one of the worst names I've ever heard"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.c01e9b5f6fdd4b86ab2f7466d6359bd7.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Lamp Left Burning"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d9f3222ac07341e79ccf373b05db3086.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I do prefer The Round Table as well"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.5859446a17bf48e8b1fa25f07549c0d1.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My own instinct had been The Round Dance"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.7bf7bfb558f84228a1026d6a8812a7f0.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I'll let them have just this name"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.33aaf9e1af9f480ba59bdaeb210d3801.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "told in chapters"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6767fd8c8db846b7afe734fbe7b74159.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cherry Blossom is a shoe polish"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.1dfc842ab14e4254af7edc32f13cdabc.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea vetoed every name with \"cold\" in it"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b5142ae3059942eabb522dd85d0e643d.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lantern Paper and Paper Lantern had both slipped in"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.a41155f923c546b09c7cc5d0465856b1.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a continual content drop, slowly, for branding"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.3aa0f876c98d470fa2991c3371aa17c3.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "268 tests passing | the same input rendering to identical bytes every time"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.b1c6d11d27f84a84969f944b4e1d9409.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "smuggled them out as bundles | The runner now commits on Codex's behalf"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.005d0a2033dc484f93a169b928389834.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex refused to start until the count was fixed | The backlog was mine"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.df0e439b18b14de2892035849fc8b56c.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every guardian should have a pet"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cc16cbb6a6864752a100b2e608be8541.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A new piece is a folder and a settings file"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.dfc3c3fb56d54f5ea3d36f2d40fb0c81.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is there a shared library for these design loops?"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.51ff13e6e2e54aa68ed25625cd132830.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This chapter's margin notes were collected the old way, by hand."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.de990951302b4f53b43025c5c3b2bd75.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is built like herbarium or planetarium"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.7eddb0f2a5fc4b4b880969137284c817.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "its nearest relative is a seaweed"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.afa152b2350348f0af818019955b668b.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "every painting is a page waiting for color | the part of a book where people talk back | Then Paul made the leap the Lamp had not"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.d5ce33686d4348a9b3eec4b57c9f6086.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "show the margins sparingly, or the notes eat the page"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.8105cb473dff40c4bb6d2008f500bf6c.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jonathan Stroud's Bartimaeus books"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.9610732f52334492bd97cf6c8666fc29.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The last instruction of the night was the simplest | A check-in fires every few hours"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.cf92fe146e54472f915dd53c9547adc3.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The lamp is lit."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.7cb5799fb96845198ca3404fa728e139.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Someone should be awake"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.bf92185fd2734f859b8a4cd721766c89.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "read the last page twice"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.95446bb285164762a5c02db1dc54cd04" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colophon, my moth, who lands beside the words like a bookmark."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

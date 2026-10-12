@@ -61,6 +61,16 @@ struct MarginariumTests {
     }
 
     /// The Lamp's ways, in plain words for any reader (Chief Architect Paul's rule for the book).
+    /// Each chapter ends with its narrator's pet saying goodnight: Codex's Pip for Codex's chapter.
+    @Test func everyChapterEndsWithItsNarratorsPet() {
+        for entry in MarginariumEntry.chapters + MarginariumEntry.appendices {
+            let narrator = entry.narrator
+            #expect(narrator.pet == (entry.id == "petsWeMade" ? "pip" : "colophon"), "\(entry.id)")
+            #expect(MarginariumPet.named(narrator.pet) != nil)
+            #expect(narrator.goodnight.hasPrefix("The end."))
+        }
+    }
+
     @Test func lampHasSevenPlainLinesInOrder() {
         #expect(MarginariumLamp.lines == [
             "Every guardian has a charter: what it believes, what it loves and what it watches out for.",

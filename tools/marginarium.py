@@ -31,6 +31,14 @@ blocks. Notes keep their numbering and full signatures; speaker is the italic na
 last "— ", even when prose follows it (a plain signature at the end is also accepted);
 speakers lists every name signed that way in the note, in order, because one note can carry
 several voices and the reader shows each guardian's pet beside it.
+
+A note says which words of the story it is about with an <!-- anchor: phrase --> line just
+before it (beside its marker); several phrases are separated by " | ", for a note whose voices
+answer different words. Each phrase is plain text (no Markdown, pipes or backslashes) found
+exactly once in the paragraphs, quotes and list items between the previous margin group and
+this one. The manifest records the block holding each phrase (anchorBlocks), and the phrases go
+to the catalog under the note's key plus ".anchor", so a translation can move them with its
+words. The reader highlights them; a note without an anchor stays a card.
 Tables become tableCell blocks in row-major order, with row/column (zero-based) and header
 metadata. Each cell has its own catalog key and an inline marker inside the pipe cell.
 The reader groups these cells into responsive tables and
@@ -79,6 +87,9 @@ RESOURCES = ASSETS.parent
 # These shipped imageset pets keep their existing playback plans in Marginarium.swift.
 PET_IMAGESETS = {"pip": {"idle": 6, "wave": 4}, "colophon": {"idle": 6, "review": 6}}
 MARKER = re.compile(r"<!-- marginarium: ([A-Za-z0-9_.-]+) -->")
+ANCHOR = re.compile(r"<!-- anchor: (.+) -->")
+# The kinds of story block whose words a margin note can point at.
+ANCHORABLE = ("paragraph", "quote", "bullet", "ordered")
 HEADING = re.compile(r"(#{1,6}) (.+)")
 BULLET = re.compile(r"( *)([-+*]) (.+)")
 ORDERED = re.compile(r"( *)(\d+)\. (.+)")
@@ -95,6 +106,8 @@ class Block:
     metadata: dict = field(default_factory=dict)
     # Tables put each marker inside its cell, rather than on a separate line.
     column_offset: int | None = None
+    # A margin note's phrases of the story (its anchor line), linked to their blocks by link_anchors.
+    anchors: list = field(default_factory=list)
 
     def record(self):
         return {"kind": self.kind, "key": self.key, **self.metadata}
@@ -105,6 +118,7 @@ def parse(source):
     lines = source.splitlines()
     blocks = []
     pending = None
+    pending_anchors = None
     i = 0
 
     def fail(message):
@@ -134,11 +148,20 @@ def parse(source):
             pending = marker[1]
             i += 1
             continue
+        if anchor := ANCHOR.fullmatch(line):
+            if pending_anchors is not None:
+                fail("two anchor lines before one block")
+            pending_anchors = anchor[1].split(" | ")
+            if any(not phrase.strip() or phrase != phrase.strip() or re.search(r"[*_`\[\]\\<>|]", phrase)
+                   for phrase in pending_anchors):
+                fail("anchor phrases are plain text without Markdown, separated by \" | \"")
+            i += 1
+            continue
         start = i
         metadata = {}
         if line.startswith("|"):
-            if pending:
-                fail("table markers belong inside their cells")
+            if pending or pending_anchors is not None:
+                fail("table markers belong inside their cells, and tables take no anchors")
             row = 0
             while i < len(lines) and lines[i].startswith("|"):
                 cells = table_cells(lines[i])
@@ -222,10 +245,11 @@ def parse(source):
             text = "\n".join(content)
         if not text.strip():
             fail("empty block")
-        blocks.append(Block(kind, text, start, pending, metadata))
+        blocks.append(Block(kind, text, start, pending, metadata, anchors=pending_anchors or []))
         pending = None
-    if pending:
-        fail("marker without a block")
+        pending_anchors = None
+    if pending or pending_anchors is not None:
+        fail("marker or anchor without a block")
     if len(blocks) < 2 or blocks[0].kind != "heading" or blocks[0].metadata["level"] != 1:
         raise ValueError("a chapter starts with a # title and a subtitle paragraph")
     if blocks[1].kind != "paragraph":
@@ -256,7 +280,46 @@ def parse(source):
             block.metadata["speakers"] = list(dict.fromkeys(signed))
         else:
             in_margin = False
+    for block in blocks:
+        if block.anchors and block.kind != "marginNote":
+            raise ValueError(f"line {block.start + 1}: only margin notes have anchors")
     return blocks
+
+
+def anchor_key(note_key):
+    return f"{note_key}.anchor"
+
+
+def link_anchors(blocks):
+    """Record, on each anchored note, the story block holding each of its phrases: the one
+    paragraph, quote or list item since the previous margin group that contains it, once,
+    as the reader shows it (emphasis, code and link syntax removed)."""
+    story = []
+    previous = None
+    for block in blocks:
+        if block.kind == "marginNote":
+            block.metadata.pop("anchorBlocks", None)
+            linked = []
+            for phrase in block.anchors:
+                found = [b for b in story for _ in range(rendered(b.text).count(phrase))]
+                if len(found) != 1:
+                    raise ValueError(f"line {block.start + 1}: anchor {phrase!r} must appear exactly once "
+                                     f"in the story before its margin group, not {len(found)} times")
+                linked.append(found[0].key)
+            if linked:
+                block.metadata["anchorBlocks"] = linked
+        elif block.kind != "marginHeading":
+            if previous == "marginNote":
+                story = []
+            if block.kind in ANCHORABLE:
+                story.append(block)
+        previous = block.kind
+
+
+def rendered(text):
+    """A block's words as the reader shows them, near enough to count an anchor's occurrences."""
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    return unescape(re.sub(r"(?<!\\)(\*\*|\*|`)", "", text))
 
 
 def table_cells(line):
@@ -455,6 +518,7 @@ def validate(root):
         source = root / chapter["source"]
         listed.add(source.resolve())
         blocks = parse(source.read_text(encoding="utf-8"))
+        link_anchors(blocks)
         if [block.record() for block in blocks] != chapter["blocks"]:
             raise ValueError(f"{chapter['source']}: manifest differs from Markdown; run import")
         for block in blocks:
@@ -471,6 +535,15 @@ def validate(root):
                 raise ValueError(f"{block.key}: comment must name the chapter and block kind")
             check_art(root, block)
             used[block.key] = block.text
+            if block.anchors:
+                key, phrases = anchor_key(block.key), " | ".join(block.anchors)
+                entry = catalog.get(key, {})
+                if english(entry) != phrases:
+                    raise ValueError(f"{key}: catalog English differs from the note's anchor line")
+                if (entry.get("extractionState") != "manual"
+                        or entry.get("comment") != anchor_comment(chapter["id"], blocks[0].text)):
+                    raise ValueError(f"{key}: needs manual extraction and the anchor's translator comment")
+                used[key] = phrases
     actual = {path.resolve() for path in (root / SOURCES).glob("*.md")}
     if actual != listed or not listed:
         raise ValueError("Markdown sources and manifest chapter list differ or are empty")
@@ -483,6 +556,32 @@ def validate(root):
 def comment(entry_id, title, block):
     detail = f"{block.kind} description for VoiceOver" if block.kind in ("image", "pet") else block.kind
     return f"The Marginarium: {title} ({entry_id}); {detail} block. Preserve inline Markdown."
+
+
+def anchor_comment(entry_id, title):
+    return (f"The Marginarium: {title} ({entry_id}); the words of the story a margin note is about, "
+            "highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it "
+            "appears once in the translated story before the note's margin group.")
+
+
+def store(strings, key, value, comment_text):
+    """Write one manual English entry; a changed English value asks translations for review."""
+    existing = strings.get(key)
+    entry = deepcopy(existing) if existing else {}
+    if existing and english(existing) != value:
+        for language, translation in entry.get("localizations", {}).items():
+            if language != "en":
+                # Translation catalogs may carry variations as well as plain string units.
+                def review(value):
+                    if isinstance(value, dict):
+                        if "stringUnit" in value:
+                            value["stringUnit"]["state"] = "needs_review"
+                        for child in value.values():
+                            review(child)
+                review(translation)
+    entry.update(comment=comment_text, extractionState="manual")
+    entry.setdefault("localizations", {})["en"] = {"stringUnit": {"state": "translated", "value": value}}
+    strings[key] = entry
 
 
 def write_json(path, value, *, catalog=False):
@@ -524,22 +623,12 @@ def import_chapter(root, source, entry_id):
             if existing is None or english(existing) != block.text:
                 raise ValueError(f"{block.key}: existing title/subtitle/passage must stay word for word")
             continue
-        entry = deepcopy(existing) if existing else {}
-        if existing and english(existing) != block.text:
-            for language, translation in entry.get("localizations", {}).items():
-                if language != "en":
-                    # Translation catalogs may carry variations as well as plain string units.
-                    def review(value):
-                        if isinstance(value, dict):
-                            if "stringUnit" in value:
-                                value["stringUnit"]["state"] = "needs_review"
-                            for child in value.values():
-                                review(child)
-                    review(translation)
-        entry.update(comment=comment(entry_id, blocks[0].text, block), extractionState="manual")
-        entry.setdefault("localizations", {})["en"] = {"stringUnit": {"state": "translated", "value": block.text}}
-        strings[block.key] = entry
-    keys = {block.key for block in blocks}
+        store(strings, block.key, block.text, comment(entry_id, blocks[0].text, block))
+    link_anchors(blocks)
+    for block in blocks:
+        if block.anchors:
+            store(strings, anchor_key(block.key), " | ".join(block.anchors), anchor_comment(entry_id, blocks[0].text))
+    keys = {block.key for block in blocks} | {anchor_key(block.key) for block in blocks if block.anchors}
     for key in list(strings):
         if key.startswith(prefix(entry_id)) and key not in keys:
             del strings[key]

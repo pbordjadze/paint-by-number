@@ -40,7 +40,7 @@ struct MarginariumCastTests {
             #expect(guardian.hatched == (MarginariumPet.named(guardian.id) != nil),
                     "\(guardian.id): hatched must match whether its pet ships")
         }
-        #expect(MarginariumCast.guardians.filter { !$0.hatched }.map(\.id).sorted() == ["dinotopia", "moon"])
+        #expect(MarginariumCast.guardians.filter { !$0.hatched }.map(\.id).sorted() == ["moon"])
         #expect(MarginariumCast.helpers.compactMap(\.pet) == ["pip", "colophon"])
         #expect(MarginariumCast.helpers.allSatisfy { MarginariumPet.named($0.pet) != nil })
     }

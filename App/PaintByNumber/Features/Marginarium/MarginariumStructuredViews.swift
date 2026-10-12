@@ -55,12 +55,19 @@ struct MarginariumTableView: View {
 }
 
 /// The Lamp's numbered asides keep their signatures. In a margin column beside the story they
-/// sit behind the contents page's passage rule; between paragraphs (iPhone, accessibility sizes)
-/// they are a card, so the story visibly steps around them. A note is one VoiceOver element, its
-/// pets (`MarginariumSpeakers`) aside; the group stays a container rather than one long utterance.
+/// sit behind the contents page's passage rule, each under the words it is about; the notes whose
+/// words were just tapped stand out and their pets wave, and tapping a note opens its words in
+/// turn. Between paragraphs (iPhone, accessibility sizes) a group is a card, which holds only
+/// the notes whose words couldn't be found (`MarginariumAnnotations.unanchored`); the rest open
+/// under their words (`MarginariumNoteCard`). A note is one VoiceOver element, its pets
+/// (`MarginariumSpeakers`) aside; the group stays a container rather than one long utterance.
 struct MarginariumMarginView: View {
     let section: MarginariumDocument.Section
     var besideStory = false
+    var annotations = MarginariumAnnotations.empty
+    var selection = MarginariumSelection()
+    var greeting = 0
+    var openNotes: @MainActor (MarginariumSelection) -> Void = { _ in }
 
     var body: some View {
         let notes = VStack(alignment: .leading, spacing: 12) {
@@ -69,6 +76,8 @@ struct MarginariumMarginView: View {
                     Text(block.attributedText)
                         .foregroundStyle(.secondary)
                         .accessibilityAddTraits(.isHeader)
+                } else if besideStory {
+                    noteBesideStory(block)
                 } else {
                     MarginariumMarginNote(block: block)
                 }
@@ -96,20 +105,82 @@ struct MarginariumMarginView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("marginarium-margin-\(section.id)")
     }
+
+    private func noteBesideStory(_ block: MarginariumDocument.Block) -> some View {
+        let opened = selection.notes.contains(block.key)
+        let words = annotations.unanchored.contains(block.key) ? [] : block.anchorPhrases
+        return MarginariumMarginNote(block: block, words: words, greeting: opened ? greeting : 0)
+            .background {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Theme.accent.opacity(opened ? 0.14 : 0))
+                    .padding(-6)
+                    .accessibilityHidden(true)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard let story = block.anchorBlocks.first, !words.isEmpty else { return }
+                openNotes(MarginariumSelection(block: story, notes: [block.key]))
+            }
+    }
+}
+
+/// The notes about the words just tapped, opened under their paragraph where there is no margin
+/// column (iPhone, accessibility sizes); their pets wave hello as it opens.
+struct MarginariumNoteCard: View {
+    let notes: [MarginariumDocument.Block]
+    let greeting: Int
+    let close: @MainActor () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("In the margin")
+                    .italic()
+                    .foregroundStyle(.secondary)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                Button("Close", systemImage: "xmark", action: close)
+                    .labelStyle(.iconOnly)
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(.secondary)
+                    // A finger-sized target that doesn't make the header taller.
+                    .padding(12)
+                    .contentShape(Rectangle())
+                    .padding(-12)
+                    .accessibilityIdentifier("marginarium-note-card-close")
+            }
+            ForEach(notes) { MarginariumMarginNote(block: $0, greeting: greeting) }
+        }
+        .font(.footnote)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("marginarium-note-card")
+    }
 }
 
 /// A margin note with a small pet for each guardian who signed it, beside the words and
-/// top-aligned. Accessibility text sizes put the pets in a row under the note instead, so the
-/// words keep the whole line.
+/// top-aligned, and in a margin column the story's words it is about above it. Accessibility
+/// text sizes put the pets in a row under the note instead, so the words keep the whole line.
 struct MarginariumMarginNote: View {
     let block: MarginariumDocument.Block
+    var words: [String] = []
+    var greeting = 0
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     private static let petWidth: CGFloat = 40
 
     var body: some View {
         let pets = MarginariumSpeakers.pets(for: block)
-        let note = MarginariumNumberedText(block: block)
-            .accessibilityIdentifier("marginarium-note-\(block.key)")
+        let note = VStack(alignment: .leading, spacing: 4) {
+            if !words.isEmpty {
+                Text(words.map(Self.quoted).formatted(.list(type: .and)))
+                    .italic()
+                    .foregroundStyle(.tint)
+            }
+            MarginariumNumberedText(block: block)
+                .accessibilityIdentifier("marginarium-note-\(block.key)")
+        }
         if pets.isEmpty {
             note
         } else if dynamicTypeSize.isAccessibilitySize {
@@ -125,19 +196,33 @@ struct MarginariumMarginNote: View {
         }
     }
 
+    /// A long phrase is quoted by its first four words; the highlight shows the rest.
+    private static func quoted(_ phrase: String) -> String {
+        let words = phrase.split(separator: " ")
+        guard words.count > 5 else {
+            return String(localized: "marginarium.note.words", defaultValue: "“\(phrase)”",
+                          comment: "The Marginarium: the words of the story a margin note is about, quoted above the note in the margin column; the argument is the words")
+        }
+        let start = words.prefix(4).joined(separator: " ")
+        return String(localized: "marginarium.note.wordsStart", defaultValue: "“\(start)…”",
+                      comment: "The Marginarium: the first words of a long phrase of the story a margin note is about, quoted above the note in the margin column; the argument is the first words")
+    }
+
     private func players(_ pets: [MarginariumPet]) -> some View {
-        ForEach(pets, id: \.id) { MarginariumSpritePlayer(pet: $0, marginWidth: Self.petWidth) }
+        ForEach(pets, id: \.id) { MarginariumSpritePlayer(pet: $0, marginWidth: Self.petWidth, greeting: greeting) }
     }
 }
 
 struct MarginariumNumberedText: View {
     let block: MarginariumDocument.Block
+    /// The block's text with its highlights, where it has any.
+    var text: AttributedString?
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(block.number.formatted())
                 .font(.display(block.kind == .marginNote ? .footnote : .body, weight: .regular))
-            Text(block.attributedText)
+            Text(text ?? block.attributedText)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)

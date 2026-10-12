@@ -5,12 +5,17 @@ import SwiftUI
 /// One cancellable player for imagesets and v2 atlases, on the contents page and in chapters.
 /// A tap restarts the response. Reduce Motion uses still poses; disappearing cancels the loop.
 /// Beside a margin note it is small, captionless and hidden from VoiceOver: the note already
-/// names its speaker, so the pet is only company for sighted readers.
+/// names its speaker, so the pet is only company for sighted readers. There it also waves when
+/// its note's words are opened (`greeting`).
 struct MarginariumSpritePlayer: View {
     let pet: MarginariumPet
     /// Nil beside a margin note.
     let caption: String?
     private let width: CGFloat
+    /// Each new nonzero value plays the tap response, as does a nonzero one on appearing.
+    private let greeting: Int
+    /// `marginarium-pet-<id>` unless a page shows the same pet twice.
+    private let identifier: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var displayScale
     @State private var pose: SpriteFrame?
@@ -21,18 +26,20 @@ struct MarginariumSpritePlayer: View {
     @State private var taps = 0
     @State private var played = 0
 
-    init(pet: MarginariumPet, caption: String) {
-        self.init(pet: pet, caption: caption, width: 96)
+    init(pet: MarginariumPet, caption: String, identifier: String? = nil) {
+        self.init(pet: pet, caption: caption, width: 96, greeting: 0, identifier: identifier)
     }
 
-    init(pet: MarginariumPet, marginWidth: CGFloat) {
-        self.init(pet: pet, caption: nil, width: marginWidth)
+    init(pet: MarginariumPet, marginWidth: CGFloat, greeting: Int = 0) {
+        self.init(pet: pet, caption: nil, width: marginWidth, greeting: greeting, identifier: nil)
     }
 
-    private init(pet: MarginariumPet, caption: String?, width: CGFloat) {
+    private init(pet: MarginariumPet, caption: String?, width: CGFloat, greeting: Int, identifier: String?) {
         self.pet = pet
         self.caption = caption
         self.width = width
+        self.greeting = greeting
+        self.identifier = identifier ?? "marginarium-pet-\(pet.id)"
         _pose = State(initialValue: pet.animation.idle.first)
     }
 
@@ -99,6 +106,9 @@ struct MarginariumSpritePlayer: View {
         .task(id: Trigger(petID: pet.id, taps: taps, reduceMotion: reduceMotion, ready: image != nil)) {
             await animate()
         }
+        .onChange(of: greeting, initial: true) { _, greeting in
+            if greeting > 0 { taps += 1 }
+        }
         // Lazy reader rows can retain their State after scrolling off screen.
         .onDisappear {
             atlas = nil
@@ -115,7 +125,7 @@ struct MarginariumSpritePlayer: View {
                 .frame(width: width, height: height)
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("marginarium-pet-\(pet.id)")
+        .accessibilityIdentifier(identifier)
     }
 
     private func animate() async {

@@ -10,7 +10,7 @@ import Testing
 struct BundledPetsTests {
     private static let guardians = [
         "baba-yaga", "balanchine", "bible-school-teacher", "bulat-okudzhava", "child-at-bedtime",
-        "emily-dickinson", "enchanted-workshop", "glassblower", "hedge-witch", "medea", "nutcracker",
+        "dinotopia", "emily-dickinson", "enchanted-workshop", "glassblower", "hedge-witch", "medea", "nutcracker",
         "open-source-enthusiast", "originality", "painter", "pirosmani", "robber-girl", "scholar",
         "snow-queen", "storybook",
     ]

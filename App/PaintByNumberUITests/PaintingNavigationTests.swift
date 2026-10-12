@@ -230,7 +230,14 @@ final class PaintingNavigationTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "gallery-open"] + (tracingPhotoPeek ? ["-tracePhotoPeek", "YES"] : [])
         app.launch()
-        XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 90), "The painting didn't open")
+        // "Close" alone could be the New Painting sheet's (CI once swiped there); the progress
+        // badge is the painting's own.
+        let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
+        XCTAssertTrue(badge.waitForExistence(timeout: 90), "The painting didn't open")
+        // Opening lays out the canvas and its bars, which on CI's iPhone has held the main thread
+        // for two to three seconds, and a gesture sent meanwhile is lost (an edge swipe was). An
+        // element query waits for the app to go idle, so this returns once the painting answers.
+        XCTAssertTrue(waitUntil(timeout: 15) { badge.isHittable && app.buttons["Close"].isHittable })
         sleep(2)
         return app
     }

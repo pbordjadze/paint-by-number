@@ -131,7 +131,8 @@ final class MarginariumReaderUITests: XCTestCase {
     }
 
     /// On a page wide enough for a margin column (the iPad), a margin note stands beside the story
-    /// it annotates; on a narrower one (the iPhone) it follows that story.
+    /// it annotates; on a narrower one (the iPhone) the demo has opened it under its words, which
+    /// come after the story's first paragraph.
     @MainActor
     func testMarginNotesStandBesideTheStoryWhereThereIsRoom() {
         let app = XCUIApplication()
@@ -155,6 +156,53 @@ final class MarginariumReaderUITests: XCTestCase {
         }
         XCTAssertLessThanOrEqual(note.frame.maxX, reader.frame.maxX)
         attachScreenshot(of: app, named: "marginarium-chapter1-margin-column")
+    }
+
+    /// Highlighted words are links to the notes about them: on the iPhone a tap opens the notes in a
+    /// card under the words, which closes again; beside a margin column they are already there.
+    @MainActor
+    func testTappingHighlightedWordsOpensTheirNotes() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "marginarium-chapter1"]
+        app.launch()
+        let reader = app.scrollViews["marginarium-reader"]
+        XCTAssertTrue(reader.waitForExistence(timeout: 15))
+        let words = reader.links["writes in the margins"]
+        XCTAssertTrue(words.waitForExistence(timeout: 10), "The narrator's highlighted words aren't a link")
+        for _ in 0..<6 {
+            if words.isHittable { break }
+            reader.swipeUp()
+        }
+        let note = reader.descendants(matching: .any).matching(NSPredicate(
+            format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
+            "marginarium-note-", "That is what a marginarium is")).firstMatch
+        let card = reader.descendants(matching: .any)["marginarium-note-card"]
+        if reader.frame.width - 40 < 700 {
+            // XCUITest gives a link in a paragraph the frame of the whole lines it runs on (CI: the
+            // text's full width, two lines tall), so the words are found by tapping along those
+            // lines until their notes open. The rest of the paragraph is plain text: a miss is inert.
+            search: for dy in [0.25, 0.75] {
+                for dx in [0.5, 0.3, 0.7, 0.1, 0.9] {
+                    words.coordinate(withNormalizedOffset: CGVector(dx: dx, dy: dy)).tap()
+                    if card.waitForExistence(timeout: 1) { break search }
+                }
+            }
+        } else {
+            words.tap()
+        }
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitUntil { note.isHittable })
+        if reader.frame.width - 40 >= 700 {
+            XCTAssertFalse(card.exists, "Beside a margin column the notes need no card")
+            XCTAssertGreaterThan(note.frame.minX, words.frame.maxX, "The note isn't beside its words")
+            attachScreenshot(of: app, named: "marginarium-highlight-beside")
+        } else {
+            XCTAssertTrue(card.exists)
+            XCTAssertGreaterThanOrEqual(note.frame.minY, words.frame.maxY, "The note didn't open under its words")
+            attachScreenshot(of: app, named: "marginarium-highlight-open")
+            app.buttons["marginarium-note-card-close"].tap()
+            XCTAssertTrue(waitUntil { !card.exists }, "The card didn't close")
+        }
     }
 
     @MainActor
