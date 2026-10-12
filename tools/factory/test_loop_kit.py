@@ -111,6 +111,30 @@ class KitTests(unittest.TestCase):
                 self.assertEqual((replayed / path).read_bytes(), contents, str(path))
             self.assertEqual((source / 'ledger.json').read_bytes(), original[Path('ledger.json')])
 
+    def test_new_prompts_caps_opt_in_and_old_frozen_wording(self):
+        self.assertFalse(loop.fresh_rules('generic')['sharedBar'])
+        for piece in ('panel-name', 'color-names'):
+            config = settings.read(loop.REPO / 'factory/pieces' / piece / 'piece.toml')
+            self.assertFalse(config.get('caps', {}).get('georgian', False))
+        for guardian in self.record['guardians']:
+            self.assertNotIn('Georgian thread', guardian['charter_text'])
+            self.assertNotIn('Georgian thread', self.run.prompt(guardian['id']))
+        self.assertNotIn('one name in fifty', self.run.prompt('moon'))
+        self.record['settings']['caps']['georgian'] = True
+        loop.save(self.run_path / 'rules.json', self.record)
+        run = kit.Run(self.run_path, self.out)
+        self.assertIn('one name in fifty', run.prompt('moon'))
+        self.assertNotIn('Georgian thread', run.prompt('moon'))
+        caps = kit.Caps(self.record)
+        self.assertTrue(caps({0: 'Tbilisi'}))
+        self.record['settings']['caps'].pop('georgian')
+        self.assertFalse(kit.Caps(self.record)({0: 'Tbilisi'}))
+        # Absence of the new marker means the frozen pre-change prompt contract.
+        self.record.pop('promptVersion')
+        self.record['settings']['caps']['georgian'] = True
+        loop.save(self.run_path / 'rules.json', self.record)
+        self.assertIn(loop.LEGACY_THREAD, kit.Run(self.run_path, self.out).prompt('moon'))
+
     def test_settings_are_frozen_and_invalid_settings_fail(self):
         first = self.run.draw(1)
         (self.piece / 'piece.toml').write_text('broken TOML')

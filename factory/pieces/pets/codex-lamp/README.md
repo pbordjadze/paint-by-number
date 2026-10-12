@@ -52,6 +52,9 @@ their preset, notes, palette, line, framing, boundaries and motion intent. Each 
 its source field, original text, replacement and reason in the worker reply and pet provenance.
 Workers never ask questions or wait for clarification: they decide within the supplied brief,
 style and contract and record their choices. This also overrides the skill's interactive steps.
+Style-sheet motion numbers are drawing guidance. Workers record target versus observed motion
+in their decisions; a numerical difference alone neither consumes repairs nor fails a pet.
+Only the skill's validators gate acceptance. The image jury then judges the resulting motion.
 
 The comparison model receives identical prompts and output schemas for proposals, shortlist,
 briefs, repairs and set review. It sees the primary model's selected context and is recorded
@@ -70,13 +73,25 @@ if the process dies before writing its final reply.
 
 ## Records under the chosen run directory
 
-All live and test scratch output belongs under `/root/factory-out/F36/`. The run directory is
+All live and test scratch output belongs under `/root/factory-out/`. The live run is in `F36/lamp`;
+tests use `FACTORY_TEST_OUT` and `TMPDIR`. The run directory is
 locked against two simultaneous drivers. Model, effort, sources, skill hashes and jobs are
-immutable; changing those inputs requires a new run directory. Parallel limits may change.
+immutable; changing those inputs requires a new run directory, except for explicitly refreshed
+guardian charters on unstarted steps. Parallel limits may change.
+
+`codex_lamp refresh-inputs <run> --reason '…'` saves the current charter text in a new immutable
+input revision. `inputs.json` and all dispatched jobs/replies remain unchanged. The provenance
+records the old/new hashes, reason, timestamp and started steps. A whole step freezes its inputs
+before its first dispatch (including both proposal rounds, or review and its repair). Rerunning
+an unchanged refresh is a no-op. Steps already started finish with their original charters;
+unstarted steps use the latest revision. Other inputs remain frozen. This command makes no
+model calls and needs no generation skill. Use `python3 -m factory.taste.codex_lamp` as the CLI.
 
 ```text
 run.json                         primary/comparison models, effort, skill location, version
 inputs.json                      frozen charters, seeds, glossary, chapter-6 evidence and rules
+input-revisions/<sha256>.json     immutable full snapshots; refresh changes only charter text
+provenance.json                  current/initial hashes, step revisions and refresh history
 skill.json                       hashes of the installed generation/validation skill
 jobs/NNN/<stage>-<seat>-mN.json    own prompt, schema, model, effort and image attachments
 retries/NNN/<job>.json            second attempt with validation reasons and previous reply
@@ -114,12 +129,14 @@ Transport conversion leaves job hashes unchanged; records made before the status
 treated as valid completions. Schema fixes therefore resume a stopped run at its unfinished jobs.
 Dispatched text prompts remain frozen across driver changes, including partially completed
 primary/comparison pairs. Replays and comparison artifacts are untouched by `run`.
-Hatch failures are normally terminal. The one migration exception is a legacy pilot with zero
-image generations blocked by a missing family reference, a v2 conflict or unanswered
-clarification. Rerunning the same command archives its old result alongside its original logs
+Hatch failures are normally terminal. Migration covers a legacy pilot with zero image
+generations blocked by a missing family reference, a v2 conflict or unanswered clarification,
+and the old jump-lift failure that enforced the style's pixel range. Rerunning the same command
+archives its old result alongside its original logs
 and starts a fresh attempt under the corrected policy. That attempt survives interruption;
 if it fails, it is terminal. Provider refusals (including events and repaired replies) never
-authorize a retry, nor do unrelated failures or failures after any image generation.
+authorize a retry, nor do unrelated failures. The motion-policy migration may reuse suitable
+source art but must complete the pipeline and pass both validators on the exact final atlas.
 Re-running verification
 checks package hashes before copying anything. Existing differing repository pet files cause
 an explicit error rather than being overwritten; identical partial copies can resume.
@@ -130,7 +147,8 @@ The entire four-file package must be at most **2,000,000 bytes**. The parent run
 that exact WebP and its evidence. Both reports must pass and match the final hash. The contact
 is rendered from those bytes by the bundled script and compressed independently. Provenance
 includes the brief, unchanged style, reference/hash, model/effort, reported generation count,
-contract overrides, autonomous decisions, technical repairs, jury redo and validator paths.
+contract overrides, motion guidance and measured differences, autonomous decisions, technical
+repairs, jury redo and validator paths.
 Large source art, previews and logs stay outside the repo.
 Generation totals are explicitly worker-reported; raw tool events are retained for auditing.
 
@@ -152,3 +170,5 @@ and veto-target agreement. It quotes up to three verbatim reasons per response. 
 score prose similarity or treat absent votes as agreement. JSON includes full replies and
 per-seat/model aggregates. Claude reply lengths use normalized JSON; new lengths use raw reply
 characters. No extra model calls or image generations are needed for comparison.
+Input revisions have separate aggregates and are never paired across a charter refresh;
+each reply and comparison includes its input hash.

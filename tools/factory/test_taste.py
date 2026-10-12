@@ -322,6 +322,23 @@ class TasteTests(unittest.TestCase):
         self.assertIn("Your past names", prompt)
         self.assertIn("Courtyard Lanterns", prompt)
 
+    def test_fresh_legacy_piece_prompts_use_current_charters_and_optional_caps(self):
+        panel = self.folder / 'new-panel'
+        with patch.object(panel_name, 'RUN', str(panel)):
+            self.quiet(panel_name.draw, 1)
+            self.quiet(panel_name.proposals, 1)
+        colors = self.folder / 'new-colors'
+        with patch.object(color_names, 'RUN', str(colors)):
+            self.quiet(color_names.setup)
+            self.quiet(color_names.prompts)
+        for folder in (panel, colors):
+            self.assertFalse(loop.load(folder / 'rules.json')['sharedBar'])
+            prompts = list(folder.rglob('*.txt'))
+            self.assertTrue(prompts)
+            for path in prompts:
+                self.assertNotIn('Georgian thread', path.read_text())
+                self.assertNotIn('one name in fifty', path.read_text())
+
     def test_piece_craft_and_rendering(self):
         self.assertFalse(panel_name.craft("A Lamp", {})[0])
         self.assertIn("duplicate", panel_name.craft("The Lamp", {"lamp": True})[0])

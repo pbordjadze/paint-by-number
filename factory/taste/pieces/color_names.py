@@ -164,7 +164,7 @@ You were given these two colors because they are near your own idea:
 
 {RULES}
 
-{loop.THREAD}
+{loop.caps_prompt(rules())}
 
 {loop.history(RUN, gid, G)}
 
@@ -180,7 +180,7 @@ Reply with only this JSON, nothing else (no code fence):
 
 {RULES}
 
-{loop.THREAD}
+{loop.caps_prompt(rules())}
 
 Write one new name for each of these 36 colors: the most beautiful, fitting name you can, the kind a painter would love to read. Plain and lovely beats clever.
 
@@ -317,7 +317,7 @@ Reply with only this JSON, nothing else (no code fence):
 Your charter:
 {g['charter_text']}
 
-{loop.THREAD}
+{loop.caps_prompt(rules())}
 
 {loop.glossary_prompt(rules()) if g.get("vetoOnly") else ""}
 

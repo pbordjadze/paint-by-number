@@ -19,6 +19,8 @@ Okudzhava's trolleybus, …).
 
 Codex never changes a pet's creature, personality, boundaries or the style sheet. When a brief
 doesn't work as an image, it says so and proposes; the Lamp decides.
+Motion numbers in a style sheet guide the drawing. Differences belong in provenance; only the
+skill's validators gate a pet. The image jury still judges the resulting character and motion.
 
 ## What a pet is (research, 2026-10-11)
 
@@ -69,7 +71,8 @@ doesn't work as an image, it says so and proposes; the Lamp decides.
    off-style, a broken boundary, a franchise look-alike, a real person's likeness. A flagged brief
    goes back to its guardian once. Paul approves the set.
 6. **Hatch:** Codex, coordinator plus one agent per pet, at most three image workers at a time.
-   Each pet is gated on the skill's `validate_atlas.py`. Codex returns `factory/pets/<id>/`
+   Each pet is gated on the skill's `validate_atlas.py` and `validate_pet_quality.py`.
+   Codex returns `factory/pets/<id>/`
    (`pet.json`, `spritesheet.webp`, the contact sheet) and a log of what each pet was made from.
 7. **Image review:** a jury of six looks at the contact sheets and says keep, or redo with one
    line why. Codex redoes; Paul has the last word.

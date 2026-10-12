@@ -17,7 +17,7 @@ import tempfile
 from . import loop, paths, runners, schema
 from .kit import outside_repo
 
-WORK = Path('/root/factory-out/F36')
+WORK = Path('/root/factory-out')
 ROWS = ('idle', 'running-right', 'running-left', 'waving', 'jumping', 'failed',
         'waiting', 'running', 'review')
 # Geometry and row order from work-pets/references/sprite-sheet-contract.md.
@@ -31,6 +31,9 @@ row 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5.
 000 is up, 090 right, 180 down, 270 left. These are gaze/pose directions with the same
 palette and treatment, not sixteen palette variants, paint treatments or separate animations.
 """
+MOTION_POLICY = ("Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) "
+                 "are drawing guidance. Only the skill's validators gate a pet; a measured difference "
+                 "from style guidance is recorded in provenance, not a reason to fail or spend repairs.")
 UNATTENDED = """This is an unattended codex exec run; nobody can answer questions.
 Never ask for clarification or wait for an answer. Decide within the brief, style sheet and v2
 contract, and record each assumption or technical decision in your reply (why for text jurors,
@@ -146,6 +149,8 @@ def execute(run, job, validate=None):
             break
         loop.save(paths.job_path(run, current, 'rejections'), {'errors': errors, 'raw_reply': raw_reply})
     record = {key: job[key] for key in ('id', 'round', 'guardian', 'model', 'effort', 'role', 'stage')}
+    if 'inputs_sha256' in job:
+        record['inputs_sha256'] = job['inputs_sha256']
     record.update(job_sha256=digest(job), prompt_sha256=digest(job['prompt'].encode()),
                   status='invalid' if errors else 'valid', errors=errors,
                   reply=reply, reply_bytes=reply_path.stat().st_size,
@@ -196,6 +201,8 @@ class Lamp:
         frozen(paths.contained(run, 'skill.json'), skill_hashes(Path(config['skill_dir'])))
         inputs = paths.contained(run, 'inputs.json')
         self.inputs = loop.load(inputs) if inputs.exists() else frozen(inputs, source_snapshot())
+        from . import lamp_inputs
+        self.inputs = lamp_inputs.current(run)
         self.seats = {g['id']: g for g in self.inputs['guardians']}
         self.models = list(dict.fromkeys([model] + ([compare] if compare else [])))
         self.model, self.effort = model, effort
@@ -206,28 +213,34 @@ class Lamp:
         rotated = others[offset:] + others[:offset]
         return ['originality', 'painter'] + rotated[:4]
 
-    def prompt(self, seat, task, context):
-        g = self.seats[seat]
-        text = (self.inputs['rules'] + '\n' + UNATTENDED + CONTRACT
+    def prompt(self, seat, task, context, inputs=None):
+        inputs = inputs or self.inputs
+        g = next(g for g in inputs['guardians'] if g['id'] == seat)
+        text = (inputs['rules'] + '\n' + UNATTENDED + CONTRACT + MOTION_POLICY
                 + f'\nYou are {g["name"]}.\nYour charter:\n{g["charter_text"]}\n'
                 + task + '\nContext:\n' + json.dumps(context, indent=2, ensure_ascii=False))
         if seat == 'originality':
-            text += '\nOriginality glossary:\n' + json.dumps(self.inputs['glossary'], ensure_ascii=False)
+            text += '\nOriginality glossary:\n' + json.dumps(inputs['glossary'], ensure_ascii=False)
         return text
 
     def round(self, number, stage, seats, task, context, rule, *, compare=False, images=()):
+        from . import lamp_inputs
+        inputs_sha, inputs = lamp_inputs.for_step(self.run, number)
         jobs = []
         for seat in seats:
             payload = context[seat] if stage in ('briefs', 'brief-repair') else context
-            prompt = self.prompt(seat, task, payload)
+            prompt = self.prompt(seat, task, payload, inputs)
             seat_jobs, saved_prompts = [], set()
             for index, model in enumerate(self.models if compare else [self.model]):
                 job = dict(id=f'{stage}-{seat}-m{index}', round=number, attempt=0,
                            role='guardian', stage=stage, guardian=seat, model=model,
-                           effort=self.effort, images=list(images), prompt=prompt, reply_schema=rule)
+                           effort=self.effort, images=list(images), prompt=prompt, reply_schema=rule,
+                           inputs_sha256=inputs_sha)
                 saved = loop.load(paths.job_path(self.run, job, 'jobs'))
                 if saved:
                     saved_prompts.add(saved['prompt'])
+                    if 'inputs_sha256' not in saved:
+                        job.pop('inputs_sha256')
                 seat_jobs.append(job)
             if len(saved_prompts) > 1:
                 raise ValueError(f'primary/comparison prompts differ: {stage}/{seat}')
@@ -238,12 +251,13 @@ class Lamp:
                     job['prompt'] = next(iter(saved_prompts))
             jobs.extend(seat_jobs)
         records = parallel_map(lambda job: execute(self.run, job,
-            lambda reply: self.check(job['guardian'], reply, stage, context)), jobs, self.parallel)
+            lambda reply: self.check(job['guardian'], reply, stage, context, inputs)), jobs, self.parallel)
         primary = {r['guardian']: r['reply'] for r in records
                    if r['model'] == self.model and r.get('status') != 'invalid'}
         return primary
 
-    def check(self, seat, reply, stage, context):
+    def check(self, seat, reply, stage, context, inputs=None):
+        inputs = inputs or self.inputs
         if stage == 'style-decision':
             nominations = reply['reference_pilots'].values()
             if any((pilot is None) != (seat == 'originality') for pilot in nominations):
@@ -253,10 +267,11 @@ class Lamp:
         if stage in ('briefs', 'brief-repair'):
             if not 150 <= len(reply['brief'].split()) <= 300 or not 50 <= len(reply['pet_notes'].split()) <= 80:
                 raise ValueError(f'{seat}: brief must be 150–300 words; pet notes 50–80')
-            if not set(self.inputs['avoid'][seat]) <= set(reply['do_not_resemble']):
+            if not set(inputs['avoid'][seat]) <= set(reply['do_not_resemble']):
                 raise ValueError(f'{seat}: omitted do-not-resemble entry')
         if 'vetoes' in reply:
-            guard = loop.charter_line(self.seats[seat]['charter_text'], 'guards against')
+            guardian = next(g for g in inputs['guardians'] if g['id'] == seat)
+            guard = loop.charter_line(guardian['charter_text'], 'guards against')
             for veto in reply['vetoes']:
                 if ' '.join(veto['quote'].split()) != guard:
                     raise ValueError(f'{seat}: veto must quote the entire guards-against line verbatim')
@@ -284,6 +299,9 @@ class Lamp:
 
     def hatch_many(self, items):
         from .lamp_hatch import hatch
+        from .lamp_inputs import bind_step
+        for kind in sorted({item['key'].split('-')[0] for item in items}):
+            bind_step(self.run, {'pilot': '2', 'set': '6', 'redo': '7'}[kind])
         return parallel_map(lambda item: hatch(self, **item), items, self.image_workers)
 
     def run_plan(self):
@@ -411,13 +429,16 @@ class Lamp:
     def image_review(self, number, stage, candidates, briefs, style):
         if not candidates:
             return {}
+        from .lamp_inputs import for_step
+        _, inputs = for_step(self.run, number)
         return self.round(number, stage, self.jury(3),
             'Inspect every attached contact sheet, each native cell and all nine rows plus sixteen looks. '
             'Return keep or redo with a concrete reason per pet. Originality marks keep unless it '
             'finds a charter violation; it does not score taste. Judge against the supplied owner '
             'charters and briefs. The maker is a separate session. Each pet gets at most one redo.',
             {'candidates': candidates, 'briefs': briefs, 'style': style,
-             'owner_charters': self.seats}, ballot_schema(list(candidates), ranking=False),
+             'owner_charters': {g['id']: g for g in inputs['guardians']}},
+            ballot_schema(list(candidates), ranking=False),
             images=[p['contact'] for p in candidates.values()])
 
     @staticmethod
@@ -449,6 +470,9 @@ def main():
     replay.add_argument('--parallel', type=int, default=4)
     compare = commands.add_parser('compare', help='write comparison.md and comparison.json without model calls')
     compare.add_argument('run_dir', type=Path)
+    refresh = commands.add_parser('refresh-inputs', help='refresh guardian charters for steps not yet started')
+    refresh.add_argument('run_dir', type=Path)
+    refresh.add_argument('--reason', default='Refresh guardian charters from factory/GUARDIANS.md.')
     args = parser.parse_args()
     if hasattr(args, 'parallel') and args.parallel < 1:
         parser.error('--parallel must be positive')
@@ -462,6 +486,9 @@ def main():
             elif args.command == 'replay':
                 from .lamp_compare import replay_run
                 result = replay_run(directory, args.pieces.split(','), args.models.split(','), args.effort, args.parallel)
+            elif args.command == 'refresh-inputs':
+                from .lamp_inputs import refresh
+                result = refresh(directory, args.reason)
             else:
                 from .lamp_compare import compare_run
                 result = compare_run(directory)

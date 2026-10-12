@@ -113,7 +113,6 @@ def main():
             f'<div class="row"><dt>{k.capitalize()}</dt><dd>{inline(cap(f[k]))}</dd></div>'
             for k in ORDER[1:] if k in f)
         recog = next((v for k, v in f.items() if k.startswith("recognizes")), None)
-        thread = f.get("Georgian thread")
         pid = f"pet-{g['id']}"
         style = atlas_style(g["id"])
         if style:
@@ -134,7 +133,6 @@ def main():
       <p class="believes">{inline(cap(f.get('believes', '')))}</p>
       <dl>{rows}</dl>
       {f'<p class="recog"><span class="label">Knows itself when</span> {inline(cap(recog))}</p>' if recog else ''}
-      {f'<p class="thread"><span class="label">Georgian thread</span> {inline(cap(thread))}</p>' if thread else ''}
       <div class="prompt">
         <span class="label">Pet prompt</span>
         <p id="{pid}">{inline(PETS[g['id']])}</p>

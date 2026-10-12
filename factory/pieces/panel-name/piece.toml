@@ -13,7 +13,7 @@ id = "panel-name"
 adapter = "panel-name"
 
 [caps]
-georgian = true
+georgian = false
 
 [roles.proposer]
 model = "haiku"

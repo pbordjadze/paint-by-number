@@ -41,6 +41,11 @@ driving manual and the state of play.
   and why), and a guardian's own words most carefully of all.
 - Credentials: Codex is signed in to Paul's ChatGPT plan in this container only; never print or
   copy its auth file.
+- For updated guardian charters during the pets run, use
+  `python3 -m factory.taste.codex_lamp refresh-inputs /root/factory-out/F36/lamp --reason 'Updated guardian charters.'`
+  before resuming the usual run command. Started steps retain their frozen inputs; provenance
+  records the revision for subsequent steps. Motion numbers guide the drawing; only the skill's
+  validators gate a pet, with measured differences recorded in provenance.
 
 ## State of play
 

@@ -34,6 +34,7 @@ def validate(data):
     if 'context' in piece and (not isinstance(piece['context'], list) or not piece['context'] or
                                not all(isinstance(text, str) for text in piece['context'])):
         raise ValueError('piece.context must be a nonempty array of strings')
+    # Omitted caps are off; validation must not add defaults to frozen settings.
     caps = data.get('caps', {})
     if set(caps) - {'georgian', 'lead', 'trail'}:
         raise ValueError('unknown caps')

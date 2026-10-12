@@ -184,7 +184,7 @@ class Run:
         return (f"You are {g['name']}.\nYour charter:\n{g['charter_text']}\n" if g else
                 'You are an independent professional designer.\n') + self.record['brief'] + \
             '\nApproved style:\n' + self.record['style'] + '\n' + \
-            (loop.THREAD if self.config.get('caps', {}).get('georgian') else '') + \
+            loop.caps_prompt(self.record, bool(self.config.get('caps', {}).get('georgian'))) + \
             '\nWhole-set caps: ' + json.dumps(self.config.get('caps', {})) + '\n' + \
             (loop.history(self.path, gid, self.gs) if history else '') + '\n'
 

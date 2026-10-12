@@ -91,6 +91,12 @@ if 'status' in props:
         if failed:
             (work / 'final/spritesheet.webp').write_bytes(b'broken fixture')
         reply = dict(status='complete', reason='Synthetic test fixture only.', image_generations=13, repairs=[])
+    if os.environ.get('FAKE_MOTION_FAILURE'):
+        reply.update(status='failed', image_generations=16,
+                     reason='Stopped after jumping exhausted both permitted repairs: its extracted peak remains '
+                            '31 pixels above baseline, exceeding the preserved 10–14-pixel lift.')
+        if os.environ['FAKE_MOTION_FAILURE'] != 'with-atlas':
+            (work / 'final/spritesheet.webp').unlink(missing_ok=True)
     reply.update(contract_overrides=[], decisions=['Proceed without clarification using the supplied constraints.'])
     if request['reference'] is None:
         reply['decisions'].append('Create the pilot base without a family reference.')

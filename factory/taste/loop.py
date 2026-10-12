@@ -65,7 +65,8 @@ def guardians():
 def fresh_rules(piece, *, version=2, recorded=False, vocabulary=None):
     record = {"version": version, "piece": piece, "recorded": recorded,
               "originalityFreeVeto": recorded and version == 2,
-              "sharedBar": not recorded, "guarantee": piece == "color-names",
+              "sharedBar": False, "promptVersion": 1 if recorded else 2,
+              "guarantee": piece == "color-names",
               "calibration": {}, "guardians": guardians(),
               "glossary": load(REPO / "factory/taste/glossary.json")}
     if vocabulary is not None:
@@ -252,7 +253,8 @@ def history(run, gid, gs):
 
 def glossary_prompt(record):
     glossary = record["glossary"]
-    return "Georgian glossary (ordinary cultural words, not franchise references):\n" + "\n".join(
+    heading = "Cultural glossary" if record.get("promptVersion", 1) >= 2 else "Georgian glossary"
+    return heading + " (ordinary cultural words, not franchise references):\n" + "\n".join(
         f"- {word}: {meaning}" for word, meaning in glossary["words"].items())
 
 
@@ -267,9 +269,21 @@ def veto_instruction(record):
     return "Every veto must quote exact words from your charter's guards against line. " + exemption
 
 
-THREAD = ("The Georgian thread is felt, not named: use materials, light, gardens and habits. "
+LEGACY_THREAD = ("The Georgian thread is felt, not named: use materials, light, gardens and habits. "
           "Across the whole set, at most one name in fifty uses a Georgian place name, "
           "and at most one in thirty uses a Georgian word.")
+
+
+def caps_prompt(record, enabled=None):
+    """Old frozen rules retain their exact prompt; new caps are an opt-in setting."""
+    if record.get("promptVersion", 1) == 1:
+        return LEGACY_THREAD if enabled is not False else ""
+    if enabled is None:
+        enabled = record.get("sharedBar", False)
+    if enabled:
+        return ("Across the whole set, at most one name in fifty uses a Georgian place name, "
+                "and at most one in thirty uses a Georgian word.")
+    return ""
 
 
 def georgian_caps(table, glossary):

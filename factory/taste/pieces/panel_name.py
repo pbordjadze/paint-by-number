@@ -70,12 +70,21 @@ def draw(n):
     save(os.path.join(rdir(n), "draw.json"), d)
     print(json.dumps({"jury": d["jury"], "proposers": d["proposers"]}))
 
-BRIEF = """Medea is an iPhone and iPad app that turns a photo into a paint-by-numbers painting, made on the device, that you then paint with your finger or Apple Pencil. It is named for Medea of Colchis (today's western Georgia): a kind, helpful witch whose magic makes the old new. Its look should remind anyone who knows Georgia of Georgia, without being obviously Georgian (no flags, no Georgian letters as decoration, no tourist cliches). It must never look like Harry Potter, Disney or any other famous franchise.
+LEGACY_BRIEF = """Medea is an iPhone and iPad app that turns a photo into a paint-by-numbers painting, made on the device, that you then paint with your finger or Apple Pencil. It is named for Medea of Colchis (today's western Georgia): a kind, helpful witch whose magic makes the old new. Its look should remind anyone who knows Georgia of Georgia, without being obviously Georgian (no flags, no Georgian letters as decoration, no tourist cliches). It must never look like Harry Potter, Disney or any other famous franchise.
 
 Every design decision for the app (colors, logo, animations, words) is judged by a panel of guardians. Each guardian keeps one idea and judges every design for it; for each decision a jury of six is drawn from the panel. These are the guardians:
 {roster}
 
 The panel needs a name for itself: what the guardians are called together. The name appears on review pages and in the record of decisions ("This palette was chosen by ..."), and it may one day be seen by the app's users, so it should be beautiful, memorable and true to the panel."""
+
+BRIEF = LEGACY_BRIEF.replace(
+    " (today's western Georgia)", "").replace(
+    " Its look should remind anyone who knows Georgia of Georgia, without being obviously Georgian "
+    "(no flags, no Georgian letters as decoration, no tourist cliches).", "")
+
+
+def brief():
+    return (BRIEF if rules().get("promptVersion", 1) >= 2 else LEGACY_BRIEF).format(roster=roster())
 
 def proposals(n):
     d = load(os.path.join(rdir(n), "draw.json"))
@@ -97,14 +106,14 @@ def proposals(n):
         out = os.path.join(rdir(n), "proposals", f"{gid}.json")
         text = f"""You are {g['name']}, one of the guardians on a design panel. Stay in character: you see everything through your idea.
 
-{BRIEF.format(roster=roster())}
+{brief()}
 
 Your charter:
 {g['charter_text']}
 
 {context}
 
-{loop.THREAD}
+{loop.caps_prompt(rules())}
 
 {loop.history(RUN, gid, G)}
 
@@ -170,12 +179,12 @@ Reply with only this JSON, nothing else (no code fence):
 (one entry per letter; the ranking lists every letter exactly once)"""
         text = f"""You are {g['name']}, sitting on a jury of the design panel. Stay in character: you judge through your idea.
 
-{BRIEF.format(roster=roster())}
+{brief()}
 
 Your charter:
 {g['charter_text']}
 
-{loop.THREAD}
+{loop.caps_prompt(rules())}
 
 {loop.glossary_prompt(rules()) if g.get("vetoOnly") else ""}
 
@@ -256,8 +265,8 @@ def write_finalist_prompts(n, draw):
         g = guardian_by_id()[gid]
         b = load(os.path.join(folder, "ballots", f"{gid}.json"))
         listing = "\n".join(f"[{letter}] {name}\n" + "\n".join(in_context(name)) for letter, name in b.items())
-        text = (f"You are {g['name']}.\n{BRIEF.format(roster=roster())}\nYour charter:\n{g['charter_text']}\n"
-                f"{loop.THREAD}\n" + (loop.glossary_prompt(rules()) if g.get("vetoOnly") else "") +
+        text = (f"You are {g['name']}.\n{brief()}\nYour charter:\n{g['charter_text']}\n"
+                f"{loop.caps_prompt(rules())}\n" + (loop.glossary_prompt(rules()) if g.get("vetoOnly") else "") +
                 f"\nFinalists:\n{listing}\nReply with candidates (lives, veto), ranking and note as JSON. " +
                 loop.veto_instruction(rules()) + " Originality only vetoes.")
         path = os.path.join(folder, "prompts", f"{gid}.txt")
