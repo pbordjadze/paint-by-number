@@ -100,8 +100,22 @@ nonisolated enum MarginariumLamp {
 
 /// A sprite cell and its hold, shared by the two pets' playback plans.
 nonisolated struct SpriteFrame: Sendable {
-    let name: String
+    enum Source: Equatable, Sendable {
+        case asset(String)
+        case cell(SpriteAtlas.Cell)
+    }
+
+    let source: Source
     let hold: Duration
+
+    init(source: Source, hold: Duration) {
+        self.source = source
+        self.hold = hold
+    }
+
+    init(name: String, hold: Duration) {
+        self.init(source: .asset(name), hold: hold)
+    }
 }
 
 /// Idle loops and tap responses; the extra hold keeps Colophon's bookmark pose on screen.
@@ -114,7 +128,7 @@ nonisolated struct SpriteAnimation: Sendable {
     func actionFrames(reduceMotion: Bool) -> [SpriteFrame] {
         if reduceMotion { return [reducedMotionAction] }
         if let actionEndHold, let last = action.last {
-            return action + [SpriteFrame(name: last.name, hold: actionEndHold)]
+            return action + [SpriteFrame(source: last.source, hold: actionEndHold)]
         }
         return action
     }

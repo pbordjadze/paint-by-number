@@ -37,6 +37,8 @@ import Foundation
 /// - `settings`: the settings sheet over the gallery.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `marginarium`: The Marginarium's sheet over the empty gallery, Pip and Colophon idling.
+/// - `marginarium-chapter`, `marginarium-chapter-dark`, `marginarium-chapter-long-text`: the
+///   reader opened to Two More Pets, with Pip and Colophon inside the chapter.
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -49,7 +51,7 @@ enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryOpen,
          galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
-         settings, settingsLongText, settingsAcknowledgements, marginarium
+         settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -77,6 +79,7 @@ enum ShellDemo: Equatable {
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
         case "marginarium": .marginarium
+        case "marginarium-chapter", "marginarium-chapter-dark", "marginarium-chapter-long-text": .marginariumChapter
         default: nil
         }
     }()
@@ -140,7 +143,7 @@ enum ShellDemo: Equatable {
         self == .settings || self == .settingsLongText || self == .settingsAcknowledgements
     }
 
-    var opensMarginarium: Bool { self == .marginarium }
+    var opensMarginarium: Bool { self == .marginarium || self == .marginariumChapter }
 
     var previewSample: Sample? {
         switch self {
@@ -213,7 +216,7 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings,
-             .settingsLongText, .settingsAcknowledgements, .marginarium:
+             .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter:
             break
         }
     }
@@ -231,6 +234,6 @@ enum ShellDemo: Equatable {
 
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded).
-    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings || opensMarginarium }
+    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings || self == .marginarium }
 }
 #endif

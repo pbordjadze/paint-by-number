@@ -72,7 +72,16 @@ synchronized folder would bundle it into the app.
   Giving feedback); `Marginarium/` (how the app is made, in chapters, with Pip, Codex's teapot,
   and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar, `MarginariumEntry`,
   `MarginariumLamp`, and the shared `MarginariumSpritePlayer`; `PipSprite` and `ColophonSprite`
-  carry the frames in the asset catalog's `Pip/` and `Colophon/`); `Settings/`; `Share/`.
+  carry the frames in the asset catalog's `Pip/` and `Colophon/`). Entries open
+  `MarginariumReaderView`: native blocks decoded by `MarginariumDocument`, with catalog
+  Markdown rendered by AttributedString and `pet:` blocks using the same player. `MarginariumPet`
+  resolves imagesets or bundled v2 atlases; `SpriteAtlas` slices them off the main actor and
+  `SpriteAtlasCache` shares decodes through the gallery's bounded image cache. Authoring, the
+  atlas contract and size budget: `docs/marginarium-pets.md`. `tools/marginarium.py` is the import/check manual;
+  `Resources/marginarium.json` is bundled, its `docs/marginarium/` sources and tool fixtures are
+  not. `MarginariumReaderTests` checks keys, initial content, inline markup and unknown-kind
+  skipping; `SpriteAtlasTests` checks a generated WebP in the test bundle only, and
+  `MarginariumReaderUITests` opens chapters, pets and appendices. `Settings/`; `Share/`.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
@@ -105,6 +114,8 @@ synchronized folder would bundle it into the app.
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`). Demo launches and the test host
   reset TipKit and hide every tip except in `paint-tip`. The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
+  `marginarium-chapter`, `marginarium-chapter-dark` and `marginarium-chapter-long-text` open the
+  reader on Two More Pets; readiness comes when its Pip block appears after the manifest loads.
 
 ## Painting screen
 

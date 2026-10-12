@@ -66,7 +66,12 @@ before planning app work).
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
   with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
-  (the app's Core ML models from their source weights).
+  (the app's Core ML models from their source weights). `marginarium.py` imports approved chapter
+  Markdown from `docs/marginarium/` into the catalog and bundled `Resources/marginarium.json`;
+  its docstring defines the supported blocks and stable key markers. `marginarium.py check`
+  checks them word for word; `python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'`
+  exercises every block kind and key stability (fixtures never ship). Chapter `pet:` blocks and
+  the shared imageset/v2-atlas player: `docs/marginarium-pets.md`.
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
@@ -255,8 +260,13 @@ Saved paintings must open in every later build. The format history is documented
   durations, percentages and numbers go through `.formatted(...)` or `PaintingTimeText`'s catalog
   units, never concatenation; errors are `LocalizedError`; no conditional or `+` of literals in a
   SwiftUI literal position (one call per literal). Helper views taking a `LocalizedStringKey` are
-  listed in `WRAPPERS` and counted in `KEY_TYPE_DECLARATIONS` of the checker. The one runtime key
-  family is `sample.<id>`, the library's titles (checked against `library.json`). A new string needs
+  listed in `WRAPPERS` and counted in `KEY_TYPE_DECLARATIONS` of the checker. Runtime key families
+  are `sample.<id>`, the library's titles (checked against `library.json`), and the stable block
+  keys in `marginarium.json` (`marginarium.<id>.block.<uuid>` plus the existing
+  title/subtitle/passage keys). The latter are unformatted Bundle lookups (literal percent signs);
+  `strings_check.py` calls `marginarium.py` to check the manifest and catalog against
+  `docs/marginarium/*.md`. Keep each Markdown block's key marker with it when editing or moving
+  it. The Markdown and tool fixtures are not bundled. A new string needs
   its catalog entry, written by hand (`"comment"`, `"extractionState": "manual"`; an explicit key
   also `localizations.en`, with plural forms for a count): Xcode extracts nothing
   (`STRING_CATALOG_GENERATE_SYMBOLS = NO`: "Finished" and "Finished!" would collide).
