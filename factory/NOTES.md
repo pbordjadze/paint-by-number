@@ -286,6 +286,9 @@ Paul's vision, not to build yet:
 - The guardians no longer each carry a Georgian thread: it was too much. It was removed quietly
   from the chapters (no new chapter about it), and from the charters and the taste code going
   forward. Records of past runs stay as they were.
+- No guards either: Georgia is not codified anywhere (no place-name or Georgian-word caps, no
+  Georgian glossary). It is already enshrined by the choice of the guardians: some are
+  explicitly Georgian (the Robber Girl and Medea especially), others close to it.
 
 ## Open questions
 
