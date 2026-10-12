@@ -127,7 +127,7 @@ struct AppInfoTests {
 }
 
 struct AcknowledgementsTests {
-    private static let all = Acknowledgements.code + Acknowledgements.models + Acknowledgements.methods
+    private static let all = Acknowledgements.artwork + Acknowledgements.code + Acknowledgements.models + Acknowledgements.methods
 
     @Test func portedCodeIsCreditedWithItsLicense() throws {
         #expect(Acknowledgements.code.map(\.name) == ["Earcut", "Polylabel"])

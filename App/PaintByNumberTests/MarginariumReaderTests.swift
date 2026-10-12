@@ -28,19 +28,30 @@ struct MarginariumReaderTests {
                     #expect(UIImage(named: image) != nil, "\(image) must be bundled")
                     #expect(!block.text.isEmpty, "An illustration needs a VoiceOver description")
                 }
+                if block.kind == .pet {
+                    #expect(MarginariumPet.named(block.pet) != nil, "\(block.pet ?? "nil") must be bundled")
+                    #expect(!block.text.isEmpty, "A pet needs a VoiceOver description")
+                }
             }
         }
         #expect(!keys.isEmpty)
     }
 
-    /// Until the chapters are approved, the import must introduce no new prose, including
-    /// the two-paragraph passage. This expectation changes only with approved content.
-    @Test func initialPagesContainOnlyTheShippedTitleSubtitleAndPassage() throws {
+    /// Existing prose stays word for word; Two More Pets adds the already-shipped captions.
+    @Test func pagesKeepShippedProseAndTwoMorePetsAddsExistingCaptions() throws {
         let document = try #require(MarginariumDocument.bundled())
         for entry in MarginariumEntry.chapters + MarginariumEntry.appendices {
             let chapter = try #require(document.chapters.first { $0.id == entry.id })
-            #expect(chapter.blocks.map(\.kind) == [.title, .subtitle, .quote])
-            #expect(chapter.blocks.map(\.text) == [entry.title, entry.subtitle, entry.passage])
+            let prose = chapter.blocks.filter { $0.kind != .pet }
+            #expect(prose.map(\.kind) == [.title, .subtitle, .quote])
+            #expect(prose.map(\.text) == [entry.title, entry.subtitle, entry.passage])
+            let pets = chapter.blocks.filter { $0.kind == .pet }
+            if entry.id == "twoMorePets" {
+                #expect(chapter.blocks.map(\.kind) == [.title, .subtitle, .pet, .pet, .quote])
+                #expect(pets.compactMap(\.pet) == ["pip", "colophon"])
+                #expect(pets.map(\.text) == [String(localized: "Pip, Codex's teapot"),
+                                             String(localized: "Colophon, Claude's moth")])
+            } else { #expect(pets.isEmpty) }
         }
     }
 
@@ -65,15 +76,34 @@ struct MarginariumReaderTests {
               {"kind":"title","key":"t"}, {"kind":"subtitle","key":"s"},
               {"kind":"heading","key":"h","level":3}, {"kind":"paragraph","key":"p"},
               {"kind":"quote","key":"q"}, {"kind":"bullet","key":"b","depth":2},
-              {"kind":"image","key":"i","image":"fixture-illustration"}
+              {"kind":"image","key":"i","image":"fixture-illustration"},
+              {"kind":"pet","key":"pet-description","pet":"pip"}
             ]}]}
             """#.utf8)
         let document = try JSONDecoder().decode(MarginariumDocument.self, from: data)
         let blocks = try #require(document.chapters.first).readableBlocks
-        #expect(blocks.map(\.kind) == [.title, .subtitle, .heading, .paragraph, .quote, .bullet, .image])
+        #expect(blocks.map(\.kind) == [.title, .subtitle, .heading, .paragraph, .quote, .bullet, .image, .pet])
         #expect(blocks.first { $0.kind == .heading }?.level == 3)
         #expect(blocks.first { $0.kind == .bullet }?.depth == 2)
         #expect(blocks.first { $0.kind == .image }?.image == "fixture-illustration")
+        #expect(blocks.first { $0.kind == .pet }?.pet == "pip")
+        #expect(blocks.first { $0.kind == .pet }?.key == "pet-description")
+    }
+
+    @Test func absentPetArtDoesNotMakeTheChapterUnreadable() throws {
+        let data = Data(#"""
+            {"version":1,"chapters":[{"id":"fixture","blocks":[
+              {"kind":"pet","key":"missing","pet":"not-bundled"},
+              {"kind":"pet","key":"no-id"},
+              {"kind":"paragraph","key":"after"}
+            ]}]}
+            """#.utf8)
+        let document = try JSONDecoder().decode(MarginariumDocument.self, from: data)
+        let blocks = try #require(document.chapters.first).readableBlocks
+        #expect(blocks.count == 3)
+        #expect(MarginariumPet.named(blocks[0].pet) == nil)
+        #expect(MarginariumPet.named(blocks[1].pet) == nil)
+        #expect(blocks.last?.key == "after")
     }
 
     @Test func inlineMarkdownRetainsEmphasisLinksAndParagraphBreaks() {

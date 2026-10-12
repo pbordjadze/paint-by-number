@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings › Acknowledgements: the sample pictures and where they come from, then the
+/// Settings › Acknowledgements: the sample pictures and artwork and where they come from, then the
 /// open-source code, machine-learning models and published methods behind the template
 /// engine, with the licenses the ported code and model weights are used under.
 struct AcknowledgementsView: View {
@@ -12,6 +12,12 @@ struct AcknowledgementsView: View {
                 Text("Pictures")
             } footer: {
                 Text("With thanks to the museums and archives that share these pictures.")
+            }
+
+            Section {
+                ForEach(Acknowledgements.artwork) { AcknowledgementRow(item: $0) }
+            } header: {
+                Text("Artwork")
             }
 
             Section {

@@ -63,6 +63,59 @@ class MarginariumTests(unittest.TestCase):
         strings_check.check_catalog(self.catalog(), usages, findings)
         self.assertEqual(findings, [], [str(f) for f in findings])
 
+    def test_pet_blocks_import_validate_and_keep_keys(self):
+        # A test atlas is sufficient for membership validation; ImageIO decoding is tested in App.
+        atlas = self.root / m.RESOURCES / "pet-fixture.webp"
+        atlas.write_bytes(b"fixture")
+        source = "# Title\n\nSubtitle.\n\n![A pet with 100% energy.](pet:fixture)\n\nAfter.\n"
+        chapter = self.imported(source)
+        pet = chapter["blocks"][2]
+        self.assertEqual(pet["kind"], "pet")
+        self.assertEqual(pet["pet"], "fixture")
+        self.assertNotIn("image", pet)
+        entry = self.catalog()["strings"][pet["key"]]
+        self.assertEqual(m.english(entry), "A pet with 100% energy.")
+        self.assertIn("pet description for VoiceOver", entry["comment"])
+        self.assertEqual(self.imported(source), chapter)
+        self.assertEqual(self.reimport(), chapter)
+        m.validate(self.root)
+        manifest = m.load_json(self.root / m.MANIFEST)
+        manifest["chapters"][0]["blocks"][2]["pet"] = "wrong-pet"
+        m.write_json(self.root / m.MANIFEST, manifest)
+        with self.assertRaisesRegex(ValueError, "manifest differs"):
+            m.validate(self.root)
+        self.reimport()
+        atlas.unlink()
+        with self.assertRaisesRegex(ValueError, "pet fixture.*bundled"):
+            m.validate(self.root)
+        with self.assertRaisesRegex(ValueError, "pet fixture.*bundled"):
+            self.imported(source)
+
+    def test_both_imageset_pets_require_their_shipped_frames(self):
+        for pet, rows in m.PET_IMAGESETS.items():
+            source = f"# Title\n\nSubtitle.\n\n![Description](pet:{pet})\n"
+            with self.subTest(pet=pet):
+                with self.assertRaisesRegex(ValueError, "bundled image set"):
+                    self.imported(source)
+                for row, count in rows.items():
+                    for index in range(count):
+                        asset = self.root / m.ASSETS / f"{pet}-{row}-{index}.imageset"
+                        m.write_json(asset / "Contents.json", {"images": [{"filename": "cell.png"}]})
+                        (asset / "cell.png").write_bytes(b"fixture")
+                self.imported(source)
+                m.validate(self.root)
+                (asset / "cell.png").unlink()
+                with self.assertRaisesRegex(ValueError, "missing files"):
+                    m.validate(self.root)
+
+    def test_pet_syntax_rejects_missing_remote_inline_and_unsafe_names(self):
+        for body in ("![Pet](pet:absent)", "![Pet](pet:)", "![Pet](pet:../pip)",
+                     "![Pet](pet:pip.webp)", "![Pet](pet://pip)", "![Pet](pet:Pip)",
+                     "![Pet](pet:pip?row=3)", "![](pet:pip)", "![*Pet*](pet:pip)",
+                     "Text ![Pet](pet:pip)"):
+            with self.subTest(body=body), self.assertRaises(ValueError):
+                self.imported("# Title\n\nSubtitle.\n\n" + body)
+
     def test_reimport_is_byte_identical_with_or_without_markers(self):
         self.imported()
         paths = [self.root / m.MANIFEST, self.root / m.CATALOG, self.canonical()]

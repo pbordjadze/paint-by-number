@@ -2,8 +2,8 @@ import Foundation
 import SwiftUI
 import os
 
-/// A still, native chapter page: New York headings, catalog-backed inline Markdown and
-/// bundled illustrations. The same reading measure as the contents page leaves room on iPad;
+/// A native chapter page: New York headings, catalog-backed inline Markdown and
+/// bundled illustrations and pets. The same reading measure as the contents page leaves room on iPad;
 /// no fixed text heights or Dynamic Type caps. Until the manifest loads (or if damaged), the
 /// already-shipped title, subtitle and passage remain readable.
 struct MarginariumReaderView: View {
@@ -52,11 +52,6 @@ struct MarginariumReaderView: View {
                 Log.library.fault("Marginarium chapter missing or unreadable: \(id, privacy: .public)")
             }
         }
-        #if DEBUG
-        .onChange(of: chapter?.id) {
-            if ShellDemo.current == .marginariumChapter { DemoMode.markReady() }
-        }
-        #endif
     }
 }
 
@@ -97,6 +92,18 @@ private struct MarginariumBlockView: View {
                     .resizable()
                     .scaledToFit()
                     .accessibilityLabel(Text(block.text))
+            }
+        case .pet:
+            if let pet = MarginariumPet.named(block.pet) {
+                MarginariumSpritePlayer(pet: pet, caption: block.text)
+                    .id(block.key)
+                    #if DEBUG
+                    .onAppear {
+                        if ShellDemo.current == .marginariumChapter, pet.id == "pip" {
+                            DemoMode.markReady()
+                        }
+                    }
+                    #endif
             }
         case .unknown:
             EmptyView()

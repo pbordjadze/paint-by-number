@@ -2,7 +2,7 @@ import Foundation
 
 /// The bundled reader manifest, made by `tools/marginarium.py` from `docs/marginarium/*.md`.
 /// Blocks carry stable catalog keys, never their position; the catalog holds their inline
-/// Markdown (an image's key holds its VoiceOver description). See the tool's docstring for
+/// Markdown (an image or pet's key holds its VoiceOver description). See the tool's docstring for
 /// the authoring format. Unknown kinds are discarded before rendering, without decoding
 /// their payload, so adding a kind doesn't make the rest of a chapter unreadable.
 nonisolated struct MarginariumDocument: Decodable, Sendable {
@@ -18,7 +18,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
 
     struct Block: Decodable, Identifiable, Sendable {
         enum Kind: String, Sendable {
-            case title, subtitle, heading, paragraph, quote, bullet, image, unknown
+            case title, subtitle, heading, paragraph, quote, bullet, image, pet, unknown
         }
 
         let kind: Kind
@@ -26,6 +26,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
         let level: Int
         let depth: Int
         let image: String?
+        let pet: String?
         var id: String { key }
 
         /// Runtime catalog lookup, like Sample.title; strings_check validates every key and
@@ -41,7 +42,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
                 ?? AttributedString(text)
         }
 
-        private enum CodingKeys: String, CodingKey { case kind, key, level, depth, image }
+        private enum CodingKeys: String, CodingKey { case kind, key, level, depth, image, pet }
 
         init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -52,12 +53,14 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
                 level = 1
                 depth = 0
                 image = nil
+                pet = nil
                 return
             }
             key = try container.decode(String.self, forKey: .key)
             level = min(6, max(1, try container.decodeIfPresent(Int.self, forKey: .level) ?? 1))
             depth = max(0, try container.decodeIfPresent(Int.self, forKey: .depth) ?? 0)
             image = try container.decodeIfPresent(String.self, forKey: .image)
+            pet = try container.decodeIfPresent(String.self, forKey: .pet)
         }
     }
 

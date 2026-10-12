@@ -12,13 +12,16 @@ constitute editorial approval: only import text Paul has approved.
 
 Format: a # title, a subtitle paragraph, then ATX headings (# through ######), paragraphs,
 > quotes (including multiple paragraphs), bullet items (-, * or +; two-space nesting), and
-standalone ![VoiceOver description](asset-name) images from Assets.xcassets. Each bullet item
+standalone ![VoiceOver description](asset-name) images from Assets.xcassets, or
+![VoiceOver description](pet:pip) pets. Each bullet item
 is a block. Continuation lines in an item are indented two spaces beyond its bullet. Quotes
 contain paragraphs, not nested block structures. Emphasis, strong emphasis, inline code and
 inline links stay as Markdown in catalog values for Foundation's AttributedString parser.
 Line breaks and inline spelling are preserved; only block syntax is removed. Unsupported
 block syntax fails with a line number rather than silently losing structure. Images require
-a nonempty plain-text description and a bundled image set; no remote images are fetched.
+a nonempty plain-text description and bundled art; no remote images are fetched. Pets are Pip,
+Colophon, or a v2 atlas named Resources/pet-<id>.webp (lowercase alphanumeric/hyphen id).
+Atlas pets idle and wave on tap. The app validates the 1536 × 2288 sheet before slicing it.
 
 Every block in the saved source has a <!-- marginarium: <key> --> marker. KEEP that marker
 with its block when editing or moving it; delete both together. New unmarked blocks get UUID
@@ -32,7 +35,7 @@ their translator comments) are never rewritten or deleted. Import only removes s
 in its own .block. namespace; translations of unchanged blocks are retained, and translations
 of edited blocks are marked needs_review. New comments name the chapter and block kind.
 
-check is read-only: source order, kind, key, heading level, bullet depth and image name must
+check is read-only: source order, kind, key, heading level, bullet depth and image/pet name must
 exactly match the manifest, and every English value must equal the Markdown block, including
 inline markup and whitespace. It also rejects missing/unlisted sources, reused or stale keys,
 missing images, and non-manual entries. strings_check.py calls the same validation and counts
@@ -53,10 +56,13 @@ CATALOG = Path("App/PaintByNumber/Resources/Localizable.xcstrings")
 MANIFEST = Path("App/PaintByNumber/Resources/marginarium.json")
 SOURCES = Path("docs/marginarium")
 ASSETS = Path("App/PaintByNumber/Resources/Assets.xcassets")
+RESOURCES = ASSETS.parent
+# These shipped imageset pets keep their existing playback plans in Marginarium.swift.
+PET_IMAGESETS = {"pip": {"idle": 6, "wave": 4}, "colophon": {"idle": 6, "review": 6}}
 MARKER = re.compile(r"<!-- marginarium: ([A-Za-z0-9_.-]+) -->")
 HEADING = re.compile(r"(#{1,6}) (.+)")
 BULLET = re.compile(r"( *)([-+*]) (.+)")
-IMAGE = re.compile(r"!\[([^\[\]\n]+)\]\(([A-Za-z0-9][A-Za-z0-9_.-]*)\)")
+IMAGE = re.compile(r"!\[([^\[\]\n]+)\]\((pet:[a-z0-9]+(?:-[a-z0-9]+)*|[A-Za-z0-9][A-Za-z0-9_.-]*)\)")
 ENTRY_ID = re.compile(r"[A-Za-z][A-Za-z0-9]*")
 
 
@@ -92,7 +98,7 @@ def parse(source):
                 or re.match(r"^\s*\[[^]]+\]:", line)):
             fail("unsupported block syntax")
         if "![" in line:
-            fail("images must be standalone ![plain description](asset-name) blocks")
+            fail("images must be standalone ![plain description](asset-name) or (pet:id) blocks")
 
     while i < len(lines):
         line = lines[i]
@@ -147,7 +153,11 @@ def parse(source):
             kind, text = "image", match[1]
             if any(c in text for c in "*_`<>") or not text.strip():
                 fail("image descriptions must be nonempty plain text")
-            metadata["image"] = match[2]
+            if match[2].startswith("pet:"):
+                kind = "pet"
+                metadata["pet"] = match[2][4:]
+            else:
+                metadata["image"] = match[2]
             i += 1
         else:
             kind, content = "paragraph", []
@@ -209,7 +219,16 @@ def load_manifest(root):
     return manifest
 
 
-def check_image(root, block):
+def check_art(root, block):
+    if block.kind == "pet":
+        pet = block.metadata["pet"]
+        if pet in PET_IMAGESETS:
+            for row, count in PET_IMAGESETS[pet].items():
+                for index in range(count):
+                    check_art(root, Block("image", block.text, block.start,
+                                          metadata={"image": f"{pet}-{row}-{index}"}))
+        elif not (root / RESOURCES / f"pet-{pet}.webp").is_file():
+            raise ValueError(f"pet {pet}: expected a bundled pet-{pet}.webp atlas")
     if block.kind == "image":
         matches = list((root / ASSETS).rglob(f"{block.metadata['image']}.imageset/Contents.json"))
         if len(matches) != 1:
@@ -244,7 +263,7 @@ def validate(root):
                 raise ValueError(f"{block.key}: needs manual extraction and a translator comment")
             if block.key.startswith(prefix(chapter["id"])) and entry["comment"] != comment(chapter["id"], blocks[0].text, block):
                 raise ValueError(f"{block.key}: comment must name the chapter and block kind")
-            check_image(root, block)
+            check_art(root, block)
             used[block.key] = block.text
     actual = {path.resolve() for path in (root / SOURCES).glob("*.md")}
     if actual != listed or not listed:
@@ -256,7 +275,7 @@ def validate(root):
 
 
 def comment(entry_id, title, block):
-    detail = "image description for VoiceOver" if block.kind == "image" else block.kind
+    detail = f"{block.kind} description for VoiceOver" if block.kind in ("image", "pet") else block.kind
     return f"The Marginarium: {title} ({entry_id}); {detail} block. Preserve inline Markdown."
 
 
@@ -285,7 +304,7 @@ def import_chapter(root, source, entry_id):
             signature = (record["kind"], english(strings.get(record["key"], {})))
             available[signature].append(record["key"])
     for block in blocks:
-        check_image(root, block)
+        check_art(root, block)
         if block.key is None:
             signature = (block.kind, block.text)
             candidates = available[signature]
