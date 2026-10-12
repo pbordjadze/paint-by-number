@@ -9,13 +9,18 @@ import tempfile
 import time
 
 from . import loop, paths, schema
-from .codex_lamp import digest, frozen
+from .codex_lamp import CONTRACT, UNATTENDED, digest, frozen
 
 RESULT = schema.obj({'status': {'type': 'string', 'enum': ['complete', 'failed', 'refused']},
                      'reason': schema.STRING, 'image_generations': {'type': 'integer', 'minimum': 0},
-                     'repairs': schema.array(schema.STRING)})
+                     'repairs': schema.array(schema.STRING),
+                     'contract_overrides': schema.array(schema.obj({
+                         'source': schema.STRING, 'original': schema.STRING,
+                         'replacement': schema.STRING, 'reason': schema.STRING})),
+                     'decisions': schema.array(schema.STRING)})
 REQUIRED = ('validate_atlas.py', 'validate_pet_quality.py', 'make_contact_sheet.py')
 LIMIT = 2_000_000
+WORKER_POLICY = 2
 
 
 def find_skill(explicit=None):
@@ -112,6 +117,16 @@ def worker_reply(lamp, work, prompt, reference):
     return reply, errors
 
 
+def retryable_pilot(record):
+    """Only the old prompt's pre-generation blockers get one migration attempt."""
+    reason = record.get('reason', '').lower()
+    return (record['key'].startswith('pilot-') and record['status'] == 'failed'
+            and record.get('image_generations') == 0 and record.get('worker_policy', 1) < WORKER_POLICY
+            and (('family reference' in reason and ('null' in reason or 'missing' in reason))
+                 or ('v2' in reason and ('conflict' in reason or 'exceed' in reason))
+                 or ('clarification' in reason and 'unanswered' in reason)))
+
+
 def hatch(lamp, key, pet, style, brief, reference, redo):
     paths.slug(key)
     base = paths.contained(lamp.run, 'hatches', key)
@@ -123,6 +138,7 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
                    reference_sha256=digest(Path(reference).read_bytes()) if reference else None, redo=redo)
     frozen(paths.contained(base, 'request.json'), request)
     target = paths.contained(base, 'result.json')
+    previous = None
     if target.exists():
         record = loop.load(target)
         if record['status'] == 'validated':
@@ -130,22 +146,45 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
             for name, sha in record['package_hashes'].items():
                 if digest(paths.contained(package, name).read_bytes()) != sha:
                     raise ValueError(f'validated package changed: {key}/{name}')
-        return record
-    record = dict(key=key, pet=pet, model=lamp.model, effort=lamp.effort, status='failed')
+        if not retryable_pilot(record):
+            return record
+        previous = record
+    record = dict(key=key, pet=pet, model=lamp.model, effort=lamp.effort, status='failed',
+                  worker_policy=WORKER_POLICY)
+    if previous:
+        old_work = paths.contained(base, Path(previous['work']).relative_to(base))
+        frozen(paths.contained(old_work, 'result.json'), previous)
+        record['resumed_from'] = str(old_work / 'result.json')
     # Never retry a completed or interrupted provider refusal.
     attempts = sorted(paths.contained(base, p.name) for p in base.glob('attempt-*'))
     for attempt in attempts:
-        try:
-            reply = loop.load(paths.contained(attempt, 'reply.json'), {})
-        except ValueError:
-            reply = {}
-        reply = reply if isinstance(reply, dict) else {}
-        if refusal(attempt) or reply.get('status') == 'refused':
-            record.update(status='refused', reason=reply.get('reason', 'provider refusal'), work=str(attempt))
+        replies = []
+        for name in ('reply.json', 'reply.retry.json'):
+            try:
+                reply = loop.load(paths.contained(attempt, name), {})
+            except ValueError:
+                reply = {}
+            if isinstance(reply, dict) and reply.get('status') == 'refused':
+                replies.append(reply)
+        if refusal(attempt) or replies:
+            record.update(status='refused', reason=replies[0].get('reason', 'provider refusal') if replies else 'provider refusal',
+                          work=str(attempt))
             loop.save(target, record)
             return record
-    work = attempts[-1] if attempts and (attempts[-1] / 'reply.json').exists() else Path(
-        tempfile.mkdtemp(prefix='attempt-', dir=base))
+    active = paths.contained(base, 'active-attempt.json')
+    if active.exists():
+        work = paths.contained(base, loop.load(active)['directory'])
+    else:
+        work = attempts[-1] if not previous and attempts and (attempts[-1] / 'reply.json').exists() else Path(
+            tempfile.mkdtemp(prefix='attempt-', dir=base))
+        frozen(active, {'directory': work.name})
+    reference_policy = (
+        'No family reference exists for this pilot. reference=null is intentional, not a blocker. '
+        'Generate the canonical base from the seed and style without a family image; use that base '
+        'and this pilot\'s approved images to ground all subsequent jobs.' if reference is None else
+        'The supplied family reference is the jury\'s chosen pilot. Attach it to every image job '
+        'for shared style, preserving this pet\'s own creature and identity. Keep this same reference '
+        'through all set hatches and redos.')
     prompt = f"""Make only a LOCAL candidate using the bundled create-pet/hatch-pet pipeline at {skill}.
 Read SKILL.md and its sprite-sheet contract. This user instruction overrides their lifecycle steps:
 NEVER upload, create, select, activate or update a service pet; NEVER save to any ChatGPT Library;
@@ -154,12 +193,26 @@ Use only built-in imagegen for art. Copy each generated source used from the too
 this work directory and record its path. One worker owns this pet; generate images sequentially, no
 nested image workers. Other pets may already be generating concurrently. Independent read-only
 visual reviewers are permitted. No real person beyond Paul and guardian namesakes in the charters.
-The set's style and this pet's creature, personality and boundaries are binding. Do not redesign them.
+{UNATTENDED}
+{CONTRACT}
+The contract overrides ANY frame count, row count, resolution or "look" number/meaning in a style
+sheet or brief. Remap motion beats to the required frames and interpret looks as directions.
+Keep the sheet's taste: preset, style_notes, palette, line, framing and boundaries, and this pet's
+creature and personality. Preserve palette colors and material treatment as one consistent style;
+do not generate the sheet's proposed palette variants or paint treatments as extra looks.
+Before generating, record EVERY technical override in contract_overrides: source field (such as
+style.rows.idle), exact original text, contract-compliant replacement and reason. Include frame
+ranges/timing remaps and look reinterpretations wherever specified. Record other autonomous
+choices in decisions. Save these in local logs and include both arrays in the final JSON reply;
+the driver copies them into the pet's provenance. Empty arrays mean no overrides/choices needed.
+Resolve overrides before preparing image jobs. Send contract-compliant technical instructions
+with the unchanged taste to imagegen; keep superseded technical claims only in provenance/logs.
 Never reword a prompt to evade a safety refusal. Stop this pet immediately on ANY safety refusal,
 return status refused and preserve the provider's reason. A failed pet must not block other pets.
-Use the request below and attach the family reference to image jobs. Base first, then idle and
+{reference_policy}
+Use the request below. Base first, then idle and
 running-right as identity/gait checks, all nine rows, cardinals, row 9 before row 10. Carry the full
-style and pet notes, row direction and do-not-resemble list into EVERY image prompt, including the
+style taste and pet notes, corrected row direction and do-not-resemble list into EVERY image prompt, including the
 three v2 look jobs (bundled defaults omit those notes). At most five image references: when needed
 combine the COMPLETE family and standard contact sheets in one labeled reference without dropping
 any required visual. Keep genuine transparency and no labels in generated art.
@@ -186,7 +239,8 @@ Request:
             record.update(status='refused', reason=reply.get('reason', 'provider refusal'))
         else:
             record.update(status=reply['status'], reason=reply['reason'],
-                          image_generations=reply['image_generations'], repairs=reply['repairs'])
+                          image_generations=reply['image_generations'], repairs=reply['repairs'],
+                          contract_overrides=reply['contract_overrides'], decisions=reply['decisions'])
             if reply['status'] == 'complete':
                 record.update(validate(work, skill))
                 metadata = {'id': pet, 'displayName': brief.get('display_name', pet),
@@ -200,6 +254,9 @@ Request:
                     contact.convert('RGB').save(paths.contained(package, 'contact-sheet.webp'), quality=75, method=6)
                 loop.save(paths.contained(package, 'pet.json'), metadata)
                 provenance = {**request, 'worker_reply': reply, 'work': str(work),
+                              'worker_policy': WORKER_POLICY, 'contract': CONTRACT,
+                              'contract_overrides': reply['contract_overrides'], 'decisions': reply['decisions'],
+                              'resumed_from': record.get('resumed_from'),
                               'atlas_sha256': record['atlas_sha256'], 'validators': record['validators'],
                               'image_generations_source': 'worker report; raw events and generation logs retained',
                               'redo_count': int(redo is not None), 'local_only': True}

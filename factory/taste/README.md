@@ -314,6 +314,14 @@ requests disabled, and implicit `/tmp`/`TMPDIR` roots excluded. Agents are expli
 to keep task files under their F36 attempt folder and never use pet-service or Library tools.
 The parent alone copies validated packages into `factory/pets/`.
 
+Pilots intentionally start without a family reference. The image jury chooses a pilot from the
+winning style as the fixed reference for every final pet and redo. New proposals state the exact
+v2 geometry and row counts; hatch workers apply that contract over technical conflicts in old
+style sheets, keeping their taste and recording each override and autonomous decision in provenance.
+No worker asks for clarification. Rerunning a stopped legacy run retries only zero-generation
+pilots blocked by the old reference, contract or clarification instructions, preserving the failed
+attempts and all dispatched text prompts, replies, replays and comparison files.
+
 Without repairs, the pet run makes **138 driver-launched `codex exec` calls**: 63 primary text/image
 jury seats, 51 comparison text seats, and 24 hatch workers (four pilots plus twenty final pets).
 An optional second style round adds 50; each flagged brief adds two; each pet redo adds one,
