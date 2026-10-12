@@ -22,10 +22,15 @@
 /// 2. Ink: contrast (grey closing minus lightness for dark ink, lightness minus the opening for
 ///    light) above Otsu's threshold of the core (at least `minimumContrast`), grown by up to
 ///    `growth` pixels into contrast above half of it, so a faint rule a letter touches stays
-///    behind. Not ink: strokes too wide for the square and the band along their edges, all the
-///    square sees of them (`Patch.wideStrokes`: bold letters, a dark shape beside the writing);
-///    ink an earlier area drew (`Ink.claim`); ink on other paper than the writing's (`writingPaper`:
-///    a speckled door, tape, the ground beyond the paper's edge); and connected ink lying more in
+///    behind. Text lower than `upsampleBelow` is read finer: the contrast is resampled (bicubic)
+///    `scale(of:)` times finer than the canvas, and the ink, its components, thinning and lines
+///    all come from that window (`Patch`), the polarity, pen, paper and wide strokes staying on
+///    the canvas's own pixels. Its ink doesn't grow: growth fattens letters into their counters
+///    and neighbours (a heavy line of small capitals came out as one blob, or as a picture).
+///    Not ink: strokes too wide for the square and the band along their edges, all the square
+///    sees of them (`Patch.wideStrokes`: bold letters, a dark shape beside the writing); ink an
+///    earlier area drew (`Ink.claim`); ink on other paper than the writing's (`writingPaper`: a
+///    speckled door, tape, the ground beyond the paper's edge); and connected ink lying more in
 ///    another line's box than in this one's. A core that comes out mostly ink
 ///    (`maximumCoverage`) is a picture, and one whose paper is grainy (`maximumGrain`) texture:
 ///    both are left to the detectors.
@@ -53,7 +58,9 @@
 /// Once every area is read, the ink the lines draw is painted over with the paper around it
 /// before the photo is segmented, so the paint ignores the letters; the writing's bounds keep
 /// numbers out (`keepOut`, `LabelKeepOut`) and the detectors' lines on the ink, its smudged copy,
-/// go (`nearInk`). The constants were measured on 53 photos (`docs/writing.md`). Deterministic:
+/// go (`nearInk`). A template marks the strokes as writing (`TemplateLineArt.writingStrokes`), so
+/// renderers draw them in the ink that reads on the paint under them (`docs/writing.md`). The
+/// constants were measured on 53 photos (`docs/writing.md`). Deterministic:
 /// areas, pixels and strokes are visited in a fixed order and every threshold comes from the
 /// area's own pixels.
 struct Writing {
@@ -92,8 +99,19 @@ struct Writing {
     /// Least contrast (OKLab lightness) that counts as ink: notebook rules are about 0.07 on
     /// white paper, a ballpoint's ink 0.3.
     static let minimumContrast: Float = 0.12
-    /// Pixels the ink may grow into contrast above half its threshold.
+    /// Pixels the ink may grow into contrast above half its threshold, and how far around the
+    /// ink an area claims.
     static let growth = 3
+    /// Text lower than `upsampleBelow` (pixels) is traced on a window resampled finer, until its
+    /// letters stand about `traceHeight` high (at most `maximumScale` times finer): counters a
+    /// pixel or two across, and the gaps between letters, then survive the threshold. Its ink
+    /// doesn't grow: a pen's edge ramps over a pixel or two, and growing into the ramp fattens
+    /// letters into their counters and each other (a heavy line of capitals 26 px high came out
+    /// as one blob, and as a picture, from 3 px of growth).
+    static let upsampleBelow: Float = 48
+    static let traceHeight: Float = 64
+    static let maximumScale = 4
+    static let maximumFinePixels = 1_500_000
     /// Share of the core's pixels above which it is a picture, not writing.
     static let maximumCoverage: Float = 0.3
     /// Lines wider than this many pens are not pen strokes.
@@ -207,6 +225,76 @@ struct Writing {
         return out
     }
 
+    /// The canvas position of point `p` of a patch whose first canvas pixel is `origin` and which
+    /// is `scale` times finer than the canvas: fine pixel (X, Y) is centred at canvas
+    /// `origin + ((X, Y) + ½) / scale − ½`, so scale 1 is `origin + p`. With `clampedTo`, a
+    /// pixel centre is kept within the canvas.
+    static func canvasPoint(
+        _ p: SIMD2<Float>, origin: SIMD2<Int>, scale: Int, clampedTo last: SIMD2<Int>? = nil
+    ) -> SIMD2<Float> {
+        let o = SIMD2(Float(origin.x), Float(origin.y))
+        var c = scale == 1 ? p + o : (p + 0.5) / Float(scale) - 0.5 + o
+        if let last { c = pointwiseMin(c, SIMD2(Float(last.x), Float(last.y))) }
+        return c
+    }
+
+    /// The patch position of canvas point `c`: `canvasPoint`'s inverse.
+    static func patchPoint(_ c: SIMD2<Float>, origin: SIMD2<Int>, scale: Int) -> SIMD2<Float> {
+        let o = SIMD2(Float(origin.x), Float(origin.y))
+        return scale == 1 ? c - o : (c - o + 0.5) * Float(scale) - 0.5
+    }
+
+    /// `values` (`width` × `height`, canvas pixels) resampled `scale` times finer, bicubic
+    /// (Catmull–Rom, the edge pixels repeating beyond it): the sample of fine pixel (X, Y) lies
+    /// where `canvasPoint` puts it.
+    static func resampled(_ values: [Float], width: Int, height: Int, scale s: Int) -> [Float] {
+        guard s > 1 else { return values }
+        let fineW = width * s, fineH = height * s
+        /// Per fine index: the first of its four canvas taps and their weights.
+        func taps(_ count: Int) -> [(first: Int, weights: SIMD4<Float>)] {
+            (0..<count * s).map { f in
+                let u = (Float(f) + 0.5) / Float(s) - 0.5
+                let i = Int(u.rounded(.down))
+                let t = u - Float(i), t2 = t * t, t3 = t2 * t
+                return (i - 1, SIMD4(
+                    -0.5 * t3 + t2 - 0.5 * t, 1.5 * t3 - 2.5 * t2 + 1, -1.5 * t3 + 2 * t2 + 0.5 * t, 0.5 * t3 - 0.5 * t2))
+            }
+        }
+        let across = taps(width), down = taps(height)
+        // Every canvas row resampled across.
+        var rows = [Float](repeating: 0, count: height * fineW)
+        for y in 0..<height {
+            for f in 0..<fineW {
+                let (first, k) = across[f]
+                var sum: Float = 0
+                for t in 0..<4 { sum += k[t] * values[y * width + min(max(first + t, 0), width - 1)] }
+                rows[y * fineW + f] = sum
+            }
+        }
+        var out = [Float](repeating: 0, count: fineW * fineH)
+        for f in 0..<fineH {
+            let (first, k) = down[f]
+            for i in 0..<fineW {
+                var sum: Float = 0
+                for t in 0..<4 { sum += k[t] * rows[min(max(first + t, 0), height - 1) * fineW + i] }
+                out[f * fineW + i] = sum
+            }
+        }
+        return out
+    }
+
+    /// `mask`, a patch `scale` times finer than the canvas, as the canvas pixels any of whose
+    /// patch pixels it holds.
+    static func coarsened(_ mask: [Bool], width w: Int, height h: Int, scale: Int) -> [Bool] {
+        guard scale > 1 else { return mask }
+        let cw = w / scale, ch = h / scale
+        var out = [Bool](repeating: false, count: cw * ch)
+        for y in 0..<h {
+            for x in 0..<w where mask[y * w + x] { out[(y / scale) * cw + x / scale] = true }
+        }
+        return out
+    }
+
     /// Keep-out rectangles along one line of text as one, so no number sits between its words
     /// (a recognizer may box each word): rectangles overlapping across by half the lower one's
     /// height and apart along by at most `lineGap` of the taller one's.
@@ -237,6 +325,18 @@ struct Writing {
     /// The closing's radius for `frame`'s writing, before its pen is known.
     static func radius(of frame: Frame) -> Int { min(maximumWindow, max(3, Int((strokeWindow * frame.height).rounded()))) }
 
+    /// How many times finer than the canvas the patch of `frame` is: 1 for text from
+    /// `upsampleBelow` up, and fewer than it takes for the window to stay within
+    /// `maximumFinePixels` (a long line of small text).
+    static func scale(of frame: Frame) -> Int {
+        guard frame.height < upsampleBelow else { return 1 }
+        var scale = min(maximumScale, max(1, Int((traceHeight / frame.height).rounded(.up))))
+        let b = frame.bounds(grow: zone(of: frame), pad: maximumWindow, width: Int.max, height: Int.max)
+        let pixels = (b.x1 - b.x0) * (b.y1 - b.y0)
+        while scale > 1 && pixels * scale * scale > maximumFinePixels { scale -= 1 }
+        return scale
+    }
+
     /// The writing of one area, or nil when it holds none, or bold writing (a pen of `boldPen`),
     /// and what was measured.
     static func ink(
@@ -248,8 +348,11 @@ struct Writing {
         let patch = clock.measure("writing.patch") {
             Patch(
                 image: image, lightness: lightness, frame: frame, zone: zone(of: frame), core: SIMD2(repeating: margin * h),
-                radius: radius(of: frame), boldPen: boldPen)
+                radius: radius(of: frame), boldPen: boldPen, scale: Self.scale(of: frame))
         }
+        // Lengths in the patch are its own pixels, `fine` to a canvas pixel; `hp` is the line's
+        // height in them.
+        let fine = Float(patch.scale), hp = h * fine
         guard !patch.bold else {
             stats.pen = patch.plainPen
             stats.verdict = "bold"
@@ -257,9 +360,9 @@ struct Writing {
         }
         let high = max(Patch.otsu(patch.contrast, patch.core), minimumContrast)
         stats.contrast = high
-        var all = patch.mask(threshold: high)
+        var all = patch.mask(threshold: high, growth: patch.scale == 1 ? growth : 0)
         let wide = patch.wideStrokes(threshold: high)
-        for i in all.indices where all[i] && (wide[i] || claimed[patch.canvasIndex(i, canvasWidth: image.width)]) {
+        for i in all.indices where all[i] && (wide[patch.canvasPixel(i)] || claimed[patch.canvasIndex(i, canvasWidth: image.width)]) {
             all[i] = false
         }
         let paper = patch.paperLightness(ink: all)
@@ -287,7 +390,7 @@ struct Writing {
         guard coreInk > 0 else { stats.verdict = "noInk"; return (nil, stats) }
         guard stats.coverage <= maximumCoverage else { stats.verdict = "picture"; return (nil, stats) }
         let fromInk = DistanceTransform.squaredEDT(width: patch.w, height: patch.h) { all[$0] }.storage
-        let away = Float((growth + 1) * (growth + 1))
+        let away = Float((growth + 1) * (growth + 1)) * fine * fine
         var ground: [Float] = []
         for i in all.indices where patch.core[i] && fromInk[i] > away { ground.append(patch.contrast[i]) }
         ground.sort()
@@ -307,11 +410,11 @@ struct Writing {
         }
         let halfWidth = Patch.halfWidths(all, width: patch.w, height: patch.h)
         let pen = Patch.lineWidth(writing, halfWidth: halfWidth, width: patch.w, height: patch.h)
-        stats.pen = pen
-        guard pen < boldPen else { stats.verdict = "bold"; return (nil, stats) }
+        stats.pen = pen / fine
+        guard pen < boldPen * fine else { stats.verdict = "bold"; return (nil, stats) }
         var mask = writing
         var marks = 0
-        for c in apart where patch.isMark(c, height: h, pen: pen, paper: paper, halfWidth: halfWidth) {
+        for c in apart where patch.isMark(c, height: hp, pen: pen, paper: paper, halfWidth: halfWidth) {
             for i in c { mask[i] = true }
             marks += 1
         }
@@ -319,10 +422,10 @@ struct Writing {
         ink.marks = marks
         stats.marks = marks
         clock.measure("writing.clean") {
-            ink.removeStructures(height: h, patch: patch, support: supportLevel * high)
-            ink.dropSpecksAndBlobs(height: h)
+            ink.removeStructures(height: hp, patch: patch, support: supportLevel * high)
+            ink.dropSpecksAndBlobs(height: hp)
         }
-        let length = ink.length
+        let length = ink.length / fine
         stats.inkPerLength = length / frame.length
         stats.piecesPerHeight = Float(ink.strokes.count + ink.dots.count) / max(length / h, 1e-3)
         if length < minimumInk * frame.length { stats.verdict = "sparse"; return (nil, stats) }
@@ -336,9 +439,13 @@ struct Writing {
     // MARK: - Ink
 
     /// Ink found in a patch: its pixels, pen, and the strokes traced from it (patch pixel
-    /// coordinates until `finish` moves them onto the canvas).
+    /// coordinates, `scale` to a canvas pixel, until `finish` moves them onto the canvas).
+    /// Lengths here are patch pixels unless said canvas.
     struct Ink {
         let x0: Int, y0: Int, w: Int, h: Int
+        /// How many times finer than the canvas the patch is, and its size in canvas pixels.
+        let scale: Int
+        let cw: Int, ch: Int
         let mask: [Bool]
         let halfWidth: [Float]
         var strokes: [StrokeGraph.Stroke]
@@ -348,32 +455,41 @@ struct Writing {
         /// distance to the paper (a stroke 3 px wide measures 4; whole pixels can't tell
         /// finer).
         let pen: Float
-        /// Pixels with ink, faint ink included: the paper's color is taken around them.
+        /// Canvas pixels with ink, faint ink included: the paper's color is taken around them.
         let exclude: [Bool]
-        /// How far around a pixel the paper's color is taken (the closing's radius).
+        /// How far around a canvas pixel the paper's color is taken (the closing's radius, canvas pixels).
         let radius: Int
         var marks = 0
-        /// Canvas lines and the rectangles numbers keep out of, made by `finish`.
+        /// Canvas lines and the rectangles numbers keep out of, made by `finish`, and the canvas
+        /// pixels (`cw` × `ch`) with ink the lines draw (and a pixel around them: what is painted
+        /// over) and within `nearReach` pens of the lines.
         var lines: [DrawnLine] = []
         var keepOut: [SIMD4<Float>] = []
+        var covered: [Bool] = []
+        var nearLines: [Bool] = []
 
         init(mask: [Bool], patch: Patch, threshold: Float) {
             x0 = patch.x0; y0 = patch.y0; w = patch.w; h = patch.h
+            scale = patch.scale
+            cw = patch.cw; ch = patch.ch
+            let fine = Float(patch.scale)
             self.mask = mask
             radius = patch.radius
-            exclude = (0..<(patch.w * patch.h)).map { mask[$0] || patch.contrast[$0] >= 0.5 * threshold }
+            exclude = Writing.coarsened(
+                (0..<(patch.w * patch.h)).map { mask[$0] || patch.contrast[$0] >= 0.5 * threshold },
+                width: patch.w, height: patch.h, scale: patch.scale)
             halfWidth = Patch.halfWidths(mask, width: w, height: h)
             let thin = Patch.centerlines(mask, width: w, height: h)
             pen = Patch.lineWidth(thin: thin, halfWidth: halfWidth)
             var g = StrokeGraph.trace(thin, strength: [Float](repeating: 1, count: w * h), width: w, height: h)
             g.mergeDegree2()
-            g.popBubbles(perimeter: 2 * pen + 6)
-            g.pruneSpurs(max(2, pen), rounds: 2)
-            strokes = g.strokes(sigma: Writing.smoothing)
+            g.popBubbles(perimeter: 2 * pen + 6 * fine)
+            g.pruneSpurs(max(2 * fine, pen), rounds: 2)
+            strokes = g.strokes(sigma: Writing.smoothing * fine)
             // Dots thin to a pixel or two, which tracing drops: each pen-sized speck of ink
             // stands for itself.
             dots = []
-            let largest = 2.5 * pen + 1, least = max(4, 0.5 * pen * pen)
+            let largest = 2.5 * pen + fine, least = max(4 * fine * fine, 0.5 * pen * pen)
             for pixels in Patch.components(mask, width: w, height: h) where Float(pixels.count) >= least {
                 var lo = SIMD2<Int>(w, h), hi = SIMD2<Int>(-1, -1), sum = SIMD2<Float>(0, 0)
                 for i in pixels {
@@ -393,17 +509,27 @@ struct Writing {
             min(max(Int(p.y.rounded()), 0), h - 1) * w + min(max(Int(p.x.rounded()), 0), w - 1)
         }
 
-        /// Line traced, dots aside (pixels).
+        /// The canvas position of patch point `p`, and the patch position of a canvas point.
+        func canvasPoint(_ p: SIMD2<Float>) -> SIMD2<Float> {
+            Writing.canvasPoint(p, origin: SIMD2(x0, y0), scale: scale)
+        }
+
+        func patchPoint(_ c: SIMD2<Float>) -> SIMD2<Float> {
+            Writing.patchPoint(c, origin: SIMD2(x0, y0), scale: scale)
+        }
+
+        /// Line traced, dots aside (patch pixels).
         var length: Float {
-            strokes.reduce(0) { $0 + StrokeGraph.length($1.points, closed: $1.closed) } + Float(dots.count) * 2
+            strokes.reduce(0) { $0 + StrokeGraph.length($1.points, closed: $1.closed) } + Float(dots.count) * 2 * Float(scale)
         }
 
         /// Drops what is a straight structure rather than writing: straight runs of a stroke that
         /// reach the zone's edge are cut off, and straight strokes whose line carries on past
-        /// them in the photo (contrast above `support`) go.
+        /// them in the photo (contrast above `support`) go. `height` is the line's, in patch pixels.
         mutating func removeStructures(height: Float, patch: Patch, support level: Float) {
-            let tolerance = max(1.5, 0.5 * pen)
-            let edge = 2 + pen / 2
+            let fine = Float(scale)
+            let tolerance = max(1.5 * fine, 0.5 * pen)
+            let edge = 2 * fine + pen / 2
             func reachesEdge(_ p: SIMD2<Float>) -> Bool { patch.zoneInset(p) <= edge }
             /// Points of the straight run from `points[0]`.
             func straightRun(_ points: [SIMD2<Float>]) -> Int {
@@ -440,7 +566,7 @@ struct Writing {
                 if s.points.count >= 2 { kept.append(s) }
             }
             let faint = patch.contrast.map { $0 >= level }
-            let w = w, h = h, offset = pen / 2 + 2.5
+            let w = w, h = h, offset = pen / 2 + 2.5 * fine, near = scale
             func isFaint(_ p: SIMD2<Float>) -> Bool {
                 let x = Int(p.x.rounded()), y = Int(p.y.rounded())
                 return x >= 0 && y >= 0 && x < w && y < h && faint[y * w + x]
@@ -456,7 +582,7 @@ struct Writing {
                 for _ in 0..<steps {
                     p += direction
                     guard patch.zoneInset(p) >= 0 else { break }
-                    if (-1...1).contains(where: { dy in (-1...1).contains { dx in isFaint(p + SIMD2(Float(dx), Float(dy))) } }) {
+                    if (-near...near).contains(where: { dy in (-near...near).contains { dx in isFaint(p + SIMD2(Float(dx), Float(dy))) } }) {
                         along += 1
                     }
                     if isFaint(p + side) { beside += 1 }
@@ -478,9 +604,9 @@ struct Writing {
 
         /// Drops specks and lines wider than `blobWidth` pens all along: the width a quarter of the
         /// way up its points, since where strokes meet the ink is wider (a short stroke meeting
-        /// another is wide for half its length).
+        /// another is wide for half its length). `height` is the line's, in patch pixels.
         mutating func dropSpecksAndBlobs(height: Float) {
-            let speck = max(2, 0.05 * height), widest = Writing.blobWidth * pen
+            let speck = max(2 * Float(scale), 0.05 * height), widest = Writing.blobWidth * pen
             let halfWidth = halfWidth, w = w, h = h
             strokes.removeAll { s in
                 if s.points.isEmpty || StrokeGraph.length(s.points, closed: s.closed) < speck { return true }
@@ -490,19 +616,19 @@ struct Writing {
         }
 
         /// Moves the strokes and dots onto the canvas as lines, and the rectangles numbers keep
-        /// out of: strokes within `keepOutJoin` heights of each other share one.
+        /// out of: strokes within `keepOutJoin` heights of each other share one. `height` is the
+        /// line's, in canvas pixels.
         mutating func finish(height: Float) {
-            let offset = SIMD2(Float(x0), Float(y0))
             var out: [DrawnLine] = []
             func line(_ points: [SIMD2<Float>], closed: Bool) -> DrawnLine {
                 DrawnLine(
-                    points: points.map { $0 + offset }, strength: [Float](repeating: 1, count: points.count),
+                    points: points.map(canvasPoint), strength: [Float](repeating: 1, count: points.count),
                     layer: [UInt8](repeating: LineLayer.outline.rawValue, count: points.count), closed: closed,
                     free: (false, false), links: [], eye: false)
             }
             for s in strokes { out.append(line(s.points, closed: s.closed)) }
             // A dot as a stroke two units long: the shortest a template keeps.
-            for d in dots { out.append(line([d - SIMD2(1, 0), d + SIMD2(1, 0)], closed: false)) }
+            for d in dots { out.append(line([d - SIMD2(Float(scale), 0), d + SIMD2(Float(scale), 0)], closed: false)) }
             lines = out
             var boxes = out.map { l -> SIMD4<Float> in
                 var lo = SIMD2<Float>(repeating: .infinity), hi = SIMD2<Float>(repeating: -.infinity)
@@ -531,16 +657,24 @@ struct Writing {
                     i += 1
                 }
             }
-            let grow = pen / 2 + Writing.keepOutGap
+            let grow = pen / (2 * Float(scale)) + Writing.keepOutGap
             keepOut = boxes.map { SIMD4($0.x - grow, $0.y - grow, $0.z + grow, $0.w + grow) }
+            let d = distanceToLines()
+            let drawn = pen / 2 + 1.5 * Float(scale), nearby = Writing.nearReach * pen + Float(scale)
+            var ink = [Bool](repeating: false, count: w * h), close = ink
+            for i in 0..<(w * h) {
+                if mask[i] && d[i] <= drawn * drawn { ink[i] = true }
+                if d[i] <= nearby * nearby { close[i] = true }
+            }
+            covered = Morphology.square(Writing.coarsened(ink, width: w, height: h, scale: scale), width: cw, height: ch, any: true)
+            nearLines = Writing.coarsened(close, width: w, height: h, scale: scale)
         }
 
         /// Squared distance (patch pixels) from each patch pixel to the traced lines.
         private func distanceToLines() -> [Float] {
             var on = [Bool](repeating: false, count: w * h)
-            let offset = SIMD2(Float(x0), Float(y0))
             for l in lines {
-                let pts = l.points.map { $0 - offset }
+                let pts = l.points.map(patchPoint)
                 for k in pts.indices {
                     let next = k + 1 < pts.count ? pts[k + 1] : (l.closed ? pts[0] : pts[k])
                     LineLayering.segment(pts[k], next) { x, y in
@@ -551,25 +685,16 @@ struct Writing {
             return DistanceTransform.squaredEDT(width: w, height: h) { on[$0] }.storage
         }
 
-        /// Claims the ink the lines draw, and `growth` pixels around it: the fringe an overlapping
+        /// Claims the ink the lines draw, and `Writing.growth` pixels around it: the fringe an overlapping
         /// area with a lower threshold would grow into. Ink left undrawn (a rule, a stroke cut at the
         /// zone's edge) stays for another area.
         func claim(_ claimed: inout [Bool], canvasWidth: Int) {
-            let drawn = cover()
-            let grown = DistanceTransform.squaredEDT(width: w, height: h) { drawn[$0] }.storage
+            let drawn = covered
+            let grown = DistanceTransform.squaredEDT(width: cw, height: ch) { drawn[$0] }.storage
             let reach = Float(Writing.growth * Writing.growth)
-            for y in 0..<h {
-                for x in 0..<w where grown[y * w + x] <= reach { claimed[(y0 + y) * canvasWidth + x0 + x] = true }
+            for y in 0..<ch {
+                for x in 0..<cw where grown[y * cw + x] <= reach { claimed[(y0 + y) * canvasWidth + x0 + x] = true }
             }
-        }
-
-        /// The ink the lines draw (and a pixel around it): what is painted over.
-        private func cover() -> [Bool] {
-            let d = distanceToLines()
-            let reach = pen / 2 + 1.5
-            var drawn = [Bool](repeating: false, count: w * h)
-            for i in 0..<(w * h) where mask[i] && d[i] <= reach * reach { drawn[i] = true }
-            return Morphology.square(drawn, width: w, height: h, any: true)
         }
 
         /// Paints the ink the areas' lines draw with the paper around it: the mean color of the
@@ -579,23 +704,22 @@ struct Writing {
         static func paint(_ inks: [Ink], over image: inout RGBAImage) {
             let canvasWidth = image.width
             var blocked = [Bool](repeating: false, count: canvasWidth * image.height)
-            let covers = inks.map { $0.cover() }
-            for (ink, cover) in zip(inks, covers) {
-                for y in 0..<ink.h {
-                    for x in 0..<ink.w where cover[y * ink.w + x] || ink.exclude[y * ink.w + x] {
+            for ink in inks {
+                for y in 0..<ink.ch {
+                    for x in 0..<ink.cw where ink.covered[y * ink.cw + x] || ink.exclude[y * ink.cw + x] {
                         blocked[(ink.y0 + y) * canvasWidth + ink.x0 + x] = true
                     }
                 }
             }
-            for (ink, cover) in zip(inks, covers) { ink.paint(cover, blocked: blocked, over: &image) }
+            for ink in inks { ink.paint(blocked: blocked, over: &image) }
         }
 
-        private func paint(_ cover: [Bool], blocked: [Bool], over image: inout RGBAImage) {
-            let stride = w + 1
-            var sum = [SIMD4<Int32>](repeating: .zero, count: stride * (h + 1))
-            for y in 0..<h {
+        private func paint(blocked: [Bool], over image: inout RGBAImage) {
+            let stride = cw + 1
+            var sum = [SIMD4<Int32>](repeating: .zero, count: stride * (ch + 1))
+            for y in 0..<ch {
                 var row = SIMD4<Int32>.zero
-                for x in 0..<w {
+                for x in 0..<cw {
                     let c = (y0 + y) * image.width + x0 + x
                     if !blocked[c] {
                         let j = c * 4
@@ -604,11 +728,11 @@ struct Writing {
                     sum[(y + 1) * stride + x + 1] = sum[y * stride + x + 1] &+ row
                 }
             }
-            for y in 0..<h {
-                for x in 0..<w where cover[y * w + x] {
+            for y in 0..<ch {
+                for x in 0..<cw where covered[y * cw + x] {
                     for scale in [1, 2, 4] {
                         let r = radius * scale
-                        let ax = max(0, x - r), bx = min(w, x + r + 1), ay = max(0, y - r), by = min(h, y + r + 1)
+                        let ax = max(0, x - r), bx = min(cw, x + r + 1), ay = max(0, y - r), by = min(ch, y + r + 1)
                         let s = sum[by * stride + bx] &- sum[ay * stride + bx] &- sum[by * stride + ax] &+ sum[ay * stride + ax]
                         guard s.w > 0 else { continue }
                         let j = ((y0 + y) * image.width + x0 + x) * 4
@@ -623,10 +747,8 @@ struct Writing {
 
         /// Sets the canvas pixels within `nearReach` pens of the lines.
         func markNear(_ near: inout [Bool], canvasWidth: Int) {
-            let d = distanceToLines()
-            let reach = Writing.nearReach * pen + 1
-            for y in 0..<h {
-                for x in 0..<w where d[y * w + x] <= reach * reach { near[(y0 + y) * canvasWidth + x0 + x] = true }
+            for y in 0..<ch {
+                for x in 0..<cw where nearLines[y * cw + x] { near[(y0 + y) * canvasWidth + x0 + x] = true }
             }
         }
     }
@@ -727,48 +849,54 @@ struct Writing {
     // MARK: - Patch
 
     /// A window of the canvas around an area: the ink's contrast, the paper behind it, and which
-    /// pixels belong to the zone and to the core.
+    /// pixels belong to the zone and to the core. The polarity, the pen, the paper and the wide
+    /// strokes are measured on the canvas's own pixels (`cw` × `ch`, from (`x0`, `y0`)); the
+    /// contrast and everything made of it (ink, components, lines) run on a window `scale` times
+    /// finer than the canvas, `w` × `h`, so small text keeps its counters and the gaps between
+    /// letters. In the finer window every length is in its own pixels, `scale` to a canvas pixel.
     struct Patch {
         let x0: Int, y0: Int, w: Int, h: Int
+        let scale: Int
+        let cw: Int, ch: Int
         let frame: Frame
         let zone: SIMD2<Float>
+        /// The closing's radius, in canvas pixels.
         let radius: Int
         let contrast: [Float]
         /// The paper's lightness (the closing for dark ink, the opening for light).
         let paper: [Float]
         let inside: [Bool]
         let core: [Bool]
+        /// The canvas's lightness, for `wideStrokes`.
         let lightness: [Float]
         /// Whether the ink is darker than the paper.
         let dark: Bool
-        /// The pen of the core's plain split into ink and paper, and whether that is bold (when
-        /// the rest goes uncomputed).
+        /// The pen (canvas pixels) of the core's plain split into ink and paper, and whether that
+        /// is bold (when the rest goes uncomputed).
         let plainPen: Float
         let bold: Bool
 
         init(
             image: RGBAImage, lightness canvas: Lightness, frame: Frame, zone: SIMD2<Float>, core coreGrow: SIMD2<Float>,
-            radius least: Int, boldPen: Float
+            radius least: Int, boldPen: Float, scale s: Int = 1
         ) {
             let b = frame.bounds(grow: zone, pad: Writing.maximumWindow, width: image.width, height: image.height)
-            x0 = b.x0; y0 = b.y0; w = max(b.x1 - b.x0, 1); h = max(b.y1 - b.y0, 1)
+            let cw = max(b.x1 - b.x0, 1), ch = max(b.y1 - b.y0, 1)
+            x0 = b.x0; y0 = b.y0; w = cw * s; h = ch * s
+            self.cw = cw; self.ch = ch
+            scale = s
             self.frame = frame
             self.zone = zone
-            let n = w * h
-            var lightness = [Float](repeating: 0, count: n)
-            var inside = [Bool](repeating: false, count: n), core = [Bool](repeating: false, count: n)
-            for y in 0..<h {
-                for x in 0..<w {
-                    let cx = min(x0 + x, image.width - 1), cy = min(y0 + y, image.height - 1)
-                    lightness[y * w + x] = canvas.at(cx, cy)
-                    let p = SIMD2(Float(cx), Float(cy))
-                    inside[y * w + x] = frame.inset(p, grow: zone) >= 0
-                    core[y * w + x] = frame.inset(p, grow: coreGrow) >= 0
+            let last = SIMD2(image.width - 1, image.height - 1)
+            let n = cw * ch
+            let lightness = (0..<n).map { canvas.at(min(b.x0 + $0 % cw, last.x), min(b.y0 + $0 / cw, last.y)) }
+            self.lightness = lightness
+            var core = [Bool](repeating: false, count: n)
+            for y in 0..<ch {
+                for x in 0..<cw {
+                    core[y * cw + x] = frame.inset(SIMD2(Float(min(x0 + x, last.x)), Float(min(y0 + y, last.y))), grow: coreGrow) >= 0
                 }
             }
-            self.inside = inside
-            self.core = core
-            self.lightness = lightness
             // The paper is what surrounds the writing: of a plain split of the core into dark and
             // light, the side most of the margin around the box lies on, whether the writing is dark
             // ink on paper or light (chalk on a board), and however much of the box bold letters
@@ -777,66 +905,87 @@ struct Writing {
             // strokes is a light feature narrower than the square.)
             let cut = Self.otsu(lightness, core)
             var below = 0, total = 0
-            for y in 0..<h {
-                for x in 0..<w where core[y * w + x] {
-                    let p = SIMD2(Float(min(x0 + x, image.width - 1)), Float(min(y0 + y, image.height - 1)))
+            for y in 0..<ch {
+                for x in 0..<cw where core[y * cw + x] {
+                    let p = SIMD2(Float(min(x0 + x, last.x)), Float(min(y0 + y, last.y)))
                     guard frame.inset(p, grow: .zero) < 0 else { continue }
                     total += 1
-                    if lightness[y * w + x] < cut { below += 1 }
+                    if lightness[y * cw + x] < cut { below += 1 }
                 }
             }
             let dark = 2 * below <= total
             self.dark = dark
             let plain = (0..<n).map { core[$0] && (dark ? lightness[$0] < cut : lightness[$0] >= cut) }
-            plainPen = Self.lineWidth(plain, halfWidth: Self.halfWidths(plain, width: w, height: h), width: w, height: h)
+            plainPen = Self.lineWidth(plain, halfWidth: Self.halfWidths(plain, width: cw, height: ch), width: cw, height: ch)
             bold = plainPen >= boldPen
             let r = min(Writing.maximumWindow, max(least, Int((plainPen / 2).rounded(.up)) + 2))
             radius = r
             guard !bold else {
                 contrast = []
                 paper = []
+                inside = []
+                self.core = []
                 return
             }
-            let paper = Self.extreme(Self.extreme(lightness, w, h, r, maximum: dark), w, h, r, maximum: !dark)
-            self.paper = paper
-            contrast = (0..<n).map { dark ? paper[$0] - lightness[$0] : lightness[$0] - paper[$0] }
+            let paper = Self.extreme(Self.extreme(lightness, cw, ch, r, maximum: dark), cw, ch, r, maximum: !dark)
+            self.paper = s == 1 ? paper : Writing.resampled(paper, width: cw, height: ch, scale: s)
+            let contrast = (0..<n).map { dark ? paper[$0] - lightness[$0] : lightness[$0] - paper[$0] }
+            self.contrast = s == 1 ? contrast : Writing.resampled(contrast, width: cw, height: ch, scale: s)
+            if s == 1 {
+                self.core = core
+                inside = (0..<n).map { frame.inset(SIMD2(Float(min(b.x0 + $0 % cw, last.x)), Float(min(b.y0 + $0 / cw, last.y))), grow: zone) >= 0 }
+            } else {
+                var fineCore = [Bool](repeating: false, count: w * h), fineInside = fineCore
+                for y in 0..<h {
+                    for x in 0..<w {
+                        let p = Writing.canvasPoint(SIMD2(Float(x), Float(y)), origin: SIMD2(x0, y0), scale: s, clampedTo: last)
+                        fineInside[y * w + x] = frame.inset(p, grow: zone) >= 0
+                        fineCore[y * w + x] = frame.inset(p, grow: coreGrow) >= 0
+                    }
+                }
+                self.core = fineCore
+                inside = fineInside
+            }
         }
 
         /// The canvas position of a patch point.
-        func canvasPoint(_ p: SIMD2<Float>) -> SIMD2<Float> { p + SIMD2(Float(x0), Float(y0)) }
+        func canvasPoint(_ p: SIMD2<Float>) -> SIMD2<Float> { Writing.canvasPoint(p, origin: SIMD2(x0, y0), scale: scale) }
 
         /// Whether `other`'s box reaches into the patch.
         func overlaps(_ other: Frame) -> Bool {
             let b = other.bounds(grow: .zero, pad: 0, width: Int.max, height: Int.max)
-            return b.x0 < x0 + w && b.x1 > x0 && b.y0 < y0 + h && b.y1 > y0
+            return b.x0 < x0 + cw && b.x1 > x0 && b.y0 < y0 + ch && b.y1 > y0
         }
 
-        /// The canvas index of patch pixel `i`.
-        func canvasIndex(_ i: Int, canvasWidth: Int) -> Int { (y0 + i / w) * canvasWidth + x0 + i % w }
+        /// The index, among the window's canvas pixels (`cw` wide), of the one patch pixel `i` lies in.
+        func canvasPixel(_ i: Int) -> Int { (i / w / scale) * cw + i % w / scale }
+
+        /// The canvas index of the canvas pixel patch pixel `i` lies in.
+        func canvasIndex(_ i: Int, canvasWidth: Int) -> Int { (y0 + i / w / scale) * canvasWidth + x0 + i % w / scale }
 
         /// Strokes too wide for the square, and the band along their edges, all the square sees of
         /// them (bold letters, a dark shape beside the writing): within the square's reach of ink,
         /// found by a square `wideWindow` times as wide, that holds the closing's whole square
-        /// (which is what lets a stroke survive the closing).
+        /// (which is what lets a stroke survive the closing). Per canvas pixel of the window.
         func wideStrokes(threshold high: Float) -> [Bool] {
-            let n = w * h
+            let n = cw * ch
             let big = Writing.wideWindow * radius
-            let paper = Self.extreme(Self.extreme(lightness, w, h, big, maximum: dark), w, h, big, maximum: !dark)
+            let paper = Self.extreme(Self.extreme(lightness, cw, ch, big, maximum: dark), cw, ch, big, maximum: !dark)
             let ink = (0..<n).map { (dark ? paper[$0] - lightness[$0] : lightness[$0] - paper[$0]) >= high ? Float(1) : 0 }
-            let inside = Self.extreme(ink, w, h, radius, maximum: false)
+            let inside = Self.extreme(ink, cw, ch, radius, maximum: false)
             guard inside.contains(1) else { return [Bool](repeating: false, count: n) }
-            return Self.extreme(inside, w, h, radius + 2, maximum: true).map { $0 > 0 }
+            return Self.extreme(inside, cw, ch, radius + 2, maximum: true).map { $0 > 0 }
         }
 
-        /// How far a patch point lies inside the zone (negative outside).
-        func zoneInset(_ p: SIMD2<Float>) -> Float { frame.inset(canvasPoint(p), grow: zone) }
+        /// How far a patch point lies inside the zone (negative outside), in patch pixels.
+        func zoneInset(_ p: SIMD2<Float>) -> Float { frame.inset(canvasPoint(p), grow: zone) * Float(scale) }
 
         /// The zone's pixels above `threshold`, grown by `growth` pixels into contrast above half of it.
-        func mask(threshold high: Float) -> [Bool] {
+        func mask(threshold high: Float, growth: Int) -> [Bool] {
             let n = w * h
             var ink = (0..<n).map { inside[$0] && contrast[$0] >= high }
             let weak = (0..<n).map { inside[$0] && contrast[$0] >= 0.5 * high }
-            for _ in 0..<Writing.growth {
+            for _ in 0..<growth {
                 var next = ink
                 for y in 0..<h {
                     for x in 0..<w where weak[y * w + x] && !ink[y * w + x] {
@@ -862,25 +1011,28 @@ struct Writing {
         }
 
         /// Whether ink apart from the writing is a mark: wholly in the zone, at least
-        /// `markSize` heights across, drawn with the writing's pen on its paper.
+        /// `markSize` heights across, drawn with the writing's pen on its paper. `height` is the
+        /// line's, in patch pixels.
         func isMark(_ pixels: [Int], height: Float, pen: Float, paper lightness: Float, halfWidth: [Float]) -> Bool {
             var lo = SIMD2<Int>(w, h), hi = SIMD2<Int>(-1, -1)
+            let fine = Float(scale)
             for i in pixels {
                 let p = SIMD2(i % w, i / w)
                 lo = pointwiseMin(lo, p); hi = pointwiseMax(hi, p)
-                if zoneInset(SIMD2(Float(p.x), Float(p.y))) < 1.5 { return false }
+                if zoneInset(SIMD2(Float(p.x), Float(p.y))) < 1.5 * fine { return false }
             }
             guard Float(max(hi.x - lo.x, hi.y - lo.y) + 1) >= Writing.markSize * height else { return false }
             // Its broadest part (the 90th percentile, against stray thick pixels) is pen-like.
             let widths = pixels.map { 2 * halfWidth[$0] }.sorted()
             guard widths[widths.count * 9 / 10] <= Writing.markPen * pen else { return false }
-            // The ring three pixels around it is the writing's paper.
-            let bx0 = max(lo.x - 3, 0), by0 = max(lo.y - 3, 0), bx1 = min(hi.x + 3, w - 1), by1 = min(hi.y + 3, h - 1)
+            // The ring three canvas pixels around it is the writing's paper.
+            let reach = 3 * scale
+            let bx0 = max(lo.x - reach, 0), by0 = max(lo.y - reach, 0), bx1 = min(hi.x + reach, w - 1), by1 = min(hi.y + reach, h - 1)
             let bw = bx1 - bx0 + 1, bh = by1 - by0 + 1
             var mark = [Bool](repeating: false, count: bw * bh)
             for i in pixels { mark[(i / w - by0) * bw + i % w - bx0] = true }
             var ring = mark
-            for _ in 0..<3 { ring = Morphology.square(ring, width: bw, height: bh, any: true) }
+            for _ in 0..<reach { ring = Morphology.square(ring, width: bw, height: bh, any: true) }
             var total = 0, alike = 0
             for k in 0..<(bw * bh) where ring[k] && !mark[k] {
                 total += 1

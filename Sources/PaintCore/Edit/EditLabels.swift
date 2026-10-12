@@ -1,0 +1,92 @@
+import Foundation
+
+extension EditWork {
+    /// The numbers of a region of a given outline and paint.
+    struct LabelPlan {
+        var labels: [Label]
+        /// The room found is short of the usual floor but holds a detail area's number: the
+        /// region must be one (`Template.detailRegions`).
+        var needsDetail: Bool
+    }
+
+    static func flatPolygon(_ rings: [[LatticePoint]]) -> FlatPolygon {
+        var poly = FlatPolygon()
+        for ring in rings {
+            poly.points.append(contentsOf: ring.map { SIMD2<Double>(Lattice.double($0)) })
+            poly.closeRing()
+        }
+        return poly
+    }
+
+    /// Where the numbers of a region with these `rings` go. The first label is the most
+    /// spacious spot of the outline (`PolyLabel`, measured as the vectorizer does), kept where it
+    /// was (`hints`, the labels of the regions this one replaces, best first) while that spot
+    /// still has most of the room, and clear of `keepOut`, the lines this edit left inside the
+    /// region, where the room there still holds a legible number (`LabelKeepOut`). Hints that
+    /// are far enough from the others and still roomy stay as further labels. Nil when no
+    /// spot holds even a detail area's number.
+    func labelPlan(
+        rings: [[LatticePoint]], color: UInt32, detail: Bool, hints: [Label], region: Int, keepOut lines: [[SIMD2<Float>]]
+    ) -> LabelPlan? {
+        let poly = Self.flatPolygon(rings)
+        guard let outer = poly.ringStarts.count > 1 ? poly.ringStarts[1] : nil, outer >= 3 else { return nil }
+        let digits = LabelSizing.digitCount(colorIndex: color)
+        let usual = Double(LabelSizing.minimumRadius(digits: digits))
+        let floor = Double(LabelSizing.minimumRadius(digits: digits, detail: true))
+        let keepOut = LabelKeepOut(rects: [], lines: lines.map(LabelKeepOut.Line.init))
+
+        var seed = SIMD2<Double>(repeating: 0)
+        for i in 0..<outer { seed += poly.points[i] }
+        seed /= Double(outer)
+        if let hint = hints.first { seed = SIMD2(Double(hint.position.x), Double(hint.position.y)) }
+
+        func pole(_ keepOut: LabelKeepOut, seed: SIMD2<Double>) -> (position: SIMD2<Double>, distance: Double) {
+            var found = PolyLabel.find(poly, precision: Vectorizer.labelPrecision, seed: seed, keepOut: keepOut)
+            if found.distance < Double(Vectorizer.smallRegionRadius) {
+                found = PolyLabel.find(poly, precision: Vectorizer.smallRegionLabelPrecision, seed: seed, keepOut: keepOut)
+            }
+            return found
+        }
+        var best = pole(LabelKeepOut(rects: []), seed: seed)
+        var needsDetail = false
+        if !detail && best.distance < usual {
+            guard best.distance >= floor else { return nil }
+            needsDetail = true
+        } else if detail && best.distance < floor {
+            return nil
+        }
+        let required = detail || needsDetail ? floor : usual
+        if !keepOut.isEmpty, keepOut.distance(best.position.x, best.position.y) < best.distance {
+            let moved = pole(keepOut, seed: best.position)
+            if moved.distance >= required { best = moved }
+        }
+
+        func room(_ p: SIMD2<Float>) -> Double {
+            min(poly.signedDistance(Double(p.x), Double(p.y)), keepOut.distance(Double(p.x), Double(p.y)))
+        }
+        var labels: [Label] = []
+        if let hint = hints.first(where: { room($0.position) >= max(required, 0.85 * best.distance) }) {
+            labels.append(Label(position: hint.position, radius: Float(room(hint.position)), region: UInt32(region)))
+        } else {
+            labels.append(Label(position: SIMD2<Float>(best.position), radius: Float(best.distance), region: UInt32(region)))
+        }
+        let spacing = Double(labelSpacing)
+        var areaPixels = 0.0
+        for k in 0..<poly.ringCount { areaPixels += poly.area2(ring: k) / 2 }
+        let cap = min(64, Int(areaPixels / (spacing * spacing * 0.6)))
+        for hint in hints where labels.count - 1 < cap && !labels.contains(where: { $0.position == hint.position }) {
+            let free = room(hint.position)
+            guard free >= max(required, 0.85 * Double(hint.radius)) else { continue }
+            let far = labels.allSatisfy { simdLength(SIMD2<Double>($0.position) - SIMD2<Double>(hint.position)) >= spacing }
+            if far { labels.append(Label(position: hint.position, radius: Float(free), region: UInt32(region))) }
+        }
+        return LabelPlan(labels: labels, needsDetail: needsDetail)
+    }
+
+    /// Hints for a region taking over from `regions`: their labels, the largest region's first.
+    func hints(from regions: [Int]) -> [Label] {
+        regions.sorted { area(of: $0) != area(of: $1) ? area(of: $0) > area(of: $1) : $0 < $1 }.flatMap { r -> [Label] in
+            labels[r] ?? (r < t.regions.count && t.regions[r].labelCount > 0 ? Array(t.labels(ofRegion: r)) : [])
+        }
+    }
+}

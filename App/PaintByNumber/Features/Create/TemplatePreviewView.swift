@@ -233,6 +233,11 @@ struct TemplatePreviewView: View {
                     .overlay(alignment: .bottom) {
                         status.padding(14)
                     }
+                    // What Refine had to say once the sliders made the template again.
+                    .overlay(alignment: .top) {
+                        RefineNoteToast(note: model.note).padding(.top, 8)
+                    }
+                    .animation(reduceMotion ? nil : .snappy, value: model.note)
             } else if case .failed(let message) = model.phase {
                 ContentUnavailableView("Couldn’t Open Photo", systemImage: "photo.badge.exclamationmark", description: Text(message))
                     .frame(maxHeight: .infinity)

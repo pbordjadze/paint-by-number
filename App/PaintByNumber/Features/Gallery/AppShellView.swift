@@ -26,6 +26,8 @@ struct AppShellView: View {
     #endif
     @State private var droppedPhoto: Data?
     @State private var droppedTitle: String?
+    /// The draft the create flow continues, read off the main actor by the gallery's row.
+    @State private var resumedDraft: Drafts.Opened?
     /// A file opened from another app (share sheet, Files), waiting for the library and the
     /// screen to be free for the create flow.
     @State private var incomingImage: IncomingImage?
@@ -53,9 +55,12 @@ struct AppShellView: View {
         // old identity).
         let flowPhoto = droppedPhoto
         let flowTitle = droppedTitle
+        let flowDraft = resumedDraft
         let flowIdentity = flowID
         NavigationStack(path: $path) {
-            GalleryView(namespace: zoom, query: query, timelapse: $timelapse) { isCreating = true }
+            GalleryView(
+                namespace: zoom, query: query, timelapse: $timelapse, onCreate: { isCreating = true },
+                onContinueDraft: continueDraft)
                 // Photos dragged in from another app (Split View, Slide Over) start a painting.
                 .dropDestination(for: DroppedPhoto.self) { photos, _ in
                     guard let photo = photos.first, !isCreating else { return false }
@@ -77,9 +82,12 @@ struct AppShellView: View {
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
             droppedTitle = nil
+            resumedDraft = nil
             openPending()
         }) {
-            CreateFlowView(openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle) { artwork in
+            CreateFlowView(
+                openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle, resuming: flowDraft
+            ) { artwork in
                 pendingOpen = artwork.id
                 isCreating = false
             }
@@ -232,7 +240,14 @@ struct AppShellView: View {
         path.removeAll()
         droppedPhoto = image.data
         droppedTitle = image.title
+        resumedDraft = nil
         flowID = UUID()
+        isCreating = true
+    }
+
+    /// Opens the create flow on the draft the gallery's row read.
+    private func continueDraft(_ opened: Drafts.Opened) {
+        resumedDraft = opened
         isCreating = true
     }
 

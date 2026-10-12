@@ -58,7 +58,9 @@ struct SegmentationTests {
     @Test func bandFusingKeepsThePaintBudget() throws {
         // A smooth two-axis gradient above the colourful tiles: fusing the gradient's bands
         // frees paints, which are re-spent, so a 150-colour request delivers about as many
-        // paints as without the band stage.
+        // paints as without the band stage. The tolerances are put back to the full strength
+        // they have up to 40 colours (`bandFusionKnee` shrinks them above it, and this
+        // scene's bands are then too far apart to fuse), so the dense palette has bands to fuse.
         var image = TestScenes.colorful(width: 480, height: 320)
         for y in 0..<160 {
             for x in 0..<480 {
@@ -67,7 +69,11 @@ struct SegmentationTests {
             }
         }
         let settings = GenerationSettings(colorCount: 150, detail: 1)
-        let p = SegmentationParameters(settings: settings, width: image.width, height: image.height)
+        var p = SegmentationParameters(settings: settings, width: image.width, height: image.height)
+        let fullStrength = Float(settings.colorCount) / SegmentationParameters.bandFusionKnee
+        p.bandNearTolerance *= fullStrength
+        p.bandNearImportantTolerance *= fullStrength
+        p.bandTolerance *= fullStrength
         var unfused = p
         unfused.bandNearTolerance = 0
         unfused.bandNearImportantTolerance = 0

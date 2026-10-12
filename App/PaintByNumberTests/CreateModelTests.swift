@@ -270,9 +270,10 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
-    /// A line drawn in Refine regenerates the template at full resolution, never a draft that
-    /// would coarsen the drawing meanwhile; taking it back brings the template it had again.
-    @Test func drawnLinesRegenerateAtFullResolutionAndUndoBringsTheTemplateBack() async throws {
+    /// Lines refined through the generator (a painting or a draft made by an earlier build) still
+    /// regenerate the template at full resolution, never a draft that would coarsen the drawing
+    /// meanwhile; taking them back brings the template they had again.
+    @Test func legacyLinesRegenerateAtFullResolutionAndUndoBringsTheTemplateBack() async throws {
         let model = CreateModel()
         model.load(sample: try #require(Sample.named("red-fox")))
         try await waitUntil { model.isFinal }
@@ -292,6 +293,205 @@ struct CreateModelTests {
         model.refine(TemplateRefinements())
         try await waitUntil { model.isFinal }
         #expect(model.preview?.template == before)
+        model.cancelAll()
+    }
+
+    // MARK: Refine's edits
+
+    /// A short line in the middle of a canvas, in canvas units.
+    private func line(in template: Template) -> TemplateEditor.Edit {
+        let w = Float(template.width), h = Float(template.height)
+        return .draw(points: [SIMD2(0.42 * w, 0.5 * h), SIMD2(0.5 * w, 0.46 * h), SIMD2(0.58 * w, 0.5 * h)])
+    }
+
+    /// Waits for the template on screen to have the edits refined so far.
+    private func waitForEdits(_ model: CreateModel, _ serial: Int) async throws {
+        try await waitUntil(polling: .milliseconds(2)) { model.settledEdits >= serial && model.isFinal }
+    }
+
+    /// An edit is laid on the template on screen as it is: nothing is generated and no draft shows,
+    /// the paints are the ones it had, and every region away from the line is bit for bit what it
+    /// was.
+    @Test func anEditIsLaidOnTheTemplateOnScreenAlone() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let edit = line(in: before)
+
+        var generated = false
+        let serial = model.edit(edit)
+        try await waitUntil(polling: .milliseconds(2)) {
+            if model.phase == .generating || model.preview?.isDraft == true { generated = true }
+            return model.settledEdits >= serial && model.isFinal
+        }
+        #expect(!generated, "An edit generated the template again")
+        #expect(model.refinements.edits == [edit] && model.preview?.refinements == model.refinements)
+        #expect(model.canUndo && !model.canRedo && model.note == nil)
+
+        let (expected, outcome) = try TemplateEditor.apply(edit, to: before)
+        #expect(outcome.declined == nil && outcome.changed)
+        let after = try #require(model.preview?.template)
+        #expect(after == expected, "The template on screen isn't the editor's result")
+        #expect(after.palette == before.palette)
+        #expect(model.stats?.areas == after.regions.count)
+
+        let w = Float(before.width), h = Float(before.height)
+        let box = (x: 0.42 * w - 8, y: 0.46 * h - 8, x2: 0.58 * w + 8, y2: 0.5 * h + 8)
+        let away = before.regions.indices.filter { r in
+            let b = before.regions[r].bounds
+            return Float(b.maxX) < box.x || Float(b.minX) > box.x2 || Float(b.maxY) < box.y || Float(b.minY) > box.y2
+        }
+        #expect(away.count > 5, "No region lies away from the line")
+        for r in away {
+            let now = outcome.continued[r]
+            #expect(before.polygons(ofRegion: r) == after.polygons(ofRegion: now), "region \(r)")
+            #expect(before.labels(ofRegion: r).map { SIMD3($0.position.x, $0.position.y, $0.radius) }
+                == after.labels(ofRegion: now).map { SIMD3($0.position.x, $0.position.y, $0.radius) })
+            #expect(before.regions[r].colorIndex == after.regions[now].colorIndex)
+        }
+
+        // Start takes the template on screen, edits and all.
+        let draft = try await model.makeDraft()
+        #expect(draft.template == after && draft.refinements.edits == [edit])
+        model.cancelAll()
+    }
+
+    /// Undo brings the previous template back exactly, from the templates kept; Redo puts the edit
+    /// back; Cancel puts back what Refine opened with.
+    @Test func undoRestoresThePreviousTemplateExactly() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        model.beginRefining()
+        let first = line(in: before)
+        try await waitForEdits(model, model.edit(first))
+        let once = try #require(model.preview?.template)
+        let w = Float(before.width), h = Float(before.height)
+        let second = TemplateEditor.Edit.draw(points: [SIMD2(0.2 * w, 0.2 * h), SIMD2(0.3 * w, 0.25 * h)])
+        try await waitForEdits(model, model.edit(second))
+        let twice = try #require(model.preview?.template)
+        #expect(model.refinements.edits == [first, second] && twice != once)
+
+        model.undo()
+        try await waitUntil { model.refinements.edits == [first] && model.isFinal }
+        #expect(model.preview?.template == once)
+        #expect(model.canUndo && model.canRedo)
+        model.redo()
+        try await waitUntil { model.refinements.edits == [first, second] && model.isFinal }
+        #expect(model.preview?.template == twice)
+
+        model.undo()
+        model.undo()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        #expect(model.preview?.template == before)
+        #expect(!model.canUndo && model.canRedo)
+
+        // Cancel goes back to what Refine opened with, whatever came after.
+        model.redo()
+        try await waitUntil { model.refinements.edits == [first] && model.isFinal }
+        model.cancelRefining()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        #expect(model.preview?.template == before)
+        model.cancelAll()
+    }
+
+    /// An edit that cannot be made changes nothing: the template, the edits and the steps of Undo
+    /// are as they were, and the painter is told.
+    @Test func aDeclinedEditLeavesTheTemplateAsItWas() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let shown = model.preview?.id
+
+        // A tap off the canvas has no shape to fill.
+        let serial = model.edit(.fill(at: SIMD2(1e9, -1e9), color: SIMD3(0.5, 0, 0)))
+        try await waitUntil(polling: .milliseconds(2)) { model.settledEdits >= serial }
+        #expect(model.refinements.edits.isEmpty && !model.canUndo)
+        #expect(model.preview?.id == shown && model.preview?.template == before)
+        #expect(model.note?.kind == .notFilled)
+        #expect(model.isFinal)
+
+        // An eraser over nothing does nothing and says nothing.
+        model.dismissNote()
+        let nothing = model.edit(.erase(path: [SIMD2(0.5, 0.5)], radius: 0.01))
+        try await waitUntil(polling: .milliseconds(2)) { model.settledEdits >= nothing }
+        #expect(model.refinements.edits.isEmpty && model.note == nil && model.preview?.template == before)
+        model.cancelAll()
+    }
+
+    /// A tap of Fill makes the shape under it an area, and a tap in that area takes the fill out
+    /// again: the template is the one it was.
+    @Test func aTapInAFilledAreaClearsTheFill() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let before = try #require(model.preview?.template)
+        let point = SIMD2(0.5 * Float(before.width), 0.5 * Float(before.height))
+        let color = SIMD3<Float>(0.6, 0.05, 0.05)
+
+        try await waitForEdits(model, model.fill(at: point, color: color))
+        let filled = try #require(model.preview?.template)
+        #expect(model.refinements.edits == [.fill(at: point, color: color)])
+        #expect(filled.detailRegions.count == before.detailRegions.count + 1)
+
+        try await waitForEdits(model, model.fill(at: point, color: color))
+        #expect(model.refinements.edits.isEmpty)
+        #expect(model.preview?.template == before)
+        model.undo()
+        try await waitUntil { model.refinements.edits.count == 1 && model.isFinal }
+        #expect(model.preview?.template == filled)
+        model.cancelAll()
+    }
+
+    /// The sliders make the template again and the edits are laid on the new one, as the editor
+    /// lays them: the painter's lines survive.
+    @Test func aSliderChangeLaysTheEditsOnTheNewTemplate() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let first = try #require(model.preview?.template)
+        let settings = model.settings
+        let edit = line(in: first)
+        try await waitForEdits(model, model.edit(edit))
+        let drawn = try #require(model.preview?.template)
+
+        model.detail = settings.detail < 0.75 ? Double(settings.detail) + 0.25 : Double(settings.detail) - 0.25
+        model.settingsChanged()
+        try await waitUntil { model.isFinal }
+        #expect(model.preview?.settings != settings && model.preview?.settings == model.settings)
+        #expect(model.preview?.refinements.edits == [edit] && model.refinements.edits == [edit])
+        let shown = try #require(model.preview?.template)
+        #expect(shown != drawn)
+
+        // Taking the edit back shows the new template without it: the edit was laid on that one.
+        model.undo()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        let base = try #require(model.preview?.template)
+        #expect(try TemplateEditor.apply(edit, to: base).template == shown)
+        model.cancelAll()
+    }
+
+    /// Edits sent while the template is being made again are laid on it before it shows.
+    @Test func editsSentWhileTheTemplateIsMadeAgainAreNotLost() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        let edit = line(in: try #require(model.preview?.template))
+
+        model.detail = model.detail < 0.75 ? model.detail + 0.25 : model.detail - 0.25
+        model.settingsChanged()
+        let serial = model.edit(edit)
+        try await waitUntil { model.settledEdits >= serial && model.isFinal }
+        #expect(model.preview?.settings == model.settings)
+        #expect(model.refinements.edits == [edit] && model.preview?.refinements.edits == [edit])
+        let shown = try #require(model.preview?.template)
+        model.undo()
+        try await waitUntil { model.refinements.edits.isEmpty && model.isFinal }
+        let base = try #require(model.preview?.template)
+        #expect(try TemplateEditor.apply(edit, to: base).template == shown)
         model.cancelAll()
     }
 

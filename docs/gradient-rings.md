@@ -50,6 +50,14 @@ subject can be told from the subject's own shading; with a budget of about +7 % 
 from the coarse ladder, one ladder per color family so skies keep their hue, with a blended
 gate edge.
 
+Shipped later, for Colors above 40 (pipeline 11): the band tolerances are fixed spreads
+(0.036–0.14), but paints sit 0.031 apart at 40 colors and one just-noticeable difference (0.02)
+apart from 96, so 150 colors recolored the same cells (barn, 24 → 150 colors: 460 → 533
+regions; with fusing off, 704). They now shrink by 40 / colors above 40 (`bandFusionKnee`). At
+150 colors and detail 0.5: regions barn 533 → 704, hibiscus 510 → 616, lighthouse 414 → 454,
+parrots 275 → 386; mean ΔE −4 to −14 %. An exponent of 0.5 gave about 70 % of that; scaling
+`consolidationTolerance` too added nothing. Colors up to 40 are unchanged.
+
 Full reports, with every variant and crop, are in git history:
 
 - the first round: `git show e03e499:docs/wave2/log/w3-gradient.md` (its brief:

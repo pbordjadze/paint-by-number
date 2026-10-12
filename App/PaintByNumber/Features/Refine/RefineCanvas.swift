@@ -2,8 +2,8 @@ import PaintCore
 import SwiftUI
 import UIKit
 
-/// What the painter did on the Refine screen that the template doesn't show yet, in the order
-/// they did it, over the drawing in `rect` (view coordinates): lines drawn in the drawing's own
+/// The edits sent on the Refine screen that the template doesn't show yet, in the order they were
+/// sent, over the drawing in `rect` (view coordinates): lines drawn in the drawing's own
 /// ink and weight, and the eraser's passes and the lines tapped away showing the paper, photo or
 /// painting beneath, so whatever they took out is gone at once. `trace` is the pen's line, the
 /// shape or the eraser's pass still under the finger; while the eraser is down a ring shows its
@@ -101,16 +101,23 @@ struct RefineInkLayer: View {
 /// The painter's fills over the drawing in `rect` (view coordinates): each area a fill made in
 /// the template on screen (`base`'s detail areas holding a fill's point) tinted its paint,
 /// multiplied in so the drawing's ink stays on top and the paper or photo shows through, and a
-/// swatch of the photo's color (`LineEdit.photoColor`, what the pipeline paints it with) where
-/// each fill the template doesn't have yet was tapped, until the template that has it comes. An
-/// area whose fill was cleared since shows no more. Over the painting (`showsAreas` off) the
-/// areas are painted already: only the swatches show.
+/// swatch of the photo's color (`LineEdit.photoColor`, what the fill paints it with) where each
+/// fill the template doesn't have yet was tapped, until the template that has it comes. Over the
+/// painting (`showsAreas` off) the areas are painted already: only the swatches show.
 struct RefineFillLayer: View, Equatable {
+    /// A fill sent and not shown yet: where it was tapped (normalized to the picture) and the
+    /// photo's color there (OKLab).
+    nonisolated struct Swatch: Equatable {
+        let point: SIMD2<Float>
+        let color: SIMD3<Float>
+    }
+
     let base: CreateModel.Preview?
-    /// The fills of the refinements, in order.
-    let fills: [TemplateRefinements.Line]
-    /// The photo the pipeline reads, for the swatches' color; it is the same while Refine is open.
-    let photo: RGBAImage?
+    /// Where the fills the template has were tapped, normalized to the picture.
+    let fills: [SIMD2<Float>]
+    let swatches: [Swatch]
+    /// The photo's color space, for the swatches' color; the same while Refine is open.
+    let space: RGBColorSpace?
     let rect: CGRect
     var showsAreas = true
 
@@ -120,19 +127,17 @@ struct RefineFillLayer: View, Equatable {
     static let swatchRadius: CGFloat = 6
 
     nonisolated static func == (a: RefineFillLayer, b: RefineFillLayer) -> Bool {
-        a.base?.id == b.base?.id && a.fills == b.fills && a.rect == b.rect && (a.photo == nil) == (b.photo == nil)
+        a.base?.id == b.base?.id && a.fills == b.fills && a.swatches == b.swatches && a.rect == b.rect && a.space == b.space
             && a.showsAreas == b.showsAreas
     }
 
     var body: some View {
         let areas = showsAreas ? Self.areas(base?.template, fills: fills) : [], rect = rect
-        let made = (base?.refinements.lines ?? []).filter { $0.kind == .fill }
-        let swatches = fills.filter { !made.contains($0) && !$0.points.isEmpty }.compactMap { fill -> (SIMD2<Float>, Color)? in
-            guard let photo else { return nil }
-            let lab = LineEdit.photoColor(at: fill.points[0], in: photo)
-            let rgb = ColorScience.okLabToEncoded(lab, space: photo.colorSpace)
-            let color = Color(photo.colorSpace == .displayP3 ? .displayP3 : .sRGB, red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z))
-            return (fill.points[0], color)
+        let dots = swatches.compactMap { swatch -> (SIMD2<Float>, Color)? in
+            guard let space else { return nil }
+            let rgb = ColorScience.okLabToEncoded(swatch.color, space: space)
+            let color = Color(space == .displayP3 ? .displayP3 : .sRGB, red: Double(rgb.x), green: Double(rgb.y), blue: Double(rgb.z))
+            return (swatch.point, color)
         }
         let size = base.map { CGSize(width: $0.template.width, height: $0.template.height) } ?? .zero
         let opacity = Self.areaOpacity, r = Self.swatchRadius
@@ -157,7 +162,7 @@ struct RefineFillLayer: View, Equatable {
             }
             .blendMode(.multiply)
             Canvas { context, _ in
-                for (point, color) in swatches {
+                for (point, color) in dots {
                     let centre = CGPoint(x: rect.minX + CGFloat(point.x) * rect.width, y: rect.minY + CGFloat(point.y) * rect.height)
                     let dot = Path(ellipseIn: CGRect(x: centre.x - r, y: centre.y - r, width: 2 * r, height: 2 * r))
                     context.fill(dot, with: .color(color))
@@ -171,13 +176,14 @@ struct RefineFillLayer: View, Equatable {
         .allowsHitTesting(false)
     }
 
-    /// The areas of `template` a fill made (its detail areas holding one of `fills`' points):
-    /// their rings in canvas units and their paint.
-    static func areas(_ template: Template?, fills: [TemplateRefinements.Line]) -> [(rings: [[SIMD2<Float>]], paint: Color)] {
+    /// The areas of `template` a fill made (its detail areas holding one of the `fills`): their
+    /// rings in canvas units and their paint.
+    static func areas(_ template: Template?, fills: [SIMD2<Float>]) -> [(rings: [[SIMD2<Float>]], paint: Color)] {
         guard let template, !template.detailRegions.isEmpty else { return [] }
+        let size = SIMD2(Float(template.width), Float(template.height))
         var filled = Set<Int>()
-        for fill in fills where !fill.points.isEmpty {
-            if let r = RefineFills.region(of: fill.points[0], in: template), template.isDetailRegion(r) { filled.insert(r) }
+        for point in fills {
+            if let r = template.region(at: point * size), template.isDetailRegion(r) { filled.insert(r) }
         }
         return filled.sorted().map { (template.polygons(ofRegion: $0), PaletteBar.paint(template, Int(template.regions[$0].colorIndex))) }
     }
@@ -198,6 +204,22 @@ struct RefineTappedLine: View {
         .stroke(Theme.signature, style: RefineInkLayer.style(max(2.5 * lineWidth, 4)))
         .shadow(color: Theme.signature.opacity(0.6), radius: 6)
         .allowsHitTesting(false)
+    }
+}
+
+/// What Refine tells the painter (`RefineNote`): a glass capsule at the top that takes no touches,
+/// like the app's other toasts (`Toast`), which VoiceOver is told of when it comes
+/// (`CreateModel.say`). Nothing without a note.
+struct RefineNoteToast: View {
+    let note: RefineNote?
+
+    var body: some View {
+        if let note {
+            Toast(text: note.text, systemImage: note.systemImage, edge: .top)
+                .padding(.horizontal, 20)
+                .allowsHitTesting(false)
+                .accessibilityIdentifier("refine-note")
+        }
     }
 }
 

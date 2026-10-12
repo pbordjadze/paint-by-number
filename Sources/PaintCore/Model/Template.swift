@@ -8,7 +8,7 @@
 public struct Template: Sendable, Equatable {
     /// Binary layout written by `encoded()`. Every version ever written stays readable:
     /// 1 = the original layout; 2 = the version-1 payload followed by extension chunks (see
-    /// `TemplateCoding.swift`: `GENR`, `LINE`, `DETL`), so later additions need no new version.
+    /// `TemplateCoding.swift`: `GENR`, `LINE`, `DETL`, `WRIT`), so later additions need no new version.
     public static let formatVersion: UInt32 = 2
     /// Largest canvas (`width * height`) the decoder accepts. The generator caps the long side
     /// at 2100 units (≈ 3 M cells); the headroom is for `pbn trace` of large flat images, and
@@ -290,6 +290,20 @@ extension Template {
             if detailRegions[mid] < target { low = mid + 1 } else { high = mid }
         }
         return low < detailRegions.count && detailRegions[low] == target
+    }
+
+    /// The OKLab lightness below which a paint is too dark for the sheet's dark ink to read on it
+    /// (the midpoint of the ink's and the paper's lightness).
+    public static let darkPaintLightness: Float = 0.58
+
+    /// Whether interior stroke `index` of the line art is writing (`TemplateLineArt.writingStrokes`)
+    /// over a paint too dark for the sheet's dark ink (`darkPaintLightness`), which renderers draw
+    /// in the paper's light tone once that region is painted.
+    public func writesOnDarkPaint(stroke index: Int) -> Bool {
+        guard let lineArt, lineArt.isWritingStroke(index), lineArt.strokes.indices.contains(index) else { return false }
+        let region = Int(lineArt.strokes[index].region)
+        guard regions.indices.contains(region), palette.indices.contains(Int(regions[region].colorIndex)) else { return false }
+        return palette[Int(regions[region].colorIndex)].oklab.x < Self.darkPaintLightness
     }
 
     /// Region under a canvas-space point, if inside the canvas.

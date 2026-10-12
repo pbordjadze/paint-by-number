@@ -13,7 +13,9 @@ nonisolated final class RenderContext: @unchecked Sendable {
     /// Every canvas pass renders into this format; blending happens in linear light and the
     /// stored values are Display P3 with the sRGB curve.
     static let colorFormat: MTLPixelFormat = .bgra8Unorm_srgb
-    static let outlineFormat: MTLPixelFormat = .r16Float
+    /// The outline coverage target: the ink's opacity (r) and the share of it in the light tone
+    /// (g, writing over a dark paint).
+    static let outlineFormat: MTLPixelFormat = .rg16Float
 
     let device: any MTLDevice
     let queue: any MTLCommandQueue
@@ -218,7 +220,7 @@ nonisolated final class RenderContext: @unchecked Sendable {
         var photo: (any MTLTexture)? = nil
     }
 
-    /// Encodes one frame: outline coverage (R16F, max blending), then a single multisampled
+    /// Encodes one frame: outline coverage (RG16F, max blending), then a single multisampled
     /// pass with paper + shadow, all fills in one indexed draw, the outline composite, the
     /// numbers, the source photo while it shows and the brush.
     func encode(

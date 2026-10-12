@@ -5,9 +5,9 @@ import XCTest
 /// and text marks too.
 final class RefineUITests: XCTestCase {
     /// The pen draws a line (a change), Undo and Redo step through it as a two-finger tap undoes
-    /// too, the eraser rubs lines out (another change), Fill fills a shape with a tap (a third),
-    /// the painting shows beneath the drawing, Done keeps it all; Shapes draws a rectangle, and
-    /// Cancel puts back what Refine opened with.
+    /// too, the eraser rubs across it (another change: an edit that changes nothing is none), Fill
+    /// fills a shape with a tap (a third), the painting shows beneath the drawing, Done keeps it
+    /// all; Shapes draws a rectangle, and Cancel puts back what Refine opened with.
     @MainActor
     func testRefineDrawsErasesAndKeepsIt() throws {
         let app = launchPreview()
@@ -45,7 +45,9 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(eraser.exists, "Refine has no eraser")
         eraser.tap()
         XCTAssertTrue(waitFor(eraser, toMatch: NSPredicate(format: "isSelected == true")), "The eraser didn't become the tool")
-        drag(on: canvas, from: CGVector(dx: 0.3, dy: 0.6), to: CGVector(dx: 0.6, dy: 0.62))
+        // Across the line just drawn, which runs from (0.25, 0.4) to (0.7, 0.45): rubbing bare paper
+        // changes nothing, and so isn't a change.
+        drag(on: canvas, from: CGVector(dx: 0.45, dy: 0.3), to: CGVector(dx: 0.5, dy: 0.6))
         XCTAssertTrue(
             waitFor(canvas, toMatch: changes("2 changes")), "Rubbing out didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-erased")
@@ -54,7 +56,7 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(fill.exists, "Refine has no Fill")
         fill.tap()
         XCTAssertTrue(waitFor(fill, toMatch: NSPredicate(format: "isSelected == true")), "Fill didn't become the tool")
-        canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
+        canvas.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         XCTAssertTrue(waitFor(canvas, toMatch: changes("3 changes")), "The fill didn't count: \(canvas.value ?? "")")
         attachScreenshot(of: app, named: "refine-filled")
 

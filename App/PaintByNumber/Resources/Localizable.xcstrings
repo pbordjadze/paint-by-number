@@ -321,6 +321,10 @@
       "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
       "extractionState" : "manual"
     },
+    "Continue Refining" : {
+      "comment" : "Button on the gallery's draft row: reopens the create flow on the new painting the painter refined and didn't start, to refine it again",
+      "extractionState" : "manual"
+    },
     "colorName.chroma.grayish" : {
       "comment" : "Color name chroma modifier (a dull, desaturated color)",
       "extractionState" : "manual",
@@ -973,6 +977,14 @@
       "comment" : "Button of that confirmation: throws the feedback away and returns to painting",
       "extractionState" : "manual"
     },
+    "Discard Draft" : {
+      "comment" : "Icon-only button on the gallery's draft row (its text is the VoiceOver label): throws away the unfinished new painting, after a confirmation",
+      "extractionState" : "manual"
+    },
+    "Discard this draft?" : {
+      "comment" : "Title of the confirmation dialog for discarding the create flow's draft",
+      "extractionState" : "manual"
+    },
     "Discard Your Feedback?" : {
       "comment" : "Title of the confirmation before leaving feedback mode on the painting screen when marks or a note would be lost",
       "extractionState" : "manual"
@@ -1245,6 +1257,30 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "gallery.draft.caption" : {
+      "comment" : "Caption of the gallery's draft row: a new painting refined and not started yet; the argument is how many changes the painter made in Refine, e.g. 3 changes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draft · %@"
+          }
+        }
+      }
+    },
+    "gallery.draft.discard.confirm" : {
+      "comment" : "Destructive button of the draft's discard confirmation; the argument is the draft's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard “%@”"
           }
         }
       }
@@ -2127,6 +2163,10 @@
     },
     "Its template, settings and progress" : {
       "comment" : "Feedback's review sheet: a row of what is sent, the painting's data",
+      "extractionState" : "manual"
+    },
+    "Its photo and everything you changed in Refine will be lost." : {
+      "comment" : "Message of the confirmation dialog for discarding the create flow's draft",
       "extractionState" : "manual"
     },
     "Made from a library picture: no photo needed" : {
@@ -3169,6 +3209,78 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Brush over marked areas to clear them."
+          }
+        }
+      }
+    },
+    "refine.note.left" : {
+      "comment" : "Refine screen toast after the sliders or a brush made the template again: how many of the painter's edits no longer apply to it; the argument is the count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld edit no longer fits the new drawing and was left out."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld edits no longer fit the new drawing and were left out."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "refine.note.notDrawn" : {
+      "comment" : "Refine screen toast: a line the painter drew could not be added to the drawing (it doubled back on itself, or lay too close to other lines); nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That line couldn’t be drawn there."
+          }
+        }
+      }
+    },
+    "refine.note.notErased" : {
+      "comment" : "Refine screen toast: an erasure the painter made could not be carried out; nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That couldn’t be erased."
+          }
+        }
+      }
+    },
+    "refine.note.notFilled" : {
+      "comment" : "Refine screen toast: a Fill tap could not make its shape an area (no room for the number of its paint); nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That shape couldn’t be filled."
+          }
+        }
+      }
+    },
+    "refine.note.tooSmall" : {
+      "comment" : "Refine screen toast: a shape the painter closed with a line has no room for a number, so it did not become an area of its own; the line stays",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That shape is too small for a number."
           }
         }
       }

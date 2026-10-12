@@ -29,7 +29,8 @@ synchronized folder would bundle it into the app.
   (`CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the strides). No shader reads
   `CanvasUniforms.background`: it carries the backdrop to `TimelapseFrameRenderer`'s clear.
 - The shaders hold no paper, ink or accent literals (the brush and the paint sheen keep theirs): the
-  chrome colors are uniforms (`CanvasUniforms.setChrome`, `select`).
+  chrome colors are uniforms (`CanvasUniforms.setChrome`, `select`; `lightInk` is the tone writing
+  over dark paint turns to).
 - Exhaustive switches: `PaintTips.signal(for:isStroking:)` and `FeedbackEngine.handle` over
   `PaintEvent`.
 - Strokes report paint many times a second, so each tip is invalidated at most once per launch and
@@ -54,7 +55,8 @@ synchronized folder would bundle it into the app.
 - `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`,
   `PreviewStyle`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
-  `ArtworkFactory` (photo → template), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
+  `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
+  see Create flow), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
   `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
   `Background`, `Log` (every logger; CI's `*-app.log`); DEBUG `DemoTemplateCache`.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
@@ -65,7 +67,7 @@ synchronized folder would bundle it into the app.
   `SyntheticTemplate`.
 - `Export/`: `TemplateRasterizer`, `PDFExporter`, `TimelapseExporter`, `ArtworkExporter`
   (`ArtworkExports.swift`), `ImageCodec`.
-- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineGeometry`); `Gallery/` (`AppShellView` the shell, `GalleryView`, `ArtworkPaintingView`
+- `Features/`: `Create/`; `Refine/` (`RefineView`, `RefineCanvas`, `RefineGeometry`, `RefineEdits`); `Gallery/` (`AppShellView` the shell, `GalleryView`, `DraftRow`, `ArtworkPaintingView`
   the painting host, `PaintingRecoveryView`, `ImageCaches.swift`, `Toast`); `Paint/` (`PaintView`,
   `PaletteBar`, `PaintChromeState`, `PaintCommands`, `PaintTips`, `PaintSpeech`, `PhotoPeek`,
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
@@ -224,7 +226,8 @@ and deceleration), rendering through a display link only while something changes
 functions looked up by name; nil means no Metal (`CanvasView.isRenderable` false, the
 `paint-unavailable` stand-in). `CanvasScene` holds a template's GPU buffers, `CanvasRenderer` the
 region states and three frame slots. `RenderContext.encode` is the one frame recipe (outline
-coverage, then one MSAA pass), shared by the canvas, `CanvasSnapshot` and `TimelapseFrameRenderer`;
+coverage, an RG16F target: the ink's opacity and the share of it in the light tone, then one MSAA
+pass), shared by the canvas, `CanvasSnapshot` and `TimelapseFrameRenderer`;
 colors are linear Display P3 into sRGB-curved targets; fills animate on the GPU from timestamps.
 Render tests compare pixels (`CanvasRenderTests`). Canvas units are the template's (root
 Conventions).
@@ -241,6 +244,14 @@ Conventions).
   style (`drawBookOutlines`, after dotted color-edge guides in `.print`, since paper has no hatch).
   Classic templates draw every edge alike (`ClassicLook` on the canvas), the selected color's
   unpainted cells outlined.
+- Writing (`TemplateLineArt.writingStrokes`) over a paint under `Template.darkPaintLightness` draws
+  in the paper's light tone once its region is painted, so it reads instead of vanishing
+  (`docs/writing.md` › Ink on dark paint): `DrawableLineArt.lightWriting` says which strokes,
+  `OutlineGeometry.lightWritingMark` rides on their layer to the shader, which crossfades by
+  `paintedAmount` (`CanvasUniforms.lightInk`: the lighter of the paper and the ink, so the dark
+  sheet's writing stays in its light ink); `TemplateRasterizer.drawBookOutlines` switches where
+  the region is painted (never in `.print`) and `LineArtDrawing.paths(within:overPaint:)` splits
+  it out over the painting (Refine's). Unpainted and every other line stay in the ink.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
   the painter sets: an open canvas follows a change at once (`PaintView`'s `@AppStorage`), and
   pictures, the time-lapse and print read it (`LineWeight.stored`). Constants live in
@@ -274,12 +285,14 @@ Conventions).
   (`Application Support/Artworks/<uuid>/`: `meta.json`, LZFSE `template.pbnt`, `progress.bin`,
   `source.jpg`, `thumbnail.png`, and `refinements.json` for a refined painting; atomic writes,
   staging and trash folders). Writes are queued per
-  artwork off the main actor; deletes are undoable.
+  artwork off the main actor; deletes are undoable. The create flow's draft lives in
+  `Artworks/Drafts/` (not an artwork: `loadAll` skips it).
 - `Library.loadForPainting` classifies failures (`Library.OpenError`: `needsNewerApp`,
   `damaged(canRegenerate:)`, or `unreadable`: a passing I/O error that changes nothing and offers no
   regeneration), resets unusable progress with a one-time `OpenNotice` and repairs stale metadata.
   `Library.regenerate(artwork:settings:)` re-runs the pipeline on the stored photo (or the library
-  picture its `sampleName` names), carries progress over by region overlap
+  picture its `sampleName` names; for a refined painting with its `refinements.json`: the base,
+  then its edits laid on it, as Refine showed them), carries progress over by region overlap
   (`PaintProgress.remapped`) and swaps the folder in atomically (`ArtworkStore.replaceContents`);
   without either photo it can't regenerate (`ArtworkFactory.canRegenerate`). Artworks written by a
   newer app (`Artwork.needsNewerApp`) are listed read-only: delete only.
@@ -336,32 +349,87 @@ Conventions).
   drawing, so with line art the photo waits for the winner's draft.
 - Refine (optional, from the preview's toolbar; `RefineView`): the drawing large, on its paper,
   over the photo, or over the painting finished (Painting: every area in its paint,
-  `TemplateRasterizer.Style.paintedAreas`, rendered when a template comes); one finger draws
-  lines and takes them out, and what it draws is what the painting gets (PaintCore keeps each
-  line as drawn, as the outline of the areas it closes too, `EdgeGuides`): the Pen draws as
+  `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
+  draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
   drawn (an end whose ink touches a line moves onto it, so the cell closes as it looks,
   `PenAssist`, `SnapLines`), Shapes draws a straight line, a rectangle, an oval or a curve (two
   drags: its ends, then its bend; `RefineShape`, `ShapePath`); the Eraser rubs out what it
   touches (a tap, a dab), the Smart Eraser rubs too and a tap takes a line from junction to
-  junction (`LineChains`); Fill's tap makes the closed shape under it an area of its own in the
-  photo's color there (a detail area, its number down to half size; a swatch shows at the tap
-  until the template has it, then the area tinted in its paint under the drawing,
-  `RefineFillLayer`), and a tap in a filled area clears it (`RefineFills`). Refine zooms to 12×
-  (`RefineSurfaceView.maximumZoom`). Two fingers zoom and move and a two-finger tap undoes
-  (`RefineCanvas`: an invisible scroll view, the canvas's way); once an Apple Pencil touches the
-  canvas the Pencil draws and one finger moves, and its double tap switches between drawing and
-  the Eraser. Each change regenerates at full resolution, no draft (`CreateModel.refine`);
-  meanwhile the changes the template on screen lacks draw over it in its own ink
-  (`RefineInkLayer`), and Undo brings back a template already made at once (`CreateModel`'s
-  `made`). Settings › Detail Brushes (`SettingsKey.detailBrushes`, off) adds the brushes for
-  more or less detail, clearing that brushing, and the text corrections (a tap turns a found
-  line off or on, a drag marks one it missed). `TemplateRefinements` change only the
-  generator's inputs (the line art's edits, `LineArtInput.edits`; importance, the edge maps'
-  gain, `LineArtInput.writing`), so drafts, sliders and Start carry them, and a refined
-  painting's `refinements.json` lets regeneration reproduce them. Nothing else reads them: a
-  painting nobody refined is made as before. PaintCore's `LineEdits` (root `CLAUDE.md` › Line
-  art) is where drawn lines join the drawing and erased ones leave it: the drawing as it showed,
-  so an edit adds or takes out just what the painter drew or erased.
+  junction; Fill's tap makes the closed shape under it an area of its own in the photo's color
+  there (a detail area, its number down to half size), and a tap in a filled area takes that fill
+  out (`EditFills`). Refine zooms to 12× (`RefineSurfaceView.maximumZoom`). Two fingers zoom and
+  move and a two-finger tap undoes (`RefineCanvas`: an invisible scroll view, the canvas's way);
+  once an Apple Pencil touches the canvas the Pencil draws and one finger moves, and its double
+  tap switches between drawing and the Eraser.
+  - **Manual edits, no image processing.** A gesture ends as one PaintCore `TemplateEditor.Edit` in
+    canvas units (the Pen's stroke after its smoothing and end assist: `.draw`; a rectangle or an
+    oval: `.draw` closed; an eraser rub: `.erase` with the radius it has on screen; a Smart Eraser
+    tap: `.eraseLine`; a Fill tap: `.fill` with `LineEdit.photoColor`), which
+    `CreateModel.edit(_:)` / `fill(at:color:)` lays on the template on screen off the main actor
+    (`EditTrail`: tens of milliseconds): no generation, no draft, no crossfade. The shown template
+    is a function of the base (what the generator makes from the photo, the settings and the
+    refinements' generator inputs, `TemplateRefinements.generatorInputs`) and `refinements.edits`,
+    laid in order, so the same pair is the same template on every device and in every build of one
+    `pipelineVersion`; what an edit doesn't reach is bit for bit what it was (`CreateModelTests`).
+    Until an edit lands (`CreateModel.settledEdits` reaches its number) it shows over the template
+    in the drawing's own ink (`RefineInkLayer`; a fill as a swatch, `RefineFillLayer`, which then
+    tints the area in its paint), and `RefineView.land` swaps the new drawing, the painting
+    beneath it and the end of the pending ink in together, so nothing flickers.
+  - **One queue.** Every change Refine makes (an edit, a brush, a text correction, Undo, Redo,
+    Cancel) runs in its turn on `CreateModel`'s queue, from the state the ones before it left, and
+    the Undo and Redo stacks live there too (`RefineHistory`, 300 steps; Refine opening clears
+    them). Undo and Redo of edits cost no editing: `EditTrail` keeps the templates after the last
+    few edits and lays a changed list only from where it parts from the one laid (`move(to:)`);
+    deeper steps lay from the nearest kept template or the base. A tap in a filled area removes
+    that fill's edit and lays the rest again.
+  - **What still regenerates, and why.** Detail Brushes (Settings › Detail Brushes,
+    `SettingsKey.detailBrushes`, off: brushes for more or less detail, clearing that brushing,
+    and the text corrections, a tap turning a found line off or on, a drag marking one it
+    missed), and the sliders, are image settings: they make the base again (`startGeneration`,
+    reusing a base made before, `made`) and the edits are laid on the new one, those that no
+    longer fit left out of what shows and counted in a toast ("N edits no longer fit the new
+    drawing"); they stay in the list, so a brush undone brings them back. A draft (a slider being
+    dragged) shows the photo's own drawing, without edits. An edit sent while the base is being
+    made again is kept and laid before the new template shows (`generate`).
+  - **An edit that can't be made** (`EditTrail.Verdict.declined`: a line that doubles back on
+    itself, lines closer than the lattice can tell apart, a fill with no room for its number)
+    changes nothing, is not kept and takes no step of the history; a toast says so
+    (`RefineNote`, `RefineNoteToast`, announced to VoiceOver by `CreateModel.say`, gone after
+    `CreateModel.noteDuration`). A shape a line closed with no room for a number is not cut off but
+    its line stays, and the toast says that. An edit with nothing to change (an eraser over bare
+    paper) is silent.
+  - `TemplateRefinements` are the painter's changes: the `edits`, and the generator's inputs
+    (importance, the edge maps' gain, `LineArtInput.writing`, and `lines`, the lines drawn and
+    erased by builds that refined through the generator, `LineArtInput.edits`: paintings and
+    drafts refined that way regenerate that way, what they mean never changes, and nothing refines
+    by it any more; a fill such a build made is part of the base, and a tap there fills again).
+    A `refinements.json` without `edits` decodes as it did; an edit it can't read
+    is left out; at most `maximumEdits` are kept. Drafts, Start (which saves the template on
+    screen, no regeneration) and a refined painting's `refinements.json` carry the edits, and
+    `Library.regenerate` makes the base and lays them (`ArtworkFactory.laying`). PaintCore's
+    `LineEdits` (root `CLAUDE.md` › Line art) stays the way the generator reads `lines`.
+- Draft (`CreateDraft`, kept by `Drafts`, `library.drafts`): the one new painting the painter
+  refined and didn't start, so closing the flow, or iOS ending the app, loses nothing. A flow has
+  a draft (`CreateModel.draft`) once its photo has refinements, and not while its settings are
+  being chosen; `CreateFlowView` hands every change of it (refinements, title, sliders) to
+  `Drafts.keep`, which writes it `Drafts.delay` (1 s) after the last, and at once when the flow
+  disappears or the scene leaves the foreground, off the main actor and one job after another.
+  `Artworks/Drafts/Current/` holds `draft.json` (photo id, titles, settings, the Lines slider,
+  sample name), `refinements.json` (an artwork's encoding) and `source.jpg` (the photo as the
+  flow holds it, encoded with a photo's first draft and copied after, never encoded twice), built
+  in `Drafts/.staging` and swapped in atomically (`DraftStore.write`). It goes when the painting
+  starts (`CreateFlowView.start`) or the refinements are undone to nothing (`Drafts.drop`, which
+  removes only its own photo's draft) and by Discard on the gallery's `DraftRow` (confirmation).
+  A different new painting leaves the draft alone and replaces it only once its own photo is
+  refined; so does choosing another photo in the flow. The row tops the gallery (hidden while a
+  filter or a search narrows it, like placeholders); Continue Refining reads the draft off the
+  main actor (`Drafts.open`) and opens the create flow on its preview (`CreateFlowView.resuming`,
+  `CreateModel.load(draft:photo:)`): the photo goes through the usual steps including the
+  suggestion (Reset to Suggested, the detents), but the draft's settings are what is generated,
+  with its refinements, at full resolution: the base, then its `edits` laid on it in order
+  (`DraftTests.resumingADraftLaysItsEditsAgain`). Refine's undo and redo stacks are not kept. A draft
+  with any file missing or unreadable, or a photo that won't decode, is no draft: logged and
+  removed, never a failure of the gallery (`DraftTests`; `gallery-draft` is its screenshot).
 - Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all

@@ -119,7 +119,8 @@ func runCheck(_ options: Options) throws {
             let counts = layers.map { layer in lines.edgeLayers.filter { $0 == layer.rawValue }.count }
             let style = lines.style == .coloringBook ? "coloring book" : "layered"
             print("\(style) lines: edges " + zip(layers, counts).map { "\($0) \($1)" }.joined(separator: ", ")
-                + "; \(lines.strokes.count) interior strokes (\(lines.strokePoints.count) points)")
+                + "; \(lines.strokes.count) interior strokes (\(lines.strokePoints.count) points)"
+                + (lines.writingStrokes.isEmpty ? "" : ", \(lines.writingStrokes.count) of them writing"))
         }
         if !template.detailRegions.isEmpty {
             print("detail areas: \(template.detailRegions.count) (regions " + template.detailRegions.prefix(20).map(String.init).joined(separator: ", ")
