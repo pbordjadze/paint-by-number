@@ -43,9 +43,15 @@ replies and Originality's seven risk/fix entries are frozen before any calls.
 The comparison model receives identical prompts and output schemas for proposals, shortlist,
 briefs, repairs and set review. It sees the primary model's selected context and is recorded
 only: this measures different answers to the same task, not two independent evolving sets.
-The image juries and all makers use the primary model. Invalid seat answers get one new call
-with the **identical** prompt and schema; both raw answers are kept. A second invalid answer
-stops the round explicitly. Transport failures can resume on rerun. A provider refusal during
+The image juries and all makers use the primary model. Dispatch derives a strict transport
+schema with closed, fully required objects and `anyOf` unions; uniqueness, bounds and string
+lengths remain local checks against each job's unchanged full schema. Invalid answers get one
+new call with the original prompt, validation reasons and previous reply; both raw answers are
+kept. A second invalid answer becomes a durable `invalid` record and the round continues without
+its proposal or vote. Invalid owner briefs withhold those pets, including failed brief repairs.
+Invalid replies remain visible in comparison reports but contribute no agreement or votes.
+A worker report repair only corrects JSON from existing evidence; it does not authorize more art.
+Transport failures can resume on rerun. A provider refusal during
 hatching never authorizes a revised prompt or a retry; explicit refusal events survive even
 if the process dies before writing its final reply.
 
@@ -60,15 +66,16 @@ run.json                         primary/comparison models, effort, skill locati
 inputs.json                      frozen charters, seeds, glossary, chapter-6 evidence and rules
 skill.json                       hashes of the installed generation/validation skill
 jobs/NNN/<stage>-<seat>-mN.json    own prompt, schema, model, effort and image attachments
-retries/NNN/<job>.json            identical-prompt second attempt for an invalid reply
+retries/NNN/<job>.json            second attempt with validation reasons and previous reply
 replies/NNN/<job>[.retry].json    raw schema answer from the kit runner
-records/NNN/<job>.json            durable completion: reply, model, effort, hashes, lengths, costs
+records/NNN/<job>.json            durable completion: valid/invalid, errors, reply, hashes, lengths, costs
 rejections/NNN/<job>-N.json       invalid reply and validation reasons
 costs/NNN/<job>-N.json            measured tokens/time; unknown measurements remain null
 dispatch/<unique>/…              every invocation's schema, reply, JSONL and stderr
 hatches/<pilot|set|redo>-…/
   request.json                   brief, style, avoidances, reference hash, redo reasons
   attempt-…/                     isolated worker directory, prompts, command and process log
+    reply[.retry].json           original report and at most one JSON repair
     final/spritesheet.webp       exact v2 encoding submitted to local validation
     qa/                          chroma, frames, directions and continuity evidence
     previews/                    worker's motion GIFs/MP4s and stills
@@ -88,6 +95,8 @@ comparison.json, comparison.md   paired votes, vetoes, agreement, lengths and ve
 Completion records are atomic, one per job. A crash leaves completed siblings intact; only
 in-flight calls may repeat. If a raw reply arrived before the record was written, rerunning
 uses it without a new call. Tallies and comparison outputs are derived again from saved replies.
+Transport conversion leaves job hashes unchanged; records made before the status field are
+treated as valid completions. Schema fixes therefore resume a stopped run at its unfinished jobs.
 Hatch failures are saved, skipped on resume and never silently retried. Re-running verification
 checks package hashes before copying anything. Existing differing repository pet files cause
 an explicit error rather than being overwritten; identical partial copies can resume.

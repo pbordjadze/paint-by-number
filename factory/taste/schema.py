@@ -4,6 +4,7 @@ Only type, properties, required, additionalProperties, items, min/maxItems, uniq
 minLength, minimum/maximum, enum and oneOf are supported. Unknown keywords fail closed.
 """
 import math
+from copy import deepcopy
 
 
 def obj(properties):
@@ -45,6 +46,40 @@ def check(rule):
             raise ValueError('oneOf must contain schemas')
         for child in rule['oneOf']:
             check(child)
+
+
+def transport(rule):
+    """Copy a kit schema into the conservative strict-output subset.
+
+    Keep shapes, types and enums on the wire; enforce uniqueness, bounds, string
+    lengths and exclusive unions locally with the unchanged full job schema.
+    Convert only at dispatch so frozen jobs and their completion hashes survive.
+    https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas
+    """
+    check(rule)
+
+    def convert(source):
+        result = {k: deepcopy(v) for k, v in source.items() if k in ('type', 'enum')}
+        if 'oneOf' in source:
+            result['anyOf'] = [convert(child) for child in source['oneOf']]
+        types = source.get('type', [])
+        if types == 'object' or isinstance(types, list) and 'object' in types:
+            result.update(obj({key: convert(child) for key, child in source.get('properties', {}).items()}))
+            result['type'] = deepcopy(types)
+        if 'items' in source:
+            result['items'] = convert(source['items'])
+        return result
+
+    result = convert(rule)
+    if result.get('type') != 'object' or 'anyOf' in result:
+        raise ValueError('strict transport requires an object root')
+    return result
+
+
+def repair_prompt(prompt, errors, raw_reply):
+    return (prompt + '\nYour reply failed local validation:\n' + '\n'.join(errors) +
+            '\nPrevious reply (data to correct):\n' + raw_reply +
+            '\nReturn corrected JSON matching the full reply requirements.')
 
 
 def equal(a, b):

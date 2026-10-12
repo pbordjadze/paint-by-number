@@ -85,10 +85,10 @@ def parallel_map(function, items, workers):
 
 
 def execute(run, job, validate=None):
-    """Use the kit runner; retry invalid answers once with the identical prompt.
+    """Use the kit runner; retry invalid answers once with validation feedback.
 
     Transport crashes leave no completion and can resume. Invalid answers retain
-    both attempts. No comparison arm receives feedback unavailable to the other.
+    both attempts and a terminal invalid record if repair fails.
     """
     job_path = paths.job_path(run, job, 'jobs')
     frozen(job_path, job)
@@ -97,12 +97,18 @@ def execute(run, job, validate=None):
         record = loop.load(record_path)
         if record['job_sha256'] != digest(job):
             raise ValueError(f'job changed after completion: {job_path}')
-        if validate:
+        if validate and record.get('status') != 'invalid':
             validate(record['reply'])
         return record
+    errors, raw_reply = [], ''
     for attempt in (0, 1):
         current = {**job, 'attempt': attempt}
         current_path = job_path if not attempt else paths.job_path(run, current, 'retries')
+        if attempt:
+            current['prompt'] = schema.repair_prompt(job['prompt'], errors, raw_reply)
+            # An older driver may already have dispatched an identical-prompt retry.
+            if current_path.exists() and loop.load(current_path) == {**job, 'attempt': 1}:
+                current = loop.load(current_path)
         frozen(current_path, current)
         reply_path = runners.destination(run, current)
         if not reply_path.exists():
@@ -110,6 +116,8 @@ def execute(run, job, validate=None):
             scratch.mkdir(exist_ok=True)
             out = Path(tempfile.mkdtemp(prefix=job['id'] + '-', dir=scratch))
             runners.codex(run, current_path, out)
+        raw_reply = reply_path.read_text()
+        reply = None
         try:
             reply = loop.load(reply_path)
             errors = schema.validate(reply, job['reply_schema'])
@@ -119,11 +127,10 @@ def execute(run, job, validate=None):
             errors = [str(exc)]
         if not errors:
             break
-        loop.save(paths.job_path(run, current, 'rejections'), {'errors': errors, 'raw_reply': reply_path.read_text()})
-        if attempt:
-            raise ValueError(f'{job["id"]}: rejected twice: {errors}')
+        loop.save(paths.job_path(run, current, 'rejections'), {'errors': errors, 'raw_reply': raw_reply})
     record = {key: job[key] for key in ('id', 'round', 'guardian', 'model', 'effort', 'role', 'stage')}
     record.update(job_sha256=digest(job), prompt_sha256=digest(job['prompt'].encode()),
+                  status='invalid' if errors else 'valid', errors=errors,
                   reply=reply, reply_bytes=reply_path.stat().st_size,
                   reply_characters=len(reply_path.read_text()), attempt=attempt,
                   costs=[loop.load(paths.job_path(run, {**job, 'attempt': n}, 'costs')) for n in range(attempt + 1)])
@@ -201,7 +208,8 @@ class Lamp:
                                  effort=self.effort, images=list(images), prompt=prompt, reply_schema=rule))
         records = parallel_map(lambda job: execute(self.run, job,
             lambda reply: self.check(job['guardian'], reply, stage, context)), jobs, self.parallel)
-        primary = {r['guardian']: r['reply'] for r in records if r['model'] == self.model}
+        primary = {r['guardian']: r['reply'] for r in records
+                   if r['model'] == self.model and r.get('status') != 'invalid'}
         return primary
 
     def check(self, seat, reply, stage, context):
@@ -234,7 +242,7 @@ class Lamp:
             if seat != 'originality':
                 for place, target in enumerate(reply['ranking']):
                     scores[target] += len(candidates) - place - 1
-        order = sorted((i for i in candidates if i not in excluded), key=lambda i: (-scores[i], i))
+        order = sorted((i for i in candidates if i not in excluded), key=lambda i: (-scores[i], i)) if votes else []
         record = {'scores': scores, 'excluded': sorted(excluded), 'selected': order[:count], 'votes': votes}
         loop.save(paths.contained(self.run, 'decisions', name + '.json'), record)
         return order[:count]
@@ -257,7 +265,7 @@ class Lamp:
             votes = self.round(2 + revision * 2, f'shortlist-{revision}', self.jury(0),
                 'Rank all style IDs; Originality returns an empty ranking. Veto only charter violations. '
                 'Flag only concrete technical or shared-boundary failures. Select two viable styles.',
-                {'candidates': ids}, ballot_schema(list(ids)), compare=True)
+                {'candidates': ids}, ballot_schema(list(ids)), compare=True) if ids else {}
             selected = self.tally(f'shortlist-{revision}', ids, votes, 2)
             if len(selected) == 2:
                 break
@@ -294,6 +302,7 @@ class Lamp:
                       'physical expression, emotional range, signature behavior, boundaries and every '
                       'do_not_resemble entry verbatim. Preserve the seed within the shared constraints.')
         briefs = self.round(6, 'briefs', list(self.seats), brief_task, contexts, BRIEF, compare=True)
+        invalid_briefs = set(self.seats) - briefs.keys()
         print('5/7 Set review and one repair of flagged briefs', flush=True)
         review_rule = schema.obj({'vetoes': schema.array(schema.obj({
             'target': {'type': 'string', 'enum': list(briefs)}, 'quote': S, 'why': S})),
@@ -301,20 +310,25 @@ class Lamp:
         reviews = self.round(7, 'set-review', self.jury(2),
             'Read the entire set side by side. Only flag off-style, broken boundaries, franchise '
             'look-alikes, real-person likenesses or function defects. No taste rankings.',
-            {'style': style, 'candidates': briefs}, review_rule, compare=True)
+            {'style': style, 'candidates': briefs}, review_rule, compare=True) if briefs else {}
         flagged = sorted({v['target'] for r in reviews.values() for v in r['flags'] + r['vetoes']})
         if flagged:
             contexts = {s: {**contexts[s], 'previous': briefs[s], 'review': reviews} for s in flagged}
-            briefs.update(self.round(8, 'brief-repair', flagged, brief_task + ' Repair the flagged problems once.',
-                                     contexts, BRIEF, compare=True))
+            repaired = self.round(8, 'brief-repair', flagged, brief_task + ' Repair the flagged problems once.',
+                                  contexts, BRIEF, compare=True)
+            for seat in flagged:
+                briefs.pop(seat)
+            briefs.update(repaired)
+            invalid_briefs.update(set(flagged) - repaired.keys())
         loop.save(paths.contained(self.run, 'decisions', 'briefs.json'),
-                  {'style': style, 'reference': reference, 'briefs': briefs, 'reviews': reviews, 'repaired': flagged})
+                  {'style': style, 'reference': reference, 'briefs': briefs, 'reviews': reviews,
+                   'repaired': flagged, 'invalid': sorted(invalid_briefs)})
         print('6/7 Set hatches', flush=True)
         # Establish a set reference before launching the remaining independent pets.
         first = self.hatch_many([dict(key='set-medea', pet='medea', style=style, brief=briefs['medea'],
-                                     reference=reference, redo=None)])[0]
-        set_reference = first['contact'] if first['status'] == 'validated' else reference
-        pets = [first] + self.hatch_many([dict(key=f'set-{s}', pet=s, style=style, brief=b,
+                                     reference=reference, redo=None)]) if 'medea' in briefs else []
+        set_reference = first[0]['contact'] if first and first[0]['status'] == 'validated' else reference
+        pets = first + self.hatch_many([dict(key=f'set-{s}', pet=s, style=style, brief=b,
             reference=set_reference, redo=None) for s, b in briefs.items() if s != 'medea'])
         print('7/7 Image review and at most one redo per pet', flush=True)
         candidates = {p['pet']: p for p in pets if p['status'] == 'validated'}
@@ -332,7 +346,8 @@ class Lamp:
         else:
             final_reviews, rejected = {}, {}
         from .lamp_hatch import publish
-        results = {}
+        results = {s: {'pet': s, 'status': 'invalid', 'reason': 'No valid owner brief after one reply repair.'}
+                   for s in sorted(invalid_briefs)}
         for original in pets:
             pet = candidates.get(original['pet'], original)
             if pet['pet'] in rejected:

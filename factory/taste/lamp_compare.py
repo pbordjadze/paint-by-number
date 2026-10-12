@@ -146,20 +146,23 @@ def compare_run(run):
             record = loop.load(path)
             records.append({**record, 'source': source})
     grouped = defaultdict(list)
-    summaries = defaultdict(lambda: {'jobs': 0, 'vetoes': 0, 'reply_characters': 0, 'votes': [], 'reasons': []})
+    summaries = defaultdict(lambda: {'jobs': 0, 'invalid': 0, 'vetoes': 0, 'reply_characters': 0, 'votes': [], 'reasons': []})
     for record in records:
         grouped[(record['source'], record['stage'], record['guardian'])].append(record)
         key = (record['guardian'], record['model'])
         summary = summaries[key]
         summary['jobs'] += 1
-        summary['vetoes'] += len(vetoes(record['reply']))
         summary['reply_characters'] += record['reply_characters']
+        if record.get('status') == 'invalid':
+            summary['invalid'] += 1
+            continue
+        summary['vetoes'] += len(vetoes(record['reply']))
         summary['votes'].append({'source': record['source'], 'stage': record['stage'],
                                   'values': votes(record['reply'])})
         summary['reasons'] = (summary['reasons'] + reasons(record['reply']))[:3]
     comparisons = []
     for (source, stage, seat), rows in sorted(grouped.items()):
-        for a, b in combinations(rows, 2):
+        for a, b in combinations([r for r in rows if r.get('status') != 'invalid'], 2):
             if a['model'] == b['model']:
                 continue
             if a['prompt_sha256'] != b['prompt_sha256']:
@@ -171,23 +174,28 @@ def compare_run(run):
         paired = [p for p in comparisons if p['guardian'] == seat and model in p['models']]
         seats.append({'guardian': seat, 'model': model, **summary, 'agreement': paired})
     report = {'version': 1, 'method': 'Matched prompts; categorical equality and ranking pair agreement. '
-              'Free prose is quoted, not scored. Missing vote fields have no denominator. '
+              'Free prose is quoted, not scored. Missing vote fields and invalid replies have no denominator. '
               'Pet comparison replies observe primary context; they are not an independent branch. '
+              'Repairs include each reply\'s own validation errors. '
               'Claude lengths are JSON-normalized; Codex lengths are raw reply characters.',
               'seats': seats, 'comparisons': comparisons,
-              'replies': [{k: r[k] for k in ('source', 'stage', 'guardian', 'model', 'effort',
-                                           'reply', 'reply_characters', 'prompt_sha256')} for r in records]}
+              'replies': [{**{k: r[k] for k in ('source', 'stage', 'guardian', 'model', 'effort',
+                                           'reply', 'reply_characters', 'prompt_sha256')},
+                          'status': r.get('status', 'valid'), 'errors': r.get('errors', [])} for r in records]}
     loop.save(paths.contained(run, 'comparison.json'), report)
     lines = ['# The Lamp across models', '', report['method'], '',
-             '| Seat | Model | Jobs | Vetoes | Mean reply characters |', '| --- | --- | ---: | ---: | ---: |']
+             '| Seat | Model | Jobs | Invalid | Vetoes | Mean reply characters |', '| --- | --- | ---: | ---: | ---: | ---: |']
     for row in seats:
-        lines.append(f'| {row["guardian"]} | {row["model"]} | {row["jobs"]} | {row["vetoes"]} | '
+        lines.append(f'| {row["guardian"]} | {row["model"]} | {row["jobs"]} | {row["invalid"]} | {row["vetoes"]} | '
                      f'{row["reply_characters"] / row["jobs"]:.0f} |')
     for (source, stage, seat), rows in sorted(grouped.items()):
         lines += ['', f'## {seat} · {source}/{stage}', '']
         for row in rows:
-            lines += [f'**{row["model"]}** (effort: {row["effort"] or "not recorded"})', '',
-                      'Votes: `' + json.dumps(votes(row['reply']), ensure_ascii=False) + '`', '',
+            lines += [f'**{row["model"]}** (effort: {row["effort"] or "not recorded"})', '']
+            if row.get('status') == 'invalid':
+                lines += ['Invalid after one repair: ' + '; '.join(row['errors']), '']
+                continue
+            lines += ['Votes: `' + json.dumps(votes(row['reply']), ensure_ascii=False) + '`', '',
                       'Vetoes: `' + json.dumps(vetoes(row['reply']), ensure_ascii=False) + '`', '']
             for reason in reasons(row['reply']):
                 lines += ['> ' + reason.replace('\n', '\n> '), '']
