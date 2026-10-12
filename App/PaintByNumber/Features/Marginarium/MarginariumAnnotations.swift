@@ -104,7 +104,8 @@ nonisolated struct MarginariumSelection: Equatable, Sendable {
 
 /// Draws a block's highlights into its text: a wash of the tint that deepens where several
 /// guardians wrote about the same words (two passes of a highlighter), a thin underline, and a
-/// link that opens their notes. The words a reader opened wash deeper still.
+/// link that opens their notes. The words a reader opened wash deeper still. The wash leaves the
+/// spaces out: a space where a line wraps would carry it on to the margin.
 enum MarginariumHighlighter {
     /// A stretch of text covered by the same highlights; `voices` counts their notes.
     struct Piece: Equatable {
@@ -127,19 +128,34 @@ enum MarginariumHighlighter {
     static func text(_ base: AttributedString, block: String, highlights: [MarginariumAnnotations.Highlight],
                      selection: Set<String>) -> AttributedString {
         var text = base
-        let count = text.characters.count
-        for piece in pieces(highlights) where piece.range.upperBound <= count {
-            let start = text.characters.index(text.characters.startIndex, offsetBy: piece.range.lowerBound)
-            let end = text.characters.index(start, offsetBy: piece.range.count)
+        let characters = Array(text.characters)
+        func index(_ offset: Int) -> AttributedString.Index {
+            text.characters.index(text.characters.startIndex, offsetBy: offset)
+        }
+        for piece in pieces(highlights) where piece.range.upperBound <= characters.count {
             let opened = !selection.isDisjoint(with: piece.notes)
-            var attributes = AttributeContainer()
-            attributes[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] =
-                Theme.accent.opacity(wash(voices: piece.voices, opened: opened))
-            attributes[AttributeScopes.SwiftUIAttributes.UnderlineStyleAttribute.self] =
+            var link = AttributeContainer()
+            link[AttributeScopes.SwiftUIAttributes.UnderlineStyleAttribute.self] =
                 Text.LineStyle(pattern: .solid, color: Theme.accent.opacity(opened ? 1 : 0.6))
-            attributes[AttributeScopes.FoundationAttributes.LinkAttribute.self] =
+            link[AttributeScopes.FoundationAttributes.LinkAttribute.self] =
                 MarginariumSelection(block: block, notes: piece.notes).url
-            text[start ..< end].mergeAttributes(attributes)
+            let range = index(piece.range.lowerBound) ..< index(piece.range.upperBound)
+            text[range].mergeAttributes(link)
+            var washed = AttributeContainer()
+            washed[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] =
+                Theme.accent.opacity(wash(voices: piece.voices, opened: opened))
+            var start = piece.range.lowerBound
+            while start < piece.range.upperBound {
+                guard !characters[start].isWhitespace else {
+                    start += 1
+                    continue
+                }
+                var end = start
+                while end < piece.range.upperBound, !characters[end].isWhitespace { end += 1 }
+                let word = index(start) ..< index(end)
+                text[word].mergeAttributes(washed)
+                start = end
+            }
         }
         return text
     }

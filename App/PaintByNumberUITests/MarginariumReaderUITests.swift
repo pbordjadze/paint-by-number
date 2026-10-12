@@ -173,13 +173,23 @@ final class MarginariumReaderUITests: XCTestCase {
             if words.isHittable { break }
             reader.swipeUp()
         }
-        // A link that wraps covers the end of its first line, the top right of its frame.
-        let wraps = words.frame.height > 30
-        words.coordinate(withNormalizedOffset: CGVector(dx: wraps ? 0.95 : 0.5, dy: wraps ? 0.2 : 0.5)).tap()
         let note = reader.descendants(matching: .any).matching(NSPredicate(
             format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
             "marginarium-note-", "That is what a marginarium is")).firstMatch
         let card = reader.descendants(matching: .any)["marginarium-note-card"]
+        if reader.frame.width - 40 < 700 {
+            // XCUITest gives a link in a paragraph the frame of the whole lines it runs on (CI: the
+            // text's full width, two lines tall), so the words are found by tapping along those
+            // lines until their notes open. The rest of the paragraph is plain text: a miss is inert.
+            search: for dy in [0.25, 0.75] {
+                for dx in [0.5, 0.3, 0.7, 0.1, 0.9] {
+                    words.coordinate(withNormalizedOffset: CGVector(dx: dx, dy: dy)).tap()
+                    if card.waitForExistence(timeout: 1) { break search }
+                }
+            }
+        } else {
+            words.tap()
+        }
         XCTAssertTrue(note.waitForExistence(timeout: 5))
         XCTAssertTrue(waitUntil { note.isHittable })
         if reader.frame.width - 40 >= 700 {

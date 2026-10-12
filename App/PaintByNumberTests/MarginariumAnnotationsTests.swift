@@ -105,13 +105,16 @@ struct MarginariumAnnotationsTests {
                 linked.append(words)
                 #expect(MarginariumSelection(url: url) == MarginariumSelection(block: "story", notes: ["n1", "n2"]))
                 #expect(run[AttributeScopes.SwiftUIAttributes.UnderlineStyleAttribute.self] != nil)
-                #expect(run[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] != nil)
+                // The wash leaves out spaces, which could carry it on to the margin at a line's end.
+                let washed = run[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] != nil
+                #expect(washed == !words.contains { $0.isWhitespace }, "\(words)")
             } else {
                 #expect(run[AttributeScopes.SwiftUIAttributes.BackgroundColorAttribute.self] == nil)
             }
         }
-        // The emphasis splits the run but not the highlight.
+        // The emphasis and the unwashed space split the runs but not the highlight.
         #expect(linked.joined() == "brave litt")
+        #expect(linked == ["brave", " ", "litt"])
     }
 
     @Test func aSelectionRoundTripsThroughItsLinkAndOtherLinksAreLeftAlone() throws {

@@ -196,9 +196,16 @@ struct MarginariumMarginNote: View {
         }
     }
 
+    /// A long phrase is quoted by its first four words; the highlight shows the rest.
     private static func quoted(_ phrase: String) -> String {
-        String(localized: "marginarium.note.words", defaultValue: "“\(phrase)”",
-               comment: "The Marginarium: the words of the story a margin note is about, quoted above the note in the margin column; the argument is the words")
+        let words = phrase.split(separator: " ")
+        guard words.count > 5 else {
+            return String(localized: "marginarium.note.words", defaultValue: "“\(phrase)”",
+                          comment: "The Marginarium: the words of the story a margin note is about, quoted above the note in the margin column; the argument is the words")
+        }
+        let start = words.prefix(4).joined(separator: " ")
+        return String(localized: "marginarium.note.wordsStart", defaultValue: "“\(start)…”",
+                      comment: "The Marginarium: the first words of a long phrase of the story a margin note is about, quoted above the note in the margin column; the argument is the first words")
     }
 
     private func players(_ pets: [MarginariumPet]) -> some View {

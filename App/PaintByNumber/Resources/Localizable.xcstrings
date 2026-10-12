@@ -10821,6 +10821,18 @@
         }
       }
     },
+    "marginarium.note.wordsStart" : {
+      "comment" : "The Marginarium: the first words of a long phrase of the story a margin note is about, quoted above the note in the margin column; the argument is the first words",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@…”"
+          }
+        }
+      }
+    },
     "marginarium.goodnight.colophon" : {
       "comment" : "The Marginarium: under the last line of a chapter Claude narrates, beside its pet; Colophon is the pet's name",
       "extractionState" : "manual",
