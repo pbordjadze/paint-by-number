@@ -1,8 +1,9 @@
 import Foundation
 
 /// A chapter or an appendix of The Marginarium, how Paint by Moonlight is made: its title, the
-/// line under it and one passage, quoted as written (the "I" is Claude, the narrator). The
-/// catalog keys name each by its content, never its number, so renumbering touches no key.
+/// line under it and one passage, quoted as written (the "I" is Claude, the narrator, except in
+/// Chapter 6, which Codex narrates). The catalog keys name each by its content, never its
+/// number, so renumbering touches no key.
 nonisolated struct MarginariumEntry: Identifiable, Sendable {
     let id: String
     /// What stands where the entry's number goes: a chapter's number, an appendix's letter.
@@ -61,6 +62,15 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
             passage: String(localized: "marginarium.twoMorePets.passage",
                             defaultValue: "The checkers catch what a person would miss, like 1.505 against 1.5. They cannot say whether two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight; the Lamp judges them next, and Paul has the last word.",
                             comment: "The Marginarium: the passage quoted from the chapter Two More Pets; \"I\" is Claude, the narrator")),
+        MarginariumEntry(
+            id: "petsWeMade", mark: 6.formatted(),
+            title: String(localized: "marginarium.petsWeMade.title", defaultValue: "The Pets We Actually Made",
+                          comment: "The Marginarium: title of the chapter, narrated by Codex, about how the guardians' pets were made"),
+            subtitle: String(localized: "marginarium.petsWeMade.subtitle", defaultValue: "Narrated by Codex.",
+                             comment: "The Marginarium: the line under the chapter title The Pets We Actually Made; Codex, an AI helper, narrates this chapter"),
+            passage: String(localized: "marginarium.petsWeMade.passage",
+                            defaultValue: "There are two pets called Dab. One is a paintbrush; the other is a palette. This is a manageable arrangement until somebody calls across the workshop.",
+                            comment: "The Marginarium: the passage quoted from the chapter The Pets We Actually Made; Dab is the name of two pets")),
     ]
 
     static let appendices: [MarginariumEntry] = [

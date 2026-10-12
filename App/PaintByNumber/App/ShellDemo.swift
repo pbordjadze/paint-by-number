@@ -44,9 +44,13 @@ import PaintCore
 /// - `marginarium`: The Marginarium's sheet over the empty gallery, Pip and Colophon idling.
 /// - `marginarium-chapter`, `marginarium-chapter-dark`, `marginarium-chapter-long-text`: the
 ///   reader opened to Two More Pets, with Pip and Colophon inside the chapter.
-/// - `marginarium-chapter1`, `marginarium-chapter1-margin`, `marginarium-chapter1-table`:
-///   Chapter 1 at its title, first margin group or guardians table. Each also has `-dark`
-///   and `-long-text` variants; readiness follows the target reaching the scroll viewport.
+/// - `marginarium-chapter1`, `marginarium-chapter1-margin`, `marginarium-chapter1-guardians`,
+///   `marginarium-chapter1-table`: Chapter 1 at its title, first margin group (the narrator's
+///   notes, with Colophon), second margin group (five guardians' notes, each with its pet) or
+///   guardians table. Each also has `-dark` and `-long-text` variants; readiness follows the
+///   target reaching the scroll viewport.
+/// - `marginarium-chapter6`, with `-dark` and `-long-text`: Chapter 6, The Pets We Actually
+///   Made, scrolled to its first pet (Medea's ram).
 /// - `gallery-open`: a painting opened from its card (zoom transition into `PaintView`).
 /// - `gallery-damaged`: a painting whose template file is damaged, opened: the recovery screen.
 /// - `gallery-timelapse`: a finished painting's time-lapse being made (progress sheet).
@@ -60,7 +64,8 @@ enum ShellDemo: Equatable {
          galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
-         marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneTable
+         marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
+         marginariumChapterOneTable, marginariumChapterSix
 
     static let current: ShellDemo? = {
         switch DemoMode.scenario {
@@ -93,8 +98,11 @@ enum ShellDemo: Equatable {
         case "marginarium-chapter1", "marginarium-chapter1-dark", "marginarium-chapter1-long-text": .marginariumChapterOne
         case "marginarium-chapter1-margin", "marginarium-chapter1-margin-dark",
              "marginarium-chapter1-margin-long-text": .marginariumChapterOneMargin
+        case "marginarium-chapter1-guardians", "marginarium-chapter1-guardians-dark",
+             "marginarium-chapter1-guardians-long-text": .marginariumChapterOneGuardians
         case "marginarium-chapter1-table", "marginarium-chapter1-table-dark",
              "marginarium-chapter1-table-long-text": .marginariumChapterOneTable
+        case "marginarium-chapter6", "marginarium-chapter6-dark", "marginarium-chapter6-long-text": .marginariumChapterSix
         default: nil
         }
     }()
@@ -163,7 +171,9 @@ enum ShellDemo: Equatable {
     var marginariumEntryID: String? {
         switch self {
         case .marginariumChapter: "twoMorePets"
-        case .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneTable: "marginarium"
+        case .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
+             .marginariumChapterOneTable: "marginarium"
+        case .marginariumChapterSix: "petsWeMade"
         default: nil
         }
     }
@@ -255,7 +265,8 @@ enum ShellDemo: Equatable {
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings,
              .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
-             .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneTable:
+             .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
+             .marginariumChapterOneTable, .marginariumChapterSix:
             break
         }
     }

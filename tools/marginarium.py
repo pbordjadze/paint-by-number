@@ -28,7 +28,9 @@ Atlas pets idle and wave on tap. The app validates the 1536 × 2288 sheet before
 
 An *In the margin* paragraph followed by ordered items becomes marginHeading and marginNote
 blocks. Notes keep their numbering and full signatures; speaker is the italic name after the
-last "— ", even when prose follows it (a plain signature at the end is also accepted).
+last "— ", even when prose follows it (a plain signature at the end is also accepted);
+speakers lists every name signed that way in the note, in order, because one note can carry
+several voices and the reader shows each guardian's pet beside it.
 Tables become tableCell blocks in row-major order, with row/column (zero-based) and header
 metadata. Each cell has its own catalog key and an inline marker inside the pipe cell.
 The reader groups these cells into responsive tables and
@@ -247,6 +249,11 @@ def parse(source):
             if "— " not in block.text or name is None:
                 raise ValueError(f"line {block.start + 1}: margin note needs a final signature")
             block.metadata["speaker"] = unescape(name[1])
+            # Every guardian who signed the note, in order, for the pets shown beside it.
+            signed = [unescape(n) for n in re.findall(r"— \*([^*]+)\*", block.text)]
+            if block.metadata["speaker"] not in signed[-1:]:
+                signed.append(block.metadata["speaker"])
+            block.metadata["speakers"] = list(dict.fromkeys(signed))
         else:
             in_margin = False
     return blocks

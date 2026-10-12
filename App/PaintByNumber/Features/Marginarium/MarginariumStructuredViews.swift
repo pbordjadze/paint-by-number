@@ -55,7 +55,8 @@ struct MarginariumTableView: View {
 }
 
 /// The Lamp's numbered asides keep their signatures, with the contents page's passage tint.
-/// A note is one VoiceOver element; the group stays a container rather than one long utterance.
+/// A note is one VoiceOver element, its pets (`MarginariumSpeakers`) aside; the group stays a
+/// container rather than one long utterance.
 struct MarginariumMarginView: View {
     let section: MarginariumDocument.Section
 
@@ -66,8 +67,7 @@ struct MarginariumMarginView: View {
                     Text(block.attributedText)
                         .accessibilityAddTraits(.isHeader)
                 } else {
-                    MarginariumNumberedText(block: block)
-                        .accessibilityIdentifier("marginarium-note-\(block.key)")
+                    MarginariumMarginNote(block: block)
                 }
             }
         }
@@ -81,6 +81,38 @@ struct MarginariumMarginView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("marginarium-margin-\(section.id)")
+    }
+}
+
+/// A margin note with a small pet for each guardian who signed it, beside the words and
+/// top-aligned. Accessibility text sizes put the pets in a row under the note instead, so the
+/// words keep the whole line.
+struct MarginariumMarginNote: View {
+    let block: MarginariumDocument.Block
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private static let petWidth: CGFloat = 40
+
+    var body: some View {
+        let pets = MarginariumSpeakers.pets(for: block)
+        let note = MarginariumNumberedText(block: block)
+            .accessibilityIdentifier("marginarium-note-\(block.key)")
+        if pets.isEmpty {
+            note
+        } else if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 8) {
+                note
+                HStack(spacing: 8) { players(pets) }
+            }
+        } else {
+            HStack(alignment: .top, spacing: 12) {
+                note.frame(maxWidth: .infinity, alignment: .leading)
+                VStack(spacing: 4) { players(pets) }
+            }
+        }
+    }
+
+    private func players(_ pets: [MarginariumPet]) -> some View {
+        ForEach(pets, id: \.id) { MarginariumSpritePlayer(pet: $0, marginWidth: Self.petWidth) }
     }
 }
 

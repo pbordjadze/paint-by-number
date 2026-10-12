@@ -310,6 +310,8 @@ class MarginariumTests(unittest.TestCase):
             for row in range(3) for column in range(2)])
         notes = [b for b in blocks if b.kind == "marginNote"]
         self.assertEqual([b.metadata["speaker"] for b in notes], ["George", "the narrator"])
+        # Every voice in a note, in order, even when prose follows the last signature.
+        self.assertEqual([b.metadata["speakers"] for b in notes], [["the Moon", "George"], ["the narrator"]])
         self.assertEqual([b.metadata["number"] for b in notes], [1, 2])
         self.assertEqual([b.kind for b in blocks[-3:]], ["paragraph", "ordered", "bullet"])
         self.assertIn("*the Moon*. Then — *George*, who", notes[0].text)
@@ -354,7 +356,7 @@ class MarginariumTests(unittest.TestCase):
         self.imported(DOCS_MARKDOWN.read_text())
         path = self.root / m.MANIFEST
         original = m.load_json(path)
-        for field, value in (("speaker", "wrong"), ("number", 9), ("row", 9), ("column", 1), ("header", False)):
+        for field, value in (("speaker", "wrong"), ("speakers", ["wrong"]), ("number", 9), ("row", 9), ("column", 1), ("header", False)):
             changed = deepcopy(original)
             block = next(b for b in changed["chapters"][0]["blocks"] if field in b)
             block[field] = value

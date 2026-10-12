@@ -40,7 +40,8 @@ struct MarginariumReaderTests {
     /// Existing prose stays word for word; Two More Pets adds the already-shipped captions.
     @Test func pagesKeepShippedProseAndTwoMorePetsAddsExistingCaptions() throws {
         let document = try #require(MarginariumDocument.bundled())
-        for entry in (MarginariumEntry.chapters + MarginariumEntry.appendices) where entry.id != "marginarium" {
+        for entry in (MarginariumEntry.chapters + MarginariumEntry.appendices)
+        where !["marginarium", "petsWeMade"].contains(entry.id) {
             let chapter = try #require(document.chapters.first { $0.id == entry.id })
             let prose = chapter.blocks.filter { $0.kind != .pet }
             #expect(prose.map(\.kind) == [.title, .subtitle, .quote])
@@ -53,6 +54,49 @@ struct MarginariumReaderTests {
                                              String(localized: "Colophon, Claude's moth")])
             } else { #expect(pets.isEmpty) }
         }
+    }
+
+    /// Codex's chapter follows Two More Pets: its full text, a pet for every guardian but the Moon
+    /// where the chapter shows it, and Claude's note kept as the quotation it is.
+    @Test func chapterSixIsCodexsChapterWithItsPets() throws {
+        let document = try #require(MarginariumDocument.bundled())
+        #expect(document.chapters.map(\.id).firstIndex(of: "petsWeMade") == 5)
+        let chapter = try #require(document.chapters.first { $0.id == "petsWeMade" })
+        #expect(chapter.blocks.first?.kind == .title)
+        #expect(chapter.blocks.first?.text == "Chapter 6: The Pets We Actually Made")
+        #expect(chapter.blocks[1].kind == .subtitle)
+        #expect(chapter.blocks[1].text == "Narrated by Codex.")
+        #expect(chapter.blocks[2].text.hasPrefix("There are two pets called Dab."))
+        let entry = try #require(MarginariumEntry.chapters.first { $0.id == "petsWeMade" })
+        #expect(entry.title == "The Pets We Actually Made")
+        #expect(entry.subtitle == "Narrated by Codex.")
+        #expect(chapter.blocks[2].text.hasPrefix(entry.passage))
+
+        let pets = chapter.blocks.filter { $0.kind == .pet }
+        #expect(pets.compactMap(\.pet) == [
+            "medea", "bulat-okudzhava", "originality", "snow-queen", "enchanted-workshop", "painter", "scholar",
+            "robber-girl", "pirosmani", "emily-dickinson", "open-source-enthusiast", "storybook",
+            "child-at-bedtime", "nutcracker", "balanchine", "bible-school-teacher", "baba-yaga", "glassblower",
+            "hedge-witch",
+        ])
+        for pet in pets {
+            #expect(MarginariumPet.named(pet.pet) != nil, "\(pet.pet ?? "nil") must be bundled")
+            #expect(!pet.text.isEmpty, "A pet needs a VoiceOver description")
+        }
+        #expect(pets.first { $0.pet == "snow-queen" }?.text == "Hush, the Snow Queen's ermine")
+        #expect(pets.first { $0.pet == "pirosmani" }?.text == "Gentle Giraffe, Niko's giraffe")
+        #expect(!chapter.blocks.contains { $0.pet == "moon" })
+        // Every pet stands in a section of its own, so the reader lays out one player per block.
+        #expect(chapter.sections.filter { $0.blocks.first?.kind == .pet }.count == 19)
+
+        let note = try #require(chapter.blocks.first { $0.text.hasPrefix("**A note from Claude, who keeps the record") })
+        #expect(note.kind == .quote)
+        #expect(note.text.hasSuffix("Codex is away until October 19 and will tell this part in its own words then."))
+        let tables = chapter.sections.filter { $0.kind == .table }
+        #expect(tables.count == 1)
+        #expect(tables.first?.tableRows.first?.cells.map(\.text) == ["Question", "Matching choices"])
+        #expect(tables.first?.tableRows.count == 6)
+        #expect(chapter.sections.flatMap(\.blocks).map(\.key) == chapter.readableBlocks.map(\.key))
     }
 
     @Test func unknownKindIsSkippedWithoutDecodingItsPayload() throws {

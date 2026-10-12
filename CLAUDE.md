@@ -78,7 +78,8 @@ before planning app work).
   exercises every block kind and key stability (fixtures never ship). `from-docs <view.json>`
   converts Docs prose XML to Markdown, preserving inline styling, tables and signed margin notes;
   `check --docs <view.json> --id <chapter>` also compares against the approved Doc. Chapter `pet:`
-  blocks and the shared imageset/v2-atlas player: `docs/marginarium-pets.md`.
+  blocks, the pets beside margin notes, the shared imageset/v2-atlas player and the bundled
+  sheets' sizes: `docs/marginarium-pets.md`.
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;

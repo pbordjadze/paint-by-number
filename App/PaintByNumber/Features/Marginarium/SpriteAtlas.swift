@@ -39,6 +39,18 @@ nonisolated struct SpriteAtlas: Sendable {
 
     func image(at cell: Cell) -> CGImage? { cells[cell] }
 
+    /// The cells `animation` plays, each redrawn so its long side is `maxPixelSize`. A crop shares
+    /// its sheet's pixels, so these copies are what lets a small player drop the sheet.
+    func thumbnails(maxPixelSize: Int) -> [Cell: CGImage] {
+        var result: [Cell: CGImage] = [:]
+        let frames = Self.animation.idle + Self.animation.action + [Self.animation.reducedMotionAction]
+        for frame in frames {
+            guard case .cell(let cell) = frame.source, result[cell] == nil, let image = cells[cell] else { continue }
+            result[cell] = ImageCodec.downscaled(image, maxPixelSize: maxPixelSize)
+        }
+        return result
+    }
+
     static func load(at url: URL) -> SpriteAtlas? {
         guard let sheet = ImageCodec.image(at: url) else { return nil }
         return SpriteAtlas(sheet: sheet)

@@ -83,13 +83,20 @@ synchronized folder would bundle it into the app.
   `Resources/marginarium.json` is bundled, its `docs/marginarium/` sources and tool fixtures are
   not. `MarginariumReaderTests` checks keys, initial content, inline markup and unknown-kind
   skipping. Chapter 1 is imported in full from its approved Docs prose: `tableCell` blocks keep
-  row/column/header metadata; `marginHeading` and numbered `marginNote` blocks keep each note's
-  final signature as `speaker` for later pets. `Chapter.sections` groups those blocks for
+  row/column/header metadata; numbered `marginNote` blocks keep every signature as `speakers`
+  (the last as `speaker`). `Chapter.sections` groups those blocks for
   `MarginariumStructuredViews`: tables align in two columns where the scaled reading measure
   allows, otherwise each row stacks its heading and text; VoiceOver reads a whole row at a time.
-  Margins use footnote type and the contents page's passage rule. `SpriteAtlasTests` checks a
-  generated WebP in the test bundle only, and `MarginariumReaderUITests` opens chapters, pets
-  and appendices. `Settings/`; `Share/`.
+  Margins use footnote type and the contents page's passage rule, and `MarginariumMarginNote`
+  shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
+  VoiceOver; `MarginariumSpritePlayer(pet:marginWidth:)` keeps only small copies of the cells it
+  plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
+  Colophon, Codex is Pip, the Moon has none), and a test fails on an unmapped speaker. Chapter 6,
+  The Pets We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
+  nineteen guardians' pets, bundled as `Resources/pet-<id>.webp` within the budget in
+  `docs/marginarium-pets.md`; the Moon's pet is withheld. `SpriteAtlasTests` checks a generated
+  WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
+  `MarginariumReaderUITests` opens chapters, pets and appendices. `Settings/`; `Share/`.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
@@ -124,9 +131,11 @@ synchronized folder would bundle it into the app.
   show the library by position; the rest use `ShellDemo.fixedPictures`.
   `marginarium-chapter`, `marginarium-chapter-dark` and `marginarium-chapter-long-text` open the
   reader on Two More Pets; readiness comes when its Pip block appears after the manifest loads.
-  `marginarium-chapter1`, `marginarium-chapter1-margin` and `marginarium-chapter1-table` open
-  Chapter 1 at the top, the first margin group and the guardians table. All have `-dark` and
-  `-long-text` variants. Readiness follows the requested section entering the reader's viewport;
+  `marginarium-chapter1`, `-margin`, `-guardians` and `-table` open Chapter 1 at the top, the
+  first margin group (the narrator's notes), the second (five guardians' notes, each with its
+  pet) and the guardians table; `marginarium-chapter6` opens Chapter 6 at Medea's ram. All have
+  `-dark` and `-long-text` variants. Readiness follows the requested section entering the
+  reader's viewport once the sheet has stopped moving, so these scenarios wait up to 30 s;
   `MarginariumReaderUITests` also captures margins and tables at accessibility text sizes.
 
 ## Painting screen

@@ -1,22 +1,43 @@
+import CoreGraphics
 import Foundation
 import SwiftUI
 
 /// One cancellable player for imagesets and v2 atlases, on the contents page and in chapters.
 /// A tap restarts the response. Reduce Motion uses still poses; disappearing cancels the loop.
+/// Beside a margin note it is small, captionless and hidden from VoiceOver: the note already
+/// names its speaker, so the pet is only company for sighted readers.
 struct MarginariumSpritePlayer: View {
     let pet: MarginariumPet
-    let caption: String
+    /// Nil beside a margin note.
+    let caption: String?
+    private let width: CGFloat
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.displayScale) private var displayScale
     @State private var pose: SpriteFrame?
     @State private var atlas: SpriteAtlas?
+    /// A margin player's cells, redrawn small, in place of `atlas`: a page of notes by several
+    /// guardians must not keep a 14 MiB decoded sheet alive for each.
+    @State private var thumbnails: [SpriteAtlas.Cell: CGImage] = [:]
     @State private var taps = 0
     @State private var played = 0
 
     init(pet: MarginariumPet, caption: String) {
+        self.init(pet: pet, caption: caption, width: 96)
+    }
+
+    init(pet: MarginariumPet, marginWidth: CGFloat) {
+        self.init(pet: pet, caption: nil, width: marginWidth)
+    }
+
+    private init(pet: MarginariumPet, caption: String?, width: CGFloat) {
         self.pet = pet
         self.caption = caption
+        self.width = width
         _pose = State(initialValue: pet.animation.idle.first)
     }
+
+    /// The cells are 192 × 208.
+    private var height: CGFloat { width * 104 / 96 }
 
     private struct Trigger: Equatable {
         let petID: String
@@ -28,7 +49,7 @@ struct MarginariumSpritePlayer: View {
     private var image: Image? {
         switch pose?.source {
         case .asset(let name): Image(name)
-        case .cell(let cell): atlas?.image(at: cell).map { Image(decorative: $0, scale: 1) }
+        case .cell(let cell): (thumbnails[cell] ?? atlas?.image(at: cell)).map { Image(decorative: $0, scale: 1) }
         case nil: nil
         }
     }
@@ -36,41 +57,65 @@ struct MarginariumSpritePlayer: View {
     var body: some View {
         VStack(spacing: 6) {
             if let image {
-                Button {
-                    taps += 1
-                } label: {
-                    image.resizable()
-                        .scaledToFit()
-                        .frame(width: 96, height: 104)
+                if let caption {
+                    button(image)
+                        .accessibilityLabel(Text(caption))
+                        .accessibilityHint(Text(pet.hint))
+                } else {
+                    button(image).accessibilityHidden(true)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text(caption))
-                .accessibilityHint(Text(pet.hint))
-                .accessibilityIdentifier("marginarium-pet-\(pet.id)")
+            } else if caption == nil {
+                // The slot stays, so a note doesn't change shape when its pet's sheet arrives.
+                Color.clear.frame(width: width, height: height)
             }
-            Text(caption)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                // The button already reads the description; keep it readable if art fails.
-                .accessibilityHidden(image != nil)
+            if let caption {
+                Text(caption)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    // The button already reads the description; keep it readable if art fails.
+                    .accessibilityHidden(image != nil)
+            }
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: caption == nil ? nil : CGFloat.infinity)
         .task(id: pet.id) {
             pose = pet.animation.idle.first
             atlas = nil
+            thumbnails = [:]
             if case .atlas(let url) = pet.art {
                 let loaded = await SpriteAtlasCache.shared.load(at: url)
                 guard !Task.isCancelled else { return }
-                atlas = loaded
+                if caption == nil, let loaded {
+                    let pixels = Int((height * displayScale).rounded(.up))
+                    let cells = await Background.run { loaded.thumbnails(maxPixelSize: pixels) }
+                    guard !Task.isCancelled else { return }
+                    thumbnails = cells
+                } else {
+                    atlas = loaded
+                }
             }
         }
         .task(id: Trigger(petID: pet.id, taps: taps, reduceMotion: reduceMotion, ready: image != nil)) {
             await animate()
         }
         // Lazy reader rows can retain their State after scrolling off screen.
-        .onDisappear { atlas = nil }
+        .onDisappear {
+            atlas = nil
+            thumbnails = [:]
+        }
+    }
+
+    private func button(_ image: Image) -> some View {
+        Button {
+            taps += 1
+        } label: {
+            image.resizable()
+                .scaledToFit()
+                .frame(width: width, height: height)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("marginarium-pet-\(pet.id)")
     }
 
     private func animate() async {

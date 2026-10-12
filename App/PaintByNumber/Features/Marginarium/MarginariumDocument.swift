@@ -73,8 +73,11 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
         let image: String?
         let pet: String?
         let number: Int
-        /// Editorial identity for future guardian pets; never substituted for the signed text.
+        /// The note's last signature, as the chapter writes it; never substituted for the signed text.
         let speaker: String?
+        /// Everyone who signed the note, in order: the guardians whose pets stand beside it
+        /// (`MarginariumSpeakers`). Chapters imported before the importer recorded it have `speaker` alone.
+        let speakers: [String]
         let row: Int
         let column: Int
         let header: Bool
@@ -94,7 +97,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
         }
 
         private enum CodingKeys: String, CodingKey {
-            case kind, key, level, depth, image, pet, number, speaker, row, column, header
+            case kind, key, level, depth, image, pet, number, speaker, speakers, row, column, header
         }
 
         init(from decoder: any Decoder) throws {
@@ -109,6 +112,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
                 pet = nil
                 number = 1
                 speaker = nil
+                speakers = []
                 row = 0
                 column = 0
                 header = false
@@ -121,6 +125,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
             pet = try container.decodeIfPresent(String.self, forKey: .pet)
             number = max(0, try container.decodeIfPresent(Int.self, forKey: .number) ?? 1)
             speaker = try container.decodeIfPresent(String.self, forKey: .speaker)
+            speakers = try container.decodeIfPresent([String].self, forKey: .speakers) ?? speaker.map { [$0] } ?? []
             row = try container.decodeIfPresent(Int.self, forKey: .row) ?? 0
             column = try container.decodeIfPresent(Int.self, forKey: .column) ?? 0
             header = try container.decodeIfPresent(Bool.self, forKey: .header) ?? false

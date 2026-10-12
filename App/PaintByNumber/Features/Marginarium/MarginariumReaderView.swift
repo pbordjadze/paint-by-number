@@ -45,13 +45,7 @@ struct MarginariumReaderView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .accessibilityIdentifier("marginarium-reader")
                 #if DEBUG
-                .onGeometryChange(for: CGRect.self) { geometry in
-                    let frame = geometry.frame(in: .global)
-                    let insets = geometry.safeAreaInsets
-                    return CGRect(x: frame.minX + insets.leading, y: frame.minY + insets.top,
-                                  width: max(0, frame.width - insets.leading - insets.trailing),
-                                  height: max(0, frame.height - insets.top - insets.bottom))
-                } action: { readerFrame = $0 }
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { readerFrame = $0 }
                 .task(id: demoTarget) { await scrollDemoToTarget(using: proxy) }
                 #endif
                 .transaction { transaction in
@@ -96,40 +90,53 @@ struct MarginariumReaderView: View {
     #if DEBUG
     /// Lazy stacks estimate distant offsets. Re-resolve the ID after layout until the start of
     /// the requested section is visibly settled; a timeout must never manufacture readiness.
+    /// The sheet is still arriving at first, so nothing is judged until the viewport holds still.
+    /// The viewport is the scroll view's own frame, which runs under the navigation bar; testing
+    /// against its safe-area-inset rectangle left the title and first-table scenarios never ready
+    /// on CI. A section counts as seen once it starts at least 32 pt below that frame's top (the
+    /// bar is taller).
     private func scrollDemoToTarget(using proxy: ScrollViewProxy) async {
         guard let target = demoTarget else { return }
         var previousFrame: CGRect?
         var previousViewport: CGRect?
-        for _ in 0..<50 {
-            do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
-            guard !readerFrame.isEmpty else { continue }
-            let frame = demoTargetFrame
-            let visible = !frame.isEmpty && frame.minY >= readerFrame.minY - 1
-                && frame.minY + min(44, frame.height) <= readerFrame.maxY
-                && frame.minX >= readerFrame.minX - 1 && frame.maxX <= readerFrame.maxX + 1
+        var frame = CGRect.zero
+        for _ in 0..<150 {
+            do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
+            let viewport = readerFrame
+            frame = demoTargetFrame
+            let settled = !viewport.isEmpty && viewport == previousViewport
+            previousViewport = viewport
+            guard settled else {
+                previousFrame = nil
+                continue
+            }
+            let visible = !frame.isEmpty && frame.minY >= viewport.minY + 32
+                && frame.minY + min(44, frame.height) <= viewport.maxY
+                && frame.minX >= viewport.minX - 1 && frame.maxX <= viewport.maxX + 1
             if visible {
-                if frame == previousFrame, readerFrame == previousViewport {
+                if frame == previousFrame {
                     Log.demo.notice("Marginarium target visible: \(target, privacy: .public)")
                     DemoMode.markReady()
                     return
                 }
                 previousFrame = frame
-                previousViewport = readerFrame
             } else {
                 previousFrame = nil
-                previousViewport = nil
                 proxy.scrollTo(target, anchor: .top)
             }
         }
-        Log.demo.error("Marginarium target did not enter the viewport: \(target, privacy: .public)")
+        Log.demo.error("Marginarium target did not enter the viewport: \(target, privacy: .public), section \(String(describing: frame), privacy: .public) in \(String(describing: readerFrame), privacy: .public)")
     }
 
     private var demoTarget: String? {
-        guard entry.id == "marginarium", let sections = chapter?.sections else { return nil }
+        guard let sections = chapter?.sections, ShellDemo.current?.marginariumEntryID == entry.id else { return nil }
+        let margins = sections.filter { $0.kind == .margin }
         switch ShellDemo.current {
         case .marginariumChapterOne: return sections.first?.id
-        case .marginariumChapterOneMargin: return sections.first { $0.kind == .margin }?.id
+        case .marginariumChapterOneMargin: return margins.first?.id
+        case .marginariumChapterOneGuardians: return margins.dropFirst().first?.id
         case .marginariumChapterOneTable: return sections.first { $0.kind == .table }?.id
+        case .marginariumChapterSix: return sections.first { $0.blocks.first?.kind == .pet }?.id
         default: return nil
         }
     }
