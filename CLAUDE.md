@@ -50,7 +50,9 @@ before planning app work).
     prints and shares through CoreGraphics in `App/PaintByNumber/Export`).
   - `Edit/`: `TemplateEditor`, the painter's pen, eraser, line eraser and fill made to a finished
     coloring-book `Template` exactly and with no image processing (`Lattice` is its exact
-    arithmetic; `docs/coloring-book.md` › Edits made to the template itself).
+    arithmetic; `docs/coloring-book.md` › Edits made to the template itself); `EditTrail`, a base
+    with a list of edits laid on it, with undo and redo from kept templates; `EditCoding`, the
+    shape of an edit in a file (the app's `refinements.json`).
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
   `Commands.swift`, `Edit.swift` (`pbn edit`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its

@@ -1,4 +1,5 @@
 #if DEBUG
+import CoreGraphics
 import Foundation
 import PaintCore
 
@@ -28,8 +29,8 @@ import PaintCore
 /// - `create-line-art`: `create-preview` with Settings › Preview on Line Art: the drawing alone
 ///   beside the photo.
 /// - `create-refine`, `create-refine-dark`: The Great Wave's Refine screen, refined as a painter
-///   might (`refinements`): the big cloud's edge drawn in, the spray off the wave's crest rubbed
-///   out.
+///   might (`refinements(canvas:)`, edits made to the template by hand): the big cloud's edge drawn
+///   in, exactly as drawn, the spray off the wave's crest rubbed out.
 /// - `create-suggested`: the photograph starter on its suggested settings ("Suggested for this
 ///   photo" chip).
 /// - `create-custom`, `create-custom-long-text`: The Great Wave after Detail moved off the
@@ -166,22 +167,30 @@ enum ShellDemo: Equatable {
     /// Settings › Preview for the scenario's create flow; nil keeps the stored one.
     var previewStyle: PreviewStyle? { self == .createLineArt ? .lineArt : nil }
 
-    /// The create flow refines its painting (`refinements`) once the suggestion is ready, and
-    /// shows the Refine screen.
+    /// The create flow refines its painting (`refinements(canvas:)`) once the suggestion is ready,
+    /// and shows the Refine screen.
     var refines: Bool { self == .createRefine }
 
-    /// What `create-refine` draws and erases on The Great Wave (the first fixed picture).
-    static let refinements: TemplateRefinements = {
+    /// What `create-refine` draws and erases on The Great Wave (the first fixed picture), for the
+    /// canvas of `template`.
+    static func refinements(for template: Template) -> TemplateRefinements {
+        refinements(canvas: CGSize(width: template.width, height: template.height))
+    }
+
+    /// The same for a canvas of `size`, in canvas units: laid on the template by hand, as Refine
+    /// does.
+    static func refinements(canvas size: CGSize) -> TemplateRefinements {
+        func at(_ x: Float, _ y: Float) -> SIMD2<Float> { SIMD2(x * Float(size.width), y * Float(size.height)) }
         var refinements = TemplateRefinements()
-        refinements.lines = [
-            .init(kind: .draw, radius: 0, points: [
-                SIMD2(0.53, 0.22), SIMD2(0.56, 0.15), SIMD2(0.62, 0.10), SIMD2(0.70, 0.09), SIMD2(0.77, 0.12),
-                SIMD2(0.82, 0.18), SIMD2(0.90, 0.22), SIMD2(1.02, 0.25),
+        refinements.edits = [
+            .draw(points: [
+                at(0.53, 0.22), at(0.56, 0.15), at(0.62, 0.10), at(0.70, 0.09), at(0.77, 0.12), at(0.82, 0.18), at(0.90, 0.22),
+                at(1.02, 0.25),
             ]),
-            .init(kind: .erase, radius: 0.02, points: [SIMD2(0.55, 0.40), SIMD2(0.58, 0.44), SIMD2(0.60, 0.48)]),
+            .erase(path: [at(0.55, 0.40), at(0.58, 0.44), at(0.60, 0.48)], radius: 0.02 * Float(max(size.width, size.height))),
         ]
         return refinements
-    }()
+    }
 
     /// How long `create` and the `create-samples` scenarios give the library picker (and the
     /// sample tiles) to load before they signal readiness: the picker runs out of process and
@@ -239,10 +248,13 @@ enum ShellDemo: Equatable {
         guard let sample = pictures.first, let url = sample.url,
               let photo = await Background.run({ try? PhotoLoader.load(url: url, maxPixelSize: 560) }),
               let image = PhotoLoader.cgImage(from: photo) else { return }
+        // The canvas the draft's settings make of its photo, which is what resuming lays the edits on.
+        let settings = GenerationSettings()
+        let canvas = settings.workingSize(sourceWidth: photo.width, sourceHeight: photo.height)
         library.drafts.keep(
             CreateDraft(
-                photoID: UUID(), title: "", defaultTitle: sample.title, settings: GenerationSettings(), lines: 0.5,
-                sampleName: sample.id, refinements: Self.refinements),
+                photoID: UUID(), title: "", defaultTitle: sample.title, settings: settings, lines: 0.5,
+                sampleName: sample.id, refinements: Self.refinements(canvas: CGSize(width: canvas.width, height: canvas.height))),
             photo: image)
         await library.drafts.flush()
     }

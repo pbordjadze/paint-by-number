@@ -135,10 +135,12 @@ drawn in the book's ink inside the cells it crosses, with the numbers kept off i
 
 ## The painter's edits
 
-The app's Refine lets the painter draw lines, take them out and fill shapes before painting. The
-edits are an input of line art (`LineArtInput.edits`, in the order made; `pbn --line-edits edits.json`),
-never a change to a template, so every invariant holds for them as for the drawing's own lines,
-and regenerating a painting draws them again. Once the painter is in Refine they decide what is
+The app's Refine lets the painter draw lines, take them out and fill shapes before painting. Its
+newest builds make those edits to the finished template (below, `TemplateEditor`); this section is
+how the edits of earlier builds are read, and stay read: an input of line art
+(`LineArtInput.edits`, in the order made; `pbn --line-edits edits.json`), never a change to a
+template, so every invariant holds for them as for the drawing's own lines, and regenerating a
+painting draws them again. Once the painter is in Refine they decide what is
 drawn: an edit changes the drawing as it showed, and nothing else changes. So the template made
 without the edits is vectorized and its drawing read back (`LayeredLines.shownLines`: its drawn
 edges and the drawing's interior strokes), `LineEdits` applies the edits to that drawing and,
@@ -253,7 +255,12 @@ smoothing, fitting). `TemplateEditor.apply(_:to:)` (`Sources/PaintCore/Edit/`, `
 Refine without it: the edit is made to the finished template, with no photo, edge map,
 segmentation, smoothing or fitting, so a line is the line drawn and everything the edit does not
 reach is bit for bit what it was. All points are canvas units; the edits are `draw(points, closed)`,
-`erase(path, radius)`, `eraseLine(at, reach)` and `fill(at, color)`.
+`erase(path, radius)`, `eraseLine(at, reach)` and `fill(at, color)`. They are `Codable` (a `kind`
+and its `points`, the shape `pbn edit` reads: `EditCoding.swift`), and `EditTrail` lays a list on a
+template and keeps the templates after the last few, so taking an edit back or putting it back
+costs no editing; an edit that does nothing on a template (declined, or nothing to change) is left
+out of what it shows and counted. The app's Refine makes every edit this way, and regenerating a
+painting makes its base from the photo and lays its edits on it (`App/CLAUDE.md` › Create flow).
 
 - **Exact.** Geometry is decided in `Int64` on the quantum grid (`Lattice`: orientation, segment
   contact, containment), so an edit gives the same bytes on every device and core count. A

@@ -155,6 +155,50 @@ struct TemplateRefinementsTests {
         #expect(try JSONDecoder().decode(TemplateRefinements.self, from: Data("{}".utf8)).isEmpty)
     }
 
+    /// Edits made by hand to the template are kept in the file, in order, and count as changes; a
+    /// file from before them reads as it did (no edits, its lines the generator's input as ever); an
+    /// edit this app can't read is left out rather than costing the rest; and they are no input of
+    /// the generator.
+    @Test func editsAreKeptInTheFileAndOlderFilesReadAsTheyDid() throws {
+        let edits: [TemplateEditor.Edit] = [
+            .draw(points: [SIMD2(15, -4), SIMD2(18.5, 30.25), SIMD2(15, 71)], closed: false),
+            .erase(path: [SIMD2(55, 44), SIMD2(65, 44.5)], radius: 3),
+            .eraseLine(at: SIMD2(10, 72), reach: 5),
+            .fill(at: SIMD2(140, 55), color: SIMD3(0.7, -0.125, 0.0625)),
+        ]
+        var refinements = TemplateRefinements()
+        refinements.lines = Self.lines
+        refinements.edits = edits
+        refinements.strokes = [Self.stroke(.more, [SIMD2(0.2, 0.3)])]
+        #expect(refinements.changeCount == Self.lines.count + edits.count + 1)
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: JSONEncoder().encode(refinements)) == refinements)
+
+        let older = #"{"lines":[{"kind":"draw","radius":0,"points":[[0.1,0.2],[0.3,0.4]]}],"strokes":[],"hiddenText":[],"addedText":[]}"#
+        let before = try JSONDecoder().decode(TemplateRefinements.self, from: Data(older.utf8))
+        #expect(before.edits.isEmpty && before.lines == [.init(kind: .draw, radius: 0, points: [SIMD2(0.1, 0.2), SIMD2(0.3, 0.4)])])
+        #expect(before.changeCount == 1 && before.generatorInputs == before)
+
+        let newer = #"{"edits":[{"kind":"smudge","points":[[1,2]]},{"kind":"draw","points":[[1,2],[3,4]],"future":1},"?"]}"#
+        let tolerant = try JSONDecoder().decode(TemplateRefinements.self, from: Data(newer.utf8))
+        #expect(tolerant.edits == [.draw(points: [SIMD2(1, 2), SIMD2(3, 4)], closed: false)])
+        let wrong = try JSONDecoder().decode(TemplateRefinements.self, from: Data(#"{"edits":"?","strokes":[]}"#.utf8))
+        #expect(wrong.isEmpty)
+
+        // Edits alone are a refinement, but not an input of the generator.
+        var only = TemplateRefinements()
+        only.edits = edits
+        #expect(!only.isEmpty && only.generatorInputs.isEmpty && only.generatorInputs != only)
+        #expect(refinements.generatorInputs.edits.isEmpty && refinements.generatorInputs.lines == Self.lines)
+        let edges = EdgeMap(width: 10, height: 10, values: [UInt8](repeating: 9, count: 100))
+        let refined = only.refining(importance: nil, lineArt: LineArtInput(edges: edges), aspect: 1)
+        #expect(refined.importance == nil && refined.lineArt?.edges == edges && refined.lineArt?.edits.isEmpty == true)
+
+        // A file with more edits than the app lays keeps the first ones.
+        let hostile = #"{"edits":["# + Array(repeating: #"{"kind":"draw","points":[[1,2],[3,4]]}"#, count: TemplateRefinements.maximumEdits + 50)
+            .joined(separator: ",") + "]}"
+        #expect(try JSONDecoder().decode(TemplateRefinements.self, from: Data(hostile.utf8)).edits.count == TemplateRefinements.maximumEdits)
+    }
+
     /// A line drawn on a template draws: one across the middle of a coloring book adds to its
     /// drawing; erased again it is gone.
     @Test func aDrawnLineShowsInTheTemplate() throws {
