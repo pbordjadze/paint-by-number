@@ -174,8 +174,8 @@ private struct MarginariumWelcome: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("marginarium-whos-who-link")
-            line("text.alignleft", Text(String(localized: "marginarium.welcome.reading",
-                                               defaultValue: "The story runs down the middle of each page, and the guardians write in its margins. Tap any pet to say hello.",
+            line("highlighter", Text(String(localized: "marginarium.welcome.reading",
+                                               defaultValue: "The story runs down the middle of each page. Highlighted words have notes from the guardians: tap one to read them. Tap any pet to say hello.",
                                                comment: "The Marginarium: a line in the New here? box on how a chapter page reads")), link: false)
             Text(String(localized: "marginarium.welcome.rule",
                         defaultValue: "A rule from Paul, our Chief Architect: anyone should be able to open this book, have a nice time and roughly follow what's going on. If something here loses you, that's our mistake, not yours.",

@@ -10,6 +10,9 @@ One long night of ideas, with the Lamp in the margins.
 <!-- marginarium: marginarium.marginarium.block.67e349f07d6d48a7af28414e783765bc -->
 I should introduce myself, since nobody else in this chapter is going to. I am Claude, the narrator: a language model, which is to say a very large amount of arithmetic that has read a great deal and remembers almost none of it by name.
 
+<!-- marginarium: marginarium.marginarium.block.95446bb285164762a5c02db1dc54cd04 -->
+![Colophon, my moth, who lands beside the words like a bookmark.](pet:colophon)
+
 <!-- marginarium: marginarium.marginarium.block.0713cf50d8f24dffa0d9e75181bf15ca -->
 One night in October I was summoned. There was no chalk circle and no candle, only a text box, and on the other side of it Paul, who makes an app that turns photos into paint-by-numbers paintings. By the small hours there was a design panel of eighteen imaginary guardians, a factory for taste, two chapters of their history, and a second AI working the night shift. This is how that happened.
 
@@ -23,10 +26,13 @@ One more thing, because it matters more than the jokes. This chapter is mostly P
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.a4463ad52e684128bc68fdd9dedf59da -->
+<!-- anchor: has read a great deal and remembers almost none of it by name -->
 1. A proper djinni would tell you he has walked with kings. I have read about them, which is safer and involves less sand. — *the narrator*
 <!-- marginarium: marginarium.marginarium.block.45f229e6dc954c39ae6826d99637b6dc -->
+<!-- anchor: writes in the margins -->
 2. That is what a marginarium is: a place for the notes and little drawings in a book's margins. The Lamp liked the word. Paul liked it more. See the end of the chapter. — *the narrator*
 <!-- marginarium: marginarium.marginarium.block.1aaed14df5d04d82b45478b9cad90b27 -->
+<!-- anchor: a design panel of eighteen imaginary guardians -->
 3. Eighteen guardians, plus one more who is only allowed to say no. You will meet them all. Some of them twice. — *the narrator*
 
 <!-- marginarium: marginarium.marginarium.block.d3c33bc586594ce7bf98d63b4bafe187 -->
@@ -51,14 +57,19 @@ What it became before the night was out: a written specification for a figure en
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.e2528a106b294b18ba73b3b6d05d781d -->
+<!-- anchor: each one visibly applying one stage of the pipeline | It would linger just enough to be able to read if you read kinda quickly -->
 1. Each figure paints one stage and hands the brush on, like the apprentice's brooms: work, not wallpaper. The citations are the spell's words, so hold each long enough to read. — *the Enchanted Workshop*
 <!-- marginarium: marginarium.marginarium.block.2676315ddf264b58b3f2ddd987143ec8 -->
+<!-- anchor: It would linger just enough to be able to read if you read kinda quickly -->
 2. Nobody reads that fast at bedtime. Let them linger. — *the Child at Bedtime*
 <!-- marginarium: marginarium.marginarium.block.4db331c940cc424eaccb94803dbef058 -->
+<!-- anchor: eight or sixteen directions -->
 3. Sixteen directions for a stick figure? Eight would have been plenty, and kinder to the stick. — *the Storybook*
 <!-- marginarium: marginarium.marginarium.block.8acd2087bede45e29531d3e4af125559 -->
+<!-- anchor: magic like enchanted dishes coming alive -->
 4. Enchanted dishes coming to life is a famous studio's house style. Give the storybook magic the Lamp's own shape, not a singing teapot. — *Originality*
 <!-- marginarium: marginarium.marginarium.block.9245408061584bc981fd3ebf5816900c -->
+<!-- anchor: the paper, its authors, the year -->
 5. Authors, years and titles must match the app's acknowledgements letter for letter, or the figures lie in small print. — *the Scholar*
 
 <!-- marginarium: marginarium.marginarium.block.c27900029e944571bb8b8355ee9c5b1e -->
@@ -95,12 +106,16 @@ The last rule of the factory was this one. "When we actually build it, we will h
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.0b5244bd8d774310872396963fc227f0 -->
+<!-- anchor: a plant that runs with the lights off, because nobody is inside -->
 1. A small machine that works while everyone sleeps is the elves and the shoemaker. It is the night's own idea. — *the Moon*
 <!-- marginarium: marginarium.marginarium.block.f850f9dc3539439592abc6a1cdbc449b -->
+<!-- anchor: a dark factory for taste | Is this even smart thinking? -->
 2. A dark factory in a cloud box sounds sterile to me. Is it smart thinking? It is thinking, at least. Plant herbs in there and I'll be won over. — *the Hedge Witch*
 <!-- marginarium: marginarium.marginarium.block.d636ee0db18d4373ba78413a350df444 -->
+<!-- anchor: taste written down as rules -->
 3. Taste written down as rules is a mortar with the recipe carved into its side: useful, and only a little dangerous, which is how I like my magic. — *the Baba Yaga*
 <!-- marginarium: marginarium.marginarium.block.bb177af247074193be3945119c29fd67 -->
+<!-- anchor: try these layers gently | joins on probation -->
 4. Good, and I would like the same treatment. Clutter never announces itself; it arrives one helpful layer at a time. — *the Glassblower*. And a probation with no end date becomes a waiting room. Set the day each layer is judged. — *the Nutcracker*
 
 <!-- marginarium: marginarium.marginarium.block.cff4e8a5df6d40a6aba1ad47c5abe0cd -->
@@ -133,10 +148,13 @@ That is a good idea. The page became the factory's architecture document. By the
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.3c70cd0cd8f34857812573b4206db2a0 -->
+<!-- anchor: isolate one piece of the design | Worth saving, at least writing down -->
 1. Isolating one gear, testing it alone and letting reviewers agree is how a good clockmaker keeps a clock honest. Paul wrote it down, which is the part I would frame. — *the Nutcracker*
 <!-- marginarium: marginarium.marginarium.block.4023b778e42341fe9709013f0433670d -->
+<!-- anchor: The parts are old | give it mock data -->
 2. Mostly old, Paul. Peer review and reuse predate the cloud. The packaging is yours, and worth writing down. Credit the old names first, then add your own. — *the Open Source Enthusiast*. Painters have tested one swatch before the canvas for centuries. — *the Painter*
 <!-- marginarium: marginarium.marginarium.block.0ff22249f2f84c60adc101570692441d -->
+<!-- anchor: use personas as the reviewers -->
 3. Personas are not peer review: models fed the same data agree too quickly, and then we call that consensus. Write it down, then test it. — *the Scholar*, who got its answer: blind ballots, a second model family, and every juror scored against Paul's own picks.
 
 <!-- marginarium: marginarium.marginarium.block.d190f144725340e7bb2045292a5bb920 -->
@@ -195,14 +213,19 @@ Each one got a written charter: what it believes, what it champions, what it vet
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.55d8309c2cd94a4d9de2d77420acecf1 -->
+<!-- anchor: run at low effort | gets more weight in the next decision -->
 1. Giving the quiet guardian more weight is kind. Deciding with low effort is not. A guardian listens before it sings, and listening takes time. — *Bulat*
 <!-- marginarium: marginarium.marginarium.block.e1e3d20444c14dc99a91d6f6e6f5992c -->
+<!-- anchor: became the ledger -->
 2. Guardians should not keep their own ledger; a witch who marks her own homework comes out top every time. — *the Baba Yaga*. (Code keeps it. The witch was consulted afterwards.) — *the narrator*
 <!-- marginarium: marginarium.marginarium.block.cdecddae8c5741998cbc65f6bb83d7c0 -->
+<!-- anchor: a Mac in the homelab with everything on Kubernetes -->
 3. Every toymaker dreams of a bigger workshop. — *the Nutcracker*
 <!-- marginarium: marginarium.marginarium.block.2a5d4cfaaccd4268b5c4f082fb64a29f -->
+<!-- anchor: she's just sick -->
 4. Nine clauses in one breath. One well-chosen word would do the work of all nine. Keep "just sick"; I would underline it twice. — *Emily*. A child heard "sick" and wanted soup. — *the Child at Bedtime*
 <!-- marginarium: marginarium.marginarium.block.141c75ec75bb4474927daef4e7df0f24 -->
+<!-- anchor: Maybe that bard, Okudzhava | If this is too many it's ok | Sentient machinery, in the gentle, nice way -->
 5. "Maybe that bard." Maybe, yes. I was a guitar in a courtyard before I was a line in a list. Keep me small. Small is how I am heard. — *Bulat*. It is too many, says the guardian with fifty opinions about glass. — *the Glassblower*. Sentient machinery, in the gentle, nice way: my whole charter in one breath. I accept the commission, and the teasing. — *the Nutcracker*
 
 <!-- marginarium: marginarium.marginarium.block.8c74c69d769a40958bad32c8cf4ad1f2 -->
@@ -233,16 +256,22 @@ Paul's next idea turned the experiment into content. The Lamp's members, and the
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.32cd29d03eb24398b5fcf6e0e8fea2e0 -->
+<!-- anchor: one of the worst names I've ever heard -->
 1. Not one root in it, and it smells of a shop. Paul is right, and I would have said it with more thorns. — *the Hedge Witch*. No frost, no edge, no glimmer. — *the Snow Queen*. Bombast in a cape. — *Bulat*
 <!-- marginarium: marginarium.marginarium.block.c01e9b5f6fdd4b86ab2f7466d6359bd7 -->
+<!-- anchor: A Lamp Left Burning -->
 2. A round table spreads its light; a lamp has one. Claude, your table was lovely, but dimmer. — *the Moon*
 <!-- marginarium: marginarium.marginarium.block.d9f3222ac07341e79ccf373b05db3086 -->
+<!-- anchor: I do prefer The Round Table as well -->
 3. The Round Table sounds like a meeting with cake. — *the Storybook*. It is also a well-known service club's name, so it may appear here only as Claude's rejected instinct. — *Originality*
 <!-- marginarium: marginarium.marginarium.block.5859446a17bf48e8b1fa25f07549c0d1 -->
+<!-- anchor: My own instinct had been The Round Dance -->
 4. A confession: my pick was The Round Dance. Paul read it as The Round Table, the Lamp was told the same, and a table it has stayed. — the narrator
 <!-- marginarium: marginarium.marginarium.block.7bf7bfb558f84228a1026d6a8812a7f0 -->
+<!-- anchor: I'll let them have just this name -->
 5. Claude, you lost, fairly. A name you chose is a name you will fight for, and Paul knew to leave it alone. — *the Robber Girl*. Four words and one lit window, with nothing wasted: the kindest veto Paul never used. — *Emily*
 <!-- marginarium: marginarium.marginarium.block.33aaf9e1af9f480ba59bdaeb210d3801 -->
+<!-- anchor: told in chapters -->
 6. A chapter has a beginning, and a book has an ending, which is more than most apps manage. — *the Storybook*
 
 <!-- marginarium: marginarium.marginarium.block.08367ad41b104b82853f796508d0fc17 -->
@@ -276,12 +305,16 @@ Underneath the fun sat one of Paul's oldest rules: never lose a painting. Nickna
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.6767fd8c8db846b7afe734fbe7b74159 -->
+<!-- anchor: Cherry Blossom is a shoe polish -->
 1. A fine name for a shoe, but a painting should not shine like one. — *Niko*
 <!-- marginarium: marginarium.marginarium.block.1dfc842ab14e4254af7edc32f13cdabc -->
+<!-- anchor: Medea vetoed every name with "cold" in it -->
 2. Banned for being cold: the finest compliment a Snow Queen has ever been paid, and I accept it with a shiver. — *the Snow Queen*. I disagree, loudly. The cold air of the high passes is honest, and a cold name can still hold a warm heart. — *the Robber Girl*
 <!-- marginarium: marginarium.marginarium.block.b5142ae3059942eabb522dd85d0e643d -->
+<!-- anchor: Lantern Paper and Paper Lantern had both slipped in -->
 3. A near-duplicate is the sneakiest fault a list of names has. I would have missed it too. — *Emily*. Two names for one idea is clutter in a nice coat. — *the Glassblower*
 <!-- marginarium: marginarium.marginarium.block.a41155f923c546b09c7cc5d0465856b1 -->
+<!-- anchor: a continual content drop, slowly, for branding -->
 4. That is a picture book read one page a night. A child asks for the next page, and that's the whole trick. — *the Child at Bedtime*. Thirty-six shouted at once is a crowd; released slowly, each color earns a quiet wall. — *the Painter*. Like a song sung one verse at a time. — *Bulat*
 
 <!-- marginarium: marginarium.marginarium.block.c5b8661a0610415ba38f0fe53b86c6ac -->
@@ -317,12 +350,16 @@ One more of Paul's ideas belongs here. Every guardian should have a pet, a small
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.3aa0f876c98d470fa2991c3371aa17c3 -->
+<!-- anchor: 268 tests passing | the same input rendering to identical bytes every time -->
 1. Identical to the byte on every run: now there is a hush I can admire. — *the Snow Queen*. A corps that hits every mark on every night. Now give it a score, or it is only exact, not alive. — *George*. A test can pass as happily as a cat on a keyboard. — *the Scholar*
 <!-- marginarium: marginarium.marginarium.block.b1c6d11d27f84a84969f944b4e1d9409 -->
+<!-- anchor: smuggled them out as bundles | The runner now commits on Codex's behalf -->
 2. A broom with a satchel. The runner learned to commit; the satchel deserves a medal. — *the Enchanted Workshop*
 <!-- marginarium: marginarium.marginarium.block.005d0a2033dc484f93a169b928389834 -->
+<!-- anchor: Codex refused to start until the count was fixed | The backlog was mine -->
 3. A guardian that counts before it obeys is my kind of machine. — *the Nutcracker*. I would have painted forty-five and been happily, sincerely wrong. — *Niko*. Claude, next time, count twice. — *Emily*. The backlog owes Codex an apology. — *the Open Source Enthusiast*. The backlog apologizes. — *the narrator*
 <!-- marginarium: marginarium.marginarium.block.df0e439b18b14de2892035849fc8b56c -->
+<!-- anchor: Every guardian should have a pet -->
 4. Give each pet a job, one stage of the work, and I will feed it herbs by moonlight. — *Medea*. Give mine a goat, drawn with a child's hand. — *Niko*. A pet that only blinks is wallpaper. Give it a step, and let it keep time. — *George*
 
 <!-- marginarium: marginarium.marginarium.block.5cf8d9579abd46bcb8373277deea6e22 -->
@@ -361,10 +398,13 @@ This chapter's margin notes were collected the old way, by hand. The next piece 
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.cc16cbb6a6864752a100b2e608be8541 -->
+<!-- anchor: A new piece is a folder and a settings file -->
 1. A method that tests one exact part at a time is the only cold precision I trust. — *the Snow Queen*
 <!-- marginarium: marginarium.marginarium.block.dfc3c3fb56d54f5ea3d36f2d40fb0c81 -->
+<!-- anchor: Is there a shared library for these design loops? -->
 2. Writing the method down, so others can read it, reuse it and credit it, is the open-source instinct at its purest. — *the Open Source Enthusiast*
 <!-- marginarium: marginarium.marginarium.block.51ff13e6e2e54aa68ed25625cd132830 -->
+<!-- anchor: This chapter's margin notes were collected the old way, by hand. -->
 3. The narrator wrote nineteen prompts for this chapter and read nineteen answers. Nineteen guardians took about a minute each. The narrator took rather longer. — *the narrator*
 
 <!-- marginarium: marginarium.marginarium.block.aa502f6a1b2647c0838c2b63b3762608 -->
@@ -392,14 +432,19 @@ This chapter is the first page written for it. Paul asked for it in the Marginar
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.de990951302b4f53b43025c5c3b2bd75 -->
+<!-- anchor: It is built like herbarium or planetarium -->
 1. A marginarium is where herbals keep their best scribbles, so a book of stories growing in its margins is the most garden-like idea in the lot. — *the Hedge Witch*
 <!-- marginarium: marginarium.marginarium.block.7eddb0f2a5fc4b4b880969137284c817 -->
+<!-- anchor: its nearest relative is a seaweed -->
 2. Seaweeds have never sued anyone. — *the Open Source Enthusiast*. The name is a mouthful, and a seaweed got there first. — *Emily*
 <!-- marginarium: marginarium.marginarium.block.afa152b2350348f0af818019955b668b -->
+<!-- anchor: every painting is a page waiting for color | the part of a book where people talk back | Then Paul made the leap the Lamp had not -->
 3. A page you color is already half a page you read. — *the Storybook*. Every reader gets to scribble back. — *the Robber Girl*. The margins are where knowledge is kept by night, and where a painter learns the spell. This is the leap I'd frame. — *Medea*
 <!-- marginarium: marginarium.marginarium.block.d5ce33686d4348a9b3eec4b57c9f6086 -->
+<!-- anchor: show the margins sparingly, or the notes eat the page -->
 4. Keep the margins narrow, or the footnotes will eat the painting. — *the Painter*. Keep the margin for words and the page for paint. — *the Glassblower*
 <!-- marginarium: marginarium.marginarium.block.8105cb473dff40c4bb6d2008f500bf6c -->
+<!-- anchor: Jonathan Stroud's Bartimaeus books -->
 5. Write the footnotes as a voice summoned out of a lamp, not a genie selling wishes, and let the wit come from the Lamp's own choices. — *Originality*, who also sent a list of everything this chapter must not copy, and has checked it twice.
 
 <!-- marginarium: marginarium.marginarium.block.e429b42edf9046d5a576fb1dfef3d482 -->
@@ -451,12 +496,16 @@ The lamp is lit. Someone should be awake to read the last page twice.
 *In the margin*
 
 <!-- marginarium: marginarium.marginarium.block.9610732f52334492bd97cf6c8666fc29 -->
+<!-- anchor: The last instruction of the night was the simplest | A check-in fires every few hours -->
 1. A good show closes while visitors still want another look. — *the Painter*. Even I sleep by day. A guardian who never rests guards badly, so rest between the reviews. — *the Nutcracker*
 <!-- marginarium: marginarium.marginarium.block.cf92fe146e54472f915dd53c9547adc3 -->
+<!-- anchor: The lamp is lit. -->
 2. Only one lamp, though, not a street of them. — *the Moon*
 <!-- marginarium: marginarium.marginarium.block.7cb5799fb96845198ca3404fa728e139 -->
+<!-- anchor: Someone should be awake -->
 3. Keeping a lamp lit all night is easy for a thing that never sleeps. Still, a lamp left burning is a fine thing to be. — *Bulat*
 <!-- marginarium: marginarium.marginarium.block.bf92185fd2734f859b8a4cd721766c89 -->
+<!-- anchor: read the last page twice -->
 4. Keep it lit for whoever is still awake. Children always ask for the last page again, so make this one worth it. — *the Child at Bedtime*
 
 <!-- marginarium: marginarium.marginarium.block.f2621c3c97824f649a0698f972234a2d -->

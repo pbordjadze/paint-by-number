@@ -56,6 +56,14 @@ says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" is listed as ha
 `MarginariumSpeakersTests` fails when a speaker in the bundled chapters is in neither the
 table nor the list of voices without a pet, or maps to a pet that doesn't resolve.
 
+Where there is no margin column, a note opens in a card under the words it is about
+(`MarginariumNoteCard`), and its pets wave as the card opens; beside a margin column, tapping
+the words makes the pets of their notes wave (`MarginariumSpritePlayer`'s `greeting`). Chapter 1
+has one pet block of its own, Colophon, right after Claude introduces itself, and every chapter
+ends with its narrator's pet saying goodnight (Pip for Codex's chapter, Colophon for the rest),
+a player with its own identifier, `marginarium-goodnight`, so a page never shows two elements
+with the same one.
+
 The pet is beside the note at ordinary text sizes and in a row under it at accessibility
 sizes, so the words keep the line. It is hidden from VoiceOver: the note, which names its
 speaker, is one element, and the pet adds nothing to repeat. Reduce Motion rests on idle

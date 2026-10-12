@@ -91,8 +91,19 @@ synchronized folder would bundle it into the app.
   `Chapter.spreads` joins each margin group to the story since the previous one: where the page
   is wide enough (`marginColumnMinimum`, scaled; not at accessibility sizes) and the chapter has
   margins, the reader sets each spread as one row, story column beside margin column, top-aligned;
-  otherwise every section is its own lazy row and a margin group follows its story as a card.
-  Margins use footnote type (beside the story, the contents page's passage rule), and `MarginariumMarginNote`
+  otherwise every section is its own lazy row. Each note names the words it is about (the
+  source's `<!-- anchor: … -->` line, `anchorBlocks` and the catalog's `<note>.anchor`;
+  `tools/marginarium.py`'s docstring), and `MarginariumAnnotations` finds them in the text the
+  reader shows; `MarginariumHighlighter` washes them in the tint, deeper where more voices meet,
+  as links (`MarginariumSelection`) the reader's `openURL` handles. Beside a margin column a tap
+  picks out the notes (and each note shows its words, quoted); without one it opens
+  `MarginariumNoteCard` under the paragraph, and only notes whose words weren't found (a
+  translation that moved them; `-NSDoubleLocalizedStrings` finds none) keep a card after their
+  story. Opened notes' pets wave (`MarginariumSpritePlayer`'s `greeting`), and every chapter ends
+  with its narrator's pet saying goodnight (`MarginariumEntry.narrator`).
+  `MarginariumAnnotationsTests` covers anchors and highlights; the `marginarium-chapter1-margin`
+  and `-guardians` demos open the first note of their group (on iPhone the card, at the words
+  most voices share). Margins use footnote type (beside the story, the contents page's passage rule), and `MarginariumMarginNote`
   shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
   VoiceOver; `MarginariumSpritePlayer(pet:marginWidth:)` keeps only small copies of the cells it
   plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is

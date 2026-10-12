@@ -102,6 +102,9 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
         /// Everyone who signed the note, in order: the guardians whose pets stand beside it
         /// (`MarginariumSpeakers`). Chapters imported before the importer recorded it have `speaker` alone.
         let speakers: [String]
+        /// A margin note's story blocks, one for each phrase of its anchor, in the anchor's order
+        /// (`MarginariumAnnotations`). Empty for every other block, and for a note about no words.
+        let anchorBlocks: [String]
         let row: Int
         let column: Int
         let header: Bool
@@ -113,6 +116,14 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
 
         var attributedText: AttributedString { Self.inline(text) }
 
+        /// The words of the story a margin note is about, as this language words them: the
+        /// catalog's `<key>.anchor`, phrases separated by " | ", one per entry of `anchorBlocks`.
+        var anchorPhrases: [String] {
+            guard !anchorBlocks.isEmpty else { return [] }
+            return Bundle.main.localizedString(forKey: key + ".anchor", value: nil, table: nil)
+                .components(separatedBy: " | ")
+        }
+
         /// Keep paragraph breaks inside a quote while interpreting emphasis and links.
         static func inline(_ text: String) -> AttributedString {
             (try? AttributedString(markdown: text,
@@ -121,7 +132,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
         }
 
         private enum CodingKeys: String, CodingKey {
-            case kind, key, level, depth, image, pet, number, speaker, speakers, row, column, header
+            case kind, key, level, depth, image, pet, number, speaker, speakers, anchorBlocks, row, column, header
         }
 
         init(from decoder: any Decoder) throws {
@@ -137,6 +148,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
                 number = 1
                 speaker = nil
                 speakers = []
+                anchorBlocks = []
                 row = 0
                 column = 0
                 header = false
@@ -150,6 +162,7 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
             number = max(0, try container.decodeIfPresent(Int.self, forKey: .number) ?? 1)
             speaker = try container.decodeIfPresent(String.self, forKey: .speaker)
             speakers = try container.decodeIfPresent([String].self, forKey: .speakers) ?? speaker.map { [$0] } ?? []
+            anchorBlocks = try container.decodeIfPresent([String].self, forKey: .anchorBlocks) ?? []
             row = try container.decodeIfPresent(Int.self, forKey: .row) ?? 0
             column = try container.decodeIfPresent(Int.self, forKey: .column) ?? 0
             header = try container.decodeIfPresent(Bool.self, forKey: .header) ?? false

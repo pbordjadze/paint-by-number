@@ -369,6 +369,67 @@ class MarginariumTests(unittest.TestCase):
             with self.subTest(body=body), self.assertRaises(ValueError):
                 m.parse("# Title\n\nSubtitle.\n\n" + body)
 
+    ANCHORED = ("# Title\n\nSubtitle.\n\nThe *quiet* lamp burns all night.\n\n- A list item about a broom.\n\n"
+                "*In the margin*\n\n<!-- anchor: quiet lamp -->\n1. Hush. — *the Snow Queen*\n"
+                "<!-- anchor: quiet lamp | about a broom -->\n2. Both. — *Bulat*\n3. Unanchored. — *Emily*\n\n"
+                "After the notes, the quiet lamp again.\n")
+
+    def test_anchors_link_each_phrase_to_its_story_block_and_reach_the_catalog(self):
+        chapter = self.imported(self.ANCHORED)
+        blocks = chapter["blocks"]
+        paragraph, item = blocks[2]["key"], blocks[3]["key"]
+        notes = [b for b in blocks if b["kind"] == "marginNote"]
+        # Emphasis isn't part of the words the reader shows, so "quiet lamp" is found across it.
+        self.assertEqual([n.get("anchorBlocks") for n in notes], [[paragraph], [paragraph, item], None])
+        strings = self.catalog()["strings"]
+        self.assertEqual(m.english(strings[m.anchor_key(notes[1]["key"])]), "quiet lamp | about a broom")
+        self.assertIn("highlighted in the reader", strings[m.anchor_key(notes[0]["key"])]["comment"])
+        self.assertNotIn(m.anchor_key(notes[2]["key"]), strings)
+        manifest, values = m.validate(self.root)
+        self.assertIn((m.anchor_key(notes[0]["key"]), "quiet lamp"), values)
+        findings = []
+        usages = [strings_check.Usage(key, "fixture", 0, default=value, raw=True) for key, value in values]
+        strings_check.check_catalog(self.catalog(), usages, findings)
+        self.assertEqual(findings, [], [str(f) for f in findings])
+        # The source keeps its anchor lines on reimport; dropping one drops its catalog entry.
+        self.assertIn("<!-- anchor: quiet lamp -->", self.canonical().read_text())
+        path = self.canonical()
+        path.write_text(path.read_text().replace("<!-- anchor: quiet lamp -->\n", ""))
+        self.reimport()
+        self.assertNotIn(m.anchor_key(notes[0]["key"]), self.catalog()["strings"])
+        m.validate(self.root)
+
+    def test_anchor_edits_ask_translations_for_review_and_drift_fails_the_check(self):
+        notes = [b for b in self.imported(self.ANCHORED)["blocks"] if b["kind"] == "marginNote"]
+        key = m.anchor_key(notes[0]["key"])
+        catalog = self.catalog()
+        catalog["strings"][key]["localizations"]["de"] = {"stringUnit": {"state": "translated", "value": "stille Lampe"}}
+        m.write_json(self.root / m.CATALOG, catalog)
+        path = self.canonical()
+        path.write_text(path.read_text().replace("<!-- anchor: quiet lamp -->", "<!-- anchor: lamp burns all night -->"))
+        self.reimport()
+        entry = self.catalog()["strings"][key]
+        self.assertEqual(m.english(entry), "lamp burns all night")
+        self.assertEqual(entry["localizations"]["de"]["stringUnit"]["state"], "needs_review")
+        catalog = self.catalog()
+        catalog["strings"][key]["localizations"]["en"]["stringUnit"]["value"] = "quiet lamp"
+        m.write_json(self.root / m.CATALOG, catalog)
+        with self.assertRaisesRegex(ValueError, "anchor line"):
+            m.validate(self.root)
+
+    def test_anchors_must_be_plain_found_once_before_their_group_and_only_on_notes(self):
+        story = "# Title\n\nSubtitle.\n\nA lamp, and another lamp.\n\n| A | B |\n| --- | --- |\n| table words | b |\n\n"
+        for anchor in ("missing words", "lamp", "table words", "After the notes", "*A lamp*", "A lamp | "):
+            source = (story + f"*In the margin*\n\n<!-- anchor: {anchor} -->\n1. Note. — *Emily*\n\n"
+                      "After the notes.\n")
+            with self.subTest(anchor=anchor), self.assertRaises(ValueError):
+                self.imported(source)
+        for body in ("<!-- anchor: A lamp -->\nA lamp.", "<!-- anchor: x -->\n<!-- anchor: y -->\n*In the margin*",
+                     "*In the margin*\n\n1. Note. — *Emily*\n\n<!-- anchor: Note -->"):
+            with self.subTest(body=body), self.assertRaises(ValueError):
+                m.parse("# Title\n\nSubtitle.\n\n" + body)
+        self.assertFalse((self.root / m.MANIFEST).exists())
+
     def test_docs_rejects_unsupported_content_instead_of_dropping_it(self):
         for xml in ("<image/>", "<paragraph><mention name='Keep me'/></paragraph>",
                     "<paragraph><text><strikethrough>Keep me</strikethrough></text></paragraph>",

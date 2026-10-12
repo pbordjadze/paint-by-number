@@ -12,6 +12,18 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
     let subtitle: String
     let passage: String
 
+    /// The narrator's pet, which says goodnight under the last line: Codex's Pip for Chapter 6,
+    /// Claude's Colophon everywhere else.
+    var narrator: (pet: String, goodnight: String) {
+        if id == "petsWeMade" {
+            ("pip", String(localized: "marginarium.goodnight.pip", defaultValue: "The end. Pip, Codex's teapot, says goodnight.",
+                           comment: "The Marginarium: under the last line of Codex's chapter, beside its pet; Pip is the pet's name"))
+        } else {
+            ("colophon", String(localized: "marginarium.goodnight.colophon", defaultValue: "The end. Colophon, Claude's moth, says goodnight.",
+                                comment: "The Marginarium: under the last line of a chapter Claude narrates, beside its pet; Colophon is the pet's name"))
+        }
+    }
+
     static let chapters: [MarginariumEntry] = [
         MarginariumEntry(
             id: "marginarium", mark: 1.formatted(),

@@ -182,7 +182,7 @@ struct MarginariumReaderTests {
     @Test func chapterOneHasTheFullTextTablesAndSignedMargins() throws {
         let document = try #require(MarginariumDocument.bundled())
         let chapter = try #require(document.chapters.first { $0.id == "marginarium" })
-        #expect(chapter.blocks.count == 235)
+        #expect(chapter.blocks.count == 236)
         #expect(chapter.blocks.first?.text == "Chapter 1: The Marginarium")
         // A newcomer meets the contents page's line first; the renumbering note closes the chapter.
         #expect(chapter.blocks[1].kind == .subtitle)
@@ -190,7 +190,11 @@ struct MarginariumReaderTests {
         #expect(chapter.blocks.last?.kind == .paragraph)
         #expect(chapter.blocks.last?.text.hasPrefix("*Renumbered on October 11, 2026") == true)
         #expect(chapter.blocks.dropLast().last?.text.hasSuffix("— *the Child at Bedtime*") == true)
-        #expect(!chapter.blocks.contains { $0.kind == .pet })
+        // Claude's moth stands right after Claude's introduction, and is the chapter's one pet.
+        let pets = chapter.blocks.filter { $0.kind == .pet }
+        #expect(pets.map(\.pet) == ["colophon"])
+        let introduction = try #require(chapter.blocks.firstIndex { $0.text.hasPrefix("I should introduce myself") })
+        #expect(chapter.blocks[introduction + 1].pet == "colophon")
         let tables = chapter.sections.filter { $0.kind == .table }
         #expect(tables.count == 2)
         #expect(tables.map { $0.tableRows.count } == [20, 19])

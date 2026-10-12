@@ -3,14 +3,23 @@ import SwiftUI
 import os
 
 /// A native chapter page: New York headings, catalog-backed inline Markdown and
-/// bundled illustrations and pets, at the contents page's reading measure. Where the page is
-/// wide enough (iPad) and the text isn't at an accessibility size, each margin group stands in
-/// a column beside the story it annotates, top-aligned with it, as in a book; otherwise it
-/// follows that story as an aside. No fixed text heights or Dynamic Type caps. Until the
-/// manifest loads (or if damaged), the already-shipped title, subtitle and passage remain readable.
+/// bundled illustrations and pets, at the contents page's reading measure. The words each margin
+/// note is about are highlighted (`MarginariumHighlighter`). Where the page is wide enough (iPad)
+/// and the text isn't at an accessibility size, each margin group stands in a column beside the
+/// story it annotates, top-aligned with it, as in a book, and tapping a highlight picks out its
+/// notes there; otherwise a tap opens them in a card under their words, and only notes whose
+/// words weren't found follow their story as an aside. The narrator's pet says goodnight at the
+/// end. No fixed text heights or Dynamic Type caps. Until the manifest loads (or if damaged),
+/// the already-shipped title, subtitle and passage remain readable.
 struct MarginariumReaderView: View {
     let entry: MarginariumEntry
     @State private var chapter: MarginariumDocument.Chapter?
+    @State private var annotations = MarginariumAnnotations.empty
+    /// The words last tapped, whose notes stand out beside the story or open under it.
+    @State private var selection = MarginariumSelection()
+    /// Counts openings, so each one makes the opened notes' pets wave.
+    @State private var greeting = 0
+    @AccessibilityFocusState private var focusedCard: String?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// The narrowest page (inside its padding) that takes a margin column, about the 11" iPad's
     /// sheet: 444 pt of story beside 224 of margin. It grows with the text.
@@ -18,6 +27,7 @@ struct MarginariumReaderView: View {
     #if DEBUG
     @State private var readerFrame: CGRect = .zero
     @State private var demoTargetFrame: CGRect = .zero
+    @State private var hasMarginColumn = false
     #endif
 
     var body: some View {
@@ -31,6 +41,8 @@ struct MarginariumReaderView: View {
                                 rowView(row, layout: layout)
                                     .id(row.id)
                             }
+                            goodnight
+                                .frame(maxWidth: layout.story)
                         } else {
                             VStack(alignment: .leading, spacing: 20) {
                                 Text(entry.title)
@@ -54,8 +66,14 @@ struct MarginariumReaderView: View {
                 .navigationTitle(entry.title)
                 .navigationBarTitleDisplayMode(.inline)
                 .accessibilityIdentifier("marginarium-reader")
+                .environment(\.openURL, OpenURLAction { url in
+                    guard let tapped = MarginariumSelection(url: url) else { return .systemAction }
+                    openNotes(tapped)
+                    return .handled
+                })
                 #if DEBUG
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { readerFrame = $0 }
+                .onChange(of: layout.margin != nil, initial: true) { _, column in hasMarginColumn = column }
                 .task(id: demoTarget) { await scrollDemoToTarget(using: proxy) }
                 #endif
                 .transaction { transaction in
@@ -64,11 +82,22 @@ struct MarginariumReaderView: View {
                 }
                 .task(id: entry.id) {
                     let id = entry.id
-                    let loaded = await Background.run {
-                        MarginariumDocument.bundled()?.chapters.first { $0.id == id }
+                    let loaded = await Background.run { () -> (MarginariumDocument.Chapter, MarginariumAnnotations)? in
+                        guard let chapter = MarginariumDocument.bundled()?.chapters.first(where: { $0.id == id }) else {
+                            return nil
+                        }
+                        return (chapter, MarginariumAnnotations(chapter: chapter))
                     }
                     guard !Task.isCancelled else { return }
-                    chapter = loaded
+                    chapter = loaded?.0
+                    annotations = loaded?.1 ?? .empty
+                    selection = MarginariumSelection()
+                    #if DEBUG
+                    if let loaded, let demo = demoSelection(in: loaded.0, annotations: loaded.1) {
+                        selection = demo
+                        greeting += 1
+                    }
+                    #endif
                     if loaded == nil {
                         Log.library.fault("Marginarium chapter missing or unreadable: \(id, privacy: .public)")
                     }
@@ -96,8 +125,31 @@ struct MarginariumReaderView: View {
         return PageLayout(story: min(620, available - PageLayout.gutter - margin), margin: margin)
     }
 
+    /// Opens the notes about the words tapped, or closes them when they are open already.
+    private func openNotes(_ tapped: MarginariumSelection) {
+        guard tapped != selection else {
+            selection = MarginariumSelection()
+            return
+        }
+        selection = tapped
+        greeting += 1
+        focusedCard = tapped.block
+    }
+
+    /// The narrator's pet, under the chapter's last line.
+    @ViewBuilder
+    private var goodnight: some View {
+        let narrator = entry.narrator
+        if let pet = MarginariumPet.named(narrator.pet) {
+            MarginariumSpritePlayer(pet: pet, caption: narrator.goodnight, identifier: "marginarium-goodnight")
+                .padding(.top, 28)
+        }
+    }
+
     /// One lazy row per section, except that a margin column joins each margin group to the story
-    /// before it (chapters whose pets need laziness, like Chapter 6, have no margins).
+    /// before it (chapters whose pets need laziness, like Chapter 6, have no margins). Without a
+    /// margin column, a margin group keeps only the notes whose words weren't found; the others
+    /// open under their words.
     private enum Row: Identifiable {
         case section(MarginariumDocument.Section)
         case spread(MarginariumDocument.Spread)
@@ -111,7 +163,14 @@ struct MarginariumReaderView: View {
     }
 
     private func rows(of chapter: MarginariumDocument.Chapter, layout: PageLayout) -> [Row] {
-        guard layout.margin != nil else { return chapter.sections.map(Row.section) }
+        guard layout.margin != nil else {
+            return chapter.sections.compactMap { section -> Row? in
+                guard section.kind == .margin else { return .section(section) }
+                let kept = section.blocks.filter { $0.kind != .marginNote || annotations.unanchored.contains($0.key) }
+                guard kept.contains(where: { $0.kind == .marginNote }) else { return nil }
+                return .section(MarginariumDocument.Section(kind: .margin, blocks: kept))
+            }
+        }
         return chapter.spreads.flatMap { spread -> [Row] in
             if spread.margin != nil, !spread.story.isEmpty { return [.spread(spread)] }
             return (spread.story + [spread.margin].compactMap { $0 }).map(Row.section)
@@ -122,19 +181,19 @@ struct MarginariumReaderView: View {
     private func rowView(_ row: Row, layout: PageLayout) -> some View {
         switch row {
         case .section(let section):
-            sectionView(section, width: layout.story, besideStory: false)
+            sectionView(section, width: layout.story, besideStory: false, opensCards: layout.margin == nil)
                 .frame(maxWidth: layout.story, alignment: .leading)
         case .spread(let spread):
             HStack(alignment: .top, spacing: PageLayout.gutter) {
                 VStack(alignment: .leading, spacing: 20) {
                     ForEach(spread.story) { section in
-                        sectionView(section, width: layout.story, besideStory: false)
+                        sectionView(section, width: layout.story, besideStory: false, opensCards: false)
                             .id(section.id)
                     }
                 }
                 .frame(width: layout.story, alignment: .leading)
                 if let margin = spread.margin, let width = layout.margin {
-                    sectionView(margin, width: width, besideStory: true)
+                    sectionView(margin, width: width, besideStory: true, opensCards: false)
                         .frame(width: width, alignment: .leading)
                         .id(margin.id)
                 }
@@ -143,13 +202,28 @@ struct MarginariumReaderView: View {
     }
 
     @ViewBuilder
-    private func sectionView(_ section: MarginariumDocument.Section, width: CGFloat, besideStory: Bool) -> some View {
+    private func sectionView(_ section: MarginariumDocument.Section, width: CGFloat, besideStory: Bool,
+                             opensCards: Bool) -> some View {
         Group {
             switch section.kind {
             case .table: MarginariumTableView(section: section, width: width)
-            case .margin: MarginariumMarginView(section: section, besideStory: besideStory)
+            case .margin:
+                MarginariumMarginView(section: section, besideStory: besideStory, annotations: annotations,
+                                      selection: selection, greeting: greeting, openNotes: openNotes)
             case .prose:
-                ForEach(section.blocks) { block in MarginariumBlockView(block: block) }
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(section.blocks) { block in
+                        MarginariumBlockView(block: block, highlights: annotations.highlights[block.key] ?? [],
+                                             selection: Set(selection.notes))
+                        if opensCards, selection.block == block.key {
+                            let notes = selection.notes.compactMap { annotations.notes[$0] }
+                            if !notes.isEmpty {
+                                MarginariumNoteCard(notes: notes, greeting: greeting) { selection = MarginariumSelection() }
+                                    .accessibilityFocused($focusedCard, equals: block.key)
+                            }
+                        }
+                    }
+                }
             }
         }
         #if DEBUG
@@ -214,20 +288,55 @@ struct MarginariumReaderView: View {
         let margins = sections.filter { $0.kind == .margin }
         switch ShellDemo.current {
         case .marginariumChapterOne: return sections.first?.id
-        case .marginariumChapterOneMargin: return margins.first?.id
-        case .marginariumChapterOneGuardians: return margins.dropFirst().first?.id
+        // Without a margin column, the demo's notes are open under their words.
+        case .marginariumChapterOneMargin: return hasMarginColumn ? margins.first?.id : selection.block ?? margins.first?.id
+        case .marginariumChapterOneGuardians:
+            return hasMarginColumn ? margins.dropFirst().first?.id : selection.block ?? margins.dropFirst().first?.id
         case .marginariumChapterOneTable: return sections.first { $0.kind == .table }?.id
         case .marginariumChapterSix: return sections.first { $0.blocks.first?.kind == .pet }?.id
         default: return nil
         }
+    }
+
+    /// The notes a margin demo opens: its group's first note, at the words it shares with the
+    /// most voices (the narrator's first aside; the Enchanted Workshop with the Child at Bedtime).
+    private func demoSelection(in chapter: MarginariumDocument.Chapter,
+                               annotations: MarginariumAnnotations) -> MarginariumSelection? {
+        guard ShellDemo.current?.marginariumEntryID == entry.id else { return nil }
+        let group: Int
+        switch ShellDemo.current {
+        case .marginariumChapterOneMargin: group = 0
+        case .marginariumChapterOneGuardians: group = 1
+        default: return nil
+        }
+        let margins = chapter.sections.filter { $0.kind == .margin }
+        guard let note = margins.dropFirst(group).first?.blocks.first(where: { $0.kind == .marginNote }),
+              let busiest = annotations.busiestHighlight(of: note.key) else { return nil }
+        return MarginariumSelection(block: busiest.block, notes: busiest.highlight.notes)
     }
     #endif
 }
 
 private struct MarginariumBlockView: View {
     let block: MarginariumDocument.Block
+    var highlights: [MarginariumAnnotations.Highlight] = []
+    var selection: Set<String> = []
+
+    /// The text with the words its margin notes are about highlighted.
+    private var text: AttributedString {
+        guard !highlights.isEmpty else { return block.attributedText }
+        return MarginariumHighlighter.text(block.attributedText, block: block.key, highlights: highlights,
+                                           selection: selection)
+    }
 
     var body: some View {
+        content
+            // Highlighted words are links that open notes; they read as the story, not as links.
+            .tint(highlights.isEmpty ? Theme.accent : Color.primary)
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch block.kind {
         case .title:
             Text(block.attributedText)
@@ -243,20 +352,21 @@ private struct MarginariumBlockView: View {
                 .padding(.top, 8)
                 .accessibilityAddTraits(.isHeader)
         case .paragraph:
-            Text(block.attributedText)
+            Text(text)
         case .quote:
-            MarginariumQuotation(text: block.attributedText)
+            MarginariumQuotation(text: text)
         case .bullet:
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Image(systemName: "circle.fill")
                     .font(.system(size: 5))
                     .accessibilityHidden(true)
-                Text(block.attributedText)
+                Text(text)
             }
             .padding(.leading, CGFloat(min(block.depth, 6)) * 16)
-            .accessibilityElement(children: .combine)
+            // Highlighted words stay their own links rather than merging into one element.
+            .accessibilityElement(children: highlights.isEmpty ? .combine : .contain)
         case .ordered, .marginNote:
-            MarginariumNumberedText(block: block)
+            MarginariumNumberedText(block: block, text: text)
                 .padding(.leading, CGFloat(min(block.depth, 6)) * 16)
         case .tableCell, .marginHeading:
             Text(block.attributedText)
@@ -302,8 +412,9 @@ private struct MarginariumQuotation: View {
         Text(text)
             .padding(.leading, 16)
             .overlay(alignment: .leading) {
+                // The accent itself: a highlighted quote tints its links like the story.
                 Capsule()
-                    .fill(.tint.opacity(0.45))
+                    .fill(Theme.accent.opacity(0.45))
                     .frame(width: 3)
             }
     }
