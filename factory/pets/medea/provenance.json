@@ -1,0 +1,274 @@
+{
+  "key": "redo-medea",
+  "pet": "medea",
+  "model": "gpt-6-astra",
+  "effort": "high",
+  "style": {
+    "name": "Warm Oilcloth Family",
+    "preset": "painterly",
+    "style_notes": "Paint each creature as something loved: broad, flat color, sincere eyes and a slight wobble in the edge. Keep marks few and steady between frames. Dark paint belongs inside the creature; the surrounding cell stays clear. Glass keeps its clear heart and soft rim, while ink gives solid bodies their weight. Warmth comes from care, not a shine added to everything.",
+    "framing": "Use transparent 192 × 208 cells. Keep every pose inside x=16–176 and y=16–192, with standing feet or body base at y=184. Reserve room above for jumps and beside the body for waves. Fit tall creatures by gently bending their posture, keeping their defining shape. Lock scale, face placement and carried objects across frames. Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid. Keep motion within the cell; movement across the screen belongs to the player. One-shot rows finish in a stable pose. Idle and waiting use small movements and long holds.",
+    "palette": "Core paint: soot #262321, cream #F1DFC1, ochre #C59A46, rust #AC5740, herb green #65764C and blue #557589. Preserve each seed's own colors: the trolleybus stays blue, the ram gold, the ermine white and the droplet clear. Lights stay within their existing flame, lantern, window or body. V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+    "line": "Solid bodies use irregular ink edges about 3 pixels wide, with essential inner marks at least 2 pixels wide. Keep important gaps at least 4 pixels open. Suggest texture with a few broad marks fixed to the body, never changing noise. The glass droplet is the deliberate exception: use a broad, soft, partly open rim and a clear center, without a hard black enclosure. The magnifying glass has an ink frame and a clear lens. Family likeness comes from shared proportions, restraint and timing, rather than forcing glass to become opaque ink.",
+    "boundaries": "All twenty seeds remain themselves. Keep the magnifying glass's raised eyebrow and searching tilt; the ram's gold fleece, herb sprig and attached twig that greens with happiness; the hut's chicken legs, kerchief roof and door broom; the sleepy mushroom's moss, tarragon and herb basket; the crescent's lantern; the still white ermine's distinct frost crown; the bold calf's embroidered felt blanket and hoof stamp; the book's flapping covers and changing ink pictures; the determined brush's legs and paint jar; the thoughtful inkpot's spectacles and tucked quill; the quiet palette's paint spots and brush tail; the curled lamb's striped cap and candle; the calm clear droplet; the gentle giraffe's long neck and sincere eyes; the precise bee's white collar and pressed flower; the generous pomegranate's opening rind and visible seeds; the courteous wooden soldier's back key and salute; the tuning fork's poised turns; the blue trolleybus's warm windows and guitar visible on its seat; and the clay lamp's grapevine handle. Use new poses, markings and patterns. Existing belongings remain attached, held or securely contained. Do not add shared herbs, keys, lamps, costumes or ornaments to other seeds. Sweeping leaves no footprint marks; frost appears only on the crown or feet; underlining and writing become small gestures without drawn words; shared seeds stay cupped in the open rind. Humming and ringing read through posture without sound symbols. No floating effects, scene background, text, speech bubbles, shadows or new review props. Review uses only the creature and its existing belongings. All pets and sheets remain local. Paul waived approval steps and retains a later veto.",
+    "rows": {
+      "idle": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+      "running-right": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+      "running-left": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+      "waving": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+      "jumping": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+      "failed": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+      "waiting": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+      "running": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+      "review": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once."
+    },
+    "why": "I want each pet to look cared for, with its own work and temper still visible. The dark oilcloth feeling lives in the painted body and can meet a dark app surface without baking a background into the sprite. No veto is proposed. Originality may veto only in a jury and never ranks taste. The Painter checks function at native size across all nine rows and sixteen added looks. Any function flag must name the pet, look, row and frame, and describe visible evidence such as a vanished eyebrow, a clipped crown or two actions with the same silhouette. These are checks to perform, not defects claimed without images. Any later charter veto must quote the exact guards-against line and give a concrete reason."
+  },
+  "brief": {
+    "display_name": "Medea",
+    "description": "A kind golden ram whose patient care brings green leaves to an attached dry twig.",
+    "brief": "Medea is a small golden ram with soft fleece the color of old gold, steady eyes and a fresh herb sprig held securely at one corner of her mouth. Short curled horns frame a confident face. A dry twig nestles firmly in the fleece over her shoulder, where its shape remains visible beside her head. Her magic has a clear, modest result: when happiness arrives, attached buds open into green leaves, one after another.\n\nShe is generous, capable and quietly proud. She greets with an offered forehoof, waits with open attention and meets a setback with lowered ears before gathering herself. Her warmth comes from deliberate gestures and sincere eyes. Broad ochre paint, cream fleece marks, herb green leaves and irregular soot edges give her weight; a few fixed light patches suggest old gold without glitter.\n\nHer signature behavior is a pause to notice new growth, followed by a small satisfied lift of the chin. Focused work uses a planted stance and a forehoof to gather the mouth-held herb stems neatly together. Review instead turns her head over her shoulder to inspect the attached twig. These actions must read through the whole pose at native size.\n\nKeep her belongings secure and her renewal gentle. Leaves remain attached; resetting a loop must never depict withering. Give her no costume, extra tools, floating effects or scene dressing.",
+    "pet_notes": "A compact ram with a rounded gold fleece body, short sturdy legs, cream muzzle and small ochre curled horns. Kind dark eyes sit clear of the horn curls. The herb sprig stays at her left mouth corner; the attached twig rises from her right shoulder fleece. Use broad matte paint, slightly uneven soot edges and a few fixed cream marks, with open gaps around hooves, horns and leaves.",
+    "rows": {
+      "idle": "Across 6 frames, stand evenly with relaxed ears, blink once, breathe gently and return to a settled hold while the sprig and twig stay quiet.",
+      "running-right": "Across 8 frames, face right and cycle through alternating hoof contacts and lifted passes, keeping the mouth-held sprig and shoulder twig secure.",
+      "running-left": "Across 8 frames, redraw the left-facing stride with the sprig and twig on their proper body sides, preserving the same steady travel rhythm.",
+      "waving": "Across 4 frames, turn toward the viewer, raise the free right forehoof, sweep it once in greeting and lower it into a stable stance.",
+      "jumping": "Across 5 frames, crouch, rise, reach a compact airborne peak, land softly and settle with every belonging attached.",
+      "failed": "Across 8 frames, stop, lower the chest and ears, hold a disappointed downward gaze and recover slightly into a stable lowered pose without damage or leaf loss.",
+      "waiting": "Across 6 frames, keep the chest upright and eyes open toward the expected action, extend the head slightly, make one questioning ear tilt and hold without handling the herbs.",
+      "running": "Across 6 frames, stay planted, lean forward, lift the left forehoof beneath the mouth-held stems, gather them together, check their alignment and reset the hoof for another careful pass.",
+      "review": "Across 6 frames, plant all four hooves, turn the head back toward the shoulder twig, follow its attached buds opening into leaves, hold the inspection and give a small satisfied nod before settling."
+    },
+    "do_not_resemble": [
+      "No franchise look-alike, logo, real-person likeness or copied artwork."
+    ],
+    "why": "This draft makes renewal visible through attached leaf growth and gives care a concrete action. I assume the sprig is mouth-held and place the twig at the right shoulder so inspection remains readable. Leaf growth finishes in a stable leafy pose; any later dry starting state is a separate state reset, never an animated loss of growth. The v2 contract overrides the sheet's conflicting frame and look instructions: one local transparent 1536 × 2288 atlas, eight columns by eleven rows, with 192 × 208 cells; rows 0–8 contain 6, 8, 8, 4, 5, 8, 6, 6 and 6 frames respectively, and unused cells remain fully transparent. Retain the sheet's 8 fps as a timing assumption, using held drawings within those counts. Keep poses within x=16–176 and y=16–192, with standing feet at y=184 and consistent scale and facial construction. Rows 9 and 10 contain single gaze/pose directions, not paint variants: row 9 is 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5; row 10 is 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5, clockwise with 000 up. Preserve one palette and treatment, separating neighboring directions through muzzle, horn and ear placement, especially row 10 frames 5–7. The supplied readability notes guide distinct silhouettes: relaxed idle, upright outward waiting, forward hoof-and-herb work, and backward twig inspection. Carry these distinctions into every later image prompt. No images were supplied for this draft, so I claim no new measured function defects; later flags must identify pet, direction or base look, row, frame and visible evidence. Motion measurements are guidance recorded in provenance, and only skill validators gate production. Review adds no props; all rows exclude floating effects, backgrounds, text, speech bubbles and shadows. No veto is proposed, and Originality has no taste-ranking role. Paul waived approval and retains a later veto; all assets remain local."
+  },
+  "reference": "/root/factory-out/F36/lamp/hatches/pilot-style-12-medea/attempt-pqzhqrsw/package/contact-sheet.webp",
+  "reference_sha256": "71ec194ada7b533702d84934c10a555e3f60843ccf7224e73ec3c643509a6604",
+  "redo": {
+    "previous": {
+      "key": "set-medea",
+      "pet": "medea",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "status": "validated",
+      "worker_policy": 3,
+      "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+      "fresh_attempts": 1,
+      "resumed_from": "/root/factory-out/F36/lamp/hatches/set-medea/result.json",
+      "resume_action": "fresh_attempt",
+      "fresh_attempt_reason": "Row 10 frames 5–6 (292.5°, 315°) still point up-right instead of up-left after two permitted repairs. Structural validation passes; quality validation fails. Rejected candidate saved at final/spritesheet.webp, with authentic QA reports and previews. Delivery artifacts plus metadata total 1,596,654 bytes. No service or Library tools were called.",
+      "reason": "Saved final/spritesheet.webp. Exact WebP passes all bundled validation gates. Required QA reports and motion previews are saved locally. Delivery artifacts plus metadata total 1,503,065 bytes.",
+      "image_generations": 3,
+      "repairs": [
+        "Reapplied the approved shared 0.82 standard-frame scale and baseline registration, preserving jump displacement.",
+        "Row 10 repair 1 corrected down-right muzzles in frames 1–2 to down-left.",
+        "Row 10 repair 2 corrected duplicated or relocated shoulder twigs while preserving the corrected gaze directions.",
+        "Increased lossless WebP compression effort to meet the delivery budget; decoded pixels remained unchanged."
+      ],
+      "contract_overrides": [
+        {
+          "source": "style.framing",
+          "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+          "replacement": "Rows 0–8 contain 6,8,8,4,5,8,6,6,6 frames. Four beats remap to 6-frame ranges 0 / 1–2 / 3–4 / 5; 8-frame ranges 0–1 / 2–3 / 4–5 / 6–7; waving 0 / 1 / 2 / 3; jumping 0 / 1 / 2–3 / 4. Use bundled per-state preview durations with terminal holds.",
+          "reason": "The v2 contract fixes frame counts and the bundled preview timings preserve state-specific rhythms."
+        },
+        {
+          "source": "style.palette",
+          "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+          "replacement": "Rows 9 and 10 contain sixteen clockwise gaze directions: 000,022.5,045,067.5,090,112.5,135,157.5; 180,202.5,225,247.5,270,292.5,315,337.5. Up=000, right=090, down=180, left=270. Preserve one palette and paint treatment.",
+          "reason": "V2 looks are directional poses, not paint variants or additional animation atlases."
+        },
+        {
+          "source": "brief.why",
+          "original": "Retain the sheet's 8 fps as a timing assumption, using held drawings within those counts.",
+          "replacement": "Use bundled ROW_DURATIONS for state GIFs and derived previews, retaining required frame counts and stable terminal poses.",
+          "reason": "Bundled timings include intentional state-specific holds; timing guidance is not an acceptance threshold."
+        }
+      ],
+      "decisions": [
+        "Completed one local fresh attempt; preserved the previous attempt unchanged. No Pets MCP, Library, upload, creation, activation or service mutation.",
+        "Reused approved base art, nine independent animation strips, cardinals and row 9. Regenerated only coherent row 10.",
+        "Used built-in imagegen sequentially. Copied all three new generated sources into sources/ and recorded cache paths, prompts, references and repairs in logs/.",
+        "Attached the complete fixed family reference to every image job. Combined complete family and standard contact sheets; the final repair also combined canonical base and layout guide to retain all required visuals within five references.",
+        "Preserved anatomical left mouth sprig and right shoulder twig. Head yaw and pitch lead gaze while the torso stays planted.",
+        "Retained the approved shared 0.82 standard-frame registration and approximately y=184 baseline, preserving relative jump displacement.",
+        "Preserved existing attached leaves; review inspects buds and growth without animated withering.",
+        "Retained the established painting and bundled preview timings. Used no mirrored look cells or one-off cell splices.",
+        "Used genuine transparency, one bundled despill pass with blue #0000FF, a shared 256-color RGB palette without dithering, preserved alpha, cleared hidden RGB and lossless WebP.",
+        "Three isolated reviewers classified every tested gaze axis correctly. Independent final visual review found no blocking defect.",
+        "Accepted similar neighboring directions as reviewed warnings: 022.5/045/067.5, 202.5/225 and 315/337.5 remain in their correct quadrants without reversal.",
+        "Waiting extends the head outward with open attention; focused work brings a forehoof to mouth stems; review turns backward toward the shoulder twig.",
+        "Idle guidance was 1–2 px breathing; observed top-bound variation is 6 px with a stable baseline and one blink. Jump guidance was 10–14 px; observed lift is 45 px with a 1 px landing offset. Both preserve their intended actions; neither difference triggered repair.",
+        "Framing guidance was x=16–176/y=16–192; observed alpha>16 bounds are x=13–169/y=21–186. The small deviation passes bundled checks and did not trigger repair.",
+        "This attempt used 3 image generations, including two row repairs. The predecessor recorded 19 calls, giving 22 historical calls across both attempts.",
+        "Rendered nine state GIFs, all-state GIF and MP4, idle-jump-idle GIF and strip, ordered look-loop GIF, contact and direction sheets, and four proof stills from the final encoded WebP.",
+        "Saved the 1536×2288 atlas at final/spritesheet.webp, required authentic reports under qa/, previews under previews/, and provenance under logs/. The WebP is 1,351,820 bytes; delivery artifacts and metadata total 1,503,065 bytes."
+      ],
+      "atlas_sha256": "826b7f06d86f0775c5facf6b82d1afe5018146780349f19a20d6a281e4dc982a",
+      "validators": {
+        "atlas": "/root/factory-out/F36/lamp/hatches/set-medea/attempt-xsq0xn2y/gate/atlas.json",
+        "quality": "/root/factory-out/F36/lamp/hatches/set-medea/attempt-xsq0xn2y/gate/quality.json"
+      },
+      "package": "/root/factory-out/F36/lamp/hatches/set-medea/attempt-xsq0xn2y/package",
+      "bytes": 1757914,
+      "contact": "/root/factory-out/F36/lamp/hatches/set-medea/attempt-xsq0xn2y/package/contact-sheet.webp",
+      "previews": "/root/factory-out/F36/lamp/hatches/set-medea/attempt-xsq0xn2y/previews",
+      "package_hashes": {
+        "contact-sheet.webp": "03ccd097798e47509f2b12ae77a5bab828e92f2b052d8f44ba6a858f0f5bc79e",
+        "pet.json": "d3e09703f4aa2a9aaaba23b466bc47e99c8d78e70f63a598b841d00e1f20a770",
+        "provenance.json": "197943e6279957378844009b16a6d38acdcdd4fc1eb1645ead9fcdd618993a70",
+        "spritesheet.webp": "826b7f06d86f0775c5facf6b82d1afe5018146780349f19a20d6a281e4dc982a"
+      },
+      "work": "/root/factory-out/F36/lamp/hatches/set-medea/attempt-xsq0xn2y"
+    },
+    "reasons": [
+      {
+        "seat": "emily-dickinson",
+        "target": "medea",
+        "why": "Row 8, frames 0–5: shoulder inspection reads, but the twig appears leafy throughout; the promised change from buds to leaves is not clear."
+      }
+    ]
+  },
+  "readability_notes": {
+    "style_id": "style-12",
+    "rules_sha256": "e06e7bf41b0b6253203f6cd6dacd7d291c7032c0ca8af554d239df33cf6f4b6e",
+    "instruction": "Readability notes from the image jury: make waiting, focused work (running row 7), and review read differently from idle and from each other at 192 × 208. Apply the winning style's supplied attributed drawing notes to this pet, including the reference pet. Carry them into every image prompt. These are drawing guidance; keep the fixed family reference and the v2 contract.",
+    "flags": [
+      {
+        "seat": "painter",
+        "target": "style-12",
+        "why": "Trolleybus, base animation, review row 8 frames 1–4: blinking and small gaze changes carry most of the action while the body and guitar remain still. Inspection is difficult to distinguish from idle. Running/work row 7 frames 1–2 shows concentration, but the work itself is unclear."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 0–5, mainly shows eye changes and a closing smile. Inspection of the seated guitar is not clearly readable; frames 0–3 remain close to idle. This is a state-readability concern, not a charter veto."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Ram, directional looks: row 10, frames 5–7 (292.5–337.5), show closely similar upward head turns. The broad direction reads, but the separate steps are weak."
+      },
+      {
+        "seat": "robber-girl",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 1–4, relies on small eye changes and a blink much like idle row 0, frames 1–3. Inspection of the seated guitar is hard to read."
+      },
+      {
+        "seat": "storybook",
+        "target": "style-12",
+        "why": "Trolleybus, base treatment: review row 8, frames 0–5, mostly shows forward attention and blinking, much like idle row 0. The intended inspection of the seated guitar is not clear in the supplied drawings."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Bulat, base look, running row 7, frames 1–2: lowered eyebrows show concentration, but the seated guitar shows no clear working action. Review row 8, frames 1–5 reads mostly as looking and blinking. Work and inspection are weakly distinguished."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Medea, base look, running row 7 and review row 8, frames 1–4: both use head dips toward the mouth-held herbs. The separate act, check and inspect beats are difficult to distinguish."
+      }
+    ]
+  },
+  "worker_reply": {
+    "status": "complete",
+    "reason": "Saved local final/spritesheet.webp. Exact WebP passes bundled v2 atlas and pet-quality validators. Required QA reports and GIF/MP4 previews are saved. Delivery files and metadata total 1,559,514 bytes.",
+    "image_generations": 1,
+    "repairs": [
+      "Replaced only review row 8 with a coherent six-frame strip showing closed shoulder-twig buds becoming attached green leaves.",
+      "Reduced export size using one shared 256-color RGB palette without dithering, preserving alpha and encoding lossless WebP. No second despill."
+    ],
+    "contract_overrides": [
+      {
+        "source": "style.framing",
+        "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+        "replacement": "Rows 0–8 contain 6,8,8,4,5,8,6,6,6 frames. Four beats remap to six-frame ranges 0 / 1–2 / 3–4 / 5; eight-frame ranges 0–1 / 2–3 / 4–5 / 6–7; waving 0 / 1 / 2 / 3; jumping 0 / 1 / 2–3 / 4. Use bundled state-specific preview durations and terminal holds.",
+        "reason": "The v2 contract fixes frame counts; bundled timing preserves each action’s rhythm."
+      },
+      {
+        "source": "style.palette",
+        "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+        "replacement": "Rows 9 and 10 contain sixteen clockwise gaze directions: 000,022.5,045,067.5,090,112.5,135,157.5; 180,202.5,225,247.5,270,292.5,315,337.5. Up=000, right=090, down=180, left=270. Preserve one palette and paint treatment.",
+        "reason": "V2 looks are directional poses, not paint variants or additional animation atlases."
+      },
+      {
+        "source": "brief.why",
+        "original": "Retain the sheet's 8 fps as a timing assumption, using held drawings within those counts.",
+        "replacement": "Use bundled ROW_DURATIONS for state GIFs and derived previews, retaining required frame counts and stable terminal poses.",
+        "reason": "Bundled timings include state-specific holds; timing guidance is not an acceptance threshold."
+      }
+    ],
+    "decisions": [
+      "Completed one local jury redo, limited to the identified review-row growth defect. Reused approved base, other animation rows, cardinals and both directional rows.",
+      "No Pets MCP, Library, upload, creation, selection, activation or service-update tools were called. All task-controlled files remain in the work directory.",
+      "Used built-in imagegen once, with the complete fixed family reference, canonical base, previous review strip and layout guide. Preserved the full corrected style instructions, pet notes, readability distinctions and avoidances in prompts/review-redo.md.",
+      "Copied the generated cache source to sources/redo-01-review.png. Cache path, inputs, references, generation count and inherited sources are recorded in logs/generation-01.json and logs/source-catalog.json. The family reference checksum matches the supplied checksum.",
+      "The review starts with a two-frame closed-bud hold, then shows open attached leaves in frames 2–5. Medea turns backward toward the twig and lifts her chin in frame 4. The mouth-held herbs remain green.",
+      "Review ends leafy without animated withering. GIF repetition restarts the state; it does not animate leaf loss.",
+      "Applied the inherited shared 0.82 review-row scale and y=184 baseline after bundled connected-component extraction. No individual pose resizing or directional-cell splicing.",
+      "Ran one bundled blue-key despill after assembly. It changed edge RGB across inherited cells while preserving alpha, silhouettes, registration and poses. Final encoding uses a shared 256-color RGB palette and lossless WebP.",
+      "Waiting retains outward open-eyed attention; focused work gathers mouth-held stems with a forehoof; review keeps four hooves planted and inspects the shoulder twig.",
+      "Idle guidance was 1–2 pixels; observed top-bound variation is 6 pixels with a stable baseline. Jump guidance was 10–14 pixels; bundled measurement reports 45 pixels of lift and a 1-pixel landing offset. Both retain their intended action; neither difference triggered repair.",
+      "Retained previously accepted neighboring-direction similarities and continuity warnings after native-size inspection. Direct axis classifications passed the bundled direction validator.",
+      "Independent reviewer initialization failed. Direct visual review was performed instead. The consensus combiner requires three reviewers and could not combine one review; no independent blind consensus is claimed.",
+      "Rendered nine state GIFs, all-state GIF and MP4, idle-jump-idle GIF and strip, ordered direction loop, contact and direction sheets, native review strip and four proof stills from the exact final WebP.",
+      "Required authentic reports are qa/chroma-despill-extended.json, qa/review.json, qa/direction-semantics.json and qa/look-continuity.json. Final validation reports and provenance are also saved locally.",
+      "Final WebP is 1,320,634 bytes. Delivery files and metadata total 1,559,514 bytes. One new generation and zero additional row-repair generations; inherited generation counts are excluded."
+    ]
+  },
+  "work": "/root/factory-out/F36/lamp/hatches/redo-medea/attempt-17yakl2n",
+  "worker_policy": 3,
+  "contract": "The v2 sprite-sheet contract fixes 192 × 208 cells, eight columns by eleven rows,\none transparent 1536 × 2288 atlas. The nine animation rows (0–8) have these exact frame counts:\nidle 6, running-right 8, running-left 8, waving 4, jumping 5, failed 8, waiting 6,\nrunning 6 (focused work, not locomotion), review 6. Unused cells stay fully transparent.\nRows 9 and 10 hold sixteen look directions, eight per row, clockwise in screen coordinates:\nrow 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5;\nrow 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5.\n000 is up, 090 right, 180 down, 270 left. These are gaze/pose directions with the same\npalette and treatment, not sixteen palette variants, paint treatments or separate animations.\n",
+  "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+  "motion_guidance_difference": null,
+  "contract_overrides": [
+    {
+      "source": "style.framing",
+      "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+      "replacement": "Rows 0–8 contain 6,8,8,4,5,8,6,6,6 frames. Four beats remap to six-frame ranges 0 / 1–2 / 3–4 / 5; eight-frame ranges 0–1 / 2–3 / 4–5 / 6–7; waving 0 / 1 / 2 / 3; jumping 0 / 1 / 2–3 / 4. Use bundled state-specific preview durations and terminal holds.",
+      "reason": "The v2 contract fixes frame counts; bundled timing preserves each action’s rhythm."
+    },
+    {
+      "source": "style.palette",
+      "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+      "replacement": "Rows 9 and 10 contain sixteen clockwise gaze directions: 000,022.5,045,067.5,090,112.5,135,157.5; 180,202.5,225,247.5,270,292.5,315,337.5. Up=000, right=090, down=180, left=270. Preserve one palette and paint treatment.",
+      "reason": "V2 looks are directional poses, not paint variants or additional animation atlases."
+    },
+    {
+      "source": "brief.why",
+      "original": "Retain the sheet's 8 fps as a timing assumption, using held drawings within those counts.",
+      "replacement": "Use bundled ROW_DURATIONS for state GIFs and derived previews, retaining required frame counts and stable terminal poses.",
+      "reason": "Bundled timings include state-specific holds; timing guidance is not an acceptance threshold."
+    }
+  ],
+  "decisions": [
+    "Completed one local jury redo, limited to the identified review-row growth defect. Reused approved base, other animation rows, cardinals and both directional rows.",
+    "No Pets MCP, Library, upload, creation, selection, activation or service-update tools were called. All task-controlled files remain in the work directory.",
+    "Used built-in imagegen once, with the complete fixed family reference, canonical base, previous review strip and layout guide. Preserved the full corrected style instructions, pet notes, readability distinctions and avoidances in prompts/review-redo.md.",
+    "Copied the generated cache source to sources/redo-01-review.png. Cache path, inputs, references, generation count and inherited sources are recorded in logs/generation-01.json and logs/source-catalog.json. The family reference checksum matches the supplied checksum.",
+    "The review starts with a two-frame closed-bud hold, then shows open attached leaves in frames 2–5. Medea turns backward toward the twig and lifts her chin in frame 4. The mouth-held herbs remain green.",
+    "Review ends leafy without animated withering. GIF repetition restarts the state; it does not animate leaf loss.",
+    "Applied the inherited shared 0.82 review-row scale and y=184 baseline after bundled connected-component extraction. No individual pose resizing or directional-cell splicing.",
+    "Ran one bundled blue-key despill after assembly. It changed edge RGB across inherited cells while preserving alpha, silhouettes, registration and poses. Final encoding uses a shared 256-color RGB palette and lossless WebP.",
+    "Waiting retains outward open-eyed attention; focused work gathers mouth-held stems with a forehoof; review keeps four hooves planted and inspects the shoulder twig.",
+    "Idle guidance was 1–2 pixels; observed top-bound variation is 6 pixels with a stable baseline. Jump guidance was 10–14 pixels; bundled measurement reports 45 pixels of lift and a 1-pixel landing offset. Both retain their intended action; neither difference triggered repair.",
+    "Retained previously accepted neighboring-direction similarities and continuity warnings after native-size inspection. Direct axis classifications passed the bundled direction validator.",
+    "Independent reviewer initialization failed. Direct visual review was performed instead. The consensus combiner requires three reviewers and could not combine one review; no independent blind consensus is claimed.",
+    "Rendered nine state GIFs, all-state GIF and MP4, idle-jump-idle GIF and strip, ordered direction loop, contact and direction sheets, native review strip and four proof stills from the exact final WebP.",
+    "Required authentic reports are qa/chroma-despill-extended.json, qa/review.json, qa/direction-semantics.json and qa/look-continuity.json. Final validation reports and provenance are also saved locally.",
+    "Final WebP is 1,320,634 bytes. Delivery files and metadata total 1,559,514 bytes. One new generation and zero additional row-repair generations; inherited generation counts are excluded."
+  ],
+  "resumed_from": null,
+  "atlas_sha256": "384ee328a25e8e59205f7f8b4cce29083ed7640ea5131d08781857c8db29a2af",
+  "validators": {
+    "atlas": "/root/factory-out/F36/lamp/hatches/redo-medea/attempt-17yakl2n/gate/atlas.json",
+    "quality": "/root/factory-out/F36/lamp/hatches/redo-medea/attempt-17yakl2n/gate/quality.json"
+  },
+  "image_generations_source": "worker report; raw events and generation logs retained",
+  "redo_count": 1,
+  "local_only": true
+}

@@ -1,0 +1,346 @@
+{
+  "key": "redo-open-source-enthusiast",
+  "pet": "open-source-enthusiast",
+  "model": "gpt-6-astra",
+  "effort": "high",
+  "style": {
+    "name": "Warm Oilcloth Family",
+    "preset": "painterly",
+    "style_notes": "Paint each creature as something loved: broad, flat color, sincere eyes and a slight wobble in the edge. Keep marks few and steady between frames. Dark paint belongs inside the creature; the surrounding cell stays clear. Glass keeps its clear heart and soft rim, while ink gives solid bodies their weight. Warmth comes from care, not a shine added to everything.",
+    "framing": "Use transparent 192 × 208 cells. Keep every pose inside x=16–176 and y=16–192, with standing feet or body base at y=184. Reserve room above for jumps and beside the body for waves. Fit tall creatures by gently bending their posture, keeping their defining shape. Lock scale, face placement and carried objects across frames. Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid. Keep motion within the cell; movement across the screen belongs to the player. One-shot rows finish in a stable pose. Idle and waiting use small movements and long holds.",
+    "palette": "Core paint: soot #262321, cream #F1DFC1, ochre #C59A46, rust #AC5740, herb green #65764C and blue #557589. Preserve each seed's own colors: the trolleybus stays blue, the ram gold, the ermine white and the droplet clear. Lights stay within their existing flame, lantern, window or body. V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+    "line": "Solid bodies use irregular ink edges about 3 pixels wide, with essential inner marks at least 2 pixels wide. Keep important gaps at least 4 pixels open. Suggest texture with a few broad marks fixed to the body, never changing noise. The glass droplet is the deliberate exception: use a broad, soft, partly open rim and a clear center, without a hard black enclosure. The magnifying glass has an ink frame and a clear lens. Family likeness comes from shared proportions, restraint and timing, rather than forcing glass to become opaque ink.",
+    "boundaries": "All twenty seeds remain themselves. Keep the magnifying glass's raised eyebrow and searching tilt; the ram's gold fleece, herb sprig and attached twig that greens with happiness; the hut's chicken legs, kerchief roof and door broom; the sleepy mushroom's moss, tarragon and herb basket; the crescent's lantern; the still white ermine's distinct frost crown; the bold calf's embroidered felt blanket and hoof stamp; the book's flapping covers and changing ink pictures; the determined brush's legs and paint jar; the thoughtful inkpot's spectacles and tucked quill; the quiet palette's paint spots and brush tail; the curled lamb's striped cap and candle; the calm clear droplet; the gentle giraffe's long neck and sincere eyes; the precise bee's white collar and pressed flower; the generous pomegranate's opening rind and visible seeds; the courteous wooden soldier's back key and salute; the tuning fork's poised turns; the blue trolleybus's warm windows and guitar visible on its seat; and the clay lamp's grapevine handle. Use new poses, markings and patterns. Existing belongings remain attached, held or securely contained. Do not add shared herbs, keys, lamps, costumes or ornaments to other seeds. Sweeping leaves no footprint marks; frost appears only on the crown or feet; underlining and writing become small gestures without drawn words; shared seeds stay cupped in the open rind. Humming and ringing read through posture without sound symbols. No floating effects, scene background, text, speech bubbles, shadows or new review props. Review uses only the creature and its existing belongings. All pets and sheets remain local. Paul waived approval steps and retains a later veto.",
+    "rows": {
+      "idle": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+      "running-right": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+      "running-left": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+      "waving": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+      "jumping": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+      "failed": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+      "waiting": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+      "running": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+      "review": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once."
+    },
+    "why": "I want each pet to look cared for, with its own work and temper still visible. The dark oilcloth feeling lives in the painted body and can meet a dark app surface without baking a background into the sprite. No veto is proposed. Originality may veto only in a jury and never ranks taste. The Painter checks function at native size across all nine rows and sixteen added looks. Any function flag must name the pet, look, row and frame, and describe visible evidence such as a vanished eyebrow, a clipped crown or two actions with the same silhouette. These are checks to perform, not defects claimed without images. Any later charter veto must quote the exact guards-against line and give a concrete reason."
+  },
+  "brief": {
+    "display_name": "The Sharing Pomegranate",
+    "description": "A cheerful little pomegranate that opens its rind to offer seeds, proud of everyone who helped it grow.",
+    "brief": "A little pomegranate stands with a round, rust-red body, a small natural calyx and sincere cream-and-soot eyes. Its rind opens into two attached, cupped sides, revealing a few broad seed clusters in deeper red against cream membranes. The face stays on the intact upper rind, so opening never splits its expression. Broad matte paint, slightly uneven ink edges and a few fixed marks make it feel handled with care.\n\nGenerous and cheerful, it welcomes company by opening its rind toward the viewer. Every seed remains securely cupped inside: sharing reads as an invitation, without scattering anything. Its signature gesture is an open offering followed by a grateful incline, acknowledging the help that made its growth possible. Pride appears as an upright posture and a clear, warm gaze. Disappointment draws the rind inward and lowers the whole body; patience stays alert and expectant.\n\nKeep its actions legible through body shape. Idle rests with a narrow opening; waiting turns outward toward someone expected; focused work uses deliberate alternating rind folds to cradle the seeds; review angles the opening inward for a sustained inspection. Greeting opens broadly, while review remains small and considered.\n\nUse original drawings and keep the eventual artwork, source files and credits local and open to inspection. Add no costume, borrowed emblem or new prop. No floating effects, scene background, text, speech bubbles or shadows. Review uses only its rind and seeds.",
+    "pet_notes": "Round rust-red pomegranate with a squat natural calyx, cream membranes and broad deep-red seed clusters. Two attached rind sides form shallow cups beneath an intact face band. Soot eyes sit clearly against small cream eye shapes. Use roughly three-pixel irregular outer ink, essential inner marks at least two pixels wide and gaps at least four pixels open. Keep texture sparse, matte and fixed to the body.",
+    "rows": {
+      "idle": "Six frames: rest upright with a narrow seed-filled opening, blink slowly, breathe with a slight body lift and return to a long settled hold.",
+      "running-right": "Eight frames: face right and rock through alternating contact and lifted poses, keeping the rind cupped and every seed contained.",
+      "running-left": "Eight frames: redraw the body facing left through the same rocking travel cycle, preserving the placement of rind seams and seed clusters.",
+      "waving": "Four frames: face the viewer, raise one attached rind edge in a clear greeting sweep, open generously and lower into a stable offering pose.",
+      "jumping": "Five frames: compress, rise, reach the peak, descend and soften into a stable landing with the seed cups held securely inward.",
+      "failed": "Eight frames: stop sharply, sink with both rind sides drawn inward, hold a visibly disappointed lowered gaze and recover slightly without damage.",
+      "waiting": "Six frames: turn the whole body toward the expected arrival, hold the opening toward that side, make one questioning lean and remain alert with eyes open.",
+      "running": "Six frames: stay planted, brace the body, fold one rind side inward then the other to cradle the seeds, check their position and reopen to repeat the focused task.",
+      "review": "Six frames: become still, tilt the open rind inward to expose and inspect its cream partitions and seed clusters, hold that distinct folded posture, then nod once and settle."
+    },
+    "do_not_resemble": [
+      "No franchise look-alike, logo, real-person likeness or copied artwork."
+    ],
+    "why": "As The Open Source Enthusiast, I express sharing through the open rind and gratitude through its thankful incline; neither needs written credits inside the sprite. I assume a legless body with attached, flexible rind sides and an intact face band. Eventual local delivery should include editable source, PNG export and credits with clear license records for any outside material; this text does not establish asset provenance. No outside material was inspected and no files were written. Codex's technical decision is to follow v2: one transparent 1536 × 2288 atlas, eight columns by eleven rows of 192 × 208 cells, with animation counts 6, 8, 8, 4, 5, 8, 6, 6, 6 and all unused cells transparent. Keep poses within x=16–176 and y=16–192, with the settled base at y=184. V2 replaces the sheet's sixteen-frame rows and paint-variant interpretation: row 9 contains directions 000 through 157.5 and row 10 contains 180 through 337.5, each advancing clockwise by 22.5 degrees, with up at 000 and right at 090. These use one palette and treatment; distinct body turns, rind overlap and gaze should make neighboring directions readable. Retain 8 fps as the supplied timing guidance. The Painter's supplied notes motivate separate resting, outward waiting, active folding and inward inspection silhouettes, rather than eye changes alone. No images were supplied for this pet, so I claim no observed function defects or completed validation. Only skill validators gate a rendered pet; motion-guidance differences belong in provenance. No veto is proposed; Originality only vetoes in juries and never ranks taste. Any later veto must quote the exact applicable guards-against charter line and give a concrete reason. Paul waived approval steps, retains a later veto, and all pets remain local."
+  },
+  "reference": "/root/factory-out/F36/lamp/hatches/pilot-style-12-medea/attempt-pqzhqrsw/package/contact-sheet.webp",
+  "reference_sha256": "71ec194ada7b533702d84934c10a555e3f60843ccf7224e73ec3c643509a6604",
+  "redo": {
+    "previous": {
+      "key": "set-open-source-enthusiast",
+      "pet": "open-source-enthusiast",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "status": "validated",
+      "worker_policy": 3,
+      "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+      "fresh_attempts": 0,
+      "resumed_from": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/result.json",
+      "resume_action": "provider_retry",
+      "provider_stop": [
+        {
+          "log": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/attempt-ivq6mjcb/codex.jsonl",
+          "line": 3,
+          "code": "",
+          "message": "You’ve hit your usage limit. Visit https://chatgpt.com/settings/usage to purchase more credits or try again at Oct 18th, 2026 4:12 AM."
+        },
+        {
+          "log": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/attempt-ivq6mjcb/codex.jsonl",
+          "line": 4,
+          "code": "",
+          "message": "You’ve hit your usage limit. Visit https://chatgpt.com/settings/usage to purchase more credits or try again at Oct 18th, 2026 4:12 AM."
+        }
+      ],
+      "reason": "Local candidate saved to final/spritesheet.webp. The exact WebP passes bundled v2 atlas and pet-quality validators. Required QA reports, contact sheets, GIFs, MP4s, PNG export, sources, and provenance are saved locally. No Pets or Library tools were called.",
+      "image_generations": 15,
+      "repairs": [
+        "Failed row: one regeneration removed detached surprise strokes.",
+        "Standard registration: applied one uniform transform per row to align body scale and ground baseline while preserving internal motion and jump displacement.",
+        "Cardinal extraction: repacked complete connected pose groups with transparent padding, then reran the bundled extractor.",
+        "Look row 10: one complete-row regeneration corrected erroneous screen-right poses to screen-left."
+      ],
+      "contract_overrides": [
+        {
+          "source": "style.framing",
+          "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+          "replacement": "Rows 0–8 use 6, 8, 8, 4, 5, 8, 6, 6, 6 frames. Retain 8 fps drawing rhythm; map four beats onto available frames: six-frame rows 0 / 1–2 / 3–4 / 5; eight-frame rows 0–1 / 2–3 / 4–5 / 6–7; waving 0 / 1 / 2 / 3; jumping 0 / 1 / 2–3 / 4. Preview playback uses bundled state durations and stable final holds.",
+          "reason": "Fixed v2 frame counts override sixteen-frame rows and two-second duration while preserving action order."
+        },
+        {
+          "source": "style.palette",
+          "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+          "replacement": "One unchanged Warm Oilcloth palette and material treatment. Row 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5. Row 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5. These are clockwise screen gaze/pose directions, 000 up, 090 right, 180 down, 270 left.",
+          "reason": "V2 looks are sixteen directions, not paint variants or additional animation atlases."
+        },
+        {
+          "source": "style.palette",
+          "original": "Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+          "replacement": "Retain the family glass-material rule as taste context only; create no material variants. This pomegranate remains matte opaque paint.",
+          "reason": "Alternate material treatments are outside the v2 directional contract."
+        },
+        {
+          "source": "style.why",
+          "original": "The Painter checks function at native size across all nine rows and sixteen added looks.",
+          "replacement": "Check nine animation rows and sixteen directional cells at native 192 × 208 size.",
+          "reason": "The sixteen looks are directional cells, not sixteen complete animation sets."
+        }
+      ],
+      "decisions": [
+        "User instructions replace all service and Library lifecycle steps; every task-controlled artifact remains in this attempt directory.",
+        "The previous attempt was inspected and preserved; it contained no reusable source art.",
+        "One owner generated all art sequentially with built-in imagegen. Independent reviewers performed read-only visual checks.",
+        "The fixed family reference supplied shared paint style only; the pomegranate retains its own identity without ram features or accessories.",
+        "The character is legless, with flexible attached rind cups, contained seeds, and an intact face band.",
+        "Waiting offers outward with alert eyes; focused work alternates rind folds while planted; review bows inward over visible seeds.",
+        "Look directions anchor the lower cups while the upper face band, whole eye surfaces, and calyx follow gaze. No whole-character turntable.",
+        "Generated PNGs and extracted frames provide editable raster sources. Local credits record the supplied reference without asserting an unspecified outside-art license.",
+        "Motion numbers were treated as drawing guidance, never additional acceptance thresholds.",
+        "Preparation selected blue #0000FF for cleanup; generation requested genuine alpha transparency.",
+        "Bundled preparation used --force to reuse this populated attempt directory without changing the previous attempt.",
+        "Row-wide registration matched approximately 128px body width and the y=184 baseline, leaving room for jumps and safe margins.",
+        "Running-left was generated separately to preserve rind construction.",
+        "Review retains visible seeds beneath raised cup edges; active work visibly closes the cups in sequence.",
+        "Row 10 used a labeled composite containing the complete family and standard contact sheets at original resolution, keeping all required references within five images.",
+        "Observed jump lift is 42px versus the 10–14px guidance, with zero landing-baseline delta. Its clear compression, rise, peak, descent, and landing passed bundled gates without a numeric-target repair.",
+        "Idle upper-silhouette movement is 8px versus the 1–2px breath guidance. Its planted base, blinks, and settled endpoint preserve a calm loop.",
+        "Exactly one despill pass changed 64,549 edge pixels while preserving alpha. Final validation reports no chroma errors or hidden RGB residue.",
+        "Close intermediate directions and the 157.5°→180° continuity outlier remain documented warnings. Three blind reviewers unanimously classified every sampled axis correctly.",
+        "Final export is lossless RGBA WebP, 1536 × 2288, 1,739,598 bytes, with a matching PNG.",
+        "Previews were rendered from the exact final WebP: nine state GIFs, all-state GIF/MP4, native-cell idle-jump-idle GIF/MP4, look-loop GIF/MP4, contact and direction sheets, and six labeled stills. State timing follows bundled durations; look playback uses 180ms per direction.",
+        "The 15 actual image generations comprise 13 planned jobs and two targeted visual repairs. No whole-pet redo or provider refusal occurred. Generated cache paths and local source copies are logged.",
+        "The delivery contact sheet is 768px wide at WebP quality 60; full-resolution PNG sheets remain available. Atlas, compressed contact, and recorded QA/provenance metadata fit below 2,000,000 bytes.",
+        "Independent final visual review found no blocking defect. Similar idle and waiting silhouettes remain a documented limitation, distinguished by eye and head movement; playback artifacts are supplied separately from static review."
+      ],
+      "atlas_sha256": "b125bfe45b409879f3adb88d57e442b79c12913934ed46d3f9b4abb037aaac31",
+      "validators": {
+        "atlas": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/attempt-sobfx_8o/gate/atlas.json",
+        "quality": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/attempt-sobfx_8o/gate/quality.json"
+      },
+      "package": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/attempt-sobfx_8o/package",
+      "bytes": 1962936,
+      "contact": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/attempt-sobfx_8o/package/contact-sheet.webp",
+      "previews": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/attempt-sobfx_8o/previews",
+      "package_hashes": {
+        "contact-sheet.webp": "80e05f85a21674d61ae642966da44a3c690769f5eedce5508dc5f528905e5992",
+        "pet.json": "8ce67d6165588a7b10bcb1e7263602dbc3f8a1e23122f9cbf67f39a9ec96d085",
+        "provenance.json": "16f1037e7dfdd5e2d7101eac8e88f5daed789cbd2c10d3e5b49a9e0e386dcfd5",
+        "spritesheet.webp": "b125bfe45b409879f3adb88d57e442b79c12913934ed46d3f9b4abb037aaac31"
+      },
+      "work": "/root/factory-out/F36/lamp/hatches/set-open-source-enthusiast/attempt-sobfx_8o"
+    },
+    "reasons": [
+      {
+        "seat": "painter",
+        "target": "open-source-enthusiast",
+        "why": "Base animation, row 6, frames 0–5 compared with row 0: waiting keeps much of idle's frontal cup silhouette. Open eyes and questioning turns provide some separation, but the intended outward offering remains subtle."
+      },
+      {
+        "seat": "open-source-enthusiast",
+        "target": "open-source-enthusiast",
+        "why": "Base animation, row 6, frames 0–5 retain nearly the same open cups and upright outline as row 0. Outward waiting depends mainly on small face and head changes; the supplied report acknowledges this limitation."
+      }
+    ]
+  },
+  "readability_notes": {
+    "style_id": "style-12",
+    "rules_sha256": "e06e7bf41b0b6253203f6cd6dacd7d291c7032c0ca8af554d239df33cf6f4b6e",
+    "instruction": "Readability notes from the image jury: make waiting, focused work (running row 7), and review read differently from idle and from each other at 192 × 208. Apply the winning style's supplied attributed drawing notes to this pet, including the reference pet. Carry them into every image prompt. These are drawing guidance; keep the fixed family reference and the v2 contract.",
+    "flags": [
+      {
+        "seat": "painter",
+        "target": "style-12",
+        "why": "Trolleybus, base animation, review row 8 frames 1–4: blinking and small gaze changes carry most of the action while the body and guitar remain still. Inspection is difficult to distinguish from idle. Running/work row 7 frames 1–2 shows concentration, but the work itself is unclear."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 0–5, mainly shows eye changes and a closing smile. Inspection of the seated guitar is not clearly readable; frames 0–3 remain close to idle. This is a state-readability concern, not a charter veto."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Ram, directional looks: row 10, frames 5–7 (292.5–337.5), show closely similar upward head turns. The broad direction reads, but the separate steps are weak."
+      },
+      {
+        "seat": "robber-girl",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 1–4, relies on small eye changes and a blink much like idle row 0, frames 1–3. Inspection of the seated guitar is hard to read."
+      },
+      {
+        "seat": "storybook",
+        "target": "style-12",
+        "why": "Trolleybus, base treatment: review row 8, frames 0–5, mostly shows forward attention and blinking, much like idle row 0. The intended inspection of the seated guitar is not clear in the supplied drawings."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Bulat, base look, running row 7, frames 1–2: lowered eyebrows show concentration, but the seated guitar shows no clear working action. Review row 8, frames 1–5 reads mostly as looking and blinking. Work and inspection are weakly distinguished."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Medea, base look, running row 7 and review row 8, frames 1–4: both use head dips toward the mouth-held herbs. The separate act, check and inspect beats are difficult to distinguish."
+      }
+    ]
+  },
+  "worker_reply": {
+    "status": "complete",
+    "reason": "Saved local candidate to final/spritesheet.webp. The exact WebP passes bundled v2 atlas and pet-quality validators. Required QA reports, sources, PNG export, contact sheets and GIF/MP4 previews are present. Only waiting changed; all other rows remain pixel-identical. No Pets or Library tools were called.",
+    "image_generations": 2,
+    "repairs": [
+      "Regenerated waiting once after the initial strip produced a sparse extracted frame and retained idle-like frontal cups.",
+      "Applied one shared waiting-row scale and translation to preserve relative motion and align the ground baseline."
+    ],
+    "contract_overrides": [
+      {
+        "source": "style.framing",
+        "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+        "replacement": "Rows 0–8 use 6, 8, 8, 4, 5, 8, 6, 6, 6 frames. Retain 8 fps drawing rhythm; map four beats onto available frames: six-frame rows 0 / 1–2 / 3–4 / 5; eight-frame rows 0–1 / 2–3 / 4–5 / 6–7; waving 0 / 1 / 2 / 3; jumping 0 / 1 / 2–3 / 4. Preview playback uses bundled state durations and stable final holds.",
+        "reason": "Fixed v2 frame counts override sixteen-frame rows and two-second duration while preserving action order."
+      },
+      {
+        "source": "style.palette",
+        "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+        "replacement": "One unchanged Warm Oilcloth palette and material treatment. Row 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5. Row 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5. These are clockwise screen gaze/pose directions, 000 up, 090 right, 180 down, 270 left.",
+        "reason": "V2 looks are sixteen directions, not paint variants or additional animation atlases."
+      },
+      {
+        "source": "style.palette",
+        "original": "Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+        "replacement": "Retain the family glass-material rule as taste context only; create no material variants. This pomegranate remains matte opaque paint.",
+        "reason": "Alternate material treatments are outside the v2 directional contract."
+      },
+      {
+        "source": "style.why",
+        "original": "The Painter checks function at native size across all nine rows and sixteen added looks.",
+        "replacement": "Check nine animation rows and sixteen directional cells at native 192 × 208 size.",
+        "reason": "The sixteen looks are directional cells, not sixteen complete animation sets."
+      },
+      {
+        "source": "prepare_pet_run.waiting.output_background",
+        "original": "Output exactly 6 full-body frames in one left-to-right row on flat pure user-selected #0000FF.",
+        "replacement": "Output exactly 6 full-body frames in one left-to-right row on a genuinely transparent background.",
+        "reason": "User requires genuine transparency; blue remains the bundled cleanup key only."
+      }
+    ],
+    "decisions": [
+      "Performed one targeted jury redo of waiting row 6, preserving the approved base, eight other animation rows, cardinals and directional rows.",
+      "All task-controlled artifacts remain in the requested work directory; no service or Library operations occurred.",
+      "One owner made two sequential built-in imagegen calls. The inherited 15-generation history is recorded separately.",
+      "Copied generated sources locally and recorded cache paths, prompts, references, source hashes and selection results in logs/.",
+      "Attached the canonical pomegranate, complete fixed family reference, previous contact sheet and spacing guide to both image jobs.",
+      "Waiting now sustains low attached seed cups extending toward screen-right, with open eyes and one questioning tilt. Seeds remain contained and the face band stays intact.",
+      "Idle retains upright frontal cups; focused work alternates inward folds; review bows inward over seeds.",
+      "Waiting frame 3 briefly glances upper-left during its questioning tilt while the offering remains directed right.",
+      "Used one shared transform for waiting, approximately 140 pixels wide with its base at y=183–184. Extra width accommodates the outward cups.",
+      "Inspected inherited base, idle and rightward gait first; reused approved sources through standard assembly, cardinal extraction, row 9 registration and row 10 assembly.",
+      "Ran bundled preparation, extraction, inspections, assembly, despill, continuity, structural validation and quality validation.",
+      "Ran exactly one despill on the assembled candidate from pre-despill sources; alpha was preserved and 64,846 edge pixels changed.",
+      "Final lossless RGBA WebP is 1536 × 2288 and 1,742,926 bytes. All ten rows outside waiting are pixel-identical to the previous final WebP.",
+      "Idle silhouette movement remains 8 pixels versus 1–2 pixels guidance; jump lift remains 42 pixels versus 10–14 pixels guidance, with zero landing-baseline delta. These preserve the intended actions and pass bundled gates, so no numeric-target repairs were made.",
+      "Waiting has a 6-pixel upper-silhouette range and 1-pixel base variation. Its sustained offering and restrained questioning tilt express the supplied nonnumeric motion guidance.",
+      "Retained reviewed warnings for subtle intermediate directions and the 157.5-to-180 continuity outlier; no cardinal failure was found.",
+      "Independent reviewer spawning failed because the thread rollout was unavailable. The owner inspected native-size ordered frames and direction sheets.",
+      "Recombined and validated inherited blind reviews against their original randomized key because look pixels are unchanged. No new blind verdicts were fabricated.",
+      "Rendered all nine state GIFs, all-state GIF/MP4, native-cell idle-jump-idle GIF/MP4, look-loop GIF/MP4, labeled contact and direction sheets, and six stills from the exact final WebP.",
+      "Retained editable raster sources, extracted frames, PNG export and local credits. The supplied reference license was unspecified; no additional license claim was made.",
+      "Atlas, compressed contact, metadata, provenance and required QA reports total 1,942,672 bytes, below 2 MB."
+    ]
+  },
+  "work": "/root/factory-out/F36/lamp/hatches/redo-open-source-enthusiast/attempt-6jytt8mo",
+  "worker_policy": 3,
+  "contract": "The v2 sprite-sheet contract fixes 192 × 208 cells, eight columns by eleven rows,\none transparent 1536 × 2288 atlas. The nine animation rows (0–8) have these exact frame counts:\nidle 6, running-right 8, running-left 8, waving 4, jumping 5, failed 8, waiting 6,\nrunning 6 (focused work, not locomotion), review 6. Unused cells stay fully transparent.\nRows 9 and 10 hold sixteen look directions, eight per row, clockwise in screen coordinates:\nrow 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5;\nrow 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5.\n000 is up, 090 right, 180 down, 270 left. These are gaze/pose directions with the same\npalette and treatment, not sixteen palette variants, paint treatments or separate animations.\n",
+  "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+  "motion_guidance_difference": null,
+  "contract_overrides": [
+    {
+      "source": "style.framing",
+      "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+      "replacement": "Rows 0–8 use 6, 8, 8, 4, 5, 8, 6, 6, 6 frames. Retain 8 fps drawing rhythm; map four beats onto available frames: six-frame rows 0 / 1–2 / 3–4 / 5; eight-frame rows 0–1 / 2–3 / 4–5 / 6–7; waving 0 / 1 / 2 / 3; jumping 0 / 1 / 2–3 / 4. Preview playback uses bundled state durations and stable final holds.",
+      "reason": "Fixed v2 frame counts override sixteen-frame rows and two-second duration while preserving action order."
+    },
+    {
+      "source": "style.palette",
+      "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+      "replacement": "One unchanged Warm Oilcloth palette and material treatment. Row 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5. Row 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5. These are clockwise screen gaze/pose directions, 000 up, 090 right, 180 down, 270 left.",
+      "reason": "V2 looks are sixteen directions, not paint variants or additional animation atlases."
+    },
+    {
+      "source": "style.palette",
+      "original": "Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+      "replacement": "Retain the family glass-material rule as taste context only; create no material variants. This pomegranate remains matte opaque paint.",
+      "reason": "Alternate material treatments are outside the v2 directional contract."
+    },
+    {
+      "source": "style.why",
+      "original": "The Painter checks function at native size across all nine rows and sixteen added looks.",
+      "replacement": "Check nine animation rows and sixteen directional cells at native 192 × 208 size.",
+      "reason": "The sixteen looks are directional cells, not sixteen complete animation sets."
+    },
+    {
+      "source": "prepare_pet_run.waiting.output_background",
+      "original": "Output exactly 6 full-body frames in one left-to-right row on flat pure user-selected #0000FF.",
+      "replacement": "Output exactly 6 full-body frames in one left-to-right row on a genuinely transparent background.",
+      "reason": "User requires genuine transparency; blue remains the bundled cleanup key only."
+    }
+  ],
+  "decisions": [
+    "Performed one targeted jury redo of waiting row 6, preserving the approved base, eight other animation rows, cardinals and directional rows.",
+    "All task-controlled artifacts remain in the requested work directory; no service or Library operations occurred.",
+    "One owner made two sequential built-in imagegen calls. The inherited 15-generation history is recorded separately.",
+    "Copied generated sources locally and recorded cache paths, prompts, references, source hashes and selection results in logs/.",
+    "Attached the canonical pomegranate, complete fixed family reference, previous contact sheet and spacing guide to both image jobs.",
+    "Waiting now sustains low attached seed cups extending toward screen-right, with open eyes and one questioning tilt. Seeds remain contained and the face band stays intact.",
+    "Idle retains upright frontal cups; focused work alternates inward folds; review bows inward over seeds.",
+    "Waiting frame 3 briefly glances upper-left during its questioning tilt while the offering remains directed right.",
+    "Used one shared transform for waiting, approximately 140 pixels wide with its base at y=183–184. Extra width accommodates the outward cups.",
+    "Inspected inherited base, idle and rightward gait first; reused approved sources through standard assembly, cardinal extraction, row 9 registration and row 10 assembly.",
+    "Ran bundled preparation, extraction, inspections, assembly, despill, continuity, structural validation and quality validation.",
+    "Ran exactly one despill on the assembled candidate from pre-despill sources; alpha was preserved and 64,846 edge pixels changed.",
+    "Final lossless RGBA WebP is 1536 × 2288 and 1,742,926 bytes. All ten rows outside waiting are pixel-identical to the previous final WebP.",
+    "Idle silhouette movement remains 8 pixels versus 1–2 pixels guidance; jump lift remains 42 pixels versus 10–14 pixels guidance, with zero landing-baseline delta. These preserve the intended actions and pass bundled gates, so no numeric-target repairs were made.",
+    "Waiting has a 6-pixel upper-silhouette range and 1-pixel base variation. Its sustained offering and restrained questioning tilt express the supplied nonnumeric motion guidance.",
+    "Retained reviewed warnings for subtle intermediate directions and the 157.5-to-180 continuity outlier; no cardinal failure was found.",
+    "Independent reviewer spawning failed because the thread rollout was unavailable. The owner inspected native-size ordered frames and direction sheets.",
+    "Recombined and validated inherited blind reviews against their original randomized key because look pixels are unchanged. No new blind verdicts were fabricated.",
+    "Rendered all nine state GIFs, all-state GIF/MP4, native-cell idle-jump-idle GIF/MP4, look-loop GIF/MP4, labeled contact and direction sheets, and six stills from the exact final WebP.",
+    "Retained editable raster sources, extracted frames, PNG export and local credits. The supplied reference license was unspecified; no additional license claim was made.",
+    "Atlas, compressed contact, metadata, provenance and required QA reports total 1,942,672 bytes, below 2 MB."
+  ],
+  "resumed_from": null,
+  "atlas_sha256": "e65baf20d2646a4766e3eedb2aab01040ae3a4b269a7b56666e34cd28d0e360a",
+  "validators": {
+    "atlas": "/root/factory-out/F36/lamp/hatches/redo-open-source-enthusiast/attempt-6jytt8mo/gate/atlas.json",
+    "quality": "/root/factory-out/F36/lamp/hatches/redo-open-source-enthusiast/attempt-6jytt8mo/gate/quality.json"
+  },
+  "image_generations_source": "worker report; raw events and generation logs retained",
+  "redo_count": 1,
+  "local_only": true,
+  "contact_preview": {
+    "width": 900,
+    "height": 1482,
+    "reason": "fit package budget without changing validated atlas bytes"
+  }
+}

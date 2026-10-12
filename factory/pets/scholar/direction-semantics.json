@@ -1,0 +1,121 @@
+{
+  "atlas": "/root/factory-out/F36/lamp/hatches/redo-scholar/attempt-q15j4zrc/final/spritesheet.webp",
+  "sha256": "76077a95bf847119fced4ef0406b33c00203f37d1cf99c0abc3fe99afbe0760c",
+  "reviewer": "primary labeled normal-size review; inherited evidence rechecked on pixel-identical preserved directions",
+  "directions": [
+    {
+      "label": "000",
+      "expected": "up",
+      "observed": "up",
+      "verdict": "pass",
+      "evidence": "Centered spectacle bridge and broadly frontal eyes; both pupils touch the upper eye arcs with cream below. Broad base stays planted."
+    },
+    {
+      "label": "022.5",
+      "expected": "up-right",
+      "observed": "up-right",
+      "verdict": "warning",
+      "evidence": "Spectacle plane shifts right and the smaller far eye approaches the right contour; both pupils remain above eye centers. Step from 045 is subtle."
+    },
+    {
+      "label": "045",
+      "expected": "up-right",
+      "observed": "up-right",
+      "verdict": "warning",
+      "evidence": "Rightward spectacle-plane yaw with both pupils high-right and cream below-left. Similar to022.5 but consistent in the upper-right quadrant."
+    },
+    {
+      "label": "067.5",
+      "expected": "up-right",
+      "observed": "up-right",
+      "verdict": "pass",
+      "evidence": "Upper face and bridge point farther right; both pupils remain above and right of eye centers. The quill follows the rim without detaching."
+    },
+    {
+      "label": "090",
+      "expected": "right",
+      "observed": "right",
+      "verdict": "pass",
+      "evidence": "Face and spectacle bridge wrap toward the right contour; pupils reach right edges at roughly eye equators. Both eyes remain visible."
+    },
+    {
+      "label": "112.5",
+      "expected": "down-right",
+      "observed": "down-right",
+      "verdict": "pass",
+      "evidence": "Both pupils sit low-right in their cream eyes, with cream above-left; spectacles descend on the right-aimed face. Repaired downward component is visible."
+    },
+    {
+      "label": "135",
+      "expected": "down-right",
+      "observed": "down-right",
+      "verdict": "pass",
+      "evidence": "Face remains yawed right while both pupils sink near lower-right eye rims. Quill bows downward with the upper body."
+    },
+    {
+      "label": "157.5",
+      "expected": "down-right",
+      "observed": "down-right",
+      "verdict": "pass",
+      "evidence": "Pronounced low gaze in both spectacle rings with face still directed right; attached feather droops over the right rim."
+    },
+    {
+      "label": "180",
+      "expected": "down",
+      "observed": "down",
+      "verdict": "pass",
+      "evidence": "Broadly frontal spectacle bridge and both pupils at the bottoms of the eyes. Face lowers while base remains planted."
+    },
+    {
+      "label": "202.5",
+      "expected": "down-left",
+      "observed": "down-left",
+      "verdict": "pass",
+      "evidence": "Spectacles shift slightly left; both pupils sit below-left of eye centers. Cream space remains above the pupils."
+    },
+    {
+      "label": "225",
+      "expected": "down-left",
+      "observed": "down-left",
+      "verdict": "pass",
+      "evidence": "Face-plane yaw is left, with the far eye against the left contour; both pupils remain near lower-left rims."
+    },
+    {
+      "label": "247.5",
+      "expected": "down-left",
+      "observed": "down-left",
+      "verdict": "warning",
+      "evidence": "Both spectacle rings remain visible; leftward face placement and lower-left pupils retain both required axes. Neighbor225 is similar."
+    },
+    {
+      "label": "270",
+      "expected": "left",
+      "observed": "left",
+      "verdict": "pass",
+      "evidence": "Face and bridge wrap left, and pupils sit at left sides of both eyes near their equators. No missing spectacle or mirrored quill."
+    },
+    {
+      "label": "292.5",
+      "expected": "up-left",
+      "observed": "up-left",
+      "verdict": "warning",
+      "evidence": "Leftward spectacle plane and pupils above-left of eye centers indicate up-left. Upward component is restrained compared with315."
+    },
+    {
+      "label": "315",
+      "expected": "up-left",
+      "observed": "up-left",
+      "verdict": "pass",
+      "evidence": "Both pupils lie high-left with cream below-right; leftward face plane remains attached above the anchored base."
+    },
+    {
+      "label": "337.5",
+      "expected": "up-left",
+      "observed": "up-left",
+      "verdict": "pass",
+      "evidence": "Upper-left gaze becomes more upright with pupils high-left and feather standing taller; shift to frontal000 closes the loop without direction reversal."
+    }
+  ],
+  "continuity_review": "Measured center-shift and pixel-difference warnings reflect spectacle yaw and attached feather pitch. The base remains registered, palette fixed, all eyes and attachments visible. No labeled quadrant reversal or clipping observed; neighboring near-cardinal steps can be subtle. All sixteen final direction cells are pixel-identical to the accepted prior atlas and were rechecked on the final labeled sheet. Three fresh independent blind reviewers agree on all tested axes.",
+  "inherited_evidence_from": "/root/factory-out/F36/lamp/hatches/set-scholar/attempt-uefsta4s/final/spritesheet.webp"
+}

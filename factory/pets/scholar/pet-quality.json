@@ -1,0 +1,74 @@
+{
+  "ok": true,
+  "atlas": "/root/factory-out/F36/lamp/hatches/redo-scholar/attempt-q15j4zrc/final/spritesheet.webp",
+  "encoded_bytes": 1346414,
+  "sha256": "76077a95bf847119fced4ef0406b33c00203f37d1cf99c0abc3fe99afbe0760c",
+  "jump": {
+    "idle_baseline": 199,
+    "jump_baselines": [
+      201,
+      185,
+      173,
+      193,
+      201
+    ],
+    "airborne_lift_pixels": 28,
+    "landing_delta_pixels": 2
+  },
+  "look_registration": {
+    "neutral_center_x": 96.0,
+    "look_centers_x": [
+      92.0,
+      93.0,
+      96.0,
+      104.0,
+      105.5,
+      107.5,
+      104.5,
+      104.0,
+      101.5,
+      102.0,
+      103.0,
+      103.0,
+      100.5,
+      103.0,
+      103.0,
+      94.5
+    ],
+    "look_widths": [
+      124,
+      130,
+      136,
+      152,
+      155,
+      159,
+      151,
+      152,
+      143,
+      146,
+      148,
+      150,
+      147,
+      152,
+      152,
+      135
+    ],
+    "maximum_center_drift_pixels": 11.5,
+    "maximum_width_ratio": 1.282258064516129
+  },
+  "errors": [],
+  "warnings": [
+    "look direction 022.5 accepted with a reviewed warning",
+    "look direction 045 accepted with a reviewed warning",
+    "look direction 247.5 accepted with a reviewed warning",
+    "look direction 292.5 accepted with a reviewed warning",
+    "045->067.5 diff is a local outlier (2346 pixels vs neighbor average 1175)",
+    "045->067.5 center shift is high (8.1px)",
+    "090->112.5 diff is a local outlier (2287 pixels vs neighbor average 1522)",
+    "157.5->180 diff is a local outlier (3103 pixels vs neighbor average 2043)",
+    "157.5->180 center shift is high (8.9px)",
+    "315->337.5 center shift is high (9.0px)",
+    "337.5->000 diff is a local outlier (3674 pixels vs neighbor average 2286)",
+    "337.5->000 center shift is high (10.3px)"
+  ]
+}

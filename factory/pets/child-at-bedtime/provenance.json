@@ -1,0 +1,231 @@
+{
+  "key": "set-child-at-bedtime",
+  "pet": "child-at-bedtime",
+  "model": "gpt-6-astra",
+  "effort": "high",
+  "style": {
+    "name": "Warm Oilcloth Family",
+    "preset": "painterly",
+    "style_notes": "Paint each creature as something loved: broad, flat color, sincere eyes and a slight wobble in the edge. Keep marks few and steady between frames. Dark paint belongs inside the creature; the surrounding cell stays clear. Glass keeps its clear heart and soft rim, while ink gives solid bodies their weight. Warmth comes from care, not a shine added to everything.",
+    "framing": "Use transparent 192 × 208 cells. Keep every pose inside x=16–176 and y=16–192, with standing feet or body base at y=184. Reserve room above for jumps and beside the body for waves. Fit tall creatures by gently bending their posture, keeping their defining shape. Lock scale, face placement and carried objects across frames. Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid. Keep motion within the cell; movement across the screen belongs to the player. One-shot rows finish in a stable pose. Idle and waiting use small movements and long holds.",
+    "palette": "Core paint: soot #262321, cream #F1DFC1, ochre #C59A46, rust #AC5740, herb green #65764C and blue #557589. Preserve each seed's own colors: the trolleybus stays blue, the ram gold, the ermine white and the droplet clear. Lights stay within their existing flame, lantern, window or body. V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+    "line": "Solid bodies use irregular ink edges about 3 pixels wide, with essential inner marks at least 2 pixels wide. Keep important gaps at least 4 pixels open. Suggest texture with a few broad marks fixed to the body, never changing noise. The glass droplet is the deliberate exception: use a broad, soft, partly open rim and a clear center, without a hard black enclosure. The magnifying glass has an ink frame and a clear lens. Family likeness comes from shared proportions, restraint and timing, rather than forcing glass to become opaque ink.",
+    "boundaries": "All twenty seeds remain themselves. Keep the magnifying glass's raised eyebrow and searching tilt; the ram's gold fleece, herb sprig and attached twig that greens with happiness; the hut's chicken legs, kerchief roof and door broom; the sleepy mushroom's moss, tarragon and herb basket; the crescent's lantern; the still white ermine's distinct frost crown; the bold calf's embroidered felt blanket and hoof stamp; the book's flapping covers and changing ink pictures; the determined brush's legs and paint jar; the thoughtful inkpot's spectacles and tucked quill; the quiet palette's paint spots and brush tail; the curled lamb's striped cap and candle; the calm clear droplet; the gentle giraffe's long neck and sincere eyes; the precise bee's white collar and pressed flower; the generous pomegranate's opening rind and visible seeds; the courteous wooden soldier's back key and salute; the tuning fork's poised turns; the blue trolleybus's warm windows and guitar visible on its seat; and the clay lamp's grapevine handle. Use new poses, markings and patterns. Existing belongings remain attached, held or securely contained. Do not add shared herbs, keys, lamps, costumes or ornaments to other seeds. Sweeping leaves no footprint marks; frost appears only on the crown or feet; underlining and writing become small gestures without drawn words; shared seeds stay cupped in the open rind. Humming and ringing read through posture without sound symbols. No floating effects, scene background, text, speech bubbles, shadows or new review props. Review uses only the creature and its existing belongings. All pets and sheets remain local. Paul waived approval steps and retains a later veto.",
+    "rows": {
+      "idle": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+      "running-right": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+      "running-left": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+      "waving": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+      "jumping": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+      "failed": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+      "waiting": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+      "running": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+      "review": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once."
+    },
+    "why": "I want each pet to look cared for, with its own work and temper still visible. The dark oilcloth feeling lives in the painted body and can meet a dark app surface without baking a background into the sprite. No veto is proposed. Originality may veto only in a jury and never ranks taste. The Painter checks function at native size across all nine rows and sixteen added looks. Any function flag must name the pet, look, row and frame, and describe visible evidence such as a vanished eyebrow, a clipped crown or two actions with the same silhouette. These are checks to perform, not defects claimed without images. Any later charter veto must quote the exact guards-against line and give a concrete reason."
+  },
+  "brief": {
+    "display_name": "Lullaby",
+    "description": "A sleepy lamb in a striped nightcap, holding a tiny candle and humming through gentle body movements.",
+    "brief": "Lullaby is a sleepy lamb who makes a quiet moment feel welcoming. Its cream fleece forms a soft, rounded body beneath a blue-and-cream striped nightcap. Sincere dark eyes, small folded ears and a relaxed mouth keep its face gentle even when something goes wrong. Broad, flat paint and a slightly uneven ink edge give it the warmth of a well-loved picture book.\n\nAt rest, the lamb curls up while holding its tiny candle upright, forward and clear of its fleece. Its signature lullaby appears through a slow chin sway and soft breathing; no notes or sound symbols appear. The little flame stays within its painted shape, without a halo, smoke or cast light.\n\nThis lamb is drowsy but willing. It trots with careful short steps, greets with its free forehoof and gathers courage for a small hop. Disappointment lowers its ears and gaze without tears, alarm or injury. Waiting brings an upright, open-eyed pause; focused work means smoothing its own nightcap; review means visibly inspecting the cap edge before a satisfied nod.\n\nKeep the striped cap and candle present and secure throughout. Add no belongings, scenery, floating effects, text, speech bubbles or shadows. Its emotional range stays warm, curious, mildly disappointed and quietly pleased, always inviting another look.",
+    "pet_notes": "Cream fleece has three broad scallops, a small ochre muzzle and soot eyes with clear surrounding cream. The blue-and-cream striped nightcap bends close to one ear, with no added ornament. Short legs and rounded hooves support a compact silhouette. A tiny ochre candle stays upright in one forehoof, its small rust-and-cream flame separated from the fleece. Texture marks remain few and fixed.",
+    "rows": {
+      "idle": "Across 6 frames, curl low around tucked legs, hold the candle forward and upright, blink slowly, sway the chin as if humming and return to a gentle breathing hold.",
+      "running-right": "Across 8 frames, face right and trot in place through alternating short steps, with the cap bending gently and the candle held steadily clear of the fleece.",
+      "running-left": "Across 8 frames, redraw the lamb facing left through the same careful trot, preserving the candle's holding hoof and the cap's attachment instead of mirroring the finished art.",
+      "waving": "Across 4 frames, turn toward the viewer, lift the free forehoof, make one broad greeting sweep and lower it into a stable pose while the candle stays upright.",
+      "jumping": "Across 5 frames, crouch, rise in a small hop, reach the peak, land softly and settle with the candle secure and no trails or landing marks.",
+      "failed": "Across 8 frames, stop standing, let the ears and shoulders sink, hold an open-eyed downward gaze and recover slightly without curling into the sleepy idle silhouette.",
+      "waiting": "Across 6 frames, sit tall with eyes open and the free forehoof resting low, look outward toward the expected action, make one questioning ear-and-head tilt and hold without pacing.",
+      "running": "Across 6 frames, remain planted, raise the free forehoof to the nightcap, smooth its folded edge with a clear stroke, check the fold and reset while keeping the candle upright.",
+      "review": "Across 6 frames, become still with the free forehoof lowered, turn and tip the head to bring the existing cap edge into view, hold the inspection and give one small nod before settling."
+    },
+    "do_not_resemble": [
+      "No franchise look-alike, logo, real-person likeness or copied artwork."
+    ],
+    "why": "As The Child at Bedtime, I chose soft shapes, careful movement and recoverable disappointment to preserve wonder and warmth. I assume the existing candle remains lit and the lamb can support itself while one forehoof holds it; no holder or other prop is added. Codex's technical decisions follow v2: one local transparent PNG atlas, 1536 × 2288, with eight columns and eleven rows of 192 × 208 cells. Rows 0–8 use 6, 8, 8, 4, 5, 8, 6, 6 and 6 frames respectively; unused cells remain fully transparent. Retain 8 fps as the sheet's playback guidance and distribute its four beats across the required frame counts. Keep poses within x=16–176 and y=16–192, with grounded feet or body base at y=184. Use roughly 3-pixel outer ink edges, essential inner marks at least 2 pixels wide and important gaps at least 4 pixels open. Rows 9–10 contain single gaze-and-pose drawings, not treatment variants: row 9 uses 000, 022.5, 045, 067.5, 090, 112.5, 135 and 157.5; row 10 uses 180, 202.5, 225, 247.5, 270, 292.5, 315 and 337.5, clockwise with 000 up and 090 right. Head angle, muzzle direction and ear placement should distinguish adjacent directions while palette and paint handling stay fixed. The Painter's supplied readability guidance informs the separate curled idle, upright outward waiting, visible cap-smoothing work and still cap inspection; review must show a head turn rather than only eye changes. No images were supplied for this draft, so these are drawing requirements, not verified results or function defects. Only skill validators gate a rendered pet; motion-guidance differences belong in provenance. No veto is proposed, and Originality does not rank taste. Paul waived approval steps, retains a later veto, and all pets remain local."
+  },
+  "reference": "/root/factory-out/F36/lamp/hatches/pilot-style-12-medea/attempt-pqzhqrsw/package/contact-sheet.webp",
+  "reference_sha256": "71ec194ada7b533702d84934c10a555e3f60843ccf7224e73ec3c643509a6604",
+  "redo": null,
+  "readability_notes": {
+    "style_id": "style-12",
+    "rules_sha256": "e06e7bf41b0b6253203f6cd6dacd7d291c7032c0ca8af554d239df33cf6f4b6e",
+    "instruction": "Readability notes from the image jury: make waiting, focused work (running row 7), and review read differently from idle and from each other at 192 × 208. Apply the winning style's supplied attributed drawing notes to this pet, including the reference pet. Carry them into every image prompt. These are drawing guidance; keep the fixed family reference and the v2 contract.",
+    "flags": [
+      {
+        "seat": "painter",
+        "target": "style-12",
+        "why": "Trolleybus, base animation, review row 8 frames 1–4: blinking and small gaze changes carry most of the action while the body and guitar remain still. Inspection is difficult to distinguish from idle. Running/work row 7 frames 1–2 shows concentration, but the work itself is unclear."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 0–5, mainly shows eye changes and a closing smile. Inspection of the seated guitar is not clearly readable; frames 0–3 remain close to idle. This is a state-readability concern, not a charter veto."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Ram, directional looks: row 10, frames 5–7 (292.5–337.5), show closely similar upward head turns. The broad direction reads, but the separate steps are weak."
+      },
+      {
+        "seat": "robber-girl",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 1–4, relies on small eye changes and a blink much like idle row 0, frames 1–3. Inspection of the seated guitar is hard to read."
+      },
+      {
+        "seat": "storybook",
+        "target": "style-12",
+        "why": "Trolleybus, base treatment: review row 8, frames 0–5, mostly shows forward attention and blinking, much like idle row 0. The intended inspection of the seated guitar is not clear in the supplied drawings."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Bulat, base look, running row 7, frames 1–2: lowered eyebrows show concentration, but the seated guitar shows no clear working action. Review row 8, frames 1–5 reads mostly as looking and blinking. Work and inspection are weakly distinguished."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Medea, base look, running row 7 and review row 8, frames 1–4: both use head dips toward the mouth-held herbs. The separate act, check and inspect beats are difficult to distinguish."
+      }
+    ]
+  },
+  "resume": {
+    "action": "provider_retry",
+    "previous_result": "/root/factory-out/F36/lamp/hatches/set-child-at-bedtime/result.json",
+    "previous_failure": "codex exec exited 1; see /root/factory-out/F36/lamp/hatches/set-child-at-bedtime/attempt-5ykb57sh/stderr.txt",
+    "fresh_attempt_reason": null,
+    "fresh_attempts": 0,
+    "provider_stop": [
+      {
+        "log": "/root/factory-out/F36/lamp/hatches/set-child-at-bedtime/attempt-5ykb57sh/codex.jsonl",
+        "line": 3,
+        "code": "",
+        "message": "You’ve hit your usage limit. Visit https://chatgpt.com/settings/usage to purchase more credits or try again at Oct 18th, 2026 4:12 AM."
+      },
+      {
+        "log": "/root/factory-out/F36/lamp/hatches/set-child-at-bedtime/attempt-5ykb57sh/codex.jsonl",
+        "line": 4,
+        "code": "",
+        "message": "You’ve hit your usage limit. Visit https://chatgpt.com/settings/usage to purchase more credits or try again at Oct 18th, 2026 4:12 AM."
+      }
+    ]
+  },
+  "worker_reply": {
+    "status": "complete",
+    "reason": "Created final/spritesheet.webp locally. Exact WebP passes bundled atlas, quality, and blind-direction validators. Required reports and previews are present. Atlas, compressed contact sheet, and metadata total 1,160,963 bytes.",
+    "image_generations": 19,
+    "repairs": [
+      "Waving repair 1: remove duplicated grounded foreleg.",
+      "Waving repair 2: use seated support on two hind hooves.",
+      "Waiting repair 1: lower greeting-like forehoof and preserve cap attachment.",
+      "Running repair 1: correct duplicated foreleg using seated anatomy reference.",
+      "Running repair 2: prevent cap-side switching during the check beat.",
+      "Cardinal extraction repair: regroup complete connected poses and add transparent spacing without redrawing.",
+      "Look row 9 repair 1: correct reversed horizontal direction using the approved right cardinal.",
+      "Encoding repair: replace lossy WebP with palette-reduced, lossless WebP to eliminate hidden RGB and meet the size budget."
+    ],
+    "contract_overrides": [
+      {
+        "source": "style.framing",
+        "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+        "replacement": "Rows 0–8 contain 6,8,8,4,5,8,6,6,6 frames. Four beats map to frames: six-frame rows 0 / 1–2 / 3–4 / 5; eight-frame rows 0–1 / 2–3 / 4–5 / 6–7; waving 0 / 1 / 2 / 3; jumping 0 / 1 / 2–3 / 4. 8 fps remains drawing rhythm guidance, with shorter cycles; previews use bundled state durations.",
+        "reason": "V2 exact frame counts override sixteen-frame/two-second rows; preserve action beats."
+      },
+      {
+        "source": "style.palette",
+        "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+        "replacement": "Rows 9 and 10 hold sixteen single gaze/pose directions clockwise: 000,022.5,045,067.5,090,112.5,135,157.5;180,202.5,225,247.5,270,292.5,315,337.5. 000 up,090 right,180 down,270 left. Use identical palette and paint handling throughout.",
+        "reason": "V2 directions replace paint-treatment looks and extra animation sets."
+      },
+      {
+        "source": "brief.why",
+        "original": "one local transparent PNG atlas, 1536 × 2288",
+        "replacement": "one local transparent WebP atlas, 1536 × 2288, with intermediate PNGs retained",
+        "reason": "User explicitly requires final/spritesheet.webp and a combined package under 2 MB."
+      }
+    ],
+    "decisions": [
+      "All artifacts remain local. No Pets MCP, Library, upload, activation, or approval calls occurred.",
+      "Previous attempt contained no reusable source art and remains unchanged.",
+      "One worker generated sequentially using built-in imagegen; three independent reviewers performed read-only visual checks.",
+      "The fixed family reference supplies style only. Lullaby retains cream fleece, striped blue-and-cream cap, and candle without ram horns or herbs.",
+      "Keep the candle lit and secure. Generate leftward travel separately to preserve asymmetric belongings.",
+      "Use genuine transparent sources and magenta as the cleanup key to avoid the blue cap.",
+      "Idle curls low; waiting sits tall with open eyes; work strokes the cap; review lowers the hoof and turns toward the cap edge.",
+      "Failed includes a brief closed-eye pause but remains standing with disappointed brows and lowered ears, distinct from curled idle.",
+      "The generated cardinals use canonical standing support rather than the initially planned seat. Preserve that anchored body throughout the directional sweep.",
+      "Head pitch, yaw, muzzle, and attached ears express gaze; the torso and candle stay anchored.",
+      "Combine the complete family and standard contact sheets into one labeled reference to retain all required visuals within five references.",
+      "Use bundled extraction, inspections, assembly, continuity, QA, and exactly one despill pass.",
+      "Lossless full-color WebP exceeded the budget. Lossy quality-90 WebP failed hidden-RGB validation. RGB-only quantization remained too large. Joint 256-color RGBA quantization followed by lossless WebP passed validation and met the budget.",
+      "Jump lift measures 45 pixels versus 10–14 pixels of drawing guidance; landing differs from the idle baseline by 7 pixels. The hop remains readable and passes the bundled gate; no repair targeted those numbers.",
+      "Bundled extraction places idle baseline at y=194 and jump landing at y=201 versus the y=184 drawing guide. Cells remain unclipped and landing validation passes.",
+      "Idle silhouette movement includes head and cap sway, so it is not a direct measurement of the 1–2 pixel breathing target. Observations are saved in qa/motion-guidance-observed.json.",
+      "Accept reviewed warnings for subtle upper-right steps and broader transitions at 000→022.5 and 157.5→180. All cardinals and quadrants remain correct.",
+      "Three blind reviewers unanimously classified all 28 tested axes correctly. The bundled blind validator reports no errors or warnings.",
+      "Independent final review found intact faces and belongings, clear jumping, and plausible non-locomotion focused work.",
+      "Render previews from the exact final WebP: nine state GIFs, all-state GIF/MP4, idle-jump-idle GIF/MP4, look-loop GIF/MP4, and four timestamped motion strips.",
+      "Archive all 19 generated sources, cache paths, prompts, references, checksums, and repair history locally under sources/ and logs/. No whole-pet redo occurred.",
+      "Final atlas is 602,310 bytes. SHA-256: 1885b30bf5f1c1d32ca2e205251ab2295287959f78fc1d1009f940697a3f13d8."
+    ]
+  },
+  "work": "/root/factory-out/F36/lamp/hatches/set-child-at-bedtime/attempt-dyew5o96",
+  "worker_policy": 3,
+  "contract": "The v2 sprite-sheet contract fixes 192 × 208 cells, eight columns by eleven rows,\none transparent 1536 × 2288 atlas. The nine animation rows (0–8) have these exact frame counts:\nidle 6, running-right 8, running-left 8, waving 4, jumping 5, failed 8, waiting 6,\nrunning 6 (focused work, not locomotion), review 6. Unused cells stay fully transparent.\nRows 9 and 10 hold sixteen look directions, eight per row, clockwise in screen coordinates:\nrow 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5;\nrow 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5.\n000 is up, 090 right, 180 down, 270 left. These are gaze/pose directions with the same\npalette and treatment, not sixteen palette variants, paint treatments or separate animations.\n",
+  "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+  "motion_guidance_difference": null,
+  "contract_overrides": [
+    {
+      "source": "style.framing",
+      "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+      "replacement": "Rows 0–8 contain 6,8,8,4,5,8,6,6,6 frames. Four beats map to frames: six-frame rows 0 / 1–2 / 3–4 / 5; eight-frame rows 0–1 / 2–3 / 4–5 / 6–7; waving 0 / 1 / 2 / 3; jumping 0 / 1 / 2–3 / 4. 8 fps remains drawing rhythm guidance, with shorter cycles; previews use bundled state durations.",
+      "reason": "V2 exact frame counts override sixteen-frame/two-second rows; preserve action beats."
+    },
+    {
+      "source": "style.palette",
+      "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+      "replacement": "Rows 9 and 10 hold sixteen single gaze/pose directions clockwise: 000,022.5,045,067.5,090,112.5,135,157.5;180,202.5,225,247.5,270,292.5,315,337.5. 000 up,090 right,180 down,270 left. Use identical palette and paint handling throughout.",
+      "reason": "V2 directions replace paint-treatment looks and extra animation sets."
+    },
+    {
+      "source": "brief.why",
+      "original": "one local transparent PNG atlas, 1536 × 2288",
+      "replacement": "one local transparent WebP atlas, 1536 × 2288, with intermediate PNGs retained",
+      "reason": "User explicitly requires final/spritesheet.webp and a combined package under 2 MB."
+    }
+  ],
+  "decisions": [
+    "All artifacts remain local. No Pets MCP, Library, upload, activation, or approval calls occurred.",
+    "Previous attempt contained no reusable source art and remains unchanged.",
+    "One worker generated sequentially using built-in imagegen; three independent reviewers performed read-only visual checks.",
+    "The fixed family reference supplies style only. Lullaby retains cream fleece, striped blue-and-cream cap, and candle without ram horns or herbs.",
+    "Keep the candle lit and secure. Generate leftward travel separately to preserve asymmetric belongings.",
+    "Use genuine transparent sources and magenta as the cleanup key to avoid the blue cap.",
+    "Idle curls low; waiting sits tall with open eyes; work strokes the cap; review lowers the hoof and turns toward the cap edge.",
+    "Failed includes a brief closed-eye pause but remains standing with disappointed brows and lowered ears, distinct from curled idle.",
+    "The generated cardinals use canonical standing support rather than the initially planned seat. Preserve that anchored body throughout the directional sweep.",
+    "Head pitch, yaw, muzzle, and attached ears express gaze; the torso and candle stay anchored.",
+    "Combine the complete family and standard contact sheets into one labeled reference to retain all required visuals within five references.",
+    "Use bundled extraction, inspections, assembly, continuity, QA, and exactly one despill pass.",
+    "Lossless full-color WebP exceeded the budget. Lossy quality-90 WebP failed hidden-RGB validation. RGB-only quantization remained too large. Joint 256-color RGBA quantization followed by lossless WebP passed validation and met the budget.",
+    "Jump lift measures 45 pixels versus 10–14 pixels of drawing guidance; landing differs from the idle baseline by 7 pixels. The hop remains readable and passes the bundled gate; no repair targeted those numbers.",
+    "Bundled extraction places idle baseline at y=194 and jump landing at y=201 versus the y=184 drawing guide. Cells remain unclipped and landing validation passes.",
+    "Idle silhouette movement includes head and cap sway, so it is not a direct measurement of the 1–2 pixel breathing target. Observations are saved in qa/motion-guidance-observed.json.",
+    "Accept reviewed warnings for subtle upper-right steps and broader transitions at 000→022.5 and 157.5→180. All cardinals and quadrants remain correct.",
+    "Three blind reviewers unanimously classified all 28 tested axes correctly. The bundled blind validator reports no errors or warnings.",
+    "Independent final review found intact faces and belongings, clear jumping, and plausible non-locomotion focused work.",
+    "Render previews from the exact final WebP: nine state GIFs, all-state GIF/MP4, idle-jump-idle GIF/MP4, look-loop GIF/MP4, and four timestamped motion strips.",
+    "Archive all 19 generated sources, cache paths, prompts, references, checksums, and repair history locally under sources/ and logs/. No whole-pet redo occurred.",
+    "Final atlas is 602,310 bytes. SHA-256: 1885b30bf5f1c1d32ca2e205251ab2295287959f78fc1d1009f940697a3f13d8."
+  ],
+  "resumed_from": "/root/factory-out/F36/lamp/hatches/set-child-at-bedtime/result.json",
+  "atlas_sha256": "1885b30bf5f1c1d32ca2e205251ab2295287959f78fc1d1009f940697a3f13d8",
+  "validators": {
+    "atlas": "/root/factory-out/F36/lamp/hatches/set-child-at-bedtime/attempt-dyew5o96/gate/atlas.json",
+    "quality": "/root/factory-out/F36/lamp/hatches/set-child-at-bedtime/attempt-dyew5o96/gate/quality.json"
+  },
+  "image_generations_source": "worker report; raw events and generation logs retained",
+  "redo_count": 0,
+  "local_only": true
+}
