@@ -17,8 +17,8 @@ one seat, Originality, can only veto. The big creative choices stay with people:
 people he invites. A person's choice always wins over the AI's, and Claude and Codex make many
 smaller calls along the way.
 
-In the app, the Marginarium is a section of its own: the book in the gallery's toolbar, where
-Pip says hello, and where each guardian's pet sits beside the words it said. It is still being
+In the app, the Marginarium is a section of its own: turn it on in Settings and it is the book in
+the gallery's toolbar, where Pip says hello and each guardian's pet sits beside the words it said. It is still being
 written. These are its first pages: one passage from each chapter, quoted as written.
 
 ## 1. The Marginarium
