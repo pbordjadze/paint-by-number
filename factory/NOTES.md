@@ -269,6 +269,18 @@ helpful, beautiful.
   `codex exec`, each pet a normal Codex session. (Giving a Codex session network access and write
   access to Codex's own folder, so it could launch the seats itself, was blocked as unsafe.)
 
+## Paul's point 13: a Marginarium that feels alive (Oct 12)
+
+Paul's vision, not to build yet:
+- The Marginarium lists every member of the Lamp, each with its pet (issue #16's members page:
+  name, belief, Georgian thread, pet).
+- In a chapter, where a guardian says something, its pet appears beside the words.
+- Sometimes a pet just wanders through, so the book feels inhabited.
+- New animations for the pets we have (good walks first), so they can move around the screen.
+- The pets' art is credited in the app as drawn by Codex with an OpenAI image model (Paul
+  approved; OpenAI's Terms of Use give the output to its user and forbid presenting it as
+  human-made).
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
