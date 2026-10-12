@@ -8790,13 +8790,13 @@
       }
     },
     "lamp.dinotopia.petCaption" : {
-      "comment" : "The Marginarium, Who is Who: the caption of Dino's egg, standing in for a pet that hasn't hatched",
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Dino",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino's egg: its pet hasn't been drawn yet"
+            "value" : "Dino, the long-necked dinosaur Paul hatched in Codex"
           }
         }
       }

@@ -98,8 +98,9 @@ synchronized folder would bundle it into the app.
   plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
   Colophon, Codex is Pip, the Moon has none), and a test fails on an unmapped speaker. Chapter 6,
   The Pets We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
-  nineteen guardians' pets, bundled as `Resources/pet-<id>.webp` within the budget in
-  `docs/marginarium-pets.md`; the Moon's pet is withheld. `SpriteAtlasTests` checks a generated
+  nineteen guardians' pets the factory drew, bundled as `Resources/pet-<id>.webp` within the
+  budget in `docs/marginarium-pets.md` with Dino's (Paul's own Codex pet, shown in Who's Who);
+  the Moon's pet is withheld. `SpriteAtlasTests` checks a generated
   WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
   `MarginariumReaderUITests` opens chapters, pets and appendices. Who's Who
   (`MarginariumWhosWhoView`, from the contents page's New here? box) shows `MarginariumCast`: the

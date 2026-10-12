@@ -12,8 +12,9 @@ Two More Pets embeds them with the contents page's captions. Pip's imagesets (`p
 from atlas row 0, `pip-wave-0...3` from row 3, 192 × 208 at the same 2x slot) are Pip's face
 as Codex redrew it, so its lid-lift tap and timings are unchanged.
 
-The nineteen guardians' pets are bundled as `pet-<id>.webp` (the table below); chapter 6 shows
-each in a pet block, and chapter 1's margin notes show them beside the words (next section).
+The guardians' pets are bundled as `pet-<id>.webp` (the table below): the nineteen the factory
+drew, which chapter 6 shows each in a pet block, and Dino's, which Paul made in the Codex app
+before Dino joined the Lamp (Who's Who shows it, `MarginariumCast`), and chapter 1's margin notes show them beside the words (next section).
 The Moon's pet is withheld: no `pet-moon.webp` ships and its notes show no pet.
 To add a future atlas pet, place its sheet in
 `App/PaintByNumber/Resources/pet-<id>.webp`, with a lowercase alphanumeric/hyphen identifier,
@@ -66,7 +67,7 @@ arrives, so a note doesn't change shape.
 
 ## Bundled size budget
 
-Budget: **1 MiB (1,048,576 bytes) encoded per guardian and 20 MiB total** for the nineteen,
+Budget: **1 MiB (1,048,576 bytes) encoded per guardian and 20 MiB total** for all of them,
 kept as WebP resources instead of expanding every frame into an imageset. This disk budget is
 separate from the decoded-memory cache limit above. `BundledPetsTests` checks both limits on
 the shipped files, that every sheet loads through `SpriteAtlas` with the v2 contract, and that
@@ -97,6 +98,7 @@ colour fringe; the white ermine is among the five sheets kept lossless.
 | `bible-school-teacher` | `a657aa4af6dd65c6c17d83c515b6d5d477a6734265f494071ee714f40f0fa5f3` | 798,748 | lossy WebP q100 |
 | `bulat-okudzhava` | `a81a4ab70d2c28edff5717a6c1f6ea65319887dd6bc16de0a08cb663704b6eb3` | 976,192 | lossy WebP q100 |
 | `child-at-bedtime` | `1885b30bf5f1c1d32ca2e205251ab2295287959f78fc1d1009f940697a3f13d8` | 602,310 | lossless, copied unchanged |
+| `dinotopia` | `2352a8abf74dead6198d1fa15e9e8206b7105949b6c0e135550970cd4f4d5bc7` | 647,146 | lossy WebP q100 |
 | `emily-dickinson` | `2fbcb5368fdfa4e69617d8afc52f8c34891d665c173fc3e59f09fb5e81d183fa` | 781,558 | lossy WebP q100 |
 | `enchanted-workshop` | `949f77dcede148f31e8e06aa12f853e169ce5812843c8799a8f24bdb3ec8835d` | 771,484 | lossy WebP q100 |
 | `glassblower` | `be734ac03874e040997e1b393abc0483b14684d3990f8d239d7d654f8faff49b` | 984,672 | lossy WebP q100 |
@@ -111,7 +113,8 @@ colour fringe; the white ermine is among the five sheets kept lossless.
 | `scholar` | `76077a95bf847119fced4ef0406b33c00203f37d1cf99c0abc3fe99afbe0760c` | 1,028,674 | lossy WebP q100 |
 | `snow-queen` | `60e2057e81601ba9ceca48226e1a86517f24d109dbbc4f029fc5d4842c799979` | 1,033,114 | lossless, copied unchanged |
 | `storybook` | `bc13623107ed5a5c83f75c4afd685750f87b050b5e0b083282479a8345e5beba` | 1,016,746 | lossy WebP q100 |
-| **Nineteen sheets** | | **16,841,140** | factory lossless total 25,641,918 |
+| **The factory's nineteen** | | **16,841,140** | factory lossless total 25,641,918 |
+| **All twenty** | | **17,488,286** | |
 
 The sheets in the app total **16,841,140 bytes (16.06 MiB)**, 8,800,778 bytes fewer than the
 lossless originals: 4,110,306 in the five copied sheets and 12,730,834 in the fourteen lossy
@@ -120,3 +123,10 @@ ones; the largest is `medea` at 1,035,302 bytes. Zipped at DEFLATE level 9 the n
 compresses almost no further. That measures the raw resources' ZIP contribution, not a signed
 Xcode archive; final IPA packaging and signatures add overhead. Pip's ten replacement frames
 add about 20 KB over the faceless ones.
+
+Dino's sheet came later, from Paul: his Codex pet, exported from the app as a 1536 × 2288 PNG
+(SHA-256 `e38ebb034a4cbafaeeb8e0da841a1d5954ffeb45f0d83079db18fef3826856b0`) that passes the v2
+contract, its unused cells fully transparent. The factory keeps it as lossless WebP
+(1,258,032 bytes, pixel-identical); the app's copy is lossy at q100 by the recipe above, 647,146
+bytes, its alpha bit-identical and its error 0.5 of 255 over the sheet. The twenty sheets total
+17,488,286 bytes (16.68 MiB).

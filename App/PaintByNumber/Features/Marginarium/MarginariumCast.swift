@@ -186,9 +186,9 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Dino"),
         happiestWhen: String(localized: "lamp.dinotopia.happiestWhen", defaultValue: "A page feels like a journal found somewhere real, and a newcomer is made welcome.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Dino"),
-        petCaption: String(localized: "lamp.dinotopia.petCaption", defaultValue: "Dino's egg: its pet hasn't been drawn yet",
-                           comment: "The Marginarium, Who is Who: the caption of Dino's egg, standing in for a pet that hasn't hatched"),
-        hatched: false)
+        petCaption: String(localized: "lamp.dinotopia.petCaption", defaultValue: "Dino, the long-necked dinosaur Paul hatched in Codex",
+                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Dino"),
+        hatched: true)
 
     static let storybook = MarginariumGuardian(
         id: "storybook",
