@@ -143,6 +143,7 @@ def retryable_pilot(record):
 
 
 def hatch(lamp, key, pet, style, brief, reference, redo):
+    from . import lamp_resume
     paths.slug(key)
     base = paths.contained(lamp.run, 'hatches', key)
     base.mkdir(parents=True, exist_ok=True)
@@ -157,51 +158,65 @@ def hatch(lamp, key, pet, style, brief, reference, redo):
         if notes:
             request['readability_notes'] = notes
     frozen(paths.contained(base, 'request.json'), request)
-    target = paths.contained(base, 'result.json')
-    previous = None
-    if target.exists():
-        record = loop.load(target)
+    previous_path, previous = lamp_resume.latest_result(base)
+    plan = lamp_resume.decision(base)
+    if previous:
+        record = previous
         if record['status'] == 'validated':
             package = paths.contained(lamp.run, Path(record['package']).relative_to(lamp.run))
             for name, sha in record['package_hashes'].items():
                 if digest(paths.contained(package, name).read_bytes()) != sha:
                     raise ValueError(f'validated package changed: {key}/{name}')
-        if not retryable_pilot(record):
+        if plan['action'] == 'keep':
             return record
-        previous = record
     if lamp.dry_resume:
         raise ValueError(f'dry resume needs a completed hatch: {key}')
     record = dict(key=key, pet=pet, model=lamp.model, effort=lamp.effort, status='failed',
-                  worker_policy=WORKER_POLICY, motion_policy=MOTION_POLICY)
+                  worker_policy=WORKER_POLICY, motion_policy=MOTION_POLICY,
+                  fresh_attempts=(previous or {}).get('fresh_attempts', 0))
+    target = lamp_resume.next_result(base) if previous else previous_path
     if previous:
-        old_work = paths.contained(base, Path(previous['work']).relative_to(base))
-        frozen(paths.contained(old_work, 'result.json'), previous)
-        record['resumed_from'] = str(old_work / 'result.json')
-    # Never retry a completed or interrupted provider refusal.
+        old_work = lamp_resume.attempt_path(base, previous)
+        record['resumed_from'] = str(previous_path)
+        record['resume_action'] = plan['action']
+        if previous.get('fresh_attempt_reason'):
+            record['fresh_attempt_reason'] = previous['fresh_attempt_reason']
+    if plan['action'] == 'fresh_attempt':
+        record['fresh_attempt_reason'] = previous['reason']
+    if record.get('fresh_attempt_reason'):
+        record['fresh_attempts'] = 1
+    if plan.get('provider_stop'):
+        record['provider_stop'] = plan['provider_stop']
+    if plan['action'] == 'refused':
+        record.update(status='refused', reason=plan['reason'], work=plan['work'])
+        frozen(target, record)
+        return record
     attempts = sorted(paths.contained(base, p.name) for p in base.glob('attempt-*'))
-    for attempt in attempts:
-        replies = []
-        for name in ('reply.json', 'reply.retry.json'):
-            try:
-                reply = loop.load(paths.contained(attempt, name), {})
-            except ValueError:
-                reply = {}
-            if isinstance(reply, dict) and reply.get('status') == 'refused':
-                replies.append(reply)
-        if refusal(attempt) or replies:
-            record.update(status='refused', reason=replies[0].get('reason', 'provider refusal') if replies else 'provider refusal',
-                          work=str(attempt))
-            loop.save(target, record)
-            return record
     active = paths.contained(base, 'active-attempt.json')
     if previous and active.exists() and loop.load(active)['directory'] == old_work.name:
         active.unlink()
+    if not previous and plan['action'] in ('provider_retry', 'continue_attempt'):
+        # A process can stop after recording its events but before the driver records
+        # its result. Settle that attempt first so its logs cannot be overwritten.
+        record.update(work=plan['work'], reason=plan['reason'], failure_kind='provider_stop')
+        if plan['action'] == 'provider_retry':
+            record['image_generations'] = 0
+        frozen(target, record)
+        return hatch(lamp, key, pet, style, brief, reference, redo)
     if active.exists():
         work = paths.contained(base, loop.load(active)['directory'])
     else:
         work = attempts[-1] if not previous and attempts and (attempts[-1] / 'reply.json').exists() else Path(
             tempfile.mkdtemp(prefix='attempt-', dir=base))
         frozen(active, {'directory': work.name})
+    if previous:
+        request = {**request, 'resume': {
+            'action': plan['action'], 'previous_result': str(previous_path),
+            'previous_failure': previous['reason'],
+            'fresh_attempt_reason': record.get('fresh_attempt_reason'),
+            'fresh_attempts': record['fresh_attempts'],
+            'provider_stop': plan.get('provider_stop', [])}}
+    frozen(paths.contained(work, 'driver-request.json'), request)
     reference_policy = (
         'No family reference exists for this pilot. reference=null is intentional, not a blocker. '
         'Generate the canonical base from the seed and style without a family image; use that base '
@@ -264,10 +279,42 @@ Request:
         prompt += (f'\nPrevious attempt evidence: {old_work}. Preserve those files. Reuse suitable '
                    'source art in this new attempt and finish the required pipeline. Previous failure: '
                    + previous['reason'] + '\n')
+    if plan['action'] == 'continue_attempt':
+        prompt += ('\nThis is a continuation after a recorded provider stop, not a fresh drawing attempt. '
+                   'Read the previous attempts, generation logs, repair logs and QA evidence, following '
+                   'resumed_from links. Copy suitable existing art into this new workspace; never change '
+                   'previous files. Finish only the remaining work. Do not restart the pet or regenerate '
+                   'accepted rows. Carry forward every previous row repair: the two-repair limit is '
+                   'cumulative across this continuation. If it is already exhausted, return failed with '
+                   'the gate reason. Report cumulative image generations and repairs with their sources.\n')
     if 'readability_notes' in request:
         prompt += '\n' + request['readability_notes']['instruction'] + '\n'
     try:
-        reply, errors = worker_reply(lamp, work, prompt, reference)
+        if plan['action'] == 'repackage':
+            # Work in a new attempt; the validated atlas, reports and old package
+            # remain byte-identical. Only the derived contact preview may shrink.
+            atlas = paths.contained(old_work, 'final/spritesheet.webp')
+            if digest(atlas.read_bytes()) != previous['atlas_sha256']:
+                raise ValueError('validated atlas changed before repackaging')
+            for name in ('final/spritesheet.webp', 'qa/chroma-despill-extended.json',
+                         'qa/review.json', 'qa/direction-semantics.json', 'qa/look-continuity.json'):
+                destination = paths.contained(work, name)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(paths.contained(old_work, name), destination)
+            reply, errors = lamp_resume.read_reply(old_work), []
+            frozen(paths.contained(work, 'reply.json'), reply)
+        else:
+            stop = lamp_resume.provider_stop(work)
+            if stop:
+                # Recover a process stop whose completion write was interrupted.
+                # Preserve its log before dispatching a replacement/continuation.
+                record.update(work=str(work), reason=stop['evidence'][0]['message'] or stop['evidence'][0]['code'],
+                              failure_kind='provider_stop', provider_stop=stop['evidence'])
+                if stop['before_work']:
+                    record.update(image_generations=0, fresh_attempts=(previous or {}).get('fresh_attempts', 0))
+                frozen(target, record)
+                return hatch(lamp, key, pet, style, brief, reference, redo)
+            reply, errors = worker_reply(lamp, work, prompt, reference)
         if errors:
             record.update(status='invalid', reason='invalid worker reply after one repair', errors=errors)
         elif reply['status'] == 'refused':
@@ -276,9 +323,13 @@ Request:
             record.update(status=reply['status'], reason=reply['reason'],
                           image_generations=reply['image_generations'], repairs=reply['repairs'],
                           contract_overrides=reply['contract_overrides'], decisions=reply['decisions'])
+            if reply['status'] == 'failed' and reply['image_generations'] > 0:
+                record['failure_kind'] = 'gate'
             if reply['status'] == 'complete' or (reply['status'] == 'failed' and motion_guidance_failure(reply)
                                                 and paths.contained(work, 'final/spritesheet.webp').is_file()):
+                record['failure_kind'] = 'gate'
                 record.update(validate(work, skill))
+                record['failure_kind'] = 'package'
                 metadata = {'id': pet, 'displayName': brief.get('display_name', pet),
                             'description': brief.get('description', brief.get('seed', pet)),
                             'spritesheetPath': 'spritesheet.webp'}
@@ -301,15 +352,40 @@ Request:
                               'redo_count': int(redo is not None), 'local_only': True}
                 loop.save(paths.contained(package, 'provenance.json'), provenance)
                 size = sum(p.stat().st_size for p in package.iterdir())
+                # Contact sheets are lossy review derivatives, not accepted artwork.
+                # Keep the exact validated atlas and metadata, and reduce this preview
+                # only when necessary. Native contacts remain in gate/ and previews/.
+                if size > LIMIT:
+                    with Image.open(paths.contained(work, 'gate/contact.png')) as contact:
+                        for width in (1200, 900, 600):
+                            if width >= contact.width:
+                                continue
+                            preview = contact.convert('RGB')
+                            preview.thumbnail((width, round(contact.height * width / contact.width)),
+                                              Image.Resampling.LANCZOS)
+                            preview.save(paths.contained(package, 'contact-sheet.webp'), quality=75, method=6)
+                            provenance['contact_preview'] = {'width': preview.width, 'height': preview.height,
+                                'reason': 'fit package budget without changing validated atlas bytes'}
+                            loop.save(paths.contained(package, 'provenance.json'), provenance)
+                            size = sum(p.stat().st_size for p in package.iterdir())
+                            if size <= LIMIT:
+                                break
                 if size > LIMIT:
                     raise ValueError(f'package is {size} bytes, exceeds {LIMIT}; no files published')
                 record.update(status='validated', package=str(package), bytes=size,
-                    contact=str(package / 'contact-sheet.webp'), previews=str(work / 'previews'),
+                    contact=str(package / 'contact-sheet.webp'),
+                    previews=str(old_work / 'previews' if plan['action'] == 'repackage' else work / 'previews'),
                     package_hashes={p.name: digest(p.read_bytes()) for p in sorted(package.iterdir())})
+                record.pop('failure_kind', None)
     except (ValueError, OSError, RuntimeError) as exc:
         record.update(status='failed', reason=str(exc))
     record['work'] = str(work)
-    loop.save(target, record)
+    if record['status'] == 'failed':
+        evidence = lamp_resume.stopped_before_work(work)
+        if evidence and not record.get('image_generations', 0):
+            record.update(failure_kind='provider_stop', provider_stop=evidence, image_generations=0,
+                          fresh_attempts=(previous or {}).get('fresh_attempts', 0))
+    frozen(target, record)
     return record
 
 

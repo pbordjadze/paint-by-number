@@ -62,6 +62,13 @@ def fill(s):
 reply = fill(rule)
 if 'status' in props:
     request = json.JSONDecoder().raw_decode(prompt.split('Request:\n', 1)[1])[0]
+    if os.environ.get('FAKE_PROVIDER_STOP') == request['pet']:
+        for item in ({'type': 'thread.started'}, {'type': 'turn.started'},
+                     {'type': 'error', 'message': 'You’ve hit your usage limit.'},
+                     {'type': 'turn.failed', 'error': {'message': 'You’ve hit your usage limit.'}}):
+            print(json.dumps(item))
+        event('end')
+        sys.exit(1)
     assert 'Never ask for clarification or wait for an answer.' in prompt
     assert 'eight columns by eleven rows' in prompt
     assert 'The contract overrides ANY frame count' in prompt
@@ -94,6 +101,15 @@ if 'status' in props:
         if failed:
             (work / 'final/spritesheet.webp').write_bytes(b'broken fixture')
         reply = dict(status='complete', reason='Synthetic test fixture only.', image_generations=13, repairs=[])
+        if os.environ.get('FAKE_PROVIDER_STOP_AFTER_ART') == request['pet']:
+            for item in ({'type': 'thread.started'}, {'type': 'turn.started'},
+                         {'type': 'item.completed', 'item': {'type': 'command_execution',
+                                                          'command': 'prepared existing art'}},
+                         {'type': 'turn.failed', 'error': {'code': 'rate_limit_exceeded',
+                                                         'message': 'Rate limit exceeded'}}):
+                print(json.dumps(item))
+            event('end')
+            sys.exit(1)
     if os.environ.get('FAKE_MOTION_FAILURE'):
         reply.update(status='failed', image_generations=16,
                      reason='Stopped after jumping exhausted both permitted repairs: its extracted peak remains '
