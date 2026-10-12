@@ -293,11 +293,9 @@ struct RegionMergingTests {
         return found
     }
 
-    @Test func linearGradientDoesNotBandBeyondWhatPaintsCanShow() throws {
-        // A gentle grey ramp (480 px for 0.6 of lightness) over eight flat colour patches at
-        // 150 colours: the palette slices the ramp into some 35 paints a couple of pixels of
-        // lightness apart, which read as one smooth band each; the template must fuse them
-        // until neighbouring bands are at least a just-noticeable step apart.
+    /// The bands a gentle grey ramp (480 px for 0.6 of lightness) over eight flat colour
+    /// patches comes out as at `colorCount` colours.
+    static func rampBands(colorCount: Int) throws -> Int {
         let w = 480, h = 160
         var image = RGBAImage(width: w, height: h, fill: SIMD4(0, 0, 0, 255))
         let patches: [SIMD3<UInt8>] = [
@@ -315,12 +313,30 @@ struct RegionMergingTests {
                 }
             }
         }
-        let settings = GenerationSettings(colorCount: 150)
+        let settings = GenerationSettings(colorCount: colorCount)
         let s = try TestScenes.segment(image, settings: settings)
         TestScenes.checkInvariants(s, settings: settings)
-        // 0.6 of lightness at a tolerance near 0.045 leaves room for about 13 bands.
-        let bands = Self.regions(of: s, x: 0..<w, y: 30..<90).count
+        return Self.regions(of: s, x: 0..<w, y: 30..<90).count
+    }
+
+    @Test func linearGradientDoesNotBandBeyondWhatPaintsCanShow() throws {
+        // At 40 colours (the knee, `SegmentationParameters.bandFusionKnee`) the palette
+        // slices the ramp into paints a few pixels of lightness apart, which read as one
+        // smooth band each; the template must fuse them until neighbouring bands are at
+        // least a just-noticeable step apart. 0.6 of lightness at a tolerance near 0.045
+        // leaves room for about 13 bands.
+        let bands = try Self.rampBands(colorCount: 40)
         #expect(bands >= 6 && bands <= 16)
+    }
+
+    @Test func fineShadesAboveTheKneeKeepMoreRampBands() throws {
+        // Past 40 colours the paints sit closer than the band tolerances, which would fuse
+        // every extra paint back: the tolerances shrink with the palette, so the ramp keeps
+        // more of its shades, though still far fewer than its 150 paints.
+        let atKnee = try Self.rampBands(colorCount: 40)
+        let fine = try Self.rampBands(colorCount: 150)
+        #expect(fine > atKnee + atKnee / 4)
+        #expect(fine < 60)
     }
 
     @Test func fineStripesNearAFaceDoNotFragment() throws {
