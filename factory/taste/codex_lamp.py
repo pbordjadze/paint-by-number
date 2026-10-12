@@ -469,8 +469,10 @@ def main():
     replay.add_argument('--parallel', type=int, default=4)
     compare = commands.add_parser('compare', help='write comparison.md and comparison.json without model calls')
     compare.add_argument('run_dir', type=Path)
-    refresh = commands.add_parser('refresh-inputs', help='refresh guardian names and charters for steps not yet started')
+    refresh = commands.add_parser('refresh-inputs', help='refresh guardian names and charters; optionally restart a step')
     refresh.add_argument('run_dir', type=Path)
+    refresh.add_argument('--restart-step', type=int, choices=range(1, 8),
+                         help='supersede this plan step and all later work (1–7)')
     refresh.add_argument('--reason', default='Refresh guardian names and charters from factory/GUARDIANS.md.')
     args = parser.parse_args()
     if hasattr(args, 'parallel') and args.parallel < 1:
@@ -487,7 +489,7 @@ def main():
                 result = replay_run(directory, args.pieces.split(','), args.models.split(','), args.effort, args.parallel)
             elif args.command == 'refresh-inputs':
                 from .lamp_inputs import refresh
-                result = refresh(directory, args.reason)
+                result = refresh(directory, args.reason, args.restart_step)
             else:
                 from .lamp_compare import compare_run
                 result = compare_run(directory)

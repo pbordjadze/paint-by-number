@@ -318,6 +318,17 @@ revision before dispatch: partial rounds and unfinished model pairs retain that 
 Display names and charters refresh, and retired inputs are dropped; seeds, rules and chapter
 evidence remain frozen. Repeating an unchanged refresh does nothing. Comparison reports separate
 input revisions in both paired results and aggregates. Historical replays continue to use their original sources.
+If a step already started on stale inputs, add `--restart-step N` (the plan's **1–7** steps,
+not job round numbers). For example, `refresh-inputs /root/factory-out/F36/lamp --restart-step 3
+--reason 'Guardian charters refreshed; restart the style decision.'` supersedes the style jury
+and every later step, keeping the proposals and pilots. This works even if an earlier refresh
+already installed the current charters. Jobs, raw replies, completion records, retries, costs,
+dispatch directories, later hatches, decisions and summary move intact into
+`records/superseded/<restart>/`. The manifest and provenance record the reason, old step input
+hashes and each superseded reply. A journal recovers interrupted moves before resumption.
+The next `run` writes new jobs from current inputs; archived replies enter no decisions or
+comparison statistics. Comparison files are archived and rebuilt with superseded replies labelled.
+Neither refreshing nor restarting calls a model, and historical replay files remain untouched.
 `--skill-dir /absolute/path/to/skills/create-pet` overrides
 automatic installed-skill discovery. Text concurrency defaults to four; pet workers default to
 three and can be reduced to one or two. Each image worker uses workspace-write with only

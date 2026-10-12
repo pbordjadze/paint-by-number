@@ -139,8 +139,8 @@ def agreement(a, b):
 
 
 def compare_run(run):
-    from . import lamp_inputs
-    provenance = loop.load(paths.contained(run, 'provenance.json'), {})
+    from . import lamp_inputs, lamp_restart
+    provenance = lamp_inputs.provenance(run) if (run / 'inputs.json').exists() else {}
     initial = provenance.get('initial')
     if initial is None and (run / 'inputs.json').exists():
         initial = digest(loop.load(run / 'inputs.json'))
@@ -154,12 +154,17 @@ def compare_run(run):
                 identity = provenance.get('steps', {}).get(lamp_inputs.step(record['round']), initial)
             records.append({**record, 'source': source,
                             'inputs_sha256': identity or record['prompt_sha256']})
+    records.extend(lamp_restart.records(run, provenance))
     grouped = defaultdict(list)
-    summaries = defaultdict(lambda: {'jobs': 0, 'invalid': 0, 'vetoes': 0, 'reply_characters': 0, 'votes': [], 'reasons': []})
+    summaries = defaultdict(lambda: {'jobs': 0, 'invalid': 0, 'superseded': 0, 'vetoes': 0,
+                                    'reply_characters': 0, 'votes': [], 'reasons': []})
     for record in records:
         grouped[(record['source'], record['stage'], record['guardian'], record['inputs_sha256'])].append(record)
         key = (record['guardian'], record['model'], record['inputs_sha256'])
         summary = summaries[key]
+        if record.get('status') == 'superseded':
+            summary['superseded'] += 1
+            continue
         summary['jobs'] += 1
         summary['reply_characters'] += record['reply_characters']
         if record.get('status') == 'invalid':
@@ -171,7 +176,7 @@ def compare_run(run):
         summary['reasons'] = (summary['reasons'] + reasons(record['reply']))[:3]
     comparisons = []
     for (source, stage, seat, identity), rows in sorted(grouped.items()):
-        for a, b in combinations([r for r in rows if r.get('status') != 'invalid'], 2):
+        for a, b in combinations([r for r in rows if r.get('status') not in ('invalid', 'superseded')], 2):
             if a['model'] == b['model']:
                 continue
             if a['prompt_sha256'] != b['prompt_sha256']:
@@ -189,21 +194,32 @@ def compare_run(run):
               'Pet comparison replies observe primary context; they are not an independent branch. '
               'Repairs include each reply\'s own validation errors. '
               'Charter input revisions are reported separately and never paired across a refresh. '
+              'Superseded replies remain visible but enter no active totals, votes or paired comparisons. '
               'Claude lengths are JSON-normalized; Codex lengths are raw reply characters.',
               'seats': seats, 'comparisons': comparisons,
               'replies': [{**{k: r[k] for k in ('source', 'stage', 'guardian', 'model', 'effort',
                                            'reply', 'reply_characters', 'prompt_sha256', 'inputs_sha256')},
-                          'status': r.get('status', 'valid'), 'errors': r.get('errors', [])} for r in records]}
+                          'status': r.get('status', 'valid'), 'errors': r.get('errors', []),
+                          **{k: r[k] for k in ('previous_status', 'superseded_reason', 'superseded_by',
+                                              'archived_path', 'raw_reply') if k in r}} for r in records]}
     loop.save(paths.contained(run, 'comparison.json'), report)
     lines = ['# The Lamp across models', '', report['method'], '',
-             '| Seat | Model | Inputs | Jobs | Invalid | Vetoes | Mean reply characters |', '| --- | --- | --- | ---: | ---: | ---: | ---: |']
+             '| Seat | Model | Inputs | Jobs | Invalid | Superseded | Vetoes | Mean reply characters |',
+             '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |']
     for row in seats:
-        lines.append(f'| {row["guardian"]} | {row["model"]} | {row["inputs_sha256"][:12]} | {row["jobs"]} | {row["invalid"]} | {row["vetoes"]} | '
-                     f'{row["reply_characters"] / row["jobs"]:.0f} |')
+        mean = f'{row["reply_characters"] / row["jobs"]:.0f}' if row['jobs'] else '—'
+        lines.append(f'| {row["guardian"]} | {row["model"]} | {row["inputs_sha256"][:12]} | {row["jobs"]} | {row["invalid"]} | '
+                     f'{row["superseded"]} | {row["vetoes"]} | {mean} |')
     for (source, stage, seat, identity), rows in sorted(grouped.items()):
         lines += ['', f'## {seat} · {source}/{stage}', '', f'Inputs: `{identity}`', '']
         for row in rows:
             lines += [f'**{row["model"]}** (effort: {row["effort"] or "not recorded"})', '']
+            if row.get('status') == 'superseded':
+                lines += ['Superseded — excluded from decisions and comparison statistics. '
+                          + row['superseded_reason'], '',
+                          f'Archived reply/record: [{row["archived_path"]}]({row["archived_path"]})', '',
+                          'Reply: `' + json.dumps(row['reply'], ensure_ascii=False) + '`', '']
+                continue
             if row.get('status') == 'invalid':
                 lines += ['Invalid after one repair: ' + '; '.join(row['errors']), '']
                 continue

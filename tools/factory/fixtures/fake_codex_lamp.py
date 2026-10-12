@@ -30,6 +30,9 @@ def event(kind, **extra):
 event('start')
 if os.environ.get('FAKE_SHORTLIST_TRANSPORT_ERROR') and 'shortlist-' in str(work):
     sys.exit(1)
+if (os.environ.get('FAKE_STYLE_TRANSPORT_ERROR') and 'style-decision-' in str(work)
+        and not any(seat in str(work) for seat in ('enchanted-workshop', 'storybook'))):
+    sys.exit(1)
 if os.environ.get('FAKE_CRASH') and os.environ['FAKE_CRASH'] in str(reply_path):
     marker = log.with_suffix('.crashed')
     try:
