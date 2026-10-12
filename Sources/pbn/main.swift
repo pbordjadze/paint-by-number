@@ -47,13 +47,17 @@
 //       strokes it prints, and the detail areas
 //   pbn names <template.pbnt> [--seed N] [--vocabulary N | --nickname-table file.tsv]
 //       prints each palette color's nickname (seeded like the app's per-painting names; the
-//       default seed is generate's), structured name and hex; the default vocabulary is the
-//       current version, and unknown future versions use the newest known version. A proposed
-//       table uses the version 1 draw (RRGGBB<TAB>Name per line, no header; the frozen table's
+//       default seed is generate's), structured name and hex; the default vocabulary is
+//       --vocabulary 2: identical stored OKLab, seed and palette order give identical nicknames
+//       on every platform (canonical anchors and integer arithmetic, including the fallback).
+//       --vocabulary 1 preserves the original platform's libm behavior: Linux names can differ
+//       from Apple; old artworks with missing metadata keep 1. Unknown future versions use 2.
+//       A proposed table uses the version 1 draw (RRGGBB<TAB>Name per line, no header; the frozen table's
 //       single-space separator is also accepted)
-//   pbn vocab check <table.tsv>
+//   pbn vocab check [<table.tsv> | --vocabulary N]
 //       reports the vocabulary's mechanical style-guide and gamut problems; exits nonzero
-//       if any fail. Proposed tables are not installed or written into templates
+//       if any fail. Without a table it checks the built-in vocabulary (default 2), including
+//       its canonical anchors. Proposed tables are not installed or written into templates
 
 let args = CommandLine.arguments
 guard args.count >= 2 else { fail("usage: pbn generate|suggest|bench|trace|check|names|vocab ...") }

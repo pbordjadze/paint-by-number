@@ -211,9 +211,15 @@ Saved paintings must open in every later build. The format history is documented
   `meta.json` (`nicknameVersion`). Missing or unreadable means 1, never the current version;
   new artworks record `ColorNickname.currentVersion`, regeneration keeps the recorded value,
   and unknown future values round-trip unchanged while resolving to the newest known version.
-  Treat each version's table, math, draw and `ColorName` thresholds like a file format: never
-  edit them. `ColorNicknameTests` pins v1's table and an assignment; `ArtworkNicknameTests`
-  pins the same palette on Apple against names computed on Linux.
+  Treat each version's table, math, draw and fallback like a file format: never edit them.
+  v1 preserves each platform's original libm behavior, not agreement across platforms:
+  `ArtworkNicknameTests` pins Apple's current names against a future iOS libm change;
+  `ColorNicknameTests` keeps Linux's different v1 pin. `ColorName` remains frozen for v1.
+  v2 uses the same table with canonical Q16 anchors and integer distances, weights, multiply-high
+  RNG mapping and structured fallback (`ColorNicknameV2`): identical stored OKLab bits, seed and
+  palette order give identical nicknames everywhere. New artworks record 2; no migration of v1.
+  `ColorNicknameV2Tests` and the app read the same `nickname-v2.json` pins; CI runs the core v2
+  suite on Linux and macOS, and the app pins on iOS. `pbn names` and `pbn vocab check` default to 2.
 
 ## App rules
 

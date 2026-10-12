@@ -7,23 +7,30 @@ extension ColorNickname {
         /// Original table text. Version 1 is hashed as UTF-8, with no trailing newline.
         public let table: String
         public let entries: [Entry]
+        /// Resolved draw version (proposed tables use 1).
+        public let version: Int
         /// Malformed rows, also included in `problems()`. Renderers must reject these rows.
         public let formatProblems: [String]
 
         private static let version1 = Vocabulary(table: ColorNickname.table)
+        private static let version2 = Vocabulary(table: ColorNickname.table, version: 2)
 
         /// Unknown future versions resolve to the newest vocabulary this build knows.
         /// Missing artwork metadata must explicitly select 1, never `currentVersion`.
         public init(version: Int) {
-            // Only v1 ships today. Add future versions without editing v1 or its draw.
-            self = Self.version1
+            self = version <= 1 ? Self.version1 : Self.version2
         }
 
         /// RRGGBB<TAB>Name, one entry per line, no header. The frozen table's single-space
         /// separator is accepted too. A final newline and CRLF line endings are allowed.
         /// Malformed rows are reported by `problems()` and never become black anchors.
         public init(table: String) {
+            self.init(table: table, version: 1)
+        }
+
+        private init(table: String, version: Int) {
             self.table = table
+            self.version = version
             var entries: [Entry] = []
             var problems: [String] = []
             var lines = table.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
@@ -40,7 +47,8 @@ extension ColorNickname {
                     problems.append("line \(index + 1): expected RRGGBB<TAB>Name (uppercase hex)")
                     continue
                 }
-                entries.append(Entry(name: String(line.dropFirst(7)), hex: hex, oklab: ColorScience.okLab(hex: hex)))
+                let lab = version == 1 ? ColorScience.okLab(hex: hex) : ColorNicknameV2.anchorLab(at: index)
+                entries.append(Entry(name: String(line.dropFirst(7)), hex: hex, oklab: lab))
             }
             self.entries = entries
             formatProblems = problems
