@@ -35,6 +35,7 @@ def main():
         "snow-queen": "A small white ermine wearing a crown of frost crystals. Elegant and still; it leaves a faint glimmer of frost where it steps.",
         "robber-girl": "A spirited reindeer calf in a felt blanket stitched with bold mountain embroidery. Mischievous and loyal; it stamps a hoof when something needs you.",
         "storybook": "A little book that flaps its covers like wings, its pages full of ink drawings that change as it flies.",
+        "dinotopia": "A newly hatched long-necked dinosaur with a scrap of eggshell still on its head and a small explorer's satchel holding a pencil and a folded map. Curious and gentle; it stops to sketch whatever it finds.",
         "enchanted-workshop": "A paintbrush with tiny legs and a determined face, carrying a paint jar and doing small jobs all on its own.",
         "scholar": "A tiny inkpot wearing round spectacles, a quill tucked behind it like a pencil behind an ear. It nods thoughtfully and underlines things.",
         "painter": "A small wooden palette with a brush for a tail and dabs of warm paint for spots. It sits back quietly so the painting gets the attention.",

@@ -8,37 +8,43 @@
       "charter": "The jury › Originality",
       "baseWeight": 1,
       "active": true,
-      "vetoOnly": true
+      "vetoOnly": true,
+      "team": "gate"
     },
     {
       "id": "medea",
       "charter": "Medea",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "moonlit-circle"
     },
     {
       "id": "baba-yaga",
       "charter": "The Baba Yaga",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "moonlit-circle"
     },
     {
       "id": "hedge-witch",
       "charter": "The Hedge Witch",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "moonlit-circle"
     },
     {
       "id": "moon",
       "charter": "The Moon",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "moonlit-circle"
     },
     {
       "id": "snow-queen",
       "charter": "The Snow Queen",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "glass-and-frost"
     },
     {
       "id": "robber-girl",
@@ -47,89 +53,158 @@
       "active": true,
       "aliases": [
         "nina"
-      ]
+      ],
+      "team": "hearth"
     },
     {
       "id": "storybook",
       "charter": "The Storybook",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "storytellers"
+    },
+    {
+      "id": "dinotopia",
+      "charter": "Dinotopia",
+      "baseWeight": 1,
+      "active": true,
+      "description": "After James Gurney's Dinotopia books.",
+      "team": "storytellers"
     },
     {
       "id": "enchanted-workshop",
       "charter": "The Enchanted Workshop",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "workshop"
     },
     {
       "id": "scholar",
       "charter": "The Scholar",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "library"
     },
     {
       "id": "painter",
       "charter": "The Painter",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "studio"
     },
     {
       "id": "child-at-bedtime",
       "charter": "The Child at Bedtime",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "hearth"
     },
     {
       "id": "glassblower",
       "charter": "The Glassblower",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "glass-and-frost"
     },
     {
       "id": "pirosmani",
       "charter": "Niko",
       "baseWeight": 1,
       "active": true,
-      "description": "After the painter Niko Pirosmani."
+      "description": "After the painter Niko Pirosmani.",
+      "team": "studio"
     },
     {
       "id": "emily-dickinson",
       "charter": "Emily",
       "baseWeight": 1,
       "active": true,
-      "description": "After the poet Emily Dickinson."
+      "description": "After the poet Emily Dickinson.",
+      "team": "poets"
     },
     {
       "id": "open-source-enthusiast",
       "charter": "The Open Source Enthusiast",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "library"
     },
     {
       "id": "nutcracker",
       "charter": "The Nutcracker",
       "baseWeight": 1,
-      "active": true
+      "active": true,
+      "team": "workshop"
     },
     {
       "id": "balanchine",
       "charter": "George",
       "baseWeight": 1,
       "active": true,
-      "description": "After the choreographer George Balanchine."
+      "description": "After the choreographer George Balanchine.",
+      "team": "workshop"
     },
     {
       "id": "bulat-okudzhava",
       "charter": "Bulat",
       "baseWeight": 1,
       "active": true,
-      "description": "After the bard Bulat Okudzhava."
+      "description": "After the bard Bulat Okudzhava.",
+      "team": "poets"
     },
     {
       "id": "bible-school-teacher",
-      "charter": "The Bible School Teacher (maybe)",
+      "charter": "The Bible School Teacher",
       "baseWeight": 1,
-      "active": false
+      "active": true,
+      "team": "hearth"
+    }
+  ],
+  "teams": [
+    {
+      "id": "storytellers",
+      "name": "The Storytellers",
+      "purpose": "Keep the app feeling like a book you could walk into."
+    },
+    {
+      "id": "studio",
+      "name": "The Studio",
+      "purpose": "Keep the painting first, and painted with love."
+    },
+    {
+      "id": "moonlit-circle",
+      "name": "The Moonlit Circle",
+      "purpose": "Keep the magic old, kind and done by night."
+    },
+    {
+      "id": "glass-and-frost",
+      "name": "Glass and Frost",
+      "purpose": "Keep things clear, calm and exact."
+    },
+    {
+      "id": "workshop",
+      "name": "The Workshop",
+      "purpose": "Keep the tools alive, kind, and moving with meaning."
+    },
+    {
+      "id": "library",
+      "name": "The Library",
+      "purpose": "Keep the magic honest and the credit generous."
+    },
+    {
+      "id": "poets",
+      "name": "The Poets",
+      "purpose": "Keep the words few, true and warm."
+    },
+    {
+      "id": "hearth",
+      "name": "The Hearth",
+      "purpose": "Keep it kind, for every age, with a little nerve."
+    },
+    {
+      "id": "gate",
+      "name": "The Gate",
+      "purpose": "Keep everything we make our own."
     }
   ]
 }

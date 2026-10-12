@@ -348,6 +348,28 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
 - Paul: the Marginarium is hidden by default; Settings › The Marginarium shows the book in the
   gallery's toolbar (`SettingsKey.showsMarginarium`).
 
+## Paul's point 19: the Marginarium for everyone, Dinotopia, teams (Oct 12)
+
+- Chief Architect Paul, set in stone: the Marginarium must be understandable and approachable to
+  anyone; any member of the Lamp should be able to open it, have a nice time and roughly follow
+  it (`GUARDIANS.md` › The Marginarium is for everyone, `App/CLAUDE.md`).
+- Margin notes go genuinely in the margin: a column beside the story on iPad, inline on iPhone
+  ("the story just isn't really readable without that"). Branch `claude/lamp-teams`.
+- A gallery of every character and their brief: Who's Who in the app, with the people, the AI
+  helpers and the guardians by team; an egg for each pet not yet hatched (Dinotopia, the Moon).
+- Chief Designer Caroline is present, and her ideas are attributed to her, not to Paul.
+- Dinotopia joins the Lamp to guard the storybook feel, with the Storybook ("one of the greatest,
+  most magical things I've ever touched"; it should really steer the direction).
+- What a guardian guards is a metaphor (`GUARDIANS.md` › Guarding by metaphor; each charter's
+  **treasure**).
+- Teams, because no guardian with a pet can leave: Paul paired Dinotopia with the Storybook and
+  the Painter with Niko; Claude proposed the rest (`GUARDIANS.md` › Teams, `panel.json` teams,
+  `loop.team_seats`). The Bible School Teacher, whose pet shipped, is seated on the Hearth.
+- Later: a gentle, kind way to give some guardians more power and some less, which stays cute
+  even when the Snow Queen is unhappy about it (`GUARDIANS.md` › Wicks, a proposal).
+- For Oct 19 if Paul agrees: Codex hatches Dinotopia's pet (its brief is in
+  `tools/factory/collection.py`), and the Moon's redraw.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.

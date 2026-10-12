@@ -62,6 +62,35 @@ def guardians():
             for g in load(REPO / "factory/panel.json")["guardians"]]
 
 
+def team_seats(gs, teams=None):
+    """One seat per team (GUARDIANS.md › Teams): its members confer and cast one ballot.
+
+    The seat's charter leads with every member's guards-against line, so a veto quoting any
+    member's line is accepted, then gives each member's charter whole. Members' IDs are the
+    seat's aliases, so a ledger kept by guardian still counts each team as represented. A team
+    is active if any member is, veto-only if all are, and weighs its members' mean base weight.
+    """
+    teams = teams if teams is not None else load(REPO / "factory/panel.json")["teams"]
+    out = []
+    for team in teams:
+        members = [g for g in gs if g.get("team") == team["id"]]
+        if not members:
+            continue
+        guards = "; ".join(charter_line(g["charter_text"], "guards against") for g in members)
+        text = (f"{team['name']}: {team['purpose']} Its members talk it over and cast one ballot "
+                "together; any member can veto by quoting its own guards-against line.\n"
+                f"- **guards against**: {guards}\n"
+                f"- **members**: {', '.join(g['name'] for g in members)}\n\n" +
+                "\n\n".join(f"#### {g['name']}\n{g['charter_text']}" for g in members))
+        out.append({"id": team["id"], "charter": team["name"], "name": team["name"],
+                    "charter_text": text, "members": [g["id"] for g in members],
+                    "aliases": [a for g in members for a in [g["id"], *g.get("aliases", [])]],
+                    "baseWeight": sum(g.get("baseWeight", 1) for g in members) / len(members),
+                    "active": any(g["active"] for g in members),
+                    **({"vetoOnly": True} if all(g.get("vetoOnly") for g in members) else {})})
+    return out
+
+
 def names_prompt(guardians):
     return ("Refer to yourself and the other guardians by these display names; "
             "seat IDs are only record keys:\n" +

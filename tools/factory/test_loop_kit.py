@@ -448,5 +448,41 @@ class PrimitiveTests(unittest.TestCase):
             self.assertIsNone(accounting.usage(log)['input_tokens'])
 
 
+
+class TeamSeatTests(unittest.TestCase):
+    """GUARDIANS.md › Teams: a team holds one seat, and every guardian sits on exactly one."""
+
+    def setUp(self):
+        self.gs = loop.guardians()
+        self.seats = loop.team_seats(self.gs)
+
+    def test_every_guardian_sits_on_exactly_one_team(self):
+        members = [m for seat in self.seats for m in seat['members']]
+        self.assertEqual(sorted(members), sorted(g['id'] for g in self.gs))
+        self.assertEqual([s['id'] for s in self.seats if s.get('vetoOnly')], ['gate'])
+        storytellers = next(s for s in self.seats if s['id'] == 'storytellers')
+        self.assertEqual(storytellers['members'], ['storybook', 'dinotopia'])
+        self.assertIn('#### Dinotopia', storytellers['charter_text'])
+
+    def test_a_member_vetoes_by_quoting_its_own_line(self):
+        record = {'version': 2, 'guardians': self.seats, 'vetoPolicy': 'quote'}
+        names = ['One', 'Two']
+        ballots = {'storytellers': {'A': 'One', 'B': 'Two'}}
+        quote = 'magic with no light and no weight'
+        verdicts = {'storytellers': {'candidates': {'A': {'veto': quote}}, 'ranking': ['B', 'A']}}
+        result = loop.score(names, ['storytellers'], ballots, verdicts, record)
+        self.assertEqual(result['vetoes']['One'], [f'The Storytellers: {quote}'])
+        verdicts['storytellers']['candidates']['A']['veto'] = 'not in any charter'
+        self.assertFalse(loop.score(names, ['storytellers'], ballots, verdicts, record)['vetoes']['One'])
+
+    def test_draw_seats_the_gate_and_teams_and_reads_a_guardian_ledger(self):
+        ledger = {'rounds': [{'represented': ['painter', 'pirosmani', 'storybook']}]}
+        drawn = loop.draw(self.seats, ledger, 'teams', jury_size=5, proposers=3)
+        self.assertEqual(drawn['jury'][0], 'gate')
+        self.assertEqual(len(set(drawn['jury'] + drawn['proposers'])), 8)
+        # Guardians already represented count for their whole team, which sits out first.
+        self.assertNotIn('studio', drawn['jury'])
+        self.assertNotIn('storytellers', drawn['jury'])
+
 if __name__ == '__main__':
     unittest.main()
