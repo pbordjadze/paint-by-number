@@ -103,7 +103,7 @@ synchronized folder would bundle it into the app.
   WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
   `MarginariumReaderUITests` opens chapters, pets and appendices. Who's Who
   (`MarginariumWhosWhoView`, from the contents page's New here? box) shows `MarginariumCast`: the
-  people (Paul, Chief Architect; Caroline, Chief Designer, whose ideas are credited to her), the
+  people (Paul, Chief Architect; Caroline, Chief Designer, making it with him from the start), the
   AI helpers with Pip and Colophon, and the Lamp's guardians in their teams, each card opening
   `MarginariumGuardianView`, its brief (the charter in `factory/GUARDIANS.md` in plain words, ids
   from `factory/panel.json`); a guardian whose pet hasn't hatched shows `MarginariumEgg`.

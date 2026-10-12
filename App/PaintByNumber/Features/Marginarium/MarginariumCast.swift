@@ -65,7 +65,7 @@ nonisolated enum MarginariumCast {
                          comment: "The Marginarium, Who is Who: the name of Paul, a person who makes the app"),
             role: String(localized: "lamp.paul.role", defaultValue: "Chief Architect",
                          comment: "The Marginarium, Who is Who: the role of Paul, under the name"),
-            line: String(localized: "lamp.paul.line", defaultValue: "Makes Paint by Moonlight, and has the last word on everything in it.",
+            line: String(localized: "lamp.paul.line", defaultValue: "Does the big-picture thinking: what the app is for, and where it goes next.",
                          comment: "The Marginarium, Who is Who: one line about Paul"),
             pet: nil),
         MarginariumPerson(
@@ -74,7 +74,7 @@ nonisolated enum MarginariumCast {
                          comment: "The Marginarium, Who is Who: the name of Caroline, a person who makes the app"),
             role: String(localized: "lamp.caroline.role", defaultValue: "Chief Designer",
                          comment: "The Marginarium, Who is Who: the role of Caroline, under the name"),
-            line: String(localized: "lamp.caroline.line", defaultValue: "Her ideas are credited to her by name. When Pip was drawn without a face, she gave it one back: \"It was unkind to take away Pip's face.\"",
+            line: String(localized: "lamp.caroline.line", defaultValue: "Has been making Paint by Moonlight with Paul from the start. Long before this book began, her feedback shaped many of his design choices, and much of what looks lovely here is thanks to her.",
                          comment: "The Marginarium, Who is Who: one line about Caroline"),
             pet: nil),
     ]

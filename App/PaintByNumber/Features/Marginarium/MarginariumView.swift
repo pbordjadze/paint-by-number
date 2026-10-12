@@ -30,7 +30,7 @@ struct MarginariumView: View {
                             .font(.display(.title3, weight: .semibold))
                             .foregroundStyle(.secondary)
                         Text(String(localized: "marginarium.intro",
-                                    defaultValue: "This is the story of how the app gets made, written down as it happens. Paul builds it with Caroline, two AI helpers called Codex and Claude, and the Lamp: a panel of imaginary guardians who each care about one thing. The big choices stay with people, and a person's choice always wins.",
+                                    defaultValue: "This is the story of how the app gets made, written down as it happens. Paul and Caroline make it together, with help from Codex and Claude, two AI helpers, and from the Lamp: a panel of imaginary guardians who each care about one thing. The big choices stay with people, and a person's choice always wins.",
                                     comment: "The Marginarium: the introduction under the subtitle; Paul and Caroline are people, Codex and Claude AI helpers, the Lamp a panel of imaginary guardians"))
                     }
 
