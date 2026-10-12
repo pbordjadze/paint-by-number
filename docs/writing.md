@@ -116,6 +116,49 @@ Limits:
 - Painting the ink out changes the palette, which can move other parts of a book: the
   Underground notice's printed title, left to the detectors, lost a few strokes.
 
+## Small text
+
+A heavy line of capitals on a dark ground, photographed close (a pin: 26 px high, a pen of about
+4 px, the letters 2 to 3 px apart and soft), came out as "HV8KE" and then vanished (see Ink on dark
+paint): the 3 px of growth merged a letter into its neighbour and shut the counters of the B, and
+took its core to 0.294 of the 0.3 `Writing.maximumCoverage` (0.24 without growth; a little heavier
+or smaller and it was a picture). The rules for text under `Writing.upsampleBelow` (48 px):
+
+- The contrast is resampled bicubic (Catmull–Rom) until the letters stand about
+  `Writing.traceHeight` (64 px) high, 2 to 4 times finer (`Writing.scale(of:)`; fewer for a long
+  line, to stay within `Writing.maximumFinePixels`), and the ink, its components, thinning and
+  lines come from that window (`Writing.Patch`: `w` × `h`, every length in its own pixels). The
+  polarity, pen, paper and wide strokes, the costly part, stay on the canvas's pixels. A line of
+  small text takes about 40 to 70 ms at 100 px across, two to three times what it did.
+- The ink doesn't grow. A pen's edge ramps over a pixel or two, so the contour of half the
+  threshold lies further out than the threshold's by a fair part of a pen, and growing into it
+  fattens every letter (a single fine pixel of growth took the pin from 0.24 to 0.28–0.30).
+  Text from 48 px up grows by 3 px as before, and its lines are unchanged.
+
+Measured on a synthetic "HUBIE" (heavy sans, light on dark red, 16 to 40 px high, pen 0.075 to 0.13
+of the height, blur 0.7 to 1.6 px, dimmer ink), counting the pieces traced (5 letters) and the
+counters closed (the B's 2): before, the heavier sets from 16 to 32 px were pictures and nothing
+was drawn (so was thin text under 22 px). Without growth every crisp set came out 5 and 2; the
+soft ones (blur 1.6) came out 12 to 13 pieces at the canvas's resolution and 5 and 2 from twice as
+fine up, where 3 and 4 times were no better and cost more. Soft, dim text under 22 px (blur 1.6, or
+ink at half the contrast) is still half lost, finer or not. `WritingTests` keeps a 26 px line
+(recall and precision at least 0.95, five pieces, two counters) that the old rules call a picture.
+
+## Ink on dark paint
+
+Writing is drawn in the one ink of the sheet, which vanishes once its region is painted with a
+paint as dark as the ink (the pin's dark red, OKLab lightness 0.215 against the ink's 0.226). The
+template says which interior strokes are writing (`TemplateLineArt.writingStrokes`, the `WRIT`
+chunk, optional: a painting saved without it draws as it did), and every renderer draws a
+writing stroke in the sheet's light tone (its paper) where its region is painted with a paint
+under `Template.darkPaintLightness` (OKLab lightness 0.58, the middle of the ink's and the
+paper's): the canvas crossfades from the ink as the region is painted (`Shaders.metal`
+`outlineVertex`, `lightInk`), pictures and the painted line art preview switch where painted
+(`TemplateRasterizer.drawBookOutlines`, `LineArtDrawing.paths(within:overPaint:)`), and
+`SVGExport` draws a second group when painted. Unpainted, over a light paint, and in print, it is
+the ink; no other line and no paint changes. On the dark paper sheet the ink is already the light
+tone, so writing there keeps it (a light writing on a light paint vanishes there, like every line).
+
 ## Vision's lines
 
 `VNRecognizeTextRequest` looks for text at least 1/32 of the photo's height by default; the

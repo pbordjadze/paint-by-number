@@ -20,7 +20,7 @@ nonisolated final class CanvasScene: @unchecked Sendable {
     let points: any MTLBuffer           // float2 boundary polyline points, then stroke points
     let segments: any MTLBuffer         // uint2 (first point, line) per segment
     let lineRegions: any MTLBuffer      // uint2 (left, right) per line (edge, then stroke)
-    let lineLayers: any MTLBuffer       // float LineLayer per line
+    let lineLayers: any MTLBuffer       // float LineLayer per line (`OutlineGeometry.lightWritingMark` added for writing on dark paint)
     let segmentCount: Int
     /// Whether the template draws as a coloring book (`CanvasUniforms.setColoringBookLines`), not
     /// with classic lines (`setClassicLines`).

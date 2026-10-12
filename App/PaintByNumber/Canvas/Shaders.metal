@@ -26,6 +26,7 @@ struct FrameUniforms {
     float4 lineAlpha;   // ink opacity per line layer (x outline, y detail, z texture, w color)
     float4 lineWidth;   // line width (px) per layer
     float4 lineMode;    // x: 1 for a coloring book
+    float4 lightInk;    // rgb: the tone writing over a dark paint draws in once its region is painted
 };
 
 // Must match `RegionState` (CanvasTypes.swift).
@@ -49,6 +50,7 @@ struct GlyphInstance {
 };
 
 constant float kWetSettle = 0.7;
+constant float kLightWriting = 4.0;      // OutlineGeometry.lightWritingMark (CanvasScene's line layers)
 constant uint kOutside = 0xFFFFFFFFu;    // BoundaryEdge.outside (PaintCore): no region on that side
 
 static float4 toClip(float2 px, constant FrameUniforms &u) {
@@ -234,21 +236,25 @@ fragment float4 fillFragment(FillOut in [[stage_in]],
 
 // MARK: - Outlines
 
-// Pass 1: capsule segments expanded in screen space write ink opacity into an R16F target
-// with MAX blending, so overlapping caps and joints never double-darken.
+// Pass 1: capsule segments expanded in screen space write ink opacity (r) into an RG16F target
+// with MAX blending, so overlapping caps and joints never double-darken, and in g the share of
+// it that is in the light tone.
 //
 // A segment belongs to a line: a boundary edge, or a stroke drawn inside a cell (line art, after
 // the edges, with its region on both sides). Each line draws with its layer's opacity and width;
 // classic templates put every line in layer 0, which is the classic line. A coloring book
 // (lineMode.x) is a drawing over the paint: its lines never dissolve, and the selected color's
 // cells are not outlined (the fill's highlight shows them); its color edges have no ink
-// (lineAlpha.w = 0).
+// (lineAlpha.w = 0). Writing over a dark paint (a stroke whose layer carries `kLightWriting`,
+// `OutlineGeometry.lightWritingMark`) is drawn in the light tone `lightInk` as its region is
+// painted, so it reads on the paint instead of vanishing into it.
 
 struct OutlineOut {
     float4 position [[position]];
     float4 ends [[flat]];       // segment endpoints (px)
     float halfWidth [[flat]];
     float alpha [[flat]];
+    float light [[flat]];       // 0…1: how far the ink has turned to the light tone
 };
 
 vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
@@ -263,7 +269,9 @@ vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
     OutlineOut o;
     uint2 seg = segments[iid];
     uint2 nb = lineRegions[seg.y];
-    uint layer = min(uint(lineLayers[seg.y] + 0.5), 3u);
+    float rawLayer = lineLayers[seg.y];
+    bool lightWriting = rawLayer > kLightWriting - 0.5;
+    uint layer = min(uint(rawLayer - (lightWriting ? kLightWriting : 0.0) + 0.5), 3u);
     float now = u.time.x;
     bool book = u.lineMode.x > 0.5;
     float left = paintedAmount(states[nb.x], now);
@@ -298,6 +306,8 @@ vertex OutlineOut outlineVertex(uint vid [[vertex_id]],
     o.ends = float4(a, b);
     o.halfWidth = hw;
     o.alpha = min(alpha, 1.0);
+    // A stroke lies in one region (both sides), so `left` is how far the paint has covered it.
+    o.light = lightWriting ? left : 0.0;
     return o;
 }
 
@@ -308,16 +318,19 @@ fragment float4 outlineFragment(OutlineOut in [[stage_in]]) {
     float2 pa = p - a;
     float h = saturate(dot(pa, ba) / max(dot(ba, ba), 1e-6));
     float d = length(pa - ba * h);
-    float coverage = saturate(in.halfWidth + 0.5 - d);
-    return float4(coverage * in.alpha, 0.0, 0.0, 0.0);
+    float coverage = saturate(in.halfWidth + 0.5 - d) * in.alpha;
+    return float4(coverage, coverage * in.light, 0.0, 0.0);
 }
 
-// Pass 2: composite the ink opacity over the fills.
+// Pass 2: composite the ink opacity over the fills, in the ink or, where writing over a dark paint
+// is, the light tone it has turned to.
 fragment float4 outlineCompositeFragment(RectOut in [[stage_in]],
                                          texture2d<half, access::read> coverage [[texture(0)]],
                                          constant FrameUniforms &u [[buffer(0)]]) {
-    float a = float(coverage.read(uint2(in.position.xy)).r);
-    return float4(u.ink.rgb * a, a);
+    float2 c = float2(coverage.read(uint2(in.position.xy)).rg);
+    float a = c.x;
+    float light = a > 0.0 ? saturate(c.y / a) : 0.0;
+    return float4(mix(u.ink.rgb, u.lightInk.rgb, light) * a, a);
 }
 
 // MARK: - Numbers

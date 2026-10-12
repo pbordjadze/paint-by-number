@@ -459,8 +459,9 @@ enum LayeredLines {
 
         var points: [SIMD2<Float>] = []
         var strokes: [InteriorStroke] = []
+        var writing: [UInt32] = []
         let q = Template.coordinateQuantum
-        for (line, region) in plan.interiorLines {
+        for (k, (line, region)) in plan.interiorLines.enumerated() {
             // A closed line (an eye inside one cell) ends where it starts.
             var keep = Self.simplify(line.points, epsilon: 0.3)
             if line.closed, let first = keep.first { keep.append(first) }
@@ -474,6 +475,8 @@ enum LayeredLines {
             let mean = line.strength.reduce(0, +) / Float(line.strength.count)
             let counts = (0..<3).map { l in line.layer.filter { $0 == UInt8(l) }.count }
             let layer = counts.indices.max { counts[$0] != counts[$1] ? counts[$0] < counts[$1] : $0 > $1 }!
+            // The writing's lines follow the drawing's.
+            if k >= plan.drawingInterior { writing.append(UInt32(strokes.count)) }
             strokes.append(InteriorStroke(
                 pointStart: start, pointCount: UInt32(keep.count), layer: UInt8(layer),
                 weight: UInt8((min(max(mean, 0), 1) * 255).rounded()), region: UInt32(region)))
@@ -490,7 +493,9 @@ enum LayeredLines {
             strokes.append(InteriorStroke(
                 pointStart: start, pointCount: UInt32(keep.count), layer: run.layer, weight: run.weight, region: run.region))
         }
-        return TemplateLineArt(edgeLayers: layers, edgeWeights: weights, strokePoints: points, strokes: strokes, style: .coloringBook)
+        return TemplateLineArt(
+            edgeLayers: layers, edgeWeights: weights, strokePoints: points, strokes: strokes, style: .coloringBook,
+            writingStrokes: writing)
     }
 
     /// A step along a template edge (`annotate`): where, the layer of the line within reach

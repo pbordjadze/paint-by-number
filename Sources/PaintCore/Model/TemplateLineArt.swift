@@ -39,16 +39,34 @@ public struct TemplateLineArt: Sendable, Equatable {
     /// no cell (a crease, a strand of fur).
     public var strokes: [InteriorStroke]
     public var style: Style
+    /// Which of `strokes` are writing (`LineArtInput.writing`: letters traced from the photo, not
+    /// the drawing), as ascending indices; empty for a template without writing, or saved before
+    /// writing was marked. Renderers draw a writing stroke in the ink that reads on the paint
+    /// under it (`Template.writesOnDarkPaint`).
+    public var writingStrokes: [UInt32]
 
     public init(
         edgeLayers: [UInt8], edgeWeights: [UInt8], strokePoints: [SIMD2<Float>] = [], strokes: [InteriorStroke] = [],
-        style: Style = .layered
+        style: Style = .layered, writingStrokes: [UInt32] = []
     ) {
         self.edgeLayers = edgeLayers
         self.edgeWeights = edgeWeights
         self.strokePoints = strokePoints
         self.strokes = strokes
         self.style = style
+        self.writingStrokes = writingStrokes
+    }
+
+    /// Whether stroke `index` is writing (`writingStrokes`).
+    public func isWritingStroke(_ index: Int) -> Bool {
+        guard !writingStrokes.isEmpty, index >= 0, index <= Int(UInt32.max) else { return false }
+        var low = 0, high = writingStrokes.count
+        let target = UInt32(index)
+        while low < high {
+            let mid = (low + high) / 2
+            if writingStrokes[mid] < target { low = mid + 1 } else { high = mid }
+        }
+        return low < writingStrokes.count && writingStrokes[low] == target
     }
 }
 

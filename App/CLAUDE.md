@@ -29,7 +29,8 @@ synchronized folder would bundle it into the app.
   (`CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the strides). No shader reads
   `CanvasUniforms.background`: it carries the backdrop to `TimelapseFrameRenderer`'s clear.
 - The shaders hold no paper, ink or accent literals (the brush and the paint sheen keep theirs): the
-  chrome colors are uniforms (`CanvasUniforms.setChrome`, `select`).
+  chrome colors are uniforms (`CanvasUniforms.setChrome`, `select`; `lightInk` is the tone writing
+  over dark paint turns to).
 - Exhaustive switches: `PaintTips.signal(for:isStroking:)` and `FeedbackEngine.handle` over
   `PaintEvent`.
 - Strokes report paint many times a second, so each tip is invalidated at most once per launch and
@@ -215,7 +216,8 @@ and deceleration), rendering through a display link only while something changes
 functions looked up by name; nil means no Metal (`CanvasView.isRenderable` false, the
 `paint-unavailable` stand-in). `CanvasScene` holds a template's GPU buffers, `CanvasRenderer` the
 region states and three frame slots. `RenderContext.encode` is the one frame recipe (outline
-coverage, then one MSAA pass), shared by the canvas, `CanvasSnapshot` and `TimelapseFrameRenderer`;
+coverage, an RG16F target: the ink's opacity and the share of it in the light tone, then one MSAA
+pass), shared by the canvas, `CanvasSnapshot` and `TimelapseFrameRenderer`;
 colors are linear Display P3 into sRGB-curved targets; fills animate on the GPU from timestamps.
 Render tests compare pixels (`CanvasRenderTests`). Canvas units are the template's (root
 Conventions).
@@ -232,6 +234,14 @@ Conventions).
   style (`drawBookOutlines`, after dotted color-edge guides in `.print`, since paper has no hatch).
   Classic templates draw every edge alike (`ClassicLook` on the canvas), the selected color's
   unpainted cells outlined.
+- Writing (`TemplateLineArt.writingStrokes`) over a paint under `Template.darkPaintLightness` draws
+  in the paper's light tone once its region is painted, so it reads instead of vanishing
+  (`docs/writing.md` › Ink on dark paint): `DrawableLineArt.lightWriting` says which strokes,
+  `OutlineGeometry.lightWritingMark` rides on their layer to the shader, which crossfades by
+  `paintedAmount` (`CanvasUniforms.lightInk`: the lighter of the paper and the ink, so the dark
+  sheet's writing stays in its light ink); `TemplateRasterizer.drawBookOutlines` switches where
+  the region is painted (never in `.print`) and `LineArtDrawing.paths(within:overPaint:)` splits
+  it out over the painting (Refine's). Unpainted and every other line stay in the ink.
 - Settings › Line Weight (`LineWeight`: Fine, Regular, Bold) is the one thing about a book's lines
   the painter sets: an open canvas follows a change at once (`PaintView`'s `@AppStorage`), and
   pictures, the time-lapse and print read it (`LineWeight.stored`). Constants live in

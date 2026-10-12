@@ -78,6 +78,9 @@ nonisolated struct CanvasUniforms {
     /// x: 1 for a coloring book (`setColoringBookLines`: lines never dissolve under paint and the
     /// selected color's cells get no outline).
     var lineMode: SIMD4<Float> = .zero
+    /// rgb: the tone writing over a dark paint is drawn in once its region is painted
+    /// (`CanvasPalette.lightTone`).
+    var lightInk: SIMD4<Float> = .zero
 }
 
 nonisolated extension CanvasUniforms {
@@ -87,6 +90,7 @@ nonisolated extension CanvasUniforms {
         background = SIMD4(palette.background, 1)
         paper = SIMD4(palette.paper, shadowOpacity)
         ink = SIMD4(palette.ink, outlineOpacity)
+        lightInk = SIMD4(palette.lightTone, 1)
         rim = SIMD4(palette.rim, palette.rimOpacity)
         accent.w = palette.hatchCeiling
     }
@@ -250,6 +254,14 @@ nonisolated struct CanvasPalette: Sendable {
     /// The palette for the Paper preference under the system appearance.
     static func resolve(_ paper: PaperAppearance, interfaceIsDark: Bool) -> CanvasPalette {
         paper.usesDarkPaper(interfaceIsDark: interfaceIsDark) ? .darkPaper : interfaceIsDark ? .dark : .light
+    }
+
+    /// The lighter of the paper and the ink: what writing over a dark paint is drawn in
+    /// (`Template.writesOnDarkPaint`), the paper on a light sheet and the ink it already is on a
+    /// dark one.
+    var lightTone: SIMD3<Float> {
+        let luminance = SIMD3<Float>(0.2126, 0.7152, 0.0722)
+        return simd_dot(paper, luminance) >= simd_dot(ink, luminance) ? paper : ink
     }
 
     /// `paint` (linear P3) as an accent on this paper: unchanged on light paper, lightened on

@@ -100,7 +100,10 @@ the paint (`docs/coloring-book.md`). The layered style it grew from is retired: 
 decoding and draw as books, and its recorded settings decode as the book's defaults. Writing (`LineArtInput.writing`: the lines of text Vision
 found, `TextFinder`) is traced from the photo itself, painted out before segmenting and drawn as
 interior strokes with the numbers kept off it (`Writing`, `LabelKeepOut`; `keepWriting`;
-`docs/writing.md`, whose corpus every change to it is judged on). The painter's edits from the
+`docs/writing.md`, whose corpus every change to it is judged on); text under 48 px is read on a
+finer window and the template marks its strokes (`TemplateLineArt.writingStrokes`, the `WRIT`
+chunk), which renderers draw in the paper's tone over a painted dark paint
+(`Template.writesOnDarkPaint`). The painter's edits from the
 app's Refine (`LineArtInput.edits`, `pbn --line-edits`: lines drawn, the eraser's passes, lines
 tapped away, shapes filled, in order) change the drawing the template without them draws, and
 nothing else (`LayeredLines.shownLines`, `LineEdits`; `docs/coloring-book.md` › The painter's
@@ -181,7 +184,8 @@ Saved paintings must open in every later build. The format history is documented
   `Tests/PaintCoreTests/Fixtures/template-v1.pbnt` / `template-v2.pbnt` / `template-v2-lines.pbnt`
   (the optional `LINE` chunk of layered templates) / `template-v2-book.pbnt` (the chunk's trailing
   style byte, written only for coloring books) / `template-v2-detail.pbnt` (the optional `DETL`
-  chunk of detail areas) must keep decoding (they are never regenerated). Add
+  chunk of detail areas) / `template-v2-writing.pbnt` (the optional `WRIT` chunk of writing
+  strokes) must keep decoding (they are never regenerated). Add
   a fixture file and decode test for every new `formatVersion`, chunk or trailing field.
 - New template data goes in an extension chunk (FourCC tag, flags, length; see
   `TemplateCoding.swift`). Old readers skip optional chunks; flag a chunk `required` only when

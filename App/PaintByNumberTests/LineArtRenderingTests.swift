@@ -99,6 +99,135 @@ struct LineArtRenderingTests {
         #expect(DrawableLineArt(t) == nil && !OutlineGeometry(t).isColoringBook)
     }
 
+    // MARK: Writing
+
+    /// The book with two strokes marked as writing, one in a region whose paint is dark (under
+    /// `Template.darkPaintLightness`) and one in a light one, and the index of a third stroke, on a
+    /// dark paint too, which stays drawing.
+    static func writing() throws -> (template: Template, dark: Int, light: Int, drawing: Int) {
+        var t = book
+        let art = try #require(t.lineArt)
+        func lightness(_ stroke: InteriorStroke) -> Float { t.palette[Int(t.regions[Int(stroke.region)].colorIndex)].oklab.x }
+        let darks = art.strokes.indices.filter { lightness(art.strokes[$0]) < Template.darkPaintLightness }
+        let lights = art.strokes.indices.filter { lightness(art.strokes[$0]) >= Template.darkPaintLightness }
+        let dark = try #require(darks.first), light = try #require(lights.first), drawing = try #require(darks.dropFirst().first)
+        t.lineArt?.writingStrokes = [dark, light].sorted().map { UInt32($0) }
+        return (t, dark, light, drawing)
+    }
+
+    /// The middle point of stroke `stroke`, in canvas units.
+    static func middle(of stroke: Int, in t: Template) -> SIMD2<Float> {
+        let art = t.lineArt!, s = art.strokes[stroke]
+        return art.strokePoints[Int(s.pointStart) + 1]
+    }
+
+    @Test func writingOverDarkPaintIsMarkedForTheShaderAndTheRenderers() throws {
+        let (t, dark, light, drawing) = try Self.writing()
+        let art = try #require(t.lineArt)
+        #expect(t.writesOnDarkPaint(stroke: dark) && !t.writesOnDarkPaint(stroke: light) && !t.writesOnDarkPaint(stroke: drawing))
+        let lines = try #require(DrawableLineArt(t))
+        #expect(lines.strokes.count == art.strokes.count && lines.lightWriting.count == lines.strokes.count)
+        for (s, flag) in lines.lightWriting.enumerated() { #expect(flag == (s == dark), "stroke \(s)") }
+        let g = OutlineGeometry(t)
+        for (s, stroke) in art.strokes.enumerated() {
+            let expected = Float(stroke.layer) + (s == dark ? OutlineGeometry.lightWritingMark : 0)
+            #expect(g.lineLayers[t.edges.count + s] == expected, "stroke \(s)")
+        }
+        // A template saved without the marks draws as it always did, and a mark past the strokes
+        // is ignored, not trusted.
+        var unmarked = t
+        unmarked.lineArt?.writingStrokes = []
+        #expect(OutlineGeometry(unmarked).lineLayers == OutlineGeometry(Self.book).lineLayers)
+        var wild = t
+        wild.lineArt?.writingStrokes = [UInt32(art.strokes.count), .max]
+        #expect(DrawableLineArt(wild)?.lightWriting.contains(true) == false)
+    }
+
+    /// The canvas draws writing over a dark paint in the paper's tone once its region is painted,
+    /// crossfaded as the paint comes; the drawing and writing over a light paint stay in the ink.
+    @Test func canvasTurnsWritingOverDarkPaintLightAsItsRegionIsPainted() throws {
+        let (t, dark, light, drawing) = try Self.writing()
+        let art = try #require(t.lineArt)
+        let size = CGSize(width: t.width * 2, height: t.height * 2)
+        let options = CanvasSnapshot.Options(outlines: true, numbers: false, outlineWidth: 1.5)
+        func at(_ stroke: Int, _ px: PixelReader) -> Int {
+            let p = Self.middle(of: stroke, in: t)
+            return luma(px[Int(p.x * 2), Int(p.y * 2)])
+        }
+        func render(painted strokes: [Int]) throws -> PixelReader {
+            var progress = PaintProgress(regionCount: t.regions.count)
+            for s in strokes { progress.paint(Int(art.strokes[s].region)) }
+            return PixelReader(try #require(CanvasSnapshot.render(template: t, progress: progress, size: size, options: options)))
+        }
+        let paper = luma(encoded(CanvasPalette.light.paper))
+        let blank = try render(painted: [])
+        let painted = try render(painted: [dark, light, drawing])
+        record(try #require(CanvasSnapshot.render(template: t, progress: nil, size: size, options: options)), "writing-unpainted")
+        for stroke in [dark, light, drawing] { #expect(at(stroke, blank) < paper - 60, "stroke \(stroke) is ink on paper") }
+        #expect(at(dark, painted) > paper - 25, "writing over a dark paint turns light: \(at(dark, painted))")
+        #expect(at(light, painted) < paper - 60, "writing over a light paint stays ink")
+        #expect(at(drawing, painted) < paper - 60, "the drawing over a dark paint stays ink")
+        // Halfway through the region's painting (smoothstep from 30 % of its duration), the ink is
+        // halfway to the paper's tone.
+        let context = try #require(RenderContext.shared)
+        let scene = try #require(CanvasScene(template: t, context: context))
+        var states = [RegionState](repeating: .settled(painted: false), count: t.regions.count)
+        states[Int(art.strokes[dark].region)] = RegionState(origin: .zero, start: -0.65, duration: 1, radius: 0, painted: 1, seed: 0)
+        let uniforms = CanvasSnapshot.uniforms(scene: scene, width: Int(size.width), height: Int(size.height), options: options)
+        let halfway = PixelReader(try #require(CanvasSnapshot.image(
+            scene: scene, states: states, uniforms: uniforms, content: RenderContext.Content(outlines: true, numbers: false),
+            width: Int(size.width), height: Int(size.height), context: context)))
+        #expect(at(dark, halfway) > at(dark, blank) + 40 && at(dark, halfway) < at(dark, painted) - 25, "halfway: \(at(dark, halfway))")
+    }
+
+    /// Pictures draw it so too, in the style's paper, where its region is painted: not on paper
+    /// before, and never in print.
+    @Test func picturesDrawWritingOverPaintedDarkPaintInThePaperTone() throws {
+        let (t, dark, light, drawing) = try Self.writing()
+        let art = try #require(t.lineArt)
+        /// The lightness at the middle of `stroke`, and the darkest within a pixel of it (a thin
+        /// line may cover the pixel only in part).
+        func lumas(_ stroke: Int, _ style: TemplateRasterizer.Style, painted: [Bool]?) throws -> (middle: Int, darkest: Int) {
+            let image = try #require(TemplateRasterizer.image(t, painted: painted, style: style, maxPixelSize: 2 * t.height))
+            let scale = Float(image.height) / Float(t.height), p = Self.middle(of: stroke, in: t)
+            let pixels = PixelReader(image), x = Int(p.x * scale), y = Int(p.y * scale)
+            let around = (-1...1).flatMap { dy in (-1...1).map { dx in luma(pixels[x + dx, y + dy]) } }
+            return (luma(pixels[x, y]), around.min()!)
+        }
+        // The finished picture and the painted preview: every region is painted.
+        for style in [TemplateRasterizer.Style.painting, .finished] {
+            #expect(try lumas(dark, style, painted: nil).middle > 200, "writing over a dark paint in the paper's tone")
+            #expect(try lumas(light, style, painted: nil).darkest < 100 && lumas(drawing, style, painted: nil).darkest < 100, "the rest in ink")
+        }
+        // A thumbnail by what is painted: the writing's region painted, or not.
+        var some = [Bool](repeating: false, count: t.regions.count)
+        some[Int(art.strokes[dark].region)] = true
+        #expect(try lumas(dark, .thumbnail, painted: some).middle > 200)
+        #expect(try lumas(dark, .thumbnail, painted: nil).darkest < 100)
+        // Print: dark ink, whatever is painted (a hairline covers a pixel only in part).
+        #expect(try lumas(dark, .printable, painted: [Bool](repeating: true, count: t.regions.count)).middle < 150)
+        #expect(try lumas(dark, .printable, painted: nil).darkest < 150)
+    }
+
+    /// The line art preview over the finished painting (Refine's) draws the writing apart, for
+    /// the paper's tone; on paper or a photo it is all one ink.
+    @Test func lineArtPreviewKeepsWritingOverDarkPaintApart() throws {
+        let (t, dark, _, _) = try Self.writing()
+        let drawing = LineArtDrawing(t)
+        #expect(drawing.hasLightWriting && drawing.lines.filter(\.onDarkPaint).count == 1)
+        #expect(!LineArtDrawing(Self.book).hasLightWriting)
+        let whole = CGRect(x: 0, y: 0, width: t.width, height: t.height)
+        let onPaper = drawing.paths(within: whole, overPaint: false)
+        #expect(onPaper.light.isEmpty && !onPaper.ink.isEmpty)
+        let overPaint = drawing.paths(within: whole, overPaint: true)
+        #expect(!overPaint.light.isEmpty && !overPaint.ink.isEmpty)
+        // Zoomed in on the writing, only it is in view, and it is the light one.
+        let p = Self.middle(of: dark, in: t)
+        let near = CGRect(x: CGFloat(p.x) - 2, y: CGFloat(p.y) - 2, width: 4, height: 4)
+        let zoomed = drawing.paths(within: near, overPaint: true)
+        #expect(!zoomed.light.isEmpty)
+    }
+
     // MARK: Uniforms
 
     @Test func classicAndBookUniforms() throws {
