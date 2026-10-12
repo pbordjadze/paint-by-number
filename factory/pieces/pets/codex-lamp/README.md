@@ -77,7 +77,7 @@ All live and test scratch output belongs under `/root/factory-out/`. The live ru
 tests use `FACTORY_TEST_OUT` and `TMPDIR`. The run directory is
 locked against two simultaneous drivers. Model, effort, sources, skill hashes and jobs are
 immutable; changing those inputs requires a new run directory, except for explicitly refreshed
-guardian charters on unstarted steps. Parallel limits may change.
+guardian charters on unstarted or explicitly restarted steps. Parallel limits may change.
 
 `codex_lamp refresh-inputs <run> --reason '…'` saves the current charter text in a new immutable
 input revision. `inputs.json` and all dispatched jobs/replies remain unchanged. The provenance
@@ -87,16 +87,31 @@ an unchanged refresh is a no-op. Steps already started finish with their origina
 unstarted steps use the latest revision. Other inputs remain frozen. This command makes no
 model calls and needs no generation skill. Use `python3 -m factory.taste.codex_lamp` as the CLI.
 
+To abandon a partial or completed step after a refresh, add `--restart-step N`, with N from
+the seven-step plan above (step 3 is job round 005). The step and every later dependent step
+move into `records/superseded/<restart>/` with their directory layout and bytes preserved:
+jobs, replies, completions, retries, rejections, costs, dispatch work, hatches, decisions and
+summary. Earlier steps and historical replays stay active. The manifest and provenance retain
+the reason, old input revision for each step, and paths and revisions of superseded replies.
+Their step bindings are cleared so the next run writes fresh jobs using current inputs.
+An explicit restart works even when the charter refresh itself is unchanged. A pending move
+journal is recovered before the next run, refresh or comparison can consume active records.
+Comparison outputs are archived and regenerated: superseded replies remain visible, including
+raw replies interrupted before collection, but enter no tallies, active totals or paired results.
+Paths embedded in archived files remain original evidence; resolve them through the manifest's
+archive prefix. Already published repository packages retain the existing overwrite protection.
+
 ```text
 run.json                         primary/comparison models, effort, skill location, version
 inputs.json                      frozen charters, seeds, glossary, chapter-6 evidence and rules
 input-revisions/<sha256>.json     immutable full snapshots; refresh changes only charter text
-provenance.json                  current/initial hashes, step revisions and refresh history
+provenance.json                  current/initial hashes, step revisions, refresh/restart history
 skill.json                       hashes of the installed generation/validation skill
 jobs/NNN/<stage>-<seat>-mN.json    own prompt, schema, model, effort and image attachments
 retries/NNN/<job>.json            second attempt with validation reasons and previous reply
 replies/NNN/<job>[.retry].json    raw schema answer from the kit runner
 records/NNN/<job>.json            durable completion: valid/invalid, errors, reply, hashes, lengths, costs
+records/superseded/<restart>/    manifest and unchanged artifacts superseded by a step restart
 rejections/NNN/<job>-N.json       invalid reply and validation reasons
 costs/NNN/<job>-N.json            measured tokens/time; unknown measurements remain null
 dispatch/<unique>/…              every invocation's schema, reply, JSONL and stderr

@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, lamp_inputs, loop
+from factory.taste import codex_lamp as lamp, lamp_hatch, lamp_compare, lamp_inputs, lamp_restart, loop
 from tools.factory.fixtures.strict_schema import check_strict
 
 
@@ -322,6 +322,189 @@ class LampTests(unittest.TestCase):
         for call in self.calls():
             context = json.JSONDecoder().raw_decode(call['prompt'].split('Context:\n', 1)[1])[0]
             self.assertEqual(context['owner_charters'], {g['id']: g for g in old['guardians']})
+
+    def test_restart_partial_style_decision_after_refresh_cli(self):
+        for guardian in self.inputs['guardians']:
+            guardian['charter_text'] += '\n- **Georgian thread**: old frozen field.'
+        driver = self.driver()
+        execute = lamp.execute
+        def legacy_execute(run, job, validate=None):
+            if job['round'] == 5:
+                job.pop('inputs_sha256')
+            return execute(run, job, validate)
+        with patch.object(lamp, 'execute', side_effect=legacy_execute), patch.dict(os.environ,
+                {'FAKE_STYLE_TRANSPORT_ERROR': '1'}):
+            with self.assertRaisesRegex(RuntimeError, '4 job'):
+                driver.run_plan()
+        self.assertEqual(len(list(self.run.glob('jobs/005/*.json'))), 6)
+        self.assertEqual(len(list(self.run.glob('replies/005/*.json'))), 2)
+        # These old votes would reject every style if accidentally consumed on resume.
+        for path in self.run.glob('records/005/*.json'):
+            record = loop.load(path)
+            record['reply']['flags'] = [{'target': sid, 'why': 'Old charter objection.'}
+                                        for sid in record['reply']['ranking']]
+            loop.save(path, record)
+        loop.write_atomic(self.run / 'replay/inputs/untouched.txt', 'Historical replay evidence.')
+        lamp_compare.compare_run(self.run)
+        evidence = {p.relative_to(self.run).as_posix(): p.read_bytes()
+                    for p in self.run.rglob('*') if p.is_file() and p.name != 'provenance.json'}
+        calls = len(self.calls())
+        real_repo = Path(__file__).resolve().parents[2]
+        command = [sys.executable, '-m', 'factory.taste.codex_lamp', 'refresh-inputs', str(self.run),
+                   '--reason', 'Refreshed charters; step 3 started on the old ones.']
+        refreshed = subprocess.run(command, cwd=real_repo, capture_output=True, text=True)
+        self.assertEqual(refreshed.returncode, 0, refreshed.stderr)
+        before = loop.load(self.run / 'provenance.json')
+        result = subprocess.run(command + ['--restart-step', '3'], cwd=real_repo, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        event = json.loads(result.stdout)
+        self.assertEqual(event['status'], 'restarted')
+        self.assertEqual(event['before'], event['after'])  # refresh was already applied
+        self.assertEqual(event['old_steps'], {'3': before['initial']})
+        self.assertEqual(len(self.calls()), calls)
+        for relative, content in evidence.items():
+            moved = any(relative == p or relative.startswith(p + '/') for p in event['artifacts'])
+            target = self.run / event['archive'] / relative if moved else self.run / relative
+            self.assertEqual(target.read_bytes(), content, relative)
+            if moved and not relative.startswith('comparison.'):
+                self.assertFalse((self.run / relative).exists(), relative)
+        provenance = loop.load(self.run / 'provenance.json')
+        self.assertEqual(set(provenance['steps']), {'1', '2'})
+        self.assertEqual(len(provenance['restarts'][0]['replies']), 2)
+        report = loop.load(self.run / 'comparison.json')
+        old = [r for r in report['replies'] if r['stage'] == 'style-decision']
+        self.assertEqual(len(old), 2)
+        self.assertTrue(all(r['status'] == 'superseded' and r['inputs_sha256'] == before['initial'] for r in old))
+        self.assertIn('Superseded — excluded', (self.run / 'comparison.md').read_text())
+        driver = self.driver()
+        round = driver.round
+        def stop_at_briefs(number, *args, **kwargs):
+            if number == 6:
+                raise RuntimeError('reached fresh briefs')
+            return round(number, *args, **kwargs)
+        with patch.object(driver, 'round', side_effect=stop_at_briefs):
+            with self.assertRaisesRegex(RuntimeError, 'reached fresh briefs'):
+                driver.run_plan()
+        new_calls = self.calls()[calls:]
+        self.assertEqual(len(new_calls), 6)
+        self.assertTrue(all('style-decision-' in c['work'] for c in new_calls))
+        for path in self.run.glob('jobs/005/*.json'):
+            job = loop.load(path)
+            self.assertEqual(job['inputs_sha256'], before['current'])
+            self.assertNotIn('**Georgian thread**', job['prompt'])
+        self.assertTrue(loop.load(self.run / 'decisions/style.json')['selected'])
+
+    def test_restart_same_revision_excludes_pairs_and_uncollected_replies(self):
+        driver = self.driver()
+        rule = lamp.schema.obj({'why': lamp.S})
+        driver.round(5, 'choice', ['moon'], 'Old task.', {}, rule, compare=True)
+        (self.run / 'records/005/choice-moon-m1.json').unlink()  # interrupted collection
+        with patch.object(loop, 'guardians', return_value=self.inputs['guardians']):
+            lamp_inputs.refresh(self.run, 'Restart the same inputs.', 3)
+        self.driver().round(5, 'choice', ['moon'], 'New task.', {}, rule, compare=True)
+        lamp_compare.compare_run(self.run)
+        report = loop.load(self.run / 'comparison.json')
+        self.assertEqual(len(report['replies']), 4)
+        self.assertEqual(len(report['comparisons']), 1)
+        old = [r for r in report['replies'] if r['status'] == 'superseded']
+        self.assertEqual({r['previous_status'] for r in old}, {'valid', 'uncollected'})
+        self.assertEqual(sum(r['jobs'] for r in report['seats']), 2)
+        self.assertEqual(sum(r['superseded'] for r in report['seats']), 2)
+        self.assertTrue(all(r['superseded_reason'] == 'Restart the same inputs.' for r in old))
+
+    def test_restart_boundaries_preserve_all_evidence_and_recover_interrupted_moves(self):
+        for number in range(1, 8):
+            with self.subTest(step=number):
+                self.run = self.case / f'run-{number}'
+                self.run.mkdir()
+                self.driver()
+                for round in range(1, 11):
+                    job = dict(id=f'job-{round}', round=round, attempt=0)
+                    loop.save(self.run / 'jobs' / f'{round:03}' / f'job-{round}.json', job)
+                    loop.save(self.run / 'dispatch' / f'job-{round}-scratch' / f'{round:03}' / 'work.json', job)
+                    for kind in ('costs', 'retries', 'rejections'):
+                        loop.save(self.run / kind / f'{round:03}' / f'job-{round}.json', job)
+                for kind in ('pilot', 'set', 'redo'):
+                    loop.save(self.run / 'hatches' / f'{kind}-moon' / 'request.json', {'kind': kind})
+                for name in lamp_restart.DECISION_STEPS:
+                    loop.save(self.run / 'decisions' / (name + '.json'), {'selected': ['old']})
+                loop.save(self.run / 'summary.json', {'status': 'complete'})
+                loop.save(self.run / 'replay/jobs/001/keep.json', {'historical': True})
+                evidence = {p.relative_to(self.run).as_posix(): p.read_bytes()
+                            for p in self.run.rglob('*') if p.is_file()}
+                old = lamp_inputs.provenance(self.run)
+                rename = Path.rename
+                moved = []
+                def interrupt(source, target):
+                    if len(moved) == 2:
+                        raise OSError('interrupted archive')
+                    moved.append(source)
+                    return rename(source, target)
+                with patch.object(loop, 'guardians', return_value=self.inputs['guardians']), \
+                        patch.object(Path, 'rename', interrupt):
+                    with self.assertRaisesRegex(OSError, 'interrupted archive'):
+                        lamp_inputs.refresh(self.run, 'Restart after interruption.', number)
+                self.assertIn('pending_restart', loop.load(self.run / 'provenance.json'))
+                recovered = lamp_inputs.provenance(self.run)
+                self.assertNotIn('pending_restart', recovered)
+                event = recovered['restarts'][0]
+                self.assertEqual(recovered['steps'], {k: v for k, v in old['steps'].items() if int(k) < number})
+                for relative, content in evidence.items():
+                    archived = any(relative == p or relative.startswith(p + '/') for p in event['artifacts'])
+                    target = self.run / event['archive'] / relative if archived else self.run / relative
+                    self.assertEqual(target.read_bytes(), content, relative)
+                for round in range(1, 11):
+                    # Step 1 owns rounds 1–4; step 2 has only pilots, and 6 only set hatches.
+                    owner = 1 if round <= 4 else 3 if round == 5 else 4 if round == 6 else 5 if round <= 8 else 7
+                    self.assertEqual((self.run / 'jobs' / f'{round:03}').exists(), owner < number)
+                for kind, owner in (('pilot', 2), ('set', 6), ('redo', 7)):
+                    self.assertEqual((self.run / 'hatches' / f'{kind}-moon').exists(), owner < number)
+                for name, owner in (('shortlist-0', 1), ('shortlist-1', 1), ('style', 3),
+                                    ('reference', 3), ('briefs', 5), ('images', 7)):
+                    self.assertEqual((self.run / 'decisions' / (name + '.json')).exists(), owner < number)
+                self.assertFalse((self.run / 'summary.json').exists())
+                self.assertEqual(lamp_inputs.provenance(self.run), recovered)
+
+    def test_refresh_and_restart_together_keep_retries_and_repeated_archives(self):
+        driver = self.driver()
+        rule = lamp.schema.obj({'why': lamp.S})
+        driver.round(1, 'earlier', ['moon'], 'Preserved task.', {}, rule)
+        with patch.dict(os.environ, {'FAKE_BAD_REPLY': 'choice-moon'}):
+            driver.round(5, 'choice', ['moon'], 'Old task.', {}, rule, compare=True)
+        # A malformed final answer from an interrupted repair must also survive reporting.
+        (self.run / 'replies/005/choice-moon-m0.retry.json').write_text('unfinished JSON {')
+        (self.run / 'records/005/choice-moon-m0.json').unlink()
+        guardians = json.loads(json.dumps(self.inputs['guardians']))
+        guardians[0]['charter_text'] += '\nRevised charter.'
+        with patch.object(loop, 'guardians', return_value=guardians):
+            event = lamp_inputs.refresh(self.run, 'Refresh and restart together.', 3)
+            provenance = loop.load(self.run / 'provenance.json')
+            self.assertNotEqual(event['before'], event['after'])
+            self.assertEqual(provenance['refreshes'][-1]['preserved_steps'], {'1': provenance['initial']})
+            first_archive = self.run / event['archive']
+            self.assertTrue(list(first_archive.glob('retries/005/*.json')))
+            self.assertTrue(list(first_archive.glob('rejections/005/*.json')))
+            original = {p: p.read_bytes() for p in first_archive.rglob('*') if p.is_file()}
+            report = loop.load(self.run / 'comparison.json')
+            old = [r for r in report['replies'] if r['status'] == 'superseded']
+            self.assertEqual(len(old), 4)
+            self.assertTrue(any(r.get('raw_reply') == 'unfinished JSON {' for r in old))
+            self.driver().round(5, 'choice', ['moon'], 'Fresh task.', {}, rule)
+            again = lamp_inputs.refresh(self.run, 'Restart again.', 3)
+            self.assertNotEqual(again['archive'], event['archive'])
+            self.assertEqual({p: p.read_bytes() for p in original}, original)
+            report = loop.load(self.run / 'comparison.json')
+            self.assertEqual(sum(r['status'] == 'superseded' for r in report['replies']), 5)
+
+    def test_restart_rejects_invalid_step_or_reason_without_changing_inputs(self):
+        self.driver()
+        before = {p: p.read_bytes() for p in self.run.rglob('*') if p.is_file()}
+        for number in (0, 8, -1, True, '3'):
+            with self.assertRaisesRegex(ValueError, 'between 1 and 7'):
+                lamp_inputs.refresh(self.run, 'Reason.', number)
+        with self.assertRaisesRegex(ValueError, 'nonempty'):
+            lamp_inputs.refresh(self.run, ' ', 3)
+        self.assertEqual({p: p.read_bytes() for p in self.run.rglob('*') if p.is_file()}, before)
 
     def test_refresh_cannot_change_a_locked_run(self):
         self.driver()
