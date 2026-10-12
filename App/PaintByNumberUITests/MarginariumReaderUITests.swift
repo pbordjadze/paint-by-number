@@ -20,6 +20,30 @@ final class MarginariumReaderUITests: XCTestCase {
     }
 
     @MainActor
+    func testChapterPetsAreVisibleAndRespondToTaps() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "marginarium-chapter"]
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Two More Pets"].waitForExistence(timeout: 15))
+        let pip = app.buttons["marginarium-pet-pip"]
+        XCTAssertTrue(pip.waitForExistence(timeout: 10))
+        XCTAssertEqual(pip.label, "Pip, Codex's teapot")
+        XCTAssertTrue(pip.isHittable)
+        pip.tap()
+        attachScreenshot(of: app, named: "marginarium-reader-pip")
+        let moth = app.buttons["marginarium-pet-colophon"]
+        let reader = app.scrollViews["marginarium-reader"]
+        for _ in 0..<5 {
+            if moth.exists && moth.isHittable { break }
+            reader.swipeUp()
+        }
+        XCTAssertEqual(moth.label, "Colophon, Claude's moth")
+        XCTAssertTrue(moth.isHittable)
+        moth.tap()
+        attachScreenshot(of: app, named: "marginarium-reader-colophon")
+    }
+
+    @MainActor
     func testReaderAtAccessibilitySizeWithLongText() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "marginarium-chapter-long-text", "-NSDoubleLocalizedStrings", "YES",
@@ -28,7 +52,14 @@ final class MarginariumReaderUITests: XCTestCase {
         let reader = app.scrollViews["marginarium-reader"]
         XCTAssertTrue(reader.waitForExistence(timeout: 15))
         // At this size the title itself wraps; scrolling must still reach the quotation.
-        let passage = reader.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Before any guardian got a pet")).firstMatch
+        let pip = app.buttons["marginarium-pet-pip"]
+        for _ in 0..<12 {
+            if pip.exists && pip.isHittable { break }
+            reader.swipeUp()
+        }
+        XCTAssertTrue(pip.exists && pip.isHittable)
+        attachScreenshot(of: app, named: "marginarium-reader-pet-accessibility-long-text")
+        let passage = reader.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "The checkers catch what a person would miss")).firstMatch
         for _ in 0..<12 {
             if passage.exists && passage.isHittable { break }
             reader.swipeUp()

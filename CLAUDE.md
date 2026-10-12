@@ -70,7 +70,8 @@ before planning app work).
   Markdown from `docs/marginarium/` into the catalog and bundled `Resources/marginarium.json`;
   its docstring defines the supported blocks and stable key markers. `marginarium.py check`
   checks them word for word; `python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'`
-  exercises every block kind and key stability (fixtures never ship).
+  exercises every block kind and key stability (fixtures never ship). Chapter `pet:` blocks and
+  the shared imageset/v2-atlas player: `docs/marginarium-pets.md`.
 - `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;

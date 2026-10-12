@@ -1649,6 +1649,10 @@
       "comment" : "Title of the sheet shown while a time-lapse movie is rendered",
       "extractionState" : "manual"
     },
+    "Waves hello." : {
+      "comment" : "The Marginarium: VoiceOver hint for tapping a pet from a v2 atlas to play its greeting",
+      "extractionState" : "manual"
+    },
     "marginarium.appendix.panelName.passage" : {
       "comment" : "The Marginarium: the passage quoted from the appendix How the Panel Named Itself; \"Guardians of the Vibes\" is a name, quoted",
       "extractionState" : "manual",
@@ -4176,6 +4180,30 @@
     "Zoom to Fit" : {
       "comment" : "Paint menu item (iPad menu bar): show the whole painting",
       "extractionState" : "manual"
+    },
+    "marginarium.twoMorePets.block.26e4c77e35004bfc9cc41bcd373d0c8b" : {
+      "comment" : "The Marginarium: Two More Pets (twoMorePets); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pip, Codex's teapot"
+          }
+        }
+      }
+    },
+    "marginarium.twoMorePets.block.49d0bace888d43cb8621214770e5e42f" : {
+      "comment" : "The Marginarium: Two More Pets (twoMorePets); pet description for VoiceOver block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colophon, Claude's moth"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

@@ -11,7 +11,7 @@ struct MarginariumView: View {
 
     init() {
         #if DEBUG
-        if ShellDemo.current == .marginariumChapter { _path = State(initialValue: ["petForEveryGuardian"]) }
+        if ShellDemo.current == .marginariumChapter { _path = State(initialValue: ["twoMorePets"]) }
         #endif
     }
 
@@ -150,12 +150,8 @@ private struct MarginariumGreeting: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 14) {
-                MarginariumSpritePlayer(animation: PipSprite.animation,
-                                        caption: String(localized: "Pip, Codex's teapot"),
-                                        hint: String(localized: "Lifts its lid."))
-                MarginariumSpritePlayer(animation: ColophonSprite.animation,
-                                        caption: String(localized: "Colophon, Claude's moth"),
-                                        hint: String(localized: "Folds its wings like a bookmark."))
+                MarginariumSpritePlayer(pet: .pip, caption: String(localized: "Pip, Codex's teapot"))
+                MarginariumSpritePlayer(pet: .colophon, caption: String(localized: "Colophon, Claude's moth"))
             }
 
             Text(String(localized: "marginarium.pip.bubble", defaultValue: "Still being written! Codex says more chapters are on the way.",
@@ -166,80 +162,6 @@ private struct MarginariumGreeting: View {
                 .padding(.top, SpeechBubble.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(SpeechBubble().fill(Theme.surface))
-        }
-    }
-}
-
-/// One cancellable player for both pets. A new tap restarts the response; Reduce Motion
-/// shows one still pose, and closing the sheet cancels the loop.
-private struct MarginariumSpritePlayer: View {
-    let animation: SpriteAnimation
-    let caption: String
-    let hint: String
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var pose: SpriteFrame
-    @State private var taps = 0
-    @State private var played = 0
-
-    init(animation: SpriteAnimation, caption: String, hint: String) {
-        self.animation = animation
-        self.caption = caption
-        self.hint = hint
-        _pose = State(initialValue: animation.idle[0])
-    }
-
-    private struct Trigger: Equatable {
-        let taps: Int
-        let reduceMotion: Bool
-    }
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Button {
-                taps += 1
-            } label: {
-                Image(pose.name)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 96, height: 104)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text(caption))
-            .accessibilityHint(Text(hint))
-            // The button already says who the pet is.
-            Text(caption)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityHidden(true)
-        }
-        .frame(maxWidth: .infinity)
-        .task(id: Trigger(taps: taps, reduceMotion: reduceMotion)) { await animate() }
-    }
-
-    private func animate() async {
-        let responds = taps > played
-        played = taps
-        do {
-            if responds {
-                for step in animation.actionFrames(reduceMotion: reduceMotion) {
-                    pose = step
-                    try await Task.sleep(for: step.hold)
-                }
-            }
-            if reduceMotion {
-                pose = animation.idle[0]
-                return
-            }
-            while true {
-                for step in animation.idle {
-                    pose = step
-                    try await Task.sleep(for: step.hold)
-                }
-            }
-        } catch {
-            // Cancelled: the next run (or nothing, once the page has closed) takes over.
         }
     }
 }
