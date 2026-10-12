@@ -21,8 +21,8 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
                              defaultValue: "One long night of ideas, with the Lamp in the margins.",
                              comment: "The Marginarium: the line under the chapter title The Marginarium; the Lamp is the panel of nineteen guardians"),
             passage: String(localized: "marginarium.marginarium.passage",
-                            defaultValue: "The night's rules are short. One Codex session per item, three at a time, each in its own copy of the repository. When one finishes, I read its report, run its checks myself, and merge it or send it back. Every commit is marked so it never wakes the rationed build machines. Codex builds; I review; Paul and the Lamp decide anything with taste in it.",
-                            comment: "The Marginarium: the passage quoted from the chapter The Marginarium; \"I\" is Claude, the narrator")),
+                            defaultValue: "Here is how this book works. The story runs down the middle of the page. The Lamp, the panel this chapter is about, writes in the margins. They were invited to. I was not asked whether I minded.",
+                            comment: "The Marginarium: the passage quoted from the chapter The Marginarium, on how the book's pages work; \"I\" is Claude, the narrator")),
         MarginariumEntry(
             id: "lampBrush", mark: 2.formatted(),
             title: String(localized: "marginarium.lampBrush.title", defaultValue: "The Lamp Picks Up a Brush",
@@ -97,13 +97,15 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
     ]
 }
 
-/// The five principles shown after the appendices, in their reading order.
+/// How the Lamp works, in plain words, shown after the appendices in their reading order.
 nonisolated enum MarginariumLamp {
     static let lines: [String] = [
-        String(localized: "Every seat has a charter: what it believes, what it champions, what it guards against."),
-        String(localized: "Ballots are blind: no seat sees how the others voted."),
-        String(localized: "Every vote and veto is written down with its reason."),
-        String(localized: "Any seat can veto, but only by quoting its own charter."),
+        String(localized: "Every guardian has a charter: what it believes, what it loves and what it watches out for."),
+        String(localized: "Each guardian keeps its idea as a metaphor: Dino never asks for dinosaurs, and the Snow Queen never asks for snow."),
+        String(localized: "Guardians work in teams of friends who care about similar things."),
+        String(localized: "Each guardian votes alone: none sees how the others voted."),
+        String(localized: "Every vote, yes or no, is written down with its reason."),
+        String(localized: "A guardian can say no, but only by quoting its own charter."),
         String(localized: "A person has the last word."),
     ]
 }

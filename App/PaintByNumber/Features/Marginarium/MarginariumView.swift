@@ -2,16 +2,21 @@ import Foundation
 import SwiftUI
 
 /// The Marginarium: how Paint by Moonlight is made, told in chapters, with Pip, Codex's teapot,
-/// and Colophon, Claude's moth, near the top and one passage from each chapter and appendix
+/// and Colophon, Claude's moth, near the top, a "New here?" box pointing to Chapter 1 and Who's
+/// Who (`MarginariumWhosWhoView`), and one passage from each chapter and appendix
 /// (`MarginariumEntry`). A sheet from the gallery's toolbar; each entry opens its native
 /// `MarginariumReaderView`, whose blocks come from the bundled MarginariumDocument manifest.
+///
+/// Chief Architect Paul's rule for the whole book: anyone who opens it should have a nice time
+/// and roughly follow what's going on. Pages say who people are and what the Lamp's words mean,
+/// or point to Who's Who; the box says so in his words.
 struct MarginariumView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var path: [String] = []
 
     init() {
         #if DEBUG
-        if let id = ShellDemo.current?.marginariumEntryID { _path = State(initialValue: [id]) }
+        if let demoPath = ShellDemo.current?.marginariumPath { _path = State(initialValue: demoPath) }
         #endif
     }
 
@@ -25,11 +30,13 @@ struct MarginariumView: View {
                             .font(.display(.title3, weight: .semibold))
                             .foregroundStyle(.secondary)
                         Text(String(localized: "marginarium.intro",
-                                    defaultValue: "Paul makes this app with a small team of AI helpers: Codex builds the tools, Claude reviews the work and writes these chapters, and nineteen guardians called the Lamp weigh in on smaller design questions. The big creative choices stay with people, and a person's choice always wins.",
-                                    comment: "The Marginarium: the introduction under the subtitle; Codex and Claude are AI helpers, the Lamp a panel of nineteen guardians"))
+                                    defaultValue: "This is the story of how the app gets made, written down as it happens. Paul and Caroline make it together, with help from Codex and Claude, two AI helpers, and from the Lamp: a panel of imaginary guardians who each care about one thing. The big choices stay with people, and a person's choice always wins.",
+                                    comment: "The Marginarium: the introduction under the subtitle; Paul and Caroline are people, Codex and Claude AI helpers, the Lamp a panel of imaginary guardians"))
                     }
 
                     MarginariumGreeting()
+
+                    MarginariumWelcome()
 
                     VStack(alignment: .leading, spacing: 28) {
                         Text(String(localized: "marginarium.passages", defaultValue: "One passage from each chapter, quoted as written.",
@@ -76,7 +83,11 @@ struct MarginariumView: View {
             .background(Theme.paper)
             .accessibilityIdentifier("marginarium-contents")
             .navigationDestination(for: String.self) { id in
-                if let entry = (MarginariumEntry.chapters + MarginariumEntry.appendices).first(where: { $0.id == id }) {
+                if id == MarginariumCast.whosWho {
+                    MarginariumWhosWhoView()
+                } else if let guardian = MarginariumCast.guardian(destination: id) {
+                    MarginariumGuardianView(guardian: guardian)
+                } else if let entry = (MarginariumEntry.chapters + MarginariumEntry.appendices).first(where: { $0.id == id }) {
                     MarginariumReaderView(entry: entry)
                 }
             }
@@ -141,6 +152,60 @@ private struct MarginariumEntryView: View {
                         .frame(width: 3)
                 }
         }
+    }
+}
+
+/// Where a newcomer starts: Chapter 1, Who's Who, how a page reads, and Paul's rule for the book.
+private struct MarginariumWelcome: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("New here?")
+                .font(.display(.title3, weight: .semibold))
+                .accessibilityAddTraits(.isHeader)
+            NavigationLink(value: "marginarium") {
+                line("book", Text(String(localized: "marginarium.welcome.start", defaultValue: "Start with Chapter 1, the night it all began.",
+                                         comment: "The Marginarium: a link in the New here? box that opens Chapter 1")), link: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("marginarium-start-chapter1")
+            NavigationLink(value: MarginariumCast.whosWho) {
+                line("person.3", Text(String(localized: "marginarium.welcome.whosWho", defaultValue: "Meet everyone in Who's Who, pets and all.",
+                                             comment: "The Marginarium: a link in the New here? box that opens Who's Who, the page of people, helpers and guardians")), link: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("marginarium-whos-who-link")
+            line("text.alignleft", Text(String(localized: "marginarium.welcome.reading",
+                                               defaultValue: "The story runs down the middle of each page, and the guardians write in its margins. Tap any pet to say hello.",
+                                               comment: "The Marginarium: a line in the New here? box on how a chapter page reads")), link: false)
+            Text(String(localized: "marginarium.welcome.rule",
+                        defaultValue: "A rule from Paul, our Chief Architect: anyone should be able to open this book, have a nice time and roughly follow what's going on. If something here loses you, that's our mistake, not yours.",
+                        comment: "The Marginarium: the last line of the New here? box, Paul's rule for the book"))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+    }
+
+    private func line(_ symbol: String, _ text: Text, link: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Image(systemName: symbol)
+                .foregroundStyle(.tint)
+                .frame(width: 24)
+                .accessibilityHidden(true)
+            text
+                .fixedSize(horizontal: false, vertical: true)
+            if link {
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.forward")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+            }
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
     }
 }
 

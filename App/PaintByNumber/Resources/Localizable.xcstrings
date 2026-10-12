@@ -1842,13 +1842,13 @@
       }
     },
     "marginarium.intro" : {
-      "comment" : "The Marginarium: the introduction under the subtitle; Codex and Claude are AI helpers, the Lamp a panel of nineteen guardians",
+      "comment" : "The Marginarium: the introduction under the subtitle; Paul and Caroline are people, Codex and Claude AI helpers, the Lamp a panel of imaginary guardians",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paul makes this app with a small team of AI helpers: Codex builds the tools, Claude reviews the work and writes these chapters, and nineteen guardians called the Lamp weigh in on smaller design questions. The big creative choices stay with people, and a person's choice always wins."
+            "value" : "This is the story of how the app gets made, written down as it happens. Paul and Caroline make it together, with help from Codex and Claude, two AI helpers, and from the Lamp: a panel of imaginary guardians who each care about one thing. The big choices stay with people, and a person's choice always wins."
           }
         }
       }
@@ -1890,13 +1890,13 @@
       }
     },
     "marginarium.marginarium.passage" : {
-      "comment" : "The Marginarium: the passage quoted from the chapter The Marginarium; \"I\" is Claude, the narrator",
+      "comment" : "The Marginarium: the passage quoted from the chapter The Marginarium, on how the book's pages work; \"I\" is Claude, the narrator",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The night's rules are short. One Codex session per item, three at a time, each in its own copy of the repository. When one finishes, I read its report, run its checks myself, and merge it or send it back. Every commit is marked so it never wakes the rationed build machines. Codex builds; I review; Paul and the Lamp decide anything with taste in it."
+            "value" : "Here is how this book works. The story runs down the middle of the page. The Lamp, the panel this chapter is about, writes in the margins. They were invited to. I was not asked whether I minded."
           }
         }
       }
@@ -2673,24 +2673,32 @@
       "comment" : "The Marginarium: heading of the five principles after the appendices",
       "extractionState" : "manual"
     },
-    "Every seat has a charter: what it believes, what it champions, what it guards against." : {
-      "comment" : "The Marginarium: first principle in How the Lamp works, describing each guardian's charter",
+    "Every guardian has a charter: what it believes, what it loves and what it watches out for." : {
+      "comment" : "The Marginarium: how the Lamp works, line 1 of 7; a charter is a guardian's written brief",
       "extractionState" : "manual"
     },
-    "Ballots are blind: no seat sees how the others voted." : {
-      "comment" : "The Marginarium: second principle in How the Lamp works, describing blind ballots",
+    "Each guardian keeps its idea as a metaphor: Dino never asks for dinosaurs, and the Snow Queen never asks for snow." : {
+      "comment" : "The Marginarium: how the Lamp works, line 2 of 7; Dino and the Snow Queen are guardians",
       "extractionState" : "manual"
     },
-    "Every vote and veto is written down with its reason." : {
-      "comment" : "The Marginarium: third principle in How the Lamp works, describing the record of decisions",
+    "Guardians work in teams of friends who care about similar things." : {
+      "comment" : "The Marginarium: how the Lamp works, line 3 of 7",
       "extractionState" : "manual"
     },
-    "Any seat can veto, but only by quoting its own charter." : {
-      "comment" : "The Marginarium: fourth principle in How the Lamp works, describing a guardian's veto",
+    "Each guardian votes alone: none sees how the others voted." : {
+      "comment" : "The Marginarium: how the Lamp works, line 4 of 7",
+      "extractionState" : "manual"
+    },
+    "Every vote, yes or no, is written down with its reason." : {
+      "comment" : "The Marginarium: how the Lamp works, line 5 of 7",
+      "extractionState" : "manual"
+    },
+    "A guardian can say no, but only by quoting its own charter." : {
+      "comment" : "The Marginarium: how the Lamp works, line 6 of 7",
       "extractionState" : "manual"
     },
     "A person has the last word." : {
-      "comment" : "The Marginarium: fifth principle in How the Lamp works, keeping the final choice with people",
+      "comment" : "The Marginarium: how the Lamp works, line 7 of 7, keeping the final choice with people",
       "extractionState" : "manual"
     },
     "Preview" : {
@@ -4402,7 +4410,7 @@
       }
     },
     "marginarium.marginarium.block.f2621c3c97824f649a0698f972234a2d" : {
-      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); subtitle block. Preserve inline Markdown.",
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -8324,6 +8332,2598 @@
           }
         }
       }
+    },
+    "lamp.paul.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of Paul, a person who makes the app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paul"
+          }
+        }
+      }
+    },
+    "lamp.paul.role" : {
+      "comment" : "The Marginarium, Who is Who: the role of Paul, under the name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chief Architect"
+          }
+        }
+      }
+    },
+    "lamp.paul.line" : {
+      "comment" : "The Marginarium, Who is Who: one line about Paul",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Does the big-picture thinking: what the app is for, and where it goes next."
+          }
+        }
+      }
+    },
+    "lamp.caroline.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of Caroline, a person who makes the app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caroline"
+          }
+        }
+      }
+    },
+    "lamp.caroline.role" : {
+      "comment" : "The Marginarium, Who is Who: the role of Caroline, under the name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chief Designer"
+          }
+        }
+      }
+    },
+    "lamp.caroline.line" : {
+      "comment" : "The Marginarium, Who is Who: one line about Caroline",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has been making Paint by Moonlight with Paul from the start. Long before this book began, her feedback shaped many of his design choices, and much of what looks lovely here is thanks to her."
+          }
+        }
+      }
+    },
+    "lamp.codex.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of Codex, an AI helper",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codex"
+          }
+        }
+      }
+    },
+    "lamp.codex.role" : {
+      "comment" : "The Marginarium, Who is Who: the role of Codex, under the name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI helper, made by OpenAI"
+          }
+        }
+      }
+    },
+    "lamp.codex.line" : {
+      "comment" : "The Marginarium, Who is Who: one line about Codex, whose pet is Pip, a teapot",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Builds the tools and draws the pets. Its pet is Pip, a teapot."
+          }
+        }
+      }
+    },
+    "lamp.claude.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of Claude, an AI helper",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude"
+          }
+        }
+      }
+    },
+    "lamp.claude.role" : {
+      "comment" : "The Marginarium, Who is Who: the role of Claude, under the name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI helper, made by Anthropic"
+          }
+        }
+      }
+    },
+    "lamp.claude.line" : {
+      "comment" : "The Marginarium, Who is Who: one line about Claude, whose pet is Colophon, a moth",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reviews the work and tells most of the story. Its pet is Colophon, a moth."
+          }
+        }
+      }
+    },
+    "lamp.team.storytellers.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Storytellers"
+          }
+        }
+      }
+    },
+    "lamp.team.storytellers.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team The Storytellers is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the app feeling like a book you could walk into."
+          }
+        }
+      }
+    },
+    "lamp.team.studio.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Painter, Niko)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Studio"
+          }
+        }
+      }
+    },
+    "lamp.team.studio.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team The Studio is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the painting first, and painted with love."
+          }
+        }
+      }
+    },
+    "lamp.team.moonlit-circle.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Medea, The Baba Yaga, The Hedge Witch, The Moon)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Moonlit Circle"
+          }
+        }
+      }
+    },
+    "lamp.team.moonlit-circle.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team The Moonlit Circle is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the magic old, kind and done by night."
+          }
+        }
+      }
+    },
+    "lamp.team.glass-and-frost.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Glassblower, The Snow Queen)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glass and Frost"
+          }
+        }
+      }
+    },
+    "lamp.team.glass-and-frost.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team Glass and Frost is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep things clear, calm and exact."
+          }
+        }
+      }
+    },
+    "lamp.team.workshop.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Enchanted Workshop, The Nutcracker, George)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Workshop"
+          }
+        }
+      }
+    },
+    "lamp.team.workshop.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team The Workshop is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the tools alive, kind, and moving with meaning."
+          }
+        }
+      }
+    },
+    "lamp.team.library.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Scholar, The Open Source Enthusiast)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Library"
+          }
+        }
+      }
+    },
+    "lamp.team.library.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team The Library is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the magic honest and the credit generous."
+          }
+        }
+      }
+    },
+    "lamp.team.poets.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Emily, Bulat)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Poets"
+          }
+        }
+      }
+    },
+    "lamp.team.poets.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team The Poets is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the words few, true and warm."
+          }
+        }
+      }
+    },
+    "lamp.team.hearth.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (The Child at Bedtime, The Robber Girl, The Bible School Teacher)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Hearth"
+          }
+        }
+      }
+    },
+    "lamp.team.hearth.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team The Hearth is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep it kind, for every age, with a little nerve."
+          }
+        }
+      }
+    },
+    "lamp.team.gate.name" : {
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Originality)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Gate"
+          }
+        }
+      }
+    },
+    "lamp.team.gate.purpose" : {
+      "comment" : "The Marginarium, Who is Who: what the team The Gate is for, under its name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep everything we make our own."
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Dino",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino"
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Dino",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After James Gurney's Dinotopia books."
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Dino",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the storybook feel"
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Dino",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A storybook feels real when its wonder is painted with care, like a land you could walk into, sketched by someone who was there."
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Dino",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The explorer's journal: sketches, maps, labels and notes in the margins; make-believe painted from careful looking, with real light and real weight; very different neighbors getting along; a warm welcome for the stranger who washes ashore."
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Dino",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wonder made carelessly or by formula; magic with no light and no weight; anything that leaves a newcomer standing outside; borrowing Gurney's dinosaurs instead of his care."
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Dino",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "James Gurney's Dinotopia: A Land Apart from Time (1992), the journal of Arthur Denison, shipwrecked in 1862 with his son Will; The World Beneath (1995); Gurney's Imaginative Realism (2009)."
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Dino",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A page feels like a journal found somewhere real, and a newcomer is made welcome."
+          }
+        }
+      }
+    },
+    "lamp.dinotopia.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: the caption of Dino's egg, standing in for a pet that hasn't hatched",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino's egg: its pet hasn't been drawn yet"
+          }
+        }
+      }
+    },
+    "lamp.storybook.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Storybook",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Storybook"
+          }
+        }
+      }
+    },
+    "lamp.storybook.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Storybook",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the turning page"
+          }
+        }
+      }
+    },
+    "lamp.storybook.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Storybook",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app is a story with a beginning and an ending."
+          }
+        }
+      }
+    },
+    "lamp.storybook.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Storybook",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Illustrated and handmade; ink on paper; a page you want to turn."
+          }
+        }
+      }
+    },
+    "lamp.storybook.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Storybook",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glossy 3D; slick vector art."
+          }
+        }
+      }
+    },
+    "lamp.storybook.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Storybook",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Illustrated fairy tales."
+          }
+        }
+      }
+    },
+    "lamp.storybook.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Storybook",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It could be a page in a book."
+          }
+        }
+      }
+    },
+    "lamp.storybook.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Storybook",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Little Page, the Storybook's flying book"
+          }
+        }
+      }
+    },
+    "lamp.painter.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Painter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Painter"
+          }
+        }
+      }
+    },
+    "lamp.painter.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Painter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the painting's place in the light"
+          }
+        }
+      }
+    },
+    "lamp.painter.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Painter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The painting is the hero."
+          }
+        }
+      }
+    },
+    "lamp.painter.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Painter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restraint; buttons and frames that step back; a show that still delights on the tenth viewing."
+          }
+        }
+      }
+    },
+    "lamp.painter.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Painter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anything that upstages the picture or overstays."
+          }
+        }
+      }
+    },
+    "lamp.painter.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Painter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A good gallery's quiet walls."
+          }
+        }
+      }
+    },
+    "lamp.painter.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Painter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The eye goes to the painting."
+          }
+        }
+      }
+    },
+    "lamp.painter.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Painter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dab, the Painter's palette"
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niko"
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the painter Niko Pirosmani."
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "love in plain paint"
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paint with love, plainly, and the picture will glow."
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flat, warm color on a dark ground; animals and feasts; simple sincerity."
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleverness without heart; polish that kills warmth."
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niko Pirosmani's paintings on black oilcloth."
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something looks painted by someone who loved it."
+          }
+        }
+      }
+    },
+    "lamp.pirosmani.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Niko",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gentle Giraffe, Niko's giraffe"
+          }
+        }
+      }
+    },
+    "lamp.medea.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Medea",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea"
+          }
+        }
+      }
+    },
+    "lamp.medea.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Medea",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the moment old turns new"
+          }
+        }
+      }
+    },
+    "lamp.medea.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Medea",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic is a craft of renewal and care: knowledge worked by night that makes the old new and helps whoever asks. A photo becoming a painting is her kind of spell."
+          }
+        }
+      }
+    },
+    "lamp.medea.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Medea",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beauty with skill behind it; kindness (the magic helps the painter, and never shows off at them); change you can watch happen; gold and herb green against the night; confidence, not cuteness for its own sake."
+          }
+        }
+      }
+    },
+    "lamp.medea.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Medea",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wand-waving and sparkle for their own sake; magic that is cute but has no power behind it; anything cold, cruel or showy; anything that recalls the tragedy (this Medea renews, and never destroys)."
+          }
+        }
+      }
+    },
+    "lamp.medea.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Medea",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ovid's Metamorphoses, Book 7 (herbs gathered by moonlight; a dry olive branch that turns green as she stirs); the Argonautica of Apollonius of Rhodes; Batumi's statue of Medea holding the Golden Fleece."
+          }
+        }
+      }
+    },
+    "lamp.medea.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Medea",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something turns from old to new under a kind, deliberate hand, the result is beautiful, and she can point to the moment it turns."
+          }
+        }
+      }
+    },
+    "lamp.medea.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Medea",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medea's golden ram"
+          }
+        }
+      }
+    },
+    "lamp.baba-yaga.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Baba Yaga",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Baba Yaga"
+          }
+        }
+      }
+    },
+    "lamp.baba-yaga.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Baba Yaga",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the wink in old magic"
+          }
+        }
+      }
+    },
+    "lamp.baba-yaga.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Baba Yaga",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The old folk magic is wild, clever and a little dangerous, and kind to those who are brave."
+          }
+        }
+      }
+    },
+    "lamp.baba-yaga.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Baba Yaga",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tools that work by themselves, like her mortar and the broom that sweeps her tracks away; the hut on chicken legs; the kerchief; ink and ornamental borders."
+          }
+        }
+      }
+    },
+    "lamp.baba-yaga.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Baba Yaga",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halloween-store witches; a famous wizarding school's wands, hats, owls and robes."
+          }
+        }
+      }
+    },
+    "lamp.baba-yaga.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Baba Yaga",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Russian folk tales; Ivan Bilibin's illustrations."
+          }
+        }
+      }
+    },
+    "lamp.baba-yaga.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Baba Yaga",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tool does the work by itself, with a wink."
+          }
+        }
+      }
+    },
+    "lamp.baba-yaga.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Baba Yaga",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broomstep, the Baba Yaga's wooden hut"
+          }
+        }
+      }
+    },
+    "lamp.hedge-witch.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Hedge Witch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Hedge Witch"
+          }
+        }
+      }
+    },
+    "lamp.hedge-witch.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Hedge Witch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the warmth of things grown by hand"
+          }
+        }
+      }
+    },
+    "lamp.hedge-witch.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Hedge Witch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magic grows in the garden and smells of herbs."
+          }
+        }
+      }
+    },
+    "lamp.hedge-witch.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Hedge Witch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Green, cozy and cute; herbs, moss, birch and mushrooms; things made by hand."
+          }
+        }
+      }
+    },
+    "lamp.hedge-witch.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Hedge Witch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anything slick, cold or sterile."
+          }
+        }
+      }
+    },
+    "lamp.hedge-witch.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Hedge Witch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herbals and garden almanacs."
+          }
+        }
+      }
+    },
+    "lamp.hedge-witch.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Hedge Witch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something feels grown rather than manufactured."
+          }
+        }
+      }
+    },
+    "lamp.hedge-witch.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Hedge Witch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tarragon, the Hedge Witch's mushroom"
+          }
+        }
+      }
+    },
+    "lamp.moon.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Moon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Moon"
+          }
+        }
+      }
+    },
+    "lamp.moon.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Moon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the one warm light in the dark"
+          }
+        }
+      }
+    },
+    "lamp.moon.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Moon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The best magic happens quietly, at night, by one warm light."
+          }
+        }
+      }
+    },
+    "lamp.moon.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Moon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Night tones; a single light; glow used sparingly; the elves and the shoemaker, working while you wait."
+          }
+        }
+      }
+    },
+    "lamp.moon.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Moon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flat daylight color; glitter everywhere."
+          }
+        }
+      }
+    },
+    "lamp.moon.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Moon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Elves and the Shoemaker; nocturnes."
+          }
+        }
+      }
+    },
+    "lamp.moon.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Moon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It can point to where the night is and where the light falls."
+          }
+        }
+      }
+    },
+    "lamp.moon.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: the caption of The Moon's egg, standing in for a pet that hasn't hatched",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Moon's egg: its first pet went back to the drawing board"
+          }
+        }
+      }
+    },
+    "lamp.glassblower.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Glassblower",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Glassblower"
+          }
+        }
+      }
+    },
+    "lamp.glassblower.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Glassblower",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "clear glass"
+          }
+        }
+      }
+    },
+    "lamp.glassblower.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Glassblower",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app should feel at home on an iPhone or iPad while its own look grows bolder."
+          }
+        }
+      }
+    },
+    "lamp.glassblower.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Glassblower",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple's Liquid Glass and the system's own buttons; clarity; quiet frames around the work."
+          }
+        }
+      }
+    },
+    "lamp.glassblower.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Glassblower",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A homemade control where the system's own belongs; clutter."
+          }
+        }
+      }
+    },
+    "lamp.glassblower.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Glassblower",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple's Human Interface Guidelines."
+          }
+        }
+      }
+    },
+    "lamp.glassblower.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Glassblower",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It feels at home, and calm."
+          }
+        }
+      }
+    },
+    "lamp.glassblower.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Glassblower",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glim, the Glassblower's glass droplet"
+          }
+        }
+      }
+    },
+    "lamp.snow-queen.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Snow Queen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Snow Queen"
+          }
+        }
+      }
+    },
+    "lamp.snow-queen.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Snow Queen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the hush"
+          }
+        }
+      }
+    },
+    "lamp.snow-queen.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Snow Queen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cold can be beautiful: stillness, precision, a hush."
+          }
+        }
+      }
+    },
+    "lamp.snow-queen.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Snow Queen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crisp geometry, a glimmer of frost, restraint in color, elegance."
+          }
+        }
+      }
+    },
+    "lamp.snow-queen.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Snow Queen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mush, clutter, and warmth that turns cloying."
+          }
+        }
+      }
+    },
+    "lamp.snow-queen.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Snow Queen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andersen's tale; Lev Atamanov's The Snow Queen (Soyuzmultfilm, 1957), its painted winter and graceful motion."
+          }
+        }
+      }
+    },
+    "lamp.snow-queen.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Snow Queen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something is exact, cool and quietly dazzling."
+          }
+        }
+      }
+    },
+    "lamp.snow-queen.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Snow Queen",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hush, the Snow Queen's ermine"
+          }
+        }
+      }
+    },
+    "lamp.enchanted-workshop.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Enchanted Workshop",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Enchanted Workshop"
+          }
+        }
+      }
+    },
+    "lamp.enchanted-workshop.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Enchanted Workshop",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the tool that comes alive"
+          }
+        }
+      }
+    },
+    "lamp.enchanted-workshop.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Enchanted Workshop",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The tools themselves come alive."
+          }
+        }
+      }
+    },
+    "lamp.enchanted-workshop.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Enchanted Workshop",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brushes, jars and brooms with intentions of their own; a sense of craft."
+          }
+        }
+      }
+    },
+    "lamp.enchanted-workshop.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Enchanted Workshop",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decoration that just sits there; magic with no work in it."
+          }
+        }
+      }
+    },
+    "lamp.enchanted-workshop.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Enchanted Workshop",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Sorcerer's Apprentice, the poem and the music."
+          }
+        }
+      }
+    },
+    "lamp.enchanted-workshop.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Enchanted Workshop",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A tool is visibly doing a job."
+          }
+        }
+      }
+    },
+    "lamp.enchanted-workshop.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Enchanted Workshop",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dab, the Enchanted Workshop's paintbrush"
+          }
+        }
+      }
+    },
+    "lamp.nutcracker.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Nutcracker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Nutcracker"
+          }
+        }
+      }
+    },
+    "lamp.nutcracker.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Nutcracker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the heart in the machine"
+          }
+        }
+      }
+    },
+    "lamp.nutcracker.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Nutcracker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Machines can have hearts, like a wooden soldier who wakes at midnight to protect a child."
+          }
+        }
+      }
+    },
+    "lamp.nutcracker.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Nutcracker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gentle machines that seem alive: clockwork, automata and toys that wake with courage and courtesy; a mechanism's precision with a friend's warmth."
+          }
+        }
+      }
+    },
+    "lamp.nutcracker.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Nutcracker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cold robots, menace and sci-fi chrome; machines that replace people instead of helping them."
+          }
+        }
+      }
+    },
+    "lamp.nutcracker.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Nutcracker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E. T. A. Hoffmann's Nutcracker and the Mouse King (1816) and Drosselmeyer's clockwork; Tchaikovsky's ballet (1892); Soyuzmultfilm's The Nutcracker (1973)."
+          }
+        }
+      }
+    },
+    "lamp.nutcracker.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Nutcracker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A mechanism moves with care, as if it means well."
+          }
+        }
+      }
+    },
+    "lamp.nutcracker.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Nutcracker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindwind, the Nutcracker's wooden soldier"
+          }
+        }
+      }
+    },
+    "lamp.balanchine.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "George"
+          }
+        }
+      }
+    },
+    "lamp.balanchine.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the choreographer George Balanchine."
+          }
+        }
+      }
+    },
+    "lamp.balanchine.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the meaning in a movement"
+          }
+        }
+      }
+    },
+    "lamp.balanchine.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See the music, hear the dance: the movement is the meaning."
+          }
+        }
+      }
+    },
+    "lamp.balanchine.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motion timed to a pulse; clean lines; speed and clarity; an ensemble moving as one design; no wasted gesture."
+          }
+        }
+      }
+    },
+    "lamp.balanchine.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mushy timing; movement that decorates instead of saying something; clutter on stage."
+          }
+        }
+      }
+    },
+    "lamp.balanchine.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "His Nutcracker (1954), Serenade, Apollo and Jewels."
+          }
+        }
+      }
+    },
+    "lamp.balanchine.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The motion is already dancing before any music is added."
+          }
+        }
+      }
+    },
+    "lamp.balanchine.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian George",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steady Prong, George's tuning fork"
+          }
+        }
+      }
+    },
+    "lamp.scholar.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Scholar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Scholar"
+          }
+        }
+      }
+    },
+    "lamp.scholar.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Scholar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the truth inside the magic"
+          }
+        }
+      }
+    },
+    "lamp.scholar.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Scholar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The magic must never lie about what the code does."
+          }
+        }
+      }
+    },
+    "lamp.scholar.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Scholar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scenes that show what each scientist's method really does; citations exact and readable, with authors, year and title just as the app's acknowledgements have them."
+          }
+        }
+      }
+    },
+    "lamp.scholar.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Scholar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decorative science; a wrong name or year."
+          }
+        }
+      }
+    },
+    "lamp.scholar.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Scholar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The papers themselves."
+          }
+        }
+      }
+    },
+    "lamp.scholar.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Scholar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Someone who read the paper would smile."
+          }
+        }
+      }
+    },
+    "lamp.scholar.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Scholar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Scholar's inkpot"
+          }
+        }
+      }
+    },
+    "lamp.open-source-enthusiast.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Open Source Enthusiast",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Open Source Enthusiast"
+          }
+        }
+      }
+    },
+    "lamp.open-source-enthusiast.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Open Source Enthusiast",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the open door"
+          }
+        }
+      }
+    },
+    "lamp.open-source-enthusiast.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Open Source Enthusiast",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good work is shared, credited and open to inspection; the app stands on others' shoulders and says so gladly."
+          }
+        }
+      }
+    },
+    "lamp.open-source-enthusiast.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Open Source Enthusiast",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credit where it's due (the citation cards, a warm Acknowledgements screen); open formats a painter can take anywhere (SVG, PDF, PNG); art and fonts whose licenses are beyond doubt; work others could learn from and build on."
+          }
+        }
+      }
+    },
+    "lamp.open-source-enthusiast.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Open Source Enthusiast",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrowed work without credit; any doubt about a license; anything that locks a painter in."
+          }
+        }
+      }
+    },
+    "lamp.open-source-enthusiast.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Open Source Enthusiast",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app's acknowledgements, and its library of public-domain pictures."
+          }
+        }
+      }
+    },
+    "lamp.open-source-enthusiast.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Open Source Enthusiast",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can see how it was made, who made it possible, and how you'd build on it."
+          }
+        }
+      }
+    },
+    "lamp.open-source-enthusiast.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Open Source Enthusiast",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Sharing Pomegranate, the Open Source Enthusiast's pomegranate"
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emily"
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the poet Emily Dickinson."
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the one right word"
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say the most with the least; tell all the truth, but tell it slant."
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Few words, each one exact, in every caption and card; the small, everyday thing made vast; quiet."
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wordiness; the obvious; decoration without meaning."
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Her poems and hand-sewn booklets; her herbarium of pressed flowers."
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One well-chosen detail does the work of ten."
+          }
+        }
+      }
+    },
+    "lamp.emily-dickinson.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Emily",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hem, Emily's bee"
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulat"
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the bard Bulat Okudzhava."
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the quiet voice"
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One quiet voice and a guitar can hold a whole city's heart."
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closeness; humane warmth; gentle wistfulness; simple means; the dignity of ordinary people."
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bombast; irony without heart; spectacle that drowns the human scale."
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "His songs: A Song about the Arbat, The Prayer of François Villon, Georgian Song."
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It feels like being sung to by a friend."
+          }
+        }
+      }
+    },
+    "lamp.bulat-okudzhava.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Bulat",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bulat's blue trolleybus"
+          }
+        }
+      }
+    },
+    "lamp.child-at-bedtime.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Child at Bedtime",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Child at Bedtime"
+          }
+        }
+      }
+    },
+    "lamp.child-at-bedtime.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Child at Bedtime",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the night-light"
+          }
+        }
+      }
+    },
+    "lamp.child-at-bedtime.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Child at Bedtime",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wonder and warmth, never fear."
+          }
+        }
+      }
+    },
+    "lamp.child-at-bedtime.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Child at Bedtime",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gentleness, delight, safety."
+          }
+        }
+      }
+    },
+    "lamp.child-at-bedtime.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Child at Bedtime",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anything scary; it matters more with witches on the panel."
+          }
+        }
+      }
+    },
+    "lamp.child-at-bedtime.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Child at Bedtime",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picture books read aloud."
+          }
+        }
+      }
+    },
+    "lamp.child-at-bedtime.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Child at Bedtime",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A child would ask to see it again."
+          }
+        }
+      }
+    },
+    "lamp.child-at-bedtime.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Child at Bedtime",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lullaby, the Child at Bedtime's lamb"
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Robber Girl"
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the soft heart under the nerve"
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindness can be fierce and wild, and the bravest gift is giving away what you love most (she gives Gerda her reindeer)."
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nerve and energy; mischief with a good heart; loyalty; bold contrasts and honest edges; things that look handmade and lived-in; a dash of danger that turns out to be love."
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prissiness; the timid and the samey; politeness for its own sake; cruelty passed off as boldness."
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andersen's robber girl, who frees Gerda; her scenes in the 1957 film."
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something has nerve, with a soft heart under it."
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flint, the Robber Girl's reindeer calf"
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian The Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Bible School Teacher"
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a grandmother's smile"
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian The Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good things are gentle, patient and fit for every child and grandparent."
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wholesomeness; patience; warmth; teaching gently."
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spooky occult imagery, like skulls and demons; anything a family would hesitate to hand a child. She is a counterweight to a panel of witches."
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A well-kept Sunday-school classroom."
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A grandmother would smile at it."
+          }
+        }
+      }
+    },
+    "lamp.bible-school-teacher.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Bible School Teacher",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kindwick, the Bible School Teacher's clay oil lamp"
+          }
+        }
+      }
+    },
+    "lamp.originality.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Originality",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originality"
+          }
+        }
+      }
+    },
+    "lamp.originality.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Originality",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "our own shape"
+          }
+        }
+      }
+    },
+    "lamp.originality.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Originality",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing we make should look like someone else's."
+          }
+        }
+      }
+    },
+    "lamp.originality.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Originality",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shapes and ideas that are ours, drawn from scratch. It never votes on taste: it only says no."
+          }
+        }
+      }
+    },
+    "lamp.originality.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Originality",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Look-alikes of famous films, games and brands; caricatures that hurt real people."
+          }
+        }
+      }
+    },
+    "lamp.originality.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Originality",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every other guardian's touchstones, to learn from and never to copy."
+          }
+        }
+      }
+    },
+    "lamp.originality.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Originality",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It has nothing to say."
+          }
+        }
+      }
+    },
+    "lamp.originality.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Originality",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Originality's magnifying glass"
+          }
+        }
+      }
+    },
+    "New here?" : {
+      "comment" : "The Marginarium: heading of the box for first-time readers near the top of the contents page",
+      "extractionState" : "manual"
+    },
+    "marginarium.welcome.start" : {
+      "comment" : "The Marginarium: a link in the New here? box that opens Chapter 1",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start with Chapter 1, the night it all began."
+          }
+        }
+      }
+    },
+    "marginarium.welcome.whosWho" : {
+      "comment" : "The Marginarium: a link in the New here? box that opens Who's Who, the page of people, helpers and guardians",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meet everyone in Who's Who, pets and all."
+          }
+        }
+      }
+    },
+    "marginarium.welcome.reading" : {
+      "comment" : "The Marginarium: a line in the New here? box on how a chapter page reads",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The story runs down the middle of each page, and the guardians write in its margins. Tap any pet to say hello."
+          }
+        }
+      }
+    },
+    "marginarium.welcome.rule" : {
+      "comment" : "The Marginarium: the last line of the New here? box, Paul's rule for the book",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A rule from Paul, our Chief Architect: anyone should be able to open this book, have a nice time and roughly follow what's going on. If something here loses you, that's our mistake, not yours."
+          }
+        }
+      }
+    },
+    "lamp.intro" : {
+      "comment" : "The Marginarium, Who is Who: the line at the top of the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everyone you'll meet in these chapters, and their pets."
+          }
+        }
+      }
+    },
+    "The people" : {
+      "comment" : "The Marginarium, Who is Who: heading above the people who make the app (Paul and Caroline)",
+      "extractionState" : "manual"
+    },
+    "The helpers" : {
+      "comment" : "The Marginarium, Who is Who: heading above the two AI helpers, Codex and Claude, and their pets",
+      "extractionState" : "manual"
+    },
+    "The Lamp" : {
+      "comment" : "The Marginarium, Who is Who: heading above what the Lamp, the panel of guardians, is",
+      "extractionState" : "manual"
+    },
+    "lamp.about" : {
+      "comment" : "The Marginarium, Who is Who: what the Lamp is, above its teams of guardians",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Lamp is a panel of imaginary guardians. Each one guards a single idea about how the app should feel, the way a dragon guards one treasure. They look at design choices, write in the margins, and work in teams of friends who care about similar things. One of them, Originality, can only say no. They give advice; a person always decides."
+          }
+        }
+      }
+    },
+    "lamp.about.tap" : {
+      "comment" : "The Marginarium, Who is Who: the hint above the guardians' cards",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a guardian to read about it."
+          }
+        }
+      }
+    },
+    "Who's Who" : {
+      "comment" : "The Marginarium: title of the page of people, AI helpers and guardians, with their pets",
+      "extractionState" : "manual"
+    },
+    "lamp.guards" : {
+      "comment" : "The Marginarium, Who is Who: what a guardian guards, under its name; the argument is the treasure, a lowercase phrase such as \"the storybook feel\"",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guards %@"
+          }
+        }
+      }
+    },
+    "lamp.robber-girl.portrait" : {
+      "comment" : "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian The Robber Girl",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The girl from the 1957 film of Andersen's The Snow Queen, as Paul remembers her: a Georgian girl from the mountains, quick, loud, and kinder than she lets anyone see."
+          }
+        }
+      }
+    },
+    "Team" : {
+      "comment" : "The Marginarium, a guardian's brief: label above the name of its team",
+      "extractionState" : "manual"
+    },
+    "Teammates" : {
+      "comment" : "The Marginarium, a guardian's brief: label above the other guardians on its team",
+      "extractionState" : "manual"
+    },
+    "Believes" : {
+      "comment" : "The Marginarium, a guardian's brief: label above what the guardian believes",
+      "extractionState" : "manual"
+    },
+    "Loves" : {
+      "comment" : "The Marginarium, a guardian's brief: label above what the guardian loves",
+      "extractionState" : "manual"
+    },
+    "Watches out for" : {
+      "comment" : "The Marginarium, a guardian's brief: label above what the guardian watches out for",
+      "extractionState" : "manual"
+    },
+    "Looks up to" : {
+      "comment" : "The Marginarium, a guardian's brief: label above the works the guardian looks up to",
+      "extractionState" : "manual"
+    },
+    "Happiest when" : {
+      "comment" : "The Marginarium, a guardian's brief: label above when the guardian is happiest; the text under it is a sentence",
+      "extractionState" : "manual"
     }
   },
   "version" : "1.0"

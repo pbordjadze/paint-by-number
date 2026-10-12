@@ -3,12 +3,18 @@ import SwiftUI
 import os
 
 /// A native chapter page: New York headings, catalog-backed inline Markdown and
-/// bundled illustrations and pets. The same reading measure as the contents page leaves room on iPad;
-/// no fixed text heights or Dynamic Type caps. Until the manifest loads (or if damaged), the
-/// already-shipped title, subtitle and passage remain readable.
+/// bundled illustrations and pets, at the contents page's reading measure. Where the page is
+/// wide enough (iPad) and the text isn't at an accessibility size, each margin group stands in
+/// a column beside the story it annotates, top-aligned with it, as in a book; otherwise it
+/// follows that story as an aside. No fixed text heights or Dynamic Type caps. Until the
+/// manifest loads (or if damaged), the already-shipped title, subtitle and passage remain readable.
 struct MarginariumReaderView: View {
     let entry: MarginariumEntry
     @State private var chapter: MarginariumDocument.Chapter?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// The narrowest page (inside its padding) that takes a margin column, about the 11" iPad's
+    /// sheet: 444 pt of story beside 224 of margin. It grows with the text.
+    @ScaledMetric(relativeTo: .body) private var marginColumnMinimum: CGFloat = 700
     #if DEBUG
     @State private var readerFrame: CGRect = .zero
     @State private var demoTargetFrame: CGRect = .zero
@@ -16,25 +22,29 @@ struct MarginariumReaderView: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let layout = pageLayout(width: geometry.size.width)
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 20) {
                         if let chapter {
-                            ForEach(chapter.sections) { section in
-                                sectionView(section, width: min(620, max(0, geometry.size.width - 40)))
-                                    .id(section.id)
+                            ForEach(rows(of: chapter, layout: layout)) { row in
+                                rowView(row, layout: layout)
+                                    .id(row.id)
                             }
                         } else {
-                            Text(entry.title)
-                                .font(.display(.largeTitle))
-                                .accessibilityAddTraits(.isHeader)
-                            Text(entry.subtitle)
-                                .font(.title3)
-                                .foregroundStyle(.secondary)
-                            MarginariumQuotation(text: AttributedString(entry.passage))
+                            VStack(alignment: .leading, spacing: 20) {
+                                Text(entry.title)
+                                    .font(.display(.largeTitle))
+                                    .accessibilityAddTraits(.isHeader)
+                                Text(entry.subtitle)
+                                    .font(.title3)
+                                    .foregroundStyle(.secondary)
+                                MarginariumQuotation(text: AttributedString(entry.passage))
+                            }
+                            .frame(maxWidth: layout.story, alignment: .leading)
                         }
                     }
-                    .frame(maxWidth: 620, alignment: .leading)
+                    .frame(maxWidth: layout.width, alignment: .leading)
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
                     .padding(.bottom, 48)
@@ -67,12 +77,77 @@ struct MarginariumReaderView: View {
         }
     }
 
+    /// The story's reading measure and, on a wide enough page, the margin column beside it.
+    private struct PageLayout {
+        static let gutter: CGFloat = 32
+        let story: CGFloat
+        let margin: CGFloat?
+        var width: CGFloat { story + (margin.map { Self.gutter + $0 } ?? 0) }
+    }
+
+    /// A chapter without margin notes keeps the single centered column.
+    private func pageLayout(width: CGFloat) -> PageLayout {
+        let available = max(0, width - 40)
+        let hasMargins = chapter?.sections.contains { $0.kind == .margin } ?? false
+        guard hasMargins, available >= marginColumnMinimum, !dynamicTypeSize.isAccessibilitySize else {
+            return PageLayout(story: min(620, available), margin: nil)
+        }
+        let margin = min(300, (available * 0.32).rounded())
+        return PageLayout(story: min(620, available - PageLayout.gutter - margin), margin: margin)
+    }
+
+    /// One lazy row per section, except that a margin column joins each margin group to the story
+    /// before it (chapters whose pets need laziness, like Chapter 6, have no margins).
+    private enum Row: Identifiable {
+        case section(MarginariumDocument.Section)
+        case spread(MarginariumDocument.Spread)
+
+        var id: String {
+            switch self {
+            case .section(let section): section.id
+            case .spread(let spread): spread.id
+            }
+        }
+    }
+
+    private func rows(of chapter: MarginariumDocument.Chapter, layout: PageLayout) -> [Row] {
+        guard layout.margin != nil else { return chapter.sections.map(Row.section) }
+        return chapter.spreads.flatMap { spread -> [Row] in
+            if spread.margin != nil, !spread.story.isEmpty { return [.spread(spread)] }
+            return (spread.story + [spread.margin].compactMap { $0 }).map(Row.section)
+        }
+    }
+
     @ViewBuilder
-    private func sectionView(_ section: MarginariumDocument.Section, width: CGFloat) -> some View {
+    private func rowView(_ row: Row, layout: PageLayout) -> some View {
+        switch row {
+        case .section(let section):
+            sectionView(section, width: layout.story, besideStory: false)
+                .frame(maxWidth: layout.story, alignment: .leading)
+        case .spread(let spread):
+            HStack(alignment: .top, spacing: PageLayout.gutter) {
+                VStack(alignment: .leading, spacing: 20) {
+                    ForEach(spread.story) { section in
+                        sectionView(section, width: layout.story, besideStory: false)
+                            .id(section.id)
+                    }
+                }
+                .frame(width: layout.story, alignment: .leading)
+                if let margin = spread.margin, let width = layout.margin {
+                    sectionView(margin, width: width, besideStory: true)
+                        .frame(width: width, alignment: .leading)
+                        .id(margin.id)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func sectionView(_ section: MarginariumDocument.Section, width: CGFloat, besideStory: Bool) -> some View {
         Group {
             switch section.kind {
             case .table: MarginariumTableView(section: section, width: width)
-            case .margin: MarginariumMarginView(section: section)
+            case .margin: MarginariumMarginView(section: section, besideStory: besideStory)
             case .prose:
                 ForEach(section.blocks) { block in MarginariumBlockView(block: block) }
             }
@@ -123,6 +198,12 @@ struct MarginariumReaderView: View {
             } else {
                 previousFrame = nil
                 proxy.scrollTo(target, anchor: .top)
+                // Beside a margin column the target may sit inside a spread that isn't laid out yet.
+                if frame.isEmpty, let spread = chapter?.spreads.first(where: { spread in
+                    spread.margin?.id == target || spread.story.contains { $0.id == target }
+                }) {
+                    proxy.scrollTo(spread.id, anchor: .top)
+                }
             }
         }
         Log.demo.error("Marginarium target did not enter the viewport: \(target, privacy: .public), section \(String(describing: frame), privacy: .public) in \(String(describing: readerFrame), privacy: .public)")
