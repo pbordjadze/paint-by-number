@@ -313,6 +313,17 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   README). When Codex is back: restore if needed, resume the run, give each failed pet one fresh
   attempt, then put each guardian's pet beside its margin notes in chapter 1.
 
+## Paul's point 17: Pip's face, and Codex on pets (Oct 12)
+
+- Word from Chief Designer Caroline, relayed by Paul: "Pip can have its face back. It was unkind
+  to take away Pip's face." Codex designs the face; the blue dot under the lid stays if Codex
+  wants it (F40). Her word can be part of Codex's chapter on the pets.
+- Codex's usage came back early (Oct 12). From now on Codex works on the pets and their chapter;
+  app work goes to Claude's helpers.
+- The pets run resumes once its driver retries the hatches the usage limit stopped before they
+  drew anything, and gives each pet that failed a gate one fresh attempt (F41). The pets' failures
+  are Codex's to solve.
+
 ## Open questions
 
 - How long the show is, and which scenes later paintings get.
