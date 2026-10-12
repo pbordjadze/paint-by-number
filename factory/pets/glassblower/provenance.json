@@ -1,0 +1,786 @@
+{
+  "key": "maker-glassblower",
+  "pet": "glassblower",
+  "model": "gpt-6-astra",
+  "effort": "high",
+  "style": {
+    "name": "Warm Oilcloth Family",
+    "preset": "painterly",
+    "style_notes": "Paint each creature as something loved: broad, flat color, sincere eyes and a slight wobble in the edge. Keep marks few and steady between frames. Dark paint belongs inside the creature; the surrounding cell stays clear. Glass keeps its clear heart and soft rim, while ink gives solid bodies their weight. Warmth comes from care, not a shine added to everything.",
+    "framing": "Use transparent 192 × 208 cells. Keep every pose inside x=16–176 and y=16–192, with standing feet or body base at y=184. Reserve room above for jumps and beside the body for waves. Fit tall creatures by gently bending their posture, keeping their defining shape. Lock scale, face placement and carried objects across frames. Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid. Keep motion within the cell; movement across the screen belongs to the player. One-shot rows finish in a stable pose. Idle and waiting use small movements and long holds.",
+    "palette": "Core paint: soot #262321, cream #F1DFC1, ochre #C59A46, rust #AC5740, herb green #65764C and blue #557589. Preserve each seed's own colors: the trolleybus stays blue, the ram gold, the ermine white and the droplet clear. Lights stay within their existing flame, lantern, window or body. V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors. Protect identity colors and face contrast in every look. Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+    "line": "Solid bodies use irregular ink edges about 3 pixels wide, with essential inner marks at least 2 pixels wide. Keep important gaps at least 4 pixels open. Suggest texture with a few broad marks fixed to the body, never changing noise. The glass droplet is the deliberate exception: use a broad, soft, partly open rim and a clear center, without a hard black enclosure. The magnifying glass has an ink frame and a clear lens. Family likeness comes from shared proportions, restraint and timing, rather than forcing glass to become opaque ink.",
+    "boundaries": "All twenty seeds remain themselves. Keep the magnifying glass's raised eyebrow and searching tilt; the ram's gold fleece, herb sprig and attached twig that greens with happiness; the hut's chicken legs, kerchief roof and door broom; the sleepy mushroom's moss, tarragon and herb basket; the crescent's lantern; the still white ermine's distinct frost crown; the bold calf's embroidered felt blanket and hoof stamp; the book's flapping covers and changing ink pictures; the determined brush's legs and paint jar; the thoughtful inkpot's spectacles and tucked quill; the quiet palette's paint spots and brush tail; the curled lamb's striped cap and candle; the calm clear droplet; the gentle giraffe's long neck and sincere eyes; the precise bee's white collar and pressed flower; the generous pomegranate's opening rind and visible seeds; the courteous wooden soldier's back key and salute; the tuning fork's poised turns; the blue trolleybus's warm windows and guitar visible on its seat; and the clay lamp's grapevine handle. Use new poses, markings and patterns. Existing belongings remain attached, held or securely contained. Do not add shared herbs, keys, lamps, costumes or ornaments to other seeds. Sweeping leaves no footprint marks; frost appears only on the crown or feet; underlining and writing become small gestures without drawn words; shared seeds stay cupped in the open rind. Humming and ringing read through posture without sound symbols. No floating effects, scene background, text, speech bubbles, shadows or new review props. Review uses only the creature and its existing belongings. All pets and sheets remain local. Paul waived approval steps and retains a later veto.",
+    "rows": {
+      "idle": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+      "running-right": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+      "running-left": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+      "waving": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+      "jumping": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+      "failed": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+      "waiting": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+      "running": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+      "review": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once."
+    },
+    "why": "I want each pet to look cared for, with its own work and temper still visible. The dark oilcloth feeling lives in the painted body and can meet a dark app surface without baking a background into the sprite. No veto is proposed. Originality may veto only in a jury and never ranks taste. The Painter checks function at native size across all nine rows and sixteen added looks. Any function flag must name the pet, look, row and frame, and describe visible evidence such as a vanished eyebrow, a clipped crown or two actions with the same silhouette. These are checks to perform, not defects claimed without images. Any later charter veto must quote the exact guards-against line and give a concrete reason."
+  },
+  "brief": {
+    "display_name": "Glim",
+    "description": "A calm, clear glass droplet whose soft inner light stays inside its body.",
+    "brief": "Glim is a clear glass droplet with a soft inner glow, calm and smooth; light passes through it like a window. Its rounded base and gently curved tip give it a simple, readable shape. A broad, partly open rim holds a clear heart, with two sincere eyes placed firmly inside the body. Warm cream touches the rim and inner light, while most of the center remains transparent. A few steady paint marks and a slight wobble at the edge connect its glass to the Warm Oilcloth Family.\n\nGlim is patient, attentive and quietly brave. It greets through a whole-body tilt, works through deliberate compression and release, and shows disappointment by sinking with its eyes lowered. Its signature behavior is a thoughtful turn followed by one small, settled nod. Happiness gently lifts its tip; uncertainty holds it alert; failure softens its posture without breaking its glass or turning into panic.\n\nKeep its restraint at home beside system controls: the pet provides character without becoming decorative chrome. Add no limbs, costume or belongings. Keep every light within its body, every pose within the cell, and every action readable through shape as well as eyes. Review uses only a thoughtful turn and nod. No floating effects, scene background, text, speech bubbles, shadows or new props. Glim remains local.",
+    "pet_notes": "A small pear-shaped glass droplet rests on a softly flattened base, its tip bending slightly like a listening head. A broad, soft, partly open cream rim surrounds a clear center. Two soot-colored eyes remain readable without a black body outline. The faint inner warmth stays contained. Sparse, fixed paint marks and gently uneven edges make it feel handled with care, while its surface stays smooth.",
+    "rows": {
+      "idle": "Rest upright with a level tip, make one slow blink and a tiny breath, then return to a long settled hold.",
+      "running-right": "Face right with the tip leading and alternate a low forward squash with a lifted rounded passing pose, keeping travel inside the cell.",
+      "running-left": "Redraw the left-facing turn with the tip leading left and the same squash-and-lift rhythm, preserving the placement of rim marks.",
+      "waving": "Turn toward the viewer, rise slightly into a broad friendly side tilt, sweep back once and settle upright.",
+      "jumping": "Compress the base, spring upward about 12 pixels, pass through a rounded peak, descend and soften into a stable landing.",
+      "failed": "Stop sharply, flatten into a low slumped shape with the tip folded downward, hold the lowered gaze and recover only slightly.",
+      "waiting": "Stay tall with open eyes and the tip angled toward the expected action, hold, make one restrained sideways questioning tilt and hold again.",
+      "running": "Keep the base planted while leaning forward, press the upper body into a purposeful low wedge, release to check and reset in a steady work loop.",
+      "review": "Become still, turn the upper body thoughtfully to one side into a curved profile, hold that considered pose, then give one small nod and settle."
+    },
+    "do_not_resemble": [
+      "No franchise look-alike, logo, real-person likeness or copied artwork."
+    ],
+    "why": "The Glassblower expresses native calm through clear glass, a spare shape and restrained motion. This is a written draft; no images were supplied for inspection, so no new function defect or veto is claimed. Originality may veto only in juries and never ranks taste. Paul waived approval steps, retains a later veto, and all assets remain local. Assumption: the seed has eyes but no limbs or belongings, so body posture carries its actions. The supplied jury notes become drawing guidance for future image prompts: waiting is tall and outward-facing, focused work repeatedly compresses forward, and review turns sideways and pauses before nodding; these must read distinctly from idle at 192 × 208. Directional looks must also show separate turns through tip, body and gaze placement. Technical decision: follow the v2 contract with one transparent 1536 × 2288 atlas, eight columns by eleven rows of 192 × 208 cells. Rows 0–8 contain respectively 6, 8, 8, 4, 5, 8, 6, 6 and 6 frames; unused cells remain fully transparent. Row 9 holds 000, 022.5, 045, 067.5, 090, 112.5, 135 and 157.5 degrees; row 10 holds 180, 202.5, 225, 247.5, 270, 292.5, 315 and 337.5 degrees, clockwise in screen coordinates with 000 up. These are sixteen gaze and pose directions in the same palette and treatment, replacing the sheet's conflicting paint-variant instructions. Preserve the sheet's taste, map its four action beats into each required frame count, and use 8 fps as timing guidance. Keep poses inside x=16–176 and y=16–192, with the resting base at y=184; maintain scale and facial placement relative to the body. Export, when produced, is a transparent PNG atlas. Only the skill's validators gate production; measured differences from motion guidance belong in provenance. The Painter's future function flags must identify the pet, look, row and frame with visible evidence."
+  },
+  "reference": "/root/factory-out/F36/lamp/hatches/pilot-style-12-medea/attempt-pqzhqrsw/package/contact-sheet.webp",
+  "reference_sha256": "71ec194ada7b533702d84934c10a555e3f60843ccf7224e73ec3c643509a6604",
+  "redo": null,
+  "readability_notes": {
+    "style_id": "style-12",
+    "rules_sha256": "e06e7bf41b0b6253203f6cd6dacd7d291c7032c0ca8af554d239df33cf6f4b6e",
+    "instruction": "Readability notes from the image jury: make waiting, focused work (running row 7), and review read differently from idle and from each other at 192 × 208. Apply the winning style's supplied attributed drawing notes to this pet, including the reference pet. Carry them into every image prompt. These are drawing guidance; keep the fixed family reference and the v2 contract.",
+    "flags": [
+      {
+        "seat": "painter",
+        "target": "style-12",
+        "why": "Trolleybus, base animation, review row 8 frames 1–4: blinking and small gaze changes carry most of the action while the body and guitar remain still. Inspection is difficult to distinguish from idle. Running/work row 7 frames 1–2 shows concentration, but the work itself is unclear."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 0–5, mainly shows eye changes and a closing smile. Inspection of the seated guitar is not clearly readable; frames 0–3 remain close to idle. This is a state-readability concern, not a charter veto."
+      },
+      {
+        "seat": "snow-queen",
+        "target": "style-12",
+        "why": "Ram, directional looks: row 10, frames 5–7 (292.5–337.5), show closely similar upward head turns. The broad direction reads, but the separate steps are weak."
+      },
+      {
+        "seat": "robber-girl",
+        "target": "style-12",
+        "why": "Trolleybus, base look: review row 8, frames 1–4, relies on small eye changes and a blink much like idle row 0, frames 1–3. Inspection of the seated guitar is hard to read."
+      },
+      {
+        "seat": "storybook",
+        "target": "style-12",
+        "why": "Trolleybus, base treatment: review row 8, frames 0–5, mostly shows forward attention and blinking, much like idle row 0. The intended inspection of the seated guitar is not clear in the supplied drawings."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Bulat, base look, running row 7, frames 1–2: lowered eyebrows show concentration, but the seated guitar shows no clear working action. Review row 8, frames 1–5 reads mostly as looking and blinking. Work and inspection are weakly distinguished."
+      },
+      {
+        "seat": "enchanted-workshop",
+        "target": "style-12",
+        "why": "Medea, base look, running row 7 and review row 8, frames 1–4: both use head dips toward the mouth-held herbs. The separate act, check and inspect beats are difficult to distinguish."
+      }
+    ]
+  },
+  "maker": {
+    "authority": "maker",
+    "maker": "Codex",
+    "statement_sha256": "3e832e10fa14127daf26ceeb39748535b49073b48595ee4c7cf8bb3bfeba0bcc",
+    "limits": "One maker attempt per commissioned pet; unchanged validators, two repairs per failing row, one image jury, no jury redo. Lamp outcomes remain as recorded.",
+    "decision": {
+      "pet": "glassblower",
+      "action": "attempt",
+      "reason": "The clear creature deserves a boundary that remains readable on light surfaces. This is a focused contrast repair, not permission to make the glass opaque.",
+      "instruction": "Strengthen the rim with a restrained darker warm contour inside the existing glass treatment. Keep the center clear and preserve identity, palette and action. Check consistency across all rows and looks, especially idle row 0, review row 8 and row 9 frames 6-7. Inspect native cells on light and dark backgrounds. Add no shadow, glow, opaque fill or scene background. Run every unchanged gate and preserve earlier art and jury reasons."
+    },
+    "previous": {
+      "key": "redo-glassblower",
+      "pet": "glassblower",
+      "model": "gpt-6-astra",
+      "effort": "high",
+      "status": "rejected",
+      "worker_policy": 3,
+      "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+      "fresh_attempts": 0,
+      "reason": "Saved final/spritesheet.webp. Bundled structural, quality and blind-direction gates pass. Required reports and GIF/MP4 previews are in qa/ and previews/. Atlas, compressed contact and metadata total 1,904,685 bytes. Only waiting row 6 changed. No service or Library calls.",
+      "image_generations": 2,
+      "repairs": [
+        "One waiting-row material repair restored the clear heart after the initial redraw produced a milky center.",
+        "Reused the prior shared framing transform: 154 × 166 raster at offset 19,22. Unaffected final rows remain pixel-identical.",
+        "Normalized reviewer display labels to bundled schema IDs and reran blind aggregation and validation without changing visual verdicts."
+      ],
+      "contract_overrides": [
+        {
+          "source": "style.framing",
+          "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+          "replacement": "Rows 0–8 use 6, 8, 8, 4, 5, 8, 6, 6, 6 frames respectively. Remap four beats to these counts; retain 8 fps as drawing guidance and use bundled state-specific preview durations.",
+          "reason": "The v2 contract fixes frame counts; long holds are expressed through timing rather than extra cells."
+        },
+        {
+          "source": "style.palette",
+          "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+          "replacement": "Sixteen clockwise gaze/pose directions in rows 9 and 10: 000 through 337.5 in 22.5-degree steps, with 000 up, 090 right, 180 down, 270 left. One consistent palette and paint treatment.",
+          "reason": "V2 looks are directions, not paint variants or additional nine-row sheets."
+        },
+        {
+          "source": "style.palette",
+          "original": "Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+          "replacement": "All directions retain the same rim softness, tint, contained inner warmth and clear center.",
+          "reason": "Directional changes must preserve material treatment."
+        },
+        {
+          "source": "style.rows.idle",
+          "original": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+          "replacement": "Preserve the action. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "style.rows.running-right",
+          "original": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+          "replacement": "Preserve the right-facing action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "style.rows.running-left",
+          "original": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+          "replacement": "Preserve the independently drawn left-facing action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "style.rows.waving",
+          "original": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+          "replacement": "Preserve the greeting action. Required 4 frames: beats 1–4 correspond to frames 0–3.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "style.rows.jumping",
+          "original": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+          "replacement": "Preserve the jump action and treat displacement as guidance. Required 5 frames: beat 1 frame 0; beat 2 frame 1; beat 3 frames 2–3; beat 4 frame 4.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "style.rows.failed",
+          "original": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+          "replacement": "Preserve the disappointed action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "style.rows.waiting",
+          "original": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+          "replacement": "Preserve the expectant action. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "style.rows.running",
+          "original": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+          "replacement": "Preserve planted focused work. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "style.rows.review",
+          "original": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once.",
+          "replacement": "Preserve the thoughtful turn, hold and nod. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+          "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+        },
+        {
+          "source": "brief.why",
+          "original": "Export, when produced, is a transparent PNG atlas.",
+          "replacement": "Export final/spritesheet.webp as transparent 1536 × 2288 WebP; retain intermediate PNG locally.",
+          "reason": "The explicit output request requires WebP within the total 2 MB package budget."
+        },
+        {
+          "source": "bundled preparation prompts.background",
+          "original": "Place a single centered pose on a perfectly flat pure blue #0000FF chroma-key background.",
+          "replacement": "Place the sprite on genuine alpha transparency, with a mostly transparent glass center. No painted background or checkerboard.",
+          "reason": "The transparency requirement and clear glass material require alpha; retain the selected blue key only for bundled cleanup and validation."
+        }
+      ],
+      "decisions": [
+        "Local-only targeted jury redo; no Pets MCP, Library, upload, creation, selection, activation or service mutation.",
+        "One sequential image worker preserved the prior canonical base, eight unaffected animation rows and all sixteen direction poses.",
+        "Both identified concerns were addressed in waiting row 6: a narrower, taller outward asking silhouette and stronger existing blue/ochre accents inside the soft cream rim.",
+        "Waiting holds open-eyed outward attention; focused work retains planted compression; review retains its side turn, pause and nod.",
+        "Reused assets were checked in dependency order: base, idle, running-right, remaining standard rows, cardinals, row 9, then row 10.",
+        "Preserved genuine alpha, a translucent clear heart, soot eyes and sparse attached rim marks, with no limbs or belongings. The fixed family ram reference supplied style only.",
+        "All task-controlled artifacts remain in this run. New sources are sources/redo-01-waiting.png and sources/redo-02-waiting.png; prompts, references and provider cache paths are recorded in logs/generations.json.",
+        "Treat 8 fps and motion amplitudes as drawing guidance; use bundled preview timings and v2 frame counts.",
+        "Reused the established shared framing transform to preserve scale and baseline.",
+        "Regenerated only waiting; no palette variants, new props, look repairs or whole-pet redesign.",
+        "Native dark-background inspection caught the initial milky center. One material-only repair restored translucency; sampled clear-center alpha is 77–83/255.",
+        "The final waiting silhouette is narrower and taller than idle, with raised outward-looking eyes and a restrained questioning tilt.",
+        "Limited the rim correction to waiting, where both jury concerns overlap; retained the soft glass treatment without a hard black enclosure.",
+        "All eight unaffected standard sources passed fresh bundled extraction and inspection. Cardinals were re-extracted, and row 9 was registered and reviewed before row 10 assembly.",
+        "Applied exactly one despill pass to the assembled candidate rebuilt from source pixels.",
+        "Exact comparison of all RGBA channels confirms rows 0–5 and 7–10 remain pixel-identical to the previous WebP.",
+        "Three isolated reviewers unanimously confirmed all blind direction axes. An independent native-size review found no concrete remaining waiting-row defects.",
+        "Reviewed continuity warnings at 067.5→090, 112.5→135 and 157.5→180. Pose changes remain coherent without direction reversal; subtle intermediate directions remain documented warnings.",
+        "Observed idle height variation is 1 px against 1–2 px guidance. The retained jump rises 40 px against 10–14 px guidance and lands with 0 px baseline delta; its action remains clear, so no numerical motion repair was made.",
+        "The resting baseline is y=183 against y=184 guidance. Waiting uses held poses and a subtle questioning tilt without an additional amplitude threshold.",
+        "Look registration drift is at most 4.5 px and width ratio is 1.108; bundled quality checks pass.",
+        "Exported lossless transparent WebP and rendered contact sheets, nine state GIFs, all-state GIF/MP4, idle-jump-idle GIF/MP4, direction-loop GIF/MP4 and labeled stills from the exact final WebP.",
+        "Actual new image-generation count is 2. The previous 30 generations are retained separately as inherited provenance."
+      ],
+      "atlas_sha256": "15fee78f77e4ae7ecbac8a2e9dd19a846b0319c0f5a6d0fa66a224da3851b1c4",
+      "validators": {
+        "atlas": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/gate/atlas.json",
+        "quality": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/gate/quality.json"
+      },
+      "package": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/package",
+      "bytes": 1960950,
+      "contact": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/package/contact-sheet.webp",
+      "previews": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/previews",
+      "package_hashes": {
+        "contact-sheet.webp": "208ad5c9341d08aed51af3057642438c887070653e85e190b66deb310249b479",
+        "pet.json": "cba46ae2e9e19d5deb7b819f091b88629a6faaa68330f731c524c4635a7db6a1",
+        "provenance.json": "df492fac6a24dd3095da9c28140fd76e55138201ec9900ab9ee18f5728747883",
+        "spritesheet.webp": "15fee78f77e4ae7ecbac8a2e9dd19a846b0319c0f5a6d0fa66a224da3851b1c4"
+      },
+      "work": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp",
+      "reasons": [
+        {
+          "seat": "painter",
+          "target": "glassblower",
+          "why": "Base animation, rows 0 and 8, and row 9 frames 6–7: the pale rim partly disappears against light checker squares in the supplied preview. The eyes remain clear, but the outer shape has weaker contrast. Record this concern without another redo."
+        }
+      ]
+    },
+    "validator_reports": [
+      {
+        "path": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/qa/direction-semantics.json",
+        "sha256": "d8ace4511536445bb205caec7ac8fa3ef1ccd5580d448a1a52bf00b072649bfa",
+        "report": {
+          "reviewer": "Primary agent, fresh native-size inspection of previews/direction-qa.png rendered from this exact WebP",
+          "directions": [
+            {
+              "label": "000",
+              "expected": "up",
+              "observed": "up",
+              "verdict": "pass",
+              "evidence": "The long tip rises over the anchored base; both eyes are lifted higher on the frontal face than neutral, with open lower glass beneath them."
+            },
+            {
+              "label": "022.5",
+              "expected": "up-right",
+              "observed": "up-right",
+              "verdict": "warning",
+              "evidence": "Tip and face bend to screen-right; far eye rises on the upper right face surface while the upper body stays tall. Close to 045 but occupies the upper-right quadrant."
+            },
+            {
+              "label": "045",
+              "expected": "up-right",
+              "observed": "up-right",
+              "verdict": "warning",
+              "evidence": "Both eyes ride the raised right-facing curved surface; the tip leans right above a tall upper body. Horizontal right and upward face pitch are visible."
+            },
+            {
+              "label": "067.5",
+              "expected": "up-right",
+              "observed": "up-right",
+              "verdict": "pass",
+              "evidence": "Tip leans farther right; eyes remain raised on that side with a narrower far eye. The base remains flattened and anchored."
+            },
+            {
+              "label": "090",
+              "expected": "right",
+              "observed": "right",
+              "verdict": "pass",
+              "evidence": "Both eyes collect on the right face surface with the far eye close to the right rim; tip aims right and the upper body leans right."
+            },
+            {
+              "label": "112.5",
+              "expected": "down-right",
+              "observed": "down-right",
+              "verdict": "pass",
+              "evidence": "Right-facing eye pair drops below its cardinal position as the upper body lowers and the tip bows forward. Both right and down cues are present."
+            },
+            {
+              "label": "135",
+              "expected": "down-right",
+              "observed": "down-right",
+              "verdict": "pass",
+              "evidence": "The folded tip and lower upper-body outline aim down-right; eyes sit very low at the right side of the glass above the anchored base."
+            },
+            {
+              "label": "157.5",
+              "expected": "down-right",
+              "observed": "down-right",
+              "verdict": "pass",
+              "evidence": "Face stays low on the right, with the tip folded farther down and a compact upper silhouette. Strong downward pitch with retained right bias."
+            },
+            {
+              "label": "180",
+              "expected": "down",
+              "observed": "down",
+              "verdict": "pass",
+              "evidence": "Both eyes sit centered just above the bottom rim and the tip folds toward the viewer and bottom, forming a low frontal bowed silhouette."
+            },
+            {
+              "label": "202.5",
+              "expected": "down-left",
+              "observed": "down-left",
+              "verdict": "pass",
+              "evidence": "Low eyes move onto the left surface; tip bends screen-left while the upper body remains lowered. Clear left and down components."
+            },
+            {
+              "label": "225",
+              "expected": "down-left",
+              "observed": "down-left",
+              "verdict": "warning",
+              "evidence": "Eyes remain low toward the left rim and the tip extends left while the upper body begins rising. Similar to 202.5 but remains down-left."
+            },
+            {
+              "label": "247.5",
+              "expected": "down-left",
+              "observed": "down-left",
+              "verdict": "pass",
+              "evidence": "Left-facing eyes are below the left cardinal face position and the tip leans left. The rising outline bridges the lower looks to the left cardinal."
+            },
+            {
+              "label": "270",
+              "expected": "left",
+              "observed": "left",
+              "verdict": "pass",
+              "evidence": "Eyes occupy the left face surface with a compressed far eye near the left rim; the upper body and tip lean screen-left over the fixed base."
+            },
+            {
+              "label": "292.5",
+              "expected": "up-left",
+              "observed": "up-left",
+              "verdict": "pass",
+              "evidence": "Face starts lifting on the left side; far eye climbs the curved left rim and tip rises above its left-facing cardinal position."
+            },
+            {
+              "label": "315",
+              "expected": "up-left",
+              "observed": "up-left",
+              "verdict": "pass",
+              "evidence": "Tip and upper body extend upward while eyes climb the upper-left face surface. Both horizontal left and vertical up are visible."
+            },
+            {
+              "label": "337.5",
+              "expected": "up-left",
+              "observed": "up-left",
+              "verdict": "warning",
+              "evidence": "Tall upper body and high eye pair keep an upward-left direction before frontal up. Near 315 in elevation but the face begins opening toward the viewer."
+            }
+          ],
+          "continuity_review": {
+            "warnings": [
+              "067.5->090 diff is a local outlier (5984 pixels vs neighbor average 3916)",
+              "067.5->090 center shift is high (10.0px)",
+              "067.5->090 sprite area ratio is high (1.15)",
+              "112.5->135 sprite area ratio is high (1.16)",
+              "157.5->180 sprite area ratio is high (1.23)"
+            ],
+            "observed": "067.5 to 090 lowers the upper silhouette into the right cardinal, with a steady base. 112.5 to 135 folds farther downward. 157.5 to 180 broadens toward a frontal downward face. These are coherent pose changes without clipping, direction reversal or identity change. Neighbors 022.5 and 045, and 315 and 337.5, remain subtle but occupy correct quadrants."
+          },
+          "atlas_sha256": "15fee78f77e4ae7ecbac8a2e9dd19a846b0319c0f5a6d0fa66a224da3851b1c4",
+          "reuse_evidence": "All look pixels compared with the prior candidate; see qa/reuse-pixel-comparison.json. All sixteen landmark verdicts independently reconfirmed visually."
+        }
+      },
+      {
+        "path": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/qa/pet-quality.json",
+        "sha256": "9f5f21029bfbdf05014970f1a420e55e5dc82f680d5cfd282a813f0eb56d29e5",
+        "report": {
+          "ok": true,
+          "atlas": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/final/spritesheet.webp",
+          "encoded_bytes": 1812232,
+          "sha256": "15fee78f77e4ae7ecbac8a2e9dd19a846b0319c0f5a6d0fa66a224da3851b1c4",
+          "jump": {
+            "idle_baseline": 183,
+            "jump_baselines": [
+              183,
+              166,
+              143,
+              166,
+              183
+            ],
+            "airborne_lift_pixels": 40,
+            "landing_delta_pixels": 0
+          },
+          "look_registration": {
+            "neutral_center_x": 96.0,
+            "look_centers_x": [
+              95.5,
+              95.0,
+              96.0,
+              100.5,
+              100.0,
+              100.5,
+              99.5,
+              97.5,
+              95.0,
+              93.0,
+              92.0,
+              92.0,
+              93.0,
+              95.0,
+              94.5,
+              95.5
+            ],
+            "look_widths": [
+              117,
+              112,
+              112,
+              123,
+              120,
+              121,
+              119,
+              117,
+              122,
+              118,
+              120,
+              120,
+              118,
+              114,
+              113,
+              111
+            ],
+            "maximum_center_drift_pixels": 4.5,
+            "maximum_width_ratio": 1.1081081081081081
+          },
+          "errors": [],
+          "warnings": [
+            "look direction 022.5 accepted with a reviewed warning",
+            "look direction 045 accepted with a reviewed warning",
+            "look direction 225 accepted with a reviewed warning",
+            "look direction 337.5 accepted with a reviewed warning",
+            "067.5->090 diff is a local outlier (5984 pixels vs neighbor average 3916)",
+            "067.5->090 center shift is high (10.0px)",
+            "067.5->090 sprite area ratio is high (1.15)",
+            "112.5->135 sprite area ratio is high (1.16)",
+            "157.5->180 sprite area ratio is high (1.23)"
+          ]
+        }
+      },
+      {
+        "path": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/gate/quality.json",
+        "sha256": "9f5f21029bfbdf05014970f1a420e55e5dc82f680d5cfd282a813f0eb56d29e5",
+        "report": {
+          "ok": true,
+          "atlas": "/root/factory-out/F36/lamp/hatches/redo-glassblower/attempt-xzmi2vsp/final/spritesheet.webp",
+          "encoded_bytes": 1812232,
+          "sha256": "15fee78f77e4ae7ecbac8a2e9dd19a846b0319c0f5a6d0fa66a224da3851b1c4",
+          "jump": {
+            "idle_baseline": 183,
+            "jump_baselines": [
+              183,
+              166,
+              143,
+              166,
+              183
+            ],
+            "airborne_lift_pixels": 40,
+            "landing_delta_pixels": 0
+          },
+          "look_registration": {
+            "neutral_center_x": 96.0,
+            "look_centers_x": [
+              95.5,
+              95.0,
+              96.0,
+              100.5,
+              100.0,
+              100.5,
+              99.5,
+              97.5,
+              95.0,
+              93.0,
+              92.0,
+              92.0,
+              93.0,
+              95.0,
+              94.5,
+              95.5
+            ],
+            "look_widths": [
+              117,
+              112,
+              112,
+              123,
+              120,
+              121,
+              119,
+              117,
+              122,
+              118,
+              120,
+              120,
+              118,
+              114,
+              113,
+              111
+            ],
+            "maximum_center_drift_pixels": 4.5,
+            "maximum_width_ratio": 1.1081081081081081
+          },
+          "errors": [],
+          "warnings": [
+            "look direction 022.5 accepted with a reviewed warning",
+            "look direction 045 accepted with a reviewed warning",
+            "look direction 225 accepted with a reviewed warning",
+            "look direction 337.5 accepted with a reviewed warning",
+            "067.5->090 diff is a local outlier (5984 pixels vs neighbor average 3916)",
+            "067.5->090 center shift is high (10.0px)",
+            "067.5->090 sprite area ratio is high (1.15)",
+            "112.5->135 sprite area ratio is high (1.16)",
+            "157.5->180 sprite area ratio is high (1.23)"
+          ]
+        }
+      }
+    ]
+  },
+  "worker_reply": {
+    "status": "complete",
+    "reason": "Saved local final/spritesheet.webp. Bundled validators and independent technical visual review pass. Required reports and GIF/MP4 previews are saved. Atlas, compressed contact and metadata total 1,920,638 bytes. Separate caller validation and publication jury remain required. No Pets or Library calls.",
+    "image_generations": 4,
+    "repairs": [
+      "One material-only repair of review row 8 restored transparency after the initial contrast edit made its center milky.",
+      "Corrected source-scale mismatch by resizing the entire retained row 10 source by 0.757097 before shared registration; no pose redraw."
+    ],
+    "contract_overrides": [
+      {
+        "source": "style.framing",
+        "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+        "replacement": "Rows 0–8 use 6, 8, 8, 4, 5, 8, 6, 6, 6 frames respectively. Remap four beats to these counts; retain 8 fps as drawing guidance and use bundled state-specific preview durations.",
+        "reason": "The v2 contract fixes frame counts; long holds are expressed through timing rather than extra cells."
+      },
+      {
+        "source": "style.palette",
+        "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+        "replacement": "Sixteen clockwise gaze/pose directions in rows 9 and 10: 000 through 337.5 in 22.5-degree steps, with 000 up, 090 right, 180 down, 270 left. One consistent palette and paint treatment.",
+        "reason": "V2 looks are directions, not paint variants or additional nine-row sheets."
+      },
+      {
+        "source": "style.palette",
+        "original": "Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+        "replacement": "All directions retain the same rim softness, tint, contained inner warmth and clear center.",
+        "reason": "Directional changes must preserve material treatment."
+      },
+      {
+        "source": "style.rows.idle",
+        "original": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+        "replacement": "Preserve the action. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "style.rows.running-right",
+        "original": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+        "replacement": "Preserve the right-facing action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "style.rows.running-left",
+        "original": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+        "replacement": "Preserve the independently drawn left-facing action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "style.rows.waving",
+        "original": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+        "replacement": "Preserve the greeting action. Required 4 frames: beats 1–4 correspond to frames 0–3.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "style.rows.jumping",
+        "original": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+        "replacement": "Preserve the jump action and treat displacement as guidance. Required 5 frames: beat 1 frame 0; beat 2 frame 1; beat 3 frames 2–3; beat 4 frame 4.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "style.rows.failed",
+        "original": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+        "replacement": "Preserve the disappointed action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "style.rows.waiting",
+        "original": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+        "replacement": "Preserve the expectant action. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "style.rows.running",
+        "original": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+        "replacement": "Preserve planted focused work. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "style.rows.review",
+        "original": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once.",
+        "replacement": "Preserve the thoughtful turn, hold and nod. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+        "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+      },
+      {
+        "source": "brief.why",
+        "original": "Export, when produced, is a transparent PNG atlas.",
+        "replacement": "Export final/spritesheet.webp as transparent 1536 × 2288 WebP; retain intermediate PNG locally.",
+        "reason": "The explicit output request requires WebP within the total 2 MB package budget."
+      },
+      {
+        "source": "bundled preparation prompts.background",
+        "original": "Place a single centered pose on a perfectly flat pure blue #0000FF chroma-key background.",
+        "replacement": "Place the sprite on genuine alpha transparency, with a mostly transparent glass center. No painted background or checkerboard.",
+        "reason": "The transparency requirement and clear glass material require alpha; retain the selected blue key only for bundled cleanup and validation."
+      }
+    ],
+    "decisions": [
+      "Completed one local maker attempt outside the Lamp budget. Preserved earlier attempts, jury reasons and gate evidence; the prior rejection remains recorded.",
+      "One worker generated art sequentially. Independent agents performed read-only visual reviews.",
+      "Reused the canonical base, sound animation rows, cardinal anchors and row 10. Limited art edits to idle row 0, review row 8 and coherent look row 9.",
+      "Strengthened the existing rim with restrained warm contour while preserving clear centers, soot eyes, attached paint marks, identity and action. Added no limbs, props, shadows or outside light.",
+      "Every image job included the fixed family reference, canonical base, layout guide and relevant identity references. Combined complete family and standard sheets when needed to stay within five references.",
+      "Checked reused assets in dependency order and ran bundled preparation, extraction, inspections, assembly, cleanup, continuity and validators.",
+      "Used the prior shared standard-frame transform: 154 × 166 raster at offset 19,22. Corrected row 10 source scale before applying shared look registration.",
+      "Applied exactly one despill pass to the assembled candidate. Rows 1–7 remain pixel-identical to the previous final WebP; row 10 changed only through deterministic resampling and registration.",
+      "Four new sources are sources/maker-01-idle.png, sources/maker-02-review.png, sources/maker-03-review.png and sources/maker-04-look-row-9.png. The second source was superseded. Prompts, references and provider-cache paths are recorded in logs/generations.json.",
+      "The earlier 32 image generations are inherited history and excluded from the new generation count.",
+      "Waiting remains tall and outward attentive; focused work compresses forward while planted; review turns sideways, pauses and settles. Independent native-size inspection found these actions distinct.",
+      "Native light/dark checks confirm readable warm rims and translucent centers. Review has a slightly stronger brown contour but remains materially consistent.",
+      "Three isolated blind reviewers unanimously classified every direction axis. Labeled review retains subtle-neighbor warnings at 022.5, 045, 225 and 337.5.",
+      "Reviewed continuity warnings at 067.5→090 and 337.5→000. They reflect coherent pose transitions without visible reversal, clipping or scale pop.",
+      "Idle height varies 1 px against 1–2 px breath guidance. The retained jump rises 40 px against 10–14 px/about 12 px guidance, with a 1 px landing-to-idle baseline difference. The intended jump remains readable; no numerical motion repair was made.",
+      "Idle baseline is y=182 against y=184 guidance; review uses y=182–183. Look center drift is at most 5.5 px and width ratio 1.135. Unchanged bundled quality checks pass.",
+      "Used bundled preview durations; 8 fps and motion amplitudes remain drawing guidance.",
+      "The independent preview warning concerns intentionally cropped upper-body zoom panels in the bundled direction sheet. Full native silhouettes are complete; retained the authentic output and supplied light/dark strips.",
+      "Exported lossless transparent v2 WebP with unused cells clear. Saved contact sheets, nine state GIFs, all-state GIF/MP4, idle-jump-idle GIF/MP4, look-loop GIF/MP4 and labeled stills from the exact final WebP.",
+      "All task-controlled artifacts remain in this work directory. Local gates pass; separate caller validators and an image jury remain required before publication."
+    ]
+  },
+  "work": "/root/factory-out/F36/lamp/hatches/maker-glassblower/attempt-rstf2y0w",
+  "worker_policy": 3,
+  "contract": "The v2 sprite-sheet contract fixes 192 × 208 cells, eight columns by eleven rows,\none transparent 1536 × 2288 atlas. The nine animation rows (0–8) have these exact frame counts:\nidle 6, running-right 8, running-left 8, waving 4, jumping 5, failed 8, waiting 6,\nrunning 6 (focused work, not locomotion), review 6. Unused cells stay fully transparent.\nRows 9 and 10 hold sixteen look directions, eight per row, clockwise in screen coordinates:\nrow 9: 000, 022.5, 045, 067.5, 090, 112.5, 135, 157.5;\nrow 10: 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5.\n000 is up, 090 right, 180 down, 270 left. These are gaze/pose directions with the same\npalette and treatment, not sixteen palette variants, paint treatments or separate animations.\n",
+  "motion_policy": "Style-sheet motion numbers (pixel displacement, angles, timing and amplitudes) are drawing guidance. Only the skill's validators gate a pet; a measured difference from style guidance is recorded in provenance, not a reason to fail or spend repairs.",
+  "motion_guidance_difference": null,
+  "contract_overrides": [
+    {
+      "source": "style.framing",
+      "original": "Each row has 16 frames at 8 fps: two seconds, four beats of four frames. Repeat held drawings within that grid.",
+      "replacement": "Rows 0–8 use 6, 8, 8, 4, 5, 8, 6, 6, 6 frames respectively. Remap four beats to these counts; retain 8 fps as drawing guidance and use bundled state-specific preview durations.",
+      "reason": "The v2 contract fixes frame counts; long holds are expressed through timing rather than extra cells."
+    },
+    {
+      "source": "style.palette",
+      "original": "V2 adds sixteen selectable looks to the base sheet, each covering all nine rows and all twenty seeds. These change paint handling and small accents, never creature, costume or props: 1. Dry Paint—sparse broad grain; 2. Full Paint—solid matte fills; 3. Thin Paint—slightly translucent fills; 4. Broken Edge—small fixed gaps in solid-body outlines; 5. Soft Edge—gentler edge transitions; 6. Firm Edge—clearer shape boundaries; 7. Cream Edge—a narrow light-facing rim; 8. Soot Edge—a deeper inward border; 9. Ochre Touch—ochre on existing small accents; 10. Rust Touch—rust on existing small accents; 11. Herb Touch—green on existing small accents; 12. Blue Touch—blue on existing small accents; 13. Pale Paint—lighter secondary colors; 14. Deep Paint—darker secondary colors; 15. Quiet Paint—less saturated secondary colors; 16. Fresh Paint—stronger secondary colors.",
+      "replacement": "Sixteen clockwise gaze/pose directions in rows 9 and 10: 000 through 337.5 in 22.5-degree steps, with 000 up, 090 right, 180 down, 270 left. One consistent palette and paint treatment.",
+      "reason": "V2 looks are directions, not paint variants or additional nine-row sheets."
+    },
+    {
+      "source": "style.palette",
+      "original": "Glass variants affect rim softness, tint or inner light only; its center remains clear.",
+      "replacement": "All directions retain the same rim softness, tint, contained inner warmth and clear center.",
+      "reason": "Directional changes must preserve material treatment."
+    },
+    {
+      "source": "style.rows.idle",
+      "original": "Beat 1: settled pose. Beat 2: one slow blink or slight head dip. Beat 3: a 1–2 pixel breath. Beat 4: return and hold. Keep sleepy pets curled, proud pets upright and the palette quietly seated. Loop gently.",
+      "replacement": "Preserve the action. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "style.rows.running-right",
+      "original": "Face right. Beat 1: first contact. Beat 2: lift and pass. Beat 3: opposite contact. Beat 4: lift and return. Legs stride, wheels turn, covers or bee wings beat; legless bodies tip and bob along the same pulse. Keep carried objects secure.",
+      "replacement": "Preserve the right-facing action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "style.rows.running-left",
+      "original": "Use the same four-beat travel cycle facing left. Redraw the turn so the eyebrow, herbs, quill, broom, guitar and other uneven details remain attached to their proper places. Do not simply mirror the finished sheet.",
+      "replacement": "Preserve the independently drawn left-facing action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "style.rows.waving",
+      "original": "Beat 1: turn toward the viewer. Beat 2: raise an available limb, cover, branch or body edge. Beat 3: make one clear greeting sweep. Beat 4: lower and settle. Bodies without limbs tilt in greeting. Keep held flames and jars upright. Play once.",
+      "replacement": "Preserve the greeting action. Required 4 frames: beats 1–4 correspond to frames 0–3.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "style.rows.jumping",
+      "original": "Beat 1: crouch or compress. Beat 2: rise 10–14 pixels. Beat 3: reach the peak and descend. Beat 4: land, soften and settle. Winged pets use a brief upward flap; the trolleybus gives a small springy hop. Show no trails or landing marks. Play once.",
+      "replacement": "Preserve the jump action and treat displacement as guidance. Required 5 frames: beat 1 frame 0; beat 2 frame 1; beat 3 frames 2–3; beat 4 frame 4.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "style.rows.failed",
+      "original": "Beat 1: stop abruptly. Beat 2: sink or tilt downward. Beat 3: hold a plainly disappointed pose. Beat 4: recover slightly while keeping the lowered gaze. No damage or comic panic. Play once and hold; this must differ from a sleepy idle.",
+      "replacement": "Preserve the disappointed action. Required 8 frames: beat 1 frames 0–1; beat 2 frames 2–3; beat 3 frames 4–5; beat 4 frames 6–7.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "style.rows.waiting",
+      "original": "Beat 1: look toward the expected action. Beat 2: hold. Beat 3: make one restrained questioning tilt or weight shift. Beat 4: hold with eyes open. The calf may make one small hoof press. Existing lights stay steady. Loop without pacing.",
+      "replacement": "Preserve the expectant action. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "style.rows.running",
+      "original": "This means a task is active, not travel. Stay planted and lean toward the work. Beat 1: prepare. Beat 2: act. Beat 3: check. Beat 4: reset. The hut sweeps close to its feet, the brush works at its own jar rim, the inkpot traces an empty underline gesture, the book turns a pictured page and the magnifier scans. Other seeds use focused body motions with their existing belongings. Loop.",
+      "replacement": "Preserve planted focused work. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "style.rows.review",
+      "original": "Beat 1: become still and attentive. Beat 2: inspect an existing body detail or belonging, or turn thoughtfully when there is none. Beat 3: hold the considered pose. Beat 4: give one small nod and settle. The magnifier angles its lens inward; the palette studies a paint dab. Keep the motion small and distinct from the broad greeting. Add nothing. Play once.",
+      "replacement": "Preserve the thoughtful turn, hold and nod. Required 6 frames: beat 1 frame 0; beat 2 frames 1–2; beat 3 frame 3; beat 4 frames 4–5.",
+      "reason": "Remap four action beats from the sixteen-frame grid to the required v2 row."
+    },
+    {
+      "source": "brief.why",
+      "original": "Export, when produced, is a transparent PNG atlas.",
+      "replacement": "Export final/spritesheet.webp as transparent 1536 × 2288 WebP; retain intermediate PNG locally.",
+      "reason": "The explicit output request requires WebP within the total 2 MB package budget."
+    },
+    {
+      "source": "bundled preparation prompts.background",
+      "original": "Place a single centered pose on a perfectly flat pure blue #0000FF chroma-key background.",
+      "replacement": "Place the sprite on genuine alpha transparency, with a mostly transparent glass center. No painted background or checkerboard.",
+      "reason": "The transparency requirement and clear glass material require alpha; retain the selected blue key only for bundled cleanup and validation."
+    }
+  ],
+  "decisions": [
+    "Completed one local maker attempt outside the Lamp budget. Preserved earlier attempts, jury reasons and gate evidence; the prior rejection remains recorded.",
+    "One worker generated art sequentially. Independent agents performed read-only visual reviews.",
+    "Reused the canonical base, sound animation rows, cardinal anchors and row 10. Limited art edits to idle row 0, review row 8 and coherent look row 9.",
+    "Strengthened the existing rim with restrained warm contour while preserving clear centers, soot eyes, attached paint marks, identity and action. Added no limbs, props, shadows or outside light.",
+    "Every image job included the fixed family reference, canonical base, layout guide and relevant identity references. Combined complete family and standard sheets when needed to stay within five references.",
+    "Checked reused assets in dependency order and ran bundled preparation, extraction, inspections, assembly, cleanup, continuity and validators.",
+    "Used the prior shared standard-frame transform: 154 × 166 raster at offset 19,22. Corrected row 10 source scale before applying shared look registration.",
+    "Applied exactly one despill pass to the assembled candidate. Rows 1–7 remain pixel-identical to the previous final WebP; row 10 changed only through deterministic resampling and registration.",
+    "Four new sources are sources/maker-01-idle.png, sources/maker-02-review.png, sources/maker-03-review.png and sources/maker-04-look-row-9.png. The second source was superseded. Prompts, references and provider-cache paths are recorded in logs/generations.json.",
+    "The earlier 32 image generations are inherited history and excluded from the new generation count.",
+    "Waiting remains tall and outward attentive; focused work compresses forward while planted; review turns sideways, pauses and settles. Independent native-size inspection found these actions distinct.",
+    "Native light/dark checks confirm readable warm rims and translucent centers. Review has a slightly stronger brown contour but remains materially consistent.",
+    "Three isolated blind reviewers unanimously classified every direction axis. Labeled review retains subtle-neighbor warnings at 022.5, 045, 225 and 337.5.",
+    "Reviewed continuity warnings at 067.5→090 and 337.5→000. They reflect coherent pose transitions without visible reversal, clipping or scale pop.",
+    "Idle height varies 1 px against 1–2 px breath guidance. The retained jump rises 40 px against 10–14 px/about 12 px guidance, with a 1 px landing-to-idle baseline difference. The intended jump remains readable; no numerical motion repair was made.",
+    "Idle baseline is y=182 against y=184 guidance; review uses y=182–183. Look center drift is at most 5.5 px and width ratio 1.135. Unchanged bundled quality checks pass.",
+    "Used bundled preview durations; 8 fps and motion amplitudes remain drawing guidance.",
+    "The independent preview warning concerns intentionally cropped upper-body zoom panels in the bundled direction sheet. Full native silhouettes are complete; retained the authentic output and supplied light/dark strips.",
+    "Exported lossless transparent v2 WebP with unused cells clear. Saved contact sheets, nine state GIFs, all-state GIF/MP4, idle-jump-idle GIF/MP4, look-loop GIF/MP4 and labeled stills from the exact final WebP.",
+    "All task-controlled artifacts remain in this work directory. Local gates pass; separate caller validators and an image jury remain required before publication."
+  ],
+  "resumed_from": null,
+  "atlas_sha256": "be734ac03874e040997e1b393abc0483b14684d3990f8d239d7d654f8faff49b",
+  "validators": {
+    "atlas": "/root/factory-out/F36/lamp/hatches/maker-glassblower/attempt-rstf2y0w/gate/atlas.json",
+    "quality": "/root/factory-out/F36/lamp/hatches/maker-glassblower/attempt-rstf2y0w/gate/quality.json"
+  },
+  "image_generations_source": "worker report; raw events and generation logs retained",
+  "redo_count": 0,
+  "local_only": true,
+  "maker_attempt_count": 1,
+  "contact_preview": {
+    "width": 600,
+    "height": 988,
+    "reason": "fit package budget without changing validated atlas bytes"
+  }
+}
