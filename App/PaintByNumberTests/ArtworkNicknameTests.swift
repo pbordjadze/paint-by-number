@@ -22,6 +22,7 @@ struct ArtworkNicknameTests {
     @Test func newArtworkRecordsTheCurrentVocabulary() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft())
+        #expect(ColorNickname.currentVersion == 2)
         #expect(artwork.nicknameVersion == ColorNickname.currentVersion)
         let meta = library.store.url(.meta, of: artwork.id)
         #expect(try fields(at: meta)["nicknameVersion"] as? Int == ColorNickname.currentVersion)
@@ -86,7 +87,7 @@ struct ArtworkNicknameTests {
         #expect(future.nicknameVersion == Int.max && future.needsNewerApp)
     }
 
-    @Test(arguments: [1, Int.max])
+    @Test(arguments: [1, 2, Int.max])
     func regenerationKeepsTheRecordedVocabulary(version: Int) async throws {
         let library = makeLibrary()
         var item = draft()
@@ -101,7 +102,7 @@ struct ArtworkNicknameTests {
         #expect(try reloaded.store.readMeta(artwork.id).nicknameVersion == version)
     }
 
-    @Test(arguments: [1, Int.max])
+    @Test(arguments: [1, 2, Int.max])
     func sessionsAndPrintableKeyUseTheArtworkVocabulary(version: Int) async throws {
         let library = makeLibrary()
         var artwork = try await library.create(draft())
@@ -123,11 +124,10 @@ struct ArtworkNicknameTests {
         for name in expected { #expect(key.contains(name), "Missing nickname: \(name)") }
     }
 
-    @Test func versionOneNamesMatchLinux() {
-        // Expected values computed on Linux, Swift 6.2: put the hex palette below (the core
-        // parrots pin) in a scratch .pbnt, then run:
-        // swift run pbn names palette.pbnt --seed 24301 --vocabulary 1
-        // This checks Apple's color conversions, distances and weighted draw against Linux.
+    @Test func versionOneAppleNamesAreFrozen() {
+        // Apple's observed v1 names (iPad CI, iOS 26.5, test-results.json accompanying app-test.log).
+        // Guards saved paintings against a libm change in a future iOS. pbn on Linux differs
+        // for v1; its separate pins remain in ColorNicknameTests. Only v2 promises agreement.
         let hexes: [UInt32] = [
             0xD19195, 0xE34C40, 0xA75D55, 0xBC3B33, 0x91362E, 0x6B3129, 0xE2C6C9, 0xEEBD0E,
             0xB59B22, 0xCECCB1, 0xA0AB7E, 0x706953, 0x575848, 0x779354, 0x5C8430, 0x5D713C,
@@ -138,12 +138,42 @@ struct ArtworkNicknameTests {
             return PaletteColor(oklab: ColorScience.encodedToOKLab(rgb, space: .sRGB), space: .sRGB)
         }
         let expected = [
-            "Dusty Coral", "Ember Glow", "Roof Tile", "Barn Roof", "Fire Brick", "Rosewood", "Rose Quartz", "Daffodil",
-            "Ochre Wall", "Latte Foam", "Eucalyptus", "Bay Leaf", "Shale", "Wet Moss", "Moss Garden", "Swamp Reed",
-            "Bog Myrtle", "Agave", "Dragonfly", "Marshmallow", "Galvanized Pail", "Driftwood", "Bog Oak", "Burnt Cork",
+            "Dusty Coral", "Boiled Lobster", "Roof Tile", "Orchard Apple", "Fire Brick", "Merlot", "Pink Salt", "Mango Lassi",
+            "Ochre Wall", "Sand Dune", "Eucalyptus", "Bay Leaf", "Shale", "Wet Moss", "Fresh Lawn", "Swamp Reed",
+            "Bog Myrtle", "Eucalyptus Sprig", "Dragonfly", "Fresh Linen", "Pumice", "Driftwood", "Bog Oak", "Wet Asphalt",
         ]
         #expect(ColorNickname.assign(palette, seed: 0x5eed, version: 1) == expected)
         #expect(ColorNameText.nicknames(for: palette, seed: 0x5eed, version: 1, languageCode: "en")
                 == expected.map { Optional($0) })
+    }
+
+    private struct NicknamePin: Decodable {
+        let name: String
+        let seed: UInt64
+        let hexes: [UInt32]?
+        let labBits: [[UInt32]]
+        let names: [String]
+    }
+
+    @Test func versionTwoUsesTheSharedCorePins() throws {
+        // The exact same expected names run in PaintCore on Linux/macOS and here on iOS.
+        let url = Fixtures.repositoryRoot.appendingPathComponent("Tests/PaintCoreTests/Fixtures/nickname-v2.json")
+        let pins = try JSONDecoder().decode([NicknamePin].self, from: Data(contentsOf: url))
+        #expect(pins.count == 2)
+        for pin in pins {
+            let palette = pin.labBits.map { bits in
+                PaletteColor(oklab: SIMD3(Float(bitPattern: bits[0]), Float(bitPattern: bits[1]), Float(bitPattern: bits[2])), rgb: .zero)
+            }
+            #expect(ColorNickname.assign(palette, seed: pin.seed, version: 2) == pin.names, "\(pin.name)")
+            #expect(ColorNameText.nicknames(for: palette, seed: pin.seed, version: 2, languageCode: "en")
+                    == pin.names.map { Optional($0) })
+            if let hexes = pin.hexes {
+                let reconstructed = hexes.map { hex in
+                    let rgb = SIMD3(Float((hex >> 16) & 0xFF), Float((hex >> 8) & 0xFF), Float(hex & 0xFF)) / 255
+                    return PaletteColor(oklab: ColorScience.encodedToOKLab(rgb, space: .sRGB), space: .sRGB)
+                }
+                #expect(ColorNickname.assign(reconstructed, seed: pin.seed, version: 2) == pin.names)
+            }
+        }
     }
 }

@@ -8,6 +8,12 @@ import Foundation
 ///
 /// The vocabulary is English data: the app shows these names only while it runs in English and
 /// shows the localized structured name otherwise. Its style guide is on `table`.
+///
+/// Version 1 preserves each platform's original libm-based draw: Apple's saved paintings keep
+/// their names, but Linux can differ. Version 2 uses the same words and hexes with canonical
+/// Q16 anchors, integer distances, weights and multiply-high draws (`ColorNicknameV2`). For
+/// identical stored OKLab Float bits, seed and palette order, v2 is identical on every platform,
+/// including its integer structured fallback. No version promises to equate different palettes.
 public enum ColorNickname {
     /// A name and the color it evokes.
     public struct Entry: Sendable, Hashable {
@@ -19,7 +25,7 @@ public enum ColorNickname {
     }
 
     /// Version used for newly created paintings. Existing paintings without a version use 1.
-    public static let currentVersion = 1
+    public static let currentVersion = 2
 
     // Version 1 draw constants are frozen along with its table.
     /// Anchors beyond this OKLab distance (ΔE) from a paint never name it.
@@ -48,20 +54,23 @@ public enum ColorNickname {
     /// A nickname per palette color: among the nearest anchors, unique within the palette, and
     /// varied by `seed` (the painting's identity), deterministically.
     ///
-    /// Each paint draws one of its `poolSize` nearest anchors (true OKLab distance, none beyond
+    /// In v1, each paint draws one of its `poolSize` nearest anchors (true OKLab distance, none beyond
     /// `maximumDistance`, none more than `window` farther than the nearest) with weight
     /// `exp(-d / falloff)` from `SplitMix64(seed ^ index)`. Paints are resolved in palette order:
     /// one whose draw is taken moves to its other candidates, nearest first, and one with none
     /// left (or none near) gets its structured name in English ("Dark grayish green"), so a
     /// result is never empty. Version 1 rounds weights to integers before the draw. Its math
     /// and draw are frozen; old callers and paintings with no recorded version use 1.
+    /// v2 keeps the candidate policy using Q16 distances and integer exponential approximation,
+    /// multiply-high draw and structured fallback; its exact arithmetic is on `ColorNicknameV2`.
     public static func assign(_ palette: [PaletteColor], seed: UInt64, version: Int = 1) -> [String] {
         assign(palette, seed: seed, vocabulary: Vocabulary(version: version))
     }
 
-    /// Assign from a proposed table using the frozen version 1 draw. Check `problems()` before
-    /// publishing a table; this overload also lets the taste loop render proposals in use.
+    /// Assign using the vocabulary's version. Proposed tables retain the frozen v1 draw;
+    /// check `problems()` before publishing a table.
     public static func assign(_ palette: [PaletteColor], seed: UInt64, vocabulary: Vocabulary) -> [String] {
+        if vocabulary.version == 2 { return ColorNicknameV2.assign(palette, seed: seed, entries: vocabulary.entries) }
         let entries = vocabulary.entries
         var taken = Set<Int>()
         var names: [String] = []

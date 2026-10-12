@@ -160,10 +160,15 @@ func loadNicknameTable(_ path: String) -> ColorNickname.Vocabulary {
 }
 
 func runVocabCheck(_ options: Options) {
-    guard options.positional.count == 2, options.positional[0] == "check" else {
-        fail("usage: pbn vocab check <table.tsv>")
+    guard (1...2).contains(options.positional.count), options.positional[0] == "check",
+          options.nicknameTable == nil else {
+        fail("usage: pbn vocab check [<table.tsv> | --vocabulary N]")
     }
-    let vocabulary = loadNicknameTable(options.positional[1])
+    guard options.positional.count == 1 || options.vocabulary == nil else {
+        fail("a proposed table and --vocabulary are mutually exclusive")
+    }
+    let vocabulary = options.positional.count == 2 ? loadNicknameTable(options.positional[1])
+        : ColorNickname.Vocabulary(version: options.vocabulary ?? ColorNickname.currentVersion)
     let problems = vocabulary.problems()
     guard problems.isEmpty else { fail(problems.joined(separator: "\n")) }
     print("valid: \(vocabulary.entries.count) entries")
