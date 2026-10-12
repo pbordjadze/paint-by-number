@@ -40,7 +40,8 @@ nonisolated enum ArtworkExporter {
     /// painting shows).
     static func templatePDF(store: ArtworkStore, artwork: Artwork, paper: PDFExporter.Paper) throws -> Data {
         let template = try store.readTemplate(artwork.id)
-        let nicknames = ColorNameText.nicknames(for: template.palette, seed: ColorNickname.seed(for: artwork.id))
+        let nicknames = ColorNameText.nicknames(
+            for: template.palette, seed: ColorNickname.seed(for: artwork.id), version: artwork.nicknameVersion)
         return PDFExporter.document(for: template, title: artwork.title, paper: paper, nicknames: nicknames)
     }
 

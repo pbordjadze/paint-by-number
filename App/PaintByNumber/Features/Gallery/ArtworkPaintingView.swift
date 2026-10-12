@@ -137,7 +137,8 @@ struct ArtworkPaintingView: View {
         let session: PaintingSession
         do {
             session = try PaintingSession(
-                template: document.template, progress: document.progress, nicknameSeed: ColorNickname.seed(for: artworkID))
+                template: document.template, progress: document.progress, nicknameSeed: ColorNickname.seed(for: artworkID),
+                nicknameVersion: artwork?.nicknameVersion ?? 1)
         } catch {
             // The library hands out matching progress; this guards against a bug, not a file.
             Log.library.error("Opening \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")

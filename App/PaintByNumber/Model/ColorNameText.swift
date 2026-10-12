@@ -50,14 +50,16 @@ nonisolated enum ColorNameText {
         return Locale.Language(identifier: languageCode).languageCode == .english
     }
 
-    /// The palette's nicknames, index-aligned (`ColorNickname.assign` with `seed`): nil for a color
+    /// The palette's nicknames, index-aligned (using the artwork's recorded `version`): nil for a color
     /// with no vocabulary name (it keeps its structured one) and for every color when
     /// `languageCode` isn't English.
     static func nicknames(
-        for palette: [PaletteColor], seed: UInt64, languageCode: String? = Bundle.main.preferredLocalizations.first
+        for palette: [PaletteColor], seed: UInt64, version: Int,
+        languageCode: String? = Bundle.main.preferredLocalizations.first
     ) -> [String?] {
         guard nicknamesAvailable(languageCode: languageCode) else { return palette.map { _ in nil } }
-        return ColorNickname.assign(palette, seed: seed).map { ColorNickname.isNickname($0) ? $0 : nil }
+        let names = Set(ColorNickname.Vocabulary(version: version).entries.map(\.name))
+        return ColorNickname.assign(palette, seed: seed, version: version).map { names.contains($0) ? $0 : nil }
     }
 
     private static func word(_ lightness: ColorName.Lightness) -> String? {

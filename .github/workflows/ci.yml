@@ -203,6 +203,11 @@ jobs:
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/release -quiet \
             ARCHS=arm64 COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/release-build.log | tail -60
           ci/check_release.sh build/release/Build/Products/Release-iphonesimulator/PaintByNumber.app 2>&1 | tee out/release-check.log
+      - name: Nickname v2 platform contract (macOS)
+        if: ${{ !cancelled() && matrix.job == 'ipad' }}
+        run: |
+          set -o pipefail
+          swift test --filter ColorNicknameV2Tests 2>&1 | tee out/nickname-v2-test.log | tail -60
       - name: Pipeline benchmark (Apple silicon)
         id: bench
         if: ${{ !cancelled() && env.RELEASE == '1' }}

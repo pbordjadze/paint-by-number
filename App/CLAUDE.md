@@ -159,7 +159,8 @@ synchronized folder would bundle it into the app.
   `HapticsPlayer` each work on a queue of their own (starting either engine blocks its caller).
   Settings' Sounds and Haptics switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
-  (`ColorNickname.seed(for:)`), so a painting's names are the same on every open (derived, never
+  (`ColorNickname.seed(for:)`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
+  so a painting's names are the same on every open (derived, never
   stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil outside English)
   feed the palette caption, current color, VoiceOver, the swatch's long-press popover and the PDF
   key; `pbn names` prints a template's.

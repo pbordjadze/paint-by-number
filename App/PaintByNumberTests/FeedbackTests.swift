@@ -102,15 +102,39 @@ struct FeedbackTests {
         #expect(report.painting.paintedRegions == [0])
         #expect(report.painting.selectedNumber == 2)
         #expect(report.painting.lineWeight == "regular")
+        #expect(report.painting.nicknameVersion == Int.max)
+        #expect(report.painting.nicknameSeed == contents.capture.nicknameSeed)
+        #expect(report.painting.paints.map(\.nickname) == contents.capture.nicknames)
         #expect(report.painting.sample == "great-wave" && report.painting.photo == nil)
         #expect(report.painting.paints.map(\.number) == [1, 2, 3])
         #expect(report.painting.paints.first?.hex == "#FF0000")
         #expect(report.files.contains("template.pbnt") && !report.files.contains("photo.jpg"))
         let decoded = try JSONDecoder().decode(FeedbackReport.self, from: JSONEncoder().encode(report))
         #expect(decoded.marks.first?.regions == mark.regions)
+        #expect(decoded.painting.nicknameVersion == Int.max)
         #expect(report.markdown.contains("These two"))
         #expect(report.markdown.contains("region 0 (paint 1)"))
         #expect(report.markdown.contains("Library picture great-wave"))
+    }
+
+    @Test func feedbackBeforeVocabularyVersionsStillDecodes() throws {
+        let report = FeedbackReport(sampleContents(), regions: [])
+        var fields = try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode(report)) as? [String: Any])
+        var painting = try #require(fields["painting"] as? [String: Any])
+        #expect(painting.removeValue(forKey: "nicknameVersion") != nil)
+        fields["painting"] = painting
+        let decoded = try JSONDecoder().decode(FeedbackReport.self, from: JSONSerialization.data(withJSONObject: fields))
+        #expect(decoded.painting.nicknameVersion == nil)
+    }
+
+    @Test func captureKeepsTheSessionsNicknameVersionAndNames() {
+        let session = PaintingSession(template: Fixtures.stripes(), nicknameSeed: 7, nicknameVersion: Int.max)
+        let capture = FeedbackCapture(
+            session: session, title: "Stripes", controller: CanvasController(), showsNumbers: true, paper: .light,
+            darkInterface: false, lineWeight: .default, displayScale: 2, source: nil)
+        #expect(capture.nicknameVersion == Int.max)
+        #expect(capture.nicknameSeed == session.nicknameSeed)
+        #expect(capture.nicknames == session.colorNicknames)
     }
 
     /// The bundle: the painting with its marks beside a zip of everything, the folder they were
@@ -136,11 +160,12 @@ struct FeedbackTests {
     /// note and the mark's comment.
     private func sampleContents() -> FeedbackPackage.Contents {
         let template = Fixtures.stripes()
-        let session = PaintingSession(template: template)
+        let session = PaintingSession(template: template, nicknameSeed: 7, nicknameVersion: Int.max)
         session.paint([0], from: SIMD2(10, 20), animated: false)
         let capture = FeedbackCapture(
             date: Date(timeIntervalSinceReferenceDate: 0), title: "Stripes", template: template, progress: session.progress,
-            selectedColor: 1, nicknames: [nil, nil, nil], nicknameSeed: 7, showsNumbers: true, paper: .light,
+            selectedColor: 1, nicknames: session.colorNicknames, nicknameSeed: session.nicknameSeed,
+            nicknameVersion: session.nicknameVersion, showsNumbers: true, paper: .light,
             darkInterface: false, lineWeight: .default, visibleRect: CGRect(x: 0, y: 0, width: 60, height: 40),
             pointsPerUnit: 8, displayScale: 2, relativeZoom: 1, app: "1.0 (1)", device: "iPad16,6", system: "iPadOS 26.0",
             source: FeedbackSource(sampleName: "great-wave"))
