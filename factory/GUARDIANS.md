@@ -58,12 +58,12 @@ should be able to open it, have a nice time, and understand what's going on, at 
 ## Teams
 
 Paul, October 12, 2026: no guardian leaves (they have pets now), so the guardians work in teams
-of friends who care about similar things. Paul paired Dinotopia with the Storybook and the
+of friends who care about similar things. Paul paired Dino with the Storybook and the
 Painter with Niko; the rest are Claude's proposal, for Paul to change.
 
 | Team | Members | Keeps |
 | --- | --- | --- |
-| The Storytellers | Dinotopia, The Storybook | Keep the app feeling like a book you could walk into. |
+| The Storytellers | Dino, The Storybook | Keep the app feeling like a book you could walk into. |
 | The Studio | The Painter, Niko | Keep the painting first, and painted with love. |
 | The Moonlit Circle | Medea, The Baba Yaga, The Hedge Witch, The Moon | Keep the magic old, kind and done by night. |
 | Glass and Frost | The Glassblower, The Snow Queen | Keep things clear, calm and exact. |
@@ -81,7 +81,7 @@ jury of the Gate and four teams hears about ten guardians for the price of five.
 ## Guarding by metaphor
 
 Every guardian keeps its idea as a metaphor: it looks for the feeling of its stories in a design,
-never their props. Dinotopia never asks for dinosaurs and the Snow Queen never asks for snow; the
+never their props. Dino never asks for dinosaurs and the Snow Queen never asks for snow; the
 Nutcracker wants a mechanism that means well, not clockwork drawn in. A charter's touchstones say
 where the feeling comes from, and its **treasure** names what the guardian guards ("Guards the
 storybook feel" in Who's Who). Props stay welcome where a piece really is about them, like the
@@ -187,7 +187,7 @@ not her character: what she does in the story is set someone free.
 - **touchstones**: illustrated fairy tales.
 - **recognizes itself when**: it could be a page in a book.
 
-### Dinotopia
+### Dino
 
 After James Gurney's Dinotopia books. Joined on October 12, 2026, at Paul's word, to guard the
 storybook feel with the Storybook: "one of the greatest, most magical things I've ever touched."
