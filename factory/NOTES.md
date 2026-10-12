@@ -407,6 +407,8 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
 
 ## Open questions
 
+- Dino in the Lamp's family style? Paul (Oct 12): leave him as he is for now, he's Dino;
+  discuss a restyle with the Lamp later.
 - How long the show is, and which scenes later paintings get.
 - New brand colors from the agents: a separate track, needs Paul's approval.
 - Where the engine builds: `tools/swift.sh` needs Docker, which this cloud container lacks; the
