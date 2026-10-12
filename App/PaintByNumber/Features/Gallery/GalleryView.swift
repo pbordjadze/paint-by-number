@@ -9,6 +9,8 @@ struct GalleryView: View {
     /// The time-lapse being made; the app shell presents its sheet.
     @Binding var timelapse: TimelapseRequest?
     var onCreate: () -> Void
+    /// The painter chose to continue refining the create flow's draft.
+    var onContinueDraft: (Drafts.Opened) -> Void
 
     @Environment(Library.self) private var library
     @State private var width: CGFloat = 0
@@ -16,11 +18,20 @@ struct GalleryView: View {
     @State private var renameText = ""
     @State private var restarting: Artwork?
     @State private var deleting: Artwork?
+    @State private var discardingDraft: CreateDraft?
+    @State private var isOpeningDraft = false
 
     var body: some View {
         ScrollView {
-            if !library.isEmpty {
+            if !isBare {
                 VStack(alignment: .leading, spacing: 36) {
+                    if let draft = shownDraft {
+                        DraftRow(
+                            draft: draft, photo: library.drafts.store.url(.source), isCompact: width < 560,
+                            isOpening: isOpeningDraft, onContinue: continueDraft, onDiscard: { discardingDraft = draft }
+                        )
+                        .transition(.opacity)
+                    }
                     let active = library.inProgress(matching: query)
                     let preparing = shownPlaceholders
                     if !active.isEmpty || !preparing.isEmpty {
@@ -41,12 +52,12 @@ struct GalleryView: View {
                 .padding(.bottom, 56)
             }
         }
-        .scrollDisabled(library.isEmpty)
+        .scrollDisabled(isBare)
         // An empty scroll view collapses; keep the paper (and the empty state) full size.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.paper)
         .overlay {
-            if library.isEmpty {
+            if isBare {
                 EmptyGalleryView(onCreate: onCreate)
                     .transition(.opacity.combined(with: .scale(scale: 0.97)))
             } else if isNarrowedToNothing {
@@ -59,7 +70,8 @@ struct GalleryView: View {
         // Deleting, filtering, searching and (un)favoriting all move cards.
         .animation(.snappy, value: shownIDs)
         .animation(.snappy, value: library.placeholders)
-        .animation(.easeInOut(duration: 0.35), value: library.isEmpty)
+        .animation(.snappy, value: shownDraft?.photoID)
+        .animation(.easeInOut(duration: 0.35), value: isBare)
         .alert("Rename Painting", isPresented: isPresent($renaming), presenting: renaming) { artwork in
             TextField("Title", text: $renameText)
                 .submitLabel(.done)
@@ -93,6 +105,15 @@ struct GalleryView: View {
                             comment: "Delete confirmation message for a painting nobody has painted on; the argument is its title"))
             }
         }
+        .confirmationDialog(
+            "Discard this draft?", isPresented: isPresent($discardingDraft), titleVisibility: .visible, presenting: discardingDraft
+        ) { draft in
+            Button(String(localized: "gallery.draft.discard.confirm", defaultValue: "Discard “\(draft.resolvedTitle)”",
+                          comment: "Destructive button of the draft's discard confirmation; the argument is the draft's title"),
+                   role: .destructive) { library.drafts.discard() }
+        } message: { _ in
+            Text("Its photo and everything you changed in Refine will be lost.")
+        }
         #if DEBUG
         .task(id: library.finished.first?.id) {
             // Demo: share the finished painting's time-lapse once it is ready.
@@ -112,8 +133,14 @@ struct GalleryView: View {
         (library.inProgress(matching: query) + library.finished(matching: query)).map(\.id)
     }
 
-    /// The library has paintings, but the filter or the search hides every one.
-    private var isNarrowedToNothing: Bool { shownIDs.isEmpty && shownPlaceholders.isEmpty }
+    /// There are paintings or a draft, but the filter or the search hides every one.
+    private var isNarrowedToNothing: Bool { shownIDs.isEmpty && shownPlaceholders.isEmpty && shownDraft == nil }
+
+    /// The create flow's draft belongs to no selection either: it shows while nothing is narrowed.
+    private var shownDraft: CreateDraft? { query.isActive ? nil : library.drafts.current }
+
+    /// Nothing to list, not even a draft: the invitation to the first painting shows instead.
+    private var isBare: Bool { library.isEmpty && library.drafts.current == nil }
 
     @ViewBuilder
     private var narrowedEmptyState: some View {
@@ -171,6 +198,16 @@ struct GalleryView: View {
     }
 
     // MARK: Actions
+
+    /// Reads the draft off the main actor, then opens the create flow on it.
+    private func continueDraft() {
+        guard !isOpeningDraft else { return }
+        isOpeningDraft = true
+        Task {
+            if let opened = await library.drafts.open() { onContinueDraft(opened) }
+            isOpeningDraft = false
+        }
+    }
 
     @ViewBuilder
     private func menu(for artwork: Artwork) -> some View {

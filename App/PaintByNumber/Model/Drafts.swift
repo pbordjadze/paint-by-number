@@ -1,0 +1,140 @@
+import CoreGraphics
+import Foundation
+import Observation
+import os
+
+/// Keeps the create flow's draft (`CreateDraft`) on disk: the one unfinished new painting the
+/// painter refined, which the gallery offers to continue. The create flow hands it every
+/// change (`keep`), written about a second after the last one and at once when the flow closes
+/// or the scene leaves the foreground (`saveNow`); starting the painting (`drop`) or the
+/// painter's Discard removes it. File work runs off the main actor, one job after another, so
+/// writes land in the order they were made.
+///
+/// A flow keeps a draft only once it has refinements, and never removes another photo's: a new
+/// painting replaces the draft when its photo is refined, and not before. A damaged draft is
+/// no draft: it is logged and removed.
+@Observable
+final class Drafts {
+    /// The draft as it is on disk (what the gallery lists): nil when there is none, or its
+    /// file hasn't landed yet.
+    private(set) var current: CreateDraft?
+
+    /// A draft read back, with its photo, ready for the create flow.
+    nonisolated struct Opened: Sendable {
+        let draft: CreateDraft
+        let photo: Data
+    }
+
+    @ObservationIgnored let store: DraftStore
+    @ObservationIgnored private var pending: (draft: CreateDraft, photo: CGImage)?
+    @ObservationIgnored private var debounce: Task<Void, Never>?
+    @ObservationIgnored private var tail: Task<Void, Never>?
+
+    static let delay: Duration = .seconds(1)
+
+    /// Reads the draft on disk, the launch-time scan of the drafts.
+    init(store: DraftStore) {
+        self.store = store
+        store.purgeStaging()
+        do {
+            current = try store.read()
+        } catch {
+            Log.create.error("Removing a damaged draft: \(String(describing: error), privacy: .public)")
+            store.remove()
+        }
+    }
+
+    /// Takes the flow's latest draft; it is written once the flow has been quiet for `delay`.
+    func keep(_ draft: CreateDraft, photo: CGImage) {
+        pending = (draft, photo)
+        debounce?.cancel()
+        debounce = Task { [weak self] in
+            try? await Task.sleep(for: Self.delay)
+            guard !Task.isCancelled else { return }
+            self?.saveNow()
+        }
+    }
+
+    /// Writes what `keep` was last given without waiting.
+    func saveNow() {
+        debounce?.cancel()
+        debounce = nil
+        guard let (draft, photo) = pending else { return }
+        pending = nil
+        enqueue { [self] in
+            // Judged here, behind the writes before it: a draft that came back to what is on
+            // disk needs none, and the photo is encoded once, with its first draft.
+            guard draft != current else { return }
+            let reusesPhoto = current?.photoID == draft.photoID
+            let store = store
+            do {
+                try await Background.run { try store.write(draft, photo: reusesPhoto ? nil : photo) }
+                current = draft
+            } catch {
+                Log.create.error("Saving the draft failed: \(String(describing: error), privacy: .public)")
+            }
+        }
+    }
+
+    /// The flow no longer has refinements to keep (they were all undone) or started the painting:
+    /// removes the draft if it is this photo's, and any write still waiting for it.
+    func drop(photoID: UUID) {
+        if pending?.draft.photoID == photoID { forgetPending() }
+        enqueue { [self] in
+            guard current?.photoID == photoID else { return }
+            await removeStored()
+        }
+    }
+
+    /// The painter's Discard.
+    func discard() {
+        forgetPending()
+        enqueue { [self] in await removeStored() }
+    }
+
+    /// The draft and its photo as they are on disk, once the writes before are done. Nil when
+    /// there is no draft, or it turns out to be damaged: that is removed.
+    func open() async -> Opened? {
+        await flush()
+        guard current != nil else { return nil }
+        let store = store
+        do {
+            return try await Background.run { () throws -> Opened in
+                guard let draft = try store.read() else { throw DraftStore.StoreError.missingPhoto }
+                return Opened(draft: draft, photo: try store.photoData())
+            }
+        } catch {
+            Log.create.error("Removing a draft that can't be opened: \(String(describing: error), privacy: .public)")
+            discard()
+            await flush()
+            return nil
+        }
+    }
+
+    /// Writes what is pending now and waits until every write and removal asked for so far is done.
+    func flush() async {
+        saveNow()
+        _ = await tail?.value
+    }
+
+    private func forgetPending() {
+        pending = nil
+        debounce?.cancel()
+        debounce = nil
+    }
+
+    private func removeStored() async {
+        let store = store
+        await Background.run { store.remove() }
+        current = nil
+    }
+
+    /// Queues file work behind the earlier jobs.
+    private func enqueue(_ work: @escaping @MainActor @Sendable () async -> Void) {
+        let previous = tail
+        tail = Task {
+            _ = await previous?.value
+            await work()
+        }
+    }
+}

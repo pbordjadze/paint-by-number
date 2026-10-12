@@ -8,9 +8,12 @@ struct CreateFlowView: View {
     var droppedPhoto: Data?
     /// The dropped or opened file's name, when it has one.
     var droppedTitle: String?
+    /// The draft to continue refining (`Drafts`): the flow opens on its preview.
+    var resuming: Drafts.Opened?
     var onStart: (Artwork) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(Library.self) private var library
     @State private var model = CreateModel(previewStyle: Self.previewStyle)
     @State private var path: [Step] = []
@@ -30,6 +33,8 @@ struct CreateFlowView: View {
             guard model.source == nil else { return }
             if let droppedPhoto {
                 model.load(imageData: droppedPhoto, title: droppedTitle)
+            } else if let resuming {
+                model.load(draft: resuming.draft, photo: resuming.photo)
             } else if let openingSample {
                 model.load(sample: openingSample)
             }
@@ -57,12 +62,26 @@ struct CreateFlowView: View {
             if openingSample != nil || ShellDemo.current == .createFromFile { DemoMode.markReady() }
         }
         #endif
-        .onDisappear { model.cancelAll() }
+        .onChange(of: model.draft) { old, draft in
+            if let draft, let photo = model.source?.preview {
+                library.drafts.keep(draft, photo: photo)
+            } else if let old, model.source != nil, old.photoID == model.photoID {
+                // Undone down to nothing. Another photo, or none, leaves the draft of the last.
+                library.drafts.drop(photoID: old.photoID)
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { library.drafts.saveNow() }
+        }
+        .onDisappear {
+            model.cancelAll()
+            library.drafts.saveNow()
+        }
     }
 
     @ViewBuilder
     private var root: some View {
-        if droppedPhoto != nil || openingSample != nil {
+        if droppedPhoto != nil || openingSample != nil || resuming != nil {
             TemplatePreviewView(model: model, onStart: start, onClose: { dismiss() })
         } else {
             PhotoSourceView(model: model, initialPane: initialPane, onClose: { dismiss() }) {
@@ -87,10 +106,12 @@ struct CreateFlowView: View {
         return .photos
     }
 
-    /// Saves the full-resolution template to the library and opens it for painting.
+    /// Saves the full-resolution template to the library and opens it for painting; the draft of
+    /// this photo, if the painter kept one, has done its work.
     private func start() async throws {
         let draft = try await model.makeDraft()
         let artwork = try await library.create(draft)
+        library.drafts.drop(photoID: model.photoID)
         onStart(artwork)
     }
 }

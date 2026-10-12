@@ -123,11 +123,19 @@ final class CreateModel {
     var title = ""
     /// The sample's name, or the date for a photo.
     private(set) var defaultTitle = ""
+    /// Names the photo, new with each one chosen and the draft's for a photo resumed from one.
+    private(set) var photoID = UUID()
 
     /// The name the painting is created with: the trimmed title, or the default.
-    var resolvedTitle: String {
-        let typed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        return typed.isEmpty ? defaultTitle : typed
+    var resolvedTitle: String { CreateDraft.resolvedTitle(typed: title, default: defaultTitle) }
+
+    /// What `Drafts` keeps of this flow: nil until the photo has refinements, and while its
+    /// settings are being chosen (the sliders don't hold them yet).
+    var draft: CreateDraft? {
+        guard let source, !isChoosingSettings, !refinements.isEmpty else { return nil }
+        return CreateDraft(
+            photoID: photoID, title: title, defaultTitle: defaultTitle, settings: settings, lines: lines,
+            sampleName: source.sampleName, refinements: refinements)
     }
 
     var colorCount: Double
@@ -237,6 +245,15 @@ final class CreateModel {
         begin(defaultTitle: title ?? Self.photoTitle(), sampleName: nil) { try await Self.decode(data: imageData) }
     }
 
+    /// Picks up a draft (`Drafts`): its photo, title and refinements, with the settings the
+    /// painter left on the sliders. The suggestion is still made, for Reset to Suggested and the
+    /// sliders' detents, but the draft's settings are the ones generated.
+    func load(draft: CreateDraft, photo: Data) {
+        begin(defaultTitle: draft.defaultTitle, sampleName: draft.sampleName, resuming: draft) {
+            try await Self.decode(data: photo)
+        }
+    }
+
     /// A photo that never arrived (the camera's shot couldn't be read): shown in place of the
     /// preview.
     func fail(_ error: CreateError) {
@@ -251,11 +268,15 @@ final class CreateModel {
         phase = .failed(error.localizedDescription)
     }
 
-    private func begin(defaultTitle: String, sampleName: String?, decode: @escaping () async throws -> Decoded) {
+    private func begin(
+        defaultTitle: String, sampleName: String?, resuming saved: CreateDraft? = nil,
+        decode: @escaping () async throws -> Decoded
+    ) {
         cancelAll()
         // A new photo gets a new default name, and anything typed for the last one goes.
         self.defaultTitle = defaultTitle
-        title = ""
+        title = saved?.title ?? ""
+        photoID = saved?.photoID ?? UUID()
         source = nil
         preview = nil
         stats = nil
@@ -264,7 +285,7 @@ final class CreateModel {
         draftImage = nil
         decision = nil
         settingsOrigin = nil
-        refinements = TemplateRefinements()
+        refinements = saved?.refinements ?? TemplateRefinements()
         made = []
         progress = 0
         phase = .loading
@@ -274,8 +295,9 @@ final class CreateModel {
         let lineArt = baseLineArt
         // A suggestion's candidates have no edge map: as line art the first would be every edge
         // between its regions, which the painting won't draw, so line art waits for the winner.
+        // Nor does a draft show the suggestion: the painter's settings are what it generates.
         let firstDraft: (@Sendable (Preview) -> Void)? =
-            previewStyle == .painting ? Self.firstDraftHandler(for: self, load: load) : nil
+            previewStyle == .painting && saved == nil ? Self.firstDraftHandler(for: self, load: load) : nil
         loadTask = Task {
             do {
                 let decoded = try await decode()
@@ -301,7 +323,9 @@ final class CreateModel {
                     chosen = nil
                 }
                 try Task.checkCancellation()
-                if let chosen {
+                if let saved {
+                    resume(saved, suggestion: chosen)
+                } else if let chosen {
                     adopt(chosen)
                 } else {
                     phase = .ready
@@ -392,6 +416,18 @@ final class CreateModel {
         phase = .generating
         let shownAsItWillBe = decision.winner == 0 && preview != nil && lineArt.style == .classic
         startGeneration(draftFirst: !shownAsItWillBe)
+    }
+
+    /// Puts a draft's settings on the sliders and generates them with its refinements at full
+    /// resolution. The suggestion is kept (nil if it failed), so the chip says whether the
+    /// draft's settings are still it.
+    private func resume(_ saved: CreateDraft, suggestion: AutoDecision?) {
+        decision = suggestion
+        apply(saved.settings)
+        lines = saved.lines
+        if let suggestion { settingsOrigin = settings == suggestion.settings ? .suggested : .custom }
+        phase = .generating
+        startGeneration(draftFirst: false)
     }
 
     /// A suggestion's settings on the sliders; its candidates carry the base line art, the Lines
