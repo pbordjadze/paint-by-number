@@ -397,8 +397,8 @@ final class CreateFlowTests: XCTestCase {
     /// otherwise pass for the sheet's.
     @MainActor
     private func settledSheetDetector(_ app: XCUIApplication) -> SheetDetector {
-        _ = app.images.matching(photoPredicate).firstMatch.waitForExistence(timeout: 10)
-        sleep(1)
+        XCTAssertTrue(app.images.matching(photoPredicate).firstMatch.waitForExistence(timeout: 10), "The inline picker hasn't loaded")
+        XCTAssertTrue(waitUntil(timeout: 10) { app.buttons["Browse All…"].isHittable }, "Browse All isn't ready for a tap")
         return SheetDetector(app)
     }
 

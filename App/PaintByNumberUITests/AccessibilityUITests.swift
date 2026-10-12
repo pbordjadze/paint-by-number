@@ -38,9 +38,15 @@ final class AccessibilityUITests: XCTestCase {
         let selectedBefore = swatches.first(where: \.isSelected)?.identifier
         let parts = target.label.components(separatedBy: ", ")
         XCTAssertEqual(parts.count, 3, target.label)
+        XCTAssertTrue(waitUntil(timeout: 10) { target.isHittable && !target.isSelected }, "The swatch isn't ready for a press")
         target.press(forDuration: 1)
         let details = app.descendants(matching: .any)["swatch-details"]
-        XCTAssertTrue(details.waitForExistence(timeout: 10), "Long-pressing \(target.identifier) showed no details")
+        guard details.waitForExistence(timeout: 10) else {
+            attachScreenshot(of: app, named: "paint-swatch-details-missing")
+            attachTree(of: app, named: "paint-swatch-details-missing-tree")
+            XCTFail("Long-pressing \(target.identifier) showed no details")
+            return
+        }
         attachScreenshot(of: app, named: "paint-swatch-details")
         let number = app.descendants(matching: .any)["swatch-details-number"]
         XCTAssertTrue(number.label.contains(String(target.identifier.dropFirst("swatch-".count))), number.label)

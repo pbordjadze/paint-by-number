@@ -189,7 +189,9 @@ struct PaletteBar: View {
                 .modifier(Shake(amount: CGFloat(shakes[index] ?? 0)))
         }
         .buttonStyle(.plain)
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
+        // Details take precedence over the button's selection gesture. Recognizing both
+        // simultaneously let a held swatch select its color instead of opening the popover.
+        .highPriorityGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in detailsColor = index })
         .popover(isPresented: detailsBinding(index), arrowEdge: axis == .horizontal ? .bottom : .trailing) {
             SwatchDetails(
                 number: index + 1, nickname: nickname, shade: session.colorTitles[index], hex: template.palette[index].hexCode)
