@@ -28,6 +28,7 @@ public enum SVGExport {
     private static let outlineColor = "#9ea3aa"
     private static let numberColor = "#6d727a"
     private static let lineColor = "#2b2530"
+    private static let paperColor = "#ffffff"
     private static let selectionColor = "#7b3f7e"
     /// Largest number size as a fraction of the canvas' long side; big regions get several
     /// numbers of this size rather than one huge one. Numbers are sized by `LabelSizing` and
@@ -40,12 +41,14 @@ public enum SVGExport {
 
     /// Templates with line art (`Template.lineArt`) draw as coloring books, as the app does:
     /// the drawn layers alike as one group (`lines-drawing`) of edges and interior strokes in
-    /// solid ink, three times the outline width, and no color edges.
+    /// solid ink, three times the outline width, and no color edges. Painted, writing over a
+    /// paint too dark for the ink (`Template.writesOnDarkPaint`) is a second group
+    /// (`lines-writing-light`) in the paper's color, drawn over the first.
     public static func render(_ t: Template, options: Options = Options()) -> String {
         var s = ""
         s.reserveCapacity(t.points.count * 16 + t.labels.count * 96 + 4096)
         s += "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 \(t.width) \(t.height)\" width=\"\(t.width)\" height=\"\(t.height)\">\n"
-        s += "<rect width=\"100%\" height=\"100%\" fill=\"#ffffff\"/>\n"
+        s += "<rect width=\"100%\" height=\"100%\" fill=\"\(paperColor)\"/>\n"
 
         if options.painted && !t.rings.isEmpty {
             // Fills tile the canvas exactly, but anti-aliased rasterizers composite each
@@ -83,18 +86,22 @@ public enum SVGExport {
         let width = max(0.5, Float(max(t.width, t.height)) / 1900)
         if options.outlines, let lines = t.lineArt, lines.edgeLayers.count == t.edges.count {
             let drawn = LineLayer.allCases.filter { $0 != .color }.map(\.rawValue)
-            var d = ""
+            var d = "", light = ""
             for (k, e) in t.edges.enumerated() where drawn.contains(lines.edgeLayers[k]) {
                 appendPath(&d, t.points(of: e), closed: false)
             }
-            for stroke in lines.strokes where drawn.contains(stroke.layer) {
+            for (k, stroke) in lines.strokes.enumerated() where drawn.contains(stroke.layer) {
                 let start = Int(stroke.pointStart), end = start + Int(stroke.pointCount)
                 guard stroke.pointCount >= 2, end <= lines.strokePoints.count else { continue }
-                appendPath(&d, lines.strokePoints[start..<end], closed: false)
+                if options.painted && t.writesOnDarkPaint(stroke: k) {
+                    appendPath(&light, lines.strokePoints[start..<end], closed: false)
+                } else {
+                    appendPath(&d, lines.strokePoints[start..<end], closed: false)
+                }
             }
-            if !d.isEmpty {
-                s += "<g id=\"lines-drawing\" opacity=\"1\">"
-                s += "<path d=\"\(d)\" fill=\"none\" stroke=\"\(lineColor)\" stroke-width=\"\(fmt(width * coloringBookWidth))\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></g>\n"
+            for (id, path, color) in [("lines-drawing", d, lineColor), ("lines-writing-light", light, paperColor)] where !path.isEmpty {
+                s += "<g id=\"\(id)\" opacity=\"1\">"
+                s += "<path d=\"\(path)\" fill=\"none\" stroke=\"\(color)\" stroke-width=\"\(fmt(width * coloringBookWidth))\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></g>\n"
             }
         } else if options.outlines && !t.edges.isEmpty {
             var d = ""

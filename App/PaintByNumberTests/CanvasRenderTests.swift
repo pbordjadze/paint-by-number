@@ -10,9 +10,21 @@ import Testing
 /// Rendered PNGs are attached to the results for visual inspection.
 struct CanvasRenderTests {
     @Test func shaderStructLayoutsMatchMetal() {
-        #expect(MemoryLayout<CanvasUniforms>.stride == 304)
+        #expect(MemoryLayout<CanvasUniforms>.stride == 320)
         #expect(MemoryLayout<RegionState>.stride == 32)
         #expect(MemoryLayout<GlyphInstance>.stride == 24)
+    }
+
+    /// Writing over a dark paint draws in the lighter of the sheet's paper and ink: the paper on a
+    /// light sheet, and on the dark sheet the light ink it already is.
+    @Test func lightInkIsTheLighterOfPaperAndInk() {
+        var u = CanvasUniforms()
+        u.setChrome(.light, shadowOpacity: 0, outlineOpacity: 0.5)
+        #expect(u.lightInk == SIMD4(CanvasPalette.light.paper, 1))
+        u.setChrome(.dark, shadowOpacity: 0, outlineOpacity: 0.5)
+        #expect(u.lightInk == SIMD4(CanvasPalette.dark.paper, 1))
+        u.setChrome(.darkPaper, shadowOpacity: 0, outlineOpacity: 0.5)
+        #expect(u.lightInk == SIMD4(CanvasPalette.darkPaper.ink, 1))
     }
 
     @Test func syntheticTemplateIsWatertight() {

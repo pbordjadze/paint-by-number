@@ -180,6 +180,14 @@ extension Template {
             problems.append("\(lines.edgeLayers.count) layers and \(lines.edgeWeights.count) weights for \(edges.count) edges")
         }
         if let bad = lines.edgeLayers.firstIndex(where: { $0 >= layers }) { problems.append("edge \(bad) layer") }
+        var previousWriting = -1
+        for s in lines.writingStrokes {
+            guard Int(s) > previousWriting, Int(s) < lines.strokes.count else {
+                problems.append("writing strokes")
+                break
+            }
+            previousWriting = Int(s)
+        }
         let w = Float(width), h = Float(height)
         for (k, stroke) in lines.strokes.enumerated() {
             let start = Int(stroke.pointStart), count = Int(stroke.pointCount)

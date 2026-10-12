@@ -44,7 +44,7 @@
 //       every label's room for its number (single-digit minimum R, default
 //       LabelSizing.minimumRadius, a detail area's scaled down as LabelSizing.detailMinimumRadius
 //       is; R ≤ 0 skips that check) and line data, whose style, edges per layer and interior
-//       strokes it prints, and the detail areas
+//       strokes (and how many are writing) it prints, and the detail areas
 //   pbn names <template.pbnt> [--seed N] [--vocabulary N | --nickname-table file.tsv]
 //       prints each palette color's nickname (seeded like the app's per-painting names; the
 //       default seed is generate's), structured name and hex; the default vocabulary is
