@@ -2,7 +2,9 @@
 """Import approved Marginarium Markdown without changing the identity of other blocks.
 
     python3 tools/marginarium.py import chapter.md --id lampBrush
+    python3 tools/marginarium.py from-docs view.json --out chapter.md
     python3 tools/marginarium.py check
+    python3 tools/marginarium.py check --docs view.json --id marginarium
     python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'
 
 Stdlib only. The import writes docs/marginarium/<id>.md (the editable source, NOT bundled),
@@ -11,10 +13,11 @@ Resources/marginarium.json (ordered chapters/blocks, version 1), and Localizable
 constitute editorial approval: only import text Paul has approved.
 
 Format: a # title, a subtitle paragraph, then ATX headings (# through ######), paragraphs,
-> quotes (including multiple paragraphs), bullet items (-, * or +; two-space nesting), and
+> quotes (including multiple paragraphs), bullet items (-, * or +; two-space nesting),
+ordered items (1., 2., ...), two-column pipe tables with a header/separator row, and
 standalone ![VoiceOver description](asset-name) images from Assets.xcassets, or
-![VoiceOver description](pet:pip) pets. Each bullet item
-is a block. Continuation lines in an item are indented two spaces beyond its bullet. Quotes
+![VoiceOver description](pet:pip) pets. Each list item
+is a block. Continuation lines in an item are indented two spaces beyond its indent. Quotes
 contain paragraphs, not nested block structures. Emphasis, strong emphasis, inline code and
 inline links stay as Markdown in catalog values for Foundation's AttributedString parser.
 Line breaks and inline spelling are preserved; only block syntax is removed. Unsupported
@@ -22,6 +25,19 @@ block syntax fails with a line number rather than silently losing structure. Ima
 a nonempty plain-text description and bundled art; no remote images are fetched. Pets are Pip,
 Colophon, or a v2 atlas named Resources/pet-<id>.webp (lowercase alphanumeric/hyphen id).
 Atlas pets idle and wave on tap. The app validates the 1536 × 2288 sheet before slicing it.
+
+An *In the margin* paragraph followed by ordered items becomes marginHeading and marginNote
+blocks. Notes keep their numbering and full signatures; speaker is the italic name after the
+last "— ", even when prose follows it (a plain signature at the end is also accepted).
+Tables become tableCell blocks in row-major order, with row/column (zero-based) and header
+metadata. Each cell has its own catalog key and an inline marker inside the pipe cell.
+The reader groups these cells into responsive tables and
+margin headings/notes into asides. This keeps localization and stable identity per text unit.
+
+from-docs converts data.xml in a Docs JSON reply, ignoring ids/hashes and dropping only the
+paragraph containing both date and mention chips. It rejects unsupported structure. Adjacent
+runs with the same styling are merged (a name split across italic runs stays one name).
+check --docs additionally compares the imported chapter against that original Docs reply.
 
 Every block in the saved source has a <!-- marginarium: <key> --> marker. KEEP that marker
 with its block when editing or moving it; delete both together. New unmarked blocks get UUID
@@ -35,7 +51,7 @@ their translator comments) are never rewritten or deleted. Import only removes s
 in its own .block. namespace; translations of unchanged blocks are retained, and translations
 of edited blocks are marked needs_review. New comments name the chapter and block kind.
 
-check is read-only: source order, kind, key, heading level, bullet depth and image/pet name must
+check is read-only: source order, kind, key and rendering metadata must
 exactly match the manifest, and every English value must equal the Markdown block, including
 inline markup and whitespace. It also rejects missing/unlisted sources, reused or stale keys,
 missing images, and non-manual entries. strings_check.py calls the same validation and counts
@@ -51,6 +67,7 @@ from pathlib import Path
 import re
 import sys
 import uuid
+import xml.etree.ElementTree as ET
 
 CATALOG = Path("App/PaintByNumber/Resources/Localizable.xcstrings")
 MANIFEST = Path("App/PaintByNumber/Resources/marginarium.json")
@@ -62,6 +79,7 @@ PET_IMAGESETS = {"pip": {"idle": 6, "wave": 4}, "colophon": {"idle": 6, "review"
 MARKER = re.compile(r"<!-- marginarium: ([A-Za-z0-9_.-]+) -->")
 HEADING = re.compile(r"(#{1,6}) (.+)")
 BULLET = re.compile(r"( *)([-+*]) (.+)")
+ORDERED = re.compile(r"( *)(\d+)\. (.+)")
 IMAGE = re.compile(r"!\[([^\[\]\n]+)\]\((pet:[a-z0-9]+(?:-[a-z0-9]+)*|[A-Za-z0-9][A-Za-z0-9_.-]*)\)")
 ENTRY_ID = re.compile(r"[A-Za-z][A-Za-z0-9]*")
 
@@ -73,6 +91,8 @@ class Block:
     start: int
     key: str | None = None
     metadata: dict = field(default_factory=dict)
+    # Tables put each marker inside its cell, rather than on a separate line.
+    column_offset: int | None = None
 
     def record(self):
         return {"kind": self.kind, "key": self.key, **self.metadata}
@@ -90,7 +110,7 @@ def parse(source):
 
     def special(line):
         return (MARKER.fullmatch(line) or HEADING.fullmatch(line) or BULLET.fullmatch(line)
-                or line.startswith((">", "![", "<!--")))
+                or ORDERED.fullmatch(line) or line.startswith((">", "![", "<!--", "|")))
 
     def plain(line):
         if (line.startswith(("```", "~~~", "<", "    ", "\t"))
@@ -114,7 +134,33 @@ def parse(source):
             continue
         start = i
         metadata = {}
-        if match := HEADING.fullmatch(line):
+        if line.startswith("|"):
+            if pending:
+                fail("table markers belong inside their cells")
+            row = 0
+            while i < len(lines) and lines[i].startswith("|"):
+                cells = table_cells(lines[i])
+                if len(cells) != 2:
+                    fail("tables need exactly two columns")
+                for column, (content, offset) in enumerate(cells):
+                    key = None
+                    if marker := MARKER.match(content):
+                        key = marker[1]
+                        content = content[marker.end():].lstrip(" ")
+                    if not content.strip() or MARKER.search(content):
+                        fail("table cells need nonempty text and at most one leading marker")
+                    blocks.append(Block("tableCell", content, i, key,
+                                        {"row": row, "column": column, "header": row == 0}, offset))
+                i += 1
+                if row == 0:
+                    if i >= len(lines) or not re.fullmatch(r"\| *:?-{3,}:? *\| *:?-{3,}:? *\|", lines[i]):
+                        fail("table needs a two-column header separator")
+                    i += 1
+                row += 1
+            if row < 2:
+                fail("table needs a body row")
+            continue
+        elif match := HEADING.fullmatch(line):
             kind, text = "heading", re.sub(r"[ \t]+#+[ \t]*$", "", match[2])
             plain(text)
             metadata["level"] = len(match[1])
@@ -131,12 +177,14 @@ def parse(source):
                 content.append(inner)
                 i += 1
             text = "\n".join(content)
-        elif match := BULLET.fullmatch(line):
-            kind = "bullet"
+        elif match := BULLET.fullmatch(line) or ORDERED.fullmatch(line):
+            kind = "ordered" if match[2].isdigit() else "bullet"
             indent = len(match[1])
             if indent % 2:
                 fail("bullet nesting uses two spaces per level")
             metadata["depth"] = indent // 2
+            if kind == "ordered":
+                metadata["number"] = int(match[2])
             plain(match[3])
             content = [match[3]]
             i += 1
@@ -182,7 +230,158 @@ def parse(source):
         raise ValueError("the block after the title must be a subtitle paragraph")
     blocks[0].kind, blocks[0].metadata = "title", {}
     blocks[1].kind = "subtitle"
+    in_margin = False
+    for index, block in enumerate(blocks):
+        if (block.kind == "paragraph" and block.text == "*In the margin*"
+                and index + 1 < len(blocks) and blocks[index + 1].kind == "ordered"):
+            block.kind = "marginHeading"
+            in_margin = True
+        elif in_margin and block.kind == "ordered":
+            if block.metadata["depth"] != 0:
+                raise ValueError(f"line {block.start + 1}: margin notes cannot be nested")
+            block.kind = "marginNote"
+            signature = block.text.rsplit("— ", 1)[-1]
+            name = re.match(r"\*([^*]+)\*", signature)
+            if name is None:
+                name = re.fullmatch(r"([\w ’'-]+)", signature)
+            if "— " not in block.text or name is None:
+                raise ValueError(f"line {block.start + 1}: margin note needs a final signature")
+            block.metadata["speaker"] = unescape(name[1])
+        else:
+            in_margin = False
     return blocks
+
+
+def table_cells(line):
+    """Split only unescaped pipes; offsets point to each cell's first non-space character."""
+    pipes = []
+    for index, char in enumerate(line):
+        if char == "|" and (len(line[:index]) - len(line[:index].rstrip("\\"))) % 2 == 0:
+            pipes.append(index)
+    if not pipes or pipes[0] != 0 or pipes[-1] != len(line) - 1:
+        raise ValueError("table rows must start and end with unescaped pipes")
+    return [(line[left + 1:right].strip(" "), left + 1 + len(line[left + 1:right])
+             - len(line[left + 1:right].lstrip(" "))) for left, right in zip(pipes, pipes[1:])]
+
+
+def unescape(text):
+    return re.sub(r"\\([\\`*_{}\[\]()#+.!|<>~-])", r"\1", text)
+
+
+def docs_inline(element):
+    """Serialize styled runs, coalescing editing boundaries that are not prose boundaries."""
+    runs = []
+
+    def append(text, styles):
+        if text:
+            if runs and runs[-1][1] == styles:
+                runs[-1] = (runs[-1][0] + text, styles)
+            else:
+                runs.append((text, styles))
+
+    def visit(node, styles=()):
+        if node.tag in ("italic", "bold", "code"):
+            styles += (node.tag,)
+        elif node.tag not in ("paragraph", "text"):
+            raise ValueError(f"unsupported Docs inline element: {node.tag}")
+        append(node.text, styles)
+        for child in node:
+            visit(child, styles)
+            append(child.tail, styles)
+
+    def render(parts):
+        result = []
+        i = 0
+        while i < len(parts):
+            text, styles = parts[i]
+            if not styles:
+                result.append(re.sub(r"([\\`*_\[\]|<>#~])", r"\\\1", text))
+                i += 1
+                continue
+            style = styles[0]
+            inside = []
+            while i < len(parts) and parts[i][1] and parts[i][1][0] == style:
+                inside.append((parts[i][0], parts[i][1][1:]))
+                i += 1
+            if style == "code":
+                if any(rest for _, rest in inside):
+                    raise ValueError("Docs code cannot contain other styling")
+                value = "".join(t for t, _ in inside)
+                if "|" in value or "\n" in value:
+                    raise ValueError("Docs inline code with pipes or newlines is unsupported")
+                ticks = "`" * (1 + max((len(m[0]) for m in re.finditer(r"`+", value)), default=0))
+                pad = " " if value.startswith(("`", " ")) or value.endswith(("`", " ")) else ""
+                result.append(ticks + pad + value + pad + ticks)
+            else:
+                value = render(inside)
+                # CommonMark emphasis delimiters cannot sit inside the span's edge spaces.
+                core = value.strip()
+                lead = value[:len(value) - len(value.lstrip())]
+                tail = value[len(value.rstrip()):]
+                mark = "*" if style == "italic" else "**"
+                result.append(lead + mark + core + mark + tail if core else value)
+        return "".join(result)
+
+    visit(element)
+    return render(runs)
+
+
+def from_docs(reply):
+    """Convert only supported Docs prose, failing rather than silently discarding content."""
+    root = ET.fromstring(reply["data"]["xml"])
+    if root.tag != "doc":
+        raise ValueError("Docs XML must have a doc root")
+    parts = []
+
+    def paragraph(node):
+        if node.tag != "paragraph" or node.get("heading"):
+            raise ValueError("Docs list items and table cells need a single plain paragraph")
+        return docs_inline(node)
+
+    for node in root:
+        if node.tag == "paragraph":
+            if node.find("date") is not None and node.find("mention") is not None:
+                continue
+            text = docs_inline(node)
+            if heading := node.get("heading"):
+                if heading not in {str(n) for n in range(1, 7)}:
+                    raise ValueError(f"unsupported Docs heading: {heading}")
+                text = "#" * int(heading) + " " + text
+            parts.append(text)
+        elif node.tag == "list":
+            kind = node.get("kind")
+            if kind not in ("bullet", "ordered"):
+                raise ValueError(f"unsupported Docs list kind: {kind}")
+            items = []
+            for index, item in enumerate(node, 1):
+                if item.tag != "listItem" or len(item) != 1:
+                    raise ValueError("Docs list items need a single paragraph")
+                prefix = "- " if kind == "bullet" else f"{index}. "
+                items.append(prefix + paragraph(item[0]).replace("\n", "\n  "))
+            parts.append("\n".join(items))
+        elif node.tag == "table":
+            rows = []
+            for index, row in enumerate(node):
+                if row.tag != "row" or len(row) != 2:
+                    raise ValueError("Docs tables need two-column rows")
+                cells = []
+                for cell in row:
+                    if (cell.tag != "cell" or len(cell) != 1
+                            or (cell.get("header") == "true") != (index == 0)):
+                        raise ValueError("Docs tables need a header row and single-paragraph cells")
+                    value = paragraph(cell[0])
+                    if "\n" in value:
+                        raise ValueError("Docs table cells with newlines are unsupported")
+                    cells.append(value)
+                rows.append("| " + " | ".join(cells) + " |")
+                if index == 0:
+                    rows.append("| --- | --- |")
+            parts.append("\n".join(rows))
+        else:
+            raise ValueError(f"unsupported Docs block: {node.tag}")
+    source = "\n\n".join(parts) + "\n"
+    parse(source)
+    return source
 
 
 def english(entry):
@@ -347,7 +546,13 @@ def import_chapter(root, source, entry_id):
     # Only add missing markers; preserve the author's Markdown spelling and layout.
     for block in reversed(blocks):
         if block.key not in marked:
-            lines.insert(block.start, f"<!-- marginarium: {block.key} -->")
+            marker = f"<!-- marginarium: {block.key} -->"
+            if block.column_offset is None:
+                lines.insert(block.start, marker)
+            else:
+                line = lines[block.start]
+                offset = block.column_offset
+                lines[block.start] = line[:offset] + marker + " " + line[offset:]
     canonical = root / chapter["source"]
     canonical.parent.mkdir(parents=True, exist_ok=True)
     canonical.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -364,16 +569,38 @@ def main():
     importing = commands.add_parser("import")
     importing.add_argument("chapter", type=Path)
     importing.add_argument("--id", required=True)
-    commands.add_parser("check")
+    converting = commands.add_parser("from-docs")
+    converting.add_argument("view", type=Path)
+    converting.add_argument("--out", type=Path, help="Markdown output (default: stdout)")
+    checking = commands.add_parser("check")
+    checking.add_argument("--docs", type=Path, help="also compare with the original Docs JSON reply")
+    checking.add_argument("--id", help="chapter to compare with --docs")
     args = parser.parse_args()
     try:
-        if args.command == "import":
+        if args.command == "from-docs":
+            source = from_docs(load_json(args.view))
+            if args.out:
+                args.out.write_text(source, encoding="utf-8")
+            else:
+                print(source, end="")
+        elif args.command == "import":
             chapter = import_chapter(args.root, args.chapter, args.id)
             print(f"marginarium: imported {chapter['id']} ({len(chapter['blocks'])} blocks)")
         else:
             manifest, values = validate(args.root)
+            if args.docs:
+                if not args.id:
+                    raise ValueError("--docs needs --id")
+                chapter = next((c for c in manifest["chapters"] if c["id"] == args.id), None)
+                if chapter is None:
+                    raise ValueError(f"chapter not found: {args.id}")
+                actual = parse((args.root / chapter["source"]).read_text(encoding="utf-8"))
+                expected = parse(from_docs(load_json(args.docs)))
+                signature = lambda b: (b.kind, b.text, b.metadata)
+                if list(map(signature, actual)) != list(map(signature, expected)):
+                    raise ValueError(f"{args.id}: source differs from Docs prose")
             print(f"marginarium: ok ({len(manifest['chapters'])} chapters, {len(values)} blocks)")
-    except (OSError, ValueError, KeyError, TypeError) as error:
+    except (OSError, ValueError, KeyError, TypeError, ET.ParseError) as error:
         print(f"marginarium: {error}", file=sys.stderr)
         return 1
     return 0

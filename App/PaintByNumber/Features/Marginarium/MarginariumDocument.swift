@@ -14,11 +14,56 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
         let blocks: [Block]
 
         var readableBlocks: [Block] { blocks.filter { $0.kind != .unknown } }
+
+        /// Group adjacent cells/notes without changing their row-major reading order or keys.
+        /// A new header's first cell starts a table even when two tables touch in the source.
+        var sections: [Section] {
+            var result: [Section] = []
+            for block in readableBlocks {
+                if block.kind == .tableCell {
+                    if result.last?.kind == .table, !(block.row == 0 && block.column == 0) {
+                        result[result.count - 1].blocks.append(block)
+                    } else {
+                        result.append(Section(kind: .table, blocks: [block]))
+                    }
+                } else if block.kind == .marginNote, result.last?.kind == .margin {
+                    result[result.count - 1].blocks.append(block)
+                } else {
+                    result.append(Section(kind: block.kind == .marginHeading ? .margin : .prose, blocks: [block]))
+                }
+            }
+            return result
+        }
+    }
+
+    struct Section: Identifiable, Sendable {
+        enum Kind: Sendable { case prose, table, margin }
+        let kind: Kind
+        var blocks: [Block]
+        var id: String { blocks.first?.key ?? "" }
+
+        var tableRows: [TableRow] {
+            var rows: [TableRow] = []
+            for block in blocks {
+                if block.column == 0 || rows.isEmpty {
+                    rows.append(TableRow(cells: [block]))
+                } else {
+                    rows[rows.count - 1].cells.append(block)
+                }
+            }
+            return rows
+        }
+    }
+
+    struct TableRow: Identifiable, Sendable {
+        var cells: [Block]
+        var id: String { cells.first?.key ?? "" }
     }
 
     struct Block: Decodable, Identifiable, Sendable {
         enum Kind: String, Sendable {
-            case title, subtitle, heading, paragraph, quote, bullet, image, pet, unknown
+            case title, subtitle, heading, paragraph, quote, bullet, ordered, image, pet
+            case tableCell, marginHeading, marginNote, unknown
         }
 
         let kind: Kind
@@ -27,6 +72,12 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
         let depth: Int
         let image: String?
         let pet: String?
+        let number: Int
+        /// Editorial identity for future guardian pets; never substituted for the signed text.
+        let speaker: String?
+        let row: Int
+        let column: Int
+        let header: Bool
         var id: String { key }
 
         /// Runtime catalog lookup, like Sample.title; strings_check validates every key and
@@ -42,7 +93,9 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
                 ?? AttributedString(text)
         }
 
-        private enum CodingKeys: String, CodingKey { case kind, key, level, depth, image, pet }
+        private enum CodingKeys: String, CodingKey {
+            case kind, key, level, depth, image, pet, number, speaker, row, column, header
+        }
 
         init(from decoder: any Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -54,6 +107,11 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
                 depth = 0
                 image = nil
                 pet = nil
+                number = 1
+                speaker = nil
+                row = 0
+                column = 0
+                header = false
                 return
             }
             key = try container.decode(String.self, forKey: .key)
@@ -61,6 +119,11 @@ nonisolated struct MarginariumDocument: Decodable, Sendable {
             depth = max(0, try container.decodeIfPresent(Int.self, forKey: .depth) ?? 0)
             image = try container.decodeIfPresent(String.self, forKey: .image)
             pet = try container.decodeIfPresent(String.self, forKey: .pet)
+            number = max(0, try container.decodeIfPresent(Int.self, forKey: .number) ?? 1)
+            speaker = try container.decodeIfPresent(String.self, forKey: .speaker)
+            row = try container.decodeIfPresent(Int.self, forKey: .row) ?? 0
+            column = try container.decodeIfPresent(Int.self, forKey: .column) ?? 0
+            header = try container.decodeIfPresent(Bool.self, forKey: .header) ?? false
         }
     }
 

@@ -80,8 +80,14 @@ synchronized folder would bundle it into the app.
   atlas contract and size budget: `docs/marginarium-pets.md`. `tools/marginarium.py` is the import/check manual;
   `Resources/marginarium.json` is bundled, its `docs/marginarium/` sources and tool fixtures are
   not. `MarginariumReaderTests` checks keys, initial content, inline markup and unknown-kind
-  skipping; `SpriteAtlasTests` checks a generated WebP in the test bundle only, and
-  `MarginariumReaderUITests` opens chapters, pets and appendices. `Settings/`; `Share/`.
+  skipping. Chapter 1 is imported in full from its approved Docs prose: `tableCell` blocks keep
+  row/column/header metadata; `marginHeading` and numbered `marginNote` blocks keep each note's
+  final signature as `speaker` for later pets. `Chapter.sections` groups those blocks for
+  `MarginariumStructuredViews`: tables align in two columns where the scaled reading measure
+  allows, otherwise each row stacks its heading and text; VoiceOver reads a whole row at a time.
+  Margins use footnote type and the contents page's passage rule. `SpriteAtlasTests` checks a
+  generated WebP in the test bundle only, and `MarginariumReaderUITests` opens chapters, pets
+  and appendices. `Settings/`; `Share/`.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
@@ -116,6 +122,10 @@ synchronized folder would bundle it into the app.
   show the library by position; the rest use `ShellDemo.fixedPictures`.
   `marginarium-chapter`, `marginarium-chapter-dark` and `marginarium-chapter-long-text` open the
   reader on Two More Pets; readiness comes when its Pip block appears after the manifest loads.
+  `marginarium-chapter1`, `marginarium-chapter1-margin` and `marginarium-chapter1-table` open
+  Chapter 1 at the top, the first margin group and the guardians table. All have `-dark` and
+  `-long-text` variants. Readiness follows the requested section entering the reader's viewport;
+  `MarginariumReaderUITests` also captures margins and tables at accessibility text sizes.
 
 ## Painting screen
 
