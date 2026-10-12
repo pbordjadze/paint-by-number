@@ -93,11 +93,9 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 | --- | --- |
 | Marginarium v1 (73a9600) | On `main`, build 1.0.294 in SideStore: Pip and one passage per chapter |
 | F29, F28, F30 | Shipped: `main` 2025569, build 1.0.303. F30 took two fix rounds (an XCUIScreen API; area identifiers lost when the canvas rebuilt its accessibility elements) |
-| F31 (`claude/f31-flaky-ui-tests`) | The three flaky UI tests root-caused (swatch long press gets priority; the photo picker sits on the toolbar button; Browse All a hypothesis). Green once with no retries; a re-run confirms. Changes behavior: Paul hears it before shipping |
-| F4 + F27 (`claude/paintcore-f4-f27`) | PaintCore and pbn only, one commit off `main`; in CI |
-| F11 (`claude/f11-vocab-in-app`, on the PaintCore branch) | `nicknameVersion` in meta.json (missing means 1; future kept verbatim); an Apple-vs-Linux name pin; in CI |
-| F35 (`claude/f35-marginarium-reader`) | A chapter reader and `tools/marginarium.py` (Markdown to catalog plus manifest, checked word for word); each page shows only what ships today; in CI |
-| F32 (`claude/f32-main-thread-stalls`) | Palette text and nicknames prepared off the main actor; `/root/factory-out/F32/stalls.md` accounts for 139 stalls (443 s), mostly framework and cold-simulator work needing a Mac profile; in CI. Conflicts with F11 in `PaintingSession.swift` when combined |
+| Ship 2 (`main` 656d8d5, build 1.0.311, both SideStore sources) | F4 + F27, F11 (with v2 names: integer arithmetic, identical on every platform; v1 frozen as each platform computes it, Apple's pinned), F32 (palette prepared off the main actor; merged with F11 by hand), F35 (chapter reader), F37 (pets in chapters, the pets' credit line), F31 (three flaky UI tests). Combined CI: 364 iPad tests, all UI tests, no retries |
+| Flaky tests still open | EyeFinderTests.findsBothEyesOfAFaceWithTheirIrises (once, on F11); GalleryActionsTests.testTimelapseShowsProgressAndCancels (passed on retry, PaintCore branch) |
+| F36 pets run | Codex plays the Lamp (Astra decides, Sol compared). Style 12 won 3–2; the jury's flags are drawing notes. On step 4 of 7 (briefs) |
 
 ## Waiting on Paul
 
