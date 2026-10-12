@@ -248,7 +248,7 @@ extension EditWork {
                 guard Set(part).count >= 2 else { continue }
                 strokes.append(WorkStroke(
                     points: part.map(Lattice.position), layer: stroke.layer, weight: stroke.weight,
-                    region: areaContaining(part, among: areas)))
+                    region: areaContaining(part, among: areas), writing: stroke.writing))
             }
         }
     }

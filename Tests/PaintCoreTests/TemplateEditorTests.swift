@@ -468,6 +468,20 @@ struct TemplateEditorTests {
         #expect(!none.changed && same == t && none.continued == Array(0..<t.regions.count))
     }
 
+    /// Traced writing stays writing (`TemplateLineArt.writingStrokes`, so it keeps its light ink on dark
+    /// paint) through edits: its pieces after a cut are writing, a drawn line never is.
+    @Test func writingStaysWritingThroughEdits() throws {
+        var t = Self.scene
+        t.lineArt!.writingStrokes = [0]
+        let (u, _) = try Self.apply(.draw(points: [SIMD2(100.3, 10.7), SIMD2(110.5, 30.1)]), to: t)
+        #expect(u.lineArt!.strokes.count == 2 && u.lineArt!.writingStrokes == [0])
+        let (v, _) = try Self.apply(.erase(path: [SIMD2(96, 119), SIMD2(104, 121)], radius: 4), to: u)
+        let marked = v.lineArt!.strokes.indices.filter { v.lineArt!.isWritingStroke($0) }
+        #expect(v.lineArt!.strokes.count == 3 && marked.count == 2)
+        #expect(marked.allSatisfy { v.lineArt!.strokes[$0].layer == t.lineArt!.strokes[0].layer })
+        #expect(try Template(encoded: v.encoded()).lineArt!.writingStrokes == v.lineArt!.writingStrokes)
+    }
+
     /// A tapped line goes from junction to junction: the square's outline against the sky, from where
     /// it meets the horizon on one side to the other, is one line; taking it out joins the square to
     /// the sky and leaves its outline against the ground as it was.

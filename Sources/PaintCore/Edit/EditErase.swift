@@ -200,7 +200,8 @@ extension EditWork {
             reached += 1
             for piece in cut.pieces {
                 strokes.append(WorkStroke(
-                    points: piece.map(Lattice.position), layer: stroke.layer, weight: stroke.weight, region: stroke.region))
+                    points: piece.map(Lattice.position), layer: stroke.layer, weight: stroke.weight, region: stroke.region,
+                    writing: stroke.writing))
             }
         }
         try mergeGroups(groups.groups(), surviving: surviving)

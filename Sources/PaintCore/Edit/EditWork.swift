@@ -37,6 +37,8 @@ struct EditWork {
         var layer: UInt8
         var weight: UInt8
         var region: Int
+        /// Traced writing (`TemplateLineArt.writingStrokes`), kept by the pieces it is cut into.
+        var writing = false
         var alive = true
     }
 
@@ -92,10 +94,10 @@ struct EditWork {
         t = template
         layers = art.edgeLayers
         weights = art.edgeWeights
-        strokes = art.strokes.map { s in
+        strokes = art.strokes.enumerated().map { i, s in
             WorkStroke(
                 points: Array(art.strokePoints[Int(s.pointStart)..<Int(s.pointStart) + Int(s.pointCount)]),
-                layer: s.layer, weight: s.weight, region: Int(s.region))
+                layer: s.layer, weight: s.weight, region: Int(s.region), writing: art.isWritingStroke(i))
         }
         originalStrokeCount = art.strokes.count
         edgeDead = [Bool](repeating: false, count: template.edges.count)

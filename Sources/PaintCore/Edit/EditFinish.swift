@@ -191,11 +191,13 @@ extension EditWork {
         }
         var strokePoints: [SIMD2<Float>] = []
         var outStrokes: [InteriorStroke] = []
+        var writingStrokes: [UInt32] = []
         for s in strokes where s.alive {
             guard newIndex[s.region] >= 0 else { throw EditFailure.invalid("a stroke lies in a region that was removed") }
             outStrokes.append(InteriorStroke(
                 pointStart: UInt32(strokePoints.count), pointCount: UInt32(s.points.count), layer: s.layer, weight: s.weight,
                 region: UInt32(newIndex[s.region])))
+            if s.writing { writingStrokes.append(UInt32(outStrokes.count - 1)) }
             strokePoints.append(contentsOf: s.points)
         }
         let art = t.lineArt!
@@ -205,7 +207,7 @@ extension EditWork {
             regionMap: RegionMap(width: t.width, height: t.height, storage: map), pipelineVersion: t.pipelineVersion,
             lineArt: TemplateLineArt(
                 edgeLayers: aliveEdges.map { layers[$0] }, edgeWeights: aliveEdges.map { weights[$0] },
-                strokePoints: strokePoints, strokes: outStrokes, style: art.style))
+                strokePoints: strokePoints, strokes: outStrokes, style: art.style, writingStrokes: writingStrokes))
         result.detailRegions = aliveRegions.indices.filter { regionDetail[aliveRegions[$0]] }.map { UInt32($0) }
 
         var continued = [Int](repeating: -1, count: t.regions.count)
