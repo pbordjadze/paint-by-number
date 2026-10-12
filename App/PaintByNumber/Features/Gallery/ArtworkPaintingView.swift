@@ -123,7 +123,7 @@ struct ArtworkPaintingView: View {
         do {
             let document = try await library.loadForPainting(artworkID)
             _ = await RenderContext.ready()
-            present(document)
+            await present(document)
         } catch {
             Log.library.error("Opening \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
             withAnimation(.easeOut(duration: 0.25)) {
@@ -133,12 +133,14 @@ struct ArtworkPaintingView: View {
     }
 
     /// Callers await `RenderContext.ready()` first: the canvas this shows needs it.
-    private func present(_ document: PaintingDocument) {
+    private func present(_ document: PaintingDocument) async {
         let session: PaintingSession
         do {
-            session = try PaintingSession(
+            session = try await PaintingSession.make(
                 template: document.template, progress: document.progress, nicknameSeed: ColorNickname.seed(for: artworkID),
                 nicknameVersion: artwork?.nicknameVersion ?? 1)
+        } catch is CancellationError {
+            return
         } catch {
             // The library hands out matching progress; this guards against a bug, not a file.
             Log.library.error("Opening \(artworkID.uuidString, privacy: .public) failed: \(String(describing: error), privacy: .public)")
@@ -191,7 +193,7 @@ struct ArtworkPaintingView: View {
             do {
                 let document = try await library.regenerate(artwork: artworkID, settings: artwork.settings)
                 _ = await RenderContext.ready()
-                present(document)
+                await present(document)
             } catch is CancellationError {
             } catch let error as Library.OpenError {
                 failure = error

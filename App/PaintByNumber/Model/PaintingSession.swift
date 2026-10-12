@@ -55,6 +55,10 @@ final class PaintingSession {
     /// Playful nicknames of the palette colors, index-aligned (nil where the color has none or the
     /// app doesn't run in English), fixed by `nicknameSeed` and `nicknameVersion`.
     let colorNicknames: [String?]
+    /// Localized palette text, prepared once before the painting appears.
+    let colorTitles: [String]
+    let numberedColorNames: [String]
+    let colorLabels: [String]
     /// Increments on every progress change; cheap to observe for autosave/thumbnails.
     private(set) var revision = 0
 
@@ -110,24 +114,89 @@ final class PaintingSession {
         self.init(checked: template, progress: progress, nicknameSeed: nicknameSeed, nicknameVersion: nicknameVersion)
     }
 
-    private init(checked template: Template, progress: PaintProgress, nicknameSeed: UInt64, nicknameVersion: Int) {
+    /// Prepares immutable counts and palette text off the main actor, then installs the live
+    /// session on it. Swatch bodies must not repeatedly resolve every color's localized words.
+    static func make(template: Template, nicknameSeed: UInt64 = 0, nicknameVersion: Int = 1) async -> PaintingSession {
+        let progress = PaintProgress(regionCount: template.regions.count)
+        let prepared = await Background.run {
+            Prepared(template: template, progress: progress, seed: nicknameSeed, version: nicknameVersion)
+        }
+        return PaintingSession(
+            checked: template, progress: progress, nicknameSeed: nicknameSeed, nicknameVersion: nicknameVersion,
+            prepared: prepared)
+    }
+
+    static func make(
+        template: Template, progress: PaintProgress, nicknameSeed: UInt64 = 0, nicknameVersion: Int = 1
+    ) async throws -> PaintingSession {
+        guard progress.regionCount == template.regions.count else {
+            throw ProgressMismatch(templateRegions: template.regions.count, progressRegions: progress.regionCount)
+        }
+        let prepared = await Background.run {
+            Prepared(template: template, progress: progress, seed: nicknameSeed, version: nicknameVersion)
+        }
+        try Task.checkCancellation()
+        return PaintingSession(
+            checked: template, progress: progress, nicknameSeed: nicknameSeed, nicknameVersion: nicknameVersion,
+            prepared: prepared)
+    }
+
+    nonisolated private struct Prepared: Sendable {
+        let totals: [Int]
+        let remaining: [Int]
+        let completed: Set<Int>
+        let names: [ColorName]
+        let nicknames: [String?]
+        let titles: [String]
+        let numbered: [String]
+        let labels: [String]
+
+        init(template: Template, progress: PaintProgress, seed: UInt64, version: Int) {
+            totals = template.regionCountsByColor
+            var remaining = totals
+            for (i, region) in template.regions.enumerated() where progress.isPainted(i) {
+                remaining[Int(region.colorIndex)] -= 1
+            }
+            self.remaining = remaining
+            completed = Set(remaining.indices.filter { remaining[$0] == 0 })
+            let names = template.palette.map(\.colorName)
+            let nicknames = ColorNameText.nicknames(for: template.palette, seed: seed, version: version)
+            self.names = names
+            self.nicknames = nicknames
+            titles = names.map(ColorNameText.title)
+            numbered = names.indices.map {
+                ColorNameText.numbered(number: $0 + 1, name: names[$0], nickname: nicknames[$0])
+            }
+            labels = names.indices.map {
+                PaintSpeech.colorLabel(number: $0 + 1, name: names[$0], nickname: nicknames[$0])
+            }
+        }
+    }
+
+    private convenience init(checked template: Template, progress: PaintProgress, nicknameSeed: UInt64, nicknameVersion: Int) {
+        self.init(
+            checked: template, progress: progress, nicknameSeed: nicknameSeed, nicknameVersion: nicknameVersion,
+            prepared: Prepared(template: template, progress: progress, seed: nicknameSeed, version: nicknameVersion))
+    }
+
+    private init(
+        checked template: Template, progress: PaintProgress, nicknameSeed: UInt64, nicknameVersion: Int, prepared: Prepared
+    ) {
         self.template = template
         self.progress = progress
-        let totals = template.regionCountsByColor
-        totalByColor = totals
-        colorNames = template.palette.map(\.colorName)
-        colorNicknames = ColorNameText.nicknames(for: template.palette, seed: nicknameSeed, version: nicknameVersion)
+        totalByColor = prepared.totals
+        colorNames = prepared.names
+        colorNicknames = prepared.nicknames
+        colorTitles = prepared.titles
+        numberedColorNames = prepared.numbered
+        colorLabels = prepared.labels
         self.nicknameSeed = nicknameSeed
         self.nicknameVersion = nicknameVersion
-        var remaining = totals
-        for (i, region) in template.regions.enumerated() where progress.isPainted(i) {
-            remaining[Int(region.colorIndex)] -= 1
-        }
-        remainingByColor = remaining
+        remainingByColor = prepared.remaining
         isComplete = progress.isComplete
         isStarted = progress.paintedCount > 0
-        completedColors = Set(remaining.indices.filter { remaining[$0] == 0 })
-        selectedColor = remaining.firstIndex { $0 > 0 }
+        completedColors = prepared.completed
+        selectedColor = prepared.remaining.firstIndex { $0 > 0 }
     }
 
     // MARK: Queries
