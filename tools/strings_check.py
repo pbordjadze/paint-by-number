@@ -97,6 +97,9 @@ KEY_TYPE_DECLARATIONS = {
     "Features/Paint/GlassIconButton.swift": 1,
     "Features/Create/TemplatePreviewView.swift": 1,
     "Features/Create/PhotoSourceView.swift": 2,
+    # Not a wrapper: MarginariumHighlighter joins a block's Texts by interpolation, a key of
+    # placeholders alone (`+` is deprecated).
+    "Features/Marginarium/MarginariumAnnotations.swift": 1,
 }
 # Calls that never carry user-facing text: logging, assertions, decoding diagnostics, file and
 # asset names.

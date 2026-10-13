@@ -54,7 +54,7 @@ struct MarginariumTableView: View {
     }
 }
 
-/// The Lamp's numbered asides keep their signatures. In a margin column beside the story they
+/// The Lamp's asides keep their signatures. In a margin column beside the story they
 /// sit behind the contents page's passage rule, each under the words it is about; the notes whose
 /// words were just tapped stand out and their pets wave, and tapping a note opens its words in
 /// turn. Between paragraphs (iPhone, accessibility sizes) a group is a card, which holds only
@@ -168,7 +168,7 @@ struct MarginariumMarginNote: View {
     var words: [String] = []
     var greeting = 0
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    private static let petWidth: CGFloat = 40
+    private static let petWidth: CGFloat = 52
 
     var body: some View {
         let pets = MarginariumSpeakers.pets(for: block)
@@ -178,7 +178,8 @@ struct MarginariumMarginNote: View {
                     .italic()
                     .foregroundStyle(.tint)
             }
-            MarginariumNumberedText(block: block)
+            Text(block.attributedText)
+                .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("marginarium-note-\(block.key)")
         }
         if pets.isEmpty {
@@ -216,13 +217,13 @@ struct MarginariumMarginNote: View {
 struct MarginariumNumberedText: View {
     let block: MarginariumDocument.Block
     /// The block's text with its highlights, where it has any.
-    var text: AttributedString?
+    var text: Text?
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(block.number.formatted())
-                .font(.display(block.kind == .marginNote ? .footnote : .body, weight: .regular))
-            Text(text ?? block.attributedText)
+                .font(.display(.body, weight: .regular))
+            (text ?? Text(block.attributedText))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)

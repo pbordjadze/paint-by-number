@@ -47,12 +47,13 @@ The reader UI tests also attach pet screenshots, including at accessibility text
 
 ## Pets beside margin notes
 
-`MarginariumMarginNote` shows a small pet (40 pt wide, tappable, a tap waves it) for each
+`MarginariumMarginNote` shows a small pet (52 pt wide, tappable, a tap waves it) for each
 guardian who signed a margin note, once each, in the order they speak. The importer records
 every signature of a note as `speakers` (and the last as `speaker`), so the names are the
 chapter's own English signatures, never the localized text. `MarginariumSpeakers` is the one
 table from a signature to a pet identifier: "the narrator" is Colophon because chapter 1
-says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" is listed as having none.
+says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" and "Bart" (whose Ibid hasn't
+hatched) are listed as having none.
 `MarginariumSpeakersTests` fails when a speaker in the bundled chapters is in neither the
 table nor the list of voices without a pet, or maps to a pet that doesn't resolve.
 

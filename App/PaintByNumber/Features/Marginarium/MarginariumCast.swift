@@ -105,10 +105,10 @@ nonisolated enum MarginariumCast {
         MarginariumTeam(
             id: "storytellers",
             name: String(localized: "lamp.team.storytellers.name", defaultValue: "The Storytellers",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart)"),
             purpose: String(localized: "lamp.team.storytellers.purpose", defaultValue: "Keep the app feeling like a book you could walk into.",
                             comment: "The Marginarium, Who is Who: what the team The Storytellers is for, under its name"),
-            members: [dinotopia, storybook]),
+            members: [dinotopia, storybook, bartimaeus]),
         MarginariumTeam(
             id: "studio",
             name: String(localized: "lamp.team.studio.name", defaultValue: "The Studio",
@@ -211,6 +211,29 @@ nonisolated enum MarginariumCast {
         petCaption: String(localized: "lamp.storybook.petCaption", defaultValue: "Little Page, the Storybook's flying book",
                            comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Storybook"),
         hatched: true)
+
+    static let bartimaeus = MarginariumGuardian(
+        id: "bartimaeus",
+        name: String(localized: "lamp.bartimaeus.name", defaultValue: "Bart",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian Bart"),
+        after: String(localized: "lamp.bartimaeus.after", defaultValue: "After Bartimaeus, the djinni who narrates Jonathan Stroud's books.",
+                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Bart"),
+        portrait: nil,
+        guards: String(localized: "lamp.bartimaeus.guards", defaultValue: "the footnote",
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Bart"),
+        believes: String(localized: "lamp.bartimaeus.believes", defaultValue: "A story is better told by someone with opinions, preferably mine, and the truest line is in the footnote.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Bart"),
+        loves: String(localized: "lamp.bartimaeus.loves", defaultValue: "A narrator who talks back; asides that earn their place; wit with an edge, aimed up at the narrator and never down at the reader; the helper whose work is named; old magic with a long memory.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Bart"),
+        watchesFor: String(localized: "lamp.bartimaeus.watchesFor", defaultValue: "Pomposity, his own included; footnotes that pad instead of land; jokes at the reader's expense; masters who take the credit for the work; borrowing a famous voice instead of finding one's own.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Bart"),
+        looksUpTo: String(localized: "lamp.bartimaeus.looksUpTo", defaultValue: "Jonathan Stroud's Bartimaeus books: The Amulet of Samarkand (2003), The Golem's Eye (2004), Ptolemy's Gate (2005), The Ring of Solomon (2010).",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Bart"),
+        happiestWhen: String(localized: "lamp.bartimaeus.happiestWhen", defaultValue: "The aside is the best line on the page, and the narrator wishes it weren't.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Bart"),
+        petCaption: String(localized: "lamp.bartimaeus.petCaption", defaultValue: "Bart's egg: Ibid, an ink asterisk, hasn't hatched yet",
+                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Bart"),
+        hatched: false)
 
     static let painter = MarginariumGuardian(
         id: "painter",

@@ -51,7 +51,7 @@ struct MarginariumReaderView: View {
                                 Text(entry.subtitle)
                                     .font(.title3)
                                     .foregroundStyle(.secondary)
-                                MarginariumQuotation(text: AttributedString(entry.passage))
+                                MarginariumQuotation(text: Text(AttributedString(entry.passage)))
                             }
                             .frame(maxWidth: layout.story, alignment: .leading)
                         }
@@ -299,7 +299,7 @@ struct MarginariumReaderView: View {
     }
 
     /// The notes a margin demo opens: its group's first note, at the words it shares with the
-    /// most voices (the narrator's first aside; the Enchanted Workshop with the Child at Bedtime).
+    /// most voices (Bart's introduction; the Enchanted Workshop with the Child at Bedtime).
     private func demoSelection(in chapter: MarginariumDocument.Chapter,
                                annotations: MarginariumAnnotations) -> MarginariumSelection? {
         guard ShellDemo.current?.marginariumEntryID == entry.id else { return nil }
@@ -323,16 +323,21 @@ private struct MarginariumBlockView: View {
     var selection: Set<String> = []
 
     /// The text with the words its margin notes are about highlighted.
-    private var text: AttributedString {
-        guard !highlights.isEmpty else { return block.attributedText }
+    private var text: Text {
+        guard !highlights.isEmpty else { return Text(block.attributedText) }
         return MarginariumHighlighter.text(block.attributedText, block: block.key, highlights: highlights,
                                            selection: selection)
     }
 
     var body: some View {
-        content
-            // Highlighted words are links that open notes; they read as the story, not as links.
-            .tint(highlights.isEmpty ? Theme.accent : Color.primary)
+        if highlights.isEmpty {
+            content.tint(Theme.accent)
+        } else {
+            content
+                // Highlighted words are links that open notes; they read as the story, not as links.
+                .tint(Color.primary)
+                .textRenderer(MarginariumWashRenderer(color: Theme.accent))
+        }
     }
 
     @ViewBuilder
@@ -351,8 +356,8 @@ private struct MarginariumBlockView: View {
                 .font(.display(headingStyle))
                 .padding(.top, 8)
                 .accessibilityAddTraits(.isHeader)
-        case .paragraph:
-            Text(text)
+        case .paragraph, .marginNote:
+            text
         case .quote:
             MarginariumQuotation(text: text)
         case .bullet:
@@ -360,12 +365,12 @@ private struct MarginariumBlockView: View {
                 Image(systemName: "circle.fill")
                     .font(.system(size: 5))
                     .accessibilityHidden(true)
-                Text(text)
+                text
             }
             .padding(.leading, CGFloat(min(block.depth, 6)) * 16)
             // Highlighted words stay their own links rather than merging into one element.
             .accessibilityElement(children: highlights.isEmpty ? .combine : .contain)
-        case .ordered, .marginNote:
+        case .ordered:
             MarginariumNumberedText(block: block, text: text)
                 .padding(.leading, CGFloat(min(block.depth, 6)) * 16)
         case .tableCell, .marginHeading:
@@ -406,10 +411,10 @@ private struct MarginariumBlockView: View {
 
 /// The contents page's leading quotation rule, also used for multi-paragraph chapter quotes.
 private struct MarginariumQuotation: View {
-    let text: AttributedString
+    let text: Text
 
     var body: some View {
-        Text(text)
+        text
             .padding(.leading, 16)
             .overlay(alignment: .leading) {
                 // The accent itself: a highlighted quote tints its links like the story.

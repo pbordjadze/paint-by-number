@@ -94,8 +94,10 @@ synchronized folder would bundle it into the app.
   otherwise every section is its own lazy row. Each note names the words it is about (the
   source's `<!-- anchor: … -->` line, `anchorBlocks` and the catalog's `<note>.anchor`;
   `tools/marginarium.py`'s docstring), and `MarginariumAnnotations` finds them in the text the
-  reader shows; `MarginariumHighlighter` washes them in the tint, deeper where more voices meet,
-  as links (`MarginariumSelection`) the reader's `openURL` handles. Beside a margin column a tap
+  reader shows; `MarginariumHighlighter` marks them as links (`MarginariumSelection`) the
+  reader's `openURL` handles, and `MarginariumWashRenderer` (a `TextRenderer`) washes them in the
+  tint, deeper where more voices meet, ending each line's band at its last word (a background
+  color on a wrapped space runs on to the margin). Beside a margin column a tap
   picks out the notes (and each note shows its words, quoted); without one it opens
   `MarginariumNoteCard` under the paragraph, and only notes whose words weren't found (a
   translation that moved them; `-NSDoubleLocalizedStrings` finds none) keep a card after their
@@ -107,7 +109,7 @@ synchronized folder would bundle it into the app.
   shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
   VoiceOver; `MarginariumSpritePlayer(pet:marginWidth:)` keeps only small copies of the cells it
   plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
-  Colophon, Codex is Pip, the Moon has none), and a test fails on an unmapped speaker. Chapter 6,
+  Colophon, Codex is Pip, the Moon and Bart have none), and a test fails on an unmapped speaker. Chapter 6,
   The Pets We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
   nineteen guardians' pets the factory drew, bundled as `Resources/pet-<id>.webp` within the
   budget in `docs/marginarium-pets.md` with Dino's (Paul's own Codex pet, shown in Who's Who);

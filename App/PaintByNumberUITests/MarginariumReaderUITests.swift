@@ -95,9 +95,9 @@ final class MarginariumReaderUITests: XCTestCase {
         let reader = app.scrollViews["marginarium-reader"]
         let note = reader.descendants(matching: .any).matching(NSPredicate(
             format: "identifier BEGINSWITH %@ AND label CONTAINS %@",
-            "marginarium-note-", "A proper djinni")).firstMatch
+            "marginarium-note-", "Somebody is now")).firstMatch
         XCTAssertTrue(note.waitForExistence(timeout: 15))
-        XCTAssertTrue(note.label.contains("the narrator"))
+        XCTAssertTrue(note.label.contains("Bart"))
         XCTAssertTrue(waitUntil { note.isHittable })
         XCTAssertGreaterThanOrEqual(note.frame.minX, reader.frame.minX)
         XCTAssertLessThanOrEqual(note.frame.maxX, reader.frame.maxX)

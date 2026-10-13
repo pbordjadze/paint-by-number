@@ -45,12 +45,26 @@
         },
         {
           "kind": "marginNote",
-          "key": "marginarium.marginarium.block.a4463ad52e684128bc68fdd9dedf59da",
+          "key": "marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c",
           "depth": 0,
           "number": 1,
-          "speaker": "the narrator",
+          "speaker": "Bart",
           "speakers": [
-            "the narrator"
+            "Bart"
+          ],
+          "anchorBlocks": [
+            "marginarium.marginarium.block.67e349f07d6d48a7af28414e783765bc"
+          ]
+        },
+        {
+          "kind": "marginNote",
+          "key": "marginarium.marginarium.block.a4463ad52e684128bc68fdd9dedf59da",
+          "depth": 0,
+          "number": 2,
+          "speaker": "Bart",
+          "speakers": [
+            "the narrator",
+            "Bart"
           ],
           "anchorBlocks": [
             "marginarium.marginarium.block.67e349f07d6d48a7af28414e783765bc"
@@ -60,7 +74,7 @@
           "kind": "marginNote",
           "key": "marginarium.marginarium.block.45f229e6dc954c39ae6826d99637b6dc",
           "depth": 0,
-          "number": 2,
+          "number": 3,
           "speaker": "the narrator",
           "speakers": [
             "the narrator"
@@ -73,7 +87,7 @@
           "kind": "marginNote",
           "key": "marginarium.marginarium.block.1aaed14df5d04d82b45478b9cad90b27",
           "depth": 0,
-          "number": 3,
+          "number": 4,
           "speaker": "the narrator",
           "speakers": [
             "the narrator"
@@ -385,6 +399,18 @@
         {
           "kind": "paragraph",
           "key": "marginarium.marginarium.block.460aac97893a413e85ed82604e431087"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.marginarium.block.ff00e475a7524704be9557ce225d6ffc"
+        },
+        {
+          "kind": "paragraph",
+          "key": "marginarium.marginarium.block.79d4efb8d66d46c4a52e633dde75de19"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.marginarium.block.6c3d783fad854ce89d0d45c510b1f725"
         },
         {
           "kind": "paragraph",
@@ -714,7 +740,7 @@
             "Bulat"
           ],
           "anchorBlocks": [
-            "marginarium.marginarium.block.460aac97893a413e85ed82604e431087",
+            "marginarium.marginarium.block.ff00e475a7524704be9557ce225d6ffc",
             "marginarium.marginarium.block.02348869941642edbae8d1ad1040360f"
           ]
         },

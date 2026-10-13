@@ -4500,7 +4500,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A proper djinni would tell you he has walked with kings. I have read about them, which is safer and involves less sand. — *the narrator*"
+            "value" : "A proper djinni would tell you he has walked with kings. I have read about them, which is safer and involves less sand. — *the narrator*. Handy. That way it can't remember whose voice it's wearing either. — *Bart*"
           }
         }
       }
@@ -4908,7 +4908,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The parts are old. Design reviews, parametric design and models judging models all existed before that night. What was new was the assembly, and the instinct to write it down as a method rather than a trick:"
+            "value" : "Two minutes later came the honest question: \"Was this a novel idea, or even that good of one?\" The parts are old. Design reviews, parametric design and models judging models all existed before that night. What was new was the assembly, and the instinct to write it down as a method rather than a trick:"
           }
         }
       }
@@ -5052,7 +5052,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The idea that gave this book its cast arrived as a paragraph. The cheap models would do the bulk of the work, surfacing options. A panel of top models, run at low effort, would decide. And that panel \"should redesign everything there is to design about my app\", piece by piece: colors, a logo, animations, words."
+            "value" : "The idea that gave this book its cast arrived in two messages, half an hour apart. The first was the factory message, which had already named the judges:"
           }
         }
       }
@@ -5856,7 +5856,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A confession: my pick was The Round Dance. Paul read it as The Round Table, the Lamp was told the same, and a table it has stayed. — the narrator"
+            "value" : "A confession: my pick was The Round Dance. Paul read it as The Round Table, the Lamp was told the same, and a table it has stayed. — *the narrator*"
           }
         }
       }
@@ -8478,7 +8478,7 @@
       }
     },
     "lamp.team.storytellers.name" : {
-      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook)",
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -9977,6 +9977,114 @@
         }
       }
     },
+    "lamp.bartimaeus.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bart"
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After Bartimaeus, the djinni who narrates Jonathan Stroud's books."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the footnote"
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A story is better told by someone with opinions, preferably mine, and the truest line is in the footnote."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A narrator who talks back; asides that earn their place; wit with an edge, aimed up at the narrator and never down at the reader; the helper whose work is named; old magic with a long memory."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomposity, his own included; footnotes that pad instead of land; jokes at the reader's expense; masters who take the credit for the work; borrowing a famous voice instead of finding one's own."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jonathan Stroud's Bartimaeus books: The Amulet of Samarkand (2003), The Golem's Eye (2004), Ptolemy's Gate (2005), The Ring of Solomon (2010)."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The aside is the best line on the page, and the narrator wishes it weren't."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bart's egg: Ibid, an ink asterisk, hasn't hatched yet"
+          }
+        }
+      }
+    },
     "lamp.scholar.name" : {
       "comment" : "The Marginarium, Who is Who: its name, for the guardian The Scholar",
       "extractionState" : "manual",
@@ -11140,7 +11248,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The parts are old | give it mock data"
+            "value" : "Was this a novel idea | give it mock data"
           }
         }
       }
@@ -11164,7 +11272,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "run at low effort | gets more weight in the next decision"
+            "value" : "a few low effort Opus 5.5s | gets more weight in the next decision"
           }
         }
       }
@@ -11537,6 +11645,66 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Colophon, my moth, who lands beside the words like a bookmark."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.ff00e475a7524704be9557ce225d6ffc" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); quote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing too elaborate in terms of subagents, mostly deterministic compute, but small hopefully, and we can use a few low effort Opus 5.5s with slightly different starting params to just make some taste calls."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.79d4efb8d66d46c4a52e633dde75de19" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); paragraph block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The second gave them the whole app:"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.6c3d783fad854ce89d0d45c510b1f725" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); quote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The smaller models are doing the bulk of the work, surfacing stuff, etc. Then we have the low effort Opus panel deciding between options. That Opus panel should redesign everything there is to design about my app. At least for now, it ought to pick new colors, guide new logo — we can go piece by piece."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Somebody is now. I'm Bart, named after the djinni whose voice this narrator has borrowed, and I'd like it back when he's done. — *Bart*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I should introduce myself, since nobody else in this chapter is going to"
           }
         }
       }

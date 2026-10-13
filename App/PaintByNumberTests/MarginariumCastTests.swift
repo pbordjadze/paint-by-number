@@ -15,10 +15,11 @@ struct MarginariumCastTests {
         for guardian in MarginariumCast.guardians {
             #expect(MarginariumCast.team(of: guardian)?.members.contains { $0.id == guardian.id } == true)
         }
-        // Paul's pairings, and Dino on the storybook feel.
-        #expect(MarginariumCast.team(of: MarginariumCast.dinotopia)?.members.map(\.id) == ["dinotopia", "storybook"])
+        // Paul's pairings, Dino on the storybook feel, and Bart with them on the footnote.
+        #expect(MarginariumCast.team(of: MarginariumCast.dinotopia)?.members.map(\.id) == ["dinotopia", "storybook", "bartimaeus"])
         #expect(MarginariumCast.team(of: MarginariumCast.painter)?.members.map(\.id) == ["painter", "pirosmani"])
         #expect(MarginariumCast.dinotopia.guards == "the storybook feel")
+        #expect(MarginariumCast.bartimaeus.guards == "the footnote")
     }
 
     @Test func everyBriefIsComplete() {
@@ -40,7 +41,7 @@ struct MarginariumCastTests {
             #expect(guardian.hatched == (MarginariumPet.named(guardian.id) != nil),
                     "\(guardian.id): hatched must match whether its pet ships")
         }
-        #expect(MarginariumCast.guardians.filter { !$0.hatched }.map(\.id).sorted() == ["moon"])
+        #expect(MarginariumCast.guardians.filter { !$0.hatched }.map(\.id).sorted() == ["bartimaeus", "moon"])
         #expect(MarginariumCast.helpers.compactMap(\.pet) == ["pip", "colophon"])
         #expect(MarginariumCast.helpers.allSatisfy { MarginariumPet.named($0.pet) != nil })
     }
