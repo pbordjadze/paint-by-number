@@ -598,6 +598,11 @@ Paul checkpoints.
   One crew for the whole show; between steps each worker walks to an untaken spot of the next
   step (the nearest it can reach in time) and swaps tools on the way; a worker with no job left
   keeps working where it stands. The demo's `planTroupe` is the reference.
+- "Ooh ok, we can try a few less. That newest demo still showed color. I also don’t like the
+  sliding animation from left to right." So: about 100 workers; the picture stays pencil and
+  ink (grey tones for shading, paints and merging; the template's lines and numbers last), with
+  color only in the crew's paint pots; each layer comes in as patches all over the picture where
+  the crew works (equalized value noise), never a front sliding across.
 - Crew: "more, and smaller" than the first demo's 22 at 8 %. Proposed: about 12 pt tall on
   screen, the count growing with the picture's area (about 130 a step on an iPhone).
 
