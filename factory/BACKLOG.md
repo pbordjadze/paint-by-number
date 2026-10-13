@@ -560,6 +560,13 @@ just be for lamp content".
   New York italic, authors and year first, about 0.5 s + 0.2 s per word, at least 2 s. Reduce
   Motion shows the cards only, cross-faded.
 
+**An army, not a worker.** Paul, October 13: "the idea was an army of little stick figures".
+His first message said so: "8 or 16 animations of a stick figure from different angles, so we can
+have one for each direction that could be an edge of a line in a painting, so for each layer we see
+the workers applying that image transform." F19 and this plan's first draft drifted to one worker
+per stage. Every scene has a crew of small figures working along the stage's changing edges, each
+facing one of 8 or 16 directions. FigureRig already takes up to 1,024 actors.
+
 **The shape: one spec, two renderers.** `making-of.json` holds every taste choice. The app plays
 it live over the painter's own photo (SwiftUI, FigureRig computing the figures). The factory
 renders the same spec into clips for the Lamp and Paul. What they pick is what ships: the same
@@ -623,8 +630,8 @@ this branch, split so the app links only what it draws:
 `App/PaintByNumber/Resources/making-of.json` is the one spec both renderers read. Scenes run in
 stage order, each with its stages, its method ids from `Acknowledgements.swift` › methods (the
 Scholar's rule: cards match the acknowledgements letter for letter, and a test checks it), its
-action, prop and duration. It also holds the worker's height as a share of the picture, the
-wipe's seed and softness, the card rule, colors from the app's tokens, and a total of 25–30 s.
+action, prop and duration. It also holds the crew (how many figures, their height as a share of the picture,
+how they spread along the front and pick their direction), the wipe's seed and softness, the card rule, colors from the app's tokens, and a total of 25–30 s.
 - One scene per credited method, with no repeats. Line art credits HED (Xie and Tu, 2015) and
   Informative Drawings (Chan, Durand and Isola, 2022), not Felzenszwalb a second time.
 - Strict, bounded decoding, since the Lamp's patches will write it. The default is Claude's,
@@ -637,7 +644,7 @@ On `claude/making-of`, after F29–F31.
   equal the one saved (a test).
 - **`MakingOfView`:** a TimelineView with a Canvas draws the earlier stage, the next stage
   revealed by its arrival-time field (a SwiftUI shader, or GraphicsContext's alpha-threshold
-  mask), and the workers as filled paths from FigureRig.
+  mask), and the crew as filled paths from FigureRig.
   - The card is SwiftUI Text, in New York italic with Dynamic Type, and VoiceOver reads each
     card as it appears.
   - Tap or Skip opens the painting.
@@ -660,8 +667,8 @@ Branch `codex/f33-making-of-spec` from this branch. `tools/factory/making_of.py 
 <making-of.json>` renders each scene as its own clip (at most 6 s, at phone size), the whole show
 (at most 30 s) and contact sheets, all from the spec.
 - Fix what the 338-s render showed:
-  - the worker's size comes from the spec;
-  - the line-art worker inks along the drawing's own strokes, not a straight line;
+  - a crew instead of one worker, sized and spread by the spec;
+  - the line-art crew inks along the drawing's own strokes, not a straight line;
   - the structure stage is drawn on paper rather than black;
   - a stage's wipe starts where its change starts, not as a vertical front.
 - Stream frames to the encoder, and stay under 2 GB of disk (F19 ran out). The budget for the
@@ -671,10 +678,10 @@ Branch `codex/f33-making-of-spec` from this branch. `tools/factory/making_of.py 
 
 ### F34 · The Lamp's round: a making-of piece (Codex runs the Lamp)
 `factory/pieces/making-of`, after F33.
-- **Parameters:** the spec's taste fields (scene durations within the length budget, worker
-  size, props per scene, wipe softness and seed, card placement, and option E's pets).
+- **Parameters:** the spec's taste fields (scene durations within the length budget, the crew's
+  size and spread, props per scene, wipe softness and seed, card placement, and option E's pets).
 - **Code checks:** length at most 30 s, every card on screen as long as the rule says, contrast,
-  and the worker on screen and large enough to read.
+  and the crew on screen and large enough to read.
 - **Jury:** six with Originality, run through `codex_lamp.py`. Jurors see each candidate's
   contact sheet and the frames at each scene's midpoint.
 - **Paul's checkpoint:** with the clips. His picks win (point 11). Claude writes the winner back
