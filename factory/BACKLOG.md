@@ -538,6 +538,152 @@ It is reachable through `pbn check`, the regression gate and the app's Debug cre
   `tools/regression.py` (no `--update`) passes with no metric moved. No `pipelineVersion` bump
   is needed (validation doesn't change output); say so if you find otherwise.
 
+## Tuesday night: the making-of ships (starts when Paul says go)
+
+Paul, October 12, 2026: "We should probably be prepared for Tuesday night after the usage reset,
+where we want to actually get that animation thing working. The lamp — they should be involved
+obviously, and that's probably the next chapter, but we also need it to actually work lol, can't
+just be for lamp content".
+
+**Where it stands.** Every making-of item so far is merged here, but nothing is in the app.
+- `main` has neither the stage snapshots (F8) nor FigureRig; this branch is about 180 commits
+  ahead of `main` and 78 behind, so the pieces are ported, never merged wholesale.
+- The one full render (F19, parrots) runs 338 s at 2064 × 1813, took 52 minutes on Linux and ran
+  out of disk. In it the worker is a speck (7.5% of the height), the wipes are straight vertical
+  fronts, the structure stage turns the photo black, the line-art worker inks a straight line
+  across the drawing, and the line-art card repeats the simplified stage's paper.
+- The figure piece has never had a Lamp round, and no piece exists for the show itself.
+- In the app, generation takes under a second, so the show can't play while it runs. NOTES already
+  decided the answer: "The show plays when the painter taps Start, over each stage's recorded
+  picture: the pipeline reruns once with an observer, so the template stays byte for byte the
+  same. Tap to skip; replay from More." There is one scene per credited method, and the cards are
+  New York italic, authors and year first, about 0.5 s + 0.2 s per word, at least 2 s. Reduce
+  Motion shows the cards only, cross-faded.
+
+**The shape: one spec, two renderers.** `making-of.json` holds every taste choice. The app plays
+it live over the painter's own photo (SwiftUI, FigureRig computing the figures). The factory
+renders the same spec into clips for the Lamp and Paul. What they pick is what ships: the same
+engine, seeds and timings, over a different picture. It works first, with a sensible default spec
+in the app, and the Lamp then tunes the spec rather than gating the build.
+
+**Who does what.** Codex does the portable parts (PaintCore, FigureRig, the factory tools), which
+are verified on Linux. Claude does the spec and the app, which compiles only on CI, and reviews
+everything. Codex runs the Lamp (`codex_lamp.py`, as for the pets) to spare Claude's usage, and
+Paul checkpoints.
+
+**Night order.**
+1. Paul says go. Claude cuts `claude/making-of` from `main` and starts F29 and F30 on Codex at
+   once, then writes F31 while they run.
+2. Claude reviews F29 and F30, merges them into `claude/making-of`, links FigureRig, and builds
+   F32 in CI rounds of about 45 minutes. Meanwhile Codex does F33, then F34.
+3. v1 goes to `main` and SideStore with the default spec as soon as F32 is green, then v2 with the
+   Lamp's spec after Paul's checkpoint. F35 comes last.
+
+**Paul's calls** (each has a recommendation; nothing waits on them except where noted):
+1. Placement: on Start, over his own painting's stages, skippable, with replay from the
+   painting's menu, as NOTES has it. A shareable video can come later; `TimelapseExporter`'s
+   frame hook makes that one item.
+2. Length: about 25–30 s, skippable from the first tap. Does it play on every Start, or once and
+   then on demand? The recommendation is every Start, since a skip costs one tap.
+3. Card face: New York in the app, with Charter staying factory-only, so no new font license or
+   Acknowledgements section is needed.
+4. The Lamp on Codex for the round's volume, with Claude reviewing and Paul at the checkpoint.
+5. Pets cheering the workers (`chapter-6` option E): after v1 works, as a Lamp option.
+
+### F29 · Stage snapshots on main (a port of F8)
+Branch `codex/f29-snapshots-main` from `origin/claude/making-of` (not this branch). Port
+`Sources/PaintCore/PipelineSnapshot.swift`, the `observer:` parameter through
+`TemplateGenerator.generate` and `Segmenter.segment`, and `pbn --snapshots` from
+`codex/f8-snapshots` (457dc29, built on pipelineVersion 10) to `main`'s pipelineVersion 11:
+working image, structure, smoothed, palette, simplified, line art (books with an edge map) and
+vectorized, at most 1024 px on the long side.
+- A nil observer does no work, and the template is byte for byte the same with or without one:
+  `tools/regression.py` passes with no baseline change, and pipelineVersion stays.
+- Tests: each stage arrives once, in order, at its size; the template is identical with and
+  without an observer, classic and coloring book; the observer can't change determinism across
+  core counts.
+- Report each stage's capture cost in time and bytes on the corpus.
+
+### F30 · FigureRig as an app library
+Branch `codex/f30-figurerig-library` from `origin/claude/making-of`, after F29. Bring
+`Sources/FigureRig`, `Sources/figures` and `Tests/FigureRigTests` (with F22's fixes) over from
+this branch, split so the app links only what it draws:
+- The `FigureRig` library holds the rig, scenes, reveal fields and a frame API that returns each
+  actor's filled shapes at time t: no SVG, no files, no card. Its `swiftSettings` match
+  PaintCore's (`-O` in Debug), because Debug app builds otherwise run it unoptimized.
+- Charter's outlines, the card layout and the PPM/PGM snapshot reading move to the `figures`
+  executable (factory only). The app sets cards in New York with SwiftUI.
+- Reveal fields work from in-memory stage pictures (F29's observer output), not files.
+- Checks: `swift test`; the hero and workers digests stay byte for byte; `figures render` of
+  both scenes is identical before and after the split. Report the time to compute one frame of
+  the workers scene; the budget is 2 ms on Linux.
+- Out of scope: the Xcode project (Claude links it in F32).
+
+### F31 · The show spec (Claude)
+`App/PaintByNumber/Resources/making-of.json` is the one spec both renderers read. Scenes run in
+stage order, each with its stages, its method ids from `Acknowledgements.swift` › methods (the
+Scholar's rule: cards match the acknowledgements letter for letter, and a test checks it), its
+action, prop and duration. It also holds the worker's height as a share of the picture, the
+wipe's seed and softness, the card rule, colors from the app's tokens, and a total of 25–30 s.
+- One scene per credited method, with no repeats. Line art credits HED (Xie and Tu, 2015) and
+  Informative Drawings (Chan, Durand and Isola, 2022), not Felzenszwalb a second time.
+- Strict, bounded decoding, since the Lamp's patches will write it. The default is Claude's,
+  from NOTES' decided rules, and the Lamp tunes it in F34.
+
+### F32 · The show in the app (Claude, CI)
+On `claude/making-of`, after F29–F31.
+- **Start:** `CreateModel` reruns the final generation once with an observer, off the main
+  actor, and keeps the stage pictures at screen size plus their reveal fields. The template must
+  equal the one saved (a test).
+- **`MakingOfView`:** a TimelineView with a Canvas draws the earlier stage, the next stage
+  revealed by its arrival-time field (a SwiftUI shader, or GraphicsContext's alpha-threshold
+  mask), and the workers as filled paths from FigureRig.
+  - The card is SwiftUI Text, in New York italic with Dynamic Type, and VoiceOver reads each
+    card as it appears.
+  - Tap or Skip opens the painting.
+  - Reduce Motion shows the cards only, cross-faded over the stage pictures; dark mode is
+    supported.
+  - Memory is released when the show ends.
+- **Replay:** from the painting's menu, regenerating the snapshots on demand (output is
+  deterministic). For a painting made by an older pipelineVersion, decide in review: replay the
+  current stages, or hide the item.
+- **Done means:**
+  - tests for the timeline (card durations by the rule, scene order, total length);
+  - a UI test: Start plays, Skip opens the painting, Replay plays;
+  - the demo scenarios `making-of`, `-dark`, `-reduce-motion` and `-long-text` in
+    `ci/scenarios.txt`;
+  - catalog strings and the `App/CLAUDE.md` pointer;
+  - Acknowledgements unchanged.
+
+### F33 · The factory renders the spec
+Branch `codex/f33-making-of-spec` from this branch. `tools/factory/making_of.py --show
+<making-of.json>` renders each scene as its own clip (at most 6 s, at phone size), the whole show
+(at most 30 s) and contact sheets, all from the spec.
+- Fix what the 338-s render showed:
+  - the worker's size comes from the spec;
+  - the line-art worker inks along the drawing's own strokes, not a straight line;
+  - the structure stage is drawn on paper rather than black;
+  - a stage's wipe starts where its change starts, not as a vertical front.
+- Stream frames to the encoder, and stay under 2 GB of disk (F19 ran out). The budget for the
+  whole show is under 10 minutes on four cores.
+- `loop checkpoint` pages can show a clip (`<video>` with a poster) beside a candidate's stills,
+  so Paul judges motion as motion.
+
+### F34 · The Lamp's round: a making-of piece (Codex runs the Lamp)
+`factory/pieces/making-of`, after F33.
+- **Parameters:** the spec's taste fields (scene durations within the length budget, worker
+  size, props per scene, wipe softness and seed, card placement, and option E's pets).
+- **Code checks:** length at most 30 s, every card on screen as long as the rule says, contrast,
+  and the worker on screen and large enough to read.
+- **Jury:** six with Originality, run through `codex_lamp.py`. Jurors see each candidate's
+  contact sheet and the frames at each scene's midpoint.
+- **Paul's checkpoint:** with the clips. His picks win (point 11). Claude writes the winner back
+  to `making-of.json` for v2.
+
+### F35 · The chapter (Claude)
+How the show was made and judged, told from F34's records, with the Lamp in the margins (Bart
+included). It comes after the show ships, never instead of it.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.
