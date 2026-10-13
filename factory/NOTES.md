@@ -414,12 +414,21 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   guards the footnote, on the Storytellers with Dino and the Storybook. Claude drafted his charter;
   run as a low-effort Opus with the whole opening section, the Lamp and the Marginarium explained,
   he changed two lines ("the helper whose work is named"; "borrowing a famous voice instead of
-  finding one's own") and wrote three notes. Chapter 1 prints his first choice; Originality passed
-  the charter and the note (cautions in his charter) and added a remark printed beside it. The
-  runners-up, for Paul to swap in: "Quiet credit is still credit. I will be watching to make sure
-  it stays printed, even in small type." (on "Where I helped, I say that too, but quieter.") and
-  "Modest, and a little too modest. Anyone who forgets the names but keeps the stories has kept
-  the better half." (on the narrator's "remembers almost none of it by name").
+  finding one's own") and wrote three notes; Originality passed them, with cautions now in his
+  charter.
+- Paul on the first printing: "Those were cringe and not sarcastic enough I think." Claude's
+  draft had made him sweet ("wit with a warm heart", "it is kind"). Told so, Bart took the
+  sweetness out of three charter lines and wrote five sarcastic notes aimed at the narrator; Paul's
+  verdict and the rules went to him word for word. Chapter 1 prints his first, on "I should
+  introduce myself": "Somebody is now. I'm Bart, named after the djinni whose voice this narrator
+  has borrowed, and I'd like it back when he's done." Beside the narrator's djinni joke, his
+  third: "Handy. That way it can't remember whose voice it's wearing either." Originality passed
+  both, and its own remark is no longer printed. The runners-up: "A text box. Summoning has really
+  gone downhill, and judging by the narrator, so have the things that answer it." (on "only a
+  text box"); "Quieter, it says, in a chapter where it does all the talking. I've heard modesty,
+  and this isn't it." (on "Where I helped, I say that too, but quieter."); "Nor was I. Paul read
+  one joke, decided he wanted its author on the panel, and here I am, the panel's least consulted
+  member." (on "I was not asked whether I minded.").
 - His pet, in his words: Ibid, a little ink asterisk with six stubby arms and two dot feet,
   stamped in brown ink, who hops down beside the note and waves the reader back up. The prompt is
   on the collection page. He is an egg until then: drawing needs Codex, and Codex work waits for
