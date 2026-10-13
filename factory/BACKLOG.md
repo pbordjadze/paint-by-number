@@ -586,6 +586,17 @@ Paul checkpoints.
 3. v1 goes to `main` and SideStore with the default spec as soon as F32 is green, then v2 with the
    Lamp's spec after Paul's checkpoint. F35 comes last.
 
+**Decided with Paul (Oct 13, from the demo, version 4):**
+- Length: "I was thinking much shorter honestly. Like less than 10 seconds." Six steps of 1.5 s,
+  about 9 s.
+- Layers in order: each step shows only what it adds to the last (sketch, shading, the paints,
+  merging, ink, clean curves), never the full photo again at every step.
+- Cards: "Give each of them 1.5 seconds, this is for fast and attentive readers — maybe the font
+  should be a little bit like, faint or transparent — or I guess book themed — idk, just gentle so
+  it’s not overwhelming". Small, faint, book-like, one per step for its 1.5 s.
+- Crew: "more, and smaller" than the first demo's 22 at 8 %. Proposed: about 12 pt tall on
+  screen, the count growing with the picture's area (about 130 a step on an iPhone).
+
 **Paul's calls** (each has a recommendation; nothing waits on them except where noted):
 1. Placement: on Start, over his own painting's stages, skippable, with replay from the
    painting's menu, as NOTES has it. A shareable video can come later; `TimelapseExporter`'s
