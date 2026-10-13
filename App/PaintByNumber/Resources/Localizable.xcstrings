@@ -8478,7 +8478,7 @@
       }
     },
     "lamp.team.storytellers.name" : {
-      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook)",
+      "comment" : "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -9973,6 +9973,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Steady Prong, George's tuning fork"
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.name" : {
+      "comment" : "The Marginarium, Who is Who: its name, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bart"
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.after" : {
+      "comment" : "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After Bartimaeus, the djinni who narrates Jonathan Stroud's books."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.guards" : {
+      "comment" : "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the footnote"
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.believes" : {
+      "comment" : "The Marginarium, Who is Who: what it believes, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A story is better told by someone with opinions, and the truest line is often in the footnote."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.loves" : {
+      "comment" : "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A narrator who talks back; asides that earn their place; wit with a warm heart under it; the helper whose work is named; old magic with a long memory."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.watchesFor" : {
+      "comment" : "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomposity, his own included; footnotes that pad instead of land; jokes at the reader's expense; masters who take the credit for the work; borrowing a famous voice instead of finding one's own."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.looksUpTo" : {
+      "comment" : "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jonathan Stroud's Bartimaeus books: The Amulet of Samarkand (2003), The Golem's Eye (2004), Ptolemy's Gate (2005), The Ring of Solomon (2010)."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.happiestWhen" : {
+      "comment" : "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The aside is the best line on the page, and it is kind."
+          }
+        }
+      }
+    },
+    "lamp.bartimaeus.petCaption" : {
+      "comment" : "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Bart",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bart's egg: Ibid, an ink asterisk, hasn't hatched yet"
           }
         }
       }
@@ -11573,6 +11681,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The smaller models are doing the bulk of the work, surfacing stuff, etc. Then we have the low effort Opus panel deciding between options. That Opus panel should redesign everything there is to design about my app. At least for now, it ought to pick new colors, guide new logo — we can go piece by piece."
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); marginNote block. Preserve inline Markdown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nor was I. I turned up after the ink was dry, and the margins had already filled up with other people's opinions. That is the right place for a narrator to find himself: with company. — *Bart*, who joined the Lamp after this chapter was written, and is named after the djinni who narrates Jonathan Stroud's books. A name borrowed with thanks is a debt, not a disguise; Bart pays his by sounding like no one but himself. — *Originality*"
+          }
+        }
+      }
+    },
+    "marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c.anchor" : {
+      "comment" : "The Marginarium: Chapter 1: The Marginarium (marginarium); the words of the story a margin note is about, highlighted in the reader. Keep each phrase, separated by \" | \", word for word as it appears once in the translated story before the note's margin group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I was not asked whether I minded"
           }
         }
       }

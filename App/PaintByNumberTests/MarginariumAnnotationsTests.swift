@@ -21,7 +21,7 @@ struct MarginariumAnnotationsTests {
         let chapter = try chapterOne()
         let annotations = MarginariumAnnotations(chapter: chapter)
         let notes = chapter.blocks.filter { $0.kind == .marginNote }
-        #expect(notes.count == 46)
+        #expect(notes.count == 47)
         #expect(annotations.unanchored.isEmpty)
         #expect(Set(annotations.notes.keys) == Set(notes.map(\.key)))
         let blocks = Dictionary(uniqueKeysWithValues: chapter.blocks.map { ($0.key, $0) })

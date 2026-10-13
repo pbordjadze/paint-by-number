@@ -109,7 +109,7 @@ synchronized folder would bundle it into the app.
   shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
   VoiceOver; `MarginariumSpritePlayer(pet:marginWidth:)` keeps only small copies of the cells it
   plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
-  Colophon, Codex is Pip, the Moon has none), and a test fails on an unmapped speaker. Chapter 6,
+  Colophon, Codex is Pip, the Moon and Bart have none), and a test fails on an unmapped speaker. Chapter 6,
   The Pets We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
   nineteen guardians' pets the factory drew, bundled as `Resources/pet-<id>.webp` within the
   budget in `docs/marginarium-pets.md` with Dino's (Paul's own Codex pet, shown in Who's Who);

@@ -34,6 +34,9 @@ One more thing, because it matters more than the jokes. This chapter is mostly P
 <!-- marginarium: marginarium.marginarium.block.1aaed14df5d04d82b45478b9cad90b27 -->
 <!-- anchor: a design panel of eighteen imaginary guardians -->
 3. Eighteen guardians, plus one more who is only allowed to say no. You will meet them all. Some of them twice. — *the narrator*
+<!-- anchor: I was not asked whether I minded -->
+<!-- marginarium: marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c -->
+4. Nor was I. I turned up after the ink was dry, and the margins had already filled up with other people's opinions. That is the right place for a narrator to find himself: with company. — *Bart*, who joined the Lamp after this chapter was written, and is named after the djinni who narrates Jonathan Stroud's books. A name borrowed with thanks is a debt, not a disguise; Bart pays his by sounding like no one but himself. — *Originality*
 
 <!-- marginarium: marginarium.marginarium.block.d3c33bc586594ce7bf98d63b4bafe187 -->
 ## Stick figures with citations

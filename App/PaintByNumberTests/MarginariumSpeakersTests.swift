@@ -33,7 +33,7 @@ struct MarginariumSpeakersTests {
             #expect(MarginariumPet.named(id) != nil, "\(speaker) → \(id)")
         }
         #expect(Set(MarginariumSpeakers.petIDs.values).count == MarginariumSpeakers.petIDs.count, "One pet per speaker")
-        #expect(MarginariumSpeakers.withoutPet == ["the Moon"])
+        #expect(MarginariumSpeakers.withoutPet == ["the Moon", "Bart"])
         #expect(Set(MarginariumSpeakers.petIDs.keys).isDisjoint(with: MarginariumSpeakers.withoutPet))
         #expect(MarginariumPet.named("moon") == nil)
         #expect(Bundle.main.url(forResource: "pet-moon", withExtension: "webp") == nil)
