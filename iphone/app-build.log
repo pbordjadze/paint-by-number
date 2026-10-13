@@ -1,0 +1,63 @@
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AccessibilityUITests.swift:89:24: warning: main actor-isolated property 'elementType' can not be referenced from a nonisolated context
+            if element.elementType == .button, element.identifier.hasPrefix("swatch-") { found.append(element) }
+                       ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElementAttributes.h:50:38: note: property declared here
+@property (readonly) XCUIElementType elementType;
+                                     ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AccessibilityUITests.swift:89:56: warning: main actor-isolated property 'identifier' can not be referenced from a nonisolated context
+            if element.elementType == .button, element.identifier.hasPrefix("swatch-") { found.append(element) }
+                                                       ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElementAttributes.h:35:32: note: property declared here
+@property (readonly) NSString *identifier;
+                               ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberUITests/AccessibilityUITests.swift:90:21: warning: main actor-isolated property 'children' can not be referenced from a nonisolated context
+            element.children.forEach(visit)
+                    ^
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks/XCUIAutomation.framework/Headers/XCUIElement.h:341:56: note: property declared here
+@property (readonly) NSArray<id<XCUIElementSnapshot>> *children;
+                                                       ^
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/runner/work/paint-by-number/paint-by-number/App/PaintByNumberTests/ArtworkNicknameTests.swift:94:35: warning: '#require(_:_:)' is redundant because 'TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300)' never equals 'nil' (from macro 'require')
+        item.photo = try #require(TemplateRasterizer.image(item.template, style: .painting, maxPixelSize: 300))
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
