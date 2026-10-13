@@ -405,6 +405,26 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   lossless with its provenance, and the app ships it on `claude/dino-hatches`. It wasn't drawn in
   the Warm Oilcloth family style, and Paul chose it anyway: his pet, his call.
 
+## Paul's point 24: Bart joins (Oct 12)
+
+- Paul liked the narrator's djinni joke in chapter 1: "let's add Bart to the Lamp, with obvious
+  parameters and vision, and let him comment on that section please. Give him enough context to
+  understand what's going on."
+- Bart (`bartimaeus`) is after Bartimaeus, the djinni who narrates Jonathan Stroud's books, and
+  guards the footnote, on the Storytellers with Dino and the Storybook. Claude drafted his charter;
+  run as a low-effort Opus with the whole opening section, the Lamp and the Marginarium explained,
+  he changed two lines ("the helper whose work is named"; "borrowing a famous voice instead of
+  finding one's own") and wrote three notes. Chapter 1 prints his first choice; Originality passed
+  the charter and the note (cautions in his charter) and added a remark printed beside it. The
+  runners-up, for Paul to swap in: "Quiet credit is still credit. I will be watching to make sure
+  it stays printed, even in small type." (on "Where I helped, I say that too, but quieter.") and
+  "Modest, and a little too modest. Anyone who forgets the names but keeps the stories has kept
+  the better half." (on the narrator's "remembers almost none of it by name").
+- His pet, in his words: Ibid, a little ink asterisk with six stubby arms and two dot feet,
+  stamped in brown ink, who hops down beside the note and waves the reader back up. The prompt is
+  on the collection page. He is an egg until then: drawing needs Codex, and Codex work waits for
+  Paul.
+
 ## Open questions
 
 - Dino in the Lamp's family style? Paul (Oct 12): leave him as he is for now, he's Dino;

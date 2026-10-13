@@ -102,7 +102,7 @@ class LampTests(unittest.TestCase):
             self.assertEqual(len([c for c in calls if 'set-snow-queen' in c['work']]), 1)
             self.assertEqual(len([c for c in calls if '/redo-moon/' in c['work']]), 1)
             images = list((self.repo / 'factory/pets').glob('*/spritesheet.webp'))
-            self.assertEqual(len(images), 19)
+            self.assertEqual(len(images), 20)
             self.assertTrue(all(sum(p.stat().st_size for p in image.parent.iterdir()) <= 2_000_000 for image in images))
             self.assertEqual(loop.load(self.run / 'decisions/shortlist-0.json')['selected'], [])
             self.assertEqual(loop.load(self.run / 'decisions/shortlist-1.json')['selected'], ['style-00', 'style-01'])
@@ -321,7 +321,7 @@ class LampTests(unittest.TestCase):
             self.assertEqual(selected, ['pilot-style-00-bulat-okudzhava'])
             _, pilot = lamp_resume.latest_result(self.run / 'hatches' / selected[0])
             set_calls = [c for c in new_calls if '/hatches/set-' in c['work'] or '/hatches/redo-' in c['work']]
-            self.assertEqual(len(set_calls), 22)
+            self.assertEqual(len(set_calls), 23)
             for call in set_calls:
                 self.assertEqual(call['args'][call['args'].index('--image') + 1], pilot['contact'])
                 provenance = loop.load(Path(call['work']) / 'package/provenance.json')
@@ -884,7 +884,7 @@ class LampTests(unittest.TestCase):
             loop.save(path, record)
         completed = {p: p.read_bytes() for folder in ('records', 'replies', 'jobs')
                      for p in (self.run / folder).glob('*/*.json')}
-        self.assertEqual(len(list(self.run.glob('records/*/*.json'))), 40)
+        self.assertEqual(len(list(self.run.glob('records/*/*.json'))), 42)
         before = len(self.calls())
         with patch.object(driver, 'hatch_many', side_effect=RuntimeError('reached pilots')):
             with self.assertRaisesRegex(RuntimeError, 'reached pilots'):
@@ -932,10 +932,10 @@ class LampTests(unittest.TestCase):
         with patch.object(driver, 'hatch_many', side_effect=hatch_many), patch.dict(os.environ,
                 {'FAKE_BAD_BRIEF': 'briefs-medea-m0,brief-repair-moon-m0', 'FAKE_BRIEF_REPAIR': 'moon'}):
             summary = driver.run_plan()
-        self.assertEqual(len(summary['pets']), 21)
+        self.assertEqual(len(summary['pets']), 22)
         self.assertEqual(summary['pets']['medea'], 'invalid')
         self.assertEqual(summary['pets']['moon'], 'invalid')
-        self.assertEqual(len([h for h in hatches if h['key'].startswith('set-')]), 19)
+        self.assertEqual(len([h for h in hatches if h['key'].startswith('set-')]), 20)
         self.assertFalse(any(h['key'] in ('set-medea', 'set-moon') for h in hatches))
         self.assertEqual(loop.load(self.run / 'decisions/briefs.json')['invalid'], ['medea', 'moon'])
 
