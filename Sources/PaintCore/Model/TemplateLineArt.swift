@@ -59,14 +59,7 @@ public struct TemplateLineArt: Sendable, Equatable {
 
     /// Whether stroke `index` is writing (`writingStrokes`).
     public func isWritingStroke(_ index: Int) -> Bool {
-        guard !writingStrokes.isEmpty, index >= 0, index <= Int(UInt32.max) else { return false }
-        var low = 0, high = writingStrokes.count
-        let target = UInt32(index)
-        while low < high {
-            let mid = (low + high) / 2
-            if writingStrokes[mid] < target { low = mid + 1 } else { high = mid }
-        }
-        return low < writingStrokes.count && writingStrokes[low] == target
+        writingStrokes.containsSorted(index)
     }
 }
 

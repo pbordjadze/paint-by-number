@@ -216,7 +216,8 @@ synchronized folder would bundle it into the app.
   (`zenPause` under Reduce Motion, `PaintingSession.reduceMotion`: nothing shines). A tap during
   any camera flight lands it and paints; only a tap on a fling just stops it.
 - Drag painting scans the capsule the brush sweeps (`PaintingSession.drag`, radius capped at
-  `PaintingSession.maxBrushRadius`).
+  `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
+  it moves the selection on.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
   `PaintingMelody` note per fill; Core Haptics patterns, none on iPad. `SoundPlayer` and
   `HapticsPlayer` each work on a queue of their own (starting either engine blocks its caller).
@@ -336,8 +337,8 @@ Conventions).
   (`PaintProgress.remapped`) and swaps the folder in atomically (`ArtworkStore.replaceContents`);
   without either photo it can't regenerate (`ArtworkFactory.canRegenerate`). Artworks written by a
   newer app (`Artwork.needsNewerApp`) are listed read-only: delete only.
-- `ArtworkPaintingView` hosts `PaintView` and autosaves (`PaintingAutosaver`: debounced, on
-  background, on close). `Library.writeFailures` records failed progress or metadata writes (the
+- `ArtworkPaintingView` hosts `PaintView` and autosaves (`PaintingAutosaver`: debounced, at
+  most 10 s apart while painting goes on, on background, on close). `Library.writeFailures` records failed progress or metadata writes (the
   newest unsaved progress is kept for `retrySaving`); the painting screen and the gallery show a
   Retry toast; thumbnail and trash writes only log. Tests make writes fail through
   `ArtworkStore.writeFaults`.

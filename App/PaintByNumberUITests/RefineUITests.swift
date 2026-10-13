@@ -136,6 +136,10 @@ final class RefineUITests: XCTestCase {
         XCTAssertTrue(
             waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120),
             "The preview never finished choosing its settings")
+        // Refine opens on the final template, which can come after the first draft.
+        XCTAssertTrue(
+            waitFor(app.buttons["refine"], toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120),
+            "The preview never became ready to refine")
         return app
     }
 

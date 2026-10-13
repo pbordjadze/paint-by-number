@@ -26,6 +26,20 @@ nonisolated enum TimelapseExporter {
     /// Blocks until the frame's pixels are in its buffer; throws if the GPU didn't draw them.
     typealias FrameCompletion = () throws -> Void
 
+    /// Waits for the encoder to take another frame. A writer that has failed or been cancelled
+    /// never becomes ready again, so that throws its error instead of waiting for good.
+    static func waitUntilReady(
+        isReady: () -> Bool, writerStatus: () -> AVAssetWriter.Status, writerError: () -> (any Error)?
+    ) async throws {
+        while !isReady() {
+            switch writerStatus() {
+            case .failed, .cancelled: throw writerError() ?? ExportError.appendFailed
+            default: break
+            }
+            try await Task.sleep(for: .milliseconds(2))
+        }
+    }
+
     /// Writes an HEVC movie to `url`. Runs on the caller's executor (frames are rendered by the
     /// caller's closure), so call it from a background task for large exports. Cancellation is
     /// checked every frame; it throws `CancellationError`, and like any failure leaves no file.
@@ -73,7 +87,8 @@ nonisolated enum TimelapseExporter {
         func appendOldest() async throws {
             let frame = pending.removeFirst()
             try frame.done()
-            while !input.isReadyForMoreMediaData { try await Task.sleep(for: .milliseconds(2)) }
+            try await waitUntilReady(
+                isReady: { input.isReadyForMoreMediaData }, writerStatus: { writer.status }, writerError: { writer.error })
             guard adaptor.append(frame.buffer, withPresentationTime: frame.time) else {
                 throw writer.error ?? ExportError.appendFailed
             }

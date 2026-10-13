@@ -127,6 +127,25 @@ struct PipelineTuningTests {
         #expect(low.detailThreshold == 0 && low.outlineThreshold == 0.2)
     }
 
+    /// `min` and `max` pass NaN on, which would trap in `workingLongSide`: a value that is not a
+    /// number takes the default.
+    @Test func settingsThatAreNotNumbersTakeTheirDefaults() {
+        let s = GenerationSettings(detail: .nan, smoothness: .infinity).normalized
+        #expect(s.detail == GenerationSettings().detail && s.smoothness == GenerationSettings().smoothness)
+        #expect(GenerationSettings(detail: .nan).workingLongSide == GenerationSettings().workingLongSide)
+        #expect(GenerationSettings(detail: 7, smoothness: -2).normalized.detail == 1)
+        #expect(GenerationSettings(detail: 7, smoothness: -2).normalized.smoothness == 0)
+
+        let book = LineArtSettings(
+            outlineThreshold: .nan, detailThreshold: .nan, minimumStrokeLength: .nan, gapBridging: .infinity,
+            lineSmoothing: -.infinity).normalized
+        #expect(book == LineArtSettings().normalized)
+        let classic = LineArtSettings(style: .classic)
+        var broken = classic
+        broken.outlineThreshold = .nan
+        #expect(broken.normalized == classic.normalized)
+    }
+
     @Test func autoCandidatesCarryLineArtAndTuning() throws {
         let image = TestScenes.scene(width: 300, height: 200)
         let classic = LineArtSettings(style: .classic)

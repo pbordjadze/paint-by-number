@@ -282,14 +282,7 @@ extension Template {
 
     /// Whether region `index` is a detail area (`detailRegions`).
     public func isDetailRegion(_ index: Int) -> Bool {
-        guard !detailRegions.isEmpty, index >= 0, index <= Int(UInt32.max) else { return false }
-        var low = 0, high = detailRegions.count
-        let target = UInt32(index)
-        while low < high {
-            let mid = (low + high) / 2
-            if detailRegions[mid] < target { low = mid + 1 } else { high = mid }
-        }
-        return low < detailRegions.count && detailRegions[low] == target
+        detailRegions.containsSorted(index)
     }
 
     /// The OKLab lightness below which a paint is too dark for the sheet's dark ink to read on it
@@ -311,5 +304,20 @@ extension Template {
         let x = Int(point.x.rounded(.down)), y = Int(point.y.rounded(.down))
         guard regionMap.contains(x: x, y: y) else { return nil }
         return Int(regionMap[x, y])
+    }
+}
+
+extension Array where Element == UInt32 {
+    /// Whether the ascending list holds `index` (binary search); the lists of region and stroke
+    /// numbers (`Template.detailRegions`, `TemplateLineArt.writingStrokes`) are kept sorted.
+    func containsSorted(_ index: Int) -> Bool {
+        guard !isEmpty, index >= 0, index <= Int(UInt32.max) else { return false }
+        var low = 0, high = count
+        let target = UInt32(index)
+        while low < high {
+            let mid = (low + high) / 2
+            if self[mid] < target { low = mid + 1 } else { high = mid }
+        }
+        return low < count && self[low] == target
     }
 }

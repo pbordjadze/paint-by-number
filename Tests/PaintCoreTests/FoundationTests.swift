@@ -187,6 +187,21 @@ struct FoundationTests {
         for data in rejected { #expect(throws: Netpbm.Error.self) { try Netpbm.read(data) } }
     }
 
+    /// The header is untrusted: a size that is not positive, or whose product
+    /// wraps, is rejected before any buffer is sized from it.
+    @Test func netpbmRejectsUnreasonableSizes() {
+        let body = Data(repeating: 9, count: 48)
+        let headers = [
+            "P6\n-3 -4\n255\n", "P6\n-3 4\n255\n", "P6\n3 -4\n255\n", "P5\n0 4\n255\n", "P5\n4 0\n255\n",
+            "P6\n0 0\n255\n",
+            "P6\n3037000500 3037000500\n255\n", "P6\n9223372036854775807 2\n255\n",
+        ]
+        for header in headers {
+            let error = #expect(throws: Netpbm.Error.self, "\(header.debugDescription)") { try Netpbm.read(Data(header.utf8) + body) }
+            if case .malformed(let reason) = error { #expect(reason == "size", "\(header.debugDescription)") }
+        }
+    }
+
     @Test func emptyBoundsHaveNoSize() {
         #expect(PixelBounds.empty.width < 0)
         #expect(PixelBounds.empty.height < 0)

@@ -180,8 +180,15 @@ struct MarginariumMarginNote: View {
             }
             Text(block.attributedText)
                 .fixedSize(horizontal: false, vertical: true)
-                .accessibilityIdentifier("marginarium-note-\(block.key)")
         }
+        // The words and the note read as one element; the pets stay aside. Tapping a note that has
+        // words shows them in the story, which VoiceOver is told.
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("marginarium-note-\(block.key)")
+        .accessibilityAddTraits(words.isEmpty ? [] : .isButton)
+        .accessibilityHint(words.isEmpty ? "" : String(
+            localized: "marginarium.note.showWords", defaultValue: "Shows these words in the story",
+            comment: "VoiceOver hint of a margin note beside the story, which has words of the story it is about; activating it highlights them in the story"))
         if pets.isEmpty {
             note
         } else if dynamicTypeSize.isAccessibilitySize {

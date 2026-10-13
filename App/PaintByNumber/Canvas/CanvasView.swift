@@ -875,6 +875,20 @@ final class CanvasView: UIView, PaintingCanvas {
         }
     }
 
+    /// Ends a replay the session changed under (a fill, an undo, a restart): the canvas shows
+    /// what the session holds, not the log the replay was started from.
+    private func endReplay() {
+        replayTask?.cancel()
+        replayTask = nil
+        isReplaying = false
+        numbersChanged()
+        guard let renderer else { return }
+        for (r, state) in Self.settledStates(template: template, progress: session.progress).enumerated() {
+            renderer.update(r, state)
+        }
+        requestRender()
+    }
+
     /// Finishing a color sweeps a gloss over it once its last fill has landed; finishing the
     /// painting flies out to all of it and sweeps the whole canvas (`finish`).
     private func celebrate(_ event: PaintEvent) {
@@ -975,6 +989,7 @@ final class CanvasView: UIView, PaintingCanvas {
     // MARK: PaintingCanvas
 
     func session(_ session: PaintingSession, didPaint regions: [Int], from origin: SIMD2<Float>, animated: Bool) {
+        if isReplaying { endReplay() }
         accessibilityChanged()
         guard let renderer else { return }
         let time = now()
@@ -1056,6 +1071,7 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     func session(_ session: PaintingSession, didUnpaint regions: [Int]) {
+        if isReplaying { endReplay() }
         accessibilityChanged()
         guard let renderer else { return }
         let time = now()
@@ -1085,6 +1101,8 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     func session(_ session: PaintingSession, focusOn region: Int) {
+        // Zen Mode's flight comes a moment after the fill: the painter may have taken the camera since.
+        guard !scrollView.isTracking, !scrollView.isDragging, !scrollView.isDecelerating, !scrollView.isZooming else { return }
         // VoiceOver (and Switch Control) follow the hint to the revealed area.
         pendingFocus = .region(region)
         reveal(region: region)

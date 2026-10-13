@@ -21,7 +21,7 @@ func runBench(_ options: Options) throws {
         fine.detail = 1
         var many = fine
         many.colorCount = GenerationSettings.colorCountRange.upperBound
-        let big = Resample.area(image, width: image.width * 1400 / long, height: image.height * 1400 / long)
+        let big = Resample.area(image, width: max(1, image.width * 1400 / long), height: max(1, image.height * 1400 / long))
         let regimes = [
             ("preview", preview, options.settings), ("detail 1", big, fine),
             ("\(many.colorCount) colors, detail 1", big, many),

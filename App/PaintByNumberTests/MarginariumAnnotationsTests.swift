@@ -138,6 +138,16 @@ struct MarginariumAnnotationsTests {
         #expect(MarginariumWashRenderer.bands([(rect(0, 5), space), (rect(5, 20), one)])
             == [Band(rect: rect(5, 20), parts: [Part(minX: 5, maxX: 25, opacity: 0.14)])])
         #expect(MarginariumWashRenderer.bands([(rect(0, 5), space), (rect(5, 20), nil)]).isEmpty)
+        // A right-to-left line lists its runs from the right: runs of one depth still join, leftwards.
+        let rightToLeft = MarginariumWashRenderer.bands([
+            (rect(170, 30), nil),
+            (rect(140, 30), one), (rect(135, 5), space), (rect(105, 30), one), (rect(100, 5), space),
+            (rect(70, 30), two), (rect(65, 5), space),
+            (rect(0, 65), nil),
+        ])
+        #expect(rightToLeft == [
+            Band(rect: rect(70, 100), parts: [Part(minX: 100, maxX: 170, opacity: 0.14), Part(minX: 70, maxX: 100, opacity: 0.24)]),
+        ])
     }
 
     @Test func aSelectionRoundTripsThroughItsLinkAndOtherLinksAreLeftAlone() throws {

@@ -114,6 +114,23 @@ struct TimelapseExportTests {
         }
     }
 
+    /// An encoder that stopped (failed or cancelled) never takes another frame: the wait ends
+    /// with its error instead of spinning until the export is cancelled.
+    @Test func waitForTheEncoderEndsWhenTheWriterStops() async throws {
+        let failure = CocoaError(.fileWriteOutOfSpace)
+        await #expect(throws: CocoaError.self) {
+            try await TimelapseExporter.waitUntilReady(isReady: { false }, writerStatus: { .failed }, writerError: { failure })
+        }
+        await #expect(throws: TimelapseExporter.ExportError.self) {
+            try await TimelapseExporter.waitUntilReady(isReady: { false }, writerStatus: { .cancelled }, writerError: { nil })
+        }
+        // A busy encoder is waited for, not given up on.
+        var polls = 0
+        try await TimelapseExporter.waitUntilReady(
+            isReady: { polls += 1; return polls > 3 }, writerStatus: { .writing }, writerError: { nil })
+        #expect(polls == 4)
+    }
+
     /// Strokes accelerate in and ease out: the count never goes backwards, every stroke is
     /// reached, the picture never stands still while it paints, and a small painting makes a
     /// short movie.

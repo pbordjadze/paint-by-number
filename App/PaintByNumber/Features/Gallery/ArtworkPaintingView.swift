@@ -16,6 +16,11 @@ struct ArtworkPaintingView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @State private var autosaver: PaintingAutosaver?
+    /// Made once when the painting is presented, not in `body`: each autosave replaces the
+    /// artwork in the library, and values made afresh would reach `PaintView` as changed
+    /// environment on every one. None of what they read changes while painting.
+    @State private var sourcePhotoLoader: SourcePhotoLoader?
+    @State private var feedbackSource: FeedbackSource?
     /// The push has finished. Only then does the painting replace its thumbnail: the zoom
     /// transition lays the screen out afresh every frame, and the painting screen rendered at
     /// each of them kept CI's simulator from answering for up to half a minute (hundreds of
@@ -37,8 +42,7 @@ struct ArtworkPaintingView: View {
     /// Where the painting came from, for feedback given on it. The painter's own photo is read
     /// (as stored, off the main actor) only if they choose to send it; a library picture's is
     /// in the repository.
-    private var feedbackSource: FeedbackSource? {
-        guard let artwork else { return nil }
+    private func makeFeedbackSource(for artwork: Artwork) -> FeedbackSource {
         let store = library.store, id = artworkID
         var photo: (@Sendable () async -> Data?)?
         if artwork.sampleName == nil {
@@ -54,9 +58,7 @@ struct ArtworkPaintingView: View {
             Theme.paper.ignoresSafeArea()
             if let autosaver, hasLanded {
                 PaintView(session: autosaver.session, title: artwork?.title ?? "", onClose: close)
-                    .environment(\.sourcePhotoLoader, SourcePhotoLoader { [library, artworkID] maxPixelSize in
-                        await library.sourcePhoto(for: artworkID, maxPixelSize: maxPixelSize)
-                    })
+                    .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }
                     .transition(.opacity)
@@ -152,6 +154,10 @@ struct ArtworkPaintingView: View {
             failure = nil
             regenerationFailed = false
             autosaver = PaintingAutosaver(session: session, artworkID: artworkID, library: library)
+            sourcePhotoLoader = SourcePhotoLoader { [library, artworkID] maxPixelSize in
+                await library.sourcePhoto(for: artworkID, maxPixelSize: maxPixelSize)
+            }
+            feedbackSource = artwork.map(makeFeedbackSource)
         }
         if let notice = document.notice { show(notice) }
         Log.library.notice("Opened \(artworkID.uuidString, privacy: .public): \(document.template.regions.count, privacy: .public) regions")
