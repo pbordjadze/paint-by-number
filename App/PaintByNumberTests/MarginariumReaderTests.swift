@@ -217,9 +217,10 @@ struct MarginariumReaderTests {
         }
         // Grouping for layout must not drop, duplicate or reorder a single text unit.
         #expect(chapter.sections.flatMap(\.blocks).map(\.key) == chapter.readableBlocks.map(\.key))
-        let plainSignature = try #require(chapter.blocks.first { $0.text.hasPrefix("A confession:") })
-        #expect(plainSignature.speaker == "the narrator")
-        #expect(plainSignature.text.hasSuffix("— the narrator"))
+        // Signed in italics like every other note now; the importer's fixture keeps a plain one.
+        let confession = try #require(chapter.blocks.first { $0.text.hasPrefix("A confession:") })
+        #expect(confession.speaker == "the narrator")
+        #expect(confession.text.hasSuffix("— *the narrator*"))
     }
 
     @Test func adjacentTablesAndMarginGroupsStaySeparateAndOrdered() throws {
