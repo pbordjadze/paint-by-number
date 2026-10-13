@@ -299,7 +299,7 @@ struct MarginariumReaderView: View {
     }
 
     /// The notes a margin demo opens: its group's first note, at the words it shares with the
-    /// most voices (the narrator's first aside; the Enchanted Workshop with the Child at Bedtime).
+    /// most voices (Bart's introduction; the Enchanted Workshop with the Child at Bedtime).
     private func demoSelection(in chapter: MarginariumDocument.Chapter,
                                annotations: MarginariumAnnotations) -> MarginariumSelection? {
         guard ShellDemo.current?.marginariumEntryID == entry.id else { return nil }

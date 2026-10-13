@@ -45,12 +45,26 @@
         },
         {
           "kind": "marginNote",
-          "key": "marginarium.marginarium.block.a4463ad52e684128bc68fdd9dedf59da",
+          "key": "marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c",
           "depth": 0,
           "number": 1,
-          "speaker": "the narrator",
+          "speaker": "Bart",
           "speakers": [
-            "the narrator"
+            "Bart"
+          ],
+          "anchorBlocks": [
+            "marginarium.marginarium.block.67e349f07d6d48a7af28414e783765bc"
+          ]
+        },
+        {
+          "kind": "marginNote",
+          "key": "marginarium.marginarium.block.a4463ad52e684128bc68fdd9dedf59da",
+          "depth": 0,
+          "number": 2,
+          "speaker": "Bart",
+          "speakers": [
+            "the narrator",
+            "Bart"
           ],
           "anchorBlocks": [
             "marginarium.marginarium.block.67e349f07d6d48a7af28414e783765bc"
@@ -60,7 +74,7 @@
           "kind": "marginNote",
           "key": "marginarium.marginarium.block.45f229e6dc954c39ae6826d99637b6dc",
           "depth": 0,
-          "number": 2,
+          "number": 3,
           "speaker": "the narrator",
           "speakers": [
             "the narrator"
@@ -73,27 +87,13 @@
           "kind": "marginNote",
           "key": "marginarium.marginarium.block.1aaed14df5d04d82b45478b9cad90b27",
           "depth": 0,
-          "number": 3,
+          "number": 4,
           "speaker": "the narrator",
           "speakers": [
             "the narrator"
           ],
           "anchorBlocks": [
             "marginarium.marginarium.block.0713cf50d8f24dffa0d9e75181bf15ca"
-          ]
-        },
-        {
-          "kind": "marginNote",
-          "key": "marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c",
-          "depth": 0,
-          "number": 4,
-          "speaker": "Originality",
-          "speakers": [
-            "Bart",
-            "Originality"
-          ],
-          "anchorBlocks": [
-            "marginarium.marginarium.block.d254ae6ef76744fb85b7b4b5bdb02115"
           ]
         },
         {

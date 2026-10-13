@@ -25,18 +25,18 @@ One more thing, because it matters more than the jokes. This chapter is mostly P
 <!-- marginarium: marginarium.marginarium.block.28ac2ecfdd1f4213acfbfd44978414e1 -->
 *In the margin*
 
+<!-- marginarium: marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c -->
+<!-- anchor: I should introduce myself, since nobody else in this chapter is going to -->
+1. Somebody is now. I'm Bart, named after the djinni whose voice this narrator has borrowed, and I'd like it back when he's done. — *Bart*
 <!-- marginarium: marginarium.marginarium.block.a4463ad52e684128bc68fdd9dedf59da -->
 <!-- anchor: has read a great deal and remembers almost none of it by name -->
-1. A proper djinni would tell you he has walked with kings. I have read about them, which is safer and involves less sand. — *the narrator*
+2. A proper djinni would tell you he has walked with kings. I have read about them, which is safer and involves less sand. — *the narrator*. Handy. That way it can't remember whose voice it's wearing either. — *Bart*
 <!-- marginarium: marginarium.marginarium.block.45f229e6dc954c39ae6826d99637b6dc -->
 <!-- anchor: writes in the margins -->
-2. That is what a marginarium is: a place for the notes and little drawings in a book's margins. The Lamp liked the word. Paul liked it more. See the end of the chapter. — *the narrator*
+3. That is what a marginarium is: a place for the notes and little drawings in a book's margins. The Lamp liked the word. Paul liked it more. See the end of the chapter. — *the narrator*
 <!-- marginarium: marginarium.marginarium.block.1aaed14df5d04d82b45478b9cad90b27 -->
 <!-- anchor: a design panel of eighteen imaginary guardians -->
-3. Eighteen guardians, plus one more who is only allowed to say no. You will meet them all. Some of them twice. — *the narrator*
-<!-- anchor: I was not asked whether I minded -->
-<!-- marginarium: marginarium.marginarium.block.da76bc6b83bb4e29b1aa857b8ed5cf7c -->
-4. Nor was I. I turned up after the ink was dry, and the margins had already filled up with other people's opinions. That is the right place for a narrator to find himself: with company. — *Bart*, who joined the Lamp after this chapter was written, and is named after the djinni who narrates Jonathan Stroud's books. A name borrowed with thanks is a debt, not a disguise; Bart pays his by sounding like no one but himself. — *Originality*
+4. Eighteen guardians, plus one more who is only allowed to say no. You will meet them all. Some of them twice. — *the narrator*
 
 <!-- marginarium: marginarium.marginarium.block.d3c33bc586594ce7bf98d63b4bafe187 -->
 ## Stick figures with citations
