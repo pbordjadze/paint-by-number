@@ -594,6 +594,10 @@ Paul checkpoints.
 - Cards: "Give each of them 1.5 seconds, this is for fast and attentive readers — maybe the font
   should be a little bit like, faint or transparent — or I guess book themed — idk, just gentle so
   it’s not overwhelming". Small, faint, book-like, one per step for its 1.5 s.
+- The crew stays: "Maybe the workers wouldn’t go away, they’d keep working between each stage".
+  One crew for the whole show; between steps each worker walks to an untaken spot of the next
+  step (the nearest it can reach in time) and swaps tools on the way; a worker with no job left
+  keeps working where it stands. The demo's `planTroupe` is the reference.
 - Crew: "more, and smaller" than the first demo's 22 at 8 %. Proposed: about 12 pt tall on
   screen, the count growing with the picture's area (about 130 a step on an iPhone).
 
