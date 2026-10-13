@@ -32,9 +32,14 @@ public enum Netpbm {
         guard let w = Int(try token()), let h = Int(try token()), let maxVal = Int(try token()), maxVal == 255 else {
             throw Error.malformed("bad header")
         }
+        // A header is untrusted: sizes must be positive and small enough that no product below can
+        // wrap. Nothing is allocated before the data is known to hold every pixel.
+        guard w > 0, h > 0 else { throw Error.malformed("size") }
+        let (cells, cellOverflow) = w.multipliedReportingOverflow(by: h)
+        guard !cellOverflow, cells <= Int.max / 4 else { throw Error.malformed("size") }
         index += 1  // single whitespace after maxval
         let channels = magic == "P6" ? 3 : 1
-        guard data.endIndex - index >= w * h * channels else { throw Error.malformed("truncated") }
+        guard data.endIndex - index >= cells * channels else { throw Error.malformed("truncated") }
         var pixels = [UInt8](repeating: 255, count: w * h * 4)
         data.withUnsafeBytes { raw in
             let base = raw.baseAddress!.assumingMemoryBound(to: UInt8.self) + (index - data.startIndex)

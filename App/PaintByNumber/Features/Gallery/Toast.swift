@@ -8,13 +8,21 @@ struct Toast<Trailing: View>: View {
     var edge: Edge = .bottom
     @ViewBuilder var trailing: Trailing
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
-        HStack(spacing: 12) {
+        // Accessibility sizes leave a phone-wide capsule too little beside the icon and the action
+        // for a painting's title: the message gets the full width, with the action under it.
+        let large = dynamicTypeSize.isAccessibilitySize
+        let layout = large
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 12))
+        layout {
             Image(systemName: systemImage)
                 .foregroundStyle(.secondary)
             // The action keeps its label however long the message is: the message gets what is left.
             Text(text)
-                .lineLimit(3)
+                .lineLimit(large ? nil : 3)
                 .fixedSize(horizontal: false, vertical: true)
                 .layoutPriority(-1)
             trailing
@@ -22,7 +30,8 @@ struct Toast<Trailing: View>: View {
         .font(.subheadline.weight(.medium))
         .padding(.horizontal, 20)
         .padding(.vertical, 13)
-        .glassEffect(.regular, in: .capsule)
+        // The stacked toast is too tall for a capsule's ends: they would cut into the text.
+        .glassEffect(.regular, in: large ? AnyShape(.rect(cornerRadius: 28, style: .continuous)) : AnyShape(.capsule))
         .transition(.move(edge: edge).combined(with: .opacity))
         .accessibilityElement(children: .combine)
     }

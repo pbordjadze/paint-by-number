@@ -426,6 +426,67 @@ struct PaintingSessionTests {
         #expect(session.colorOf(shown) == next && !session.isPainted(shown))
     }
 
+    /// A finished painting opens with no color on the brush; undoing a fill picks up the
+    /// color of the area it freed, so the painter can paint it again at once.
+    @Test func undoOnAFinishedPaintingSelectsTheFreedColor() throws {
+        var progress = PaintProgress(regionCount: template.regions.count)
+        for r in template.regions.indices { _ = progress.paint(r) }
+        let session = try PaintingSession(template: template, progress: progress)
+        #expect(session.isComplete && session.selectedColor == nil)
+        let region = try #require(session.undo())
+        #expect(session.selectedColor == session.colorOf(region))
+        session.paint([region], from: .zero, animated: false)
+        let picked = (session.colorOf(region) + 1) % session.paletteCount
+        session.select(color: picked)
+        session.undo()
+        #expect(session.selectedColor == picked, "a color on the brush stays")
+    }
+
+    /// A stroke paints the color it began with: finishing that color moves the palette's
+    /// selection on at once, but the rest of the stroke does not fill the next color's areas.
+    @Test func strokeKeepsItsColorAfterAutoAdvance() throws {
+        let session = PaintingSession(template: template)
+        session.select(color: 4)
+        session.beginStroke()
+        session.paint(regions(ofColor: 4), from: .zero, animated: false)
+        #expect(session.isColorComplete(4))
+        let next = try #require(session.selectedColor)
+        #expect(next != 4, "the selection moved on")
+        let area = try #require(regions(ofColor: next).first)
+        #expect(session.drag(from: label(area), to: label(area), radius: 2) == nil)
+        #expect(session.tap(at: label(area), tolerance: 0) == .rejected(region: area, expectedColor: next))
+        #expect(!session.isPainted(area))
+        session.endStroke()
+
+        session.beginStroke()
+        #expect(session.drag(from: label(area), to: label(area), radius: 2) != nil)
+        session.endStroke()
+        #expect(session.isPainted(area))
+    }
+
+    /// Replay ends when the session changes under it: the canvas shows what the session holds,
+    /// not the log the replay started from.
+    @Test func replayEndsWhenTheSessionChangesUnderIt() async throws {
+        let session = PaintingSession(template: template)
+        let view = CanvasView(session: session)
+        view.reduceMotion = true
+        view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        view.layoutIfNeeded()
+        session.paint(Array(template.regions.indices), from: .zero, animated: false)
+        view.replay()
+        let undone = try #require(session.undo())
+        func expectsTheSession(_ note: Comment) throws {
+            for r in template.regions.indices {
+                let state = try #require(view.regionState(r))
+                #expect(state.painted == (r == undone ? 0 : 1), note)
+            }
+        }
+        try expectsTheSession("right after the undo")
+        // The replay would have refilled everything once its lift was over.
+        try await Task.sleep(for: .milliseconds(700))
+        try expectsTheSession("after the replay's schedule began")
+    }
+
     @Test func hintWithNothingLeftStaysQuiet() {
         let session = PaintingSession(template: template)
         session.autoAdvance = false

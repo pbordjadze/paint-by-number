@@ -241,6 +241,8 @@ nonisolated struct MarginariumWashRenderer: TextRenderer {
             for run in stretch {
                 band.rect = band.rect.union(run.rect)
                 if let last = band.parts.last, last.opacity == run.wash.opacity {
+                    // Right-to-left lines list their runs from the right: a run extends the part leftwards.
+                    band.parts[band.parts.count - 1].minX = min(last.minX, run.rect.minX)
                     band.parts[band.parts.count - 1].maxX = max(last.maxX, run.rect.maxX)
                 } else {
                     band.parts.append(Part(minX: run.rect.minX, maxX: run.rect.maxX, opacity: run.wash.opacity))

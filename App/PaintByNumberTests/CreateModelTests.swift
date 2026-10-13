@@ -169,6 +169,51 @@ struct CreateModelTests {
         #expect(model.preview == nil)
     }
 
+    /// A template made from a photo no longer there is not kept for the next one: the generation
+    /// that finishes after the photo went finds `made` cleared and leaves it so.
+    @Test func aGenerationFinishingAfterThePhotoWentKeepsNothing() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.phase == .generating }
+        model.fail(.cameraCapture)
+        try await Task.sleep(for: .seconds(3))
+        #expect(model.rememberedBases == 0 && model.preview == nil)
+
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+        #expect(model.rememberedBases > 0)
+        model.load(sample: try #require(Sample.named("great-wave")))
+        #expect(model.rememberedBases == 0)
+        model.cancelAll()
+    }
+
+    /// Refine opens only on the final template: not while the settings are chosen, on a draft, or
+    /// on the template of settings the sliders have left.
+    @Test func refineOpensOnlyOnTheFinalTemplate() async throws {
+        let model = CreateModel()
+        #expect(!model.canRefine)
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.phase == .suggesting }
+        #expect(!model.canRefine)
+        try await waitUntil { model.isFinal }
+        #expect(model.canRefine)
+
+        // The sliders moved: the template on screen is the earlier settings'.
+        model.setAdjusting(true)
+        model.colorCount = 9
+        model.settingsChanged()
+        #expect(!model.canRefine)
+        try await waitUntil(polling: .milliseconds(5)) {
+            model.settingsChanged()
+            return model.preview?.isDraft == true && model.preview?.settings?.colorCount == 9
+        }
+        #expect(!model.canRefine)
+        model.setAdjusting(false)
+        try await waitUntil { model.isFinal }
+        #expect(model.canRefine)
+        model.cancelAll()
+    }
+
     /// The typed name is trimmed; an empty one falls back to the sample's name or, for a
     /// photo, the date. A new photo starts over with its own default.
     @Test func titleFallsBackToTheDefault() throws {

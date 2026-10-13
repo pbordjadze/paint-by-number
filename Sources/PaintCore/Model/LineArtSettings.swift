@@ -20,14 +20,6 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
 
         /// Whether templates of this style are made from an edge map (and eyes): all but classic.
         public var usesEdgeMap: Bool { self != .classic }
-
-        /// The line art a template of this style carries; nil for classic templates.
-        public var templateStyle: TemplateLineArt.Style? {
-            switch self {
-            case .classic: nil
-            case .coloringBook: .coloringBook
-            }
-        }
     }
 
     /// What happens where a drawn line runs between two cells of the same paint.
@@ -136,14 +128,17 @@ public struct LineArtSettings: Sendable, Hashable, Codable {
         }
     }
 
-    /// Clamped copy: thresholds in 0...1 and ordered (detail ≤ outline).
+    /// Clamped copy: thresholds in 0...1 and ordered (detail ≤ outline). A value that is not a
+    /// number (`pbn --line-art … nan`) becomes the style's default, as `max` and `min` pass NaN on.
     public var normalized: LineArtSettings {
+        let d = LineArtSettings(style: style)
+        func clamp(_ x: Float, _ fallback: Float, _ upper: Float) -> Float { x.isFinite ? min(max(x, 0), upper) : fallback }
         var s = self
-        s.detailThreshold = min(max(detailThreshold, 0), 1)
-        s.outlineThreshold = min(max(outlineThreshold, s.detailThreshold), 1)
-        s.minimumStrokeLength = min(max(minimumStrokeLength, 0), 200)
-        s.gapBridging = min(max(gapBridging, 0), 40)
-        s.lineSmoothing = min(max(lineSmoothing, 0), 1)
+        s.detailThreshold = clamp(detailThreshold, d.detailThreshold, 1)
+        s.outlineThreshold = min(max(clamp(outlineThreshold, d.outlineThreshold, 1), s.detailThreshold), 1)
+        s.minimumStrokeLength = clamp(minimumStrokeLength, d.minimumStrokeLength, 200)
+        s.gapBridging = clamp(gapBridging, d.gapBridging, 40)
+        s.lineSmoothing = clamp(lineSmoothing, d.lineSmoothing, 1)
         return s
     }
 

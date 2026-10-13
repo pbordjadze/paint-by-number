@@ -73,6 +73,8 @@ final class MarkupCanvasView: PKCanvasView {
         use(draft.tool, penColor: draft.penColor)
         markingChanged()
         isAccessibilityElement = true
+        // Without it VoiceOver takes the touches, and the hint's promise to draw couldn't be kept.
+        accessibilityTraits = .allowsDirectInteraction
         accessibilityLabel = String(localized: "feedback.canvas.label", defaultValue: "Painting",
                                     comment: "VoiceOver label of the painting while feedback is being drawn on it")
         accessibilityHint = String(localized: "feedback.canvas.hint",

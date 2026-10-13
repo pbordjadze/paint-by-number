@@ -138,7 +138,8 @@ struct RefineView: View {
 
     init(model: CreateModel) {
         self.model = model
-        _base = State(initialValue: model.preview)
+        // Never a draft: its canvas is smaller than the one the edits will be laid on.
+        _base = State(initialValue: model.preview.flatMap { $0.isDraft ? nil : $0 })
         // Without a drawing to draw on (its line art failed), only the brushes are left.
         _tool = State(initialValue: model.hasLineArtInput ? .pen : .more)
     }
@@ -189,7 +190,7 @@ struct RefineView: View {
                     .frame(width: picture.width, height: picture.height)
                     .position(x: picture.midX, y: picture.midY)
                 let showsPhoto = backdrop == .photo || base == nil
-                let painted = backdrop == .painting && base != nil ? painting?.image : nil
+                let painted = backdrop == .painting && base != nil && painting?.preview == base?.id ? painting?.image : nil
                 ZStack {
                     if showsPhoto {
                         Image(decorative: photo, scale: 1)
@@ -586,7 +587,7 @@ struct RefineView: View {
     /// painting never lags the drawing.
     private func land() async {
         let preview = model.preview, settled = model.settledEdits
-        if let preview, !preview.isDraft || base == nil {
+        if let preview, !preview.isDraft {
             var image = painting
             if backdrop == .painting, painting?.preview != preview.id {
                 let template = preview.template
@@ -596,7 +597,8 @@ struct RefineView: View {
                 if let made { image = (preview.id, made) }
             }
             base = preview
-            painting = image
+            // Only a painting of this template: an older one would show lines that are gone.
+            painting = image?.preview == preview.id ? image : nil
         }
         submitted.removeAll { $0.id <= settled }
     }
@@ -759,6 +761,12 @@ struct RefineView: View {
         dismiss()
     }
 
+    /// Keeps the changes, a curve waiting to be bent among them (as switching tools keeps it).
+    private func done() {
+        finishCurve()
+        dismiss()
+    }
+
     /// The number of changes, for VoiceOver.
     static func changes(_ count: Int) -> String {
         guard count > 0 else {
@@ -790,7 +798,7 @@ struct RefineView: View {
                 .accessibilityIdentifier("refine-redo")
         }
         ToolbarItem(placement: .confirmationAction) {
-            Button("Done", systemImage: "checkmark") { dismiss() }
+            Button("Done", systemImage: "checkmark", action: done)
                 .accessibilityIdentifier("refine-done")
         }
     }

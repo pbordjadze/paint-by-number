@@ -29,27 +29,48 @@ final class AccessibilityUITests: XCTestCase {
 
     /// A long press on a swatch shows its number, nickname, shade and hex code, and leaves the
     /// selected color alone.
+    ///
+    /// The hold is 2 s, four times the gesture's 0.5 s, because a main thread that is late at
+    /// touch-down (the canvas waiting for a drawable) can let the touch-up arrive first and end the
+    /// press as a tap, which selects the swatch. That is an acceptable result for a person but
+    /// not for this test: a miss is told apart by its selection, and the press is made again on
+    /// another swatch, up to three times.
     @MainActor
     func testLongPressShowsTheColorDetails() throws {
         let app = launch(["-demo", "paint-ax"])
-        let swatches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-'")).allElementsBoundByIndex
         let window = app.windows.firstMatch.frame
-        let target = try XCTUnwrap(swatches.first { !$0.isSelected && window.contains($0.frame) })
-        let selectedBefore = swatches.first(where: \.isSelected)?.identifier
-        let parts = target.label.components(separatedBy: ", ")
-        XCTAssertEqual(parts.count, 3, target.label)
-        XCTAssertTrue(waitUntil(timeout: 10) { target.isHittable && !target.isSelected }, "The swatch isn't ready for a press")
-        target.press(forDuration: 1)
         let details = app.descendants(matching: .any)["swatch-details"]
-        guard details.waitForExistence(timeout: 10) else {
-            attachScreenshot(of: app, named: "paint-swatch-details-missing")
+        var target = ""
+        var parts: [String] = []
+        var selectedBefore: String?
+        var shown = false
+        for attempt in 1...3 {
+            // One snapshot gives the selected swatch and the target, so that no further queries
+            // load the main thread just before the press.
+            let swatches = Self.swatches(in: try app.snapshot())
+            selectedBefore = swatches.first { $0.isSelected }?.identifier
+            let chosen = try XCTUnwrap(swatches.first { !$0.isSelected && window.contains($0.frame) })
+            target = chosen.identifier
+            parts = chosen.label.components(separatedBy: ", ")
+            XCTAssertEqual(parts.count, 3, chosen.label)
+            let swatch = app.buttons[target]
+            XCTAssertTrue(waitUntil(timeout: 10) { swatch.isHittable && !swatch.isSelected }, "The swatch isn't ready for a press")
+            swatch.press(forDuration: 2)
+            if details.waitForExistence(timeout: 3) {
+                shown = true
+                break
+            }
+            // The miss selected the target: the next attempt starts from that.
+            attachScreenshot(of: app, named: "paint-swatch-details-missing-\(attempt)")
+        }
+        guard shown else {
             attachTree(of: app, named: "paint-swatch-details-missing-tree")
-            XCTFail("Long-pressing \(target.identifier) showed no details")
+            XCTFail("Long-pressing \(target) showed no details")
             return
         }
         attachScreenshot(of: app, named: "paint-swatch-details")
         let number = app.descendants(matching: .any)["swatch-details-number"]
-        XCTAssertTrue(number.label.contains(String(target.identifier.dropFirst("swatch-".count))), number.label)
+        XCTAssertTrue(number.label.contains(String(target.dropFirst("swatch-".count))), number.label)
         XCTAssertTrue(app.descendants(matching: .any)["swatch-details-name"].label.contains(parts[1]))
         XCTAssertTrue(app.descendants(matching: .any)["swatch-details-shade"].label.localizedCaseInsensitiveContains(parts[2]))
         let hex = app.descendants(matching: .any)["swatch-details-hex"].label
@@ -59,6 +80,17 @@ final class AccessibilityUITests: XCTestCase {
         XCTAssertTrue(details.waitForNonExistence(timeout: 10), "The details didn't close")
         let selectedAfter = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'swatch-' AND selected == true")).firstMatch
         XCTAssertEqual(selectedAfter.identifier, selectedBefore, "The long press changed the selected color")
+    }
+
+    /// The painting screen's swatches, from one snapshot of the app.
+    private static func swatches(in snapshot: any XCUIElementSnapshot) -> [any XCUIElementSnapshot] {
+        var found: [any XCUIElementSnapshot] = []
+        func visit(_ element: any XCUIElementSnapshot) {
+            if element.elementType == .button, element.identifier.hasPrefix("swatch-") { found.append(element) }
+            element.children.forEach(visit)
+        }
+        visit(snapshot)
+        return found
     }
 
     /// The canvas offers the unpainted areas of the selected color to VoiceOver, top to bottom,

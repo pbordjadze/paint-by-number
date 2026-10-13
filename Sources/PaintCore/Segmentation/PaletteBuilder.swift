@@ -34,11 +34,15 @@ enum PaletteBuilder {
         // seeding draws random numbers, so seeds are drawn in order and the searches run
         // concurrently.
         var rng = SplitMix64(seed: p.seed)
+        // A task's cancellation shows only on the calling thread, and the restarts run on several:
+        // the first check that sees it stops them all.
+        let flag = CancellationFlag()
+        let check = CancellationCheck { flag.isSet || (cancel.isCancelled && flag.set()) }
         let seeds = (0..<p.paletteRestarts).map { _ in seedPlusPlus(samples, k: k, rng: &rng) }
         let results = Parallel.mapBands(seeds.count) { range in
             range.map { r in
                 Result { () throws -> (centers: [SIMD3<Float>], cost: Float) in
-                    let centers = try search(samples, seeds: seeds[r], k: k, separation: separation, cancel: cancel)
+                    let centers = try search(samples, seeds: seeds[r], k: k, separation: separation, cancel: check)
                     return (centers, totalCost(samples, centers: centers))
                 }
             }

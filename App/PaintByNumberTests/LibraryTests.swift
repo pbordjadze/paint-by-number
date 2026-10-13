@@ -322,6 +322,32 @@ struct LibraryTests {
 
     /// Progress that exists but can't be read this time is not "missing": opening fails and
     /// nothing is written over it, so the painted areas survive to the next attempt.
+    @Test func unreadableTemplateIsKept() async throws {
+        let library = makeLibrary()
+        let artwork = try await library.create(draft())
+        let url = library.store.url(.template, of: artwork.id)
+        let saved = try Data(contentsOf: url)
+        // A directory in the file's place reads with an error other than "no such file" or
+        // "corrupt": not damage, so no Regenerate is offered.
+        try FileManager.default.removeItem(at: url)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
+        await #expect(throws: Library.OpenError.unreadable) { try await library.loadForPainting(artwork.id) }
+        await #expect(throws: Library.OpenError.unreadable) {
+            try await library.regenerate(artwork: artwork.id, settings: artwork.settings)
+        }
+        await library.restart(artwork.id)
+        var isDirectory: ObjCBool = false
+        #expect(FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue)
+
+        try FileManager.default.removeItem(at: url)
+        try saved.write(to: url)
+        #expect(try await library.loadForPainting(artwork.id).template == Fixtures.stripes())
+
+        // A file that is gone is damage, as before.
+        try FileManager.default.removeItem(at: url)
+        await #expect(throws: Library.OpenError.damaged(canRegenerate: false)) { try await library.loadForPainting(artwork.id) }
+    }
+
     @Test func unreadableProgressIsKept() async throws {
         let library = makeLibrary()
         let artwork = try await library.create(draft(painted: [0, 2]))
@@ -721,8 +747,9 @@ struct LibraryTests {
         let library = makeLibrary()
         let artwork = try await library.create(draft())
         faults.fail(.thumbnail)
-        await library.refreshThumbnail(artwork.id, progress: progress(painting: [0]))
+        let written = await library.refreshThumbnail(artwork.id, progress: progress(painting: [0]))
         await library.flush()
+        #expect(!written)
         #expect(library.writeFailures.isEmpty)
         #expect(library.artwork(with: artwork.id)?.thumbnailVersion == artwork.thumbnailVersion)
     }

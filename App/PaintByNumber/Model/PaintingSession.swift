@@ -90,6 +90,9 @@ final class PaintingSession {
     let nicknameVersion: Int
     /// Fills of the stroke in progress (nil between strokes).
     @ObservationIgnored private var strokeFills: [Int]?
+    /// The color on the brush when the stroke in progress began: the stroke keeps painting it
+    /// though finishing it moves the selection on (`paint`).
+    @ObservationIgnored private var strokeColor: Int?
 
     /// Saved progress that belongs to a different template (e.g. a stale or damaged file).
     nonisolated struct ProgressMismatch: Error, Equatable {
@@ -231,7 +234,7 @@ final class PaintingSession {
     /// imprecise tap still hit a small region of the selected color nearby.
     @discardableResult
     func tap(at point: SIMD2<Float>, tolerance: Float) -> PaintEvent? {
-        guard let color = selectedColor, let hit = template.region(at: point) else { return nil }
+        guard let color = brushColor, let hit = template.region(at: point) else { return nil }
         let target: Int?
         if !progress.isPainted(hit) && colorOf(hit) == color {
             target = hit
@@ -263,32 +266,40 @@ final class PaintingSession {
     /// brushes grow; the capsule scan keeps the cost proportional to the area swept.
     static let maxBrushRadius: Float = 96
 
+    /// The color a tap or drag paints: the one a stroke began with while one is under way,
+    /// else the selected one.
+    private var brushColor: Int? { strokeColor ?? selectedColor }
+
     /// Paints every region of the selected color that a brush of `radius` touches moving
     /// from `a` to `b`, in the order it reaches them (replays follow the stroke).
     @discardableResult
     func drag(from a: SIMD2<Float>, to b: SIMD2<Float>, radius: Float) -> PaintEvent? {
-        guard let color = selectedColor else { return nil }
+        guard let color = brushColor else { return nil }
         let progress = self.progress
-        let eligible = template.regions.indices.map { !progress.isPainted($0) && colorOf($0) == color }
-        // Stroke parameter of the first contact per region; infinity = not touched.
-        var enter = [Float](repeating: .infinity, count: eligible.count)
-        var touched: [Int] = []
-        forEachRegion(inCapsuleFrom: a, to: b, radius: min(max(0, radius), Self.maxBrushRadius), among: eligible) { region, t in
-            guard t < enter[region] else { return }
-            if enter[region] == .infinity { touched.append(region) }
+        // Stroke parameter of the first contact per region it touches.
+        var enter: [Int: Float] = [:]
+        forEachRegion(
+            inCapsuleFrom: a, to: b, radius: min(max(0, radius), Self.maxBrushRadius),
+            where: { !progress.isPainted($0) && colorOf($0) == color }
+        ) { region, t in
+            guard t < enter[region, default: .infinity] else { return }
             enter[region] = t
         }
-        guard !touched.isEmpty else { return nil }
-        let found = touched.sorted { (enter[$0], $0) < (enter[$1], $1) }
+        guard !enter.isEmpty else { return nil }
+        let found = enter.keys.sorted { (enter[$0]!, $0) < (enter[$1]!, $1) }
         return paint(found, from: b, animated: true)
     }
 
     /// Brackets a drag or Pencil stroke so everything it paints undoes together.
-    func beginStroke() { strokeFills = [] }
+    func beginStroke() {
+        strokeFills = []
+        strokeColor = selectedColor
+    }
 
     func endStroke() {
         guard let fills = strokeFills else { return }
         strokeFills = nil
+        strokeColor = nil
         guard let last = fills.last else { return }
         emit(.strokeEnded(regions: fills))
         if flowsToNextArea {
@@ -338,6 +349,8 @@ final class PaintingSession {
         remainingByColor[colorOf(region)] += 1
         revision += 1
         updateMilestones(colors: [colorOf(region)])
+        // A reopened finished painting has no color on the brush: the undone area's.
+        if selectedColor == nil { select(color: colorOf(region)) }
         canvas?.session(self, didUnpaint: [region])
         emit(.undone(region: region))
         return region
@@ -466,12 +479,12 @@ final class PaintingSession {
         return best
     }
 
-    /// Visits the pixels of `among` regions within `r` of the segment a→b (the area a brush
+    /// Visits the pixels of the eligible regions within `r` of the segment a→b (the area a brush
     /// of radius `r` sweeps; pixel centres on the canvas grid), with the stroke parameter
     /// 0…1 at which the moving brush first covers each. This is the continuous limit of
     /// stamping the disc every canvas unit, at a cost proportional to the swept area.
     private func forEachRegion(
-        inCapsuleFrom a: SIMD2<Float>, to b: SIMD2<Float>, radius r: Float, among eligible: [Bool],
+        inCapsuleFrom a: SIMD2<Float>, to b: SIMD2<Float>, radius r: Float, where isEligible: (Int) -> Bool,
         _ body: (_ region: Int, _ enter: Float) -> Void
     ) {
         let map = template.regionMap
@@ -485,39 +498,43 @@ final class PaintingSession {
         let y0 = max(0, Int((min(a.y, b.y) - r - pad).rounded(.down)))
         let y1 = min(map.height - 1, Int((max(a.y, b.y) + r + pad).rounded(.up)))
         guard y0 <= y1 else { return }
+        // Eligibility is asked once per run of pixels of one region, not per pixel.
+        var lastRegion = -1, lastEligible = false
         map.storage.withUnsafeBufferPointer { regions in
-            eligible.withUnsafeBufferPointer { eligible in
-                for y in y0...y1 {
-                    let cy = Float(y) + 0.5
-                    // Only the part of the segment within r (vertically) of this row can
-                    // bring its pixels within r.
-                    var t0: Float = 0, t1: Float = 1
-                    if d.y != 0 {
-                        let u = (cy - r - pad - a.y) / d.y, v = (cy + r + pad - a.y) / d.y
-                        t0 = max(0, min(u, v))
-                        t1 = min(1, max(u, v))
-                        if t0 > t1 { continue }
-                    } else if abs(cy - a.y) > r + pad {
-                        continue
+            for y in y0...y1 {
+                let cy = Float(y) + 0.5
+                // Only the part of the segment within r (vertically) of this row can
+                // bring its pixels within r.
+                var t0: Float = 0, t1: Float = 1
+                if d.y != 0 {
+                    let u = (cy - r - pad - a.y) / d.y, v = (cy + r + pad - a.y) / d.y
+                    t0 = max(0, min(u, v))
+                    t1 = min(1, max(u, v))
+                    if t0 > t1 { continue }
+                } else if abs(cy - a.y) > r + pad {
+                    continue
+                }
+                let xa = a.x + d.x * t0, xb = a.x + d.x * t1
+                let x0 = max(0, Int((min(xa, xb) - r - pad).rounded(.down)))
+                let x1 = min(map.width - 1, Int((max(xa, xb) + r + pad).rounded(.up)))
+                guard x0 <= x1 else { continue }
+                let row = y * map.width
+                for x in x0...x1 {
+                    let region = Int(regions[row + x])
+                    if region != lastRegion {
+                        lastRegion = region
+                        lastEligible = isEligible(region)
                     }
-                    let xa = a.x + d.x * t0, xb = a.x + d.x * t1
-                    let x0 = max(0, Int((min(xa, xb) - r - pad).rounded(.down)))
-                    let x1 = min(map.width - 1, Int((max(xa, xb) + r + pad).rounded(.up)))
-                    guard x0 <= x1 else { continue }
-                    let row = y * map.width
-                    for x in x0...x1 {
-                        let region = Int(regions[row + x])
-                        guard eligible[region] else { continue }
-                        let p = SIMD2(Float(x) + 0.5, cy) - a
-                        let along = len2 > 0 ? simd_dot(p, d) / len2 : 0
-                        guard simd_length_squared(p - d * min(max(along, 0), 1)) <= r2 else { continue }
-                        var enter: Float = 0
-                        if len > 0 {
-                            let perp2 = max(0, simd_length_squared(p) - along * along * len2)
-                            enter = min(max(along - max(0, r2 - perp2).squareRoot() / len, 0), 1)
-                        }
-                        body(region, enter)
+                    guard lastEligible else { continue }
+                    let p = SIMD2(Float(x) + 0.5, cy) - a
+                    let along = len2 > 0 ? simd_dot(p, d) / len2 : 0
+                    guard simd_length_squared(p - d * min(max(along, 0), 1)) <= r2 else { continue }
+                    var enter: Float = 0
+                    if len > 0 {
+                        let perp2 = max(0, simd_length_squared(p) - along * along * len2)
+                        enter = min(max(along - max(0, r2 - perp2).squareRoot() / len, 0), 1)
                     }
+                    body(region, enter)
                 }
             }
         }

@@ -20,6 +20,7 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     private var nextVoice = 0
     private var notes: [AVAudioPCMBuffer] = []
     private var thud: AVAudioPCMBuffer?
+    private var isBuilt = false
     private var isSetUp = false
     private var lastNote: ContinuousClock.Instant?
     private let clock = ContinuousClock()
@@ -81,8 +82,9 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
             return engine.isRunning
         }
         let start = clock.now
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
+        // The graph is built once: a start that fails (a call holding the audio session) is retried
+        // by the next sound without attaching another ten nodes.
+        if !isBuilt {
             for _ in 0..<10 {
                 let voice = AVAudioPlayerNode()
                 engine.attach(voice)
@@ -90,11 +92,15 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
                 voices.append(voice)
             }
             engine.mainMixerNode.outputVolume = 0.8
+            notes = Self.scale.map { buffer(ToneSynth.kalimba(frequency: $0, sampleRate: format.sampleRate)) }
+            thud = buffer(ToneSynth.thud(sampleRate: format.sampleRate))
+            isBuilt = true
+        }
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
             engine.prepare()
             try engine.start()
             for voice in voices { voice.play() }
-            notes = Self.scale.map { buffer(ToneSynth.kalimba(frequency: $0, sampleRate: format.sampleRate)) }
-            thud = buffer(ToneSynth.thud(sampleRate: format.sampleRate))
             isSetUp = true
             let took = clock.now - start
             Log.feedback.notice("Sounds ready in \(String(describing: took), privacy: .public)")

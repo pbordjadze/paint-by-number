@@ -177,6 +177,9 @@ final class CreateModel {
     /// back) lays the edits on it again without generating.
     @ObservationIgnored private var made: [Made] = []
 
+    /// How many base templates are kept for stepping back (`made`).
+    var rememberedBases: Int { made.count }
+
     private struct Made {
         let settings: GenerationSettings
         /// The generator inputs it was made with (`TemplateRefinements.generatorInputs`).
@@ -235,6 +238,11 @@ final class CreateModel {
         default: false
         }
     }
+
+    /// Refine can open: it draws on the final template, because its edits are in the canvas units
+    /// of the template it is shown and are laid unscaled on whichever template is made next (a
+    /// draft's canvas is smaller than the full one's, and a Detail change moves the full one's).
+    var canRefine: Bool { !isChoosingSettings && isFinal }
 
     /// The preview matches the settings and refinements at full resolution.
     var isFinal: Bool {
@@ -300,6 +308,8 @@ final class CreateModel {
         settingsOrigin = nil
         refinements = TemplateRefinements()
         made = []
+        // A generation still finishing belonged to the photo that is gone.
+        loadID += 1
         forgetEdits()
         phase = .failed(error.localizedDescription)
     }
@@ -545,6 +555,7 @@ final class CreateModel {
         }
         generation += 1
         let id = generation
+        let load = loadID
         let input = draft ? (draftImage ?? source.image) : source.image
         if !draft {
             phase = .generating
@@ -573,8 +584,9 @@ final class CreateModel {
                     aspect: Float(source.image.width) / Float(source.image.height), settings: used, recorded: settings,
                     isDraft: draft, style: previewStyle, progress: draft ? nil : report)
             }
-            // Kept even if cancelled meanwhile: it is what these settings and inputs make.
-            if let base = shown.trail?.base { remember(base, settings: settings, refinements: inputs) }
+            // Kept even if cancelled meanwhile: it is what these settings and inputs make of this
+            // photo, not of the one that replaced it (`made` was cleared for that one).
+            if load == loadID, let base = shown.trail?.base { remember(base, settings: settings, refinements: inputs) }
             try Task.checkCancellation()
             // A draft finishing after a newer generation began (the resting thumb's full
             // resolution) would replace it with less.

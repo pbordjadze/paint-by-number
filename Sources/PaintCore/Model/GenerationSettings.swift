@@ -57,8 +57,9 @@ public struct GenerationSettings: Sendable, Hashable, Codable {
     public var normalized: GenerationSettings {
         var s = self
         s.colorCount = min(max(colorCount, Self.colorCountRange.lowerBound), Self.colorCountRange.upperBound)
-        s.detail = min(max(detail, 0), 1)
-        s.smoothness = min(max(smoothness, 0), 1)
+        // NaN passes through `min` and `max` and would trap in `workingLongSide`.
+        s.detail = detail.isFinite ? min(max(detail, 0), 1) : GenerationSettings().detail
+        s.smoothness = smoothness.isFinite ? min(max(smoothness, 0), 1) : GenerationSettings().smoothness
         s.lineArt = lineArt.normalized
         s.tuning = tuning.normalized
         return s

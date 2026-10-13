@@ -257,7 +257,7 @@ final class Library {
         do {
             template = try await Background.run { try Library.readTemplate(id, from: store) }
         } catch {
-            return  // written by a newer app
+            return  // written by a newer app, or unreadable just now: nothing changes
         }
         guard var artwork = artwork(with: id), !artwork.needsNewerApp else { return }
         if let template { artwork.adopt(template, settings: artwork.settings) }
@@ -292,18 +292,21 @@ final class Library {
         }
     }
 
-    /// Re-renders the thumbnail, then publishes its new version to the gallery.
-    func refreshThumbnail(_ id: UUID, template: Template? = nil, progress: PaintProgress) async {
-        guard artwork(with: id)?.needsNewerApp != true else { return }
+    /// Re-renders the thumbnail, then publishes its new version to the gallery. False when it
+    /// didn't reach the disk, so the caller can try again.
+    @discardableResult
+    func refreshThumbnail(_ id: UUID, template: Template? = nil, progress: PaintProgress) async -> Bool {
+        guard artwork(with: id)?.needsNewerApp != true else { return false }
         let written = await enqueue(id) { store in
             let t = try template ?? store.readTemplate(id)
             guard let png = Library.thumbnailPNG(t, painted: progress.painted) else { return }
             try store.writeThumbnail(png, for: id)
         }.value
-        guard written, var artwork = artwork(with: id) else { return }
+        guard written, var artwork = artwork(with: id) else { return written }
         artwork.thumbnailVersion += 1
         replace(artwork, resort: false)
         persistMeta(artwork)
+        return true
     }
 
     // MARK: Deleting (undoable)
@@ -456,15 +459,27 @@ final class Library {
     // MARK: Internals
 
     /// An artwork's template, or nil when it is damaged. A template from a newer app throws
-    /// `OpenError.needsNewerApp`: it is kept, never replaced.
+    /// `OpenError.needsNewerApp` and one that can't be read now (an I/O or protection error,
+    /// not a missing or corrupt file) `OpenError.unreadable`: both are kept, never replaced.
     private nonisolated static func readTemplate(_ id: UUID, from store: ArtworkStore) throws -> Template? {
         do {
             return try store.readTemplate(id)
         } catch let error as Template.CodingError where error.requiresNewerReader {
             throw OpenError.needsNewerApp
+        } catch let error as CocoaError where !Self.isDamage(error) {
+            Log.library.error("Template of \(id.uuidString, privacy: .public) can't be read: \(String(describing: error), privacy: .public)")
+            throw OpenError.unreadable
         } catch {
             Log.library.error("Template of \(id.uuidString, privacy: .public) is unreadable: \(String(describing: error), privacy: .public)")
             return nil
+        }
+    }
+
+    /// A file that is gone or whose content is bad, as opposed to one that failed to be read.
+    private nonisolated static func isDamage(_ error: CocoaError) -> Bool {
+        switch error.code {
+        case .fileNoSuchFile, .fileReadNoSuchFile, .fileReadCorruptFile: true
+        default: false
         }
     }
 

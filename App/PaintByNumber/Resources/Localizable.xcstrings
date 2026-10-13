@@ -10941,6 +10941,18 @@
         }
       }
     },
+    "marginarium.note.showWords" : {
+      "comment" : "VoiceOver hint of a margin note beside the story, which has words of the story it is about; activating it highlights them in the story",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows these words in the story"
+          }
+        }
+      }
+    },
     "marginarium.goodnight.colophon" : {
       "comment" : "The Marginarium: under the last line of a chapter Claude narrates, beside its pet; Colophon is the pet's name",
       "extractionState" : "manual",

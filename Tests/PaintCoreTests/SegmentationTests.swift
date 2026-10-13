@@ -22,6 +22,25 @@ struct SegmentationTests {
         TestScenes.checkInvariants(try TestScenes.segment(TestScenes.scene(seed: 3), settings: settings), settings: settings)
     }
 
+    /// The palette restarts run on several threads, but a task's cancellation shows only on the
+    /// calling one: the first check that sees it stops the rest, and the build ends cancelled.
+    @Test func paletteBuildStopsWhenOnlyTheCallingThreadSeesCancellation() throws {
+        let w = 48, h = 48
+        let colors = Grid(width: w, height: h, storage: (0..<(w * h)).map { i in
+            SIMD4(Float(i % w) / Float(w), Float((i * 7) % 13) / 13 - 0.5, Float(i / w) / Float(h) - 0.5, 0)
+        })
+        let p = SegmentationParameters(settings: GenerationSettings(colorCount: 12), width: w, height: h)
+        let importance = [Float](repeating: 1, count: w * h)
+        let caller = ObjectIdentifier(Thread.current)
+        let callerOnly = CancellationCheck { ObjectIdentifier(Thread.current) == caller }
+        #expect(throws: CancellationError.self) {
+            try PaletteBuilder.build(colors: colors, importance: importance, parameters: p, cancel: callerOnly)
+        }
+        let first = try PaletteBuilder.build(colors: colors, importance: importance, parameters: p, cancel: .none)
+        #expect(!first.isEmpty)
+        #expect(try PaletteBuilder.build(colors: colors, importance: importance, parameters: p, cancel: .none) == first)
+    }
+
     @Test(arguments: [6, 24, 60, 150])
     func paletteSpacing(colors: Int) throws {
         let settings = GenerationSettings(colorCount: colors, detail: 0.5)

@@ -96,8 +96,9 @@ struct TemplatePreviewView: View {
         .navigationTitle("New Painting")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
-        // Shrink Preview is the way back from the enlarged preview.
-        .navigationBarBackButtonHidden(isEnlarged)
+        // Shrink Preview is the way back from the enlarged preview. There is none while Start
+        // Painting saves: leaving then would open the painting from whichever flow closes next.
+        .navigationBarBackButtonHidden(isEnlarged || isStarting)
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
         #if DEBUG
@@ -158,6 +159,7 @@ struct TemplatePreviewView: View {
         if let onClose, !isEnlarged {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark", action: onClose)
+                    .disabled(isStarting)
             }
         }
         if isEnlarged {
@@ -175,8 +177,10 @@ struct TemplatePreviewView: View {
                     isRefining = true
                 }
                 // Without line art there is nothing to draw on; the detail brushes still work.
+                // Nor on a draft or an earlier settings' template: the edits are made in the canvas
+                // units of the template Refine opens on.
                 .disabled(
-                    model.preview == nil || model.isChoosingSettings
+                    !model.canRefine || isStarting
                         || !(model.hasLineArtInput || Preferences().detailBrushes))
                 .accessibilityValue(RefineView.changes(model.refinements.changeCount))
                 .accessibilityIdentifier("refine")
@@ -347,8 +351,15 @@ struct TemplatePreviewView: View {
     /// The settings a slider tunes.
     private enum Setting: Hashable { case colors, detail, smoothness, lines }
 
+    /// Locked while Start Painting makes the painting: a change then would make the template again
+    /// under it.
     @ViewBuilder
     private func slider(_ setting: Setting) -> some View {
+        sliderBody(setting).disabled(isStarting)
+    }
+
+    @ViewBuilder
+    private func sliderBody(_ setting: Setting) -> some View {
         switch setting {
         case .colors:
             SettingSlider(
@@ -410,6 +421,7 @@ struct TemplatePreviewView: View {
                     .chipBackground(Theme.paper)
                 }
                 .buttonStyle(.plain)
+                .disabled(isStarting)
                 .accessibilityLabel("Reset to Suggested")
                 .accessibilityValue("Custom")
             } else {
@@ -463,8 +475,10 @@ struct TemplatePreviewView: View {
                 try await onStart()
             } catch {
                 startError = error.localizedDescription
+                isStarting = false
             }
-            isStarting = false
+            // Started: the flow closes, and this stays set until it has, so a second tap during
+            // the dismissal can't save the painting again.
         }
     }
 
