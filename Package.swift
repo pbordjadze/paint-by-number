@@ -10,6 +10,7 @@ let package = Package(
     platforms: [.iOS("18.0"), .macOS("15.0")],
     products: [
         .library(name: "PaintCore", targets: ["PaintCore"]),
+        .library(name: "MakingOf", targets: ["MakingOf"]),
         .executable(name: "pbn", targets: ["pbn"]),
     ],
     targets: [
@@ -17,6 +18,14 @@ let package = Package(
             name: "PaintCore",
             swiftSettings: [
                 // The pipeline must stay fast in Debug app builds too.
+                .unsafeFlags(["-O"], .when(configuration: .debug)),
+                .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
+            ]
+        ),
+        .target(
+            name: "MakingOf",
+            dependencies: ["PaintCore"],
+            swiftSettings: [
                 .unsafeFlags(["-O"], .when(configuration: .debug)),
                 .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
             ]
@@ -29,6 +38,7 @@ let package = Package(
             ]
         ),
         .testTarget(name: "PaintCoreTests", dependencies: ["PaintCore"], resources: [.copy("Fixtures")]),
+        .testTarget(name: "MakingOfTests", dependencies: ["MakingOf", "PaintCore"], resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v6]
 )

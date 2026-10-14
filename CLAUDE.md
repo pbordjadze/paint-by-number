@@ -12,10 +12,10 @@ before planning app work).
 
 ## Map
 
-- `Package.swift`: `PaintCore`, `pbn`, `PaintCoreTests`. The Xcode project builds PaintCore from
-  this package (local reference `..`), so its flags change the app's builds too (release
-  `-Ounchecked`); its iOS 18 / macOS 15 platforms are only a floor (the app's 26.0 is the
-  project's).
+- `Package.swift`: `PaintCore`, `pbn`, `PaintCoreTests`, and the separate `MakingOf`,
+  `MakingOfTests`. The Xcode project builds PaintCore from this package (local reference `..`), so
+  its flags change the app's builds too (release `-Ounchecked`); its iOS 18 / macOS 15 platforms
+  are only a floor (the app's 26.0 is the project's).
 - `Sources/PaintCore`: the portable, dependency-free pipeline (builds on Linux too).
   `TemplateGenerator.generate(from:importance:lineArt:…)` composes the stages, timed by
   `StageClock`; `TemplateGenerator.pipelineVersion` is recorded in every template.
@@ -57,6 +57,8 @@ before planning app work).
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
   `Commands.swift`, `Edit.swift` (`pbn edit`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
+- `Sources/MakingOf`: the making-of show's crew, planned and moved (`CrewPlan`'s doc comment; strict
+  `ShowSpec`); a port of `tools/factory/making_of_pets.py`, whose fixture the tests replay.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data);
   `layered-photo.ppm`, `layered-edges.pgm` and `shapes.ppm` are inputs that tests and the line
