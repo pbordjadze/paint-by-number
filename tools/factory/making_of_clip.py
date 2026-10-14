@@ -9,8 +9,9 @@ Usage:
 
 --pets draws the Lamp's pets (making_of_pets.py) from the app's Resources folder instead of dots.
 The show's spec (--spec, default App/PaintByNumber/Resources/making-of.json) sets the timing, each
-step's card (its methods' credit lines from ACKNOWLEDGEMENTS.md, printed letter for letter) and
-the crew's motion; --step, --crew (the first N pets of its order) and --pet-height override it.
+step's card (its caption, with its methods' credit lines from ACKNOWLEDGEMENTS.md as a footnote,
+printed letter for letter) and the crew's motion; --step, --crew (the first N pets of its order)
+and --pet-height override it.
 
 Timeline: the photo alone for INTRO seconds, six steps of STEP seconds, then the template held
 for OUTRO. In each step every worker makes VISITS stops (one per --stop-every seconds); the
@@ -58,7 +59,7 @@ CHARTER_ITALIC = os.path.join(FONT_DIR, 'c0649bt_.pfb')
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SPEC = os.path.join(ROOT, 'App', 'PaintByNumber', 'Resources', 'making-of.json')
-STEPS = []          # (id, [(authors, year, title)]) per step, from the spec and Acknowledgements
+STEPS = []          # (id, caption, [(authors, year, title)]) per step, from the spec and Acknowledgements
 
 
 def credits(names):
@@ -83,7 +84,7 @@ def load_spec(path):
     if spec.get('version') != 1 or len(spec['steps']) != 6:
         sys.exit(f'{path}: expected version 1 with six steps')
     INTRO, STEP, OUTRO = (float(spec['timing'][k]) for k in ('intro', 'step', 'outro'))
-    STEPS = [(st['id'], credits(st['methods'])) for st in spec['steps']]
+    STEPS = [(st['id'], st['caption'], credits(st['methods'])) for st in spec['steps']]
     GRID = float(spec['outlines']['grid'])
     crew = spec['crew']
     P = making_of_pets
@@ -333,8 +334,12 @@ def region_min(T, labels, count):
 
 
 class Cards:
-    def __init__(self, width):
+    """Each step's card, after Caroline: what the step does in a few plain words, and under it,
+    smaller and fainter like a footnote, the credit line of each paper it stands on."""
+
+    def __init__(self, width, footnote):
         self.width = width
+        self.footnote = footnote
         self.cache = {}
 
     def image(self, k):
@@ -343,26 +348,33 @@ class Cards:
         w = self.width
         img = Image.new('L', (w, CARD_BAND), 0)
         d = ImageDraw.Draw(img)
-        caps = ImageFont.truetype(CHARTER, 21)
-        title = ImageFont.truetype(CHARTER_ITALIC, 30)
-        y = 30
-        for authors, year, ttl in STEPS[k][1]:
-            line = f'{authors.upper()} · {year}'
-            d.text(((w - d.textlength(line, font=caps)) / 2, y), line, font=caps, fill=255)
-            y += 32
-            words, lines, cur = ttl.split(), [], ''
-            for word in words:
-                trial = (cur + ' ' + word).strip()
-                if d.textlength(trial, font=title) > w * 0.84 and cur:
+        caption = ImageFont.truetype(CHARTER, 31)
+        small = ImageFont.truetype(CHARTER, 16)
+        small_italic = ImageFont.truetype(CHARTER_ITALIC, 16)
+        _, text, cites = STEPS[k]
+        marks = ','.join('¹²³'[i] for i in range(len(cites)))
+        d.text(((w - d.textlength(text + marks, font=caption)) / 2, 54), text + marks, font=caption, fill=255)
+        y = 116
+        faint = int(255 * self.footnote)
+        for i, (authors, year, title) in enumerate(cites):
+            # the credit line letter for letter, the title in italics, wrapped to the card
+            runs = [(f'{"¹²³"[i]} {authors} · {year} · ', small)] + [(word + ' ', small_italic) for word in title.split()]
+            lines, cur, width_now = [], [], 0.0
+            for run, font in runs:
+                size = d.textlength(run, font=font)
+                if cur and width_now + size > w * 0.9:
                     lines.append(cur)
-                    cur = word
-                else:
-                    cur = trial
+                    cur, width_now = [], 0.0
+                cur.append((run, font))
+                width_now += size
             lines.append(cur)
-            for ln in lines:
-                d.text(((w - d.textlength(ln, font=title)) / 2, y), ln, font=title, fill=255)
-                y += 38
-            y += 18
+            for line in lines:
+                x = (w - sum(d.textlength(r, font=f) for r, f in line)) / 2
+                for run, font in line:
+                    d.text((x, y), run, font=font, fill=faint)
+                    x += d.textlength(run, font=font)
+                y += 22
+            y += 6
         a = np.asarray(img, dtype=np.float32) / 255
         self.cache[k] = a
         return a
@@ -656,7 +668,7 @@ def main():
     if a.motion:
         motion_report(pets, total, (W, H), pet_h, a.motion)
         return
-    cards = Cards(W)
+    cards = Cards(W, float(spec['cards']['footnote']))
     frame_h = H + CARD_BAND
     frame_h += frame_h % 2
     ink_rgb = INK

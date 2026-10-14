@@ -1,5 +1,5 @@
 {
-  "about": "The making-of show: the one spec its renderers read (tools/factory/making_of_clip.py now, the app later). Times are seconds; crew lengths are in the pet's own height; 'height' is a share of the picture's height. Each step names the methods its card credits, by their names in Acknowledgements, whose credit lines the cards print letter for letter.",
+  "about": "The making-of show: the one spec its renderers read (tools/factory/making_of_clip.py now, the app later). Times are seconds; crew lengths are in the pet's own height; 'height' is a share of the picture's height. Each step's card says in a few plain words what the step does (its caption, after Caroline), with the methods it stands on as a footnote: named as in Acknowledgements, whose credit lines the footnote prints letter for letter.",
   "version": 1,
   "timing": {
     "intro": 0.6,
@@ -7,15 +7,16 @@
     "outro": 2.4
   },
   "steps": [
-    { "id": "sketch", "methods": ["Relative total variation"], "pose": "busy" },
-    { "id": "shading", "methods": ["Domain transform"], "pose": "busy" },
-    { "id": "paints", "methods": ["k-means++"], "pose": "review" },
-    { "id": "merged", "methods": ["Distance transforms"], "pose": "review" },
-    { "id": "ink", "methods": ["Holistically-nested edge detection", "Informative drawings"], "pose": "busy" },
-    { "id": "template", "methods": ["Potrace"], "pose": "review" }
+    { "id": "sketch", "caption": "Finding the shapes under the texture", "methods": ["Relative total variation"], "pose": "busy" },
+    { "id": "shading", "caption": "Shading softly, without crossing edges", "methods": ["Domain transform"], "pose": "busy" },
+    { "id": "paints", "caption": "Choosing the paints", "methods": ["k-means++"], "pose": "review" },
+    { "id": "merged", "caption": "Folding tiny bits into their neighbors", "methods": ["Distance transforms"], "pose": "review" },
+    { "id": "ink", "caption": "Drawing the lines", "methods": ["Holistically-nested edge detection", "Informative drawings"], "pose": "busy" },
+    { "id": "template", "caption": "Smoothing the outlines, adding the numbers", "methods": ["Potrace"], "pose": "review" }
   ],
   "cards": {
-    "opacity": 0.62
+    "opacity": 0.62,
+    "footnote": 0.55
   },
   "sketch": {
     "coherenceFrom": 0.2,
