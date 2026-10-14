@@ -1,0 +1,85 @@
+"""The making-of crew's planner against its Swift port's fixture, and SplitMix64's pinned draws.
+
+    python3 -m unittest discover -s tools/tests -p 'test_making_of_pets.py'
+
+Needs numpy and Pillow (making_of_pets.py imports them). Sources/MakingOf's tests hold the same
+numbers and replay the same fixture."""
+
+import json
+from pathlib import Path
+import random
+import sys
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools" / "factory"))
+import making_of_pets as pets
+
+FIXTURE = ROOT / "Tests" / "MakingOfTests" / "Fixtures" / "plan-parrots.json"
+SPEC = ROOT / "App" / "PaintByNumber" / "Resources" / "making-of.json"
+
+
+class SplitMixTests(unittest.TestCase):
+    def test_published_seed_zero_outputs(self):
+        rng = pets.SplitMix64(0)
+        self.assertEqual([rng.next() for _ in range(3)],
+                         [0xE220A8397B1DCDAF, 0x6E789E6AA1B965F4, 0x06C45D188009454F])
+
+    def test_first_doubles_of_seed_one(self):
+        rng = pets.SplitMix64(1)
+        self.assertEqual([rng.random() for _ in range(5)],
+                         [0.5665615751722809, 0.7457817572627011, 0.9710027535867962, 0.4443592170557721,
+                          0.44426470082635805])
+
+    def test_uniform_scales_a_double(self):
+        rng = pets.SplitMix64(1)
+        self.assertEqual([rng.uniform(0.6, 0.95) for _ in range(3)],
+                         [0.7982965513102983, 0.8610236150419454, 0.9398509637553787])
+
+    def test_bounded_draws_and_choice(self):
+        rng = pets.SplitMix64(1)
+        self.assertEqual([rng.below(10) for _ in range(8)], [5, 9, 0, 5, 1, 8, 5, 3])
+        rng = pets.SplitMix64(1)
+        self.assertEqual([rng.choice([-1, 1]) for _ in range(8)], [1, 1, -1, 1, 1, -1, 1, 1])
+
+    def test_permutations_shuffle_from_the_back(self):
+        self.assertEqual(pets.SplitMix64(1).permutation(8), [4, 3, 2, 7, 5, 6, 0, 1])
+        self.assertEqual(pets.SplitMix64(2).permutation(3), [2, 0, 1])
+        self.assertEqual(pets.SplitMix64(3).permutation(1), [0])
+        self.assertEqual(pets.SplitMix64(3).permutation(0), [])
+
+
+class PlanFixtureTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        pets.configure(cls.fixture["spec"])
+        cls.planned = pets.plan(cls.fixture["inputs"])
+
+    def test_fixture_was_made_from_the_shipped_spec(self):
+        self.assertEqual(self.fixture["spec"], json.loads(SPEC.read_text(encoding="utf-8")))
+
+    def test_inputs_are_at_the_precision_the_file_keeps(self):
+        self.assertEqual(pets.quantized(self.fixture["inputs"]), self.fixture["inputs"])
+
+    def test_plan_replays(self):
+        again = json.loads(json.dumps(pets.plan_data(self.planned)))
+        self.assertEqual(again, self.fixture["plan"])
+
+    def test_states_replay(self):
+        timing = self.fixture["spec"]["timing"]
+        end = timing["intro"] + 6 * timing["step"] + timing["outro"]
+        again = json.loads(json.dumps(pets.states_data(self.planned.pets, end)))
+        self.assertEqual(again, self.fixture["states"])
+
+    def test_state_is_a_function_of_the_time(self):
+        times = [i / 60 for i in range(1080)]
+        shuffled = random.Random(1).sample(times, 300)
+        for pet in self.planned.pets:
+            sequential = {t: pet.state(t) for t in times}
+            for t in shuffled:
+                self.assertEqual(pet.state(t), sequential[t])
+
+
+if __name__ == "__main__":
+    unittest.main()
