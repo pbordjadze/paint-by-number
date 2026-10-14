@@ -4,10 +4,12 @@
 
 Usage:
   making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width 1024] [--fps 60] [--crew 12]
-                    [--step SECONDS] [--stills DIR]
+                    [--step SECONDS] [--stop-every SECONDS] [--pets RESOURCES] [--stills DIR]
+
+--pets draws the Lamp's pets (making_of_pets.py) from the app's Resources folder instead of dots.
 
 Timeline: the photo alone for INTRO seconds, six steps of STEP seconds, then the template held
-for OUTRO. In each step every worker makes VISITS stops (one per half second of step); the
+for OUTRO. In each step every worker makes VISITS stops (one per --stop-every seconds); the
 step's change spreads from those stops, so it always grows from where somebody is working, at a
 pace that fills the step:
 
@@ -35,8 +37,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from making_of_layers import INK, PAPER, Sources, ink, sketch, wash  # noqa: E402
+import making_of_pets  # noqa: E402
 
-INTRO, OUTRO = 0.4, 0.9
+INTRO, OUTRO = 0.4, 1.6
 STEP = 1.5      # --step
 VISITS = 3      # one stop per half second of step
 CARD_BAND = 232
@@ -163,14 +166,16 @@ def sample_stops(weight, n, rng, spacing):
 
 
 class Crew:
-    """Each worker's stops: (arrive, leave, x, y), in time order across the show."""
+    """Each worker's stops: (arrive, leave, x, y, step), in time order across the show; the first
+    is where it starts, along the bottom of the picture (`inside`) or just below it."""
 
-    def __init__(self, n, size, rng):
+    def __init__(self, n, size, rng, inside=False):
         w, h = size
-        self.stops = [[(0.0, 0.0, w * (i + 0.5) / n + rng.uniform(-20, 20), h + 40)] for i in range(n)]
+        y = h - 10 if inside else h + 40
+        self.stops = [[(0.0, INTRO * 0.6, w * (i + 0.5) / n + rng.uniform(-20, 20), y, 0)] for i in range(n)]
         self.rng = rng
 
-    def plan_step(self, t0, points):
+    def plan_step(self, t0, points, step=0):
         """Hands `points` out in VISITS rounds, each round to the nearest free worker; returns
         the visits as (time, x, y)."""
         n = len(self.stops)
@@ -181,13 +186,13 @@ class Crew:
             for i in order:
                 if not pool:
                     break
-                _, leave, x, y = self.stops[i][-1]
+                _, leave, x, y, _ = self.stops[i][-1]
                 k = min(range(len(pool)), key=lambda q: (pool[q][0] - x) ** 2 + (pool[q][1] - y) ** 2)
                 px, py = pool.pop(k)
                 gap = (STEP - 0.3) / VISITS
                 arrive = t0 + 0.10 + j * gap + self.rng.uniform(-0.12, 0.12) * gap
                 arrive = max(arrive, leave + 0.18)
-                self.stops[i].append((arrive, arrive + 0.55 * gap, px, py))
+                self.stops[i].append((arrive, arrive + 0.55 * gap, px, py, step))
                 visits.append((arrive, px, py))
         return visits
 
@@ -198,7 +203,7 @@ class Crew:
                 out.append((s[0][2], s[0][3], 0.0))
                 continue
             pos = None
-            for (a0, l0, x0, y0), (a1, l1, x1, y1) in zip(s, s[1:]):
+            for (a0, l0, x0, y0, _), (a1, l1, x1, y1, _) in zip(s, s[1:]):
                 if t < a1:
                     u = ease((t - l0) / max(a1 - l0, 1e-3)) if t > l0 else 0.0
                     pos = (x0 + (x1 - x0) * u, y0 + (y1 - y0) * u, 1.0 if l0 < t < a1 else 0.0)
@@ -280,8 +285,10 @@ def main():
     ap.add_argument('--seed', type=int, default=7)
     ap.add_argument('--stills')
     ap.add_argument('--step', type=float, default=STEP)
+    ap.add_argument('--stop-every', type=float, default=0.5)
+    ap.add_argument('--pets')
     a = ap.parse_args()
-    STEP, VISITS = a.step, max(3, round(a.step / 0.5))
+    STEP, VISITS = a.step, max(2, round(a.step / a.stop_every))
     pace = 1.5 / STEP          # the constants below were set for 1.5 s steps
     rng = np.random.default_rng(a.seed)
 
@@ -313,12 +320,18 @@ def main():
         stroke_w + 1e-6 * stroke_w.max(),
         num_w + 1e-6,
     ]
-    crew = Crew(a.crew, (W, H), rng)
+    crew = Crew(a.crew, (W, H), rng, inside=bool(a.pets))
+    pet_h = 0.12 * H
+    if a.pets:
+        # a pet's spot keeps all of it in the picture: half a pet from the sides, a pet from the top
+        room = np.zeros((H, W), dtype=np.float32)
+        room[int(pet_h) + 4:H - 8, int(0.05 * W):W - int(0.05 * W)] = 1
+        weights = [w * room for w in weights]
     n_stops = a.crew * VISITS
     T = []
     for k in range(6):
-        pts = sample_stops(weights[k], n_stops, rng, spacing=0.09 * W)
-        visits = crew.plan_step(starts[k], pts)
+        pts = sample_stops(weights[k], n_stops, rng, spacing=(0.11 if a.pets else 0.09) * W)
+        visits = crew.plan_step(starts[k], pts, k)
         noise = 0.10 * value_noise((H, W), (18, 12), rng) + 0.06 * value_noise((H, W), (60, 40), rng)
         T.append(arrival(visits, (H, W), speed=0.55 * W * pace, t_end=starts[k] + STEP - 0.2, noise=noise))
     T_pal = region_min(T[2], pal_labels, pal_n)
@@ -357,6 +370,13 @@ def main():
         num_idx[y0:y1, x0:x1][box] = i
     num_T_px = np.where(num_idx >= 0, num_T[np.maximum(num_idx, 0)], np.inf).astype(np.float32)
 
+    pets = []
+    if a.pets:
+        ids = making_of_pets.ORDER[:a.crew]
+        sprites = making_of_pets.load(a.pets, ids)
+        pet_rng = np.random.default_rng(a.seed + 1)
+        for i, pid in enumerate(ids):
+            pets.append(making_of_pets.Pet(sprites[pid], crew.stops[i], pet_h, pet_rng, INTRO + 6 * STEP))
     cards = Cards(W)
     frame_h = H + CARD_BAND
     frame_h += frame_h % 2
@@ -421,7 +441,15 @@ def main():
                 frame[H:H + CARD_BAND] = frame[H:H + CARD_BAND] * (1 - c) + ink_rgb * c
         img = Image.fromarray((np.clip(frame, 0, 1) * 255 + 0.5).astype(np.uint8))
         draw = ImageDraw.Draw(img, 'RGBA')
-        if t < INTRO + 6 * STEP + OUTRO - 0.3:
+        if pets:
+            end = INTRO + 6 * STEP
+            fade = 1.0 if t < end + OUTRO - 0.45 else max(0.0, 1 - (t - (end + OUTRO - 0.45)) / 0.35)
+            if fade > 0:
+                canvas = img.crop((0, 0, W, H)).convert('RGBA')
+                for pet in sorted(pets, key=lambda p: p.state(t)[1]):
+                    pet.draw(canvas, t, fade, H)
+                img.paste(canvas.convert('RGB'), (0, 0))
+        elif t < INTRO + 6 * STEP + OUTRO - 0.3:
             fade = 1.0 if t < INTRO + 6 * STEP else max(0.0, 1 - (t - INTRO - 6 * STEP) / 0.5)
             for i, (x, y, moving) in enumerate(crew.positions(t)):
                 if y > H + 12:
