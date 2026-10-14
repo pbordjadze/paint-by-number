@@ -45,8 +45,14 @@ import Testing
     }
 
     @Test func fixtureWasMadeFromTheShippedSpec() throws {
-        // a Lamp edit of making-of.json lands here until the plan fixture is regenerated (see CrewPlan)
-        #expect(try ShowSpec(json: shippedSpecData()) == PlanFixture.load().spec)
+        // an edit to what the plan reads (the crew, the steps' order and poses, the timing) lands
+        // here until the plan fixture is regenerated (see CrewPlan); captions and cards don't
+        let shipped = try ShowSpec(json: shippedSpecData())
+        let made = try PlanFixture.load().spec
+        #expect(shipped.crew == made.crew)
+        #expect(shipped.steps.map(\.id) == made.steps.map(\.id))
+        #expect(shipped.steps.map(\.pose) == made.steps.map(\.pose))
+        #expect(shipped.timing == made.timing)
     }
 
     @Test func badSpecsThrow() throws {

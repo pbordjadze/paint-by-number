@@ -22,14 +22,8 @@ let package = Package(
                 .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
             ]
         ),
-        .target(
-            name: "MakingOf",
-            dependencies: ["PaintCore"],
-            swiftSettings: [
-                .unsafeFlags(["-O"], .when(configuration: .debug)),
-                .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
-            ]
-        ),
+        // The show's crew: cheap to plan, and planned from a spec the Lamp edits, so checked.
+        .target(name: "MakingOf", dependencies: ["PaintCore"]),
         .executableTarget(
             name: "pbn",
             dependencies: ["PaintCore"],
