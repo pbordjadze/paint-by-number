@@ -273,8 +273,46 @@ class Cards:
         return a
 
 
+def motion_report(pets, total, size, h, out):
+    """How the pets move, by numbers and by eye: per pet its fastest speed and hardest
+    acceleration (in its heights per second), and a spacing chart, its feet every 1/30 s, darker
+    later; even spacing is steady speed, bunching is slowing down."""
+    os.makedirs(out, exist_ok=True)
+    dt = 1 / 120
+    lines = []
+    for n, p in enumerate(pets):
+        xs, ys, lifts = [], [], []
+        for i in range(int(total / dt)):
+            st = p.state(i * dt)
+            xs.append(st[0])
+            ys.append(st[1])
+            lifts.append(st[2])
+        xs, ys, lifts = np.array(xs), np.array(ys), np.array(lifts)
+        v = np.hypot(np.diff(xs), np.diff(ys)) / dt / h
+        acc = np.abs(np.diff(v)) / dt
+        lift_v = np.abs(np.diff(lifts)) / dt / h
+        jobs = len(p.stops) - 1
+        moving = v > 0.2
+        lines.append(f'{n:2d} jobs {jobs:2d}  ground: top {v.max():4.2f} h/s, mean moving {v[moving].mean() if moving.any() else 0:4.2f},'
+                     f' moving {moving.mean() * 100:3.0f}% of the time, hardest accel {np.percentile(acc, 99.5):5.1f} h/s2'
+                     f'  lift: top {lifts.max() / h:4.2f} h, fastest {lift_v.max():4.2f} h/s')
+        ys = ys - lifts
+        if n < 4:
+            img = Image.new('RGB', size, (247, 244, 238))
+            d = ImageDraw.Draw(img)
+            for i in range(0, len(xs), 4):
+                c = int(200 * (1 - i / len(xs)))
+                d.ellipse((xs[i] - 2, ys[i] - 2, xs[i] + 2, ys[i] + 2), fill=(c, c, c))
+            img.save(os.path.join(out, f'spacing-{n}.png'))
+    for n, p in enumerate(pets[:2]):
+        for sgm, stop in zip(p.segments, p.stops[1:]):
+            lines.append(f'pet {n} walks {sgm["leave"]:.2f}-{sgm["arrive"]:.2f} s, {sgm["d"] / h:.1f} h, to ({stop[2]:.0f}, {stop[3]:.0f})')
+    open(os.path.join(out, 'motion.txt'), 'w').write('\n'.join(lines) + '\n')
+    print('\n'.join(lines))
+
+
 def main():
-    global STEP, VISITS
+    global STEP, VISITS, INTRO
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('generated')
     ap.add_argument('snapshots')
@@ -287,8 +325,11 @@ def main():
     ap.add_argument('--step', type=float, default=STEP)
     ap.add_argument('--stop-every', type=float, default=0.5)
     ap.add_argument('--pets')
+    ap.add_argument('--motion', help='write a motion report and spacing charts of the pets to this folder, and stop')
     a = ap.parse_args()
     STEP, VISITS = a.step, max(2, round(a.step / a.stop_every))
+    if a.pets:
+        INTRO = 0.6         # the pets pop in first
     pace = 1.5 / STEP          # the constants below were set for 1.5 s steps
     rng = np.random.default_rng(a.seed)
 
@@ -313,14 +354,14 @@ def main():
     for x, y, _, _ in numbers:
         num_w[int(min(max(y, 0), H - 1)), int(min(max(x, 0), W - 1))] += 1
     weights = [
-        src.structure + 0.08,
+        src.structure + 0.35,           # edges first, but the whole picture gets visited
         np.ones((H, W), dtype=np.float32),
         np.sqrt(area(pal_labels, pal_n)) / area(pal_labels, pal_n),
         np.sqrt(area(sim_labels, sim_n)) / area(sim_labels, sim_n),
         stroke_w + 1e-6 * stroke_w.max(),
         num_w + 1e-6,
     ]
-    crew = Crew(a.crew, (W, H), rng, inside=bool(a.pets))
+    crew = Crew(a.crew, (W, H), rng)
     pet_h = 0.12 * H
     if a.pets:
         # a pet's spot keeps all of it in the picture: half a pet from the sides, a pet from the top
@@ -328,10 +369,29 @@ def main():
         room[int(pet_h) + 4:H - 8, int(0.05 * W):W - int(0.05 * W)] = 1
         weights = [w * room for w in weights]
     n_stops = a.crew * VISITS
+    pets = []
+    if a.pets:
+        ids = making_of_pets.ORDER[:a.crew]
+        sprites = making_of_pets.load(a.pets, ids)
+        pet_rng = np.random.default_rng(a.seed + 1)
+        order = pet_rng.permutation(len(ids))
+        wave = pet_rng.permutation(len(ids))
+        # they pop in all over the picture, so the first step starts everywhere at once
+        homes = sample_stops(weights[0], len(ids), rng, spacing=0.2 * W)
+        for i, pid in enumerate(ids):
+            x, y = homes[i % len(homes)]
+            appear = 0.04 + 0.035 * order[i]
+            start = (appear, appear + 0.05, x, y, -1)
+            pets.append(making_of_pets.Pet(sprites[pid], start, pet_h, pet_rng, appear,
+                                           INTRO + 6 * STEP, INTRO + 6 * STEP + 0.15 + 0.05 * wave[i]))
     T = []
     for k in range(6):
-        pts = sample_stops(weights[k], n_stops, rng, spacing=(0.11 if a.pets else 0.09) * W)
-        visits = crew.plan_step(starts[k], pts, k)
+        if pets:
+            pts = sample_stops(weights[k], a.crew * 4, rng, spacing=0.1 * W)
+            visits = making_of_pets.plan_step(pets, starts[k], starts[k] + STEP - 0.15, pts, k, pet_h, rng)
+        else:
+            pts = sample_stops(weights[k], n_stops, rng, spacing=0.09 * W)
+            visits = crew.plan_step(starts[k], pts, k)
         noise = 0.10 * value_noise((H, W), (18, 12), rng) + 0.06 * value_noise((H, W), (60, 40), rng)
         T.append(arrival(visits, (H, W), speed=0.55 * W * pace, t_end=starts[k] + STEP - 0.2, noise=noise))
     T_pal = region_min(T[2], pal_labels, pal_n)
@@ -370,13 +430,11 @@ def main():
         num_idx[y0:y1, x0:x1][box] = i
     num_T_px = np.where(num_idx >= 0, num_T[np.maximum(num_idx, 0)], np.inf).astype(np.float32)
 
-    pets = []
-    if a.pets:
-        ids = making_of_pets.ORDER[:a.crew]
-        sprites = making_of_pets.load(a.pets, ids)
-        pet_rng = np.random.default_rng(a.seed + 1)
-        for i, pid in enumerate(ids):
-            pets.append(making_of_pets.Pet(sprites[pid], crew.stops[i], pet_h, pet_rng, INTRO + 6 * STEP))
+    for p in pets:
+        p.finish()
+    if a.motion:
+        motion_report(pets, total, (W, H), pet_h, a.motion)
+        return
     cards = Cards(W)
     frame_h = H + CARD_BAND
     frame_h += frame_h % 2
@@ -395,7 +453,8 @@ def main():
             pic = layers[0]
         elif k == 0:
             drawn = smoothstep((t - (T[0] - 0.3 * src.structure)) / 0.14)[..., None]
-            washed = smoothstep((t - T[0] - 0.12) / 0.3)[..., None]
+            # the wash follows the graphite, but is done before the step ends
+            washed = smoothstep((t - np.minimum(T[0] + 0.12, starts[0] + STEP - 0.35)) / 0.3)[..., None]
             graphite = sketch(src.structure, 1.0)
             pic = (layers[0] + (paper - layers[0]) * washed) * (1 - drawn * (1 - graphite))
         elif k <= 3:
