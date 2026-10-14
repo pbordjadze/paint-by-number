@@ -4,11 +4,12 @@
 
 Usage:
   making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width 1024] [--fps 60] [--crew 12]
-                    [--stills DIR]
+                    [--step SECONDS] [--stills DIR]
 
 Timeline: the photo alone for INTRO seconds, six steps of STEP seconds, then the template held
-for OUTRO. In each step every worker makes VISITS stops; the step's change spreads from those
-stops, so it always grows from where somebody is working:
+for OUTRO. In each step every worker makes VISITS stops (one per half second of step); the
+step's change spreads from those stops, so it always grows from where somebody is working, at a
+pace that fills the step:
 
   1 sketch             graphite drawn over the photo outward from each stop, strong edges first,
                        then the photo washes to paper behind it
@@ -35,8 +36,9 @@ from PIL import Image, ImageDraw, ImageFont
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from making_of_layers import INK, PAPER, Sources, ink, sketch, wash  # noqa: E402
 
-INTRO, STEP, OUTRO = 0.4, 1.5, 0.9
-VISITS = 3
+INTRO, OUTRO = 0.4, 0.9
+STEP = 1.5      # --step
+VISITS = 3      # one stop per half second of step
 CARD_BAND = 232
 FONT_DIR = '/usr/share/fonts/X11/Type1'
 CHARTER = os.path.join(FONT_DIR, 'c0648bt_.pfb')
@@ -182,9 +184,10 @@ class Crew:
                 _, leave, x, y = self.stops[i][-1]
                 k = min(range(len(pool)), key=lambda q: (pool[q][0] - x) ** 2 + (pool[q][1] - y) ** 2)
                 px, py = pool.pop(k)
-                arrive = t0 + 0.10 + j * 0.40 + self.rng.uniform(-0.05, 0.05)
+                gap = (STEP - 0.3) / VISITS
+                arrive = t0 + 0.10 + j * gap + self.rng.uniform(-0.12, 0.12) * gap
                 arrive = max(arrive, leave + 0.18)
-                self.stops[i].append((arrive, arrive + 0.22, px, py))
+                self.stops[i].append((arrive, arrive + 0.55 * gap, px, py))
                 visits.append((arrive, px, py))
         return visits
 
@@ -266,6 +269,7 @@ class Cards:
 
 
 def main():
+    global STEP, VISITS
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('generated')
     ap.add_argument('snapshots')
@@ -275,7 +279,10 @@ def main():
     ap.add_argument('--crew', type=int, default=12)
     ap.add_argument('--seed', type=int, default=7)
     ap.add_argument('--stills')
+    ap.add_argument('--step', type=float, default=STEP)
     a = ap.parse_args()
+    STEP, VISITS = a.step, max(3, round(a.step / 0.5))
+    pace = 1.5 / STEP          # the constants below were set for 1.5 s steps
     rng = np.random.default_rng(a.seed)
 
     src = Sources(a.generated, a.snapshots, a.width)
@@ -313,7 +320,7 @@ def main():
         pts = sample_stops(weights[k], n_stops, rng, spacing=0.09 * W)
         visits = crew.plan_step(starts[k], pts)
         noise = 0.10 * value_noise((H, W), (18, 12), rng) + 0.06 * value_noise((H, W), (60, 40), rng)
-        T.append(arrival(visits, (H, W), speed=0.55 * W, t_end=starts[k] + STEP - 0.2, noise=noise))
+        T.append(arrival(visits, (H, W), speed=0.55 * W * pace, t_end=starts[k] + STEP - 0.2, noise=noise))
     T_pal = region_min(T[2], pal_labels, pal_n)
     T_sim = region_min(T[3], sim_labels, sim_n)
     T_clear = region_min(T[5], sim_labels, sim_n)
@@ -326,7 +333,7 @@ def main():
         seg = np.hypot(*np.diff(s, axis=0).T)
         cum = np.concatenate(([0], np.cumsum(seg)))
         t0 = float(T[4][y, x])
-        dur = min(max(cum[-1] / (0.9 * W), 0.12), 0.6)
+        dur = min(max(cum[-1] / (0.9 * W * pace), 0.12), 0.6 / pace)
         if t0 + dur > t5_end:
             t0 = max(starts[4], t5_end - dur)
         stroke_plan.append((t0, dur, s, cum))
@@ -407,7 +414,8 @@ def main():
         frame[H:] = PAPER
         if 0 <= k < 6:
             ls = t - starts[k]
-            alpha = float(smoothstep(np.array(ls / 0.15)) * (1 - smoothstep(np.array((ls - (STEP - 0.15)) / 0.15))))
+            fade = 0.15 / pace ** 0.5
+            alpha = float(smoothstep(np.array(ls / fade)) * (1 - smoothstep(np.array((ls - (STEP - fade)) / fade))))
             if alpha > 0:
                 c = cards.image(k)[..., None] * (0.62 * alpha)
                 frame[H:H + CARD_BAND] = frame[H:H + CARD_BAND] * (1 - c) + ink_rgb * c
