@@ -7,8 +7,11 @@ Each step of the show adds only what its stage contributes, in pencil and ink on
   2 shading   the smoothed image's lightness as a soft wash under the sketch
   3 paints    one flat tone per paint (`palette.ppm`), the sketch fading
   4 merged    the simplified regions' tones (`simplified.ppm`): small bits gone
-  5 ink       the book's lines (`line-art.pgm`) over those tones
+  5 ink       the template's own lines over those tones, lifting toward the paper
   6 template  the template itself (`template.svg`: lines and numbers), as the painter gets it
+
+Steps 5 and 6 share the template's lines, so the last step only lifts the tones and sets the
+numbers.
 
 Usage:
   making_of_layers.py <generate-out> <snapshots> <layers-out> [--width W]
@@ -23,6 +26,7 @@ $MAKING_OF_NODE_MODULES (a worktree can borrow the main checkout's).
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -71,8 +75,14 @@ def ink(lines, strength=1.0):
     return 1 - d[..., None] * (1 - INK)
 
 
-def rasterize(svg, width, out):
-    """The template SVG at `width` pixels, through resvg."""
+def rasterize(svg, width, out, numbers=True):
+    """The template SVG at `width` pixels, through resvg; without its numbers if asked."""
+    if not numbers:
+        with open(svg, encoding='utf-8') as f:
+            text = re.sub(r'<text\b[^>]*>.*?</text>', '', f.read(), flags=re.S)
+        svg = out + '.svg'
+        with open(svg, 'w', encoding='utf-8') as f:
+            f.write(text)
     base = os.environ.get('MAKING_OF_NODE_MODULES', TOOLS)
     script = (
         "import { createRequire } from 'node:module'; import { readFileSync, writeFileSync } from 'node:fs';"
@@ -106,23 +116,21 @@ def main():
     smoothed = load(snap('smoothed.ppm'), size, 'RGB')
     palette = load(snap('palette.ppm'), size, 'RGB')
     simplified = load(snap('simplified.ppm'), size, 'RGB')
-    if not os.path.exists(snap('line-art.pgm')):
-        sys.exit('no line-art.pgm: generate a coloring book with --edges')
-    lines = load(snap('line-art.pgm'), size, 'L')
     with tempfile.TemporaryDirectory() as tmp:
-        png = os.path.join(tmp, 'template.png')
-        rasterize(os.path.join(a.generated, 'template.svg'), width, png)
-        template = load(png, size, 'RGB')
+        svg = os.path.join(a.generated, 'template.svg')
+        rasterize(svg, width, os.path.join(tmp, 'template.png'))
+        rasterize(svg, width, os.path.join(tmp, 'lines.png'), numbers=False)
+        template = load(os.path.join(tmp, 'template.png'), size, 'RGB')
+        lines = load(os.path.join(tmp, 'lines.png'), size, 'L')
 
     paper = np.broadcast_to(PAPER, photo.shape)
-    merged = paper * wash(simplified, 0.45)
     layers = [
         photo,
         paper * sketch(structure, 1.0),
         paper * wash(smoothed, 0.35) * sketch(structure, 0.8),
         paper * wash(palette, 0.45) * sketch(structure, 0.35),
-        merged,
-        merged * ink(lines),
+        paper * wash(simplified, 0.45),
+        paper * wash(simplified, 0.22) * ink(lines),
         paper * template,
     ]
     for i, layer in enumerate(layers):
