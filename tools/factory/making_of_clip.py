@@ -5,12 +5,18 @@
 Usage:
   making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width 1024] [--fps 60] [--crew 12]
                     [--step SECONDS] [--stop-every SECONDS] [--pets RESOURCES] [--spec JSON]
-                    [--stills DIR] [--pet-height SHARE] [--motion DIR]
+                    [--stills DIR] [--pet-height SHARE] [--motion DIR] [--plan-json PATH]
 
 --pets draws the Lamp's pets (making_of_pets.py) from the app's Resources folder instead of dots.
 The show's spec (--spec, default App/PaintByNumber/Resources/making-of.json) sets the timing, each
 step's card (its methods' credit lines from ACKNOWLEDGEMENTS.md, printed letter for letter) and
 the crew's motion; --step, --crew (the first N pets of its order) and --pet-height override it.
+--motion DIR writes a motion report of the pets and stops. --plan-json PATH (needs --pets) writes the
+crew's plan and stops: {"spec", "inputs", "plan", "states"}, the inputs rounded to 0.01 px and
+0.0001 s before the plan is made from them, and every pet's state at 30 per second. That file is
+Sources/MakingOf's test fixture (Tests/MakingOfTests/Fixtures/plan-parrots.json); regenerate it,
+after changing making_of_pets.py or the spec, with the generated parrots as in the header of
+Sources/MakingOf/MakingOf.swift.
 
 Timeline: the photo alone for INTRO seconds, six steps of STEP seconds, then the template held
 for OUTRO. In each step every worker makes VISITS stops (one per --stop-every seconds); the
@@ -85,19 +91,7 @@ def load_spec(path):
     INTRO, STEP, OUTRO = (float(spec['timing'][k]) for k in ('intro', 'step', 'outro'))
     STEPS = [(st['id'], credits(st['methods'])) for st in spec['steps']]
     GRID = float(spec['outlines']['grid'])
-    crew = spec['crew']
-    P = making_of_pets
-    P.ORDER = list(crew['pets']) + [i for i in P.ORDER if i not in crew['pets']]
-    P.WORK_POSE = [st['pose'] for st in spec['steps']]
-    for key, name in (('walk', 'WALK'), ('lean', 'LEAN'), ('accel', 'ACCEL'), ('decel', 'DECEL'),
-                      ('stride', 'STRIDE'), ('hop', 'HOP'), ('hopTime', 'HOP_TIME'), ('hopMin', 'HOP_MIN'),
-                      ('pop', 'POP'), ('side', 'SIDE'), ('space', 'SPACE'), ('trace', 'TRACE'),
-                      ('hold', 'HOLD'), ('exit', 'EXIT'), ('wave', 'WAVE'), ('tilt', 'TILT'),
-                      ('still', 'STILL'), ('margin', 'MARGIN')):
-        setattr(P, name, float(crew[key]))
-    P.WORK = tuple(crew['work'])
-    P.BANDS = int(crew['bands'])
-    P.TRACE_RAMP = tuple(crew['traceRamp'])
+    making_of_pets.configure(spec)
     return spec
 
 
@@ -431,6 +425,15 @@ def motion_report(pets, total, size, h, out):
     print('\n'.join(lines))
 
 
+def write_plan(path, spec, inputs, planned, total):
+    """The plan file: the spec and the inputs the plan was made from, the plan, and every pet's
+    state 30 times a second to the show's end."""
+    doc = {'spec': spec, 'inputs': inputs, 'plan': making_of_pets.plan_data(planned),
+           'states': making_of_pets.states_data(planned.pets, total)}
+    with open(path, 'w', encoding='utf-8') as f:     # one line per part
+        f.write('{\n' + ',\n'.join(f'"{k}":' + json.dumps(v, separators=(',', ':')) for k, v in doc.items()) + '\n}\n')
+
+
 def main():
     global STEP, VISITS, INTRO, OUTRO
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -448,8 +451,11 @@ def main():
     ap.add_argument('--pets')
     ap.add_argument('--pet-height', type=float, help="a pet's height as a share of the picture's (the spec's crew height)")
     ap.add_argument('--motion', help='write a motion report and spacing charts of the pets to this folder, and stop')
+    ap.add_argument('--plan-json', help="write the crew's plan (inputs, plan, states) to this file, and stop; needs --pets")
     a = ap.parse_args()
     spec = load_spec(a.spec)
+    if a.plan_json and not a.pets:
+        sys.exit('--plan-json needs --pets')
     if a.step:
         STEP = a.step
     a.crew = a.crew or len(spec['crew']['pets'])
@@ -506,9 +512,6 @@ def main():
     if a.pets:
         ids = making_of_pets.ORDER[:a.crew]
         sprites = making_of_pets.load(a.pets, ids)
-        pet_rng = np.random.default_rng(a.seed + 1)
-        order = pet_rng.permutation(len(ids))
-        wave = pet_rng.permutation(len(ids))
         # they pop in one to a band (the planner's), each at its first job, so the first step
         # starts everywhere at once
         n, nb, m = len(ids), max(1, min(making_of_pets.BANDS, len(ids))), making_of_pets.MARGIN
@@ -520,13 +523,6 @@ def main():
             for hx, hy in homes:                # apart across band edges too
                 band[(xx - hx) ** 2 + (yy - hy) ** 2 < (0.2 * W) ** 2] = 0
             homes += sample_stops(band, sum(1 for j in range(n) if j * nb // n == b), rng, spacing=0.2 * W)
-        for i, pid in enumerate(ids):
-            x, y = homes[i % len(homes)]
-            appear = 0.04 + 0.035 * order[i]
-            start = (appear, appear + 0.05, x, y, -1, None)
-            pets.append(making_of_pets.Pet(sprites[pid], start, pet_h, pet_rng, appear,
-                                           end + 0.15 + 0.06 * wave[i], [s0 + STEP for s0 in starts]))
-        planner = making_of_pets.Planner(pets, (W, H), pet_h, pet_rng, STEP * float(spec['crew']['beat']), INTRO)
     # step 3's k-means++ seeds: real pixels of the smoothed picture, chosen by the method itself
     q = (np.clip(src.palette, 0, 1) * 255 + 0.5).astype(np.int64)
     paint_keys, paint_of = np.unique((q[..., 0] << 16) | (q[..., 1] << 8) | q[..., 2], return_inverse=True)
@@ -542,28 +538,36 @@ def main():
         sx, sy = float(gx.ravel()[c]), float(gy.ravel()[c])
         paint = int(((paint_lab - sample_lab[c]) ** 2).sum(axis=1).argmin())
         seeds.append((starts[2] + 0.12 + j * min(float(spec['seeds']['dropEvery']), 1.0 / len(picks)), sx, sy, paint))
-    T = []
+    # what each step's jobs are done at, and the noise its change is roughened by, drawn in step
+    # order from the picture's random numbers
+    candidates, noises = [], []
     for k in range(6):
-        if pets:
+        if a.pets:
             if k == 2:
-                visits = planner.step(starts[k], starts[k] + STEP - 0.15, [(x, y) for _, x, y, _ in seeds], k)
-            elif k == 4:
-                visits, traces = planner.trace(starts[k], starts[k] + STEP - 0.15, strokes, k)
+                spots = [(x, y) for _, x, y, _ in seeds]
+            elif k == making_of_pets.INK_STEP:
+                spots = []                      # its lines are the strokes
             else:
-                pts = sample_stops(weights[k], a.crew * 4, rng, spacing=0.1 * W)
+                spots = sample_stops(weights[k], a.crew * 4, rng, spacing=0.1 * W)
                 if k == 0:
-                    pts = list(homes) + list(pts)      # each pet pops in at its first job
-                visits = planner.step(starts[k], starts[k] + STEP - 0.15, pts, k)
-            if not visits:
-                visits = [(starts[k] + 0.1, W / 2, H / 2)]
+                    spots = list(homes) + list(spots)      # each pet pops in at its first job
+            candidates.append(spots)
         else:
             pts = sample_stops(weights[k], n_stops, rng, spacing=0.09 * W)
-            visits = crew.plan_step(starts[k], pts, k)
-        seeds_by_step.append(visits)
-        noise = 0.10 * value_noise((H, W), (18, 12), rng) + 0.06 * value_noise((H, W), (60, 40), rng)
-        T.append(arrival(visits, (H, W), speed=0.55 * W * pace, t_end=starts[k] + STEP - 0.2, noise=noise))
-    if pets:
-        planner.farewell([end - 0.05 + 0.03 * w for w in wave], H + CARD_BAND)
+            seeds_by_step.append(crew.plan_step(starts[k], pts, k))
+        noises.append(0.10 * value_noise((H, W), (18, 12), rng) + 0.06 * value_noise((H, W), (60, 40), rng))
+    if a.pets:
+        inputs = making_of_pets.quantized({
+            'size': [W, H], 'petHeight': pet_h, 'intro': INTRO, 'step': STEP, 'seed': a.seed + 1,
+            'pets': [{'id': pid, 'start': homes[i % len(homes)]} for i, pid in enumerate(ids)],
+            'candidates': candidates, 'strokes': strokes, 'frameHeight': H + CARD_BAND})
+        planned = making_of_pets.plan(inputs)
+        if a.plan_json:
+            write_plan(a.plan_json, spec, inputs, planned, total)
+            return
+        pets, seeds_by_step, traces = planned.pets, planned.visits, planned.traces
+    T = [arrival(visits, (H, W), speed=0.55 * W * pace, t_end=starts[k] + STEP - 0.2, noise=noise)
+         for k, (visits, noise) in enumerate(zip(seeds_by_step, noises))]
     # each paint's areas flow out from its seed; a paint no seed landed on follows the crew
     ys_, xs_ = np.mgrid[0:H, 0:W].astype(np.float32)
     T_seed = np.full((H, W), np.inf, dtype=np.float32)
@@ -752,7 +756,7 @@ def main():
             if fade > 0:
                 canvas = img.convert('RGBA')
                 for pet in sorted(pets, key=lambda p: p.state(t)[1]):
-                    pet.draw(canvas, t, fade, H)
+                    pet.draw(sprites[pet.id], canvas, t, fade, H)
                 img = canvas.convert('RGB')
         elif t < INTRO + 6 * STEP + OUTRO - 0.3:
             fade = 1.0 if t < INTRO + 6 * STEP else max(0.0, 1 - (t - INTRO - 6 * STEP) / 0.5)
