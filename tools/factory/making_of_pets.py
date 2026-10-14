@@ -139,9 +139,10 @@ class Sprites:
 class Planner:
     """Hands out the jobs. A pet stands beside its spot (SIDE), on the side it came from, so the
     change it makes is never hidden under it; spots of pets working at the same time stay SPACE
-    apart; arrivals land on the step's quarter beats, rippling left to right. Each pet has its
-    band of the picture (BANDS, by where it pops in) and takes a job elsewhere only when its band
-    has none it can reach in time."""
+    apart; arrivals land on the step's quarter beats, rippling left to right, the first on the
+    step's own downbeat when a pet can be there by then. Each pet has its band of the picture
+    (BANDS, by where it pops in) and takes a job elsewhere only when its band has none it can
+    reach in time."""
 
     def __init__(self, pets, size, h, rng, beat, origin):
         self.pets, self.h, self.rng = pets, h, rng
@@ -211,7 +212,7 @@ class Planner:
                 d = math.hypot(sx - x, sy - y)
                 if d < STILL * h:       # near enough to reach from here: no little shuffle over
                     sx, sy, d = x, y, 0.0
-                reach = max(free[i] + walk_time(d, h), t0 + 0.08)   # compared unsnapped: the beat's
+                reach = max(free[i] + walk_time(d, h), t0)          # compared unsnapped: the beat's
                 arrive = self._snap(reach, sx)                       # ripple must not pull anyone sideways
                 last = t_end
                 if homes:
@@ -257,7 +258,7 @@ class Planner:
                     break
                 length = float(np.hypot(*np.diff(pts, axis=0).T).sum())
                 d = math.hypot(pts[0][0] - x, pts[0][1] - y)
-                reach = max(free[i] + walk_time(d, h), t0 + 0.08)
+                reach = max(free[i] + walk_time(d, h), t0)
                 arrive = self._snap(reach, pts[0][0])
                 dur = trace_time(length, h)
                 end_by = t_end

@@ -101,6 +101,9 @@ def load_spec(path):
     return spec
 
 
+LUMA = np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
+
+
 # The pets' colors, roughly: the dots stand in for them until the sprites go in.
 CREW_COLORS = ['#C98A3B', '#2E9C8F', '#7FA7D9', '#8C5A3C', '#5B6B3A', '#C2553F', '#3F8FB8', '#9C3B5E',
                '#B23A3A', '#6C5A8E', '#D2A23A', '#4E7A4E', '#A0603A', '#3A6E8C', '#C77AA0', '#7A7A3A',
@@ -506,8 +509,17 @@ def main():
         pet_rng = np.random.default_rng(a.seed + 1)
         order = pet_rng.permutation(len(ids))
         wave = pet_rng.permutation(len(ids))
-        # they pop in all over the picture, so the first step starts everywhere at once
-        homes = sample_stops(weights[0], len(ids), rng, spacing=0.2 * W)
+        # they pop in one to a band (the planner's), each at its first job, so the first step
+        # starts everywhere at once
+        n, nb, m = len(ids), max(1, min(making_of_pets.BANDS, len(ids))), making_of_pets.MARGIN
+        edges = np.linspace(m * W, (1 - m) * W, nb + 1).astype(int)
+        homes, yy, xx = [], *np.mgrid[0:H, 0:W]
+        for b in range(nb):
+            band = np.zeros_like(weights[0])
+            band[:, edges[b]:edges[b + 1]] = weights[0][:, edges[b]:edges[b + 1]]
+            for hx, hy in homes:                # apart across band edges too
+                band[(xx - hx) ** 2 + (yy - hy) ** 2 < (0.2 * W) ** 2] = 0
+            homes += sample_stops(band, sum(1 for j in range(n) if j * nb // n == b), rng, spacing=0.2 * W)
         for i, pid in enumerate(ids):
             x, y = homes[i % len(homes)]
             appear = 0.04 + 0.035 * order[i]
@@ -539,6 +551,8 @@ def main():
                 visits, traces = planner.trace(starts[k], starts[k] + STEP - 0.15, strokes, k)
             else:
                 pts = sample_stops(weights[k], a.crew * 4, rng, spacing=0.1 * W)
+                if k == 0:
+                    pts = list(homes) + list(pts)      # each pet pops in at its first job
                 visits = planner.step(starts[k], starts[k] + STEP - 0.15, pts, k)
             if not visits:
                 visits = [(starts[k] + 0.1, W / 2, H / 2)]
@@ -659,11 +673,14 @@ def main():
         if k < 0:
             pic = layers[0]
         elif k == 0:
-            # texture smears away first, then graphite on what survives, then the photo washes out
+            # texture smears away first and the color drains, graphite goes down on what survives,
+            # then the photo fades to paper behind it: grey to paper, never color punched to white
             smear = smoothstep((t - T[0]) / 0.3)[..., None]
             base = layers[0] + (src.detextured - layers[0]) * smear
+            drain = smoothstep((t - T[0] - 0.1) / 0.5)[..., None]
+            base = base + ((base @ LUMA)[..., None] - base) * drain
             drawn = smoothstep((t - np.minimum(T[0] + 0.35 - 0.25 * src.survivors, end0 - 0.4)) / 0.16)[..., None]
-            washed = smoothstep((t - np.minimum(T[0] + 0.6, end0 - 0.35)) / 0.3)[..., None]
+            washed = smoothstep((t - np.minimum(T[0] + 0.45, end0 - 0.8)) / 0.7)[..., None]
             pic = (base + (paper - base) * washed) * (1 - drawn * (1 - graphite))
         elif k <= 3:
             Tk = [T[0], T[1], T_pal, T_sim][k]
