@@ -98,6 +98,41 @@ def save(arr, path):
     Image.fromarray((np.clip(arr, 0, 1) * 255 + 0.5).astype(np.uint8)).save(path)
 
 
+class Sources:
+    """One generation's stage pictures at `width` pixels wide, 0...1 floats, plus the
+    multiply layers the six steps are made of."""
+
+    def __init__(self, generated, snapshots, width=None):
+        snap = lambda n: os.path.join(snapshots, n)
+        w0, h0 = Image.open(snap('working-image.ppm')).size
+        width = width or w0
+        self.size = size = (width, round(h0 * width / w0))
+        self.svg = os.path.join(generated, 'template.svg')
+        self.photo = load(snap('working-image.ppm'), size, 'RGB')
+        self.structure = load(snap('structure.pgm'), size, 'L')
+        self.smoothed = load(snap('smoothed.ppm'), size, 'RGB')
+        self.palette = load(snap('palette.ppm'), size, 'RGB')
+        self.simplified = load(snap('simplified.ppm'), size, 'RGB')
+        with tempfile.TemporaryDirectory() as tmp:
+            rasterize(self.svg, width, os.path.join(tmp, 'template.png'))
+            rasterize(self.svg, width, os.path.join(tmp, 'lines.png'), numbers=False)
+            self.template = load(os.path.join(tmp, 'template.png'), size, 'RGB')
+            self.lines = load(os.path.join(tmp, 'lines.png'), size, 'L')
+        self.paper = np.broadcast_to(PAPER, self.photo.shape)
+
+    def layers(self):
+        paper, structure = self.paper, self.structure
+        return [
+            self.photo,
+            paper * sketch(structure, 1.0),
+            paper * wash(self.smoothed, 0.35) * sketch(structure, 0.8),
+            paper * wash(self.palette, 0.45) * sketch(structure, 0.35),
+            paper * wash(self.simplified, 0.45),
+            paper * wash(self.simplified, 0.22) * ink(self.lines),
+            paper * self.template,
+        ]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('generated')
@@ -105,38 +140,13 @@ def main():
     ap.add_argument('out')
     ap.add_argument('--width', type=int)
     a = ap.parse_args()
-    snap = lambda n: os.path.join(a.snapshots, n)
-    w0, h0 = Image.open(snap('working-image.ppm')).size
-    width = a.width or w0
-    size = (width, round(h0 * width / w0))
+    src = Sources(a.generated, a.snapshots, a.width)
     os.makedirs(a.out, exist_ok=True)
-
-    photo = load(snap('working-image.ppm'), size, 'RGB')
-    structure = load(snap('structure.pgm'), size, 'L')
-    smoothed = load(snap('smoothed.ppm'), size, 'RGB')
-    palette = load(snap('palette.ppm'), size, 'RGB')
-    simplified = load(snap('simplified.ppm'), size, 'RGB')
-    with tempfile.TemporaryDirectory() as tmp:
-        svg = os.path.join(a.generated, 'template.svg')
-        rasterize(svg, width, os.path.join(tmp, 'template.png'))
-        rasterize(svg, width, os.path.join(tmp, 'lines.png'), numbers=False)
-        template = load(os.path.join(tmp, 'template.png'), size, 'RGB')
-        lines = load(os.path.join(tmp, 'lines.png'), size, 'L')
-
-    paper = np.broadcast_to(PAPER, photo.shape)
-    layers = [
-        photo,
-        paper * sketch(structure, 1.0),
-        paper * wash(smoothed, 0.35) * sketch(structure, 0.8),
-        paper * wash(palette, 0.45) * sketch(structure, 0.35),
-        paper * wash(simplified, 0.45),
-        paper * wash(simplified, 0.22) * ink(lines),
-        paper * template,
-    ]
+    layers = src.layers()
     for i, layer in enumerate(layers):
         save(layer, os.path.join(a.out, f'layer-{i}.png'))
     with open(os.path.join(a.out, 'layers.json'), 'w') as f:
-        json.dump({'size': size, 'layers': [f'layer-{i}.png' for i in range(len(layers))]}, f)
+        json.dump({'size': src.size, 'layers': [f'layer-{i}.png' for i in range(len(layers))]}, f)
 
 
 if __name__ == '__main__':
