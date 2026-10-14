@@ -13,14 +13,17 @@ for OUTRO. In each step every worker makes VISITS stops (one per --stop-every se
 step's change spreads from those stops, so it always grows from where somebody is working, at a
 pace that fills the step:
 
-  1 sketch             graphite drawn over the photo outward from each stop, strong edges first,
-                       then the photo washes to paper behind it
+  1 sketch             relative total variation: around each stop the photo's texture smears away
+                       first, then graphite goes down on the structure that survives, strongest
+                       first, and the photo washes to paper behind it
   2 shading            a soft-edged bloom outward from each stop
-  3 paints, 4 merged   whole regions (connected areas of one paint) pop in as the bloom reaches them
-  5 ink                each of the template's strokes is drawn along its path from the stop nearest
-                       its start, while the grey lifts halfway to the paper
-  6 template           regions clear to paper as the bloom reaches them; each number appears with
-                       its region
+  3 paints             k-means++: real seeds (pixels drawn by their squared distance to the seeds so
+                       far) drop one by one as dots, and each paint's areas flow out from its seed
+  4 merged             whole regions (connected areas of one paint) pop in as the bloom reaches them
+  5 ink                the template's lines as stair-stepped pixel outlines, the way Potrace starts,
+                       drawn along their paths (pets walk some), while the grey lifts halfway
+  6 template           Potrace's fit: the outlines relax into the template's smooth curves, rippling
+                       out from the stops; areas clear to paper, and numbers come last
 
 --stills DIR also writes a frame every quarter second, for contact sheets. Needs numpy, Pillow,
 ffmpeg, the Charter Type 1 fonts (xfonts-scalable) and making_of_layers.py's node setup.
@@ -37,7 +40,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from making_of_layers import INK, PAPER, Sources, ink, sketch, wash  # noqa: E402
+from making_of_layers import INK, PAPER, Sources, oklab, sketch, wash  # noqa: E402
 import making_of_pets  # noqa: E402
 
 INTRO, OUTRO = 0.4, 1.6
@@ -78,6 +81,46 @@ def ink_line(pen, pts, value, width):
     tmp = Image.new('L', (x1 - x0, y1 - y0), 0)
     ImageDraw.Draw(tmp).line([(x - x0, y - y0) for x, y in pts], fill=value, width=width, joint='curve')
     pen.paste(ImageChops.lighter(pen.crop((x0, y0, x1, y1)), tmp), (x0, y0))
+
+
+GRID = 5    # px: the step of the pixel outlines (coarse enough to see on a phone)
+
+
+def kmeanspp(lab, k, rng):
+    """k-means++ seeding (Arthur and Vassilvitskii 2007) over `lab` samples: the first seed at
+    random, each next one drawn with probability proportional to its squared distance to the
+    nearest seed so far. Returns the chosen indices in order."""
+    first = int(rng.integers(len(lab)))
+    order = [first]
+    d2 = ((lab - lab[first]) ** 2).sum(axis=1)
+    for _ in range(k - 1):
+        c = int(rng.choice(len(lab), p=d2 / d2.sum()))
+        order.append(c)
+        d2 = np.minimum(d2, ((lab - lab[c]) ** 2).sum(axis=1))
+    return order
+
+
+def staircase(pts, grid):
+    """A smooth polyline as the stair-stepped pixel outline it was fitted to, paired point by
+    point with the smooth line, so one can relax into the other: (jagged, smooth) arrays."""
+    cum = np.concatenate(([0], np.cumsum(np.hypot(*np.diff(pts, axis=0).T))))
+    d = np.linspace(0, cum[-1], max(2, int(cum[-1] / 1.5) + 1))
+    smooth = np.stack([np.interp(d, cum, pts[:, 0]), np.interp(d, cum, pts[:, 1])], axis=1)
+    snapped = np.round(smooth / grid) * grid
+    J, S = [snapped[0]], [smooth[0]]
+    for b, sm in zip(snapped[1:], smooth[1:]):
+        a = J[-1]
+        if (b == a).all():
+            continue
+        if a[0] != b[0] and a[1] != b[1]:          # a stair: across, then down
+            J.append(np.array([b[0], a[1]]))
+            S.append(sm)
+        J.append(b)
+        S.append(sm)
+    if len(J) < 2:
+        J.append(snapped[-1])
+        S.append(smooth[-1])
+    return np.array(J, dtype=np.float32), np.array(S, dtype=np.float32)
 
 
 def smoothstep(x):
@@ -423,10 +466,27 @@ def main():
             pets.append(making_of_pets.Pet(sprites[pid], start, pet_h, pet_rng, appear,
                                            end + 0.15 + 0.06 * wave[i], [s0 + STEP for s0 in starts]))
         planner = making_of_pets.Planner(pets, (W, H), pet_h, pet_rng, STEP / 4, INTRO)
+    # step 3's k-means++ seeds: real pixels of the smoothed picture, chosen by the method itself
+    q = (np.clip(src.palette, 0, 1) * 255 + 0.5).astype(np.int64)
+    paint_keys, paint_of = np.unique((q[..., 0] << 16) | (q[..., 1] << 8) | q[..., 2], return_inverse=True)
+    paint_of = paint_of.reshape(H, W)
+    paint_lab = oklab(np.stack([(paint_keys >> 16) & 255, (paint_keys >> 8) & 255, paint_keys & 255], axis=1)
+                      .astype(np.float32) / 255) * np.array([1, 1.6, 1.6])
+    gy, gx = np.mgrid[int(0.12 * H) + 4:H - 8:6, int(0.05 * W):W - int(0.05 * W):6]
+    sample_lab = oklab(src.smoothed[gy, gx]).reshape(-1, 3) * np.array([1, 1.6, 1.6])
+    seed_rng = np.random.default_rng(a.seed + 2)
+    picks = kmeanspp(sample_lab, len(paint_keys), seed_rng)
+    seeds = []
+    for j, c in enumerate(picks):
+        sx, sy = float(gx.ravel()[c]), float(gy.ravel()[c])
+        paint = int(((paint_lab - sample_lab[c]) ** 2).sum(axis=1).argmin())
+        seeds.append((starts[2] + 0.12 + j * min(0.045, 1.0 / len(picks)), sx, sy, paint))
     T = []
     for k in range(6):
         if pets:
-            if k == 4:
+            if k == 2:
+                visits = planner.step(starts[k], starts[k] + STEP - 0.15, [(x, y) for _, x, y, _ in seeds], k)
+            elif k == 4:
                 visits, traces = planner.trace(starts[k], starts[k] + STEP - 0.15, strokes, k)
             else:
                 pts = sample_stops(weights[k], a.crew * 4, rng, spacing=0.1 * W)
@@ -441,7 +501,17 @@ def main():
         T.append(arrival(visits, (H, W), speed=0.55 * W * pace, t_end=starts[k] + STEP - 0.2, noise=noise))
     if pets:
         planner.farewell([end - 0.05 + 0.03 * w for w in wave], H + CARD_BAND)
-    T_pal = region_min(T[2], pal_labels, pal_n)
+    # each paint's areas flow out from its seed; a paint no seed landed on follows the crew
+    ys_, xs_ = np.mgrid[0:H, 0:W].astype(np.float32)
+    T_seed = np.full((H, W), np.inf, dtype=np.float32)
+    for st, sx, sy, paint in seeds:
+        mine = paint_of == paint
+        T_seed[mine] = np.minimum(T_seed[mine], st + 0.25 + np.hypot(xs_ - sx, ys_ - sy)[mine] / (W / 1.3))
+    T_seed = np.where(np.isinf(T_seed), T[2] + 0.3, T_seed)
+    lo, hi, cap = starts[2] + 0.2, float(T_seed.max()), starts[2] + STEP - 0.2
+    if hi > cap:
+        T_seed = lo + (T_seed - lo) * (cap - lo) / (hi - lo)
+    T_pal = region_min(T_seed, pal_labels, pal_n)
     T_sim = region_min(T[3], sim_labels, sim_n)
     T_clear = region_min(T[5], sim_labels, sim_n)
     # steps 3 and 4 settle with a small overshoot, darker then back, where the picture changes
@@ -453,22 +523,42 @@ def main():
     traced_by = {n: (t0, dur, pts) for n, t0, dur, pts in traces}
     stroke_plan = []
     for n, s in enumerate(strokes):
-        if n in traced_by:
+        walked = n in traced_by
+        if walked:
             t0, dur, pts = traced_by[n]
             pts = np.asarray(pts, dtype=np.float32)
-            cum = np.concatenate(([0], np.cumsum(np.hypot(*np.diff(pts, axis=0).T))))
-            stroke_plan.append((t0, dur, pts, cum, True))
-            continue
-        x, y = int(min(max(s[0][0], 0), W - 1)), int(min(max(s[0][1], 0), H - 1))
-        cum = np.concatenate(([0], np.cumsum(np.hypot(*np.diff(s, axis=0).T))))
-        t0 = max(float(T[4][y, x]) + rng.uniform(0, 0.5), starts[4] + (0.3 if pets else 0.0))
-        dur = min(max(cum[-1] / (0.45 * W * pace), 0.25), 0.9 / pace)
-        if t0 + dur > t5_end:
-            t0 = max(starts[4], t5_end - dur)
-        stroke_plan.append((t0, dur, s, cum, False))
+        else:
+            pts = s
+        J, S = staircase(pts, GRID)
+        cum = np.concatenate(([0], np.cumsum(np.hypot(*np.diff(S, axis=0).T))))
+        if not walked:
+            x, y = int(min(max(pts[0][0], 0), W - 1)), int(min(max(pts[0][1], 0), H - 1))
+            t0 = max(float(T[4][y, x]) + rng.uniform(0, 0.5), starts[4] + (0.3 if pets else 0.0))
+            dur = min(max(cum[-1] / (0.45 * W * pace), 0.25), 0.9 / pace)
+            if t0 + dur > t5_end:
+                t0 = max(starts[4], t5_end - dur)
+        # step 6 relaxes each point when the ripple from the crew reaches it
+        ix = np.clip(S[:, 0].astype(int), 0, W - 1)
+        iy = np.clip(S[:, 1].astype(int), 0, H - 1)
+        relax = T[5][iy, ix][:, None]
+        stroke_plan.append((t0, dur, J, S, cum, walked, relax))
     pen = Image.new('L', (W * 2, H * 2), 0)
+    graphite = sketch(src.survivors, 1.0)
+    end0 = starts[0] + STEP
+
+    def outlines(t):
+        """Line coverage (0...1) with each point relaxed from its stair-stepped outline toward
+        the smooth curve as far as the ripple has reached it at time t."""
+        canvas = Image.new('L', (W * 2, H * 2), 0)
+        d = ImageDraw.Draw(canvas)
+        for _, _, J, S, _, _, relax in stroke_plan:
+            m = smoothstep((t - relax) / 0.4)
+            P = (J + (S - J) * m) * 2
+            d.line([tuple(p) for p in P], fill=255, width=3)
+        return np.asarray(canvas.reduce(2), dtype=np.float32)[..., None] / 255
+
+    smooth_cov = outlines(float('inf'))
     INK_RAMP = 0.35                  # s for a stroke to darken from grey to ink
-    lines_mult = ink(src.lines)
     lift_from, lift_to = wash(src.simplified, 0.45), wash(src.simplified, 0.22)
     # step 6: numbers, each with its region
     template = src.template
@@ -479,7 +569,8 @@ def main():
         near = [t for t, sx, sy in seeds_by_step[5] if math.hypot(sx - x, sy - y) < 1.6 * pet_h]
         # a number next to a working pet goes down a moment after it does; the rest come quietly later
         at = min(near) + 0.3 if pets and near else max(clear_at, starts[5] + (0.55 * STEP if pets else 0))
-        num_T.append(min(max(at, clear_at + 0.05), end - 0.15))
+        smoothed_at = float(T[5][int(min(max(y, 0), H - 1)), int(min(max(x, 0), W - 1))]) + 0.45
+        num_T.append(min(max(at, clear_at + 0.05, smoothed_at), end - 0.15))
     num_T = np.array(num_T)
     ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
     num_idx = np.full((H, W), -1, dtype=np.int32)
@@ -514,11 +605,12 @@ def main():
         if k < 0:
             pic = layers[0]
         elif k == 0:
-            drawn = smoothstep((t - (T[0] - 0.3 * src.structure)) / 0.14)[..., None]
-            # the wash follows the graphite, but is done before the step ends
-            washed = smoothstep((t - np.minimum(T[0] + 0.12, starts[0] + STEP - 0.35)) / 0.3)[..., None]
-            graphite = sketch(src.structure, 1.0)
-            pic = (layers[0] + (paper - layers[0]) * washed) * (1 - drawn * (1 - graphite))
+            # texture smears away first, then graphite on what survives, then the photo washes out
+            smear = smoothstep((t - T[0]) / 0.3)[..., None]
+            base = layers[0] + (src.detextured - layers[0]) * smear
+            drawn = smoothstep((t - np.minimum(T[0] + 0.35 - 0.25 * src.survivors, end0 - 0.4)) / 0.16)[..., None]
+            washed = smoothstep((t - np.minimum(T[0] + 0.6, end0 - 0.35)) / 0.3)[..., None]
+            pic = (base + (paper - base) * washed) * (1 - drawn * (1 - graphite))
         elif k <= 3:
             Tk = [T[0], T[1], T_pal, T_sim][k]
             soft = 0.16 if k < 2 else 0.09
@@ -528,31 +620,29 @@ def main():
                 bump = np.sin(np.pi * np.clip((t - Tk) / 0.22, 0, 1))[..., None]
                 pic = pic * (1 - 0.1 * bump * settle[k])
         elif k == 4:
-            for t0, dur, s, cum, walked in stroke_plan:
+            for t0, dur, J, S, cum, walked, _ in stroke_plan:
                 if t < t0 or t > t0 + dur + INK_RAMP + 1 / a.fps:
                     continue
                 if walked:
                     a1 = making_of_pets.traced(t - t0, float(cum[-1]), pet_h)
                 else:
                     a1 = ease((t - t0) / dur) * cum[-1]
-                if a1 <= 0:
-                    continue
-                pts = [tuple(p) for p, c in zip(s, cum) if c < a1]
-                pts.append(tuple(np.interp(a1, cum, s[:, c]) for c in (0, 1)))
-                if len(pts) < 2:
+                n_pts = int(np.searchsorted(cum, a1, side='right'))
+                if n_pts < 2:
                     continue
                 value = int(255 * (0.45 + 0.55 * min(max((t - t0) / (dur + INK_RAMP), 0), 1)))
-                ink_line(pen, [(x * 2, y * 2) for x, y in pts], value, 9)
+                ink_line(pen, [(x * 2, y * 2) for x, y in J[:n_pts]], value, 3)
             pm = np.asarray(pen.reduce(2), dtype=np.float32)[..., None] / 255
             lift = smoothstep((t - T[4]) / 0.16)[..., None]
-            pic = paper * (lift_from + (lift_to - lift_from) * lift) * (1 - pm * (1 - lines_mult))
+            pic = paper * (lift_from + (lift_to - lift_from) * lift) * (1 - pm * (1 - INK))
         else:
             if k == 5 and t < INTRO + 6 * STEP:
                 clear = smoothstep((t - T_clear) / 0.12)[..., None]
                 nm = smoothstep((t - num_T_px) / 0.1)[..., None]
-                pic = paper * (lift_to + (1 - lift_to) * clear) * lines_mult * (1 - nm * (1 - numbers_mult))
+                cov = outlines(t)
+                pic = paper * (lift_to + (1 - lift_to) * clear) * (1 - cov * (1 - INK)) * (1 - nm * (1 - numbers_mult))
             else:
-                last = paper * lines_mult * numbers_mult
+                last = paper * (1 - smooth_cov * (1 - INK)) * numbers_mult
                 u = smoothstep((t - INTRO - 6 * STEP) / 0.15)
                 pic = last + (layers[6] - last) * u
 
@@ -568,6 +658,19 @@ def main():
                 frame[H:H + CARD_BAND] = frame[H:H + CARD_BAND] * (1 - c) + ink_rgb * c
         img = Image.fromarray((np.clip(frame, 0, 1) * 255 + 0.5).astype(np.uint8))
         draw = ImageDraw.Draw(img, 'RGBA')
+        if k == 2:
+            # the k-means++ seeds: a dot where each landed, popping in, gone as the step ends
+            gone = 1 - smoothstep(np.array((t - (starts[2] + STEP - 0.4)) / 0.35))
+            ink_rgb8 = tuple(int(v * 255) for v in INK)
+            for st, sx, sy, _ in seeds:
+                if t < st:
+                    continue
+                u = min((t - st) / 0.22, 1.0)
+                r = 8.5 * (1 + 0.35 * math.sin(math.pi * u) * (1 - u))
+                al = int(255 * float(gone) * min(u * 3, 1))
+                draw.ellipse((sx - r - 2.5, sy - r - 2.5, sx + r + 2.5, sy + r + 2.5), fill=(247, 244, 238, al))
+                draw.ellipse((sx - r, sy - r, sx + r, sy + r), outline=ink_rgb8 + (al,), width=3)
+                draw.ellipse((sx - 2.6, sy - 2.6, sx + 2.6, sy + 2.6), fill=ink_rgb8 + (al,))
         if pets:
             # they dim only as the painting screen arrives, never while waving
             fade = 1.0 if t < total - 0.3 else max(0.0, (total - t) / 0.3)

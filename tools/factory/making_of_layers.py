@@ -3,7 +3,9 @@
 
 Each step of the show adds only what its stage contributes, in pencil and ink on the paper:
 
-  1 sketch    the structure field (`structure.pgm`) as graphite
+  1 sketch    the structure that survives relative total variation, as graphite: the structure
+              field (`structure.pgm`) weighted by how coherent the steps around each pixel are,
+              so texture (feathers, leaves) drops out and contours stay
   2 shading   the smoothed image's lightness as a soft wash under the sketch
   3 paints    one flat tone per paint (`palette.ppm`), the sketch fading
   4 merged    the simplified regions' tones (`simplified.ppm`): small bits gone
@@ -55,6 +57,47 @@ def lightness(rgb):
     s = 0.0883024619 * lin[..., 0] + 0.2817188376 * lin[..., 1] + 0.6299787005 * lin[..., 2]
     l, m, s = np.cbrt(l), np.cbrt(m), np.cbrt(s)
     return 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s
+
+
+def box(a, r):
+    """Box blur of radius r along both axes (2-D float array, edges clamped)."""
+    for axis in (0, 1):
+        pad = [(0, 0), (0, 0)]
+        pad[axis] = (r + 1, r)
+        c = np.cumsum(np.pad(a, pad + [(0, 0)] * (a.ndim - 2), mode='edge'), axis=axis)
+        hi = np.take(c, np.arange(2 * r + 1, c.shape[axis]), axis=axis)
+        lo = np.take(c, np.arange(0, c.shape[axis] - 2 * r - 1), axis=axis)
+        a = (hi - lo) / (2 * r + 1)
+    return a
+
+
+def oklab(rgb):
+    lin = np.where(rgb <= 0.04045, rgb / 12.92, ((rgb + 0.055) / 1.055) ** 2.4)
+    l = np.cbrt(0.4122214708 * lin[..., 0] + 0.5363325363 * lin[..., 1] + 0.0514459929 * lin[..., 2])
+    m = np.cbrt(0.2119034982 * lin[..., 0] + 0.6806995451 * lin[..., 1] + 0.1073969566 * lin[..., 2])
+    s = np.cbrt(0.0883024619 * lin[..., 0] + 0.2817188376 * lin[..., 1] + 0.6299787005 * lin[..., 2])
+    return np.stack([0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+                     1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+                     0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s], axis=-1)
+
+
+def relative_total_variation(rgb, radius):
+    """What StructureMap measures (Xu et al. 2012), on a picture: per pixel, how coherent the
+    color steps are over a window (1 = they all point one way, a contour; 0 = they cancel,
+    texture), and how much variation there is in all. Same window as the pipeline (a box of
+    `radius`, twice), chroma stretched by 1.6 as the segmentation grid is."""
+    lab = oklab(rgb) * np.array([1, 1.6, 1.6], dtype=np.float32)
+    dx = np.zeros_like(lab)
+    dy = np.zeros_like(lab)
+    dx[:, 1:] = lab[:, 1:] - lab[:, :-1]
+    dy[1:] = lab[1:] - lab[:-1]
+    coherent, total = 0, 0
+    for d in (dx, dy):
+        mag = np.sqrt((d * d).sum(axis=-1))
+        vec = box(box(d, radius), radius)
+        coherent = coherent + np.sqrt((vec * vec).sum(axis=-1))
+        total = total + box(box(mag[..., None], radius), radius)[..., 0]
+    return np.clip(coherent / (total + 1e-4), 0, 1), total
 
 
 def sketch(structure, strength):
@@ -119,14 +162,28 @@ class Sources:
             self.template = load(os.path.join(tmp, 'template.png'), size, 'RGB')
             self.lines = load(os.path.join(tmp, 'lines.png'), size, 'L')
         self.paper = np.broadcast_to(PAPER, self.photo.shape)
+        # relative total variation, at the pipeline's window scaled to this picture
+        radius = max(1, round(0.0025 * 1600 * width / 1024))
+        self.coherence, variation = relative_total_variation(self.photo, radius)
+        ratio = self.coherence ** 3          # the pipeline's structureExponent
+        # graphite only on what survives: structure where the steps agree, as strong as before
+        keep = np.clip((self.coherence - 0.2) / 0.45, 0, 1) ** 1.2
+        survivors = self.structure * keep
+        self.survivors = np.clip(survivors * np.percentile(self.structure, 99.5)
+                                 / (np.percentile(survivors, 99.5) + 1e-6), 0, 1)
+        # the photo with its texture smeared away: where steps cancel and there is much of them
+        busy = np.clip(variation / (np.percentile(variation, 90) + 1e-6), 0, 1)
+        self.texture = np.clip((1 - ratio) * busy * 1.4, 0, 1)
+        blurred = box(box(self.photo, 4), 4)
+        self.detextured = self.photo + (blurred - self.photo) * self.texture[..., None]
 
     def layers(self):
-        paper, structure = self.paper, self.structure
+        paper = self.paper
         return [
             self.photo,
-            paper * sketch(structure, 1.0),
-            paper * wash(self.smoothed, 0.35) * sketch(structure, 0.8),
-            paper * wash(self.palette, 0.45) * sketch(structure, 0.35),
+            paper * sketch(self.survivors, 1.0),
+            paper * wash(self.smoothed, 0.35) * sketch(self.survivors, 0.8),
+            paper * wash(self.palette, 0.45) * sketch(self.survivors, 0.35),
             paper * wash(self.simplified, 0.45),
             paper * wash(self.simplified, 0.22) * ink(self.lines),
             paper * self.template,
