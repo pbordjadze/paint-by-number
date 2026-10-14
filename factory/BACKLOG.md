@@ -627,6 +627,16 @@ Paul checkpoints.
 - The Lamp's second look: "maybe add someone who guards minimalism, and someone else who could be
   interesting". Rikyū and Lotte joined (Who's Who).
 
+- Chief Designer Caroline, relayed by Paul: "Add that Caroline suggested that this was too many
+  pets at 12, and then again at 6 — and still thinks this final output, though very cool, is a lot
+  to see for the user. She suggests a briefer description of what each step does and then for the
+  paper name to be a footnote/citation instead of so front and center." The cards now try it: a
+  short caption per step (`caption` in the spec), with each paper's credit line, letter for letter,
+  as a small, fainter footnote under it.
+- Chapter 7, "Before You Paint": Paul asked the Scholar, Niko, Bulat and Dino to write it, Bulat
+  narrating ("one more serious narrator") and the others "more cute and childish in the margins",
+  with a condensed cast.
+
 **Where it stands (Oct 14).** On `claude/making-of`: F29's port (with it, the regression gate's
 60 templates are byte for byte main's), the spec (F31's file, `making-of.json`) and the factory's
 renderer, `tools/factory/making_of_clip.py` with `making_of_pets.py` and `making_of_layers.py`,
