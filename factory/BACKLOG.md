@@ -722,6 +722,9 @@ On `claude/making-of`, after F29–F31.
   - the demo scenarios `making-of`, `-dark`, `-reduce-motion` and `-long-text` in
     `ci/scenarios.txt`;
   - catalog strings and the `App/CLAUDE.md` pointer;
+  - a portrait photo among the screenshots (`Tests/Corpus/regatta`): the factory's checks were
+    all landscape until Oct 14, when the first portrait found four bugs (`claude/making-of`
+    9075e59); the crew's `petHeight` is the spec's height times the picture's shorter side;
   - Acknowledgements unchanged.
 
 ### F33 · The factory renders the spec
