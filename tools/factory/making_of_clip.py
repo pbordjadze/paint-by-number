@@ -3,7 +3,7 @@
 (making_of_layers.py), each step revealed where the crew works, the cards, and the crew as dots.
 
 Usage:
-  making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width 1024] [--fps 60] [--crew 12]
+  making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width PX] [--fps 60] [--crew 12]
                     [--step SECONDS] [--stop-every SECONDS] [--pets RESOURCES] [--spec JSON]
                     [--stills DIR] [--pet-height SHARE] [--motion DIR] [--plan-json PATH]
 
@@ -452,7 +452,8 @@ def main():
     ap.add_argument('generated')
     ap.add_argument('snapshots')
     ap.add_argument('out')
-    ap.add_argument('--width', type=int, default=1024)
+    ap.add_argument('--width', type=int, help="the picture's width in px (default the snapshots', whose long side "
+                    'the pipeline keeps to 1024: never upscaled)')
     ap.add_argument('--fps', type=int, default=60)
     ap.add_argument('--crew', type=int)
     ap.add_argument('--seed', type=int, default=7)
@@ -461,7 +462,7 @@ def main():
     ap.add_argument('--spec', default=SPEC)
     ap.add_argument('--stop-every', type=float, default=0.5)
     ap.add_argument('--pets')
-    ap.add_argument('--pet-height', type=float, help="a pet's height as a share of the picture's (the spec's crew height)")
+    ap.add_argument('--pet-height', type=float, help="a pet's height as a share of the picture's shorter side (the spec's crew height)")
     ap.add_argument('--motion', help='write a motion report and spacing charts of the pets to this folder, and stop')
     ap.add_argument('--plan-json', help="write the crew's plan (inputs, plan, states) to this file, and stop; needs --pets")
     a = ap.parse_args()
@@ -506,7 +507,8 @@ def main():
         num_w + 1e-6,
     ]
     crew = Crew(a.crew, (W, H), rng)
-    pet_h = (a.pet_height or float(spec['crew']['height'])) * H
+    # of the shorter side, so a portrait photo's crew is the size of its landscape twin's
+    pet_h = (a.pet_height or float(spec['crew']['height'])) * min(W, H)
     if a.pets:
         # for the numbers a pet picks the open spots, where few lines run, so it doesn't stand
         # tangled in the finished drawing's ink

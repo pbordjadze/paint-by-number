@@ -78,6 +78,12 @@ struct Planner {
         box.x0 <= p.x && p.x <= box.x1 && box.y0 <= p.y && p.y <= box.y1
     }
 
+    /// Whether a pet walking along `line` stays whole in the picture: its sides (0.7 h apart) and
+    /// its head (h up) inside. Its feet are, on any of the template's lines.
+    private func inView(_ line: Polyline) -> Bool {
+        line.points.allSatisfy { 0.35 * h <= $0.x && $0.x <= width - 0.35 * h && h <= $0.y }
+    }
+
     private func stand(_ jx: Double, _ jy: Double, from fromX: Double) -> Point {
         let side = fromX < jx ? -1.0 : 1.0
         var x = jx + side * crew.side * h
@@ -173,11 +179,13 @@ struct Planner {
     }
 
     /// Step `k`'s lines: each free pet walks to the nearest line it can draw in time and draws it
-    /// by walking along it. Returns the seeds and the lines drawn.
+    /// by walking along it, never one that would take it out of the picture. Returns the seeds and
+    /// the lines drawn.
     mutating func trace(from t0: Double, to tEnd: Double, strokes: [Polyline], k: Int) -> (seeds: [Visit], traces: [Trace]) {
         var seeds: [Visit] = []
         var traces: [Trace] = []
-        var pool = strokes.enumerated().filter { $0.element.length >= 0.9 * h }.map { (n: $0.offset, line: $0.element) }
+        var pool = strokes.enumerated().filter { $0.element.length >= 0.9 * h && inView($0.element) }
+            .map { (n: $0.offset, line: $0.element) }
         var free = pets.map { $0.lastStop.leave }
         var live = [Bool](repeating: true, count: pets.count)
         while let i = nextPet(live, free), !pool.isEmpty {

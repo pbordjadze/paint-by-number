@@ -4,7 +4,7 @@ import Foundation
 /// 1, the six steps in order, known poses, no unknown key at any level, every duration and length
 /// positive and within the bounds below), so a bad edit throws, with the key in the error, and
 /// never reaches the planner. Times are seconds; crew lengths are in the pet's own height; a
-/// `height` is a share of the picture's.
+/// `height` is a share of the picture's shorter side.
 public struct ShowSpec: Sendable, Equatable, Decodable {
     public static let version = 1
     /// The largest file `init(json:)` reads.

@@ -268,6 +268,13 @@ class Planner:
         x0, y0, x1, y1 = self.box
         return x0 <= x <= x1 and y0 <= y <= y1
 
+    def _in_view(self, pts):
+        """Whether a pet walking along `pts` stays whole in the picture: its sides (0.7 h apart) and
+        its head (h up) inside. Its feet are, on any of the template's lines."""
+        h = self.h
+        x, y = pts[:, 0], pts[:, 1]
+        return bool((0.35 * h <= x).all() and (x <= self.W - 0.35 * h).all() and (h <= y).all())
+
     def _end(self, stop):
         path = stop[5]
         return (float(path[-1][0]), float(path[-1][1])) if path is not None else (stop[2], stop[3])
@@ -337,10 +344,10 @@ class Planner:
 
     def trace(self, t0, t_end, strokes, k):
         """Step `k`'s lines: each free pet walks to the nearest line it can draw in time and draws
-        it by walking along it. Returns (seeds, traces): traces are (stroke index, start time,
-        duration, points in drawing order)."""
+        it by walking along it, never one that would take it out of the picture. Returns (seeds,
+        traces): traces are (stroke index, start time, duration, points in drawing order)."""
         h, seeds, traces = self.h, [], []
-        pool = {n: s for n, s in enumerate(strokes) if cumulative(s)[-1] >= 0.9 * h}
+        pool = {n: s for n, s in enumerate(strokes) if cumulative(s)[-1] >= 0.9 * h and self._in_view(s)}
         free = [p.stops[-1][1] for p in self.pets]
         live = [True] * len(self.pets)
         while any(live) and pool:

@@ -257,6 +257,17 @@ import Testing
         #expect(other.pets.map(\.id) == a.pets.map(\.id))
     }
 
+    @Test func noLineTakesAPetOutOfThePicture() throws {
+        let spec = try PlanFixture.load().spec
+        let base = try inputs()
+        let (w, y, h) = (base.width, base.height / 2, base.petHeight)
+        // one line from inside the left band to the picture's edge, one that stays inside
+        let edge = [Point(0.2 * w, y), Point(0, y)]
+        let inside = [Point(0.45 * w, y), Point(0.45 * w + 1.5 * h, y)]
+        let plan = try CrewPlan(inputs { $0.strokes = [edge, inside] }, spec: spec)
+        #expect(plan.traces.map(\.stroke) == [1])
+    }
+
     @Test func aShowWithNothingToDoStillPlays() throws {
         let spec = try PlanFixture.load().spec
         let bare = try CrewPlan(inputs { $0.candidates = Array(repeating: [], count: 6); $0.strokes = [] }, spec: spec)

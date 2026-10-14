@@ -85,6 +85,13 @@ class PlanFixtureTests(unittest.TestCase):
             for t in shuffled:
                 self.assertEqual(pet.state(t), sequential[t])
 
+    def test_no_line_takes_a_pet_out_of_the_picture(self):
+        inputs = dict(self.fixture["inputs"])
+        w, y, h = inputs["size"][0], inputs["size"][1] / 2, inputs["petHeight"]
+        # one line from inside the left band to the picture's edge, one that stays inside
+        inputs["strokes"] = [[[0.2 * w, y], [0.0, y]], [[0.45 * w, y], [0.45 * w + 1.5 * h, y]]]
+        self.assertEqual([t[0] for t in pets.plan(inputs).traces], [1])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -109,6 +109,7 @@ public struct CrewInputs: Sendable, Equatable {
 
     public var width: Double
     public var height: Double
+    /// A pet's height in pixels: the spec's crew `height` times the picture's shorter side.
     public var petHeight: Double
     public var intro: Double
     /// The seconds each of the six steps lasts (the spec's `timing.step`, unless something else

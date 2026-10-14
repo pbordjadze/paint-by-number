@@ -42,10 +42,11 @@ INK = np.array([0x34, 0x2A, 0x30], dtype=np.float32) / 255
 TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def load(path, size, mode):
+def load(path, size, mode, flat=False):
+    """A picture at `size`, 0...1 floats; a `flat` one (one color per area) keeps its colors."""
     im = Image.open(path).convert(mode)
     if im.size != size:
-        im = im.resize(size, Image.LANCZOS)
+        im = im.resize(size, Image.NEAREST if flat else Image.LANCZOS)
     return np.asarray(im, dtype=np.float32) / 255
 
 
@@ -171,8 +172,8 @@ class Sources:
         self.photo = load(snap('working-image.ppm'), size, 'RGB')
         self.structure = load(snap('structure.pgm'), size, 'L')
         self.smoothed = load(snap('smoothed.ppm'), size, 'RGB')
-        self.palette = load(snap('palette.ppm'), size, 'RGB')
-        self.simplified = load(snap('simplified.ppm'), size, 'RGB')
+        self.palette = load(snap('palette.ppm'), size, 'RGB', flat=True)
+        self.simplified = load(snap('simplified.ppm'), size, 'RGB', flat=True)
         with tempfile.TemporaryDirectory() as tmp:
             rasterize(self.svg, width, os.path.join(tmp, 'template.png'))
             rasterize(self.svg, width, os.path.join(tmp, 'lines.png'), numbers=False)
