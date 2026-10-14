@@ -17,7 +17,7 @@ pet's own height (h) or in seconds:
   anybody else; it arrives no sooner than the step it works for has begun.
 - At work it shows its busy pose for the hands-on steps (sketch, shading, ink) and its reviewing
   pose for the others (paints, merged, template).
-- A soft shadow stays on the ground, smaller while the pet is in the air; pets higher in the
+- A soft shadow stays on the ground, smaller and paler while the pet is in the air; pets higher in the
   picture are a little smaller, and nearer ones are drawn over farther ones.
 - They pop in one after another at the start and wave one after another at the end.
 - Positions are drawn to a fraction of a pixel, so slow movement doesn't shimmer.
@@ -47,6 +47,9 @@ HOP, HOP_TIME, HOP_MIN = 0.06, 0.32, 1.6    # h, s, and the shortest walk (h) th
 WORK = (0.6, 0.95)  # s at a job
 POP = 0.42          # s for the pop at the start
 SIDE = 0.42         # h: a pet stands this far to one side of its spot, and works toward it
+STILL = 0.5         # h: a job this close is worked from where the pet stands, without a walk
+MARGIN = 0.12       # share of the picture: no job, nor a line's start, this close to a side or the top
+BANDS = 3           # upright bands the crew shares out, left to right, so it spreads over the picture
 SPACE = 1.0         # h: how far apart pets' spots stay while both are there (see _clear)
 TRACE = 1.5         # h per second while drawing a line by walking along it
 TRACE_RAMP = (0.12, 0.16)
@@ -81,6 +84,8 @@ def trace_time(dist, h):
 def trapezoid(tau, dist, v, acc, dec):
     """Distance covered `tau` s into a move of `dist` at top speed `v`, speeding up over `acc` s
     and slowing over `dec` s."""
+    if dist <= 0:
+        return 0.0
     cruise = dist / v - 0.5 * (acc + dec)
     if cruise < 0:                      # too short to reach full speed: scale the ramps
         k = math.sqrt(dist / v / (0.5 * (acc + dec)))
@@ -134,13 +139,30 @@ class Sprites:
 class Planner:
     """Hands out the jobs. A pet stands beside its spot (SIDE), on the side it came from, so the
     change it makes is never hidden under it; spots of pets working at the same time stay SPACE
-    apart; arrivals land on the step's quarter beats, rippling left to right."""
+    apart; arrivals land on the step's quarter beats, rippling left to right. Each pet has its
+    band of the picture (BANDS, by where it pops in) and takes a job elsewhere only when its band
+    has none it can reach in time."""
 
     def __init__(self, pets, size, h, rng, beat, origin):
         self.pets, self.h, self.rng = pets, h, rng
         self.W, self.H = size
         self.beat, self.origin = beat, origin
         self.taken = []                 # (from, to, x, y, pet)
+        m = MARGIN
+        self.box = (m * self.W, m * self.H + h, (1 - m) * self.W, self.H - 4)   # where feet may work
+        n, self.bands = len(pets), max(1, min(BANDS, len(pets)))
+        order = sorted(range(n), key=lambda i: pets[i].stops[0][2])
+        self.band = {i: rank * self.bands // n for rank, i in enumerate(order)}
+
+    def _in_band(self, i, x):
+        x0, _, x1, _ = self.box
+        w = (x1 - x0) / self.bands
+        b = self.band[i]
+        return x0 + b * w - 0.25 * self.h <= x <= x0 + (b + 1) * w + 0.25 * self.h
+
+    def _inside(self, x, y):
+        x0, y0, x1, y1 = self.box
+        return x0 <= x <= x1 and y0 <= y <= y1
 
     def _end(self, stop):
         path = stop[5]
@@ -181,9 +203,14 @@ class Planner:
             i = min((j for j in range(len(self.pets)) if live[j]), key=lambda j: free[j])
             x, y = self._end(self.pets[i].stops[-1])
             best = None
-            for q, (jx, jy) in enumerate(pool):
+            for q, (jx, jy) in [(q, c) for own in (True, False) for q, c in enumerate(pool)
+                                if self._in_band(i, c[0]) == own]:
+                if best is not None and not self._in_band(i, jx):
+                    break                       # a job in its own band always comes first
                 sx, sy = self._stand(jx, jy, x)
                 d = math.hypot(sx - x, sy - y)
+                if d < STILL * h:       # near enough to reach from here: no little shuffle over
+                    sx, sy, d = x, y, 0.0
                 reach = max(free[i] + walk_time(d, h), t0 + 0.08)   # compared unsnapped: the beat's
                 arrive = self._snap(reach, sx)                       # ripple must not pull anyone sideways
                 last = t_end
@@ -222,21 +249,25 @@ class Planner:
             i = min((j for j in range(len(self.pets)) if live[j]), key=lambda j: free[j])
             x, y = self._end(self.pets[i].stops[-1])
             best = None
-            for n, s in pool.items():
-                length = float(np.hypot(*np.diff(s, axis=0).T).sum())
-                for pts in (s, s[::-1]):
-                    d = math.hypot(pts[0][0] - x, pts[0][1] - y)
-                    reach = max(free[i] + walk_time(d, h), t0 + 0.08)
-                    arrive = self._snap(reach, pts[0][0])
-                    dur = trace_time(length, h)
-                    end_by = t_end
-                    if homes:
-                        hx, hy, by = homes[i]
-                        end_by = min(end_by, by - walk_time(math.hypot(hx - pts[-1][0], hy - pts[-1][1]), h))
-                    if arrive + dur > end_by or not self._clear(pts[0][0], pts[0][1], arrive, arrive + 0.4, i):
-                        continue
-                    if best is None or reach - 0.1 * dur < best[5] - 0.1 * best[2]:
-                        best = (arrive, n, dur, pts, d, reach)
+            # a line starting in its own band always comes first
+            starts = [(own, n, pts) for own in (True, False) for n, s in pool.items() for pts in (s, s[::-1])
+                      if self._inside(pts[0][0], pts[0][1]) and self._in_band(i, pts[0][0]) == own]
+            for own, n, pts in starts:
+                if best is not None and not own:
+                    break
+                length = float(np.hypot(*np.diff(pts, axis=0).T).sum())
+                d = math.hypot(pts[0][0] - x, pts[0][1] - y)
+                reach = max(free[i] + walk_time(d, h), t0 + 0.08)
+                arrive = self._snap(reach, pts[0][0])
+                dur = trace_time(length, h)
+                end_by = t_end
+                if homes:
+                    hx, hy, by = homes[i]
+                    end_by = min(end_by, by - walk_time(math.hypot(hx - pts[-1][0], hy - pts[-1][1]), h))
+                if arrive + dur > end_by or not self._clear(pts[0][0], pts[0][1], arrive, arrive + 0.4, i):
+                    continue
+                if best is None or reach < best[5]:
+                    best = (arrive, n, dur, pts, d, reach)
             if best is None:
                 live[i] = False
                 continue
@@ -254,13 +285,23 @@ class Planner:
                 seeds.append((tt, float(np.interp(dist, cum, pts[:, 0])), float(np.interp(dist, cum, pts[:, 1]))))
         return seeds, traces
 
+    def _crosses(self, a, b, o):
+        """Whether walking from a to b passes over a pet standing at o (boxes as in _clear)."""
+        (ax, ay), (bx, by), (ox, oy) = a, b, o
+        L2 = (bx - ax) ** 2 + (by - ay) ** 2
+        u = min(max(((ox - ax) * (bx - ax) + (oy - ay) * (by - ay)) / max(L2, 1e-9), 0), 1)
+        px, py = ax + u * (bx - ax), ay + u * (by - ay)
+        return abs(px - ox) < 0.85 * SPACE * self.h and abs(py - oy) < 1.15 * SPACE * self.h
+
     def farewell(self, wave_at, frame_h):
         """The goodbye: each pet waves where it stands at `wave_at[i]` for WAVE s, then walks
-        briskly to the nearest edge and steps out of the frame."""
+        briskly to the nearest edge whose way doesn't cross a pet still there, and steps out of
+        the frame."""
         h = self.h
+        spots = [self._end(p.stops[-1]) for p in self.pets]
         for i, p in enumerate(self.pets):
             prev = p.stops[-1]
-            x, y = self._end(prev)
+            x, y = spots[i]
             if prev[5] is not None:
                 done = prev[0] + trace_time(float(np.hypot(*np.diff(prev[5], axis=0).T).sum()), h)
             else:
@@ -268,8 +309,10 @@ class Planner:
             at = max(wave_at[i], done)
             self._depart(i, at)
             p.stops.append((at, at + WAVE, x, y, -2, None))
-            exits = [(-0.7 * h, y), (self.W + 0.7 * h, y), (x, -0.25 * h), (x, frame_h + 1.2 * h)]
-            ex, ey = min(exits, key=lambda e: math.hypot(e[0] - x, e[1] - y))
+            exits = sorted([(-0.7 * h, y), (self.W + 0.7 * h, y), (x, -0.25 * h), (x, frame_h + 1.2 * h)],
+                           key=lambda e: math.hypot(e[0] - x, e[1] - y))
+            others = spots[:i] + spots[i + 1:]
+            ex, ey = next((e for e in exits if not any(self._crosses((x, y), e, o) for o in others)), exits[0])
             need = walk_time(math.hypot(ex - x, ey - y), h) / EXIT
             p.stops.append((at + WAVE + need, float('inf'), ex, ey, -3, None))
 
@@ -341,6 +384,8 @@ class Pet:
             if t < seg['leave']:
                 break
             if t < seg['arrive']:
+                if seg['len'] < 1e-6:                           # the next job is right here: it stays put
+                    return self._at_stop(self.stops[i], t, seg['before'])
                 dt = t - seg['leave']
                 if dt < LEAN:                                   # the breath before setting off
                     w = math.sin(math.pi * dt / LEAN)
@@ -420,10 +465,12 @@ class Pet:
         sprite = im.resize((w, hh), Image.LANCZOS, box=(bx, by, bx + w * sxs, by + hh * sys_))
         if alpha < 0.999:
             sprite.putalpha(sprite.getchannel('A').point(lambda v: int(v * alpha)))
-        sw = self.h * depth * 0.40 * (1 - 0.3 * min(lift / max(self.h * HOP, 1), 1))
+        air = min(lift / max(self.h * HOP, 1), 1)
+        sw = self.h * depth * 0.40 * (1 - 0.4 * air)
         sh = max(2, round(sw * 0.42))
         shadow = Image.new('RGBA', (max(2, round(2 * sw)), sh), (0, 0, 0, 0))
-        ImageDraw.Draw(shadow).ellipse((0, 0, shadow.width - 1, sh - 1), fill=(52, 42, 48, int(44 * alpha)))
+        ImageDraw.Draw(shadow).ellipse((0, 0, shadow.width - 1, sh - 1),
+                                       fill=(52, 42, 48, int(44 * alpha * (1 - 0.6 * air))))
         put(canvas, shadow, round(x - sw), round(y - sh / 2))
         put(canvas, sprite, ix, iy)
 

@@ -1,0 +1,62 @@
+{
+  "about": "The making-of show: the one spec its renderers read (tools/factory/making_of_clip.py now, the app later). Times are seconds; crew lengths are in the pet's own height; 'height' is a share of the picture's height. Each step names the methods its card credits, by their names in Acknowledgements, whose credit lines the cards print letter for letter.",
+  "version": 1,
+  "timing": {
+    "intro": 0.6,
+    "step": 2.5,
+    "outro": 2.4
+  },
+  "steps": [
+    { "id": "sketch", "methods": ["Relative total variation"], "pose": "busy" },
+    { "id": "shading", "methods": ["Domain transform"], "pose": "busy" },
+    { "id": "paints", "methods": ["k-means++"], "pose": "review" },
+    { "id": "merged", "methods": ["Distance transforms"], "pose": "review" },
+    { "id": "ink", "methods": ["Holistically-nested edge detection", "Informative drawings"], "pose": "busy" },
+    { "id": "template", "methods": ["Potrace"], "pose": "review" }
+  ],
+  "cards": {
+    "opacity": 0.62
+  },
+  "sketch": {
+    "coherenceFrom": 0.2,
+    "coherenceSpan": 0.45,
+    "coherenceExponent": 1.2,
+    "smearRadius": 4
+  },
+  "seeds": {
+    "dropEvery": 0.045,
+    "dot": 8.5,
+    "fade": 0.3
+  },
+  "outlines": {
+    "grid": 5,
+    "relax": 0.4,
+    "inkRamp": 0.35
+  },
+  "crew": {
+    "pets": ["enchanted-workshop", "dinotopia", "snow-queen"],
+    "height": 0.16,
+    "walk": 2.4,
+    "lean": 0.14,
+    "accel": 0.22,
+    "decel": 0.28,
+    "stride": 1.5,
+    "hop": 0.06,
+    "hopTime": 0.32,
+    "hopMin": 1.6,
+    "work": [0.6, 0.95],
+    "pop": 0.42,
+    "side": 0.42,
+    "still": 0.5,
+    "margin": 0.12,
+    "bands": 3,
+    "space": 1.0,
+    "trace": 1.5,
+    "traceRamp": [0.12, 0.16],
+    "hold": 0.3,
+    "exit": 1.8,
+    "wave": 0.6,
+    "tilt": 4.0,
+    "beat": 0.25
+  }
+}

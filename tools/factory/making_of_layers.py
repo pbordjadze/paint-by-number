@@ -145,7 +145,7 @@ class Sources:
     """One generation's stage pictures at `width` pixels wide, 0...1 floats, plus the
     multiply layers the six steps are made of."""
 
-    def __init__(self, generated, snapshots, width=None):
+    def __init__(self, generated, snapshots, width=None, sketch_spec=None):
         snap = lambda n: os.path.join(snapshots, n)
         w0, h0 = Image.open(snap('working-image.ppm')).size
         width = width or w0
@@ -167,14 +167,15 @@ class Sources:
         self.coherence, variation = relative_total_variation(self.photo, radius)
         ratio = self.coherence ** 3          # the pipeline's structureExponent
         # graphite only on what survives: structure where the steps agree, as strong as before
-        keep = np.clip((self.coherence - 0.2) / 0.45, 0, 1) ** 1.2
+        k = sketch_spec or {'coherenceFrom': 0.2, 'coherenceSpan': 0.45, 'coherenceExponent': 1.2, 'smearRadius': 4}
+        keep = np.clip((self.coherence - k['coherenceFrom']) / k['coherenceSpan'], 0, 1) ** k['coherenceExponent']
         survivors = self.structure * keep
         self.survivors = np.clip(survivors * np.percentile(self.structure, 99.5)
                                  / (np.percentile(survivors, 99.5) + 1e-6), 0, 1)
         # the photo with its texture smeared away: where steps cancel and there is much of them
         busy = np.clip(variation / (np.percentile(variation, 90) + 1e-6), 0, 1)
         self.texture = np.clip((1 - ratio) * busy * 1.4, 0, 1)
-        blurred = box(box(self.photo, 4), 4)
+        blurred = box(box(self.photo, int(k['smearRadius'])), int(k['smearRadius']))
         self.detextured = self.photo + (blurred - self.photo) * self.texture[..., None]
 
     def layers(self):

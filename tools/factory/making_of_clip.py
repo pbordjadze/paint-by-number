@@ -4,9 +4,13 @@
 
 Usage:
   making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width 1024] [--fps 60] [--crew 12]
-                    [--step SECONDS] [--stop-every SECONDS] [--pets RESOURCES] [--stills DIR]
+                    [--step SECONDS] [--stop-every SECONDS] [--pets RESOURCES] [--spec JSON]
+                    [--stills DIR] [--pet-height SHARE] [--motion DIR]
 
 --pets draws the Lamp's pets (making_of_pets.py) from the app's Resources folder instead of dots.
+The show's spec (--spec, default App/PaintByNumber/Resources/making-of.json) sets the timing, each
+step's card (its methods' credit lines from ACKNOWLEDGEMENTS.md, printed letter for letter) and
+the crew's motion; --step, --crew (the first N pets of its order) and --pet-height override it.
 
 Timeline: the photo alone for INTRO seconds, six steps of STEP seconds, then the template held
 for OUTRO. In each step every worker makes VISITS stops (one per --stop-every seconds); the
@@ -30,6 +34,7 @@ ffmpeg, the Charter Type 1 fonts (xfonts-scalable) and making_of_layers.py's nod
 """
 
 import argparse
+import json
 import math
 import os
 import re
@@ -40,7 +45,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from making_of_layers import INK, PAPER, Sources, oklab, sketch, wash  # noqa: E402
+from making_of_layers import INK, PAPER, Sources, box, oklab, sketch, wash  # noqa: E402
 import making_of_pets  # noqa: E402
 
 INTRO, OUTRO = 0.4, 1.6
@@ -51,20 +56,51 @@ FONT_DIR = '/usr/share/fonts/X11/Type1'
 CHARTER = os.path.join(FONT_DIR, 'c0648bt_.pfb')
 CHARTER_ITALIC = os.path.join(FONT_DIR, 'c0649bt_.pfb')
 
-STEPS = [
-    ('Sketch', [('Li Xu, Qiong Yan, Yang Xia and Jiaya Jia', '2012',
-                 'Structure Extraction from Texture via Relative Total Variation')]),
-    ('Shading', [('Eduardo Gastal and Manuel Oliveira', '2011',
-                  'Domain Transform for Edge-Aware Image and Video Processing')]),
-    ('Paints', [('David Arthur and Sergei Vassilvitskii', '2007',
-                 'k-means++: The Advantages of Careful Seeding')]),
-    ('Merged', [('Pedro Felzenszwalb and Daniel Huttenlocher', '2012',
-                 'Distance Transforms of Sampled Functions')]),
-    ('Ink', [('Saining Xie and Zhuowen Tu', '2015', 'Holistically-Nested Edge Detection'),
-             ('Caroline Chan, Frédo Durand and Phillip Isola', '2022',
-              'Learning to generate line drawings that convey geometry and semantics')]),
-    ('Template', [('Peter Selinger', '2003', 'Potrace: a polygon-based tracing algorithm')]),
-]
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SPEC = os.path.join(ROOT, 'App', 'PaintByNumber', 'Resources', 'making-of.json')
+STEPS = []          # (id, [(authors, year, title)]) per step, from the spec and Acknowledgements
+
+
+def credits(names):
+    """Each method's credit line as ACKNOWLEDGEMENTS.md prints it: (authors, year, title). A
+    card prints exactly this, so a name that isn't credited there stops the render."""
+    text = open(os.path.join(ROOT, 'ACKNOWLEDGEMENTS.md'), encoding='utf-8').read()
+    out = []
+    for name in names:
+        # the exact heading (the models have one of their own, "Informative Drawings"), and the
+        # credit line inside that section, never past the next heading
+        m = re.search(r'^### ' + re.escape(name) + r'\n(?:(?!### ).*\n)*?(.+), "(.+)", (\d{4})$', text, re.M)
+        if not m:
+            sys.exit(f'{name}: no credit in ACKNOWLEDGEMENTS.md')
+        out.append((m.group(1), m.group(3), m.group(2)))
+    return out
+
+
+def load_spec(path):
+    """Reads the show's spec and applies it: timing, steps and cards, the crew's motion."""
+    global INTRO, OUTRO, STEP, STEPS, GRID
+    spec = json.load(open(path, encoding='utf-8'))
+    if spec.get('version') != 1 or len(spec['steps']) != 6:
+        sys.exit(f'{path}: expected version 1 with six steps')
+    INTRO, STEP, OUTRO = (float(spec['timing'][k]) for k in ('intro', 'step', 'outro'))
+    STEPS = [(st['id'], credits(st['methods'])) for st in spec['steps']]
+    GRID = float(spec['outlines']['grid'])
+    crew = spec['crew']
+    P = making_of_pets
+    P.ORDER = list(crew['pets']) + [i for i in P.ORDER if i not in crew['pets']]
+    P.WORK_POSE = [st['pose'] for st in spec['steps']]
+    for key, name in (('walk', 'WALK'), ('lean', 'LEAN'), ('accel', 'ACCEL'), ('decel', 'DECEL'),
+                      ('stride', 'STRIDE'), ('hop', 'HOP'), ('hopTime', 'HOP_TIME'), ('hopMin', 'HOP_MIN'),
+                      ('pop', 'POP'), ('side', 'SIDE'), ('space', 'SPACE'), ('trace', 'TRACE'),
+                      ('hold', 'HOLD'), ('exit', 'EXIT'), ('wave', 'WAVE'), ('tilt', 'TILT'),
+                      ('still', 'STILL'), ('margin', 'MARGIN')):
+        setattr(P, name, float(crew[key]))
+    P.WORK = tuple(crew['work'])
+    P.BANDS = int(crew['bands'])
+    P.TRACE_RAMP = tuple(crew['traceRamp'])
+    return spec
+
+
 # The pets' colors, roughly: the dots stand in for them until the sprites go in.
 CREW_COLORS = ['#C98A3B', '#2E9C8F', '#7FA7D9', '#8C5A3C', '#5B6B3A', '#C2553F', '#3F8FB8', '#9C3B5E',
                '#B23A3A', '#6C5A8E', '#D2A23A', '#4E7A4E', '#A0603A', '#3A6E8C', '#C77AA0', '#7A7A3A',
@@ -83,7 +119,7 @@ def ink_line(pen, pts, value, width):
     pen.paste(ImageChops.lighter(pen.crop((x0, y0, x1, y1)), tmp), (x0, y0))
 
 
-GRID = 5    # px: the step of the pixel outlines (coarse enough to see on a phone)
+GRID = 5    # px: the step of the pixel outlines (coarse enough to see on a phone); the spec's
 
 
 def kmeanspp(lab, k, rng):
@@ -349,9 +385,11 @@ def motion_report(pets, total, size, h, out):
         lift_v = np.abs(np.diff(lifts)) / dt / h
         jobs = len(p.stops) - 1
         moving = v > 0.2
+        work = slice(0, int(p.segments[-1]['leave'] / dt))      # before the brisker walk-off
         lines.append(f'{n:2d} jobs {jobs:2d}  ground: top {v.max():4.2f} h/s, mean moving {v[moving].mean() if moving.any() else 0:4.2f},'
                      f' moving {moving.mean() * 100:3.0f}% of the time, hardest accel {np.percentile(acc, 99.5):5.1f} h/s2'
-                     f'  lift: top {lifts.max() / h:4.2f} h, fastest {lift_v.max():4.2f} h/s')
+                     f'  lift: top {lifts.max() / h:4.2f} h, fastest {lift_v.max():4.2f} h/s'
+                     f'  before the walk-off: top {v[work].max():4.2f} h/s, hardest accel {np.percentile(acc[work], 99.5):5.1f} h/s2')
         ys = ys - lifts
         if n < 4:
             img = Image.new('RGB', size, (247, 244, 238))
@@ -398,22 +436,27 @@ def main():
     ap.add_argument('out')
     ap.add_argument('--width', type=int, default=1024)
     ap.add_argument('--fps', type=int, default=60)
-    ap.add_argument('--crew', type=int, default=12)
+    ap.add_argument('--crew', type=int)
     ap.add_argument('--seed', type=int, default=7)
     ap.add_argument('--stills')
-    ap.add_argument('--step', type=float, default=STEP)
+    ap.add_argument('--step', type=float)
+    ap.add_argument('--spec', default=SPEC)
     ap.add_argument('--stop-every', type=float, default=0.5)
     ap.add_argument('--pets')
+    ap.add_argument('--pet-height', type=float, help="a pet's height as a share of the picture's (the spec's crew height)")
     ap.add_argument('--motion', help='write a motion report and spacing charts of the pets to this folder, and stop')
     a = ap.parse_args()
-    STEP, VISITS = a.step, max(2, round(a.step / a.stop_every))
-    if a.pets:
-        INTRO = 0.6         # the pets pop in first
-        OUTRO = 2.4         # wave, walk out, and leave the template a moment to itself
+    spec = load_spec(a.spec)
+    if a.step:
+        STEP = a.step
+    a.crew = a.crew or len(spec['crew']['pets'])
+    VISITS = max(2, round(STEP / a.stop_every))
+    if not a.pets:
+        INTRO, OUTRO = 0.4, 0.9          # dots need no entrance or goodbye
     pace = 1.5 / STEP          # the constants below were set for 1.5 s steps
     rng = np.random.default_rng(a.seed)
 
-    src = Sources(a.generated, a.snapshots, a.width)
+    src = Sources(a.generated, a.snapshots, a.width, spec['sketch'])
     W, H = src.size
     layers = src.layers()
     paper = src.paper
@@ -442,11 +485,17 @@ def main():
         num_w + 1e-6,
     ]
     crew = Crew(a.crew, (W, H), rng)
-    pet_h = 0.12 * H
+    pet_h = (a.pet_height or float(spec['crew']['height'])) * H
     if a.pets:
-        # a pet's spot keeps all of it in the picture: half a pet from the sides, a pet from the top
+        # for the numbers a pet picks the open spots, where few lines run, so it doesn't stand
+        # tangled in the finished drawing's ink
+        density = box((src.lines < 0.85).astype(np.float32), max(1, int(0.35 * pet_h)))
+        open_ = 1 - np.clip(density / (np.percentile(density, 95) + 1e-6), 0, 1)
+        weights[5] = weights[5] * (0.05 + open_ ** 2)
+        # a pet's spot keeps all of it in the picture and off its edges, so nobody works in a corner
+        m = making_of_pets.MARGIN
         room = np.zeros((H, W), dtype=np.float32)
-        room[int(pet_h) + 4:H - 8, int(0.05 * W):W - int(0.05 * W)] = 1
+        room[int(m * H + pet_h):H - 8, int(m * W):W - int(m * W)] = 1
         weights = [w * room for w in weights]
     n_stops = a.crew * VISITS
     end = INTRO + 6 * STEP
@@ -465,7 +514,7 @@ def main():
             start = (appear, appear + 0.05, x, y, -1, None)
             pets.append(making_of_pets.Pet(sprites[pid], start, pet_h, pet_rng, appear,
                                            end + 0.15 + 0.06 * wave[i], [s0 + STEP for s0 in starts]))
-        planner = making_of_pets.Planner(pets, (W, H), pet_h, pet_rng, STEP / 4, INTRO)
+        planner = making_of_pets.Planner(pets, (W, H), pet_h, pet_rng, STEP * float(spec['crew']['beat']), INTRO)
     # step 3's k-means++ seeds: real pixels of the smoothed picture, chosen by the method itself
     q = (np.clip(src.palette, 0, 1) * 255 + 0.5).astype(np.int64)
     paint_keys, paint_of = np.unique((q[..., 0] << 16) | (q[..., 1] << 8) | q[..., 2], return_inverse=True)
@@ -480,7 +529,7 @@ def main():
     for j, c in enumerate(picks):
         sx, sy = float(gx.ravel()[c]), float(gy.ravel()[c])
         paint = int(((paint_lab - sample_lab[c]) ** 2).sum(axis=1).argmin())
-        seeds.append((starts[2] + 0.12 + j * min(0.045, 1.0 / len(picks)), sx, sy, paint))
+        seeds.append((starts[2] + 0.12 + j * min(float(spec['seeds']['dropEvery']), 1.0 / len(picks)), sx, sy, paint))
     T = []
     for k in range(6):
         if pets:
@@ -512,8 +561,12 @@ def main():
     if hi > cap:
         T_seed = lo + (T_seed - lo) * (cap - lo) / (hi - lo)
     T_pal = region_min(T_seed, pal_labels, pal_n)
+    flat = paint_of.ravel()
+    spread = np.full(len(paint_keys), -np.inf)
+    np.maximum.at(spread, flat, T_pal.ravel())
     T_sim = region_min(T[3], sim_labels, sim_n)
     T_clear = region_min(T[5], sim_labels, sim_n)
+    T_lift = region_min(T[4], sim_labels, sim_n)
     # steps 3 and 4 settle with a small overshoot, darker then back, where the picture changes
     settle = {k: np.clip(np.abs(layers[k + 1] - layers[k]).max(axis=2) * 12, 0, 1)[..., None] for k in (2, 3)}
 
@@ -543,6 +596,7 @@ def main():
         relax = T[5][iy, ix][:, None]
         stroke_plan.append((t0, dur, J, S, cum, walked, relax))
     pen = Image.new('L', (W * 2, H * 2), 0)
+    relax_time = float(spec['outlines']['relax'])
     graphite = sketch(src.survivors, 1.0)
     end0 = starts[0] + STEP
 
@@ -552,13 +606,13 @@ def main():
         canvas = Image.new('L', (W * 2, H * 2), 0)
         d = ImageDraw.Draw(canvas)
         for _, _, J, S, _, _, relax in stroke_plan:
-            m = smoothstep((t - relax) / 0.4)
+            m = smoothstep((t - relax) / relax_time)
             P = (J + (S - J) * m) * 2
             d.line([tuple(p) for p in P], fill=255, width=3)
         return np.asarray(canvas.reduce(2), dtype=np.float32)[..., None] / 255
 
     smooth_cov = outlines(float('inf'))
-    INK_RAMP = 0.35                  # s for a stroke to darken from grey to ink
+    INK_RAMP = float(spec['outlines']['inkRamp'])     # s for a stroke to darken from grey to ink
     lift_from, lift_to = wash(src.simplified, 0.45), wash(src.simplified, 0.22)
     # step 6: numbers, each with its region
     template = src.template
@@ -579,8 +633,8 @@ def main():
         x0, x1, y0, y1 = int(max(x - r, 0)), int(min(x + r + 1, W)), int(max(y - r, 0)), int(min(y + r + 1, H))
         if x0 >= x1 or y0 >= y1:
             continue
-        box = (xs[y0:y1, x0:x1] - x) ** 2 + (ys[y0:y1, x0:x1] - y) ** 2 <= r * r
-        num_idx[y0:y1, x0:x1][box] = i
+        disc = (xs[y0:y1, x0:x1] - x) ** 2 + (ys[y0:y1, x0:x1] - y) ** 2 <= r * r
+        num_idx[y0:y1, x0:x1][disc] = i
     num_T_px = np.where(num_idx >= 0, num_T[np.maximum(num_idx, 0)], np.inf).astype(np.float32)
 
     for p in pets:
@@ -630,10 +684,10 @@ def main():
                 n_pts = int(np.searchsorted(cum, a1, side='right'))
                 if n_pts < 2:
                     continue
-                value = int(255 * (0.45 + 0.55 * min(max((t - t0) / (dur + INK_RAMP), 0), 1)))
+                value = 255 if walked else int(255 * (0.45 + 0.55 * min(max((t - t0) / (dur + INK_RAMP), 0), 1)))
                 ink_line(pen, [(x * 2, y * 2) for x, y in J[:n_pts]], value, 3)
             pm = np.asarray(pen.reduce(2), dtype=np.float32)[..., None] / 255
-            lift = smoothstep((t - T[4]) / 0.16)[..., None]
+            lift = smoothstep((t - T_lift) / 0.12)[..., None]
             pic = paper * (lift_from + (lift_to - lift_from) * lift) * (1 - pm * (1 - INK))
         else:
             if k == 5 and t < INTRO + 6 * STEP:
@@ -654,20 +708,24 @@ def main():
             fade = 0.15 / pace ** 0.5
             alpha = float(smoothstep(np.array(ls / fade)) * (1 - smoothstep(np.array((ls - (STEP - fade)) / fade))))
             if alpha > 0:
-                c = cards.image(k)[..., None] * (0.62 * alpha)
+                c = cards.image(k)[..., None] * (float(spec['cards']['opacity']) * alpha)
                 frame[H:H + CARD_BAND] = frame[H:H + CARD_BAND] * (1 - c) + ink_rgb * c
         img = Image.fromarray((np.clip(frame, 0, 1) * 255 + 0.5).astype(np.uint8))
         draw = ImageDraw.Draw(img, 'RGBA')
         if k == 2:
-            # the k-means++ seeds: a dot where each landed, popping in, gone as the step ends
+            # the k-means++ seeds: a ring where each landed, popping in, gone once its paint has spread
             gone = 1 - smoothstep(np.array((t - (starts[2] + STEP - 0.4)) / 0.35))
             ink_rgb8 = tuple(int(v * 255) for v in INK)
-            for st, sx, sy, _ in seeds:
+            for st, sx, sy, paint in seeds:
                 if t < st:
                     continue
                 u = min((t - st) / 0.22, 1.0)
-                r = 8.5 * (1 + 0.35 * math.sin(math.pi * u) * (1 - u))
-                al = int(255 * float(gone) * min(u * 3, 1))
+                r = float(spec['seeds']['dot']) * (1 + 0.35 * math.sin(math.pi * u) * (1 - u))
+                # once its paint has spread, the ring has done its job
+                done = 1 - smoothstep(np.array((t - spread[paint] - 0.1) / float(spec['seeds']['fade'])))
+                al = int(255 * float(gone) * float(done) * min(u * 3, 1))
+                if al <= 0:
+                    continue
                 draw.ellipse((sx - r - 2.5, sy - r - 2.5, sx + r + 2.5, sy + r + 2.5), fill=(247, 244, 238, al))
                 draw.ellipse((sx - r, sy - r, sx + r, sy + r), outline=ink_rgb8 + (al,), width=3)
                 draw.ellipse((sx - 2.6, sy - 2.6, sx + 2.6, sy + 2.6), fill=ink_rgb8 + (al,))
