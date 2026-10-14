@@ -637,6 +637,11 @@ Paul checkpoints.
   narrating ("one more serious narrator") and the others "more cute and childish in the margins",
   with a condensed cast.
 
+- Paul, on Caroline's cards and the Lamp's last two asks: "Looks great—yes to both calls". The
+  cards keep their captions; the greys follow the Snow Queen's tones (0.62 to 0.92, averaging
+  0.85); the goodbye gets a last look and, for the last one out, a wave at the edge (Dino and the
+  Robber Girl). The show is now 19 s.
+
 **Where it stands (Oct 14).** On `claude/making-of`: F29's port (with it, the regression gate's
 60 templates are byte for byte main's), the spec (F31's file, `making-of.json`) and the factory's
 renderer, `tools/factory/making_of_clip.py` with `making_of_pets.py` and `making_of_layers.py`,
