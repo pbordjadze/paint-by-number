@@ -9,7 +9,9 @@ public struct Stop: Sendable, Equatable {
         case appear
         /// The step (0 to 5) whose job it is.
         case job(Int)
-        /// Waving goodbye, where it stands.
+        /// A last look at the finished picture, before the wave.
+        case look
+        /// Waving goodbye, where it stands (and the last one out once more, just inside the edge).
         case wave
         /// Walking out of the frame, which is where it ends up.
         case exit
@@ -267,6 +269,8 @@ public struct PetPlan: Sendable, Equatable {
             PetState(x: x, y: y, lift: 0, row: row, scaleX: sx, scaleY: sy, tilt: 0, alpha: alpha, frameValue: frame)
         }
         switch stop.kind {
+        case .look:                                             // a last look at the picture
+            return still(.review, (t - arrive) * 8, 1, 1)
         case .wave:                                             // waving goodbye
             return still(.wave, (t - arrive) * 7, 1, 1)
         case .exit:                                             // gone

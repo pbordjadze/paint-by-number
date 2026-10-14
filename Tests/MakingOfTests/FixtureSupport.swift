@@ -50,7 +50,7 @@ struct PlanFixture: Decodable {
             var leave: Double?
             var x: Double
             var y: Double
-            /// -1 pops in, 0 to 5 is a job, -2 waves, -3 walks out.
+            /// -1 pops in, 0 to 5 is a job, -4 takes a last look, -2 waves, -3 walks out.
             var step: Int
             var path: [[Double]]?
         }

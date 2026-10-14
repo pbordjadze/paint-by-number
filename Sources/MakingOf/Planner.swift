@@ -240,11 +240,13 @@ struct Planner {
         return abs(px - o.x) < 0.85 * crew.space * h && abs(py - o.y) < 1.15 * crew.space * h
     }
 
-    /// The goodbye: each pet waves where it stands at `waveAt[i]` for `wave` s, then walks
-    /// briskly to the nearest edge whose way doesn't cross a pet still there, and steps out of
-    /// the frame.
+    /// The goodbye: each pet takes a last look at the finished picture (`crew.look` s, reviewing),
+    /// waves where it stands from `waveAt[i]` for `crew.wave` s, then walks briskly to the nearest
+    /// edge whose way doesn't cross a pet still there, and steps out of the frame. The last one out
+    /// stops just inside that edge, turns to you and waves once more (`crew.edgeWave` s) first.
     mutating func farewell(waveAt: [Double], frameHeight: Double) {
         let spots = pets.map { $0.lastStop.end }
+        var leaving: [(off: Double, exit: Point)] = []
         for i in pets.indices {
             let prev = pets[i].lastStop
             let here = spots[i]
@@ -258,7 +260,9 @@ struct Planner {
             }
             let at = max(waveAt[i], done)
             depart(i, at)
-            pets[i].stops.append(Stop(arrive: at, leave: at + crew.wave, x: here.x, y: here.y, kind: .wave, path: nil))
+            pets[i].stops.append(Stop(arrive: at, leave: at + crew.look, x: here.x, y: here.y, kind: .look, path: nil))
+            pets[i].stops.append(Stop(
+                arrive: at + crew.look, leave: at + crew.look + crew.wave, x: here.x, y: here.y, kind: .wave, path: nil))
             let candidates = [
                 Point(-0.7 * h, here.y), Point(width + 0.7 * h, here.y), Point(here.x, -0.25 * h),
                 Point(here.x, frameHeight + 1.2 * h),
@@ -272,8 +276,24 @@ struct Planner {
             let others = spots.indices.filter { $0 != i }.map { spots[$0] }
             let exit = exits.first { e in !others.contains { crosses(here, e, $0) } } ?? exits[0]
             let need = crew.walkTime(norm(exit.x - here.x, exit.y - here.y), h) / crew.exit
-            pets[i].stops.append(Stop(
-                arrive: at + crew.wave + need, leave: .infinity, x: exit.x, y: exit.y, kind: .exit, path: nil))
+            leaving.append((at + crew.look + crew.wave + need, exit))
+        }
+        // the last one out; of equals, the later listed, as the reference's tuple max picks
+        let last = leaving.indices.max { (leaving[$0].off, $0) < (leaving[$1].off, $1) }
+        for i in pets.indices {
+            var (off, exit) = leaving[i]
+            if i == last {
+                // it stops where it can still be seen whole, and waves to you before it goes
+                let here = spots[i]
+                let spot = exit.x < 0 || exit.x > width
+                    ? Point(exit.x < 0 ? 0.5 * h : width - 0.5 * h, here.y)
+                    : Point(here.x, exit.y < 0 ? 1.05 * h : height - 4)
+                let at = pets[i].lastStop.leave + crew.walkTime(norm(spot.x - here.x, spot.y - here.y), h) / crew.exit
+                pets[i].stops.append(Stop(
+                    arrive: at, leave: at + crew.edgeWave, x: spot.x, y: spot.y, kind: .wave, path: nil))
+                off = at + crew.edgeWave + crew.walkTime(norm(exit.x - spot.x, exit.y - spot.y), h) / crew.exit
+            }
+            pets[i].stops.append(Stop(arrive: off, leave: .infinity, x: exit.x, y: exit.y, kind: .exit, path: nil))
         }
     }
 

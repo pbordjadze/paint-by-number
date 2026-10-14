@@ -31,7 +31,7 @@ import Testing
 
     @Test func shippedSpecDecodes() throws {
         let spec = try ShowSpec(json: shippedSpecData())
-        #expect(spec.timing.intro == 0.6 && spec.timing.step == 2.5 && spec.timing.outro == 2.4)
+        #expect(spec.timing.intro == 0.6 && spec.timing.step == 2.5 && spec.timing.outro == 3.4)
         #expect(spec.steps.map(\.id) == ShowSpec.StepID.allCases)
         #expect(spec.steps.map(\.pose) == [.busy, .busy, .review, .review, .busy, .review])
         #expect(spec.steps[4].methods == ["Holistically-nested edge detection", "Informative drawings"])
@@ -42,6 +42,8 @@ import Testing
         #expect(spec.crew.work == 0.6...0.95)
         #expect(spec.crew.traceRamp == ShowSpec.Ramp(up: 0.12, down: 0.16))
         #expect(spec.crew.bands == 3)
+        #expect(spec.crew.look == 0.4 && spec.crew.edgeWave == 0.5)
+        #expect(spec.tones == ShowSpec.Tones(low: 0.62, high: 0.92, mean: 0.85))
     }
 
     @Test func fixtureWasMadeFromTheShippedSpec() throws {
@@ -72,6 +74,13 @@ import Testing
             ("a footnote bolder than bold", try edited { $0["cards"] = ["opacity": 0.62, "footnote": 1.5] }),
             ("a negative footnote", try edited { $0["cards"] = ["opacity": 0.62, "footnote": -0.5] }),
             ("a text for a footnote", try edited { $0["cards"] = ["opacity": 0.62, "footnote": "faint"] }),
+            ("no tones", try edited { $0["tones"] = nil }),
+            ("tones whose mean is outside them", try edited { $0["tones"] = ["low": 0.62, "high": 0.92, "mean": 0.95] }),
+            ("tones upside down", try edited { $0["tones"] = ["low": 0.92, "high": 0.62, "mean": 0.85] }),
+            ("a black tone", try edited { $0["tones"] = ["low": 0, "high": 0.92, "mean": 0.85] }),
+            ("an unknown key in the tones", try edited { $0["tones"] = ["low": 0.62, "high": 0.92, "mean": 0.85, "gamma": 1] }),
+            ("no last look", try editedCrew { $0["look"] = nil }),
+            ("a negative edge wave", try editedCrew { $0["edgeWave"] = -0.5 }),
             ("an unknown key in the cards", try edited { $0["cards"] = ["opacity": 0.62, "footnote": 0.55, "shadow": 1] }),
             ("an unknown key in a step", try editedSteps { $0["subtitle"] = "x" }),
             ("no methods", try editedSteps { $0["methods"] = [String]() }),

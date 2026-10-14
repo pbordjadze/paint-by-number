@@ -63,6 +63,8 @@ TRACE_RAMP = (0.12, 0.16)
 HOLD = 0.3          # s: everyone standing takes the reviewing pose as a step ends
 EXIT = 1.8          # times walking pace, for the walk off the picture at the end
 WAVE = 0.6          # s of waving goodbye
+LOOK = 0.4          # s of a last look at the finished picture, before the wave
+EDGE_WAVE = 0.5     # s the last one out waves again, just inside the edge
 TILT = 4.0          # degrees of forward lean at full walking speed
 BEAT = 0.25         # share of a step between the beats arrivals land on
 INK_STEP = 4        # the step whose lines are drawn by walking along them
@@ -80,7 +82,8 @@ def configure(spec):
                       ('stride', 'STRIDE'), ('hop', 'HOP'), ('hopTime', 'HOP_TIME'), ('hopMin', 'HOP_MIN'),
                       ('pop', 'POP'), ('side', 'SIDE'), ('space', 'SPACE'), ('trace', 'TRACE'),
                       ('hold', 'HOLD'), ('exit', 'EXIT'), ('wave', 'WAVE'), ('tilt', 'TILT'),
-                      ('still', 'STILL'), ('margin', 'MARGIN'), ('beat', 'BEAT')):
+                      ('still', 'STILL'), ('margin', 'MARGIN'), ('beat', 'BEAT'),
+                      ('look', 'LOOK'), ('edgeWave', 'EDGE_WAVE')):
         globals()[name] = float(crew[key])
     WORK = tuple(float(v) for v in crew['work'])
     BANDS = int(crew['bands'])
@@ -385,11 +388,13 @@ class Planner:
         return abs(px - ox) < 0.85 * SPACE * self.h and abs(py - oy) < 1.15 * SPACE * self.h
 
     def farewell(self, wave_at, frame_h):
-        """The goodbye: each pet waves where it stands at `wave_at[i]` for WAVE s, then walks
-        briskly to the nearest edge whose way doesn't cross a pet still there, and steps out of
-        the frame."""
+        """The goodbye: each pet takes a last look at the finished picture (LOOK s, reviewing),
+        waves where it stands from `wave_at[i]` for WAVE s, then walks briskly to the nearest edge
+        whose way doesn't cross a pet still there, and steps out of the frame. The last one out
+        stops just inside that edge, turns to you and waves once more (EDGE_WAVE s) first."""
         h = self.h
         spots = [self._end(p.stops[-1]) for p in self.pets]
+        leaving = []
         for i, p in enumerate(self.pets):
             prev = p.stops[-1]
             x, y = spots[i]
@@ -399,21 +404,38 @@ class Planner:
                 done = prev[1] if prev[4] >= 0 else prev[0]
             at = max(wave_at[i], done)
             self._depart(i, at)
-            p.stops.append((at, at + WAVE, x, y, -2, None))
+            p.stops.append((at, at + LOOK, x, y, -4, None))
+            p.stops.append((at + LOOK, at + LOOK + WAVE, x, y, -2, None))
             exits = sorted([(-0.7 * h, y), (self.W + 0.7 * h, y), (x, -0.25 * h), (x, frame_h + 1.2 * h)],
                            key=lambda e: norm(e[0] - x, e[1] - y))
             others = spots[:i] + spots[i + 1:]
             ex, ey = next((e for e in exits if not any(self._crosses((x, y), e, o) for o in others)), exits[0])
-            need = walk_time(norm(ex - x, ey - y), h) / EXIT
-            p.stops.append((at + WAVE + need, float('inf'), ex, ey, -3, None))
+            off = at + LOOK + WAVE + walk_time(norm(ex - x, ey - y), h) / EXIT
+            leaving.append((off, i, ex, ey))
+        last = max(leaving)[1]
+        for off, i, ex, ey in leaving:
+            p = self.pets[i]
+            if i == last:
+                # it stops where it can still be seen whole, and waves to you before it goes
+                x, y = spots[i]
+                gone = p.stops[-1][1]
+                if ex < 0 or ex > self.W:
+                    sx, sy = (0.5 * h if ex < 0 else self.W - 0.5 * h), y
+                else:
+                    sx, sy = x, (1.05 * h if ey < 0 else self.H - 4)
+                at = gone + walk_time(norm(sx - x, sy - y), h) / EXIT
+                p.stops.append((at, at + EDGE_WAVE, sx, sy, -2, None))
+                off = at + EDGE_WAVE + walk_time(norm(ex - sx, ey - sy), h) / EXIT
+            p.stops.append((off, float('inf'), ex, ey, -3, None))
 
 
 class Pet:
     """One pet's way through the show. `stops` are (arrive, leave, x, y, step, path): a job
     (step 0-5) worked standing at (x, y), or drawn by walking `path`; the first stop is where it
-    pops in at `appear` (step -1); at the end it waves where it stands (step -2), then walks out
-    of the frame (step -3). `step_ends` are when steps end, for the shared hold. Once `finish` has
-    built the walks, `state` is a pure function of the time."""
+    pops in at `appear` (step -1); at the end it takes a last look at the picture (step -4), waves
+    where it stands (step -2), then walks out of the frame (step -3), the last one out waving once
+    more just inside the edge (another step -2). `step_ends` are when steps end, for the shared
+    hold. Once `finish` has built the walks, `state` is a pure function of the time."""
 
     def __init__(self, pid, start, height, rng, appear, step_ends):
         self.id = pid
@@ -529,6 +551,8 @@ class Pet:
         land = t - arrive
         sy = 1 + spring(land, -0.10, 0.22, 0.08) if path is None else 1.0
         sx = 1 / math.sqrt(max(sy, 0.5))
+        if k == -4:                                             # a last look at the picture
+            return x, y, 0.0, 'review', int((t - arrive) * 8), 1.0, 1.0, 0.0, 1.0
         if k == -2:                                             # waving goodbye
             return x, y, 0.0, 'wave', int((t - arrive) * 7), 1.0, 1.0, 0.0, 1.0
         if k == -3:                                             # gone

@@ -57,7 +57,12 @@ class PlanFixtureTests(unittest.TestCase):
         cls.planned = pets.plan(cls.fixture["inputs"])
 
     def test_fixture_was_made_from_the_shipped_spec(self):
-        self.assertEqual(self.fixture["spec"], json.loads(SPEC.read_text(encoding="utf-8")))
+        # what the plan reads: a caption or card change needs no new fixture
+        shipped, made = json.loads(SPEC.read_text(encoding="utf-8")), self.fixture["spec"]
+        for key in ("crew", "timing"):
+            self.assertEqual(made[key], shipped[key])
+        self.assertEqual([(s["id"], s["pose"]) for s in made["steps"]],
+                         [(s["id"], s["pose"]) for s in shipped["steps"]])
 
     def test_inputs_are_at_the_precision_the_file_keeps(self):
         self.assertEqual(pets.quantized(self.fixture["inputs"]), self.fixture["inputs"])

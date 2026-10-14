@@ -14,6 +14,7 @@ public struct ShowSpec: Sendable, Equatable, Decodable {
     public var timing: Timing
     public var steps: [Step]
     public var cards: Cards
+    public var tones: Tones
     public var sketch: Sketch
     public var seeds: Seeds
     public var outlines: Outlines
@@ -47,6 +48,14 @@ public struct ShowSpec: Sendable, Equatable, Decodable {
         public var opacity: Double
         /// How faint the footnote's credit lines are: 1 is as bold as the caption.
         public var footnote: Double
+    }
+
+    /// The greys of the paints, merged and ink steps: lightness mapped from `low` to `high`, bent
+    /// so the picture averages `mean` (the Snow Queen's lighter, clearer greys).
+    public struct Tones: Sendable, Equatable {
+        public var low: Double
+        public var high: Double
+        public var mean: Double
     }
 
     public struct Sketch: Sendable, Equatable {
@@ -98,6 +107,10 @@ public struct ShowSpec: Sendable, Equatable, Decodable {
         public var hold: Double
         public var exit: Double
         public var wave: Double
+        /// Seconds of a last look at the finished picture, before the wave.
+        public var look: Double
+        /// Seconds the last one out waves again, just inside the edge.
+        public var edgeWave: Double
         public var tilt: Double
         public var beat: Double
     }
@@ -111,7 +124,7 @@ public struct ShowSpec: Sendable, Equatable, Decodable {
     }
 
     public init(from decoder: any Decoder) throws {
-        let f = try Fields(decoder, keys: ["about", "version", "timing", "steps", "cards", "sketch", "seeds", "outlines", "crew"])
+        let f = try Fields(decoder, keys: ["about", "version", "timing", "steps", "cards", "tones", "sketch", "seeds", "outlines", "crew"])
         let found = try f.integer("version", in: 0...Int.max)
         guard found == Self.version else {
             throw f.invalid("version", "\(found), but this reader knows version \(Self.version)")
@@ -120,6 +133,7 @@ public struct ShowSpec: Sendable, Equatable, Decodable {
         timing = try f.value("timing")
         steps = try f.value("steps")
         cards = try f.value("cards")
+        tones = try f.value("tones")
         sketch = try f.value("sketch")
         seeds = try f.value("seeds")
         outlines = try f.value("outlines")
@@ -164,6 +178,16 @@ extension ShowSpec.Cards: Decodable {
     }
 }
 
+extension ShowSpec.Tones: Decodable {
+    public init(from decoder: any Decoder) throws {
+        let f = try Fields(decoder, keys: ["low", "high", "mean"])
+        low = try f.fraction("low")
+        high = try f.fraction("high")
+        mean = try f.fraction("mean")
+        guard low < mean && mean < high else { throw f.invalid("mean", "must lie between low and high") }
+    }
+}
+
 extension ShowSpec.Sketch: Decodable {
     public init(from decoder: any Decoder) throws {
         let f = try Fields(decoder, keys: ["coherenceFrom", "coherenceSpan", "coherenceExponent", "smearRadius"])
@@ -197,7 +221,7 @@ extension ShowSpec.Crew: Decodable {
         let f = try Fields(decoder, keys: [
             "pets", "height", "walk", "lean", "accel", "decel", "stride", "hop", "hopTime", "hopMin", "work",
             "pop", "side", "still", "margin", "bands", "space", "trace", "traceRamp", "hold", "exit", "wave",
-            "tilt", "beat",
+            "look", "edgeWave", "tilt", "beat",
         ])
         let pets: [String] = try f.value("pets")
         guard (1...20).contains(pets.count), pets.allSatisfy({ !$0.isEmpty && $0.count <= 64 }),
@@ -230,6 +254,8 @@ extension ShowSpec.Crew: Decodable {
         hold = try f.number("hold", in: 0.01...5)
         exit = try f.number("exit", in: 0.1...20)
         wave = try f.number("wave", in: 0.01...10)
+        look = try f.number("look", in: 0.01...5)
+        edgeWave = try f.number("edgeWave", in: 0.01...5)
         tilt = try f.number("tilt", in: 0...45)
         beat = try f.number("beat", in: 0.01...1)
     }

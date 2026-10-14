@@ -4,7 +4,7 @@
   "timing": {
     "intro": 0.6,
     "step": 2.5,
-    "outro": 2.4
+    "outro": 3.4
   },
   "steps": [
     { "id": "sketch", "caption": "Finding the shapes under the texture", "methods": ["Relative total variation"], "pose": "busy" },
@@ -17,6 +17,11 @@
   "cards": {
     "opacity": 0.62,
     "footnote": 0.55
+  },
+  "tones": {
+    "low": 0.62,
+    "high": 0.92,
+    "mean": 0.85
   },
   "sketch": {
     "coherenceFrom": 0.2,
@@ -57,6 +62,8 @@
     "hold": 0.3,
     "exit": 1.8,
     "wave": 0.6,
+    "look": 0.4,
+    "edgeWave": 0.5,
     "tilt": 4.0,
     "beat": 0.25
   }

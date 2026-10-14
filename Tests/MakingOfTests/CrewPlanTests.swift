@@ -15,6 +15,7 @@ import Testing
     private func kind(_ step: Int) -> Stop.Kind {
         switch step {
         case -1: .appear
+        case -4: .look
         case -2: .wave
         case -3: .exit
         default: .job(step)
@@ -148,11 +149,12 @@ import Testing
         let h = inputs.petHeight
         let dt = 1.0 / 120
         for pet in plan.pets {
-            let walkOff = pet.walks[pet.walks.count - 1].leave
+            // up to the goodbye, whose walks are brisker on purpose
+            let goodbye = pet.stops.first { $0.kind == .look }?.arrive ?? .infinity
             var previous = pet.state(at: 0)
             var fastest = 0.0
             var t = dt
-            while t < walkOff {
+            while t < goodbye {
                 let s = pet.state(at: t)
                 fastest = max(fastest, norm(s.x - previous.x, s.y - previous.y) / dt / h)
                 previous = s
@@ -260,8 +262,11 @@ import Testing
         let bare = try CrewPlan(inputs { $0.candidates = Array(repeating: [], count: 6); $0.strokes = [] }, spec: spec)
         #expect(bare.traces.isEmpty)
         #expect(bare.visits.count == 6)
+        // each looks, waves and goes; the last one out waves again at the edge
+        let kinds = bare.pets.map { $0.stops.map(\.kind) }
+        #expect(kinds.filter { $0 == [.appear, .look, .wave, .exit] }.count == bare.pets.count - 1)
+        #expect(kinds.filter { $0 == [.appear, .look, .wave, .wave, .exit] }.count == 1)
         for pet in bare.pets {
-            #expect(pet.stops.map(\.kind) == [.appear, .wave, .exit])
             #expect(pet.state(at: -1).alpha == 0)
             #expect(pet.state(at: 5).row == .idle || pet.state(at: 5).row == .review)
             #expect(pet.state(at: 100).alpha == 0)

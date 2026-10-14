@@ -52,7 +52,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from making_of_layers import INK, PAPER, Sources, box, oklab, sketch, wash  # noqa: E402
+from making_of_layers import INK, PAPER, Sources, box, oklab, sketch  # noqa: E402
 import making_of_pets  # noqa: E402
 
 INTRO, OUTRO = 0.4, 1.6
@@ -394,11 +394,11 @@ def motion_report(pets, total, size, h, out):
         lift_v = np.abs(np.diff(lifts)) / dt / h
         jobs = len(p.stops) - 1
         moving = v > 0.2
-        work = slice(0, int(p.segments[-1]['leave'] / dt))      # before the brisker walk-off
+        work = slice(0, int(min(st[0] for st in p.stops if st[4] == -4) / dt))   # before the goodbye
         lines.append(f'{n:2d} jobs {jobs:2d}  ground: top {v.max():4.2f} h/s, mean moving {v[moving].mean() if moving.any() else 0:4.2f},'
                      f' moving {moving.mean() * 100:3.0f}% of the time, hardest accel {np.percentile(acc, 99.5):5.1f} h/s2'
                      f'  lift: top {lifts.max() / h:4.2f} h, fastest {lift_v.max():4.2f} h/s'
-                     f'  before the walk-off: top {v[work].max():4.2f} h/s, hardest accel {np.percentile(acc[work], 99.5):5.1f} h/s2')
+                     f'  before the goodbye: top {v[work].max():4.2f} h/s, hardest accel {np.percentile(acc[work], 99.5):5.1f} h/s2')
         ys = ys - lifts
         if n < 4:
             img = Image.new('RGB', size, (247, 244, 238))
@@ -477,7 +477,7 @@ def main():
     pace = 1.5 / STEP          # the constants below were set for 1.5 s steps
     rng = np.random.default_rng(a.seed)
 
-    src = Sources(a.generated, a.snapshots, a.width, spec['sketch'])
+    src = Sources(a.generated, a.snapshots, a.width, spec['sketch'], spec['tones'])
     W, H = src.size
     layers = src.layers()
     paper = src.paper
@@ -643,7 +643,7 @@ def main():
 
     smooth_cov = outlines(float('inf'))
     INK_RAMP = float(spec['outlines']['inkRamp'])     # s for a stroke to darken from grey to ink
-    lift_from, lift_to = wash(src.simplified, 0.45), wash(src.simplified, 0.22)
+    lift_from, lift_to = src.toned, src.lifted
     # step 6: numbers, each with its region
     template = src.template
     numbers_mult = np.where(src.lines[..., None] > 0.85, template, 1.0)

@@ -112,6 +112,23 @@ def wash(rgb, strength):
     return (1 - strength * (1 - L))[..., None]
 
 
+def tone_curve(rgb, low, high, mean):
+    """Maps lightness onto greys from `low` to `high`, bent so that `rgb` averages `mean`: the
+    Snow Queen's lighter, clearer greys. Returns the map, so every stage after `rgb` gets the
+    same one and changes only where the picture does."""
+    L = lightness(rgb)
+    lo, hi = np.percentile(L, (1, 99))
+    span = max(float(hi - lo), 1e-6)
+    t = np.clip((L - lo) / span, 0, 1)
+    want = (mean - low) / (high - low)
+    a, b = 0.05, 20.0                   # t ** g averages less as g grows
+    for _ in range(40):
+        g = (a * b) ** 0.5
+        a, b = (g, b) if (t ** g).mean() > want else (a, g)
+    g = (a * b) ** 0.5
+    return lambda img: (low + (high - low) * np.clip((lightness(img) - lo) / span, 0, 1) ** g)[..., None]
+
+
 def ink(lines, strength=1.0):
     """A multiply layer: dark lines (black on white) in the app's ink."""
     d = (1 - lines) * strength
@@ -145,7 +162,7 @@ class Sources:
     """One generation's stage pictures at `width` pixels wide, 0...1 floats, plus the
     multiply layers the six steps are made of."""
 
-    def __init__(self, generated, snapshots, width=None, sketch_spec=None):
+    def __init__(self, generated, snapshots, width=None, sketch_spec=None, tones=None):
         snap = lambda n: os.path.join(snapshots, n)
         w0, h0 = Image.open(snap('working-image.ppm')).size
         width = width or w0
@@ -177,6 +194,10 @@ class Sources:
         self.texture = np.clip((1 - ratio) * busy * 1.4, 0, 1)
         blurred = box(box(self.photo, int(k['smearRadius'])), int(k['smearRadius']))
         self.detextured = self.photo + (blurred - self.photo) * self.texture[..., None]
+        t = tones or {'low': 0.62, 'high': 0.92, 'mean': 0.85}
+        self.tone = tone_curve(self.simplified, t['low'], t['high'], t['mean'])
+        self.toned = self.tone(self.simplified)
+        self.lifted = 1 - 0.5 * (1 - self.toned)        # the ink step lifts the grey halfway
 
     def layers(self):
         paper = self.paper
@@ -184,9 +205,9 @@ class Sources:
             self.photo,
             paper * sketch(self.survivors, 1.0),
             paper * wash(self.smoothed, 0.35) * sketch(self.survivors, 0.8),
-            paper * wash(self.palette, 0.45) * sketch(self.survivors, 0.35),
-            paper * wash(self.simplified, 0.45),
-            paper * wash(self.simplified, 0.22) * ink(self.lines),
+            paper * self.tone(self.palette) * sketch(self.survivors, 0.35),
+            paper * self.toned,
+            paper * self.lifted * ink(self.lines),
             paper * self.template,
         ]
 
