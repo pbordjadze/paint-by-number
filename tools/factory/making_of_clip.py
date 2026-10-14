@@ -27,13 +27,14 @@ ffmpeg, the Charter Type 1 fonts (xfonts-scalable) and making_of_layers.py's nod
 """
 
 import argparse
+import math
 import os
 import re
 import subprocess
 import sys
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from making_of_layers import INK, PAPER, Sources, ink, sketch, wash  # noqa: E402
@@ -65,6 +66,18 @@ STEPS = [
 CREW_COLORS = ['#C98A3B', '#2E9C8F', '#7FA7D9', '#8C5A3C', '#5B6B3A', '#C2553F', '#3F8FB8', '#9C3B5E',
                '#B23A3A', '#6C5A8E', '#D2A23A', '#4E7A4E', '#A0603A', '#3A6E8C', '#C77AA0', '#7A7A3A',
                '#5A5A7A', '#B86A4A', '#3A9A6A', '#8A6A9A']
+
+
+def ink_line(pen, pts, value, width):
+    """Draws a polyline at `value` onto `pen`, keeping whatever is darker there already."""
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    x0, y0 = max(int(min(xs)) - width, 0), max(int(min(ys)) - width, 0)
+    x1, y1 = min(int(max(xs)) + width + 1, pen.width), min(int(max(ys)) + width + 1, pen.height)
+    if x0 >= x1 or y0 >= y1:
+        return
+    tmp = Image.new('L', (x1 - x0, y1 - y0), 0)
+    ImageDraw.Draw(tmp).line([(x - x0, y - y0) for x, y in pts], fill=value, width=width, joint='curve')
+    pen.paste(ImageChops.lighter(pen.crop((x0, y0, x1, y1)), tmp), (x0, y0))
 
 
 def smoothstep(x):
@@ -306,13 +319,36 @@ def motion_report(pets, total, size, h, out):
             img.save(os.path.join(out, f'spacing-{n}.png'))
     for n, p in enumerate(pets[:2]):
         for sgm, stop in zip(p.segments, p.stops[1:]):
-            lines.append(f'pet {n} walks {sgm["leave"]:.2f}-{sgm["arrive"]:.2f} s, {sgm["d"] / h:.1f} h, to ({stop[2]:.0f}, {stop[3]:.0f})')
+            lines.append(f'pet {n} walks {sgm["leave"]:.2f}-{sgm["arrive"]:.2f} s, {sgm["d"] / h:.1f} h, to ({stop[2]:.0f}, {stop[3]:.0f}), step {stop[4]}'
+                         + (' and draws a line' if stop[5] is not None else ''))
+    for k in range(6):
+        xs = [st[2] for p in pets for st in p.stops if st[4] == k]
+        if xs:
+            third = [sum(1 for x in xs if j * size[0] / 3 <= x < (j + 1) * size[0] / 3) for j in range(3)]
+            lines.append(f'step {k + 1}: {len(xs)} jobs, left/middle/right thirds {third[0]}/{third[1]}/{third[2]}')
+    # crowding: how often two pets' boxes (0.7 h wide, h tall) overlap, standing or walking
+    frames, touching, worst = 0, 0, 0
+    for i in range(0, int(total * 30)):
+        t = i / 30
+        boxes = []
+        for p in pets:
+            st = p.state(t)
+            if st[8] > 0.5:
+                boxes.append((st[0] - 0.35 * h, st[1] - st[2] - h, st[0] + 0.35 * h, st[1] - st[2]))
+        n = sum(1 for a_ in range(len(boxes)) for b_ in range(a_ + 1, len(boxes))
+                if boxes[a_][0] < boxes[b_][2] and boxes[b_][0] < boxes[a_][2] and boxes[a_][1] < boxes[b_][3] and boxes[b_][1] < boxes[a_][3])
+        frames += 1
+        touching += n > 0
+        worst = max(worst, n)
+    lines.append(f'pets overlapping in {touching / frames * 100:.0f}% of frames, at most {worst} pairs at once')
+    traces = sum(1 for p in pets for st in p.stops if st[5] is not None)
+    lines.append(f'lines drawn by walking: {traces}; out of the frame by {min(p.stops[-1][0] for p in pets):.2f}-{max(p.stops[-1][0] for p in pets):.2f} s')
     open(os.path.join(out, 'motion.txt'), 'w').write('\n'.join(lines) + '\n')
     print('\n'.join(lines))
 
 
 def main():
-    global STEP, VISITS, INTRO
+    global STEP, VISITS, INTRO, OUTRO
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('generated')
     ap.add_argument('snapshots')
@@ -330,6 +366,7 @@ def main():
     STEP, VISITS = a.step, max(2, round(a.step / a.stop_every))
     if a.pets:
         INTRO = 0.6         # the pets pop in first
+        OUTRO = 2.4         # wave, walk out, and leave the template a moment to itself
     pace = 1.5 / STEP          # the constants below were set for 1.5 s steps
     rng = np.random.default_rng(a.seed)
 
@@ -369,7 +406,8 @@ def main():
         room[int(pet_h) + 4:H - 8, int(0.05 * W):W - int(0.05 * W)] = 1
         weights = [w * room for w in weights]
     n_stops = a.crew * VISITS
-    pets = []
+    end = INTRO + 6 * STEP
+    pets, traces, seeds_by_step = [], [], []
     if a.pets:
         ids = making_of_pets.ORDER[:a.crew]
         sprites = making_of_pets.load(a.pets, ids)
@@ -381,44 +419,68 @@ def main():
         for i, pid in enumerate(ids):
             x, y = homes[i % len(homes)]
             appear = 0.04 + 0.035 * order[i]
-            start = (appear, appear + 0.05, x, y, -1)
+            start = (appear, appear + 0.05, x, y, -1, None)
             pets.append(making_of_pets.Pet(sprites[pid], start, pet_h, pet_rng, appear,
-                                           INTRO + 6 * STEP, INTRO + 6 * STEP + 0.15 + 0.05 * wave[i]))
+                                           end + 0.15 + 0.06 * wave[i], [s0 + STEP for s0 in starts]))
+        planner = making_of_pets.Planner(pets, (W, H), pet_h, pet_rng, STEP / 4, INTRO)
     T = []
     for k in range(6):
         if pets:
-            pts = sample_stops(weights[k], a.crew * 4, rng, spacing=0.1 * W)
-            visits = making_of_pets.plan_step(pets, starts[k], starts[k] + STEP - 0.15, pts, k, pet_h, rng)
+            if k == 4:
+                visits, traces = planner.trace(starts[k], starts[k] + STEP - 0.15, strokes, k)
+            else:
+                pts = sample_stops(weights[k], a.crew * 4, rng, spacing=0.1 * W)
+                visits = planner.step(starts[k], starts[k] + STEP - 0.15, pts, k)
+            if not visits:
+                visits = [(starts[k] + 0.1, W / 2, H / 2)]
         else:
             pts = sample_stops(weights[k], n_stops, rng, spacing=0.09 * W)
             visits = crew.plan_step(starts[k], pts, k)
+        seeds_by_step.append(visits)
         noise = 0.10 * value_noise((H, W), (18, 12), rng) + 0.06 * value_noise((H, W), (60, 40), rng)
         T.append(arrival(visits, (H, W), speed=0.55 * W * pace, t_end=starts[k] + STEP - 0.2, noise=noise))
+    if pets:
+        planner.farewell([end - 0.05 + 0.03 * w for w in wave], H + CARD_BAND)
     T_pal = region_min(T[2], pal_labels, pal_n)
     T_sim = region_min(T[3], sim_labels, sim_n)
     T_clear = region_min(T[5], sim_labels, sim_n)
+    # steps 3 and 4 settle with a small overshoot, darker then back, where the picture changes
+    settle = {k: np.clip(np.abs(layers[k + 1] - layers[k]).max(axis=2) * 12, 0, 1)[..., None] for k in (2, 3)}
 
-    # step 5: each stroke drawn from its start, at a pen's pace, finished before the step ends
+    # step 5: the lines the pets walk are drawn under their feet; the rest follow from where they
+    # are, at a calmer pace, each darkening from grey to ink as it goes down
     t5_end = starts[4] + STEP - 0.12
+    traced_by = {n: (t0, dur, pts) for n, t0, dur, pts in traces}
     stroke_plan = []
-    for s in strokes:
+    for n, s in enumerate(strokes):
+        if n in traced_by:
+            t0, dur, pts = traced_by[n]
+            pts = np.asarray(pts, dtype=np.float32)
+            cum = np.concatenate(([0], np.cumsum(np.hypot(*np.diff(pts, axis=0).T))))
+            stroke_plan.append((t0, dur, pts, cum, True))
+            continue
         x, y = int(min(max(s[0][0], 0), W - 1)), int(min(max(s[0][1], 0), H - 1))
-        seg = np.hypot(*np.diff(s, axis=0).T)
-        cum = np.concatenate(([0], np.cumsum(seg)))
-        t0 = float(T[4][y, x])
-        dur = min(max(cum[-1] / (0.9 * W * pace), 0.12), 0.6 / pace)
+        cum = np.concatenate(([0], np.cumsum(np.hypot(*np.diff(s, axis=0).T))))
+        t0 = max(float(T[4][y, x]) + rng.uniform(0, 0.5), starts[4] + (0.3 if pets else 0.0))
+        dur = min(max(cum[-1] / (0.45 * W * pace), 0.25), 0.9 / pace)
         if t0 + dur > t5_end:
             t0 = max(starts[4], t5_end - dur)
-        stroke_plan.append((t0, dur, s, cum))
+        stroke_plan.append((t0, dur, s, cum, False))
     pen = Image.new('L', (W * 2, H * 2), 0)
-    pen_draw = ImageDraw.Draw(pen)
-    pen_done = [0.0] * len(strokes)
+    INK_RAMP = 0.35                  # s for a stroke to darken from grey to ink
     lines_mult = ink(src.lines)
     lift_from, lift_to = wash(src.simplified, 0.45), wash(src.simplified, 0.22)
     # step 6: numbers, each with its region
     template = src.template
     numbers_mult = np.where(src.lines[..., None] > 0.85, template, 1.0)
-    num_T = np.array([T_clear[int(min(max(y, 0), H - 1)), int(min(max(x, 0), W - 1))] for x, y, _, _ in numbers])
+    num_T = []
+    for x, y, _, _ in numbers:
+        clear_at = float(T_clear[int(min(max(y, 0), H - 1)), int(min(max(x, 0), W - 1))])
+        near = [t for t, sx, sy in seeds_by_step[5] if math.hypot(sx - x, sy - y) < 1.6 * pet_h]
+        # a number next to a working pet goes down a moment after it does; the rest come quietly later
+        at = min(near) + 0.3 if pets and near else max(clear_at, starts[5] + (0.55 * STEP if pets else 0))
+        num_T.append(min(max(at, clear_at + 0.05), end - 0.15))
+    num_T = np.array(num_T)
     ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
     num_idx = np.full((H, W), -1, dtype=np.int32)
     for i, (x, y, sz, _) in enumerate(numbers):
@@ -462,19 +524,25 @@ def main():
             soft = 0.16 if k < 2 else 0.09
             m = smoothstep((t - Tk) / soft)[..., None]
             pic = layers[k] + (layers[k + 1] - layers[k]) * m
+            if k in settle:
+                bump = np.sin(np.pi * np.clip((t - Tk) / 0.22, 0, 1))[..., None]
+                pic = pic * (1 - 0.1 * bump * settle[k])
         elif k == 4:
-            for i, (t0, dur, s, cum) in enumerate(stroke_plan):
-                u = min(max((t - t0) / dur, 0.0), 1.0)
-                if u <= pen_done[i]:
+            for t0, dur, s, cum, walked in stroke_plan:
+                if t < t0 or t > t0 + dur + INK_RAMP + 1 / a.fps:
                     continue
-                a0, a1 = pen_done[i] * cum[-1], ease(u) * cum[-1] if u < 1 else cum[-1]
-                if a1 <= a0:
+                if walked:
+                    a1 = making_of_pets.traced(t - t0, float(cum[-1]), pet_h)
+                else:
+                    a1 = ease((t - t0) / dur) * cum[-1]
+                if a1 <= 0:
                     continue
-                pts = [tuple(np.interp(a0, cum, s[:, c]) for c in (0, 1))]
-                pts += [tuple(p) for p, c in zip(s, cum) if a0 < c < a1]
+                pts = [tuple(p) for p, c in zip(s, cum) if c < a1]
                 pts.append(tuple(np.interp(a1, cum, s[:, c]) for c in (0, 1)))
-                pen_draw.line([(x * 2, y * 2) for x, y in pts], fill=255, width=9, joint='curve')
-                pen_done[i] = a1 / cum[-1] if cum[-1] else 1.0
+                if len(pts) < 2:
+                    continue
+                value = int(255 * (0.45 + 0.55 * min(max((t - t0) / (dur + INK_RAMP), 0), 1)))
+                ink_line(pen, [(x * 2, y * 2) for x, y in pts], value, 9)
             pm = np.asarray(pen.reduce(2), dtype=np.float32)[..., None] / 255
             lift = smoothstep((t - T[4]) / 0.16)[..., None]
             pic = paper * (lift_from + (lift_to - lift_from) * lift) * (1 - pm * (1 - lines_mult))
@@ -501,13 +569,13 @@ def main():
         img = Image.fromarray((np.clip(frame, 0, 1) * 255 + 0.5).astype(np.uint8))
         draw = ImageDraw.Draw(img, 'RGBA')
         if pets:
-            end = INTRO + 6 * STEP
-            fade = 1.0 if t < end + OUTRO - 0.45 else max(0.0, 1 - (t - (end + OUTRO - 0.45)) / 0.35)
+            # they dim only as the painting screen arrives, never while waving
+            fade = 1.0 if t < total - 0.3 else max(0.0, (total - t) / 0.3)
             if fade > 0:
-                canvas = img.crop((0, 0, W, H)).convert('RGBA')
+                canvas = img.convert('RGBA')
                 for pet in sorted(pets, key=lambda p: p.state(t)[1]):
                     pet.draw(canvas, t, fade, H)
-                img.paste(canvas.convert('RGB'), (0, 0))
+                img = canvas.convert('RGB')
         elif t < INTRO + 6 * STEP + OUTRO - 0.3:
             fade = 1.0 if t < INTRO + 6 * STEP else max(0.0, 1 - (t - INTRO - 6 * STEP) / 0.5)
             for i, (x, y, moving) in enumerate(crew.positions(t)):

@@ -46,6 +46,13 @@ STRIDE = 1.5        # h per walk cycle (8 frames)
 HOP, HOP_TIME, HOP_MIN = 0.06, 0.32, 1.6    # h, s, and the shortest walk (h) that ends in one
 WORK = (0.6, 0.95)  # s at a job
 POP = 0.42          # s for the pop at the start
+SIDE = 0.42         # h: a pet stands this far to one side of its spot, and works toward it
+SPACE = 1.0         # h: how far apart pets' spots stay while both are there (see _clear)
+TRACE = 1.5         # h per second while drawing a line by walking along it
+TRACE_RAMP = (0.12, 0.16)
+HOLD = 0.3          # s: everyone standing takes the reviewing pose as a step ends
+EXIT = 1.8          # times walking pace, for the walk off the picture at the end
+WAVE = 0.6          # s of waving goodbye
 TILT = 4.0          # degrees of forward lean at full walking speed
 
 
@@ -66,10 +73,14 @@ def walk_time(dist, h):
     return LEAN + dist / (WALK * h) + 0.5 * (ACCEL + DECEL)
 
 
-def travelled(tau, dist, h):
-    """Distance covered `tau` s after the lean, on a trapezoid of speed."""
-    v = WALK * h
-    acc, dec = ACCEL, DECEL
+def trace_time(dist, h):
+    """Seconds to draw a line `dist` px long, walking along it."""
+    return dist / (TRACE * h) + 0.5 * (TRACE_RAMP[0] + TRACE_RAMP[1])
+
+
+def trapezoid(tau, dist, v, acc, dec):
+    """Distance covered `tau` s into a move of `dist` at top speed `v`, speeding up over `acc` s
+    and slowing over `dec` s."""
     cruise = dist / v - 0.5 * (acc + dec)
     if cruise < 0:                      # too short to reach full speed: scale the ramps
         k = math.sqrt(dist / v / (0.5 * (acc + dec)))
@@ -84,6 +95,16 @@ def travelled(tau, dist, h):
     d += v * cruise
     r = tau - acc - cruise
     return min(dist, d + v * r - 0.5 * v * r * r / dec)
+
+
+def travelled(tau, dist, h):
+    """Distance walked `tau` s after the lean."""
+    return trapezoid(tau, dist, WALK * h, ACCEL, DECEL)
+
+
+def traced(tau, dist, h):
+    """Distance drawn `tau` s into tracing a line."""
+    return trapezoid(tau, dist, TRACE * h, *TRACE_RAMP)
 
 
 class Sprites:
@@ -110,57 +131,172 @@ class Sprites:
         self.cx = float(xs.mean())
 
 
-def plan_step(pets, t0, t_end, candidates, step, h, rng):
-    """Hands out the step's jobs: whoever is free first takes the nearest untaken spot it can
-    walk to and finish by `t_end`. Appends (arrive, leave, x, y, step) to each pet's stops and
-    returns the visits (time, x, y) the step's change spreads from."""
-    pool = list(candidates)
-    free = [p.stops[-1][1] for p in pets]
-    visits = []
-    busy = [True] * len(pets)
-    while any(busy) and pool:
-        i = min((j for j in range(len(pets)) if busy[j]), key=lambda j: free[j])
-        _, _, x, y, _ = pets[i].stops[-1]
-        best, best_arrive = None, None
-        for q, (px, py) in enumerate(pool):
-            arrive = free[i] + walk_time(math.hypot(px - x, py - y), h)
-            if arrive < t0 + 0.08:                  # wait, so the walk ends as the step begins
-                arrive = t0 + 0.08 + rng.uniform(0, 0.25)
-            if arrive + WORK[0] <= t_end and (best is None or arrive < best_arrive):
-                best, best_arrive = q, arrive
-        if best is None:
-            busy[i] = False
-            continue
-        px, py = pool.pop(best)
-        prev = pets[i].stops[-1]
-        depart = best_arrive - walk_time(math.hypot(px - x, py - y), h)
-        if depart > prev[1]:                     # it kept working there until it had to go
-            pets[i].stops[-1] = (prev[0], depart, prev[2], prev[3], prev[4])
-        leave = best_arrive + rng.uniform(*WORK)
-        pets[i].stops.append((best_arrive, min(leave, t_end), px, py, step))
-        free[i] = min(leave, t_end)
-        visits.append((best_arrive, px, py))
-    return visits
+class Planner:
+    """Hands out the jobs. A pet stands beside its spot (SIDE), on the side it came from, so the
+    change it makes is never hidden under it; spots of pets working at the same time stay SPACE
+    apart; arrivals land on the step's quarter beats, rippling left to right."""
+
+    def __init__(self, pets, size, h, rng, beat, origin):
+        self.pets, self.h, self.rng = pets, h, rng
+        self.W, self.H = size
+        self.beat, self.origin = beat, origin
+        self.taken = []                 # (from, to, x, y, pet)
+
+    def _end(self, stop):
+        path = stop[5]
+        return (float(path[-1][0]), float(path[-1][1])) if path is not None else (stop[2], stop[3])
+
+    def _stand(self, jx, jy, fromx):
+        h = self.h
+        side = -1 if fromx < jx else 1
+        x = jx + side * SIDE * h
+        if not 0.05 * self.W <= x <= 0.95 * self.W:
+            x = jx - side * SIDE * h
+        return min(max(x, 0.05 * self.W), 0.95 * self.W), min(jy + 0.05 * h, self.H - 4)
+
+    def _clear(self, x, y, t0, t1, me):
+        # pets are taller than wide: clear means side by side with room, or a whole pet apart up and down
+        h = self.h
+        return all(o == me or b + 0.2 < t0 or t1 + 0.2 < a
+                   or abs(x - ox) >= 0.85 * SPACE * h or abs(y - oy) >= 1.15 * SPACE * h
+                   for a, b, ox, oy, o in self.taken)
+
+    def _snap(self, t, x):
+        k = math.ceil((t - self.origin) / self.beat - 1e-6)
+        return self.origin + k * self.beat + 0.15 * x / self.W
+
+    def _depart(self, i, depart):
+        prev = self.pets[i].stops[-1]
+        if depart > prev[1]:            # it kept at it there until it had to go
+            self.pets[i].stops[-1] = prev[:1] + (depart,) + prev[2:]
+
+    def step(self, t0, t_end, candidates, k, homes=None):
+        """Jobs at `candidates` (spots) for step `k`; returns the seeds its change spreads from,
+        (time, x, y), a short sweep beside each pet as it works. `homes`, if given, is where
+        each pet must be by when afterwards ((x, y, t) per pet)."""
+        h, pool, seeds = self.h, list(candidates), []
+        free = [p.stops[-1][1] for p in self.pets]
+        live = [True] * len(self.pets)
+        while any(live) and pool:
+            i = min((j for j in range(len(self.pets)) if live[j]), key=lambda j: free[j])
+            x, y = self._end(self.pets[i].stops[-1])
+            best = None
+            for q, (jx, jy) in enumerate(pool):
+                sx, sy = self._stand(jx, jy, x)
+                d = math.hypot(sx - x, sy - y)
+                reach = max(free[i] + walk_time(d, h), t0 + 0.08)   # compared unsnapped: the beat's
+                arrive = self._snap(reach, sx)                       # ripple must not pull anyone sideways
+                last = t_end
+                if homes:
+                    hx, hy, by = homes[i]
+                    last = min(last, by - walk_time(math.hypot(hx - sx, hy - sy), h) / EXIT)
+                if arrive + WORK[0] > last or not self._clear(sx, sy, arrive, arrive + WORK[1], i):
+                    continue
+                if best is None or reach < best[6]:
+                    best = (arrive, q, sx, sy, d, last, reach)
+            if best is None:
+                live[i] = False
+                continue
+            arrive, q, sx, sy, d, last, _ = best
+            jx, jy = pool.pop(q)
+            self._depart(i, arrive - walk_time(d, h))
+            leave = min(arrive + self.rng.uniform(*WORK), last)
+            self.pets[i].stops.append((arrive, leave, sx, sy, k, None))
+            self.taken.append((arrive, leave, sx, sy, i))
+            free[i] = leave
+            toward = 1 if jx >= sx else -1
+            for f, dx in ((0.1, -0.2), (0.35, 0.05), (0.6, 0.25)):
+                seeds.append((arrive + f * (leave - arrive), jx + toward * dx * h, jy))
+        return seeds
+
+    def trace(self, t0, t_end, strokes, k, homes=None):
+        """Step `k`'s lines: each free pet walks to the nearest line it can draw in time and draws
+        it by walking along it. Returns (seeds, traces): traces are (stroke index, start time,
+        duration, points in drawing order)."""
+        h, seeds, traces = self.h, [], []
+        pool = {n: s for n, s in enumerate(strokes)
+                if float(np.hypot(*np.diff(s, axis=0).T).sum()) >= 0.9 * h}
+        free = [p.stops[-1][1] for p in self.pets]
+        live = [True] * len(self.pets)
+        while any(live) and pool:
+            i = min((j for j in range(len(self.pets)) if live[j]), key=lambda j: free[j])
+            x, y = self._end(self.pets[i].stops[-1])
+            best = None
+            for n, s in pool.items():
+                length = float(np.hypot(*np.diff(s, axis=0).T).sum())
+                for pts in (s, s[::-1]):
+                    d = math.hypot(pts[0][0] - x, pts[0][1] - y)
+                    reach = max(free[i] + walk_time(d, h), t0 + 0.08)
+                    arrive = self._snap(reach, pts[0][0])
+                    dur = trace_time(length, h)
+                    end_by = t_end
+                    if homes:
+                        hx, hy, by = homes[i]
+                        end_by = min(end_by, by - walk_time(math.hypot(hx - pts[-1][0], hy - pts[-1][1]), h))
+                    if arrive + dur > end_by or not self._clear(pts[0][0], pts[0][1], arrive, arrive + 0.4, i):
+                        continue
+                    if best is None or reach - 0.1 * dur < best[5] - 0.1 * best[2]:
+                        best = (arrive, n, dur, pts, d, reach)
+            if best is None:
+                live[i] = False
+                continue
+            arrive, n, dur, pts, d, _ = best
+            del pool[n]
+            self._depart(i, arrive - walk_time(d, h))
+            self.pets[i].stops.append((arrive, arrive + dur, float(pts[0][0]), float(pts[0][1]), k, pts))
+            self.taken.append((arrive, arrive + 0.4, float(pts[0][0]), float(pts[0][1]), i))
+            free[i] = arrive + dur + 0.12
+            traces.append((n, arrive, dur, pts))
+            cum = np.concatenate(([0], np.cumsum(np.hypot(*np.diff(pts, axis=0).T))))
+            for f in np.linspace(0, 1, 6):
+                dist = f * cum[-1]
+                tt = arrive + dur * f
+                seeds.append((tt, float(np.interp(dist, cum, pts[:, 0])), float(np.interp(dist, cum, pts[:, 1]))))
+        return seeds, traces
+
+    def farewell(self, wave_at, frame_h):
+        """The goodbye: each pet waves where it stands at `wave_at[i]` for WAVE s, then walks
+        briskly to the nearest edge and steps out of the frame."""
+        h = self.h
+        for i, p in enumerate(self.pets):
+            prev = p.stops[-1]
+            x, y = self._end(prev)
+            if prev[5] is not None:
+                done = prev[0] + trace_time(float(np.hypot(*np.diff(prev[5], axis=0).T).sum()), h)
+            else:
+                done = prev[1] if prev[4] >= 0 else prev[0]
+            at = max(wave_at[i], done)
+            self._depart(i, at)
+            p.stops.append((at, at + WAVE, x, y, -2, None))
+            exits = [(-0.7 * h, y), (self.W + 0.7 * h, y), (x, -0.25 * h), (x, frame_h + 1.2 * h)]
+            ex, ey = min(exits, key=lambda e: math.hypot(e[0] - x, e[1] - y))
+            need = walk_time(math.hypot(ex - x, ey - y), h) / EXIT
+            p.stops.append((at + WAVE + need, float('inf'), ex, ey, -3, None))
 
 
 class Pet:
-    """One pet's way through the show; `stops` are (arrive, leave, x, y, step), the first its
-    starting place (step -1: idle there), where it pops in at `appear`."""
+    """One pet's way through the show. `stops` are (arrive, leave, x, y, step, path): a job
+    (step 0-5) worked standing at (x, y), or drawn by walking `path`; the first stop is where it
+    pops in at `appear` (step -1); at the end it waves where it stands (step -2), then walks out
+    of the frame (step -3). `step_ends` are when steps end, for the shared hold."""
 
-    def __init__(self, sprites, start, height, rng, appear, end_time, wave_at):
+    def __init__(self, sprites, start, height, rng, appear, wave_at, step_ends):
         self.sp = sprites
         self.stops = [start]
         self.h = height
         self.appear = appear
-        self.end = end_time
         self.wave_at = wave_at
+        self.step_ends = step_ends
         self.rng = rng
         self.facing = 'right'
 
     def finish(self):
-        """Builds the paths once all stops are planned."""
+        """Builds the walks between stops once every stop is planned."""
         self.segments = []
-        for (a0, l0, x0, y0, _), (a1, _, x1, y1, _) in zip(self.stops, self.stops[1:]):
+        for s0, s1 in zip(self.stops, self.stops[1:]):
+            l0 = s0[1]
+            x0, y0 = (float(s0[5][-1][0]), float(s0[5][-1][1])) if s0[5] is not None else (s0[2], s0[3])
+            a1, x1, y1 = s1[0], s1[2], s1[3]
             dx, dy = x1 - x0, y1 - y0
             d = math.hypot(dx, dy)
             bend = self.rng.uniform(0.06, 0.16) * self.rng.choice([-1, 1])
@@ -169,13 +305,14 @@ class Pet:
             px = (1 - ts) ** 2 * x0 + 2 * (1 - ts) * ts * cx + ts ** 2 * x1
             py = (1 - ts) ** 2 * y0 + 2 * (1 - ts) * ts * cy + ts ** 2 * y1
             cum = np.concatenate(([0], np.cumsum(np.hypot(np.diff(px), np.diff(py)))))
+            need = walk_time(float(cum[-1]), self.h) - LEAN
+            hurry = max(1.0, need / max(a1 - l0 - LEAN, 0.05))
             self.segments.append({'leave': l0, 'arrive': a1, 'px': px, 'py': py, 'cum': cum,
-                                  'len': float(cum[-1]), 'd': d})
-        # distance walked before each segment, for a walk cycle that never jumps
+                                  'len': float(cum[-1]), 'd': d, 'hurry': hurry})
         total = 0.0
-        for s in self.segments:
-            s['before'] = total
-            total += s['len']
+        for seg in self.segments:       # distance walked before each walk, so the cycle never jumps
+            seg['before'] = total
+            total += seg['len']
 
     def _point(self, s, dist):
         u = np.interp(dist, s['cum'], np.linspace(0, 1, len(s['cum'])))
@@ -185,55 +322,75 @@ class Pet:
         y = s['py'][i] + (s['py'][i + 1] - s['py'][i]) * f
         return x, y, s['px'][i + 1] - s['px'][i]
 
+    def _walking(self, x, y, tx, walked, speed, extra_lift=0.0):
+        h = self.h
+        if abs(tx) > 0.15:
+            self.facing = 'right' if tx > 0 else 'left'
+        frame = int(walked / (STRIDE * h) * 8)
+        bob = 0.022 * h * abs(math.sin(math.pi * walked / (STRIDE * h / 2))) * min(speed, 1)
+        tilt = TILT * min(speed, 1) * (-1 if self.facing == 'right' else 1)
+        return x, y, bob + extra_lift, self.facing, frame, 1.0, 1.0, tilt, 1.0
+
     def state(self, t):
         """(x, y, lift, row, frame, sx, sy, tilt, alpha) at time t."""
         h = self.h
-        since = t - self.appear
         start = self.stops[0]
-        if since < 0:
+        if t < self.appear:
             return start[2], start[3], 0.0, 'idle', 0, 1.0, 1.0, 0.0, 0.0
-        for i, s in enumerate(self.segments):
-            if t < s['leave']:
+        for i, seg in enumerate(self.segments):
+            if t < seg['leave']:
                 break
-            if t < s['arrive']:
-                dt = t - s['leave']
+            if t < seg['arrive']:
+                dt = t - seg['leave']
                 if dt < LEAN:                                   # the breath before setting off
                     w = math.sin(math.pi * dt / LEAN)
-                    x, y = self.stops[i][2], self.stops[i][3]
-                    back = -1 if self._dir(s) == 'right' else 1
-                    return x, y, 0.0, self.facing, 0, 1 + 0.05 * w, 1 - 0.06 * w, 2.5 * w * -back, 1.0
-                dist = travelled(dt - LEAN, s['len'], h)
-                x, y, tx = self._point(s, dist)
-                if abs(tx) > 0.15:
-                    self.facing = 'right' if tx > 0 else 'left'
-                walked = s['before'] + dist
-                frame = int(walked / (STRIDE * h) * 8)
-                speed = (travelled(dt - LEAN + 0.01, s['len'], h) - dist) / 0.01 / (WALK * h)
-                bob = 0.022 * h * abs(math.sin(math.pi * walked / (STRIDE * h / 2))) * min(speed, 1)
-                lift = bob
-                to_go = s['arrive'] - t
-                if s['d'] >= HOP_MIN * h and to_go < HOP_TIME:
-                    lift += HOP * h * math.sin(math.pi * (1 - to_go / HOP_TIME))
-                tilt = TILT * min(speed, 1) * (-1 if self.facing == 'right' else 1)
-                return x, y, lift, self.facing, frame, 1.0, 1.0, tilt, 1.0
+                    x, y = seg['px'][0], seg['py'][0]
+                    lean_back = 2.5 * w * (1 if seg['px'][-1] >= seg['px'][0] else -1)
+                    return x, y, 0.0, self.facing, 0, 1 + 0.05 * w, 1 - 0.06 * w, lean_back, 1.0
+                k = seg['hurry']
+                dist = travelled((dt - LEAN) * k, seg['len'], h)
+                x, y, tx = self._point(seg, dist)
+                speed = (travelled((dt - LEAN + 0.01) * k, seg['len'], h) - dist) / 0.01 / (WALK * h)
+                to_go = seg['arrive'] - t
+                hop = 0.0
+                nxt = self.stops[i + 1]
+                if seg['d'] >= HOP_MIN * h and to_go < HOP_TIME and nxt[5] is None:
+                    hop = HOP * h * math.sin(math.pi * (1 - to_go / HOP_TIME))
+                return self._walking(x, y, tx, seg['before'] + dist, speed, hop)
             nxt = self.stops[i + 1]
             if t <= nxt[1] or i + 1 == len(self.segments):
-                return self._at_stop(nxt, t)
-        return self._at_stop(self.stops[0] if not self.segments or t < self.segments[0]['leave'] else self.stops[-1], t)
+                return self._at_stop(nxt, t, seg['before'] + seg['len'])
+        return self._at_stop(self.stops[0], t, 0.0)
 
-    def _dir(self, s):
-        return 'right' if s['px'][-1] >= s['px'][0] else 'left'
+    def _holding(self, t):
+        return any(e - HOLD <= t < e for e in self.step_ends)
 
-    def _at_stop(self, stop, t):
-        arrive, leave, x, y, k = stop
+    def _at_stop(self, stop, t, walked):
+        arrive, leave, x, y, k, path = stop
+        h = self.h
+        cum = np.concatenate(([0], np.cumsum(np.hypot(*np.diff(path, axis=0).T)))) if path is not None else None
+        if path is not None and arrive <= t <= arrive + trace_time(float(cum[-1]), h):   # drawing a line
+            dist = traced(t - arrive, float(cum[-1]), h)
+            x = float(np.interp(dist, cum, path[:, 0]))
+            y = float(np.interp(dist, cum, path[:, 1]))
+            ahead = float(np.interp(min(dist + 2, cum[-1]), cum, path[:, 0])) - x
+            speed = (traced(t - arrive + 0.01, float(cum[-1]), h) - dist) / 0.01 / (WALK * h)
+            return self._walking(x, y, ahead, walked + dist, speed)
+        if path is not None:                                    # the line drawn, it looks it over
+            x, y = float(path[-1][0]), float(path[-1][1])
+            arrive += trace_time(float(cum[-1]), h)
         land = t - arrive
-        sy = 1 + spring(land, -0.10, 0.22, 0.08)
+        sy = 1 + spring(land, -0.10, 0.22, 0.08) if path is None else 1.0
         sx = 1 / math.sqrt(max(sy, 0.5))
+        if k == -2:                                             # waving goodbye
+            return x, y, 0.0, 'wave', int((t - arrive) * 7), 1.0, 1.0, 0.0, 1.0
+        if k == -3:                                             # gone
+            return x, y, 0.0, 'idle', 0, 1.0, 1.0, 0.0, 0.0
+        if self._holding(t):
+            return x, y, 0.0, 'review', int(t * 8), sx, sy, 0.0, 1.0
         if t <= leave and k >= 0:
             return x, y, 0.0, WORK_POSE[k], int(land * 8), sx, sy, 0.0, 1.0
-        if t < self.wave_at:
-            return x, y, 0.0, 'idle', int(t * 6), sx, sy, 0.0, 1.0
-        return x, y, 0.0, 'wave', int((t - self.wave_at) * 7), 1.0, 1.0, 0.0, 1.0
+        return x, y, 0.0, 'idle', int(t * 6), sx, sy, 0.0, 1.0
 
     def draw(self, canvas, t, fade, picture_h):
         x, y, lift, row, frame, sx, sy, tilt, alpha = self.state(t)
@@ -249,7 +406,7 @@ class Pet:
         im = frames[frame % len(frames)]
         if abs(tilt) > 0.05:
             im = im.rotate(tilt, resample=Image.BICUBIC, center=(self.sp.cx, self.sp.foot))
-        depth = 0.9 + 0.16 * min(max(y / picture_h, 0), 1)
+        depth = 0.9 + 0.16 * min(max(y / picture_h, 0), 1)   # below the picture: as near as it gets
         scale = self.h * depth / (self.sp.foot - self.sp.top)
         sxs, sys_ = 1 / (scale * sx), 1 / (scale * sy)      # source pixels per screen pixel
         ox = x - self.sp.cx * scale * sx                       # where the frame's corner lands, unrounded
