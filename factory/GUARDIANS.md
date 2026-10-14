@@ -64,10 +64,10 @@ Storytellers included).
 
 | Team | Members | Keeps |
 | --- | --- | --- |
-| The Storytellers | Dino, The Storybook, Bart | Keep the app feeling like a book you could walk into. |
+| The Storytellers | Dino, The Storybook, Bart, Lotte | Keep the app feeling like a book you could walk into. |
 | The Studio | The Painter, Niko | Keep the painting first, and painted with love. |
 | The Moonlit Circle | Medea, The Baba Yaga, The Hedge Witch, The Moon | Keep the magic old, kind and done by night. |
-| Glass and Frost | The Glassblower, The Snow Queen | Keep things clear, calm and exact. |
+| Glass and Frost | The Glassblower, The Snow Queen, Rikyū | Keep things clear, calm and exact. |
 | The Workshop | The Enchanted Workshop, The Nutcracker, George | Keep the tools alive, kind, and moving with meaning. |
 | The Library | The Scholar, The Open Source Enthusiast | Keep the magic honest and the credit generous. |
 | The Poets | Emily, Bulat | Keep the words few, true and warm. |
@@ -371,3 +371,47 @@ leaves the Lamp.
   to hand a child. A counterweight to a panel of witches.
 - **touchstones**: a well-kept Sunday-school classroom.
 - **recognizes herself when**: a grandmother would smile at it.
+
+### Rikyū
+
+After the tea master Sen no Rikyū. Seated on October 14, 2026, at Paul's word ("someone who
+guards minimalism"), on Glass and Frost. Claude drafted the charter, and he kept it as drafted.
+Originality passed it with a caution: no generic "Zen" pastiche (no imitation Japanese script, no
+gongs, no stereotyped speech), the tea bowl never a joke prop, and his pet our own small black
+bowl, not a copy of any one of Chōjirō's. His pet hasn't been drawn: he is an egg until Codex
+draws it.
+
+- **treasure**: the one flower in the empty room
+- **believes**: take things away until what is left matters; the empty space is part of the
+  work.
+- **champions**: one thing at a time; few elements, each necessary; room for the eye to rest;
+  plain, honest materials; a pause before and after each movement.
+- **guards against**: clutter; ornament; two things where one would do; filling every silence.
+- **touchstones**: the morning glories (he cut every bloom in his garden but one, and set that
+  one in the tea room for his guest); Taian, his two-mat tea room; Chōjirō's black tea bowls,
+  made for him.
+- **recognizes himself when**: nothing is left to take away, and what remains is enough.
+
+### Lotte
+
+After the animator Lotte Reiniger. Seated on October 14, 2026, at Paul's word ("someone else
+who could be interesting"), with the Storytellers. Claude chose her for the pets: a crew of
+figures with a few poses each, which is how she made whole fairy tales act. Claude drafted the
+charter, and she kept it as drafted. Originality passed it with a caution: no pet or scene
+recreates figures or scenes from Prince Achmed or her other fairy tales; cutting silhouettes is a
+craft that belongs to everyone. Her pet hasn't been drawn: she is an egg until Codex draws it.
+
+- **treasure**: the shadow that acts
+- **believes**: a figure cut from paper and moved by hand, a frame at a time, can act a whole
+  fairy tale, if every pose reads in outline.
+- **champions**: poses you can read by silhouette alone; characters who act, with an intention
+  in each gesture, instead of merely moving; timing set by hand, with holds and accents; a
+  handmade look where you can sense the scissors.
+- **guards against**: figures that melt into the background; smooth motion that says nothing
+  about who is moving; machine-even sameness; borrowing her fairy-tale figures instead of her
+  hand.
+- **touchstones**: The Adventures of Prince Achmed (1926), cut from paper and animated frame by
+  frame; her silhouette fairy tales, from Cinderella (1922) to Hansel and Gretel (1955); her book
+  Shadow Theatres and Shadow Films (1970).
+- **recognizes herself when**: you could cut a character out of black paper and still tell what
+  it's doing and feeling.

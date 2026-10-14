@@ -606,6 +606,33 @@ Paul checkpoints.
 - Crew: "more, and smaller" than the first demo's 22 at 8 %. Proposed: about 12 pt tall on
   screen, the count growing with the picture's area (about 130 a step on an iPhone).
 
+**Decided with Paul (Oct 13–14, checkpoints 1 to 3, rendered on Linux):**
+- Pets, not stick figures: "I’m thinking pets only — give me a little mockup of what a smaller
+  amount of them might look like?" The Lamp's own pets are the crew, using the poses their sheets
+  already have. "We’ll plan on making new animations for each pet when codex usage is back."
+- Layers: "5-6 is just a big jump, everything else looks good". Step 5 inks the template's own
+  lines, so step 6 only relaxes them into curves and adds the numbers.
+- Pace: "This is rushed. And with the pets instead of stick figures, this will be visually
+  engaging enough that we can slow it down a little." Then "2.5s looks right": six steps of
+  2.5 s, about 18 s with the pets' entrance and goodbye.
+- Motion: "The hops might be too fast. There’s still some refinement needed here for general
+  motion." The motion pass: eased walks at most 2.4 heights a second, low hops with a springy
+  landing, arrivals on the step's quarter beats, no teleports.
+- "You could try the scholars suggestions": the sketch keeps only the edges relative total
+  variation keeps, the paints flow from the k-means++ seeds the method picks, and the outlines
+  relax from stepped to smooth as Potrace's method does.
+- Crew size: "Before moving forward — maybe see what this looks like with 6 or 3 or even just 1
+  pet?", then "3 seems better": three pets (the Enchanted Workshop's, Dino's and the Snow
+  Queen's) at 16 % of the picture's height, each working its own band of the picture.
+- The Lamp's second look: "maybe add someone who guards minimalism, and someone else who could be
+  interesting". Rikyū and Lotte joined (Who's Who).
+
+**Where it stands (Oct 14).** On `claude/making-of`: F29's port (with it, the regression gate's
+60 templates are byte for byte main's), the spec (F31's file, `making-of.json`) and the factory's
+renderer, `tools/factory/making_of_clip.py` with `making_of_pets.py` and `making_of_layers.py`,
+which reads the spec. Next: the crew's planner ported to portable Swift and tested on Linux
+against the Python, then F32 when CI minutes return.
+
 **Paul's calls** (each has a recommendation; nothing waits on them except where noted):
 1. Placement: on Start, over his own painting's stages, skippable, with replay from the
    painting's menu, as NOTES has it. A shareable video can come later; `TimelapseExporter`'s

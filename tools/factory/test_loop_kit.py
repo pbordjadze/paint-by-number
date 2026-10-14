@@ -461,7 +461,7 @@ class TeamSeatTests(unittest.TestCase):
         self.assertEqual(sorted(members), sorted(g['id'] for g in self.gs))
         self.assertEqual([s['id'] for s in self.seats if s.get('vetoOnly')], ['gate'])
         storytellers = next(s for s in self.seats if s['id'] == 'storytellers')
-        self.assertEqual(storytellers['members'], ['storybook', 'dinotopia', 'bartimaeus'])
+        self.assertEqual(storytellers['members'], ['storybook', 'dinotopia', 'bartimaeus', 'lotte-reiniger'])
         self.assertIn('#### Dino', storytellers['charter_text'])
 
     def test_a_member_vetoes_by_quoting_its_own_line(self):

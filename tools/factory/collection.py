@@ -49,6 +49,8 @@ def main():
         "balanchine": "A small tuning fork that dances en pointe, ringing one clear note with each perfect turn.",
         "bulat-okudzhava": "A little blue trolleybus with warm lit windows, rolling slowly down a night street, a guitar resting on one seat.",
         "bible-school-teacher": "A small clay oil lamp with a kind glow and a curl of grapevine around its handle.",
+        "sen-no-rikyu": "A small black tea bowl, shaped by hand and a little uneven, with one morning glory resting on its rim. It sits very still, and when something is finished it tips the flower toward you.",
+        "lotte-reiniger": "A little bird cut from black paper, its wings joined with tiny wire hinges. When it flies you can see light through the lace of holes cut in its feathers.",
     }
     COLORS = ["#C8963E", "#5E7F4A", "#8E3B2E", "#5D7186", "#B86A6A", "#B59A3A", "#3F6E68", "#9A7BA6"]
 
