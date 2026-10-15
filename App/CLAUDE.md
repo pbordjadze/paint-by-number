@@ -376,7 +376,9 @@ Conventions).
 
 ## Create flow
 
-- `PhotoSourceView`: the inline picker fills the page (Gotchas). Compact windows switch Photos and
+- `PhotoSourceView`: the inline picker fills the page (Gotchas). iPhone doesn't embed it: its grid
+  never took a tap on a device, so the Photos pane is Choose Photo, which presents the full system
+  picker as Browse All does (`embedsPicker`). Compact windows switch Photos and
   Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
   picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
   albums and search; "Browse All…" presents the full system picker, the way in when the embedded
