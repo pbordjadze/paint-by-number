@@ -105,7 +105,8 @@ before planning app work).
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone`, all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
-  (`ci/report.py` writes `STATUS.md`).
+  (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
+  (on request; its header says how).
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
   per-agent reports are not committed (they live on their branch and in commit messages); a
@@ -390,7 +391,10 @@ any port of it, when changing the fitter: work from the paper.
    `https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/source.json`, and
    asks the combined source in `pbordjadze/sidestore` to rebuild (secret
    `SIDESTORE_DISPATCH_TOKEN`, issue #1; without it that source catches up on its 15-minute
-   schedule).
+   schedule). TestFlight builds are separate and on request: the `TestFlight` workflow (Run
+   workflow from `main`, or a pushed `testflight-*` tag) archives, cloud-signs with an App Store
+   Connect API key and uploads, version `MARKETING_VERSION` (`<run>.<attempt>`). The repository is
+   public, so GitHub's standard runners cost no minutes; the limit is 5 macOS jobs at once.
 
 **Branches.** `main` is the default and shipping branch (`iphone` job, IPA, SideStore source; the
 benchmark's base). Work on `claude/<topic>` branches and merge into `main`; once merged, the branch
