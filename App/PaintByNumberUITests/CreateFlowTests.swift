@@ -461,6 +461,18 @@ final class CreateFlowTests: XCTestCase {
             attachTree(of: app, named: "library-picker-tree")
             throw XCTSkip("The library picker's photos aren't reachable from the UI test")
         }
+        // A grid fills in as it loads (a sheet's lazily): read it once its count has held for a
+        // moment, or a photo bound by index can be gone before its frame is read (iPhone's
+        // Choose Photo sheet, read as soon as its first photo showed).
+        var count = -1
+        var steady = 0
+        let settle = Date().addingTimeInterval(15)
+        while steady < 3, Date() < settle {
+            let now = photos.count
+            steady = now == count ? steady + 1 : 0
+            count = now
+            usleep(500_000)
+        }
         let excluding = other?.images.matching(photoPredicate).allElementsBoundByIndex.map { $0.frame } ?? []
         // Thumbnails only (the picker's bar may carry small glyphs with similar labels).
         let thumbnails = photos.allElementsBoundByIndex.prefix(60)
