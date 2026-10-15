@@ -316,7 +316,7 @@ Saved paintings must open in every later build. The format history is documented
 - Demo scenarios: `-demo <name>`; the catalogs are the doc comments of `ShellDemo`, `PaintDemoView`
   and `RootView`. A screenshotted scenario is one `name@seconds` line of `ci/scenarios.txt` (no
   comments; `@seconds` is only the timeout; the file merges as a union) and calls `DemoMode.markReady()` once its content is on
-  screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `SyntheticTemplate`,
+  screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`, `SyntheticTemplate`,
   `LineArtMapsCache`, `DemoTemplateCache` and `MainThreadWatchdog` are wrapped in `#if DEBUG`,
   and every other reference (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`,
   `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`

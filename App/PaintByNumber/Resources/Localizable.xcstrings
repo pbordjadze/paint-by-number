@@ -245,6 +245,10 @@
       "comment" : "Settings toggle: after finishing a color, the next color is picked automatically",
       "extractionState" : "manual"
     },
+    "After Start Painting, watch your photo become its painting, step by step, with three guardians’ pets at work. It takes about 20 seconds, and a tap skips it." : {
+      "comment" : "Footer under the Settings switch The Making-of (off by default): what turning it on does; the guardians' pets are the Marginarium's",
+      "extractionState" : "manual"
+    },
     "All" : {
       "comment" : "Choice in the gallery's Show menu that lists every painting; also the menu's VoiceOver value while it is chosen",
       "extractionState" : "manual"
@@ -1715,6 +1719,90 @@
     },
     "Making Your Time-lapse" : {
       "comment" : "Title of the sheet shown while a time-lapse movie is rendered",
+      "extractionState" : "manual"
+    },
+    "makingOf.caption.ink" : {
+      "comment" : "Card of the making-of show's fifth step: the painting's lines are inked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drawing the lines"
+          }
+        }
+      }
+    },
+    "makingOf.caption.merged" : {
+      "comment" : "Card of the making-of show's fourth step: areas too small to paint join the areas beside them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folding tiny bits into their neighbors"
+          }
+        }
+      }
+    },
+    "makingOf.caption.paints" : {
+      "comment" : "Card of the making-of show's third step: the painting's paints are picked from the photo",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choosing the paints"
+          }
+        }
+      }
+    },
+    "makingOf.caption.shading" : {
+      "comment" : "Card of the making-of show's second step: soft grey shading is laid in, stopping at the edges",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shading softly, without crossing edges"
+          }
+        }
+      }
+    },
+    "makingOf.caption.sketch" : {
+      "comment" : "Card of the making-of show's first step, under the picture: the photo's texture smears away and pencil lines find its shapes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finding the shapes under the texture"
+          }
+        }
+      }
+    },
+    "makingOf.caption.template" : {
+      "comment" : "Card of the making-of show's last step: stair-stepped outlines relax into smooth curves and the paint numbers go in",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoothing the outlines, adding the numbers"
+          }
+        }
+      }
+    },
+    "Preparing the Making-of" : {
+      "comment" : "VoiceOver label of the spinner under the photo while the making-of show is being made, before it plays",
+      "extractionState" : "manual"
+    },
+    "Skip" : {
+      "comment" : "Button over the making-of show that ends it and opens the new painting",
+      "extractionState" : "manual"
+    },
+    "The Making-of" : {
+      "comment" : "Settings switch (off by default) that makes Start Painting first play the making-of show: the painter's photo becoming its painting, step by step (a name, like a film's title)",
       "extractionState" : "manual"
     },
     "Waves hello." : {

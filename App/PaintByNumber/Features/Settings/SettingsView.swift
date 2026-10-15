@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
     @AppStorage(SettingsKey.detailBrushes) private var detailBrushes = false
     @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
+    @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = false
     @State private var path: [Destination] = []
 
     private let appInfo = AppInfo()
@@ -132,6 +133,15 @@ struct SettingsView: View {
                     .accessibilityIdentifier("settings-marginarium")
                 } footer: {
                     Text("Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with the guardians’ pets.")
+                }
+
+                Section {
+                    Toggle(isOn: $playsMakingOf) {
+                        SwiftUI.Label("The Making-of", systemImage: "film")
+                    }
+                    .accessibilityIdentifier("settings-making-of")
+                } footer: {
+                    Text("After Start Painting, watch your photo become its painting, step by step, with three guardians’ pets at work. It takes about 20 seconds, and a tap skips it.")
                 }
 
                 Section {
