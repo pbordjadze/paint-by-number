@@ -46,6 +46,18 @@ struct MarginariumCastTests {
         #expect(MarginariumCast.helpers.allSatisfy { MarginariumPet.named($0.pet) != nil })
     }
 
+    /// A guardian's drawing is the guardian, never its pet (Paul, October 15): its caption and
+    /// VoiceOver description are its name alone, and an egg says the guardian hasn't hatched.
+    @Test func aDrawingGoesByItsGuardiansName() {
+        for guardian in MarginariumCast.guardians {
+            if guardian.hatched {
+                #expect(guardian.petCaption == guardian.name, "\(guardian.id)")
+            } else {
+                #expect(guardian.petCaption.hasPrefix(guardian.name + ", still an egg"), "\(guardian.id)")
+            }
+        }
+    }
+
     /// Every guardian whose pet stands beside a margin note has a page in Who's Who.
     @Test func everySpeakingGuardianHasAPage() {
         let pages = Set(MarginariumCast.guardians.map(\.id))

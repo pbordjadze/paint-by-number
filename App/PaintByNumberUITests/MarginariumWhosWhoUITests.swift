@@ -1,16 +1,52 @@
 import XCTest
 
-/// Who's Who opens from the contents page's New here? box; a guardian's card opens its brief,
-/// which stays readable at the largest text sizes.
+/// The contents page opens on the drawings: a tap makes one wave and shows its name, which opens its
+/// brief. Who's Who opens from the contents, and a guardian's card opens its brief too, which stays
+/// readable at the largest text sizes.
 final class MarginariumWhosWhoUITests: XCTestCase {
+    @MainActor
+    func testADrawingShowsItsNameWhichOpensItsBrief() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "marginarium"]
+        app.launch()
+        let page = app.scrollViews["marginarium-contents"]
+        let pip = app.buttons["marginarium-drawing-pip"]
+        XCTAssertTrue(pip.waitForExistence(timeout: 15))
+        XCTAssertTrue(waitUntil { pip.isHittable })
+        XCTAssertEqual(pip.label, "Pip, Codex's teapot")
+        let dino = app.buttons["marginarium-drawing-dinotopia"]
+        for _ in 0..<8 {
+            if dino.exists && dino.isHittable { break }
+            page.swipeUp()
+        }
+        XCTAssertTrue(dino.isHittable)
+        XCTAssertEqual(dino.label, "Dino")
+        dino.tap()
+        let name = app.buttons["marginarium-name-dinotopia"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5), "Tapping Dino didn't show its name")
+        XCTAssertTrue(name.label.contains("Dino"), name.label)
+        attachScreenshot(of: app, named: "marginarium-drawing-named")
+        name.tap()
+        XCTAssertTrue(app.navigationBars["Dino"].waitForExistence(timeout: 10))
+        // The title names the guardian; its drawing keeps the name for VoiceOver alone.
+        let drawing = app.scrollViews["marginarium-guardian-page"].buttons["marginarium-pet-dinotopia"]
+        XCTAssertTrue(drawing.waitForExistence(timeout: 10))
+        XCTAssertEqual(drawing.label, "Dino")
+    }
+
     @MainActor
     func testWhosWhoOpensFromContentsAndAGuardianOpensItsBrief() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "marginarium"]
         app.launch()
+        let contents = app.scrollViews["marginarium-contents"]
         let link = app.buttons["marginarium-whos-who-link"]
-        XCTAssertTrue(link.waitForExistence(timeout: 15))
-        XCTAssertTrue(waitUntil { link.isHittable })
+        XCTAssertTrue(contents.waitForExistence(timeout: 15))
+        for _ in 0..<15 {
+            if link.exists && link.isHittable { break }
+            contents.swipeUp()
+        }
+        XCTAssertTrue(link.exists && link.isHittable, "Who's Who isn't reachable from the contents")
         link.tap()
         XCTAssertTrue(app.navigationBars["Who's Who"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.descendants(matching: .any)["marginarium-person-caroline"].exists)

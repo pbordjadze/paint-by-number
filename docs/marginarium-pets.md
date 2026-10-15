@@ -5,17 +5,20 @@ chapter, for example `![Pip lifts its lid](pet:pip)`. The importer writes a `pet
 stable catalog key and a `pet` identifier. Its plain-text alt text becomes both the visible
 caption and the VoiceOver description; the player adds the pet's localized action hint.
 Keep the block's key marker when editing or moving it. Import and validate with
-`tools/marginarium.py` as described in its docstring.
+`tools/marginarium.py` as described in its docstring. A guardian's drawing is the guardian,
+never its pet (Paul, October 15): its alt text is the guardian's name alone (`![Medea](pet:medea)`),
+and prose names the guardian, not "its pet"; only Pip and Colophon are pets, with names of their own.
 
 Pip and Colophon use their existing imagesets, idle timings and tap responses everywhere.
 Two More Pets embeds them with the contents page's captions. Pip's imagesets (`pip-idle-0...5`
 from atlas row 0, `pip-wave-0...3` from row 3, 192 × 208 at the same 2x slot) are Pip's face
 as Codex redrew it, so its lid-lift tap and timings are unchanged.
 
-The guardians' pets are bundled as `pet-<id>.webp` (the table below): the nineteen the factory
-drew, which chapter 6 shows each in a pet block, and Dino's, which Paul made in the Codex app
+The guardians' drawings are bundled as `pet-<id>.webp` (the table below): the nineteen the factory
+drew, which chapter 2 shows each in a pet block, and Dino's, which Paul made in the Codex app
 before Dino joined the Lamp (Who's Who shows it, `MarginariumCast`), and chapter 1's margin notes show them beside the words (next section).
-The Moon's pet is withheld: no `pet-moon.webp` ships and its notes show no pet.
+The contents page opens on them all, with Pip and Colophon, as small copies (`MarginariumView`).
+The Moon's drawing is withheld: no `pet-moon.webp` ships and its notes show no pet.
 To add a future atlas pet, place its sheet in
 `App/PaintByNumber/Resources/pet-<id>.webp`, with a lowercase alphanumeric/hyphen identifier,
 then use `pet:<id>` in the chapter. The unique filename survives Xcode's flattened resource
@@ -40,9 +43,10 @@ bad resources, cache reuse and Reduce Motion plans. Its 2.2 KiB `pet-fixture.web
 colored geometry and belongs to the test bundle. Reproduce it with
 `tools/tests/fixtures/make_sprite_atlas.py <scratch-output.webp>`. Its `thumbnails` test checks
 the small cells a margin player keeps. The chapter screenshot demos (`marginarium-chapter`,
-`-dark`, `-long-text`) open Two More Pets with Pip visible; `marginarium-chapter6` (also `-dark`
-and `-long-text`) scrolls chapter 6 to Medea's ram, and `marginarium-chapter1-margin` and
-`-guardians` show the narrator's notes with Colophon and five guardians' notes with their pets.
+`-dark`, `-long-text`) open Two More Pets with Pip visible; `marginarium-chapter2` (also `-dark`
+and `-long-text`) scrolls chapter 2 to Medea, and `marginarium-chapter1-margin` and
+`-guardians` show the narrator's notes with Colophon and five guardians' notes, each guardian
+drawn beside its note.
 The reader UI tests also attach pet screenshots, including at accessibility text sizes.
 
 ## Pets beside margin notes
@@ -52,7 +56,7 @@ guardian who signed a margin note, once each, in the order they speak. The impor
 every signature of a note as `speakers` (and the last as `speaker`), so the names are the
 chapter's own English signatures, never the localized text. `MarginariumSpeakers` is the one
 table from a signature to a pet identifier: "the narrator" is Colophon because chapter 1
-says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" and "Bart" (whose Ibid hasn't
+says "I am Claude, the narrator", "Codex" is Pip, and "the Moon" and "Bart" (who hasn't
 hatched) are listed as having none.
 `MarginariumSpeakersTests` fails when a speaker in the bundled chapters is in neither the
 table nor the list of voices without a pet, or maps to a pet that doesn't resolve.

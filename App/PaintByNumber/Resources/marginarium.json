@@ -1702,88 +1702,6 @@
       ]
     },
     {
-      "id": "lampBrush",
-      "source": "docs/marginarium/lampBrush.md",
-      "blocks": [
-        {
-          "kind": "title",
-          "key": "marginarium.lampBrush.title"
-        },
-        {
-          "kind": "subtitle",
-          "key": "marginarium.lampBrush.subtitle"
-        },
-        {
-          "kind": "quote",
-          "key": "marginarium.lampBrush.passage"
-        }
-      ]
-    },
-    {
-      "id": "constitution",
-      "source": "docs/marginarium/constitution.md",
-      "blocks": [
-        {
-          "kind": "title",
-          "key": "marginarium.constitution.title"
-        },
-        {
-          "kind": "subtitle",
-          "key": "marginarium.constitution.subtitle"
-        },
-        {
-          "kind": "quote",
-          "key": "marginarium.constitution.passage"
-        }
-      ]
-    },
-    {
-      "id": "petForEveryGuardian",
-      "source": "docs/marginarium/petForEveryGuardian.md",
-      "blocks": [
-        {
-          "kind": "title",
-          "key": "marginarium.petForEveryGuardian.title"
-        },
-        {
-          "kind": "subtitle",
-          "key": "marginarium.petForEveryGuardian.subtitle"
-        },
-        {
-          "kind": "quote",
-          "key": "marginarium.petForEveryGuardian.passage"
-        }
-      ]
-    },
-    {
-      "id": "twoMorePets",
-      "source": "docs/marginarium/twoMorePets.md",
-      "blocks": [
-        {
-          "kind": "title",
-          "key": "marginarium.twoMorePets.title"
-        },
-        {
-          "kind": "subtitle",
-          "key": "marginarium.twoMorePets.subtitle"
-        },
-        {
-          "kind": "pet",
-          "key": "marginarium.twoMorePets.block.26e4c77e35004bfc9cc41bcd373d0c8b",
-          "pet": "pip"
-        },
-        {
-          "kind": "pet",
-          "key": "marginarium.twoMorePets.block.49d0bace888d43cb8621214770e5e42f",
-          "pet": "colophon"
-        },
-        {
-          "kind": "quote",
-          "key": "marginarium.twoMorePets.passage"
-        }
-      ]
-    },
-    {
       "id": "petsWeMade",
       "source": "docs/marginarium/petsWeMade.md",
       "blocks": [
@@ -2259,6 +2177,88 @@
         {
           "kind": "quote",
           "key": "marginarium.appendix.thirtySixColors.passage"
+        }
+      ]
+    },
+    {
+      "id": "lampBrush",
+      "source": "docs/marginarium/lampBrush.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.lampBrush.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.lampBrush.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.lampBrush.passage"
+        }
+      ]
+    },
+    {
+      "id": "constitution",
+      "source": "docs/marginarium/constitution.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.constitution.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.constitution.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.constitution.passage"
+        }
+      ]
+    },
+    {
+      "id": "petForEveryGuardian",
+      "source": "docs/marginarium/petForEveryGuardian.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.petForEveryGuardian.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.petForEveryGuardian.subtitle"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.petForEveryGuardian.passage"
+        }
+      ]
+    },
+    {
+      "id": "twoMorePets",
+      "source": "docs/marginarium/twoMorePets.md",
+      "blocks": [
+        {
+          "kind": "title",
+          "key": "marginarium.twoMorePets.title"
+        },
+        {
+          "kind": "subtitle",
+          "key": "marginarium.twoMorePets.subtitle"
+        },
+        {
+          "kind": "pet",
+          "key": "marginarium.twoMorePets.block.26e4c77e35004bfc9cc41bcd373d0c8b",
+          "pet": "pip"
+        },
+        {
+          "kind": "pet",
+          "key": "marginarium.twoMorePets.block.49d0bace888d43cb8621214770e5e42f",
+          "pet": "colophon"
+        },
+        {
+          "kind": "quote",
+          "key": "marginarium.twoMorePets.passage"
         }
       ]
     }

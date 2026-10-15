@@ -2,8 +2,9 @@ import Foundation
 
 /// A chapter or an appendix of The Marginarium, how Paint by Moonlight is made: its title, the
 /// line under it and one passage, quoted as written (the "I" is Claude, the narrator, except in
-/// Chapter 6, which Codex narrates). The catalog keys name each by its content, never its
-/// number, so renumbering touches no key.
+/// Chapter 2, which Codex narrates). The reader shows the passage until the chapter loads, and
+/// the contents page quotes Chapter 1's as its way into the story. The catalog keys name each by
+/// its content, never its number, so renumbering touches no key.
 nonisolated struct MarginariumEntry: Identifiable, Sendable {
     let id: String
     /// What stands where the entry's number goes: a chapter's number, an appendix's letter.
@@ -12,7 +13,7 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
     let subtitle: String
     let passage: String
 
-    /// The narrator's pet, which says goodnight under the last line: Codex's Pip for Chapter 6,
+    /// The narrator's pet, which says goodnight under the last line: Codex's Pip for Chapter 2,
     /// Claude's Colophon everywhere else.
     var narrator: (pet: String, goodnight: String) {
         if id == "petsWeMade" {
@@ -24,6 +25,7 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
         }
     }
 
+    /// The story: Chapter 1, then Codex's.
     static let chapters: [MarginariumEntry] = [
         MarginariumEntry(
             id: "marginarium", mark: 1.formatted(),
@@ -33,58 +35,21 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
                              defaultValue: "One long night of ideas, with the Lamp in the margins.",
                              comment: "The Marginarium: the line under the chapter title The Marginarium; the Lamp is the panel of nineteen guardians"),
             passage: String(localized: "marginarium.marginarium.passage",
-                            defaultValue: "Here is how this book works. The story runs down the middle of the page. The Lamp, the panel this chapter is about, writes in the margins. They were invited to. I was not asked whether I minded.",
-                            comment: "The Marginarium: the passage quoted from the chapter The Marginarium, on how the book's pages work; \"I\" is Claude, the narrator")),
+                            defaultValue: "One night in October I was summoned. There was no chalk circle and no candle, only a text box, and on the other side of it Paul, who makes an app that turns photos into paint-by-numbers paintings. By the small hours there was a design panel of eighteen imaginary guardians, a factory for taste, two chapters of their history, and a second AI working the night shift. This is how that happened.",
+                            comment: "The Marginarium: the opening of the chapter The Marginarium, quoted on the contents page under the drawings as the way into the story; \"I\" is Claude, the narrator, and Paul a person who makes the app")),
         MarginariumEntry(
-            id: "lampBrush", mark: 2.formatted(),
-            title: String(localized: "marginarium.lampBrush.title", defaultValue: "The Lamp Picks Up a Brush",
-                          comment: "The Marginarium: title of the chapter about the guardians playing the app on a Mac"),
-            subtitle: String(localized: "marginarium.lampBrush.subtitle",
-                             defaultValue: "A Mac arrives, with a plan for the guardians to play.",
-                             comment: "The Marginarium: the line under the chapter title The Lamp Picks Up a Brush"),
-            passage: String(localized: "marginarium.lampBrush.passage",
-                            defaultValue: "A guardian cannot hold a stylus, but it can do what a careful tester does: look at the screen, decide on one move, and look again. The Mac turns that into a loop.",
-                            comment: "The Marginarium: the passage quoted from the chapter The Lamp Picks Up a Brush")),
-        MarginariumEntry(
-            id: "constitution", mark: 3.formatted(),
-            title: String(localized: "marginarium.constitution.title", defaultValue: "The Lamp's Constitution",
-                          comment: "The Marginarium: title of the chapter about who decides what"),
-            subtitle: String(localized: "marginarium.constitution.subtitle", defaultValue: "One page on who decides what.",
-                             comment: "The Marginarium: the line under the chapter title The Lamp's Constitution"),
-            passage: String(localized: "marginarium.constitution.passage",
-                            defaultValue: "Codex and I make taste decisions all night long, mostly small ones nobody asked us to make: how fast a stick figure walks, how a broom is drawn, which grey a chart uses, how a chapter begins. The Lamp takes the decisions about who the app is: its names, its colors, its pets. Paul can overrule any of them, ours included.",
-                            comment: "The Marginarium: the passage quoted from the chapter The Lamp's Constitution; \"I\" is Claude, the narrator")),
-        MarginariumEntry(
-            id: "petForEveryGuardian", mark: 4.formatted(),
-            title: String(localized: "marginarium.petForEveryGuardian.title", defaultValue: "A Pet for Every Guardian",
-                          comment: "The Marginarium: title of the chapter about the guardians' pets and the first, a test teapot"),
-            subtitle: String(localized: "marginarium.petForEveryGuardian.subtitle",
-                             defaultValue: "Every guardian will get a pet. First, a test teapot.",
-                             comment: "The Marginarium: the line under the chapter title A Pet for Every Guardian"),
-            passage: String(localized: "marginarium.petForEveryGuardian.passage",
-                            defaultValue: "Before any guardian got a pet, a teapot got one first.\n\nIt was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one night, alone, on our own machine, and sent nothing anywhere.",
-                            comment: "The Marginarium: the passage quoted from the chapter A Pet for Every Guardian, two paragraphs")),
-        MarginariumEntry(
-            id: "twoMorePets", mark: 5.formatted(),
-            title: String(localized: "marginarium.twoMorePets.title", defaultValue: "Two More Pets",
-                          comment: "The Marginarium: title of the chapter about Codex's teapot and Claude's moth"),
-            subtitle: String(localized: "marginarium.twoMorePets.subtitle",
-                             defaultValue: "Codex keeps the teapot. Claude gets a moth.",
-                             comment: "The Marginarium: the line under the chapter title Two More Pets"),
-            passage: String(localized: "marginarium.twoMorePets.passage",
-                            defaultValue: "The checkers catch what a person would miss, like 1.505 against 1.5. They cannot say whether two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight; the Lamp judges them next, and Paul has the last word.",
-                            comment: "The Marginarium: the passage quoted from the chapter Two More Pets; \"I\" is Claude, the narrator")),
-        MarginariumEntry(
-            id: "petsWeMade", mark: 6.formatted(),
-            title: String(localized: "marginarium.petsWeMade.title", defaultValue: "The Pets We Actually Made",
-                          comment: "The Marginarium: title of the chapter, narrated by Codex, about how the guardians' pets were made"),
+            id: "petsWeMade", mark: 2.formatted(),
+            title: String(localized: "marginarium.petsWeMade.title", defaultValue: "The Drawings We Actually Made",
+                          comment: "The Marginarium: title of the chapter, narrated by Codex, about how the guardians were drawn"),
             subtitle: String(localized: "marginarium.petsWeMade.subtitle", defaultValue: "Narrated by Codex.",
-                             comment: "The Marginarium: the line under the chapter title The Pets We Actually Made; Codex, an AI helper, narrates this chapter"),
+                             comment: "The Marginarium: the line under the chapter title The Drawings We Actually Made; Codex, an AI helper, narrates this chapter"),
             passage: String(localized: "marginarium.petsWeMade.passage",
-                            defaultValue: "There are two pets called Dab. One is a paintbrush; the other is a palette. This is a manageable arrangement until somebody calls across the workshop.",
-                            comment: "The Marginarium: the passage quoted from the chapter The Pets We Actually Made; Dab is the name of two pets")),
+                            defaultValue: "Two of the guardians are drawn as painting tools, a paintbrush and a palette, and they were once given the same name. This is a manageable arrangement until somebody calls across the workshop.",
+                            comment: "The Marginarium: the passage quoted from the chapter The Drawings We Actually Made; the guardians are the Lamp's panel, two of them drawn as a paintbrush and a palette")),
     ]
 
+    /// The short pieces, at the back: the book's first two chapters, then the four one-passage
+    /// chapters that followed Chapter 1.
     static let appendices: [MarginariumEntry] = [
         MarginariumEntry(
             id: "panelName", mark: "A",
@@ -106,19 +71,45 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
             passage: String(localized: "marginarium.appendix.thirtySixColors.passage",
                             defaultValue: "The Moon struck every name with daylight in it, four times.",
                             comment: "The Marginarium: the passage quoted from the appendix Thirty-Six Colors")),
-    ]
-}
-
-/// How the Lamp works, in plain words, shown after the appendices in their reading order.
-nonisolated enum MarginariumLamp {
-    static let lines: [String] = [
-        String(localized: "Every guardian has a charter: what it believes, what it loves and what it watches out for."),
-        String(localized: "Each guardian keeps its idea as a metaphor: Dino never asks for dinosaurs, and the Snow Queen never asks for snow."),
-        String(localized: "Guardians work in teams of friends who care about similar things."),
-        String(localized: "Each guardian votes alone: none sees how the others voted."),
-        String(localized: "Every vote, yes or no, is written down with its reason."),
-        String(localized: "A guardian can say no, but only by quoting its own charter."),
-        String(localized: "A person has the last word."),
+        MarginariumEntry(
+            id: "lampBrush", mark: "C",
+            title: String(localized: "marginarium.lampBrush.title", defaultValue: "The Lamp Picks Up a Brush",
+                          comment: "The Marginarium: title of the chapter about the guardians playing the app on a Mac"),
+            subtitle: String(localized: "marginarium.lampBrush.subtitle",
+                             defaultValue: "A Mac arrives, with a plan for the guardians to play.",
+                             comment: "The Marginarium: the line under the chapter title The Lamp Picks Up a Brush"),
+            passage: String(localized: "marginarium.lampBrush.passage",
+                            defaultValue: "A guardian cannot hold a stylus, but it can do what a careful tester does: look at the screen, decide on one move, and look again. The Mac turns that into a loop.",
+                            comment: "The Marginarium: the passage quoted from the chapter The Lamp Picks Up a Brush")),
+        MarginariumEntry(
+            id: "constitution", mark: "D",
+            title: String(localized: "marginarium.constitution.title", defaultValue: "The Lamp's Constitution",
+                          comment: "The Marginarium: title of the chapter about who decides what"),
+            subtitle: String(localized: "marginarium.constitution.subtitle", defaultValue: "One page on who decides what.",
+                             comment: "The Marginarium: the line under the chapter title The Lamp's Constitution"),
+            passage: String(localized: "marginarium.constitution.passage",
+                            defaultValue: "Codex and I make taste decisions all night long, mostly small ones nobody asked us to make: how fast a stick figure walks, how a broom is drawn, which grey a chart uses, how a chapter begins. The Lamp takes the decisions about who the app is: its names, its colors, its pets. Paul can overrule any of them, ours included.",
+                            comment: "The Marginarium: the passage quoted from the chapter The Lamp's Constitution; \"I\" is Claude, the narrator")),
+        MarginariumEntry(
+            id: "petForEveryGuardian", mark: "E",
+            title: String(localized: "marginarium.petForEveryGuardian.title", defaultValue: "A Drawing for Every Guardian",
+                          comment: "The Marginarium: title of the chapter about drawing the guardians, and the first drawing, a test teapot"),
+            subtitle: String(localized: "marginarium.petForEveryGuardian.subtitle",
+                             defaultValue: "Every guardian will be drawn. First, a test teapot.",
+                             comment: "The Marginarium: the line under the chapter title A Drawing for Every Guardian"),
+            passage: String(localized: "marginarium.petForEveryGuardian.passage",
+                            defaultValue: "Before any guardian was drawn, a teapot was.\n\nIt was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one night, alone, on our own machine, and sent nothing anywhere.",
+                            comment: "The Marginarium: the passage quoted from the chapter A Drawing for Every Guardian, two paragraphs")),
+        MarginariumEntry(
+            id: "twoMorePets", mark: "F",
+            title: String(localized: "marginarium.twoMorePets.title", defaultValue: "Two More Pets",
+                          comment: "The Marginarium: title of the chapter about Codex's teapot and Claude's moth"),
+            subtitle: String(localized: "marginarium.twoMorePets.subtitle",
+                             defaultValue: "Codex keeps the teapot. Claude gets a moth.",
+                             comment: "The Marginarium: the line under the chapter title Two More Pets"),
+            passage: String(localized: "marginarium.twoMorePets.passage",
+                            defaultValue: "The checkers catch what a person would miss, like 1.505 against 1.5. They cannot say whether two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight; the Lamp judges them next, and Paul has the last word.",
+                            comment: "The Marginarium: the passage quoted from the chapter Two More Pets; \"I\" is Claude, the narrator")),
     ]
 }
 

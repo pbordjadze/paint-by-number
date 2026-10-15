@@ -6,11 +6,13 @@ import SwiftUI
 /// A tap restarts the response. Reduce Motion uses still poses; disappearing cancels the loop.
 /// Beside a margin note it is small, captionless and hidden from VoiceOver: the note already
 /// names its speaker, so the pet is only company for sighted readers. There it also waves when
-/// its note's words are opened (`greeting`).
+/// its note's words are opened (`greeting`), as it does on the contents page when tapped.
 struct MarginariumSpritePlayer: View {
     let pet: MarginariumPet
     /// Nil beside a margin note.
     let caption: String?
+    /// False for a page's picture that the page's title names: the caption is its VoiceOver label alone.
+    private let showsCaption: Bool
     private let width: CGFloat
     /// Each new nonzero value plays the tap response, as does a nonzero one on appearing.
     private let greeting: Int
@@ -27,16 +29,23 @@ struct MarginariumSpritePlayer: View {
     @State private var played = 0
 
     init(pet: MarginariumPet, caption: String, width: CGFloat = 120, identifier: String? = nil) {
-        self.init(pet: pet, caption: caption, width: width, greeting: 0, identifier: identifier)
+        self.init(pet: pet, caption: caption, showsCaption: true, width: width, greeting: 0, identifier: identifier)
+    }
+
+    /// A page's picture under a title that names it: `label` is for VoiceOver alone.
+    init(pet: MarginariumPet, label: String, width: CGFloat) {
+        self.init(pet: pet, caption: label, showsCaption: false, width: width, greeting: 0, identifier: nil)
     }
 
     init(pet: MarginariumPet, marginWidth: CGFloat, greeting: Int = 0) {
-        self.init(pet: pet, caption: nil, width: marginWidth, greeting: greeting, identifier: nil)
+        self.init(pet: pet, caption: nil, showsCaption: false, width: marginWidth, greeting: greeting, identifier: nil)
     }
 
-    private init(pet: MarginariumPet, caption: String?, width: CGFloat, greeting: Int, identifier: String?) {
+    private init(pet: MarginariumPet, caption: String?, showsCaption: Bool, width: CGFloat, greeting: Int,
+                 identifier: String?) {
         self.pet = pet
         self.caption = caption
+        self.showsCaption = showsCaption
         self.width = width
         self.greeting = greeting
         self.identifier = identifier ?? "marginarium-pet-\(pet.id)"
@@ -71,11 +80,11 @@ struct MarginariumSpritePlayer: View {
                 } else {
                     button(image).accessibilityHidden(true)
                 }
-            } else if caption == nil {
+            } else if caption == nil || !showsCaption {
                 // The slot stays, so a note doesn't change shape when its pet's sheet arrives.
                 Color.clear.frame(width: width, height: height)
             }
-            if let caption {
+            if let caption, showsCaption {
                 Text(caption)
                     .font(.caption)
                     .foregroundStyle(.secondary)

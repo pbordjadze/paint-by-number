@@ -5,7 +5,7 @@ import Testing
 
 /// The guardians' sheets that ship in the app (`Resources/pet-<id>.webp`): each loads through the
 /// app's own loader with the v2 contract, and together they stay inside the budget in
-/// `docs/marginarium-pets.md`. The Moon's pet is withheld, so no sheet is named for it.
+/// `docs/marginarium-pets.md`. The Moon's drawing is withheld, so no sheet is named for it.
 @MainActor
 struct BundledPetsTests {
     private static let guardians = [

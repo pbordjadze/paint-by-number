@@ -1,11 +1,12 @@
 import Foundation
 import SwiftUI
 
-/// Who's Who: everyone the chapters mention, with their pets (`MarginariumCast`). The people and
-/// the AI helpers come first, then what the Lamp is, then its guardians team by team; a guardian's
-/// card opens its brief (`MarginariumGuardianView`). Teams are lazy grid cells, and cards play small
-/// copies of their pets' cells (`MarginariumSpritePlayer(pet:marginWidth:)`), so a screenful of
-/// pets never holds their full sheets.
+/// Who's Who: everyone the chapters mention, the guardians drawn as themselves and the helpers with
+/// their pets (`MarginariumCast`). The people and the AI helpers come first, then what the Lamp
+/// is, then its guardians team by team; a guardian's card opens its brief
+/// (`MarginariumGuardianView`). Teams are lazy grid cells, and cards play small copies of their
+/// drawings' cells (`MarginariumSpritePlayer(pet:marginWidth:)`), so a screenful of guardians
+/// never holds their full sheets.
 struct MarginariumWhosWhoView: View {
     @ScaledMetric(relativeTo: .body) private var cardMinimum: CGFloat = 150
     /// Groups (the people, the helpers, each team) sit two to a row where a page has room for
@@ -16,7 +17,7 @@ struct MarginariumWhosWhoView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 36) {
-                    Text(String(localized: "lamp.intro", defaultValue: "Everyone you'll meet in these chapters, and their pets.",
+                    Text(String(localized: "lamp.intro", defaultValue: "Everyone you'll meet in these chapters.",
                                 comment: "The Marginarium, Who is Who: the line at the top of the page"))
                         .font(.display(.title3, weight: .semibold))
                         .foregroundStyle(.secondary)
@@ -120,7 +121,7 @@ struct MarginariumWhosWhoView: View {
     #endif
 }
 
-/// A guardian's card: its pet (or egg), its name, who it is named after if anyone, and what it
+/// A guardian's card: its drawing (or egg), its name, who it is named after if anyone, and what it
 /// guards, one VoiceOver element.
 private struct MarginariumGuardianCard: View {
     let guardian: MarginariumGuardian
@@ -128,7 +129,7 @@ private struct MarginariumGuardianCard: View {
     var body: some View {
         VStack(spacing: 8) {
             MarginariumGuardianPet(guardian: guardian, width: MarginariumPersonCard.petWidth)
-                // The card is the link; the pet only keeps it company here.
+                // The card is the link; the drawing only keeps it company here.
                 .allowsHitTesting(false)
             VStack(spacing: 2) {
                 Text(guardian.name)
@@ -193,20 +194,23 @@ private struct MarginariumPersonCard: View {
     }
 }
 
-/// A guardian's pet, small and captionless beside its name, or with its caption as the page's
-/// picture; an egg until it hatches.
+/// A guardian's drawing, small and silent for VoiceOver where something beside it names it, or
+/// labeled as the page's picture under its brief's title; an egg until it hatches.
 struct MarginariumGuardianPet: View {
     let guardian: MarginariumGuardian
-    /// Nil for the small, captionless kind.
+    /// The picture's VoiceOver label (its name), never shown: the page's title says it. Nil for
+    /// the small kind.
     var caption: String? = nil
     let width: CGFloat
+    /// The small kind waves at each new nonzero value (`MarginariumSpritePlayer`'s `greeting`).
+    var greeting = 0
 
     var body: some View {
         if guardian.hatched, let pet = MarginariumPet.named(guardian.id) {
             if let caption {
-                MarginariumSpritePlayer(pet: pet, caption: caption, width: width)
+                MarginariumSpritePlayer(pet: pet, label: caption, width: width)
             } else {
-                MarginariumSpritePlayer(pet: pet, marginWidth: width)
+                MarginariumSpritePlayer(pet: pet, marginWidth: width, greeting: greeting)
             }
         } else {
             MarginariumEgg(width: width, caption: caption)
@@ -214,7 +218,7 @@ struct MarginariumGuardianPet: View {
     }
 }
 
-/// A guardian's brief, its charter in plain words: its pet, who it is named after or who it is, its
+/// A guardian's brief, its charter in plain words: its drawing, who it is named after or who it is, its
 /// team, what it guards, and what it believes, loves, watches out for, looks up to and is happiest
 /// seeing.
 struct MarginariumGuardianView: View {
@@ -228,7 +232,7 @@ struct MarginariumGuardianView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // The brief's picture: the pet at twice its size in the story.
+                // The brief's picture: the drawing at twice its size in the story.
                 MarginariumGuardianPet(guardian: guardian, caption: guardian.petCaption, width: 192)
                     .frame(maxWidth: .infinity)
 
@@ -302,35 +306,26 @@ struct MarginariumGuardianView: View {
     }
 }
 
-/// A pet that hasn't hatched: a cream egg drawn in the pets' brown ink, rocking now and then
-/// (still under Reduce Motion). The pets' art keeps its colors in dark mode, so the egg does too.
+/// A guardian that hasn't hatched: a cream egg drawn in the sprites' brown ink, rocking now and then
+/// (still under Reduce Motion). The sprites' art keeps its colors in dark mode, so the egg does too.
 struct MarginariumEgg: View {
     let width: CGFloat
-    /// Nil on a card, where the card names the guardian and the egg is decoration.
+    /// The VoiceOver label on a brief's page, never shown (the title names the guardian); nil where
+    /// something beside the egg names it.
     var caption: String? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private static let shell = Color(red: 0.965, green: 0.937, blue: 0.875)
     private static let ink = Color(red: 0.42, green: 0.34, blue: 0.27)
 
     var body: some View {
-        VStack(spacing: 6) {
-            egg
-                // The pets' cells are 96 × 104; the egg stands in one, a little smaller than a pet.
-                .frame(width: width * 0.62, height: width * 0.8)
-                .frame(width: width, height: width * 104 / 96, alignment: .bottom)
-            if let caption {
-                Text(caption)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .frame(maxWidth: caption == nil ? nil : CGFloat.infinity)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(caption ?? ""))
-        .accessibilityHidden(caption == nil)
-        .accessibilityIdentifier("marginarium-egg")
+        egg
+            // The pets' cells are 96 × 104; the egg stands in one, a little smaller than a pet.
+            .frame(width: width * 0.62, height: width * 0.8)
+            .frame(width: width, height: width * 104 / 96, alignment: .bottom)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(caption ?? ""))
+            .accessibilityHidden(caption == nil)
+            .accessibilityIdentifier("marginarium-egg")
     }
 
     @ViewBuilder
