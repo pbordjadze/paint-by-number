@@ -88,7 +88,9 @@ public struct SpriteShadow: Sendable, Equatable {
 /// turned `rotation` degrees clockwise about it, and drawn at `alpha`. The shadow goes first.
 ///
 /// The frame is already wrapped to the row, so `(atlasRow, frame)` is the cell to cut:
-/// column `frame` of row `atlasRow`.
+/// column `frame` of row `atlasRow`. (`draw_sprite` in `making_of_pets.py` turns the cell before it
+/// scales it, which differs from this order by a squash of 5 % on a lean of 2.5 degrees: nothing
+/// anyone can see.)
 public struct SpriteDraw: Sendable, Equatable {
     public var id: String
     public var row: Row
