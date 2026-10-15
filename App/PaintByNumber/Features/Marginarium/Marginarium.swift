@@ -81,7 +81,7 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
             subtitle: String(localized: "marginarium.petsWeMade.subtitle", defaultValue: "Narrated by Codex.",
                              comment: "The Marginarium: the line under the chapter title The Drawings We Actually Made; Codex, an AI helper, narrates this chapter"),
             passage: String(localized: "marginarium.petsWeMade.passage",
-                            defaultValue: "There are two guardians drawn as painting tools. One is a paintbrush; the other is a palette. This is a manageable arrangement until somebody calls across the workshop.",
+                            defaultValue: "Two of the guardians are drawn as painting tools, a paintbrush and a palette, and they were once given the same name. This is a manageable arrangement until somebody calls across the workshop.",
                             comment: "The Marginarium: the passage quoted from the chapter The Drawings We Actually Made; the guardians are the Lamp's panel, two of them drawn as a paintbrush and a palette")),
     ]
 

@@ -1,7 +1,7 @@
 import XCTest
 
 /// Both sections of the contents page open native reader pages, including at large text sizes;
-/// Chapter 6 shows the guardians' pets, and Chapter 1's margin notes carry them beside the words,
+/// Chapter 6 shows the guardians' drawings, and Chapter 1's margin notes carry them beside the words,
 /// in a margin column beside the story where the page has room.
 final class MarginariumReaderUITests: XCTestCase {
     @MainActor

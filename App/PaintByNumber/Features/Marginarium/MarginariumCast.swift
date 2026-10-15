@@ -32,7 +32,8 @@ nonisolated struct MarginariumTeam: Identifiable, Sendable {
     let members: [MarginariumGuardian]
 }
 
-/// Someone at the table who isn't a guardian: a person, or an AI helper with its pet.
+/// Someone at the table who isn't a guardian: a person, or an AI helper with its pet (Pip and
+/// Colophon, the book's only pets; a guardian's drawing is the guardian).
 nonisolated struct MarginariumPerson: Identifiable, Sendable {
     let id: String
     let name: String
@@ -174,7 +175,7 @@ nonisolated enum MarginariumCast {
                      comment: "The Marginarium, Who is Who: its name, for the guardian Dino"),
         after: String(localized: "lamp.dinotopia.after", defaultValue: "After James Gurney's Dinotopia books.",
                       comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Dino"),
-        portrait: String(localized: "lamp.dinotopia.portrait", defaultValue: "Paul hatched Dino himself, in Codex.",
+        portrait: String(localized: "lamp.dinotopia.portrait", defaultValue: "Paul hatched Dino himself, in Codex: a long-necked dinosaur.",
                          comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Dino"),
         guards: String(localized: "lamp.dinotopia.guards", defaultValue: "the storybook feel",
                        comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Dino"),

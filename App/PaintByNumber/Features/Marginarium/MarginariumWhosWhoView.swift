@@ -1,11 +1,12 @@
 import Foundation
 import SwiftUI
 
-/// Who's Who: everyone the chapters mention, with their pets (`MarginariumCast`). The people and
-/// the AI helpers come first, then what the Lamp is, then its guardians team by team; a guardian's
-/// card opens its brief (`MarginariumGuardianView`). Teams are lazy grid cells, and cards play small
-/// copies of their pets' cells (`MarginariumSpritePlayer(pet:marginWidth:)`), so a screenful of
-/// pets never holds their full sheets.
+/// Who's Who: everyone the chapters mention, the guardians drawn as themselves and the helpers with
+/// their pets (`MarginariumCast`). The people and the AI helpers come first, then what the Lamp
+/// is, then its guardians team by team; a guardian's card opens its brief
+/// (`MarginariumGuardianView`). Teams are lazy grid cells, and cards play small copies of their
+/// drawings' cells (`MarginariumSpritePlayer(pet:marginWidth:)`), so a screenful of guardians
+/// never holds their full sheets.
 struct MarginariumWhosWhoView: View {
     @ScaledMetric(relativeTo: .body) private var cardMinimum: CGFloat = 150
     /// Groups (the people, the helpers, each team) sit two to a row where a page has room for
@@ -120,7 +121,7 @@ struct MarginariumWhosWhoView: View {
     #endif
 }
 
-/// A guardian's card: its pet (or egg), its name, who it is named after if anyone, and what it
+/// A guardian's card: its drawing (or egg), its name, who it is named after if anyone, and what it
 /// guards, one VoiceOver element.
 private struct MarginariumGuardianCard: View {
     let guardian: MarginariumGuardian
@@ -128,7 +129,7 @@ private struct MarginariumGuardianCard: View {
     var body: some View {
         VStack(spacing: 8) {
             MarginariumGuardianPet(guardian: guardian, width: MarginariumPersonCard.petWidth)
-                // The card is the link; the pet only keeps it company here.
+                // The card is the link; the drawing only keeps it company here.
                 .allowsHitTesting(false)
             VStack(spacing: 2) {
                 Text(guardian.name)
@@ -193,8 +194,8 @@ private struct MarginariumPersonCard: View {
     }
 }
 
-/// A guardian's pet, small and captionless beside its name, or with its caption as the page's
-/// picture; an egg until it hatches.
+/// A guardian's drawing, small and captionless beside its name, or with its caption (its name)
+/// as the page's picture; an egg until it hatches.
 struct MarginariumGuardianPet: View {
     let guardian: MarginariumGuardian
     /// Nil for the small, captionless kind.
@@ -214,7 +215,7 @@ struct MarginariumGuardianPet: View {
     }
 }
 
-/// A guardian's brief, its charter in plain words: its pet, who it is named after or who it is, its
+/// A guardian's brief, its charter in plain words: its drawing, who it is named after or who it is, its
 /// team, what it guards, and what it believes, loves, watches out for, looks up to and is happiest
 /// seeing.
 struct MarginariumGuardianView: View {
@@ -228,7 +229,7 @@ struct MarginariumGuardianView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // The brief's picture: the pet at twice its size in the story.
+                // The brief's picture: the drawing at twice its size in the story.
                 MarginariumGuardianPet(guardian: guardian, caption: guardian.petCaption, width: 192)
                     .frame(maxWidth: .infinity)
 
@@ -302,8 +303,8 @@ struct MarginariumGuardianView: View {
     }
 }
 
-/// A pet that hasn't hatched: a cream egg drawn in the pets' brown ink, rocking now and then
-/// (still under Reduce Motion). The pets' art keeps its colors in dark mode, so the egg does too.
+/// A guardian that hasn't hatched: a cream egg drawn in the sprites' brown ink, rocking now and then
+/// (still under Reduce Motion). The sprites' art keeps its colors in dark mode, so the egg does too.
 struct MarginariumEgg: View {
     let width: CGFloat
     /// Nil on a card, where the card names the guardian and the egg is decoration.

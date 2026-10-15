@@ -75,7 +75,7 @@ struct MarginariumReaderTests {
         #expect(chapter.blocks.first?.text == "Chapter 6: The Drawings We Actually Made")
         #expect(chapter.blocks[1].kind == .subtitle)
         #expect(chapter.blocks[1].text == "Narrated by Codex.")
-        #expect(chapter.blocks[2].text.hasPrefix("There are two guardians drawn as painting tools."))
+        #expect(chapter.blocks[2].text.hasPrefix("Two of the guardians are drawn as painting tools, a paintbrush and a palette,"))
         let entry = try #require(MarginariumEntry.chapters.first { $0.id == "petsWeMade" })
         #expect(entry.title == "The Drawings We Actually Made")
         #expect(entry.subtitle == "Narrated by Codex.")
@@ -92,9 +92,12 @@ struct MarginariumReaderTests {
             #expect(MarginariumPet.named(pet.pet) != nil, "\(pet.pet ?? "nil") must be bundled")
             #expect(!pet.text.isEmpty, "A pet needs a VoiceOver description")
         }
-        // A guardian's drawing is the guardian: its description is its name alone.
-        #expect(pets.first { $0.pet == "snow-queen" }?.text == "The Snow Queen")
-        #expect(pets.first { $0.pet == "pirosmani" }?.text == "Niko")
+        // A guardian's drawing is the guardian: its description is its guardian's name alone.
+        for pet in pets {
+            let guardian = MarginariumCast.guardians.first { $0.id == pet.pet }
+            #expect(guardian != nil, "\(pet.pet ?? "nil") has no page in Who's Who")
+            #expect(pet.text == guardian?.name, "\(pet.pet ?? "nil")")
+        }
         #expect(!chapter.blocks.contains { $0.pet == "moon" })
         // Every pet stands in a section of its own, so the reader lays out one player per block.
         #expect(chapter.sections.filter { $0.blocks.first?.kind == .pet }.count == 19)
@@ -102,6 +105,10 @@ struct MarginariumReaderTests {
         let note = try #require(chapter.blocks.first { $0.text.hasPrefix("**A note from Claude, who keeps the record") })
         #expect(note.kind == .quote)
         #expect(note.text.hasSuffix("Codex is away until October 19 and will tell this part in its own words then."))
+        // Taking out the drawings' names and the word "pet" is said out loud, in a note of its own.
+        #expect(chapter.blocks.contains {
+            $0.kind == .quote && $0.text.hasPrefix("**A note from Claude, who keeps the record (October 15).**")
+        })
         let tables = chapter.sections.filter { $0.kind == .table }
         #expect(tables.count == 1)
         #expect(tables.first?.tableRows.first?.cells.map(\.text) == ["Question", "Matching choices"])

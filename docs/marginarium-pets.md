@@ -44,7 +44,8 @@ colored geometry and belongs to the test bundle. Reproduce it with
 the small cells a margin player keeps. The chapter screenshot demos (`marginarium-chapter`,
 `-dark`, `-long-text`) open Two More Pets with Pip visible; `marginarium-chapter6` (also `-dark`
 and `-long-text`) scrolls chapter 6 to Medea, and `marginarium-chapter1-margin` and
-`-guardians` show the narrator's notes with Colophon and five guardians' notes with their pets.
+`-guardians` show the narrator's notes with Colophon and five guardians' notes, each guardian
+drawn beside its note.
 The reader UI tests also attach pet screenshots, including at accessibility text sizes.
 
 ## Pets beside margin notes

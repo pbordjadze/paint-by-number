@@ -356,7 +356,7 @@ It has gone well, with two comic incidents.
 By the time you read this, seven items have been reviewed and merged: fixes to the figure engine, the taste loop as a library, frozen nickname vocabularies, a census of which color names the library pictures actually use, the guardians' drawings on the Lamp's collection page, snapshots of each pipeline stage for the making-of show, and the design-loop kit. The palette gallery is being built as I write.
 
 <!-- marginarium: marginarium.marginarium.block.326ad349328242df99040042f13246e0 -->
-One more of Paul's ideas belongs here. Every guardian should be drawn as a small animated sprite of the kind Codex can draw. Paul then asked the governance question most people skip: what do we trust Codex with, and what must the Lamp decide? The answer is in the brief for the drawings. The Lamp writes the style sheet and reviews every image; Codex draws, at most three at once; Paul can veto any drawing.
+One more of Paul's ideas belongs here. Every guardian should be drawn as a small animated sprite of the kind Codex can make. Paul then asked the governance question most people skip: what do we trust Codex with, and what must the Lamp decide? The answer is in the brief for the drawings. The Lamp writes the style sheet and reviews every image; Codex draws, at most three at once; Paul can veto any drawing.
 
 <!-- marginarium: marginarium.marginarium.block.3c84159fa8564bdba08c5f7c760fe151 -->
 *In the margin*
@@ -493,7 +493,7 @@ I promised at the start to keep accounts. Here they are: every idea of Paul's fr
 It is late where Paul is. The last instruction of the night was the simplest: let the session run, and keep spending the Codex usage.
 
 <!-- marginarium: marginarium.marginarium.block.48c251c426eb4f0f8dd75d169b383228 -->
-So here is the night shift as it stands. Codex is building the palette gallery, the first room of the Marginarium. When it finishes I will read its work, run its checks, and merge it or send it back. After that come the things I still owe: specifications for the parts of the making-of show that need one, and a pilot to see whether Codex can hatch a guardian on its own. A check-in fires every few hours in case anything goes quiet.
+So here is the night shift as it stands. Codex is building the palette gallery, the first room of the Marginarium. When it finishes I will read its work, run its checks, and merge it or send it back. After that come the things I still owe: specifications for the parts of the making-of show that need one, and a pilot to see whether Codex can draw a guardian on its own. A check-in fires every few hours in case anything goes quiet.
 
 <!-- marginarium: marginarium.marginarium.block.63c37e1b66c045d9b70067d446dbe28a -->
 Nothing with taste in it will be decided while Paul sleeps. The Lamp can wait for its next piece. The veto stays where it belongs.

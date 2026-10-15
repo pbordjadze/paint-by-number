@@ -169,7 +169,7 @@ private struct MarginariumWelcome: View {
             .buttonStyle(.plain)
             .accessibilityIdentifier("marginarium-start-chapter1")
             NavigationLink(value: MarginariumCast.whosWho) {
-                line("person.3", Text(String(localized: "marginarium.welcome.whosWho", defaultValue: "Meet everyone in Who's Who, guardians and all.",
+                line("person.3", Text(String(localized: "marginarium.welcome.whosWho", defaultValue: "Meet the people, the helpers and the guardians in Who's Who.",
                                              comment: "The Marginarium: a link in the New here? box that opens Who's Who, the page of people, helpers and guardians")), link: true)
             }
             .buttonStyle(.plain)

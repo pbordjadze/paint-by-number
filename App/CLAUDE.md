@@ -112,8 +112,8 @@ synchronized folder would bundle it into the app.
   Colophon, Codex is Pip, the Moon and Bart have none), and a test fails on an unmapped speaker. Chapter 6,
   The Drawings We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
   nineteen guardians the factory drew, bundled as `Resources/pet-<id>.webp` within the
-  budget in `docs/marginarium-pets.md` with Dino's (Paul's own Codex pet, shown in Who's Who);
-  the Moon's drawing is withheld. `SpriteAtlasTests` checks a generated
+  budget in `docs/marginarium-pets.md` with Dino's (Paul made it himself in the Codex app; Who's
+  Who shows it); the Moon's drawing is withheld. `SpriteAtlasTests` checks a generated
   WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
   `MarginariumReaderUITests` opens chapters, pets and appendices. Who's Who
   (`MarginariumWhosWhoView`, from the contents page's New here? box) shows `MarginariumCast`: the
@@ -163,9 +163,9 @@ synchronized folder would bundle it into the app.
   `marginarium-chapter`, `marginarium-chapter-dark` and `marginarium-chapter-long-text` open the
   reader on Two More Pets; readiness comes when its Pip block appears after the manifest loads.
   `marginarium-chapter1`, `-margin`, `-guardians` and `-table` open Chapter 1 at the top, the
-  first margin group (the narrator's notes), the second (five guardians' notes, each with its
-  pet) and the guardians table; `marginarium-chapter6` opens Chapter 6 at Medea. All have
-  `-dark` and `-long-text` variants. Readiness follows the requested section entering the
+  first margin group (the narrator's notes), the second (five guardians' notes, each guardian
+  drawn beside its note) and the guardians table; `marginarium-chapter6` opens Chapter 6 at
+  Medea. All have `-dark` and `-long-text` variants. Readiness follows the requested section entering the
   reader's viewport once the sheet has stopped moving, so these scenarios wait up to 30 s;
   `MarginariumReaderUITests` also captures margins and tables at accessibility text sizes.
   `marginarium-whos-who` (with `-dark`, `-long-text`) opens Who's Who at its top,

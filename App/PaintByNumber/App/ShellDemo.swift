@@ -46,9 +46,9 @@ import PaintCore
 ///   reader opened to Two More Pets, with Pip and Colophon inside the chapter.
 /// - `marginarium-chapter1`, `marginarium-chapter1-margin`, `marginarium-chapter1-guardians`,
 ///   `marginarium-chapter1-table`: Chapter 1 at its title, first margin group (the narrator's
-///   notes, with Colophon), second margin group (five guardians' notes, each with its pet) or
-///   guardians table. Each also has `-dark` and `-long-text` variants; readiness follows the
-///   target reaching the scroll viewport.
+///   notes, with Colophon), second margin group (five guardians' notes, each guardian drawn
+///   beside its note) or guardians table. Each also has `-dark` and `-long-text` variants;
+///   readiness follows the target reaching the scroll viewport.
 /// - `marginarium-chapter6`, with `-dark` and `-long-text`: Chapter 6, The Drawings We Actually
 ///   Made, scrolled to its first guardian (Medea).
 /// - `marginarium-whos-who`, with `-dark` and `-long-text`: Who's Who at its top (the people,
