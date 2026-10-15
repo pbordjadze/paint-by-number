@@ -1,0 +1,29 @@
+Attributes: Switch, 0x1178abd40, {{68.0, 928.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 0
+Element subtree:
+ →Switch, 0x1178abd40, {{68.0, 928.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 0
+Path to element:
+ →Application, 0x117897200, pid: 73890, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x117897340, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x117897480, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x1178975c0, {{48.0, 42.0}, {936.0, 1282.0}}
+     ↳Other, 0x117897700, {{48.0, 42.0}, {936.0, 1282.0}}
+      ↳Other, 0x117897840, {{48.0, 42.0}, {936.0, 1282.0}}
+       ↳Other, 0x117897980, {{48.0, 42.0}, {936.0, 1282.0}}
+        ↳Other, 0x117897ac0, {{inf, inf}, {0.0, 0.0}}
+         ↳Other, 0x117897c00, {{inf, inf}, {0.0, 0.0}}
+          ↳Other, 0x117897d40, {{inf, inf}, {0.0, 0.0}}
+           ↳Other, 0x117897e80, {{inf, inf}, {0.0, 0.0}}
+            ↳Other, 0x1178ab200, {{inf, inf}, {0.0, 0.0}}
+             ↳Other, 0x1178ab340, {{inf, inf}, {0.0, 0.0}}
+              ↳Other, 0x1178ab480, {{inf, inf}, {0.0, 0.0}}
+               ↳Other, 0x1178ab5c0, {{inf, inf}, {0.0, 0.0}}
+                ↳CollectionView, 0x1178ab700, {{inf, inf}, {0.0, 0.0}}
+                 ↳Cell, 0x1178ab840, {{inf, inf}, {0.0, 0.0}}
+                  ↳Other, 0x1178ab980, {{inf, inf}, {0.0, 0.0}}
+                   ↳Other, 0x1178abac0, {{inf, inf}, {0.0, 0.0}}
+                    ↳Other, 0x1178abc00, {{inf, inf}, {0.0, 0.0}}
+                     ↳Switch, 0x1178abd40, {{68.0, 928.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 0
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Switch
+    ↪︎Find: Elements matching predicate '"settings-marginarium" IN identifiers'

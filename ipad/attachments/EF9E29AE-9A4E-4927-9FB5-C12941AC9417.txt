@@ -1,0 +1,29 @@
+Application, 0x1174e3e80, pid: 73890, label: 'Paint by Moonlight' <App element pid: 73890>
+  Window (Main), 0x1174e1cc0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4335814656.4>
+    Other, 0x1174e1680, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4413916672.5>
+      Other, 0x1174e3480, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4416028672.6>
+        Other, 0x1174e2080, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4413885504.7>
+          Other, 0x1174e3ac0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4335813632.8>
+            Other, 0x1174e1e00, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4413409024.9>
+              Other, 0x1174e2580, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4413889536.10>
+                NavigationBar, 0x1174e1a40, {{0.0, 32.0}, {1032.0, 106.0}}, identifier: 'Paint by Moonlight' <AX element pid: 73890, elementOrHash.elementID: 4416143360.11>
+                  Button, 0x1174e0000, {{14.0, 36.0}, {36.0, 36.0}}, label: 'Settings' <AX element pid: 73890, elementOrHash.elementID: 4603008640.14>
+                  Button, 0x1174e30c0, {{666.0, 36.0}, {36.0, 36.0}}, label: 'Show', value: All, Disabled <AX element pid: 73890, elementOrHash.elementID: 4603009920.16>
+                  Button, 0x1174e3700, {{722.0, 36.0}, {36.0, 36.0}}, label: 'New Painting' <AX element pid: 73890, elementOrHash.elementID: 4603011200.17>
+                  SearchField, 0x1174e17c0, {{778.0, 32.0}, {240.0, 44.0}}, label: 'Search paintings', placeholderValue: 'Search paintings' <AX element pid: 73890, elementOrHash.elementID: 4335870720.18>
+                    Image, 0x1174e0b40, {{790.0, 44.5}, {20.5, 18.5}}, identifier: 'magnifyingglass', label: 'Search' <AX element pid: 73890, elementOrHash.elementID: 4603019264.22>
+                  StaticText, 0x1174e12c0, {{20.0, 89.5}, {315.0, 41.0}}, label: 'Paint by Moonlight' <AX element pid: 73890, elementOrHash.elementID: 4335911808.19>
+                Other, 0x1178b5680, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4413889984.12>
+                  Other, 0x1178b6580, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4336893952.20>
+                    Other, 0x1178b61c0, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4335910912.23>
+                      Other, 0x1178b5a40, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4413376704.24>
+                        ScrollView, 0x1178b48c0, {{516.0, 0.0}, {0.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4414914560.25>
+                          Other, 0x1178b6d00, {{516.0, 138.0}, {0.0, 0.0}} <AX element pid: 73890, elementOrHash.elementID: 4413922816.30>
+                        Other, 0x1178b5900, {{381.0, 504.0}, {270.0, 198.0}} <AX element pid: 73890, elementOrHash.elementID: 4413419776.26>
+                        StaticText, 0x1178b5f40, {{336.2, 735.8}, {359.5, 67.5}}, label: 'Every painting starts with a photo' <AX element pid: 73890, elementOrHash.elementID: 4413420672.27>
+                        StaticText, 0x1178b6080, {{320.5, 813.2}, {391.0, 42.5}}, label: 'Turn any photo into a numbered canvas, then bring it to life one color at a time.' <AX element pid: 73890, elementOrHash.elementID: 4413421120.28>
+                        Button, 0x1178b6440, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting' <AX element pid: 73890, elementOrHash.elementID: 4413422912.29>
+                          Image, 0x1178b66c0, {{452.5, 912.5}, {14.5, 14.5}}, identifier: 'plus', label: 'Add' <AX element pid: 73890, elementOrHash.elementID: 4413421568.31>
+                          StaticText, 0x1178b7ac0, {{420.5, 890.0}, {191.0, 60.5}}, label: 'New Painting' <AX element pid: 73890, elementOrHash.elementID: 4413422464.32>
+                Other, 0x1178b6f80, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4413919744.13>
+                  Other, 0x1178b4640, {{0.0, 0.0}, {1032.0, 1376.0}} <AX element pid: 73890, elementOrHash.elementID: 4413921792.21>

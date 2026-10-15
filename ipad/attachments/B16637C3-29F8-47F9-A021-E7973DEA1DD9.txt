@@ -1,0 +1,42 @@
+Attributes: Switch, 0x11741c640, {{68.0, 928.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 1
+Element subtree:
+ →Switch, 0x11741c640, {{68.0, 928.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 1
+Path to element:
+ →Application, 0x1178b7e80, pid: 72923, label: 'Paint by Moonlight'
+  ↳Window (Main), 0x11741db80, {{0.0, 0.0}, {1032.0, 1376.0}}
+   ↳Other, 0x11741e940, {{0.0, 0.0}, {1032.0, 1376.0}}
+    ↳Other, 0x11741e080, {{48.0, 42.0}, {936.0, 1282.0}}
+     ↳Other, 0x11741cc80, {{48.0, 42.0}, {936.0, 1282.0}}
+      ↳Other, 0x11741cdc0, {{48.0, 42.0}, {936.0, 1282.0}}
+       ↳Other, 0x11741e1c0, {{48.0, 42.0}, {936.0, 1282.0}}
+        ↳Other, 0x11741d400, {{48.0, 42.0}, {936.0, 1282.0}}
+         ↳Other, 0x11741cf00, {{48.0, 42.0}, {936.0, 1282.0}}
+          ↳Other, 0x11741d040, {{48.0, 42.0}, {936.0, 1282.0}}
+           ↳Other, 0x11741ef80, {{48.0, 42.0}, {936.0, 1282.0}}
+            ↳Other, 0x11741f0c0, {{48.0, 42.0}, {936.0, 1282.0}}
+             ↳Other, 0x11741f200, {{48.0, 42.0}, {936.0, 1282.0}}
+              ↳Other, 0x11741f340, {{48.0, 42.0}, {936.0, 1282.0}}
+               ↳Other, 0x11741f980, {{48.0, 42.0}, {936.0, 1282.0}}
+                ↳CollectionView, 0x11741fac0, {{48.0, 42.0}, {936.0, 1282.0}}
+                 ↳Cell, 0x11741fc00, {{68.0, 928.5}, {896.0, 52.0}}
+                  ↳Other, 0x11741c500, {{68.0, 928.5}, {896.0, 52.0}}
+                   ↳Other, 0x11741d540, {{68.0, 928.5}, {896.0, 52.0}}
+                    ↳Other, 0x11741fd40, {{68.0, 928.5}, {896.0, 52.0}}
+                     ↳Switch, 0x11741c640, {{68.0, 928.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 1
+Query chain:
+ →Find: Target Application 'com.pbordjadze.paintbynumber'
+  ↪︎Find: Descendants matching type Switch
+    Output: {
+      Switch, 0x117839680, {{68.0, 146.5}, {896.0, 52.0}}, label: 'Advance to Next Color', value: 1
+      Switch, 0x117846a80, {{68.0, 520.0}, {896.0, 52.0}}, label: 'Sounds', value: 1
+      Switch, 0x117852a80, {{68.0, 829.0}, {896.0, 52.0}}, identifier: 'settings-detail-brushes', label: 'Detail Brushes', value: 0
+      Switch, 0x117858000, {{68.0, 928.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 1
+      Switch, 0x117839900, {{883.0, 158.5}, {63.0, 28.0}}, value: 1
+      Switch, 0x117846d00, {{883.0, 532.0}, {63.0, 28.0}}, value: 1
+      Switch, 0x117852d00, {{883.0, 841.0}, {63.0, 28.0}}, value: 0
+      Switch, 0x117858280, {{883.0, 940.5}, {63.0, 28.0}}, value: 1
+    }
+    ↪︎Find: Elements matching predicate '"settings-marginarium" IN identifiers'
+      Output: {
+        Switch, 0x117814000, {{68.0, 928.5}, {896.0, 52.0}}, identifier: 'settings-marginarium', label: 'The Marginarium', value: 1
+      }
