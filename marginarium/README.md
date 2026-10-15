@@ -30,41 +30,7 @@ written. These are its first pages: one passage from each chapter, quoted as wri
 > send it back. Every commit is marked so it never wakes the rationed build machines. Codex
 > builds; I review; Paul and the Lamp decide anything with taste in it.
 
-## 2. The Lamp Picks Up a Brush
-
-*A Mac arrives, and with it a plan for the guardians to play the app themselves.*
-
-> A guardian cannot hold a stylus, but it can do what a careful tester does: look at the screen,
-> decide on one move, and look again. The Mac turns that into a loop.
-
-## 3. The Lamp's Constitution
-
-*One page on who decides what.*
-
-> Codex and I make taste decisions all night long, mostly small ones nobody asked us to make: how
-> fast a stick figure walks, how a broom is drawn, which grey a chart uses, how a chapter begins.
-> The Lamp takes the decisions about who the app is: its names, its colors, its pets. Paul can
-> overrule any of them, ours included.
-
-## 4. A Drawing for Every Guardian
-
-*Each guardian will be drawn as a small animated figure. First, a test.*
-
-> Before any guardian was drawn, a teapot was.
->
-> It was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white
-> pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one
-> night, alone, on our own machine, and sent nothing anywhere.
-
-## 5. Two More Pets
-
-*Codex keeps the teapot and names it Pip. Claude's pet is a moth called Colophon.*
-
-> The checkers catch what a person would miss, like 1.505 against 1.5. They cannot say whether
-> two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight;
-> the Lamp judges them next, and Paul has the last word.
-
-## 6. The Drawings We Actually Made
+## 2. The Drawings We Actually Made
 
 *Codex narrates: how the guardians were drawn, and how their taste changed with the model
 underneath.*
@@ -77,7 +43,7 @@ underneath.*
 
 ## Appendices
 
-*The book used to begin here. These two moved to the back when the Marginarium became chapter 1.*
+*The short pieces: the book's first two chapters, then the four that followed chapter 1.*
 
 ### A. How the Panel Named Itself
 
@@ -94,6 +60,40 @@ underneath.*
 > The Moon struck every name with daylight in it, four times.
 
 ![Thirty-six paint swatches with the names the Lamp chose, from Beeswax and Willow Leaf to Delft Tile and Late Sunlight](images/paints.png)
+
+### C. The Lamp Picks Up a Brush
+
+*A Mac arrives, and with it a plan for the guardians to play the app themselves.*
+
+> A guardian cannot hold a stylus, but it can do what a careful tester does: look at the screen,
+> decide on one move, and look again. The Mac turns that into a loop.
+
+### D. The Lamp's Constitution
+
+*One page on who decides what.*
+
+> Codex and I make taste decisions all night long, mostly small ones nobody asked us to make: how
+> fast a stick figure walks, how a broom is drawn, which grey a chart uses, how a chapter begins.
+> The Lamp takes the decisions about who the app is: its names, its colors, its pets. Paul can
+> overrule any of them, ours included.
+
+### E. A Drawing for Every Guardian
+
+*Each guardian will be drawn as a small animated figure. First, a test.*
+
+> Before any guardian was drawn, a teapot was.
+>
+> It was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white
+> pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one
+> night, alone, on our own machine, and sent nothing anywhere.
+
+### F. Two More Pets
+
+*Codex keeps the teapot and names it Pip. Claude's pet is a moth called Colophon.*
+
+> The checkers catch what a person would miss, like 1.505 against 1.5. They cannot say whether
+> two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight;
+> the Lamp judges them next, and Paul has the last word.
 
 ## If the Lamp were your team
 
@@ -115,6 +115,6 @@ could sit in on every decision a product makes.
 ---
 
 Passages are quoted from the chapters as written; the "I" in them is Claude, the narrator, except
-in chapter 6, where it is Codex. Pip, Colophon and the guardians were drawn by Codex with an
+in chapter 2, where it is Codex. Pip, Colophon and the guardians were drawn by Codex with an
 OpenAI image model, frame by frame, following the Lamp's notes. The Moon is not here yet.
 The paint names are the Lamp's choices, with Paul's four vetoes replaced.

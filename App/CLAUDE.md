@@ -73,9 +73,16 @@ synchronized folder would bundle it into the app.
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Marginarium/` (how the app is made, in chapters, with Pip, Codex's teapot,
   and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar once Settings › The
-  Marginarium is on (`SettingsKey.showsMarginarium`, off by default; demos open it directly), `MarginariumEntry`,
-  `MarginariumLamp`, and the shared `MarginariumSpritePlayer`; `PipSprite` and `ColophonSprite`
-  carry the frames in the asset catalog's `Pip/` and `Colophon/`). Entries open
+  Marginarium is on (`SettingsKey.showsMarginarium`, off by default; demos open it directly),
+  `MarginariumEntry` and the shared `MarginariumSpritePlayer`; `PipSprite` and `ColophonSprite`
+  carry the frames in the asset catalog's `Pip/` and `Colophon/`). Paul's shape for it (October
+  15): reductive, cute first, complexity only for whoever keeps digging. `MarginariumView` opens
+  on its drawings with nothing above them (`MarginariumCompany`: Pip, Colophon and every guardian
+  idling as small copies; a tap makes one wave and shows its name, a link to its brief), then one
+  way into the story (Chapter 1's opening paragraph, its entry's `passage`, and a link to keep
+  reading), then a lean contents: two chapters (1 The Marginarium; 2 The Drawings We Actually
+  Made, Codex's), the Who's Who link and Appendices A–F (A and B the book's first chapters, C–F
+  the one-passage chapters that followed Chapter 1), each a title and subtitle. Entries open
   `MarginariumReaderView`: native blocks decoded by `MarginariumDocument`, with catalog
   Markdown rendered by AttributedString and `pet:` blocks using the same player. `MarginariumPet`
   resolves imagesets or bundled v2 atlases; `SpriteAtlas` slices them off the main actor and
@@ -109,22 +116,23 @@ synchronized folder would bundle it into the app.
   shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
   VoiceOver; `MarginariumSpritePlayer(pet:marginWidth:)` keeps only small copies of the cells it
   plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
-  Colophon, Codex is Pip, the Moon and Bart have none), and a test fails on an unmapped speaker. Chapter 6,
+  Colophon, Codex is Pip, the Moon and Bart have none), and a test fails on an unmapped speaker. Chapter 2,
   The Drawings We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
   nineteen guardians the factory drew, bundled as `Resources/pet-<id>.webp` within the
   budget in `docs/marginarium-pets.md` with Dino's (Paul made it himself in the Codex app; Who's
   Who shows it); the Moon's drawing is withheld. `SpriteAtlasTests` checks a generated
   WebP in the test bundle only, `BundledPetsTests` the shipped sheets, and
   `MarginariumReaderUITests` opens chapters, pets and appendices. Who's Who
-  (`MarginariumWhosWhoView`, from the contents page's New here? box) shows `MarginariumCast`: the
+  (`MarginariumWhosWhoView`, from the contents and a drawing's name) shows `MarginariumCast`: the
   people (Paul, Chief Architect; Caroline, Chief Designer, making it with him from the start), the
   AI helpers with Pip and Colophon, and the Lamp's guardians in their teams, each card opening
   `MarginariumGuardianView`, its brief (the charter in `factory/GUARDIANS.md` in plain words, ids
   from `factory/panel.json`); a guardian who hasn't hatched shows `MarginariumEgg`. A guardian's drawing
-  is the guardian, never its pet (Paul, October 15): its caption and VoiceOver label are its name
-  alone (an egg's, "Bart, still an egg"), and no reader-facing text calls it a pet or gives it a
-  name of its own; only Pip and Colophon are pets, with their names.
-  `MarginariumCastTests` and `MarginariumWhosWhoUITests` cover them. Chief Architect Paul's rule
+  is the guardian, never its pet (Paul, October 15): its VoiceOver label is its name alone (an
+  egg's, "Bart, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
+  own; only Pip and Colophon are pets, with their names. A brief shows the name once, as its title
+  (the drawing's `caption` is its VoiceOver label there, never shown).
+  `MarginariumCastTests` and `MarginariumWhosWhoUITests` (the drawings' names too) cover them. Chief Architect Paul's rule
   for the whole Marginarium: anyone who opens it should have a nice time and roughly follow what's
   going on, so a new page says who people are and what the Lamp's words mean (or links Who's Who),
   in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`.
@@ -160,11 +168,13 @@ synchronized folder would bundle it into the app.
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`). Demo launches and the test host
   reset TipKit and hide every tip except in `paint-tip`. The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
-  `marginarium-chapter`, `marginarium-chapter-dark` and `marginarium-chapter-long-text` open the
-  reader on Two More Pets; readiness comes when its Pip block appears after the manifest loads.
+  `marginarium` (with `-dark`, `-long-text`) is the contents page, its drawings idling, ready 2 s
+  after it appears. `marginarium-chapter`, `marginarium-chapter-dark` and
+  `marginarium-chapter-long-text` open the reader on Two More Pets (Appendix F); readiness comes
+  when its Pip block appears after the manifest loads.
   `marginarium-chapter1`, `-margin`, `-guardians` and `-table` open Chapter 1 at the top, the
   first margin group (the narrator's notes), the second (five guardians' notes, each guardian
-  drawn beside its note) and the guardians table; `marginarium-chapter6` opens Chapter 6 at
+  drawn beside its note) and the guardians table; `marginarium-chapter2` opens Chapter 2 at
   Medea. All have `-dark` and `-long-text` variants. Readiness follows the requested section entering the
   reader's viewport once the sheet has stopped moving, so these scenarios wait up to 30 s;
   `MarginariumReaderUITests` also captures margins and tables at accessibility text sizes.
