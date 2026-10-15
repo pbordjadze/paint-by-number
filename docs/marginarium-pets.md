@@ -38,7 +38,9 @@ sheet, at most two at a time and in the order asked, redraws the ten cells the a
 (`SpriteAtlas.playedCells`: idle row 0, waving row 3) into bitmaps of their own, no larger than
 the player draws them (a cell is never scaled up; at most 192 × 208, 159,744 bytes), and lets the
 sheet go: a crop of a sheet shares its pixels and keeps all of them alive, which is how twenty
-players holding "small copies" on a 3x iPhone held 281 MB. Those frames are what the gallery's
+players holding "small copies" on a 3x iPhone held 281 MB. The sheet is drawn once into plain
+memory first, and the cells are cut from that: drawing a crop of the decoded WebP decoded the
+whole sheet again for each cell (about 60 ms each on CI, as long as the decode itself). Those frames are what the gallery's
 memory-warning-aware `ImageCache` keeps, with a 32 MiB decoded-byte limit, so the contents page's
 twenty drawings (1.5 MiB each) fit and a later page reuses them. Askers for the same frames share
 one decode. Visible players retain their frames and let go when they scroll away; evicted frames

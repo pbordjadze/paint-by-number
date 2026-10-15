@@ -46,30 +46,35 @@ nonisolated struct SpriteAtlas: Sendable {
 
     /// The cells `animation` plays, each redrawn into a bitmap of its own with its long side at
     /// most `maxPixelSize` (a cell is never scaled up). A crop keeps its whole sheet alive, so
-    /// only these copies let a player drop the 14 MiB behind them. Nil when any cell can't be
-    /// drawn: an animation with a hole in it would stall.
+    /// only these copies let a player drop the 14 MiB behind them. The sheet is first drawn once
+    /// into plain memory: a crop of the decoded WebP decoded it again for every cell drawn from it
+    /// (CI: about 60 ms each, as long as the decode itself). Nil when any cell can't be drawn: an
+    /// animation with a hole in it would stall.
     func thumbnails(maxPixelSize: Int) -> [Cell: CGImage]? {
+        guard let flat = Self.redrawn(sheet, width: sheet.width, height: sheet.height) else { return nil }
         var result: [Cell: CGImage] = [:]
         for cell in Self.playedCells {
-            guard let crop = image(at: cell), let copy = Self.standalone(crop, longSide: maxPixelSize) else { return nil }
+            guard let rect = cell.rect, let crop = flat.cropping(to: rect) else { return nil }
+            let scale = min(1, Double(max(1, maxPixelSize)) / Double(max(crop.width, crop.height)))
+            guard let copy = Self.redrawn(crop, width: max(1, Int((Double(crop.width) * scale).rounded())),
+                                          height: max(1, Int((Double(crop.height) * scale).rounded())))
+            else { return nil }
             result[cell] = copy
         }
         return result
     }
 
-    /// Premultiplied BGRA, the layout the render server takes without converting it.
-    private static func standalone(_ crop: CGImage, longSide: Int) -> CGImage? {
-        let scale = min(1, Double(max(1, longSide)) / Double(max(crop.width, crop.height)))
-        let width = max(1, Int((Double(crop.width) * scale).rounded()))
-        let height = max(1, Int((Double(crop.height) * scale).rounded()))
+    /// `image` drawn into a bitmap of its own, premultiplied BGRA, the layout the render server
+    /// takes without converting it.
+    private static func redrawn(_ image: CGImage, width: Int, height: Int) -> CGImage? {
         let bitmapInfo = CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue
-        for space in [crop.colorSpace, CGColorSpace(name: CGColorSpace.sRGB)] {
+        for space in [image.colorSpace, CGColorSpace(name: CGColorSpace.sRGB)] {
             guard let space, space.model == .rgb,
                   let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
                                           bytesPerRow: 0, space: space, bitmapInfo: bitmapInfo)
             else { continue }
             context.interpolationQuality = .high
-            context.draw(crop, in: CGRect(x: 0, y: 0, width: width, height: height))
+            context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
             return context.makeImage()
         }
         return nil
