@@ -461,23 +461,18 @@ final class CreateFlowTests: XCTestCase {
             attachTree(of: app, named: "library-picker-tree")
             throw XCTSkip("The library picker's photos aren't reachable from the UI test")
         }
-        // A grid fills in as it loads (a sheet's lazily): read it once its count has held for a
-        // moment, or a photo bound by index can be gone before its frame is read (iPhone's
-        // Choose Photo sheet, read as soon as its first photo showed).
-        var count = -1
-        var steady = 0
-        let settle = Date().addingTimeInterval(15)
-        while steady < 3, Date() < settle {
-            let now = photos.count
-            steady = now == count ? steady + 1 : 0
-            count = now
-            usleep(500_000)
-        }
         let excluding = other?.images.matching(photoPredicate).allElementsBoundByIndex.map { $0.frame } ?? []
-        // Thumbnails only (the picker's bar may carry small glyphs with similar labels).
-        let thumbnails = photos.allElementsBoundByIndex.prefix(60)
+        // Thumbnails only (the picker's bar may carry small glyphs with similar labels), read one
+        // at a time and only as far as the first usable one: the full picker's sheet lists photos
+        // it can't then resolve by index ("No matches found for Element at index 6"), so one that
+        // doesn't exist is passed over rather than read.
+        let candidates = photos.allElementsBoundByIndex.prefix(60).lazy
+            .filter { $0.exists }
             .map { (element: $0, frame: $0.frame) }
             .filter { $0.frame.width >= 40 && $0.frame.height >= 40 && !excluding.contains($0.frame) }
+        // The inline grid's coordinates are judged from all its photos, read once; a sheet's are
+        // read only up to the photo tapped.
+        let thumbnails = origin == nil ? AnySequence(Array(candidates)) : AnySequence(candidates)
         // When `area` is the picker itself, a grid in the picker's own coordinates starts at
         // x ≈ 0, left of the picker in the window. (Hit testing misled here: on the phone the
         // photos failed it in window coordinates, which sent the tap below the grid.)
