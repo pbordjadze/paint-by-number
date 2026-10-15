@@ -651,8 +651,8 @@ Paul checkpoints.
 60 templates are byte for byte main's), the spec (F31's file, `making-of.json`), the factory's
 renderer (`tools/factory/making_of_clip.py` with `making_of_pets.py` and `making_of_layers.py`,
 which reads the spec), and the crew's planner and motion in portable Swift (`Sources/MakingOf`,
-06a8345), replaying the Python's parrots plan. F30 is superseded (the crew is the Lamp's pets,
-not FigureRig's figures), and F33 and F34 were done another way (see each). Next: F46, the rest
+06a8345), replaying the Python's parrots plan. F30 is superseded (the crew is three of the Lamp's
+guardians, drawn from their sprite sheets, not FigureRig's figures), and F33 and F34 were done another way (see each). Next: F46, the rest
 of the show in portable Swift, so F32 is a thin view when CI minutes return.
 
 **Paul's calls** (each has a recommendation; nothing waits on them except where noted):
@@ -681,8 +681,8 @@ vectorized, at most 1024 px on the long side.
 - Report each stage's capture cost in time and bytes on the corpus.
 
 ### F30 · FigureRig as an app library
-*Superseded Oct 14: the crew is three of the Lamp's pets with procedural motion
-(`Sources/MakingOf`), so the app links no FigureRig.*
+*Superseded Oct 14: the crew is three of the Lamp's guardians, drawn from their sprite sheets with
+procedural motion (`Sources/MakingOf`), so the app links no FigureRig.*
 Branch `codex/f30-figurerig-library` from `origin/claude/making-of`, after F29. Bring
 `Sources/FigureRig`, `Sources/figures` and `Tests/FigureRigTests` (with F22's fixes) over from
 this branch, split so the app links only what it draws:
@@ -737,7 +737,7 @@ On `claude/making-of`, after F29–F31.
   - Acknowledgements unchanged.
 
 ### F33 · The factory renders the spec
-*Done another way, Oct 13–14: `making_of_clip.py` renders the spec with the pets, at the snapshots'
+*Done another way, Oct 13–14: `making_of_clip.py` renders the spec with the guardians as the crew, at the snapshots'
 size, landscape and portrait; Paul judged its clips at checkpoints 1 to 3.*
 Branch `codex/f33-making-of-spec` from this branch. `tools/factory/making_of.py --show
 <making-of.json>` renders each scene as its own clip (at most 6 s, at phone size), the whole show
