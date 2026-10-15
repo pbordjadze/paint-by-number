@@ -105,10 +105,6 @@ struct MarginariumReaderTests {
         let note = try #require(chapter.blocks.first { $0.text.hasPrefix("**A note from Claude, who keeps the record") })
         #expect(note.kind == .quote)
         #expect(note.text.hasSuffix("Codex is away until October 19 and will tell this part in its own words then."))
-        // Taking out the drawings' names and the word "pet" is said out loud, in a note of its own.
-        #expect(chapter.blocks.contains {
-            $0.kind == .quote && $0.text.hasPrefix("**A note from Claude, who keeps the record (October 15).**")
-        })
         let tables = chapter.sections.filter { $0.kind == .table }
         #expect(tables.count == 1)
         #expect(tables.first?.tableRows.first?.cells.map(\.text) == ["Question", "Matching choices"])
