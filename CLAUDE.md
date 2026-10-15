@@ -394,7 +394,7 @@ any port of it, when changing the fitter: work from the paper.
    schedule). TestFlight builds are separate and on request: the `TestFlight` workflow archives,
    cloud-signs with an App Store Connect API key and has App Store Connect validate the app; Run
    workflow from `main` with Upload ticked uploads it (version `MARKETING_VERSION`, build
-   `<run>.<attempt>`), and a pushed `testflight-*` tag is a dry run on any commit. The repository is
+   `<run>.<attempt>`), and a push to a `claude/testflight-dryrun*` branch (which CI ignores) is a dry run of its commit. The repository is
    public, so GitHub's standard runners cost no minutes; the limit is 5 macOS jobs at once.
 
 **Branches.** `main` is the default and shipping branch (`iphone` job, IPA, SideStore source; the

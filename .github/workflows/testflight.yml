@@ -3,7 +3,8 @@ name: TestFlight
 # A signed Release build for TestFlight, on request only (CI's IPA job keeps making the unsigned
 # SideStore builds). Every run archives, signs and has App Store Connect validate the app; only a
 # run from Actions › TestFlight › Run workflow with "Upload" ticked (from `main`) uploads it. A
-# pushed `testflight-*` tag runs the dry run on any commit (CI itself doesn't run for tags).
+# push to a `claude/testflight-dryrun*` branch runs the dry run on its commit (ci.yml ignores those
+# branches).
 # Signing is Xcode's cloud signing with an App Store Connect API key: the archive is built
 # unsigned, as the IPA job's is, and -exportArchive signs it with the team's cloud-managed
 # distribution certificate and an App Store profile it makes, so no certificate or profile lives
@@ -20,7 +21,7 @@ on:
         type: boolean
         default: false
   push:
-    tags: ['testflight-*']
+    branches: ['claude/testflight-dryrun*']
 
 permissions:
   contents: read
