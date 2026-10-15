@@ -1,6 +1,6 @@
 import PaintCore
 
-/// A pixel of a plane, where a pet works or a seed lands.
+/// A pixel of a plane, where a guardian works or a seed lands.
 struct Spot: Sendable, Hashable {
     var x: Int
     var y: Int

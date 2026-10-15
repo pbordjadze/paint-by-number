@@ -5,13 +5,13 @@ extension CrewInputs {
     public static let defaultExitBand = 232.0
 
     /// What the crew is planned from, chosen from a generation's pictures and template: where each
-    /// pet pops in, the spots every step's jobs are done at, the lines to draw, and with them the
+    /// guardian pops in, the spots every step's jobs are done at, the lines to draw, and with them the
     /// seeds step 3 drops. `making_of_inputs.py` is the reference and makes the same numbers bit for
     /// bit; the sizes and spots come at the precision the plan file keeps (0.01 px, 0.0001 s).
     ///
     /// Every random draw is a `ShowStreams` stream of `seed` (the planner's `CrewPlan` draws from
     /// `SplitMix64(seed:)` itself), so a change to one step's weights can't move another step's
-    /// spots. The pets pop in one to a band of the picture (the spec's `bands`, left to right), each at
+    /// spots. The guardians pop in one to a band of the picture (the spec's `bands`, left to right), each at
     /// its first job; step 2's jobs are at the seeds, step 4's are the strokes, and the others
     /// (`pets * 4` spots each) are drawn by `StopWeights`.
     ///
@@ -77,7 +77,7 @@ extension CrewInputs {
                 var rng = streams.stream(.spots, k)
                 let spots = Sampling.sampleStops(
                     weights: weights.plane(forStep: k), width: w, count: pets * 4, spacing: 0.1 * Double(w), rng: &rng)
-                candidates.append(k == 0 ? homes + spots : spots)   // each pet pops in at its first job
+                candidates.append(k == 0 ? homes + spots : spots)   // each guardian pops in at its first job
             }
         }
 

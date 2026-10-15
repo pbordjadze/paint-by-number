@@ -1,6 +1,6 @@
 import Foundation
 
-/// The timing of a pet's moves, from the spec's numbers. `h` is the pet's height in pixels.
+/// The timing of a guardian's moves, from the spec's numbers. `h` is the guardian's height in pixels.
 extension ShowSpec.Crew {
     /// Seconds from setting off to arriving `dist` px away.
     func walkTime(_ dist: Double, _ h: Double) -> Double {

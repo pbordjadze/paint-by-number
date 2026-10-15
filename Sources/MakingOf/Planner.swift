@@ -1,14 +1,14 @@
 import Foundation
 import PaintCore
 
-/// When a pet changes the picture where it works: a moment, and where.
+/// When a guardian changes the picture where it works: a moment, and where.
 public struct Visit: Sendable, Equatable {
     public var time: Double
     public var x: Double
     public var y: Double
 }
 
-/// A line drawn by a pet walking along it.
+/// A line drawn by a guardian walking along it.
 public struct Trace: Sendable, Equatable {
     /// The line's index in the strokes the plan was made from.
     public var stroke: Int
@@ -18,10 +18,10 @@ public struct Trace: Sendable, Equatable {
     public var line: Polyline
 }
 
-/// Hands out the jobs. A pet stands beside its spot (`side`), on the side it came from, so the
-/// change it makes is never hidden under it; spots of pets working at the same time stay `space`
+/// Hands out the jobs. A guardian stands beside its spot (`side`), on the side it came from, so the
+/// change it makes is never hidden under it; spots of guardians working at the same time stay `space`
 /// apart; arrivals land on the step's quarter beats, rippling left to right, the first on the
-/// step's own downbeat when a pet can be there by then. Each pet has its band of the picture
+/// step's own downbeat when a guardian can be there by then. Each guardian has its band of the picture
 /// (`bands`, by where it pops in) and takes a job elsewhere only when its band has none it can
 /// reach in time.
 struct Planner {
@@ -78,7 +78,7 @@ struct Planner {
         box.x0 <= p.x && p.x <= box.x1 && box.y0 <= p.y && p.y <= box.y1
     }
 
-    /// Whether a pet walking along `line` stays whole in the picture: its sides (0.7 h apart) and
+    /// Whether a guardian walking along `line` stays whole in the picture: its sides (0.7 h apart) and
     /// its head (h up) inside. Its feet are, on any of the template's lines.
     private func inView(_ line: Polyline) -> Bool {
         line.points.allSatisfy { 0.35 * h <= $0.x && $0.x <= width - 0.35 * h && h <= $0.y }
@@ -93,8 +93,8 @@ struct Planner {
         return Point(min(max(x, 0.05 * width), 0.95 * width), min(jy + 0.05 * h, height - 4))
     }
 
-    /// Whether (x, y) is free for `me` from `t0` to `t1`. Pets are taller than wide: clear means
-    /// side by side with room, or a whole pet apart up and down.
+    /// Whether (x, y) is free for `me` from `t0` to `t1`. Guardians are taller than wide: clear means
+    /// side by side with room, or a whole guardian apart up and down.
     private func clear(_ x: Double, _ y: Double, _ t0: Double, _ t1: Double, _ me: Int) -> Bool {
         taken.allSatisfy {
             $0.pet == me || $0.to + 0.2 < t0 || t1 + 0.2 < $0.from
@@ -108,14 +108,14 @@ struct Planner {
         return origin + k * beat + 0.15 * x / width
     }
 
-    /// Pet `i` kept at its last stop until it had to go.
+    /// Guardian `i` kept at its last stop until it had to go.
     private mutating func depart(_ i: Int, _ time: Double) {
         if time > pets[i].lastStop.leave {
             pets[i].stops[pets[i].stops.count - 1].leave = time
         }
     }
 
-    /// The live pet that is free first (the first listed, of equals).
+    /// The live guardian that is free first (the first listed, of equals).
     private func nextPet(_ live: [Bool], _ free: [Double]) -> Int? {
         var best: Int?
         for j in live.indices where live[j] {
@@ -127,7 +127,7 @@ struct Planner {
     }
 
     /// Jobs at `candidates` (spots) for step `k`; returns the seeds its change spreads from, a
-    /// short sweep beside each pet as it works.
+    /// short sweep beside each guardian as it works.
     mutating func step(from t0: Double, to tEnd: Double, candidates: [Point], k: Int) -> [Visit] {
         var pool = candidates
         var seeds: [Visit] = []
@@ -178,7 +178,7 @@ struct Planner {
         return seeds
     }
 
-    /// Step `k`'s lines: each free pet walks to the nearest line it can draw in time and draws it
+    /// Step `k`'s lines: each free guardian walks to the nearest line it can draw in time and draws it
     /// by walking along it, never one that would take it out of the picture. Returns the seeds and
     /// the lines drawn.
     mutating func trace(from t0: Double, to tEnd: Double, strokes: [Polyline], k: Int) -> (seeds: [Visit], traces: [Trace]) {
@@ -239,7 +239,7 @@ struct Planner {
         return (seeds, traces)
     }
 
-    /// Whether walking from `a` to `b` passes over a pet standing at `o` (boxes as in `clear`).
+    /// Whether walking from `a` to `b` passes over a guardian standing at `o` (boxes as in `clear`).
     private func crosses(_ a: Point, _ b: Point, _ o: Point) -> Bool {
         let l2 = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y)
         let u = min(max(((o.x - a.x) * (b.x - a.x) + (o.y - a.y) * (b.y - a.y)) / max(l2, 1e-9), 0), 1)
@@ -248,9 +248,9 @@ struct Planner {
         return abs(px - o.x) < 0.85 * crew.space * h && abs(py - o.y) < 1.15 * crew.space * h
     }
 
-    /// The goodbye: each pet takes a last look at the finished picture (`crew.look` s, reviewing),
+    /// The goodbye: each guardian takes a last look at the finished picture (`crew.look` s, reviewing),
     /// waves where it stands from `waveAt[i]` for `crew.wave` s, then walks briskly to the nearest
-    /// edge whose way doesn't cross a pet still there, and steps out of the frame. The last one out
+    /// edge whose way doesn't cross a guardian still there, and steps out of the frame. The last one out
     /// stops just inside that edge, turns to you and waves once more (`crew.edgeWave` s) first.
     mutating func farewell(waveAt: [Double], frameHeight: Double) {
         let spots = pets.map { $0.lastStop.end }
@@ -305,7 +305,7 @@ struct Planner {
         }
     }
 
-    /// Builds every pet's walks once all the stops are planned.
+    /// Builds every guardian's walks once all the stops are planned.
     mutating func finishPets() {
         for i in pets.indices {
             pets[i].finish(&rng)

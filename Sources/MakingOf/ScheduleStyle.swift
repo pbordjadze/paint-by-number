@@ -59,9 +59,9 @@ public struct ScheduleStyle: Sendable, Equatable {
 
     // MARK: Numbers
 
-    /// In pet heights: a number this near a working pet goes down just after it ...
+    /// In guardian heights: a number this near a working guardian goes down just after it ...
     public var numberNear = 1.6
-    /// ... this long after the pet's visit.
+    /// ... this long after the guardian's visit.
     public var numberAfterPet = 0.3
     /// Steps into the template step the other numbers wait for, at the earliest.
     public var numberLate = 0.55

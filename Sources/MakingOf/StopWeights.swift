@@ -44,12 +44,12 @@ struct LineMask: Sendable, Equatable {
 /// How likely each pixel is to be picked as a place to work, per step: the planes
 /// `tools/factory/making_of_inputs.py` weighs spots by, which are integers or doubles made of
 /// `+ - * /` and `squareRoot()` only, so Swift and Python draw the same spots. Every plane is zero
-/// outside `room`, the picture without a margin where a pet would stand in a corner.
+/// outside `room`, the picture without a margin where a guardian would stand in a corner.
 struct StopWeights {
     let pictures: ShowPictures
     let template: ShowTemplate
     let petHeight: Double
-    /// The rows and columns a pet may work in: below the top margin and the pet's own height (so
+    /// The rows and columns a guardian may work in: below the top margin and the guardian's own height (so
     /// all of it stays in the picture), above the bottom 8 px, off the sides' margins.
     let rows: Range<Int>
     let columns: Range<Int>
@@ -101,7 +101,7 @@ struct StopWeights {
 
     /// Where the numbers are, in the open: a number counts one (and a floor of 1e-6, so every pixel
     /// stays possible), times `0.05 + open^2`, where `open` is 1 less how thick lines run within a
-    /// pet's reach (a box of 0.35 of its height, against the thickest 5% of the picture), so a pet
+    /// guardian's reach (a box of 0.35 of its height, against the thickest 5% of the picture), so a guardian
     /// doesn't stand tangled in the finished drawing's ink.
     func numbers() -> [Double] {
         let w = pictures.width, h = pictures.height

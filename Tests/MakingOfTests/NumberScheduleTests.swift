@@ -55,7 +55,7 @@ import Testing
     }
 
     @Test func aNumberNearAWorkingPetComesInJustAfterItsLastVisit() {
-        // within 1.6 pet heights (16 px): the earliest visit there, plus 0.3 s
+        // within 1.6 guardian heights (16 px): the earliest visit there, plus 0.3 s
         let visits = [Visit(time: 10.9, x: 20, y: 20), Visit(time: 10.6, x: 30, y: 20), Visit(time: 10.1, x: 90, y: 40)]
         let times = tiny(numbers: [(x: 25, y: 20, size: 4)], visits: visits)
         #expect(times == [10.6 + 0.3])

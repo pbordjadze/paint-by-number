@@ -1,15 +1,15 @@
 import Foundation
 import PaintCore
 
-/// MakingOf: the crew of the making-of show, planned and moved. The show plays after the painter
-/// taps Start: three of the app's pets walk over the painter's photo, and each step of the
-/// pipeline is revealed where they work (`ShowSpec`, `making-of.json`).
+/// MakingOf: the making-of show (`Show`). It plays after the painter taps Start: three of the
+/// Lamp's guardians walk over the painter's photo, and each step of the pipeline is revealed where
+/// they work (`ShowSpec`, `making-of.json`).
 ///
-/// `CrewPlan` hands the jobs out (who works where, when, and which lines are drawn by walking
-/// along them) from plain data, and `PetPlan.state(at:)` says where a pet is, which sprite row
-/// and frame it shows, how it squashes and leans, at any moment. Both are pure functions of their
-/// inputs: the same photo, spots, strokes and seed give the same show on any device, from
-/// PaintCore's `SplitMix64`, the only random source.
+/// `CrewPlan` is the guardians' plan: it hands the jobs out (who works where, when, and which
+/// lines are drawn by walking along them) from plain data, and `PetPlan.state(at:)` says where a
+/// guardian is, which sprite row and frame it shows, how it squashes and leans, at any moment.
+/// Both are pure functions of their inputs: the same photo, spots, strokes and seed give the same
+/// show on any device, from PaintCore's `SplitMix64`, the only random source.
 ///
 /// `tools/factory/making_of_pets.py` is the reference: this is its port, line by line, and
 /// `Tests/MakingOfTests/Fixtures/plan-parrots.json` proves the two equal. Change them together
@@ -24,11 +24,11 @@ import PaintCore
 ///     python3 tools/factory/making_of_clip.py $OUT/gen $OUT/gen/snap /dev/null \
 ///       --pets App/PaintByNumber/Resources --plan-json Tests/MakingOfTests/Fixtures/plan-parrots.json
 ///
-/// Planning draws every random number from SplitMix64, in a fixed order: the pets' order of
+/// Planning draws every random number from SplitMix64, in a fixed order: the guardians' order of
 /// appearing, their order of waving, each job's work time as the steps are planned, then each
 /// walk's bend.
 public struct CrewPlan: Sendable, Equatable {
-    /// The step whose lines the pets draw by walking along them: `ShowSpec.StepID.ink`'s place,
+    /// The step whose lines the guardians draw by walking along them: `ShowSpec.StepID.ink`'s place,
     /// which the spec insists on.
     public static let inkStep = 4
 
@@ -109,14 +109,14 @@ public struct CrewInputs: Sendable, Equatable {
 
     public var width: Double
     public var height: Double
-    /// A pet's height in pixels: the spec's crew `height` times the picture's shorter side.
+    /// A guardian's height in pixels: the spec's crew `height` times the picture's shorter side.
     public var petHeight: Double
     public var intro: Double
     /// The seconds each of the six steps lasts (the spec's `timing.step`, unless something else
     /// sets the pace).
     public var step: Double
     public var seed: UInt64
-    /// The pets, in crew order.
+    /// The guardians, in crew order.
     public var pets: [Member]
     /// For each step, the spots its jobs are done at (the ink step's are ignored: its jobs are the
     /// strokes).

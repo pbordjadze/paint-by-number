@@ -49,7 +49,7 @@ import Testing
     @Test func theRoomKeepsPetsOutOfTheCorners() throws {
         let small = try SmallShow()
         let w = weights(small)
-        // 216 x 144: 0.12 of the height plus the pet's 23.04 from the top, 8 px off the bottom, 0.12 of the width at the sides
+        // 216 x 144: 0.12 of the height plus the guardian's 23.04 from the top, 8 px off the bottom, 0.12 of the width at the sides
         #expect(w.rows == 40..<136)
         #expect(w.columns == 25..<191)
     }

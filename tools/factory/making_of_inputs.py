@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""What the making-of crew is planned from, chosen exactly: where each pet pops in, the spots every
+"""What the making-of crew is planned from, chosen exactly: where each guardian pops in, the spots every
 step's jobs are done at, the k-means++ seeds step 3 drops, and the template's lines.
 
 Usage:
@@ -20,7 +20,7 @@ It works at the snapshots' size, as the app does; --width resamples the pictures
 making_of_layers.py does, for a clip at another size.
 
 The weights the spots are drawn by (all multiplied by `room`, the picture without a margin where a
-pet would stand in a corner):
+guardian would stand in a corner):
   step 0 and homes  the structure plus 0.35: the edges first, but the whole picture is visited
   step 1            the same everywhere
   step 3            1 / sqrt(area) of the merged region a pixel is in, so small regions are visited
@@ -184,7 +184,7 @@ class Built:
 
 
 def build(pictures, template, spec, seed, ids, exit_band=CARD_BAND, pet_height=None):
-    """The crew's inputs for `ids` (pets, in crew order) at the pictures' size, with the show's `seed`
+    """The crew's inputs for `ids` (guardians, in crew order) at the pictures' size, with the show's `seed`
     (the planner's too). `pet_height` overrides the spec's share of the shorter side."""
     W, H = pictures.size
     crew, timing = spec['crew'], spec['timing']
@@ -195,7 +195,7 @@ def build(pictures, template, spec, seed, ids, exit_band=CARD_BAND, pet_height=N
     n = len(ids)
     trace = {}
 
-    # a pet's spot keeps all of it in the picture and off its edges, so nobody works in a corner
+    # a guardian's spot keeps all of it in the picture and off its edges, so nobody works in a corner
     room = np.zeros((H, W))
     x0 = int(margin * W)
     y0 = int(margin * H + pet_h)
@@ -206,7 +206,7 @@ def build(pictures, template, spec, seed, ids, exit_band=CARD_BAND, pet_height=N
     count = np.zeros((H, W))
     for x, y, _ in template.numbers:
         count[int(min(max(y, 0), H - 1)), int(min(max(x, 0), W - 1))] += 1
-    # for the numbers a pet picks the open spots, where few lines run, so it doesn't stand tangled
+    # for the numbers a guardian picks the open spots, where few lines run, so it doesn't stand tangled
     # in the finished drawing's ink
     ink = exact.line_mask(W, H, template.strokes, template.line_width / 2 + LINE_REACH)
     density = exact.box_sum(ink, max(1, int(0.35 * pet_h)))
@@ -264,7 +264,7 @@ def build(pictures, template, spec, seed, ids, exit_band=CARD_BAND, pet_height=N
             spots = sample_stops(weights[k].ravel(), W, n * 4, making_of_pets.stream(seed, making_of_pets.STREAM_SPOTS, k),
                                  spacing=0.1 * W)
             if k == 0:
-                spots = homes + spots           # each pet pops in at its first job
+                spots = homes + spots           # each guardian pops in at its first job
         candidates.append(spots)
 
     px = lambda v: exact.quantize(float(v), 2)

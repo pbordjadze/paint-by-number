@@ -22,8 +22,16 @@ let package = Package(
                 .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
             ]
         ),
-        // The show's crew: cheap to plan, and planned from a spec the Lamp edits, so checked.
-        .target(name: "MakingOf", dependencies: ["PaintCore"]),
+        // The making-of show: its crew, layers and reveal fields, planned and built from a spec the
+        // Lamp edits, so a checked build in Release (no -Ounchecked, unlike PaintCore); Debug app
+        // builds still get PaintCore's -O, or its per-pixel loops would run unoptimized.
+        .target(
+            name: "MakingOf",
+            dependencies: ["PaintCore"],
+            swiftSettings: [
+                .unsafeFlags(["-O"], .when(configuration: .debug)),
+            ]
+        ),
         .executableTarget(
             name: "pbn",
             dependencies: ["PaintCore"],

@@ -3,7 +3,7 @@ import Foundation
 /// The making-of show's spec: `making-of.json`, which the Lamp edits. Decoding is strict (version
 /// 1, the six steps in order, known poses, no unknown key at any level, every duration and length
 /// positive and within the bounds below), so a bad edit throws, with the key in the error, and
-/// never reaches the planner. Times are seconds; crew lengths are in the pet's own height; a
+/// never reaches the planner. Times are seconds; crew lengths are in the guardian's own height; a
 /// `height` is a share of the picture's shorter side.
 public struct ShowSpec: Sendable, Equatable, Decodable {
     public static let version = 1
@@ -24,7 +24,7 @@ public struct ShowSpec: Sendable, Equatable, Decodable {
         case sketch, shading, paints, merged, ink, template
     }
 
-    /// What a pet does at a job: the hands-on steps show it busy, the others reviewing.
+    /// What a guardian does at a job: the hands-on steps show it busy, the others reviewing.
     public enum Pose: String, Sendable, Decodable {
         case busy, review
     }

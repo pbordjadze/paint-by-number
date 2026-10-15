@@ -143,7 +143,7 @@ import Testing
     }
 
     /// A walk bends to one side, so it is longer than the straight line its time was planned for,
-    /// and the pet hurries to arrive on time: by (1 + 2/3 bend^2) at most, 1.7 % at the bend's
+    /// and the guardian hurries to arrive on time: by (1 + 2/3 bend^2) at most, 1.7 % at the bend's
     /// most (0.16).
     @Test func noWalkToAJobIsFasterThanWalkingPace() {
         let h = inputs.petHeight
@@ -171,7 +171,7 @@ import Testing
         }
     }
 
-    /// Pets are 0.7 heights wide and one high; one is out of the way once it has faded.
+    /// Guardians are 0.7 heights wide and one high; one is out of the way once it has faded.
     @Test func petsNeverOverlap() {
         struct Box {
             var x0, x1, y0, y1: Double

@@ -1,11 +1,11 @@
 import Foundation
 import PaintCore
 
-/// A place a pet is at for a while: a job worked standing at (x, y), or a line drawn by walking
+/// A place a guardian is at for a while: a job worked standing at (x, y), or a line drawn by walking
 /// `path`.
 public struct Stop: Sendable, Equatable {
     public enum Kind: Sendable, Equatable {
-        /// Where the pet pops in.
+        /// Where the guardian pops in.
         case appear
         /// The step (0 to 5) whose job it is.
         case job(Int)
@@ -25,7 +25,7 @@ public struct Stop: Sendable, Equatable {
     public var kind: Kind
     public var path: Polyline?
 
-    /// Where the pet is when it sets off: at the end of the line it drew, else here.
+    /// Where the guardian is when it sets off: at the end of the line it drew, else here.
     var end: Point {
         path?.points.last ?? Point(x, y)
     }
@@ -77,7 +77,7 @@ public enum Row: String, Sendable {
     case idle, right, left, wave, busy, review
 }
 
-/// Where a pet is and how it looks at one moment.
+/// Where a guardian is and how it looks at one moment.
 public struct PetState: Sendable, Equatable {
     public var x: Double
     public var y: Double
@@ -98,7 +98,7 @@ public struct PetState: Sendable, Equatable {
     var frameValue: Double
 }
 
-/// One pet's way through the show: its stops, the walks between them, and where it is at any
+/// One guardian's way through the show: its stops, the walks between them, and where it is at any
 /// time. Planned by `CrewPlan`; once finished, `state(at:)` is a pure function of the time.
 public struct PetPlan: Sendable, Equatable {
     public let id: String
@@ -110,7 +110,7 @@ public struct PetPlan: Sendable, Equatable {
     let stepEnds: [Double]
     let crew: ShowSpec.Crew
     let poses: [ShowSpec.Pose]
-    /// For each stop that draws a line, which way the pet faces at each point of it.
+    /// For each stop that draws a line, which way the guardian faces at each point of it.
     private var lineFaces: [[Facing]] = []
 
     /// The pieces each walk's curve is cut into.
@@ -204,7 +204,7 @@ public struct PetPlan: Sendable, Equatable {
             tilt: tilt, alpha: 1, frameValue: frame)
     }
 
-    /// Where the pet is, and how it looks, `t` seconds into the show.
+    /// Where the guardian is, and how it looks, `t` seconds into the show.
     public func state(at t: Double) -> PetState {
         let h = height
         let start = stops[0]

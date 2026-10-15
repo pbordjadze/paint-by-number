@@ -109,7 +109,7 @@ import Testing
         spec.crew.pets = ["a", "b", "c", "d", "e", "f", "g"]
         let (inputs, _) = try CrewInputs.make(small.pictures, small.show, spec: spec, seed: 7)
         #expect(inputs.pets.count == 7 && inputs.candidates[1].count == 28)
-        // three bands left to right: the first holds 3 of 7 pets (0, 1, 2), the second 2 (3, 4), the third 2
+        // three bands left to right: the first holds 3 of 7 guardians (0, 1, 2), the second 2 (3, 4), the third 2
         let homes = inputs.pets.map(\.start)
         let edges = [0.12 * 216, 0.12 * 216 + (0.88 * 216 - 0.12 * 216) / 3, 0.12 * 216 + 2 * (0.88 * 216 - 0.12 * 216) / 3, 0.88 * 216]
         for (i, home) in homes.enumerated() {
@@ -149,7 +149,7 @@ import Testing
     private func points(_ pairs: [[Double]]) -> [Point] { pairs.map { Point($0[0], $0[1]) } }
 
     @Test func aPictureWithLittleRoomIsDrawnFromEverywhere() throws {
-        // 20 x 14: rows 3..<6 and columns 2..<18 are the room, too narrow for a pet's height. The spots
+        // 20 x 14: rows 3..<6 and columns 2..<18 are the room, too narrow for a guardian's height. The spots
         // are Python's, which has the same fallbacks (the cases are in test_making_of_inputs.py too).
         let small = try SmallShow()
         let (inputs, seeds) = try CrewInputs.make(
@@ -166,8 +166,8 @@ import Testing
     }
 
     @Test func aPictureSmallerThanTheCrewSharesItsHomes() throws {
-        // four cells, three bands of seven pets: each band finds the four cells and no more, so twelve
-        // homes for twenty pets, who go round them
+        // four cells, three bands of seven guardians: each band finds the four cells and no more, so twelve
+        // homes for twenty guardians, who go round them
         let small = try SmallShow()
         let (inputs, seeds) = try CrewInputs.make(
             flat(2, 2), ShowTemplate(small.template, width: 2, height: 2), spec: spec(pets: 20), seed: 7)

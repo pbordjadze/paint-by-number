@@ -15,7 +15,7 @@ public struct InkLine: Sendable, Equatable {
 }
 
 /// How the template's lines are drawn: first in the ink step, as stair-stepped pixel outlines
-/// (the way tracing starts), laid down along their paths (the pets walk some) while the grey
+/// (the way tracing starts), laid down along their paths (the guardians walk some) while the grey
 /// lifts; then in the template step the outlines relax into the template's smooth curves,
 /// rippling out from where the crew works.
 ///
@@ -28,7 +28,7 @@ public struct StrokeSchedule: Sendable {
     public struct Stroke: Sendable, Equatable {
         /// The line's index in the template's strokes.
         public var index: Int
-        /// Whether a pet walks along it, drawing it under its feet.
+        /// Whether a guardian walks along it, drawing it under its feet.
         public var walked: Bool
         public var start: Double
         public var duration: Double
@@ -51,7 +51,7 @@ public struct StrokeSchedule: Sendable {
 
     /// - Parameters:
     ///   - strokes: the template's lines, in pixels of the working image (the plan's inputs).
-    ///   - traces: the lines the crew walks (`CrewPlan.traces`), drawn from their start to end by the pet.
+    ///   - traces: the lines the crew walks (`CrewPlan.traces`), drawn from their start to end by the guardian.
     ///   - inkArrival: the ink step's `Arrival.field`, which a line the crew doesn't walk begins after.
     ///   - relaxArrival: the template step's, which a point relaxes after.
     ///   - streams: each such line's wait is a draw from the `.strokes` stream of its index.
@@ -155,7 +155,7 @@ public struct StrokeSchedule: Sendable {
     }
 
     /// The ink step's lines: each line begun, drawn along its stair-stepped outline as far as it has
-    /// got. A walked line is in full ink under the pet's feet; the others darken from grey to ink.
+    /// got. A walked line is in full ink under the guardian's feet; the others darken from grey to ink.
     public func inked(at t: Double) -> [InkLine] {
         var lines: [InkLine] = []
         for stroke in strokes where t >= stroke.start {

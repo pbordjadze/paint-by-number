@@ -1,6 +1,6 @@
 import PaintCore
 
-/// When each of the template's numbers comes in, in the last step: just after the last pet to work
+/// When each of the template's numbers comes in, in the last step: just after the last guardian to work
 /// near it has been there, else late in the step, and never before its area has cleared to paper
 /// nor before the outlines have relaxed at it. `making_of_reveal.py` is the reference and equals
 /// this bit for bit.
