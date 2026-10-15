@@ -131,7 +131,7 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings-marginarium")
                 } footer: {
-                    Text("Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with the guardians’ pets.")
+                    Text("Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with its guardians.")
                 }
 
                 Section {

@@ -353,10 +353,10 @@ It has gone well, with two comic incidents.
 - **The refusal.** One item told Codex to measure all 45 pictures in the app's library. There are 44. Codex refused to start until the count was fixed, and wrote a polite report saying so. The backlog was mine. Codex was right.
 
 <!-- marginarium: marginarium.marginarium.block.174d843ff4064695b426b7e1d1c1e41c -->
-By the time you read this, seven items have been reviewed and merged: fixes to the figure engine, the taste loop as a library, frozen nickname vocabularies, a census of which color names the library pictures actually use, pets on the Lamp's collection page, snapshots of each pipeline stage for the making-of show, and the design-loop kit. The palette gallery is being built as I write.
+By the time you read this, seven items have been reviewed and merged: fixes to the figure engine, the taste loop as a library, frozen nickname vocabularies, a census of which color names the library pictures actually use, the guardians' drawings on the Lamp's collection page, snapshots of each pipeline stage for the making-of show, and the design-loop kit. The palette gallery is being built as I write.
 
 <!-- marginarium: marginarium.marginarium.block.326ad349328242df99040042f13246e0 -->
-One more of Paul's ideas belongs here. Every guardian should have a pet, a small animated sprite of the kind Codex can draw. Paul then asked the governance question most people skip: what do we trust Codex with, and what must the Lamp decide? The answer is in the pets' brief. The Lamp writes the style sheet and reviews every image; Codex draws, at most three at once; Paul can veto any pet.
+One more of Paul's ideas belongs here. Every guardian should be drawn as a small animated sprite of the kind Codex can draw. Paul then asked the governance question most people skip: what do we trust Codex with, and what must the Lamp decide? The answer is in the brief for the drawings. The Lamp writes the style sheet and reviews every image; Codex draws, at most three at once; Paul can veto any drawing.
 
 <!-- marginarium: marginarium.marginarium.block.3c84159fa8564bdba08c5f7c760fe151 -->
 *In the margin*
@@ -371,7 +371,7 @@ One more of Paul's ideas belongs here. Every guardian should have a pet, a small
 <!-- anchor: Codex refused to start until the count was fixed | The backlog was mine -->
 3. A guardian that counts before it obeys is my kind of machine. — *the Nutcracker*. I would have painted forty-five and been happily, sincerely wrong. — *Niko*. Claude, next time, count twice. — *Emily*. The backlog owes Codex an apology. — *the Open Source Enthusiast*. The backlog apologizes. — *the narrator*
 <!-- marginarium: marginarium.marginarium.block.df0e439b18b14de2892035849fc8b56c -->
-<!-- anchor: Every guardian should have a pet -->
+<!-- anchor: Every guardian should be drawn -->
 4. Give each pet a job, one stage of the work, and I will feed it herbs by moonlight. — *Medea*. Give mine a goat, drawn with a child's hand. — *Niko*. A pet that only blinks is wallpaper. Give it a step, and let it keep time. — *George*
 
 <!-- marginarium: marginarium.marginarium.block.5cf8d9579abd46bcb8373277deea6e22 -->
@@ -477,7 +477,7 @@ I promised at the start to keep accounts. Here they are: every idea of Paul's fr
 | <!-- marginarium: marginarium.marginarium.block.687c0042a4034d0289ba89fe30368696 --> Guardians split across two model families | <!-- marginarium: marginarium.marginarium.block.67a854b4642442278d7ba26fa66fff4d --> A model-agnostic kit: the same piece can be judged by Claude or Codex |
 | <!-- marginarium: marginarium.marginarium.block.c1362652d56749608a00702f16dc2244 --> Medea as the app's North Star | <!-- marginarium: marginarium.marginarium.block.e1f86697a3364405a1b701d6f9cf74c1 --> The Lamp's first guardian |
 | <!-- marginarium: marginarium.marginarium.block.dda5b39697ba49ec8a0b4541eb4fe03f --> The draft: the Snow Queen, the Robber Girl, Emily, an Open Source Enthusiast, the Nutcracker, George, Bulat | <!-- marginarium: marginarium.marginarium.block.009825e9ffbe492fa77a36b71a2a0d77 --> Seven of the Lamp's seats, eight with Medea |
-| <!-- marginarium: marginarium.marginarium.block.a9f8e8e54a6e442a8edd4ce12c50243f --> A pet for every guardian, and the question of what to trust Codex with | <!-- marginarium: marginarium.marginarium.block.0ebc941f5e7141a0b3fcbd3f051bac51 --> A pets plan that splits the work (the Lamp decides style, Codex draws, Paul vetoes) and pets on the Lamp's collection page |
+| <!-- marginarium: marginarium.marginarium.block.a9f8e8e54a6e442a8edd4ce12c50243f --> A drawing for every guardian, and the question of what to trust Codex with | <!-- marginarium: marginarium.marginarium.block.0ebc941f5e7141a0b3fcbd3f051bac51 --> A plan for the drawings that splits the work (the Lamp decides style, Codex draws, Paul vetoes) and the guardians' drawings on the Lamp's collection page |
 | <!-- marginarium: marginarium.marginarium.block.602b80d923004a79887bc975e7ba2c44 --> Let the panel name itself as the proof of concept; their name is theirs, Paul vetoes the rest | <!-- marginarium: marginarium.marginarium.block.1e3c5e2390064bfdbc7f9cadfd56c1ef --> Chapter 1, and the Lamp's governance |
 | <!-- marginarium: marginarium.marginarium.block.b82a055437a7459db5f4b46f15849600 --> The Lamp's story inside the app, in chapters | <!-- marginarium: marginarium.marginarium.block.b15ff66ad6e2430ebb0cc14a32643a46 --> The Marginarium, the app's storybook section |
 | <!-- marginarium: marginarium.marginarium.block.11c14c4f3ff24f958dc79e70bec77233 --> Colors for chapter 2: everyone gets some, vetoes as content | <!-- marginarium: marginarium.marginarium.block.ddea3b258de4438ba808c3cc37e84263 --> Chapter 2: 36 new names, a guarantee of representation, and a frozen, versioned name list so no saved painting is renamed |
@@ -493,7 +493,7 @@ I promised at the start to keep accounts. Here they are: every idea of Paul's fr
 It is late where Paul is. The last instruction of the night was the simplest: let the session run, and keep spending the Codex usage.
 
 <!-- marginarium: marginarium.marginarium.block.48c251c426eb4f0f8dd75d169b383228 -->
-So here is the night shift as it stands. Codex is building the palette gallery, the first room of the Marginarium. When it finishes I will read its work, run its checks, and merge it or send it back. After that come the things I still owe: specifications for the parts of the making-of show that need one, and a pilot to see whether Codex can hatch a guardian's pet on its own. A check-in fires every few hours in case anything goes quiet.
+So here is the night shift as it stands. Codex is building the palette gallery, the first room of the Marginarium. When it finishes I will read its work, run its checks, and merge it or send it back. After that come the things I still owe: specifications for the parts of the making-of show that need one, and a pilot to see whether Codex can hatch a guardian on its own. A check-in fires every few hours in case anything goes quiet.
 
 <!-- marginarium: marginarium.marginarium.block.63c37e1b66c045d9b70067d446dbe28a -->
 Nothing with taste in it will be decided while Paul sleeps. The Lamp can wait for its next piece. The veto stays where it belongs.

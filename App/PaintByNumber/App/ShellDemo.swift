@@ -49,8 +49,8 @@ import PaintCore
 ///   notes, with Colophon), second margin group (five guardians' notes, each with its pet) or
 ///   guardians table. Each also has `-dark` and `-long-text` variants; readiness follows the
 ///   target reaching the scroll viewport.
-/// - `marginarium-chapter6`, with `-dark` and `-long-text`: Chapter 6, The Pets We Actually
-///   Made, scrolled to its first pet (Medea's ram).
+/// - `marginarium-chapter6`, with `-dark` and `-long-text`: Chapter 6, The Drawings We Actually
+///   Made, scrolled to its first guardian (Medea).
 /// - `marginarium-whos-who`, with `-dark` and `-long-text`: Who's Who at its top (the people,
 ///   the helpers, the Lamp and its first teams); `marginarium-whos-who-teams` scrolled to the
 ///   Workshop and the teams after it.

@@ -16,7 +16,7 @@ struct MarginariumWhosWhoView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 36) {
-                    Text(String(localized: "lamp.intro", defaultValue: "Everyone you'll meet in these chapters, and their pets.",
+                    Text(String(localized: "lamp.intro", defaultValue: "Everyone you'll meet in these chapters.",
                                 comment: "The Marginarium, Who is Who: the line at the top of the page"))
                         .font(.display(.title3, weight: .semibold))
                         .foregroundStyle(.secondary)

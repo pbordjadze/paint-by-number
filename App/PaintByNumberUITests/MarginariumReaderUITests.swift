@@ -212,8 +212,8 @@ final class MarginariumReaderUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.navigationBars["The Marginarium"].waitForExistence(timeout: 15))
         openEntry("petsWeMade", in: app)
-        XCTAssertTrue(app.navigationBars["The Pets We Actually Made"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Chapter 6: The Pets We Actually Made"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["The Drawings We Actually Made"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Chapter 6: The Drawings We Actually Made"].waitForExistence(timeout: 10))
         let reader = app.scrollViews["marginarium-reader"]
         let ram = app.buttons["marginarium-pet-medea"]
         for _ in 0..<12 {
@@ -221,7 +221,7 @@ final class MarginariumReaderUITests: XCTestCase {
             reader.swipeUp()
         }
         XCTAssertTrue(ram.waitForExistence(timeout: 10))
-        XCTAssertEqual(ram.label, "Medea's golden ram")
+        XCTAssertEqual(ram.label, "Medea")
         XCTAssertTrue(ram.isHittable)
         ram.tap()
         attachScreenshot(of: app, named: "marginarium-chapter6-medea")

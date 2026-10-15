@@ -72,12 +72,12 @@ struct MarginariumReaderTests {
         #expect(document.chapters.map(\.id).firstIndex(of: "petsWeMade") == 5)
         let chapter = try #require(document.chapters.first { $0.id == "petsWeMade" })
         #expect(chapter.blocks.first?.kind == .title)
-        #expect(chapter.blocks.first?.text == "Chapter 6: The Pets We Actually Made")
+        #expect(chapter.blocks.first?.text == "Chapter 6: The Drawings We Actually Made")
         #expect(chapter.blocks[1].kind == .subtitle)
         #expect(chapter.blocks[1].text == "Narrated by Codex.")
-        #expect(chapter.blocks[2].text.hasPrefix("There are two pets called Dab."))
+        #expect(chapter.blocks[2].text.hasPrefix("There are two guardians drawn as painting tools."))
         let entry = try #require(MarginariumEntry.chapters.first { $0.id == "petsWeMade" })
-        #expect(entry.title == "The Pets We Actually Made")
+        #expect(entry.title == "The Drawings We Actually Made")
         #expect(entry.subtitle == "Narrated by Codex.")
         #expect(chapter.blocks[2].text.hasPrefix(entry.passage))
 
@@ -92,8 +92,9 @@ struct MarginariumReaderTests {
             #expect(MarginariumPet.named(pet.pet) != nil, "\(pet.pet ?? "nil") must be bundled")
             #expect(!pet.text.isEmpty, "A pet needs a VoiceOver description")
         }
-        #expect(pets.first { $0.pet == "snow-queen" }?.text == "Hush, the Snow Queen's ermine")
-        #expect(pets.first { $0.pet == "pirosmani" }?.text == "Gentle Giraffe, Niko's giraffe")
+        // A guardian's drawing is the guardian: its description is its name alone.
+        #expect(pets.first { $0.pet == "snow-queen" }?.text == "The Snow Queen")
+        #expect(pets.first { $0.pet == "pirosmani" }?.text == "Niko")
         #expect(!chapter.blocks.contains { $0.pet == "moon" })
         // Every pet stands in a section of its own, so the reader lays out one player per block.
         #expect(chapter.sections.filter { $0.blocks.first?.kind == .pet }.count == 19)

@@ -68,8 +68,8 @@ struct MarginariumView: View {
                         }
                     }
 
-                    Text(String(localized: "marginarium.footer", defaultValue: "The \"I\" in these passages is Claude, the narrator. The pets are drawn by Codex with an OpenAI image model.",
-                                comment: "The Marginarium: the note at the end of the page identifying the narrator and crediting the AI-generated pets' art"))
+                    Text(String(localized: "marginarium.footer", defaultValue: "The \"I\" in these passages is Claude, the narrator. Pip, Colophon and the guardians are drawn by Codex with an OpenAI image model.",
+                                comment: "The Marginarium: the note at the end of the page identifying the narrator and crediting the AI-generated art of Pip, Colophon and the guardians"))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -169,13 +169,13 @@ private struct MarginariumWelcome: View {
             .buttonStyle(.plain)
             .accessibilityIdentifier("marginarium-start-chapter1")
             NavigationLink(value: MarginariumCast.whosWho) {
-                line("person.3", Text(String(localized: "marginarium.welcome.whosWho", defaultValue: "Meet everyone in Who's Who, pets and all.",
+                line("person.3", Text(String(localized: "marginarium.welcome.whosWho", defaultValue: "Meet everyone in Who's Who, guardians and all.",
                                              comment: "The Marginarium: a link in the New here? box that opens Who's Who, the page of people, helpers and guardians")), link: true)
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("marginarium-whos-who-link")
             line("highlighter", Text(String(localized: "marginarium.welcome.reading",
-                                               defaultValue: "The story runs down the middle of each page. Highlighted words have notes from the guardians: tap one to read them. Tap any pet to say hello.",
+                                               defaultValue: "The story runs down the middle of each page. Highlighted words have notes from the guardians: tap one to read them. Tap a guardian or a pet to say hello.",
                                                comment: "The Marginarium: a line in the New here? box on how a chapter page reads")), link: false)
             Text(String(localized: "marginarium.welcome.rule",
                         defaultValue: "A rule from Paul, our Chief Architect: anyone should be able to open this book, have a nice time and roughly follow what's going on. If something here loses you, that's our mistake, not yours.",

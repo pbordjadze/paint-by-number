@@ -56,14 +56,14 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
                             comment: "The Marginarium: the passage quoted from the chapter The Lamp's Constitution; \"I\" is Claude, the narrator")),
         MarginariumEntry(
             id: "petForEveryGuardian", mark: 4.formatted(),
-            title: String(localized: "marginarium.petForEveryGuardian.title", defaultValue: "A Pet for Every Guardian",
-                          comment: "The Marginarium: title of the chapter about the guardians' pets and the first, a test teapot"),
+            title: String(localized: "marginarium.petForEveryGuardian.title", defaultValue: "A Drawing for Every Guardian",
+                          comment: "The Marginarium: title of the chapter about drawing the guardians, and the first drawing, a test teapot"),
             subtitle: String(localized: "marginarium.petForEveryGuardian.subtitle",
-                             defaultValue: "Every guardian will get a pet. First, a test teapot.",
-                             comment: "The Marginarium: the line under the chapter title A Pet for Every Guardian"),
+                             defaultValue: "Every guardian will be drawn. First, a test teapot.",
+                             comment: "The Marginarium: the line under the chapter title A Drawing for Every Guardian"),
             passage: String(localized: "marginarium.petForEveryGuardian.passage",
-                            defaultValue: "Before any guardian got a pet, a teapot got one first.\n\nIt was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one night, alone, on our own machine, and sent nothing anywhere.",
-                            comment: "The Marginarium: the passage quoted from the chapter A Pet for Every Guardian, two paragraphs")),
+                            defaultValue: "Before any guardian was drawn, a teapot was.\n\nIt was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one night, alone, on our own machine, and sent nothing anywhere.",
+                            comment: "The Marginarium: the passage quoted from the chapter A Drawing for Every Guardian, two paragraphs")),
         MarginariumEntry(
             id: "twoMorePets", mark: 5.formatted(),
             title: String(localized: "marginarium.twoMorePets.title", defaultValue: "Two More Pets",
@@ -76,13 +76,13 @@ nonisolated struct MarginariumEntry: Identifiable, Sendable {
                             comment: "The Marginarium: the passage quoted from the chapter Two More Pets; \"I\" is Claude, the narrator")),
         MarginariumEntry(
             id: "petsWeMade", mark: 6.formatted(),
-            title: String(localized: "marginarium.petsWeMade.title", defaultValue: "The Pets We Actually Made",
-                          comment: "The Marginarium: title of the chapter, narrated by Codex, about how the guardians' pets were made"),
+            title: String(localized: "marginarium.petsWeMade.title", defaultValue: "The Drawings We Actually Made",
+                          comment: "The Marginarium: title of the chapter, narrated by Codex, about how the guardians were drawn"),
             subtitle: String(localized: "marginarium.petsWeMade.subtitle", defaultValue: "Narrated by Codex.",
-                             comment: "The Marginarium: the line under the chapter title The Pets We Actually Made; Codex, an AI helper, narrates this chapter"),
+                             comment: "The Marginarium: the line under the chapter title The Drawings We Actually Made; Codex, an AI helper, narrates this chapter"),
             passage: String(localized: "marginarium.petsWeMade.passage",
-                            defaultValue: "There are two pets called Dab. One is a paintbrush; the other is a palette. This is a manageable arrangement until somebody calls across the workshop.",
-                            comment: "The Marginarium: the passage quoted from the chapter The Pets We Actually Made; Dab is the name of two pets")),
+                            defaultValue: "There are two guardians drawn as painting tools. One is a paintbrush; the other is a palette. This is a manageable arrangement until somebody calls across the workshop.",
+                            comment: "The Marginarium: the passage quoted from the chapter The Drawings We Actually Made; the guardians are the Lamp's panel, two of them drawn as a paintbrush and a palette")),
     ]
 
     static let appendices: [MarginariumEntry] = [

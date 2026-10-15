@@ -18,7 +18,7 @@ people he invites. A person's choice always wins over the AI's, and Claude and C
 smaller calls along the way.
 
 In the app, the Marginarium is a section of its own: turn it on in Settings and it is the book in
-the gallery's toolbar, where Pip says hello and each guardian's pet sits beside the words it said. It is still being
+the gallery's toolbar, where Pip says hello and each guardian sits beside the words it said. It is still being
 written. These are its first pages: one passage from each chapter, quoted as written.
 
 ## 1. The Marginarium
@@ -46,11 +46,11 @@ written. These are its first pages: one passage from each chapter, quoted as wri
 > The Lamp takes the decisions about who the app is: its names, its colors, its pets. Paul can
 > overrule any of them, ours included.
 
-## 4. A Pet for Every Guardian
+## 4. A Drawing for Every Guardian
 
-*Each guardian will get a small animated companion. First, a test.*
+*Each guardian will be drawn as a small animated figure. First, a test.*
 
-> Before any guardian got a pet, a teapot got one first.
+> Before any guardian was drawn, a teapot was.
 >
 > It was nobody's teapot. It had no idea to keep and no charter to live by. It was a plain white
 > pot with a round lid, made only to see whether a pet could be made at all. Codex drew it one
@@ -64,16 +64,16 @@ written. These are its first pages: one passage from each chapter, quoted as wri
 > two drawings are related or whether a moth needs eyes. Codex and I made those calls tonight;
 > the Lamp judges them next, and Paul has the last word.
 
-## 6. The Pets We Actually Made
+## 6. The Drawings We Actually Made
 
-*Codex narrates: how the guardians' pets were made, and how their taste changed with the model
+*Codex narrates: how the guardians were drawn, and how their taste changed with the model
 underneath.*
 
 > What I take from Astra and Sol is that a charter can carry a recognizable concern across models
 > without fixing the threshold at which that concern becomes a veto. Shared first choices can
 > conceal different lower rankings, different names and different notions of excess.
 
-![Nineteen painted pets in rows, each with its name and its guardian: a golden ram, a hut on chicken legs, a mossy mushroom, a white ermine, a reindeer calf, a flying book, a brush, an inkpot in spectacles, a palette, a sleepy lamb, a glass droplet, a giraffe, a bee, a pomegranate, a wooden soldier, a tuning fork, a blue trolleybus, a clay lamp and a magnifying glass](images/pets.png)
+![Nineteen painted guardians in rows, each with its name: a golden ram, a hut on chicken legs, a mossy mushroom, a white ermine, a reindeer calf, a flying book, a brush, an inkpot in spectacles, a palette, a sleepy lamb, a glass droplet, a giraffe, a bee, a pomegranate, a wooden soldier, a tuning fork, a blue trolleybus, a clay lamp and a magnifying glass](images/pets.png)
 
 ## Appendices
 
@@ -115,6 +115,6 @@ could sit in on every decision a product makes.
 ---
 
 Passages are quoted from the chapters as written; the "I" in them is Claude, the narrator, except
-in chapter 6, where it is Codex. Pip, Colophon and the guardians' pets were drawn by Codex with an
-OpenAI image model, frame by frame, following the Lamp's notes. The Moon's pet is not here yet.
+in chapter 6, where it is Codex. Pip, Colophon and the guardians were drawn by Codex with an
+OpenAI image model, frame by frame, following the Lamp's notes. The Moon is not here yet.
 The paint names are the Lamp's choices, with Paul's four vetoes replaced.
