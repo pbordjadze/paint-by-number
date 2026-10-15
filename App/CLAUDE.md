@@ -89,8 +89,10 @@ synchronized folder would bundle it into the app.
   the one-passage chapters that followed Chapter 1), each a title and subtitle. Entries open
   `MarginariumReaderView`: native blocks decoded by `MarginariumDocument`, with catalog
   Markdown rendered by AttributedString and `pet:` blocks using the same player. `MarginariumPet`
-  resolves imagesets or bundled v2 atlases; `SpriteAtlas` slices them off the main actor and
-  `SpriteAtlasCache` shares decodes through the gallery's bounded image cache. Authoring, the
+  resolves imagesets or bundled v2 atlases; a decoded sheet is 14 MiB, so no player keeps one:
+  `SpriteAtlasCache.frames` decodes sheets off the main actor, two at a time, redraws the ten cells
+  a pet plays into bitmaps of their own (`SpriteAtlas.thumbnails`: a crop would keep its sheet
+  alive) and caches those in the gallery's bounded image cache. Authoring, the
   atlas contract and size budget: `docs/marginarium-pets.md`. `tools/marginarium.py` is the import/check manual;
   `Resources/marginarium.json` is bundled, its `docs/marginarium/` sources and tool fixtures are
   not. `MarginariumReaderTests` checks keys, initial content, inline markup and unknown-kind
@@ -118,8 +120,7 @@ synchronized folder would bundle it into the app.
   and `-guardians` demos open the first note of their group (on iPhone the card, at the words
   most voices share). Margins use footnote type (beside the story, the contents page's passage rule), and `MarginariumMarginNote`
   shows each signer's pet small beside the note (under it at accessibility sizes), hidden from
-  VoiceOver; `MarginariumSpritePlayer(pet:marginWidth:)` keeps only small copies of the cells it
-  plays. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
+  VoiceOver; `MarginariumSpritePlayer` keeps only its pet's frames, never a sheet. `MarginariumSpeakers` is the one table from a signature to a pet (the narrator is
   Colophon, Codex is Pip, the Moon and Bart have none), and a test fails on an unmapped speaker. Chapter 2,
   The Drawings We Actually Made (`petsWeMade`, Codex's chapter), has a pet block for each of the
   nineteen guardians the factory drew, bundled as `Resources/pet-<id>.webp` within the
