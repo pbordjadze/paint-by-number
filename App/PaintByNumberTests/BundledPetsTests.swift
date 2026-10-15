@@ -56,6 +56,28 @@ struct BundledPetsTests {
         }
     }
 
+    /// What the contents page keeps of all twenty drawings on a 3x iPhone (72 pt asks for 234 px):
+    /// each drawing's ten frames at the cell's own size, 1.5 MiB, in place of its 13.4 MiB sheet.
+    @Test func theContentsPageKeepsEachDrawingsFramesAndNotItsSheet() async throws {
+        let cache = SpriteAtlasCache()
+        let sheetBytes = SpriteAtlas.width * SpriteAtlas.height * 4
+        var kept = 0
+        for url in sheets {
+            let name = url.lastPathComponent
+            let frames = try #require(await cache.frames(at: url, maxPixelSize: 234), "\(name) must give frames")
+            #expect(frames.count == SpriteAtlas.playedCells.count)
+            for image in frames.values {
+                #expect(image.width <= 192 && image.height == 208, "\(name) is drawn at its cell's size")
+            }
+            let bytes = frames.values.reduce(0) { $0 + ImageCache<URL>.cost(of: $1) }
+            #expect(bytes <= 2 << 20, "\(name)'s frames are over 2 MiB")
+            kept += bytes
+        }
+        #expect(kept * 8 < sheets.count * sheetBytes, "A drawing's frames are under an eighth of its sheet")
+        #expect(cache.decodedBytes <= SpriteAtlasCache.costLimit)
+        #expect(!cache.isLoading)
+    }
+
     @Test func theSheetsStayInsideTheSizeBudget() throws {
         var total = 0
         for url in sheets {

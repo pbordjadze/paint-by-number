@@ -3,7 +3,8 @@ import Foundation
 import SwiftUI
 
 /// One cancellable player for imagesets and v2 atlases, on the contents page and in chapters.
-/// A tap restarts the response. Reduce Motion uses still poses; disappearing cancels the loop.
+/// A tap restarts the response. Reduce Motion uses still poses; disappearing, or the app leaving the
+/// foreground, stops the loop.
 /// Beside a margin note it is small, captionless and hidden from VoiceOver: the note already
 /// names its speaker, so the pet is only company for sighted readers. There it also waves when
 /// its note's words are opened (`greeting`), as it does on the contents page when tapped.
@@ -20,11 +21,11 @@ struct MarginariumSpritePlayer: View {
     private let identifier: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var displayScale
+    @Environment(\.scenePhase) private var scenePhase
     @State private var pose: SpriteFrame?
-    @State private var atlas: SpriteAtlas?
-    /// A margin player's cells, redrawn small, in place of `atlas`: a page of notes by several
-    /// guardians must not keep a 14 MiB decoded sheet alive for each.
-    @State private var thumbnails: [SpriteAtlas.Cell: CGImage] = [:]
+    /// The cells it plays, each a bitmap of its own at the size it draws (`SpriteAtlasCache`): never
+    /// the 14 MiB sheet, which a page of twenty drawings could not hold.
+    @State private var frames: [SpriteAtlas.Cell: CGImage] = [:]
     @State private var taps = 0
     @State private var played = 0
 
@@ -60,12 +61,13 @@ struct MarginariumSpritePlayer: View {
         let taps: Int
         let reduceMotion: Bool
         let ready: Bool
+        let active: Bool
     }
 
     private var image: Image? {
         switch pose?.source {
         case .asset(let name): Image(name)
-        case .cell(let cell): (thumbnails[cell] ?? atlas?.image(at: cell)).map { Image(decorative: $0, scale: 1) }
+        case .cell(let cell): frames[cell].map { Image(decorative: $0, scale: 1) }
         case nil: nil
         }
     }
@@ -97,32 +99,22 @@ struct MarginariumSpritePlayer: View {
         .frame(maxWidth: caption == nil ? nil : CGFloat.infinity)
         .task(id: pet.id) {
             pose = pet.animation.idle.first
-            atlas = nil
-            thumbnails = [:]
-            if case .atlas(let url) = pet.art {
-                let loaded = await SpriteAtlasCache.shared.load(at: url)
-                guard !Task.isCancelled else { return }
-                if caption == nil, let loaded {
-                    let pixels = Int((height * displayScale).rounded(.up))
-                    let cells = await Background.run { loaded.thumbnails(maxPixelSize: pixels) }
-                    guard !Task.isCancelled else { return }
-                    thumbnails = cells
-                } else {
-                    atlas = loaded
-                }
-            }
+            frames = [:]
+            guard case .atlas(let url) = pet.art else { return }
+            let pixels = Int((height * displayScale).rounded(.up))
+            let loaded = await SpriteAtlasCache.shared.frames(at: url, maxPixelSize: pixels)
+            guard !Task.isCancelled else { return }
+            frames = loaded ?? [:]
         }
-        .task(id: Trigger(petID: pet.id, taps: taps, reduceMotion: reduceMotion, ready: image != nil)) {
+        .task(id: Trigger(petID: pet.id, taps: taps, reduceMotion: reduceMotion, ready: image != nil,
+                          active: scenePhase == .active)) {
             await animate()
         }
         .onChange(of: greeting, initial: true) { _, greeting in
             if greeting > 0 { taps += 1 }
         }
         // Lazy reader rows can retain their State after scrolling off screen.
-        .onDisappear {
-            atlas = nil
-            thumbnails = [:]
-        }
+        .onDisappear { frames = [:] }
     }
 
     private func button(_ image: Image) -> some View {
@@ -141,6 +133,7 @@ struct MarginariumSpritePlayer: View {
 
     private func animate() async {
         let animation = pet.animation
+        guard scenePhase == .active else { return }
         let responds = taps > played
         played = taps
         guard image != nil, !animation.idle.isEmpty else { return }

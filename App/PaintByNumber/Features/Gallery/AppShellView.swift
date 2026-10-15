@@ -10,9 +10,10 @@ import UniformTypeIdentifiers
 struct AppShellView: View {
     @Environment(Library.self) private var library
     @Environment(\.horizontalSizeClass) private var sizeClass
-    #if DEBUG
-    /// The Marginarium is in Debug builds only for now: Release builds leave out its code, its
-    /// chapters and its drawings (the target's `EXCLUDED_SOURCE_FILE_NAMES`, `ci/check_release.sh`).
+    #if UNRELEASED
+    /// The Marginarium is in Debug and SideStore builds only for now (`UNRELEASED`): the release
+    /// leaves out its code, its chapters and its drawings (the target's Release
+    /// `EXCLUDED_SOURCE_FILE_NAMES`, `ci/check_release.sh`).
     @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
     #endif
     @Namespace private var zoom
@@ -104,7 +105,7 @@ struct AppShellView: View {
             SettingsView()
                 .environment(library)
         }
-        #if DEBUG
+        #if UNRELEASED
         .sheet(isPresented: $isShowingMarginarium, onDismiss: presentIncomingImage) {
             if UIDevice.current.userInterfaceIdiom == .pad, sizeClass == .regular {
                 MarginariumView()
@@ -152,7 +153,7 @@ struct AppShellView: View {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
         }
-        #if DEBUG
+        #if UNRELEASED
         if showsMarginarium {
             ToolbarItem(placement: .topBarLeading) {
                 Button("The Marginarium", systemImage: "book.pages") { isShowingMarginarium = true }

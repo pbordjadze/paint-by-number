@@ -94,9 +94,18 @@ struct MarginariumView: View {
             }
             #if DEBUG
             .task {
-                // `marginarium`: a moment for the drawings' sheets to load and start idling.
+                // `marginarium`: the drawings' sheets decode a couple at a time; ready once they
+                // all have, and a moment after, for them to start idling.
                 guard ShellDemo.current == .marginarium else { return }
-                do { try await Task.sleep(for: .seconds(2)) } catch { return }
+                do {
+                    try await Task.sleep(for: .seconds(1))
+                    var waits = 0
+                    while SpriteAtlasCache.shared.isLoading, waits < 200 {
+                        try await Task.sleep(for: .milliseconds(200))
+                        waits += 1
+                    }
+                    try await Task.sleep(for: .seconds(1))
+                } catch { return }
                 DemoMode.markReady()
             }
             #endif

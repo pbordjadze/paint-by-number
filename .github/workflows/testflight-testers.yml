@@ -1,0 +1,40 @@
+name: TestFlight testers
+
+# Puts a TestFlight build in front of friends and family (ci/testflight_testers.py, its docstring
+# the manual): the external "Friends & Family" group with its public link on, the build in it with
+# its What to Test, submitted for Beta App Review. On request: Actions › TestFlight testers › Run
+# workflow from `main`, or a push to a `claude/testflight-testers*` branch (which ci.yml ignores).
+# The public link is never printed, as the repository's logs are public: copy it from App Store
+# Connect › TestFlight › Friends & Family once Apple approves the build.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        description: 'Build number (CFBundleVersion, e.g. 6.1); empty: the newest processed'
+        required: false
+  push:
+    branches: ['claude/testflight-testers*']
+
+permissions:
+  contents: read
+
+jobs:
+  testers:
+    name: Friends & Family
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Submit for external testing
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          BUILD: ${{ inputs.build }}
+          # Present only on a branch that asks for the link (see the script's docstring).
+          LINK_RECIPIENT_FILE: ci/link-recipient.pem
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+          "$RUNNER_TEMP/venv/bin/python" ci/testflight_testers.py
