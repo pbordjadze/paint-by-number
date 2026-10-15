@@ -52,11 +52,12 @@ jobs:
       - uses: actions/checkout@v5
       - name: Install Python
         # Pillow decodes the regression's photos and draws its sheets (from pbn's rasters; no
-        # node needed); the string catalog check is plain Python.
+        # node needed); the string catalog check is plain Python; numpy is for the making-of
+        # tools' tests (the show's Python reference).
         shell: bash
         env:
           DEBIAN_FRONTEND: noninteractive
-        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends python3 python3-pil > /dev/null
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends python3 python3-pil python3-numpy > /dev/null
       - name: Test
         shell: bash
         run: |
@@ -74,6 +75,12 @@ jobs:
           python3 tools/regression.py --self-test
           python3 tools/regression.py --json out/regression/regression.json --sheets out/regression/sheets \
             | tee out/regression/regression.txt
+      - name: Making-of show (Python reference)
+        # Sources/MakingOf's tests replay the fixtures these write; this fails when a fixture is not
+        # what the Python makes now, or the Python's own cases break (no node or ffmpeg needed).
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: python3 -m unittest discover -s tools/tests -p 'test_making_of_*.py'
       - name: String catalog
         # The app's sources and Localizable.xcstrings drifting apart only shows on a device, as a
         # string that silently stays English; the macOS jobs have no Xcode extraction to catch it.

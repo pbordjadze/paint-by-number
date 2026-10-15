@@ -10,6 +10,7 @@ let package = Package(
     platforms: [.iOS("18.0"), .macOS("15.0")],
     products: [
         .library(name: "PaintCore", targets: ["PaintCore"]),
+        .library(name: "MakingOf", targets: ["MakingOf"]),
         .executable(name: "pbn", targets: ["pbn"]),
     ],
     targets: [
@@ -21,6 +22,16 @@ let package = Package(
                 .unsafeFlags(["-Ounchecked", "-wmo"], .when(configuration: .release)),
             ]
         ),
+        // The making-of show: its crew, layers and reveal fields, planned and built from a spec the
+        // Lamp edits, so a checked build in Release (no -Ounchecked, unlike PaintCore); Debug app
+        // builds still get PaintCore's -O, or its per-pixel loops would run unoptimized.
+        .target(
+            name: "MakingOf",
+            dependencies: ["PaintCore"],
+            swiftSettings: [
+                .unsafeFlags(["-O"], .when(configuration: .debug)),
+            ]
+        ),
         .executableTarget(
             name: "pbn",
             dependencies: ["PaintCore"],
@@ -29,6 +40,7 @@ let package = Package(
             ]
         ),
         .testTarget(name: "PaintCoreTests", dependencies: ["PaintCore"], resources: [.copy("Fixtures")]),
+        .testTarget(name: "MakingOfTests", dependencies: ["MakingOf", "PaintCore"], resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v6]
 )

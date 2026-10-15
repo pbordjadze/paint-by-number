@@ -11,9 +11,33 @@ func runGenerate(_ options: Options) throws {
     let decision = options.auto ? suggest(image, importance: importance, options: options) : nil
     // Auto's decision carries the line art and tuning asked for.
     let generator = TemplateGenerator(settings: decision?.0.settings ?? options.settings)
+    let observer: PipelineSnapshot.Observer?
+    if let path = options.snapshots {
+        let dir = URL(fileURLWithPath: path)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        observer = { snapshot in
+            let data: Data
+            let ext: String
+            switch snapshot.picture {
+            case .color(let image):
+                data = Netpbm.encodePPM(image)
+                ext = "ppm"
+            case .grayscale(let image):
+                data = Netpbm.encodePGM(width: image.width, height: image.height, values: image.storage)
+                ext = "pgm"
+            }
+            // `working.ppm` is generate's full-size metrics preview; keep the capped
+            // snapshot even when the two output directories are the same.
+            let name = snapshot.stage == .working ? "working-image" : snapshot.stage.rawValue
+            try data.write(to: dir.appendingPathComponent("\(name).\(ext)"))
+        }
+    } else {
+        observer = nil
+    }
     let output: TemplateGenerator.Output
     do {
-        output = try generator.generate(from: image, importance: importance, lineArt: lineArtInput, cancel: .none)
+        output = try generator.generate(
+            from: image, importance: importance, lineArt: lineArtInput, cancel: .none, observer: observer)
     } catch { fail("generation failed: \(error)") }
     let t = output.template
     let size = generator.settings.workingSize(sourceWidth: image.width, sourceHeight: image.height)

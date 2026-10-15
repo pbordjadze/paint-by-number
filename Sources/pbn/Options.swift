@@ -19,6 +19,7 @@ struct Options {
     var hints: String?
     var candidates = 5
     var out: String?
+    var snapshots: String?
     var edges: String?
     var lines: String?
     var eyes: String?
@@ -132,6 +133,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--hints": o.hints = value(a, &it)
         case "--candidates": o.candidates = number(a, &it)
         case "--out": o.out = value(a, &it)
+        case "--snapshots": o.snapshots = value(a, &it)
         case "--edges": o.edges = value(a, &it)
         case "--lines": o.lines = value(a, &it)
         case "--eyes": o.eyes = value(a, &it)
