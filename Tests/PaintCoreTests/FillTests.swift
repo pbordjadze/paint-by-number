@@ -48,7 +48,8 @@ struct FillTests {
     /// rather than trapping in `Int(_:)`.
     @Test func noRegionUnderANonFinitePoint() throws {
         let t = try Self.generate([]).template
-        for point in [SIMD2<Float>(.nan, 20), SIMD2(100, .infinity), SIMD2(-.infinity, 0), SIMD2(1e30, 1e30)] {
+        let points: [SIMD2<Float>] = [SIMD2(.nan, 20), SIMD2(100, .infinity), SIMD2(-.infinity, 0), SIMD2(1e30, 1e30)]
+        for point in points {
             #expect(t.region(at: point) == nil, "\(point)")
         }
         #expect(t.region(at: SIMD2(100, 20)) != nil)
