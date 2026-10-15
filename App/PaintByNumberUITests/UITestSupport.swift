@@ -44,18 +44,27 @@ extension XCTestCase {
         XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: element)], timeout: timeout) == .completed
     }
 
+    /// A tap that changed nothing is tapped once more. On the iPad simulator of GitHub's macOS 26
+    /// image of October 13, 2026, a tap in Settings' tests is now and then lost: a switch never
+    /// moves, or the gallery's Settings button opens nothing, while the app's main thread is free
+    /// and its tree shows nothing in the way (the earlier image and the iPhone never lost one). The
+    /// whole screen, system overlays included, is attached as `lost-tap-<what>` for the diagnosis,
+    /// and the second tap is an activity the test's log shows.
+    @MainActor
+    func retapIfLost(_ what: String, _ tap: () -> Void) {
+        attach(XCUIScreen.main.screenshot(), named: "lost-tap-\(what)")
+        XCTContext.runActivity(named: "The tap on \(what) was lost: tapping again") { _ in tap() }
+    }
+
     /// Turns a Settings switch on or off, tapping the switch itself at its row's trailing end, and
-    /// says whether it got there. On the iPad simulator of GitHub's macOS 26 image of October 13,
-    /// 2026, a tap on a switch is now and then lost (the switch never moves while the app's main
-    /// thread is free; the earlier image and the iPhone never lost one), so a switch that hasn't
-    /// moved after 3 seconds is tapped once more, as an activity the test's log shows.
+    /// says whether it got there (a lost tap: `retapIfLost`).
     @MainActor
     func flip(_ toggle: XCUIElement, on: Bool) -> Bool {
         let target = NSPredicate(format: "value == %@", on ? "1" : "0")
         let tap = { toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap() }
         tap()
         if waitFor(toggle, toMatch: target, timeout: 3) { return true }
-        XCTContext.runActivity(named: "The tap on \(toggle.label) was lost: tapping again") { _ in tap() }
+        retapIfLost(toggle.label, tap)
         return waitFor(toggle, toMatch: target, timeout: 5)
     }
 
@@ -67,8 +76,10 @@ extension XCTestCase {
         app.launch()
         let button = app.buttons["Settings"]
         XCTAssertTrue(button.waitForExistence(timeout: 30), "The gallery has no Settings button")
+        let sheet = app.navigationBars["Settings"]
         button.tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10), "The settings sheet didn't open")
+        if !sheet.waitForExistence(timeout: 5) { retapIfLost("Settings") { button.tap() } }
+        XCTAssertTrue(sheet.waitForExistence(timeout: 10), "The settings sheet didn't open")
         return app
     }
 }
