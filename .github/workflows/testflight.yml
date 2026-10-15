@@ -50,8 +50,14 @@ jobs:
               echo "::error::Secret $name is not set (Settings › Secrets and variables › Actions)"; exit 1
             fi
           done
+          # Rebuilt from its base64 alone: a key copied on a phone can lose its line breaks or
+          # gain spaces, which a PEM reader rejects.
           KEY="$RUNNER_TEMP/AuthKey_$ASC_KEY_ID.p8"
-          printf '%s\n' "$ASC_KEY_P8" > "$KEY"
+          BODY=$(printf '%s' "$ASC_KEY_P8" | sed -e 's/-----[A-Z ]*-----//g' | tr -d ' \t\r\n')
+          { echo "-----BEGIN PRIVATE KEY-----"; printf '%s\n' "$BODY" | fold -w 64; echo "-----END PRIVATE KEY-----"; } > "$KEY"
+          if ! openssl pkey -in "$KEY" -noout 2>/dev/null; then
+            echo "::error::ASC_KEY_P8 isn't a private key: paste the whole .p8 file, BEGIN and END lines included"; exit 1
+          fi
           echo "ASC_KEY_PATH=$KEY" >> "$GITHUB_ENV"
       - name: Archive
         run: |
