@@ -14,11 +14,14 @@ struct AcknowledgementsView: View {
                 Text("With thanks to the museums and archives that share these pictures.")
             }
 
+            #if DEBUG
+            // The Marginarium's drawings, which Release builds leave out with it (`AppShellView`).
             Section {
                 ForEach(Acknowledgements.artwork) { AcknowledgementRow(item: $0) }
             } header: {
                 Text("Artwork")
             }
+            #endif
 
             Section {
                 ForEach(Acknowledgements.code) { AcknowledgementRow(item: $0) }

@@ -73,7 +73,11 @@ synchronized folder would bundle it into the app.
   `CompletionBar`, DEBUG `PaintDemoView`); `Feedback/` (the painter's feedback on a painting, see
   Giving feedback); `Marginarium/` (how the app is made, in chapters, with Pip, Codex's teapot,
   and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar once Settings › The
-  Marginarium is on (`SettingsKey.showsMarginarium`, off by default; demos open it directly),
+  Marginarium is on (`SettingsKey.showsMarginarium`, off by default; demos open it directly). Debug
+  builds only for now: Release builds have neither the switch nor the toolbar entry (`#if DEBUG`)
+  and leave out its code, `marginarium.json`, the `pet-*.webp` sheets and `Marginarium.xcassets`
+  (Pip's and Colophon's frames) through the target's Release `EXCLUDED_SOURCE_FILE_NAMES`, which
+  `ci/check_release.sh` checks; its `marginarium.*` strings stay in the catalog, unused,
   `MarginariumEntry` and the shared `MarginariumSpritePlayer`; `PipSprite` and `ColophonSprite`
   carry the frames in the asset catalog's `Pip/` and `Colophon/`). Paul's shape for it (October
   15): reductive, cute first, complexity only for whoever keeps digging. `MarginariumView` opens
@@ -372,7 +376,9 @@ Conventions).
 
 ## Create flow
 
-- `PhotoSourceView`: the inline picker fills the page (Gotchas). Compact windows switch Photos and
+- `PhotoSourceView`: the inline picker fills the page (Gotchas). iPhone doesn't embed it: its grid
+  never took a tap on a device, so the Photos pane is Choose Photo, which presents the full system
+  picker as Browse All does (`embedsPicker`). Compact windows switch Photos and
   Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
   picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
   albums and search; "Browse All…" presents the full system picker, the way in when the embedded

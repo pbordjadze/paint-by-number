@@ -12,6 +12,10 @@ import UIKit
 /// picker's own top bar reaches the albums and search; "Browse All…" presents the full system
 /// picker, a way in that doesn't depend on the embedded one taking taps.
 ///
+/// iPhone doesn't embed the picker (`embedsPicker`): on Paul's iPhone its grid never took a tap,
+/// though its bar did, after three layouts that each picked photos on the simulator (Sept 30,
+/// Oct 4 and 9). The page offers Choose Photo there instead, which presents the full picker.
+///
 /// The picker meets the page's leading edge: inset from both the window's left and top edge,
 /// the embedded picker's photo grid ignores taps on iPhone for its first ten seconds or so (its
 /// bar takes them at once), measured on the iOS 26 simulator, where every layout that keeps the
@@ -147,32 +151,56 @@ struct PhotoSourceView: View {
     private var photosPane: some View {
         VStack(alignment: .leading, spacing: 12) {
             if isWide { SectionTitle("Your Photos").padding(.leading, horizontalPadding) }
-            // Continuous selection of at most one photo with the selection actions disabled:
-            // a tap picks at once, with no Add button to confirm. The shared library gives the
-            // items asset identifiers, which the embedded picker needs to show the reset to `[]`
-            // as a deselect (so the same photo can be picked again); it needs no authorization,
-            // as the picker still runs out of process.
-            PhotosPicker(
-                selection: $libraryItems, maxSelectionCount: 1, selectionBehavior: .continuous,
-                matching: .images, preferredItemEncoding: .current, photoLibrary: .shared()
-            ) {
-                Label("Choose Photo", systemImage: "photo.on.rectangle")
-            }
-            .photosPickerStyle(.inline)
-            .photosPickerDisabledCapabilities(.selectionActions)
-            // Only the bottom bar goes: it carries selection status and actions, meaningless
-            // when a tap picks. The top bar stays for Photos/Albums, search and the album back button.
-            .photosPickerAccessoryVisibility(.hidden, edges: .bottom)
-            .accessibilityIdentifier("library-picker")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // The card only on wide windows, square where it meets the leading edge (see the
-            // type's doc comment), through the same modifiers in both cases so the picker keeps
-            // its identity when the width changes.
-            .background(Theme.surface.opacity(isWide ? 1 : 0))
-            .clipShape(cardShape)
-            .overlay { cardShape.strokeBorder(Theme.hairline, lineWidth: isWide ? 0.5 : 0) }
+            if embedsPicker { libraryPicker } else { photoChooser }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    /// The embedded picker's grid takes no taps on an iPhone (the type's doc comment).
+    private var embedsPicker: Bool { UIDevice.current.userInterfaceIdiom != .phone }
+
+    /// iPhone's Photos pane: the full system picker, the one Browse All presents, a tap away.
+    private var photoChooser: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "photo.on.rectangle.angled")
+                .font(.system(size: 56, weight: .light))
+                .foregroundStyle(Theme.accent)
+                .accessibilityHidden(true)
+            Button("Choose Photo", systemImage: "photo") { isBrowsingAll = true }
+                .buttonStyle(.glassProminent)
+                .tint(Theme.signature)
+                .controlSize(.large)
+                .accessibilityIdentifier("choose-photo")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, horizontalPadding)
+    }
+
+    private var libraryPicker: some View {
+        // Continuous selection of at most one photo with the selection actions disabled:
+        // a tap picks at once, with no Add button to confirm. The shared library gives the
+        // items asset identifiers, which the embedded picker needs to show the reset to `[]`
+        // as a deselect (so the same photo can be picked again); it needs no authorization,
+        // as the picker still runs out of process.
+        PhotosPicker(
+            selection: $libraryItems, maxSelectionCount: 1, selectionBehavior: .continuous,
+            matching: .images, preferredItemEncoding: .current, photoLibrary: .shared()
+        ) {
+            Label("Choose Photo", systemImage: "photo.on.rectangle")
+        }
+        .photosPickerStyle(.inline)
+        .photosPickerDisabledCapabilities(.selectionActions)
+        // Only the bottom bar goes: it carries selection status and actions, meaningless
+        // when a tap picks. The top bar stays for Photos/Albums, search and the album back button.
+        .photosPickerAccessoryVisibility(.hidden, edges: .bottom)
+        .accessibilityIdentifier("library-picker")
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // The card only on wide windows, square where it meets the leading edge (see the
+        // type's doc comment), through the same modifiers in both cases so the picker keeps
+        // its identity when the width changes.
+        .background(Theme.surface.opacity(isWide ? 1 : 0))
+        .clipShape(cardShape)
+        .overlay { cardShape.strokeBorder(Theme.hairline, lineWidth: isWide ? 0.5 : 0) }
     }
 
     private var cardShape: UnevenRoundedRectangle {

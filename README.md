@@ -68,7 +68,7 @@ them. It declares no tracking and no collected data in its privacy manifest
 (`App/PaintByNumber/Resources/PrivacyInfo.xcprivacy`); the only required-reason APIs it uses
 are `UserDefaults`, for its own settings, and file timestamps, to clean up its own temporary
 exports. Third-party credits and licenses are in
-[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
+[ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md); the app's privacy policy is [PRIVACY.md](PRIVACY.md).
 
 ## Project layout
 
