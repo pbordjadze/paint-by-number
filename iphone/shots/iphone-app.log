@@ -1,0 +1,575 @@
+156:2026-10-15 19:21:48.722 Df PaintByNumber[18195:dea5] [com.apple.xpc:connection] [0x1081d4140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+157:2026-10-15 19:21:48.723 Df PaintByNumber[18195:dea5] [com.apple.xpc:connection] [0x1081d4140] invalidated after a failed init
+256:2026-10-15 19:21:49.056 Df PaintByNumber[18195:dea7] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+288:2026-10-15 19:21:49.122 Df PaintByNumber[18195:dfec] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+368:2026-10-15 19:21:49.149 Df PaintByNumber[18195:dfec] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+400:2026-10-15 19:21:49.168 Df PaintByNumber[18195:dfeb] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+432:2026-10-15 19:21:49.195 Df PaintByNumber[18195:dfba] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+485:2026-10-15 19:21:53.635 Df PaintByNumber[18403:e10e] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101545aa0>
+682:2026-10-15 19:21:55.682 Df PaintByNumber[18403:e116] [com.apple.xpc:connection] [0x1015f1f40] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+683:2026-10-15 19:21:55.685 Df PaintByNumber[18403:e116] [com.apple.xpc:connection] [0x1015f1f40] invalidated after a failed init
+783:2026-10-15 19:21:55.945 Df PaintByNumber[18403:e148] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+863:2026-10-15 19:21:56.009 Df PaintByNumber[18403:e11a] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+896:2026-10-15 19:21:56.030 Df PaintByNumber[18403:e11a] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+928:2026-10-15 19:21:56.052 Df PaintByNumber[18403:e148] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+960:2026-10-15 19:21:56.069 Df PaintByNumber[18403:e11b] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+1012:2026-10-15 19:22:00.075 Df PaintByNumber[18586:e39f] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101541a80>
+1198:2026-10-15 19:22:02.934 Df PaintByNumber[18586:e3ba] [com.apple.xpc:connection] [0x108498140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+1199:2026-10-15 19:22:02.941 Df PaintByNumber[18586:e3ba] [com.apple.xpc:connection] [0x108498140] invalidated after a failed init
+1310:2026-10-15 19:22:03.321 Df PaintByNumber[18586:e3b6] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+1390:2026-10-15 19:22:03.392 Df PaintByNumber[18586:e49f] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+1422:2026-10-15 19:22:03.426 Df PaintByNumber[18586:e49c] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+1455:2026-10-15 19:22:03.456 Df PaintByNumber[18586:e49f] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+1487:2026-10-15 19:22:03.482 Df PaintByNumber[18586:e49f] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+1826:2026-10-15 19:22:12.412 Df PaintByNumber[19411:eb22] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x104145680>
+2029:2026-10-15 19:22:15.915 Df PaintByNumber[19411:eb2e] [com.apple.xpc:connection] [0x108dcc140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+2030:2026-10-15 19:22:15.917 Df PaintByNumber[19411:eb2e] [com.apple.xpc:connection] [0x108dcc140] invalidated after a failed init
+2129:2026-10-15 19:22:16.206 Df PaintByNumber[19411:eb2b] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+2161:2026-10-15 19:22:16.311 Df PaintByNumber[19411:eb2a] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+2241:2026-10-15 19:22:16.337 Df PaintByNumber[19411:eb2b] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+2273:2026-10-15 19:22:16.363 Df PaintByNumber[19411:eb2b] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+2305:2026-10-15 19:22:16.390 Df PaintByNumber[19411:eb2c] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+2627:2026-10-15 19:22:25.103 Df PaintByNumber[19591:edcd] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101541a20>
+2834:2026-10-15 19:22:29.094 Df PaintByNumber[19591:eddb] [com.apple.xpc:connection] [0x1061ac640] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+2835:2026-10-15 19:22:29.095 Df PaintByNumber[19591:eddb] [com.apple.xpc:connection] [0x1061ac640] invalidated after a failed init
+2934:2026-10-15 19:22:29.508 Df PaintByNumber[19591:eddc] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+3014:2026-10-15 19:22:29.581 Df PaintByNumber[19591:edd9] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+3046:2026-10-15 19:22:29.604 Df PaintByNumber[19591:eddc] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+3078:2026-10-15 19:22:29.624 Df PaintByNumber[19591:eddc] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+3110:2026-10-15 19:22:29.645 Df PaintByNumber[19591:eddc] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+3445:2026-10-15 19:22:41.545 Df PaintByNumber[20313:f4d4] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x104145580>
+3643:2026-10-15 19:22:44.872 Df PaintByNumber[20313:f4e0] [com.apple.xpc:connection] [0x108de8140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+3644:2026-10-15 19:22:44.879 Df PaintByNumber[20313:f4e0] [com.apple.xpc:connection] [0x108de8140] invalidated after a failed init
+3743:2026-10-15 19:22:45.186 Df PaintByNumber[20313:f4e6] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+3791:2026-10-15 19:22:45.239 Df PaintByNumber[20313:f4e3] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+3855:2026-10-15 19:22:45.258 Df PaintByNumber[20313:f4e6] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+3887:2026-10-15 19:22:45.276 Df PaintByNumber[20313:f4e3] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+3919:2026-10-15 19:22:45.299 Df PaintByNumber[20313:f4e3] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+4250:2026-10-15 19:22:53.652 Df PaintByNumber[21030:fb84] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101961be0>
+4443:2026-10-15 19:23:18.830 E  PaintByNumber[21030:fb8e] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+4451:2026-10-15 19:23:46.292 E  PaintByNumber[21030:10447] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+4459:2026-10-15 19:23:58.639 E  PaintByNumber[21030:10ce1] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+4467:2026-10-15 19:24:12.134 E  PaintByNumber[21030:11315] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+4479:2026-10-15 19:24:23.983 E  PaintByNumber[21030:10447] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+4487:2026-10-15 19:24:39.687 E  PaintByNumber[21030:fb8e] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+4526:2026-10-15 19:24:56.304 Df PaintByNumber[26454:12c1e] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105961a40>
+4762:2026-10-15 19:25:05.988 Df PaintByNumber[26879:13016] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105961dc0>
+4941:2026-10-15 19:25:11.380 E  PaintByNumber[26879:1302b] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+4950:2026-10-15 19:25:17.777 E  PaintByNumber[26879:13023] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+4993:2026-10-15 19:25:28.878 Df PaintByNumber[27972:139fb] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105d61540>
+5222:2026-10-15 19:25:37.076 Df PaintByNumber[28078:13b75] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d61b60>
+5478:2026-10-15 19:25:45.835 Df PaintByNumber[28729:1412a] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105d61fa0>
+5694:2026-10-15 19:25:54.986 Df PaintByNumber[28905:143b6] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x104161ba0>
+5908:2026-10-15 19:26:02.886 Df PaintByNumber[29835:14bd8] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101541ac0>
+6134:2026-10-15 19:26:08.062 Df PaintByNumber[29955:14db9] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d61be0>
+6347:2026-10-15 19:26:14.078 Df PaintByNumber[30146:14fd0] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103561bc0>
+6559:2026-10-15 19:26:21.710 Df PaintByNumber[30648:1543d] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d619c0>
+6757:2026-10-15 19:26:24.881 Df PaintByNumber[30648:15446] [com.apple.xpc:connection] [0x113855400] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+6758:2026-10-15 19:26:24.881 Df PaintByNumber[30648:15446] [com.apple.xpc:connection] [0x113855400] invalidated after a failed init
+6931:2026-10-15 19:26:25.804 Df PaintByNumber[30648:1551f] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+6963:2026-10-15 19:26:25.865 Df PaintByNumber[30648:15446] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(1), rhs: Value<Swift.Bool>(false))) status changed to: failed
+6995:2026-10-15 19:26:25.882 Df PaintByNumber[30648:1552f] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+7027:2026-10-15 19:26:25.899 Df PaintByNumber[30648:1552f] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+7059:2026-10-15 19:26:25.924 Df PaintByNumber[30648:1552f] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+7110:2026-10-15 19:26:29.683 Df PaintByNumber[30791:15624] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101961880>
+7302:2026-10-15 19:26:31.487 E  PaintByNumber[30791:15624] [com.pbordjadze.paintbynumber:library] Opening 24BC8C9F-F1D2-4791-AB1D-986ED04F019A failed: damaged(canRegenerate: true)
+7336:2026-10-15 19:26:36.213 Df PaintByNumber[30831:156f8] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d61b80>
+7564:2026-10-15 19:26:57.590 Df PaintByNumber[31614:15dff] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1035617a0>
+7786:2026-10-15 19:27:21.723 Df PaintByNumber[32402:1657e] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101561ba0>
+7997:2026-10-15 19:27:36.615 Df PaintByNumber[32855:16a13] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103545aa0>
+8199:2026-10-15 19:27:41.808 Df PaintByNumber[32885:16a8d] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101545b60>
+8418:2026-10-15 19:27:51.312 Df PaintByNumber[33531:17034] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101541c80>
+8626:2026-10-15 19:28:00.625 Df PaintByNumber[33690:17204] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d45b40>
+8864:2026-10-15 19:28:10.412 Df PaintByNumber[34123:175f6] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d422e0>
+9062:2026-10-15 19:28:19.485 Df PaintByNumber[34522:179e7] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x104145b60>
+9282:2026-10-15 19:28:28.285 Df PaintByNumber[34788:17cfe] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101945880>
+9480:2026-10-15 19:28:49.895 E  PaintByNumber[34788:17d09] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+9520:2026-10-15 19:29:08.999 Df PaintByNumber[36687:18eda] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105941680>
+9748:2026-10-15 19:29:22.383 Df PaintByNumber[37405:1953e] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d418e0>
+9988:2026-10-15 19:29:34.541 Df PaintByNumber[37646:19804] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x102145ae0>
+10261:2026-10-15 19:29:54.118 Df PaintByNumber[38482:19fcf] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103945680>
+10505:2026-10-15 19:30:09.571 Df PaintByNumber[39107:1a59b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1061459c0>
+10697:2026-10-15 19:30:39.806 E  PaintByNumber[39107:1a5a2] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+10740:2026-10-15 19:30:58.441 Df PaintByNumber[41061:1b797] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101941b60>
+10977:2026-10-15 19:31:15.014 Df PaintByNumber[41331:1baea] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1019459c0>
+11197:2026-10-15 19:31:32.095 Df PaintByNumber[42352:1c3fa] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x106145ac0>
+11387:2026-10-15 19:31:49.184 E  PaintByNumber[42352:1c42e] [com.apple.coreml:coreml] E5RT: Program failed validation: Padding size for dim2 is too big for mode reflect.  It can a maximum of (dim_size - 1) 0 (11)
+11420:2026-10-15 19:32:07.808 Df PaintByNumber[43255:1cc9f] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101545aa0>
+11564:2026-10-15 19:32:08.822 Df PaintByNumber[43255:1ccb4] [com.apple.xpc:connection] [0x106d8cb40] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+11565:2026-10-15 19:32:08.822 Df PaintByNumber[43255:1ccb4] [com.apple.xpc:connection] [0x106d8cb40] invalidated after a failed init
+11700:2026-10-15 19:32:15.417 Df PaintByNumber[43464:1ceb7] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105d41760>
+11844:2026-10-15 19:32:16.078 Df PaintByNumber[43464:1cec6] [com.apple.xpc:connection] [0x10a9b8dc0] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+11845:2026-10-15 19:32:16.094 Df PaintByNumber[43464:1cec6] [com.apple.xpc:connection] [0x10a9b8dc0] invalidated after a failed init
+11959:2026-10-15 19:32:22.005 Df PaintByNumber[43793:1d19c] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x104141820>
+12105:2026-10-15 19:32:22.773 Df PaintByNumber[43793:1d1c7] [com.apple.xpc:connection] [0x108d94c80] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+12106:2026-10-15 19:32:22.773 Df PaintByNumber[43793:1d1c7] [com.apple.xpc:connection] [0x108d94c80] invalidated after a failed init
+12224:2026-10-15 19:32:28.777 Df PaintByNumber[44086:1d449] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105541ac0>
+12411:2026-10-15 19:32:33.324 Df PaintByNumber[44086:1d45a] [com.apple.xpc:connection] [0x10ad74640] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+12412:2026-10-15 19:32:33.329 Df PaintByNumber[44086:1d45a] [com.apple.xpc:connection] [0x10ad74640] invalidated after a failed init
+12571:2026-10-15 19:32:34.228 Df PaintByNumber[44086:1d53a] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+12638:2026-10-15 19:32:34.324 Df PaintByNumber[44086:1d53a] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+12670:2026-10-15 19:32:34.362 Df PaintByNumber[44086:1d45c] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+12702:2026-10-15 19:32:34.391 Df PaintByNumber[44086:1d45c] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+12755:2026-10-15 19:32:38.540 Df PaintByNumber[44447:1d850] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105545980>
+12940:2026-10-15 19:32:42.180 Df PaintByNumber[44447:1d85d] [com.apple.xpc:connection] [0x10a198640] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+12941:2026-10-15 19:32:42.185 Df PaintByNumber[44447:1d85d] [com.apple.xpc:connection] [0x10a198640] invalidated after a failed init
+13100:2026-10-15 19:32:42.591 Df PaintByNumber[44447:1d85d] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+13132:2026-10-15 19:32:42.665 Df PaintByNumber[44447:1d85e] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+13164:2026-10-15 19:32:42.685 Df PaintByNumber[44447:1d85e] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+13197:2026-10-15 19:32:42.702 Df PaintByNumber[44447:1d856] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+13229:2026-10-15 19:32:42.733 Df PaintByNumber[44447:1d856] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+13280:2026-10-15 19:32:47.324 Df PaintByNumber[45088:1de16] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1039458c0>
+13467:2026-10-15 19:32:50.135 Df PaintByNumber[45088:1de25] [com.apple.xpc:connection] [0x10adfc140] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+13468:2026-10-15 19:32:50.143 Df PaintByNumber[45088:1de25] [com.apple.xpc:connection] [0x10adfc140] invalidated after a failed init
+13627:2026-10-15 19:32:50.499 Df PaintByNumber[45088:1de25] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+13659:2026-10-15 19:32:50.537 Df PaintByNumber[45088:1de1d] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+13691:2026-10-15 19:32:50.554 Df PaintByNumber[45088:1de27] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+13723:2026-10-15 19:32:50.566 Df PaintByNumber[45088:1de27] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+13756:2026-10-15 19:32:50.578 Df PaintByNumber[45088:1de27] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+13813:2026-10-15 19:32:56.448 Df PaintByNumber[45351:1e0db] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101545100>
+14000:2026-10-15 19:32:59.357 Df PaintByNumber[45351:1e0e4] [com.apple.xpc:connection] [0x10616c640] failed to do a bootstrap look-up: xpc_error=[3: No such process]
+14001:2026-10-15 19:32:59.357 Df PaintByNumber[45351:1e0e4] [com.apple.xpc:connection] [0x10616c640] invalidated after a failed init
+14160:2026-10-15 19:32:59.799 Df PaintByNumber[45351:1e113] [com.apple.TipKit:TipKit • Core] Rule(id: tip.pencil.0.event.event.pencilStroke.0.count(donationsCount) >= Optional(1)) status changed to: failed
+14193:2026-10-15 19:32:59.889 Df PaintByNumber[45351:1e0eb] [com.apple.TipKit:TipKit • Core] Rule(id: tip.firstPaint.0.parameter.Bool.FirstPaintTip+hasPaint.Equal(lhs: Variable(6), rhs: Value<Swift.Bool>(false))) status changed to: failed
+14225:2026-10-15 19:32:59.902 Df PaintByNumber[45351:1e0eb] [com.apple.TipKit:TipKit • Core] Rule(id: tip.hint.0.event.event.wrongTap.0.count(donationsCount) >= Optional(3)) status changed to: failed
+14257:2026-10-15 19:32:59.917 Df PaintByNumber[45351:1e0eb] [com.apple.TipKit:TipKit • Core] Rule(id: tip.zoom.0.event.event.smallMiss.0.count(donationsCount) >= Optional(2)) status changed to: failed
+14289:2026-10-15 19:32:59.933 Df PaintByNumber[45351:1e0eb] [com.apple.TipKit:TipKit • Core] Rule(id: tip.dragPaint.0.event.event.singleTap.0.count(donationsCount) >= Optional(6)) status changed to: failed
+14351:2026-10-15 19:33:06.458 Df PaintByNumber[45553:1e328] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105545b40>
+14589:2026-10-15 19:33:19.111 Df PaintByNumber[46002:1e75e] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101946420>
+14788:2026-10-15 19:33:28.448 Df PaintByNumber[46174:1e956] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1035451e0>
+15003:2026-10-15 19:33:35.605 Df PaintByNumber[46358:1eb42] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103541b20>
+15220:2026-10-15 19:33:42.343 Df PaintByNumber[46944:1f025] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103941ae0>
+15442:2026-10-15 19:33:48.554 Df PaintByNumber[46995:1f15d] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d45ac0>
+15648:2026-10-15 19:33:54.758 Df PaintByNumber[47276:1f428] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x106145ae0>
+15890:2026-10-15 19:34:05.252 Df PaintByNumber[47899:1f9ea] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103945ae0>
+16113:2026-10-15 19:34:13.519 Df PaintByNumber[48247:1fd1b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x104145aa0>
+16328:2026-10-15 19:34:19.210 Df PaintByNumber[48279:1fd9a] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d45aa0>
+16547:2026-10-15 19:34:26.937 Df PaintByNumber[48697:2014d] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d45b00>
+16763:2026-10-15 19:34:34.500 Df PaintByNumber[49082:20499] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1021459c0>
+16976:2026-10-15 19:34:40.570 Df PaintByNumber[49121:2054f] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101545620>
+17198:2026-10-15 19:34:54.740 Df PaintByNumber[49778:20b14] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x105d41b20>
+17423:2026-10-15 19:35:03.618 Df PaintByNumber[49933:20cc0] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101d45b60>
+17631:2026-10-15 19:35:11.393 Df PaintByNumber[50205:20f4b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x106145b20>
+17855:2026-10-15 19:35:21.057 Df PaintByNumber[50844:2151d] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x102141ac0>
+18073:2026-10-15 19:35:29.406 Df PaintByNumber[51159:2182b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x102145b00>
+18284:2026-10-15 19:35:35.648 Df PaintByNumber[51213:218e2] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x104141b60>
+18508:2026-10-15 19:35:44.461 Df PaintByNumber[51657:21cc9] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x101545ac0>
+18724:2026-10-15 19:35:52.679 Df PaintByNumber[51986:21f95] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103941b00>
+18938:2026-10-15 19:35:58.496 Df PaintByNumber[52023:22034] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103145740>
+19161:2026-10-15 19:36:06.703 Df PaintByNumber[52339:22335] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1019417a0>
+19387:2026-10-15 19:36:14.190 Df PaintByNumber[52774:2271b] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x102145ea0>
+19587:2026-10-15 19:36:20.400 Df PaintByNumber[52855:22821] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d45ac0>
+19801:2026-10-15 19:36:27.023 Df PaintByNumber[53128:22acc] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x1019459c0>
+20022:2026-10-15 19:36:34.461 Df PaintByNumber[53825:230cc] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x106145880>
+20242:2026-10-15 19:36:40.726 Df PaintByNumber[54047:2335f] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d45800>
+----- the app's own lines -----
+137:2026-10-15 19:21:48.116 Df PaintByNumber[18195:dea0] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.274366666 seconds
+235:2026-10-15 19:21:48.945 Df PaintByNumber[18195:dfeb] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+455:2026-10-15 19:21:49.238 Df PaintByNumber[18195:dea9] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.689254625 seconds
+664:2026-10-15 19:21:55.282 Df PaintByNumber[18403:e11e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.163949833 seconds
+742:2026-10-15 19:21:55.815 Df PaintByNumber[18403:e11a] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+973:2026-10-15 19:21:56.085 Df PaintByNumber[18403:e118] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.503970083 seconds
+1191:2026-10-15 19:22:02.446 Df PaintByNumber[18586:e3b7] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.206404042 seconds
+1269:2026-10-15 19:22:03.134 Df PaintByNumber[18586:e49c] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+1448:2026-10-15 19:22:03.453 Df PaintByNumber[18586:e3b3] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.581485084 seconds
+1510:2026-10-15 19:22:03.904 Df PaintByNumber[18586:e39f] [com.pbordjadze.paintbynumber:feedback] Feedback started
+1591:2026-10-15 19:22:04.223 Df PaintByNumber[18586:e39f] [com.pbordjadze.paintbynumber:demo] demo paint-feedback: 0 marks
+2010:2026-10-15 19:22:15.208 Df PaintByNumber[19411:eb2e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.276200958 seconds
+2099:2026-10-15 19:22:16.142 Df PaintByNumber[19411:eb2a] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+2328:2026-10-15 19:22:16.444 Df PaintByNumber[19411:eb29] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.725789959 seconds
+2329:2026-10-15 19:22:16.775 Df PaintByNumber[19411:eb22] [com.pbordjadze.paintbynumber:feedback] Feedback started
+2460:2026-10-15 19:22:17.040 Df PaintByNumber[19411:eb22] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-dark: 0 marks
+2815:2026-10-15 19:22:28.415 Df PaintByNumber[19591:edd4] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.257088625 seconds
+2903:2026-10-15 19:22:29.357 Df PaintByNumber[19591:edd9] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+3133:2026-10-15 19:22:29.681 Df PaintByNumber[19591:edd6] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.791377875 seconds
+3134:2026-10-15 19:22:29.957 Df PaintByNumber[19591:edcd] [com.pbordjadze.paintbynumber:feedback] Feedback started
+3271:2026-10-15 19:22:30.683 Df PaintByNumber[19591:edcd] [com.pbordjadze.paintbynumber:canvas] Waited 0.380165208 seconds for a drawable
+3289:2026-10-15 19:22:31.512 Df PaintByNumber[19591:edcd] [com.pbordjadze.paintbynumber:feedback] Review sheet up
+3290:2026-10-15 19:22:31.517 Df PaintByNumber[19591:edcd] [com.pbordjadze.paintbynumber:feedback] Review: 4 strokes in 2 marks
+3415:2026-10-15 19:22:34.065 Df PaintByNumber[19591:edcd] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-review: 2 marks
+3624:2026-10-15 19:22:44.206 Df PaintByNumber[20313:f4e7] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.254159416 seconds
+3711:2026-10-15 19:22:45.055 Df PaintByNumber[20313:f4e2] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+3942:2026-10-15 19:22:45.352 Df PaintByNumber[20313:f4e8] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.684010209 seconds
+3944:2026-10-15 19:22:45.729 Df PaintByNumber[20313:f4d4] [com.pbordjadze.paintbynumber:feedback] Feedback started
+4098:2026-10-15 19:22:46.984 Df PaintByNumber[20313:f4d4] [com.pbordjadze.paintbynumber:feedback] Review sheet up
+4099:2026-10-15 19:22:46.986 Df PaintByNumber[20313:f4d4] [com.pbordjadze.paintbynumber:feedback] Review: 4 strokes in 2 marks
+4169:2026-10-15 19:22:47.931 Df PaintByNumber[20313:f4d4] [com.pbordjadze.paintbynumber:demo] demo paint-feedback-long-text: 2 marks
+4400:2026-10-15 19:22:54.639 Df PaintByNumber[21030:fb8f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.210346791 seconds
+4448:2026-10-15 19:23:37.564 Df PaintByNumber[21030:fb84] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 42.851150249999996 seconds
+4456:2026-10-15 19:23:53.215 Df PaintByNumber[21030:fb84] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 15.649960583 seconds
+4464:2026-10-15 19:24:03.946 Df PaintByNumber[21030:fb84] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 10.730743542 seconds
+4472:2026-10-15 19:24:16.257 Df PaintByNumber[21030:fb84] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 12.310434249999998 seconds
+4484:2026-10-15 19:24:33.946 Df PaintByNumber[21030:fb84] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 17.688963084 seconds
+4492:2026-10-15 19:24:45.663 Df PaintByNumber[21030:fb84] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 11.716216375 seconds
+4678:2026-10-15 19:24:57.310 Df PaintByNumber[26454:12c2e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.22548775 seconds
+4712:2026-10-15 19:24:57.811 Df PaintByNumber[26454:12c1e] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.446482792 seconds
+4713:2026-10-15 19:24:58.185 Df PaintByNumber[26454:12c1e] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.373444625 seconds
+4714:2026-10-15 19:24:58.692 Df PaintByNumber[26454:12c1e] [com.pbordjadze.paintbynumber:library] Seeded wheat-field in 0.506124542 seconds
+4715:2026-10-15 19:24:59.023 Df PaintByNumber[26454:12c1e] [com.pbordjadze.paintbynumber:library] Seeded hawksbill-turtle in 0.330539041 seconds
+4716:2026-10-15 19:24:59.459 Df PaintByNumber[26454:12c1e] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.435515625 seconds
+4717:2026-10-15 19:24:59.729 Df PaintByNumber[26454:12c1e] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.270286292 seconds
+4904:2026-10-15 19:25:06.747 Df PaintByNumber[26879:13032] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.201961416 seconds
+4936:2026-10-15 19:25:07.281 Df PaintByNumber[26879:13016] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.524884625 seconds
+4937:2026-10-15 19:25:07.440 Df PaintByNumber[26879:13016] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.158785417 seconds
+4938:2026-10-15 19:25:07.548 Df PaintByNumber[26879:13016] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.108021375 seconds
+4946:2026-10-15 19:25:14.858 Df PaintByNumber[26879:13016] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 7.308822042 seconds
+4947:2026-10-15 19:25:15.019 Df PaintByNumber[26879:13016] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.160391166 seconds
+4955:2026-10-15 19:25:20.998 Df PaintByNumber[26879:13016] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 5.979285125 seconds
+5141:2026-10-15 19:25:29.766 Df PaintByNumber[27972:13a0a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.248561625 seconds
+5176:2026-10-15 19:25:30.222 Df PaintByNumber[27972:139fb] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.443097583 seconds
+5177:2026-10-15 19:25:30.410 Df PaintByNumber[27972:139fb] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.187726834 seconds
+5178:2026-10-15 19:25:30.541 Df PaintByNumber[27972:139fb] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.131309375 seconds
+5179:2026-10-15 19:25:30.642 Df PaintByNumber[27972:139fb] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.100003542 seconds
+5180:2026-10-15 19:25:30.799 Df PaintByNumber[27972:139fb] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.156960959 seconds
+5181:2026-10-15 19:25:30.910 Df PaintByNumber[27972:139fb] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.110965209 seconds
+5365:2026-10-15 19:25:37.789 Df PaintByNumber[28078:13b98] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.185368041 seconds
+5421:2026-10-15 19:25:38.577 Df PaintByNumber[28078:13b75] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.746043375 seconds
+5424:2026-10-15 19:25:38.766 Df PaintByNumber[28078:13b75] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.188807417 seconds
+5425:2026-10-15 19:25:38.860 Df PaintByNumber[28078:13b75] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.093450542 seconds
+5426:2026-10-15 19:25:38.938 Df PaintByNumber[28078:13b75] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.078347458 seconds
+5427:2026-10-15 19:25:39.469 Df PaintByNumber[28078:13b75] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.530245333 seconds
+5428:2026-10-15 19:25:39.798 Df PaintByNumber[28078:13b75] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.328832375 seconds
+5613:2026-10-15 19:25:46.536 Df PaintByNumber[28729:1412f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.208306 seconds
+5649:2026-10-15 19:25:46.941 Df PaintByNumber[28729:1412a] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.397046666 seconds
+5651:2026-10-15 19:25:47.086 Df PaintByNumber[28729:1412a] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.145304125 seconds
+5652:2026-10-15 19:25:47.247 Df PaintByNumber[28729:1412a] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.160084209 seconds
+5653:2026-10-15 19:25:47.413 Df PaintByNumber[28729:1412a] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.165694667 seconds
+5654:2026-10-15 19:25:47.752 Df PaintByNumber[28729:1412a] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.339105416 seconds
+5655:2026-10-15 19:25:48.391 Df PaintByNumber[28729:1412a] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.639038333 seconds
+5841:2026-10-15 19:25:55.806 Df PaintByNumber[28905:143c6] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.205088125 seconds
+5876:2026-10-15 19:25:56.850 Df PaintByNumber[28905:143b6] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.992902084 seconds
+5877:2026-10-15 19:25:57.093 Df PaintByNumber[28905:143b6] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.243291917 seconds
+5878:2026-10-15 19:25:57.224 Df PaintByNumber[28905:143b6] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.130795375 seconds
+5879:2026-10-15 19:25:57.384 Df PaintByNumber[28905:143b6] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.159951875 seconds
+5880:2026-10-15 19:25:57.654 Df PaintByNumber[28905:143b6] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.269260333 seconds
+5881:2026-10-15 19:25:57.770 Df PaintByNumber[28905:143b6] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.116109875 seconds
+6059:2026-10-15 19:26:03.582 Df PaintByNumber[29835:14be0] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.173038833 seconds
+6281:2026-10-15 19:26:08.795 Df PaintByNumber[29955:14dba] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.174778167 seconds
+6315:2026-10-15 19:26:09.148 Df PaintByNumber[29955:14db9] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.078438625 seconds
+6317:2026-10-15 19:26:09.442 Df PaintByNumber[29955:14db9] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.293455917 seconds
+6318:2026-10-15 19:26:09.657 Df PaintByNumber[29955:14db9] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.2154545 seconds
+6495:2026-10-15 19:26:14.844 Df PaintByNumber[30146:14fee] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.198470958 seconds
+6530:2026-10-15 19:26:15.678 Df PaintByNumber[30146:14fd0] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.812150458 seconds
+6531:2026-10-15 19:26:16.000 Df PaintByNumber[30146:14fd0] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.32255025 seconds
+6532:2026-10-15 19:26:16.336 Df PaintByNumber[30146:14fd0] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.334648875 seconds
+6709:2026-10-15 19:26:22.451 Df PaintByNumber[30648:1544a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.200778209 seconds
+6744:2026-10-15 19:26:23.168 Df PaintByNumber[30648:1543d] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.703169083 seconds
+6752:2026-10-15 19:26:23.417 Df PaintByNumber[30648:1543d] [com.pbordjadze.paintbynumber:library] Opened CDE9162E-A7EB-45AD-8CB2-83123D18000A: 206 regions
+6753:2026-10-15 19:26:24.290 Df PaintByNumber[30648:1543d] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+6809:2026-10-15 19:26:25.104 Df PaintByNumber[30648:1543d] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+6830:2026-10-15 19:26:25.236 Df PaintByNumber[30648:1544b] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+6916:2026-10-15 19:26:25.748 Df PaintByNumber[30648:15441] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.994539416 seconds
+7258:2026-10-15 19:26:30.454 Df PaintByNumber[30791:15628] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.191107542 seconds
+7293:2026-10-15 19:26:31.250 Df PaintByNumber[30791:15624] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 0.731179458 seconds
+7297:2026-10-15 19:26:31.407 E  PaintByNumber[30791:1562b] [com.pbordjadze.paintbynumber:library] Template of 24BC8C9F-F1D2-4791-AB1D-986ED04F019A is unreadable: unreadable("template decompression")
+7302:2026-10-15 19:26:31.487 E  PaintByNumber[30791:15624] [com.pbordjadze.paintbynumber:library] Opening 24BC8C9F-F1D2-4791-AB1D-986ED04F019A failed: damaged(canRegenerate: true)
+7303:2026-10-15 19:26:32.352 Df PaintByNumber[30791:15624] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer (disabled), _UITransformGestureRecognizer (disabled)
+7305:2026-10-15 19:26:32.780 Df PaintByNumber[30791:15624] [com.pbordjadze.paintbynumber:library] Painting screen recognizers: UIKitHoverGestureRecognizer, _UIParallaxTransitionPanGestureRecognizer, _UIContentSwipeDismissGestureRecognizer, _UITransformGestureRecognizer
+7482:2026-10-15 19:26:36.989 Df PaintByNumber[30831:15700] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.188058333 seconds
+7515:2026-10-15 19:26:38.044 Df PaintByNumber[30831:156f8] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.998504083 seconds
+7711:2026-10-15 19:26:58.529 Df PaintByNumber[31614:15e13] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.212302333 seconds
+7744:2026-10-15 19:26:59.236 Df PaintByNumber[31614:15dff] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.645716625 seconds
+7932:2026-10-15 19:27:22.808 Df PaintByNumber[32402:1658a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.295278334 seconds
+7961:2026-10-15 19:27:24.049 Df PaintByNumber[32402:1657e] [com.pbordjadze.paintbynumber:library] Seeded great-wave in 1.170517709 seconds
+7962:2026-10-15 19:27:25.018 Df PaintByNumber[32402:1657e] [com.pbordjadze.paintbynumber:library] Seeded delicate-arch in 0.969407709 seconds
+7963:2026-10-15 19:27:25.630 Df PaintByNumber[32402:1657e] [com.pbordjadze.paintbynumber:library] Seeded earthrise in 0.611485917 seconds
+7964:2026-10-15 19:27:26.241 Df PaintByNumber[32402:1657e] [com.pbordjadze.paintbynumber:library] Seeded red-fox in 0.610458375 seconds
+7965:2026-10-15 19:27:26.899 Df PaintByNumber[32402:1657e] [com.pbordjadze.paintbynumber:library] Seeded milkmaid in 0.657548458 seconds
+7966:2026-10-15 19:27:27.699 Df PaintByNumber[32402:1657e] [com.pbordjadze.paintbynumber:library] Seeded red-fuji in 0.799779917 seconds
+8355:2026-10-15 19:27:42.818 Df PaintByNumber[32885:16a95] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.324959 seconds
+8572:2026-10-15 19:27:52.041 Df PaintByNumber[33531:17041] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.259856291 seconds
+8789:2026-10-15 19:28:01.589 Df PaintByNumber[33690:17214] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.288417583 seconds
+8994:2026-10-15 19:28:11.224 Df PaintByNumber[34123:175fe] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.200092791 seconds
+9220:2026-10-15 19:28:20.225 Df PaintByNumber[34522:179f3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.208002417 seconds
+9438:2026-10-15 19:28:29.239 Df PaintByNumber[34788:17d09] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.301220875 seconds
+9669:2026-10-15 19:29:09.967 Df PaintByNumber[36687:18eef] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.197088542 seconds
+9909:2026-10-15 19:29:23.247 Df PaintByNumber[37405:1954c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.257132834 seconds
+10148:2026-10-15 19:29:35.218 Df PaintByNumber[37646:1980f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.193401667 seconds
+10419:2026-10-15 19:29:54.849 Df PaintByNumber[38482:19fd7] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.235854166 seconds
+10660:2026-10-15 19:30:10.258 Df PaintByNumber[39107:1a5a5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.219458791 seconds
+10903:2026-10-15 19:30:59.315 Df PaintByNumber[41061:1b7a2] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.255996875 seconds
+11137:2026-10-15 19:31:15.727 Df PaintByNumber[41331:1baf3] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.250164291 seconds
+11362:2026-10-15 19:31:33.032 Df PaintByNumber[42352:1c402] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.270975708 seconds
+11628:2026-10-15 19:32:09.201 Df PaintByNumber[43255:1ccb6] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.590597084 seconds
+11629:2026-10-15 19:32:09.693 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo] Main thread stuck for 2.016363584 seconds (stall 1), 123 frames:
+11630:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #0 libswiftCore.dylib _ZL26swift_cvw_initWithCopyImplPN5swift11OpaqueValueES1_PKNS_14TargetMetadataINS_9InProcessEEE + 60 | #1 Foundation $s10Foundation11LocaleCacheV5StateV18IdentifierAndPrefsVWOc + 44 | #2 Foundation $s10Foundation11LocaleCacheV5StateV18IdentifierAndPrefsVWOc + 44 | #3 Foundation $ss22__RawDictionaryStorageC4find_9hashValues10_HashTableV6BucketV6bucket_Sb5foundtx_SitSHRzlF10Foundation11LocaleCacheV5StateV18IdentifierAndPrefsV_TB5 + 2372 | #4 Foundation $ss22__RawDictionaryStorageC4findys10_HashTableV6BucketV6bucket_Sb5foundtxSHRzlF10Foundation11LocaleCacheV5StateV18IdentifierAndPrefsV_TB5 + 180 | #5 Foundation $s10Foundation11LocaleCacheV13fixedNSLocaleyAA08_NSSwiftB0CAA01_B3ICUCFAfC5StateVzYbXEfU_ + 208
+11631:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #6 Foundation $s10Foundation11LocaleCacheV13fixedNSLocaleyAA08_NSSwiftB0CAA01_B3ICUCFAfC5StateVzYbXEfU_TA + 16 | #7 Foundation $s10Foundation10_LocaleICUCAA01_B8ProtocolA2aDP16bridgeToNSLocaleSo0G0CyFTW + 68 | #8 Foundation $s10Foundation6LocaleV19_bridgeToObjectiveCSo8NSLocaleCyF + 44 | #9 SwiftUICore $s7SwiftUI18LocalizedStringKeyV7resolve4into2in7options5table6bundleyxz_AA17EnvironmentValuesVAA4TextV14ResolveOptionsVSSSgSo8NSBundleCSgtAA08ResolvedN9ContainerRzlF + 1196 | #10 SwiftUICore $s7SwiftUI20LocalizedTextStorage33_8C53218A357EE528547B0855666BD2E5LLC7resolve4into2in4withyxz_AA17EnvironmentValuesVAA0D0V14ResolveOptionsVtAA08ResolvedD9ContainerRzlF + 76
+11632:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #11 SwiftUICore $s7SwiftUI4TextV7resolve4into2in4withyxz_AA17EnvironmentValuesVAC14ResolveOptionsVtAA08ResolvedC9ContainerRzlFAC0L0V_TB5 + 348 | #12 SwiftUICore $s7SwiftUI4TextVAAE36resolveAttributedStringAndProperties2in24includeDefaultAttributes7options5idiomSo09NSMutableeF0CSg_AC08ResolvedH0VtAA17EnvironmentValuesV_SbAC14ResolveOptionsVAA17AnyInterfaceIdiomVSgtF + 760 | #13 SwiftUICore $s7SwiftUI18ResolvedTextHelperV7resolve_4with11sizeFittingAA0c6StyledD0CSgAA0D0VSg_AA17EnvironmentValuesVSbtF + 2672 | #14 SwiftUICore $s7SwiftUI18ResolvedTextFilter33_641995D812913A47B866B20B88782376LLV11updateValueyyF + 940
+11633:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #15 SwiftUICore $s14AttributeGraph0A0VyACyxGqd__c5ValueQyd__RszAA12StatefulRuleRd__lufcADSPyqd__GXEfU_ySv_So11AGAttributeatcyXEfU_ySv_AJtcfu_7SwiftUI18ResolvedStyledTextC_AK0iK6Filter33_641995D812913A47B866B20B88782376LLVTt1g5 + 20 | #16 AttributeGraph _ZN2AG5Graph11UpdateStack6updateEv + 488 | #17 AttributeGraph _ZN2AG5Graph16update_attributeENS_4data3ptrINS_4NodeEEEj + 352 | #18 AttributeGraph _ZN2AG5Graph20input_value_ref_slowENS_4data3ptrINS_4NodeEEENS_11AttributeIDEjjPK15AGSwiftMetadataRhl + 676 | #19 AttributeGraph AGGraphGetValue + 236 | #20 SwiftUICore $s7SwiftUI14TextChildQuery33_641995D812913A47B866B20B88782376LLV5valueQrvg + 68 | #21 SwiftUICore $s14AttributeGraph0A0VyACyxGqd__c5ValueQyd__RszAA4RuleRd__lufcADSPyqd__GXEfU_ySv_So11AGAttributeatcyXEfU_ySv_AJtcfu_ + 148
+11634:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #22 AttributeGraph _ZN2AG5Graph11UpdateStack6updateEv + 488 | #23 AttributeGraph _ZN2AG5Graph16update_attributeENS_4data3ptrINS_4NodeEEEj + 352 | #24 AttributeGraph _ZN2AG5Graph20input_value_ref_slowENS_4data3ptrINS_4NodeEEENS_11AttributeIDEjjPK15AGSwiftMetadataRhl + 676 | #25 AttributeGraph AGGraphGetValue + 236 | #26 SwiftUICore $s14AttributeGraph0A0VyACyxGqd__c5ValueQyd__RszAA12StatefulRuleRd__lufcADSPyqd__GXEfU_ySv_So11AGAttributeatcyXEfU_ySv_AJtcfu_7SwiftUI14LayoutComputerV_AK010StyledTextiJ033_641995D812913A47B866B20B88782376LLVTt1g5 + 48 | #27 AttributeGraph _ZN2AG5Graph11UpdateStack6updateEv + 488 | #28 AttributeGraph _ZN2AG5Graph16update_attributeENS_4data3ptrINS_4NodeEEEj + 352
+11635:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #29 AttributeGraph _ZN2AG5Graph20input_value_ref_slowENS_4data3ptrINS_4NodeEEENS_11AttributeIDEjjPK15AGSwiftMetadataRhl + 236 | #30 AttributeGraph AGGraphGetInputValue + 248 | #31 SwiftUICore $s7SwiftUI11LayoutProxyV4size2inSo6CGSizeVAA13_ProposedSizeV_tF + 116 | #32 SwiftUICore $s7SwiftUI14_PaddingLayoutV12sizeThatFits2in7context5childSo6CGSizeVAA13_ProposedSizeV_AA0M17AndSpacingContextVAA0D5ProxyVtF + 204 | #33 SwiftUICore $s7SwiftUI14_PaddingLayoutVAA05UnaryD0A2aDP12sizeThatFits2in7context5childSo6CGSizeVAA13_ProposedSizeV_AA0N17AndSpacingContextVAA0D5ProxyVtFTW + 40 | #34 SwiftUICore $s7SwiftUI17UnaryLayoutEngine33_1C3B77B617AD058A6802F719E38F5D79LLV12sizeThatFitsySo6CGSizeVAA13_ProposedSizeVFTm + 944
+11636:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #35 SwiftUICore $s7SwiftUI17UnaryLayoutEngine33_1C3B77B617AD058A6802F719E38F5D79LLVyxGAA0dE0A2aFP7spacingAA7SpacingVyFTW + 16 | #36 SwiftUICore $s7SwiftUI15LayoutEngineBox33_91FCB5522C30220AE13689E45789FEF2LLC12sizeThatFitsySo6CGSizeVAA13_ProposedSizeVF + 76 | #37 SwiftUICore $s7SwiftUI11LayoutProxyV10dimensions2inAA14ViewDimensionsVAA13_ProposedSizeV_tF + 228 | #38 SwiftUICore $s7SwiftUI11StackLayoutV23UnmanagedImplementation33_00690F480F8D293143B214DBE6D72CD0LLV6resize_8proposal5proxyyAC5ChildAELLVz_AA16ProposedViewSizeVAA0D7SubviewVtF + 92 | #39 SwiftUICore $s7SwiftUI11StackLayoutV23UnmanagedImplementation33_00690F480F8D293143B214DBE6D72CD0LLV46sizeChildrenGenerallyWithConcreteMajorProposal2in05minorT8ForChildyAA16ProposedViewSizeV_12CoreGraphics7CGFloatVSgAC0X0AELLVXEtF03$s7a4UI11
+11637:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #40 SwiftUICore $s7SwiftUI11StackLayoutV23UnmanagedImplementation33_00690F480F8D293143B214DBE6D72CD0LLV14placeChildren12in21minorProposalForChildyAA16ProposedViewSizeV_12CoreGraphics7CGFloatVSgAC0T0AELLVXEtF03$s7a4UI11cd3V23e22Implementation33_ | #41 SwiftUICore $s7SwiftUI11StackLayoutV23UnmanagedImplementation33_00690F480F8D293143B214DBE6D72CD0LLV13placeChildren2inyAA16ProposedViewSizeV_tF + 204 | #42 SwiftUICore $s7SwiftUI12VStackLayoutVAA0D0A2aDP12sizeThatFits8proposal8subviews5cacheSo6CGSizeVAA16ProposedViewSizeV_AA0D8SubviewsV5CacheQzztFTWTm + 88 | #43 SwiftUICore $s7SwiftUI16ViewLayoutEngineV12sizeThatFitsySo6CGSizeVAA13_ProposedSizeVFAFyXEfU_ + 164 | #44 SwiftUICore $s7SwiftUI16ViewLayoutEngineV12sizeThatFitsySo6CGSizeVAA13_ProposedSizeVF + 712
+11638:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #45 SwiftUICore $s7SwiftUI15LayoutEngineBox33_91FCB5522C30220AE13689E45789FEF2LLC12sizeThatFitsySo6CGSizeVAA13_ProposedSizeVF + 76 | #46 SwiftUICore $s7SwiftUI11LayoutProxyV4size2inSo6CGSizeVAA13_ProposedSizeV_tF + 224 | #47 SwiftUICore $s7SwiftUI16_FlexFrameLayoutV12sizeThatFits2in7context5childSo6CGSizeVAA13_ProposedSizeV_AA0N17AndSpacingContextVAA0E5ProxyVtF + 352 | #48 SwiftUICore $s7SwiftUI16_FlexFrameLayoutVAA05UnaryE0A2aDP12sizeThatFits2in7context5childSo6CGSizeVAA13_ProposedSizeV_AA0O17AndSpacingContextVAA0E5ProxyVtFTW + 56 | #49 SwiftUICore $s7SwiftUI17UnaryLayoutEngine33_1C3B77B617AD058A6802F719E38F5D79LLV12sizeThatFitsySo6CGSizeVAA13_ProposedSizeVFTm + 944 | #50 SwiftUICore $s7SwiftUI17UnaryLayoutEngine33_1C3B77B617AD058A6802F719E38F5D79LLVyxGAA0dE0A2aFP7spacingAA7SpacingVyFTW + 16
+11639:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #51 SwiftUICore $s7SwiftUI15LayoutEngineBox33_91FCB5522C30220AE13689E45789FEF2LLC12sizeThatFitsySo6CGSizeVAA13_ProposedSizeVF + 76 | #52 SwiftUICore $s7SwiftUI9ViewGraphC12sizeThatFits_14layoutComputer6insetsSo6CGSizeVAA13_ProposedSizeV_AA06LayoutI0VSgAA10EdgeInsetsVtFZTf4nnnd_n + 232 | #53 SwiftUICore $s7SwiftUI9ViewGraphC12sizeThatFitsySo6CGSizeVAA13_ProposedSizeVF + 156 | #54 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE13_sizeThatFitsySo6CGSizeVAA08ProposedC4SizeVFAfA0cD0CXEfU_TA + 68 | #55 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE07_updatecD04bodyqd__Sgqd__AA0cD0CXE_tlF + 200 | #56 SwiftUICore $s7SwiftUI25ViewGraphRootValueUpdaterPAAE13_sizeThatFitsySo6CGSizeVAA08ProposedC4SizeVF + 84
+11640:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #57 SwiftUI $s7SwiftUI20PlatformListViewBasePAASo6UIViewCRbzrlE16hostSizeThatFits5widthSo6CGSizeV12CoreGraphics7CGFloatV_tF + 424 | #58 SwiftUI $s7SwiftUI20PlatformListViewBasePAASo020UICollectionReusableE0CRbzrlE29hostPreferredLayoutAttributes7fitting6insetsSo0gekL0CAJ_AA10EdgeInsetsVtF + 724 | #59 SwiftUI $s7SwiftUI26ListCollectionViewCellBaseC32preferredLayoutAttributesFittingySo012UICollectioneiJ0CAFF + 440 | #60 SwiftUI $s7SwiftUI26ListCollectionViewCellBaseC32preferredLayoutAttributesFittingySo012UICollectioneiJ0CAFFTo + 44 | #61 UIKitCore -[UICollectionReusableView _preferredLayoutAttributesFittingAttributes:isAnimatingExistingView:] + 152 | #62 UIKitCore -[UICollectionViewListCell _preferredLayoutAttributesFittingAttributes:isAnimatingExistingView:] + 280
+11641:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #63 UIKitCore -[UICollectionView _checkForPreferredAttributesInView:originalAttributes:] + 260 | #64 UIKitCore +[UIView(Animation) performWithoutAnimation:] + 68 | #65 UIKitCore -[UICollectionView _createPreparedSupplementaryViewForElementOfKind:atIndexPath:layout:withLayoutAttributes:applyAttributes:] + 1632 | #66 UIKitCore -[UICollectionView _createVisibleViewsForSingleCategoryAttributes:limitCreation:fadeForBoundsChange:] + 1524 | #67 UIKitCore -[UICollectionView _createVisibleViewsForAttributes:fadeForBoundsChange:notifyLayoutForVisibleCellsPass:] + 280 | #68 UIKitCore -[UICollectionView _updateVisibleCellsNow:] + 3248 | #69 UIKitCore -[UICollectionView layoutSubviews] + 276 | #70 SwiftUI $s7SwiftUI30UpdateCoalescingCollectionViewC14layoutSubviewsyyF + 56
+11642:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #71 SwiftUI $s7SwiftUI30UpdateCoalescingCollectionViewC14layoutSubviewsyyFTo + 32 | #72 UIKitCore block_destroy_helper.13 + 9888 | #73 UIKitCore block_destroy_helper.13 + 10824 | #74 UIKitCore -[UIView(CALayerDelegate) layoutSublayersOfLayer:] + 2648 | #75 QuartzCore _ZN2CA5Layer15perform_update_EPS0_P7CALayerjNS_17LayerUpdateReasonEPNS_11TransactionE + 456 | #76 QuartzCore _ZN2CA5Layer17update_if_needed_EPNS_11TransactionENS_17LayerUpdateReasonE + 600 | #77 UIKitCore -[UIView(Hierarchy) layoutBelowIfNeeded] + 328 | #78 UIKitCore -[UISheetPresentationController _sheetLayoutInfoLayout:] + 36 | #79 UIKitCore get_enum_tag_for_layout_string SD8IteratorV8_VariantOySOx__G + 57544 | #80 UIKitCore get_enum_tag_for_layout_string SD8IteratorV8_VariantOySOx__G + 57648
+11643:2026-10-15 19:32:09.885 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #81 UIKitCore __54-[UISheetPresentationController _transitionWillBegin:]_block_invoke_3 + 36 | #82 UIKitCore +[UIView(Animation) performWithoutAnimation:] + 68 | #83 UIKitCore __54-[UISheetPresentationController _transitionWillBegin:]_block_invoke_2 + 232 | #84 UIKitCore __UIVIEWCONTROLLERTRANSITIONCOORDINATOR_IS_EXECUTING_ALONGSIDE_ANIMATION_BLOCK__ + 28 | #85 UIKitCore -[_UIViewControllerTransitionCoordinator _applyBlocks:releaseBlocks:] + 120 | #86 UIKitCore -[_UIViewControllerTransitionContext __runAlongsideAnimations] + 220 | #87 UIKitCore __UIVIEW_IS_EXECUTING_ALONGSIDE_ANIMATION_BLOCK__ + 16 | #88 UIKitCore __72+[UIView(Animation) _setAlongsideAnimations:toRunByEndOfBlock:animated:]_block_invoke + 24 | #89 UIKitCore -[UIViewAnimationState _runAlongsideAnimations] + 32
+11644:2026-10-15 19:32:09.886 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #90 UIKitCore -[UIViewAnimationState pop] + 36 | #91 UIKitCore +[UIViewAnimationState popAnimationState] + 56 | #92 UIKitCore +[UIView(UIViewAnimationWithBlocks) _setupAnimationWithDuration:delay:view:options:factory:animations:start:animationStateGenerator:completion:] + 716 | #93 UIKitCore +[UIView(UIViewAnimationWithBlocks) animateWithDuration:delay:options:animations:completion:] + 44 | #94 UIKitCore __50-[UITransitionView _startTransition:withDuration:]_block_invoke_2 + 328 | #95 UIKitCore +[UIView(UIViewAnimationWithBlocks) conditionallyAnimate:withAnimation:layout:completion:] + 72 | #96 UIKitCore -[UITransitionView _startTransition:withDuration:] + 1072 | #97 UIKitCore -[UITransitionView transition:fromView:toView:removeFromView:] + 1944
+11645:2026-10-15 19:32:09.886 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #98 UIKitCore -[UIViewControllerBuiltinTransitionViewAnimator animateTransition:] + 1300 | #99 UIKitCore ___UIViewControllerTransitioningRunCustomTransitionWithRequest_block_invoke_3 + 164 | #100 UIKitCore +[UIKeyboardSceneDelegate _pinInputViewsForKeyboardSceneDelegate:onBehalfOfResponder:duringBlock:] + 84 | #101 UIKitCore ___UIViewControllerTransitioningRunCustomTransitionWithRequest_block_invoke_2 + 184 | #102 UIKitCore +[UIView(Animation) _setAlongsideAnimations:toRunByEndOfBlock:animated:] + 148 | #103 UIKitCore _UIViewControllerTransitioningRunCustomTransitionWithRequest + 496 | #104 UIKitCore __77-[UIPresentationController runTransitionForCurrentStateAnimated:handoffData:]_block_invoke_3 + 1880 | #105 UIKitCore -[_UIAfterCACommitBlock run] + 64
+11646:2026-10-15 19:32:09.886 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #106 UIKitCore -[_UIAfterCACommitQueue flush] + 156 | #107 UIKitCore _runAfterCACommitDeferredBlocks + 256 | #108 UIKitCore _cleanUpAfterCAFlushAndRunDeferredBlocks + 76 | #109 CoreFoundation __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__ + 20 | #110 CoreFoundation __CFRunLoopDoBlocks + 340 | #111 CoreFoundation __CFRunLoopRun + 788 | #112 CoreFoundation _CFRunLoopRunSpecificWithOptions + 496 | #113 GraphicsServices GSEventRunModal + 116 | #114 UIKitCore -[UIApplication _run] + 776 | #115 UIKitCore UIApplicationMain + 120 | #116 SwiftUI $s7SwiftUI17KitRendererCommon33_ACC2C5639A7D76F611E170E831FCA491LLys5NeverOyXlXpFAESpySpys4Int8VGSgGXEfU_ + 164 | #117 SwiftUI $s7SwiftUI6runAppys5NeverOxAA0D0RzlF + 180 | #118 SwiftUI $s7SwiftUI3AppPAAE4mainyyFZ + 148
+11647:2026-10-15 19:32:09.886 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo]   stall 1 #119 PaintByNumber.debug.dylib $s13PaintByNumber0abC3AppV5$mainyyFZ + 40 | #120 PaintByNumber.debug.dylib __debug_main_executable_dylib_entry_point + 12 | #121 0x10034b0e4 | #122 0x1004d84e4
+11659:2026-10-15 19:32:10.137 E  PaintByNumber[43255:1ccb1] [com.pbordjadze.paintbynumber:demo] Main thread answered after 2.461969292 seconds (stall 1)
+11897:2026-10-15 19:32:16.388 Df PaintByNumber[43464:1cec8] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.328063625 seconds
+12158:2026-10-15 19:32:23.039 Df PaintByNumber[43793:1d1c6] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.274717792 seconds
+12402:2026-10-15 19:32:29.710 Df PaintByNumber[44086:1d457] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+12404:2026-10-15 19:32:32.643 Df PaintByNumber[44086:1d457] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.229044458 seconds
+12492:2026-10-15 19:32:33.899 Df PaintByNumber[44086:1d45c] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+12627:2026-10-15 19:32:34.317 Df PaintByNumber[44086:1d45e] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 1.056327209 seconds
+12931:2026-10-15 19:32:39.311 Df PaintByNumber[44447:1d85b] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+12933:2026-10-15 19:32:41.781 Df PaintByNumber[44447:1d85b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.214595333 seconds
+13012:2026-10-15 19:32:42.395 Df PaintByNumber[44447:1d856] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+13175:2026-10-15 19:32:42.689 Df PaintByNumber[44447:1d854] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.545172458 seconds
+13458:2026-10-15 19:32:47.984 Df PaintByNumber[45088:1de1f] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+13460:2026-10-15 19:32:49.685 Df PaintByNumber[45088:1de1f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.152142375 seconds
+13538:2026-10-15 19:32:50.309 Df PaintByNumber[45088:1de27] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+13751:2026-10-15 19:32:50.576 Df PaintByNumber[45088:1de1f] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.470794333 seconds
+13991:2026-10-15 19:32:57.185 Df PaintByNumber[45351:1e0e2] [com.pbordjadze.paintbynumber:demo] demo red-fox: edge detector ran
+13993:2026-10-15 19:32:58.958 Df PaintByNumber[45351:1e0e2] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.178033375 seconds
+14072:2026-10-15 19:32:59.604 Df PaintByNumber[45351:1e0eb] [com.apple.coreaudio:AudioConverter]        ACv2Workarounds.mm:51    com.pbordjadze.paintbynumber: fix84702776_86723525_86479548_89800354_SinglePacketDesc: false
+14182:2026-10-15 19:32:59.882 Df PaintByNumber[45351:1e0e5] [com.pbordjadze.paintbynumber:feedback] Sounds ready in 0.566090584 seconds
+14504:2026-10-15 19:33:07.120 Df PaintByNumber[45553:1e32b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.216795583 seconds
+14725:2026-10-15 19:33:19.780 Df PaintByNumber[46002:1e760] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.204408875 seconds
+14945:2026-10-15 19:33:29.127 Df PaintByNumber[46174:1e95d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.211024416 seconds
+15156:2026-10-15 19:33:36.294 Df PaintByNumber[46358:1eb55] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.218171625 seconds
+15377:2026-10-15 19:33:43.136 Df PaintByNumber[46944:1f027] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.249651708 seconds
+15597:2026-10-15 19:33:49.302 Df PaintByNumber[46995:1f161] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.230301334 seconds
+15807:2026-10-15 19:33:55.453 Df PaintByNumber[47276:1f435] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.217942083 seconds
+15851:2026-10-15 19:33:56.784 Df PaintByNumber[47276:1f428] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.8700cdaef99f4602b4a4dfc35fa22bc5
+16049:2026-10-15 19:34:06.018 Df PaintByNumber[47899:1f9f2] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.247874666 seconds
+16074:2026-10-15 19:34:06.755 Df PaintByNumber[47899:1f9ea] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.8700cdaef99f4602b4a4dfc35fa22bc5
+16270:2026-10-15 19:34:14.212 Df PaintByNumber[48247:1fd21] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.208532625 seconds
+16294:2026-10-15 19:34:14.924 Df PaintByNumber[48247:1fd1b] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.8700cdaef99f4602b4a4dfc35fa22bc5
+16481:2026-10-15 19:34:19.955 Df PaintByNumber[48279:1fda9] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.235398 seconds
+16505:2026-10-15 19:34:20.676 Df PaintByNumber[48279:1fd9a] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.67e349f07d6d48a7af28414e783765bc
+16702:2026-10-15 19:34:27.652 Df PaintByNumber[48697:20150] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.231040417 seconds
+16726:2026-10-15 19:34:28.333 Df PaintByNumber[48697:2014d] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.67e349f07d6d48a7af28414e783765bc
+16922:2026-10-15 19:34:35.135 Df PaintByNumber[49082:2049e] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.207475917 seconds
+16946:2026-10-15 19:34:35.933 Df PaintByNumber[49082:20499] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.28ac2ecfdd1f4213acfbfd44978414e1
+17133:2026-10-15 19:34:41.335 Df PaintByNumber[49121:20556] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.264524583 seconds
+17158:2026-10-15 19:34:42.168 Df PaintByNumber[49121:2054f] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.09e755fb021447fcaa41d9e28e836828
+17355:2026-10-15 19:34:55.432 Df PaintByNumber[49778:20b1d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.230186084 seconds
+17380:2026-10-15 19:34:56.297 Df PaintByNumber[49778:20b14] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.09e755fb021447fcaa41d9e28e836828
+17576:2026-10-15 19:35:04.405 Df PaintByNumber[49933:20cc5] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.238575875 seconds
+17602:2026-10-15 19:35:06.441 Df PaintByNumber[49933:20cc0] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.e380b38c30a340b2a3f0b4974315de87
+17788:2026-10-15 19:35:12.073 Df PaintByNumber[50205:20f5a] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.220191083 seconds
+17813:2026-10-15 19:35:12.993 Df PaintByNumber[50205:20f4b] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.bad8e3dd86114b66814cc392d5747b30
+18009:2026-10-15 19:35:21.807 Df PaintByNumber[50844:2152c] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.231211541 seconds
+18034:2026-10-15 19:35:22.788 Df PaintByNumber[50844:2151d] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.bad8e3dd86114b66814cc392d5747b30
+18229:2026-10-15 19:35:30.201 Df PaintByNumber[51159:2182d] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.2498845 seconds
+18253:2026-10-15 19:35:31.052 Df PaintByNumber[51159:2182b] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.marginarium.block.bad8e3dd86114b66814cc392d5747b30
+18440:2026-10-15 19:35:36.489 Df PaintByNumber[51213:218ee] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.263694166 seconds
+18466:2026-10-15 19:35:37.530 Df PaintByNumber[51213:218e2] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.petsWeMade.block.a842c8d9e1db44ea86e64411f3dcf11b
+18662:2026-10-15 19:35:45.110 Df PaintByNumber[51657:21ccf] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.229942167 seconds
+18687:2026-10-15 19:35:45.929 Df PaintByNumber[51657:21cc9] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.petsWeMade.block.a842c8d9e1db44ea86e64411f3dcf11b
+18883:2026-10-15 19:35:53.336 Df PaintByNumber[51986:21fa2] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.238157292 seconds
+18908:2026-10-15 19:35:54.248 Df PaintByNumber[51986:21f95] [com.pbordjadze.paintbynumber:demo] Marginarium target visible: marginarium.petsWeMade.block.a842c8d9e1db44ea86e64411f3dcf11b
+19095:2026-10-15 19:35:59.282 Df PaintByNumber[52023:22039] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.282960917 seconds
+19315:2026-10-15 19:36:07.505 Df PaintByNumber[52339:2233b] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.241210542 seconds
+19535:2026-10-15 19:36:15.011 Df PaintByNumber[52774:22726] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.271731833 seconds
+19734:2026-10-15 19:36:21.013 Df PaintByNumber[52855:2282f] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.194438625 seconds
+19958:2026-10-15 19:36:27.809 Df PaintByNumber[53128:22adb] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.244087875 seconds
+20175:2026-10-15 19:36:35.057 Df PaintByNumber[53825:230dc] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.1774035 seconds
+20399:2026-10-15 19:36:41.418 Df PaintByNumber[54047:23375] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.227833083 seconds
+----- tail -----
+2026-10-15 19:36:40.723 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Creating new assertion because there is no existing background assertion.
+2026-10-15 19:36:40.723 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Creating new background assertion
+2026-10-15 19:36:40.723 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Created new background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.723 Df PaintByNumber[54047:23379] [com.apple.runningboard:connection] Initializing connection
+2026-10-15 19:36:40.724 Df PaintByNumber[54047:23379] [com.apple.runningboard:process] Removing all cached process handles
+2026-10-15 19:36:40.724 Df PaintByNumber[54047:23379] [com.apple.runningboard:connection] Creating connection to com.apple.runningboard
+2026-10-15 19:36:40.724 Df PaintByNumber[54047:23379] [com.apple.xpc:connection] [0x103de4f00] activating connection: mach=true listener=false peer=false name=com.apple.runningboard
+2026-10-15 19:36:40.724 Df PaintByNumber[54047:23375] [com.apple.runningboard:connection] Sending handshake request attempt #1 to server
+2026-10-15 19:36:40.724 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Deactivation reason added: 10; deactivation reasons: 0 -> 1024; animating application lifecycle event: 0
+2026-10-15 19:36:40.725 Df PaintByNumber[54047:2335f] [com.apple.BoardServices:Injection] activating monitor for service com.apple.frontboard.open
+2026-10-15 19:36:40.725 Df PaintByNumber[54047:2335f] [com.apple.BoardServices:Injection] activating monitor for service com.apple.frontboard.workspace-service
+2026-10-15 19:36:40.725 Df PaintByNumber[54047:2335f] [com.apple.FrontBoard:Common] FBSWorkspace registering source: com.apple.frontboard.systemappservices
+2026-10-15 19:36:40.726 Df PaintByNumber[54047:2335f] [com.apple.FrontBoard:Common] FBSWorkspace connected to endpoint : <BSServiceConnectionEndpoint: 0x103d45680; target: com.apple.frontboard.systemappservices; service: com.apple.frontboard.workspace-service>
+2026-10-15 19:36:40.726 Df PaintByNumber[54047:2335f] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x103ccc820 com.apple.frontboard.systemappservices> attempting immediate handshake from activate
+2026-10-15 19:36:40.726 Df PaintByNumber[54047:23375] [com.apple.runningboard:connection] Handshake succeeded
+2026-10-15 19:36:40.726 Df PaintByNumber[54047:23375] [com.apple.runningboard:connection] Identity resolved as app<com.pbordjadze.paintbynumber((null))>
+2026-10-15 19:36:40.726 Df PaintByNumber[54047:2335f] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x103ccc820 com.apple.frontboard.systemappservices> sent handshake
+2026-10-15 19:36:40.726 Df PaintByNumber[54047:2335f] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x103d45800>
+2026-10-15 19:36:40.728 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.728 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x103c9ecc0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 1755 (elapsed = 0).
+2026-10-15 19:36:40.728 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UIApplicationSceneKeyboardSettings on FBSSceneSettings
+2026-10-15 19:36:40.728 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneOcclusionSettings> on FBSSceneSettings
+2026-10-15 19:36:40.728 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneInterfaceProtectionSettings> on FBSSceneSettings
+2026-10-15 19:36:40.728 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneLayoutPreferencesHostSettingsExtension on FBSSceneSettings
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneSafeAreaSettingsExtension on FBSSceneSettings
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:2335f] [com.apple.dt.xctest:Default] Registering for test daemon availability notify post.
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:2335f] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneLayoutPreferenceClientSettingsExtension on FBSSceneClientSettings
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:2335f] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:2335f] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UIHomeAffordanceHostSceneSettings> on FBSSceneSettings
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISystemShellSceneHostingEnvironmentSettings on FBSSceneSettings
+2026-10-15 19:36:40.729 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneRenderingEnvironmentSettings on FBSSceneSettings
+2026-10-15 19:36:40.730 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneRenderingEnvironmentClientSettings> on FBSSceneClientSettings
+2026-10-15 19:36:40.730 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneTransitioningHostSettings> on FBSSceneSettings
+2026-10-15 19:36:40.730 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Deactivation reason added: 11; deactivation reasons: 1024 -> 3072; animating application lifecycle event: 0
+2026-10-15 19:36:40.730 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneFocusSystemSettings> on FBSSceneSettings
+2026-10-15 19:36:40.730 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneOrientationSettingsExtension on FBSSceneSettings
+2026-10-15 19:36:40.731 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneOrientationClientSettingsExtension on FBSSceneClientSettings
+2026-10-15 19:36:40.731 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneWindowingControlClientSettings on FBSSceneClientSettings
+2026-10-15 19:36:40.731 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneSettingsCore on FBSSceneSettings
+2026-10-15 19:36:40.732 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingContentSizePreferenceClientSettings> on FBSSceneClientSettings
+2026-10-15 19:36:40.732 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneHostingTraitCollectionPropagationSettings on FBSSceneSettings
+2026-10-15 19:36:40.732 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Deactivation reason removed: 10; deactivation reasons: 3072 -> 2048; animating application lifecycle event: 0
+2026-10-15 19:36:40.733 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneClientSettingsCore on FBSSceneClientSettings
+2026-10-15 19:36:40.733 Df PaintByNumber[54047:2335f] [com.apple.UIKit:EventBus] Event Timing Profile for Touch: not found, path="/System/Library/EventTimingProfiles/Sim.Touch.plist"
+2026-10-15 19:36:40.733 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingSheetPresentationSettings> on FBSSceneSettings
+2026-10-15 19:36:40.733 Df PaintByNumber[54047:2335f] [com.apple.UIKit:EventBus] Event Timing Profile for Pencil: not found, path="/System/Library/EventTimingProfiles/Sim.Pencil.plist"
+2026-10-15 19:36:40.733 Df PaintByNumber[54047:2335f] [com.apple.UIKit:UpdateScheduler] Selected display: name=LCD (PurpleMain), id=1
+2026-10-15 19:36:40.733 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingSheetPresentationClientSettings> on FBSSceneClientSettings
+2026-10-15 19:36:40.734 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingEventDeferringSettings> on FBSSceneSettings
+2026-10-15 19:36:40.734 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIKit__UITypedKeyValueSceneSettings> on FBSSceneSettings
+2026-10-15 19:36:40.735 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIKit__UITypedKeyValueSceneSettings> on FBSSceneClientSettings
+2026-10-15 19:36:40.735 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingViewControllerPreferencePropagationClientSettings> on FBSSceneClientSettings
+2026-10-15 19:36:40.736 Df PaintByNumber[54047:23379] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneZoomTransitionSettings> on FBSSceneSettings
+2026-10-15 19:36:40.736 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] UIMutableApplicationSceneSettings setting counterpart class: UIApplicationSceneSettings
+2026-10-15 19:36:40.737 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] UIMutableApplicationSceneClientSettings setting counterpart class: UIApplicationSceneClientSettings
+2026-10-15 19:36:40.737 Df PaintByNumber[54047:23378] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneTransitionContextCore on FBSSceneTransitionContext
+2026-10-15 19:36:40.738 A  PaintByNumber[54047:2337c] (RunningBoardServices) didChangeInheritances
+2026-10-15 19:36:40.745 Df PaintByNumber[54047:2335f] [com.apple.xpc:connection] [0x103de5180] activating connection: mach=true listener=false peer=false name=com.apple.lsd.mapdb
+2026-10-15 19:36:40.748 A  PaintByNumber[54047:23375] (CoreFoundation) Loading Preferences From User Session CFPrefsD
+2026-10-15 19:36:40.840 Df PaintByNumber[54047:2335f] [com.apple.BoardServices:XPCErrors] [C:2] Alloc com.apple.backboard.hid-services.xpc
+2026-10-15 19:36:40.841 Df PaintByNumber[54047:2335f] [com.apple.xpc:connection] [0x103de5540] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-10-15 19:36:40.843 Df PaintByNumber[54047:2335f] [com.apple.app_launch_measurement:ApplicationLaunch] alm_acquire_pageins_recording_assertion: acquired pageins recording assertion!
+2026-10-15 19:36:40.846 Df PaintByNumber[54047:2335f] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: Persistent SceneSession Map Update, expirationHandler: <__NSGlobalBlock__: 0x1e78c84e8>
+2026-10-15 19:36:40.846 Df PaintByNumber[54047:2335f] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.846 Df PaintByNumber[54047:2335f] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.846 Df PaintByNumber[54047:2335f] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x103f15b40>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 1755 (elapsed = 0).
+2026-10-15 19:36:40.847 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Deactivation reason added: 5; deactivation reasons: 2048 -> 2080; animating application lifecycle event: 1
+2026-10-15 19:36:40.848 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Should send trait collection or coordinate space update, interface style 1 -> 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:40.849 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:40.850 Df PaintByNumber[54047:2335f] [com.apple.UIKit:HomeAffordanceObservation] Initializing: <_UIHomeAffordanceSceneNotifier: 0x103f40f50>; with scene: <UIWindowScene: 0x103473400>
+2026-10-15 19:36:40.850 Df PaintByNumber[54047:2335f] [com.apple.BacklightServices:scenes] 0x103c3a700 setDelegate:<0x103c39da0 _UIBacklightEnvironment> hasDelegate:YES for environment:sceneID:com.pbordjadze.paintbynumber-default
+2026-10-15 19:36:40.851 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:40.851 Df PaintByNumber[54047:2335f] [com.apple.UIKit:EventDeferring] [0x103f40fc0] Initialized with scene: <UIWindowScene: 0x103473400>; behavior: <_UIEventDeferringBehavior_iOS: 0x108805a40>; availableForProcess: 1, systemShellManagesKeyboardFocus: 1
+2026-10-15 19:36:40.854 Df PaintByNumber[54047:2335f] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x103eec600; process scope; status: target> was:none
+2026-10-15 19:36:40.854 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Setting default evaluation strategy for UIUserInterfaceIdiomPhone to LastOneWins
+2026-10-15 19:36:40.855 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Scene target of keyboard event deferring environment did change: 1; scene: UIWindowScene: 0x103473400; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default
+2026-10-15 19:36:40.855 Df PaintByNumber[54047:2335f] [com.apple.UIKit:EventDeferring] [0x103f40fc0] Scene target of event deferring environments did update: scene: 0x103473400; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-10-15 19:36:40.855 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x103473400; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default
+2026-10-15 19:36:40.855 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Stack[KeyWindow] 0x103c38d50: Taking no further action for migration from LastOneWins -> SystemShellManaged as there are no scenes
+2026-10-15 19:36:40.855 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Setting default evaluation strategy for UIUserInterfaceIdiomPhone to SystemShellManaged
+2026-10-15 19:36:40.855 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Key window needs update: 0; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x103473400; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x0; reason: UIWindowScene: 0x103473400: Window scene became target of keyboard environment
+2026-10-15 19:36:40.856 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:40.856 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:40.858 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:40.908 Df PaintByNumber[54047:2337b] [com.apple.BackBoard:EventDelivery] BKSHIDEventObserver - connection activation
+2026-10-15 19:36:40.908 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Orientation] <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93) Scene updated orientation preferences: none -> ( Pu Ll Lr )
+2026-10-15 19:36:40.909 Df PaintByNumber[54047:2337c] [com.apple.BackBoard:EventDelivery] BKSHIDEventDeliveryManager - connection activation
+2026-10-15 19:36:40.921 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Key window API is scene-level: YES
+2026-10-15 19:36:40.921 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] UIWindowScene: 0x103473400: Window became key in scene: UIWindow: 0x103ea8400; contextId: 0x6F8CA2C3: reason: UIWindowScene: 0x103473400: Window requested to become key in scene: 0x103ea8400
+2026-10-15 19:36:40.921 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Key window needs update: 1; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x103473400; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x103ea8400; reason: UIWindowScene: 0x103473400: Window requested to become key in scene: 0x103ea8400
+2026-10-15 19:36:40.921 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Window did become application key: UIWindow: 0x103ea8400; contextId: 0x6F8CA2C3; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default
+2026-10-15 19:36:40.921 Df PaintByNumber[54047:2335f] [com.apple.UIKit:EventDeferring] [0x103f40fc0] Begin local event deferring requested for token: 0x103eee460; environments: 1; reason: UIWindowScene: 0x103473400: Begin event deferring in keyboardFocus for window: 0x103ea8400
+2026-10-15 19:36:40.924 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:40.925 Df PaintByNumber[54047:2335f] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-default  persistentID: 2784A922-1115-45D2-B490-C26EBD160A93
+2026-10-15 19:36:40.926 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Ignoring already applied deactivation reason: 5; deactivation reasons: 2080
+2026-10-15 19:36:40.926 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Deactivation reason added: 12; deactivation reasons: 2080 -> 6176; animating application lifecycle event: 1
+2026-10-15 19:36:40.926 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Deactivation reason removed: 11; deactivation reasons: 6176 -> 4128; animating application lifecycle event: 1
+2026-10-15 19:36:40.926 Df PaintByNumber[54047:2335f] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneIntelligenceSupportSettings> on FBSSceneSettings
+2026-10-15 19:36:40.928 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:40.931 A  PaintByNumber[54047:2335f] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-10-15 19:36:40.932 Df PaintByNumber[54047:23375] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x103eec600; token: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default; status: ancestor> was:target
+2026-10-15 19:36:40.933 Df PaintByNumber[54047:2337b] [com.apple.UIIntelligenceSupport:xpc] establishing connection to agent
+2026-10-15 19:36:40.933 Df PaintByNumber[54047:2337b] [com.apple.xpc:session] [0x103e52580] Session created.
+2026-10-15 19:36:40.933 Df PaintByNumber[54047:2337b] [com.apple.xpc:session] [0x103e52580] Session created from connection [0x108940a00]
+2026-10-15 19:36:40.933 Df PaintByNumber[54047:2337b] [com.apple.xpc:connection] [0x108940a00] activating connection: mach=true listener=false peer=false name=com.apple.uiintelligencesupport.agent
+2026-10-15 19:36:40.933 Df PaintByNumber[54047:2337b] [com.apple.xpc:session] [0x103e52580] Session activated
+2026-10-15 19:36:40.952 Df PaintByNumber[54047:23373] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Adding persistent store, expirationHandler: <__NSMallocBlock__: 0x1088f19e0>
+2026-10-15 19:36:40.952 Df PaintByNumber[54047:23373] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.952 Df PaintByNumber[54047:23373] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.952 Df PaintByNumber[54047:23373] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x103f16900>: taskID = 3, taskName = CoreData: Adding persistent store, creationTime = 1755 (elapsed = 0).
+2026-10-15 19:36:40.957 Df PaintByNumber[54047:23373] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 3
+2026-10-15 19:36:40.957 Df PaintByNumber[54047:23373] [com.apple.UIKit:BackgroundTask] Ending task with identifier 3 and description: <_UIBackgroundTaskInfo: 0x103f16900>: taskID = 3, taskName = CoreData: Adding persistent store, creationTime = 1755 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x1088f19e0>
+2026-10-15 19:36:40.957 Df PaintByNumber[54047:23373] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103e50050> (used by background task with identifier 3: <_UIBackgroundTaskInfo: 0x103f16900>: taskID = 3, taskName = CoreData: Adding persistent store, creationTime = 1755 (elapsed = 0))
+2026-10-15 19:36:40.958 Df PaintByNumber[54047:23375] [com.apple.TipKit:TipKit • Datastore] MiniTipsDatastore(id: com.apple.tipkit.shared) did load at: /Users/runner/Library/Developer/CoreSimulator/Devices/22452A91-4697-4369-8812-53ADB77EB73B/data/Containers/Data/Application/20B7D5AF-F5CF-4A8A-94D8-644E7A5556F0/Library/Application Support/.tipkit
+2026-10-15 19:36:40.959 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x1088f19e0>
+2026-10-15 19:36:40.959 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.959 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.959 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x103f16800>: taskID = 4, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0).
+2026-10-15 19:36:40.962 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 4
+2026-10-15 19:36:40.962 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending task with identifier 4 and description: <_UIBackgroundTaskInfo: 0x103f16800>: taskID = 4, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x1088f19e0>
+2026-10-15 19:36:40.962 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103e50050> (used by background task with identifier 4: <_UIBackgroundTaskInfo: 0x103f16800>: taskID = 4, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0))
+2026-10-15 19:36:40.969 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x1088f2dc0>
+2026-10-15 19:36:40.970 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.970 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.970 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x103f17740>: taskID = 5, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0).
+2026-10-15 19:36:40.973 A  PaintByNumber[54047:2335f] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-10-15 19:36:40.974 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 5
+2026-10-15 19:36:40.974 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending task with identifier 5 and description: <_UIBackgroundTaskInfo: 0x103f17740>: taskID = 5, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x1088f2dc0>
+2026-10-15 19:36:40.974 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103e50050> (used by background task with identifier 5: <_UIBackgroundTaskInfo: 0x103f17740>: taskID = 5, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0))
+2026-10-15 19:36:40.975 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x1088f2d90>
+2026-10-15 19:36:40.975 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.975 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.976 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x103f17740>: taskID = 6, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0).
+2026-10-15 19:36:40.982 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 6
+2026-10-15 19:36:40.982 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending task with identifier 6 and description: <_UIBackgroundTaskInfo: 0x103f17740>: taskID = 6, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x1088f2d90>
+2026-10-15 19:36:40.982 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103e50050> (used by background task with identifier 6: <_UIBackgroundTaskInfo: 0x103f17740>: taskID = 6, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0))
+2026-10-15 19:36:40.984 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x1088f3420>
+2026-10-15 19:36:40.985 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.985 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.985 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x103c9f680>: taskID = 7, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0).
+2026-10-15 19:36:40.986 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 7
+2026-10-15 19:36:40.986 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending task with identifier 7 and description: <_UIBackgroundTaskInfo: 0x103c9f680>: taskID = 7, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x1088f30c0>
+2026-10-15 19:36:40.986 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103e50050> (used by background task with identifier 7: <_UIBackgroundTaskInfo: 0x103c9f680>: taskID = 7, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0))
+2026-10-15 19:36:40.997 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: CoreData: Executing write request, expirationHandler: <__NSMallocBlock__: 0x1088f3540>
+2026-10-15 19:36:40.997 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.997 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x103e50050>
+2026-10-15 19:36:40.997 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x103c9f680>: taskID = 8, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0).
+2026-10-15 19:36:40.998 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 8
+2026-10-15 19:36:40.998 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Ending task with identifier 8 and description: <_UIBackgroundTaskInfo: 0x103c9f680>: taskID = 8, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0), _expireHandler: <__NSMallocBlock__: 0x1088f3540>
+2026-10-15 19:36:40.998 Df PaintByNumber[54047:23375] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103e50050> (used by background task with identifier 8: <_UIBackgroundTaskInfo: 0x103c9f680>: taskID = 8, taskName = CoreData: Executing write request, creationTime = 1755 (elapsed = 0))
+2026-10-15 19:36:40.998 Df PaintByNumber[54047:23375] [com.apple.TipKit:TipKit • Datastore] MiniTipsDatastore removing existing TipKit records
+2026-10-15 19:36:41.051 Df PaintByNumber[54047:2335f] [PrototypeTools:domain] Not observing PTDefaults on customer install.
+2026-10-15 19:36:41.106 Df PaintByNumber[54047:23379] [com.apple.calls.callkit:Default] Call host has no calls
+2026-10-15 19:36:41.190 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Orientation] <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93) Scene updated orientation preferences: ( Pu Ll Lr ) -> ( Pu )
+2026-10-15 19:36:41.202 Df PaintByNumber[54047:23375] [com.apple.xpc:connection] [0x1130d2440] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-10-15 19:36:41.202 Df PaintByNumber[54047:23375] [com.apple.xpc:connection] [0x103de7e80] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-10-15 19:36:41.202 Df PaintByNumber[54047:23375] [com.apple.xpc:connection] [0x11330c000] activating connection: mach=true listener=false peer=false name=com.apple.metal.simulator
+2026-10-15 19:36:41.313 E  PaintByNumber[54047:2335f] [com.apple.UIKit:Assert] _dictationButton not yet initialized when setting up for the large content viewer.
+2026-10-15 19:36:41.315 E  PaintByNumber[54047:2335f] [com.apple.UIKit:Assert] _dictationButton not yet initialized when setting up for the large content viewer.
+2026-10-15 19:36:41.341 Df PaintByNumber[54047:2335f] [com.apple.renderbox:misc] RBDevice: initialized bg state: false
+2026-10-15 19:36:41.342 Df PaintByNumber[54047:2335f] [com.apple.xpc:connection] [0x1135c4c80] activating connection: mach=true listener=false peer=false name=com.apple.IOSurface.Remote
+2026-10-15 19:36:41.359 Df PaintByNumber[54047:2335f] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:1 [AAD57B77-32BE-430B-A9E0-868890C37516] (reporting strategy default)>
+2026-10-15 19:36:41.359 Df PaintByNumber[54047:2335f] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:2 [FA84D8EA-977B-48F9-8B18-3A2E31FC90C3] (reporting strategy default)>
+2026-10-15 19:36:41.359 Df PaintByNumber[54047:2335f] [com.apple.network:activity] Set activity <nw_activity 50:1 [AAD57B77-32BE-430B-A9E0-868890C37516] (reporting strategy default)> as the global parent
+2026-10-15 19:36:41.359 Df PaintByNumber[54047:2335f] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 1
+2026-10-15 19:36:41.359 Df PaintByNumber[54047:2335f] [com.apple.UIKit:BackgroundTask] Ending task with identifier 1 and description: <_UIBackgroundTaskInfo: 0x103c9ecc0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 1755 (elapsed = 0), _expireHandler: (null)
+2026-10-15 19:36:41.359 Df PaintByNumber[54047:2335f] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103e50050> (used by background task with identifier 1: <_UIBackgroundTaskInfo: 0x103c9ecc0>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 1755 (elapsed = 0))
+2026-10-15 19:36:41.360 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 2
+2026-10-15 19:36:41.367 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Ending task with identifier 2 and description: <_UIBackgroundTaskInfo: 0x103f15b40>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 1755 (elapsed = 0), _expireHandler: <__NSGlobalBlock__: 0x1e78c84e8>
+2026-10-15 19:36:41.367 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x103e50050> (used by background task with identifier 2: <_UIBackgroundTaskInfo: 0x103f15b40>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 1755 (elapsed = 0))
+2026-10-15 19:36:41.368 Df PaintByNumber[54047:23379] [com.apple.UIKit:BackgroundTask] Will invalidate assertion: <BKSProcessAssertion: 0x103e50050> for task identifier: 2
+2026-10-15 19:36:41.368 A  PaintByNumber[54047:23379] (RunningBoardServices) didChangeInheritances
+2026-10-15 19:36:41.418 Df PaintByNumber[54047:23375] [com.pbordjadze.paintbynumber:canvas] Making the render context took 0.227833083 seconds
+2026-10-15 19:36:41.771 Df PaintByNumber[54047:2335f] [com.apple.UIKit:EventDeferring] [0x103f40fc0] Scene target of event deferring environments did update: scene: 0x103473400; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-10-15 19:36:41.771 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x103473400; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.pbordjadze.paintbynumber-default
+2026-10-15 19:36:41.778 Df PaintByNumber[54047:2335f] [com.apple.Accessibility:AXCommon] Read Per-App on Init: Smart invert = (null)
+2026-10-15 19:36:41.797 Df PaintByNumber[54047:2335f] [com.apple.UIKit:UpdateScheduler] Target list changed: <CADisplay:LCD PurpleMain>
+2026-10-15 19:36:41.804 Df PaintByNumber[54047:2337c] [com.apple.CoreAnalytics:client] No XPC connection in Simulator
+2026-10-15 19:36:41.837 Df PaintByNumber[54047:2335f] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-default  persistentID: 2784A922-1115-45D2-B490-C26EBD160A93
+2026-10-15 19:36:41.838 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:41.838 Df PaintByNumber[54047:2335f] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93)
+2026-10-15 19:36:41.839 Df PaintByNumber[54047:2335f] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.pbordjadze.paintbynumber-default  persistentID: 2784A922-1115-45D2-B490-C26EBD160A93
+2026-10-15 19:36:41.839 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Deactivation reason removed: 12; deactivation reasons: 4128 -> 32; animating application lifecycle event: 1
+2026-10-15 19:36:41.839 Df PaintByNumber[54047:2335f] [com.apple.KeyboardArbiter:Client] Send setDeactivating: N (-DeactivationReason:SuspendedEventsOnly)
+2026-10-15 19:36:41.843 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Application] Deactivation reason removed: 5; deactivation reasons: 32 -> 0; animating application lifecycle event: 0
+2026-10-15 19:36:41.865 A  PaintByNumber[54047:23378] (RunningBoardServices) didChangeInheritances
+2026-10-15 19:36:41.913 Df PaintByNumber[54047:2335f] [com.apple.KeyboardArbiter:Client] startConnection
+2026-10-15 19:36:41.913 Df PaintByNumber[54047:2335f] [com.apple.xpc:connection] [0x113442080] activating connection: mach=true listener=false peer=false name=com.apple.UIKit.KeyboardManagement.hosted
+2026-10-15 19:36:42.000 Df PaintByNumber[54047:2335f] [com.apple.KeyboardArbiter:Client] handleKeyboardChange: set currentKeyboard:N (wasKeyboard:N)
+2026-10-15 19:36:42.002 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyboardSceneDelegate] forceReloadInputViews
+2026-10-15 19:36:42.002 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyboardSceneDelegate] Reloading input views for key-window scene responder: <(null): 0x0; > force:Y
+2026-10-15 19:36:42.003 Df PaintByNumber[54047:2335f] [com.apple.UIKit:KeyboardArbiterClientLog] isWritingToolsHandlingKeyboardTracking:Y (WT ready:Y, Arbiter ready:Y)
+2026-10-15 19:36:42.047 Df PaintByNumber[54047:2335f] [com.apple.network:activity] <nw_activity 50:1 [AAD57B77-32BE-430B-A9E0-868890C37516] (global parent) (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 1758ms
+2026-10-15 19:36:42.047 Df PaintByNumber[54047:2335f] [com.apple.network:activity] <nw_activity 50:2 [FA84D8EA-977B-48F9-8B18-3A2E31FC90C3] (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 1758ms
+2026-10-15 19:36:42.047 Df PaintByNumber[54047:2335f] [com.apple.network:activity] Unsetting the global parent activity <nw_activity 50:1 [AAD57B77-32BE-430B-A9E0-868890C37516] (global parent) (reporting strategy default) complete (reason success)>
+2026-10-15 19:36:42.047 Df PaintByNumber[54047:2335f] [com.apple.network:activity] Unset the global parent activity
+2026-10-15 19:36:42.047 Df PaintByNumber[54047:2335f] [com.apple.app_launch_measurement:ApplicationLaunch] alm_release_pageins_recording_assertion: releasing pageins recording assertion
+2026-10-15 19:36:42.338 Df PaintByNumber[54047:2335f] [com.apple.UIKit:Orientation] <UIWindowScene: 0x103473400> (2784A922-1115-45D2-B490-C26EBD160A93) Scene updated orientation preferences: ( Pu ) -> ( Pu Ll Lr )
