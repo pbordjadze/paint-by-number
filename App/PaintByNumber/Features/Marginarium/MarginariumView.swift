@@ -89,6 +89,7 @@ struct MarginariumView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", systemImage: "checkmark") { dismiss() }
+                        .tint(Theme.signature)
                 }
             }
             #if DEBUG
