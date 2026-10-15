@@ -10,15 +10,16 @@ final class MarginariumReaderUITests: XCTestCase {
         app.launchArguments = ["-demo", "marginarium"]
         app.launch()
         XCTAssertTrue(app.navigationBars["The Marginarium"].waitForExistence(timeout: 15))
-        openEntry("lampBrush", in: app)
-        XCTAssertTrue(app.navigationBars["The Lamp Picks Up a Brush"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["A Mac arrives, with a plan for the guardians to play."].exists)
-        attachScreenshot(of: app, named: "marginarium-reader-chapter")
-        app.navigationBars["The Lamp Picks Up a Brush"].buttons.firstMatch.tap()
+        // B, then C below it: the contents keeps its place, so the second only scrolls on.
         openEntry("thirtySixColors", in: app)
         XCTAssertTrue(app.navigationBars["Thirty-Six Colors"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["The Moon struck every name with daylight in it, four times."].exists)
         attachScreenshot(of: app, named: "marginarium-reader-appendix")
+        app.navigationBars["Thirty-Six Colors"].buttons.firstMatch.tap()
+        openEntry("lampBrush", in: app)
+        XCTAssertTrue(app.navigationBars["The Lamp Picks Up a Brush"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["A Mac arrives, with a plan for the guardians to play."].exists)
+        attachScreenshot(of: app, named: "marginarium-reader-former-chapter")
     }
 
     @MainActor
