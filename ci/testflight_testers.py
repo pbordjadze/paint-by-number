@@ -9,8 +9,10 @@ Run by `.github/workflows/testflight-testers.yml`. It finds the app by its bundl
 an existing one's link on, adds the build to it with its What to Test, and submits the build for
 Beta App Review. Every step is idempotent: a second run changes nothing it already did.
 
-The group's public link is never printed (the repository's logs are public): copy it from App
-Store Connect › TestFlight › Friends & Family once Apple approves the build. The Test Information
+The group's public link is never printed in the clear (the repository's logs are public): copy
+it from App Store Connect › TestFlight › Friends & Family once Apple approves the build, or put
+an RSA public key at LINK_RECIPIENT_FILE and the link is printed encrypted to it (RSA-OAEP,
+SHA-256, base64), for whoever holds the private key. The Test Information
 (description, feedback email, privacy policy, review contact) is filled in App Store Connect.
 Needs `cryptography` (ES256 tokens).
 """
@@ -26,7 +28,7 @@ import urllib.parse
 import urllib.request
 
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import ec, padding
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 
 API = "https://api.appstoreconnect.apple.com/v1"
@@ -155,13 +157,20 @@ def main():
     build = find_build(client, app_id, os.environ.get("BUILD", "").strip())
     version = build["attributes"]["version"]
     print(f"Build {version} ({build['attributes']['processingState']}).")
-    ensure_group(client, app_id, build["id"])
+    group = ensure_group(client, app_id, build["id"])
     print(f"Build {version} is in {GROUP!r}.")
     ensure_what_to_test(client, build["id"])
     print("What to Test is set.")
     state = ensure_submitted(client, build["id"])
     print(f"Beta App Review: {state}.")
     print(f"Once approved, copy the public link from App Store Connect › TestFlight › {GROUP}.")
+    recipient = os.environ.get("LINK_RECIPIENT_FILE", "")
+    if recipient and os.path.exists(recipient):
+        link = client.call("GET", f"/betaGroups/{group['id']}")["data"]["attributes"].get("publicLink") or ""
+        with open(recipient, "rb") as file:
+            sealed = serialization.load_pem_public_key(file.read()).encrypt(link.encode(), padding.OAEP(
+                mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=None))
+        print("Public link, encrypted: " + base64.b64encode(sealed).decode())
 
 
 if __name__ == "__main__":
