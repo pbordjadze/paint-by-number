@@ -108,7 +108,7 @@ struct MakingOfShowTests {
         source.template = painting
         let built = try await MakingOfShow.build(source)
         #expect(built.digits == painting.labels.map { Int(painting.regions[Int($0.region)].colorIndex) + 1 })
-        #expect(built.digits.allSatisfy { $0 <= 4 })
+        #expect(built.numbers.count == painting.labels.count)
     }
 
     /// Reduce Motion's stills: the picture as each step leaves it, then the real template, with
