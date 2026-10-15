@@ -709,6 +709,9 @@ how they spread along the front and pick their direction), the wipe's seed and s
   from NOTES' decided rules, and the Lamp tunes it in F34.
 
 ### F32 · The show in the app (Claude, CI)
+*In progress Oct 15, in the release session (`claude/making-of-view` from `claude/release-1`): a
+Settings switch, off by default, plays the show on Start from the Marginarium's sprite sheets; no
+Replay yet. It joins the first TestFlight build if its CI is green in time, otherwise the next.*
 On `claude/making-of`, after F29–F31.
 - **Start:** `CreateModel` reruns the final generation once with an observer, off the main
   actor, and keeps the stage pictures at screen size plus their reveal fields. The template must
@@ -816,7 +819,7 @@ included). It comes after the show ships, never instead of it.
 
 ## Waits on CI (rationed macOS runners)
 
-- **F32**, the show in the app, after F46.
+- **F32**, the show in the app: in progress in the release session (Oct 15).
 - Two flaky tests still open (`ORCHESTRATOR.md`): `EyeFinderTests.findsBothEyesOfAFaceWithTheirIrises`
   and `GalleryActionsTests.testTimelapseShowsProgressAndCancels`.
 
