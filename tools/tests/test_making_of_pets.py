@@ -49,6 +49,20 @@ class SplitMixTests(unittest.TestCase):
         self.assertEqual(pets.SplitMix64(3).permutation(0), [])
 
 
+
+class StreamTests(unittest.TestCase):
+    def test_each_purpose_has_its_own_stream(self):
+        pins = [
+            (pets.STREAM_HOMES, 0, [0.7824150874829743, 0.024802976027635926, 0.8992068202961797]),
+            (pets.STREAM_SPOTS, 5, [0.6750960295029587, 0.04260565902968305, 0.2721234946036929]),
+            (pets.STREAM_NOISE, 11, [0.07621336553267122, 0.8016695796850121, 0.6890799999388426]),
+            (pets.STREAM_SEEDS, 0, [0.5056482214915431, 0.5501754934418699, 0.13723743402324384]),
+            (pets.STREAM_STROKES, 332, [0.9854077396862709, 0.22682682046334635, 0.8518463187733157]),
+        ]
+        for purpose, index, doubles in pins:
+            rng = pets.stream(7, purpose, index)
+            self.assertEqual([rng.random() for _ in range(3)], doubles, (purpose, index))
+
 class PlanFixtureTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

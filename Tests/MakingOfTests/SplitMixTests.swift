@@ -40,6 +40,34 @@ import Testing
     }
 }
 
+/// `stream` in `making_of_pets.py` derives the same generators: these numbers are in
+/// `tools/tests/test_making_of_pets.py` too.
+@Suite struct ShowStreamsTests {
+    @Test func eachPurposeHasItsOwnStream() {
+        let streams = ShowStreams(seed: 7)
+        let pins: [(ShowStream, Int, [Double])] = [
+            (.homes, 0, [0.7824150874829743, 0.024802976027635926, 0.8992068202961797]),
+            (.spots, 5, [0.6750960295029587, 0.04260565902968305, 0.2721234946036929]),
+            (.noise, 11, [0.07621336553267122, 0.8016695796850121, 0.6890799999388426]),
+            (.seeds, 0, [0.5056482214915431, 0.5501754934418699, 0.13723743402324384]),
+            (.strokes, 332, [0.9854077396862709, 0.22682682046334635, 0.8518463187733157]),
+        ]
+        for (purpose, index, doubles) in pins {
+            var rng = streams.stream(purpose, index)
+            #expect((0..<3).map { _ in rng.nextDouble() } == doubles, "\(purpose) \(index)")
+        }
+    }
+}
+
+@Suite struct PlaneTests {
+    @Test func rowMajorFromTheTopLeft() {
+        var plane = Plane(width: 3, height: 2, repeating: 0)
+        plane[2, 1] = 7
+        #expect(plane.data == [0, 0, 0, 0, 0, 7])
+        #expect(plane == Plane(width: 3, height: 2, data: [0, 0, 0, 0, 0, 7]))
+    }
+}
+
 /// `numpy.interp`, whose rounding the planner's comparisons follow. The values come from numpy.
 @Suite struct InterpTests {
     @Test func linesAndEnds() {

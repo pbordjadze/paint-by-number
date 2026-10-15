@@ -130,6 +130,17 @@ class SplitMix64:
         return items[self.below(len(items))]
 
 
+# The show's random draws, one stream per purpose, so a draw count in one (sample_stops retries)
+# can never shift another. Sources/MakingOf/Streams.swift has the same; both suites pin them.
+STREAM_HOMES, STREAM_SPOTS, STREAM_NOISE, STREAM_SEEDS, STREAM_STROKES = 1, 2, 3, 4, 5
+
+
+def stream(seed, purpose, index):
+    """The SplitMix64 for one purpose (STREAM_*) and index (a step, a stroke, a noise grid) of
+    the show's seed: a generator seeded from the first draw of `seed ^ (purpose << 32 | index)`."""
+    assert 0 <= index < 1 << 32
+    return SplitMix64(SplitMix64(seed ^ (purpose << 32 | index)).next())
+
 def ease(x):
     x = min(max(x, 0.0), 1.0)
     return x * x * (3 - 2 * x)
