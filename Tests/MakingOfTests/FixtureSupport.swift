@@ -4,7 +4,7 @@ import Testing
 
 /// `Fixtures/plan-parrots.json`, which `making_of_clip.py --plan-json` writes (see `CrewPlan`'s
 /// doc comment): the spec and inputs a crew was planned from by `making_of_pets.py`, the plan, and
-/// every pet's state 30 times a second.
+/// every guardian's state 30 times a second.
 struct PlanFixture: Decodable {
     var spec: ShowSpec
     var inputs: Inputs
@@ -113,6 +113,12 @@ struct PlanFixture: Decodable {
 func shippedSpecData() throws -> Data {
     let repo = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     return try Data(contentsOf: repo.appendingPathComponent("App/PaintByNumber/Resources/making-of.json"))
+}
+
+/// `pet-metrics.json` as shipped with the app, read through `#filePath` like the spec.
+func shippedMetricsData() throws -> Data {
+    let repo = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    return try Data(contentsOf: repo.appendingPathComponent("App/PaintByNumber/Resources/pet-metrics.json"))
 }
 
 /// Collects what differs between two things, to report it together.

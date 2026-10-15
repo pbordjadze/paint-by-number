@@ -223,10 +223,12 @@ public struct ShowLayers: Sendable {
     public let style: RevealStyle
     public let photo: Plane<SIMD4<UInt8>>
     /// How coherent the photo's color steps are over the window: 1 on a contour, 0 on texture.
+    /// (Empty, 0 by 0, when the layers were made without `keepingAnalysis`: the `Compositor` reads
+    /// only the planes below.)
     public let coherence: Plane<Float>
     /// The structure that survives the coherence, rescaled; 0...1.
     public let survivors: Plane<Float>
-    /// Where the steps cancel and there are many of them; 0...1.
+    /// Where the steps cancel and there are many of them; 0...1. (Empty without `keepingAnalysis`.)
     public let texture: Plane<Float>
     public let detextured: Plane<SIMD3<Float>>
     /// OKLab lightness of the smoothed picture.
@@ -244,7 +246,7 @@ public struct ShowLayers: Sendable {
         photo: Plane<SIMD4<UInt8>>, structure: Plane<UInt8>, smoothed: Plane<SIMD4<UInt8>>,
         palette: Plane<SIMD4<UInt8>>, simplified: Plane<SIMD4<UInt8>>,
         sketch: ShowSpec.Sketch, tones: ShowSpec.Tones,
-        style: RevealStyle = .standard, cancel: CancellationCheck = .none
+        style: RevealStyle = .standard, keepingAnalysis: Bool = true, cancel: CancellationCheck = .none
     ) throws {
         let (w, h) = (photo.width, photo.height)
         precondition(w > 0 && h > 0, "the show needs a picture")
@@ -317,9 +319,10 @@ public struct ShowLayers: Sendable {
         let tone = ToneCurve(counting: simplified, tones: tones, style: style)
         var smoothedLightness = Plane<Float>(width: w, height: h, repeating: 0)
         Self.fill(&smoothedLightness) { Float(LayerColor.lightness(smoothed.data[$0])) }
-        self.coherence = coherence
+        let dropped = Plane<Float>(width: 0, height: 0, data: [])
+        self.coherence = keepingAnalysis ? coherence : dropped
         self.survivors = survivors
-        self.texture = texture
+        self.texture = keepingAnalysis ? texture : dropped
         self.detextured = detextured
         self.smoothedLightness = smoothedLightness
         self.tone = tone

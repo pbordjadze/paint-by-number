@@ -378,6 +378,19 @@ struct LayersGolden: Decodable {
         #expect(a.paletteGrey == b.paletteGrey && a.simplifiedGrey == b.simplifiedGrey)
     }
 
+    @Test func leavingOutTheAnalysisKeepsEveryPlaneTheCompositorReads() throws {
+        let spec = try LayerFixture.spec()
+        let kept = try LayerFixture.layers()
+        let lean = try ShowLayers(
+            photo: LayerFixture.rgb("working-image.ppm"), structure: LayerFixture.grey("structure.pgm"),
+            smoothed: LayerFixture.rgb("smoothed.ppm"), palette: LayerFixture.rgb("palette.ppm"),
+            simplified: LayerFixture.rgb("simplified.ppm"), sketch: spec.sketch, tones: spec.tones, keepingAnalysis: false)
+        #expect(lean.coherence.data.isEmpty && lean.texture.data.isEmpty && !kept.coherence.data.isEmpty)
+        #expect(lean.photo == kept.photo && lean.survivors == kept.survivors && lean.detextured == kept.detextured)
+        #expect(lean.smoothedLightness == kept.smoothedLightness && lean.tone == kept.tone)
+        #expect(lean.paletteGrey == kept.paletteGrey && lean.simplifiedGrey == kept.simplifiedGrey)
+    }
+
     @Test func cancellingStopsTheBuild() throws {
         let spec = try LayerFixture.spec()
         let photo = try LayerFixture.rgb("working-image.ppm")
