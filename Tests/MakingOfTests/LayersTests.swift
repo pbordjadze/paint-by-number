@@ -226,7 +226,10 @@ struct LayersGolden: Decodable {
         var rng = SplitMix64(seed: 3)
         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
         let values = (0..<6000).map { i -> Float in
-            i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+            if i % 7 == 0 { return 0 }
+            if i % 11 == 0 { return 0.25 }
+            let scale: Double = pow(10, Double(i % 6) - 3)
+            return Float(rng.nextDouble() * scale)
         }
         let sorted = values.sorted()
         for rank in Array(stride(from: 0, to: 6000, by: 97)) + [1, 5999, 5998, 3000] {
