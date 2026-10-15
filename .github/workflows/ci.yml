@@ -270,7 +270,8 @@ jobs:
 
   ipa:
     name: IPA for SideStore (unsigned device build)
-    if: github.ref_name == 'main'
+    # On a branch, `[ipa]` in the commit's message archives without publishing.
+    if: github.ref_name == 'main' || contains(github.event.head_commit.message, '[ipa]')
     runs-on: macos-26
     timeout-minutes: 30
     env:
@@ -283,9 +284,12 @@ jobs:
           set -o pipefail
           mkdir -p out
           # Version 1.0.<run>, build <run>: every build is an update to the installed one.
+          # SideStore builds carry what the release leaves out for now (UNRELEASED, CLAUDE.md ›
+          # App rules): its code compiled in and the Release exclusion of its files cleared.
           xcodebuild archive -project "$PROJECT" -scheme "$SCHEME" -configuration Release \
             -destination 'generic/platform=iOS' -archivePath build/PaintByNumber.xcarchive -quiet \
             MARKETING_VERSION="1.0.$BUILD" CURRENT_PROJECT_VERSION="$BUILD" \
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS='UNRELEASED $(inherited)' EXCLUDED_SOURCE_FILE_NAMES= \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             2>&1 | tee out/ipa-build.log | tail -80
       - name: Package
@@ -298,6 +302,7 @@ jobs:
           ls -l out/PaintByNumber.ipa
           /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"
       - name: Publish release and SideStore source
+        if: github.ref_name == 'main'
         run: |
           git log -1 --format=%s > out/notes.txt
           gh release create "build-$BUILD" out/PaintByNumber.ipa --prerelease --target "$GITHUB_SHA" \
@@ -317,6 +322,7 @@ jobs:
           git -c user.name="ci" -c user.email="ci@users.noreply.github.com" commit -qm "SideStore source for build $BUILD"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "sidestore:refs/heads/sidestore"
       - name: Tell pbordjadze/sidestore
+        if: github.ref_name == 'main'
         # The combined source there re-reads this one on a 15-minute schedule GitHub runs late
         # or drops; this rebuilds it now. Needs SIDESTORE_DISPATCH_TOKEN (fine-grained,
         # Contents: read and write on that repo; issue #1).

@@ -74,8 +74,8 @@ synchronized folder would bundle it into the app.
   Giving feedback); `Marginarium/` (how the app is made, in chapters, with Pip, Codex's teapot,
   and Colophon, Claude's moth: `MarginariumView` from the gallery's toolbar once Settings › The
   Marginarium is on (`SettingsKey.showsMarginarium`, off by default; demos open it directly). Debug
-  builds only for now: Release builds have neither the switch nor the toolbar entry (`#if DEBUG`)
-  and leave out its code, `marginarium.json`, the `pet-*.webp` sheets and `Marginarium.xcassets`
+  and SideStore builds only for now: the release has neither the switch nor the toolbar entry
+  (`#if UNRELEASED`) and leaves out its code, `marginarium.json`, the `pet-*.webp` sheets and `Marginarium.xcassets`
   (Pip's and Colophon's frames) through the target's Release `EXCLUDED_SOURCE_FILE_NAMES`, which
   `ci/check_release.sh` checks; its `marginarium.*` strings stay in the catalog, unused,
   `MarginariumEntry` and the shared `MarginariumSpritePlayer`; `PipSprite` and `ColophonSprite`

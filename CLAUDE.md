@@ -322,9 +322,13 @@ Saved paintings must open in every later build. The format history is documented
   `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
   `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a Debug-only type name
-  shows up in the Release binary. The Marginarium is Debug-only for now too (its switch and toolbar entry
-  under `#if DEBUG`; its code and resources left out of Release by the target's Release
-  `EXCLUDED_SOURCE_FILE_NAMES`), and the same check fails if any of it ships.
+  shows up in the Release binary. The Marginarium is left out of the release for now, the same check failing if any of
+  it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
+  resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`.
+  `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
+  job archives Release with it defined and the exclusion cleared, so Paul's SideStore build has
+  what the release (TestFlight, App Store, the Release check) leaves out. It gates only
+  features Paul chose to try before shipping; demo code stays `#if DEBUG`.
 - Done means: a test for each new behaviour in the right target (Swift Testing in
   `Tests/PaintCoreTests` and `App/PaintByNumberTests`, XCTest in `App/PaintByNumberUITests`), a demo
   scenario for any new screen worth a CI screenshot, catalog entries for its strings, VoiceOver
@@ -386,7 +390,8 @@ any port of it, when changing the fitter: work from the paper.
    100 min. A newer push to the same branch cancels the older run, which then never reports. Work
    on something else while it runs.
 4. Read errors/screenshots, fix, repeat. Batch fixes; one validated push beats many guesses.
-5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`),
+5. Device builds: every push to `main` also archives an unsigned Release IPA (version `1.0.<run>`,
+   with `UNRELEASED`: App rules; `[ipa]` in a branch commit's message archives without publishing),
    publishes it as the `build-<run>` prerelease (the five newest are kept) and rewrites the
    SideStore source on the `sidestore` branch (`ci/sidestore_source.py`), which users add in
    SideStore as
