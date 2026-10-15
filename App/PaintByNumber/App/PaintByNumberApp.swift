@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 @main
 struct PaintByNumberApp: App {
@@ -18,6 +19,8 @@ struct PaintByNumberApp: App {
             RootView()
                 .environment(library)
                 .tint(Theme.accent)
+                // Tip popovers draw their icons in the system blue otherwise, not the tint.
+                .tipImageStyle(Theme.accent)
         }
         .commands { PaintCommands() }
     }

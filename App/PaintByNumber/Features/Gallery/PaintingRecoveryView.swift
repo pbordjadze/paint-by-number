@@ -41,8 +41,10 @@ struct PaintingRecoveryView: View {
                             .tint(Theme.signature)
                     }
                     if artwork != nil {
+                        // Glass draws its label in the tint, whatever the role.
                         Button("Delete Painting", systemImage: "trash", role: .destructive, action: onDelete)
                             .buttonStyle(.glass)
+                            .tint(.red)
                     }
                     Button("Back to Gallery", action: onClose)
                         .buttonStyle(.glass)

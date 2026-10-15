@@ -98,7 +98,6 @@ struct FeedbackBar: View {
         .accessibilityShowsLargeContentViewer()
     }
 
-    /// Its own key: Settings' "Feedback" is haptics and sounds.
     private var name: String {
         String(localized: "feedback.mode.title", defaultValue: "Feedback",
                comment: "Feedback mode's top bar on the painting screen: its title, while the painter marks the painting and writes notes for the developers")
