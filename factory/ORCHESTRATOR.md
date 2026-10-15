@@ -80,7 +80,7 @@ driving manual and the state of play.
 | F27 | Merged: Int counts and bounded validation work; templates byte-identical, no timing change measured |
 | Loop | Claude made the taste loop's JSON writes atomic after a half-written job file failed one test run |
 | F33 (fca29fb) | Merged: no deprecated Pillow calls; renders byte for byte |
-| F36 | Running: Codex builds the driver for a Codex-run Lamp and the pets (Paul's point 12) |
+| F36 | Merged (with fixes, and F38, F40–F44): Codex ran the Lamp for the pets (Paul's point 12) |
 | F34 | Merged: the palette gallery hides empty and whitespace-only reasons; preview unchanged |
 
 
@@ -95,8 +95,9 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 | F29, F28, F30 | Shipped: `main` 2025569, build 1.0.303. F30 took two fix rounds (an XCUIScreen API; area identifiers lost when the canvas rebuilt its accessibility elements) |
 | Ship 2 (`main` 656d8d5, build 1.0.311, both SideStore sources) | F4 + F27, F11 (with v2 names: integer arithmetic, identical on every platform; v1 frozen as each platform computes it, Apple's pinned), F32 (palette prepared off the main actor; merged with F11 by hand), F35 (chapter reader), F37 (pets in chapters, the pets' credit line), F31 (three flaky UI tests). Combined CI: 364 iPad tests, all UI tests, no retries |
 | Flaky tests still open | EyeFinderTests.findsBothEyesOfAFaceWithTheirIrises (once, on F11); GalleryActionsTests.testTimelapseShowsProgressAndCancels (passed on retry, PaintCore branch) |
-| F36 pets run | Paused by Codex's usage limit until Oct 18: 2 of 20 pets validated (Originality, the Snow Queen), 5 failed their gates, 13 not started; state saved on `factory-state/pets-run` |
-| F39 chapter 1 in full | Parked on `claude/f39-chapter1-in-app` until the pets exist (Paul's point 16) |
+| F36 pets run | Done: nineteen pets shipped Oct 12 (`main` 42bb76c, build 1.0.325, `NOTES.md` point 18); the Moon's is withheld; F45 (Codex's own fix to its chapter's Hedge Witch paragraph) waits for Codex's usage, Oct 19 |
+| F39 chapter 1 in full | Shipped Oct 12 with the pets (`main` 42bb76c) |
+| Making-of (F29–F35, F46) | On `claude/making-of`, see `BACKLOG.md` › Tuesday night; F46 (the show's portable half) in progress Oct 15 on Linux, F32 waits on CI |
 
 ## Waiting on Paul
 
@@ -104,5 +105,5 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
   Claude kept Colophon's eyes (a taste call, Paul's to veto).
 - `pieces/color-names/drops.json`, the gallery's drop schedule; Bulat's Late Sunlight question.
 - The pets' style sheet: Paul's call who decides it (people he invites, or the Lamp as a proposal).
-- The making-of's look (Paul's call; the Lamp only if he wants its notes): 338 s long, a small worker, and a straight
-  ink line across the drawing in the line-art stage.
+- The making-of's look was settled at checkpoints 1 to 3 (Oct 13–14, `BACKLOG.md` › Tuesday night); Paul's calls 1 to 5
+  there still stand on their recommendations.

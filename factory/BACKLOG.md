@@ -540,6 +540,11 @@ It is reachable through `pbn check`, the regression gate and the app's Debug cre
 
 ## Tuesday night: the making-of ships (starts when Paul says go)
 
+F29–F35 below are the making-of's. The earlier app items with the same numbers (the Marginarium's
+second version, the play harness, three flaky UI tests, palette preparation off the main actor,
+the chapter reader, and the factory's Pillow and gallery fixes) shipped on Oct 11–12 under those
+numbers; their branches and `ORCHESTRATOR.md`'s tables keep the old meanings.
+
 Paul, October 12, 2026: "We should probably be prepared for Tuesday night after the usage reset,
 where we want to actually get that animation thing working. The lamp — they should be involved
 obviously, and that's probably the next chapter, but we also need it to actually work lol, can't
@@ -642,11 +647,13 @@ Paul checkpoints.
   0.85); the goodbye gets a last look and, for the last one out, a wave at the edge (Dino and the
   Robber Girl). The show is now 19 s.
 
-**Where it stands (Oct 14).** On `claude/making-of`: F29's port (with it, the regression gate's
-60 templates are byte for byte main's), the spec (F31's file, `making-of.json`) and the factory's
-renderer, `tools/factory/making_of_clip.py` with `making_of_pets.py` and `making_of_layers.py`,
-which reads the spec. Next: the crew's planner ported to portable Swift and tested on Linux
-against the Python, then F32 when CI minutes return.
+**Where it stands (Oct 15).** On `claude/making-of`: F29's port (with it, the regression gate's
+60 templates are byte for byte main's), the spec (F31's file, `making-of.json`), the factory's
+renderer (`tools/factory/making_of_clip.py` with `making_of_pets.py` and `making_of_layers.py`,
+which reads the spec), and the crew's planner and motion in portable Swift (`Sources/MakingOf`,
+06a8345), replaying the Python's parrots plan. F30 is superseded (the crew is the Lamp's pets,
+not FigureRig's figures), and F33 and F34 were done another way (see each). Next: F46, the rest
+of the show in portable Swift, so F32 is a thin view when CI minutes return.
 
 **Paul's calls** (each has a recommendation; nothing waits on them except where noted):
 1. Placement: on Start, over his own painting's stages, skippable, with replay from the
@@ -674,6 +681,8 @@ vectorized, at most 1024 px on the long side.
 - Report each stage's capture cost in time and bytes on the corpus.
 
 ### F30 · FigureRig as an app library
+*Superseded Oct 14: the crew is three of the Lamp's pets with procedural motion
+(`Sources/MakingOf`), so the app links no FigureRig.*
 Branch `codex/f30-figurerig-library` from `origin/claude/making-of`, after F29. Bring
 `Sources/FigureRig`, `Sources/figures` and `Tests/FigureRigTests` (with F22's fixes) over from
 this branch, split so the app links only what it draws:
@@ -728,6 +737,8 @@ On `claude/making-of`, after F29–F31.
   - Acknowledgements unchanged.
 
 ### F33 · The factory renders the spec
+*Done another way, Oct 13–14: `making_of_clip.py` renders the spec with the pets, at the snapshots'
+size, landscape and portrait; Paul judged its clips at checkpoints 1 to 3.*
 Branch `codex/f33-making-of-spec` from this branch. `tools/factory/making_of.py --show
 <making-of.json>` renders each scene as its own clip (at most 6 s, at phone size), the whole show
 (at most 30 s) and contact sheets, all from the spec.
@@ -742,6 +753,9 @@ Branch `codex/f33-making-of-spec` from this branch. `tools/factory/making_of.py 
   so Paul judges motion as motion.
 
 ### F34 · The Lamp's round: a making-of piece (Codex runs the Lamp)
+*Done another way, Oct 14: the Lamp looked at the show twice, by Claude's subagents rather than a
+`pieces/making-of` piece on Codex (051f616, then the second look, ec63ecb and 118c591), and Paul
+said yes to its calls. The piece itself was never built.*
 `factory/pieces/making-of`, after F33.
 - **Parameters:** the spec's taste fields (scene durations within the length budget, the crew's
   size and spread, props per scene, wipe softness and seed, card placement, and option E's pets).
@@ -752,7 +766,28 @@ Branch `codex/f33-making-of-spec` from this branch. `tools/factory/making_of.py 
 - **Paul's checkpoint:** with the clips. His picks win (point 11). Claude writes the winner back
   to `making-of.json` for v2.
 
+### F46 · The show's portable half (Claude, Linux, `[skip ci]`)
+On `claude/making-of`, before F32. Everything F32 needs but the drawing, as portable Swift in
+`Sources/MakingOf`, tested on Linux against the Python reference, so the app's view only draws what
+a frame function hands it and F32 takes fewer CI rounds. Built in four packages by Sonnet agents,
+Claude reviewing and merging:
+- **Shared** (cbbc874): `Plane`; `ShowStreams`, one SplitMix64 per purpose (homes, spots, noise,
+  seeds, strokes), the same in `making_of_pets.stream`; a small fixture (a parrot's head, 216 x 144).
+- **A, crew inputs, exact:** the pictures and the template's strokes, labels, the spots and the
+  k-means++ paint seeds on the streams, `CrewInputs.make`; the Python moves to the same draws and
+  loses the dead `Crew` and dots mode, and the parrots plan fixture is made again.
+- **B, layers and compositor:** the six layers' math at the snapshots' size (relative total
+  variation, the tone curve from the palette's counts) and each step's picture recipe as a CPU
+  reference, within a measured tolerance of the Python.
+- **C, reveal:** value noise on the streams, arrival times, per-region times, the stroke and number
+  schedules, the ink lines at any time.
+- **D, the show:** `Show.frame(at:)` (picture recipe, ink lines, numbers, seed rings, sprite draws,
+  the card), the timeline tests F32 lists, `making_of_clip.py` reduced to a driver over the shared
+  modules, the Python tests in the core CI job, and the CLAUDE.md pointers.
+
 ### F35 · The chapter (Claude)
+*Started Oct 14 as Chapter 7, "Before You Paint" (a Doc: Bulat narrating, the Scholar, Niko and
+Dino in the margins); it ships with or after the show.*
 How the show was made and judged, told from F34's records, with the Lamp in the margins (Bart
 included). It comes after the show ships, never instead of it.
 
@@ -771,7 +806,13 @@ included). It comes after the show ships, never instead of it.
 
 ## Waits on CI (rationed macOS runners)
 
-- **F28 · Damaged data never traps, in the app** (from F25's review, findings 1, 2 and 4;
+- **F32**, the show in the app, after F46.
+- Two flaky tests still open (`ORCHESTRATOR.md`): `EyeFinderTests.findsBothEyesOfAFaceWithTheirIrises`
+  and `GalleryActionsTests.testTimelapseShowsProgressAndCancels`.
+
+Shipped from this section: F28 (`main` 2025569, build 1.0.303) and F11 (Ship 2, build 1.0.311).
+
+- **F28 · Damaged data never traps, in the app** (shipped; from F25's review, findings 1, 2 and 4;
   confirmed by Claude reading the code): `PaintProgress.sanitized` keeps any finite positive
   time, and `PaintingTimeText.spent` does `Int(seconds / 60)`, so one damaged `progress.bin`
   (about 1e157 s) traps the gallery card at every launch once autosaved to `meta.json`. Clamp
@@ -782,6 +823,6 @@ included). It comes after the show ships, never instead of it.
   (a damaged `progress.bin`, `meta.json` and `refinements.json` open without trapping), per
   `LibraryTests`' pattern. Batch with F11 so one CI run checks both.
 
-- **F11 · Versioned vocabularies in the app:** the version in `meta.json`, and a pin in
+- **F11 · Versioned vocabularies in the app** (shipped, with v2 names): the version in `meta.json`, and a pin in
   `App/PaintByNumberTests` so Apple's math is checked. After F4, and when Paul releases CI
   minutes.
