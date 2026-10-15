@@ -80,18 +80,18 @@ jobs:
           /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"
           ci/check_release.sh "$APP" 2>&1 | tee out/release-check.log
       - name: Sign
-        # Cloud signing happens here; a dry run keeps the signed IPA, an upload sends it on.
+        # Cloud signing happens here, into an IPA that the next steps validate and upload. (Xcode's
+        # own upload asks App Store Connect for a store configuration that refuses the team key's
+        # JWT; altool accepts the same key.)
         run: |
           set -o pipefail
-          DESTINATION=export
-          [ "$UPLOAD" = true ] && DESTINATION=upload
           cat > build/ExportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key><string>app-store-connect</string>
-            <key>destination</key><string>$DESTINATION</string>
+            <key>destination</key><string>export</string>
             <key>teamID</key><string>$APPLE_TEAM_ID</string>
             <key>signingStyle</key><string>automatic</string>
             <key>uploadSymbols</key><true/>
@@ -103,12 +103,8 @@ jobs:
             -exportPath build/export -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY_PATH" \
             -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             2>&1 | tee out/export.log | tail -80
-          if [ "$UPLOAD" = true ]; then
-            echo "Uploaded build $BUILD: App Store Connect processes it (usually 5 to 30 minutes) before TestFlight offers it."
-          fi
       - name: Validate with App Store Connect
         # The checks an upload gets (signature, Info.plist, icons, entitlements), without uploading.
-        if: env.UPLOAD != 'true'
         run: |
           set -o pipefail
           IPA=$(ls build/export/*.ipa)
@@ -116,6 +112,14 @@ jobs:
           xcrun altool --validate-app -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" \
             2>&1 | tee out/validate.log | tail -40
           grep -qiE 'No errors validating|successfully' out/validate.log
+      - name: Upload
+        if: env.UPLOAD == 'true'
+        run: |
+          set -o pipefail
+          xcrun altool --upload-app -f "$(ls build/export/*.ipa)" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" \
+            2>&1 | tee out/upload.log | tail -40
+          grep -qiE 'No errors uploading|UPLOAD SUCCEEDED' out/upload.log
+          echo "Uploaded build $BUILD: App Store Connect processes it (usually 5 to 30 minutes) before TestFlight offers it."
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: testflight, path: out, if-no-files-found: ignore }
