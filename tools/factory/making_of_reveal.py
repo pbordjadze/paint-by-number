@@ -14,7 +14,7 @@ A step's change spreads from where the crew works (`arrival`), roughened by nois
 of the picture changes when the change first reaches it (`region_min`). The paints flow out from
 the k-means++ seeds instead (`paint_flow`); the template's lines are drawn stair-stepped, then
 relax into their smooth curves (`stroke_schedule`, `staircase`), and each number comes in near the
-last pet to work by it (`number_times`). Everything is a pure function of its inputs and the
+last guardian to work by it (`number_times`). Everything is a pure function of its inputs and the
 show's seed, from SplitMix64 streams (making_of_pets.stream): noise and the strokes' start
 jitter. Geometry is float64 throughout and uses only + - * / and sqrt, so Swift and Python agree
 bit for bit; lines are polylines with an ink value, never pixels.
@@ -57,8 +57,8 @@ STROKE_MIN_TIME = 0.25    # s: the quickest such a line is drawn
 STROKE_MAX_TIME = 0.9     # s (over pace): the slowest
 INK_END_MARGIN = 0.12     # s: such a line is drawn this long before the ink step ends
 INK_GREY = 0.45           # ink value a line starts at; it darkens to full ink over `inkRamp`
-NUMBER_NEAR = 1.6         # pet heights: a number this near a working pet goes down just after it
-NUMBER_AFTER_PET = 0.3    # s after that pet's visit
+NUMBER_NEAR = 1.6         # guardian heights: a number this near a working guardian goes down just after it
+NUMBER_AFTER_PET = 0.3    # s after that guardian's visit
 NUMBER_LATE = 0.55        # steps into the template step the other numbers wait for, at the earliest
 NUMBER_AFTER_CLEAR = 0.05  # s after its area has cleared to paper, at the earliest
 NUMBER_AFTER_RELAX = 0.45  # s after the outlines have relaxed at it
@@ -310,7 +310,7 @@ def lines_at(plan, t, intro, step, ink_ramp, relax_time, pet_h):
 # --- numbers -------------------------------------------------------------------------------------------
 
 def number_times(numbers, clear, simplified, T_relax, visits, intro, step, pet_h):
-    """When each number (x, y, size) comes in: just after the last visit of a pet working near it
+    """When each number (x, y, size) comes in: just after the last visit of a guardian working near it
     (`visits` are the template step's, (time, x, y)), else late in the step; never before its area
     has cleared (`clear`, per region of `simplified`) nor before the outlines have relaxed at it."""
     h, w = T_relax.shape
@@ -373,7 +373,7 @@ def seed_ring(seed, spread, t, intro, step, dot, fade):
 
 def crew_fade(t, duration):
     """How much of the crew shows at `t`: all of it until the last CREW_FADE_OUT of the show."""
-    return 1.0 if t < duration - CREW_FADE_OUT else max(0.0, (duration - t) / CREW_FADE_OUT)
+    return min(max((duration - t) / CREW_FADE_OUT, 0.0), 1.0)
 
 
 def handoff(t, intro, step):
@@ -488,7 +488,7 @@ def make_inputs(folder, spec):
         paint_of_region[r] = p
     sim_labels, n_sim = label_regions(key_of(simplified))
 
-    # the crew: three pets, spots of its own for each step, planned as the show plans them
+    # the crew: three guardians, spots of its own for each step, planned as the show plans them
     s = starts(intro, step)
     m = float(spec['crew']['margin'])
 

@@ -1,23 +1,23 @@
-"""The Lamp's pets as the making-of show's crew: their sprites, their jobs, and how they move.
+"""The Lamp's guardians as the making-of show's crew: their sprites, their jobs, and how they move.
 
 Sprites come from the app's own sheets (`App/PaintByNumber/Resources/pet-<id>.webp`, the
 create-pet v2 contract in `SpriteAtlas.swift`): idle, walking right and left, waving, busy and
 reviewing. The motion is procedural, on top of those frames, and every number below is in the
-pet's own height (h) or in seconds:
+guardian's own height (h) or in seconds:
 
-- A pet walks at WALK h/s. It takes the nearest job it can reach and finish within the step, so
-  it does as many as fit and never darts; a pet with nothing in reach keeps working where it is.
+- A guardian walks at WALK h/s. It takes the nearest job it can reach and finish within the step, so
+  it does as many as fit and never darts; a guardian with nothing in reach keeps working where it is.
 - Setting off: it leans back and squashes a little for LEAN s, then speeds up over ACCEL s,
   leaning forward as it goes; it slows over DECEL s before the spot.
 - Its walk cycle advances with the distance it covers (8 frames per STRIDE h), so the feet keep
   pace, and its body bobs twice a cycle.
 - A longer walk ends in a low hop onto the spot (HOP h over its last HOP_TIME s); landing
   squashes and springs back.
-- A pet sets off for its next job as soon as it finishes the last, so nobody moves in step with
+- A guardian sets off for its next job as soon as it finishes the last, so nobody moves in step with
   anybody else; it arrives no sooner than the step it works for has begun.
 - At work it shows its busy pose for the hands-on steps (sketch, shading, ink) and its reviewing
   pose for the others (paints, merged, template).
-- A soft shadow stays on the ground, smaller and paler while the pet is in the air; pets higher in the
+- A soft shadow stays on the ground, smaller and paler while the guardian is in the air; guardians higher in the
   picture are a little smaller, and nearer ones are drawn over farther ones.
 - They pop in one after another at the start and wave one after another at the end.
 - Positions are drawn to a fraction of a pixel, so slow movement doesn't shimmer.
@@ -53,11 +53,11 @@ STRIDE = 1.5        # h per walk cycle (8 frames)
 HOP, HOP_TIME, HOP_MIN = 0.06, 0.32, 1.6    # h, s, and the shortest walk (h) that ends in one
 WORK = (0.6, 0.95)  # s at a job
 POP = 0.42          # s for the pop at the start
-SIDE = 0.42         # h: a pet stands this far to one side of its spot, and works toward it
-STILL = 0.5         # h: a job this close is worked from where the pet stands, without a walk
+SIDE = 0.42         # h: a guardian stands this far to one side of its spot, and works toward it
+STILL = 0.5         # h: a job this close is worked from where the guardian stands, without a walk
 MARGIN = 0.12       # share of the picture: no job, nor a line's start, this close to a side or the top
 BANDS = 3           # upright bands the crew shares out, left to right, so it spreads over the picture
-SPACE = 1.0         # h: how far apart pets' spots stay while both are there (see _clear)
+SPACE = 1.0         # h: how far apart guardians' spots stay while both are there (see _clear)
 TRACE = 1.5         # h per second while drawing a line by walking along it
 TRACE_RAMP = (0.12, 0.16)
 HOLD = 0.3          # s: everyone standing takes the reviewing pose as a step ends
@@ -227,7 +227,9 @@ def traced(tau, dist, h):
 
 
 class Sprites:
-    """One pet's frames by row, plus where its feet are in the cell."""
+    """One guardian's frames by row (each cell padded by PAD), plus where its feet are: `top`, `foot`
+    and `cx` in the padded frame; `metrics` has them in the cell's own pixels, as pet-metrics.json
+    and Sources/MakingOf's SpriteMetrics do."""
 
     def __init__(self, path):
         sheet = Image.open(path).convert('RGBA')
@@ -249,12 +251,17 @@ class Sprites:
         self.top, self.foot = int(ys.min()), int(ys.max())
         self.cx = float(xs.mean())
 
+    @property
+    def metrics(self):
+        """(top, foot, cx) in the cell's own pixels."""
+        return self.top - PAD, self.foot - PAD, self.cx - PAD
+
 
 class Planner:
-    """Hands out the jobs. A pet stands beside its spot (SIDE), on the side it came from, so the
-    change it makes is never hidden under it; spots of pets working at the same time stay SPACE
+    """Hands out the jobs. A guardian stands beside its spot (SIDE), on the side it came from, so the
+    change it makes is never hidden under it; spots of guardians working at the same time stay SPACE
     apart; arrivals land on the step's quarter beats, rippling left to right, the first on the
-    step's own downbeat when a pet can be there by then. Each pet has its band of the picture
+    step's own downbeat when a guardian can be there by then. Each guardian has its band of the picture
     (BANDS, by where it pops in) and takes a job elsewhere only when its band has none it can
     reach in time."""
 
@@ -262,7 +269,7 @@ class Planner:
         self.pets, self.h, self.rng = pets, h, rng
         self.W, self.H = size
         self.beat, self.origin = beat, origin
-        self.taken = []                 # (from, to, x, y, pet)
+        self.taken = []                 # (from, to, x, y, guardian)
         m = MARGIN
         self.box = (m * self.W, m * self.H + h, (1 - m) * self.W, self.H - 4)   # where feet may work
         n, self.bands = len(pets), max(1, min(BANDS, len(pets)))
@@ -280,7 +287,7 @@ class Planner:
         return x0 <= x <= x1 and y0 <= y <= y1
 
     def _in_view(self, pts):
-        """Whether a pet walking along `pts` stays whole in the picture: its sides (0.7 h apart) and
+        """Whether a guardian walking along `pts` stays whole in the picture: its sides (0.7 h apart) and
         its head (h up) inside. Its feet are, on any of the template's lines."""
         h = self.h
         x, y = pts[:, 0], pts[:, 1]
@@ -299,7 +306,7 @@ class Planner:
         return min(max(x, 0.05 * self.W), 0.95 * self.W), min(jy + 0.05 * h, self.H - 4)
 
     def _clear(self, x, y, t0, t1, me):
-        # pets are taller than wide: clear means side by side with room, or a whole pet apart up and down
+        # guardians are taller than wide: clear means side by side with room, or a whole guardian apart up and down
         h = self.h
         return all(o == me or b + 0.2 < t0 or t1 + 0.2 < a
                    or abs(x - ox) >= 0.85 * SPACE * h or abs(y - oy) >= 1.15 * SPACE * h
@@ -316,7 +323,7 @@ class Planner:
 
     def step(self, t0, t_end, candidates, k):
         """Jobs at `candidates` (spots) for step `k`; returns the seeds its change spreads from,
-        (time, x, y), a short sweep beside each pet as it works."""
+        (time, x, y), a short sweep beside each guardian as it works."""
         h, pool, seeds = self.h, list(candidates), []
         free = [p.stops[-1][1] for p in self.pets]
         live = [True] * len(self.pets)
@@ -354,7 +361,7 @@ class Planner:
         return seeds
 
     def trace(self, t0, t_end, strokes, k):
-        """Step `k`'s lines: each free pet walks to the nearest line it can draw in time and draws
+        """Step `k`'s lines: each free guardian walks to the nearest line it can draw in time and draws
         it by walking along it, never one that would take it out of the picture. Returns (seeds,
         traces): traces are (stroke index, start time, duration, points in drawing order)."""
         h, seeds, traces = self.h, [], []
@@ -398,7 +405,7 @@ class Planner:
         return seeds, traces
 
     def _crosses(self, a, b, o):
-        """Whether walking from a to b passes over a pet standing at o (boxes as in _clear)."""
+        """Whether walking from a to b passes over a guardian standing at o (boxes as in _clear)."""
         (ax, ay), (bx, by), (ox, oy) = a, b, o
         L2 = (bx - ax) * (bx - ax) + (by - ay) * (by - ay)
         u = min(max(((ox - ax) * (bx - ax) + (oy - ay) * (by - ay)) / max(L2, 1e-9), 0), 1)
@@ -406,9 +413,9 @@ class Planner:
         return abs(px - ox) < 0.85 * SPACE * self.h and abs(py - oy) < 1.15 * SPACE * self.h
 
     def farewell(self, wave_at, frame_h):
-        """The goodbye: each pet takes a last look at the finished picture (LOOK s, reviewing),
+        """The goodbye: each guardian takes a last look at the finished picture (LOOK s, reviewing),
         waves where it stands from `wave_at[i]` for WAVE s, then walks briskly to the nearest edge
-        whose way doesn't cross a pet still there, and steps out of the frame. The last one out
+        whose way doesn't cross a guardian still there, and steps out of the frame. The last one out
         stops just inside that edge, turns to you and waves once more (EDGE_WAVE s) first."""
         h = self.h
         spots = [self._end(p.stops[-1]) for p in self.pets]
@@ -448,7 +455,7 @@ class Planner:
 
 
 class Pet:
-    """One pet's way through the show. `stops` are (arrive, leave, x, y, step, path): a job
+    """One guardian's way through the show. `stops` are (arrive, leave, x, y, step, path): a job
     (step 0-5) worked standing at (x, y), or drawn by walking `path`; the first stop is where it
     pops in at `appear` (step -1); at the end it takes a last look at the picture (step -4), waves
     where it stands (step -2), then walks out of the frame (step -3), the last one out waving once
@@ -581,59 +588,22 @@ class Pet:
             return x, y, 0.0, WORK_POSE[k], int(land * 8), sx, sy, 0.0, 1.0
         return x, y, 0.0, 'idle', int(t * 6), sx, sy, 0.0, 1.0
 
-    def draw(self, sprites, canvas, t, fade, picture_h):
-        x, y, lift, row, frame, sx, sy, tilt, alpha = self.state(t)
-        since = t - self.appear
-        if 0 <= since < POP:
-            u = since / POP
-            pop = 1 + 0.18 * math.sin(math.pi * u) * (1 - u)
-            sx, sy = sx * pop, sy * pop
-        alpha = min(alpha, ease(since / 0.18)) * fade
-        if alpha <= 0.01:
-            return
-        frames = sprites.rows[row]
-        im = frames[frame % len(frames)]
-        if abs(tilt) > 0.05:
-            im = im.rotate(tilt, resample=Image.BICUBIC, center=(sprites.cx, sprites.foot))
-        depth = 0.9 + 0.16 * min(max(y / picture_h, 0), 1)   # below the picture: as near as it gets
-        scale = self.h * depth / (sprites.foot - sprites.top)
-        sxs, sys_ = 1 / (scale * sx), 1 / (scale * sy)      # source pixels per screen pixel
-        ox = x - sprites.cx * scale * sx                       # where the frame's corner lands, unrounded
-        oy = y - lift - sprites.foot * scale * sy
-        # start on the first whole pixel inside the frame and sample from the fraction past its
-        # corner, so the pet sits between pixels when it should (the frame's margin is clear)
-        ix, iy = math.ceil(ox), math.ceil(oy)
-        bx, by = (ix - ox) * sxs, (iy - oy) * sys_
-        w = max(1, math.floor((sprites.size[0] - bx) / sxs))
-        hh = max(1, math.floor((sprites.size[1] - by) / sys_))
-        sprite = im.resize((w, hh), Image.LANCZOS, box=(bx, by, bx + w * sxs, by + hh * sys_))
-        if alpha < 0.999:
-            sprite.putalpha(sprite.getchannel('A').point(lambda v: int(v * alpha)))
-        air = min(lift / max(self.h * HOP, 1), 1)
-        sw = self.h * depth * 0.40 * (1 - 0.4 * air)
-        sh = max(2, round(sw * 0.42))
-        shadow = Image.new('RGBA', (max(2, round(2 * sw)), sh), (0, 0, 0, 0))
-        ImageDraw.Draw(shadow).ellipse((0, 0, shadow.width - 1, sh - 1),
-                                       fill=(52, 42, 48, int(44 * alpha * (1 - 0.6 * air))))
-        put(canvas, shadow, round(x - sw), round(y - sh / 2))
-        put(canvas, sprite, ix, iy)
-
 
 Plan = namedtuple('Plan', 'pets visits traces')
 
 
 def plan(inputs):
     """The crew's whole show, planned: a pure function of plain data. Every random draw is
-    SplitMix64's, in a fixed order (the pets' appear order, their wave order, each job's work
+    SplitMix64's, in a fixed order (the guardians' appear order, their wave order, each job's work
     time as the steps are planned, then each walk's bend), so Sources/MakingOf plans the same
     show from the same inputs.
 
-    inputs: size [W, H] and petHeight in px; intro and step in s; seed; pets [{id, start: [x, y]}]
+    inputs: size [W, H] and petHeight in px; intro and step in s; seed; guardians [{id, start: [x, y]}]
     in crew order; candidates, per step the spots [x, y] its jobs are done at (the ink step's are
     ignored); strokes, the template's lines [[x, y], ...], drawn by walking in the ink step;
     frameHeight, the video frame's, which the farewell walks off the bottom of.
 
-    Returns Plan(pets, visits, traces): the pets with their stops and walks, finished; per step the
+    Returns Plan(guardians, visits, traces): the guardians with their stops and walks, finished; per step the
     points its change spreads from, (time, x, y); the lines drawn by walking, (stroke index,
     start, duration, points in drawing order)."""
     W, H = inputs['size']
@@ -701,11 +671,79 @@ def plan_data(planned):
 
 
 def states_data(pets, end, fps=30):
-    """Each pet's `state(t)` every 1/`fps` s from 0 to `end`, as JSON-ready rows
+    """Each guardian's `state(t)` every 1/`fps` s from 0 to `end`, as JSON-ready rows
     [x, y, lift, row, frame, sx, sy, tilt, alpha] (floats rounded to 1e-6)."""
     ts = [i / fps for i in range(round(end * fps) + 1)]
     return {'fps': fps, 'pets': [[[_round(v) if isinstance(v, float) else v for v in p.state(t)] for t in ts]
                                  for p in pets]}
+
+
+# How a guardian is drawn, beyond the spec (SpriteDraw.Look in Sources/MakingOf/Sprites.swift).
+INVISIBLE = 0.01        # below this alpha a guardian is not drawn
+APPEAR = 0.18           # s: it fades in over this long as it appears, and swells by SWELL of its size over POP
+SWELL = 0.18
+DEPTH_FAR = 0.9         # one at the picture's top is this share of its height, one at the bottom this much more
+DEPTH_SPAN = 0.16
+SHADOW_WIDTH = 0.40     # the shadow's half width in guardian heights ...
+SHADOW_FLAT = 0.42      # ... its height in widths ...
+SHADOW_SHRINK = 0.4     # ... how much it shrinks and pales in the air ...
+SHADOW_PALE = 0.6
+SHADOW_ALPHA = 44 / 255  # ... and its alpha on the ground
+INK = (52, 42, 48)      # the shadow's color: the show's ink
+
+
+def sprite_draw(pid, state, since, fade, height, picture_h, metrics):
+    """A guardian to draw, or None while it can't be seen: `state` is Guardian.state(t) at a time `since`
+    it appeared, `fade` the whole crew's fade, `height` its height in px, `picture_h` the picture's,
+    `metrics` its sheet's (top, foot, cx) in cell pixels. Returns {id, row, frame, x, y, scale_x,
+    scale_y, rotation, alpha, shadow}: the cell's point (cx, foot) goes at (x, y) (lift taken off),
+    scaled about it by scale_x and scale_y, then turned `rotation` degrees CLOCKWISE (state's tilt is
+    Pillow's number, counter-clockwise positive), at `alpha`; the shadow is an ellipse
+    {x, y, half_width, height, alpha} on the ground. `frame` is wrapped to the row's length."""
+    x, y, lift, row, frame, sx, sy, tilt, alpha = state
+    x, y, lift, sx, sy, tilt, alpha = (float(v) for v in (x, y, lift, sx, sy, tilt, alpha))
+    if 0 <= since < POP:
+        u = since / POP
+        pop = 1 + SWELL * math.sin(math.pi * u) * (1 - u)
+        sx, sy = sx * pop, sy * pop
+    alpha = min(alpha, ease(since / APPEAR)) * fade
+    if not alpha > INVISIBLE:
+        return None
+    top, foot, _ = metrics
+    depth = DEPTH_FAR + DEPTH_SPAN * min(max(y / picture_h, 0), 1)
+    scale = height * depth / (foot - top)
+    air = min(lift / max(height * HOP, 1), 1)
+    half_width = height * depth * SHADOW_WIDTH * (1 - SHADOW_SHRINK * air)
+    return {'id': pid, 'row': row, 'frame': frame % ROWS[row][1], 'x': x, 'y': y - lift,
+            'scale_x': scale * sx, 'scale_y': scale * sy, 'rotation': -tilt, 'alpha': alpha,
+            'shadow': {'x': x, 'y': y, 'half_width': half_width, 'height': half_width * SHADOW_FLAT,
+                       'alpha': SHADOW_ALPHA * alpha * (1 - SHADOW_PALE * air)}}
+
+
+def draw_sprite(canvas, sprites, d):
+    """Draws a `sprite_draw` onto an RGBA canvas with Pillow (the factory's way: BICUBIC to turn it,
+    LANCZOS to scale it, sampling between pixels so slow movement doesn't shimmer)."""
+    im = sprites.rows[d['row']][d['frame']]
+    if abs(d['rotation']) > 0.05:
+        im = im.rotate(-d['rotation'], resample=Image.BICUBIC, center=(sprites.cx, sprites.foot))
+    sxs, sys_ = 1 / d['scale_x'], 1 / d['scale_y']          # source pixels per screen pixel
+    ox = d['x'] - sprites.cx * d['scale_x']                    # where the frame's corner lands, unrounded
+    oy = d['y'] - sprites.foot * d['scale_y']
+    # start on the first whole pixel inside the frame and sample from the fraction past its
+    # corner, so the guardian sits between pixels when it should (the frame's margin is clear)
+    ix, iy = math.ceil(ox), math.ceil(oy)
+    bx, by = (ix - ox) * sxs, (iy - oy) * sys_
+    w = max(1, math.floor((sprites.size[0] - bx) / sxs))
+    h = max(1, math.floor((sprites.size[1] - by) / sys_))
+    sprite = im.resize((w, h), Image.LANCZOS, box=(bx, by, bx + w * sxs, by + h * sys_))
+    if d['alpha'] < 0.999:
+        sprite.putalpha(sprite.getchannel('A').point(lambda v: int(v * d['alpha'])))
+    shadow = d['shadow']
+    sh = max(2, round(shadow['height']))
+    ground = Image.new('RGBA', (max(2, round(2 * shadow['half_width'])), sh), (0, 0, 0, 0))
+    ImageDraw.Draw(ground).ellipse((0, 0, ground.width - 1, sh - 1), fill=INK + (round(255 * shadow['alpha']),))
+    put(canvas, ground, round(shadow['x'] - shadow['half_width']), round(shadow['y'] - sh / 2))
+    put(canvas, sprite, ix, iy)
 
 
 def put(canvas, im, left, top):
@@ -719,3 +757,36 @@ def put(canvas, im, left, top):
 
 def load(resources, ids):
     return {i: Sprites(os.path.join(resources, f'pet-{i}.webp')) for i in ids}
+
+
+def metrics_table(resources):
+    """The metrics of every sheet in `resources` (pet-<id>.webp), as pet-metrics.json has them:
+    {"about", "version": 1, "cell": [w, h], "guardians": {id: {"top", "foot", "cx"}}} in the cell's own
+    pixels, ids in order. Sources/MakingOf's SpriteMetrics.table reads it."""
+    ids = sorted(f[4:-5] for f in os.listdir(resources) if f.startswith('pet-') and f.endswith('.webp'))
+    table = {}
+    for i in ids:
+        top, foot, cx = Sprites(os.path.join(resources, f'pet-{i}.webp')).metrics
+        table[i] = {'top': top, 'foot': foot, 'cx': cx}
+    return {'about': "Where each guardian stands in its sprite sheet's cells, measured from the idle frames "
+                     "(every pixel with alpha above 24): the highest and lowest row and the mean column, in the "
+                     "cell's own pixels. Written by `making_of_pets.py --metrics`; Sources/MakingOf's SpriteMetrics "
+                     "reads it.",
+            'version': 1, 'cell': list(CELL), 'pets': table}
+
+
+def main():
+    import argparse
+    import json
+    ap = argparse.ArgumentParser(description='Writes pet-metrics.json for the sheets in a folder.')
+    ap.add_argument('--metrics', metavar='RESOURCES', required=True, help="the folder of the pets' sheets")
+    ap.add_argument('out')
+    a = ap.parse_args()
+    doc = metrics_table(a.metrics)
+    with open(a.out, 'w', encoding='utf-8') as f:     # one line per guardian
+        f.write('{\n' + ',\n'.join(f'"{k}":' + json.dumps(v) for k, v in doc.items() if k != 'pets') + ',\n"pets":{\n'
+                + ',\n'.join(f'  {json.dumps(k)}:{json.dumps(v)}' for k, v in doc['pets'].items()) + '\n}\n}\n')
+
+
+if __name__ == '__main__':
+    main()

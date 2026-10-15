@@ -16,8 +16,8 @@ At time t the show is in a step (`stage_of`) and shows one of
   hold         the finished drawing
 
 `ink` is a coverage plane, 0...1 where the lines (pen strokes in step 5, outlines in step 6 and
-after) darken the paper; the numbers are the renderer's too (`numbers` of template_picture is what
-making_of_clip.py still draws with). Sources/MakingOf's `Compositor` is the port, the same
+after) darken the paper; the numbers are the renderer's too (`numbers` of template_picture and
+hold_picture is what making_of_clip.py draws them with). Sources/MakingOf's `Compositor` is the port, the same
 formulas on the same names, compared by Tests/MakingOfTests with the numbers that
 tools/tests/test_making_of_layers.py writes. The numbers in the formulas are `RevealStyle`'s.
 """
@@ -118,9 +118,11 @@ class Compositor:
         self.graphite = sketch(src.survivors, style.sketch_strengths[0], style)
         self.settle = {k: settle_plane(layers[k], layers[k + 1], style) for k in (2, 3)}
 
-    def picture(self, t, ink=None):
+    def picture(self, t, ink=None, numbers=None, template=None, handoff=0.0):
         """The picture at time t; `ink`: the lines' coverage, (H, W) or (H, W, 1), where the step
-        draws them."""
+        draws them. What the factory's clip adds in the last steps and the app's view draws itself:
+        `numbers` (how far each number has come in, their multiply layer), and `template` (the real
+        template's picture) taking over from the finished drawing by `handoff`."""
         k = stage_of(t, self.intro, self.step)
         T, style, layers, src = self.times, self.style, self.layers, self.src
         if ink is not None and ink.ndim == 2:
@@ -136,5 +138,5 @@ class Compositor:
         if k == 4:
             return ink_picture(t, self.paper, src.toned, src.lifted, T['lift'], ink, style)
         if k == 5:
-            return template_picture(t, self.paper, src.lifted, T['clear'], ink, None, style)
-        return hold_picture(self.paper, ink)
+            return template_picture(t, self.paper, src.lifted, T['clear'], ink, numbers, style)
+        return hold_picture(self.paper, ink, None if numbers is None else numbers[1], template, handoff)
