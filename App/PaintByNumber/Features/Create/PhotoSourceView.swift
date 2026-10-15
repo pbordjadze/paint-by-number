@@ -288,7 +288,7 @@ private struct SampleTile: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(alignment: .bottom) {
-                        LinearGradient(colors: [.clear, .black.opacity(0.45)], startPoint: .top, endPoint: .bottom)
+                        LinearGradient(colors: [.clear, .black.opacity(0.68)], startPoint: .top, endPoint: .bottom)
                     }
             }
             .background(Theme.surface)

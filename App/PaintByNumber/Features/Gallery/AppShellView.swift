@@ -1,5 +1,6 @@
 import CoreTransferable
 import Foundation
+import os
 import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
@@ -267,8 +268,19 @@ struct AppShellView: View {
         #if DEBUG
         guard !DemoMode.isActive else { return }
         #endif
+        let guardian = ReopenGuard()
+        guard guardian.mayReopen() else {
+            Log.library.error("The painting reopened at the last launch never settled; showing the gallery")
+            openArtwork = ""
+            return
+        }
         guard let id = UUID(uuidString: openArtwork), library.artwork(with: id) != nil else { return }
+        guardian.begin()
         path = [id]
+        Task {
+            try? await Task.sleep(for: ReopenGuard.settleDelay)
+            guardian.settled()
+        }
     }
 }
 

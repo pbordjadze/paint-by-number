@@ -3,16 +3,18 @@ import Testing
 import UIKit
 @testable import PaintByNumber
 
-/// The Marginarium: six chapters and two appendices, each with its title and passage, and
-/// both pets' bundled frames and tap responses, and how the Lamp works.
+/// The Marginarium: two chapters and six appendices, each with its title and passage, and both
+/// pets' bundled frames and tap responses.
 @MainActor
 struct MarginariumTests {
     @Test func chaptersAndAppendicesHaveTitlesAndPassages() {
-        #expect(MarginariumEntry.chapters.count == 6)
-        #expect(MarginariumEntry.chapters.map(\.mark) == (1...6).map { $0.formatted() })
-        #expect(MarginariumEntry.chapters.last?.id == "petsWeMade")
-        #expect(MarginariumEntry.appendices.count == 2)
-        #expect(MarginariumEntry.appendices.map(\.mark) == ["A", "B"])
+        // The story, then Codex's chapter; the one-passage chapters wait at the back.
+        #expect(MarginariumEntry.chapters.map(\.id) == ["marginarium", "petsWeMade"])
+        #expect(MarginariumEntry.chapters.map(\.mark) == (1...2).map { $0.formatted() })
+        #expect(MarginariumEntry.appendices.map(\.id) == [
+            "panelName", "thirtySixColors", "lampBrush", "constitution", "petForEveryGuardian", "twoMorePets",
+        ])
+        #expect(MarginariumEntry.appendices.map(\.mark) == ["A", "B", "C", "D", "E", "F"])
         for entry in MarginariumEntry.chapters + MarginariumEntry.appendices {
             #expect(!entry.title.isEmpty, "\(entry.id) has no title")
             #expect(!entry.passage.isEmpty, "\(entry.id) has no passage")
@@ -60,7 +62,6 @@ struct MarginariumTests {
         #expect(PipSprite.animation.actionFrames(reduceMotion: false).map(\.source) == PipSprite.waving.map(\.source))
     }
 
-    /// The Lamp's ways, in plain words for any reader (Chief Architect Paul's rule for the book).
     /// Each chapter ends with its narrator's pet saying goodnight: Codex's Pip for Codex's chapter.
     @Test func everyChapterEndsWithItsNarratorsPet() {
         for entry in MarginariumEntry.chapters + MarginariumEntry.appendices {
@@ -69,17 +70,5 @@ struct MarginariumTests {
             #expect(MarginariumPet.named(narrator.pet) != nil)
             #expect(narrator.goodnight.hasPrefix("The end."))
         }
-    }
-
-    @Test func lampHasSevenPlainLinesInOrder() {
-        #expect(MarginariumLamp.lines == [
-            "Every guardian has a charter: what it believes, what it loves and what it watches out for.",
-            "Each guardian keeps its idea as a metaphor: Dino never asks for dinosaurs, and the Snow Queen never asks for snow.",
-            "Guardians work in teams of friends who care about similar things.",
-            "Each guardian votes alone: none sees how the others voted.",
-            "Every vote, yes or no, is written down with its reason.",
-            "A guardian can say no, but only by quoting its own charter.",
-            "A person has the last word.",
-        ])
     }
 }

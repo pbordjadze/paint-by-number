@@ -56,6 +56,7 @@ struct FeedbackSheet: View {
                         ProgressView()
                     } else {
                         Button("Send", systemImage: "paperplane", action: send)
+                            .tint(Theme.signature)
                             .disabled(draft.isEmpty)
                             .accessibilityIdentifier("feedback-send")
                     }

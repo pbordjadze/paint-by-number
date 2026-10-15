@@ -30,7 +30,7 @@ enum MarginariumSpeakers {
         "the Bible School Teacher": "bible-school-teacher",
     ]
 
-    /// Voices with no pet to show: the Moon's was withheld, and Bart's (Ibid) hasn't hatched.
+    /// Voices with no drawing to show: the Moon's was withheld, and Bart hasn't hatched.
     static let withoutPet: Set<String> = ["the Moon", "Bart"]
 
     /// The pet of each guardian who signed the note, once each, in the order they speak.

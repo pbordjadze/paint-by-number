@@ -30,7 +30,7 @@ An *In the margin* paragraph followed by ordered items becomes marginHeading and
 blocks. Notes keep their numbering and full signatures; speaker is the italic name after the
 last "— ", even when prose follows it (a plain signature at the end is also accepted);
 speakers lists every name signed that way in the note, in order, because one note can carry
-several voices and the reader shows each guardian's pet beside it.
+several voices and the reader shows each guardian's drawing beside it.
 
 A note says which words of the story it is about with an <!-- anchor: phrase --> line just
 before it (beside its marker); several phrases are separated by " | ", for a note whose voices

@@ -29,7 +29,7 @@ nonisolated enum IncomingFile {
         do {
             data = try Data(contentsOf: url)
         } catch {
-            Log.create.error("Reading an opened file failed: \(String(describing: error), privacy: .public)")
+            Log.create.error("Reading an opened file failed: \(String(describing: error), privacy: .private)")
             data = Data()
         }
         removeIfInInbox(url, inbox: inbox)
@@ -64,7 +64,7 @@ nonisolated enum IncomingFile {
         do {
             try FileManager.default.removeItem(at: url)
         } catch {
-            Log.create.error("Deleting an inbox copy failed: \(String(describing: error), privacy: .public)")
+            Log.create.error("Deleting an inbox copy failed: \(String(describing: error), privacy: .private)")
         }
     }
 }

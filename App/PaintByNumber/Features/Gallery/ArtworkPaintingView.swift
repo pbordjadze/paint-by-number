@@ -111,7 +111,12 @@ struct ArtworkPaintingView: View {
         .background { CanvasGesturesOverZoomDismissal(onAppear: land).frame(width: 0, height: 0) }
         .task { await open() }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { autosaver?.saveNow(refreshThumbnail: true) }
+            guard phase != .active else { return }
+            autosaver?.saveNow(refreshThumbnail: true)
+            if phase == .background {
+                let library = library
+                BackgroundSaving.shared.hold { await library.flush() }
+            }
         }
         .onChange(of: autoAdvance) { _, value in autosaver?.session.autoAdvance = value }
         .onDisappear {

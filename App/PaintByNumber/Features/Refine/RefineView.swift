@@ -360,7 +360,7 @@ struct RefineView: View {
             HStack(spacing: 10) {
                 ProgressView(value: model.progress)
                     .frame(width: 64)
-                Text("Refining…")
+                Text("Updating…")
             }
             .font(.footnote.weight(.medium))
             .padding(.horizontal, 14)
@@ -799,6 +799,7 @@ struct RefineView: View {
         }
         ToolbarItem(placement: .confirmationAction) {
             Button("Done", systemImage: "checkmark", action: done)
+                .tint(Theme.signature)
                 .accessibilityIdentifier("refine-done")
         }
     }

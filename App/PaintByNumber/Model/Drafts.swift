@@ -38,6 +38,10 @@ final class Drafts {
         store.purgeStaging()
         do {
             current = try store.read()
+        } catch let error as CocoaError where !Library.isDamage(error) {
+            // Can't be read just now (an I/O or data protection error), which says nothing
+            // about the draft: kept for a later launch, as the library keeps such a painting.
+            Log.create.error("The draft can't be read now: \(String(describing: error), privacy: .public)")
         } catch {
             Log.create.error("Removing a damaged draft: \(String(describing: error), privacy: .public)")
             store.remove()

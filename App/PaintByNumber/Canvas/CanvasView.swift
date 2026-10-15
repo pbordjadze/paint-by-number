@@ -1111,6 +1111,8 @@ final class CanvasView: UIView, PaintingCanvas {
     /// Paint spreads from the touch; when the touch is outside the region (tolerance, drag
     /// brush), start from the region's nearest point instead.
     private func paintOrigin(for region: Int, near p: SIMD2<Float>) -> SIMD2<Float> {
+        // `Int(_:)` traps on a non-finite touch.
+        guard p.x.isFinite, p.y.isFinite else { return anchors[region] }
         if template.region(at: p) == region { return p }
         let map = template.regionMap
         let b = template.regions[region].bounds

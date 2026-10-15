@@ -12,10 +12,10 @@ before planning app work).
 
 ## Map
 
-- `Package.swift`: `PaintCore`, `pbn`, `PaintCoreTests`. The Xcode project builds PaintCore from
-  this package (local reference `..`), so its flags change the app's builds too (release
-  `-Ounchecked`); its iOS 18 / macOS 15 platforms are only a floor (the app's 26.0 is the
-  project's).
+- `Package.swift`: `PaintCore`, `pbn`, `PaintCoreTests`, and the separate `MakingOf`,
+  `MakingOfTests`. The Xcode project builds PaintCore from this package (local reference `..`), so
+  its flags change the app's builds too (release `-Ounchecked`); its iOS 18 / macOS 15 platforms
+  are only a floor (the app's 26.0 is the project's).
 - `Sources/PaintCore`: the portable, dependency-free pipeline (builds on Linux too).
   `TemplateGenerator.generate(from:importance:lineArt:…)` composes the stages, timed by
   `StageClock`; `TemplateGenerator.pipelineVersion` is recorded in every template.
@@ -57,6 +57,27 @@ before planning app work).
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
   `Commands.swift`, `Edit.swift` (`pbn edit`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
+- `Sources/MakingOf` (depends on PaintCore only; Debug `-O`, Release checked): the making-of show,
+  which plays after Start (three guardians walk over the painter's photo and each pipeline step is
+  revealed where they work). `Show` (its and `ShowFrame`'s doc comments say what the app's view
+  draws) is built once from a generation's `ShowPictures`, the finished template (`ShowTemplate`),
+  the strict `ShowSpec` (`making-of.json`), a seed and `SpriteMetrics` (`pet-metrics.json`, in the
+  app's `Resources`), and then `frame(at:)` is a pure function of the time. Inside: `CrewInputs.make`
+  and `CrewPlan` (the crew), `ShowLayers` and `Compositor` (the pictures, `RevealStyle`: what a pixel
+  looks like), `Arrival`, `StrokeSchedule`, `NumberSchedule` and `Timeline` (when and where,
+  `ScheduleStyle`). Every random draw is a `ShowStreams` stream of SplitMix64; discrete decisions are
+  exact (integers, `+ - * /`, `sqrt`) and the pictures are within measured tolerances of the Python
+  reference `tools/factory/making_of_{exact,inputs,layers,compose,reveal,pets,show}.py`, which
+  `making_of_clip.py` plays with Pillow (stills and video). Fixtures in `Tests/MakingOfTests/Fixtures/`
+  are written by that Python and replayed by the tests: `plan-parrots.json` by
+  `making_of_clip.py --plan-json` (recipe in `CrewPlan`'s doc comment), `show-small/inputs-small.json`
+  by `making_of_inputs.py` (recipe in `test_making_of_inputs.py`), `reveal-small.json` by
+  `making_of_reveal.py --fixture`, `layers-small.json` and `compose-small.json` by
+  `tools/tests/test_making_of_layers.py --write-goldens`, `frames-small.json` by
+  `tools/tests/test_making_of_show.py --write-goldens`, and `pet-metrics.json` by
+  `making_of_pets.py --metrics App/PaintByNumber/Resources <out>`. `python3 -m unittest discover -s
+  tools/tests -p 'test_making_of_*.py'` (numpy, Pillow; CI `core`) fails when a committed fixture is
+  not what the Python makes now.
 - `Tests/PaintCoreTests` (Swift Testing; helpers in `TestSupport.swift`, `TestScenes.swift`,
   `ColorTestSupport.swift`). `Fixtures/`: `template-*.pbnt` are frozen (Saved data);
   `layered-photo.ppm`, `layered-edges.pgm` and `shapes.ppm` are inputs that tests and the line
@@ -84,7 +105,8 @@ before planning app work).
   regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone`, all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
-  (`ci/report.py` writes `STATUS.md`).
+  (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
+  (on request; its header says how).
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
   per-agent reports are not committed (they live on their branch and in commit messages); a
@@ -369,7 +391,11 @@ any port of it, when changing the fitter: work from the paper.
    `https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/source.json`, and
    asks the combined source in `pbordjadze/sidestore` to rebuild (secret
    `SIDESTORE_DISPATCH_TOKEN`, issue #1; without it that source catches up on its 15-minute
-   schedule).
+   schedule). TestFlight builds are separate and on request: the `TestFlight` workflow archives,
+   cloud-signs with an App Store Connect API key and has App Store Connect validate the app; Run
+   workflow from `main` with Upload ticked uploads it (version `MARKETING_VERSION`, build
+   `<run>.<attempt>`), and a push to a `claude/testflight-dryrun*` branch (which CI ignores) is a dry run of its commit. The repository is
+   public, so GitHub's standard runners cost no minutes; the limit is 5 macOS jobs at once.
 
 **Branches.** `main` is the default and shipping branch (`iphone` job, IPA, SideStore source; the
 benchmark's base). Work on `claude/<topic>` branches and merge into `main`; once merged, the branch

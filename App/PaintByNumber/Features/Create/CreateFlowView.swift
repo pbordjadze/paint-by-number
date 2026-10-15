@@ -71,7 +71,12 @@ struct CreateFlowView: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active { library.drafts.saveNow() }
+            guard phase != .active else { return }
+            library.drafts.saveNow()
+            if phase == .background {
+                let drafts = library.drafts
+                BackgroundSaving.shared.hold { await drafts.flush() }
+            }
         }
         .onDisappear {
             model.cancelAll()

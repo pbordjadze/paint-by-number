@@ -275,7 +275,7 @@ struct TemplatePreviewView: View {
                     if model.preview == nil {
                         Text("Creating template…")
                     } else {
-                        Text("Refining…")
+                        Text("Updating…")
                     }
                 }
             case .failed(let message):

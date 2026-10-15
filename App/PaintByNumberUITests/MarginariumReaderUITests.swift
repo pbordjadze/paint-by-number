@@ -1,24 +1,25 @@
 import XCTest
 
-/// Both sections of the contents page open native reader pages, including at large text sizes;
-/// Chapter 6 shows the guardians' pets, and Chapter 1's margin notes carry them beside the words,
-/// in a margin column beside the story where the page has room.
+/// The contents page's chapters and appendices open native reader pages, including at large text
+/// sizes; Chapter 2 shows the guardians' drawings, and Chapter 1's margin notes carry them beside
+/// the words, in a margin column beside the story where the page has room.
 final class MarginariumReaderUITests: XCTestCase {
     @MainActor
-    func testChapterAndAppendixOpenFromContents() {
+    func testAppendicesOpenFromContents() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "marginarium"]
         app.launch()
         XCTAssertTrue(app.navigationBars["The Marginarium"].waitForExistence(timeout: 15))
-        openEntry("lampBrush", in: app)
-        XCTAssertTrue(app.navigationBars["The Lamp Picks Up a Brush"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["A Mac arrives, with a plan for the guardians to play."].exists)
-        attachScreenshot(of: app, named: "marginarium-reader-chapter")
-        app.navigationBars["The Lamp Picks Up a Brush"].buttons.firstMatch.tap()
+        // B, then C below it: the contents keeps its place, so the second only scrolls on.
         openEntry("thirtySixColors", in: app)
         XCTAssertTrue(app.navigationBars["Thirty-Six Colors"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["The Moon struck every name with daylight in it, four times."].exists)
         attachScreenshot(of: app, named: "marginarium-reader-appendix")
+        app.navigationBars["Thirty-Six Colors"].buttons.firstMatch.tap()
+        openEntry("lampBrush", in: app)
+        XCTAssertTrue(app.navigationBars["The Lamp Picks Up a Brush"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["A Mac arrives, with a plan for the guardians to play."].exists)
+        attachScreenshot(of: app, named: "marginarium-reader-former-chapter")
     }
 
     @MainActor
@@ -206,14 +207,14 @@ final class MarginariumReaderUITests: XCTestCase {
     }
 
     @MainActor
-    func testChapterSixOpensFromContentsWithItsPets() {
+    func testChapterTwoOpensFromContentsWithItsPets() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "marginarium"]
         app.launch()
         XCTAssertTrue(app.navigationBars["The Marginarium"].waitForExistence(timeout: 15))
         openEntry("petsWeMade", in: app)
-        XCTAssertTrue(app.navigationBars["The Pets We Actually Made"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Chapter 6: The Pets We Actually Made"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["The Drawings We Actually Made"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Chapter 2: The Drawings We Actually Made"].waitForExistence(timeout: 10))
         let reader = app.scrollViews["marginarium-reader"]
         let ram = app.buttons["marginarium-pet-medea"]
         for _ in 0..<12 {
@@ -221,10 +222,10 @@ final class MarginariumReaderUITests: XCTestCase {
             reader.swipeUp()
         }
         XCTAssertTrue(ram.waitForExistence(timeout: 10))
-        XCTAssertEqual(ram.label, "Medea's golden ram")
+        XCTAssertEqual(ram.label, "Medea")
         XCTAssertTrue(ram.isHittable)
         ram.tap()
-        attachScreenshot(of: app, named: "marginarium-chapter6-medea")
+        attachScreenshot(of: app, named: "marginarium-chapter2-medea")
     }
 
     @MainActor

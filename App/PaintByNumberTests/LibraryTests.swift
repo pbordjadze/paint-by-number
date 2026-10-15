@@ -653,6 +653,30 @@ struct LibraryTests {
         #expect(library.placeholders.isEmpty)
     }
 
+    /// A launch the system ends while it seeds (memory) never reaches the completion: it counts
+    /// as soon as it starts, so the starters can't end every launch.
+    @Test func seedingCountsAnAttemptBeforeItFinishes() async throws {
+        let suite = "PBNTests-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let library = makeLibrary()
+        let glories = try #require(Sample.named("morning-glories"))
+
+        // Three launches that ended while seeding: the fourth doesn't seed.
+        defaults.set(Library.maxSeedAttempts, forKey: Library.seedFailuresKey)
+        #expect(library.seedIfNeeded([glories], defaults: defaults) == nil)
+        #expect(defaults.bool(forKey: Library.seededKey))
+        #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
+        #expect(library.artworks.isEmpty)
+
+        defaults.removeObject(forKey: Library.seededKey)
+        let task = try #require(library.seedIfNeeded([glories], defaults: defaults))
+        #expect(defaults.integer(forKey: Library.seedFailuresKey) == 1)
+        await task.value
+        #expect(defaults.bool(forKey: Library.seededKey))
+        #expect(defaults.object(forKey: Library.seedFailuresKey) == nil)
+    }
+
     @Test func seedingCountsPartialSuccess() async throws {
         let suite = "PBNTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))

@@ -2,8 +2,8 @@ import Foundation
 
 /// Who's Who in the Marginarium: the people, the AI helpers and the Lamp's guardians in their
 /// teams (`MarginariumWhosWhoView`). Each guardian's brief is its charter in `factory/GUARDIANS.md`
-/// in plain words; the ids are the panel's (`factory/panel.json`) and name each pet's sheet
-/// (`MarginariumPet`). A guardian whose pet hasn't hatched shows an egg (`MarginariumEgg`).
+/// in plain words; the ids are the panel's (`factory/panel.json`) and name each guardian's sheet
+/// (`MarginariumPet`). A guardian who hasn't hatched yet shows an egg (`MarginariumEgg`).
 nonisolated struct MarginariumGuardian: Identifiable, Sendable {
     let id: String
     let name: String
@@ -18,7 +18,8 @@ nonisolated struct MarginariumGuardian: Identifiable, Sendable {
     let watchesFor: String
     let looksUpTo: String
     let happiestWhen: String
-    /// The pet's caption and VoiceOver description, or the egg's while `hatched` is false.
+    /// The drawing's VoiceOver description, or the egg's while `hatched` is false. The drawing is
+    /// the guardian, never its pet (Paul, October 15), so the description is its name alone.
     let petCaption: String
     let hatched: Bool
 }
@@ -31,7 +32,8 @@ nonisolated struct MarginariumTeam: Identifiable, Sendable {
     let members: [MarginariumGuardian]
 }
 
-/// Someone at the table who isn't a guardian: a person, or an AI helper with its pet.
+/// Someone at the table who isn't a guardian: a person, or an AI helper with its pet (Pip and
+/// Colophon, the book's only pets; a guardian's drawing is the guardian).
 nonisolated struct MarginariumPerson: Identifiable, Sendable {
     let id: String
     let name: String
@@ -86,7 +88,7 @@ nonisolated enum MarginariumCast {
                          comment: "The Marginarium, Who is Who: the name of Codex, an AI helper"),
             role: String(localized: "lamp.codex.role", defaultValue: "AI helper, made by OpenAI",
                          comment: "The Marginarium, Who is Who: the role of Codex, under the name"),
-            line: String(localized: "lamp.codex.line", defaultValue: "Builds the tools and draws the pets. Its pet is Pip, a teapot.",
+            line: String(localized: "lamp.codex.line", defaultValue: "Builds the tools and draws the guardians. Its pet is Pip, a teapot.",
                          comment: "The Marginarium, Who is Who: one line about Codex, whose pet is Pip, a teapot"),
             pet: "pip"),
         MarginariumPerson(
@@ -173,7 +175,8 @@ nonisolated enum MarginariumCast {
                      comment: "The Marginarium, Who is Who: its name, for the guardian Dino"),
         after: String(localized: "lamp.dinotopia.after", defaultValue: "After James Gurney's Dinotopia books.",
                       comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Dino"),
-        portrait: nil,
+        portrait: String(localized: "lamp.dinotopia.portrait", defaultValue: "Paul hatched Dino himself, in Codex: a long-necked dinosaur.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Dino"),
         guards: String(localized: "lamp.dinotopia.guards", defaultValue: "the storybook feel",
                        comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Dino"),
         believes: String(localized: "lamp.dinotopia.believes", defaultValue: "A storybook feels real when its wonder is painted with care, like a land you could walk into, sketched by someone who was there.",
@@ -186,8 +189,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Dino"),
         happiestWhen: String(localized: "lamp.dinotopia.happiestWhen", defaultValue: "A page feels like a journal found somewhere real, and a newcomer is made welcome.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Dino"),
-        petCaption: String(localized: "lamp.dinotopia.petCaption", defaultValue: "Dino, the long-necked dinosaur Paul hatched in Codex",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Dino"),
+        petCaption: String(localized: "lamp.dinotopia.petCaption", defaultValue: "Dino",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Dino"),
         hatched: true)
 
     static let storybook = MarginariumGuardian(
@@ -208,8 +211,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Storybook"),
         happiestWhen: String(localized: "lamp.storybook.happiestWhen", defaultValue: "It could be a page in a book.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Storybook"),
-        petCaption: String(localized: "lamp.storybook.petCaption", defaultValue: "Little Page, the Storybook's flying book",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Storybook"),
+        petCaption: String(localized: "lamp.storybook.petCaption", defaultValue: "The Storybook",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Storybook"),
         hatched: true)
 
     static let bartimaeus = MarginariumGuardian(
@@ -231,8 +234,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Bart"),
         happiestWhen: String(localized: "lamp.bartimaeus.happiestWhen", defaultValue: "The aside is the best line on the page, and the narrator wishes it weren't.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Bart"),
-        petCaption: String(localized: "lamp.bartimaeus.petCaption", defaultValue: "Bart's egg: Ibid, an ink asterisk, hasn't hatched yet",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Bart"),
+        petCaption: String(localized: "lamp.bartimaeus.petCaption", defaultValue: "Bart, still an egg",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Bart's egg: the guardian hasn't hatched yet"),
         hatched: false)
 
     static let painter = MarginariumGuardian(
@@ -253,8 +256,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Painter"),
         happiestWhen: String(localized: "lamp.painter.happiestWhen", defaultValue: "The eye goes to the painting.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Painter"),
-        petCaption: String(localized: "lamp.painter.petCaption", defaultValue: "Dab, the Painter's palette",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Painter"),
+        petCaption: String(localized: "lamp.painter.petCaption", defaultValue: "The Painter",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Painter"),
         hatched: true)
 
     static let pirosmani = MarginariumGuardian(
@@ -276,8 +279,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Niko"),
         happiestWhen: String(localized: "lamp.pirosmani.happiestWhen", defaultValue: "Something looks painted by someone who loved it.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Niko"),
-        petCaption: String(localized: "lamp.pirosmani.petCaption", defaultValue: "Gentle Giraffe, Niko's giraffe",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Niko"),
+        petCaption: String(localized: "lamp.pirosmani.petCaption", defaultValue: "Niko",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Niko"),
         hatched: true)
 
     static let medea = MarginariumGuardian(
@@ -298,8 +301,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Medea"),
         happiestWhen: String(localized: "lamp.medea.happiestWhen", defaultValue: "Something turns from old to new under a kind, deliberate hand, the result is beautiful, and she can point to the moment it turns.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Medea"),
-        petCaption: String(localized: "lamp.medea.petCaption", defaultValue: "Medea's golden ram",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Medea"),
+        petCaption: String(localized: "lamp.medea.petCaption", defaultValue: "Medea",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Medea"),
         hatched: true)
 
     static let babaYaga = MarginariumGuardian(
@@ -320,8 +323,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Baba Yaga"),
         happiestWhen: String(localized: "lamp.baba-yaga.happiestWhen", defaultValue: "A tool does the work by itself, with a wink.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Baba Yaga"),
-        petCaption: String(localized: "lamp.baba-yaga.petCaption", defaultValue: "Broomstep, the Baba Yaga's wooden hut",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Baba Yaga"),
+        petCaption: String(localized: "lamp.baba-yaga.petCaption", defaultValue: "The Baba Yaga",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Baba Yaga"),
         hatched: true)
 
     static let hedgeWitch = MarginariumGuardian(
@@ -342,8 +345,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Hedge Witch"),
         happiestWhen: String(localized: "lamp.hedge-witch.happiestWhen", defaultValue: "Something feels grown rather than manufactured.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Hedge Witch"),
-        petCaption: String(localized: "lamp.hedge-witch.petCaption", defaultValue: "Tarragon, the Hedge Witch's mushroom",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Hedge Witch"),
+        petCaption: String(localized: "lamp.hedge-witch.petCaption", defaultValue: "The Hedge Witch",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Hedge Witch"),
         hatched: true)
 
     static let moon = MarginariumGuardian(
@@ -364,8 +367,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Moon"),
         happiestWhen: String(localized: "lamp.moon.happiestWhen", defaultValue: "It can point to where the night is and where the light falls.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Moon"),
-        petCaption: String(localized: "lamp.moon.petCaption", defaultValue: "The Moon's egg: its first pet went back to the drawing board",
-                           comment: "The Marginarium, Who is Who: the caption of The Moon's egg, standing in for a pet that hasn't hatched"),
+        petCaption: String(localized: "lamp.moon.petCaption", defaultValue: "The Moon, still an egg: its first try went back to the drawing board",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of The Moon's egg: the guardian hasn't hatched yet, its first drawing withheld"),
         hatched: false)
 
     static let glassblower = MarginariumGuardian(
@@ -386,8 +389,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Glassblower"),
         happiestWhen: String(localized: "lamp.glassblower.happiestWhen", defaultValue: "It feels at home, and calm.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Glassblower"),
-        petCaption: String(localized: "lamp.glassblower.petCaption", defaultValue: "Glim, the Glassblower's glass droplet",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Glassblower"),
+        petCaption: String(localized: "lamp.glassblower.petCaption", defaultValue: "The Glassblower",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Glassblower"),
         hatched: true)
 
     static let snowQueen = MarginariumGuardian(
@@ -408,8 +411,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Snow Queen"),
         happiestWhen: String(localized: "lamp.snow-queen.happiestWhen", defaultValue: "Something is exact, cool and quietly dazzling.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Snow Queen"),
-        petCaption: String(localized: "lamp.snow-queen.petCaption", defaultValue: "Hush, the Snow Queen's ermine",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Snow Queen"),
+        petCaption: String(localized: "lamp.snow-queen.petCaption", defaultValue: "The Snow Queen",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Snow Queen"),
         hatched: true)
 
     static let enchantedWorkshop = MarginariumGuardian(
@@ -430,8 +433,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Enchanted Workshop"),
         happiestWhen: String(localized: "lamp.enchanted-workshop.happiestWhen", defaultValue: "A tool is visibly doing a job.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Enchanted Workshop"),
-        petCaption: String(localized: "lamp.enchanted-workshop.petCaption", defaultValue: "Dab, the Enchanted Workshop's paintbrush",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Enchanted Workshop"),
+        petCaption: String(localized: "lamp.enchanted-workshop.petCaption", defaultValue: "The Enchanted Workshop",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Enchanted Workshop"),
         hatched: true)
 
     static let nutcracker = MarginariumGuardian(
@@ -452,8 +455,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Nutcracker"),
         happiestWhen: String(localized: "lamp.nutcracker.happiestWhen", defaultValue: "A mechanism moves with care, as if it means well.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Nutcracker"),
-        petCaption: String(localized: "lamp.nutcracker.petCaption", defaultValue: "Kindwind, the Nutcracker's wooden soldier",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Nutcracker"),
+        petCaption: String(localized: "lamp.nutcracker.petCaption", defaultValue: "The Nutcracker",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Nutcracker"),
         hatched: true)
 
     static let balanchine = MarginariumGuardian(
@@ -475,8 +478,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian George"),
         happiestWhen: String(localized: "lamp.balanchine.happiestWhen", defaultValue: "The motion is already dancing before any music is added.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian George"),
-        petCaption: String(localized: "lamp.balanchine.petCaption", defaultValue: "Steady Prong, George's tuning fork",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian George"),
+        petCaption: String(localized: "lamp.balanchine.petCaption", defaultValue: "George",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian George"),
         hatched: true)
 
     static let scholar = MarginariumGuardian(
@@ -497,8 +500,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Scholar"),
         happiestWhen: String(localized: "lamp.scholar.happiestWhen", defaultValue: "Someone who read the paper would smile.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Scholar"),
-        petCaption: String(localized: "lamp.scholar.petCaption", defaultValue: "The Scholar's inkpot",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Scholar"),
+        petCaption: String(localized: "lamp.scholar.petCaption", defaultValue: "The Scholar",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Scholar"),
         hatched: true)
 
     static let openSourceEnthusiast = MarginariumGuardian(
@@ -519,8 +522,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Open Source Enthusiast"),
         happiestWhen: String(localized: "lamp.open-source-enthusiast.happiestWhen", defaultValue: "You can see how it was made, who made it possible, and how you'd build on it.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Open Source Enthusiast"),
-        petCaption: String(localized: "lamp.open-source-enthusiast.petCaption", defaultValue: "The Sharing Pomegranate, the Open Source Enthusiast's pomegranate",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Open Source Enthusiast"),
+        petCaption: String(localized: "lamp.open-source-enthusiast.petCaption", defaultValue: "The Open Source Enthusiast",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Open Source Enthusiast"),
         hatched: true)
 
     static let emilyDickinson = MarginariumGuardian(
@@ -542,8 +545,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Emily"),
         happiestWhen: String(localized: "lamp.emily-dickinson.happiestWhen", defaultValue: "One well-chosen detail does the work of ten.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Emily"),
-        petCaption: String(localized: "lamp.emily-dickinson.petCaption", defaultValue: "Hem, Emily's bee",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Emily"),
+        petCaption: String(localized: "lamp.emily-dickinson.petCaption", defaultValue: "Emily",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Emily"),
         hatched: true)
 
     static let bulatOkudzhava = MarginariumGuardian(
@@ -565,8 +568,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Bulat"),
         happiestWhen: String(localized: "lamp.bulat-okudzhava.happiestWhen", defaultValue: "It feels like being sung to by a friend.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Bulat"),
-        petCaption: String(localized: "lamp.bulat-okudzhava.petCaption", defaultValue: "Bulat's blue trolleybus",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Bulat"),
+        petCaption: String(localized: "lamp.bulat-okudzhava.petCaption", defaultValue: "Bulat",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Bulat"),
         hatched: true)
 
     static let childAtBedtime = MarginariumGuardian(
@@ -587,8 +590,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Child at Bedtime"),
         happiestWhen: String(localized: "lamp.child-at-bedtime.happiestWhen", defaultValue: "A child would ask to see it again.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Child at Bedtime"),
-        petCaption: String(localized: "lamp.child-at-bedtime.petCaption", defaultValue: "Lullaby, the Child at Bedtime's lamb",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Child at Bedtime"),
+        petCaption: String(localized: "lamp.child-at-bedtime.petCaption", defaultValue: "The Child at Bedtime",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Child at Bedtime"),
         hatched: true)
 
     static let robberGirl = MarginariumGuardian(
@@ -610,8 +613,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Robber Girl"),
         happiestWhen: String(localized: "lamp.robber-girl.happiestWhen", defaultValue: "Something has nerve, with a soft heart under it.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Robber Girl"),
-        petCaption: String(localized: "lamp.robber-girl.petCaption", defaultValue: "Flint, the Robber Girl's reindeer calf",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Robber Girl"),
+        petCaption: String(localized: "lamp.robber-girl.petCaption", defaultValue: "The Robber Girl",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Robber Girl"),
         hatched: true)
 
     static let bibleSchoolTeacher = MarginariumGuardian(
@@ -632,8 +635,8 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Bible School Teacher"),
         happiestWhen: String(localized: "lamp.bible-school-teacher.happiestWhen", defaultValue: "A grandmother would smile at it.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Bible School Teacher"),
-        petCaption: String(localized: "lamp.bible-school-teacher.petCaption", defaultValue: "Kindwick, the Bible School Teacher's clay oil lamp",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian The Bible School Teacher"),
+        petCaption: String(localized: "lamp.bible-school-teacher.petCaption", defaultValue: "The Bible School Teacher",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Bible School Teacher"),
         hatched: true)
 
     static let originality = MarginariumGuardian(
@@ -654,7 +657,7 @@ nonisolated enum MarginariumCast {
                           comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Originality"),
         happiestWhen: String(localized: "lamp.originality.happiestWhen", defaultValue: "It has nothing to say.",
                              comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Originality"),
-        petCaption: String(localized: "lamp.originality.petCaption", defaultValue: "Originality's magnifying glass",
-                           comment: "The Marginarium, Who is Who: its pet's caption and VoiceOver description, for the guardian Originality"),
+        petCaption: String(localized: "lamp.originality.petCaption", defaultValue: "Originality",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian Originality"),
         hatched: true)
 }
