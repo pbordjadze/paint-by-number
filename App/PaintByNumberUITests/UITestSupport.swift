@@ -44,6 +44,21 @@ extension XCTestCase {
         XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: element)], timeout: timeout) == .completed
     }
 
+    /// Turns a Settings switch on or off, tapping the switch itself at its row's trailing end, and
+    /// says whether it got there. On the iPad simulator of GitHub's macOS 26 image of October 13,
+    /// 2026, a tap on a switch is now and then lost (the switch never moves while the app's main
+    /// thread is free; the earlier image and the iPhone never lost one), so a switch that hasn't
+    /// moved after 3 seconds is tapped once more, as an activity the test's log shows.
+    @MainActor
+    func flip(_ toggle: XCUIElement, on: Bool) -> Bool {
+        let target = NSPredicate(format: "value == %@", on ? "1" : "0")
+        let tap = { toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap() }
+        tap()
+        if waitFor(toggle, toMatch: target, timeout: 3) { return true }
+        XCTContext.runActivity(named: "The tap on \(toggle.label) was lost: tapping again") { _ in tap() }
+        return waitFor(toggle, toMatch: target, timeout: 5)
+    }
+
     /// Opens Settings the way a person does: from the gallery's toolbar.
     @MainActor
     func openSettings() -> XCUIApplication {
