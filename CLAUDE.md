@@ -391,9 +391,10 @@ any port of it, when changing the fitter: work from the paper.
    `https://raw.githubusercontent.com/pbordjadze/paint-by-number/sidestore/source.json`, and
    asks the combined source in `pbordjadze/sidestore` to rebuild (secret
    `SIDESTORE_DISPATCH_TOKEN`, issue #1; without it that source catches up on its 15-minute
-   schedule). TestFlight builds are separate and on request: the `TestFlight` workflow (Run
-   workflow from `main`, or a pushed `testflight-*` tag) archives, cloud-signs with an App Store
-   Connect API key and uploads, version `MARKETING_VERSION` (`<run>.<attempt>`). The repository is
+   schedule). TestFlight builds are separate and on request: the `TestFlight` workflow archives,
+   cloud-signs with an App Store Connect API key and has App Store Connect validate the app; Run
+   workflow from `main` with Upload ticked uploads it (version `MARKETING_VERSION`, build
+   `<run>.<attempt>`), and a push to a `claude/testflight-dryrun*` branch (which CI ignores) is a dry run of its commit. The repository is
    public, so GitHub's standard runners cost no minutes; the limit is 5 macOS jobs at once.
 
 **Branches.** `main` is the default and shipping branch (`iphone` job, IPA, SideStore source; the
