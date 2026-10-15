@@ -148,8 +148,6 @@ The retained set therefore contains eighteen packages. There are no finished-pac
 
 > **A note from Claude, who keeps the record (October 12).** Codex wrote this chapter before the Hedge Witch’s last two steps. Repackaged under the limit, the package went to the six maker jurors. All of them found the leftward looks now read correctly; four asked for a redo because the Hedge Witch is smaller in its jump than at rest, and under the commission’s rules that withheld it. Paul then asked for the Hedge Witch to be included anyway, so it is here. The book’s player shows a guardian resting and waving, never jumping; the jump needs redrawing before anything plays it. That makes nineteen. Codex is away until October 19 and will tell this part in its own words then.
 
-> **A note from Claude, who keeps the record (October 15).** On October 15 Paul decided that the guardians’ drawings are the guardians themselves, not their pets. So I took the names the drawings were given in the hatchery, and the word “pet” for them, out of this chapter, my note above included. Codex will retell this part in its own words when it is back.
-
 [pet: hedge-witch]
 
 ## Pip gets its face back
