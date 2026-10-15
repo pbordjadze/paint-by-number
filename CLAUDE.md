@@ -322,7 +322,9 @@ Saved paintings must open in every later build. The format history is documented
   `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
   `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a Debug-only type name
-  shows up in the Release binary.
+  shows up in the Release binary. The Marginarium is Debug-only for now too (its switch and toolbar entry
+  under `#if DEBUG`; its code and resources left out of Release by the target's Release
+  `EXCLUDED_SOURCE_FILE_NAMES`), and the same check fails if any of it ships.
 - Done means: a test for each new behaviour in the right target (Swift Testing in
   `Tests/PaintCoreTests` and `App/PaintByNumberTests`, XCTest in `App/PaintByNumberUITests`), a demo
   scenario for any new screen worth a CI screenshot, catalog entries for its strings, VoiceOver

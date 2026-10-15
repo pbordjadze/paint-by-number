@@ -83,6 +83,8 @@ CATALOG = Path("App/PaintByNumber/Resources/Localizable.xcstrings")
 MANIFEST = Path("App/PaintByNumber/Resources/marginarium.json")
 SOURCES = Path("docs/marginarium")
 ASSETS = Path("App/PaintByNumber/Resources/Assets.xcassets")
+# Pip's and Colophon's frames: a catalog of their own, which Release builds leave out.
+MARGINARIUM_ASSETS = Path("App/PaintByNumber/Resources/Marginarium.xcassets")
 RESOURCES = ASSETS.parent
 # These shipped imageset pets keep their existing playback plans in Marginarium.swift.
 PET_IMAGESETS = {"pip": {"idle": 6, "wave": 4}, "colophon": {"idle": 6, "review": 6}}
@@ -499,7 +501,8 @@ def check_art(root, block):
         elif not (root / RESOURCES / f"pet-{pet}.webp").is_file():
             raise ValueError(f"pet {pet}: expected a bundled pet-{pet}.webp atlas")
     if block.kind == "image":
-        matches = list((root / ASSETS).rglob(f"{block.metadata['image']}.imageset/Contents.json"))
+        matches = [match for catalog in (ASSETS, MARGINARIUM_ASSETS)
+                   for match in (root / catalog).rglob(f"{block.metadata['image']}.imageset/Contents.json")]
         if len(matches) != 1:
             raise ValueError(f"image {block.metadata['image']}: expected one bundled image set")
         images = load_json(matches[0]).get("images", [])

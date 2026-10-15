@@ -13,7 +13,9 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
     @AppStorage(SettingsKey.previewStyle) private var previewStyle = PreviewStyle.default
     @AppStorage(SettingsKey.detailBrushes) private var detailBrushes = false
+    #if DEBUG
     @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
+    #endif
     @State private var path: [Destination] = []
 
     private let appInfo = AppInfo()
@@ -129,6 +131,8 @@ struct SettingsView: View {
                     Text("Refine also offers brushes for more or less detail in an area, and corrections to the lines of text the app found.")
                 }
 
+                #if DEBUG
+                // Debug builds only for now (`AppShellView`).
                 Section {
                     Toggle(isOn: $showsMarginarium) {
                         SwiftUI.Label("The Marginarium", systemImage: "book.pages")
@@ -137,6 +141,7 @@ struct SettingsView: View {
                 } footer: {
                     Text("Adds the Marginarium to the gallery’s toolbar: the storybook of how the app was made, with its guardians.")
                 }
+                #endif
 
                 Section {
                     LabeledContent {
