@@ -1,0 +1,228 @@
+Building for debugging...
+[0/16] /Users/runner/work/paint-by-number/paint-by-number/.build/arm64-apple-macosx/debug/PaintCorePackageTests.derived/runner.swift
+[1/16] Write sources
+[2/16] Write pbn-entitlement.plist
+[2/16] Write sources
+[4/16] Copying Fixtures
+[5/16] Write sources
+[7/16] Copying Fixtures
+[9/16] Write sources
+[10/16] Write swift-version-7974D3F7F03D5E95.txt
+[12/67] Emitting module PaintCore
+[13/67] Compiling PaintCore ColorNicknameVocabularyValidation.swift
+[14/67] Compiling PaintCore ColorScience.swift
+[15/67] Compiling PaintCore ConnectedComponents.swift
+[16/67] Compiling PaintCore DisjointSet.swift
+[17/67] Compiling PaintCore DistanceTransform.swift
+[18/67] Compiling PaintCore Gaussian.swift
+[19/67] Compiling PaintCore Grid.swift
+[20/67] Compiling PaintCore MinHeap.swift
+[21/67] Compiling PaintCore Morphology.swift
+[22/67] Compiling PaintCore Netpbm.swift
+[23/67] Compiling PaintCore Parallel.swift
+[24/67] Compiling PaintCore PixelBounds.swift
+[25/67] Compiling PaintCore Resample.swift
+[26/67] Compiling PaintCore SIMDMath.swift
+[27/67] Compiling PaintCore SplitMix64.swift
+[28/67] Compiling PaintCore StageClock.swift
+[29/67] Compiling PaintCore CellMap.swift
+[30/67] Compiling PaintCore DrawnLine.swift
+[31/67] Compiling PaintCore EdgeMap.swift
+[32/67] Compiling PaintCore LayeredLines.swift
+[33/67] Compiling PaintCore LineArtStats.swift
+[34/67] Compiling PaintCore LineDetection.swift
+[35/67] Compiling PaintCore LineEdits.swift
+[36/67] Compiling PaintCore LineLayering.swift
+[37/67] Compiling PaintCore MaskContours.swift
+[38/67] Compiling PaintCore AutoSettings.swift
+[39/67] Compiling PaintCore AutoWorking.swift
+[40/67] Compiling PaintCore PaintingLength.swift
+[41/67] Compiling PaintCore PhotoAnalysis.swift
+[42/67] Compiling PaintCore PhotoAnalyzer.swift
+[43/67] Compiling PaintCore SubjectHints.swift
+[44/67] Compiling PaintCore EditCoding.swift
+[45/67] Compiling PaintCore EditDraw.swift
+[46/67] Compiling PaintCore EditErase.swift
+[47/67] Compiling PaintCore EditFaces.swift
+[48/67] Compiling PaintCore EditFill.swift
+[49/67] Compiling PaintCore EditFinish.swift
+[50/67] Compiling PaintCore EditLabels.swift
+[51/67] Compiling PaintCore EditMerge.swift
+[52/67] Compiling PaintCore EditPixels.swift
+[53/67] Compiling PaintCore EditTrail.swift
+[54/67] Compiling PaintCore EditWork.swift
+[55/67] Compiling PaintCore Lattice.swift
+[56/67] Compiling PaintCore TemplateEditor.swift
+[57/67] Compiling PaintCore SVGExport.swift
+[58/67] Compiling PaintCore ColorNaming.swift
+[59/67] Compiling PaintCore ColorNickname.swift
+[60/67] Compiling PaintCore ColorNicknameV2.swift
+[61/67] Compiling PaintCore ColorNicknameV2Anchors.swift
+[62/67] Compiling PaintCore ColorNicknameVocabulary.swift
+[63/115] Compiling PaintCore RegionRuns.swift
+[64/115] Compiling PaintCore RegionSimplifier+LabelRoom.swift
+[65/115] Compiling PaintCore RegionSimplifier.swift
+[66/115] Compiling PaintCore SegmentationParameters.swift
+[67/115] Compiling PaintCore Segmenter.swift
+[68/115] Compiling PaintCore StructureMap.swift
+[69/115] Compiling PaintCore TextureConsolidation.swift
+[70/115] Compiling PaintCore TextureMap.swift
+[71/115] Compiling PaintCore ThinPartRemoval.swift
+[72/115] Compiling PaintCore WorkingImage.swift
+[73/115] Compiling PaintCore TemplateGenerator.swift
+[74/115] Compiling PaintCore BoundaryGraph.swift
+[75/115] Compiling PaintCore CurveFairing.swift
+[76/115] Compiling PaintCore CurveFitter.swift
+[77/115] Compiling PaintCore DenseCurve.swift
+[78/115] Compiling PaintCore Earcut.swift
+[79/115] Compiling PaintCore EdgeGuides.swift
+[80/115] Compiling PaintCore EdgeSmoother.swift
+[81/115] Compiling PaintCore GeometryValidator.swift
+[82/115] Compiling PaintCore LabelKeepOut.swift
+[83/115] Compiling PaintCore PolyLabel.swift
+[84/115] Compiling PaintCore RegionFills.swift
+[85/115] Compiling PaintCore TemplateValidation.swift
+[86/115] Compiling PaintCore Vectorizer.swift
+[87/115] Compiling PaintCore StrokeGraph.swift
+[88/115] Compiling PaintCore Writing.swift
+[89/115] Compiling PaintCore GenerationSettings.swift
+[90/115] Compiling PaintCore LabelSizing.swift
+[91/115] Compiling PaintCore LineArtSettings.swift
+[92/115] Compiling PaintCore PaintingTime.swift
+[93/115] Compiling PaintCore PipelineTuning.swift
+[94/115] Compiling PaintCore RegionRemap.swift
+[95/115] Compiling PaintCore Segmentation.swift
+[96/115] Compiling PaintCore Template.swift
+[97/115] Compiling PaintCore TemplateCoding.swift
+[98/115] Compiling PaintCore TemplateLineArt.swift
+[99/115] Compiling PaintCore PipelineSnapshot.swift
+[100/115] Compiling PaintCore BandMerging.swift
+[101/115] Compiling PaintCore BandRings.swift
+[102/115] Compiling PaintCore BoundarySmoothing.swift
+[103/115] Compiling PaintCore BoxBlur.swift
+[104/115] Compiling PaintCore DomainTransformFilter.swift
+[105/115] Compiling PaintCore ImportanceMap.swift
+[106/115] Compiling PaintCore LabelRegularizer.swift
+[107/115] Compiling PaintCore PaletteBuilder.swift
+[108/115] Compiling PaintCore PaletteOrdering.swift
+[109/115] Compiling PaintCore PaletteRefiner.swift
+[110/115] Compiling PaintCore RegionAdjacency.swift
+[111/165] Emitting module pbn
+[112/165] Compiling PaintCoreTests AutoSettingsTests.swift
+[113/165] Compiling PaintCoreTests BandRingsTests.swift
+[114/165] Compiling PaintCoreTests ColorNamingTests.swift
+[115/165] Compiling PaintCoreTests ColorNicknameTests.swift
+[116/168] Compiling pbn Rasters.swift
+[117/168] Compiling pbn Timing.swift
+[118/168] Compiling pbn main.swift
+[119/168] Compiling PaintCoreTests ColorNicknameV2Tests.swift
+[120/168] Compiling PaintCoreTests ColorTestSupport.swift
+[121/168] Compiling PaintCoreTests CurveFitterTests.swift
+[121/168] Write Objects.LinkFileList
+[122/168] Linking pbn
+[123/168] Applying pbn
+[125/168] Compiling PaintCoreTests FillTests.swift
+[126/168] Compiling PaintCoreTests FoundationTests.swift
+[127/168] Compiling PaintCoreTests LabelSizingTests.swift
+[128/168] Compiling PaintCoreTests LineArtCodingTests.swift
+[129/168] Compiling PaintCoreTests LineArtTests.swift
+[130/168] Compiling PaintCoreTests LineEditsTests.swift
+[131/168] Compiling PaintCoreTests PipelineSnapshotTests.swift
+[132/168] Compiling PaintCoreTests PipelineTuningTests.swift
+[133/168] Compiling PaintCoreTests RegionMergingTests.swift
+[134/168] Compiling PaintCoreTests RegionRemapTests.swift
+[145/178] Emitting module MakingOf
+[146/178] Compiling MakingOf Show.swift
+[147/178] Compiling MakingOf ShowFrame.swift
+[148/178] Compiling MakingOf ShowPictures.swift
+[149/178] Compiling MakingOf ShowSpec.swift
+[150/178] Compiling MakingOf ShowTemplate.swift
+[151/178] Compiling MakingOf Sprites.swift
+[152/178] Compiling MakingOf StopWeights.swift
+[153/178] Compiling MakingOf Streams.swift
+[154/178] Compiling MakingOf Timeline.swift
+[155/178] Compiling MakingOf ValueNoise.swift
+[156/196] Emitting module MakingOfTests
+[157/204] Compiling MakingOfTests ShowTests.swift
+[158/204] Compiling MakingOfTests SmallShowSupport.swift
+[159/204] Compiling MakingOfTests SplitMixTests.swift
+[160/204] Compiling MakingOfTests SpritesTests.swift
+[161/204] Compiling MakingOfTests StopWeightsTests.swift
+[162/204] Compiling MakingOfTests TimelineTests.swift
+[163/204] Compiling MakingOfTests ValueNoiseTests.swift
+[164/204] Compiling MakingOfTests resource_bundle_accessor.swift
+[165/204] Compiling MakingOfTests ArrivalTests.swift
+[166/204] Compiling MakingOfTests CardsTests.swift
+[167/204] Compiling MakingOfTests CompositorTests.swift
+[168/204] Compiling MakingOfTests CrewInputsTests.swift
+[169/204] Compiling MakingOfTests CrewPlanTests.swift
+[170/204] Compiling MakingOfTests ExactMathTests.swift
+[171/204] Compiling MakingOfTests FixtureSupport.swift
+[172/204] Compiling MakingOfTests InkCoverageTests.swift
+[173/204] Compiling MakingOfTests LabelingTests.swift
+[174/204] Compiling MakingOfTests LayersTests.swift
+[175/204] Compiling MakingOfTests NumberScheduleTests.swift
+[176/204] Compiling MakingOfTests OutlinesTests.swift
+[177/204] Compiling MakingOfTests RevealFixture.swift
+[178/204] Compiling MakingOfTests SamplingTests.swift
+[179/204] Compiling MakingOfTests ShowPicturesTests.swift
+[180/204] Compiling MakingOfTests ShowSpecTests.swift
+[181/204] Compiling MakingOfTests ShowTemplateTests.swift
+[185/204] Emitting module PaintCoreTests
+/Users/runner/work/paint-by-number/paint-by-number/Tests/MakingOfTests/LayersTests.swift:228:22: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+226 |         var rng = SplitMix64(seed: 3)
+227 |         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
+228 |         let values = (0..<6000).map { i -> Float in
+    |                      `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229 |             i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+230 |         }
+/Users/runner/work/paint-by-number/paint-by-number/Tests/MakingOfTests/LayersTests.swift:228:22: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+226 |         var rng = SplitMix64(seed: 3)
+227 |         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
+228 |         let values = (0..<6000).map { i -> Float in
+    |                      `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229 |             i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+230 |         }
+/Users/runner/work/paint-by-number/paint-by-number/Tests/MakingOfTests/LayersTests.swift:228:22: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+226 |         var rng = SplitMix64(seed: 3)
+227 |         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
+228 |         let values = (0..<6000).map { i -> Float in
+    |                      `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229 |             i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+230 |         }
+/Users/runner/work/paint-by-number/paint-by-number/Tests/MakingOfTests/LayersTests.swift:228:22: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+226 |         var rng = SplitMix64(seed: 3)
+227 |         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
+228 |         let values = (0..<6000).map { i -> Float in
+    |                      `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229 |             i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+230 |         }
+/Users/runner/work/paint-by-number/paint-by-number/Tests/MakingOfTests/LayersTests.swift:228:22: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+226 |         var rng = SplitMix64(seed: 3)
+227 |         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
+228 |         let values = (0..<6000).map { i -> Float in
+    |                      `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229 |             i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+230 |         }
+/Users/runner/work/paint-by-number/paint-by-number/Tests/MakingOfTests/LayersTests.swift:228:22: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+226 |         var rng = SplitMix64(seed: 3)
+227 |         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
+228 |         let values = (0..<6000).map { i -> Float in
+    |                      `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229 |             i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+230 |         }
+/Users/runner/work/paint-by-number/paint-by-number/Tests/MakingOfTests/LayersTests.swift:228:22: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+226 |         var rng = SplitMix64(seed: 3)
+227 |         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
+228 |         let values = (0..<6000).map { i -> Float in
+    |                      `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229 |             i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+230 |         }
+/Users/runner/work/paint-by-number/paint-by-number/Tests/MakingOfTests/LayersTests.swift:228:22: error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+226 |         var rng = SplitMix64(seed: 3)
+227 |         // zeros, repeats and values over six orders of magnitude, so that buckets of all sizes occur
+228 |         let values = (0..<6000).map { i -> Float in
+    |                      `- error: the compiler is unable to type-check this expression in reasonable time; try breaking up the expression into distinct sub-expressions
+229 |             i % 7 == 0 ? 0 : i % 11 == 0 ? 0.25 : Float(rng.nextDouble() * pow(10, Double(i % 6) - 3))
+230 |         }
+error: fatalError
