@@ -12,7 +12,7 @@ nonisolated enum ArtworkExporter {
         var errorDescription: String? {
             switch self {
             case .renderFailed:
-                String(localized: "export.error.renderFailed", defaultValue: "The picture couldn't be rendered.",
+                String(localized: "export.error.renderFailed", defaultValue: "The picture couldn’t be rendered.",
                        comment: "Error when a painting's picture can't be rendered for sharing")
             case .timelapseFailed:
                 String(localized: "export.error.timelapseFailed", defaultValue: "The time-lapse couldn’t be made.",

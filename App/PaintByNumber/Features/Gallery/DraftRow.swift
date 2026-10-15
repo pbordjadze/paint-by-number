@@ -97,9 +97,11 @@ struct DraftRow: View {
             .disabled(isOpening)
             .accessibilityIdentifier("draft-continue")
 
+            // Glass draws its label in the tint, whatever the role.
             Button("Discard Draft", systemImage: "trash", role: .destructive, action: onDiscard)
                 .labelStyle(.iconOnly)
                 .buttonStyle(.glass)
+                .tint(.red)
                 .buttonBorderShape(.circle)
                 .disabled(isOpening)
                 .accessibilityIdentifier("draft-discard")

@@ -94,6 +94,8 @@ struct PaintView: View {
         // Nothing here takes typing: a keyboard over a sheet (feedback's notes) leaves the
         // canvas where it is.
         .ignoresSafeArea(.keyboard)
+        // The canvas runs under the top edge: the clock would sit on the painting.
+        .statusBarHidden()
         .background(Color(uiColor: .systemGroupedBackground))
         .focusedSceneValue(\.painting, PaintingFocus(
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
@@ -133,6 +135,7 @@ struct PaintView: View {
         .sheet(isPresented: reviewsFeedback) {
             if let feedback {
                 FeedbackSheet(draft: feedback, onSent: feedbackSent)
+                    .pageSizedOnPad()
             }
         }
         .overlay(alignment: .top) {

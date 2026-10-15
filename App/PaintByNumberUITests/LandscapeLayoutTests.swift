@@ -35,10 +35,10 @@ final class LandscapeLayoutTests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 30))
         expectation(for: NSPredicate(format: "isEnabled == true"), evaluatedWith: start)
         waitForExpectations(timeout: 60)
-        // Start Painting enables at the draft; the full-resolution template is still refining, and
+        // Start Painting enables at the draft; the full-resolution template is still updating, and
         // auditing while its status capsule fades out reports an element that has just gone.
-        let refining = app.staticTexts["Refining…"]
-        XCTAssertTrue(waitUntil(timeout: 120) { !refining.exists }, "The template was still refining")
+        let updating = app.staticTexts["Updating…"]
+        XCTAssertTrue(waitUntil(timeout: 120) { !updating.exists }, "The template was still updating")
         sleep(1)
         attachScreen(named: "landscape-create-preview")
         try audit(app, named: "create-preview")

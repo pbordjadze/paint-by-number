@@ -234,7 +234,8 @@ synchronized folder would bundle it into the app.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
   `PaintingMelody` note per fill; Core Haptics patterns, none on iPad. `SoundPlayer` and
   `HapticsPlayer` each work on a queue of their own (starting either engine blocks its caller).
-  Settings' Sounds and Haptics switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`).
+  Settings' Sounds and Haptics switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`);
+  Haptics shows only on hardware with haptics (not iPad, not the simulator).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
   (`ColorNickname.seed(for:)`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
   so a painting's names are the same on every open (derived, never

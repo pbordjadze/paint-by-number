@@ -1,3 +1,4 @@
+import CoreHaptics
 import Foundation
 import PaintCore
 import SwiftUI
@@ -78,9 +79,12 @@ struct SettingsView: View {
                     Text("Short tips explain painting gestures as you go.")
                 }
 
-                Section("Feedback") {
-                    Toggle(isOn: $haptics) {
-                        SwiftUI.Label("Haptics", systemImage: "hand.tap")
+                Section("Sound & Haptics") {
+                    // iPad and the simulator have no haptics: nothing to switch.
+                    if CHHapticEngine.capabilitiesForHardware().supportsHaptics {
+                        Toggle(isOn: $haptics) {
+                            SwiftUI.Label("Haptics", systemImage: "hand.tap")
+                        }
                     }
                     Toggle(isOn: $sounds) {
                         SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
@@ -162,10 +166,12 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done", systemImage: "checkmark") { dismiss() }
+                        .tint(Theme.signature)
                 }
             }
         }
         .presentationDetents([.large])
+        .pageSizedOnPad()
         .tint(Theme.accent)
     }
 }
