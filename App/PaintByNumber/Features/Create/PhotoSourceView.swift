@@ -9,8 +9,8 @@ import UIKit
 /// The inline picker is the page's primary content and fills the remaining height. Compact
 /// windows switch between it and the samples with a segmented control; wide windows show the
 /// samples in a scrolling column beside it, in two sections: paintings, then photographs. The
-/// picker's own top bar reaches the albums and search; "Browse All…" presents the full system
-/// picker, a way in that doesn't depend on the embedded one taking taps.
+/// picker is just its grid of photos; "Browse All…" presents the full system picker for albums
+/// and search, a way in that doesn't depend on the embedded one taking taps.
 ///
 /// The picker meets the page's leading edge: inset from both the window's left and top edge,
 /// the embedded picker's photo grid ignores taps on iPhone for its first ten seconds or so (its
@@ -160,9 +160,10 @@ struct PhotoSourceView: View {
             }
             .photosPickerStyle(.inline)
             .photosPickerDisabledCapabilities(.selectionActions)
-            // Only the bottom bar goes: it carries selection status and actions, meaningless
-            // when a tap picks. The top bar stays for Photos/Albums, search and the album back button.
-            .photosPickerAccessoryVisibility(.hidden, edges: .bottom)
+            // No bars: the bottom one carries selection status and actions, meaningless when a
+            // tap picks, and the top one (Photos and Collections, search) stacked a second
+            // segmented control under the page's own on a black band; Browse All reaches albums.
+            .photosPickerAccessoryVisibility(.hidden, edges: .all)
             .accessibilityIdentifier("library-picker")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             // The card only on wide windows, square where it meets the leading edge (see the

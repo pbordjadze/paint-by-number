@@ -378,9 +378,10 @@ Conventions).
 
 - `PhotoSourceView`: the inline picker fills the page (Gotchas). Compact windows switch Photos and
   Samples with a segmented control; windows at least 600 pt wide (`PhotoSourceView.isWide`) keep the
-  picker in a card with a scrolling samples column beside it. The picker's own top bar reaches the
-  albums and search; "Browse All…" presents the full system picker, the way in when the embedded
-  one doesn't take taps.
+  picker in a card with a scrolling samples column beside it. The picker shows its grid alone (no
+  top or bottom bar: its Photos/Collections control stacked under the page's own); "Browse All…"
+  presents the full system picker, for albums and search and the way in when the embedded one
+  doesn't take taps.
 - Samples: Paintings then Photographs (`Sample.all(of:)`), in `library.json`'s order, titled from
   the catalog (`sample.<id>`); `Sample.starters` (a painting and a photograph) are prepared on first
   launch. Adding a picture: `docs/picture-library.md`.
