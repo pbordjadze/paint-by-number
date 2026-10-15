@@ -174,16 +174,20 @@ final class Library {
             defaults.removeObject(forKey: Self.seedFailuresKey)
             return nil
         }
+        // Nothing made (say, the device was out of space): try again on later launches, but not
+        // forever. The attempt is counted before seeding, not after: a launch that ends while
+        // seeding (the system ending the app for memory) counts too, or it would end every launch.
+        let attempt = defaults.integer(forKey: Self.seedFailuresKey) + 1
+        guard attempt <= Self.maxSeedAttempts else {
+            defaults.set(true, forKey: Self.seededKey)
+            defaults.removeObject(forKey: Self.seedFailuresKey)
+            return nil
+        }
+        defaults.set(attempt, forKey: Self.seedFailuresKey)
         return seed(samples.map { SeedItem(sample: $0) }) { created in
-            // Nothing made (say, the device was out of space): try again on later launches,
-            // but not forever.
-            let failures = created > 0 ? 0 : defaults.integer(forKey: Self.seedFailuresKey) + 1
-            if failures == 0 || failures >= Self.maxSeedAttempts {
-                defaults.set(true, forKey: Self.seededKey)
-                defaults.removeObject(forKey: Self.seedFailuresKey)
-            } else {
-                defaults.set(failures, forKey: Self.seedFailuresKey)
-            }
+            guard created > 0 || attempt >= Self.maxSeedAttempts else { return }
+            defaults.set(true, forKey: Self.seededKey)
+            defaults.removeObject(forKey: Self.seedFailuresKey)
         }
     }
 
@@ -476,7 +480,7 @@ final class Library {
     }
 
     /// A file that is gone or whose content is bad, as opposed to one that failed to be read.
-    private nonisolated static func isDamage(_ error: CocoaError) -> Bool {
+    nonisolated static func isDamage(_ error: CocoaError) -> Bool {
         switch error.code {
         case .fileNoSuchFile, .fileReadNoSuchFile, .fileReadCorruptFile: true
         default: false

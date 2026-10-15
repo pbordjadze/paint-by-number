@@ -338,7 +338,8 @@ Conventions).
   without either photo it can't regenerate (`ArtworkFactory.canRegenerate`). Artworks written by a
   newer app (`Artwork.needsNewerApp`) are listed read-only: delete only.
 - `ArtworkPaintingView` hosts `PaintView` and autosaves (`PaintingAutosaver`: debounced, at
-  most 10 s apart while painting goes on, on background, on close). `Library.writeFailures` records failed progress or metadata writes (the
+  most 10 s apart while painting goes on, on background, on close). Leaving the foreground, it and
+  the create flow hold a background task until their writes are on disk (`BackgroundSaving`). `Library.writeFailures` records failed progress or metadata writes (the
   newest unsaved progress is kept for `retrySaving`); the painting screen and the gallery show a
   Retry toast; thumbnail and trash writes only log. Tests make writes fail through
   `ArtworkStore.writeFaults`.
@@ -347,7 +348,8 @@ Conventions).
   (`Library.inProgress`/`finished` list favorites first); `TitleSearch.matches` needs every query
   word to start a title word, ignoring case, diacritics and width. `AppShellView` keeps the open
   painting's id in `@SceneStorage("openArtwork")` and reopens it once on appear (not in demo
-  launches, nor while a file is being opened).
+  launches, nor while a file is being opened); a launch whose reopen never settled (the app ended
+  opening it) shows the gallery at the next one instead (`ReopenGuard`).
 - Image caches (`ImageCache`, `ImageCaches.swift`): LRU by decoded bytes, emptied on memory
   warnings; gallery tiles decode thumbnails at their own pixel size.
 - Rendering without Metal: `TemplateRasterizer` (CoreGraphics; vector geometry, falls back to the

@@ -301,6 +301,8 @@ extension Template {
 
     /// Region under a canvas-space point, if inside the canvas.
     public func region(at point: SIMD2<Float>) -> Int? {
+        // Off the canvas, as far as `Int(_:)` goes: it traps on these.
+        guard point.x.isFinite, point.y.isFinite, abs(point.x) < 1e9, abs(point.y) < 1e9 else { return nil }
         let x = Int(point.x.rounded(.down)), y = Int(point.y.rounded(.down))
         guard regionMap.contains(x: x, y: y) else { return nil }
         return Int(regionMap[x, y])

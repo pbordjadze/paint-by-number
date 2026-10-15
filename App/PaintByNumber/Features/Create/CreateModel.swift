@@ -380,7 +380,7 @@ final class CreateModel {
                 }
             } catch is CancellationError {
             } catch {
-                Log.create.error("Loading photo failed: \(String(describing: error), privacy: .public)")
+                Log.create.error("Loading photo failed: \(String(describing: error), privacy: .private)")
                 phase = .failed((error as? CreateError ?? .unreadable).localizedDescription)
             }
         }

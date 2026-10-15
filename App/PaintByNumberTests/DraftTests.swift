@@ -199,6 +199,24 @@ struct DraftTests {
         #expect(!FileManager.default.fileExists(atPath: folder.path), "The damaged draft was kept")
     }
 
+    /// A draft that can't be read just now (here: no permission, as a data protection error would
+    /// leave it) is no damage: it is kept, and the next launch that can read it has it.
+    @Test func aDraftThatCantBeReadNowIsKept() throws {
+        let store = store
+        let saved = draft()
+        try store.write(saved, photo: try photo())
+        let fm = FileManager.default
+        let json = store.url(.draft).path
+        try fm.setAttributes([.posixPermissions: 0], ofItemAtPath: json)
+        defer { try? fm.setAttributes([.posixPermissions: 0o644], ofItemAtPath: json) }
+
+        #expect(Drafts(store: store).current == nil)
+        #expect(fm.fileExists(atPath: json), "A draft that couldn't be read just now was removed")
+
+        try fm.setAttributes([.posixPermissions: 0o644], ofItemAtPath: json)
+        #expect(Drafts(store: store).current == saved)
+    }
+
     @Test func aPhotoThatDoesNotDecodeIsFoundWhenOpening() async throws {
         let store = store
         try store.write(draft(), photo: try photo())

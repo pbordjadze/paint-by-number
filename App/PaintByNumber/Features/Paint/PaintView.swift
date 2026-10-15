@@ -275,7 +275,9 @@ struct PaintView: View {
     /// The palette's lines for `count` swatches `length` points long, under the Rows setting:
     /// Auto allows `automatic` lines, and no choice makes the bar thicker than `room` points.
     private func paletteLines(count: Int, length: CGFloat, automatic: Int, room: CGFloat, metrics: PaletteMetrics) -> Int {
-        let fit = Int((room - 2 * PaletteMetrics.padding + PaletteMetrics.spacing) / metrics.pitch)
+        let lines = (room - 2 * PaletteMetrics.padding + PaletteMetrics.spacing) / metrics.pitch
+        // `Int(_:)` traps on a non-finite size (a zero-sized layout pass).
+        let fit = lines.isFinite ? Int(max(lines, 0)) : 1
         let most = max(1, min(paletteRows.maxLines(automatic: automatic), fit))
         if paletteRows.isFixed { return max(1, min(most, count)) }
         return metrics.lines(count: count, length: length, maxLines: most)

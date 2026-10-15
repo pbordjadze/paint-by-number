@@ -44,6 +44,16 @@ struct FillTests {
     /// in a new paint of the speck's color (the palette had none within a just-noticeable
     /// difference), kept against every merge, with a number at least a detail area's floor;
     /// the template holds every invariant, at each region's own floor.
+    /// A touch that isn't a number (a NaN from a gesture) or is far off the canvas has no region,
+    /// rather than trapping in `Int(_:)`.
+    @Test func noRegionUnderANonFinitePoint() throws {
+        let t = try Self.generate([]).template
+        for point in [SIMD2<Float>(.nan, 20), SIMD2(100, .infinity), SIMD2(-.infinity, 0), SIMD2(1e30, 1e30)] {
+            #expect(t.region(at: point) == nil, "\(point)")
+        }
+        #expect(t.region(at: SIMD2(100, 20)) != nil)
+    }
+
     @Test func aFilledShapeBecomesADetailArea() throws {
         let shape = Self.star()
         let outlined = try Self.generate([shape])
