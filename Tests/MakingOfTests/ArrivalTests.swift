@@ -139,7 +139,7 @@ import Testing
         let timing = ScheduleTiming(intro: 0, step: 2)          // the paints step spans 4...6
         let paints = Plane<Int32>(width: 4, height: 1, data: [0, 0, 1, 1])
         let labels = Plane<Int32>(width: 4, height: 1, data: [0, 0, 1, 1])
-        let seed = PaintFlow.Seed(time: 4.1, x: 1, y: 0, paint: 0)
+        let seed = PaintSeed(time: 4.1, x: 1, y: 0, paint: 0)
         let calm = PaintFlow.times(
             seeds: [seed], paints: paints, paintCount: 2, labels: labels, labelCount: 2,
             following: Plane(width: 4, height: 1, repeating: 5), timing: timing)

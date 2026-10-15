@@ -5,7 +5,9 @@ import PaintCore
 /// spec (`ShowSpec.tones`, `.sketch`) does not set. `tools/factory/making_of_layers.py` has the
 /// same struct, field for field (`RevealStyle`, in snake_case), and `LayersTests` compares the two.
 /// Seconds are the ramps a change takes to come in; colors are `paper` and `ink` in 0...255 and
-/// `graphite` in 0...1.
+/// `graphite` in 0...1. `ScheduleStyle` is the other style and the two don't overlap: this one is
+/// what a pixel looks like at a moment, run for every pixel (by the `Compositor`, and by the app's
+/// shader); that one is when and where the change reaches each part, worked out once per show.
 public struct RevealStyle: Sendable, Equatable {
     public var paper = SIMD3<Double>(247, 244, 238)
     public var graphite = SIMD3<Double>(0.30, 0.29, 0.31)

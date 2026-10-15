@@ -76,23 +76,9 @@ public enum Arrival {
 }
 
 /// How the paints of step 3 flow: each paint's areas spread from the k-means++ seeds that landed
-/// on it, and a paint no seed landed on follows the crew's own change.
+/// on it (`PaintSeed`, which `CrewInputs.make` chooses), and a paint no seed landed on follows the
+/// crew's own change.
 public enum PaintFlow {
-    /// A k-means++ seed: dropped at `time` on (`x`, `y`), a pixel of paint `paint`.
-    public struct Seed: Sendable, Equatable {
-        public var time: Double
-        public var x: Double
-        public var y: Double
-        public var paint: Int
-
-        public init(time: Double, x: Double, y: Double, paint: Int) {
-            self.time = time
-            self.x = x
-            self.y = y
-            self.paint = paint
-        }
-    }
-
     public struct Result: Sendable, Equatable {
         /// When each region of the labels changes: its earliest pixel's time.
         public var regionTimes: [Double]
@@ -109,14 +95,14 @@ public enum PaintFlow {
     /// `labelCount` regions (connected areas of one paint); `crew` is the paints step's own
     /// `Arrival.field`, which unseeded paints follow a moment behind.
     public static func times(
-        seeds: [Seed], paints: Plane<Int32>, paintCount: Int, labels: Plane<Int32>, labelCount: Int,
+        seeds: [PaintSeed], paints: Plane<Int32>, paintCount: Int, labels: Plane<Int32>, labelCount: Int,
         following crew: Plane<Double>, timing: ScheduleTiming, style: ScheduleStyle = .standard
     ) -> Result {
         let (width, height) = (paints.width, paints.height)
         precondition(
             [labels.width, crew.width] == [width, width] && [labels.height, crew.height] == [height, height],
             "paints, labels and the crew's field cover the same picture")
-        var bySeededPaint = [[Seed]](repeating: [], count: paintCount)
+        var bySeededPaint = [[PaintSeed]](repeating: [], count: paintCount)
         for seed in seeds {
             precondition((0..<paintCount).contains(seed.paint), "a seed lands on a paint")
             bySeededPaint[seed.paint].append(seed)

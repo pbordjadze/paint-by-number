@@ -1,8 +1,12 @@
-/// The numbers the reveal schedule (`Arrival`, `PaintFlow`, `StrokeSchedule`, `NumberSchedule`) is
-/// tuned by, in one place. `making_of_reveal.py` has the same in capitals with underscores (a
-/// lattice's cells are one pair there), and `test_making_of_reveal.py` checks that they agree;
-/// change them together and regenerate `reveal-small.json`. Times are seconds, lengths pixels of
-/// the working image unless a unit says otherwise.
+/// The numbers the show's schedule (`Arrival`, `PaintFlow`, `StrokeSchedule`, `NumberSchedule`, and
+/// `Timeline` for the overlays) is tuned by, in one place: WHEN and WHERE things happen, worked out
+/// once per show on the CPU. `RevealStyle` is the other style, and the two don't overlap: that one is
+/// what a pixel looks like at a moment (colors, and the ramps a change takes to come in, which the
+/// `Compositor` and the app's shader run for every pixel). `making_of_reveal.py` has this one in
+/// capitals with underscores (a lattice's cells are one pair there), and `test_making_of_reveal.py`
+/// checks that they agree; change them together and regenerate `reveal-small.json` and
+/// `frames-small.json`. Times are seconds, lengths pixels of the working image unless a unit says
+/// otherwise.
 public struct ScheduleStyle: Sendable, Equatable {
     public static let standard = ScheduleStyle()
 
@@ -73,6 +77,27 @@ public struct ScheduleStyle: Sendable, Equatable {
     public var numberDisc = 0.9
     public var numberDiscMinimum = 4.0
 
+    // MARK: Overlays
+
+    /// A step's card fades in, and out again, over this long at the reference step (over the square
+    /// root of the pace, so a brisker show fades faster).
+    public var cardFade = 0.15
+    /// A seed ring pops in over this long, swelling by this share of its radius on the way ...
+    public var ringPop = 0.22
+    public var ringSwell = 0.35
+    /// ... and is opaque once a third of that has passed: its alpha rises this many times as fast.
+    public var ringRise = 3.0
+    /// Every ring is gone this long before the paints step ends, over `ringGoneFade` ...
+    public var ringGoneBefore = 0.4
+    public var ringGoneFade = 0.35
+    /// ... and a ring fades this long after its paint has spread everywhere (the spec's
+    /// `seeds.fade` is how long it takes).
+    public var ringAfterSpread = 0.1
+    /// Every guardian fades out over the last of this long of the show, as the painting screen arrives.
+    public var crewFadeOut = 0.3
+    /// The finished drawing hands over to the real template over this long, as the steps end.
+    public var handoff = 0.15
+
     public init() {}
 }
 
@@ -103,4 +128,12 @@ public struct ScheduleTiming: Sendable, Equatable {
 
     /// How much faster than the reference step this one is, which the speeds scale by.
     public func pace(_ style: ScheduleStyle) -> Double { style.referenceStep / step }
+
+    /// What the show is doing at time `t`: -1 before the first step, 0 to 5 in a step, 6 once the
+    /// six are over (`stage_of` in `making_of_compose.py`).
+    public func stage(at t: Double) -> Int {
+        if t < intro { return -1 }
+        if t >= end { return Self.steps }
+        return min(Int(((t - intro) / step).rounded(.down)), Self.steps - 1)
+    }
 }

@@ -88,7 +88,10 @@ public struct PetState: Sendable, Equatable {
     public var frame: Int { truncated(frameValue) }
     public var scaleX: Double
     public var scaleY: Double
-    /// Degrees, positive turning clockwise.
+    /// Degrees, positive turning COUNTER-clockwise, as Pillow's `rotate` takes them (the Python
+    /// reference's number, which the plan fixture pins): a guardian facing right leans forward at
+    /// -4, a clockwise turn. `SpriteDraw.rotation` is this negated, clockwise-positive like
+    /// SwiftUI's `rotationEffect`.
     public var tilt: Double
     public var alpha: Double
     /// `frame` before it is truncated.

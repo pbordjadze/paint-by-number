@@ -8,7 +8,7 @@ import Testing
         Labeling.regions(keys: Plane(width: rows[0].count, height: rows.count, data: rows.flatMap { $0 }))
     }
 
-    private func rows(_ r: RegionLabels) -> [[UInt32]] {
+    private func rows(_ r: RegionLabels) -> [[Int32]] {
         (0..<r.labels.height).map { y in (0..<r.labels.width).map { r.labels[$0, y] } }
     }
 

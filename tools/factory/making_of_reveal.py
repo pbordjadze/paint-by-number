@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """When each part of the making-of picture changes: the show's reveal schedule, in float64.
 
-This is the reference for Sources/MakingOf (ValueNoise, Arrival, Outlines, NumberSchedule), which
-ports it line by line; change the two together and regenerate the fixture:
+This is the reference for Sources/MakingOf (ValueNoise, Arrival, Outlines, NumberSchedule, Timeline),
+which ports it line by line; change the two together and regenerate the fixture:
 
   python3 tools/factory/making_of_reveal.py --fixture Tests/MakingOfTests/Fixtures/show-small \\
       Tests/MakingOfTests/Fixtures/reveal-small.json
@@ -66,6 +66,15 @@ NUMBER_END_MARGIN = 0.15  # s: every number is down this long before the show's 
 NUMBER_FADE = 0.1         # s a number takes to come in
 NUMBER_DISC = 0.9         # of a number's size: the radius of the disc it owns (at least NUMBER_DISC_MINIMUM)
 NUMBER_DISC_MINIMUM = 4.0  # px
+CARD_FADE = 0.15          # s: a card fades in and out over this long at the reference step (over sqrt of the pace)
+RING_POP = 0.22           # s: a seed ring pops in over this long ...
+RING_SWELL = 0.35         # ... swelling by this share of its radius on the way ...
+RING_RISE = 3.0           # ... and is opaque once a third of that has passed
+RING_GONE_BEFORE = 0.4    # s: every ring is gone this long before the paints step ends, over ...
+RING_GONE_FADE = 0.35     # ... this long
+RING_AFTER_SPREAD = 0.1   # s: a ring fades this long after its paint has spread everywhere
+CREW_FADE_OUT = 0.3       # s: every guardian fades out over the last of this long of the show
+HANDOFF = 0.15            # s: the finished drawing hands over to the real template over this long
 WHOLE_WITHIN = 1e-9       # px: a line walked to the end can fall a rounding short of its length; it is whole
 
 STEPS = 6
@@ -333,6 +342,43 @@ def number_discs(numbers, shape):
         dx, dy = xs[y0:y1, x0:x1] - x, ys[y0:y1, x0:x1] - y
         owner[y0:y1, x0:x1][dx * dx + dy * dy <= r * r] = i
     return owner
+
+
+# --- overlays ------------------------------------------------------------------------------------------
+# When the cards, the seed rings, the crew and the real template come and go (Sources/MakingOf's
+# Timeline): pure functions of the time, like everything above.
+
+def card_fade(k, t, intro, step):
+    """How far card `k` has faded in or out at `t`, 0...1: in over the first CARD_FADE of its step and out
+    over the last, a brisker show fading faster."""
+    fade = CARD_FADE / math.sqrt(REFERENCE_STEP / step)
+    local = t - starts(intro, step)[k]
+    return pets.ease(local / fade) * (1 - pets.ease((local - (step - fade)) / fade))
+
+
+def seed_ring(seed, spread, t, intro, step, dot, fade):
+    """The ring of a seed (time, x, y, paint) at `t` as {x, y, radius, alpha}, or None while it doesn't
+    show. `spread`: when its paint's last region has changed; `dot`, `fade`: the spec's seeds."""
+    st, sx, sy, _ = seed
+    if t < st:
+        return None
+    gone = 1 - pets.ease((t - (starts(intro, step)[2] + step - RING_GONE_BEFORE)) / RING_GONE_FADE)
+    u = min((t - st) / RING_POP, 1.0)
+    done = 1 - pets.ease((t - spread - RING_AFTER_SPREAD) / fade)
+    alpha = gone * done * min(u * RING_RISE, 1)
+    if not alpha > 0:
+        return None
+    return {'x': sx, 'y': sy, 'radius': dot * (1 + RING_SWELL * math.sin(math.pi * u) * (1 - u)), 'alpha': alpha}
+
+
+def crew_fade(t, duration):
+    """How much of the crew shows at `t`: all of it until the last CREW_FADE_OUT of the show."""
+    return 1.0 if t < duration - CREW_FADE_OUT else max(0.0, (duration - t) / CREW_FADE_OUT)
+
+
+def handoff(t, intro, step):
+    """How far the real template has taken over from the finished drawing, 0...1."""
+    return pets.ease((t - (intro + STEPS * step)) / HANDOFF)
 
 
 # --- the fixture ---------------------------------------------------------------------------------------

@@ -70,9 +70,7 @@ public struct Compositor: Sendable {
 
     /// -1 before the first step, 0...5 in a step, 6 once the six are over.
     public func stage(at t: Double) -> Int {
-        if t < intro { return -1 }
-        if t >= intro + 6 * step { return 6 }
-        return min(Int(((t - intro) / step).rounded(.down)), 5)
+        ScheduleTiming(intro: intro, step: step).stage(at: t)
     }
 
     /// The whole picture at time t; `ink` is the lines' coverage (0 for none, 1 for full ink) in the
@@ -186,8 +184,5 @@ public struct Compositor: Sendable {
         return SIMD3(repeating: 1) - SIMD3(repeating: darkness) * (SIMD3(repeating: 1) - style.graphite)
     }
 
-    static func smoothstep(_ x: Double) -> Double {
-        let x = min(max(x, 0), 1)
-        return x * x * (3 - 2 * x)
-    }
+    static func smoothstep(_ x: Double) -> Double { ease(x) }
 }

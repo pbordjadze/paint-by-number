@@ -18,13 +18,15 @@ public struct PaintSeed: Sendable, Equatable {
 }
 
 /// The paints of the palette picture: its distinct colors, ascending as `r << 16 | g << 8 | b`,
-/// and for each pixel the index of its color among them.
+/// and for each pixel the index of its color among them (an `Int32` like every area label, so
+/// `PaintFlow` takes it as it is).
 struct PaintColors: Sendable, Equatable {
     var keys: [UInt32]
-    var index: Plane<UInt16>
+    var index: Plane<Int32>
 
-    /// The most paints a picture can have here.
-    static let maximum = Int(UInt16.max) + 1
+    /// The most colors a palette picture may have: it holds dozens, and a picture with this many
+    /// is not one.
+    static let maximum = 1 << 16
 
     init(palette: Plane<SIMD4<UInt8>>) throws {
         var seen = Set<UInt32>()
@@ -36,7 +38,7 @@ struct PaintColors: Sendable, Equatable {
         }
         guard seen.count <= Self.maximum else { throw ShowPicturesError(description: "the palette picture has \(seen.count) colors") }
         keys = seen.sorted()
-        let place = Dictionary(uniqueKeysWithValues: keys.enumerated().map { ($1, UInt16($0)) })
+        let place = Dictionary(uniqueKeysWithValues: keys.enumerated().map { ($1, Int32($0)) })
         index = Plane(width: palette.width, height: palette.height, data: palette.data.map { place[ExactMath.colorKey($0)]! })
     }
 

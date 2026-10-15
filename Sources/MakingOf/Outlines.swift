@@ -163,7 +163,7 @@ public struct StrokeSchedule: Sendable {
             if stroke.walked {
                 drawn = crew.traced(t - stroke.start, stroke.length, petHeight)
             } else {
-                drawn = Self.ease((t - stroke.start) / stroke.duration) * stroke.length
+                drawn = ease((t - stroke.start) / stroke.duration) * stroke.length
             }
             if stroke.length - drawn < Self.wholeWithin { drawn = stroke.length }
             let count = Self.pointsBehind(stroke.cumulative, drawn)
@@ -181,17 +181,12 @@ public struct StrokeSchedule: Sendable {
     public func relaxed(at t: Double) -> [InkLine] {
         strokes.map { stroke in
             let points = (0..<stroke.jagged.count).map { i -> Point in
-                let m = Self.ease((t - stroke.relax[i]) / outlines.relax)
+                let m = ease((t - stroke.relax[i]) / outlines.relax)
                 let (a, b) = (stroke.jagged[i], stroke.smooth[i])
                 return Point(a.x * (1 - m) + b.x * m, a.y * (1 - m) + b.y * m)     // exactly each end at 0 and 1
             }
             return InkLine(stroke: stroke.index, points: points, value: 1)
         }
-    }
-
-    private static func ease(_ x: Double) -> Double {
-        let t = min(max(x, 0), 1)
-        return t * t * (3 - 2 * t)
     }
 
     /// How many of the ascending `distances` are at or before `d` (`numpy.searchsorted` to the right).

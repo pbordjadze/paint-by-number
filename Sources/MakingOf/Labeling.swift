@@ -1,7 +1,9 @@
 /// The connected areas of a picture or of a plane of keys.
 struct RegionLabels: Sendable, Equatable {
-    /// For each cell, the number of its area, from 0.
-    var labels: Plane<UInt32>
+    /// For each cell, the number of its area, from 0. `Int32` is the show's one type for an index
+    /// of an area or a paint (`Arrival.regionMinimum`, `PaintFlow`, `NumberSchedule` take these
+    /// planes as they are), signed because `NumberSchedule.discs` marks no owner with -1.
+    var labels: Plane<Int32>
     var count: Int
 }
 
@@ -56,7 +58,7 @@ enum Labeling {
 
         var number = [Int32](repeating: -1, count: runStart.count)
         var count = 0
-        var labels = [UInt32](repeating: 0, count: w * h)
+        var labels = [Int32](repeating: 0, count: w * h)
         for y in 0..<h {
             for r in rowFirstRun[y]..<rowFirstRun[y + 1] {
                 let root = find(r)
@@ -64,7 +66,7 @@ enum Labeling {
                     number[root] = Int32(count)
                     count += 1
                 }
-                let label = UInt32(number[root])
+                let label = number[root]
                 for x in Int(runStart[r])..<Int(runEnd[r]) { labels[y * w + x] = label }
             }
         }

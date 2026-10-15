@@ -143,8 +143,8 @@ struct RevealFixture: Decodable {
         }
     }
     var numbers: [(x: Double, y: Double, size: Double)] { inputs.numbers.map { (x: $0[0], y: $0[1], size: $0[2]) } }
-    var seeds: [PaintFlow.Seed] {
-        inputs.seeds.map { PaintFlow.Seed(time: $0[0], x: $0[1], y: $0[2], paint: Int($0[3])) }
+    var seeds: [PaintSeed] {
+        inputs.seeds.map { PaintSeed(time: $0[0], x: $0[1], y: $0[2], paint: Int($0[3])) }
     }
     var paletteLabels: Plane<Int32> { Self.plane(inputs.paletteLabels.runs, width: width, height: height) }
     var simplifiedLabels: Plane<Int32> { Self.plane(inputs.simplifiedLabels.runs, width: width, height: height) }

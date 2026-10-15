@@ -41,8 +41,7 @@ public struct NumberSchedule: Sendable, Equatable {
 
     /// How much of number `i` is in at time `t` (0...1).
     public func alpha(_ i: Int, at t: Double) -> Double {
-        let x = min(max((t - times[i]) / fade, 0), 1)
-        return x * x * (3 - 2 * x)
+        ease((t - times[i]) / fade)
     }
 
     /// Which number owns each pixel, -1 for none: a disc about each number's place, as big as the
