@@ -30,19 +30,27 @@ The final two rows are the sixteen clockwise looks. The player loops row 0 (idle
 (waving) on tap, then returns to idle. Reduce Motion rests on idle cell 0 and cuts to one still
 action pose on tap. Pip's lid lift and Colophon's bookmark pose retain their existing behavior.
 
-ImageIO decoding uses `ImageCodec`, and both decoding and cropping run through `Background.run`.
-`SpriteAtlasCache` coalesces concurrent loads and reuses the gallery's memory-warning-aware
-`ImageCache` with a 32 MiB decoded-byte limit. At four bytes per pixel one sheet occupies
-14,057,472 bytes (13.41 MiB), so two fit. Visible players retain their crops; evicted sheets can
-decode again. Unreadable or wrong-size sheets produce no image or active button; the caption
+ImageIO decoding uses `ImageCodec`, and both decoding and drawing run through `Background.run`.
+A decoded sheet is 14,057,472 bytes (13.41 MiB at four bytes per pixel), and the contents page
+shows twenty of them at once, so no player keeps a sheet. `SpriteAtlasCache.frames` decodes a
+sheet, at most two at a time and in the order asked, redraws the ten cells the animation plays
+(`SpriteAtlas.playedCells`: idle row 0, waving row 3) into bitmaps of their own, no larger than
+the player draws them (a cell is never scaled up; at most 192 × 208, 159,744 bytes), and lets the
+sheet go: a crop of a sheet shares its pixels and keeps all of them alive, which is how twenty
+players holding "small copies" on a 3x iPhone held 281 MB. Those frames are what the gallery's
+memory-warning-aware `ImageCache` keeps, with a 32 MiB decoded-byte limit, so the contents page's
+twenty drawings (1.5 MiB each) fit and a later page reuses them. Askers for the same frames share
+one decode. Visible players retain their frames and let go when they scroll away; evicted frames
+can decode again. Unreadable or wrong-size sheets produce no image or active button; the caption
 stays readable. An unresolved pet identifier omits the block. Missing files and invalid cells
 return nil. No force-unwrapping is used in the decoder.
 
 `SpriteAtlasTests` exercises the actual WebP/ImageIO path, all cell rectangles and crop pixels,
 bad resources, cache reuse and Reduce Motion plans. Its 2.2 KiB `pet-fixture.webp` contains only
 colored geometry and belongs to the test bundle. Reproduce it with
-`tools/tests/fixtures/make_sprite_atlas.py <scratch-output.webp>`. Its `thumbnails` test checks
-the small cells a margin player keeps. The chapter screenshot demos (`marginarium-chapter`,
+`tools/tests/fixtures/make_sprite_atlas.py <scratch-output.webp>`. Its `thumbnails` tests check
+the small cells a player keeps, and that a page of twenty drawings decodes a few sheets at a time
+and keeps only their frames; `BundledPetsTests` does the same with the shipped sheets. The chapter screenshot demos (`marginarium-chapter`,
 `-dark`, `-long-text`) open Two More Pets with Pip visible; `marginarium-chapter2` (also `-dark`
 and `-long-text`) scrolls chapter 2 to Medea, and `marginarium-chapter1-margin` and
 `-guardians` show the narrator's notes with Colophon and five guardians' notes, each guardian
@@ -72,10 +80,9 @@ with the same one.
 The pet is beside the note at ordinary text sizes and in a row under it at accessibility
 sizes, so the words keep the line. It is hidden from VoiceOver: the note, which names its
 speaker, is one element, and the pet adds nothing to repeat. Reduce Motion rests on idle
-cell 0 and answers a tap with the still pose, as in chapters. A margin player keeps only the
-cells it plays (`SpriteAtlas.thumbnails`: idle row 0 and waving row 3, redrawn to its size) and
-lets go of the 14 MiB decoded sheet, which only the bounded cache keeps, so a page of notes by
-five guardians holds five small sets, not five sheets. The slot is reserved before the sheet
+cell 0 and answers a tap with the still pose, as in chapters. A player keeps only the
+cells it plays, as above, so a page of notes by five guardians holds five small sets, not five
+sheets. The slot is reserved before the sheet
 arrives, so a note doesn't change shape.
 
 ## Bundled size budget
