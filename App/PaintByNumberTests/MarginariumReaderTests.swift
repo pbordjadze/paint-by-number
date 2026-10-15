@@ -37,7 +37,8 @@ struct MarginariumReaderTests {
         #expect(!keys.isEmpty)
     }
 
-    /// The contents page quotes each chapter as written: its passage is in the chapter, word for word.
+    /// Each passage is quoted as written (the contents page quotes Chapter 1's): it is in its
+    /// chapter, word for word.
     @Test func everyPassageIsQuotedAsWritten() throws {
         let document = try #require(MarginariumDocument.bundled())
         for entry in MarginariumEntry.chapters + MarginariumEntry.appendices {
@@ -65,14 +66,14 @@ struct MarginariumReaderTests {
         }
     }
 
-    /// Codex's chapter follows Two More Pets: its full text, a pet for every guardian but the Moon
+    /// Codex's chapter follows Chapter 1: its full text, a pet for every guardian but the Moon
     /// where the chapter shows it, and Claude's note kept as the quotation it is.
-    @Test func chapterSixIsCodexsChapterWithItsPets() throws {
+    @Test func chapterTwoIsCodexsChapterWithItsPets() throws {
         let document = try #require(MarginariumDocument.bundled())
-        #expect(document.chapters.map(\.id).firstIndex(of: "petsWeMade") == 5)
+        #expect(document.chapters.map(\.id).firstIndex(of: "petsWeMade") == 1)
         let chapter = try #require(document.chapters.first { $0.id == "petsWeMade" })
         #expect(chapter.blocks.first?.kind == .title)
-        #expect(chapter.blocks.first?.text == "Chapter 6: The Drawings We Actually Made")
+        #expect(chapter.blocks.first?.text == "Chapter 2: The Drawings We Actually Made")
         #expect(chapter.blocks[1].kind == .subtitle)
         #expect(chapter.blocks[1].text == "Narrated by Codex.")
         #expect(chapter.blocks[2].text.hasPrefix("Two of the guardians are drawn as painting tools, a paintbrush and a palette,"))
@@ -284,9 +285,9 @@ struct MarginariumReaderTests {
         let withMargins = chapter.spreads.filter { $0.margin != nil }
         #expect(withMargins.count == chapter.sections.filter { $0.kind == .margin }.count)
         #expect(withMargins.allSatisfy { !$0.story.isEmpty })
-        // Chapter 6's pets stay one lazy row each: it has no margin groups to join them.
-        let six = try #require(document.chapters.first { $0.id == "petsWeMade" })
-        #expect(six.spreads.allSatisfy { $0.margin == nil })
+        // Chapter 2's pets stay one lazy row each: it has no margin groups to join them.
+        let two = try #require(document.chapters.first { $0.id == "petsWeMade" })
+        #expect(two.spreads.allSatisfy { $0.margin == nil })
     }
 
     @Test func signaturesKeepTheirItalicsIncludingNamesSplitIntoDocsRuns() throws {

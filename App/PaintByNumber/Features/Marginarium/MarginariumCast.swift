@@ -18,8 +18,8 @@ nonisolated struct MarginariumGuardian: Identifiable, Sendable {
     let watchesFor: String
     let looksUpTo: String
     let happiestWhen: String
-    /// The drawing's caption and VoiceOver description, or the egg's while `hatched` is false. The
-    /// drawing is the guardian, never its pet (Paul, October 15), so the caption is its name alone.
+    /// The drawing's VoiceOver description, or the egg's while `hatched` is false. The drawing is
+    /// the guardian, never its pet (Paul, October 15), so the description is its name alone.
     let petCaption: String
     let hatched: Bool
 }

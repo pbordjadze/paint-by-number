@@ -147,7 +147,7 @@ struct MarginariumReaderView: View {
     }
 
     /// One lazy row per section, except that a margin column joins each margin group to the story
-    /// before it (chapters whose pets need laziness, like Chapter 6, have no margins). Without a
+    /// before it (chapters whose pets need laziness, like Chapter 2, have no margins). Without a
     /// margin column, a margin group keeps only the notes whose words weren't found; the others
     /// open under their words.
     private enum Row: Identifiable {
@@ -293,7 +293,7 @@ struct MarginariumReaderView: View {
         case .marginariumChapterOneGuardians:
             return hasMarginColumn ? margins.dropFirst().first?.id : selection.block ?? margins.dropFirst().first?.id
         case .marginariumChapterOneTable: return sections.first { $0.kind == .table }?.id
-        case .marginariumChapterSix: return sections.first { $0.blocks.first?.kind == .pet }?.id
+        case .marginariumChapterTwo: return sections.first { $0.blocks.first?.kind == .pet }?.id
         default: return nil
         }
     }

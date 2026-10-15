@@ -194,20 +194,23 @@ private struct MarginariumPersonCard: View {
     }
 }
 
-/// A guardian's drawing, small and captionless beside its name, or with its caption (its name)
-/// as the page's picture; an egg until it hatches.
+/// A guardian's drawing, small and silent for VoiceOver where something beside it names it, or
+/// labeled as the page's picture under its brief's title; an egg until it hatches.
 struct MarginariumGuardianPet: View {
     let guardian: MarginariumGuardian
-    /// Nil for the small, captionless kind.
+    /// The picture's VoiceOver label (its name), never shown: the page's title says it. Nil for
+    /// the small kind.
     var caption: String? = nil
     let width: CGFloat
+    /// The small kind waves at each new nonzero value (`MarginariumSpritePlayer`'s `greeting`).
+    var greeting = 0
 
     var body: some View {
         if guardian.hatched, let pet = MarginariumPet.named(guardian.id) {
             if let caption {
-                MarginariumSpritePlayer(pet: pet, caption: caption, width: width)
+                MarginariumSpritePlayer(pet: pet, label: caption, width: width)
             } else {
-                MarginariumSpritePlayer(pet: pet, marginWidth: width)
+                MarginariumSpritePlayer(pet: pet, marginWidth: width, greeting: greeting)
             }
         } else {
             MarginariumEgg(width: width, caption: caption)
@@ -307,31 +310,22 @@ struct MarginariumGuardianView: View {
 /// (still under Reduce Motion). The sprites' art keeps its colors in dark mode, so the egg does too.
 struct MarginariumEgg: View {
     let width: CGFloat
-    /// Nil on a card, where the card names the guardian and the egg is decoration.
+    /// The VoiceOver label on a brief's page, never shown (the title names the guardian); nil where
+    /// something beside the egg names it.
     var caption: String? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private static let shell = Color(red: 0.965, green: 0.937, blue: 0.875)
     private static let ink = Color(red: 0.42, green: 0.34, blue: 0.27)
 
     var body: some View {
-        VStack(spacing: 6) {
-            egg
-                // The pets' cells are 96 × 104; the egg stands in one, a little smaller than a pet.
-                .frame(width: width * 0.62, height: width * 0.8)
-                .frame(width: width, height: width * 104 / 96, alignment: .bottom)
-            if let caption {
-                Text(caption)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .frame(maxWidth: caption == nil ? nil : CGFloat.infinity)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(caption ?? ""))
-        .accessibilityHidden(caption == nil)
-        .accessibilityIdentifier("marginarium-egg")
+        egg
+            // The pets' cells are 96 × 104; the egg stands in one, a little smaller than a pet.
+            .frame(width: width * 0.62, height: width * 0.8)
+            .frame(width: width, height: width * 104 / 96, alignment: .bottom)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(caption ?? ""))
+            .accessibilityHidden(caption == nil)
+            .accessibilityIdentifier("marginarium-egg")
     }
 
     @ViewBuilder

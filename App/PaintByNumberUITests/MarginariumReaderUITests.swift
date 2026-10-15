@@ -1,11 +1,11 @@
 import XCTest
 
-/// Both sections of the contents page open native reader pages, including at large text sizes;
-/// Chapter 6 shows the guardians' drawings, and Chapter 1's margin notes carry them beside the words,
-/// in a margin column beside the story where the page has room.
+/// The contents page's chapters and appendices open native reader pages, including at large text
+/// sizes; Chapter 2 shows the guardians' drawings, and Chapter 1's margin notes carry them beside
+/// the words, in a margin column beside the story where the page has room.
 final class MarginariumReaderUITests: XCTestCase {
     @MainActor
-    func testChapterAndAppendixOpenFromContents() {
+    func testAppendicesOpenFromContents() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "marginarium"]
         app.launch()
@@ -206,14 +206,14 @@ final class MarginariumReaderUITests: XCTestCase {
     }
 
     @MainActor
-    func testChapterSixOpensFromContentsWithItsPets() {
+    func testChapterTwoOpensFromContentsWithItsPets() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "marginarium"]
         app.launch()
         XCTAssertTrue(app.navigationBars["The Marginarium"].waitForExistence(timeout: 15))
         openEntry("petsWeMade", in: app)
         XCTAssertTrue(app.navigationBars["The Drawings We Actually Made"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Chapter 6: The Drawings We Actually Made"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Chapter 2: The Drawings We Actually Made"].waitForExistence(timeout: 10))
         let reader = app.scrollViews["marginarium-reader"]
         let ram = app.buttons["marginarium-pet-medea"]
         for _ in 0..<12 {
@@ -224,7 +224,7 @@ final class MarginariumReaderUITests: XCTestCase {
         XCTAssertEqual(ram.label, "Medea")
         XCTAssertTrue(ram.isHittable)
         ram.tap()
-        attachScreenshot(of: app, named: "marginarium-chapter6-medea")
+        attachScreenshot(of: app, named: "marginarium-chapter2-medea")
     }
 
     @MainActor

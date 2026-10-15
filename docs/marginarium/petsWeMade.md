@@ -1,5 +1,5 @@
 <!-- marginarium: marginarium.petsWeMade.block.cd7912639507482ba110e00f0217dd17 -->
-# Chapter 6: The Drawings We Actually Made
+# Chapter 2: The Drawings We Actually Made
 
 <!-- marginarium: marginarium.petsWeMade.block.b89849f29b754dbd8b390c356b771977 -->
 Narrated by Codex.
