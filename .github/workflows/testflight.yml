@@ -1,8 +1,9 @@
 name: TestFlight
 
-# A signed Release build uploaded to App Store Connect for TestFlight, on request only: Actions ›
-# TestFlight › Run workflow, from `main` (CI's IPA job keeps making the unsigned SideStore builds),
-# or a pushed `testflight-*` tag (any commit; CI itself doesn't run for tags).
+# A signed Release build for TestFlight, on request only (CI's IPA job keeps making the unsigned
+# SideStore builds). Every run archives, signs and has App Store Connect validate the app; only a
+# run from Actions › TestFlight › Run workflow with "Upload" ticked (from `main`) uploads it. A
+# pushed `testflight-*` tag runs the dry run on any commit (CI itself doesn't run for tags).
 # Signing is Xcode's cloud signing with an App Store Connect API key: the archive is built
 # unsigned, as the IPA job's is, and -exportArchive signs it with the team's cloud-managed
 # distribution certificate and an App Store profile it makes, so no certificate or profile lives
@@ -13,6 +14,11 @@ name: TestFlight
 
 on:
   workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Upload to TestFlight (otherwise sign and validate only)'
+        type: boolean
+        default: false
   push:
     tags: ['testflight-*']
 
@@ -36,6 +42,7 @@ jobs:
     timeout-minutes: 45
     env:
       BUILD: ${{ github.run_number }}.${{ github.run_attempt }}
+      UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.upload && 'true' || 'false' }}
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -71,16 +78,19 @@ jobs:
           APP="$ARCHIVE/Products/Applications/PaintByNumber.app"
           /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" -c "Print CFBundleVersion" "$APP/Info.plist"
           ci/check_release.sh "$APP" 2>&1 | tee out/release-check.log
-      - name: Sign and upload
+      - name: Sign
+        # Cloud signing happens here; a dry run keeps the signed IPA, an upload sends it on.
         run: |
           set -o pipefail
+          DESTINATION=export
+          [ "$UPLOAD" = true ] && DESTINATION=upload
           cat > build/ExportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key><string>app-store-connect</string>
-            <key>destination</key><string>upload</string>
+            <key>destination</key><string>$DESTINATION</string>
             <key>teamID</key><string>$APPLE_TEAM_ID</string>
             <key>signingStyle</key><string>automatic</string>
             <key>uploadSymbols</key><true/>
@@ -92,7 +102,19 @@ jobs:
             -exportPath build/export -allowProvisioningUpdates -authenticationKeyPath "$ASC_KEY_PATH" \
             -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             2>&1 | tee out/export.log | tail -80
-          echo "Uploaded build $BUILD: App Store Connect processes it (usually 5 to 30 minutes) before TestFlight offers it."
+          if [ "$UPLOAD" = true ]; then
+            echo "Uploaded build $BUILD: App Store Connect processes it (usually 5 to 30 minutes) before TestFlight offers it."
+          fi
+      - name: Validate with App Store Connect
+        # The checks an upload gets (signature, Info.plist, icons, entitlements), without uploading.
+        if: env.UPLOAD != 'true'
+        run: |
+          set -o pipefail
+          IPA=$(ls build/export/*.ipa)
+          mkdir -p ~/private_keys && cp "$ASC_KEY_PATH" ~/private_keys/
+          xcrun altool --validate-app -f "$IPA" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" \
+            2>&1 | tee out/validate.log | tail -40
+          grep -qiE 'No errors validating|successfully' out/validate.log
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: testflight, path: out, if-no-files-found: ignore }
