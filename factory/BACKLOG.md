@@ -652,8 +652,8 @@ Paul checkpoints.
 renderer (`tools/factory/making_of_clip.py` with `making_of_pets.py` and `making_of_layers.py`,
 which reads the spec), and the crew's planner and motion in portable Swift (`Sources/MakingOf`,
 06a8345), replaying the Python's parrots plan. F30 is superseded (the crew is three of the Lamp's
-guardians, drawn from their sprite sheets, not FigureRig's figures), and F33 and F34 were done another way (see each). Next: F46, the rest
-of the show in portable Swift, so F32 is a thin view when CI minutes return.
+guardians, drawn from their sprite sheets, not FigureRig's figures), and F33 and F34 were done another way (see each). F46 (Oct 15) put the
+rest of the show in portable Swift. Next: F32, a thin view, when CI minutes return.
 
 **Paul's calls** (each has a recommendation; nothing waits on them except where noted):
 1. Placement: on Start, over his own painting's stages, skippable, with replay from the
@@ -767,6 +767,16 @@ said yes to its calls. The piece itself was never built.*
   to `making-of.json` for v2.
 
 ### F46 · The show's portable half (Claude, Linux, `[skip ci]`)
+*Done Oct 15 (`claude/making-of` 27b69c0): `Show.init` builds the whole show once (0.46 s on four
+cores, 1.0 s on one, for 1024 x 682; about 37 MB kept), and `frame(at:)` says what to draw at any
+moment (26 µs on average). The Swift equals the Python exactly for every decision and within 2e-6
+for pixels, with the same bytes on 1 and 4 cores. `making_of_clip.py` is now a driver over the
+same modules, so a factory clip is the show the app will play. On the way, the old clip turned
+out to replan each guardian's bends after planning, so it never showed the plan its fixture
+pins; it does now. 207 MakingOf tests, 126 Python ones (in the core CI job from the next real
+run). Left for F32: draw a `ShowFrame` (`ShowFrame`'s doc comment lists everything to draw), set
+the cards in New York with credit lines from `Acknowledgements` by exact method name, Reduce
+Motion, and one CI check of a frame without ink against `Show.composite`.*
 On `claude/making-of`, before F32. Everything F32 needs but the drawing, as portable Swift in
 `Sources/MakingOf`, tested on Linux against the Python reference, so the app's view only draws what
 a frame function hands it and F32 takes fewer CI rounds. Built in four packages by Sonnet agents,
