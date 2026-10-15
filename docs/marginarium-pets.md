@@ -27,7 +27,8 @@ copy. The tool checks that the resource exists; runtime decoding checks its dime
 `SpriteAtlas` implements the create-pet v2 contract: 1536 × 2288 pixels, eight columns of
 192 × 208 cells, top-left origin. Rows contain 6, 8, 8, 4, 5, 8, 6, 6, 6, 8 and 8 usable cells.
 The final two rows are the sixteen clockwise looks. The player loops row 0 (idle), plays row 3
-(waving) on tap, then returns to idle. Reduce Motion rests on idle cell 0 and cuts to one still
+(waving) on tap, then returns to idle. The loop runs only while the player is on screen and the
+app is in the foreground (`scenePhase` active). Reduce Motion rests on idle cell 0 and cuts to one still
 action pose on tap. Pip's lid lift and Colophon's bookmark pose retain their existing behavior.
 
 ImageIO decoding uses `ImageCodec`, and both decoding and drawing run through `Background.run`.

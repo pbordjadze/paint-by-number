@@ -3,7 +3,8 @@ import Foundation
 import SwiftUI
 
 /// One cancellable player for imagesets and v2 atlases, on the contents page and in chapters.
-/// A tap restarts the response. Reduce Motion uses still poses; disappearing cancels the loop.
+/// A tap restarts the response. Reduce Motion uses still poses; disappearing, or the app leaving the
+/// foreground, stops the loop.
 /// Beside a margin note it is small, captionless and hidden from VoiceOver: the note already
 /// names its speaker, so the pet is only company for sighted readers. There it also waves when
 /// its note's words are opened (`greeting`), as it does on the contents page when tapped.
@@ -20,6 +21,7 @@ struct MarginariumSpritePlayer: View {
     private let identifier: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var displayScale
+    @Environment(\.scenePhase) private var scenePhase
     @State private var pose: SpriteFrame?
     /// The cells it plays, each a bitmap of its own at the size it draws (`SpriteAtlasCache`): never
     /// the 14 MiB sheet, which a page of twenty drawings could not hold.
@@ -59,6 +61,7 @@ struct MarginariumSpritePlayer: View {
         let taps: Int
         let reduceMotion: Bool
         let ready: Bool
+        let active: Bool
     }
 
     private var image: Image? {
@@ -103,7 +106,8 @@ struct MarginariumSpritePlayer: View {
             guard !Task.isCancelled else { return }
             frames = loaded ?? [:]
         }
-        .task(id: Trigger(petID: pet.id, taps: taps, reduceMotion: reduceMotion, ready: image != nil)) {
+        .task(id: Trigger(petID: pet.id, taps: taps, reduceMotion: reduceMotion, ready: image != nil,
+                          active: scenePhase == .active)) {
             await animate()
         }
         .onChange(of: greeting, initial: true) { _, greeting in
@@ -129,6 +133,7 @@ struct MarginariumSpritePlayer: View {
 
     private func animate() async {
         let animation = pet.animation
+        guard scenePhase == .active else { return }
         let responds = taps > played
         played = taps
         guard image != nil, !animation.idle.isEmpty else { return }
