@@ -138,7 +138,7 @@ def main():
       <dl>{rows}</dl>
       {f'<p class="recog"><span class="label">Knows itself when</span> {inline(cap(recog))}</p>' if recog else ''}
       <div class="prompt">
-        <span class="label">Pet prompt</span>
+        <span class="label">Drawing prompt</span>
         <p id="{pid}">{inline(PETS[g['id']])}</p>
         <button type="button" class="copy" data-target="{pid}">Copy prompt</button>
       </div>

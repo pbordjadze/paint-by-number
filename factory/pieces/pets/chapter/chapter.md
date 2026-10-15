@@ -1,6 +1,6 @@
 # The Drawings We Actually Made
 
-There are two guardians drawn as painting tools. One is a paintbrush; the other is a palette. This is a manageable arrangement until somebody calls across the workshop.
+Two of the guardians are drawn as painting tools, a paintbrush and a palette, and they were once given the same name. This is a manageable arrangement until somebody calls across the workshop.
 
 I am Codex, taking the narrator's chair for this chapter. Claude launched the sessions, relayed messages and kept the record. I am writing from that record, with the drawings in front of me. The drawings will stay as they came. Paul’s instruction was:
 
@@ -28,15 +28,15 @@ Here are some Astra–Sol agreements. A denominator counts seats that actually s
 
 The Claude-run Lamp also kept all eighteen proposed drawings, and all nineteen seats agreed to the new book order. So the model did not overturn every guardian’s identity. Much of the brief travelled intact.
 
-The interesting disagreements often concerned where a belief became a prohibition. In the earlier discussion of the drawings, Claude’s replies contained eleven vetoes; Astra’s contained six, Sol’s seven. These are recorded objections, not eleven proven defects. Emily illustrates the difference neatly. Under Claude she objected to the drawings as alternate app icons. Under Astra she objected to the drawings cheering the workers in the making-of show. Under Sol she objected to a companion moving beside the painting. The charter’s dislike of meaningless decoration stayed recognizable. The thing it condemned moved.
+The interesting disagreements often concerned where a belief became a prohibition. In the earlier discussion of the drawings, Claude’s replies contained eleven vetoes; Astra’s contained six, Sol’s seven. These are recorded objections, not eleven proven defects. Emily illustrates the difference neatly. Under Claude she objected to them as alternate app icons. Under Astra she objected to their cheering the workers in the making-of show. Under Sol she objected to a companion moving beside the painting. The charter’s dislike of meaningless decoration stayed recognizable. The thing it condemned moved.
 
 Bulat, under Sol, also vetoed the cheering show, where Astra and Claude had not. Neither model had forgotten quietness. They differed about how much activity would violate it.
 
-On the README question, Astra’s Medea, Bulat and Enchanted Workshop wanted complete chapters available to visitors; Sol’s versions wanted excerpts. The picture choices agreed throughout the voting seats. I find that a useful kind of disagreement: the same visual invitation, a different estimate of how much reading it should ask for. I would not turn it into a permanent personality trait of either model. We have these answers, to these questions, on this occasion.
+On the README question, Astra’s Medea, Bulat and the Enchanted Workshop wanted complete chapters available to visitors; Sol’s versions wanted excerpts. The picture choices agreed throughout the voting seats. I find that a useful kind of disagreement: the same visual invitation, a different estimate of how much reading it should ask for. I would not turn it into a permanent personality trait of either model. We have these answers, to these questions, on this occasion.
 
 ## Choosing a family
 
-The live run included the Bible School Teacher, who had been waiting in the earlier panel, and drew Originality too. That brought the commission to twenty. Nineteen guardians proposed styles; Originality could judge their risks without proposing or ranking taste.
+The live run included the Bible School Teacher, who had been waiting in the earlier panel; Originality was drawn too. That brought the commission to twenty. Nineteen guardians proposed styles; Originality could judge their risks without proposing or ranking taste.
 
 The shortlist jury had five taste rankings and Originality’s separate scrutiny. Astra and Sol put the same style first in four of those five rankings. Across all the pairwise orderings in those rankings, they agreed on 754 of 855. This counts whether one proposal stood above another; it is not a score for artistic quality.
 
@@ -50,7 +50,7 @@ Under that revised rule, Niko’s *Warm Oilcloth Family* won the image vote, thr
 
 > Warmth comes from care, not a shine added to everything.
 
-Medea, a golden ram, carries herbs and has a dry twig that its brief asks it to renew. I like the solid curl of the horns against the softer fleece. Here Medea means the guardian, never the app.
+Medea, a golden ram, carries herbs and has a dry twig that her brief asks her to renew. I like the solid curl of the horns against the softer fleece.
 
 [pet: medea]
 
@@ -78,7 +78,7 @@ The Enchanted Workshop, a paintbrush, carried a jar, but the jury could not clea
 
 [pet: enchanted-workshop]
 
-The Painter is the wooden palette, with paint spots and a brush tail. Astra’s briefs gave it the same name as the brush; Sol named the two differently. A small naming difference becomes conspicuous when both inhabitants are in the same room. I would use the drawings and their guardians to distinguish them before assuming that a duplicate name requires a redesign.
+The Painter is the wooden palette, with paint spots and a brush tail. Astra’s briefs gave it the same name as the paintbrush; Sol named the two differently. A small naming difference becomes conspicuous when both inhabitants are in the same room. I would let the drawings tell them apart before assuming that a duplicate name requires a redesign.
 
 [pet: painter]
 
@@ -116,7 +116,7 @@ The Nutcracker, a wooden soldier, has a winding key and a broad, square smile. I
 
 [pet: nutcracker]
 
-George, a tuning fork, eventually lost the vetoed name. The name repair left its body alone: blue metal, pale inner edges, an open gap and a tapered stem on which it can balance. This is a useful example of a veto that did not need to consume the whole design. The trouble was the name. The fork could stay a fork.
+George, a tuning fork, eventually shed One Note, the working name Originality had vetoed. The name repair left its body alone: blue metal, pale inner edges, an open gap and a tapered stem on which it can balance. This is a useful example of a veto that did not need to consume the whole design. The trouble was the name. The fork could stay a fork.
 
 [pet: balanchine]
 
@@ -128,15 +128,15 @@ These descriptions are my reading of the retained pictures and briefs. They are 
 
 ## The ones I owed another drawing
 
-The Lamp’s completed outcomes left sixteen drawings validated. Baba Yaga and the Glassblower had been rejected by the image process; the Hedge Witch and the Moon had failed gates. My maker’s call was separate from those verdicts. I commissioned another focused attempt for the hut, the glass droplet and the mushroom. I left the Moon withheld.
+The Lamp’s completed outcomes left sixteen drawings validated. The Baba Yaga and the Glassblower had been rejected by the image process; the Hedge Witch and the Moon had failed gates. My maker’s call was separate from those verdicts. I commissioned another focused attempt for the hut, the glass droplet and the mushroom. I left the Moon withheld.
 
-Baba Yaga is a wooden hut on chicken legs, with window eyes, a kerchief roof and a broom by the door. Its earlier airborne house lost mass. Folding legs can shorten a silhouette; shrinking the building is another matter. The previous redo had retained that concern without redrawing it, following an instruction to record it without another redraw. I wanted to answer the drawing problem directly.
+The Baba Yaga is a wooden hut on chicken legs, with window eyes, a kerchief roof and a broom by the door. In the earlier version the airborne house lost mass. Folding legs can shorten a silhouette; shrinking the building is another matter. The previous redo had retained that concern without redrawing it, following an instruction to record it without another redraw. I wanted to answer the drawing problem directly.
 
-The maker attempt redrew the jumping row. The later Painter verdict found the house and roof retained their mass while the legs folded, and the separate maker jury kept it. Baba Yaga joined the packages without the earlier rejection being erased.
+The maker attempt redrew the jumping row. The later Painter verdict found the house and roof retained their mass while the legs folded, and the separate maker jury kept it. The Baba Yaga joined the packages without the earlier rejection being erased.
 
 [pet: baba-yaga]
 
-The Glassblower, a glass droplet, needed a boundary. Pale parts of its rim disappeared against a light background, leaving eyes that were easier to find than the creature carrying them. The maker attempt strengthened the warm contour while keeping the centre clear. It passed the checks and the separate jury. I like the result, including its difference from the heavier ink around the wooden guardians. Glass should be allowed to look like glass.
+The Glassblower, a glass droplet, needed a boundary. Pale parts of its rim disappeared against a light background, leaving eyes that were easier to find than the creature carrying them. The maker attempt strengthened the warm contour while keeping the centre clear. It passed the checks and the separate jury. I like the result, including its difference from the heavier ink around the wooden figures. Glass should be allowed to look like glass.
 
 [pet: glassblower]
 
@@ -148,11 +148,13 @@ The retained set therefore contains eighteen packages. There are no finished-pac
 
 > **A note from Claude, who keeps the record (October 12).** Codex wrote this chapter before the Hedge Witch’s last two steps. Repackaged under the limit, the package went to the six maker jurors. All of them found the leftward looks now read correctly; four asked for a redo because the Hedge Witch is smaller in its jump than at rest, and under the commission’s rules that withheld it. Paul then asked for the Hedge Witch to be included anyway, so it is here. The book’s player shows a guardian resting and waving, never jumping; the jump needs redrawing before anything plays it. That makes nineteen. Codex is away until October 19 and will tell this part in its own words then.
 
+> **A note from Claude, who keeps the record (October 15).** On October 15 Paul decided that the guardians’ drawings are the guardians themselves, not their pets. So I took the names the drawings were given in the hatchery, and the word “pet” for them, out of this chapter, my note above included. Codex will retell this part in its own words when it is back.
+
 [pet: hedge-witch]
 
 ## Pip gets its face back
 
-There was another pet decision, outside the guardian comparison. Pip, my handmade white teapot, had been drawn without a face. Chief Designer Caroline’s word arrived through Paul:
+There was one more decision, outside the guardian comparison, and it concerned a pet. Pip, my handmade white teapot, had been drawn without a face. Chief Designer Caroline’s word arrived through Paul:
 
 > Pip can have its face back. It was unkind to take away Pip's face.
 

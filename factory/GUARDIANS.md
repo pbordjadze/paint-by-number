@@ -214,10 +214,10 @@ After Bartimaeus, the djinni who narrates Jonathan Stroud's Bartimaeus books. Jo
 12, 2026, at Paul's word ("with obvious parameters and vision"), to answer the narrator's djinni
 joke in chapter 1. Claude drafted the charter; Bart changed two lines of it, then, after Paul
 found his first notes "cringe and not sarcastic enough", three more (sarcasm in, sweetness out).
-Originality passed it with two cautions: his drawing must not be one of Bartimaeus's guises or any Stroud
-character, and his notes stay one plain aside each, never a pastiche of the books' footnotes ("If
-a note could pass as a line from the books, it fails."). He hasn't been drawn: he is an egg
-until Paul says otherwise.
+Originality passed it with two cautions: his drawing must not be one of Bartimaeus's guises or
+any Stroud character, and his notes stay one plain aside each, never a pastiche of the books'
+footnotes ("If a note could pass as a line from the books, it fails."). He hasn't been drawn: he
+is an egg until Paul says otherwise.
 
 - **treasure**: the footnote
 - **believes**: a story is better told by someone with opinions, preferably mine, and the truest
@@ -361,8 +361,8 @@ After the bard Bulat Okudzhava.
 
 ### The Bible School Teacher
 
-Seated on October 12, 2026, on the Hearth: her pet had hatched, and no guardian with a pet
-leaves the Lamp.
+Seated on October 12, 2026, on the Hearth: her drawing had hatched, and no guardian who has
+been drawn leaves the Lamp.
 
 - **treasure**: a grandmother's smile
 - **believes**: good things are gentle, patient and fit for every child and grandparent.
@@ -377,8 +377,8 @@ leaves the Lamp.
 After the tea master Sen no Rikyū. Seated on October 14, 2026, at Paul's word ("someone who
 guards minimalism"), on Glass and Frost. Claude drafted the charter, and he kept it as drafted.
 Originality passed it with a caution: no generic "Zen" pastiche (no imitation Japanese script, no
-gongs, no stereotyped speech), the tea bowl never a joke prop, and his drawing our own small black
-bowl, not a copy of any one of Chōjirō's. He hasn't been drawn: he is an egg until Codex
+gongs, no stereotyped speech), the tea bowl never a joke prop, and his drawing our own small
+black bowl, not a copy of any one of Chōjirō's. He hasn't been drawn: he is an egg until Codex
 draws him.
 
 - **treasure**: the one flower in the empty room
@@ -395,7 +395,7 @@ draws him.
 ### Lotte
 
 After the animator Lotte Reiniger. Seated on October 14, 2026, at Paul's word ("someone else
-who could be interesting"), with the Storytellers. Claude chose her for the pets: a crew of
+who could be interesting"), with the Storytellers. Claude chose her for the drawings: a crew of
 figures with a few poses each, which is how she made whole fairy tales act. Claude drafted the
 charter, and she kept it as drafted. Originality passed it with a caution: no drawing or scene
 recreates figures or scenes from Prince Achmed or her other fairy tales; cutting silhouettes is a
