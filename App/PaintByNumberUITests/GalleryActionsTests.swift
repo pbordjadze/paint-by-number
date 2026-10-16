@@ -25,8 +25,8 @@ final class GalleryActionsTests: XCTestCase {
     }
 
     /// A confirmation points at the card whose menu asked for it, wherever the card sits: the
-    /// unstarted last card in progress (the Delete of a painter's "October 6", in the third row), a
-    /// started one for Restart, and a finished one below the fold. A dialog on the whole gallery
+    /// unstarted card, alone in its section (the Delete of a painter's "October 6", in the third
+    /// row), a started one for Restart, and a finished one below the fold. A dialog on the whole gallery
     /// opens over the middle of it, whichever card was chosen.
     @MainActor
     func testConfirmationsPointAtTheirCard() {
@@ -73,26 +73,27 @@ final class GalleryActionsTests: XCTestCase {
     @MainActor
     func testFavoriteFromTheMenuMarksAndMovesTheCard() {
         let app = launchGallery()
-        // The demo gallery's one favorite is Earthrise; The Milkmaid is the last card in progress.
-        let milkmaid = revealCard("The Milkmaid", in: app)
-        XCTAssertFalse(valueOf(milkmaid).contains("Favorite"), "The Milkmaid starts out as a favorite")
-        milkmaid.press(forDuration: 1.5)
+        // The demo gallery's one favorite is Earthrise; Red Fox in Snow, started, is the last card in
+        // progress (The Milkmaid, nobody's painted on it, is the one card ready to paint).
+        let fox = revealCard("Red Fox in Snow", in: app)
+        XCTAssertFalse(valueOf(fox).contains("Favorite"), "Red Fox in Snow starts out as a favorite")
+        fox.press(forDuration: 1.5)
         let favorite = app.buttons["Favorite"]
         XCTAssertTrue(favorite.waitForExistence(timeout: 5), "The card menu has no Favorite")
         favorite.tap()
 
-        XCTAssertTrue(waitFor(milkmaid, "value CONTAINS 'Favorite'"), "The card doesn't say it is a favorite")
+        XCTAssertTrue(waitFor(fox, "value CONTAINS 'Favorite'"), "The card doesn't say it is a favorite")
         scrollToTop(app)
         let wave = app.buttons["The Great Wave"].firstMatch
-        XCTAssertTrue(waitUntil { self.precedes(milkmaid, wave) }, "The favorite didn't move ahead of The Great Wave")
+        XCTAssertTrue(waitUntil { self.precedes(fox, wave) }, "The favorite didn't move ahead of The Great Wave")
         attachScreenshot(of: app, named: "favorite")
 
-        milkmaid.press(forDuration: 1.5)
+        fox.press(forDuration: 1.5)
         let unfavorite = app.buttons["Unfavorite"]
         XCTAssertTrue(unfavorite.waitForExistence(timeout: 5), "A favorite's menu has no Unfavorite")
         unfavorite.tap()
-        XCTAssertTrue(waitFor(milkmaid, "NOT (value CONTAINS 'Favorite')"), "Unfavorite left the mark on the card")
-        XCTAssertTrue(waitUntil { self.precedes(wave, milkmaid) }, "The card didn't return to its place")
+        XCTAssertTrue(waitFor(fox, "NOT (value CONTAINS 'Favorite')"), "Unfavorite left the mark on the card")
+        XCTAssertTrue(waitUntil { self.precedes(wave, fox) }, "The card didn't return to its place")
     }
 
     /// The Show menu lists favorites only; with none left the gallery explains how to add one.
@@ -218,6 +219,22 @@ final class GalleryActionsTests: XCTestCase {
         for _ in 0..<6 where !card.isHittable { app.swipeUp() }
         if !card.isHittable { attachTree(of: app, named: "gallery-tree") }
         XCTAssertTrue(card.isHittable, "“\(title)” couldn't be scrolled into view")
+        waitUntilStill(card)
         return card
+    }
+
+    /// Waits for `card` to stop moving. A swipe leaves the gallery coasting, and a touch on a scroll
+    /// view that is still coasting only stops it: the long press that follows opens no menu (the one
+    /// failure on record of `testTimelapseShowsProgressAndCancels` on CI's iPad: the finished card,
+    /// below the fold and just scrolled to, had no menu).
+    @MainActor
+    private func waitUntilStill(_ card: XCUIElement) {
+        var last = card.frame
+        for _ in 0..<20 {
+            Thread.sleep(forTimeInterval: 0.25)
+            let frame = card.frame
+            if frame == last { return }
+            last = frame
+        }
     }
 }

@@ -17,6 +17,8 @@ import PaintCore
 /// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
 ///   with every localized string twice as long.
 /// - `gallery-empty`: the empty state.
+/// - `gallery-first-run`: the gallery as the first launch leaves it: the library's two starter
+///   paintings, none of them painted on (ready to paint, nothing in progress).
 /// - `gallery-draft`, `gallery-draft-long-text`: three paintings below the create flow's draft
 ///   (The Great Wave, refined as in `create-refine`), with its photo, "Continue Refining" and
 ///   Discard; the second with every localized string twice as long.
@@ -66,8 +68,8 @@ import PaintCore
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
-    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryDraft,
-         galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
+         galleryDraft, galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
@@ -82,6 +84,7 @@ enum ShellDemo: Equatable {
         case "gallery-no-favorites-long-text": .galleryNoFavorites
         case "gallery-long-text": .galleryLongText
         case "gallery-empty": .galleryEmpty
+        case "gallery-first-run": .galleryFirstRun
         case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
         case "gallery-damaged": .galleryDamaged
@@ -253,6 +256,11 @@ enum ShellDemo: Equatable {
                 for artwork in library.artworks {
                     if let sample = artwork.sampleName, favorites.contains(sample) { library.setFavorite(artwork.id, true) }
                 }
+                DemoMode.markReady()
+            })
+        case .galleryFirstRun:
+            // What the first launch makes (`Library.seedIfNeeded`): the starters, nobody's touched.
+            library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
                 DemoMode.markReady()
             })
         case .galleryLongText:

@@ -75,14 +75,28 @@ struct PressableCardStyle: ButtonStyle {
     }
 }
 
+extension View {
+    /// A description under a title (a `ContentUnavailableView`'s) that wraps at a readable width:
+    /// on a wide screen it would run on for most of the screen's width.
+    func readableDescription() -> some View {
+        frame(maxWidth: 480)
+            .multilineTextAlignment(.center)
+    }
+}
+
 /// Small circular progress indicator in the tint color.
 struct ProgressRing: View {
     var fraction: Double
     var lineWidth: CGFloat = 2.5
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// How much of the tint the unfilled part of the ring shows. At night the tint is antique
+    /// gold on a near-black surface, where the day's share all but vanishes.
+    static func trackOpacity(for scheme: ColorScheme) -> Double { scheme == .dark ? 0.4 : 0.22 }
 
     var body: some View {
         ZStack {
-            Circle().stroke(.tint.opacity(0.22), lineWidth: lineWidth)
+            Circle().stroke(.tint.opacity(Self.trackOpacity(for: colorScheme)), lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: max(0.001, min(fraction, 1)))
                 .stroke(.tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))

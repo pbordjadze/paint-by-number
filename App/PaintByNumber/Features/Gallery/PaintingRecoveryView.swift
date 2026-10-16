@@ -2,7 +2,9 @@ import Foundation
 import SwiftUI
 
 /// Shown instead of the canvas when a painting can't be opened: says why, and offers what
-/// can still be done (regenerate it from its photo, delete it, or go back).
+/// can still be done (regenerate it from its photo, delete it, or go back). Delete asks first,
+/// and the button asks (a dialog is a popover on the view that carries it: this one points at
+/// the button).
 struct PaintingRecoveryView: View {
     let artwork: Artwork?
     let failure: Library.OpenError
@@ -14,11 +16,14 @@ struct PaintingRecoveryView: View {
     var onDelete: () -> Void
     var onClose: () -> Void
 
+    @State private var confirmsDelete = false
+
     var body: some View {
         ContentUnavailableView {
             Label(title, systemImage: systemImage)
         } description: {
             Text(message)
+                .readableDescription()
         } actions: {
             if let progress {
                 VStack(spacing: 10) {
@@ -40,11 +45,16 @@ struct PaintingRecoveryView: View {
                             .buttonStyle(.glassProminent)
                             .tint(Theme.signature)
                     }
-                    if artwork != nil {
+                    if let artwork {
                         // Glass draws its label in the tint, whatever the role.
-                        Button("Delete Painting", systemImage: "trash", role: .destructive, action: onDelete)
+                        Button("Delete Painting", systemImage: "trash", role: .destructive) { confirmsDelete = true }
                             .buttonStyle(.glass)
                             .tint(.red)
+                            .confirmationDialog("Delete this painting?", isPresented: $confirmsDelete, titleVisibility: .visible) {
+                                Button(DeleteConfirmation.buttonTitle(for: artwork), role: .destructive, action: onDelete)
+                            } message: {
+                                DeleteConfirmationMessage(artwork: artwork)
+                            }
                     }
                     Button("Back to Gallery", action: onClose)
                         .buttonStyle(.glass)

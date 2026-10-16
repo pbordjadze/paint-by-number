@@ -96,3 +96,32 @@ struct GalleryQueryTests {
         }
     }
 }
+
+/// The gallery's subtitle: the counts of what its sections show.
+struct GalleryCountsTests {
+    private func subtitle(_ inProgress: Int, _ ready: Int, _ finished: Int) -> String {
+        GalleryCounts(inProgress: inProgress, ready: ready, finished: finished).subtitle
+    }
+
+    /// The first launch leaves two starters nobody has painted on: nothing is in progress.
+    @Test func paintingsNobodyHasPaintedOnAreNotInProgress() {
+        #expect(subtitle(0, 2, 0) == "2 ready to paint")
+        #expect(subtitle(0, 1, 0) == "1 ready to paint")
+        #expect(!subtitle(0, 2, 0).contains("progress"))
+    }
+
+    @Test func oneKindAloneSaysWhatThePaintingsAre() {
+        #expect(subtitle(0, 0, 0).isEmpty)
+        #expect(subtitle(1, 0, 0) == "1 painting in progress")
+        #expect(subtitle(3, 0, 0) == "3 paintings in progress")
+        #expect(subtitle(0, 0, 1) == "1 finished painting")
+        #expect(subtitle(0, 0, 2) == "2 finished paintings")
+    }
+
+    @Test func moreKindsAreCountedInTheOrderOfTheSections() {
+        #expect(subtitle(4, 0, 2) == "4 in progress · 2 finished")
+        #expect(subtitle(3, 1, 0) == "3 in progress · 1 ready to paint")
+        #expect(subtitle(0, 1, 2) == "1 ready to paint · 2 finished")
+        #expect(subtitle(3, 1, 2) == "3 in progress · 1 ready to paint · 2 finished")
+    }
+}

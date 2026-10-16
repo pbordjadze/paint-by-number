@@ -1490,7 +1490,7 @@
       }
     },
     "gallery.subtitle.both" : {
-      "comment" : "Gallery subtitle with both counts; the arguments are the in-progress part and the finished part",
+      "comment" : "Two parts of the gallery subtitle side by side, e.g. 3 in progress · 2 finished; the arguments are the two parts",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1502,7 +1502,7 @@
       }
     },
     "gallery.subtitle.count.finished" : {
-      "comment" : "Second part of the gallery subtitle: how many paintings are finished",
+      "comment" : "Part of the gallery subtitle: how many paintings are finished",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1526,7 +1526,7 @@
       }
     },
     "gallery.subtitle.count.inProgress" : {
-      "comment" : "First part of the gallery subtitle: how many paintings are in progress",
+      "comment" : "Part of the gallery subtitle: how many paintings are in progress",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1542,6 +1542,30 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld in progress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.subtitle.count.ready" : {
+      "comment" : "Part of the gallery subtitle: how many paintings nobody has painted on yet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ready to paint"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ready to paint"
                 }
               }
             }
@@ -1642,7 +1666,7 @@
       "extractionState" : "manual"
     },
     "In Progress" : {
-      "comment" : "Gallery section header for paintings that are not finished",
+      "comment" : "Gallery section header for paintings that are painted on and not finished",
       "extractionState" : "manual"
     },
     "Included" : {
@@ -2961,6 +2985,10 @@
       "comment" : "Caption on the gallery card of a painting that has no paint yet",
       "extractionState" : "manual"
     },
+    "Ready to Paint" : {
+      "comment" : "Gallery section header for paintings nobody has painted on yet",
+      "extractionState" : "manual"
+    },
     "Ready to Share" : {
       "comment" : "Status shown in the time-lapse sheet once the movie is ready to share",
       "extractionState" : "manual"
@@ -3136,7 +3164,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draw lines exactly as you draw them. Two fingers zoom and move, and a two-finger tap undoes."
+            "value" : "Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes."
           }
         }
       }

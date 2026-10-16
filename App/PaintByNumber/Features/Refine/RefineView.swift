@@ -903,7 +903,7 @@ struct RefineView: View {
         switch tool {
         case .pen:
             String(localized: "refine.hint.pen",
-                   defaultValue: "Draw lines exactly as you draw them. Two fingers zoom and move, and a two-finger tap undoes.",
+                   defaultValue: "Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes.",
                    comment: "Refine screen: how the Pen works (it draws lines into the painting's drawing just where they are drawn), shown while it is picked")
         case .shape:
             switch shape {

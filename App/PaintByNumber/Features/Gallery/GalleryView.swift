@@ -13,6 +13,7 @@ struct GalleryView: View {
     var onContinueDraft: (Drafts.Opened) -> Void
 
     @Environment(Library.self) private var library
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var width: CGFloat = 0
     @State private var renaming: Artwork?
     @State private var renameText = ""
@@ -31,12 +32,19 @@ struct GalleryView: View {
                         )
                         .transition(.opacity)
                     }
+                    // A painting nobody has painted on is ready to paint, not in progress.
                     let active = library.inProgress(matching: query)
-                    let preparing = shownPlaceholders
-                    if !active.isEmpty || !preparing.isEmpty {
-                        section("In Progress", count: active.count + preparing.count) {
-                            ForEach(preparing) { PlaceholderCard(placeholder: $0) }
+                    if !active.isEmpty {
+                        section("In Progress", count: active.count) {
                             ForEach(active) { card($0) }
+                        }
+                    }
+                    let ready = library.readyToPaint(matching: query)
+                    let preparing = shownPlaceholders
+                    if !ready.isEmpty || !preparing.isEmpty {
+                        section("Ready to Paint", count: ready.count + preparing.count) {
+                            ForEach(preparing) { PlaceholderCard(placeholder: $0) }
+                            ForEach(ready) { card($0) }
                         }
                     }
                     let finished = library.finished(matching: query)
@@ -93,7 +101,7 @@ struct GalleryView: View {
     private var shownPlaceholders: [Library.Placeholder] { query.isActive ? [] : library.placeholders }
 
     private var shownIDs: [UUID] {
-        (library.inProgress(matching: query) + library.finished(matching: query)).map(\.id)
+        (library.inProgress(matching: query) + library.readyToPaint(matching: query) + library.finished(matching: query)).map(\.id)
     }
 
     /// There are paintings or a draft, but the filter or the search hides every one.
@@ -128,7 +136,9 @@ struct GalleryView: View {
         }
     }
 
-    private var horizontalPadding: CGFloat { width < 560 ? 20 : 32 }
+    /// The system's own margin, where the large title and its subtitle sit (16 pt on compact
+    /// widths, 20 pt on regular ones), so the cards start where they do.
+    private var horizontalPadding: CGFloat { sizeClass == .compact ? 16 : 20 }
     private var spacing: CGFloat { width < 560 ? 16 : 26 }
 
     private func section<Content: View>(_ title: LocalizedStringKey, count: Int, @ViewBuilder content: () -> Content) -> some View {
@@ -177,21 +187,9 @@ struct GalleryView: View {
             "Delete this painting?", isPresented: isPending($deleting, artwork), titleVisibility: .visible, presenting: deleting
         ) { pending in
             // Undoable for a few seconds afterwards (the toast's Undo).
-            Button(String(localized: "gallery.delete.confirm", defaultValue: "Delete “\(pending.title)”",
-                          comment: "Destructive button of the delete confirmation; the argument is the painting's title"),
-                   role: .destructive) { library.delete(pending.id) }
+            Button(DeleteConfirmation.buttonTitle(for: pending), role: .destructive) { library.delete(pending.id) }
         } message: { pending in
-            if pending.isComplete {
-                Text(String(localized: "gallery.delete.message.finished", defaultValue: "“\(pending.title)” is finished.",
-                            comment: "Delete confirmation message for a finished painting; the argument is its title"))
-            } else if pending.isStarted {
-                let percent = ProgressCaption.percentText(pending)
-                Text(String(localized: "gallery.delete.message.started", defaultValue: "“\(pending.title)” is \(percent) painted.",
-                            comment: "Delete confirmation message for a painting in progress; the arguments are its title and the formatted percentage painted, e.g. 42%"))
-            } else {
-                Text(String(localized: "gallery.delete.message.notStarted", defaultValue: "“\(pending.title)” hasn’t been started yet.",
-                            comment: "Delete confirmation message for a painting nobody has painted on; the argument is its title"))
-            }
+            DeleteConfirmationMessage(artwork: pending)
         }
     }
 

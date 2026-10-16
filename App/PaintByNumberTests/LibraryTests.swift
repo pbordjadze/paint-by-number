@@ -903,9 +903,9 @@ struct LibraryTests {
             item.date = Date(timeIntervalSinceNow: -60 * minutesAgo)
             return try await library.create(item)
         }
-        let newest = try await add("Newest", minutesAgo: 1)
-        let middle = try await add("Middle", minutesAgo: 2)
-        let oldest = try await add("Oldest", minutesAgo: 3)
+        let newest = try await add("Newest", minutesAgo: 1, painted: [0])
+        let middle = try await add("Middle", minutesAgo: 2, painted: [0])
+        let oldest = try await add("Oldest", minutesAgo: 3, painted: [0])
         let recentlyDone = try await add("Done Recently", minutesAgo: 4, painted: [0, 1, 2])
         let longAgoDone = try await add("Done Long Ago", minutesAgo: 5, painted: [0, 1, 2])
         #expect(library.inProgress.map(\.id) == [newest.id, middle.id, oldest.id])
@@ -927,9 +927,9 @@ struct LibraryTests {
 
     @Test func galleryListsRespectTheQuery() async throws {
         let library = makeLibrary()
-        let fox = try await library.create(draft(title: "Red Fox in Snow"))
+        let fox = try await library.create(draft(title: "Red Fox in Snow", painted: [0]))
         let fuji = try await library.create(draft(title: "Red Fuji", painted: [0, 1, 2]))
-        let wave = try await library.create(draft(title: "The Great Wave"))
+        let wave = try await library.create(draft(title: "The Great Wave", painted: [0]))
         library.setFavorite(fuji.id, true)
         library.setFavorite(wave.id, true)
 
@@ -944,6 +944,38 @@ struct LibraryTests {
         let both = GalleryQuery(filter: .favorites, search: "re")
         #expect(library.inProgress(matching: both).isEmpty)
         #expect(library.finished(matching: both).map(\.id) == [fuji.id])
+    }
+
+    /// A painting nobody has painted on is ready to paint, never in progress: in the gallery's
+    /// sections and in its subtitle's counts. The first paint moves it, finishing moves it on.
+    @Test func paintingsNobodyHasPaintedOnAreReadyToPaintNotInProgress() async throws {
+        let library = makeLibrary()
+        let fresh = try await library.create(draft(title: "Fresh"))
+        let favorite = try await library.create(draft(title: "Favorite Fresh"))
+        library.setFavorite(favorite.id, true)
+        #expect(library.inProgress.isEmpty && library.finished.isEmpty)
+        #expect(library.readyToPaint.map(\.id) == [favorite.id, fresh.id], "favorites first, as everywhere")
+        let counts = GalleryCounts(
+            inProgress: library.inProgress.count, ready: library.readyToPaint.count, finished: library.finished.count)
+        #expect(counts.subtitle == "2 ready to paint")
+
+        var progress = PaintProgress(regionCount: 3)
+        progress.paint(1)
+        library.saveProgress(progress, for: fresh.id)
+        #expect(library.inProgress.map(\.id) == [fresh.id])
+        #expect(library.readyToPaint.map(\.id) == [favorite.id])
+
+        // The Show filter and the search narrow the section like the others.
+        #expect(library.readyToPaint(matching: GalleryQuery(filter: .favorites)).map(\.id) == [favorite.id])
+        #expect(library.readyToPaint(matching: GalleryQuery(filter: .all, search: "fre")).map(\.id) == [favorite.id])
+        #expect(library.inProgress(matching: GalleryQuery(filter: .all, search: "xyz")).isEmpty)
+
+        progress.paint(0)
+        progress.paint(2)
+        library.saveProgress(progress, for: fresh.id)
+        #expect(library.inProgress.isEmpty)
+        #expect(library.finished.map(\.id) == [fresh.id])
+        #expect(library.readyToPaint.map(\.id) == [favorite.id])
     }
 
     @Test func favoriteWriteFailuresAreRetried() async throws {

@@ -832,8 +832,14 @@ final class CanvasView: UIView, PaintingCanvas {
 
     // MARK: Replay
 
+    /// How often the replay tells the session how much of the painting it shows
+    /// (`PaintingSession.replayed`).
+    private static let replayTick: Duration = .milliseconds(50)
+
     /// Replays the painting: the paint lifts off, then every region fills again in the order
-    /// it was painted, all scheduled at once so the GPU animates it without per-frame work.
+    /// it was painted, all scheduled at once so the GPU animates it without per-frame work. The
+    /// session hears how many areas are on screen meanwhile (`ReplayProgress`), so the progress
+    /// badge follows the canvas.
     func replay() {
         guard let renderer, !session.progress.log.isEmpty else { return }
         replayTask?.cancel()
@@ -852,8 +858,15 @@ final class CanvasView: UIView, PaintingCanvas {
         activeUntil = max(activeUntil, time + lift)
         requestRender()
         replayTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(Double(lift) + 0.25))
             guard let self, !Task.isCancelled else { return }
+            while now() - time < lift {
+                session.showReplayed(ReplayProgress.lifting(total: painted.count, elapsed: now() - time, lift: lift))
+                try? await Task.sleep(for: Self.replayTick)
+                guard !Task.isCancelled else { return }
+            }
+            session.showReplayed(0)
+            try? await Task.sleep(for: .seconds(0.25))
+            guard !Task.isCancelled else { return }
             // About 7 s for a typical painting, never a slog for a large one.
             let span = min(10, max(4, Float(painted.count) * 0.02)) * fillDurationScale
             let step = span / Float(painted.count)
@@ -867,8 +880,12 @@ final class CanvasView: UIView, PaintingCanvas {
             }
             activeUntil = max(activeUntil, begin + span + 1.5)
             requestRender()
-            try? await Task.sleep(for: .seconds(Double(span) + 0.4))
-            guard !Task.isCancelled else { return }
+            while now() - begin < span + 0.4 {
+                session.showReplayed(ReplayProgress.filling(total: painted.count, elapsed: now() - begin, step: step))
+                try? await Task.sleep(for: Self.replayTick)
+                guard !Task.isCancelled else { return }
+            }
+            session.showReplayed(nil)
             isReplaying = false
             numbersChanged()
             celebrate(.artworkCompleted)
@@ -881,6 +898,7 @@ final class CanvasView: UIView, PaintingCanvas {
         replayTask?.cancel()
         replayTask = nil
         isReplaying = false
+        session.showReplayed(nil)
         numbersChanged()
         guard let renderer else { return }
         for (r, state) in Self.settledStates(template: template, progress: session.progress).enumerated() {
