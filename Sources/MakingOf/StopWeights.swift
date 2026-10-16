@@ -13,8 +13,12 @@ struct LineMask: Sendable, Equatable {
 
     /// The mask of `strokes` drawn `lineWidth` wide in a plane `width` x `height`.
     init(width: Int, height: Int, strokes: [Polyline], lineWidth: Double) {
+        self.init(width: width, height: height, strokes: strokes, halfWidth: lineWidth / 2 + Self.reach)
+    }
+
+    /// The pixels whose centre is within `halfWidth` of a stroke (`line_mask(..., half_width)`).
+    init(width: Int, height: Int, strokes: [Polyline], halfWidth half: Double) {
         var plane = Plane<UInt8>(width: width, height: height, repeating: 0)
-        let half = lineWidth / 2 + Self.reach
         let near = half * half
         for stroke in strokes {
             for (a, b) in zip(stroke.points, stroke.points.dropFirst()) {

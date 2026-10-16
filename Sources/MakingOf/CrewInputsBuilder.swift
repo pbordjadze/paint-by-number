@@ -61,10 +61,7 @@ extension CrewInputs {
         }
 
         let paints = try PaintColors(palette: pictures.palette)
-        var seedStream = streams.stream(.seeds, 0)
-        let seeds = PaintSeeds.seeds(
-            smoothed: pictures.smoothed, paints: paints, rng: &seedStream,
-            start: intro + 2 * step, dropEvery: spec.seeds.dropEvery)
+        let seeds = PaintSeeds.seeds(pictures: pictures, paints: paints, spec: spec, seed: seed)
 
         var candidates: [[Spot]] = []
         for k in 0..<steps {

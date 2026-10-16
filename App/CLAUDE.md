@@ -149,6 +149,25 @@ synchronized folder would bundle it into the app.
   for the whole Marginarium: anyone who opens it should have a nice time and roughly follow what's
   going on, so a new page says who people are and what the Lamp's words mean (or links Who's Who),
   in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`.
+- `Features/MakingOf/`: the making-of show in the app (F32; the show itself is `Sources/MakingOf`,
+  linked as the package's `MakingOf` product). It has no crew: the app plays `FieldShow`, each step
+  growing from seeds over the picture itself, and draws no guardian (nothing of it touches the
+  Marginarium's sprite sheets, so it ships in Release; `ci/check_release.sh` checks that
+  `making-of.json` is bundled and that no `SpriteAtlas` or `MakingOfSprites` is). It stays behind
+  Settings › The Making-of (`SettingsKey.playsMakingOf`, off by default; the switch and the screen
+  have no `#if`, only `MakingOfDemoView` is DEBUG). With the switch on, `CreateFlowView.start` saves
+  the painting as ever, then lays `MakingOfView` over the flow instead of opening it; Skip, a tap
+  or the show's end opens it (`onStart`), and so does a show that can't be made. `MakingOfPlayer`
+  makes the show off the main actor (`MakingOfShow.build`: the base generated again with a
+  `PipelineSnapshot` observer from `CreateModel.makingOfSource`, the saved template, the bundled
+  `making-of.json`, seeded by the artwork id), composites the picture on the CPU with
+  `FieldShow.composite` at most 30 times a second on a background task, and announces each card to
+  VoiceOver; `MakingOfCanvas` draws the rest of each `ShowFrame` (the real template, numbers, seed
+  rings, then the field show's sparks at the burning tips of the ink step and its stars round the
+  numbers coming out, in ink at the picture-to-view scale the rings use), `MakingOfCardView` the
+  card in New York (captions in the catalog, which `MakingOfShowTests` keeps the spec's; credits
+  from `Acknowledgements.methods` letter for letter). Reduce Motion plays stills, one per step
+  with its card, cross-faded, with no rings, sparks or stars. No replay from the painting yet.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
@@ -195,6 +214,10 @@ synchronized folder would bundle it into the app.
   `marginarium-whos-who` (with `-dark`, `-long-text`) opens Who's Who at its top,
   `marginarium-whos-who-teams` scrolled to the Workshop, and `marginarium-guardian` (with `-dark`,
   `-long-text`) Dino's brief (`ShellDemo.marginariumPath`).
+  `making-of`, `-ink`, `-stars`, `-dark`, `-long-text`, `-end` and `-reduce-motion` (DEBUG
+  `MakingOfDemoView`) make the show of a portrait photograph and hold it at a moment (the paints
+  step's rings, the ink step's sparks, the template step's stars); `MakingOfUITests` turns the
+  setting on with `-playsMakingOf YES`, starts a painting, and skips the show into it.
 
 ## Painting screen
 
@@ -551,7 +574,8 @@ paper (`CanvasSnapshot.Options`).
   (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings ›
   Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
   `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
-  puts the book in the gallery's toolbar (off by default). New paintings are
+  puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
+  making-of show after Start Painting (off by default; `Features/MakingOf`). New paintings are
   coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in
   Settings changes how a template is made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).

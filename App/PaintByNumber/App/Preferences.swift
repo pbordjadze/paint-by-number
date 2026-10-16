@@ -24,6 +24,9 @@ enum SettingsKey {
     /// The gallery's toolbar offers The Marginarium, the storybook of how the app was made
     /// (Settings › The Marginarium; off by default).
     static let showsMarginarium = "showsMarginarium"
+    /// Start Painting first plays the making-of show (`MakingOfView`): the painter's photo becoming
+    /// its painting, step by step (Settings › The Making-of; off by default).
+    static let playsMakingOf = "playsMakingOf"
 }
 
 /// The preferences that code outside views reads (the create flow, a painting's session), with
@@ -37,6 +40,8 @@ struct Preferences {
     var previewStyle: PreviewStyle
     /// Refine offers its detail brushes and text corrections too.
     var detailBrushes: Bool
+    /// Start Painting plays the making-of show first.
+    var playsMakingOf: Bool
 
     init(defaults: UserDefaults = .standard) {
         autoAdvance = defaults.object(forKey: SettingsKey.autoAdvance) as? Bool ?? true
@@ -44,6 +49,7 @@ struct Preferences {
             ?? .default
         previewStyle = PreviewStyle.stored(in: defaults)
         detailBrushes = defaults.bool(forKey: SettingsKey.detailBrushes)
+        playsMakingOf = defaults.bool(forKey: SettingsKey.playsMakingOf)
     }
 
     func apply(to session: PaintingSession) {

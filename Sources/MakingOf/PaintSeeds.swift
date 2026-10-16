@@ -73,6 +73,18 @@ enum PaintSeeds {
         return order
     }
 
+    /// The seeds a show drops: `seeds(smoothed:...)` from the show's own `.seeds` stream, dropping
+    /// from the paints step of the spec's timing as the plan file keeps it (4 decimals), so the crew's
+    /// show and the field show drop the same ones.
+    static func seeds(pictures: ShowPictures, paints: PaintColors, spec: ShowSpec, seed: UInt64) -> [PaintSeed] {
+        let intro = ExactMath.quantize(spec.timing.intro, decimals: 4)
+        let step = ExactMath.quantize(spec.timing.step, decimals: 4)
+        var stream = ShowStreams(seed: seed).stream(.seeds, 0)
+        return seeds(
+            smoothed: pictures.smoothed, paints: paints, rng: &stream, start: intro + 2 * step,
+            dropEvery: spec.seeds.dropEvery)
+    }
+
     /// Step 3's seeds: pixels of the smoothed picture on a grid 6 px apart, below the sketch's top
     /// and off the sides, chosen by k-means++ in OKLab for as many seeds as there are paints, each
     /// snapped to the paint nearest in color. They drop one after another from `start`, `dropEvery`

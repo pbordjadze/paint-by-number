@@ -13,6 +13,8 @@ struct RootView: View {
                 .task { DemoMode.markReady() }
         case let scenario? where scenario.hasPrefix("paint"):
             PaintDemoView(scenario: scenario)
+        case let scenario? where scenario.hasPrefix("making-of"):
+            MakingOfDemoView(scenario: scenario)
         default:
             AppShellView()
         }
