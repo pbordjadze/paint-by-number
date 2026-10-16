@@ -1,3 +1,4 @@
+import os
 import SwiftUI
 
 /// New painting: pick a photo (library, camera or a sample) → tune the template → paint.
