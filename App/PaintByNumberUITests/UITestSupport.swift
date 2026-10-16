@@ -1,4 +1,3 @@
-import UIKit
 import XCTest
 
 /// What every UI test shares: attachments the CI report keys on by name, a polling wait, the way
@@ -89,10 +88,11 @@ extension XCTestCase {
     /// `.confirmationDialog` is a popover (iPhone too) anchored to the view that carries the
     /// modifier: one on a whole screen opened at the screen's middle, near its top, whichever card
     /// was chosen. The dialog's content (the smallest rectangle holding every label) must lie within
-    /// `reach` of the source, the arrow's length and the popover's padding included, with the arrow,
-    /// which points at the source's center, over the content: the popover is above or below the
-    /// source (beside it, on iPad too). The screen, the app's tree and the measures are attached as
-    /// `dialog-…-<what>`. Returns the content's frame, nil when the dialog never came up.
+    /// `reach` of the source (the arrow is 13 pt long), with the arrow, which points at the source's
+    /// center, over the content: the popover is above or below the source, or beside it where the
+    /// source sits at the screen's edge (More, the draft row's Discard). The screen and the measures
+    /// (the app's tree too when the check fails) are attached as `dialog-…-<what>`. Returns the
+    /// content's frame, nil when the dialog never came up.
     @MainActor
     @discardableResult
     func checkDialog(showing labels: [String], pointsAt source: CGRect, _ what: String, in app: XCUIApplication) -> CGRect? {
@@ -107,8 +107,8 @@ extension XCTestCase {
             }
         }
         attachScreenshot(of: app, named: "dialog-\(what)")
-        attachTree(of: app, named: "dialog-tree-\(what)")
         guard !dialog.isNull else {
+            attachTree(of: app, named: "dialog-tree-\(what)")
             XCTFail("\(what): no confirmation dialog on screen")
             return nil
         }
@@ -118,12 +118,12 @@ extension XCTestCase {
         let gapX = max(0, source.minX - dialog.maxX, dialog.minX - source.maxX)
         let gapY = max(0, source.minY - dialog.maxY, dialog.minY - source.maxY)
         let aboveOrBelow = gapY <= reach && (dialog.minX - slack...dialog.maxX + slack).contains(source.midX)
-        let beside = UIDevice.current.userInterfaceIdiom == .pad
-            && gapX <= reach && (dialog.minY - slack...dialog.maxY + slack).contains(source.midY)
+        let beside = gapX <= reach && (dialog.minY - slack...dialog.maxY + slack).contains(source.midY)
         attachNote(
             "dialog \(dialog.integral)\nsource \(source.integral)\ngap x \(Int(gapX)), y \(Int(gapY)) pt (reach \(Int(reach)))\n"
                 + "arrow over the content: above or below \(aboveOrBelow), beside \(beside)\nmissing \(missing)",
             named: "dialog-measure-\(what)")
+        if !missing.isEmpty || !(aboveOrBelow || beside) { attachTree(of: app, named: "dialog-tree-\(what)") }
         XCTAssertTrue(missing.isEmpty, "\(what): the dialog doesn't show \(missing)")
         XCTAssertTrue(
             aboveOrBelow || beside,
