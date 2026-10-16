@@ -48,9 +48,13 @@ final class FeedbackUITests: XCTestCase {
 
         app.buttons["feedback-back"].tap()
         XCTAssertTrue(next.waitForExistence(timeout: 10), "Back didn't return to drawing")
-        app.buttons["feedback-cancel"].tap()
+        let cancel = app.buttons["feedback-cancel"]
+        let source = cancel.frame
+        cancel.tap()
         let discard = app.buttons["Discard"]
         XCTAssertTrue(discard.waitForExistence(timeout: 10), "Cancel didn't ask before throwing the mark away")
+        // It points at the Cancel button it was asked from.
+        checkDialog(showing: ["Discard Your Feedback?", "Your marks and notes will be lost."], pointsAt: source, "feedback-discard", in: app)
         discard.tap()
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "Discarding didn't return to painting")
         XCTAssertFalse(next.exists, "Feedback mode is still on")

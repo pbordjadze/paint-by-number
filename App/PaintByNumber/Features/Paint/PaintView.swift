@@ -121,14 +121,6 @@ struct PaintView: View {
             }
         }
         .onDisappear { undoManager?.removeAllActions(withTarget: session) }
-        .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
-            Button("Restart", role: .destructive) {
-                undoManager?.removeAllActions(withTarget: session)
-                session.reset()
-            }
-        } message: {
-            Text("All paint will be cleared.")
-        }
         .sheet(item: $timelapse) { request in
             TimelapseExportSheet(request: request)
         }
@@ -462,6 +454,15 @@ struct PaintView: View {
         }
         .accessibilityLabel(Text("More"))
         .accessibilityShowsLargeContentViewer { Label("More", systemImage: "ellipsis") }
+        // Asked from this menu, so the popover points at its button, not at the whole screen.
+        .confirmationDialog("Restart this painting?", isPresented: $confirmRestart, titleVisibility: .visible) {
+            Button("Restart", role: .destructive) {
+                undoManager?.removeAllActions(withTarget: session)
+                session.reset()
+            }
+        } message: {
+            Text("All paint will be cleared.")
+        }
     }
 
     /// More › Palette: its rows and order.

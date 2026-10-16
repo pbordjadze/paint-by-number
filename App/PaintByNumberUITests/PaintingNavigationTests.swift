@@ -46,6 +46,22 @@ final class PaintingNavigationTests: XCTestCase {
         XCTAssertTrue(wait(for: badge, toMatch: NSPredicate(format: "label != %@", before)), "Undo didn't take anything back")
     }
 
+    /// More › Restart asks beside the More button, not over the middle of the painting.
+    @MainActor
+    func testRestartConfirmationPointsAtMore() throws {
+        let app = openSeededPainting()
+        let more = app.buttons["More"]
+        let source = more.frame
+        more.tap()
+        let restart = app.buttons["Restart"]
+        XCTAssertTrue(restart.waitForExistence(timeout: 5), "More has no Restart")
+        restart.tap()
+        guard let dialog = checkDialog(
+            showing: ["Restart this painting?", "All paint will be cleared."], pointsAt: source, "restart", in: app)
+        else { return }
+        dismissDialog(at: dialog, titled: "Restart this painting?", in: app)
+    }
+
     /// The Hint button flies the camera to an unpainted area.
     @MainActor
     func testHintButtonMovesTheCanvas() throws {
