@@ -179,9 +179,15 @@ public struct StrokeSchedule: Sendable {
     /// smooth curve, as far as the ripple from the crew has reached it, in full ink. `t = .infinity`
     /// is the finished template, `-.infinity` the outlines before any of it.
     public func relaxed(at t: Double) -> [InkLine] {
+        Self.relaxed(strokes, at: t, over: outlines.relax)
+    }
+
+    /// `relaxed(at:)` for any strokes, a point taking `relaxTime` seconds from the ripple reaching
+    /// it to being smooth (the field show's, which has its own ripple but this same relaxing).
+    static func relaxed(_ strokes: [Stroke], at t: Double, over relaxTime: Double) -> [InkLine] {
         strokes.map { stroke in
             let points = (0..<stroke.jagged.count).map { i -> Point in
-                let m = ease((t - stroke.relax[i]) / outlines.relax)
+                let m = ease((t - stroke.relax[i]) / relaxTime)
                 let (a, b) = (stroke.jagged[i], stroke.smooth[i])
                 return Point(a.x * (1 - m) + b.x * m, a.y * (1 - m) + b.y * m)     // exactly each end at 0 and 1
             }

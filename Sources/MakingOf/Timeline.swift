@@ -35,8 +35,14 @@ public struct Timeline: Sendable, Equatable {
     private let style: ScheduleStyle
 
     public init(_ spec: ShowSpec, style: ScheduleStyle = .standard) {
+        self.init(spec, outro: spec.timing.outro, style: style)
+    }
+
+    /// The spec's timing with a hold of its own: the field show's (`FieldShow.outro`), which has no
+    /// farewell to wait for.
+    public init(_ spec: ShowSpec, outro: Double, style: ScheduleStyle = .standard) {
         timing = ScheduleTiming(spec)
-        outro = spec.timing.outro
+        self.outro = outro
         cards = spec.cards
         seeds = spec.seeds
         self.style = style
