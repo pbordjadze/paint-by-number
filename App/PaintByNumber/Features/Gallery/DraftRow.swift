@@ -39,7 +39,8 @@ struct DraftRow: View {
             if stacked { buttons(fillsWidth: true) }
         }
         .padding(14)
-        .frame(maxWidth: 560, alignment: .leading)
+        // The whole row, its edges the grid's: a card of its own width left half of a wide row empty.
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surface, in: .rect(cornerRadius: Theme.cardRadius, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)

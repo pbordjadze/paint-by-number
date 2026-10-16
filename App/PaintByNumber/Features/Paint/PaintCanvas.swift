@@ -94,6 +94,7 @@ struct CanvasUnavailableView: View {
             SwiftUI.Label("Can’t Show the Canvas", systemImage: "exclamationmark.triangle")
         } description: {
             Text("This device can’t draw the painting right now. Your progress is saved.")
+                .readableDescription()
         } actions: {
             if let onClose {
                 Button("Back to Gallery", action: onClose)

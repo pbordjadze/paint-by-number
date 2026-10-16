@@ -25,8 +25,8 @@ final class GalleryActionsTests: XCTestCase {
     }
 
     /// A confirmation points at the card whose menu asked for it, wherever the card sits: the
-    /// unstarted last card in progress (the Delete of a painter's "October 6", in the third row), a
-    /// started one for Restart, and a finished one below the fold. A dialog on the whole gallery
+    /// unstarted card, alone in its section (the Delete of a painter's "October 6", in the third
+    /// row), a started one for Restart, and a finished one below the fold. A dialog on the whole gallery
     /// opens over the middle of it, whichever card was chosen.
     @MainActor
     func testConfirmationsPointAtTheirCard() {
@@ -73,26 +73,27 @@ final class GalleryActionsTests: XCTestCase {
     @MainActor
     func testFavoriteFromTheMenuMarksAndMovesTheCard() {
         let app = launchGallery()
-        // The demo gallery's one favorite is Earthrise; The Milkmaid is the last card in progress.
-        let milkmaid = revealCard("The Milkmaid", in: app)
-        XCTAssertFalse(valueOf(milkmaid).contains("Favorite"), "The Milkmaid starts out as a favorite")
-        milkmaid.press(forDuration: 1.5)
+        // The demo gallery's one favorite is Earthrise; Red Fox in Snow, started, is the last card in
+        // progress (The Milkmaid, nobody's painted on it, is the one card ready to paint).
+        let fox = revealCard("Red Fox in Snow", in: app)
+        XCTAssertFalse(valueOf(fox).contains("Favorite"), "Red Fox in Snow starts out as a favorite")
+        fox.press(forDuration: 1.5)
         let favorite = app.buttons["Favorite"]
         XCTAssertTrue(favorite.waitForExistence(timeout: 5), "The card menu has no Favorite")
         favorite.tap()
 
-        XCTAssertTrue(waitFor(milkmaid, "value CONTAINS 'Favorite'"), "The card doesn't say it is a favorite")
+        XCTAssertTrue(waitFor(fox, "value CONTAINS 'Favorite'"), "The card doesn't say it is a favorite")
         scrollToTop(app)
         let wave = app.buttons["The Great Wave"].firstMatch
-        XCTAssertTrue(waitUntil { self.precedes(milkmaid, wave) }, "The favorite didn't move ahead of The Great Wave")
+        XCTAssertTrue(waitUntil { self.precedes(fox, wave) }, "The favorite didn't move ahead of The Great Wave")
         attachScreenshot(of: app, named: "favorite")
 
-        milkmaid.press(forDuration: 1.5)
+        fox.press(forDuration: 1.5)
         let unfavorite = app.buttons["Unfavorite"]
         XCTAssertTrue(unfavorite.waitForExistence(timeout: 5), "A favorite's menu has no Unfavorite")
         unfavorite.tap()
-        XCTAssertTrue(waitFor(milkmaid, "NOT (value CONTAINS 'Favorite')"), "Unfavorite left the mark on the card")
-        XCTAssertTrue(waitUntil { self.precedes(wave, milkmaid) }, "The card didn't return to its place")
+        XCTAssertTrue(waitFor(fox, "NOT (value CONTAINS 'Favorite')"), "Unfavorite left the mark on the card")
+        XCTAssertTrue(waitUntil { self.precedes(wave, fox) }, "The card didn't return to its place")
     }
 
     /// The Show menu lists favorites only; with none left the gallery explains how to add one.
@@ -204,20 +205,53 @@ final class GalleryActionsTests: XCTestCase {
         return XCTWaiter.wait(for: [wait], timeout: timeout) == .completed
     }
 
-    /// Waits for a card to be ready and scrolls it into view (the finished ones sit below the
-    /// fold on a phone). Cards are buttons; the placeholder shown while a painting is still
-    /// being generated is not, so it can't be mistaken for the card.
+    /// Waits for the demo gallery to have made its six paintings, then scrolls the card into view
+    /// (the finished ones sit below the fold on a phone). Cards are buttons; the placeholder shown
+    /// while a painting is still being generated is not, so it can't be mistaken for the card.
+    ///
+    /// The paintings land one after another among each other, and a card far from the screen is no
+    /// button at all: the grid builds only what is near it (a finished painting, a section and a
+    /// row below the fold on a phone, was never in the tree to wait for). The navigation bar's
+    /// subtitle is always there and counts every painting, those still being made too: it reads
+    /// like this once the last has landed, and nothing slides along under a long press then.
     @MainActor
     private func revealCard(_ title: String, in app: XCUIApplication) -> XCUIElement {
+        let counts = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "3 in progress · 1 ready · 2 finished")).firstMatch
+        XCTAssertTrue(counts.waitForExistence(timeout: 120), "The demo gallery never finished making its paintings")
         let card = app.buttons[title].firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: 120), "“\(title)” never appeared")
-        // Cards still being generated slide the others along as they land: a long press
-        // meanwhile can open a neighbour's menu.
-        let preparing = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Preparing'")).firstMatch
-        XCTAssertTrue(preparing.waitForNonExistence(timeout: 120), "The demo gallery never finished generating")
-        for _ in 0..<6 where !card.isHittable { app.swipeUp() }
-        if !card.isHittable { attachTree(of: app, named: "gallery-tree") }
-        XCTAssertTrue(card.isHittable, "“\(title)” couldn't be scrolled into view")
+        let window = app.windows.firstMatch.frame
+        // The middle of the card between the bars: its top is the status bar and the navigation bar,
+        // its bottom the search field. A card scrolled up until only its lower part shows has its
+        // middle in the status bar, where it counts as hittable, and a press there is no press on
+        // it (the favorite test's Red Fox, after the Milkmaid had been scrolled to).
+        func isInView() -> Bool {
+            card.exists && card.isHittable && (window.minY + 130)...(window.maxY - 100) ~= card.frame.midY
+        }
+        // A card is built only near the screen: one that isn't in the tree is below (the finished
+        // ones, at the start) or far above, which a few swipes up tell apart.
+        for attempt in 0..<8 where !isInView() {
+            let above = card.exists ? card.frame.midY < window.midY : attempt >= 4
+            if above { app.swipeDown() } else { app.swipeUp() }
+        }
+        if !isInView() { attachTree(of: app, named: "gallery-tree") }
+        XCTAssertTrue(isInView(), "“\(title)” couldn't be scrolled into view")
+        waitUntilStill(card)
         return card
+    }
+
+    /// Waits for `card` to stop moving. A swipe leaves the gallery coasting, and a touch on a scroll
+    /// view that is still coasting only stops it: the long press that follows opens no menu (the one
+    /// failure on record of `testTimelapseShowsProgressAndCancels` on CI's iPad: the finished card,
+    /// below the fold and just scrolled to, had no menu).
+    @MainActor
+    private func waitUntilStill(_ card: XCUIElement) {
+        var last = card.frame
+        for _ in 0..<20 {
+            Thread.sleep(forTimeInterval: 0.25)
+            let frame = card.frame
+            if frame == last { return }
+            last = frame
+        }
     }
 }

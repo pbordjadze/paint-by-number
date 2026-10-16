@@ -388,7 +388,8 @@ struct PaintView: View {
 
     /// What the progress badge shows: the ring, plus any of the title (when it fits whole),
     /// the percentage and, on regular widths, the selected color's name (compact widths show
-    /// it above the palette instead).
+    /// it above the palette instead). A finished painting has no paint on the brush to name:
+    /// the completion bar has taken the palette's place.
     nonisolated private struct BadgeVariant: Hashable {
         var showsTitle = false
         var showsPercent = true
@@ -401,7 +402,7 @@ struct PaintView: View {
     /// Largest first. The name outranks the percentage: when a long (translated) name doesn't
     /// fit beside the percentage, the last variant keeps the ring and lets the name shrink.
     private var badgeVariants: [BadgeVariant] {
-        let showsColor = sizeClass == .regular && session.selectedColor != nil
+        let showsColor = sizeClass == .regular && !session.isComplete && session.selectedColor != nil
         var variants: [BadgeVariant] = []
         if !title.isEmpty { variants.append(BadgeVariant(showsTitle: true, showsColor: showsColor)) }
         variants.append(BadgeVariant(showsColor: showsColor))
@@ -632,6 +633,8 @@ struct PaintView: View {
 
 /// The progress badge's ring and percentage. They change with every fill, so they read the
 /// session in a view of their own: a fill re-renders them, not the painting screen around them.
+/// They show what is on the canvas, which during a replay is not what the painting holds
+/// (`PaintingSession.replayed`).
 private struct ProgressGroup: View {
     let session: PaintingSession
     let title: String
@@ -640,7 +643,7 @@ private struct ProgressGroup: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        let fraction = session.fractionComplete
+        let fraction = session.shownFraction
         // Whole percent, rounded down: 100 only once the last area is painted.
         let percent = Int(fraction * 100)
         HStack(spacing: 8) {
@@ -682,9 +685,10 @@ private struct ProgressGroup: View {
     /// The ring fills in paint: each color's painted share of the areas, in palette order.
     private var paintedArcs: [(paint: Color, start: Double, end: Double)] {
         let total = Double(max(session.progress.regionCount, 1))
+        let shown = session.shownPaintedByColor
         var start = 0.0
         return (0..<session.paletteCount).compactMap { color -> (paint: Color, start: Double, end: Double)? in
-            let painted = session.totalByColor[color] - session.remainingByColor[color]
+            let painted = shown[color]
             guard painted > 0 else { return nil }
             let end = start + Double(painted) / total
             defer { start = end }

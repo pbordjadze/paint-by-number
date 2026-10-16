@@ -28,9 +28,10 @@ synchronized folder would bundle it into the app.
   on a screen or a grid it points at the container's middle, not at what asked. Attach it to the
   card, button or menu that asks, keeping one state for what is pending: each gallery card carries
   its Delete and Restart (`GalleryView.isPending`), `DraftRow` its Discard, `PaintView.moreMenu`
-  its Restart, `FeedbackBar` its Cancel's. `checkDialog` (`UITestSupport`) measures a dialog
-  against its source in `GalleryActionsTests`, `DraftUITests`, `PaintingNavigationTests` and
-  `FeedbackUITests`. Alerts (`.alert`) are centered and need none of this.
+  its Restart, `FeedbackBar` its Cancel's, `PaintingRecoveryView` its Delete Painting (what both
+  Deletes say: `DeleteConfirmation`). `checkDialog` (`UITestSupport`) measures a dialog
+  against its source in `GalleryActionsTests`, `DraftUITests`, `PaintingNavigationTests`,
+  `FeedbackUITests` and `RecoveryTests`. Alerts (`.alert`) are centered and need none of this.
 - `CanvasUniforms`, `RegionState` and `GlyphInstance` are mirrored by hand in `Shaders.metal`:
   change both in the same order, 16-byte vectors only
   (`CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the strides). No shader reads
@@ -64,7 +65,7 @@ synchronized folder would bundle it into the app.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
   see Create flow), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
-  `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
+  `Sample`, `GalleryQuery`, `GalleryCounts`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
   `Background`, `Log` (every logger; CI's `*-app.log`); DEBUG `DemoTemplateCache`.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
   `ObjectFinder`, `TextFinder`, `LineArtInputs`, `TemplateRefinements`; DEBUG `LineArtMapsCache`.
@@ -177,7 +178,8 @@ synchronized folder would bundle it into the app.
   `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
-  (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`). Demo launches and the test host
+  (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), and `gallery-first-run` is the
+  gallery as the first launch leaves it (the two starters, none painted on). Demo launches and the test host
   reset TipKit and hide every tip except in `paint-tip`. The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
   `marginarium` (with `-dark`, `-long-text`) is the contents page, its drawings idling, ready 2 s
@@ -213,7 +215,11 @@ synchronized folder would bundle it into the app.
   changes on the way (`CanvasView.layoutSubviews`): the completion bar taking the palette's place
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
-  `isComplete`) and its seal bounces once it is up, for a painting finished on screen.
+  `isComplete`) and its seal bounces once it is up, for a painting finished on screen. The
+  progress badge then names no color (nothing is on the brush); during a replay its ring and
+  percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
+  how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
+  the saved progress stay whole).
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
@@ -381,7 +387,9 @@ Conventions).
   `ArtworkStore.writeFaults`.
 - Favorites and search: `Artwork.isFavorite` (tolerant decoding); the gallery's Show menu
   (`GalleryFilter`, `@SceneStorage("galleryFilter")`) and `.searchable` make a `GalleryQuery`
-  (`Library.inProgress`/`finished` list favorites first); `TitleSearch.matches` needs every query
+  (`Library.inProgress`/`readyToPaint`/`finished` list favorites first; the gallery's sections are
+  these three, a painting nobody has painted on being ready to paint, not in progress, and
+  `GalleryCounts` is the subtitle that counts them); `TitleSearch.matches` needs every query
   word to start a title word, ignoring case, diacritics and width. `AppShellView` keeps the open
   painting's id in `@SceneStorage("openArtwork")` and reopens it once on appear (not in demo
   launches, nor while a file is being opened); a launch whose reopen never settled (the app ended

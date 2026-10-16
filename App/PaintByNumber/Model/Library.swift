@@ -121,14 +121,17 @@ final class Library {
 
     // MARK: Queries
 
-    /// Favorites first, then newest change first.
-    var inProgress: [Artwork] { Self.favoritesFirst(artworks.filter { !$0.isComplete }) }
+    /// Painted on and not finished: favorites first, then newest change first.
+    var inProgress: [Artwork] { Self.favoritesFirst(artworks.filter { $0.isStarted && !$0.isComplete }) }
+    /// Nobody has painted on them yet: in no way in progress. Favorites first, then newest change first.
+    var readyToPaint: [Artwork] { Self.favoritesFirst(artworks.filter { !$0.isStarted && !$0.isComplete }) }
     /// Favorites first, then most recently finished first.
     var finished: [Artwork] {
         Self.favoritesFirst(
             artworks.filter(\.isComplete).sorted { ($0.completedAt ?? $0.modifiedAt) > ($1.completedAt ?? $1.modifiedAt) })
     }
     func inProgress(matching query: GalleryQuery) -> [Artwork] { inProgress.filter(query.includes) }
+    func readyToPaint(matching query: GalleryQuery) -> [Artwork] { readyToPaint.filter(query.includes) }
     func finished(matching query: GalleryQuery) -> [Artwork] { finished.filter(query.includes) }
     var isEmpty: Bool { artworks.isEmpty && placeholders.isEmpty }
 
