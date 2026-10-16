@@ -11,8 +11,9 @@ nonisolated struct GalleryCounts: Equatable, Sendable {
     var finished = 0
 
     /// Empty when there is nothing to count. One kind alone says what the paintings are ("2
-    /// paintings in progress", "2 finished paintings", "2 ready to paint"); more kinds are each
-    /// a count, in the order of the sections.
+    /// paintings in progress", "2 ready to paint", "2 finished paintings"); more kinds are each a
+    /// short count, in the order of the sections, so that all three still fit the collapsed
+    /// title's room on a phone ("3 in progress · 1 ready · 2 finished").
     var subtitle: String {
         switch (inProgress > 0, ready > 0, finished > 0) {
         case (false, false, false):
@@ -20,6 +21,9 @@ nonisolated struct GalleryCounts: Equatable, Sendable {
         case (true, false, false):
             return String(localized: "gallery.subtitle.inProgress", defaultValue: "\(inProgress) paintings in progress",
                           comment: "Gallery subtitle when every painting is still in progress; the argument is how many")
+        case (false, true, false):
+            return String(localized: "gallery.subtitle.ready", defaultValue: "\(ready) ready to paint",
+                          comment: "Gallery subtitle when no painting has been painted on yet, as on the first launch; the argument is how many")
         case (false, false, true):
             return String(localized: "gallery.subtitle.finished", defaultValue: "\(finished) finished paintings",
                           comment: "Gallery subtitle when every painting is finished; the argument is how many")
@@ -30,8 +34,8 @@ nonisolated struct GalleryCounts: Equatable, Sendable {
                                     comment: "Part of the gallery subtitle: how many paintings are in progress"))
             }
             if ready > 0 {
-                parts.append(String(localized: "gallery.subtitle.count.ready", defaultValue: "\(ready) ready to paint",
-                                    comment: "Part of the gallery subtitle: how many paintings nobody has painted on yet"))
+                parts.append(String(localized: "gallery.subtitle.count.ready", defaultValue: "\(ready) ready",
+                                    comment: "Part of the gallery subtitle: how many paintings nobody has painted on yet and are ready to paint"))
             }
             if finished > 0 {
                 parts.append(String(localized: "gallery.subtitle.count.finished", defaultValue: "\(finished) finished",

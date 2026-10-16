@@ -1550,7 +1550,7 @@
       }
     },
     "gallery.subtitle.count.ready" : {
-      "comment" : "Part of the gallery subtitle: how many paintings nobody has painted on yet",
+      "comment" : "Part of the gallery subtitle: how many paintings nobody has painted on yet and are ready to paint",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1559,13 +1559,13 @@
               "one" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld ready to paint"
+                  "value" : "%lld ready"
                 }
               },
               "other" : {
                 "stringUnit" : {
                   "state" : "translated",
-                  "value" : "%lld ready to paint"
+                  "value" : "%lld ready"
                 }
               }
             }
@@ -1614,6 +1614,30 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld paintings in progress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.subtitle.ready" : {
+      "comment" : "Gallery subtitle when no painting has been painted on yet, as on the first launch; the argument is how many",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ready to paint"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ready to paint"
                 }
               }
             }

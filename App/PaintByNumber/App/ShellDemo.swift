@@ -316,8 +316,9 @@ enum ShellDemo: Equatable {
         await library.drafts.flush()
     }
 
-    /// The first six pictures painted to various stages: four in progress, two finished
-    /// (with two pictures, one of each).
+    /// The first six pictures painted to various stages: three in progress, one nobody has painted
+    /// on, two finished (`GalleryActionsTests` waits for the subtitle that counts them, "3 in
+    /// progress · 1 ready · 2 finished"; with two pictures, one in progress and one finished).
     private var galleryItems: [Library.SeedItem] {
         let hour: TimeInterval = 3600
         // By position: the fraction painted, and the hours since it was last painted.

@@ -205,19 +205,23 @@ final class GalleryActionsTests: XCTestCase {
         return XCTWaiter.wait(for: [wait], timeout: timeout) == .completed
     }
 
-    /// Waits for a card to be ready and scrolls it into view (the finished ones sit below the
-    /// fold on a phone). Cards are buttons; the placeholder shown while a painting is still
-    /// being generated is not, so it can't be mistaken for the card.
+    /// Waits for the demo gallery to have made its six paintings, then scrolls the card into view
+    /// (the finished ones sit below the fold on a phone). Cards are buttons; the placeholder shown
+    /// while a painting is still being generated is not, so it can't be mistaken for the card.
+    ///
+    /// The paintings land one after another among each other, and a card far from the screen is no
+    /// button at all: the grid builds only what is near it (a finished painting, a section and a
+    /// row below the fold on a phone, was never in the tree to wait for). The navigation bar's
+    /// subtitle is always there and counts every painting, those still being made too: it reads
+    /// like this once the last has landed, and nothing slides along under a long press then.
     @MainActor
     private func revealCard(_ title: String, in app: XCUIApplication) -> XCUIElement {
+        let counts = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "3 in progress · 1 ready · 2 finished")).firstMatch
+        XCTAssertTrue(counts.waitForExistence(timeout: 120), "The demo gallery never finished making its paintings")
         let card = app.buttons[title].firstMatch
-        XCTAssertTrue(card.waitForExistence(timeout: 120), "“\(title)” never appeared")
-        // Cards still being generated slide the others along as they land: a long press
-        // meanwhile can open a neighbour's menu.
-        let preparing = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Preparing'")).firstMatch
-        XCTAssertTrue(preparing.waitForNonExistence(timeout: 120), "The demo gallery never finished generating")
-        for _ in 0..<6 where !card.isHittable { app.swipeUp() }
-        if !card.isHittable { attachTree(of: app, named: "gallery-tree") }
+        for _ in 0..<8 where !(card.exists && card.isHittable) { app.swipeUp() }
+        if !(card.exists && card.isHittable) { attachTree(of: app, named: "gallery-tree") }
         XCTAssertTrue(card.isHittable, "“\(title)” couldn't be scrolled into view")
         waitUntilStill(card)
         return card

@@ -118,10 +118,12 @@ struct GalleryCountsTests {
         #expect(subtitle(0, 0, 2) == "2 finished paintings")
     }
 
+    /// Short counts, in the order of the sections: all three fit the collapsed title's room on a
+    /// phone, where "3 in progress · 1 ready to paint · 2 finished" ran out ("2 fi…").
     @Test func moreKindsAreCountedInTheOrderOfTheSections() {
         #expect(subtitle(4, 0, 2) == "4 in progress · 2 finished")
-        #expect(subtitle(3, 1, 0) == "3 in progress · 1 ready to paint")
-        #expect(subtitle(0, 1, 2) == "1 ready to paint · 2 finished")
-        #expect(subtitle(3, 1, 2) == "3 in progress · 1 ready to paint · 2 finished")
+        #expect(subtitle(3, 1, 0) == "3 in progress · 1 ready")
+        #expect(subtitle(0, 1, 2) == "1 ready · 2 finished")
+        #expect(subtitle(3, 1, 2) == "3 in progress · 1 ready · 2 finished")
     }
 }

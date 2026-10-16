@@ -1,7 +1,8 @@
 import Foundation
 import SwiftUI
 
-/// The gallery: paintings in progress and finished ones, as an adaptive grid of cards.
+/// The gallery: paintings in progress, ready to paint (nobody has painted on them yet) and
+/// finished, each section an adaptive grid of cards.
 struct GalleryView: View {
     let namespace: Namespace.ID
     /// The Show filter and the search text: what the gallery lists.
