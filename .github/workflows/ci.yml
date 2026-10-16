@@ -64,6 +64,13 @@ jobs:
           set -o pipefail
           mkdir -p out
           swift test 2>&1 | grep -vE '^\[[0-9]+/[0-9]+\]' | tee out/core-test.log | tail -60
+      - name: Feedback relay tests
+        # The Worker behind Give Feedback (feedback-relay/) against a mocked GitHub; Ubuntu's node 18.
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          apt-get install -y -qq --no-install-recommends nodejs > /dev/null
+          node --test feedback-relay/worker.test.js
       - name: Quality regression
         # Also after failed tests: the metrics help explain them.
         if: ${{ !cancelled() }}

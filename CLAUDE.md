@@ -101,12 +101,18 @@ before planning app work).
   `check --docs <view.json> --id <chapter>` also compares against the approved Doc. Chapter `pet:`
   blocks, the pets beside margin notes, the shared imageset/v2-atlas player and the bundled
   sheets' sizes: `docs/marginarium-pets.md`.
-- `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
-  regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
+- `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
+  tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone`, all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
   (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
-  (on request; its header says how).
+  (on request; its header says how); `.github/workflows/feedback-relay.yml`, the deploy of
+  `feedback-relay/` (see below).
+- `feedback-relay/`: the Cloudflare Worker behind Give Feedback's Send (`worker.js`'s header is its
+  contract and manual; `worker.test.js` runs with `node --test feedback-relay/worker.test.js`, in
+  CI's `core` job too). It files each report in the developers' private GitHub repository. Its
+  deploy workflow needs the secrets `CLOUDFLARE_API_TOKEN` and `FEEDBACK_GITHUB_TOKEN` and writes
+  the Worker's URL to its run summary, which `FeedbackUploader.endpoint` must match.
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
   per-agent reports are not committed (they live on their branch and in commit messages); a
@@ -317,7 +323,9 @@ Saved paintings must open in every later build. The format history is documented
   and `RootView`. A screenshotted scenario is one `name@seconds` line of `ci/scenarios.txt` (no
   comments; `@seconds` is only the timeout; the file merges as a union) and calls `DemoMode.markReady()` once its content is on
   screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `SyntheticTemplate`,
-  `LineArtMapsCache`, `DemoTemplateCache` and `MainThreadWatchdog` are wrapped in `#if DEBUG`,
+  `LineArtMapsCache`, `DemoTemplateCache`, `MainThreadWatchdog` and `FeedbackUploadStub` (Debug
+  builds' stand-in for the feedback relay, picked by `-feedback-upload`: tests and CI never
+  upload) are wrapped in `#if DEBUG`,
   and every other reference (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`,
   `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
@@ -334,9 +342,12 @@ Saved paintings must open in every later build. The format history is documented
   scenario for any new screen worth a CI screenshot, catalog entries for its strings, VoiceOver
   labels and values, Dynamic Type, Reduce Motion and dark mode for every new control, and the
   CLAUDE.md pointers kept current. No stubs or flags hiding unfinished work.
-- Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking, no collected
-  data; required-reason APIs: UserDefaults `CA92.1`, file timestamps `C617.1` for purging the app's
-  own export folders). Using another required-reason API (file timestamps, disk space, boot time via
+- Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking; the one
+  thing the app sends off the device is the feedback a painter chooses to send, declared as
+  collected data not linked to them and used only for App Functionality: customer support, other
+  diagnostic data, photos or videos; `AboutTests` pins the list and `PRIVACY.md` says the same, so
+  a change to what Send uploads changes all three; required-reason APIs: UserDefaults `CA92.1`, file
+  timestamps `C617.1` for purging the app's own export folders). Using another required-reason API (file timestamps, disk space, boot time via
   `systemUptime`/`mach_absolute_time`, active keyboards) means adding its category and reason code
   there; `AboutTests` fails when the sources of the app or of `Sources/PaintCore` (not `pbn`) and
   the manifest disagree. Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category
