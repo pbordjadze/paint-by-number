@@ -4,9 +4,10 @@ import SwiftUI
 
 /// The making-of show, full screen over the create flow after Start Painting when Settings › The
 /// Making-of is on (`SettingsKey.playsMakingOf`, off by default): the painter's photo becoming its
-/// painting in six steps (`Sources/MakingOf`, `ShowSpec`), three guardians' pets at work on it, and
-/// under the picture a faint card for each step. Skip, a tap anywhere or the show's end calls
-/// `onFinish`, which opens the painting Start has already saved; so does a show that can't be made.
+/// painting in six steps (`Sources/MakingOf`, `FieldShow`: each step grows from seeds over the
+/// picture itself), and under the picture a faint card for each step. Skip, a tap anywhere or the
+/// show's end calls `onFinish`, which opens the painting Start has already saved; so does a show
+/// that can't be made.
 ///
 /// `MakingOfPlayer` makes and times the show; this draws it (`MakingOfCanvas`): the picture fitted
 /// above the card's band (`MakingOfLayout`), on the screen's paper in either appearance (the
@@ -120,7 +121,7 @@ struct MakingOfView: View {
     private func inTime(_ built: MakingOfShow, at t: Double, in layout: MakingOfLayout) -> some View {
         let frame = built.show.frame(at: t)
         return ZStack(alignment: .topLeading) {
-            MakingOfCanvas(built: built, frame: frame, picture: player.picture ?? source.photo, layout: layout, crew: true)
+            MakingOfCanvas(built: built, frame: frame, picture: player.picture ?? source.photo, layout: layout, marks: true)
             if let card = frame.card {
                 cardView(built.cards[card.step], opacity: card.opacity, footnote: card.footnoteOpacity, in: layout)
             }
@@ -131,7 +132,7 @@ struct MakingOfView: View {
     private func still(_ built: MakingOfShow, _ still: MakingOfPlayer.Still, in layout: MakingOfLayout) -> some View {
         let cards = built.spec.cards
         return ZStack(alignment: .topLeading) {
-            MakingOfCanvas(built: built, frame: still.frame, picture: still.picture ?? source.photo, layout: layout, crew: false)
+            MakingOfCanvas(built: built, frame: still.frame, picture: still.picture ?? source.photo, layout: layout, marks: false)
             if let k = still.step {
                 cardView(built.cards[k], opacity: cards.opacity, footnote: cards.opacity * cards.footnote, in: layout)
             }
@@ -167,20 +168,27 @@ nonisolated struct MakingOfLayout: Equatable, Sendable {
 
 /// One frame of the show, as `ShowFrame`'s doc comment says: the picture (layers and ink,
 /// composited by `MakingOfPlayer`), the real template at its hand-off, the numbers, the seed rings,
-/// and the guardians back to front, each shadow then its sprite. The real template comes in under
-/// the numbers rather than over them: it is drawn without its numbers (`MakingOfShow.handoff`), and
-/// the show's are the template's own, in place.
+/// and the sparks and stars of the field show, in ink over the rest. The real template comes in
+/// under the numbers rather than over them: it is drawn without its numbers
+/// (`MakingOfShow.handoff`), and the show's are the template's own, in place.
 struct MakingOfCanvas: View {
     let built: MakingOfShow
     let frame: ShowFrame
     let picture: CGImage
     let layout: MakingOfLayout
-    /// The guardians and the seed rings; Reduce Motion's stills have neither.
-    let crew: Bool
+    /// The seed rings, sparks and stars; Reduce Motion's stills have none of them.
+    let marks: Bool
 
     nonisolated static let cornerRadius: CGFloat = 6
     /// The size digits are set at, then scaled to each number's.
     nonisolated private static let digitSize: CGFloat = 64
+    /// A spark is a filled circle of `sparkRadius + sparkGrowth * heat` picture pixels at
+    /// `sparkOpacity * heat` (`Spark`'s doc comment: `230 * heat / 255`), a star an outline
+    /// `starWidth` pixel wide; all in `RevealStyle.ink`, scaled to the view like the rings.
+    nonisolated private static let sparkRadius = 1.6
+    nonisolated private static let sparkGrowth = 1.6
+    nonisolated private static let sparkOpacity = 230.0 / 255
+    nonisolated private static let starWidth: CGFloat = 1
     nonisolated private static let paper = color(RevealStyle.standard.paper)
     nonisolated private static let ink = color(RevealStyle.standard.ink)
 
@@ -189,9 +197,9 @@ struct MakingOfCanvas: View {
     }
 
     var body: some View {
-        let built = built, frame = frame, picture = picture, rect = layout.picture, crew = crew
+        let built = built, frame = frame, picture = picture, rect = layout.picture, marks = marks
         Canvas { context, _ in
-            Self.draw(built, frame, picture: picture, in: rect, crew: crew, context: &context)
+            Self.draw(built, frame, picture: picture, in: rect, marks: marks, context: &context)
         }
         .accessibilityHidden(true)
     }
@@ -208,7 +216,7 @@ struct MakingOfCanvas: View {
     }
 
     nonisolated private static func draw(
-        _ built: MakingOfShow, _ frame: ShowFrame, picture: CGImage, in rect: CGRect, crew: Bool,
+        _ built: MakingOfShow, _ frame: ShowFrame, picture: CGImage, in rect: CGRect, marks: Bool,
         context: inout GraphicsContext
     ) {
         guard rect.width > 0, rect.height > 0 else { return }
@@ -222,9 +230,10 @@ struct MakingOfCanvas: View {
             sheet.draw(Image(decorative: template, scale: 1).interpolation(.high), in: rect)
         }
         drawNumbers(built, frame, place: place, context: context)
-        if crew {
+        if marks {
             drawRings(frame, place: place, context: context)
-            drawGuardians(built, frame, place: place, context: context)
+            drawSparks(frame, place: place, context: context)
+            drawStars(frame, place: place, context: context)
         }
     }
 
@@ -262,44 +271,40 @@ struct MakingOfCanvas: View {
             let center = place(ring.x, ring.y)
             let r = CGFloat(ring.radius) * k
             let width = CGFloat(SeedRing.lineWidth) * k
-            func disc(_ radius: CGFloat) -> Path {
-                Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: 2 * radius, height: 2 * radius))
-            }
             var c = context
             c.opacity = ring.alpha
-            c.fill(disc(r + CGFloat(SeedRing.halo) * k), with: .color(paper))
-            c.stroke(disc(r - width / 2), with: .color(ink), lineWidth: width)
-            c.fill(disc(CGFloat(SeedRing.dotRadius) * k), with: .color(ink))
+            c.fill(disc(center, r + CGFloat(SeedRing.halo) * k), with: .color(paper))
+            c.stroke(disc(center, r - width / 2), with: .color(ink), lineWidth: width)
+            c.fill(disc(center, CGFloat(SeedRing.dotRadius) * k), with: .color(ink))
         }
     }
 
-    /// The guardians as `SpriteDraw` places them: the soft shadow on the ground, then the cell, its
-    /// feet (`SpriteMetrics.cx`, `foot`) on the spot, scaled about them, then turned.
-    nonisolated private static func drawGuardians(
-        _ built: MakingOfShow, _ frame: ShowFrame, place: Placement, context: GraphicsContext
-    ) {
+    /// The hot tips of the lines burning in the ink step (`Spark`): a filled ink circle at each,
+    /// bigger and stronger while hot, normally blended over the picture and the rings.
+    nonisolated private static func drawSparks(_ frame: ShowFrame, place: Placement, context: GraphicsContext) {
         let k = place.scale
-        for draw in frame.sprites where built.sprites.has(draw.id) {
-            let shadow = draw.shadow
-            let ground = place(shadow.x, shadow.y)
-            let (halfWidth, height) = (CGFloat(shadow.halfWidth) * k, CGFloat(shadow.height) * k)
+        for spark in frame.sparks where spark.heat > 0 {
+            let heat = min(spark.heat, 1)
             var c = context
-            c.opacity = shadow.alpha
-            c.fill(
-                Path(ellipseIn: CGRect(x: ground.x - halfWidth, y: ground.y - height / 2, width: 2 * halfWidth, height: height)),
-                with: .color(ink))
-
-            guard let cell = built.sprites.image(draw), let metrics = built.metrics[draw.id] else { continue }
-            var s = context
-            s.opacity = draw.alpha
-            let feet = place(draw.x, draw.y)
-            s.translateBy(x: feet.x, y: feet.y)
-            s.rotate(by: .degrees(draw.rotation))
-            s.scaleBy(x: CGFloat(draw.scaleX) * k, y: CGFloat(draw.scaleY) * k)
-            s.draw(
-                Image(decorative: cell, scale: 1).interpolation(.high),
-                in: CGRect(
-                    x: -metrics.cx, y: -metrics.foot, width: SpriteMetrics.cell.width, height: SpriteMetrics.cell.height))
+            c.opacity = sparkOpacity * heat
+            c.fill(disc(place(spark.x, spark.y), CGFloat(sparkRadius + sparkGrowth * heat) * k), with: .color(ink))
         }
+    }
+
+    /// The faint rings that open round the numbers as they come out in the last step (`Star`): a
+    /// circle outline one picture pixel wide in ink, its outer edge at the star's radius.
+    nonisolated private static func drawStars(_ frame: ShowFrame, place: Placement, context: GraphicsContext) {
+        let k = place.scale
+        let width = starWidth * k
+        for star in frame.stars where star.alpha > 0 {
+            var c = context
+            c.opacity = min(star.alpha, 1)
+            let radius = max(CGFloat(star.radius) * k - width / 2, 0)
+            c.stroke(disc(place(star.x, star.y), radius), with: .color(ink), lineWidth: width)
+        }
+    }
+
+    nonisolated private static func disc(_ center: CGPoint, _ radius: CGFloat) -> Path {
+        Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: 2 * radius, height: 2 * radius))
     }
 }

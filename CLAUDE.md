@@ -58,11 +58,14 @@ before planning app work).
   `Commands.swift`, `Edit.swift` (`pbn edit`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
 - `Sources/MakingOf` (depends on PaintCore only; Debug `-O`, Release checked): the making-of show,
-  which plays after Start (three guardians walk over the painter's photo and each pipeline step is
-  revealed where they work). `Show` (its and `ShowFrame`'s doc comments say what the app's view
+  which plays after Start when Settings › The Making-of is on (off by default). The app plays
+  `FieldShow`, the show with no crew (below); `Show`, the first one, has three guardians walk over
+  the painter's photo and each pipeline step revealed where they work, and the app doesn't play it.
+  `Show` (its and `ShowFrame`'s doc comments say what the app's view
   draws) is built once from a generation's `ShowPictures`, the finished template (`ShowTemplate`),
-  the strict `ShowSpec` (`making-of.json`), a seed and `SpriteMetrics` (`pet-metrics.json`, in the
-  app's `Resources`), and then `frame(at:)` is a pure function of the time. Inside: `CrewInputs.make`
+  the strict `ShowSpec` (`making-of.json`, bundled in Release too), a seed and `SpriteMetrics`
+  (`pet-metrics.json`, in the app's `Resources` but not in its Release and not read by it), and
+  then `frame(at:)` is a pure function of the time. Inside: `CrewInputs.make`
   and `CrewPlan` (the crew), `ShowLayers` and `Compositor` (the pictures, `RevealStyle`: what a pixel
   looks like), `Arrival`, `StrokeSchedule`, `NumberSchedule` and `Timeline` (when and where,
   `ScheduleStyle`). Every random draw is a `ShowStreams` stream of SplitMix64; discrete decisions are
@@ -326,8 +329,10 @@ Saved paintings must open in every later build. The format history is documented
   `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
   `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a Debug-only type name
-  shows up in the Release binary. The Marginarium is left out of the release for now, the same check failing if any of
-  it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
+  shows up in the Release binary. The Making-of ships (its screen and Settings switch have no
+  `#if`; `making-of.json` is bundled, which the same check requires, and nothing of the
+  Marginarium's sprites is reachable from it). The Marginarium is left out of the release for now,
+  the same check failing if any of it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
   resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`.
   `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
   job archives Release with it defined and the exclusion cleared, so Paul's SideStore build has

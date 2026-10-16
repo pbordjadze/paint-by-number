@@ -9,11 +9,14 @@ import SwiftUI
 /// photograph, South Manitou Island Lighthouse (the factory's checks found their bugs on a
 /// portrait), at the default settings with its line art, and held still for the screenshot:
 ///
-/// - `making-of`: the paints step at 7 s: the guardians at work, the seed rings and the step's
-///   card.
+/// - `making-of`: the paints step at 7 s: the paints running through their areas, the seed rings
+///   and the step's card.
+/// - `making-of-ink`: the ink step at 11.6 s, the lines burning with a spark at each hot tip.
+/// - `making-of-stars`: the template step at 14.7 s, the numbers coming out each in a faint
+///   ring (a star).
 /// - `making-of-dark`, `making-of-long-text`: the ink step at 12 s, its card crediting two
 ///   methods; in dark appearance, and with every localized string twice as long.
-/// - `making-of-end`: the real template after the hand-off, the guardians saying goodbye.
+/// - `making-of-end`: the real template after the hand-off, at the end of the hold.
 /// - `making-of-reduce-motion`: Reduce Motion's still of the paints step, with its card.
 struct MakingOfDemoView: View {
     let scenario: String
@@ -38,6 +41,8 @@ struct MakingOfDemoView: View {
     private var heldAt: Double {
         switch scenario {
         case "making-of-reduce-motion": 2
+        case "making-of-ink": 11.6
+        case "making-of-stars": 14.7
         case "making-of-dark", "making-of-long-text": 12
         case "making-of-end": 17.2
         default: 7

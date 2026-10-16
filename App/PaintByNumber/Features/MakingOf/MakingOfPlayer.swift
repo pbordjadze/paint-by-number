@@ -10,14 +10,14 @@ import PaintCore
 /// stills.
 ///
 /// - In time: `time(at:)` from `origin`. A background task composites the picture on the CPU
-///   (`Show.composite`: the layers and the ink, the part of a frame a shader would do) at most
-///   `frameInterval` apart into one plane it keeps, and hands each as `picture`; the view draws the
-///   rest of every frame itself from `Show.frame(at:)` (numbers, the real template, seed rings,
-///   guardians, the card). The photo and the finished drawing don't change, so they are composited
-///   once. VoiceOver hears each step's card as it comes in.
-/// - Reduce Motion: no crew and no reveal: `stills`, the picture as each step leaves it with that
-///   step's card at full strength, `ShowSpec.Timing.step` apart (the view cross-fades them), and
-///   the real template last.
+///   (`FieldShow.composite`: the layers, the ink and the fronts' tide lines, the part of a frame a
+///   shader would do) at most `frameInterval` apart into one plane it keeps, and hands each as
+///   `picture`; the view draws the rest of every frame itself from `FieldShow.frame(at:)` (numbers,
+///   the real template, seed rings, sparks, stars, the card). The photo and the finished drawing
+///   don't change, so they are composited once. VoiceOver hears each step's card as it comes in.
+/// - Reduce Motion: no moving marks and no reveal: `stills`, the picture as each step leaves it
+///   with that step's card at full strength, `ShowSpec.Timing.step` apart (the view cross-fades
+///   them), and the real template last.
 ///
 /// It ends once, through `onFinish`: the show over, Skip or a tap (`skip`), or a show that
 /// couldn't be made; the screen then shows its last frame until it goes, and `release` lets go of
@@ -36,8 +36,8 @@ final class MakingOfPlayer {
         case finished
     }
 
-    /// A still of Reduce Motion: a frame without the crew, its picture, and its card's step (nil
-    /// for the real template at the end).
+    /// A still of Reduce Motion: a frame without the moving marks, its picture, and its card's
+    /// step (nil for the real template at the end).
     nonisolated struct Still: Sendable {
         let frame: ShowFrame
         let picture: CGImage?
@@ -57,8 +57,8 @@ final class MakingOfPlayer {
     @ObservationIgnored private var onFinish: (() -> Void)?
     @ObservationIgnored private var work: Task<Void, Never>?
 
-    /// At most 30 pictures a second: the reveals are soft, and the crew and the lines over them are
-    /// drawn at the display's rate.
+    /// At most 30 pictures a second: the reveals are soft, and the marks over them (the numbers,
+    /// rings, sparks and stars) are drawn at the display's rate.
     nonisolated static let frameInterval = 1.0 / 30
     /// The show starts this long after it is made, so its first picture is ready when it is due.
     static let lead = 0.1
@@ -202,7 +202,7 @@ final class MakingOfPlayer {
         }
     }
 
-    /// Reduce Motion's stills (`MakingOfShow.stillTimes`), without the crew or the seed rings.
+    /// Reduce Motion's stills (`MakingOfShow.stillTimes`), without the seed rings, sparks or stars.
     @concurrent
     static func stills(of built: MakingOfShow) async -> [Still] {
         let show = built.show
@@ -210,8 +210,9 @@ final class MakingOfPlayer {
         var stills: [Still] = []
         for (i, t) in MakingOfShow.stillTimes(show.timeline.timing).enumerated() {
             var frame = show.frame(at: t)
-            frame.sprites = []
             frame.seedRings = []
+            frame.sparks = []
+            frame.stars = []
             stills.append(Still(
                 frame: frame, picture: built.picture(frame, into: &pixels), step: i < ScheduleTiming.steps ? i : nil))
         }

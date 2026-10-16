@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Checks a built Release app for what a shipped build must (and must not) contain.
 #   ci/check_release.sh <path/to/PaintByNumber.app>
-# It carries the privacy manifest and export-compliance answer, none of the Marginarium, and none
-# of the Debug-only code (`DemoMode`, the demo scenarios, the synthetic template, the maps and
-# template caches of demo and test launches, their main-thread watchdog): those types are compiled
-# out of Release by `#if DEBUG`.
+# It carries the privacy manifest and export-compliance answer, the making-of's spec (the screen
+# behind Settings' The Making-of ships), none of the Marginarium, and none of the Debug-only code
+# (`DemoMode`, the demo scenarios, the synthetic template, the maps and template caches of demo and
+# test launches, their main-thread watchdog): those types are compiled out of Release by `#if DEBUG`.
 set -euo pipefail
 APP="$1"
 BINARY="$APP/$(/usr/libexec/PlistBuddy -c "Print CFBundleExecutable" "$APP/Info.plist")"
@@ -29,18 +29,22 @@ for symbol in DemoMode ShellDemo PaintDemoView MakingOfDemoView SyntheticTemplat
 done
 
 # The Marginarium is in Debug builds only for now: Release leaves out its code, chapters and
-# drawings (the target's EXCLUDED_SOURCE_FILE_NAMES), and the making-of's data until its screen ships.
-for symbol in MarginariumView MarginariumReaderView MarginariumSpritePlayer MarginariumDocument SpriteAtlas; do
+# drawings (the target's EXCLUDED_SOURCE_FILE_NAMES). The making-of show draws no guardian, so
+# nothing of it reaches the Marginarium's sprite sheets (`MakingOfSprites` and the metrics file the
+# crew's show was drawn with are gone too).
+for symbol in MarginariumView MarginariumReaderView MarginariumSpritePlayer MarginariumDocument SpriteAtlas MakingOfSprites pet-metrics; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
-for file in marginarium.json making-of.json pet-metrics.json; do
+for file in marginarium.json pet-metrics.json; do
   [[ ! -e "$APP/$file" ]] || fail "the Release app bundles $file"
 done
+# The making-of ships behind Settings' The Making-of: its spec is bundled, or the switch would do nothing.
+[[ -s "$APP/making-of.json" ]] || fail "the Release app doesn't bundle making-of.json, so The Making-of would do nothing"
 if compgen -G "$APP/pet-*.webp" > /dev/null; then fail "the Release app bundles the Marginarium's pet sheets"; fi
 if xcrun --find assetutil > /dev/null 2>&1; then
   if xcrun assetutil --info "$APP/Assets.car" 2>/dev/null | grep -qE '"Name" : "(pip|colophon)-'; then
     fail "the Release asset catalog holds Pip's or Colophon's frames"
   fi
 fi
-[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, no Debug-only code, no Marginarium"
+[[ $failed -eq 0 ]] && echo "Release build ok: privacy manifest present, making-of spec bundled, no Debug-only code, no Marginarium"
 exit $failed

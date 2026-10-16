@@ -150,7 +150,7 @@ struct SettingsView: View {
                     }
                     .accessibilityIdentifier("settings-making-of")
                 } footer: {
-                    Text("After Start Painting, watch your photo become its painting, step by step, with three guardians’ pets at work. It takes about 20 seconds, and a tap skips it.")
+                    Text("After Start Painting, watch your photo become its painting, step by step. It takes about 20 seconds, and a tap skips it.")
                 }
 
                 Section {

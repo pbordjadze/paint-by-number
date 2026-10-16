@@ -1,7 +1,6 @@
 import CoreGraphics
 import Foundation
 import MakingOf
-import os
 import PaintCore
 
 /// What a painting's making-of show is made from: the photo and the generator inputs its base
@@ -22,23 +21,22 @@ nonisolated struct MakingOfSource: Sendable {
     var seed: UInt64
 }
 
-/// A making-of show ready to play (`MakingOfPlayer`): MakingOf's `Show` and what the view draws
-/// beside its pictures (`ShowFrame`'s doc comment): the numbers' digits, the guardians' cells and
-/// metrics, each step's card, and the real template the finished drawing hands over to.
+/// A making-of show ready to play (`MakingOfPlayer`): MakingOf's `FieldShow`, the show with no crew
+/// (each step grows from seeds over the picture itself), and what the view draws beside its
+/// pictures (`ShowFrame`'s doc comment): the numbers' digits, each step's card, and the real
+/// template the finished drawing hands over to.
 ///
 /// `build` generates the base template once more with a `PipelineSnapshot` observer for the stage
 /// pictures (observing never changes the template: PaintCore's `PipelineSnapshotTests`), then
-/// builds the show from them, the painting's own template, the bundled `making-of.json` and
-/// `pet-metrics.json`, and the artwork's seed. On a device that is a generation and about half a
-/// second more; the show keeps about 37 MB, the guardians' cells about 6 MB each.
+/// builds the show from them, the painting's own template, the bundled `making-of.json` and the
+/// artwork's seed. On a device that is a generation and about a second more; the show keeps about
+/// 35 MB.
 nonisolated struct MakingOfShow: Sendable {
-    let show: Show
+    let show: FieldShow
     let spec: ShowSpec
     /// Where each number of the template goes, in `ShowFrame.numbers`' order, and its paint number.
     let numbers: [ShowTemplate.Number]
     let digits: [Int]
-    let metrics: [String: SpriteMetrics]
-    let sprites: MakingOfSprites
     /// One per step, in order.
     let cards: [MakingOfCard]
     /// The painting's template on the show's paper, its lines without its numbers (the view keeps
@@ -65,19 +63,14 @@ nonisolated struct MakingOfShow: Sendable {
 
     static func make(_ source: MakingOfSource, cancel: CancellationCheck) throws -> MakingOfShow {
         let spec = try ShowSpec(json: resource("making-of"))
-        let metrics = try SpriteMetrics.table(json: resource("pet-metrics"))
         let (pictures, base) = try observe(source, cancel: cancel)
         let template = source.template ?? base
         let shown = ShowTemplate(template, width: pictures.width, height: pictures.height)
-        let show = try Show(
-            pictures: pictures, template: shown, spec: spec, seed: source.seed, sprites: metrics, cancel: cancel)
-        try cancel.throwIfCancelled()
-        let sprites = MakingOfSprites(ids: spec.crew.pets)
+        let show = try FieldShow(pictures: pictures, template: shown, spec: spec, seed: source.seed, cancel: cancel)
         try cancel.throwIfCancelled()
         return MakingOfShow(
             show: show, spec: spec, numbers: shown.numbers,
             digits: template.labels.map { Int(template.regions[Int($0.region)].colorIndex) + 1 },
-            metrics: metrics, sprites: sprites,
             cards: spec.steps.enumerated().map { MakingOfCard(step: $1, index: $0) },
             handoff: TemplateRasterizer.image(template, style: handoffStyle, maxPixelSize: handoffSize),
             colorSpace: template.colorSpace)
@@ -102,8 +95,8 @@ nonisolated struct MakingOfShow: Sendable {
         (0..<ScheduleTiming.steps).map { timing.start($0 + 1) - 0.05 } + [timing.end + 1]
     }
 
-    /// The picture of `frame` (`Show.composite`: the layers and the lines) as an image, drawn in
-    /// `pixels`, a plane of the pictures' size kept from frame to frame.
+    /// The picture of `frame` (`FieldShow.composite`: the layers, the lines and the fronts' tide
+    /// lines) as an image, drawn in `pixels`, a plane of the pictures' size kept from frame to frame.
     func picture(_ frame: ShowFrame, into pixels: inout Plane<SIMD4<UInt8>>) -> CGImage? {
         show.composite(frame, into: &pixels)
         return Self.image(pixels, space: colorSpace)
@@ -151,54 +144,5 @@ private nonisolated final class SnapshotRecorder: @unchecked Sendable {
     func receive(_ snapshot: PipelineSnapshot) {
         guard snapshot.stage != .lineArt, snapshot.stage != .vectorized else { return }
         lock.withLock { kept.append(snapshot) }
-    }
-}
-
-/// The guardians' cells the show plays, copied out of their sheets (the Marginarium's create-pet
-/// v2 atlases, cut by `SpriteAtlas`; `docs/marginarium-pets.md`) so the decoded sheets, 14 MB
-/// each, can go: the rows `Row` names, about 6 MB a guardian. A sheet that won't load leaves its
-/// guardian out of the drawing, shadow and all.
-nonisolated struct MakingOfSprites: Sendable {
-    private let cells: [String: [SpriteAtlas.Cell: CGImage]]
-
-    /// The rows a guardian plays in the show.
-    static let rows: [Row] = [.idle, .right, .left, .wave, .busy, .review]
-
-    init(ids: [String], bundle: Bundle = .main) {
-        var cells: [String: [SpriteAtlas.Cell: CGImage]] = [:]
-        for id in ids {
-            guard let url = bundle.url(forResource: "pet-\(id)", withExtension: "webp"), let atlas = SpriteAtlas.load(at: url) else {
-                Log.create.error("Making-of: no sprite sheet for \(id, privacy: .public)")
-                continue
-            }
-            var own: [SpriteAtlas.Cell: CGImage] = [:]
-            for row in Self.rows {
-                for column in 0..<row.frameCount {
-                    let cell = SpriteAtlas.Cell(row: row.atlasRow, column: column)
-                    if let image = atlas.image(at: cell).flatMap(Self.copy) { own[cell] = image }
-                }
-            }
-            cells[id] = own
-        }
-        self.cells = cells
-    }
-
-    /// The cell `draw` shows, if its guardian's sheet loaded.
-    func image(_ draw: SpriteDraw) -> CGImage? {
-        cells[draw.id]?[SpriteAtlas.Cell(row: draw.atlasRow, column: draw.frame)]
-    }
-
-    /// Whether `id`'s cells loaded.
-    func has(_ id: String) -> Bool { cells[id] != nil }
-
-    /// A cell drawn into pixels of its own: a crop keeps its whole sheet alive.
-    private static func copy(_ image: CGImage) -> CGImage? {
-        let space = image.colorSpace.flatMap { $0.model == .rgb ? $0 : nil } ?? CGColorSpace(name: CGColorSpace.sRGB)!
-        guard let context = CGContext(
-            data: nil, width: image.width, height: image.height, bitsPerComponent: 8, bytesPerRow: 0, space: space,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
-        return context.makeImage()
     }
 }

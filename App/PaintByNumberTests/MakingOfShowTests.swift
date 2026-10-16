@@ -6,8 +6,8 @@ import Testing
 @testable import PaintByNumber
 
 /// The making-of show's app half: the setting, the cards, and the show made as Start makes it
-/// (`MakingOfShow`), its stills and its player. The show itself is `Sources/MakingOf`'s, tested
-/// there against the Python reference.
+/// (`MakingOfShow`: a `FieldShow`, the show with no crew), its stills and its player. The show
+/// itself is `Sources/MakingOf`'s, tested there against the Python reference.
 @MainActor
 struct MakingOfShowTests {
     /// Settings › The Making-of is off until switched on, and reads a launch argument's `YES`
@@ -56,18 +56,18 @@ struct MakingOfShowTests {
         }
     }
 
-    /// A show made from a photo: the spec's length and steps in order, a card per step, every
-    /// number of the template, the crew's sprites, the real template to hand over to.
+    /// A show made from a photo: the spec's steps in order and the field show's hold at the end,
+    /// a card per step, every number of the template, the real template to hand over to, and no
+    /// guardian anywhere.
     @Test func aShowIsMadeFromAPhoto() async throws {
         let source = try Self.source()
         let built = try await MakingOfShow.build(source)
         let spec = try Self.spec()
         let show = built.show
-        #expect(abs(show.duration - (spec.timing.intro + 6 * spec.timing.step + spec.timing.outro)) < 1e-9)
+        #expect(abs(show.duration - (spec.timing.intro + 6 * spec.timing.step + FieldShow.outro)) < 1e-9)
         #expect(built.cards.map(\.step) == Array(0..<6))
         #expect(built.digits.count == built.numbers.count && !built.digits.isEmpty)
         #expect(built.digits.allSatisfy { (1...8).contains($0) })
-        for id in spec.crew.pets { #expect(built.sprites.has(id), "\(id)") }
         #expect(built.handoff != nil)
 
         // The steps come in order, each with its own card, and the show ends on the real template.
@@ -84,12 +84,31 @@ struct MakingOfShowTests {
         #expect(end.picture.handoff > 0.999 && end.numbers.count == built.numbers.count && end.numbers.allSatisfy { $0 > 0.999 })
         #expect(show.frame(at: timing.start(2) + 1).card?.caption == spec.steps[2].caption)
 
-        // A frame's picture is the pictures' size, guardians drawn from cells the sprites hold.
+        // A frame's picture is the pictures' size.
         var pixels = Plane<SIMD4<UInt8>>(width: show.size.width, height: show.size.height, repeating: .zero)
         let image = try #require(built.picture(show.frame(at: timing.start(1) + 1), into: &pixels))
         #expect(image.width == show.size.width && image.height == show.size.height)
-        let working = show.frame(at: timing.start(1) + 1).sprites
-        #expect(!working.isEmpty && working.allSatisfy { built.sprites.image($0) != nil })
+    }
+
+    /// What the view draws over the picture besides the numbers and rings: sparks at the burning
+    /// tips of the ink step, stars round the numbers coming out in the template step (and the
+    /// first moments of the hold), in the ranges `MakingOfCanvas` draws them in, and never a
+    /// guardian.
+    @Test func theShowHasSparksAndStarsAndNoGuardians() async throws {
+        let built = try await MakingOfShow.build(Self.source())
+        let show = built.show
+        var sparks = 0, stars = 0
+        for t in stride(from: 0.0, through: show.duration, by: 0.02) {
+            let frame = show.frame(at: t)
+            #expect(frame.sprites.isEmpty, "t = \(t)")
+            if !frame.sparks.isEmpty { #expect(frame.picture.stage == ScheduleTiming.inkStep, "sparks at t = \(t)") }
+            if !frame.stars.isEmpty { #expect(frame.picture.stage >= ScheduleTiming.templateStep, "stars at t = \(t)") }
+            #expect(frame.sparks.allSatisfy { $0.heat > 0 && $0.heat <= 1 }, "t = \(t)")
+            #expect(frame.stars.allSatisfy { $0.alpha > 0 && $0.alpha <= 1 && $0.radius > 0 }, "t = \(t)")
+            sparks += frame.sparks.count
+            stars += frame.stars.count
+        }
+        #expect(sparks > 0 && stars > 0)
     }
 
     /// The show draws the painting's own template, edits and all, whatever the base it was
@@ -98,7 +117,7 @@ struct MakingOfShowTests {
         var source = try Self.source()
         let plain = try TemplateGenerator(settings: source.settings).generate(from: source.image, cancel: .none).template
         let (pictures, base) = try MakingOfShow.observe(source, cancel: .none)
-        #expect(base == plain)
+        #expect(base == plain && base.encoded() == plain.encoded())
         #expect(pictures.width <= 1024 && pictures.height <= 1024 && pictures.width > 0)
 
         var fewer = source.settings
@@ -111,8 +130,32 @@ struct MakingOfShowTests {
         #expect(built.numbers.count == painting.labels.count)
     }
 
+    /// A painting's template is what Start saved and no more: making its show from a real
+    /// generation reads the template and changes nothing in it, and the show's numbers are the
+    /// template's own, in place.
+    @Test func makingTheShowLeavesTheSavedTemplateAlone() async throws {
+        var source = try Self.source()
+        let saved = try TemplateGenerator(settings: source.settings).generate(from: source.image, cancel: .none).template
+        let bytes = saved.encoded()
+        source.template = saved
+
+        let built = try await MakingOfShow.build(source)
+        let field = built.show
+        #expect(built.numbers.count == saved.labels.count && built.digits.count == saved.labels.count)
+        let last = field.frame(at: field.timeline.timing.end + 0.5)
+        #expect(last.numbers.count == saved.labels.count && last.numbers.allSatisfy { $0 > 0.999 })
+        #expect(source.template == saved && saved.encoded() == bytes)
+        #expect(source.template?.encoded() == bytes)
+
+        // the same inputs make the same show: its frames are a function of the time
+        let again = try await MakingOfShow.build(source)
+        for t in stride(from: 0.0, through: field.duration, by: 0.7) {
+            #expect(again.show.frame(at: t) == field.frame(at: t), "t = \(t)")
+        }
+    }
+
     /// Reduce Motion's stills: the picture as each step leaves it, then the real template, with
-    /// neither guardians nor rings.
+    /// no seed rings, sparks or stars.
     @Test func stillsFollowTheSteps() async throws {
         let built = try await MakingOfShow.build(Self.source())
         let timing = built.show.timeline.timing
@@ -120,7 +163,10 @@ struct MakingOfShowTests {
         #expect(times.map { timing.stage(at: $0) } == Array(0...6))
         let stills = await MakingOfPlayer.stills(of: built)
         #expect(stills.map(\.step) == [0, 1, 2, 3, 4, 5, nil])
-        #expect(stills.allSatisfy { $0.frame.sprites.isEmpty && $0.frame.seedRings.isEmpty && $0.picture != nil })
+        #expect(stills.allSatisfy {
+            $0.frame.seedRings.isEmpty && $0.frame.sparks.isEmpty && $0.frame.stars.isEmpty && $0.frame.sprites.isEmpty
+                && $0.picture != nil
+        })
         #expect((stills.last?.frame.picture.handoff ?? 0) > 0.999)
     }
 
