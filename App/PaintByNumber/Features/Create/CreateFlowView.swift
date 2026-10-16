@@ -17,8 +17,15 @@ struct CreateFlowView: View {
     @Environment(Library.self) private var library
     @State private var model = CreateModel(previewStyle: Self.previewStyle)
     @State private var path: [Step] = []
+    /// The painting Start saved, while its making-of plays over the flow (Settings › The Making-of).
+    @State private var makingOf: MakingOfRequest?
 
     enum Step: Hashable { case preview }
+
+    private struct MakingOfRequest {
+        let artwork: Artwork
+        let source: MakingOfSource
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -82,6 +89,13 @@ struct CreateFlowView: View {
             model.cancelAll()
             library.drafts.saveNow()
         }
+        .overlay {
+            if let makingOf {
+                MakingOfView(source: makingOf.source, onFinish: { onStart(makingOf.artwork) })
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.35), value: makingOf != nil)
     }
 
     @ViewBuilder
@@ -112,11 +126,16 @@ struct CreateFlowView: View {
     }
 
     /// Saves the full-resolution template to the library and opens it for painting; the draft of
-    /// this photo, if the painter kept one, has done its work.
+    /// this photo, if the painter kept one, has done its work. With Settings › The Making-of on, the
+    /// saved painting's show plays first, and the painting opens when it ends.
     private func start() async throws {
         let draft = try await model.makeDraft()
         let artwork = try await library.create(draft)
         library.drafts.drop(photoID: model.photoID)
-        onStart(artwork)
+        if Preferences().playsMakingOf, let source = model.makingOfSource(for: draft, artworkID: artwork.id) {
+            makingOf = MakingOfRequest(artwork: artwork, source: source)
+        } else {
+            onStart(artwork)
+        }
     }
 }

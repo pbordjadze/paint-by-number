@@ -24,7 +24,7 @@ plutil -lint "$APP/PrivacyInfo.xcprivacy" || fail "PrivacyInfo.xcprivacy is not 
 WORK="$(mktemp -d)"
 strip -S -x -o "$WORK/binary" "$BINARY"
 strings -a "$WORK/binary" > "$WORK/strings.txt"
-for symbol in DemoMode ShellDemo PaintDemoView SyntheticTemplate demo-ready DemoLibrary LineArtMaps DemoTemplate MainThreadWatchdog; do
+for symbol in DemoMode ShellDemo PaintDemoView MakingOfDemoView SyntheticTemplate demo-ready DemoLibrary LineArtMaps DemoTemplate MainThreadWatchdog; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 

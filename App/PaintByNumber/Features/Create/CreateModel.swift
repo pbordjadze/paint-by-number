@@ -455,6 +455,18 @@ final class CreateModel {
             refinements: refinements)
     }
 
+    /// What the making-of show of `draft` (the painting Start saved, as `artworkID`) is made from:
+    /// this photo and the generator inputs its base was made with, so making the base again with an
+    /// observer gives its stage pictures, and the painting's own template. Seeded by the artwork, so
+    /// a painting's show is the same each time it is made.
+    func makingOfSource(for draft: ArtworkDraft, artworkID: UUID) -> MakingOfSource? {
+        guard let source else { return nil }
+        return MakingOfSource(
+            image: source.image, importance: importance, lineArt: lineArtInput, refinements: draft.refinements,
+            settings: draft.settings, template: draft.template, photo: source.preview,
+            seed: ColorNickname.seed(for: artworkID))
+    }
+
     /// Moves the sliders to the suggestion and generates it: the winner as a draft first unless
     /// it is the candidate already on screen and drawn as it will be (suggestion drafts have no
     /// edge map, so line art other than classic is drafted again), then at full resolution.
