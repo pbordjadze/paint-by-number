@@ -185,6 +185,24 @@ enum ExactMath {
         return Double(a) + Double((b - a) * rem) / 100
     }
 
+    /// `percentile(_:percent:)` of values given as counts: `counts[v]` cells hold the value `v`.
+    static func percentile(counts: [Int], percent: Int) -> Double {
+        let total = counts.reduce(0, +)
+        guard total > 0 else { return 0 }
+        /// The value of the cell that a sort would put at `rank`.
+        func value(atRank rank: Int) -> Int {
+            var seen = 0
+            for (v, count) in counts.enumerated() {
+                seen += count
+                if seen > rank { return v }
+            }
+            return counts.count - 1
+        }
+        let (lo, rem) = ((total - 1) * percent).quotientAndRemainder(dividingBy: 100)
+        let a = value(atRank: lo), b = value(atRank: min(lo + 1, total - 1))
+        return Double(a) + Double((b - a) * rem) / 100
+    }
+
     /// Running sums of `weights` in index order, each added to the one before.
     static func cumulative(_ weights: [Double]) -> [Double] {
         var total = 0.0

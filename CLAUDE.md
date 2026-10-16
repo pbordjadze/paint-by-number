@@ -68,13 +68,17 @@ before planning app work).
   `ScheduleStyle`). Every random draw is a `ShowStreams` stream of SplitMix64; discrete decisions are
   exact (integers, `+ - * /`, `sqrt`) and the pictures are within measured tolerances of the Python
   reference `tools/factory/making_of_{exact,inputs,layers,compose,reveal,pets,show}.py`, which
-  `making_of_clip.py` plays with Pillow (stills and video). Fixtures in `Tests/MakingOfTests/Fixtures/`
+  `making_of_clip.py` plays with Pillow (stills and video). `making_of_fields.py` is the show with
+  no crew (each step grown from seeds over the picture itself; `making_of_clip.py --no-crew`), and
+  `FieldShow` (its doc comment) its port, with `Show`'s surface and `ShowFrame.sparks` and `.stars`
+  of its own (`Show`'s are empty). Fixtures in `Tests/MakingOfTests/Fixtures/`
   are written by that Python and replayed by the tests: `plan-parrots.json` by
   `making_of_clip.py --plan-json` (recipe in `CrewPlan`'s doc comment), `show-small/inputs-small.json`
   by `making_of_inputs.py` (recipe in `test_making_of_inputs.py`), `reveal-small.json` by
   `making_of_reveal.py --fixture`, `layers-small.json` and `compose-small.json` by
   `tools/tests/test_making_of_layers.py --write-goldens`, `frames-small.json` by
-  `tools/tests/test_making_of_show.py --write-goldens`, and `pet-metrics.json` by
+  `tools/tests/test_making_of_show.py --write-goldens`, `fields-small.json` by
+  `tools/tests/test_making_of_fields.py --write-goldens`, and `pet-metrics.json` by
   `making_of_pets.py --metrics App/PaintByNumber/Resources <out>`. `python3 -m unittest discover -s
   tools/tests -p 'test_making_of_*.py'` (numpy, Pillow; CI `core`) fails when a committed fixture is
   not what the Python makes now.
