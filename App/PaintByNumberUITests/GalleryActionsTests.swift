@@ -220,9 +220,22 @@ final class GalleryActionsTests: XCTestCase {
             .matching(NSPredicate(format: "label == %@", "3 in progress · 1 ready · 2 finished")).firstMatch
         XCTAssertTrue(counts.waitForExistence(timeout: 120), "The demo gallery never finished making its paintings")
         let card = app.buttons[title].firstMatch
-        for _ in 0..<8 where !(card.exists && card.isHittable) { app.swipeUp() }
-        if !(card.exists && card.isHittable) { attachTree(of: app, named: "gallery-tree") }
-        XCTAssertTrue(card.isHittable, "“\(title)” couldn't be scrolled into view")
+        let window = app.windows.firstMatch.frame
+        // The middle of the card between the bars: its top is the status bar and the navigation bar,
+        // its bottom the search field. A card scrolled up until only its lower part shows has its
+        // middle in the status bar, where it counts as hittable, and a press there is no press on
+        // it (the favorite test's Red Fox, after the Milkmaid had been scrolled to).
+        func isInView() -> Bool {
+            card.exists && card.isHittable && (window.minY + 130)...(window.maxY - 100) ~= card.frame.midY
+        }
+        // A card is built only near the screen: one that isn't in the tree is below (the finished
+        // ones, at the start) or far above, which a few swipes up tell apart.
+        for attempt in 0..<8 where !isInView() {
+            let above = card.exists ? card.frame.midY < window.midY : attempt >= 4
+            if above { app.swipeDown() } else { app.swipeUp() }
+        }
+        if !isInView() { attachTree(of: app, named: "gallery-tree") }
+        XCTAssertTrue(isInView(), "“\(title)” couldn't be scrolled into view")
         waitUntilStill(card)
         return card
     }
