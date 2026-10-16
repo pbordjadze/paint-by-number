@@ -11,10 +11,10 @@ import Foundation
 /// real, and Debug builds (CI, tests) send nothing (`FeedbackUploadStub`).
 nonisolated struct FeedbackUploader: Sendable {
     /// What the relay is reached at: the Worker `moonlight-feedback` of
-    /// `.github/workflows/feedback-relay.yml`, whose run summary prints the URL to put here
-    /// (its workers.dev subdomain is the account's, `paintbymoonlight` unless that was taken).
-    /// The one place the address is written.
-    static let endpoint = URL(string: "https://moonlight-feedback.paintbymoonlight.workers.dev/v1/feedback")!
+    /// `.github/workflows/feedback-relay.yml`, whose run summary prints the Worker's URL (its
+    /// workers.dev subdomain is the Cloudflare account's, `paul-bordjadze`). The one place the
+    /// address is written.
+    static let endpoint = URL(string: "https://moonlight-feedback.paul-bordjadze.workers.dev/v1/feedback")!
 
     /// How long the relay may stay silent before the upload counts as failed.
     static let timeout: TimeInterval = 60

@@ -82,7 +82,7 @@ struct FeedbackUploaderTests {
     // MARK: The request
 
     @Test func theEndpointIsTheRelaysFeedbackPath() {
-        #expect(FeedbackUploader.endpoint.absoluteString == "https://moonlight-feedback.paintbymoonlight.workers.dev/v1/feedback")
+        #expect(FeedbackUploader.endpoint.absoluteString == "https://moonlight-feedback.paul-bordjadze.workers.dev/v1/feedback")
     }
 
     @Test func requestPostsFormDataWithTheAppVersionAndASixtySecondTimeout() {
