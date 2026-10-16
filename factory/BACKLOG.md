@@ -798,6 +798,28 @@ Claude reviewing and merging:
   the card), the timeline tests F32 lists, `making_of_clip.py` reduced to a driver over the shared
   modules, the Python tests in the core CI job, and the CLAUDE.md pointers.
 
+### F47 · The show with no crew (Claude)
+*Started Oct 16. Paul, after seeing it once: "that belongs in the repo somewhere, I think this is
+probably closer to something I’d ship now." On `claude/making-of-fields` (ca7f94c, from `main`):
+`tools/factory/making_of_fields.py` (`FieldShow`, Show's frames without a crew),
+`making_of_clip.py --no-crew`, 13 tests; rendered on parrots, lighthouse, hibiscus and the portrait
+regatta. Python only.*
+Each step's change grows from seeds over the picture itself, through a cost field that follows what
+the step does: graphite races along the surviving structure; watercolor blooms stall at edges with
+a tide line; each paint runs from its real k-means++ seed through its own areas; merged bits melt
+from the outside in, smallest first; the lines burn like fuses, a spark at each tip; a second fuse
+relaxes the outlines, the areas clear in drifts and the numbers come out like stars. 17.2 s (no
+goodbye: the outro is 1.6 s). The seeds, paints, lines, numbers, layers, compositor formulas and
+cards are the shared modules'; every draw is a SplitMix64 stream, every pick from integer weights.
+To ship it in place of the crew (Paul's call; F32's view is otherwise unchanged):
+- Port `FieldShow` to `Sources/MakingOf` beside `Show`: `geodesic` (fast sweeping, only `+` and
+  `min`), the warped noise on its own stream, `paced`, the six fields, the burning lines and their
+  sparks, the stars; the seeds exact, the fields within a measured tolerance of Python goldens on
+  the small fixture.
+- `ShowFrame` gains `sparks` and `stars`, F32's view draws them, and the spec says which show
+  plays (strictly decoded).
+- F35's chapter tells the switch.
+
 ### F35 · The chapter (Claude)
 *Started Oct 14 as Chapter 7, "Before You Paint" (a Doc: Bulat narrating, the Scholar, Niko and
 Dino in the margins); it ships with or after the show.*
@@ -820,6 +842,7 @@ included). It comes after the show ships, never instead of it.
 ## Waits on CI (rationed macOS runners)
 
 - **F32**, the show in the app: in progress in the release session (Oct 15).
+- **F47**, the show with no crew in the app: waits on Paul's call, then a Linux port before F32's CI.
 - Two flaky tests still open (`ORCHESTRATOR.md`): `EyeFinderTests.findsBothEyesOfAFaceWithTheirIrises`
   and `GalleryActionsTests.testTimelapseShowsProgressAndCancels`.
 
