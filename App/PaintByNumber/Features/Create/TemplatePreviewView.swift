@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import PaintCore
 import SwiftUI
@@ -13,6 +14,9 @@ struct TemplatePreviewView: View {
     /// Closes the flow, where the preview is its first page (a sample or a photo opened from
     /// elsewhere); the enlarged preview hides it.
     var onClose: (() -> Void)?
+    /// Told where the comparison's picture is on screen, for Start Painting's hand-off to move it
+    /// from (`StartHandoff`).
+    var pictureProbe: PreviewPictureProbe?
 
     @State private var size: CGSize = .zero
     /// `size` with the keyboard's room given back: what the layout is chosen for.
@@ -234,6 +238,9 @@ struct TemplatePreviewView: View {
                 CompareView(
                     photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
                     afterLabel: model.previewStyle.name, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                        pictureProbe?.measured(frame: frame, aspect: photoAspect)
+                    }
                     .overlay(alignment: .bottom) {
                         status.padding(14)
                     }
@@ -600,6 +607,29 @@ private extension View {
             // A comfortable target without making the chip itself taller.
             .frame(minHeight: 44)
             .contentShape(.rect)
+    }
+}
+
+/// Where the preview's picture is on screen: the preview writes it as it is laid out and the create
+/// flow reads it when Start Painting is tapped, to move the picture from there (`StartHandoff`). A
+/// reference, so that neither invalidates the other.
+final class PreviewPictureProbe {
+    private var frame = CGRect.zero
+    private var aspect: CGFloat = 0
+
+    /// The comparison's frame (global coordinates) and the photo's shape.
+    func measured(frame: CGRect, aspect: CGFloat) {
+        self.frame = frame
+        self.aspect = aspect
+    }
+
+    /// The picture: the photo's shape fitted in the comparison's frame (the enlarged preview's
+    /// frame is the whole page), in global coordinates; nil before it has been laid out.
+    var picture: CGRect? {
+        guard aspect > 0, frame.isPlace else { return nil }
+        let size = CompareView.fitted(aspect, in: frame.size)
+        return CGRect(
+            x: frame.midX - size.width / 2, y: frame.midY - size.height / 2, width: size.width, height: size.height)
     }
 }
 

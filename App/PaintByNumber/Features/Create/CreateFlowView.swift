@@ -1,6 +1,13 @@
+import CoreGraphics
 import SwiftUI
 
 /// New painting: pick a photo (library, camera or a sample) → tune the template → paint.
+///
+/// Start Painting ends in one motion into the painting (`StartHandoff`): the painting opens under
+/// the cover this flow is presented in, and once its canvas has drawn, the flow's picture (the
+/// making-of show's when it played, else the preview's) moves to where the template sits in it while
+/// everything else fades to clear, and cross-fades into the canvas. The cover's background is
+/// clear for that (`AppShellView`), so the flow draws its own.
 struct CreateFlowView: View {
     /// A bundled sample to open straight on its preview (demo scenarios).
     var openingSample: Sample?
@@ -14,24 +21,64 @@ struct CreateFlowView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.startHandoff) private var handoff
     @Environment(Library.self) private var library
     @State private var model = CreateModel(previewStyle: Self.previewStyle)
     @State private var path: [Step] = []
     /// The painting Start saved, while its making-of plays over the flow (Settings › The Making-of).
     @State private var makingOf: MakingOfRequest?
+    /// Where the preview's picture is on screen, which the show or the hand-off moves it from.
+    @State private var previewPicture = PreviewPictureProbe()
+    /// The preview's picture on its way to the painting, when no making-of plays.
+    @State private var departure: PictureDeparture?
+    /// How the making-of show leaves, once the painting has drawn.
+    @State private var leaving = MakingOfView.Leaving.staying
+    /// The flow itself (its screens and its background), fading to clear as the painting takes over.
+    @State private var flowOpacity = 1.0
+    @State private var isDissolving = false
 
     enum Step: Hashable { case preview }
 
     private struct MakingOfRequest {
         let artwork: Artwork
         let source: MakingOfSource
+        /// Where the preview's picture was (global coordinates): the show's picture starts there.
+        let entry: CGRect?
     }
 
     var body: some View {
+        flow
+            .background(Theme.paper.ignoresSafeArea())
+            .opacity(flowOpacity)
+            .overlay {
+                if let makingOf {
+                    MakingOfView(
+                        source: makingOf.source, entry: makingOf.entry, leaving: leaving,
+                        onFinish: { onStart(makingOf.artwork) })
+                }
+            }
+            .overlay {
+                if let departure { DepartingPicture(departure: departure) }
+            }
+            // Touches go nowhere while the painting is being opened and taken over.
+            .overlay {
+                if handoff?.isRunning == true { Color.clear.contentShape(.rect) }
+            }
+            .onChange(of: handoff?.phase, initial: true) { _, phase in
+                switch phase {
+                case .ready(_, let target)?: dissolve(into: target)
+                case .timedOut?: giveUp()
+                default: break
+                }
+            }
+    }
+
+    private var flow: some View {
         NavigationStack(path: $path) {
             root
                 .navigationDestination(for: Step.self) { _ in
-                    TemplatePreviewView(model: model, onStart: start)
+                    TemplatePreviewView(model: model, onStart: start, pictureProbe: previewPicture)
                 }
         }
         .task {
@@ -89,19 +136,12 @@ struct CreateFlowView: View {
             model.cancelAll()
             library.drafts.saveNow()
         }
-        .overlay {
-            if let makingOf {
-                MakingOfView(source: makingOf.source, onFinish: { onStart(makingOf.artwork) })
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeInOut(duration: 0.35), value: makingOf != nil)
     }
 
     @ViewBuilder
     private var root: some View {
         if droppedPhoto != nil || openingSample != nil || resuming != nil {
-            TemplatePreviewView(model: model, onStart: start, onClose: { dismiss() })
+            TemplatePreviewView(model: model, onStart: start, onClose: { dismiss() }, pictureProbe: previewPicture)
         } else {
             PhotoSourceView(model: model, initialPane: initialPane, onClose: { dismiss() }) {
                 path = [.preview]
@@ -132,10 +172,111 @@ struct CreateFlowView: View {
         let draft = try await model.makeDraft()
         let artwork = try await library.create(draft)
         library.drafts.drop(photoID: model.photoID)
+        let place = previewPicture.picture
+        let from = StartHandoffPlan.entry(reduceMotion: reduceMotion, from: place)
         if Preferences().playsMakingOf, let source = model.makingOfSource(for: draft, artworkID: artwork.id) {
-            makingOf = MakingOfRequest(artwork: artwork, source: source)
+            makingOf = MakingOfRequest(artwork: artwork, source: source, entry: from)
         } else {
+            // The preview's picture is what moves to the painting, from where it is.
+            if let from, let picture = model.preview?.picture {
+                departure = PictureDeparture(picture: picture, rect: from, radius: Theme.cardRadius, opacity: 0)
+            }
             onStart(artwork)
+        }
+    }
+
+    // MARK: Into the painting
+
+    /// The painting beneath the cover has drawn its first frame, its template at `target` (global
+    /// coordinates): the picture moves there while the rest of the flow fades to clear, then
+    /// cross-fades into the canvas. Reduce Motion fades the whole flow instead, in place.
+    private func dissolve(into target: CGRect) {
+        guard !isDissolving else { return }
+        isDissolving = true
+        Log.create.notice("Hand-off: the painting drew, template at \(String(describing: target), privacy: .public)")
+        Task {
+            switch StartHandoffPlan.motion(reduceMotion: reduceMotion, target: target) {
+            case .fly:
+                withAnimation(.spring(duration: StartHandoffPlan.move, bounce: StartHandoffPlan.bounce)) {
+                    leaving = .moving(target)
+                    departure?.rect = target
+                    departure?.radius = 2
+                }
+                withAnimation(.easeOut(duration: StartHandoffPlan.appear)) { departure?.opacity = 1 }
+                withAnimation(.easeOut(duration: StartHandoffPlan.fade)) { flowOpacity = 0 }
+                try? await Task.sleep(for: .seconds(StartHandoffPlan.landAfter))
+                withAnimation(.easeOut(duration: StartHandoffPlan.crossFade)) {
+                    leaving = .landed(target)
+                    departure?.opacity = 0
+                }
+                try? await Task.sleep(for: .seconds(StartHandoffPlan.crossFade + 0.05))
+            case .crossFade:
+                withAnimation(.easeInOut(duration: StartHandoffPlan.move)) {
+                    leaving = .landed(nil)
+                    flowOpacity = 0
+                }
+                try? await Task.sleep(for: .seconds(StartHandoffPlan.move + 0.05))
+            }
+            handoff?.complete()
+        }
+    }
+
+    /// The painting didn't draw in time (a slow open, or the recovery screen): the flow fades away
+    /// alone, and the painting stays pushed beneath.
+    private func giveUp() {
+        guard !isDissolving else { return }
+        isDissolving = true
+        Log.create.notice("Hand-off: the painting never drew; the cover fades away")
+        Task {
+            withAnimation(.easeInOut(duration: StartHandoffPlan.move)) {
+                leaving = .landed(nil)
+                departure?.opacity = 0
+                flowOpacity = 0
+            }
+            try? await Task.sleep(for: .seconds(StartHandoffPlan.move + 0.05))
+            handoff?.complete()
+        }
+    }
+}
+
+/// The preview's picture, between Start and the painting: fixed in its place, then moved to where
+/// the painting's template is, with the picture's corners squaring as the canvas's do.
+private struct PictureDeparture {
+    let picture: CreateModel.Picture
+    /// Global coordinates.
+    var rect: CGRect
+    var radius: CGFloat
+    var opacity: Double
+}
+
+private struct DepartingPicture: View {
+    let departure: PictureDeparture
+
+    var body: some View {
+        GeometryReader { geometry in
+            let origin = geometry.frame(in: .global).origin
+            picture
+                .frame(width: departure.rect.width, height: departure.rect.height)
+                .clipShape(.rect(cornerRadius: departure.radius, style: .continuous))
+                .offset(x: departure.rect.minX - origin.x, y: departure.rect.minY - origin.y)
+                .opacity(departure.opacity)
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var picture: some View {
+        switch departure.picture {
+        case .painting(let image):
+            Image(decorative: image, scale: 1)
+                .resizable()
+                .interpolation(.high)
+                .scaledToFill()
+        case .lineArt(let drawing):
+            LineArtLayer(drawing: drawing, picture: CGRect(origin: .zero, size: departure.rect.size), scale: 1)
+                .equatable()
         }
     }
 }

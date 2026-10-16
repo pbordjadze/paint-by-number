@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import Observation
 import os
@@ -26,8 +27,15 @@ struct PaintView: View {
     var initialCamera: CanvasCamera?
     /// Scales fill animation durations (demo scenarios).
     var fillDurationScale: Float = 1
+    /// Told once, when the canvas's first frame is on screen, where the template is in it (global
+    /// coordinates): the create flow's picture moves there (`StartHandoff`).
+    var onCanvasDrawn: ((CGRect) -> Void)?
 
     @State private var controller = CanvasController()
+    /// Where the canvas is in global coordinates, read when its first frame is on screen. A
+    /// reference, so that measuring it never invalidates the screen.
+    @State private var canvasOrigin = CanvasOrigin()
+    @Environment(\.startHandoff) private var startHandoff
     @State private var chrome = PaintChromeState()
     @State private var showsNumbers = true
     @State private var confirmRestart = false
@@ -74,14 +82,21 @@ struct PaintView: View {
     /// `showsPhoto` opens with the photo shown (demo scenarios).
     init(
         session: PaintingSession, title: String = "", onClose: (() -> Void)? = nil,
-        initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false
+        initialCamera: CanvasCamera? = nil, fillDurationScale: Float = 1, showsPhoto: Bool = false,
+        onCanvasDrawn: ((CGRect) -> Void)? = nil
     ) {
         self.session = session
         self.title = title
         self.onClose = onClose
         self.initialCamera = initialCamera
         self.fillDurationScale = fillDurationScale
+        self.onCanvasDrawn = onCanvasDrawn
         _peek = State(initialValue: PhotoPeek(latched: showsPhoto))
+    }
+
+    /// Where the canvas view is in global coordinates (`onCanvasDrawn` reports in them).
+    private final class CanvasOrigin {
+        var point = CGPoint.zero
     }
 
     var body: some View {
@@ -102,13 +117,18 @@ struct PaintView: View {
             session: session, controller: controller, showsNumbers: $showsNumbers, showsPhoto: photoBinding,
             isGivingFeedback: feedback != nil, giveFeedback: startFeedback))
         .onAppear {
-            if tips == nil { tips = PaintTips.makeGroup() }
+            // A painting just started is opened under the create flow's cover, where a tip's
+            // popover can't present: its tips wait until the cover is gone.
+            if tips == nil, startHandoff?.isRunning != true { tips = PaintTips.makeGroup() }
             FeedbackEngine.shared.attach(to: session)
             chrome.undoManager = undoManager
             chrome.observe(session)
             RenderContext.prewarm()
         }
         .onChange(of: undoManager) { _, manager in chrome.undoManager = manager }
+        .onChange(of: startHandoff?.isRunning == true) { _, running in
+            if !running, tips == nil { tips = PaintTips.makeGroup() }
+        }
         // Picking the next color follows the palette as it is laid out.
         .onChange(of: colorOrder, initial: true) { _, order in session.colorOrder = order }
         .onChange(of: zenMode, initial: true) { _, zen in session.flowsToNextArea = zen }
@@ -163,9 +183,11 @@ struct PaintView: View {
                 },
                 onDismissPhoto: { peek.setLatched(false) },
                 onZoomStep: { PaintTips.record(.zoomedByDoubleTap) },
-                isAnnotating: feedback != nil)
+                isAnnotating: feedback != nil,
+                onFirstFrame: firstFrameReport)
                 .id(ObjectIdentifier(session))
                 .ignoresSafeArea()
+                .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: { canvasOrigin.point = $0 }
 
             if let feedback {
                 MarkupCanvas(
@@ -228,6 +250,14 @@ struct PaintView: View {
         // The completion bar slides in for the palette (at the bottom or the side) as the
         // painting is finished; `isComplete` flips inside a fill, with no animation of its own.
         .animation(reduceMotion ? nil : .snappy, value: session.isComplete)
+    }
+
+    /// The canvas's first frame, as `onCanvasDrawn` takes it: the template's rect in global
+    /// coordinates.
+    private var firstFrameReport: ((CGRect) -> Void)? {
+        guard let onCanvasDrawn else { return nil }
+        let origin = canvasOrigin
+        return { drawn in onCanvasDrawn(drawn.offsetBy(dx: origin.point.x, dy: origin.point.y)) }
     }
 
     // MARK: Layout

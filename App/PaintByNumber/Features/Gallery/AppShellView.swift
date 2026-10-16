@@ -46,8 +46,10 @@ struct AppShellView: View {
     @State private var flowID = UUID()
     @State private var isDropTargeted = false
     @State private var didRestore = false
-    /// A painting just created in the create flow, opened once the flow has closed.
-    @State private var pendingOpen: UUID?
+    /// Start Painting's hand-off to the painting it makes: the painting opens under the create
+    /// flow's cover, which dissolves into it. Passed through the environment to the flow and to
+    /// the painting (`StartHandoff`).
+    @State private var handoff = StartHandoff()
     @SceneStorage("openArtwork") private var openArtwork = ""
     #if DEBUG
     /// The `gallery-open` demo opens its painting once: the gallery's other seeds land later, and
@@ -82,24 +84,32 @@ struct AppShellView: View {
                 .toolbar { toolbar }
                 .searchable(text: $search, prompt: Text("Search paintings"))
                 .navigationDestination(for: UUID.self) { id in
+                    // The zoom is for pushes from a card and for the way back to it; the painting
+                    // Start Painting makes is pushed under the cover with no animation (`startPainting`).
                     ArtworkPaintingView(artworkID: id) { path.removeAll { $0 == id } }
                         .navigationTransition(.zoom(sourceID: id, in: zoom))
                 }
         }
+        .environment(\.startHandoff, handoff)
         .fullScreenCover(isPresented: $isCreating, onDismiss: {
             droppedPhoto = nil
             droppedTitle = nil
             resumedDraft = nil
-            openPending()
+            handoff.reset()
         }) {
             CreateFlowView(
-                openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle, resuming: flowDraft
-            ) { artwork in
-                pendingOpen = artwork.id
-                isCreating = false
-            }
+                openingSample: launchSample, droppedPhoto: flowPhoto, droppedTitle: flowTitle, resuming: flowDraft,
+                onStart: startPainting
+            )
             .id(flowIdentity)
             .environment(library)
+            .environment(\.startHandoff, handoff)
+            // The flow draws its own background and leaves the cover clear, so that it can fade to
+            // the painting opened beneath it.
+            .presentationBackground(.clear)
+        }
+        .onChange(of: handoff.isFinished) { _, finished in
+            if finished { endCreateFlow() }
         }
         .sheet(isPresented: $isShowingSettings, onDismiss: presentIncomingImage) {
             SettingsView()
@@ -240,6 +250,8 @@ struct AppShellView: View {
         droppedPhoto = image.data
         droppedTitle = image.title
         resumedDraft = nil
+        // A hand-off still under way belonged to the flow this one replaces.
+        handoff.reset()
         flowID = UUID()
         isCreating = true
     }
@@ -250,10 +262,25 @@ struct AppShellView: View {
         isCreating = true
     }
 
-    private func openPending() {
-        guard let id = pendingOpen else { return }
-        pendingOpen = nil
-        path = [id]
+    /// Start Painting has saved `artwork`. The cover stays up, showing the create flow's picture;
+    /// the painting is pushed beneath it with no animation, and the flow dissolves into it once its
+    /// canvas has drawn (`StartHandoff`). The zoom would show the gallery between the two.
+    private func startPainting(_ artwork: Artwork) {
+        guard handoff.begin(artwork.id) else { return }
+        guard StartHandoffLogic.shouldPush(artwork.id, onto: path) else { return }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { path = [artwork.id] }
+    }
+
+    /// The flow has dissolved into the painting: the cover goes without a slide.
+    private func endCreateFlow() {
+        let wasCovering = isCreating
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { isCreating = false }
+        // The cover's `onDismiss` resets the hand-off; with no cover up it never comes.
+        if !wasCovering { handoff.reset() }
     }
 
     /// Reopens the painting that was open when the app was last suspended.

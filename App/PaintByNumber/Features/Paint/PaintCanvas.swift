@@ -47,9 +47,13 @@ struct PaintCanvas: UIViewRepresentable {
     var onZoomStep: (() -> Void)?
     /// Feedback mode: the markup canvas over this one has the touches and the camera.
     var isAnnotating = false
+    /// Told once, when the canvas's first frame is on screen, where the template is in it (the
+    /// canvas view's own coordinates). Read when the view is made.
+    var onFirstFrame: ((CGRect) -> Void)?
 
     func makeUIView(context: Context) -> CanvasView {
         let view = CanvasView(session: session)
+        view.onFirstFrame = onFirstFrame
         view.initialCamera = initialCamera
         view.fillDurationScale = fillDurationScale
         view.photoLoader = photoLoader
