@@ -24,6 +24,30 @@ final class GalleryActionsTests: XCTestCase {
         attachScreenshot(of: app, named: "deleted")
     }
 
+    /// A confirmation points at the card whose menu asked for it, wherever the card sits: the
+    /// unstarted last card in progress (the Delete of a painter's "October 6", in the third row), a
+    /// started one for Restart, and a finished one below the fold. A dialog on the whole gallery
+    /// opens over the middle of it, whichever card was chosen.
+    @MainActor
+    func testConfirmationsPointAtTheirCard() {
+        let app = launchGallery()
+        for (title, action) in [("The Milkmaid", "Delete"), ("Red Fox in Snow", "Restart"), ("Delicate Arch", "Delete")] {
+            let card = revealCard(title, in: app)
+            let source = card.frame
+            card.press(forDuration: 1.5)
+            let item = app.buttons[action]
+            XCTAssertTrue(item.waitForExistence(timeout: 5), "The menu of “\(title)” has no \(action)")
+            item.tap()
+
+            let labels = action == "Delete"
+                ? ["Delete this painting?", "Delete “\(title)”"]
+                : ["Start this painting over?", "Every painted area will be cleared.", "Restart “\(title)”"]
+            guard let dialog = checkDialog(showing: labels, pointsAt: source, "\(action.lowercased())-\(title)", in: app) else { return }
+            dismissDialog(at: dialog, titled: labels[0], in: app)
+            XCTAssertTrue(card.exists, "“\(title)” is gone after the dialog was dismissed")
+        }
+    }
+
     @MainActor
     func testTimelapseShowsProgressAndCancels() throws {
         let app = launchGallery()

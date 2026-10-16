@@ -27,11 +27,15 @@ final class DraftUITests: XCTestCase {
         app.buttons["Close"].tap()
         XCTAssertTrue(row.waitForExistence(timeout: 10), "Closing the create flow lost the draft")
 
-        app.buttons["draft-discard"].tap()
+        let discard = app.buttons["draft-discard"]
+        let source = discard.frame
+        discard.tap()
         let confirm = app.buttons["Discard “The Great Wave”"]
         XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Discard didn't ask for confirmation")
         XCTAssertTrue(row.exists, "The draft was discarded before confirming")
         attachScreenshot(of: app, named: "draft-discard-confirmation")
+        // It points at the Discard button it was asked from.
+        checkDialog(showing: ["Discard this draft?", "Discard “The Great Wave”"], pointsAt: source, "draft-discard", in: app)
         confirm.tap()
         XCTAssertTrue(row.waitForNonExistence(timeout: 10), "The draft is still in the gallery")
     }
