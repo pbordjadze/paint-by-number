@@ -157,6 +157,34 @@ def hatch_request(lamp, key, pet, style, brief, reference, redo, maker=None):
     return request
 
 
+def display_name(lamp, pet):
+    """A guardian's drawing is the guardian (Paul, October 15): a package goes by the seated
+    guardian's own name from the run's inputs, never a name a brief proposed. The brief, with its
+    display_name, stays in the package's provenance."""
+    seat = lamp.seats.get(pet)
+    if not seat:
+        raise ValueError(f'no seated guardian for pet: {pet}')
+    return seat['name']
+
+
+def package_metadata(lamp, pet, brief):
+    return {'id': pet, 'displayName': display_name(lamp, pet),
+            'description': brief.get('description', brief.get('seed', pet)),
+            'spritesheetPath': 'spritesheet.webp'}
+
+
+def same_but_name(existing, data):
+    """Whether two pet.json files differ in nothing but displayName."""
+    try:
+        old, new = json.loads(existing), json.loads(data)
+    except ValueError:
+        return False
+    if not isinstance(old, dict) or not isinstance(new, dict):
+        return False
+    return {k: v for k, v in old.items() if k != 'displayName'} == \
+        {k: v for k, v in new.items() if k != 'displayName'}
+
+
 def verify_package(lamp, record):
     if record['status'] not in ('validated', 'rejected') and not record.get('package_hashes'):
         return
@@ -357,9 +385,7 @@ Request:
                 record['failure_kind'] = 'gate'
                 record.update(validate(work, skill))
                 record['failure_kind'] = 'package'
-                metadata = {'id': pet, 'displayName': brief.get('display_name', pet),
-                            'description': brief.get('description', brief.get('seed', pet)),
-                            'spritesheetPath': 'spritesheet.webp'}
+                metadata = package_metadata(lamp, pet, brief)
                 package = paths.contained(work, 'package')
                 package.mkdir(exist_ok=True)
                 shutil.copyfile(paths.contained(work, 'final/spritesheet.webp'), paths.contained(package, 'spritesheet.webp'))
@@ -473,12 +499,20 @@ def publish(lamp, pet, brief, style):
         data = paths.contained(source, name).read_bytes()
         if digest(data) != sha:
             raise ValueError('validated bytes changed before publication')
+        if name == 'pet.json':
+            # A package validated under a brief's name still publishes under its guardian's
+            # (Paul, October 15); nothing else of the pet changes.
+            data = json.dumps({**json.loads(data), 'displayName': display_name(lamp, pet['pet'])},
+                              indent=2, ensure_ascii=False).encode()
         target = paths.contained(destination, name)
-        # Resume can safely finish a partial copy, but cannot overwrite another run's art.
+        # Resume can safely finish a partial copy, but cannot overwrite another run's art. A pet
+        # published under another name only is already published; the guardian's name wins.
         if target.exists():
-            if target.read_bytes() != data:
+            existing = target.read_bytes()
+            if existing == data:
+                continue
+            if name != 'pet.json' or not same_but_name(existing, data):
                 raise ValueError(f'existing pet differs; refusing overwrite: {target}')
-            continue
         fd, temp = tempfile.mkstemp(prefix='.pet-', dir=destination)
         try:
             with os.fdopen(fd, 'wb') as handle:

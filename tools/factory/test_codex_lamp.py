@@ -1548,5 +1548,66 @@ class LampTests(unittest.TestCase):
             lamp.execute(self.run, dict(id='safe', round=1, attempt=0))
 
 
+class GuardianNameTests(unittest.TestCase):
+    """A guardian's drawing is the guardian (Paul, October 15): a package goes by the seated
+    guardian's name, and a pet published before the rename still counts as published."""
+
+    def setUp(self):
+        self.lamp = type('Seats', (), {'seats': {'hedge-witch': {'id': 'hedge-witch', 'name': 'The Hedge Witch'}}})()
+
+    def test_a_package_goes_by_its_seated_guardians_name_not_its_briefs(self):
+        brief = {'display_name': 'Tarragon', 'description': 'A sleepy mossy mushroom.'}
+        self.assertEqual(lamp_hatch.package_metadata(self.lamp, 'hedge-witch', brief), {
+            'id': 'hedge-witch', 'displayName': 'The Hedge Witch',
+            'description': 'A sleepy mossy mushroom.', 'spritesheetPath': 'spritesheet.webp'})
+        with self.assertRaisesRegex(ValueError, 'no seated guardian'):
+            lamp_hatch.package_metadata(self.lamp, 'nobody', brief)
+
+    def test_every_published_drawing_goes_by_its_guardians_name(self):
+        repo = Path(__file__).resolve().parents[2]
+        for guardian in loop.guardians():
+            metadata = loop.load(repo / 'factory/pets' / guardian['id'] / 'pet.json')
+            if metadata is not None:
+                self.assertEqual(metadata['displayName'], guardian['name'], guardian['id'])
+
+    def publish(self, root, package_name, existing_name, description='A sleepy mossy mushroom.', atlas=b'atlas'):
+        """Publish a package named package_name over a pet published as existing_name (None: none)."""
+        package = root / 'package'
+        package.mkdir(exist_ok=True)
+        files = {'spritesheet.webp': b'atlas', 'pet.json': json.dumps(
+            {'id': 'hedge-witch', 'displayName': package_name, 'description': 'A sleepy mossy mushroom.',
+             'spritesheetPath': 'spritesheet.webp'}, indent=2, ensure_ascii=False).encode()}
+        for name, data in files.items():
+            (package / name).write_bytes(data)
+        published = root / 'repo/factory/pets/hedge-witch'
+        shutil.rmtree(published, ignore_errors=True)
+        if existing_name is not None:
+            published.mkdir(parents=True)
+            (published / 'spritesheet.webp').write_bytes(atlas)
+            loop.save(published / 'pet.json', {'id': 'hedge-witch', 'displayName': existing_name,
+                                               'description': description, 'spritesheetPath': 'spritesheet.webp'})
+        record = {'pet': 'hedge-witch', 'package': str(package),
+                  'package_hashes': {name: lamp.digest(data) for name, data in files.items()}}
+        with patch.object(loop, 'REPO', root / 'repo'):
+            lamp_hatch.publish(self.lamp, record, {}, {})
+        return loop.load(published / 'pet.json')['displayName']
+
+    def test_a_resumed_publish_keeps_the_guardians_name(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            # Validated under the brief's name, published under the guardian's: already published.
+            self.assertEqual(self.publish(root, 'Tarragon', 'The Hedge Witch'), 'The Hedge Witch')
+            # Published under the brief's name, or not yet: the guardian's name wins.
+            self.assertEqual(self.publish(root, 'The Hedge Witch', 'Tarragon'), 'The Hedge Witch')
+            self.assertEqual(self.publish(root, 'Tarragon', 'Tarragon'), 'The Hedge Witch')
+            self.assertEqual(self.publish(root, 'Tarragon', None), 'The Hedge Witch')
+            self.assertEqual((root / 'repo/factory/pets/hedge-witch/spritesheet.webp').read_bytes(), b'atlas')
+            # Anything else that differs is still another run's pet.
+            with self.assertRaisesRegex(ValueError, 'existing pet differs'):
+                self.publish(root, 'Tarragon', 'The Hedge Witch', description='Another mushroom.')
+            with self.assertRaisesRegex(ValueError, 'existing pet differs'):
+                self.publish(root, 'Tarragon', 'The Hedge Witch', atlas=b'other art')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -36,7 +36,7 @@ def main():
         "robber-girl": "A spirited reindeer calf in a felt blanket stitched with bold mountain embroidery. Mischievous and loyal; it stamps a hoof when something needs you.",
         "storybook": "A little book that flaps its covers like wings, its pages full of ink drawings that change as it flies.",
         "dinotopia": "Paul's own Dino, made in the Codex app: a teal long-necked dinosaur with a cream belly and a sly, friendly grin.",
-        "bartimaeus": "Ibid, a little ink asterisk with six stubby arms and two dot feet, drawn in brown ink as if someone stamped it there by hand. When a reader taps a word, it tugs the word's sleeve, hops down beside the note looking pleased to have the last word, then waves the reader back up to where they left off.",
+        "bartimaeus": "A little ink asterisk with six stubby arms and two dot feet, drawn in brown ink as if someone stamped it there by hand. When a reader taps a word, it tugs the word's sleeve, hops down beside the note looking pleased to have the last word, then waves the reader back up to where they left off.",
         "enchanted-workshop": "A paintbrush with tiny legs and a determined face, carrying a paint jar and doing small jobs all on its own.",
         "scholar": "A tiny inkpot wearing round spectacles, a quill tucked behind it like a pencil behind an ear. It nods thoughtfully and underlines things.",
         "painter": "A small wooden palette with a brush for a tail and dabs of warm paint for spots. It sits back quietly so the painting gets the attention.",
@@ -138,7 +138,7 @@ def main():
       <dl>{rows}</dl>
       {f'<p class="recog"><span class="label">Knows itself when</span> {inline(cap(recog))}</p>' if recog else ''}
       <div class="prompt">
-        <span class="label">Pet prompt</span>
+        <span class="label">Drawing prompt</span>
         <p id="{pid}">{inline(PETS[g['id']])}</p>
         <button type="button" class="copy" data-target="{pid}">Copy prompt</button>
       </div>

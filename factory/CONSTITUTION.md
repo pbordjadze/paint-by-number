@@ -24,7 +24,7 @@ the loop can overrule them.
 1. The Marginarium: https://claude.ai/code/artifact/24c06665-da64-4813-8c8e-2497c1841636
 2. The Lamp Picks Up a Brush: https://claude.ai/code/artifact/a087b22e-d1f9-4ef7-b447-2a87fd347b66
 3. The Lamp's Constitution: https://claude.ai/code/artifact/c0882849-16d2-4800-bbbd-023e0ff5350c
-4. A Pet for Every Guardian: https://claude.ai/code/artifact/8a53579f-2e12-4e71-8e26-e81dfa8cd892
+4. A Drawing for Every Guardian (retitled Oct 15): https://claude.ai/code/artifact/8a53579f-2e12-4e71-8e26-e81dfa8cd892
 5. Two More Pets: https://claude.ai/code/artifact/a112d638-0555-4f24-9a6a-6a3fc5476adf
 
 Appendices (renumbered October 11 at Paul's suggestion, all nineteen guardians agreeing):
