@@ -23,7 +23,13 @@ final class MakingOfUITests: XCTestCase {
         attachScreenshot(of: app, named: "making-of-playing")
         XCTAssertTrue(played, "The making-of never showed a step's card")
 
-        if skip.exists { skip.tap() }
+        // The show is about 17 s, and while it animates every query waits on it: on a slow runner it
+        // can end on its own, which opens the painting too, between finding Skip and tapping it.
+        let showMayEnd = XCTExpectedFailure.Options()
+        showMayEnd.isStrict = false
+        XCTExpectFailure("The show ended on its own before Skip was tapped", options: showMayEnd) {
+            skip.tap()
+        }
         XCTAssertTrue(
             app.staticTexts["The Great Wave, 0 percent painted"].waitForExistence(timeout: 60),
             "Skipping the making-of didn't open the painting")
