@@ -30,9 +30,10 @@ done
 
 # The Marginarium is in Debug builds only for now: Release leaves out its code, chapters and
 # drawings (the target's EXCLUDED_SOURCE_FILE_NAMES). The making-of show draws no guardian, so
-# nothing of it reaches the Marginarium's sprite sheets (`MakingOfSprites` and the metrics file the
-# crew's show was drawn with are gone too).
-for symbol in MarginariumView MarginariumReaderView MarginariumSpritePlayer MarginariumDocument SpriteAtlas MakingOfSprites pet-metrics; do
+# nothing of it reaches the Marginarium's sprite sheets (`MakingOfSprites` is gone). The MakingOf
+# package still holds the crew's `Show` and its messages naming `pet-metrics.json`, so only the
+# file is checked for that one, not the binary.
+for symbol in MarginariumView MarginariumReaderView MarginariumSpritePlayer MarginariumDocument SpriteAtlas MakingOfSprites; do
   if grep -q "$symbol" "$WORK/strings.txt"; then fail "the Release binary contains $symbol"; fi
 done
 for file in marginarium.json pet-metrics.json; do
