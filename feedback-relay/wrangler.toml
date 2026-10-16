@@ -1,0 +1,29 @@
+# The feedback relay (worker.js: its header is the manual). Deployed by
+# .github/workflows/feedback-relay.yml, which also sets the secret FEEDBACK_GITHUB_TOKEN.
+name = "moonlight-feedback"
+main = "worker.js"
+compatibility_date = "2025-10-01"
+# node:buffer, for base64 that is native code (the free plan allows 10 ms of CPU per request).
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[vars]
+# The private repository the reports go to.
+FEEDBACK_REPO = "pbordjadze/paint-feedback"
+
+# A flood brake per IP address: a limiter's period is 10 or 60 seconds, so this is 3 a minute, not
+# a limit per hour. Counted per Cloudflare location, approximately.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "3141"
+
+  [ratelimits.simple]
+  limit = 3
+  period = 60
+
+# Only what the worker logs itself (errors), not every request.
+[observability]
+enabled = true
+
+  [observability.logs]
+  invocation_logs = false

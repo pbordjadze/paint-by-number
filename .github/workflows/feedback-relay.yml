@@ -1,0 +1,130 @@
+name: Feedback relay
+
+# Deploys feedback-relay/, the Cloudflare Worker behind Give Feedback (the header of its worker.js
+# is the manual). On a push to main that touches the folder, or on request (Run workflow).
+#
+# Secrets (repository Settings > Secrets and variables > Actions):
+#   CLOUDFLARE_API_TOKEN   a token for the one Cloudflare account: Workers Scripts Edit and
+#                          Account Settings Read (the "Edit Cloudflare Workers" template has both)
+#   FEEDBACK_GITHUB_TOKEN  a fine-grained token with Contents and Issues read and write on the
+#                          private feedback repository only; it becomes the Worker's secret
+# This repository is public, so its logs are too: nothing below prints a secret, and the steps
+# that hold one run without `set -x`.
+#
+# It finds the account (a token sees exactly one), makes sure the account has a workers.dev
+# subdomain (paintbymoonlight, or that with a short random suffix when the name is taken), deploys,
+# and writes the Worker's URL to the run's summary. The app's endpoint
+# (`FeedbackUploader.endpoint`) must be that URL plus /v1/feedback.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['feedback-relay/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feedback-relay
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy the relay
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Test
+        run: node --test feedback-relay/worker.test.js
+
+      - name: Cloudflare account and workers.dev subdomain
+        id: cloudflare
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          FEEDBACK_GITHUB_TOKEN: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$*"; exit 1; }
+          [[ -n $CLOUDFLARE_API_TOKEN ]] || fail "The secret CLOUDFLARE_API_TOKEN is not set."
+          [[ -n $FEEDBACK_GITHUB_TOKEN ]] || fail "The secret FEEDBACK_GITHUB_TOKEN is not set."
+
+          api=https://api.cloudflare.com/client/v4
+          response="$RUNNER_TEMP/cloudflare.json"
+          # Prints the HTTP status and leaves the body in $response. The token travels in a
+          # header, which curl doesn't print.
+          call() {
+            curl --silent --show-error --output "$response" --write-out '%{http_code}' \
+              --header "Authorization: Bearer $CLOUDFLARE_API_TOKEN" --header 'Content-Type: application/json' "$@"
+          }
+          problems() { jq -r '[.errors[]?.message] | join("; ")' "$response" 2>/dev/null || true; }
+
+          status=$(call "$api/accounts")
+          [[ $status == 2* ]] || fail "Listing the Cloudflare accounts failed (HTTP $status): $(problems)"
+          count=$(jq '.result | length' "$response")
+          [[ $count == 1 ]] || fail "Expected exactly one Cloudflare account for this token, found $count."
+          account=$(jq -r '.result[0].id' "$response")
+
+          status=$(call "$api/accounts/$account/workers/subdomain")
+          case $status in 401 | 403 | 5*) fail "Reading the workers.dev subdomain failed (HTTP $status): $(problems)" ;; esac
+          subdomain=$(jq -r '.result.subdomain // empty' "$response" 2>/dev/null || true)
+          if [[ -z $subdomain ]]; then
+            candidate=paintbymoonlight
+            for attempt in 1 2 3 4 5; do
+              status=$(call --request PUT --data "{\"subdomain\":\"$candidate\"}" "$api/accounts/$account/workers/subdomain")
+              case $status in 401 | 403 | 5*) fail "Creating the workers.dev subdomain failed (HTTP $status): $(problems)" ;; esac
+              if [[ $status == 2* ]]; then
+                subdomain=$(jq -r '.result.subdomain // empty' "$response")
+                break
+              fi
+              echo "The subdomain $candidate is not available (HTTP $status); trying another."
+              candidate="paintbymoonlight-$(openssl rand -hex 2)"
+            done
+            [[ -n $subdomain ]] || fail "Could not create a workers.dev subdomain."
+          fi
+          echo "account_id=$account" >> "$GITHUB_OUTPUT"
+          echo "subdomain=$subdomain" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy
+        # v4.1.3. wrangler-action puts FEEDBACK_GITHUB_TOKEN on the Worker as a secret (it names
+        # an environment variable of this step), then runs the deploy in feedback-relay/.
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ steps.cloudflare.outputs.account_id }}
+          wranglerVersion: '4.145.0'
+          workingDirectory: feedback-relay
+          command: deploy
+          secrets: |
+            FEEDBACK_GITHUB_TOKEN
+        env:
+          FEEDBACK_GITHUB_TOKEN: ${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+
+      - name: Summary
+        shell: bash
+        env:
+          SUBDOMAIN: ${{ steps.cloudflare.outputs.subdomain }}
+        run: |
+          set -euo pipefail
+          url="https://moonlight-feedback.${SUBDOMAIN}.workers.dev"
+          # A GET is refused with 405 by the relay itself and reaches nothing else: it shows the
+          # Worker answers (a new workers.dev name can take a moment to resolve).
+          answer=000
+          for attempt in 1 2 3 4 5 6; do
+            answer=$(curl --silent --output /dev/null --write-out '%{http_code}' "$url/v1/feedback" || true)
+            [[ $answer == 405 ]] && break
+            sleep 5
+          done
+          [[ $answer == 405 ]] || echo "::warning::GET $url/v1/feedback answered HTTP $answer, not 405."
+          {
+            echo "### Feedback relay"
+            echo
+            echo "Worker URL: \`$url\`"
+            echo
+            echo "The app's endpoint must be \`$url/v1/feedback\` (\`FeedbackUploader.endpoint\`)."
+            echo
+            echo "A GET to it answered HTTP $answer (405 is right)."
+          } >> "$GITHUB_STEP_SUMMARY"
