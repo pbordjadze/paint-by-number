@@ -46,6 +46,12 @@ struct ArtworkPaintingView: View {
     /// fades in, since the cover is what dissolves.
     private var isUnderCover: Bool { handoff?.isOpening(artworkID) == true }
 
+    /// What the canvas tells once its first frame is on screen, while the cover waits for it.
+    private var canvasReport: ((CGRect) -> Void)? {
+        guard isUnderCover else { return nil }
+        return { rect in canvasDrew(rect) }
+    }
+
     /// The canvas has drawn its first frame: where the template sits tells the cover where to
     /// bring its picture.
     private func canvasDrew(_ templateRect: CGRect) {
@@ -73,7 +79,7 @@ struct ArtworkPaintingView: View {
             if let autosaver, hasLanded {
                 PaintView(
                     session: autosaver.session, title: artwork?.title ?? "", onClose: close,
-                    onCanvasDrawn: isUnderCover ? canvasDrew : nil)
+                    onCanvasDrawn: canvasReport)
                     .environment(\.sourcePhotoLoader, sourcePhotoLoader)
                     .environment(\.feedbackSource, feedbackSource)
                     .background { RevisionObserver(session: autosaver.session, onChange: autosaver.sessionChanged) }

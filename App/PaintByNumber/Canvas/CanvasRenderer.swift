@@ -56,9 +56,8 @@ final class CanvasRenderer {
 
     /// Renders a frame into the layer's next drawable. Returns false when no frame could be
     /// produced (GPU still busy with earlier frames, or no drawable); try again next tick.
-    /// `onPresented` is called, on a thread of Metal's, when the frame is on screen: from the
-    /// drawable's presented handler, or a moment after the GPU finished the frame if that never
-    /// comes (it may be called twice; the caller treats the first as the answer).
+    /// `onPresented` is called, on a thread of Metal's, once the frame is on screen: a tenth of a
+    /// second after the GPU finished it, which is a few refreshes after it was queued to be shown.
     @discardableResult
     func draw(
         in layer: CAMetalLayer, uniforms: CanvasUniforms, content: RenderContext.Content,
@@ -96,7 +95,6 @@ final class CanvasRenderer {
             targets: RenderContext.Targets(color: drawable.texture, multisample: multisample, outlines: outlines),
             content: content)
         commands.addCompletedHandler(Self.signal(inFlight, then: onPresented))
-        if let onPresented { drawable.addPresentedHandler(Self.presented(onPresented)) }
         commands.present(drawable)
         commands.commit()
         return true
@@ -115,8 +113,8 @@ final class CanvasRenderer {
     }
 
     /// Built outside the main actor: Metal calls it on its own completion thread. A frame whose
-    /// presentation is awaited (`onPresented`) is also announced here, a tenth of a second after
-    /// the GPU finished it: the drawable's own handler normally comes first.
+    /// presentation is awaited (`onPresented`) is announced here, a tenth of a second after the
+    /// GPU finished it: the drawable is shown at the next refresh after that.
     nonisolated private static func signal(
         _ semaphore: DispatchSemaphore, then onPresented: (@Sendable () -> Void)?
     ) -> MTLCommandBufferHandler {
@@ -124,10 +122,5 @@ final class CanvasRenderer {
             semaphore.signal()
             if let onPresented { DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) { onPresented() } }
         }
-    }
-
-    /// Built outside the main actor too: the drawable's presented handler runs on Metal's thread.
-    nonisolated private static func presented(_ onPresented: @escaping @Sendable () -> Void) -> MTLDrawablePresentedHandler {
-        { _ in onPresented() }
     }
 }
