@@ -3,7 +3,8 @@ import SwiftUI
 
 /// The create flow's draft, at the top of the gallery: the photo, its name, how much was
 /// refined, and the way back into Refine or out of the draft (`Drafts`). Narrow windows and
-/// large text stack the buttons under the text.
+/// large text stack the buttons under the text. Discard asks first, and the row asks (a dialog is
+/// a popover on the view that carries it: this one points at the button).
 struct DraftRow: View {
     let draft: CreateDraft
     /// The draft's photo file, decoded at the thumbnail's size.
@@ -12,11 +13,13 @@ struct DraftRow: View {
     /// The draft is being read to open the create flow on it.
     let isOpening: Bool
     var onContinue: () -> Void
+    /// The painter confirmed Discard Draft.
     var onDiscard: () -> Void
 
     @Environment(\.displayScale) private var displayScale
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var image: CGImage?
+    @State private var confirmsDiscard = false
 
     private static let thumbnailSize: CGFloat = 64
 
@@ -98,13 +101,20 @@ struct DraftRow: View {
             .accessibilityIdentifier("draft-continue")
 
             // Glass draws its label in the tint, whatever the role.
-            Button("Discard Draft", systemImage: "trash", role: .destructive, action: onDiscard)
+            Button("Discard Draft", systemImage: "trash", role: .destructive) { confirmsDiscard = true }
                 .labelStyle(.iconOnly)
                 .buttonStyle(.glass)
                 .tint(.red)
                 .buttonBorderShape(.circle)
                 .disabled(isOpening)
                 .accessibilityIdentifier("draft-discard")
+                .confirmationDialog("Discard this draft?", isPresented: $confirmsDiscard, titleVisibility: .visible) {
+                    Button(String(localized: "gallery.draft.discard.confirm", defaultValue: "Discard “\(draft.resolvedTitle)”",
+                                  comment: "Destructive button of the draft's discard confirmation; the argument is the draft's title"),
+                           role: .destructive, action: onDiscard)
+                } message: {
+                    Text("Its photo and everything you changed in Refine will be lost.")
+                }
         }
         .controlSize(.large)
     }

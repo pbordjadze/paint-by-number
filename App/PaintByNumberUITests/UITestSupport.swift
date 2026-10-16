@@ -1,7 +1,8 @@
+import UIKit
 import XCTest
 
-/// What every UI test shares: attachments the CI report keys on by name, a polling wait and the
-/// way into Settings.
+/// What every UI test shares: attachments the CI report keys on by name, a polling wait, the way
+/// into Settings and the check that a confirmation dialog points at what asked for it.
 extension XCTestCase {
     @MainActor
     func attach(_ screenshot: XCUIScreenshot, named name: String) {
@@ -84,12 +85,14 @@ extension XCTestCase {
     }
 
     /// Waits for a confirmation dialog to show `labels` (its title, its message, its buttons) and
-    /// checks it stands next to `source`, the card or button whose action asked for it. A
-    /// `.confirmationDialog` is a popover anchored to the view that carries the modifier, so one on a
-    /// whole screen opens over the middle of it, whichever card was chosen; its content (the smallest
-    /// rectangle holding every label) must lie within `reach` of the source in any direction, the
-    /// popover's arrow and padding included. The screen, the app's tree and the measures are attached
-    /// as `dialog-…-<what>`. Returns the content's frame, nil when the dialog never came up.
+    /// checks it points at `source`, the card or button whose action asked for it. A
+    /// `.confirmationDialog` is a popover (iPhone too) anchored to the view that carries the
+    /// modifier: one on a whole screen opened at the screen's middle, near its top, whichever card
+    /// was chosen. The dialog's content (the smallest rectangle holding every label) must lie within
+    /// `reach` of the source, the arrow's length and the popover's padding included, with the arrow,
+    /// which points at the source's center, over the content: the popover is above or below the
+    /// source (beside it, on iPad too). The screen, the app's tree and the measures are attached as
+    /// `dialog-…-<what>`. Returns the content's frame, nil when the dialog never came up.
     @MainActor
     @discardableResult
     func checkDialog(showing labels: [String], pointsAt source: CGRect, _ what: String, in app: XCUIApplication) -> CGRect? {
@@ -109,16 +112,22 @@ extension XCTestCase {
             XCTFail("\(what): no confirmation dialog on screen")
             return nil
         }
-        let dx = max(0, source.minX - dialog.maxX, dialog.minX - source.maxX)
-        let dy = max(0, source.minY - dialog.maxY, dialog.minY - source.maxY)
-        let distance = (dx * dx + dy * dy).squareRoot()
-        let reach = max(60, min(source.height, 120))
+        let reach: CGFloat = 40
+        // The arrow ends inside the popover's rounded body, so within the padding of its content.
+        let slack: CGFloat = 24
+        let gapX = max(0, source.minX - dialog.maxX, dialog.minX - source.maxX)
+        let gapY = max(0, source.minY - dialog.maxY, dialog.minY - source.maxY)
+        let aboveOrBelow = gapY <= reach && (dialog.minX - slack...dialog.maxX + slack).contains(source.midX)
+        let beside = UIDevice.current.userInterfaceIdiom == .pad
+            && gapX <= reach && (dialog.minY - slack...dialog.maxY + slack).contains(source.midY)
         attachNote(
-            "dialog \(dialog.integral)\nsource \(source.integral)\ndistance \(Int(distance)) pt (reach \(Int(reach)))\nmissing \(missing)",
+            "dialog \(dialog.integral)\nsource \(source.integral)\ngap x \(Int(gapX)), y \(Int(gapY)) pt (reach \(Int(reach)))\n"
+                + "arrow over the content: above or below \(aboveOrBelow), beside \(beside)\nmissing \(missing)",
             named: "dialog-measure-\(what)")
         XCTAssertTrue(missing.isEmpty, "\(what): the dialog doesn't show \(missing)")
-        XCTAssertLessThanOrEqual(
-            distance, reach, "\(what): the dialog \(dialog.integral) is \(Int(distance)) pt from what asked for it, \(source.integral)")
+        XCTAssertTrue(
+            aboveOrBelow || beside,
+            "\(what): the dialog \(dialog.integral) doesn't point at what asked for it, \(source.integral) (gap x \(Int(gapX)), y \(Int(gapY)))")
         return dialog
     }
 

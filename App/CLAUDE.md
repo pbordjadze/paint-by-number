@@ -24,6 +24,13 @@ synchronized folder would bundle it into the app.
   drags and left for the photo step. The edge swipe and Back still go back.
 - A presentation's content only sees state its presenter's body read: `AppShellView.body` reads the
   create flow's photo, title and identity up front, or the flow opens without its photo.
+- A `.confirmationDialog` is a popover (iPhone too) anchored to the view that carries the modifier:
+  on a screen or a grid it points at the container's middle, not at what asked. Attach it to the
+  card, button or menu that asks, keeping one state for what is pending: each gallery card carries
+  its Delete and Restart (`GalleryView.isPending`), `DraftRow` its Discard, `PaintView.moreMenu`
+  its Restart, `FeedbackBar` its Cancel's. `checkDialog` (`UITestSupport`) measures a dialog
+  against its source in `GalleryActionsTests`, `DraftUITests`, `PaintingNavigationTests` and
+  `FeedbackUITests`. Alerts (`.alert`) are centered and need none of this.
 - `CanvasUniforms`, `RegionState` and `GlyphInstance` are mirrored by hand in `Shaders.metal`:
   change both in the same order, 16-byte vectors only
   (`CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the strides). No shader reads

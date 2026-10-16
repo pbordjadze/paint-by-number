@@ -18,7 +18,6 @@ struct GalleryView: View {
     @State private var renameText = ""
     @State private var restarting: Artwork?
     @State private var deleting: Artwork?
-    @State private var discardingDraft: CreateDraft?
     @State private var isOpeningDraft = false
 
     var body: some View {
@@ -28,7 +27,7 @@ struct GalleryView: View {
                     if let draft = shownDraft {
                         DraftRow(
                             draft: draft, photo: library.drafts.store.url(.source), isCompact: width < 560,
-                            isOpening: isOpeningDraft, onContinue: continueDraft, onDiscard: { discardingDraft = draft }
+                            isOpening: isOpeningDraft, onContinue: continueDraft, onDiscard: { library.drafts.discard() }
                         )
                         .transition(.opacity)
                     }
@@ -77,42 +76,6 @@ struct GalleryView: View {
                 .submitLabel(.done)
             Button("Cancel", role: .cancel) {}
             Button("Rename") { library.rename(artwork.id, to: renameText) }
-        }
-        .confirmationDialog("Start this painting over?", isPresented: isPresent($restarting), titleVisibility: .visible, presenting: restarting) { artwork in
-            Button(String(localized: "gallery.restart.confirm", defaultValue: "Restart “\(artwork.title)”",
-                          comment: "Destructive button of the restart confirmation; the argument is the painting's title"),
-                   role: .destructive) {
-                Task { await library.restart(artwork.id) }
-            }
-        } message: { _ in
-            Text("Every painted area will be cleared.")
-        }
-        .confirmationDialog("Delete this painting?", isPresented: isPresent($deleting), titleVisibility: .visible, presenting: deleting) { artwork in
-            // Undoable for a few seconds afterwards (the toast's Undo).
-            Button(String(localized: "gallery.delete.confirm", defaultValue: "Delete “\(artwork.title)”",
-                          comment: "Destructive button of the delete confirmation; the argument is the painting's title"),
-                   role: .destructive) { library.delete(artwork.id) }
-        } message: { artwork in
-            if artwork.isComplete {
-                Text(String(localized: "gallery.delete.message.finished", defaultValue: "“\(artwork.title)” is finished.",
-                            comment: "Delete confirmation message for a finished painting; the argument is its title"))
-            } else if artwork.isStarted {
-                let percent = ProgressCaption.percentText(artwork)
-                Text(String(localized: "gallery.delete.message.started", defaultValue: "“\(artwork.title)” is \(percent) painted.",
-                            comment: "Delete confirmation message for a painting in progress; the arguments are its title and the formatted percentage painted, e.g. 42%"))
-            } else {
-                Text(String(localized: "gallery.delete.message.notStarted", defaultValue: "“\(artwork.title)” hasn’t been started yet.",
-                            comment: "Delete confirmation message for a painting nobody has painted on; the argument is its title"))
-            }
-        }
-        .confirmationDialog(
-            "Discard this draft?", isPresented: isPresent($discardingDraft), titleVisibility: .visible, presenting: discardingDraft
-        ) { draft in
-            Button(String(localized: "gallery.draft.discard.confirm", defaultValue: "Discard “\(draft.resolvedTitle)”",
-                          comment: "Destructive button of the draft's discard confirmation; the argument is the draft's title"),
-                   role: .destructive) { library.drafts.discard() }
-        } message: { _ in
-            Text("Its photo and everything you changed in Refine will be lost.")
         }
         #if DEBUG
         .task(id: library.finished.first?.id) {
@@ -195,6 +158,41 @@ struct GalleryView: View {
         }
         .buttonStyle(PressableCardStyle())
         .contextMenu { menu(for: artwork) }
+        // A confirmation dialog is a popover on the view that carries it, so each card carries the
+        // two its menu asks for and the popover points at it, where one on the whole gallery
+        // pointed at its middle. `restarting` and `deleting` still say which painting is pending.
+        .confirmationDialog(
+            "Start this painting over?", isPresented: isPending($restarting, artwork), titleVisibility: .visible,
+            presenting: restarting
+        ) { pending in
+            Button(String(localized: "gallery.restart.confirm", defaultValue: "Restart “\(pending.title)”",
+                          comment: "Destructive button of the restart confirmation; the argument is the painting's title"),
+                   role: .destructive) {
+                Task { await library.restart(pending.id) }
+            }
+        } message: { _ in
+            Text("Every painted area will be cleared.")
+        }
+        .confirmationDialog(
+            "Delete this painting?", isPresented: isPending($deleting, artwork), titleVisibility: .visible, presenting: deleting
+        ) { pending in
+            // Undoable for a few seconds afterwards (the toast's Undo).
+            Button(String(localized: "gallery.delete.confirm", defaultValue: "Delete “\(pending.title)”",
+                          comment: "Destructive button of the delete confirmation; the argument is the painting's title"),
+                   role: .destructive) { library.delete(pending.id) }
+        } message: { pending in
+            if pending.isComplete {
+                Text(String(localized: "gallery.delete.message.finished", defaultValue: "“\(pending.title)” is finished.",
+                            comment: "Delete confirmation message for a finished painting; the argument is its title"))
+            } else if pending.isStarted {
+                let percent = ProgressCaption.percentText(pending)
+                Text(String(localized: "gallery.delete.message.started", defaultValue: "“\(pending.title)” is \(percent) painted.",
+                            comment: "Delete confirmation message for a painting in progress; the arguments are its title and the formatted percentage painted, e.g. 42%"))
+            } else {
+                Text(String(localized: "gallery.delete.message.notStarted", defaultValue: "“\(pending.title)” hasn’t been started yet.",
+                            comment: "Delete confirmation message for a painting nobody has painted on; the argument is its title"))
+            }
+        }
     }
 
     // MARK: Actions
@@ -315,5 +313,12 @@ struct GalleryView: View {
 
     private func isPresent<T>(_ value: Binding<T?>) -> Binding<Bool> {
         Binding(get: { value.wrappedValue != nil }, set: { if !$0 { value.wrappedValue = nil } })
+    }
+
+    /// Whether `value` holds this card's painting: its dialog is up on this card and on no other.
+    private func isPending(_ value: Binding<Artwork?>, _ artwork: Artwork) -> Binding<Bool> {
+        Binding(
+            get: { value.wrappedValue?.id == artwork.id },
+            set: { if !$0, value.wrappedValue?.id == artwork.id { value.wrappedValue = nil } })
     }
 }
