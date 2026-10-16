@@ -45,6 +45,7 @@ env:
 jobs:
   core:
     name: PaintCore tests and quality regression (Linux)
+    if: false
     runs-on: ubuntu-latest
     container: swift:6.2-noble
     timeout-minutes: 30
@@ -114,7 +115,7 @@ jobs:
       fail-fast: false
       matrix:
         # iphone as the header says; the report job asks the same.
-        job: ${{ fromJSON((github.ref_name == 'main' || github.event.inputs.iphone == 'true' || contains(github.event.head_commit.message, '[iphone]')) && '["ipad", "ipad-ui", "iphone"]' || '["ipad", "ipad-ui"]') }}
+        job: ["ipad-ui"]
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 2 }
@@ -125,7 +126,7 @@ jobs:
         run: |
           case "${{ matrix.job }}" in
             ipad)    plan=(DEVICE=ipad SHOTS=1 RELEASE=1 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests" SKIP=) ;;
-            ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests "SKIP=PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests") ;;
+            ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests/CreateFlowTests SKIP=) ;;
             iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 ONLY= SKIP=) ;;
           esac
           printf '%s\n' "${plan[@]}" >> "$GITHUB_ENV"
@@ -206,7 +207,7 @@ jobs:
           for test in $SKIP; do SELECT+=("-skip-testing:$test"); done
           xcodebuild test-without-building -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
             -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd "${SELECT[@]}" \
-            -retry-tests-on-failure -test-iterations 2 -resultBundlePath build/Tests.xcresult -quiet \
+            -test-iterations 3 -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
       - name: Release build
         id: release

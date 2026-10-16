@@ -102,6 +102,8 @@ struct TemplatePreviewView: View {
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
         #if DEBUG
+        .onAppear { Log.demo.error("probe: preview appear") }
+        .onDisappear { Log.demo.error("probe: preview disappear") }
         // `create-refine` shows the Refine screen once its painting is refined.
         .onChange(of: model.refinements.isEmpty) { _, isEmpty in
             if ShellDemo.current?.refines == true, !isEmpty { isRefining = true }
@@ -618,6 +620,9 @@ private struct ContentSwipeBackOff: UIViewControllerRepresentable {
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
+            #if DEBUG
+            Log.demo.error("probe: swipe-back controller did appear")
+            #endif
             guard let recognizer = navigationController?.interactiveContentPopGestureRecognizer,
                   recognizer.isEnabled else { return }
             recognizer.isEnabled = false
@@ -627,6 +632,9 @@ private struct ContentSwipeBackOff: UIViewControllerRepresentable {
         // On again as the preview goes; an edge swipe called off halfway appears it again.
         override func viewWillDisappear(_ animated: Bool) {
             super.viewWillDisappear(animated)
+            #if DEBUG
+            Log.demo.error("probe: swipe-back controller will disappear, moving from parent \(self.isMovingFromParent, privacy: .public)")
+            #endif
             disabled?.isEnabled = true
             disabled = nil
         }

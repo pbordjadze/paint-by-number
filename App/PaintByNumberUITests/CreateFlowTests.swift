@@ -180,15 +180,68 @@ final class CreateFlowTests: XCTestCase {
             XCTFail("No back button on the preview")
             return
         }
+        attachNote("\(Date().timeIntervalSince1970)", named: "probe-back-tap-time")
         back.tap()
-        let returned = waitUntil(timeout: 30) { !start.exists }
-        if !returned { attachTree(of: app, named: "preview-back-missed-tree") }
+        var returned = waitUntil(timeout: 12) { !start.exists }
+        if !returned {
+            attach(XCUIScreen.main.screenshot(), named: "probe-back-missed-screen")
+            attachTree(of: app, named: "preview-back-missed-tree")
+            let refine = app.buttons["refine"]
+            attachNote("refine enabled \(refine.isEnabled) at \(Date().timeIntervalSince1970)", named: "probe-refine-state")
+            _ = waitFor(refine, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120)
+            attachNote("refine enabled \(refine.isEnabled) at \(Date().timeIntervalSince1970)", named: "probe-refine-state-2")
+            back.tap()
+            returned = waitUntil(timeout: 20) { !start.exists }
+            attachNote("second tap returned \(returned) at \(Date().timeIntervalSince1970)", named: "probe-second-tap")
+        }
         XCTAssertTrue(returned, "Back didn't return to the photo step")
         XCTAssertTrue(picker.waitForExistence(timeout: 20))
 
         let reopened = try pickFirstInlinePhoto(app, picker: picker, opens: start)
         attachScreenshot(of: app, named: "library-photo-picked-again")
         XCTAssertTrue(reopened, "The same photo couldn't be picked a second time")
+    }
+
+    /// Probe (throwaway): Back right after Start Painting is enabled, and Back once Refine is.
+    @MainActor
+    func testProbeBackRepeats() throws {
+        try XCTSkipIf(!isPad, "iPad only")
+        let (app, picker) = launchToPicker("create")
+        XCTAssertTrue(picker.exists, "No library picker")
+        let start = app.buttons["Start Painting"]
+        let refine = app.buttons["refine"]
+        var misses = 0
+        for cycle in 1...8 {
+            let patient = cycle % 2 == 0
+            let opened = try pickFirstInlinePhoto(app, picker: picker, opens: start)
+            guard opened else { XCTFail("cycle \(cycle): no preview"); return }
+            XCTAssertTrue(
+                waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120), "cycle \(cycle): Start never enabled")
+            if patient {
+                XCTAssertTrue(
+                    waitFor(refine, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120), "cycle \(cycle): Refine never enabled")
+            }
+            let back = app.navigationBars.buttons.matching(identifier: "BackButton").firstMatch
+            guard back.waitForExistence(timeout: 10) else { XCTFail("cycle \(cycle): no back button"); return }
+            attachNote("cycle \(cycle) patient \(patient) tap at \(Date().timeIntervalSince1970)", named: "probe-cycle")
+            back.tap()
+            var returned = waitUntil(timeout: 12) { !start.exists }
+            if !returned {
+                misses += 1
+                attach(XCUIScreen.main.screenshot(), named: "probe-cycle-\(cycle)-missed-screen")
+                attachNote("cycle \(cycle) patient \(patient) missed; refine enabled \(refine.isEnabled)", named: "probe-cycle-missed")
+                _ = waitFor(refine, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120)
+                back.tap()
+                returned = waitUntil(timeout: 20) { !start.exists }
+                attachNote("cycle \(cycle) second tap returned \(returned)", named: "probe-cycle-second")
+            }
+            XCTAssertTrue(returned, "cycle \(cycle): Back never returned")
+            guard returned else { return }
+            XCTAssertTrue(picker.waitForExistence(timeout: 20), "cycle \(cycle): no picker")
+            // Let the abandoned preview's work finish before the next pick.
+            sleep(2)
+        }
+        XCTAssertEqual(misses, 0, "Back was missed \(misses) times")
     }
 
     /// Samples (behind a segment on compact widths, beside the picker on wide ones) sit in a

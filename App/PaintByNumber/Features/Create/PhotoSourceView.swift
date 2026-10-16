@@ -93,7 +93,14 @@ struct PhotoSourceView: View {
                 }
             }
         }
+        #if DEBUG
+        .onAppear { Log.demo.error("probe: photo step appear") }
+        .onDisappear { Log.demo.error("probe: photo step disappear") }
+        #endif
         .onChange(of: libraryItems) { _, items in
+            #if DEBUG
+            Log.demo.error("probe: libraryItems -> \(items.count, privacy: .public)")
+            #endif
             guard let item = items.first else { return }
             // Clearing the selection lets the same photo be picked again after coming back.
             libraryItems = []
@@ -273,6 +280,9 @@ struct PhotoSourceView: View {
 
     /// Shared by the inline picker and Browse All.
     private func pick(_ item: PhotosPickerItem) {
+        #if DEBUG
+        Log.demo.error("probe: pick")
+        #endif
         model.load(item: item)
         onPicked()
     }

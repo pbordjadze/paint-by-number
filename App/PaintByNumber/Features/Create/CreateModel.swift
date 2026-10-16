@@ -318,6 +318,9 @@ final class CreateModel {
         defaultTitle: String, sampleName: String?, resuming saved: CreateDraft? = nil,
         decode: @escaping () async throws -> Decoded
     ) {
+        #if DEBUG
+        Log.demo.error("probe: model begins loading a photo")
+        #endif
         cancelAll()
         // A new photo gets a new default name, and anything typed for the last one goes.
         self.defaultTitle = defaultTitle
@@ -472,6 +475,9 @@ final class CreateModel {
     /// edge map, so line art other than classic is drafted again), then at full resolution.
     private func adopt(_ decision: AutoDecision) {
         self.decision = decision
+        #if DEBUG
+        Log.demo.error("probe: model adopts the suggestion")
+        #endif
         apply(decision.settings)
         settingsOrigin = .suggested
         phase = .generating
@@ -613,6 +619,9 @@ final class CreateModel {
                 try Task.checkCancellation()
             }
             // Drafts follow the finger as they come: a crossfade would blur one into the next.
+            #if DEBUG
+            Log.demo.error("probe: model shows a \(draft ? "draft" : "final", privacy: .public) template")
+            #endif
             withAnimation(draft ? nil : .easeInOut(duration: 0.35)) {
                 preview = shown.preview
                 if !draft { stats = Stats(shown.preview.template) }

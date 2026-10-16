@@ -47,6 +47,8 @@ struct CreateFlowView: View {
             }
         }
         #if DEBUG
+        .onChange(of: path) { old, new in Log.demo.error("probe: create path \(old.count, privacy: .public) -> \(new.count, privacy: .public)") }
+        .onAppear { TouchProbe.install() }
         .task {
             // A cancelled wait must not signal readiness.
             guard ShellDemo.current == .create || ShellDemo.current?.opensSamples == true else { return }
