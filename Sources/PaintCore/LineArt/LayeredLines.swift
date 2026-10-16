@@ -19,11 +19,13 @@
 ///    paint boundary or frame (`gapBridging` × 1.6 / 1.2 by layer), so open strokes close
 ///    cells.
 /// 4. `cells`: the segmentation split along the rasterized lines (`CellMap`): every cell keeps
-///    its paint and holds its number; `keepColorEdges` off merges line-free neighbours whose
-///    paints are within two palette steps. The painter's fills keep the cells they fall in as
-///    detail areas (`CellMap.fill`), painted the photo's color there (`LineEdit.photoColor`):
-///    no merge takes them, and their numbers may be as small as a detail area's
-///    (`LabelSizing.detailMinimumRadius`; `Plan.detailRegions`).
+///    its paint and holds its number; the blur of a soft edge, cut into strips by the line on
+///    it, joins the cell beside it so the paint stops at the line (`CellMap.mergeBlurStrips`);
+///    `keepColorEdges` off merges line-free neighbours whose paints are within two palette
+///    steps. The painter's fills keep the cells they fall in as detail areas (`CellMap.fill`),
+///    painted the photo's color there (`LineEdit.photoColor`): no merge takes them, and their
+///    numbers may be as small as a detail area's (`LabelSizing.detailMinimumRadius`;
+///    `Plan.detailRegions`).
 /// 5. `join`: same-paint neighbours join per `samePaint` (by default across everything but
 ///    outlines), and the lines that end up inside a cell become interior strokes (stretches
 ///    shorter than `LineLayering.minimumRun` are a boundary stretch's end point or a merged
@@ -65,6 +67,12 @@ enum LayeredLines {
     static let closeReach: [Float] = [1.6, 1.2, 1]
     /// `keepColorEdges` off: paints within this many palette steps merge.
     static let mergeSteps: Float = 2
+    /// How deep a blur strip may be (its room), in minimum radii of a 1-digit number
+    /// (`CellMap.mergeBlurStrips`): about 22 px across. The segmentation merges the blur of an
+    /// edge under 3 radii across (`SegmentationParameters.stripWidth`); a lens blurs the edges of
+    /// a photo's subject over twice that, and the detector's line lies on the near side of the
+    /// blur (the red fox's strips along its tail and paws, on a 1600-px canvas, are 3 to 7.5 deep).
+    static let blurStripReach: Float = 4
     /// Paint difference at which a color line's weight saturates.
     static let colorWeightReference: Float = 0.15
     /// How far (working pixels) a stroke may run from a contour's ridge and still read its
@@ -255,6 +263,9 @@ enum LayeredLines {
             let near = CellMap.near(walls.layer, width: w, height: h)
             stats.tinyMerged = try clock.measure("lineArt.cells.tiny") {
                 try cells.mergeTiny(need: need, palette: palette, near: near, cancel: cancel)
+            }
+            stats.blurStripsMerged = try clock.measure("lineArt.cells.strips") {
+                try cells.mergeBlurStrips(reach: blurStripReach * params.minRadius, palette: palette, near: near, cancel: cancel)
             }
             if !s.keepColorEdges {
                 let tolerance = mergeSteps * Self.paletteStep(segmentation.palette.map(\.oklab))

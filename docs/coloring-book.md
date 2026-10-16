@@ -125,6 +125,41 @@ mask (any image, inside at half) or polygons; the Linux evaluation stands in for
 mask made from HED itself (the shapes HED at 0.2 encloses), which the eval sheets show closing
 the fox.
 
+## Soft edges
+
+A detector puts its line on the steepest part of an edge, and the paint changes wherever the colors
+cross between two palette steps. On a sharp edge the two lie within a pixel or two (`CellMap`'s
+first step moves a paint boundary within 2.5 px of a line onto it). On a soft one (a lens's shallow
+focus: the red fox's tail and paws, which CI's `paint-book-progress` and `paint-book-dark-paper`
+showed with a pale band painted past the outline) the blur is a ramp of a dozen pixels or more that
+the segmentation labels with paints of its own, and the line cuts it into strips, one on each side. The
+strip outside the line is a cell of the background's area, so the book paints it, and it shows
+past the outline once painted (What a book must do: *no boundary of the painted cells appears*).
+Reproduced on Linux with the fox's maps from PyTorch (HED at 1152 px, the drawing at 768, the
+demo's default settings, no Vision): bands 6 to 15 px across along the tail's edge and underside and
+under the paws, in the paint between the fox's and the snow's.
+
+`CellMap.mergeBlurStrips` (after the walls are assigned, before cells too small for their number
+merge across a line) gives such a strip the paint of the cell beside it, so the paint stops at the
+line. A strip is a cell at most `LayeredLines.blurStripReach` (4) minimum radii deep (about 22 px
+across) that a line runs along (30 % of its borders with other cells, 16 px at least), with a
+line-free border to one cell three times its size (the one it joins) and a line between it and
+another (the one across), and whose paint lies between theirs: on the line from the paint beside it
+to the one across it (within a tenth of its length and a just-noticeable difference or half the
+nearer distance off), the two at least 0.06 apart. Anything else stays, and so do the painter's
+fills: a dark rim inside a line (darker than both sides), a cell of the paint across the line (a
+line through flat paint), a shadow or a shade wider than a strip (the shadow on the snow under the
+fox's tail is picture, not blur). Both strips of a ramp go, each into the cell it lay
+against: the disc of `BlurStripTests` blurred over 25 px came out with a tan inside the line, a
+pale beige outside it and the ground's paint beyond, and now has two cells, as a sharp edge has.
+
+Measured on the six corpus books (24 colors, detail 0.5, the committed maps) and the fox's: 4 to
+24 strips merged per picture (the fox 18), cells −1.7 to −3.9 % (the fox 196 → 186), mean ΔE +0.3 to
++1.6 % (the paint is the segmentation's, a strip takes its neighbour's), ink density within 0.4 %,
+areas the lines enclose −2 to +4 % (where a strip goes, edges join, and an edge is classed by the
+line along most of it), open ends per 1000 units −4 to +0 %. Every template stays valid; the
+classic and Auto regimes' metrics are what they were.
+
 ## Writing
 
 The detectors draw no note or card legibly: the drawing runs at 768 px, where a pen stroke is
