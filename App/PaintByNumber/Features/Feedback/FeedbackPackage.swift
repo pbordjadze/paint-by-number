@@ -3,8 +3,9 @@ import Foundation
 import PaintCore
 
 /// Writes a piece of feedback as the bundle `FeedbackReport` describes, in its own export
-/// folder (`ArtworkExporter`), zipped, beside the painting-with-marks picture, which is shared
-/// with the zip so a message shows it without unzipping. Rendering and writing run off the
+/// folder (`ArtworkExporter`), zipped, beside the painting-with-marks picture (which goes with
+/// the zip, so a message shows it without unzipping) and the report as text (`feedback.md`
+/// again, for `FeedbackUploader`, which sends the three). Rendering and writing run off the
 /// main actor; the ink comes in drawn (PencilKit draws it, `FeedbackInk`) over the frames of
 /// the same `Layout`.
 nonisolated enum FeedbackPackage {
@@ -72,26 +73,39 @@ nonisolated enum FeedbackPackage {
         var ink: Ink
     }
 
-    /// Writes the bundle and returns what to share: the painting with its marks (PNG) and the
-    /// bundle (zip), side by side in one export folder, so `ArtworkExporter.removeExport` on
-    /// either removes both.
+    /// What `write` leaves in one export folder, so `ArtworkExporter.removeExport` on any of
+    /// them removes all.
+    nonisolated struct Files: Sendable, Equatable {
+        /// The painting with its marks (PNG).
+        var picture: URL
+        /// The bundle (zip).
+        var bundle: URL
+        /// The report as text (`feedback.md`, which the bundle holds too).
+        var report: URL
+
+        /// What the share sheet gets: the picture and the bundle.
+        var shared: [URL] { [picture, bundle] }
+    }
+
+    /// Writes the bundle and returns its files.
     @concurrent
-    static func write(_ contents: Contents) async throws -> [URL] {
+    static func write(_ contents: Contents) async throws -> Files {
         let name = bundleName(title: contents.capture.title, date: contents.capture.date)
         let picture = try ArtworkExporter.temporaryURL(name: name, pathExtension: "png")
         let directory = picture.deletingLastPathComponent()
         let folder = directory.appending(path: ArtworkExporter.fileName(name), directoryHint: .isDirectory)
         let zip = directory.appending(path: "\(ArtworkExporter.fileName(name)).zip")
+        let report = directory.appending(path: FeedbackReport.File.markdown)
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            try writeFiles(contents, into: folder, picture: picture)
+            try writeFiles(contents, into: folder, picture: picture, report: report)
             try archive(folder, to: zip)
             try? FileManager.default.removeItem(at: folder)
         } catch {
             ArtworkExporter.removeExport(at: picture)
             throw error
         }
-        return [picture, zip]
+        return Files(picture: picture, bundle: zip, report: report)
     }
 
     /// "Red Fox Feedback 2026-10-05 14.32": the name the picture and the zip are shared under,
@@ -105,7 +119,8 @@ nonisolated enum FeedbackPackage {
                       comment: "Name of the files a painting's feedback is shared as (a picture and a zip archive); the arguments are the painting's title and when the feedback was given, e.g. 2026-10-05 14.32")
     }
 
-    private static func writeFiles(_ contents: Contents, into folder: URL, picture: URL) throws {
+    /// The bundle's files go into `folder`; the picture and the report are written beside it too.
+    private static func writeFiles(_ contents: Contents, into folder: URL, picture: URL, report reportFile: URL) throws {
         let capture = contents.capture, layout = contents.layout
         guard let context = RenderContext.shared, let scene = CanvasScene(template: capture.template, context: context) else {
             throw ArtworkExporter.ExportError.renderFailed
@@ -145,7 +160,9 @@ nonisolated enum FeedbackPackage {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         encoder.dateEncodingStrategy = .iso8601
         try encoder.encode(report).write(to: folder.appending(path: FeedbackReport.File.json))
-        try Data(report.markdown.utf8).write(to: folder.appending(path: FeedbackReport.File.markdown))
+        let markdown = Data(report.markdown.utf8)
+        try markdown.write(to: folder.appending(path: FeedbackReport.File.markdown))
+        try markdown.write(to: reportFile)
         try capture.template.encoded().write(to: folder.appending(path: FeedbackReport.File.template))
         if let photo = contents.photo { try photo.write(to: folder.appending(path: FeedbackReport.File.photo)) }
     }

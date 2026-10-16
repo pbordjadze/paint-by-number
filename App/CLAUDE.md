@@ -280,10 +280,20 @@ synchronized folder would bundle it into the app.
   recognition was tried and dropped, unproven on finger writing over a painting), and lists what
   goes along; the painter's own photo only when they switch Original Photo on (a library picture
   is named instead).
-- Send writes the bundle (`FeedbackPackage`; its contents are `FeedbackReport`'s doc comment) and
-  hands the painting-with-marks PNG and the zip to `ActivityShareSheet`: there is no fixed address,
-  the painter picks Mail, Messages, AirDrop or Files. The export folder goes once the sheet closes;
-  sharing ends feedback with a thank-you toast.
+- Send writes the bundle (`FeedbackPackage`; its contents are `FeedbackReport`'s doc comment: the
+  painting-with-marks PNG, the zip and `feedback.md` beside it) and `FeedbackUploader` posts the
+  three to the relay (`feedback-relay/`, root `CLAUDE.md` › Map; `FeedbackUploader.endpoint` is the
+  one place its address is written). Sent, the export folder goes and feedback ends with a toast
+  that says it was sent. A failed send (offline, a timeout, any non-2xx) shows an alert: Try Again
+  sends the same files, Share Instead hands the PNG and the zip to `ActivityShareSheet` (the old
+  path: the painter picks Mail, Messages, AirDrop or Files; sharing ends feedback with the plain
+  thank-you), Cancel keeps the draft. The review sheet says Send goes straight to the people who
+  make the app; `PRIVACY.md` and the privacy manifest say what is uploaded (`AboutTests` pins it).
+- Tests and CI never upload: `FeedbackUploads.current` is the real uploader only in Release builds;
+  in Debug it is `FeedbackUploadStub` unless the launch says `-feedback-upload live`
+  (`fail` and `fail-once` make the stub fail, for `FeedbackUITests`' alert and Try Again). The stub
+  sits in `#if DEBUG` and `ci/check_release.sh` looks for its name and the argument in the Release
+  binary.
 
 ## Canvas
 

@@ -23,7 +23,7 @@ final class FeedbackDraft {
     var penColor = FeedbackInkColor.red
     /// The review and send sheet is up (over the markup canvas).
     var isReviewing = false
-    /// Shared: feedback mode is ending.
+    /// Sent or shared: feedback mode is ending.
     var isSent = false
     private(set) var hasInk = false
     private(set) var canUndo = false
@@ -147,8 +147,8 @@ final class FeedbackDraft {
 
     // MARK: Sending
 
-    /// Writes the bundle (`FeedbackPackage`) and returns the files to share.
-    func package() async throws -> [URL] {
+    /// Writes the bundle (`FeedbackPackage`) and returns its files.
+    func package() async throws -> FeedbackPackage.Files {
         if strokes.isEmpty && hasInk { prepareReview() }
         let layout = FeedbackPackage.Layout(capture: capture, marks: marks, strokes: strokes)
         let ink = await Self.ink(drawing, over: layout)

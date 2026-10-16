@@ -54,7 +54,8 @@ struct PaintView: View {
     @State private var feedback: FeedbackDraft?
     /// The white flash of the capture as feedback starts.
     @State private var flashes = false
-    @State private var thanks = false
+    /// The thank-you toast's text while it shows.
+    @State private var thanks: String?
     @Environment(\.feedbackSource) private var feedbackSource
     @Environment(\.displayScale) private var displayScale
     @Environment(\.colorScheme) private var colorScheme
@@ -131,9 +132,9 @@ struct PaintView: View {
             }
         }
         .overlay(alignment: .top) {
-            if thanks {
+            if let thanks {
                 // Below the top bar, like the painting's other toasts; taps reach the canvas.
-                Toast(text: String(localized: "Thanks for the feedback!"), systemImage: "checkmark.circle", edge: .top)
+                Toast(text: thanks, systemImage: "checkmark.circle", edge: .top)
                     .padding(.top, 62)
                     .padding(.horizontal, 20)
                     .allowsHitTesting(false)
@@ -591,17 +592,22 @@ struct PaintView: View {
         Log.feedback.notice("Feedback ended")
     }
 
-    /// The feedback was shared: the sheet goes, then feedback mode, and thanks.
-    private func feedbackSent() {
+    /// The feedback was sent to the developers or shared: the sheet goes, then feedback mode, and
+    /// thanks (sent, or just thanks for a share, which may only have been saved to Files).
+    private func feedbackSent(_ delivery: FeedbackSheet.Delivery) {
         feedback?.isSent = true
         feedback?.isReviewing = false
+        let message = switch delivery {
+        case .sent: String(localized: "Feedback sent. Thank you!")
+        case .shared: String(localized: "Thanks for the feedback!")
+        }
         Task {
             try? await Task.sleep(for: .milliseconds(400))
             endFeedback()
-            Announcer.announce(String(localized: "Thanks for the feedback!"))
-            thanks = true
+            Announcer.announce(message)
+            thanks = message
             try? await Task.sleep(for: .seconds(3))
-            thanks = false
+            thanks = nil
         }
     }
 

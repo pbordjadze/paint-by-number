@@ -158,7 +158,7 @@ struct SettingsView: View {
                 } header: {
                     Text("About")
                 } footer: {
-                    Text("Your photos and paintings stay on this device unless you share them. Paint by Moonlight collects no data.")
+                    Text("Your photos and paintings stay on this device unless you share them or choose to send feedback. Paint by Moonlight has no accounts, ads or tracking.")
                 }
             }
             .navigationDestination(for: Destination.self) { destination in

@@ -35,9 +35,10 @@ paint-by-numbers templates — entirely on-device — and makes painting them fl
   painted), and photos sent from the share sheet or Files open straight in the create flow.
 - **Feedback on any painting**: Give Feedback freezes the paint as it is. Draw on the painting
   with a finger or the Pencil, zooming into the detail you mean, then add a note and a comment
-  for each mark. Send shares a picture of the painting with your marks and a bundle for the
-  developers (close-ups, the template, its settings, a report) through the share sheet. Your
-  photo goes along only if you switch it on.
+  for each mark. Send uploads a picture of the painting with your marks and a bundle for the
+  developers (close-ups, the template, its settings, a report) straight to them, through a small
+  relay (`feedback-relay/`); if that fails, you can try again or share it instead. Your photo goes
+  along only if you switch it on.
 - **Details**: every paint gets a playful nickname ("Harbor Fog", "Apricot Jam") beside its
   plain name, a dark paper for painting in the evening, and Liquid Glass throughout.
 
@@ -63,9 +64,10 @@ Kodak Lossless True Color Image Suite.*
 ## Privacy
 
 Photos are turned into templates entirely on the device. The app has no accounts, no analytics
-and no network code, so your photos and paintings stay on your iPhone or iPad unless you share
-them. It declares no tracking and no collected data in its privacy manifest
-(`App/PaintByNumber/Resources/PrivacyInfo.xcprivacy`); the only required-reason APIs it uses
+and no tracking, and its only network code is Give Feedback's Send, so your photos and paintings
+stay on your iPhone or iPad unless you share them or send feedback. Its privacy manifest
+(`App/PaintByNumber/Resources/PrivacyInfo.xcprivacy`) declares no tracking and, as collected data
+not linked to you, the feedback you choose to send; the only required-reason APIs it uses
 are `UserDefaults`, for its own settings, and file timestamps, to clean up its own temporary
 exports. Third-party credits and licenses are in
 [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md); the app's privacy policy is [PRIVACY.md](PRIVACY.md).

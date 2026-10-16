@@ -286,7 +286,7 @@
       "extractionState" : "manual"
     },
     "Cancel" : {
-      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label), and the Refine screen's Cancel, which puts back what it opened with",
+      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label), and the Refine screen's Cancel, which puts back what it opened with, and the alert shown when feedback couldn't be sent (it keeps what the painter wrote)",
       "extractionState" : "manual"
     },
     "Can’t Find It?" : {
@@ -299,6 +299,10 @@
     },
     "Can’t Show the Canvas" : {
       "comment" : "Title of the screen shown when the device can't draw the painting canvas (no Metal)",
+      "extractionState" : "manual"
+    },
+    "Check your connection and try again, or share it another way. What you wrote is kept." : {
+      "comment" : "Message of the alert when the feedback couldn't be sent; its buttons are Try Again, Share Instead and Cancel, and Cancel keeps the painter's note and marks",
       "extractionState" : "manual"
     },
     "Choose a photo with a clear subject and good light. It becomes your canvas." : {
@@ -663,6 +667,10 @@
     },
     "Couldn’t save progress" : {
       "comment" : "Toast on the painting screen (and its VoiceOver announcement) when saving progress to disk failed",
+      "extractionState" : "manual"
+    },
+    "Couldn’t Send Feedback" : {
+      "comment" : "Alert title when the feedback couldn't be sent to the developers (no connection, a timeout or a refusal)",
       "extractionState" : "manual"
     },
     "create.compare.value" : {
@@ -1083,6 +1091,10 @@
     },
     "Favorites" : {
       "comment" : "Choice in the gallery's Show menu that lists only favorite paintings; also the menu's VoiceOver value while it is chosen",
+      "extractionState" : "manual"
+    },
+    "Feedback sent. Thank you!" : {
+      "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was sent to the developers",
       "extractionState" : "manual"
     },
     "feedback.announcement.started" : {
@@ -1711,6 +1723,22 @@
     },
     "Making Your Time-lapse" : {
       "comment" : "Title of the sheet shown while a time-lapse movie is rendered",
+      "extractionState" : "manual"
+    },
+    "Send goes straight to the people who make Paint by Moonlight." : {
+      "comment" : "Feedback's review sheet: footer under what is sent; Send delivers the feedback to the developers directly",
+      "extractionState" : "manual"
+    },
+    "Send goes straight to the people who make Paint by Moonlight. Your photo helps us remake the painting; it goes only if you turn it on." : {
+      "comment" : "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
+      "extractionState" : "manual"
+    },
+    "Sending…" : {
+      "comment" : "Feedback's review sheet: message (and VoiceOver label of the progress indicator) while the feedback is being sent to the developers",
+      "extractionState" : "manual"
+    },
+    "Share Instead" : {
+      "comment" : "Button in the alert after feedback couldn't be sent: opens the share sheet so the painter can send the feedback another way, such as Mail",
       "extractionState" : "manual"
     },
     "Waves hello." : {
@@ -2938,7 +2966,7 @@
       "extractionState" : "manual"
     },
     "Preparing your feedback…" : {
-      "comment" : "Feedback's review sheet: message while the feedback's pictures and files are being written, before the share sheet opens",
+      "comment" : "Feedback's review sheet: message while the feedback's pictures and files are being written, before they are sent (or, after Share Instead, before the share sheet opens)",
       "extractionState" : "manual"
     },
     "Preparing…" : {
@@ -3854,19 +3882,11 @@
       "extractionState" : "manual"
     },
     "Send" : {
-      "comment" : "Feedback's review sheet: button that prepares the feedback's files and opens the share sheet to send them",
+      "comment" : "Feedback's review sheet: button that prepares the feedback's files and sends them to the developers",
       "extractionState" : "manual"
     },
     "Send Feedback" : {
       "comment" : "Title of the sheet that reviews and sends feedback on a painting",
-      "extractionState" : "manual"
-    },
-    "Send opens the share sheet: choose how it goes and who gets it." : {
-      "comment" : "Feedback's review sheet: footer under what is sent",
-      "extractionState" : "manual"
-    },
-    "Send opens the share sheet: choose how it goes and who gets it. Your photo helps us remake the painting; it goes only if you turn it on." : {
-      "comment" : "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
       "extractionState" : "manual"
     },
     "Settings" : {
@@ -4090,7 +4110,7 @@
       "extractionState" : "manual"
     },
     "Thanks for the feedback!" : {
-      "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared",
+      "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared through the share sheet (Share Instead in the alert after sending failed)",
       "extractionState" : "manual"
     },
     "The Marginarium" : {
@@ -4226,7 +4246,7 @@
       "extractionState" : "manual"
     },
     "Try Again" : {
-      "comment" : "Button in the time-lapse sheet after rendering failed",
+      "comment" : "Button in the time-lapse sheet after rendering failed, and in the alert after feedback couldn't be sent: sends it again",
       "extractionState" : "manual"
     },
     "Try again in a moment." : {
@@ -4281,7 +4301,7 @@
       "comment" : "Section title above the photo library picker on wide screens in the create flow",
       "extractionState" : "manual"
     },
-    "Your photos and paintings stay on this device unless you share them. Paint by Moonlight collects no data." : {
+    "Your photos and paintings stay on this device unless you share them or choose to send feedback. Paint by Moonlight has no accounts, ads or tracking." : {
       "comment" : "Footer of the About section in Settings: the privacy statement",
       "extractionState" : "manual"
     },
