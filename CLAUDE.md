@@ -401,9 +401,11 @@ any port of it, when changing the fitter: work from the paper.
    schedule). TestFlight builds are separate and on request: the `TestFlight` workflow archives,
    cloud-signs with an App Store Connect API key and has App Store Connect validate the app; Run
    workflow from `main` with Upload ticked uploads it (version `MARKETING_VERSION`, build
-   `<run>.<attempt>`), and a push to a `claude/testflight-dryrun*` branch (which CI ignores) is a dry run of its commit.
-   The `TestFlight testers` workflow (`ci/testflight_testers.py`) puts a processed build in the
-   external Friends & Family group, public link on, and submits it for Beta App Review. The repository is
+   `<run>.<attempt>`) and, once App Store Connect has processed it, puts it in the external
+   Friends & Family group (public link on) with its What to Test and submits it for Beta App
+   Review (`ci/testflight_testers.py`; the `TestFlight testers` workflow does the same for a build
+   by hand); a push to a `claude/testflight-dryrun*` branch (which CI ignores) is a dry run of its
+   commit. The repository is
    public, so GitHub's standard runners cost no minutes; the limit is 5 macOS jobs at once.
 
 **Branches.** `main` is the default and shipping branch (`iphone` job, IPA, SideStore source; the

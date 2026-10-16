@@ -2,8 +2,10 @@ name: TestFlight testers
 
 # Puts a TestFlight build in front of friends and family (ci/testflight_testers.py, its docstring
 # the manual): the external "Friends & Family" group with its public link on, the build in it with
-# its What to Test, submitted for Beta App Review. On request: Actions › TestFlight testers › Run
-# workflow from `main`, or a push to a `claude/testflight-testers*` branch (which ci.yml ignores).
+# its What to Test, submitted for Beta App Review. The TestFlight workflow does this itself after
+# each upload; this one is for a build by hand (or to read the review's state) on request: Actions ›
+# TestFlight testers › Run workflow from `main`, or a push to a `claude/testflight-testers*` branch
+# (which ci.yml ignores).
 # The public link is never printed, as the repository's logs are public: copy it from App Store
 # Connect › TestFlight › Friends & Family once Apple approves the build.
 
