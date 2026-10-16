@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Puts a TestFlight build in front of external testers, through the App Store Connect API.
 
-    ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_P8=… [BUILD=6.1] python3 ci/testflight_testers.py
+    ASC_KEY_ID=… ASC_ISSUER_ID=… ASC_KEY_P8=… [BUILD=6.1] [WAIT_MINUTES=50] [WHAT_TO_TEST=…] \
+        python3 ci/testflight_testers.py
 
-Run by `.github/workflows/testflight-testers.yml`. It finds the app by its bundle id and the build
-(BUILD, the CFBundleVersion, or the newest processed one), makes the external group
+Run by `.github/workflows/testflight.yml` right after an upload (BUILD the uploaded build,
+WAIT_MINUTES for App Store Connect to process it) and by `.github/workflows/testflight-testers.yml`
+on request. It finds the app by its bundle id and the build (BUILD, the CFBundleVersion, or the
+newest processed one; with WAIT_MINUTES it waits that long for BUILD to finish processing, and
+stops on a build App Store Connect rejected), makes the external group
 "Friends & Family" the first time (its public link on, limited to `LINK_LIMIT` testers) or turns
-an existing one's link on, adds the build to it with its What to Test, and submits the build for
-Beta App Review. Every step is idempotent: a second run changes nothing it already did.
+an existing one's link on, adds the build to it with its What to Test (WHAT_TO_TEST, or the
+standing text below), and submits the build for Beta App Review. Every step is idempotent: a
+second run changes nothing it already did. On Actions, the outcome also goes to the run's summary.
 
 The group's public link is never printed in the clear (the repository's logs are public): copy
 it from App Store Connect › TestFlight › Friends & Family once Apple approves the build, or put
@@ -92,17 +97,24 @@ class Client:
             raise APIError(f"{method} {path}: {error.code} {detail}") from None
 
 
-def find_build(client, app_id, wanted):
+def find_build(client, app_id, wanted, wait_minutes=0):
     query = {"filter[app]": app_id, "sort": "-uploadedDate", "limit": "20",
              "fields[builds]": "version,processingState,uploadedDate,expired"}
     if wanted:
         query["filter[version]"] = wanted
-    builds = client.call("GET", "/builds", query=query)["data"]
-    usable = [b for b in builds if b["attributes"]["processingState"] == "VALID" and not b["attributes"]["expired"]]
-    if not usable:
+    deadline = time.time() + wait_minutes * 60
+    while True:
+        builds = client.call("GET", "/builds", query=query)["data"]
+        usable = [b for b in builds if b["attributes"]["processingState"] == "VALID" and not b["attributes"]["expired"]]
+        if usable:
+            return usable[0]
         states = ", ".join(f"{b['attributes']['version']}: {b['attributes']['processingState']}" for b in builds)
-        raise APIError(f"no processed build{' ' + wanted if wanted else ''} ({states or 'none uploaded'})")
-    return usable[0]
+        # A freshly uploaded build shows up after a few minutes, PROCESSING, then VALID or rejected.
+        rejected = any(b["attributes"]["processingState"] in ("FAILED", "INVALID") for b in builds)
+        if rejected or time.time() >= deadline:
+            raise APIError(f"no processed build{' ' + wanted if wanted else ''} ({states or 'none uploaded'})")
+        print(f"Waiting for App Store Connect to process build {wanted or '(newest)'} ({states or 'not listed yet'})…", flush=True)
+        time.sleep(60)
 
 
 def ensure_group(client, app_id, build_id):
@@ -124,16 +136,24 @@ def ensure_group(client, app_id, build_id):
     return group
 
 
-def ensure_what_to_test(client, build_id):
+def ensure_what_to_test(client, build_id, text):
     existing = client.call("GET", f"/builds/{build_id}/betaBuildLocalizations")["data"]
     english = next((l for l in existing if l["attributes"]["locale"] == "en-US"), None)
     if english is None:
         client.call("POST", "/betaBuildLocalizations", {"data": {
-            "type": "betaBuildLocalizations", "attributes": {"locale": "en-US", "whatsNew": WHAT_TO_TEST},
+            "type": "betaBuildLocalizations", "attributes": {"locale": "en-US", "whatsNew": text},
             "relationships": {"build": {"data": {"type": "builds", "id": build_id}}}}})
-    elif english["attributes"].get("whatsNew") != WHAT_TO_TEST:
+    elif english["attributes"].get("whatsNew") != text:
         client.call("PATCH", f"/betaBuildLocalizations/{english['id']}", {"data": {
-            "type": "betaBuildLocalizations", "id": english["id"], "attributes": {"whatsNew": WHAT_TO_TEST}}})
+            "type": "betaBuildLocalizations", "id": english["id"], "attributes": {"whatsNew": text}}})
+
+
+def summarize(lines):
+    """Adds `lines` to the Actions run's summary page, where Paul reads the outcome."""
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if path:
+        with open(path, "a") as file:
+            file.write("\n".join(lines) + "\n")
 
 
 def ensure_submitted(client, build_id):
@@ -154,16 +174,19 @@ def main():
     if not apps:
         sys.exit(f"No App Store Connect app has the bundle id {BUNDLE_ID}")
     app_id = apps[0]["id"]
-    build = find_build(client, app_id, os.environ.get("BUILD", "").strip())
+    wait = int(os.environ.get("WAIT_MINUTES", "0") or 0)
+    build = find_build(client, app_id, os.environ.get("BUILD", "").strip(), wait)
     version = build["attributes"]["version"]
     print(f"Build {version} ({build['attributes']['processingState']}).")
     group = ensure_group(client, app_id, build["id"])
     print(f"Build {version} is in {GROUP!r}.")
-    ensure_what_to_test(client, build["id"])
+    ensure_what_to_test(client, build["id"], os.environ.get("WHAT_TO_TEST", "").strip() or WHAT_TO_TEST)
     print("What to Test is set.")
     state = ensure_submitted(client, build["id"])
     print(f"Beta App Review: {state}.")
     print(f"Once approved, copy the public link from App Store Connect › TestFlight › {GROUP}.")
+    summarize([f"### Build {version} is in {GROUP}",
+               f"Beta App Review: **{state}**. Testers get it, through the same link, once Apple approves it."])
     recipient = os.environ.get("LINK_RECIPIENT_FILE", "")
     if recipient and os.path.exists(recipient):
         link = client.call("GET", f"/betaGroups/{group['id']}")["data"]["attributes"].get("publicLink") or ""

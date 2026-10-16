@@ -2,8 +2,11 @@ name: TestFlight
 
 # A signed Release build for TestFlight, on request only (CI's IPA job keeps making the unsigned
 # SideStore builds). Every run archives, signs and has App Store Connect validate the app; only a
-# run from Actions › TestFlight › Run workflow with "Upload" ticked (from `main`) uploads it. A
-# push to a `claude/testflight-dryrun*` branch runs the dry run on its commit (ci.yml ignores those
+# run from Actions › TestFlight › Run workflow with "Upload" ticked (from `main`) uploads it, and
+# then its `testers` job waits for App Store Connect to process the build, puts it in the
+# Friends & Family group with its What to Test and submits it for Beta App Review
+# (ci/testflight_testers.py): one button from `main` to testers. A push to a
+# `claude/testflight-dryrun*` branch runs the dry run on its commit (ci.yml ignores those
 # branches).
 # Signing is Xcode's cloud signing with an App Store Connect API key: the archive is built
 # unsigned, as the IPA job's is, and -exportArchive signs it with the team's cloud-managed
@@ -17,9 +20,12 @@ on:
   workflow_dispatch:
     inputs:
       upload:
-        description: 'Upload to TestFlight (otherwise sign and validate only)'
+        description: 'Upload to TestFlight and give it to Friends & Family (otherwise sign and validate only)'
         type: boolean
         default: false
+      what_to_test:
+        description: 'What to Test, shown to testers (empty: the standing text)'
+        required: false
   push:
     branches: ['claude/testflight-dryrun*']
 
@@ -41,6 +47,9 @@ jobs:
     name: Archive, sign and upload to TestFlight
     runs-on: macos-26
     timeout-minutes: 45
+    outputs:
+      # The uploaded build, for `testers` (kept when a failed `testers` alone is re-run).
+      build: ${{ steps.upload.outputs.build }}
     env:
       BUILD: ${{ github.run_number }}.${{ github.run_attempt }}
       UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.upload && 'true' || 'false' }}
@@ -113,6 +122,7 @@ jobs:
             2>&1 | tee out/validate.log | tail -40
           grep -qiE 'No errors validating|successfully' out/validate.log
       - name: Upload
+        id: upload
         if: env.UPLOAD == 'true'
         run: |
           set -o pipefail
@@ -120,6 +130,28 @@ jobs:
             2>&1 | tee out/upload.log | tail -40
           grep -qiE 'No errors uploading|UPLOAD SUCCEEDED' out/upload.log
           echo "Uploaded build $BUILD: App Store Connect processes it (usually 5 to 30 minutes) before TestFlight offers it."
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v5
         if: always()
         with: { name: testflight, path: out, if-no-files-found: ignore }
+
+  testers:
+    name: Give the build to Friends & Family
+    needs: upload
+    if: needs.upload.outputs.build != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - name: Wait for processing, add to the group, submit for review
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          BUILD: ${{ needs.upload.outputs.build }}
+          WAIT_MINUTES: '50'
+          WHAT_TO_TEST: ${{ inputs.what_to_test }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --quiet cryptography
+          "$RUNNER_TEMP/venv/bin/python" ci/testflight_testers.py
