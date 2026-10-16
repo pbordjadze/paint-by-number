@@ -30,7 +30,9 @@ picture's size and grown back bilinearly.
 Every random draw is SplitMix64's (making_of_pets.stream, the purposes from STREAM_FIELDS on) and
 every pick is made from integer weights (making_of_inputs.sample_stops), so a port picks the same
 seeds; the fields are smooth float64 for a port to match within a tolerance, as the layers do.
-Sources/MakingOf has no port of it yet.
+Sources/MakingOf's `FieldShow` is the port: Tests/MakingOfTests compares it with the numbers that
+tools/tests/test_making_of_fields.py --write-goldens writes (fields-small.json), which also pins the
+picks `FieldShow.picks` records here.
 """
 
 import dataclasses
@@ -262,18 +264,21 @@ class FieldShow:
         per_pixel = lambda per_region, regions: per_region[regions].astype(np.float32)
         labels, count = built.sim_labels, built.sim_n
 
+        self.picks = {}                     # what chance decided, for the golden to pin
         # 1: fast along what survives relative total variation, slow across the flats
         survivors = np.clip(shrink(stages.survivors), 0, 1)
         speed = (SKETCH_FLAT + SKETCH_GAIN * survivors ** SKETCH_POWER) * noise.rough((h, w), *SKETCH_ROUGH)
         lit = born(seed, 0, shrink(structure ** 2).astype(np.int64).ravel(), w, SKETCH_SEEDS,
                    SKETCH_SPACING * w, 0.0, SKETCH_BIRTHS)
         sketch = paced(grow(geodesic(1 / speed, lit), self.size), s[0] + 0.05, s[0] + step - SKETCH_END)
+        self.picks['sketch'] = lit
 
         # 2: blooms that stall at edges, with ragged fronts
         edges = np.clip(shrink(structure) / max(exact.percentile(structure, 98), 1), 0, 1)
         speed = noise.rough((h, w), *BLOOM_ROUGH) * (0.6 + 0.8 * fine) / (1 + BLOOM_EDGE * edges ** 2)
         drops = born(seed, 1, np.ones(h * w, dtype=np.int64), w, BLOOM_SEEDS, BLOOM_SPACING * w, 0.0, BLOOM_BIRTHS)
         shading = paced(grow(geodesic(1 / speed, drops), self.size), s[1] + 0.05, s[1] + step - BLOOM_END)
+        self.picks['shading'] = drops
 
         # 3: each paint from its own seeds through its own areas; between them, slowly
         paint_of = built.paint_of[::SCALE, ::SCALE][:h, :w]
@@ -318,6 +323,7 @@ class FieldShow:
         drift = paced(grow(noise.warped((h, w), MELT_DRIFT[0], 4.0), self.size),
                       s[3] + MELT_DRIFT[1] * step, s[3] + MELT_DRIFT[2] * step)
         merged = np.minimum(np.where(bits, melt, drift), s[3] + step - MELT_END)
+        self.picks['melting'] = {'bits': int(bits.sum()), 'areas': melting.tolist(), 'rank': rank[melting].tolist()}
 
         # 5: fuses along the lines
         strokes = [np.array(st) for st in built.inputs['strokes']]
@@ -327,9 +333,13 @@ class FieldShow:
         fuse_cost = np.where(on_line, 1.0, FUSE_OFF_LINE) * (0.75 + 0.5 * fine)
         lines_full = exact.line_mask(W, H, strokes, 1.0)
 
+        self.picks['fuses'] = lit_fuses = []
+
         def fuses(n, births):
             picked = [int(cells[rng.below(len(cells))]) for _ in range(n)]
-            return geodesic(fuse_cost, [(rng.uniform(0, births), c % w, c // w) for c in picked])
+            lit = [(rng.uniform(0, births), c % w, c // w) for c in picked]
+            lit_fuses.append(lit)
+            return geodesic(fuse_cost, lit)
 
         fuse = paced(grow(fuses(FUSE_SEEDS, FUSE_BIRTHS), self.size), s[4] + 0.05, s[4] + step - FUSE_END,
                      over=lines_full)
