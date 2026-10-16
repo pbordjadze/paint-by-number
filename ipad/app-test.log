@@ -1,0 +1,36 @@
+Retrying tests on failure. Running tests repeatedly up to 2 times.
+
+Writing result bundle at path:
+	/Users/runner/work/paint-by-number/paint-by-number/build/Tests.xcresult
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS Simulator, arch:arm64, id:99DEE653-946C-406D-8E9E-238D1FCE93C9, OS:26.5, name:iPad Pro 13-inch (M5) }
+{ platform:iOS Simulator, arch:x86_64, id:99DEE653-946C-406D-8E9E-238D1FCE93C9, OS:26.5, name:iPad Pro 13-inch (M5) }
+2026-10-16 20:53:48.609 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:53:48.609 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:54:09.089 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:54:09.089 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:54:47.677 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:54:47.677 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:55:02.540 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:55:02.540 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:56:01.885 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:56:01.885 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:56:24.320 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:56:24.321 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:56:57.922 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:56:57.922 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:57:24.433 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:57:24.433 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:57:50.341 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:57:50.341 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:58:11.367 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:58:11.367 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:58:43.283 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:58:43.283 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:59:12.241 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: The operation couldn’t be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.)
+2026-10-16 20:59:12.242 xcodebuild[56780:153946] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-16 20:59:39.308 xcodebuild[56780:153946] [MT] IDETestOperationsObserverDebug: 614.499 elapsed -- Testing started completed.
+2026-10-16 20:59:39.308 xcodebuild[56780:153946] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-16 20:59:39.308 xcodebuild[56780:153946] [MT] IDETestOperationsObserverDebug: 614.499 sec, +614.499 sec -- end
+Testing started

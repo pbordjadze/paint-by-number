@@ -1,0 +1,1347 @@
+Building for debugging...
+Build complete! (164.37s)
+Test Suite 'All tests' started at 2026-10-16 20:25:37.834
+Test Suite 'debug.xctest' started at 2026-10-16 20:25:37.835
+Test Suite 'debug.xctest' passed at 2026-10-16 20:25:37.835
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.0 (0.0) seconds
+Test Suite 'All tests' passed at 2026-10-16 20:25:37.835
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.0 (0.0) seconds
+◇ Test run started.
+↳ Testing Library Version: 6.2.4 (5ee435b15ad40ec)
+↳ Target Platform: x86_64-unknown-linux-gnu
+◇ Suite ArrivalTests started.
+◇ Suite "Pipeline tuning and line art settings" started.
+◇ Suite SplitMixDrawsTests started.
+◇ Suite ShowPicturesTests started.
+◇ Suite LayersTests started.
+◇ Suite PlaneTests started.
+◇ Suite "Pipeline snapshots" started.
+◇ Suite StopWeightsTests started.
+◇ Suite CrewPlanReplayTests started.
+◇ Suite "Line edits" started.
+◇ Suite SpritesTests started.
+◇ Suite "Detail coding" started.
+◇ Suite ShowTests started.
+◇ Suite "Fills" started.
+◇ Suite ShowTemplateTests started.
+◇ Suite "Auto settings" started.
+◇ Suite CrewPlanContractTests started.
+◇ Suite CompositorTests started.
+◇ Suite "CurveFitter" started.
+◇ Suite ValueNoiseTests started.
+◇ Suite CardsTests started.
+◇ Suite "Foundation" started.
+◇ Suite "Label sizing" started.
+◇ Suite CrewInputsFallbackTests started.
+◇ Suite "Writing coding" started.
+◇ Suite "Template editor" started.
+◇ Suite NumberScheduleTests started.
+◇ Suite "Region remap" started.
+◇ Suite "Edit coding" started.
+◇ Suite "Edit trail" started.
+◇ Suite "Band rings" started.
+◇ Suite OutlinesTests started.
+◇ Suite "Vectorizer" started.
+◇ Suite "Region merging" started.
+◇ Suite PaintSeedsTests started.
+◇ Suite LabelingTests started.
+◇ Suite "ColorNickname v2" started.
+◇ Suite "ColorNaming" started.
+◇ Suite "ColorNickname" started.
+◇ Suite FieldShowTests started.
+◇ Suite "Line art" started.
+◇ Suite CrewPlanInvariantTests started.
+◇ Suite ShowStreamsTests started.
+➜ Suite FieldShowBenchmark skipped.
+◇ Suite "Writing" started.
+◇ Suite SamplingTests started.
+◇ Suite "Template coding" started.
+◇ Suite ExactMathTests started.
+◇ Suite InterpTests started.
+◇ Suite "Segmentation" started.
+◇ Suite TimelineTests started.
+◇ Suite InkCoverageTests started.
+◇ Suite CrewInputsTests started.
+◇ Suite "Line art coding" started.
+◇ Suite LineMaskTests started.
+◇ Suite ShowSpecTests started.
+◇ Suite "Blur strips" started.
+◇ Suite "Template validation work limits" started.
+◇ Test settingsDecodeTolerantly() started.
+◇ Test coloringBookFlatteningScalesOnlyThePaintKnobs() started.
+◇ Test minimumCellSizeChangesTheTemplate() started.
+◇ Test tuningIsClamped() started.
+◇ Test settingsThatAreNotNumbersTakeTheirDefaults() started.
+◇ Test eachFactorScalesExactlyItsKnobs() started.
+◇ Test eachStepsFieldMatchesTheReference() started.
+◇ Test regionTimesMatchTheReference() started.
+◇ Test autoCandidatesCarryLineArtAndTuning() started.
+◇ Test aLateStepIsSqueezedTowardItsFirstVisit() started.
+◇ Test aFieldNeverArrivesAfterItsStepEndsAndGrowsFromTheVisits() started.
+◇ Test lineArtSettingsAreClampedAndOrdered() started.
+◇ Test uniformScalesADouble() started.
+◇ Test picturesOfDifferentSizesAreRefused() started.
+◇ Test aMissingStageIsNamed() started.
+◇ Test aSeededPaintFlowsFromItsSeedAndAnUnseededOneFollowsTheCrew() started.
+◇ Test aPictureOfTheWrongKindIsRefused() started.
+◇ Test snapshotsMakeTheSamePicturesAsFiles() started.
+◇ Test theDirectoryHoldsTheFivePictures() started.
+◇ Test aFieldDoesNotDependOnHowItsRowsAreSharedBetweenCores() started.
+◇ Test aMissingFileIsNamed() started.
+◇ Test theChangeSpreadsFromTheEarliestVisitAtItsSpeed() started.
+◇ Test permutationsShuffleFromTheBack() started.
+◇ Test theRealPipelinesSnapshotsAreAccepted() started.
+◇ Test eachPaintsLastRegionSetsItsSpread() started.
+◇ Test firstDoublesOfSeedOne() started.
+◇ Test boundedDrawsAndChoice() started.
+◇ Test publishedSeedZeroOutputs() started.
+◇ Test thePaintsFlowMatchesTheReference() started.
+◇ Test rowMajorFromTheTopLeft() started.
+◇ Test regionMinimumTakesTheEarliestPixelOfEachRegion() started.
+◇ Test cancellingStopsTheBuild() started.
+◇ Test toneCurveAveragesTheWantedMean() started.
+◇ Test textureIsSmearedAndTheContourStays() started.
+◇ Test latticeMatchesPython() started.
+◇ Test aBoxBlurAveragesItsWindowWithEdgesRepeated() started.
+◇ Test statisticsMatchPython() started.
+◇ Test aFlatPhotoHasNothingToFind() started.
+◇ Test toneCurveMatchesPython() started.
+◇ Test styleIsPythons() started.
+◇ Test percentilesAreNumpys() started.
+◇ Test numbersAreWeighedWhereTheyAreAndWhereLinesAreThin() started.
+◇ Test smallRegionsWeighMorePerPixel() started.
+◇ Test countingPaintsIsTheSameAsBeingTold() started.
+◇ Test eachStepsWeightsSumTheSameInPython() started.
+◇ Test aPictureTooSmallForItsMarginsHasNoRoom() started.
+◇ Test aContourIsCoherentAndAFineTextureIsNot() started.
+◇ Test theRoomKeepsPetsOutOfTheCorners() started.
+◇ Test structureWeighsAThirdOfTheLevelPlusTheEdges() started.
+◇ Test selectingARankIsSortingAndIndexing() started.
+◇ Test weightsAreZeroOutsideTheRoomAndPositiveInside() started.
+◇ Test theWindowIsThePipelinesAndTiesGoToEven() started.
+◇ Test rowsAskedAtOnceDoNotChangeTheAnswer() started.
+◇ Test aFlatPictureGetsTheDarkestGrey() started.
+◇ Test observerErrorsStopGeneration() started.
+◇ Test buildingTwiceGivesTheSameBytes() started.
+◇ Test smoothedUnscalesChromaAndKeepsPrimaries() started.
+◇ Test observationPreservesTemplateAndRepeats(style:) started.
+◇ Test leavingOutTheAnalysisKeepsEveryPlaneTheCompositorReads() started.
+◇ Test boundsEveryStageWithoutUpscaling() started.
+◇ Test fixtureCoversTheWholeShow() started.
+◇ Test visitsAndTracesReplay() started.
+◇ Test aLineThatClosesNothingIsDrawnInsideItsCell() started.
+◇ Test stopsAndWalksReplay() started.
+◇ Test aDrawnLineSplitsTheCellItCrosses() started.
+◇ Test statesReplay() started.
+◇ Test theEraserTakesLinesOut() started.
+◇ Test aLineAlongPartOfABoundaryIsDrawnJustThere() started.
+◇ Test anErasureRevealsNoHiddenLine() started.
+◇ Test extraNumbersKeepTheirRoomBesideADrawnLine() started.
+◇ Test hostileEditsAreHarmless() started.
+◇ Test anEndShortOfALineStaysWhereDrawn() started.
+◇ Test anErasureChangesNothingElse() started.
+◇ Test editsTakeEffectInOrder() started.
+◇ Test anOvershootingEndIsNotTrimmed() started.
+◇ Test drawnEndsStayWhereDrawn() started.
+◇ Test aDrawnLineMovesTheNumberOffIt() started.
+◇ Test freeEndedLinesStayInsideTheirCells() started.
+◇ Test aDrawnShapeBoundsItsAreaAsDrawn() started.
+◇ Test aDabTakesOutWhatItTouches() started.
+◇ Test aLineErasedWholeLeavesItsJunctionsAlone() started.
+◇ Test theTiltsSignIsTheFixturesAndTheSpritesTheReverse() started.
+◇ Test editsAreDeterministic() started.
+◇ Test itFadesInPopsAndIsNotDrawnWhenItCannotBeSeen() started.
+◇ Test theRotationIsClockwiseWhereTheTiltIsPillows() started.
+◇ Test metricsAreReadStrictly() started.
+◇ Test aFrameWrapsToItsRow() started.
+◇ Test rowsAreTheSheetsRows() started.
+◇ Test decodesDetailFixture() started.
+◇ Test detailChunkIsOptional() started.
+◇ Test roundTripsDetailRegions() started.
+◇ Test craftedDetailRegionsAreCorrupt() started.
+◇ Test theCellIsScaledSoItsBodyIsTheHeight() started.
+◇ Test squashScalesEachAxisAndLiftRaisesTheSpriteNotTheShadow() started.
+◇ Test damagedDetailChunk() started.
+◇ Test validationJudgesEachRegionByItsFloor() started.
+◇ Test noRegionUnderANonFinitePoint() started.
+◇ Test aLaterFillReplacesAnEarlierOne() started.
+◇ Test aFillReusesAMatchingPaint() started.
+◇ Test aFilledShapeBecomesADetailArea() started.
+◇ Test aFillInAnOpenShapeFillsTheCellAroundIt() started.
+◇ Test photoColorIsTheMedianRoundThePoint() started.
+◇ Test theStagesComeInOrderWithTheirCards() started.
+◇ Test withoutFillsNothingChanges() started.
+◇ Test aFillTakesTheWholeShape() started.
+◇ Test guardiansWorkInsideThePicture() started.
+◇ Test aGuardianWithoutMetricsIsNamed() started.
+◇ Test aFrameIsAFunctionOfTheTime() started.
+◇ Test guardiansAreDrawnBackToFront() started.
+◇ Test compositesMatchPython() started.
+◇ Test theWholeSpecifiedTimeIsPlayed() started.
+◇ Test monochromeGetsFewerColorsThanColorful() started.
+◇ Test aDifferentSeedMakesADifferentShow() started.
+◇ Test aTemplateWithoutLinesHasNone() started.
+◇ Test theRealPipelineMakesAShow() started.
+◇ Test buildingCanBeCancelled() started.
+◇ Test chooseStopsWhenCancelled() started.
+◇ Test checkerboardIsTextureAndRectangleIsStructure() started.
+◇ Test buildingTwiceMakesTheSameShow() started.
+◇ Test parrotsDecisionIsPinned() started.
+◇ Test framesMatchPython() started.
+◇ Test featuresAreQuantized() started.
+◇ Test theCenterWinsTiesAndOtherTiesGoToTheBandsMiddle() started.
+◇ Test noiseRaisesNoise() started.
+◇ Test aFrozenBookReadsTheSame() started.
+◇ Test kneeFindsWhereAnotherPaintStopsPaying() started.
+◇ Test candidateRuleIsDeterministicAndReadsTheFeatures() started.
+◇ Test flatImageHasAFlatCurveAndNoRampsOrTexture() started.
+◇ Test thresholdsFadeIn() started.
+◇ Test draftImageMatchesTheCreateFlow() started.
+◇ Test aClassicTemplateDrawsEveryEdgeThinly() started.
+◇ Test eachStepsChangeReachesEveryPixelBeforeItEnds() started.
+◇ Test linesAndNumbersAreTheSVGsAtTheSameSize() started.
+◇ Test regionCountsGrowFasterWithDetailAndImportance() started.
+◇ Test hintsDecodeWithMissingLists() started.
+◇ Test timeBandsAreOrderedAndOverlap() started.
+◇ Test candidatesStartAtTheCenterStayInsideTheBandsAndRespectTheLimit() started.
+◇ Test choosePicksAWinnerInsideTheBandsAfterOneFirstDraft() started.
+◇ Test paintingTimeOutsideTheBandCostsAtEqualFidelity() started.
+◇ Test scoreMeasuresTheTemplate() started.
+◇ Test aSmallerPictureScalesThem() started.
+◇ Test paintingTimeEstimate() started.
+◇ Test hotspotImportanceLowersEntropy() started.
+◇ Test gentleRampIsSmooth() started.
+◇ Test longerPaintingsCenterHigher() started.
+◇ Test edgesComeFirstAndPaintOnlyEdgesAreNotDrawn() started.
+◇ Test theFixturesSVGIsTheTemplatesRendering() started.
+◇ Test chooseIsByteIdenticalAcrossRuns() started.
+◇ Test hintsAreCopiedClampedAndQuantized() started.
+◇ Test badInputsThrow() started.
+◇ Test samePlanTwice() started.
+◇ Test stateIsAFunctionOfTheTime() started.
+◇ Test aShowWithNothingToDoStillPlays() started.
+◇ Test loopThroughAJunctionKeepsItsEnd() started.
+◇ Test circlesStayRound(radius:) started.
+◇ Test noLineTakesAPetOutOfThePicture() started.
+◇ Test digitalStraightLinesFitOneSegment() started.
+◇ Test cornerRadiusRoundsCorners() started.
+◇ Test deterministicAcrossReuse() started.
+◇ Test gentleBendsStaySmooth() started.
+◇ Test shortChains() started.
+◇ Test openChainsKeepPinnedEnds() started.
+◇ Test ellipsesStayRound() started.
+◇ Test squareKeepsSharpCorners() started.
+◇ Test closedFitDoesNotDependOnWhereTheChainStarts() started.
+◇ Test settlingOnlyDarkens() started.
+◇ Test tinyLoopsComeOutRound() started.
+◇ Test beforeTheFirstStepIsThePhoto() started.
+◇ Test linesOnlyShowWhereTheStepDrawsThem() started.
+◇ Test aPictureIsMadeOfItsPixels() started.
+◇ Test eachStepEndsInTheNextLayer() started.
+◇ Test theSketchStepNeverAddsColor() started.
+◇ Test picturesMatchPython() started.
+◇ Test theLastStepsEndInPaper() started.
+◇ Test stagesFollowTheTiming() started.
+◇ Test timesAreTheClosedFormOfPython() started.
+◇ Test fullInkIsTheInkColor() started.
+◇ Test theModelAndTheMethodWithTheSameNameAreTwoEntries() started.
+◇ Test aCardCarriesTheStepsWordsAndItsOpacities() started.
+◇ Test eachMethodNamesExactlyOneEntryByItsExactName() started.
+◇ Test aWidePictureThePipelineShrinksScalesItsLines() started.
+◇ Test aFlatPictureHasOnePaintAndOneSeed() started.
+◇ Test aPictureWithLittleRoomIsDrawnFromEverywhere() started.
+◇ Test aPictureSmallerThanTheCrewSharesItsHomes() started.
+◇ Test theRealPipelineFeedsTheWholeChain() started.
+◇ Test noPetsIsRefused() started.
+◇ Test minimumRadiusIsAchievable() started.
+◇ Test minimalRegionsGetTheSameFontSize() started.
+◇ Test paletteHexIsLowercaseEightBitAndClamped() started.
+◇ Test rowDividerIsExact() started.
+◇ Test detailMinimumRadiusIsAchievable() started.
+◇ Test detailNumbersHaveTheirOwnFloor() started.
+◇ Test svgNeverDropsNumbers() started.
+◇ Test disjointSetCompressesToTheRootTheCallerChose() started.
+◇ Test emptyBoundsHaveNoSize() started.
+◇ Test digitCounts() started.
+◇ Test connectedComponents() started.
+◇ Test netpbmReadsGrayAndRejectsBadInput() started.
+◇ Test distanceTransformWithoutFeaturesIsInfinite() started.
+◇ Test netpbmRoundTrip() started.
+◇ Test okLabReferenceValues() started.
+◇ Test interiorDistanceOfSquare() started.
+◇ Test distanceTransformMatchesBruteForce() started.
+◇ Test resampleAveragesInLinearLight() started.
+◇ Test netpbmRejectsUnreasonableSizes() started.
+◇ Test okLabRoundTrip() started.
+◇ Test parallelHelpersCoverEachIndexOnce() started.
+◇ Test areaResampleOfUniformImageIsExact() started.
+◇ Test encodeTableMatchesTransferFunction() started.
+◇ Test decodesWritingFixture() started.
+◇ Test writingChunkIsOptional() started.
+◇ Test outOfGamutIsClippedByChroma() started.
+◇ Test craftedWritingStrokesAreCorrupt() started.
+◇ Test roundTripsWritingStrokes() started.
+◇ Test theDiscsMatchTheReference() started.
+◇ Test aNumberNearAWorkingPetComesInJustAfterItsLastVisit() started.
+◇ Test aNumberFadesInOverItsFadeTime() started.
+◇ Test damagedWritingChunk() started.
+◇ Test aDiscIsTheNumbersSizeAtLeastFourPixelsAndTheLaterOneWins() started.
+◇ Test theTimesMatchTheReference() started.
+◇ Test aNumberWaitsForTheOutlinesToRelaxAtIt() started.
+◇ Test aNumberFarFromEveryPetWaitsForLateInTheStep() started.
+◇ Test noNumberIsLaterThanTheShowsEnd() started.
+◇ Test aLineClosesAShapeWithAnEarlierStroke() started.
+◇ Test aClosedLoopInsideACellMakesAnIsland() started.
+◇ Test everyNumberComesInInsideTheTemplateStepAfterItsAreaClears() started.
+◇ Test erasingNeverMergesAcrossUndrawnEdges() started.
+◇ Test aTinyPieceIsADetailAreaOrNoSplit() started.
+◇ Test facesTurnTowardTheirRegion() started.
+◇ Test untouchedRegionsAreByteIdentical() started.
+◇ Test aTappedStrokeIsTakenOut() started.
+◇ Test editsAreDeterministicAndRoundTrip() started.
+◇ Test latticeArithmeticIsExact() started.
+◇ Test aFillTakesTheWholeShapeTheInkEncloses() started.
+◇ Test aLineEndingNearInkJoinsIt() started.
+◇ Test writingStaysWritingThroughEdits() started.
+◇ Test aFillMakesOneDetailAreaOfAPaint() started.
+◇ Test aFieldPassesThroughTheLatticeAtItsNodes() started.
+◇ Test randomEditsKeepTheTemplateValid() started.
+◇ Test aFieldIsDeterministicWhateverIsBuiltAround() started.
+◇ Test erasingABoundaryMergesTheRegionsAndKeepsTheRestOfTheInk() started.
+◇ Test stepNoiseMatchesTheReference() started.
+◇ Test aDanglingLineBecomesAnInteriorStroke() started.
+◇ Test aLineCrossingInkIsCutAtTheCrossing() started.
+◇ Test aFieldStaysInsideItsLatticeAndEasesInsideACell() started.
+◇ Test latticesAreRowMajorDrawsFromTheNoiseStreams() started.
+◇ Test aLatticeDrawsFromItsOwnStreamOnly() started.
+◇ Test editsThatCannotBeMadeLeaveTheTemplateAlone() started.
+◇ Test aTappedLineGoesFromJunctionToJunction() started.
+◇ Test aLineClosingOffAnAreaSplitsItAlongTheLine() started.
+◇ Test segmentsMeetExactly() started.
+◇ Test aLineAlongInkIsThatInk() started.
+◇ Test theEraserCutsStrokesAndMissesNothing() started.
+◇ Test scalesBetweenMapSizes() started.
+◇ Test splitRegionsInheritTheParentStroke() started.
+◇ Test theEraserReachesExactlyItsRadius() started.
+◇ Test identicalMapsKeepPaintOrder() started.
+◇ Test ignoresEmptyAndInvalidPaintOrders() started.
+◇ Test mergedRegionsNeedSixtyPercentPainted() started.
+◇ Test theShapeIsPinned() started.
+◇ Test missingFieldsTakeTheirDefaults() started.
+◇ Test unknownFieldsAreSkippedAndUnreadableEditsFail() started.
+◇ Test roundTrips() started.
+◇ Test pipelineOutputIsCountedDeterministically() started.
+◇ Test thresholdsDecide() started.
+◇ Test hardEdgedTargetHasNoRings() started.
+◇ Test aListChangedInTheMiddleIsLaidFromWhereItParts() started.
+◇ Test degenerateInputsCountNothing() started.
+◇ Test anEditThatDoesNothingIsNotAdded() started.
+◇ Test snapshotsAreBounded() started.
+◇ Test aClassicTemplateDeclinesEveryEdit() started.
+◇ Test rampSlicedIntoRingsCountsEveryRing() started.
+◇ Test editsThatNoLongerFitAreLeftOutAndCounted() started.
+◇ Test undoAndRedoNeedNoEditing() started.
+◇ Test aCancelledMoveLeavesTheTrailAsItWas() started.
+◇ Test aShapeTooSmallForANumberIsReported() started.
+◇ Test anEditAddedIsTheEditorsResult() started.
+◇ Test walkedLinesKeepTheirTracesAndTheRestStartInsideTheInkStep() started.
+◇ Test borderTouchingRegions() started.
+◇ Test validatorDetectsBadContacts() started.
+◇ Test regionWithManyHoles() started.
+◇ Test randomBlobMaps(seed:) started.
+◇ Test validateReportsCrampedLabels() started.
+◇ Test largeRegionsGetExtraLabels() started.
+◇ Test labelRoomReachesLatticeWhenNeeded() started.
+◇ Test cleanShapesNeedNoFallbacks() started.
+◇ Test deterministic() started.
+◇ Test halfwayRoundsToEven() started.
+◇ Test nestedIslands() started.
+◇ Test theInkStepsLinesOnlyGrowAndDarken() started.
+◇ Test nothingIsDrawnBeforeTheInkStep() started.
+◇ Test diagonalTouches() started.
+◇ Test checkerboard() started.
+◇ Test digitalStraightLinesStayStraight() started.
+◇ Test earcutCoversPolygonsExactly() started.
+◇ Test aTimeIsAnsweredTheSameInAnyOrder() started.
+◇ Test photoThroughPipeline() started.
+◇ Test labelRoomHoldsAfterSmoothing() started.
+◇ Test smallRegionsReportTheirInscribedRadiusPrecisely() started.
+◇ Test aDiagonalClimbsInSteps() started.
+◇ Test latticeClearanceMeasuresThePixelOutline() started.
+◇ Test highColorPipelineIsLegibleAndDeterministic() started.
+◇ Test singleRegion() started.
+◇ Test tinyImages() started.
+◇ Test theTemplateStepRelaxesEachPointWhenTheRippleReachesIt() started.
+◇ Test cancellation() started.
+◇ Test circlesAreRound() started.
+◇ Test orientationConvention() started.
+◇ Test aLineIsResampledEveryOnePointFivePixelsBeforeItSnaps() started.
+◇ Test theScheduleMatchesTheReference() started.
+◇ Test theLinesAtEachTimeMatchTheReference() started.
+◇ Test aStraightLineSnapsToTheGridAndKeepsItsPairs() started.
+◇ Test rectangleCornersStayCrisp() started.
+◇ Test aLineThatSnapsToOnePointStillHasTwo() started.
+◇ Test aLinesWaitIsItsOwnDrawWhoeverElseIsWalked() started.
+◇ Test textureConsolidationMergesCloseTonesOnlyInUnimportantTexture() started.
+◇ Test boundaryStepsMatchBruteForce() started.
+◇ Test lowContrastCrumbsMergeWhileDistinctSpotsStay() started.
+◇ Test aWalkedLineIsInFullInkAndTheRestDarkenFromGrey() started.
+◇ Test linesAreDrawnInTheReferencesOrder() started.
+◇ Test threeStrokesMatchPointForPoint() started.
+◇ Test stripOfItsOwnColourStays() started.
+◇ Test sharpEdgedStripStays() started.
+◇ Test rampBandsFuseUpToToleranceAndContoursStay() started.
+◇ Test blurredEdgeStripMerges() started.
+◇ Test ringAroundASmallFeatureIsNotAStrip() started.
+◇ Test fineShadesAboveTheKneeKeepMoreRampBands() started.
+◇ Test linearGradientDoesNotBandBeyondWhatPaintsCanShow() started.
+◇ Test fineStripesNearAFaceDoNotFragment() started.
+◇ Test theSmallPicturesSeedsReplay() started.
+◇ Test theSmallPicturesPaintsAreItsDistinctColors() started.
+◇ Test theFinishedTemplateIsTheSmoothLinesAndTheFirstIsTheStairs() started.
+◇ Test noMoreSeedsThanRows() started.
+◇ Test seedsSpreadOverTheColors() started.
+◇ Test rowsThatAreAlreadySeedsTwinsAreDrawnUniformly() started.
+◇ Test drawStaysNearAndUniqueWithVariedSeeds() started.
+◇ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() started.
+◇ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() started.
+◇ Test sharedPlatformPins() started.
+◇ Test binary32QuantizationHasSpecifiedEdges() started.
+◇ Test smallFixtureHasItsRegions() started.
+◇ Test aPictureIsLabeledByColor() started.
+◇ Test integerDistanceWeightAndMappingBoundaries() started.
+◇ Test areasAreNumberedByTheirFirstRun() started.
+◇ Test runsJoinedLaterKeepTheEarliestNumber() started.
+◇ Test diagonalNeighboursAreNotJoined() started.
+◇ Test vocabularyPassesTheLibraryOracle() started.
+◇ Test aHoleIsItsOwnArea() started.
+◇ Test oneRowAndOneColumn() started.
+◇ Test theNearestAnchorWinsMostOften() started.
+◇ Test samplePalettesHaveNearbyAnchors() started.
+◇ Test drawsStayCloseToTheNearestAnchor() started.
+◇ Test oracleRejectsStyleViolations(edit:) started.
+◇ Test crowdedPalettesStayUniqueWhereAnchorsAllow() started.
+◇ Test unknownVersionsUseTheNewestKnownVocabulary() started.
+◇ Test parrotsPaletteGetsDistinctNicknames() started.
+◇ Test proposedNamesAreActuallyUsed() started.
+◇ Test oracleChecksWordCapsSizeAndGamut() started.
+◇ Test tsvPreservesTableOrderAndAssignments() started.
+◇ Test assignmentIsDeterministic() started.
+◇ Test seedFoldsAUUIDStably() started.
+◇ Test farOrNonFinitePaintsFallBackToTheStructuredName() started.
+◇ Test differentSeedsGiveDifferentNames() started.
+◇ Test malformedTablesAreReported(edit:) started.
+◇ Test versionOneTableSHA256IsFrozen() started.
+◇ Test syntheticPaletteNames() started.
+◇ Test namesAreUniqueWithin150Colors() started.
+◇ Test paletteColorExposesItsName() started.
+◇ Test englishTitleCapitalizesOnlyTheFirstLetter() started.
+◇ Test namingIsDeterministicAndPure() started.
+◇ Test grayRampIsMonotonic() started.
+◇ Test nonFiniteInputIsGray() started.
+◇ Test spokenModifierRules() started.
+◇ Test knownColorsHaveExpectedNames() started.
+◇ Test samplePalettesGetSensibleNames() started.
+◇ Test pacingMatchesPythonBitForBit() started.
+◇ Test drawingCombinesWithContours() started.
+◇ Test clutterCountsCrowdedLinesOnly() started.
+◇ Test eachStepsChangeReachesEveryPixelBeforeItEnds() started.
+◇ Test eyesAreOutlined() started.
+◇ Test emptyEdgeMapKeepsTheCells() started.
+◇ Test aFrontIsTheDistanceWhereNothingGetsInItsWay() started.
+◇ Test crowdedLinesAreDetailUnlessLong() started.
+◇ Test theRealPipelineMakesAShow() started.
+◇ Test deterministic() started.
+◇ Test lineArtTemplateIsValid() started.
+◇ Test linesAroundEyesAreStronger() started.
+◇ Test coloringBookSVGIsOneDrawing() started.
+◇ Test theFieldsMatchPython(_:) started.
+◇ Test samePaintChoices() started.
+◇ Test geodesicMatchesPythonBitForBit() started.
+◇ Test thinningLeavesOnePixelLines() started.
+◇ Test classicIgnoresTheEdgeMap() started.
+◇ Test selectedColorIsHatched() started.
+◇ Test theFieldShowsStyleIsItsOwn() started.
+◇ Test resizingMatchesPython() started.
+◇ Test mergingCloseColorsGivesFewerCells() started.
+◇ Test validationReportsBadLineData() started.
+◇ Test theStagesComeInOrderWithTheirCardsAndMarks() started.
+◇ Test gapsAreBridged() started.
+◇ Test pacingSpreadsAnOutlierEvenly() started.
+◇ Test coloringBookIsADrawingOverTheCells() started.
+◇ Test maskContoursTraceShapes() started.
+◇ Test subjectsCloseTheirSilhouettes() started.
+◇ Test streamsMatchPython() started.
+◇ Test contoursDecideTheOutlines() started.
+◇ Test anEyeTooSmallForANumberIsStillDrawn() started.
+◇ Test layersByHysteresisAlongTheLine() started.
+◇ Test edgeMapAtAnotherResolution() started.
+◇ Test aTemplateOfAnotherSizeIsRefused() started.
+◇ Test detectorPicksWhatTheInputReads() started.
+◇ Test everyLineBurnsInTheInkStepWithTimeToDarken() started.
+◇ Test lineArtGenerationCancels() started.
+◇ Test theSparksCoolAndTheStarsOpenAndFade() started.
+◇ Test theShowIsTimedByItsOwnHold() started.
+◇ Test aPictureTooSmallToShowIsRefused() started.
+◇ Test aDifferentSeedMakesADifferentShow() started.
+◇ Test theSameBytesOnOneCoreAndOnFour() started.
+◇ Test buildingTwiceMakesTheSameShow() started.
+◇ Test framesMatchPython(_:) started.
+◇ Test seedsAndPicksMatchPython(_:) started.
+◇ Test numbersComeOutAfterTheirAreaClears() started.
+◇ Test aFrameIsAFunctionOfTheTime() started.
+◇ Test buildingCanBeCancelled() started.
+◇ Test noiseMatchesPython() started.
+◇ Test everyStepSpreadsFromWhereThePetsWork() started.
+◇ Test eachPurposeHasItsOwnStream() started.
+◇ Test aTideLinesTheFrontsOfStepsTwoToFour() started.
+◇ Test aPictureWithNoLinesStillMakesAShow() started.
+◇ Test theCrewShowHasNoMarks() started.
+◇ Test noWalkToAJobIsFasterThanWalkingPace() started.
+◇ Test petsNeverOverlap() started.
+◇ Test compositesMatchPython(_:) started.
+◇ Test linesAreDrawnByWalking() started.
+◇ Test everyPetLeavesTheFrameBeforeTheShowEnds() started.
+◇ Test jobsAreSharedAcrossThePicture() started.
+◇ Test noSpotsAskedDrawsNothing() started.
+◇ Test spotsKeepTheirDistance() started.
+➜ Test timesTheBuildTheFramesAndTheComposites() skipped.
+◇ Test spotsAreDrawnByWeight() started.
+◇ Test smallHeavyLightTextKeepsItsLettersApartAndItsCountersClosed() started.
+◇ Test fewerSpotsThanAskedAreWhatThereIs() started.
+◇ Test aPlaneWithoutWeightIsDrawnFromUniformly() started.
+◇ Test textLowerThanAWindowIsTracedFinerAndTallTextAtTheCanvas() started.
+◇ Test aBookDrawsTheWritingInsideItsCellsWithTheNumbersOffIt() started.
+◇ Test boldWritingIsLeftToTheDetectors() started.
+◇ Test aMarkBesideTheWritingComesAlongAndTheGroundDoesNot() started.
+◇ Test chalkOnABoardIsWritingToo() started.
+◇ Test tracesThePenAndLeavesTheRules() started.
+◇ Test writingOnAGrainyGroundOrBrokenIntoCrumbsIsTexture() started.
+◇ Test findingIsDeterministic() started.
+◇ Test aLineBoxedTwiceIsTracedOnce() started.
+◇ Test tooSmallOrNoInkIsNoWriting() started.
+◇ Test keepWritingIsOnUnlessSaidOtherwise() started.
+◇ Test aDrawingTheWritingTouchesIsNotWriting() started.
+◇ Test aLabelMovesOffTheWritingWhereItsRegionHasRoom() started.
+◇ Test cubeRootsSettle() started.
+◇ Test weightedPicksFindTheFirstEntryPastTheValue() started.
+◇ Test boxSumsOfASinglePixelPlane() started.
+◇ Test halvesRoundToEven() started.
+◇ Test skipsUnknownChunks() started.
+◇ Test boxSumsCountTheEdgeAgain() started.
+◇ Test theCubeRootIsTheLibrarysWithinAFewUlps() started.
+◇ Test oklabInDoubles() started.
+◇ Test versions() started.
+◇ Test sumsRunInOrder() started.
+◇ Test roundTripsPipelineVersion() started.
+◇ Test theTransferTableIsTheTrueCurve() started.
+◇ Test decodesDataSlices() started.
+◇ Test percentilesInterpolateBetweenRanks() started.
+◇ Test quantizingRoundsHalvesToEven() started.
+◇ Test decodesV2Fixture() started.
+◇ Test craftedReferencesAreCorrupt() started.
+◇ Test truncationAtEveryOffset() started.
+◇ Test hugeCountsAreTruncated() started.
+◇ Test randomCorruption(_:) started.
+◇ Test malformedChunkSections() started.
+◇ Test decodesV1Fixture() started.
+◇ Test invariantsAcrossSmoothness(smoothness:) started.
+◇ Test generatorStampsPipelineVersion() started.
+◇ Test bandFusingKeepsThePaintBudget() started.
+◇ Test requiredUnknownChunkNeedsNewerReader() started.
+◇ Test inscribedDiscTestMatchesDistanceTransform() started.
+◇ Test transparentPixelsBecomePaper() started.
+◇ Test highColorScene() started.
+◇ Test paletteHonoursThePublishedFloor(colorCount:) started.
+◇ Test lowDetailHasLargerRegions() started.
+◇ Test emptyImage() started.
+◇ Test importanceIsHonoured() started.
+◇ Test repeatedPointsTakeTheLast() started.
+◇ Test invariantsAcrossDetail(detail:) started.
+◇ Test thinPartsArePeeled() started.
+◇ Test deterministic() started.
+◇ Test cancellation() started.
+◇ Test runComponentsMatchPixelComponents() started.
+◇ Test paletteOrderingGroupsHues() started.
+◇ Test linesAndEnds() started.
+◇ Test unevenSteps() started.
+◇ Test paletteBuildStopsWhenOnlyTheCallingThreadSeesCancellation() started.
+◇ Test publishedPaletteFloor() started.
+◇ Test neutralsComeLastLightToDark() started.
+◇ Test displayP3Input() started.
+◇ Test freedPaintsAreRespent() started.
+◇ Test uniformImage() started.
+◇ Test progressIsMonotonic() started.
+◇ Test minPaletteDistanceNeverBelowJND() started.
+◇ Test paletteSpacing(colors:) started.
+◇ Test tinyImages(size:) started.
+◇ Test aSinglePointDrawsNothing() started.
+◇ Test salientSmallColorGetsAPaint() started.
+◇ Test enforceLabelRoomUsesDigitCount() started.
+◇ Test aHorizontalLineCoversThePixelsItRunsThrough() started.
+◇ Test aValueScalesTheInkAndTheDarkerLineWins() started.
+◇ Test theEdgeIsSoftOverOnePixel() started.
+◇ Test aDotIsRound() started.
+◇ Test linesOffThePictureAreClipped() started.
+◇ Test aBriskerShowFadesFaster() started.
+◇ Test theStepsFollowTheSpecsTiming() started.
+◇ Test theShowIsItsIntroItsSixStepsAndItsOutro() started.
+◇ Test theHandoffRunsAsTheStepsEnd() started.
+◇ Test theCrewFadesOutOverTheLastOfTheShow() started.
+◇ Test aCardLivesInsideItsStep() started.
+◇ Test aRingPopsInSwellsAndGoesWhenItsPaintHasSpread() started.
+◇ Test theSmallShowsInputsAreThePythons() started.
+◇ Test sizesAndSpotsAreAtThePlanFilesPrecision() started.
+◇ Test aTemplateOfAnotherPictureIsRefused() started.
+◇ Test spotsStayInTheRoomAndSeedsInTheirGrid() started.
+◇ Test theCrewCanBePlannedFromThem() started.
+◇ Test eachStepsDrawsAreItsOwn() started.
+◇ Test aSecondCallIsTheFirst() started.
+◇ Test homesAreTheFirstSpotsOfTheFirstStep() started.
+◇ Test truncatedLayeredFilesAreRejected() started.
+◇ Test moreBandsThanPetsAndMorePetsThanBands() started.
+◇ Test decodesColoringBookFixture() started.
+◇ Test theSeedChangesTheSpotsButNotTheLinesOrTheSeedsPaints() started.
+◇ Test lineArtStyleIsAnOptionalTrailingByte() started.
+◇ Test lineChunkIsOptional() started.
+◇ Test decodesLayeredFixture() started.
+◇ Test roundTripsLineArt() started.
+◇ Test craftedLineReferencesAreCorrupt() started.
+◇ Test randomCorruptionOfLineData() started.
+◇ Test pixelsWithinReachOfALineAreInked() started.
+◇ Test aFaintFootnoteIsStillAFootnote() started.
+◇ Test noLinesNoInk() started.
+◇ Test shippedSpecDecodes() started.
+◇ Test theErrorNamesTheKey() started.
+◇ Test fixtureWasMadeFromTheShippedSpec() started.
+◇ Test badSpecsThrow() started.
+◇ Test linesOutsideThePlaneAreClipped() started.
+◇ Test aSensibleEditStillDecodes() started.
+◇ Test aBlurredEdgeStopsAtTheLine() started.
+◇ Test aRimIsNotABlurStrip() started.
+◇ Test aSharpEdgeIsTwoAreas() started.
+◇ Test case passing 1 argument style → .classic to observationPreservesTemplateAndRepeats(style:) started.
+◇ Test case passing 1 argument style → .coloringBook to observationPreservesTemplateAndRepeats(style:) started.
+ShowTests measured composite: 9.215144733953906e-07
+ShowTests measured frame scalars: 0.0
+◇ Test case passing 1 argument radius → 4.0 to circlesStayRound(radius:) started.
+◇ Test case passing 1 argument radius → 9.5 to circlesStayRound(radius:) started.
+◇ Test case passing 1 argument radius → 20.0 to circlesStayRound(radius:) started.
+◇ Test case passing 1 argument radius → 40.0 to circlesStayRound(radius:) started.
+◇ Test case passing 1 argument radius → 75.0 to circlesStayRound(radius:) started.
+◇ Test sparseBoundaryAtMaximumWorkingSizeStillValidates() started.
+◇ Test rejectsRepeatedRingPointSpans() started.
+◇ Test rejectsRepeatedRegionRingSpans() started.
+◇ Test rejectsQuadraticLabelChecks(measureRoom:) started.
+◇ Test rejectsRepeatedEdgePointSpans() started.
+◇ Test rejectsQuadraticBucketPairsIncludingCleanPairs() started.
+◇ Test budgetRejectsOverflowingProducts() started.
+◇ Test ordinaryDetailedGeometryStillValidates() started.
+◇ Test rejectsBucketPrefixOverflow() started.
+◇ Test collinearRaysOnThinCanvasDoNotOverflow() started.
+◇ Test rejectsRepeatedStrokePointSpans() started.
+◇ Test case passing 1 argument seed → 0 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 1 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 2 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 3 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 4 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument seed → 5 to randomBlobMaps(seed:) started.
+◇ Test case passing 1 argument edit → ("Void", "Soot", "duplicate name") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("050507", "0F0E0D", "duplicate anchor") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "void", "Title Case") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "A Long Name", "one or two words") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "Extraordinarily Long", "at most 16 characters") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "Vöid", "ASCII letters") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "Void2", "ASCII letters") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "Deep-Black-Sea", "at most one hyphen") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "Blue", "a plain color word alone") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "Skin", "uses “skin”") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("Void", "Blue Fog", "is a black anchor") to oracleRejectsStyleViolations(edit:) started.
+◇ Test case passing 1 argument edit → ("050507", "05050Z") to malformedTablesAreReported(edit:) started.
+◇ Test case passing 1 argument edit → ("050507", "05050a") to malformedTablesAreReported(edit:) started.
+◇ Test case passing 1 argument edit → ("050507 Void", "050507\t") to malformedTablesAreReported(edit:) started.
+◇ Test case passing 1 argument edit → ("050507 Void", "050507Void") to malformedTablesAreReported(edit:) started.
+◇ Test case passing 1 argument edit → ("050507 Void", "050507\tVoid\tExtra") to malformedTablesAreReported(edit:) started.
+◇ Test case passing 1 argument kind → .small to theFieldsMatchPython(_:) started.
+◇ Test case passing 1 argument kind → .odd to theFieldsMatchPython(_:) started.
+FieldShowTests measured sketch time (small): 1.1920928955078125e-07
+FieldShowTests measured shading time (small): 0.0
+FieldShowTests measured paints time (small): 0.0
+FieldShowTests measured merged time (small): 0.0
+FieldShowTests measured lift time (small): 0.0
+FieldShowTests measured clear time (small): 0.0
+FieldShowTests measured spread (small): 0.0
+FieldShowTests measured fuse (small): 0.0
+FieldShowTests measured relax (small): 0.0
+FieldShowTests measured fuse spans (small): 0.0
+FieldShowTests measured number times (small): 0.0
+FieldShowTests measured sketch time (odd): 1.1920928955078125e-07
+FieldShowTests measured shading time (odd): 0.0
+FieldShowTests measured paints time (odd): 0.0
+FieldShowTests measured merged time (odd): 0.0
+FieldShowTests measured lift time (odd): 0.0
+FieldShowTests measured clear time (odd): 0.0
+FieldShowTests measured spread (odd): 8.881784197001252e-16
+FieldShowTests measured fuse (odd): 0.0
+FieldShowTests measured relax (odd): 0.0
+FieldShowTests measured fuse spans (odd): 0.0
+FieldShowTests measured number times (odd): 0.0
+◇ Test case passing 1 argument kind → .small to framesMatchPython(_:) started.
+FieldShowTests measured frame scalars (small): 0.0
+◇ Test case passing 1 argument kind → .odd to framesMatchPython(_:) started.
+◇ Test case passing 1 argument kind → .small to seedsAndPicksMatchPython(_:) started.
+FieldShowTests measured frame scalars (odd): 0.0
+◇ Test case passing 1 argument kind → .odd to seedsAndPicksMatchPython(_:) started.
+FieldShowTests measured the picks' moments (small): 0.0
+FieldShowTests measured the picks' moments (odd): 0.0
+FieldShowTests measured noise.rough: 4.440892098500626e-16
+◇ Test case passing 1 argument kind → .small to compositesMatchPython(_:) started.
+◇ Test case passing 1 argument kind → .odd to compositesMatchPython(_:) started.
+FieldShowTests measured composite past the rounding (small): 0.0
+FieldShowTests measured composite past the rounding (odd): 0.0
+◇ Test case passing 1 argument source → "v1" to randomCorruption(_:) started.
+◇ Test case passing 1 argument source → "v2" to randomCorruption(_:) started.
+◇ Test case passing 1 argument source → "v2-lines" to randomCorruption(_:) started.
+◇ Test case passing 1 argument source → "v2-book" to randomCorruption(_:) started.
+◇ Test case passing 1 argument source → "v2-detail" to randomCorruption(_:) started.
+◇ Test case passing 1 argument source → "v2-writing" to randomCorruption(_:) started.
+◇ Test case passing 1 argument source → "blobs" to randomCorruption(_:) started.
+◇ Test case passing 1 argument smoothness → 0.0 to invariantsAcrossSmoothness(smoothness:) started.
+◇ Test case passing 1 argument smoothness → 1.0 to invariantsAcrossSmoothness(smoothness:) started.
+◇ Test case passing 1 argument colorCount → 12 to paletteHonoursThePublishedFloor(colorCount:) started.
+◇ Test case passing 1 argument colorCount → 24 to paletteHonoursThePublishedFloor(colorCount:) started.
+◇ Test case passing 1 argument colorCount → 150 to paletteHonoursThePublishedFloor(colorCount:) started.
+◇ Test case passing 1 argument detail → 0.0 to invariantsAcrossDetail(detail:) started.
+◇ Test case passing 1 argument detail → 0.5 to invariantsAcrossDetail(detail:) started.
+◇ Test case passing 1 argument detail → 1.0 to invariantsAcrossDetail(detail:) started.
+◇ Test case passing 1 argument colors → 6 to paletteSpacing(colors:) started.
+◇ Test case passing 1 argument colors → 24 to paletteSpacing(colors:) started.
+◇ Test case passing 1 argument colors → 60 to paletteSpacing(colors:) started.
+◇ Test case passing 1 argument colors → 150 to paletteSpacing(colors:) started.
+◇ Test case passing 1 argument size → (1, 1) to tinyImages(size:) started.
+◇ Test case passing 1 argument size → (3, 2) to tinyImages(size:) started.
+◇ Test case passing 1 argument size → (2, 7) to tinyImages(size:) started.
+◇ Test case passing 1 argument size → (1, 40) to tinyImages(size:) started.
+✔ Test tuningIsClamped() passed after 22.622 seconds.
+✔ Test settingsThatAreNotNumbersTakeTheirDefaults() passed after 22.623 seconds.
+✔ Test coloringBookFlatteningScalesOnlyThePaintKnobs() passed after 22.680 seconds.
+✔ Test settingsDecodeTolerantly() passed after 22.742 seconds.
+✔ Test eachFactorScalesExactlyItsKnobs() passed after 22.742 seconds.
+✔ Test regionTimesMatchTheReference() passed after 22.741 seconds.
+✔ Test eachStepsFieldMatchesTheReference() passed after 22.742 seconds.
+✔ Test aLateStepIsSqueezedTowardItsFirstVisit() passed after 22.741 seconds.
+✔ Test lineArtSettingsAreClampedAndOrdered() passed after 22.742 seconds.
+✔ Test picturesOfDifferentSizesAreRefused() passed after 22.741 seconds.
+✔ Test uniformScalesADouble() passed after 22.742 seconds.
+✔ Test aFieldNeverArrivesAfterItsStepEndsAndGrowsFromTheVisits() passed after 22.742 seconds.
+✔ Test aSeededPaintFlowsFromItsSeedAndAnUnseededOneFollowsTheCrew() passed after 22.741 seconds.
+✔ Test aPictureOfTheWrongKindIsRefused() passed after 22.742 seconds.
+✔ Test aMissingStageIsNamed() passed after 22.742 seconds.
+✔ Test snapshotsMakeTheSamePicturesAsFiles() passed after 22.742 seconds.
+✔ Test theDirectoryHoldsTheFivePictures() passed after 22.742 seconds.
+✔ Test aMissingFileIsNamed() passed after 22.744 seconds.
+✔ Test theChangeSpreadsFromTheEarliestVisitAtItsSpeed() passed after 22.745 seconds.
+✔ Test permutationsShuffleFromTheBack() passed after 22.745 seconds.
+✔ Test theRealPipelinesSnapshotsAreAccepted() passed after 22.745 seconds.
+✔ Test eachPaintsLastRegionSetsItsSpread() passed after 22.747 seconds.
+✔ Test minimumCellSizeChangesTheTemplate() passed after 22.748 seconds.
+✔ Test firstDoublesOfSeedOne() passed after 22.747 seconds.
+✔ Test boundedDrawsAndChoice() passed after 22.747 seconds.
+✔ Test publishedSeedZeroOutputs() passed after 22.748 seconds.
+✔ Test aFieldDoesNotDependOnHowItsRowsAreSharedBetweenCores() passed after 22.748 seconds.
+✔ Test rowMajorFromTheTopLeft() passed after 22.748 seconds.
+✔ Test regionMinimumTakesTheEarliestPixelOfEachRegion() passed after 22.748 seconds.
+✔ Test cancellingStopsTheBuild() passed after 22.748 seconds.
+✔ Test thePaintsFlowMatchesTheReference() passed after 22.750 seconds.
+✔ Test textureIsSmearedAndTheContourStays() passed after 22.750 seconds.
+✔ Test aBoxBlurAveragesItsWindowWithEdgesRepeated() passed after 22.750 seconds.
+✔ Test toneCurveAveragesTheWantedMean() passed after 22.750 seconds.
+✔ Test aFlatPhotoHasNothingToFind() passed after 22.750 seconds.
+✔ Test latticeMatchesPython() passed after 22.750 seconds.
+✔ Test styleIsPythons() passed after 22.750 seconds.
+✔ Test percentilesAreNumpys() passed after 22.750 seconds.
+✔ Test statisticsMatchPython() passed after 22.750 seconds.
+✔ Test numbersAreWeighedWhereTheyAreAndWhereLinesAreThin() passed after 22.750 seconds.
+✔ Test smallRegionsWeighMorePerPixel() passed after 22.751 seconds.
+✔ Test countingPaintsIsTheSameAsBeingTold() passed after 22.751 seconds.
+✔ Test aPictureTooSmallForItsMarginsHasNoRoom() passed after 22.751 seconds.
+✔ Test toneCurveMatchesPython() passed after 22.751 seconds.
+✔ Test eachStepsWeightsSumTheSameInPython() passed after 22.751 seconds.
+✔ Test structureWeighsAThirdOfTheLevelPlusTheEdges() passed after 22.751 seconds.
+✔ Test theRoomKeepsPetsOutOfTheCorners() passed after 22.751 seconds.
+✔ Test aContourIsCoherentAndAFineTextureIsNot() passed after 22.751 seconds.
+✔ Test theWindowIsThePipelinesAndTiesGoToEven() passed after 22.751 seconds.
+✔ Test selectingARankIsSortingAndIndexing() passed after 22.751 seconds.
+✔ Test aFlatPictureGetsTheDarkestGrey() passed after 22.751 seconds.
+✔ Test observerErrorsStopGeneration() passed after 22.751 seconds.
+✔ Test rowsAskedAtOnceDoNotChangeTheAnswer() passed after 22.752 seconds.
+✔ Test smoothedUnscalesChromaAndKeepsPrimaries() passed after 22.752 seconds.
+✔ Test buildingTwiceGivesTheSameBytes() passed after 22.752 seconds.
+✔ Test weightsAreZeroOutsideTheRoomAndPositiveInside() passed after 22.752 seconds.
+✔ Test observationPreservesTemplateAndRepeats(style:) with 2 test cases passed after 22.752 seconds.
+✔ Test boundsEveryStageWithoutUpscaling() passed after 22.752 seconds.
+✔ Test fixtureCoversTheWholeShow() passed after 22.753 seconds.
+✔ Test visitsAndTracesReplay() passed after 22.753 seconds.
+✔ Test leavingOutTheAnalysisKeepsEveryPlaneTheCompositorReads() passed after 22.753 seconds.
+✔ Test stopsAndWalksReplay() passed after 22.753 seconds.
+✔ Test statesReplay() passed after 22.753 seconds.
+✔ Test aLineThatClosesNothingIsDrawnInsideItsCell() passed after 22.753 seconds.
+✔ Test aDrawnLineSplitsTheCellItCrosses() passed after 22.753 seconds.
+✔ Test aLineAlongPartOfABoundaryIsDrawnJustThere() passed after 22.753 seconds.
+✔ Test theEraserTakesLinesOut() passed after 22.753 seconds.
+✔ Test autoCandidatesCarryLineArtAndTuning() passed after 22.756 seconds.
+✔ Test anEndShortOfALineStaysWhereDrawn() passed after 22.753 seconds.
+✔ Test hostileEditsAreHarmless() passed after 22.753 seconds.
+✔ Test anErasureChangesNothingElse() passed after 22.753 seconds.
+✔ Test anErasureRevealsNoHiddenLine() passed after 22.755 seconds.
+✔ Test drawnEndsStayWhereDrawn() passed after 22.754 seconds.
+✔ Test anOvershootingEndIsNotTrimmed() passed after 22.758 seconds.
+✔ Test aDrawnLineMovesTheNumberOffIt() passed after 22.758 seconds.
+✔ Test editsTakeEffectInOrder() passed after 22.758 seconds.
+✔ Test aDrawnShapeBoundsItsAreaAsDrawn() passed after 22.758 seconds.
+✔ Test freeEndedLinesStayInsideTheirCells() passed after 22.759 seconds.
+✔ Test theTiltsSignIsTheFixturesAndTheSpritesTheReverse() passed after 22.759 seconds.
+✔ Test aDabTakesOutWhatItTouches() passed after 22.759 seconds.
+✔ Test itFadesInPopsAndIsNotDrawnWhenItCannotBeSeen() passed after 22.760 seconds.
+✔ Test theRotationIsClockwiseWhereTheTiltIsPillows() passed after 22.761 seconds.
+✔ Test metricsAreReadStrictly() passed after 22.761 seconds.
+✔ Test aFrameWrapsToItsRow() passed after 22.762 seconds.
+✔ Test rowsAreTheSheetsRows() passed after 22.762 seconds.
+✔ Test decodesDetailFixture() passed after 22.763 seconds.
+✔ Test detailChunkIsOptional() passed after 22.763 seconds.
+✔ Test roundTripsDetailRegions() passed after 22.763 seconds.
+✔ Test craftedDetailRegionsAreCorrupt() passed after 22.763 seconds.
+✔ Test theCellIsScaledSoItsBodyIsTheHeight() passed after 22.763 seconds.
+✔ Test squashScalesEachAxisAndLiftRaisesTheSpriteNotTheShadow() passed after 22.763 seconds.
+✔ Test aLineErasedWholeLeavesItsJunctionsAlone() passed after 22.764 seconds.
+✔ Test extraNumbersKeepTheirRoomBesideADrawnLine() passed after 22.765 seconds.
+✔ Test editsAreDeterministic() passed after 22.766 seconds.
+✔ Test noRegionUnderANonFinitePoint() passed after 22.765 seconds.
+✔ Test validationJudgesEachRegionByItsFloor() passed after 22.765 seconds.
+✔ Test aFillReusesAMatchingPaint() passed after 22.765 seconds.
+✔ Test aLaterFillReplacesAnEarlierOne() passed after 22.766 seconds.
+✔ Test photoColorIsTheMedianRoundThePoint() passed after 22.766 seconds.
+✔ Test damagedDetailChunk() passed after 22.767 seconds.
+✔ Test aFilledShapeBecomesADetailArea() passed after 22.767 seconds.
+✔ Test theStagesComeInOrderWithTheirCards() passed after 22.767 seconds.
+✔ Test guardiansWorkInsideThePicture() passed after 22.767 seconds.
+✔ Test aGuardianWithoutMetricsIsNamed() passed after 22.768 seconds.
+✔ Test aFrameIsAFunctionOfTheTime() passed after 22.768 seconds.
+✔ Test guardiansAreDrawnBackToFront() passed after 22.769 seconds.
+✔ Test aFillInAnOpenShapeFillsTheCellAroundIt() passed after 22.769 seconds.
+✔ Test theWholeSpecifiedTimeIsPlayed() passed after 22.769 seconds.
+✔ Test aFillTakesTheWholeShape() passed after 22.770 seconds.
+✔ Test aDifferentSeedMakesADifferentShow() passed after 22.769 seconds.
+✔ Test aTemplateWithoutLinesHasNone() passed after 22.769 seconds.
+✔ Test compositesMatchPython() passed after 22.770 seconds.
+✔ Test buildingCanBeCancelled() passed after 22.770 seconds.
+✔ Test withoutFillsNothingChanges() passed after 22.770 seconds.
+✔ Test monochromeGetsFewerColorsThanColorful() passed after 22.770 seconds.
+✔ Test buildingTwiceMakesTheSameShow() passed after 22.770 seconds.
+✔ Test checkerboardIsTextureAndRectangleIsStructure() passed after 22.770 seconds.
+✔ Test framesMatchPython() passed after 22.770 seconds.
+✔ Test featuresAreQuantized() passed after 22.770 seconds.
+✔ Test theCenterWinsTiesAndOtherTiesGoToTheBandsMiddle() passed after 22.770 seconds.
+✔ Test chooseStopsWhenCancelled() passed after 22.770 seconds.
+✔ Test aFrozenBookReadsTheSame() passed after 22.770 seconds.
+✔ Test kneeFindsWhereAnotherPaintStopsPaying() passed after 22.770 seconds.
+✔ Test candidateRuleIsDeterministicAndReadsTheFeatures() passed after 22.770 seconds.
+✔ Test theRealPipelineMakesAShow() passed after 22.771 seconds.
+✔ Test flatImageHasAFlatCurveAndNoRampsOrTexture() passed after 22.770 seconds.
+✔ Test noiseRaisesNoise() passed after 22.771 seconds.
+✔ Test thresholdsFadeIn() passed after 22.770 seconds.
+✔ Test draftImageMatchesTheCreateFlow() passed after 22.771 seconds.
+✔ Test aClassicTemplateDrawsEveryEdgeThinly() passed after 22.771 seconds.
+✔ Test eachStepsChangeReachesEveryPixelBeforeItEnds() passed after 22.771 seconds.
+✔ Test linesAndNumbersAreTheSVGsAtTheSameSize() passed after 22.771 seconds.
+✔ Test regionCountsGrowFasterWithDetailAndImportance() passed after 22.771 seconds.
+✔ Test hintsDecodeWithMissingLists() passed after 22.771 seconds.
+✔ Test timeBandsAreOrderedAndOverlap() passed after 22.771 seconds.
+✔ Test candidatesStartAtTheCenterStayInsideTheBandsAndRespectTheLimit() passed after 22.771 seconds.
+✔ Test parrotsDecisionIsPinned() passed after 22.772 seconds.
+✔ Test aSmallerPictureScalesThem() passed after 22.772 seconds.
+✔ Test paintingTimeEstimate() passed after 22.772 seconds.
+✔ Test paintingTimeOutsideTheBandCostsAtEqualFidelity() passed after 22.772 seconds.
+✔ Test scoreMeasuresTheTemplate() passed after 22.772 seconds.
+✔ Test longerPaintingsCenterHigher() passed after 22.772 seconds.
+✔ Test edgesComeFirstAndPaintOnlyEdgesAreNotDrawn() passed after 22.772 seconds.
+✔ Test theFixturesSVGIsTheTemplatesRendering() passed after 22.772 seconds.
+✔ Test gentleRampIsSmooth() passed after 22.772 seconds.
+✔ Test hotspotImportanceLowersEntropy() passed after 22.773 seconds.
+✔ Test badInputsThrow() passed after 22.772 seconds.
+✔ Test hintsAreCopiedClampedAndQuantized() passed after 22.772 seconds.
+✔ Test stateIsAFunctionOfTheTime() passed after 22.772 seconds.
+✔ Test samePlanTwice() passed after 22.773 seconds.
+✔ Test loopThroughAJunctionKeepsItsEnd() passed after 22.773 seconds.
+✔ Test circlesStayRound(radius:) with 5 test cases passed after 22.773 seconds.
+✔ Test aShowWithNothingToDoStillPlays() passed after 22.773 seconds.
+✔ Test digitalStraightLinesFitOneSegment() passed after 22.773 seconds.
+✔ Test cornerRadiusRoundsCorners() passed after 22.773 seconds.
+✔ Test deterministicAcrossReuse() passed after 22.773 seconds.
+✔ Test gentleBendsStaySmooth() passed after 22.773 seconds.
+✔ Test shortChains() passed after 22.773 seconds.
+✔ Test noLineTakesAPetOutOfThePicture() passed after 22.773 seconds.
+✔ Test ellipsesStayRound() passed after 22.773 seconds.
+✔ Test squareKeepsSharpCorners() passed after 22.773 seconds.
+✔ Test closedFitDoesNotDependOnWhereTheChainStarts() passed after 22.773 seconds.
+✔ Test openChainsKeepPinnedEnds() passed after 22.773 seconds.
+✔ Test settlingOnlyDarkens() passed after 22.773 seconds.
+✔ Test tinyLoopsComeOutRound() passed after 22.773 seconds.
+✔ Test beforeTheFirstStepIsThePhoto() passed after 22.773 seconds.
+✔ Test linesOnlyShowWhereTheStepDrawsThem() passed after 22.773 seconds.
+✔ Test chooseIsByteIdenticalAcrossRuns() passed after 22.774 seconds.
+✔ Test eachStepEndsInTheNextLayer() passed after 22.774 seconds.
+✔ Test aPictureIsMadeOfItsPixels() passed after 22.774 seconds.
+✔ Test theSketchStepNeverAddsColor() passed after 22.774 seconds.
+✔ Test theLastStepsEndInPaper() passed after 22.774 seconds.
+✔ Test picturesMatchPython() passed after 22.774 seconds.
+✔ Test stagesFollowTheTiming() passed after 22.774 seconds.
+✔ Test timesAreTheClosedFormOfPython() passed after 22.774 seconds.
+✔ Test theModelAndTheMethodWithTheSameNameAreTwoEntries() passed after 22.774 seconds.
+✔ Test aCardCarriesTheStepsWordsAndItsOpacities() passed after 22.774 seconds.
+✔ Test eachMethodNamesExactlyOneEntryByItsExactName() passed after 22.774 seconds.
+✔ Test fullInkIsTheInkColor() passed after 22.774 seconds.
+✔ Test aFlatPictureHasOnePaintAndOneSeed() passed after 22.774 seconds.
+✔ Test aPictureWithLittleRoomIsDrawnFromEverywhere() passed after 22.774 seconds.
+✔ Test aPictureSmallerThanTheCrewSharesItsHomes() passed after 22.774 seconds.
+✔ Test aWidePictureThePipelineShrinksScalesItsLines() passed after 22.774 seconds.
+✔ Test noPetsIsRefused() passed after 22.774 seconds.
+✔ Test minimalRegionsGetTheSameFontSize() passed after 22.774 seconds.
+✔ Test paletteHexIsLowercaseEightBitAndClamped() passed after 22.801 seconds.
+✔ Test theRealPipelineFeedsTheWholeChain() passed after 22.827 seconds.
+◇ Test case passing 1 argument measureRoom → false to rejectsQuadraticLabelChecks(measureRoom:) started.
+◇ Test case passing 1 argument measureRoom → true to rejectsQuadraticLabelChecks(measureRoom:) started.
+✔ Test detailMinimumRadiusIsAchievable() passed after 22.850 seconds.
+✔ Test detailNumbersHaveTheirOwnFloor() passed after 22.851 seconds.
+✔ Test svgNeverDropsNumbers() passed after 22.856 seconds.
+✔ Test disjointSetCompressesToTheRootTheCallerChose() passed after 22.898 seconds.
+✔ Test emptyBoundsHaveNoSize() passed after 22.899 seconds.
+✔ Test digitCounts() passed after 22.899 seconds.
+✔ Test connectedComponents() passed after 22.899 seconds.
+✔ Test netpbmReadsGrayAndRejectsBadInput() passed after 22.899 seconds.
+✔ Test distanceTransformWithoutFeaturesIsInfinite() passed after 22.899 seconds.
+✔ Test netpbmRoundTrip() passed after 22.899 seconds.
+✔ Test okLabReferenceValues() passed after 22.899 seconds.
+✔ Test interiorDistanceOfSquare() passed after 22.898 seconds.
+✔ Test minimumRadiusIsAchievable() passed after 22.899 seconds.
+✔ Test resampleAveragesInLinearLight() passed after 22.899 seconds.
+✔ Test netpbmRejectsUnreasonableSizes() passed after 22.899 seconds.
+✔ Test okLabRoundTrip() passed after 22.899 seconds.
+✔ Test choosePicksAWinnerInsideTheBandsAfterOneFirstDraft() passed after 22.902 seconds.
+✔ Test areaResampleOfUniformImageIsExact() passed after 22.899 seconds.
+✔ Test rowDividerIsExact() passed after 22.899 seconds.
+✔ Test decodesWritingFixture() passed after 22.899 seconds.
+✔ Test writingChunkIsOptional() passed after 22.899 seconds.
+✔ Test outOfGamutIsClippedByChroma() passed after 22.899 seconds.
+✔ Test craftedWritingStrokesAreCorrupt() passed after 22.899 seconds.
+✔ Test distanceTransformMatchesBruteForce() passed after 22.899 seconds.
+✔ Test theDiscsMatchTheReference() passed after 22.898 seconds.
+✔ Test aNumberNearAWorkingPetComesInJustAfterItsLastVisit() passed after 22.899 seconds.
+✔ Test aNumberFadesInOverItsFadeTime() passed after 22.898 seconds.
+✔ Test parallelHelpersCoverEachIndexOnce() passed after 22.899 seconds.
+✔ Test aDiscIsTheNumbersSizeAtLeastFourPixelsAndTheLaterOneWins() passed after 22.899 seconds.
+✔ Test theTimesMatchTheReference() passed after 22.899 seconds.
+✔ Test aNumberWaitsForTheOutlinesToRelaxAtIt() passed after 22.898 seconds.
+✔ Test aNumberFarFromEveryPetWaitsForLateInTheStep() passed after 22.899 seconds.
+✔ Test damagedWritingChunk() passed after 22.899 seconds.
+✔ Test noNumberIsLaterThanTheShowsEnd() passed after 22.899 seconds.
+✔ Test aLineClosesAShapeWithAnEarlierStroke() passed after 22.898 seconds.
+✔ Test aClosedLoopInsideACellMakesAnIsland() passed after 22.899 seconds.
+✔ Test everyNumberComesInInsideTheTemplateStepAfterItsAreaClears() passed after 22.899 seconds.
+✔ Test aTinyPieceIsADetailAreaOrNoSplit() passed after 22.899 seconds.
+✔ Test facesTurnTowardTheirRegion() passed after 22.898 seconds.
+✔ Test encodeTableMatchesTransferFunction() passed after 22.899 seconds.
+✔ Test aTappedStrokeIsTakenOut() passed after 22.898 seconds.
+✔ Test editsAreDeterministicAndRoundTrip() passed after 22.898 seconds.
+✔ Test latticeArithmeticIsExact() passed after 22.898 seconds.
+✔ Test aFillTakesTheWholeShapeTheInkEncloses() passed after 22.898 seconds.
+✔ Test aLineEndingNearInkJoinsIt() passed after 22.898 seconds.
+✔ Test writingStaysWritingThroughEdits() passed after 22.898 seconds.
+✔ Test aFillMakesOneDetailAreaOfAPaint() passed after 22.898 seconds.
+✔ Test erasingNeverMergesAcrossUndrawnEdges() passed after 22.899 seconds.
+✔ Test aFieldPassesThroughTheLatticeAtItsNodes() passed after 22.899 seconds.
+✔ Test aFieldIsDeterministicWhateverIsBuiltAround() passed after 22.898 seconds.
+✔ Test erasingABoundaryMergesTheRegionsAndKeepsTheRestOfTheInk() passed after 22.899 seconds.
+✔ Test untouchedRegionsAreByteIdentical() passed after 22.899 seconds.
+✔ Test aDanglingLineBecomesAnInteriorStroke() passed after 22.898 seconds.
+✔ Test aLineCrossingInkIsCutAtTheCrossing() passed after 22.899 seconds.
+✔ Test stepNoiseMatchesTheReference() passed after 22.899 seconds.
+✔ Test aFieldStaysInsideItsLatticeAndEasesInsideACell() passed after 22.899 seconds.
+✔ Test latticesAreRowMajorDrawsFromTheNoiseStreams() passed after 22.898 seconds.
+✔ Test editsThatCannotBeMadeLeaveTheTemplateAlone() passed after 22.898 seconds.
+✔ Test aTappedLineGoesFromJunctionToJunction() passed after 22.898 seconds.
+✔ Test aLineClosingOffAnAreaSplitsItAlongTheLine() passed after 22.898 seconds.
+✔ Test segmentsMeetExactly() passed after 22.898 seconds.
+✔ Test aLineAlongInkIsThatInk() passed after 22.899 seconds.
+✔ Test theEraserCutsStrokesAndMissesNothing() passed after 22.900 seconds.
+✔ Test scalesBetweenMapSizes() passed after 22.900 seconds.
+✔ Test splitRegionsInheritTheParentStroke() passed after 22.900 seconds.
+✔ Test theEraserReachesExactlyItsRadius() passed after 22.900 seconds.
+✔ Test identicalMapsKeepPaintOrder() passed after 22.900 seconds.
+✔ Test ignoresEmptyAndInvalidPaintOrders() passed after 22.900 seconds.
+✔ Test mergedRegionsNeedSixtyPercentPainted() passed after 22.900 seconds.
+✔ Test theShapeIsPinned() passed after 22.900 seconds.
+✔ Test missingFieldsTakeTheirDefaults() passed after 22.900 seconds.
+✔ Test aLatticeDrawsFromItsOwnStreamOnly() passed after 22.901 seconds.
+✔ Test unknownFieldsAreSkippedAndUnreadableEditsFail() passed after 22.900 seconds.
+✔ Test roundTrips() passed after 22.901 seconds.
+✔ Test thresholdsDecide() passed after 22.900 seconds.
+✔ Test hardEdgedTargetHasNoRings() passed after 22.900 seconds.
+✔ Test aListChangedInTheMiddleIsLaidFromWhereItParts() passed after 22.900 seconds.
+✔ Test degenerateInputsCountNothing() passed after 22.900 seconds.
+✔ Test anEditThatDoesNothingIsNotAdded() passed after 22.900 seconds.
+✔ Test snapshotsAreBounded() passed after 22.900 seconds.
+✔ Test aClassicTemplateDeclinesEveryEdit() passed after 22.900 seconds.
+✔ Test pipelineOutputIsCountedDeterministically() passed after 22.900 seconds.
+✔ Test rampSlicedIntoRingsCountsEveryRing() passed after 22.900 seconds.
+✔ Test editsThatNoLongerFitAreLeftOutAndCounted() passed after 22.900 seconds.
+✔ Test aCancelledMoveLeavesTheTrailAsItWas() passed after 22.900 seconds.
+✔ Test aShapeTooSmallForANumberIsReported() passed after 22.900 seconds.
+✔ Test anEditAddedIsTheEditorsResult() passed after 22.900 seconds.
+✔ Test undoAndRedoNeedNoEditing() passed after 22.900 seconds.
+✔ Test borderTouchingRegions() passed after 22.900 seconds.
+✔ Test validatorDetectsBadContacts() passed after 22.900 seconds.
+✔ Test regionWithManyHoles() passed after 22.900 seconds.
+✔ Test validateReportsCrampedLabels() passed after 22.900 seconds.
+✔ Test walkedLinesKeepTheirTracesAndTheRestStartInsideTheInkStep() passed after 22.900 seconds.
+✔ Test randomBlobMaps(seed:) with 6 test cases passed after 22.900 seconds.
+✔ Test largeRegionsGetExtraLabels() passed after 22.900 seconds.
+✔ Test labelRoomReachesLatticeWhenNeeded() passed after 22.900 seconds.
+✔ Test cleanShapesNeedNoFallbacks() passed after 22.900 seconds.
+✔ Test halfwayRoundsToEven() passed after 22.900 seconds.
+✔ Test nestedIslands() passed after 22.900 seconds.
+✔ Test deterministic() passed after 22.900 seconds.
+✔ Test theInkStepsLinesOnlyGrowAndDarken() passed after 22.900 seconds.
+✔ Test nothingIsDrawnBeforeTheInkStep() passed after 22.900 seconds.
+✔ Test diagonalTouches() passed after 22.900 seconds.
+✔ Test checkerboard() passed after 22.900 seconds.
+✔ Test earcutCoversPolygonsExactly() passed after 22.900 seconds.
+✔ Test digitalStraightLinesStayStraight() passed after 22.900 seconds.
+✔ Test aTimeIsAnsweredTheSameInAnyOrder() passed after 22.900 seconds.
+✔ Test photoThroughPipeline() passed after 22.900 seconds.
+✔ Test smallRegionsReportTheirInscribedRadiusPrecisely() passed after 22.900 seconds.
+✔ Test aDiagonalClimbsInSteps() passed after 22.900 seconds.
+✔ Test latticeClearanceMeasuresThePixelOutline() passed after 22.900 seconds.
+✔ Test labelRoomHoldsAfterSmoothing() passed after 22.900 seconds.
+✔ Test singleRegion() passed after 22.900 seconds.
+✔ Test tinyImages() passed after 22.900 seconds.
+✔ Test theTemplateStepRelaxesEachPointWhenTheRippleReachesIt() passed after 22.900 seconds.
+✔ Test cancellation() passed after 22.900 seconds.
+✔ Test circlesAreRound() passed after 22.900 seconds.
+✔ Test orientationConvention() passed after 22.900 seconds.
+✔ Test aLineIsResampledEveryOnePointFivePixelsBeforeItSnaps() passed after 22.900 seconds.
+✔ Test theScheduleMatchesTheReference() passed after 22.900 seconds.
+✔ Test theLinesAtEachTimeMatchTheReference() passed after 22.900 seconds.
+✔ Test aStraightLineSnapsToTheGridAndKeepsItsPairs() passed after 22.900 seconds.
+✔ Test rectangleCornersStayCrisp() passed after 22.900 seconds.
+✔ Test aLineThatSnapsToOnePointStillHasTwo() passed after 22.900 seconds.
+✔ Test aLinesWaitIsItsOwnDrawWhoeverElseIsWalked() passed after 22.900 seconds.
+✔ Test textureConsolidationMergesCloseTonesOnlyInUnimportantTexture() passed after 22.900 seconds.
+✔ Test boundaryStepsMatchBruteForce() passed after 22.900 seconds.
+✔ Test lowContrastCrumbsMergeWhileDistinctSpotsStay() passed after 22.900 seconds.
+✔ Test aWalkedLineIsInFullInkAndTheRestDarkenFromGrey() passed after 22.900 seconds.
+✔ Test highColorPipelineIsLegibleAndDeterministic() passed after 22.901 seconds.
+✔ Test linesAreDrawnInTheReferencesOrder() passed after 22.900 seconds.
+✔ Test stripOfItsOwnColourStays() passed after 22.900 seconds.
+✔ Test threeStrokesMatchPointForPoint() passed after 22.900 seconds.
+✔ Test sharpEdgedStripStays() passed after 22.900 seconds.
+✔ Test rampBandsFuseUpToToleranceAndContoursStay() passed after 22.900 seconds.
+✔ Test blurredEdgeStripMerges() passed after 22.900 seconds.
+✔ Test ringAroundASmallFeatureIsNotAStrip() passed after 22.900 seconds.
+✔ Test randomEditsKeepTheTemplateValid() passed after 22.904 seconds.
+✔ Test linearGradientDoesNotBandBeyondWhatPaintsCanShow() passed after 22.900 seconds.
+✔ Test theSmallPicturesSeedsReplay() passed after 22.900 seconds.
+✔ Test theSmallPicturesPaintsAreItsDistinctColors() passed after 22.900 seconds.
+✔ Test fineStripesNearAFaceDoNotFragment() passed after 22.900 seconds.
+✔ Test noMoreSeedsThanRows() passed after 22.900 seconds.
+✔ Test seedsSpreadOverTheColors() passed after 22.900 seconds.
+✔ Test rowsThatAreAlreadySeedsTwinsAreDrawnUniformly() passed after 22.900 seconds.
+✔ Test theFinishedTemplateIsTheSmoothLinesAndTheFirstIsTheStairs() passed after 22.900 seconds.
+✔ Test canonicalAnchorsAreFrozenAndMatchTheOriginalTable() passed after 22.900 seconds.
+✔ Test fallbackIsIntegerAndHandlesExhaustionAndExtremeInputs() passed after 22.900 seconds.
+✔ Test sharedPlatformPins() passed after 22.900 seconds.
+✔ Test binary32QuantizationHasSpecifiedEdges() passed after 22.900 seconds.
+✔ Test drawStaysNearAndUniqueWithVariedSeeds() passed after 22.900 seconds.
+✔ Test aPictureIsLabeledByColor() passed after 22.900 seconds.
+✔ Test integerDistanceWeightAndMappingBoundaries() passed after 22.900 seconds.
+✔ Test areasAreNumberedByTheirFirstRun() passed after 22.900 seconds.
+✔ Test diagonalNeighboursAreNotJoined() passed after 22.900 seconds.
+✔ Test runsJoinedLaterKeepTheEarliestNumber() passed after 22.900 seconds.
+✔ Test vocabularyPassesTheLibraryOracle() passed after 22.900 seconds.
+✔ Test aHoleIsItsOwnArea() passed after 22.900 seconds.
+✔ Test oneRowAndOneColumn() passed after 22.900 seconds.
+✔ Test fineShadesAboveTheKneeKeepMoreRampBands() passed after 22.901 seconds.
+✔ Test samplePalettesHaveNearbyAnchors() passed after 22.900 seconds.
+✔ Test theNearestAnchorWinsMostOften() passed after 22.900 seconds.
+✔ Test oracleRejectsStyleViolations(edit:) with 11 test cases passed after 22.900 seconds.
+✔ Test crowdedPalettesStayUniqueWhereAnchorsAllow() passed after 22.900 seconds.
+✔ Test unknownVersionsUseTheNewestKnownVocabulary() passed after 22.900 seconds.
+✔ Test smallFixtureHasItsRegions() passed after 22.901 seconds.
+✔ Test parrotsPaletteGetsDistinctNicknames() passed after 22.900 seconds.
+✔ Test drawsStayCloseToTheNearestAnchor() passed after 22.900 seconds.
+✔ Test proposedNamesAreActuallyUsed() passed after 22.900 seconds.
+✔ Test oracleChecksWordCapsSizeAndGamut() passed after 22.900 seconds.
+✔ Test assignmentIsDeterministic() passed after 22.900 seconds.
+✔ Test seedFoldsAUUIDStably() passed after 22.901 seconds.
+✔ Test farOrNonFinitePaintsFallBackToTheStructuredName() passed after 22.901 seconds.
+✔ Test differentSeedsGiveDifferentNames() passed after 22.901 seconds.
+✔ Test malformedTablesAreReported(edit:) with 5 test cases passed after 22.901 seconds.
+✔ Test tsvPreservesTableOrderAndAssignments() passed after 22.902 seconds.
+✔ Test versionOneTableSHA256IsFrozen() passed after 22.901 seconds.
+✔ Test syntheticPaletteNames() passed after 22.901 seconds.
+✔ Test paletteColorExposesItsName() passed after 22.901 seconds.
+✔ Test englishTitleCapitalizesOnlyTheFirstLetter() passed after 22.901 seconds.
+✔ Test grayRampIsMonotonic() passed after 22.901 seconds.
+✔ Test nonFiniteInputIsGray() passed after 22.901 seconds.
+✔ Test spokenModifierRules() passed after 22.901 seconds.
+✔ Test knownColorsHaveExpectedNames() passed after 22.901 seconds.
+✔ Test samplePalettesGetSensibleNames() passed after 22.901 seconds.
+✔ Test namingIsDeterministicAndPure() passed after 22.901 seconds.
+✔ Test namesAreUniqueWithin150Colors() passed after 22.902 seconds.
+✔ Test drawingCombinesWithContours() passed after 22.901 seconds.
+✔ Test clutterCountsCrowdedLinesOnly() passed after 22.901 seconds.
+✔ Test pacingMatchesPythonBitForBit() passed after 22.901 seconds.
+✔ Test eachStepsChangeReachesEveryPixelBeforeItEnds() passed after 22.901 seconds.
+✔ Test aFrontIsTheDistanceWhereNothingGetsInItsWay() passed after 22.901 seconds.
+✔ Test crowdedLinesAreDetailUnlessLong() passed after 22.901 seconds.
+✔ Test emptyEdgeMapKeepsTheCells() passed after 22.901 seconds.
+✔ Test eyesAreOutlined() passed after 22.901 seconds.
+✔ Test deterministic() passed after 22.901 seconds.
+✔ Test linesAroundEyesAreStronger() passed after 22.901 seconds.
+✔ Test roundTripsWritingStrokes() passed after 22.909 seconds.
+✔ Test lineArtTemplateIsValid() passed after 22.901 seconds.
+✔ Test coloringBookSVGIsOneDrawing() passed after 22.901 seconds.
+✔ Test theFieldsMatchPython(_:) with 2 test cases passed after 22.901 seconds.
+✔ Test geodesicMatchesPythonBitForBit() passed after 22.901 seconds.
+✔ Test thinningLeavesOnePixelLines() passed after 22.901 seconds.
+✔ Test samePaintChoices() passed after 22.901 seconds.
+✔ Test theFieldShowsStyleIsItsOwn() passed after 22.901 seconds.
+✔ Test selectedColorIsHatched() passed after 22.901 seconds.
+✔ Test resizingMatchesPython() passed after 22.901 seconds.
+✔ Test classicIgnoresTheEdgeMap() passed after 22.901 seconds.
+✔ Test theStagesComeInOrderWithTheirCardsAndMarks() passed after 22.901 seconds.
+✔ Test gapsAreBridged() passed after 22.901 seconds.
+✔ Test pacingSpreadsAnOutlierEvenly() passed after 22.901 seconds.
+✔ Test validationReportsBadLineData() passed after 22.901 seconds.
+✔ Test maskContoursTraceShapes() passed after 22.901 seconds.
+✔ Test mergingCloseColorsGivesFewerCells() passed after 22.901 seconds.
+✔ Test coloringBookIsADrawingOverTheCells() passed after 22.901 seconds.
+✔ Test streamsMatchPython() passed after 22.901 seconds.
+✔ Test anEyeTooSmallForANumberIsStillDrawn() passed after 22.901 seconds.
+✔ Test layersByHysteresisAlongTheLine() passed after 22.901 seconds.
+✔ Test edgeMapAtAnotherResolution() passed after 22.901 seconds.
+✔ Test aTemplateOfAnotherSizeIsRefused() passed after 22.901 seconds.
+✔ Test detectorPicksWhatTheInputReads() passed after 22.903 seconds.
+✔ Test everyLineBurnsInTheInkStepWithTimeToDarken() passed after 22.903 seconds.
+✔ Test subjectsCloseTheirSilhouettes() passed after 22.904 seconds.
+✔ Test theSparksCoolAndTheStarsOpenAndFade() passed after 22.903 seconds.
+✔ Test theShowIsTimedByItsOwnHold() passed after 22.903 seconds.
+✔ Test aPictureTooSmallToShowIsRefused() passed after 22.903 seconds.
+✔ Test contoursDecideTheOutlines() passed after 22.904 seconds.
+✔ Test theRealPipelineMakesAShow() passed after 22.905 seconds.
+✔ Test aDifferentSeedMakesADifferentShow() passed after 22.903 seconds.
+✔ Test framesMatchPython(_:) with 2 test cases passed after 22.903 seconds.
+✔ Test buildingTwiceMakesTheSameShow() passed after 22.903 seconds.
+✔ Test seedsAndPicksMatchPython(_:) with 2 test cases passed after 22.903 seconds.
+✔ Test numbersComeOutAfterTheirAreaClears() passed after 22.903 seconds.
+✔ Test aFrameIsAFunctionOfTheTime() passed after 22.903 seconds.
+✔ Test buildingCanBeCancelled() passed after 22.903 seconds.
+✔ Test everyStepSpreadsFromWhereThePetsWork() passed after 22.903 seconds.
+✔ Test eachPurposeHasItsOwnStream() passed after 22.903 seconds.
+✔ Test noiseMatchesPython() passed after 22.903 seconds.
+✔ Test aTideLinesTheFrontsOfStepsTwoToFour() passed after 22.903 seconds.
+✔ Test theCrewShowHasNoMarks() passed after 22.903 seconds.
+✔ Test noWalkToAJobIsFasterThanWalkingPace() passed after 22.903 seconds.
+✔ Test petsNeverOverlap() passed after 22.903 seconds.
+✔ Test aPictureWithNoLinesStillMakesAShow() passed after 22.904 seconds.
+✔ Test compositesMatchPython(_:) with 2 test cases passed after 22.904 seconds.
+✔ Test linesAreDrawnByWalking() passed after 22.904 seconds.
+✔ Test everyPetLeavesTheFrameBeforeTheShowEnds() passed after 22.904 seconds.
+✔ Test noSpotsAskedDrawsNothing() passed after 22.904 seconds.
+✔ Test spotsKeepTheirDistance() passed after 22.904 seconds.
+✔ Test spotsAreDrawnByWeight() passed after 22.904 seconds.
+✔ Test jobsAreSharedAcrossThePicture() passed after 22.904 seconds.
+✔ Test fewerSpotsThanAskedAreWhatThereIs() passed after 22.904 seconds.
+✔ Test aPlaneWithoutWeightIsDrawnFromUniformly() passed after 22.904 seconds.
+✔ Test textLowerThanAWindowIsTracedFinerAndTallTextAtTheCanvas() passed after 22.904 seconds.
+✔ Test lineArtGenerationCancels() passed after 22.905 seconds.
+✔ Test smallHeavyLightTextKeepsItsLettersApartAndItsCountersClosed() passed after 22.904 seconds.
+✔ Test boldWritingIsLeftToTheDetectors() passed after 22.904 seconds.
+✔ Test chalkOnABoardIsWritingToo() passed after 22.904 seconds.
+✔ Test aMarkBesideTheWritingComesAlongAndTheGroundDoesNot() passed after 22.904 seconds.
+✔ Test theSameBytesOnOneCoreAndOnFour() passed after 22.905 seconds.
+✔ Test tracesThePenAndLeavesTheRules() passed after 22.904 seconds.
+✔ Test findingIsDeterministic() passed after 22.904 seconds.
+✔ Test aBookDrawsTheWritingInsideItsCellsWithTheNumbersOffIt() passed after 22.904 seconds.
+✔ Test keepWritingIsOnUnlessSaidOtherwise() passed after 22.904 seconds.
+✔ Test aLineBoxedTwiceIsTracedOnce() passed after 22.904 seconds.
+✔ Test aLabelMovesOffTheWritingWhereItsRegionHasRoom() passed after 22.904 seconds.
+✔ Test cubeRootsSettle() passed after 22.903 seconds.
+✔ Test weightedPicksFindTheFirstEntryPastTheValue() passed after 22.903 seconds.
+✔ Test boxSumsOfASinglePixelPlane() passed after 22.903 seconds.
+✔ Test halvesRoundToEven() passed after 22.903 seconds.
+✔ Test skipsUnknownChunks() passed after 22.904 seconds.
+✔ Test boxSumsCountTheEdgeAgain() passed after 22.904 seconds.
+✔ Test theCubeRootIsTheLibrarysWithinAFewUlps() passed after 22.904 seconds.
+✔ Test oklabInDoubles() passed after 22.905 seconds.
+✔ Test versions() passed after 22.905 seconds.
+✔ Test sumsRunInOrder() passed after 22.905 seconds.
+✔ Test roundTripsPipelineVersion() passed after 22.905 seconds.
+✔ Test theTransferTableIsTheTrueCurve() passed after 22.905 seconds.
+✔ Test decodesDataSlices() passed after 22.906 seconds.
+✔ Test percentilesInterpolateBetweenRanks() passed after 22.905 seconds.
+✔ Test quantizingRoundsHalvesToEven() passed after 22.905 seconds.
+✔ Test decodesV2Fixture() passed after 22.905 seconds.
+✔ Test craftedReferencesAreCorrupt() passed after 22.905 seconds.
+✔ Test writingOnAGrainyGroundOrBrokenIntoCrumbsIsTexture() passed after 22.906 seconds.
+✔ Test hugeCountsAreTruncated() passed after 22.905 seconds.
+✔ Test tooSmallOrNoInkIsNoWriting() passed after 22.906 seconds.
+✔ Test randomCorruption(_:) with 7 test cases passed after 22.905 seconds.
+✔ Test truncationAtEveryOffset() passed after 22.906 seconds.
+✔ Test malformedChunkSections() passed after 22.905 seconds.
+✔ Test decodesV1Fixture() passed after 22.905 seconds.
+✔ Test invariantsAcrossSmoothness(smoothness:) with 2 test cases passed after 22.905 seconds.
+✔ Test generatorStampsPipelineVersion() passed after 22.905 seconds.
+✔ Test requiredUnknownChunkNeedsNewerReader() passed after 22.906 seconds.
+✔ Test inscribedDiscTestMatchesDistanceTransform() passed after 22.905 seconds.
+✔ Test transparentPixelsBecomePaper() passed after 22.905 seconds.
+✔ Test paletteHonoursThePublishedFloor(colorCount:) with 3 test cases passed after 22.905 seconds.
+✔ Test highColorScene() passed after 22.905 seconds.
+✔ Test bandFusingKeepsThePaintBudget() passed after 22.906 seconds.
+✔ Test emptyImage() passed after 22.905 seconds.
+✔ Test repeatedPointsTakeTheLast() passed after 22.905 seconds.
+✔ Test thinPartsArePeeled() passed after 22.905 seconds.
+✔ Test invariantsAcrossDetail(detail:) with 3 test cases passed after 22.905 seconds.
+✔ Test lowDetailHasLargerRegions() passed after 22.905 seconds.
+✔ Test importanceIsHonoured() passed after 22.905 seconds.
+✔ Test cancellation() passed after 22.905 seconds.
+✔ Test runComponentsMatchPixelComponents() passed after 22.905 seconds.
+✔ Test paletteOrderingGroupsHues() passed after 22.905 seconds.
+✔ Test linesAndEnds() passed after 22.905 seconds.
+✔ Test unevenSteps() passed after 22.905 seconds.
+✔ Test deterministic() passed after 22.905 seconds.
+✔ Test publishedPaletteFloor() passed after 22.905 seconds.
+✔ Test paletteBuildStopsWhenOnlyTheCallingThreadSeesCancellation() passed after 22.905 seconds.
+✔ Test freedPaintsAreRespent() passed after 22.905 seconds.
+✔ Test uniformImage() passed after 22.905 seconds.
+✔ Test neutralsComeLastLightToDark() passed after 22.905 seconds.
+✔ Test minPaletteDistanceNeverBelowJND() passed after 22.905 seconds.
+✔ Test progressIsMonotonic() passed after 22.905 seconds.
+✔ Test displayP3Input() passed after 22.905 seconds.
+✔ Test aDrawingTheWritingTouchesIsNotWriting() passed after 22.908 seconds.
+✔ Test paletteSpacing(colors:) with 4 test cases passed after 22.905 seconds.
+✔ Test tinyImages(size:) with 4 test cases passed after 22.905 seconds.
+✔ Test aSinglePointDrawsNothing() passed after 22.905 seconds.
+✔ Test salientSmallColorGetsAPaint() passed after 22.905 seconds.
+✔ Test enforceLabelRoomUsesDigitCount() passed after 22.905 seconds.
+✔ Test aValueScalesTheInkAndTheDarkerLineWins() passed after 22.905 seconds.
+✔ Test aHorizontalLineCoversThePixelsItRunsThrough() passed after 22.905 seconds.
+✔ Test theEdgeIsSoftOverOnePixel() passed after 22.905 seconds.
+✔ Test aDotIsRound() passed after 22.905 seconds.
+✔ Test linesOffThePictureAreClipped() passed after 22.905 seconds.
+✔ Test aBriskerShowFadesFaster() passed after 22.905 seconds.
+✔ Test theStepsFollowTheSpecsTiming() passed after 22.905 seconds.
+✔ Test theShowIsItsIntroItsSixStepsAndItsOutro() passed after 22.905 seconds.
+✔ Test theHandoffRunsAsTheStepsEnd() passed after 22.905 seconds.
+✔ Test aCardLivesInsideItsStep() passed after 22.905 seconds.
+✔ Test theCrewFadesOutOverTheLastOfTheShow() passed after 22.905 seconds.
+✔ Test aRingPopsInSwellsAndGoesWhenItsPaintHasSpread() passed after 22.905 seconds.
+✔ Test theSmallShowsInputsAreThePythons() passed after 22.905 seconds.
+✔ Test aTemplateOfAnotherPictureIsRefused() passed after 22.905 seconds.
+✔ Test sizesAndSpotsAreAtThePlanFilesPrecision() passed after 22.905 seconds.
+✔ Test spotsStayInTheRoomAndSeedsInTheirGrid() passed after 22.905 seconds.
+✔ Test theCrewCanBePlannedFromThem() passed after 22.905 seconds.
+✔ Test eachStepsDrawsAreItsOwn() passed after 22.905 seconds.
+✔ Test aSecondCallIsTheFirst() passed after 22.905 seconds.
+✔ Test homesAreTheFirstSpotsOfTheFirstStep() passed after 22.905 seconds.
+✔ Test decodesColoringBookFixture() passed after 22.904 seconds.
+✔ Test moreBandsThanPetsAndMorePetsThanBands() passed after 22.904 seconds.
+✔ Test theSeedChangesTheSpotsButNotTheLinesOrTheSeedsPaints() passed after 22.904 seconds.
+✔ Test lineChunkIsOptional() passed after 22.904 seconds.
+✔ Test decodesLayeredFixture() passed after 22.904 seconds.
+✔ Test lineArtStyleIsAnOptionalTrailingByte() passed after 22.904 seconds.
+✔ Test roundTripsLineArt() passed after 22.904 seconds.
+✔ Test craftedLineReferencesAreCorrupt() passed after 22.904 seconds.
+✔ Test pixelsWithinReachOfALineAreInked() passed after 22.904 seconds.
+✔ Test aFaintFootnoteIsStillAFootnote() passed after 22.904 seconds.
+✔ Test noLinesNoInk() passed after 22.904 seconds.
+✔ Test shippedSpecDecodes() passed after 22.904 seconds.
+✔ Test theErrorNamesTheKey() passed after 22.904 seconds.
+✔ Test fixtureWasMadeFromTheShippedSpec() passed after 22.904 seconds.
+✔ Test linesOutsideThePlaneAreClipped() passed after 22.904 seconds.
+✔ Test aSensibleEditStillDecodes() passed after 22.904 seconds.
+✔ Test truncatedLayeredFilesAreRejected() passed after 22.905 seconds.
+✔ Test badSpecsThrow() passed after 22.904 seconds.
+✔ Test randomCorruptionOfLineData() passed after 22.904 seconds.
+✔ Test sparseBoundaryAtMaximumWorkingSizeStillValidates() passed after 16.346 seconds.
+✔ Test rejectsRepeatedRingPointSpans() passed after 16.346 seconds.
+✔ Test rejectsRepeatedRegionRingSpans() passed after 16.346 seconds.
+✔ Test rejectsRepeatedEdgePointSpans() passed after 16.330 seconds.
+✔ Test rejectsQuadraticLabelChecks(measureRoom:) with 2 test cases passed after 16.331 seconds.
+✔ Test aBlurredEdgeStopsAtTheLine() passed after 22.904 seconds.
+✔ Test budgetRejectsOverflowingProducts() passed after 16.330 seconds.
+✔ Test ordinaryDetailedGeometryStillValidates() passed after 16.330 seconds.
+✔ Test aRimIsNotABlurStrip() passed after 22.904 seconds.
+✔ Test rejectsQuadraticBucketPairsIncludingCleanPairs() passed after 16.331 seconds.
+✔ Test rejectsRepeatedStrokePointSpans() passed after 16.321 seconds.
+✔ Test aSharpEdgeIsTwoAreas() passed after 22.905 seconds.
+✔ Suite "Pipeline tuning and line art settings" passed after 22.937 seconds.
+✔ Suite ArrivalTests passed after 22.937 seconds.
+✔ Suite ShowPicturesTests passed after 22.937 seconds.
+✔ Suite PlaneTests passed after 22.937 seconds.
+✔ Suite SplitMixDrawsTests passed after 22.937 seconds.
+✔ Suite StopWeightsTests passed after 22.937 seconds.
+✔ Suite LayersTests passed after 22.937 seconds.
+✔ Suite "Pipeline snapshots" passed after 22.937 seconds.
+✔ Suite CrewPlanReplayTests passed after 22.937 seconds.
+✔ Suite "Line edits" passed after 22.937 seconds.
+✔ Suite SpritesTests passed after 22.937 seconds.
+✔ Suite "Detail coding" passed after 22.937 seconds.
+✔ Suite "Fills" passed after 22.937 seconds.
+✔ Suite ShowTemplateTests passed after 22.937 seconds.
+✔ Suite ShowTests passed after 22.937 seconds.
+✔ Suite CrewPlanContractTests passed after 22.937 seconds.
+✔ Suite "Auto settings" passed after 22.937 seconds.
+✔ Suite CompositorTests passed after 22.937 seconds.
+✔ Suite CardsTests passed after 22.937 seconds.
+✔ Suite "CurveFitter" passed after 22.937 seconds.
+✔ Suite CrewInputsFallbackTests passed after 22.937 seconds.
+✔ Suite "Label sizing" passed after 22.937 seconds.
+✔ Suite "Foundation" passed after 22.937 seconds.
+✔ Suite "Writing coding" passed after 22.937 seconds.
+✔ Suite NumberScheduleTests passed after 22.937 seconds.
+✔ Suite ValueNoiseTests passed after 22.938 seconds.
+✔ Suite "Template editor" passed after 22.937 seconds.
+✔ Suite "Region remap" passed after 22.937 seconds.
+✔ Suite "Edit coding" passed after 22.937 seconds.
+✔ Suite "Band rings" passed after 22.937 seconds.
+✔ Suite "Edit trail" passed after 22.937 seconds.
+✔ Suite OutlinesTests passed after 22.937 seconds.
+✔ Suite "Vectorizer" passed after 22.937 seconds.
+✔ Suite "Region merging" passed after 22.937 seconds.
+✔ Suite "ColorNickname v2" passed after 22.937 seconds.
+✔ Suite PaintSeedsTests passed after 22.937 seconds.
+✔ Suite LabelingTests passed after 22.937 seconds.
+✔ Suite "ColorNaming" passed after 22.938 seconds.
+✔ Suite "ColorNickname" passed after 22.937 seconds.
+✔ Suite "Line art" passed after 22.937 seconds.
+✔ Suite CrewPlanInvariantTests passed after 22.938 seconds.
+✔ Suite ShowStreamsTests passed after 22.938 seconds.
+✔ Suite FieldShowTests passed after 22.938 seconds.
+✔ Suite SamplingTests passed after 22.938 seconds.
+✔ Suite ExactMathTests passed after 22.938 seconds.
+✔ Suite "Writing" passed after 22.938 seconds.
+✔ Suite "Template coding" passed after 22.938 seconds.
+✔ Suite InterpTests passed after 22.938 seconds.
+✔ Suite InkCoverageTests passed after 22.938 seconds.
+✔ Suite "Segmentation" passed after 22.938 seconds.
+✔ Suite TimelineTests passed after 22.938 seconds.
+✔ Suite CrewInputsTests passed after 22.938 seconds.
+✔ Suite "Line art coding" passed after 22.938 seconds.
+✔ Suite LineMaskTests passed after 22.938 seconds.
+✔ Suite ShowSpecTests passed after 22.938 seconds.
+✔ Suite "Blur strips" passed after 22.938 seconds.
+✔ Test collinearRaysOnThinCanvasDoNotOverflow() passed after 16.370 seconds.
+✔ Test rejectsBucketPrefixOverflow() passed after 16.412 seconds.
+✔ Suite "Template validation work limits" passed after 23.023 seconds.
+✔ Test run with 564 tests in 58 suites passed after 23.026 seconds.
