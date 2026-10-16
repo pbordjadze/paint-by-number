@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0A00000000000000000000F1 /* PaintCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0A00000000000000000000E1 /* PaintCore */; };
+		0A00000000000000000000F2 /* MakingOf in Frameworks */ = {isa = PBXBuildFile; productRef = 0A00000000000000000000E2 /* MakingOf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +59,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0A00000000000000000000F1 /* PaintCore in Frameworks */,
+				0A00000000000000000000F2 /* MakingOf in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,6 +130,7 @@
 			name = PaintByNumber;
 			packageProductDependencies = (
 				0A00000000000000000000E1 /* PaintCore */,
+				0A00000000000000000000E2 /* MakingOf */,
 			);
 			productName = PaintByNumber;
 			productReference = 0A0000000000000000000B01 /* PaintByNumber.app */;
@@ -395,7 +398,7 @@
 				COREML_CODEGEN_LANGUAGE = None;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
-				EXCLUDED_SOURCE_FILE_NAMES = "Marginarium*.swift SpriteAtlas.swift Marginarium.xcassets marginarium.json pet-*.webp making-of.json pet-metrics.json";
+				EXCLUDED_SOURCE_FILE_NAMES = "Marginarium*.swift SpriteAtlas.swift Marginarium.xcassets marginarium.json pet-*.webp pet-metrics.json";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Paint by Moonlight";
@@ -549,6 +552,10 @@
 		0A00000000000000000000E1 /* PaintCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PaintCore;
+		};
+		0A00000000000000000000E2 /* MakingOf */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MakingOf;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -487,6 +487,59 @@ struct PaintingSessionTests {
         try expectsTheSession("after the replay's schedule began")
     }
 
+    /// The progress badge shows what the replay has on the canvas (`replayed`), while the painting
+    /// itself stays whole.
+    @Test func aReplayShowsFewerAreasThanThePaintingHolds() {
+        let session = PaintingSession(template: template)
+        session.paint(Array(template.regions.indices), from: .zero, animated: false)
+        let total = template.regions.count
+        #expect(session.shownFraction == 1)
+        #expect(session.shownPaintedByColor == session.totalByColor)
+
+        let revision = session.revision
+        session.showReplayed(0)
+        #expect(session.shownFraction == 0)
+        #expect(session.shownPaintedByColor.allSatisfy { $0 == 0 })
+        #expect(session.isComplete && session.progress.paintedCount == total && session.revision == revision)
+
+        // The first areas of the stroke log, in the order they were painted.
+        let half = total / 2
+        session.showReplayed(half)
+        #expect(session.shownFraction == Double(half) / Double(total))
+        var expected = [Int](repeating: 0, count: session.paletteCount)
+        for stroke in session.progress.log.prefix(half) { expected[session.colorOf(Int(stroke.region))] += 1 }
+        #expect(session.shownPaintedByColor == expected)
+        #expect(session.shownPaintedByColor.reduce(0, +) == half)
+
+        session.showReplayed(total + 100)
+        #expect(session.replayed == total, "never more than the painting has")
+        session.showReplayed(nil)
+        #expect(session.replayed == nil && session.shownFraction == 1)
+    }
+
+    /// A replay tells the session how much is on the canvas, and lets go of it when the session
+    /// changes under it (as the replay itself does).
+    @Test func aReplayTellsTheSessionWhatIsOnTheCanvas() async throws {
+        let session = PaintingSession(template: template)
+        let view = CanvasView(session: session)
+        view.reduceMotion = true
+        view.frame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        view.layoutIfNeeded()
+        session.paint(Array(template.regions.indices), from: .zero, animated: false)
+        #expect(session.replayed == nil)
+        view.replay()
+        // Under Reduce Motion the paint is gone at once, and then the areas fill one after another.
+        try await waitUntil(timeout: .seconds(10)) { session.replayed == 0 }
+        #expect(session.isComplete, "the painting is whole while its replay plays")
+        try await waitUntil(timeout: .seconds(10)) { (session.replayed ?? 0) >= 3 }
+        #expect((session.replayed ?? 0) < template.regions.count, "the whole painting is not back yet")
+        #expect(session.shownFraction < 1)
+
+        try #require(session.undo() != nil)
+        #expect(session.replayed == nil, "a replay the session changed under tells the screen nothing more")
+        #expect(session.shownFraction < 1 && session.shownFraction > 0)
+    }
+
     @Test func hintWithNothingLeftStaysQuiet() {
         let session = PaintingSession(template: template)
         session.autoAdvance = false

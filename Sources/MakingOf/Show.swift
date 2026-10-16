@@ -179,7 +179,7 @@ public struct Show: Sendable {
             ink: strokes.lines(at: t),
             numbers: stage >= ScheduleTiming.templateStep
                 ? (0..<self.numbers.times.count).map { self.numbers.alpha($0, at: t) } : [],
-            seedRings: rings, sprites: drawn.map(\.draw), card: card)
+            seedRings: rings, sparks: [], stars: [], sprites: drawn.map(\.draw), card: card)
     }
 
     // MARK: The CPU reference

@@ -186,25 +186,11 @@ struct AppShellView: View {
 
     /// Counts what the gallery shows, so a filter or a search is visible in the numbers.
     private var subtitle: String {
-        let active = library.inProgress(matching: query).count + (query.isActive ? 0 : library.placeholders.count)
-        let finished = library.finished(matching: query).count
-        switch (active, finished) {
-        case (0, 0):
-            return ""
-        case (_, 0):
-            return String(localized: "gallery.subtitle.inProgress", defaultValue: "\(active) paintings in progress",
-                          comment: "Gallery subtitle when every painting is still in progress; the argument is how many")
-        case (0, _):
-            return String(localized: "gallery.subtitle.finished", defaultValue: "\(finished) finished paintings",
-                          comment: "Gallery subtitle when every painting is finished; the argument is how many")
-        default:
-            let activeText = String(localized: "gallery.subtitle.count.inProgress", defaultValue: "\(active) in progress",
-                                    comment: "First part of the gallery subtitle: how many paintings are in progress")
-            let finishedText = String(localized: "gallery.subtitle.count.finished", defaultValue: "\(finished) finished",
-                                      comment: "Second part of the gallery subtitle: how many paintings are finished")
-            return String(localized: "gallery.subtitle.both", defaultValue: "\(activeText) · \(finishedText)",
-                          comment: "Gallery subtitle with both counts; the arguments are the in-progress part and the finished part")
-        }
+        GalleryCounts(
+            inProgress: library.inProgress(matching: query).count,
+            ready: library.readyToPaint(matching: query).count + (query.isActive ? 0 : library.placeholders.count),
+            finished: library.finished(matching: query).count
+        ).subtitle
     }
 
     /// The sample the create flow opens on (demo scenarios; none in Release builds).

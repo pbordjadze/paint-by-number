@@ -6,20 +6,45 @@ import UIKit
 
 /// Feedback's review and send sheet: the painting with its marks, a note, a comment per mark
 /// beside its close-up, what goes along (the painter's own photo only if they turn it on), and
-/// Send, which writes the bundle
-/// (`FeedbackPackage`) and opens the share sheet, where the painter picks Mail, Messages,
-/// AirDrop or Files and who it goes to. Back returns to drawing; sharing it ends feedback.
+/// Send, which writes the bundle (`FeedbackPackage`) and sends it straight to the developers
+/// (`FeedbackUploader`). When that fails (offline, a timeout, a refusal) an alert offers Try
+/// Again, Share Instead, which opens the share sheet where the painter picks Mail, Messages,
+/// AirDrop or Files and who it goes to, and Cancel, which keeps everything written. Back
+/// returns to drawing; sending or sharing it ends feedback.
 struct FeedbackSheet: View {
     @Bindable var draft: FeedbackDraft
-    /// The bundle was shared.
-    var onSent: () -> Void
+    /// The feedback was sent or shared.
+    var onSent: (Delivery) -> Void
+    /// Where Send goes: the relay, or in Debug builds a stub (`FeedbackUploads`).
+    var uploader: FeedbackUploader = FeedbackUploads.current
+
+    /// How the feedback left.
+    enum Delivery {
+        /// To the developers, by Send.
+        case sent
+        /// Through the share sheet, by Share Instead.
+        case shared
+    }
 
     @Environment(\.dismiss) private var dismiss
     @State private var phase = Phase.editing
+    /// The files written for the Send in progress or just failed, kept for Try Again and Share
+    /// Instead and removed when feedback is sent, given up or shared.
+    @State private var prepared: FeedbackPackage.Files?
 
     private enum Phase: Equatable {
-        case editing, packing, failed
+        case editing
+        /// Writing the bundle (or, for Share Instead, waiting for the alert to leave).
+        case packing
+        /// The bundle is on its way to the developers.
+        case sending
+        /// The bundle couldn't be written.
+        case failed
+        /// It couldn't be sent: the alert asks what to do.
+        case notSent
         case sharing([URL])
+
+        var isBusy: Bool { self == .packing || self == .sending }
     }
 
     var body: some View {
@@ -52,8 +77,9 @@ struct FeedbackSheet: View {
                         .accessibilityIdentifier("feedback-back")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    if phase == .packing {
+                    if phase.isBusy {
                         ProgressView()
+                            .accessibilityLabel(Text(progressText))
                     } else {
                         Button("Send", systemImage: "paperplane", action: send)
                             .tint(Theme.signature)
@@ -62,18 +88,25 @@ struct FeedbackSheet: View {
                     }
                 }
             }
-            .disabled(phase == .packing)
+            .disabled(phase.isBusy)
             .overlay(alignment: .bottom) {
-                if phase == .packing {
-                    Toast(text: String(localized: "Preparing your feedback…"), systemImage: "shippingbox")
+                if phase.isBusy {
+                    Toast(text: progressText, systemImage: phase == .sending ? "paperplane" : "shippingbox")
                         .padding(.horizontal, 20)
                         .padding(.bottom, 24)
                 }
             }
             .animation(.snappy, value: phase)
+            .alert("Couldn’t Send Feedback", isPresented: notSent) {
+                Button("Try Again", action: tryAgain)
+                Button("Share Instead", action: shareInstead)
+                Button("Cancel", role: .cancel, action: giveUpSending)
+            } message: {
+                Text("Check your connection and try again, or share it another way. What you wrote is kept.")
+            }
         }
         .tint(Theme.accent)
-        .interactiveDismissDisabled(phase == .packing)
+        .interactiveDismissDisabled(phase.isBusy)
         .background {
             ActivityShareSheet(items: sharedFiles) { completed in finishSharing(completed: completed) }
         }
@@ -123,9 +156,9 @@ struct FeedbackSheet: View {
             Text("Included")
         } footer: {
             if draft.canIncludePhoto {
-                Text("Send opens the share sheet: choose how it goes and who gets it. Your photo helps us remake the painting; it goes only if you turn it on.")
+                Text("Send goes straight to the people who make Paint by Moonlight. Your photo helps us remake the painting; it goes only if you turn it on.")
             } else {
-                Text("Send opens the share sheet: choose how it goes and who gets it.")
+                Text("Send goes straight to the people who make Paint by Moonlight.")
             }
         }
     }
@@ -145,15 +178,27 @@ struct FeedbackSheet: View {
         Binding { phase == .failed } set: { if !$0 { phase = .editing } }
     }
 
+    /// The alert's buttons each move `phase` on, so whichever of them and this setter runs
+    /// first, the others find what they expect.
+    private var notSent: Binding<Bool> {
+        Binding { phase == .notSent } set: { if !$0, phase == .notSent { phase = .editing } }
+    }
+
     private var sharedFiles: [URL] {
         if case .sharing(let files) = phase { files } else { [] }
+    }
+
+    private var progressText: String {
+        phase == .sending ? String(localized: "Sending…") : String(localized: "Preparing your feedback…")
     }
 
     private func send() {
         phase = .packing
         Task {
             do {
-                phase = .sharing(try await draft.package())
+                let files = try await draft.package()
+                prepared = files
+                await upload(files)
             } catch {
                 Log.feedback.error("Packing feedback failed: \(String(describing: error), privacy: .public)")
                 phase = .failed
@@ -161,15 +206,60 @@ struct FeedbackSheet: View {
         }
     }
 
+    /// Sends the written files to the developers: thanks if they took them, the alert if not.
+    private func upload(_ files: FeedbackPackage.Files) async {
+        phase = .sending
+        do {
+            try await uploader.upload(files, app: draft.capture.app)
+            Log.feedback.notice("Feedback sent (\(uploader.name, privacy: .public))")
+            phase = .editing
+            discardPrepared()
+            onSent(.sent)
+        } catch {
+            Log.feedback.error("Sending feedback failed: \(String(describing: error), privacy: .public)")
+            phase = .notSent
+        }
+    }
+
+    private func tryAgain() {
+        guard let files = prepared else { return }
+        Task { await upload(files) }
+    }
+
+    /// Opens the share sheet with the files already written, once the alert has gone: UIKit
+    /// presents nothing over an alert that is still leaving.
+    private func shareInstead() {
+        guard let files = prepared else { return }
+        phase = .packing
+        Task {
+            try? await Task.sleep(for: .milliseconds(500))
+            phase = .sharing(files.shared)
+        }
+    }
+
+    /// Back to the sheet with everything written still in it.
+    private func giveUpSending() {
+        phase = .editing
+        discardPrepared()
+    }
+
+    /// The export folder goes: the files are sent, or will be made again.
+    private func discardPrepared() {
+        guard let files = prepared else { return }
+        prepared = nil
+        Task { await Background.run { ArtworkExporter.removeExport(at: files.picture) } }
+    }
+
     /// The share sheet closed: the receivers have their copies, so the files go either way;
     /// shared, feedback is done.
     private func finishSharing(completed: Bool) {
         let files = sharedFiles
         phase = .editing
+        prepared = nil
         if let first = files.first {
             Task { await Background.run { ArtworkExporter.removeExport(at: first) } }
         }
-        if completed { onSent() }
+        if completed { onSent(.shared) }
     }
 }
 

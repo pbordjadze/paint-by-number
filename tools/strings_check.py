@@ -122,12 +122,13 @@ ALLOWED_LITERALS = {
 }
 # Files whose text is shown verbatim in every language: license texts, and credits (names,
 # copyright lines and paper citations); and feedback's report (`feedback.md`), written for the
-# developers in English like pbn's output and never shown in the app; and the Marginarium's
-# speaker table, whose strings are the signatures `marginarium.json` records, matched and never
-# shown. Their localizable sentences still go through the forms.
+# developers in English like pbn's output and never shown in the app; the uploader's HTTP header
+# lines (`Content-Disposition: form-data; name=…`, sent to the relay and never shown); and the
+# Marginarium's speaker table, whose strings are the signatures `marginarium.json` records,
+# matched and never shown. Their localizable sentences still go through the forms.
 VERBATIM_FILES = {
     "Features/Settings/License.swift", "Features/Settings/Acknowledgements.swift", "Features/Feedback/FeedbackReport.swift",
-    "Features/Marginarium/MarginariumSpeakers.swift",
+    "Features/Feedback/FeedbackUploader.swift", "Features/Marginarium/MarginariumSpeakers.swift",
 }
 # Properties of Info.plist that Xcode localizes through InfoPlist.xcstrings.
 LOCALIZED_INFOPLIST_KEY = re.compile(r"^(CFBundleDisplayName|CFBundleName|NS\w+UsageDescription)$")

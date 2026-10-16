@@ -61,6 +61,12 @@ final class PaintingSession {
     let colorLabels: [String]
     /// Increments on every progress change; cheap to observe for autosave/thumbnails.
     private(set) var revision = 0
+    /// While the canvas replays the painting: how many of its areas are on screen, in the order
+    /// they were painted (all as the paint starts to lift, none once it has gone, then each as its
+    /// fill begins); nil otherwise. The painting itself is untouched: `progress` stays whole.
+    /// Only the progress badge reads it (`shownFraction`, `shownPaintedByColor`), so it says what
+    /// the canvas shows.
+    private(set) var replayed: Int?
 
     @ObservationIgnored weak var canvas: PaintingCanvas?
     @ObservationIgnored private var observers: [(PaintEvent) -> Void] = []
@@ -211,6 +217,29 @@ final class PaintingSession {
     var paletteCount: Int { template.palette.count }
     var fractionComplete: Double {
         progress.regionCount == 0 ? 0 : Double(progress.paintedCount) / Double(progress.regionCount)
+    }
+
+    /// The canvas's replay has `count` of the painting's areas on screen (nil: no replay is
+    /// playing, the painting shows as it stands).
+    func showReplayed(_ count: Int?) {
+        let shown = count.map { min(max($0, 0), progress.regionCount) }
+        if replayed != shown { replayed = shown }
+    }
+
+    /// The share of the areas the screen shows painted: the replay's while one plays, else
+    /// `fractionComplete`.
+    var shownFraction: Double {
+        guard let replayed else { return fractionComplete }
+        return progress.regionCount == 0 ? 0 : Double(replayed) / Double(progress.regionCount)
+    }
+
+    /// The painted areas of each palette color, as the screen shows them: the first `replayed` of
+    /// the stroke log while a replay plays, else what the painting holds.
+    var shownPaintedByColor: [Int] {
+        guard let replayed else { return (0..<paletteCount).map { totalByColor[$0] - remainingByColor[$0] } }
+        var counts = [Int](repeating: 0, count: paletteCount)
+        for stroke in progress.log.prefix(replayed) { counts[colorOf(Int(stroke.region))] += 1 }
+        return counts
     }
 
     func isPainted(_ region: Int) -> Bool { progress.isPainted(region) }

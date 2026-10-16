@@ -245,6 +245,10 @@
       "comment" : "Settings toggle: after finishing a color, the next color is picked automatically",
       "extractionState" : "manual"
     },
+    "After Start Painting, watch your photo become its painting, step by step. It takes about 20 seconds, and a tap skips it." : {
+      "comment" : "Footer under the Settings switch The Making-of (off by default): what turning it on does",
+      "extractionState" : "manual"
+    },
     "All" : {
       "comment" : "Choice in the gallery's Show menu that lists every painting; also the menu's VoiceOver value while it is chosen",
       "extractionState" : "manual"
@@ -286,7 +290,7 @@
       "extractionState" : "manual"
     },
     "Cancel" : {
-      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label), and the Refine screen's Cancel, which puts back what it opened with",
+      "comment" : "Button that dismisses a dialog, stops rendering the time-lapse, closes Settings › Advanced › Share with a Note without doing anything, or leaves feedback mode on the painting screen (its accessibility label), and the Refine screen's Cancel, which puts back what it opened with, and the alert shown when feedback couldn't be sent (it keeps what the painter wrote)",
       "extractionState" : "manual"
     },
     "Can’t Find It?" : {
@@ -299,6 +303,10 @@
     },
     "Can’t Show the Canvas" : {
       "comment" : "Title of the screen shown when the device can't draw the painting canvas (no Metal)",
+      "extractionState" : "manual"
+    },
+    "Check your connection and try again, or share it another way. What you wrote is kept." : {
+      "comment" : "Message of the alert when the feedback couldn't be sent; its buttons are Try Again, Share Instead and Cancel, and Cancel keeps the painter's note and marks",
       "extractionState" : "manual"
     },
     "Choose a photo with a clear subject and good light. It becomes your canvas." : {
@@ -663,6 +671,10 @@
     },
     "Couldn’t save progress" : {
       "comment" : "Toast on the painting screen (and its VoiceOver announcement) when saving progress to disk failed",
+      "extractionState" : "manual"
+    },
+    "Couldn’t Send Feedback" : {
+      "comment" : "Alert title when the feedback couldn't be sent to the developers (no connection, a timeout or a refusal)",
       "extractionState" : "manual"
     },
     "create.compare.value" : {
@@ -1085,6 +1097,10 @@
       "comment" : "Choice in the gallery's Show menu that lists only favorite paintings; also the menu's VoiceOver value while it is chosen",
       "extractionState" : "manual"
     },
+    "Feedback sent. Thank you!" : {
+      "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was sent to the developers",
+      "extractionState" : "manual"
+    },
     "feedback.announcement.started" : {
       "comment" : "VoiceOver announcement as the painting screen switches to giving feedback; Next is the button that opens the sheet to write and send it",
       "extractionState" : "manual",
@@ -1490,7 +1506,7 @@
       }
     },
     "gallery.subtitle.both" : {
-      "comment" : "Gallery subtitle with both counts; the arguments are the in-progress part and the finished part",
+      "comment" : "Two parts of the gallery subtitle side by side, e.g. 3 in progress · 2 finished; the arguments are the two parts",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1502,7 +1518,7 @@
       }
     },
     "gallery.subtitle.count.finished" : {
-      "comment" : "Second part of the gallery subtitle: how many paintings are finished",
+      "comment" : "Part of the gallery subtitle: how many paintings are finished",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1526,7 +1542,7 @@
       }
     },
     "gallery.subtitle.count.inProgress" : {
-      "comment" : "First part of the gallery subtitle: how many paintings are in progress",
+      "comment" : "Part of the gallery subtitle: how many paintings are in progress",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1542,6 +1558,30 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld in progress"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gallery.subtitle.count.ready" : {
+      "comment" : "Part of the gallery subtitle: how many paintings nobody has painted on yet and are ready to paint",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ready"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ready"
                 }
               }
             }
@@ -1597,6 +1637,30 @@
         }
       }
     },
+    "gallery.subtitle.ready" : {
+      "comment" : "Gallery subtitle when no painting has been painted on yet, as on the first launch; the argument is how many",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ready to paint"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld ready to paint"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "gallery.toast.deleted" : {
       "comment" : "Toast after deleting a painting, next to an Undo button; the argument is the painting's title",
       "extractionState" : "manual",
@@ -1642,7 +1706,7 @@
       "extractionState" : "manual"
     },
     "In Progress" : {
-      "comment" : "Gallery section header for paintings that are not finished",
+      "comment" : "Gallery section header for paintings that are painted on and not finished",
       "extractionState" : "manual"
     },
     "Included" : {
@@ -1711,6 +1775,106 @@
     },
     "Making Your Time-lapse" : {
       "comment" : "Title of the sheet shown while a time-lapse movie is rendered",
+      "extractionState" : "manual"
+    },
+    "makingOf.caption.ink" : {
+      "comment" : "Card of the making-of show's fifth step: the painting's lines are inked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drawing the lines"
+          }
+        }
+      }
+    },
+    "makingOf.caption.merged" : {
+      "comment" : "Card of the making-of show's fourth step: areas too small to paint join the areas beside them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folding tiny bits into their neighbors"
+          }
+        }
+      }
+    },
+    "makingOf.caption.paints" : {
+      "comment" : "Card of the making-of show's third step: the painting's paints are picked from the photo",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choosing the paints"
+          }
+        }
+      }
+    },
+    "makingOf.caption.shading" : {
+      "comment" : "Card of the making-of show's second step: soft grey shading is laid in, stopping at the edges",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shading softly, without crossing edges"
+          }
+        }
+      }
+    },
+    "makingOf.caption.sketch" : {
+      "comment" : "Card of the making-of show's first step, under the picture: the photo's texture smears away and pencil lines find its shapes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finding the shapes under the texture"
+          }
+        }
+      }
+    },
+    "makingOf.caption.template" : {
+      "comment" : "Card of the making-of show's last step: stair-stepped outlines relax into smooth curves and the paint numbers go in",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smoothing the outlines, adding the numbers"
+          }
+        }
+      }
+    },
+    "Preparing the Making-of" : {
+      "comment" : "VoiceOver label of the spinner under the photo while the making-of show is being made, before it plays",
+      "extractionState" : "manual"
+    },
+    "Skip" : {
+      "comment" : "Button over the making-of show that ends it and opens the new painting",
+      "extractionState" : "manual"
+    },
+    "The Making-of" : {
+      "comment" : "Settings switch (off by default) that makes Start Painting first play the making-of show: the painter's photo becoming its painting, step by step (a name, like a film's title)",
+      "extractionState" : "manual"
+    },
+    "Send goes straight to the people who make Paint by Moonlight." : {
+      "comment" : "Feedback's review sheet: footer under what is sent; Send delivers the feedback to the developers directly",
+      "extractionState" : "manual"
+    },
+    "Send goes straight to the people who make Paint by Moonlight. Your photo helps us remake the painting; it goes only if you turn it on." : {
+      "comment" : "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
+      "extractionState" : "manual"
+    },
+    "Sending…" : {
+      "comment" : "Feedback's review sheet: message (and VoiceOver label of the progress indicator) while the feedback is being sent to the developers",
+      "extractionState" : "manual"
+    },
+    "Share Instead" : {
+      "comment" : "Button in the alert after feedback couldn't be sent: opens the share sheet so the painter can send the feedback another way, such as Mail",
       "extractionState" : "manual"
     },
     "Waves hello." : {
@@ -2938,7 +3102,7 @@
       "extractionState" : "manual"
     },
     "Preparing your feedback…" : {
-      "comment" : "Feedback's review sheet: message while the feedback's pictures and files are being written, before the share sheet opens",
+      "comment" : "Feedback's review sheet: message while the feedback's pictures and files are being written, before they are sent (or, after Share Instead, before the share sheet opens)",
       "extractionState" : "manual"
     },
     "Preparing…" : {
@@ -2959,6 +3123,10 @@
     },
     "Ready to paint" : {
       "comment" : "Caption on the gallery card of a painting that has no paint yet",
+      "extractionState" : "manual"
+    },
+    "Ready to Paint" : {
+      "comment" : "Gallery section header for paintings nobody has painted on yet",
       "extractionState" : "manual"
     },
     "Ready to Share" : {
@@ -3136,7 +3304,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draw lines exactly as you draw them. Two fingers zoom and move, and a two-finger tap undoes."
+            "value" : "Draw lines exactly as you draw them. Two fingers zoom and move, and a two‑finger tap undoes."
           }
         }
       }
@@ -3854,19 +4022,11 @@
       "extractionState" : "manual"
     },
     "Send" : {
-      "comment" : "Feedback's review sheet: button that prepares the feedback's files and opens the share sheet to send them",
+      "comment" : "Feedback's review sheet: button that prepares the feedback's files and sends them to the developers",
       "extractionState" : "manual"
     },
     "Send Feedback" : {
       "comment" : "Title of the sheet that reviews and sends feedback on a painting",
-      "extractionState" : "manual"
-    },
-    "Send opens the share sheet: choose how it goes and who gets it." : {
-      "comment" : "Feedback's review sheet: footer under what is sent",
-      "extractionState" : "manual"
-    },
-    "Send opens the share sheet: choose how it goes and who gets it. Your photo helps us remake the painting; it goes only if you turn it on." : {
-      "comment" : "Feedback's review sheet: footer under what is sent, for a painting made from the painter's own photo",
       "extractionState" : "manual"
     },
     "Settings" : {
@@ -4090,7 +4250,7 @@
       "extractionState" : "manual"
     },
     "Thanks for the feedback!" : {
-      "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared",
+      "comment" : "Painting screen: toast and VoiceOver announcement after feedback on the painting was shared through the share sheet (Share Instead in the alert after sending failed)",
       "extractionState" : "manual"
     },
     "The Marginarium" : {
@@ -4226,7 +4386,7 @@
       "extractionState" : "manual"
     },
     "Try Again" : {
-      "comment" : "Button in the time-lapse sheet after rendering failed",
+      "comment" : "Button in the time-lapse sheet after rendering failed, and in the alert after feedback couldn't be sent: sends it again",
       "extractionState" : "manual"
     },
     "Try again in a moment." : {
@@ -4281,7 +4441,7 @@
       "comment" : "Section title above the photo library picker on wide screens in the create flow",
       "extractionState" : "manual"
     },
-    "Your photos and paintings stay on this device unless you share them. Paint by Moonlight collects no data." : {
+    "Your photos and paintings stay on this device unless you share them or choose to send feedback. Paint by Moonlight has no accounts, ads or tracking." : {
       "comment" : "Footer of the About section in Settings: the privacy statement",
       "extractionState" : "manual"
     },

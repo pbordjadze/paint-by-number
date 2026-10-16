@@ -1,7 +1,7 @@
 import XCTest
 
 /// Settings: About (version, acknowledgements), Paper, Line Weight, Painting Length, Preview,
-/// Detail Brushes and The Marginarium.
+/// Detail Brushes, The Marginarium and The Making-of.
 final class SettingsTests: XCTestCase {
     @MainActor
     func testAboutShowsTheVersion() throws {
@@ -172,6 +172,32 @@ final class SettingsTests: XCTestCase {
         again.navigationBars["Settings"].buttons["Done"].tap()
         XCTAssertTrue(again.buttons["Settings"].waitForExistence(timeout: 10))
         XCTAssertFalse(again.buttons["The Marginarium"].exists, "The book stayed in the toolbar once hidden")
+    }
+
+    /// The Making-of starts off and switches on (Start then plays the show: `MakingOfUITests`).
+    @MainActor
+    func testMakingOfSwitchStartsOffAndTurnsOn() throws {
+        let app = openSettings()
+        let toggle = app.switches["settings-making-of"]
+        scroll(app, to: toggle)
+        // Below the Marginarium's: a row the list has made can still be under the fold.
+        for _ in 0..<3 where toggle.exists && !toggle.isHittable { app.swipeUp() }
+        XCTAssertTrue(toggle.exists, "Settings has no Making-of switch")
+        XCTAssertEqual(toggle.value as? String, "0", "The Making-of doesn't start off")
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        XCTAssertTrue(
+            XCTWaiter.wait(
+                for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '1'"), object: toggle)], timeout: 5)
+                == .completed,
+            "The Making-of didn't switch on: \(toggle.value ?? "")")
+        attachScreenshot(of: app, named: "settings-making-of")
+        // Stored in the simulator's defaults: off again for the other tests.
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+        XCTAssertTrue(
+            XCTWaiter.wait(
+                for: [XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == '0'"), object: toggle)], timeout: 5)
+                == .completed,
+            "The Making-of didn't switch off: \(toggle.value ?? "")")
     }
 
     /// The picker's label and value together: how a menu picker's row reads.

@@ -58,23 +58,30 @@ before planning app work).
   `Commands.swift`, `Edit.swift` (`pbn edit`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
 - `Sources/MakingOf` (depends on PaintCore only; Debug `-O`, Release checked): the making-of show,
-  which plays after Start (three guardians walk over the painter's photo and each pipeline step is
-  revealed where they work). `Show` (its and `ShowFrame`'s doc comments say what the app's view
+  which plays after Start when Settings › The Making-of is on (off by default). The app plays
+  `FieldShow`, the show with no crew (below); `Show`, the first one, has three guardians walk over
+  the painter's photo and each pipeline step revealed where they work, and the app doesn't play it.
+  `Show` (its and `ShowFrame`'s doc comments say what the app's view
   draws) is built once from a generation's `ShowPictures`, the finished template (`ShowTemplate`),
-  the strict `ShowSpec` (`making-of.json`), a seed and `SpriteMetrics` (`pet-metrics.json`, in the
-  app's `Resources`), and then `frame(at:)` is a pure function of the time. Inside: `CrewInputs.make`
+  the strict `ShowSpec` (`making-of.json`, bundled in Release too), a seed and `SpriteMetrics`
+  (`pet-metrics.json`, in the app's `Resources` but not in its Release and not read by it), and
+  then `frame(at:)` is a pure function of the time. Inside: `CrewInputs.make`
   and `CrewPlan` (the crew), `ShowLayers` and `Compositor` (the pictures, `RevealStyle`: what a pixel
   looks like), `Arrival`, `StrokeSchedule`, `NumberSchedule` and `Timeline` (when and where,
   `ScheduleStyle`). Every random draw is a `ShowStreams` stream of SplitMix64; discrete decisions are
   exact (integers, `+ - * /`, `sqrt`) and the pictures are within measured tolerances of the Python
   reference `tools/factory/making_of_{exact,inputs,layers,compose,reveal,pets,show}.py`, which
-  `making_of_clip.py` plays with Pillow (stills and video). Fixtures in `Tests/MakingOfTests/Fixtures/`
+  `making_of_clip.py` plays with Pillow (stills and video). `making_of_fields.py` is the show with
+  no crew (each step grown from seeds over the picture itself; `making_of_clip.py --no-crew`), and
+  `FieldShow` (its doc comment) its port, with `Show`'s surface and `ShowFrame.sparks` and `.stars`
+  of its own (`Show`'s are empty). Fixtures in `Tests/MakingOfTests/Fixtures/`
   are written by that Python and replayed by the tests: `plan-parrots.json` by
   `making_of_clip.py --plan-json` (recipe in `CrewPlan`'s doc comment), `show-small/inputs-small.json`
   by `making_of_inputs.py` (recipe in `test_making_of_inputs.py`), `reveal-small.json` by
   `making_of_reveal.py --fixture`, `layers-small.json` and `compose-small.json` by
   `tools/tests/test_making_of_layers.py --write-goldens`, `frames-small.json` by
-  `tools/tests/test_making_of_show.py --write-goldens`, and `pet-metrics.json` by
+  `tools/tests/test_making_of_show.py --write-goldens`, `fields-small.json` by
+  `tools/tests/test_making_of_fields.py --write-goldens`, and `pet-metrics.json` by
   `making_of_pets.py --metrics App/PaintByNumber/Resources <out>`. `python3 -m unittest discover -s
   tools/tests -p 'test_making_of_*.py'` (numpy, Pillow; CI `core`) fails when a committed fixture is
   not what the Python makes now.
@@ -101,12 +108,18 @@ before planning app work).
   `check --docs <view.json> --id <chapter>` also compares against the approved Doc. Chapter `pet:`
   blocks, the pets beside margin notes, the shared imageset/v2-atlas player and the bundled
   sheets' sizes: `docs/marginarium-pets.md`.
-- `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, quality
-  regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
+- `ci/` scripts and `.github/workflows/ci.yml`: jobs `core` (Linux: PaintCore tests, the feedback relay's
+  tests, quality regression, string catalog), the simulator matrix `apple` (every push: `ipad`, Debug build,
   screenshots, unit and Settings UI tests, Release check, benchmark; `ipad-ui`, the other UI tests;
   on `main`: `iphone`, all of it), `ipa` (unsigned IPA, SideStore source) on `main`, `report`
   (`ci/report.py` writes `STATUS.md`); `.github/workflows/testflight.yml`, the TestFlight upload
-  (on request; its header says how).
+  (on request; its header says how); `.github/workflows/feedback-relay.yml`, the deploy of
+  `feedback-relay/` (see below).
+- `feedback-relay/`: the Cloudflare Worker behind Give Feedback's Send (`worker.js`'s header is its
+  contract and manual; `worker.test.js` runs with `node --test feedback-relay/worker.test.js`, in
+  CI's `core` job too). It files each report in the developers' private GitHub repository. Its
+  deploy workflow needs the secrets `CLOUDFLARE_API_TOKEN` and `FEEDBACK_GITHUB_TOKEN` and writes
+  the Worker's URL to its run summary, which `FeedbackUploader.endpoint` must match.
 - `docs/`: notes the code cites: `auto-tuning.md` (and `auto-corpus.md`), `coloring-book.md`,
   `writing.md`, `picture-library.md`, `gradient-rings.md`, `cleanroom-curve-fitter.md`. Plans, agent briefs and
   per-agent reports are not committed (they live on their branch and in commit messages); a
@@ -126,7 +139,9 @@ before planning app work).
 (`LineArtInput`) into cells bounded by lines, each line in a `LineLayer`. Detect and trace read the
 edge map alone; eyes and the subjects' silhouettes enter at the layer stage (`LineLayering.addEyes`,
 `addObjects`), where `LineArtInput.contours` decides the outlines; `CellMap` splits the segmentation
-along the lines; lines inside cells become `InteriorStroke`s (`Template.lineArt`). It makes the
+along the lines (the strips a line cuts from the blur of a soft edge join the cell beside them, so
+no paint shows past an outline: `docs/coloring-book.md` › Soft edges); lines inside cells become
+`InteriorStroke`s (`Template.lineArt`). It makes the
 **coloring book** (`LineArtSettings.Style.coloringBook`: the default, and every template the app
 makes): the drawing as its only lines, on flatter paint
 (`SegmentationParameters.coloringBookFlattening`, by style, edge map or not), drawn in full ink over
@@ -316,14 +331,18 @@ Saved paintings must open in every later build. The format history is documented
 - Demo scenarios: `-demo <name>`; the catalogs are the doc comments of `ShellDemo`, `PaintDemoView`
   and `RootView`. A screenshotted scenario is one `name@seconds` line of `ci/scenarios.txt` (no
   comments; `@seconds` is only the timeout; the file merges as a union) and calls `DemoMode.markReady()` once its content is on
-  screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `SyntheticTemplate`,
-  `LineArtMapsCache`, `DemoTemplateCache` and `MainThreadWatchdog` are wrapped in `#if DEBUG`,
+  screen. Demo mode is DEBUG-only: `DemoMode`, `ShellDemo`, `PaintDemoView`, `MakingOfDemoView`,
+  `SyntheticTemplate`, `LineArtMapsCache`, `DemoTemplateCache`, `MainThreadWatchdog` and
+  `FeedbackUploadStub` (Debug builds' stand-in for the feedback relay, picked by
+  `-feedback-upload`: tests and CI never upload) are wrapped in `#if DEBUG`,
   and every other reference (`RootView`, `Library.forLaunch`, `AppShellView`, `SettingsView`,
   `LineArtInputs`, `ArtworkFactory`, …) sits in an `#if DEBUG`
   block, so Release builds and the IPA have no `-demo` switch. New demo code follows the same rule;
   `ci/check_release.sh` (run by the `ipad` job on a Release build) fails if a Debug-only type name
-  shows up in the Release binary. The Marginarium is left out of the release for now, the same check failing if any of
-  it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
+  shows up in the Release binary. The Making-of ships (its screen and Settings switch have no
+  `#if`; `making-of.json` is bundled, which the same check requires, and nothing of the
+  Marginarium's sprites is reachable from it). The Marginarium is left out of the release for now,
+  the same check failing if any of it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
   resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`.
   `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
   job archives Release with it defined and the exclusion cleared, so Paul's SideStore build has
@@ -334,9 +353,12 @@ Saved paintings must open in every later build. The format history is documented
   scenario for any new screen worth a CI screenshot, catalog entries for its strings, VoiceOver
   labels and values, Dynamic Type, Reduce Motion and dark mode for every new control, and the
   CLAUDE.md pointers kept current. No stubs or flags hiding unfinished work.
-- Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking, no collected
-  data; required-reason APIs: UserDefaults `CA92.1`, file timestamps `C617.1` for purging the app's
-  own export folders). Using another required-reason API (file timestamps, disk space, boot time via
+- Ship hygiene: `Resources/PrivacyInfo.xcprivacy` is the privacy manifest (no tracking; the one
+  thing the app sends off the device is the feedback a painter chooses to send, declared as
+  collected data not linked to them and used only for App Functionality: customer support, other
+  diagnostic data, photos or videos; `AboutTests` pins the list and `PRIVACY.md` says the same, so
+  a change to what Send uploads changes all three; required-reason APIs: UserDefaults `CA92.1`, file
+  timestamps `C617.1` for purging the app's own export folders). Using another required-reason API (file timestamps, disk space, boot time via
   `systemUptime`/`mach_absolute_time`, active keyboards) means adding its category and reason code
   there; `AboutTests` fails when the sources of the app or of `Sources/PaintCore` (not `pbn`) and
   the manifest disagree. Export compliance (`ITSAppUsesNonExemptEncryption`) and the app category

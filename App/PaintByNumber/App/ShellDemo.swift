@@ -17,6 +17,8 @@ import PaintCore
 /// - `gallery-no-favorites-long-text`: the Favorites filter with nothing favorited (its empty state),
 ///   with every localized string twice as long.
 /// - `gallery-empty`: the empty state.
+/// - `gallery-first-run`: the gallery as the first launch leaves it: the library's two starter
+///   paintings, none of them painted on (ready to paint, nothing in progress).
 /// - `gallery-draft`, `gallery-draft-long-text`: three paintings below the create flow's draft
 ///   (The Great Wave, refined as in `create-refine`), with its photo, "Continue Refining" and
 ///   Discard; the second with every localized string twice as long.
@@ -66,8 +68,8 @@ import PaintCore
 ///   `-NSDoubleLocalizedStrings YES` to scenarios named `*-long-text`, the pseudo-localization that
 ///   shows where translations (German, Finnish, ...) would truncate or overflow.
 enum ShellDemo: Equatable {
-    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryDraft,
-         galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
+    case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
+         galleryDraft, galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
@@ -82,6 +84,7 @@ enum ShellDemo: Equatable {
         case "gallery-no-favorites-long-text": .galleryNoFavorites
         case "gallery-long-text": .galleryLongText
         case "gallery-empty": .galleryEmpty
+        case "gallery-first-run": .galleryFirstRun
         case "gallery-draft", "gallery-draft-long-text": .galleryDraft
         case "gallery-open": .galleryOpen
         case "gallery-damaged": .galleryDamaged
@@ -255,6 +258,11 @@ enum ShellDemo: Equatable {
                 }
                 DemoMode.markReady()
             })
+        case .galleryFirstRun:
+            // What the first launch makes (`Library.seedIfNeeded`): the starters, nobody's touched.
+            library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
+                DemoMode.markReady()
+            })
         case .galleryLongText:
             library.seed(galleryItems, completion: { _ in
                 // The newest deletion keeps its Undo toast up for `Library.undoWindow`, well past the screenshot.
@@ -308,8 +316,9 @@ enum ShellDemo: Equatable {
         await library.drafts.flush()
     }
 
-    /// The first six pictures painted to various stages: four in progress, two finished
-    /// (with two pictures, one of each).
+    /// The first six pictures painted to various stages: three in progress, one nobody has painted
+    /// on, two finished (`GalleryActionsTests` waits for the subtitle that counts them, "3 in
+    /// progress · 1 ready · 2 finished"; with two pictures, one in progress and one finished).
     private var galleryItems: [Library.SeedItem] {
         let hour: TimeInterval = 3600
         // By position: the fraction painted, and the hours since it was last painted.

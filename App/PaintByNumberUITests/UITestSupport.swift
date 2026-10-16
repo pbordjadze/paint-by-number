@@ -131,8 +131,12 @@ extension XCTestCase {
         return dialog
     }
 
-    /// Closes a dialog without choosing: Cancel where it has one, else a tap on the window's edge
-    /// farthest from it (a popover closes on a tap outside it, which it swallows).
+    /// Closes a dialog without choosing: Cancel where it has one, else a tap at the middle of the
+    /// window's bottom edge (a popover closes on a tap outside it, which it swallows), or of its top
+    /// when the dialog reaches the bottom. Below the status bar, never in it: a tap there is the
+    /// system's (it scrolls to the top) and never reaches the app. This tapped 3% from the top for
+    /// every dialog in the lower half, and the popover of a card high on a phone's screen, which
+    /// opens below the card, stayed up.
     @MainActor
     func dismissDialog(at dialog: CGRect, titled title: String, in app: XCUIApplication) {
         let cancel = app.buttons["Cancel"]
@@ -140,7 +144,7 @@ extension XCTestCase {
             cancel.tap()
         } else {
             let window = app.windows.firstMatch
-            let y: CGFloat = dialog.midY > window.frame.midY ? 0.03 : 0.97
+            let y: CGFloat = dialog.maxY > window.frame.height * 0.85 ? 0.08 : 0.97
             window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: y)).tap()
         }
         XCTAssertTrue(element(labeled: title, in: app).waitForNonExistence(timeout: 10), "“\(title)” stayed on screen")

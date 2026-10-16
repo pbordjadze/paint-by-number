@@ -2,7 +2,9 @@ import XCTest
 
 /// Feedback on a painting: a finger draws a mark, the highlighter can be picked, Next reviews
 /// the mark (it gets its own comment field, which takes typing), Back returns to drawing, and
-/// Cancel › Discard returns to painting.
+/// Cancel › Discard returns to painting. Send goes to the developers through the relay, which
+/// Debug builds never reach: `-feedback-upload` picks a stub that succeeds (the default), fails
+/// (`fail`) or fails the first time (`fail-once`), so the thanks, the alert and Try Again run.
 final class FeedbackUITests: XCTestCase {
     @MainActor
     func testDrawReviewAndDiscard() throws {
@@ -58,5 +60,74 @@ final class FeedbackUITests: XCTestCase {
         discard.tap()
         XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10), "Discarding didn't return to painting")
         XCTAssertFalse(next.exists, "Feedback mode is still on")
+    }
+
+    // MARK: Send
+
+    private let failedTitle = "Couldn’t Send Feedback"
+
+    /// The toast that thanks for a sent feedback (its label also names its symbol).
+    @MainActor
+    private func thanks(in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Feedback sent. Thank you!")).firstMatch
+    }
+
+    /// The review sheet over `paint-feedback-review`'s painting, marks and note, its Send going to
+    /// the stub that `mode` names (the one that succeeds when nil).
+    @MainActor
+    private func openReview(uploading mode: String? = nil) -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "paint-feedback-review"] + (mode.map { ["-feedback-upload", $0] } ?? [])
+        app.launch()
+        XCTAssertTrue(app.navigationBars["Send Feedback"].waitForExistence(timeout: 120), "The review didn't open")
+        XCTAssertTrue(app.buttons["feedback-send"].waitForExistence(timeout: 10), "The review has no Send")
+        return app
+    }
+
+    @MainActor
+    func testSendThanksThePainterAndEndsFeedback() throws {
+        let app = openReview()
+        attachScreenshot(of: app, named: "feedback-review-send")
+        app.buttons["feedback-send"].tap()
+        XCTAssertTrue(thanks(in: app).waitForExistence(timeout: 60), "A sent feedback wasn't thanked")
+        attachScreenshot(of: app, named: "feedback-sent")
+        XCTAssertFalse(app.navigationBars["Send Feedback"].exists, "The review sheet stayed up after sending")
+        XCTAssertFalse(app.buttons["feedback-next"].exists, "Feedback mode is still on after sending")
+    }
+
+    /// A send that fails asks what to do; Cancel keeps the note and the marks to send another way.
+    @MainActor
+    func testFailedSendOffersTryAgainShareInsteadAndCancel() throws {
+        let app = openReview(uploading: "fail")
+        app.buttons["feedback-send"].tap()
+        let alert = app.alerts[failedTitle]
+        XCTAssertTrue(alert.waitForExistence(timeout: 60), "A send that failed showed no alert")
+        attachScreenshot(of: app, named: "feedback-send-failed")
+        for button in ["Try Again", "Share Instead", "Cancel"] {
+            XCTAssertTrue(alert.buttons[button].exists, "The alert has no \(button) button")
+        }
+        XCTAssertFalse(thanks(in: app).exists, "A failed send was thanked")
+
+        alert.buttons["Cancel"].tap()
+        XCTAssertTrue(alert.waitForNonExistence(timeout: 10), "Cancel left the alert up")
+        XCTAssertTrue(app.navigationBars["Send Feedback"].exists, "Cancel closed the review")
+        let note = app.descendants(matching: .any)["feedback-note"]
+        XCTAssertTrue(
+            waitFor(note, toMatch: NSPredicate(format: "value CONTAINS %@", "The sky reads beautifully")),
+            "Cancel lost the note: \(note.value ?? "")")
+        XCTAssertTrue(app.descendants(matching: .any)["feedback-mark-1"].exists, "Cancel lost the marks")
+        XCTAssertTrue(app.buttons["feedback-send"].isEnabled, "Send stayed off after Cancel")
+    }
+
+    /// Try Again sends the same files again: the stub fails only the first try, and the second is thanked.
+    @MainActor
+    func testTryAgainSendsAfterAFailure() throws {
+        let app = openReview(uploading: "fail-once")
+        app.buttons["feedback-send"].tap()
+        let alert = app.alerts[failedTitle]
+        XCTAssertTrue(alert.waitForExistence(timeout: 60), "The first try didn't fail")
+        alert.buttons["Try Again"].tap()
+        XCTAssertTrue(thanks(in: app).waitForExistence(timeout: 60), "Try Again wasn't thanked")
+        XCTAssertFalse(app.navigationBars["Send Feedback"].exists, "The review sheet stayed up after sending")
     }
 }

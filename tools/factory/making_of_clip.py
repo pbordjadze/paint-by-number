@@ -5,7 +5,7 @@ same frames), drawn with Pillow: the layers composited by making_of_compose.py, 
 and numbers, the cards, the seed rings and the Lamp's guardians (making_of_pets.py) as the crew.
 
 Usage:
-  making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width PX] [--fps 60] [--crew N]
+  making_of_clip.py <generate-out> <snapshots> <out.mp4> [--width PX] [--fps 60] [--crew N] [--no-crew]
                     [--step SECONDS] [--pets RESOURCES] [--spec JSON] [--seed 7]
                     [--stills DIR] [--pet-height SHARE] [--motion DIR] [--plan-json PATH]
 
@@ -18,6 +18,8 @@ roughens each step's reveal, the lines' start jitters) is chosen by the shared m
 makes the same numbers in Sources/MakingOf; the pictures are the snapshots' own size, which the
 pipeline keeps to 1024 px on the long side, and --width only scales the video (and the stills) to
 that many pixels across.
+--no-crew plays the show with no crew instead (making_of_fields.py): each step's change grows from
+seeds over the picture itself, with sparks along the burning lines and a ring as each number comes out.
 --motion DIR writes a motion report of the guardians and stops. --plan-json PATH writes the crew's
 plan and stops: {"spec", "inputs", "plan", "states"}, the inputs rounded to 0.01 px and 0.0001 s before
 the plan is made from them, and every guardian's state at 30 per second. That file is
@@ -58,6 +60,7 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import making_of_fields  # noqa: E402
 import making_of_inputs  # noqa: E402
 import making_of_layers as layers  # noqa: E402
 import making_of_pets  # noqa: E402
@@ -271,6 +274,19 @@ def draw_rings(draw, frame):
         draw.ellipse((x - 2.6, y - 2.6, x + 2.6, y + 2.6), fill=ink + (al,))
 
 
+def draw_marks(draw, frame):
+    """The show with no crew's own marks (making_of_fields.py): a spark at each burning tip of the
+    ink step's lines, and a faint ring opening round each number as it comes out."""
+    ink = tuple(int(v) for v in layers.STYLE.ink)
+    for spark in frame.get('sparks', ()):
+        x, y, heat = spark['x'], spark['y'], spark['heat']
+        r = 1.6 + 1.6 * heat
+        draw.ellipse((x - r, y - r, x + r, y + r), fill=ink + (int(230 * heat),))
+    for star in frame.get('stars', ()):
+        x, y, r = star['x'], star['y'], star['radius']
+        draw.ellipse((x - r, y - r, x + r, y + r), outline=ink + (int(255 * star['alpha']),), width=1)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('generated')
@@ -280,6 +296,7 @@ def main():
                     "width, the snapshots': the pipeline keeps its long side to 1024)")
     ap.add_argument('--fps', type=int, default=60)
     ap.add_argument('--crew', type=int)
+    ap.add_argument('--no-crew', action='store_true', help='the show with no crew (making_of_fields.py)')
     ap.add_argument('--seed', type=int, default=7)
     ap.add_argument('--stills')
     ap.add_argument('--step', type=float)
@@ -297,6 +314,8 @@ def main():
     intro, step, outro = (float(spec['timing'][k]) for k in ('intro', 'step', 'outro'))
     total = intro + 6 * step + outro
 
+    if a.no_crew and (a.plan_json or a.motion):
+        sys.exit('--plan-json and --motion are the crew\'s')
     if a.plan_json or a.motion:
         pictures, template, built = making_of_show.crew_inputs(a.snapshots, svg, spec, a.seed, ids, a.pet_height)
         planned = making_of_pets.plan(built.inputs)
@@ -306,8 +325,12 @@ def main():
             motion_report(planned.pets, total, pictures.size, built.inputs['petHeight'], a.motion)
         return
 
-    sprites = making_of_pets.load(a.pets, ids)
-    show = making_of_show.Show(a.snapshots, svg, spec, a.seed, ids, a.pet_height, {i: s.metrics for i, s in sprites.items()})
+    if a.no_crew:
+        sprites, show = {}, making_of_fields.FieldShow(a.snapshots, svg, spec, a.seed)
+        total = show.duration
+    else:
+        sprites = making_of_pets.load(a.pets, ids)
+        show = making_of_show.Show(a.snapshots, svg, spec, a.seed, ids, a.pet_height, {i: s.metrics for i, s in sprites.items()})
     W, H = show.size
     template, lines = rasterized(svg, show.size)
     numbers_mult = np.where(lines[..., None] > 0.85, template, 1.0)       # the numbers' glyphs, as a multiply layer
@@ -341,7 +364,9 @@ def main():
             c = cards.image(frame['card']['step'])[..., None] * frame['card']['opacity']
             canvas[H:H + CARD_BAND] = canvas[H:H + CARD_BAND] * (1 - c) + layers.INK * c
         img = Image.fromarray((np.clip(canvas, 0, 1) * 255 + 0.5).astype(np.uint8))
-        draw_rings(ImageDraw.Draw(img, "RGBA"), frame)
+        draw = ImageDraw.Draw(img, "RGBA")
+        draw_rings(draw, frame)
+        draw_marks(draw, frame)
         if frame['sprites']:
             rgba = img.convert('RGBA')
             for d in frame['sprites']:

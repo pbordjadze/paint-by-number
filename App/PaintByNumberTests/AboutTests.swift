@@ -18,11 +18,30 @@ struct PrivacyManifestTests {
         })
     }
 
-    @Test func manifestShipsInTheBundleAndDeclaresNoTrackingOrCollection() throws {
+    @Test func manifestShipsInTheBundleAndDeclaresNoTracking() throws {
         let manifest = try Self.manifest()
         #expect(manifest["NSPrivacyTracking"] as? Bool == false)
         #expect((manifest["NSPrivacyTrackingDomains"] as? [String])?.isEmpty == true)
-        #expect((manifest["NSPrivacyCollectedDataTypes"] as? [Any])?.isEmpty == true)
+    }
+
+    /// What Send uploads (`FeedbackUploader`): the painter's notes (customer support), the app,
+    /// device and system and the painting's settings (other diagnostic data), the painting with its
+    /// marks and the photo if switched on (photos or videos). Nothing is linked to a person, none
+    /// is used for tracking, and each is for the app's function; PRIVACY.md says the same.
+    @Test func manifestDeclaresExactlyTheDataFeedbackSends() throws {
+        let manifest = try Self.manifest()
+        let entries = try #require(manifest["NSPrivacyCollectedDataTypes"] as? [[String: Any]])
+        let types = entries.compactMap { $0["NSPrivacyCollectedDataType"] as? String }
+        #expect(types.sorted() == [
+            "NSPrivacyCollectedDataTypeCustomerSupport",
+            "NSPrivacyCollectedDataTypeOtherDiagnosticData",
+            "NSPrivacyCollectedDataTypePhotosorVideos",
+        ])
+        for entry in entries {
+            #expect(entry["NSPrivacyCollectedDataTypeLinked"] as? Bool == false)
+            #expect(entry["NSPrivacyCollectedDataTypeTracking"] as? Bool == false)
+            #expect(entry["NSPrivacyCollectedDataTypePurposes"] as? [String] == ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])
+        }
     }
 
     @Test func userDefaultsIsDeclaredForTheAppsOwnPreferences() throws {

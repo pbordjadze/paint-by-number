@@ -16,6 +16,7 @@ struct SettingsView: View {
     #if UNRELEASED
     @AppStorage(SettingsKey.showsMarginarium) private var showsMarginarium = false
     #endif
+    @AppStorage(SettingsKey.playsMakingOf) private var playsMakingOf = false
     @State private var path: [Destination] = []
 
     private let appInfo = AppInfo()
@@ -144,6 +145,15 @@ struct SettingsView: View {
                 #endif
 
                 Section {
+                    Toggle(isOn: $playsMakingOf) {
+                        SwiftUI.Label("The Making-of", systemImage: "film")
+                    }
+                    .accessibilityIdentifier("settings-making-of")
+                } footer: {
+                    Text("After Start Painting, watch your photo become its painting, step by step. It takes about 20 seconds, and a tap skips it.")
+                }
+
+                Section {
                     LabeledContent {
                         Text(appInfo.summary)
                     } label: {
@@ -158,7 +168,7 @@ struct SettingsView: View {
                 } header: {
                     Text("About")
                 } footer: {
-                    Text("Your photos and paintings stay on this device unless you share them. Paint by Moonlight collects no data.")
+                    Text("Your photos and paintings stay on this device unless you share them or choose to send feedback. Paint by Moonlight has no accounts, ads or tracking.")
                 }
             }
             .navigationDestination(for: Destination.self) { destination in

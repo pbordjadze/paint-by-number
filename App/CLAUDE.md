@@ -28,9 +28,10 @@ synchronized folder would bundle it into the app.
   on a screen or a grid it points at the container's middle, not at what asked. Attach it to the
   card, button or menu that asks, keeping one state for what is pending: each gallery card carries
   its Delete and Restart (`GalleryView.isPending`), `DraftRow` its Discard, `PaintView.moreMenu`
-  its Restart, `FeedbackBar` its Cancel's. `checkDialog` (`UITestSupport`) measures a dialog
-  against its source in `GalleryActionsTests`, `DraftUITests`, `PaintingNavigationTests` and
-  `FeedbackUITests`. Alerts (`.alert`) are centered and need none of this.
+  its Restart, `FeedbackBar` its Cancel's, `PaintingRecoveryView` its Delete Painting (what both
+  Deletes say: `DeleteConfirmation`). `checkDialog` (`UITestSupport`) measures a dialog
+  against its source in `GalleryActionsTests`, `DraftUITests`, `PaintingNavigationTests`,
+  `FeedbackUITests` and `RecoveryTests`. Alerts (`.alert`) are centered and need none of this.
 - `CanvasUniforms`, `RegionState` and `GlyphInstance` are mirrored by hand in `Shaders.metal`:
   change both in the same order, 16-byte vectors only
   (`CanvasRenderTests.shaderStructLayoutsMatchMetal` pins the strides). No shader reads
@@ -64,7 +65,7 @@ synchronized folder would bundle it into the app.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
   see Create flow), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
-  `Sample`, `GalleryQuery`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
+  `Sample`, `GalleryQuery`, `GalleryCounts`, `IncomingFile`, `ColorNameText`, `PaintingTimeText`, `TemplateCounts`,
   `Background`, `Log` (every logger; CI's `*-app.log`); DEBUG `DemoTemplateCache`.
 - `Generation/`: `PhotoLoader`, `SubjectImportance` (Vision), `EdgeDetector`, `EyeFinder`,
   `ObjectFinder`, `TextFinder`, `LineArtInputs`, `TemplateRefinements`; DEBUG `LineArtMapsCache`.
@@ -148,6 +149,25 @@ synchronized folder would bundle it into the app.
   for the whole Marginarium: anyone who opens it should have a nice time and roughly follow what's
   going on, so a new page says who people are and what the Lamp's words mean (or links Who's Who),
   in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`.
+- `Features/MakingOf/`: the making-of show in the app (F32; the show itself is `Sources/MakingOf`,
+  linked as the package's `MakingOf` product). It has no crew: the app plays `FieldShow`, each step
+  growing from seeds over the picture itself, and draws no guardian (nothing of it touches the
+  Marginarium's sprite sheets, so it ships in Release; `ci/check_release.sh` checks that
+  `making-of.json` is bundled and that no `SpriteAtlas` or `MakingOfSprites` is). It stays behind
+  Settings › The Making-of (`SettingsKey.playsMakingOf`, off by default; the switch and the screen
+  have no `#if`, only `MakingOfDemoView` is DEBUG). With the switch on, `CreateFlowView.start` saves
+  the painting as ever, then lays `MakingOfView` over the flow instead of opening it; Skip, a tap
+  or the show's end opens it (`onStart`), and so does a show that can't be made. `MakingOfPlayer`
+  makes the show off the main actor (`MakingOfShow.build`: the base generated again with a
+  `PipelineSnapshot` observer from `CreateModel.makingOfSource`, the saved template, the bundled
+  `making-of.json`, seeded by the artwork id), composites the picture on the CPU with
+  `FieldShow.composite` at most 30 times a second on a background task, and announces each card to
+  VoiceOver; `MakingOfCanvas` draws the rest of each `ShowFrame` (the real template, numbers, seed
+  rings, then the field show's sparks at the burning tips of the ink step and its stars round the
+  numbers coming out, in ink at the picture-to-view scale the rings use), `MakingOfCardView` the
+  card in New York (captions in the catalog, which `MakingOfShowTests` keeps the spec's; credits
+  from `Acknowledgements.methods` letter for letter). Reduce Motion plays stills, one per step
+  with its card, cross-faded, with no rings, sparks or stars. No replay from the painting yet.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
   `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
@@ -177,7 +197,8 @@ synchronized folder would bundle it into the app.
   `test-app.log` and the screenshots' `*-app.log`), and STATUS.md lists each stall's length.
 - Demo scenarios (catalogs: `ShellDemo`, `PaintDemoView`, `RootView`): names containing `dark` are
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
-  (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`). Demo launches and the test host
+  (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), and `gallery-first-run` is the
+  gallery as the first launch leaves it (the two starters, none painted on). Demo launches and the test host
   reset TipKit and hide every tip except in `paint-tip`. The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
   `marginarium` (with `-dark`, `-long-text`) is the contents page, its drawings idling, ready 2 s
@@ -193,6 +214,10 @@ synchronized folder would bundle it into the app.
   `marginarium-whos-who` (with `-dark`, `-long-text`) opens Who's Who at its top,
   `marginarium-whos-who-teams` scrolled to the Workshop, and `marginarium-guardian` (with `-dark`,
   `-long-text`) Dino's brief (`ShellDemo.marginariumPath`).
+  `making-of`, `-ink`, `-stars`, `-dark`, `-long-text`, `-end` and `-reduce-motion` (DEBUG
+  `MakingOfDemoView`) make the show of a portrait photograph and hold it at a moment (the paints
+  step's rings, the ink step's sparks, the template step's stars); `MakingOfUITests` turns the
+  setting on with `-playsMakingOf YES`, starts a painting, and skips the show into it.
 
 ## Painting screen
 
@@ -213,7 +238,11 @@ synchronized folder would bundle it into the app.
   changes on the way (`CanvasView.layoutSubviews`): the completion bar taking the palette's place
   changes the canvas insets as the painting finishes. The color that fill finished gets no sound,
   haptic or announcement of its own. The completion bar slides in (`PaintView`'s animation on
-  `isComplete`) and its seal bounces once it is up, for a painting finished on screen.
+  `isComplete`) and its seal bounces once it is up, for a painting finished on screen. The
+  progress badge then names no color (nothing is on the brush); during a replay its ring and
+  percentage follow the canvas, not the finished painting (`CanvasView.replay` tells the session
+  how many areas are on screen, `PaintingSession.replayed`, by `ReplayProgress`; `isComplete` and
+  the saved progress stay whole).
 - Palette (iPad first): `PaintView.PaletteLayout` wraps the palette into rows (bottom) or columns
   (trailing edge of wide windows) so every color shows at once, filling across the bar before
   along it (`PaletteBar.lanes`: rows read 1 4 7 / 2 5 8); More › Palette chooses its lines
@@ -280,10 +309,20 @@ synchronized folder would bundle it into the app.
   recognition was tried and dropped, unproven on finger writing over a painting), and lists what
   goes along; the painter's own photo only when they switch Original Photo on (a library picture
   is named instead).
-- Send writes the bundle (`FeedbackPackage`; its contents are `FeedbackReport`'s doc comment) and
-  hands the painting-with-marks PNG and the zip to `ActivityShareSheet`: there is no fixed address,
-  the painter picks Mail, Messages, AirDrop or Files. The export folder goes once the sheet closes;
-  sharing ends feedback with a thank-you toast.
+- Send writes the bundle (`FeedbackPackage`; its contents are `FeedbackReport`'s doc comment: the
+  painting-with-marks PNG, the zip and `feedback.md` beside it) and `FeedbackUploader` posts the
+  three to the relay (`feedback-relay/`, root `CLAUDE.md` › Map; `FeedbackUploader.endpoint` is the
+  one place its address is written). Sent, the export folder goes and feedback ends with a toast
+  that says it was sent. A failed send (offline, a timeout, any non-2xx) shows an alert: Try Again
+  sends the same files, Share Instead hands the PNG and the zip to `ActivityShareSheet` (the old
+  path: the painter picks Mail, Messages, AirDrop or Files; sharing ends feedback with the plain
+  thank-you), Cancel keeps the draft. The review sheet says Send goes straight to the people who
+  make the app; `PRIVACY.md` and the privacy manifest say what is uploaded (`AboutTests` pins it).
+- Tests and CI never upload: `FeedbackUploads.current` is the real uploader only in Release builds;
+  in Debug it is `FeedbackUploadStub` unless the launch says `-feedback-upload live`
+  (`fail` and `fail-once` make the stub fail, for `FeedbackUITests`' alert and Try Again). The stub
+  sits in `#if DEBUG` and `ci/check_release.sh` looks for its name and the argument in the Release
+  binary.
 
 ## Canvas
 
@@ -371,7 +410,9 @@ Conventions).
   `ArtworkStore.writeFaults`.
 - Favorites and search: `Artwork.isFavorite` (tolerant decoding); the gallery's Show menu
   (`GalleryFilter`, `@SceneStorage("galleryFilter")`) and `.searchable` make a `GalleryQuery`
-  (`Library.inProgress`/`finished` list favorites first); `TitleSearch.matches` needs every query
+  (`Library.inProgress`/`readyToPaint`/`finished` list favorites first; the gallery's sections are
+  these three, a painting nobody has painted on being ready to paint, not in progress, and
+  `GalleryCounts` is the subtitle that counts them); `TitleSearch.matches` needs every query
   word to start a title word, ignoring case, diacritics and width. `AppShellView` keeps the open
   painting's id in `@SceneStorage("openArtwork")` and reopens it once on appear (not in demo
   launches, nor while a file is being opened); a launch whose reopen never settled (the app ended
@@ -533,7 +574,8 @@ paper (`CanvasSnapshot.Options`).
   (`PreviewStyle`, Painting by default) is how the create flow shows a new painting; Settings ›
   Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
   `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
-  puts the book in the gallery's toolbar (off by default). New paintings are
+  puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
+  making-of show after Start Painting (off by default; `Features/MakingOf`). New paintings are
   coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in
   Settings changes how a template is made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
