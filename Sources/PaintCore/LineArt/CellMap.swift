@@ -10,6 +10,8 @@ import Foundation
 /// 3. Cells too small for their number merge into a neighbour in their enclosed area (never
 ///    across a wall), smallest first, preferring long shared borders and close paints.
 /// 4. Wall pixels go to the cells beside them (majority of their assigned neighbours).
+/// 4b. Blur strips along a line merge into the cell beside them (`mergeBlurStrips`), so the
+///    paint stops at the line where an edge is soft.
 /// 5. No cell stays too small for its number: the rest merge across a line, into a cell of
 ///    the same paint when there is one (across the weakest line first), else into the
 ///    closest paint.
@@ -50,6 +52,20 @@ struct CellMap {
     }
 
     static let snapBand: Float = 2.5
+    /// A blur strip (`mergeBlurStrips`) runs along a line for this share of its borders with
+    /// other cells and for at least `stripLineMinimum` of their pixels; the cell it joins holds
+    /// this share of its line-free border and is `stripAreaRatio` times as large; the strip's
+    /// paint lies between those of the cells either side of it, which are `stripContrast` apart
+    /// (OKLab): within `stripSlack` of the line between them (as a share of its length), and
+    /// within `stripMixture` of the nearer one's distance (a just-noticeable difference at
+    /// least) off it.
+    static let stripLineShare: Float = 0.3
+    static let stripLineMinimum: Int32 = 16
+    static let stripFreeShare: Float = 0.6
+    static let stripAreaRatio = 3
+    static let stripContrast: Float = 0.06
+    static let stripMixture: Float = 0.5
+    static let stripSlack: Float = 0.1
     /// A same-paint pair is kept apart when a blocking line runs along this many border pixels.
     static let joinBlock: Int32 = 4
 
@@ -592,6 +608,75 @@ struct CellMap {
             }
         }
         return merges
+    }
+
+    /// Step 4b (walls assigned): blur strips along a line join the cell beside them. A detector
+    /// puts its line on the steepest part of an edge, while the paint changes wherever the colors
+    /// cross between palette steps, so the blur of a soft edge (a fox's tail in snow, a lens's
+    /// shallow focus) leaves its paints in strips beside the line, on both sides, and one of
+    /// them paints past the outline. A strip is a cell no deeper than `reach` (its room) that a
+    /// line runs along (`stripLineShare`), with a line-free border to one larger cell (the one
+    /// it joins) and a line between it and another (the one across), and whose paint lies
+    /// between theirs: the blur from one to the other, which takes the paint of the one beside
+    /// it, so the paint boundary lands on the line (step 1 does that for strips under 5 px).
+    /// A cell that differs from both neighbours (a dark rim, a highlight) or has the paint of
+    /// the one across (a line through a flat area) is a feature and stays, and so does a kept
+    /// cell. Returns the strips merged.
+    mutating func mergeBlurStrips(
+        reach: Float, palette: [SIMD3<Float>], near: [UInt8], cancel: CancellationCheck
+    ) throws -> Int {
+        guard count > 2 else { return 0 }
+        let room = rooms()
+        try cancel.throwIfCancelled()
+        let area = extents().area
+        try cancel.throwIfCancelled()
+        // Per cell, its border with each neighbour along a line and with none.
+        var along = [[Int: Int32]](repeating: [:], count: count)
+        var apart = [[Int: Int32]](repeating: [:], count: count)
+        for (key, pair) in pairs(near: near) {
+            let a = Int(key >> 32), b = Int(key & 0xFFFF_FFFF)
+            let line = pair.lines[0] + pair.lines[1] + pair.lines[2]
+            if line > 0 { along[a][b] = line; along[b][a] = line }
+            if pair.lines[3] > 0 { apart[a][b] = pair.lines[3]; apart[b][a] = pair.lines[3] }
+        }
+        try cancel.throwIfCancelled()
+        /// The neighbour with the longest border (the lowest cell on a tie).
+        func longest(_ borders: [Int: Int32]) -> (cell: Int, border: Int32)? {
+            var best: (cell: Int, border: Int32)?
+            for cell in borders.keys.sorted() where best == nil || borders[cell]! > best!.border { best = (cell, borders[cell]!) }
+            return best
+        }
+        var target = Array(0..<count)
+        var absorbs = [Bool](repeating: false, count: count)
+        var merged = 0
+        for strip in 0..<count where !kept[strip] && !absorbs[strip] && room[strip] <= reach {
+            let line = along[strip].values.reduce(0, +), free = apart[strip].values.reduce(0, +)
+            guard line >= Self.stripLineMinimum, free > 0,
+                  Float(line) >= Self.stripLineShare * Float(line + free),
+                  let across = longest(along[strip]), let beside = longest(apart[strip]),
+                  across.cell != beside.cell, !kept[beside.cell], target[beside.cell] == beside.cell,
+                  Float(beside.border) >= Self.stripFreeShare * Float(free),
+                  area[beside.cell] >= Self.stripAreaRatio * area[strip]
+            else { continue }
+            let paint = palette[Int(color[strip])]
+            let there = palette[Int(color[across.cell])], here = palette[Int(color[beside.cell])]
+            let blur = there - here, span = (blur * blur).sum()
+            guard span >= Self.stripContrast * Self.stripContrast else { continue }
+            // Where the strip's paint falls on the line from the paint beside it to the one
+            // across, and how far off the line.
+            let mixing = ((paint - here) * blur).sum() / span
+            let off = paint - here - blur * mixing
+            let nearer = min(ColorScience.distance(paint, here), ColorScience.distance(paint, there))
+            guard mixing >= -Self.stripSlack, mixing <= 1 - Self.stripSlack,
+                  (off * off).sum().squareRoot() <= max(Self.stripMixture * nearer, SegmentationParameters.jnd)
+            else { continue }
+            target[strip] = beside.cell
+            absorbs[beside.cell] = true
+            merged += 1
+        }
+        guard merged > 0 else { return 0 }
+        merge(target)
+        return merged
     }
 
     /// `keepColorEdges` off: neighbouring cells with no line between them whose paints are

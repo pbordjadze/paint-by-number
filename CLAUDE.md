@@ -126,7 +126,9 @@ before planning app work).
 (`LineArtInput`) into cells bounded by lines, each line in a `LineLayer`. Detect and trace read the
 edge map alone; eyes and the subjects' silhouettes enter at the layer stage (`LineLayering.addEyes`,
 `addObjects`), where `LineArtInput.contours` decides the outlines; `CellMap` splits the segmentation
-along the lines; lines inside cells become `InteriorStroke`s (`Template.lineArt`). It makes the
+along the lines (the strips a line cuts from the blur of a soft edge join the cell beside them, so
+no paint shows past an outline: `docs/coloring-book.md` › Soft edges); lines inside cells become
+`InteriorStroke`s (`Template.lineArt`). It makes the
 **coloring book** (`LineArtSettings.Style.coloringBook`: the default, and every template the app
 makes): the drawing as its only lines, on flatter paint
 (`SegmentationParameters.coloringBookFlattening`, by style, edge map or not), drawn in full ink over
