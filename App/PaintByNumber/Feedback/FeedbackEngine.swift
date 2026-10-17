@@ -5,7 +5,7 @@ import PaintCore
 /// `PaintingSession` when its screen appears.
 ///
 /// Preferences (read live, set from Settings): `SettingsKey.haptics`, `SettingsKey.sounds`
-/// (both default on).
+/// (both default on), and `SettingsKey.sky`, whose sky of the moment picks the sounds.
 final class FeedbackEngine {
     static let shared = FeedbackEngine()
 
@@ -44,7 +44,7 @@ final class FeedbackEngine {
 
     private func prepare() {
         if hapticsEnabled { haptics.prepare() }
-        if soundsEnabled { sounds.prepare() }
+        if soundsEnabled { sounds.prepare(sky: SkySetting.current()) }
     }
 
     /// Selection changes and other UI detents.
@@ -54,6 +54,7 @@ final class FeedbackEngine {
 
     private func handle(_ event: PaintEvent, in session: PaintingSession) {
         let hapticsOn = hapticsEnabled, soundsOn = soundsEnabled
+        let sky = SkySetting.current()
         switch event {
         case let .painted(regions, _):
             // Perceived size of what was painted, relative to the canvas.
@@ -61,7 +62,7 @@ final class FeedbackEngine {
             let canvas = Float(max(1, session.template.width * session.template.height))
             let size = min(1, (area / canvas).squareRoot() * 6)
             if hapticsOn { haptics.paint(strength: size, duration: fillDuration) }
-            if soundsOn { sounds.paint(velocity: 0.35 + 0.65 * size) }
+            if soundsOn { sounds.paint(velocity: 0.35 + 0.65 * size, sky: sky) }
         case .rejected:
             if hapticsOn { haptics.reject() }
             if soundsOn { sounds.reject() }
@@ -71,10 +72,10 @@ final class FeedbackEngine {
             break
         case .colorCompleted:
             if hapticsOn { haptics.colorComplete() }
-            if soundsOn { sounds.colorComplete() }
+            if soundsOn { sounds.colorComplete(sky: sky) }
         case .artworkCompleted:
             if hapticsOn { haptics.celebrate() }
-            if soundsOn { sounds.celebrate() }
+            if soundsOn { sounds.celebrate(sky: sky) }
         case .undone:
             if hapticsOn { haptics.tick() }
         case .strokeEnded, .hintShown, .missedSmallArea:

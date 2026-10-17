@@ -3,7 +3,8 @@ import Foundation
 /// Who's Who in the Marginarium: the people, the AI helpers and the Lamp's guardians in their
 /// teams (`MarginariumWhosWhoView`). Each guardian's brief is its charter in `factory/GUARDIANS.md`
 /// in plain words; the ids are the panel's (`factory/panel.json`) and name each guardian's sheet
-/// (`MarginariumPet`). A guardian who hasn't hatched yet shows an egg (`MarginariumEgg`).
+/// (`MarginariumPet`). A guardian who hasn't hatched yet shows an egg (`MarginariumEgg`). A
+/// guardian who passed its seat on keeps its page (`MarginariumCast.former`).
 nonisolated struct MarginariumGuardian: Identifiable, Sendable {
     let id: String
     let name: String
@@ -51,10 +52,14 @@ nonisolated enum MarginariumCast {
     static func guardian(destination: String) -> MarginariumGuardian? {
         guard destination.hasPrefix("guardian.") else { return nil }
         let id = destination.dropFirst("guardian.".count)
-        return guardians.first { $0.id == id }
+        return everyGuardian.first { $0.id == id }
     }
 
+    /// The Lamp today, team by team.
     static var guardians: [MarginariumGuardian] { teams.flatMap(\.members) }
+
+    /// Every guardian with a page: the Lamp today, then those who passed their seats on.
+    static var everyGuardian: [MarginariumGuardian] { guardians + former.members }
 
     static func team(of guardian: MarginariumGuardian) -> MarginariumTeam? {
         teams.first { team in team.members.contains { $0.id == guardian.id } }
@@ -107,10 +112,10 @@ nonisolated enum MarginariumCast {
         MarginariumTeam(
             id: "storytellers",
             name: String(localized: "lamp.team.storytellers.name", defaultValue: "The Storytellers",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (Dino, The Storybook, Bart, Lotte)"),
             purpose: String(localized: "lamp.team.storytellers.purpose", defaultValue: "Keep the app feeling like a book you could walk into.",
                             comment: "The Marginarium, Who is Who: what the team The Storytellers is for, under its name"),
-            members: [dinotopia, storybook, bartimaeus]),
+            members: [dinotopia, storybook, bartimaeus, lotte]),
         MarginariumTeam(
             id: "studio",
             name: String(localized: "lamp.team.studio.name", defaultValue: "The Studio",
@@ -121,17 +126,17 @@ nonisolated enum MarginariumCast {
         MarginariumTeam(
             id: "moonlit-circle",
             name: String(localized: "lamp.team.moonlit-circle.name", defaultValue: "The Moonlit Circle",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (Medea, The Baba Yaga, The Hedge Witch, The Moon)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (Medea, The Baba Yaga, The Hedge Witch, The Moon, The Astrologer)"),
             purpose: String(localized: "lamp.team.moonlit-circle.purpose", defaultValue: "Keep the magic old, kind and done by night.",
                             comment: "The Marginarium, Who is Who: what the team The Moonlit Circle is for, under its name"),
-            members: [medea, babaYaga, hedgeWitch, moon]),
+            members: [medea, babaYaga, hedgeWitch, moon, astrologer]),
         MarginariumTeam(
             id: "glass-and-frost",
             name: String(localized: "lamp.team.glass-and-frost.name", defaultValue: "Glass and Frost",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Glassblower, The Snow Queen)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Glassblower, The Snow Queen, Rikyū)"),
             purpose: String(localized: "lamp.team.glass-and-frost.purpose", defaultValue: "Keep things clear, calm and exact.",
                             comment: "The Marginarium, Who is Who: what the team Glass and Frost is for, under its name"),
-            members: [glassblower, snowQueen]),
+            members: [glassblower, snowQueen, rikyu]),
         MarginariumTeam(
             id: "workshop",
             name: String(localized: "lamp.team.workshop.name", defaultValue: "The Workshop",
@@ -156,10 +161,10 @@ nonisolated enum MarginariumCast {
         MarginariumTeam(
             id: "hearth",
             name: String(localized: "lamp.team.hearth.name", defaultValue: "The Hearth",
-                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Child at Bedtime, The Robber Girl, The Bible School Teacher)"),
+                         comment: "The Marginarium, Who is Who: the name of a team of guardians (The Child at Bedtime, The Robber Girl, Madeleine)"),
             purpose: String(localized: "lamp.team.hearth.purpose", defaultValue: "Keep it kind, for every age, with a little nerve.",
                             comment: "The Marginarium, Who is Who: what the team The Hearth is for, under its name"),
-            members: [childAtBedtime, robberGirl, bibleSchoolTeacher]),
+            members: [childAtBedtime, robberGirl, madeleineLengle]),
         MarginariumTeam(
             id: "gate",
             name: String(localized: "lamp.team.gate.name", defaultValue: "The Gate",
@@ -168,6 +173,16 @@ nonisolated enum MarginariumCast {
                             comment: "The Marginarium, Who is Who: what the team The Gate is for, under its name"),
             members: [originality]),
     ]
+
+    /// Guardians who passed their seats on. Not on the Lamp any more, each keeps its page; its
+    /// drawing and its words stay in the chapters where it spoke. Shown after the teams.
+    static let former = MarginariumTeam(
+        id: "former",
+        name: String(localized: "lamp.former.name", defaultValue: "Former Guardians",
+                     comment: "The Marginarium, Who is Who: the heading of the guardians who are no longer on the Lamp, after its teams"),
+        purpose: String(localized: "lamp.former.purpose", defaultValue: "They passed their seats on. Their words stay in the chapters.",
+                        comment: "The Marginarium, Who is Who: the line under Former Guardians"),
+        members: [bibleSchoolTeacher])
 
     static let dinotopia = MarginariumGuardian(
         id: "dinotopia",
@@ -622,7 +637,8 @@ nonisolated enum MarginariumCast {
         name: String(localized: "lamp.bible-school-teacher.name", defaultValue: "The Bible School Teacher",
                      comment: "The Marginarium, Who is Who: its name, for the guardian The Bible School Teacher"),
         after: nil,
-        portrait: nil,
+        portrait: String(localized: "lamp.bible-school-teacher.portrait", defaultValue: "She sat on the Hearth until October 17, 2026, when Paul gave her seat to Madeleine. Her drawing and her words stay in the chapters where she spoke.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian The Bible School Teacher, who is no longer on the Lamp"),
         guards: String(localized: "lamp.bible-school-teacher.guards", defaultValue: "a grandmother's smile",
                        comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Bible School Teacher"),
         believes: String(localized: "lamp.bible-school-teacher.believes", defaultValue: "Good things are gentle, patient and fit for every child and grandparent.",
@@ -638,6 +654,101 @@ nonisolated enum MarginariumCast {
         petCaption: String(localized: "lamp.bible-school-teacher.petCaption", defaultValue: "The Bible School Teacher",
                            comment: "The Marginarium, Who is Who: the caption and VoiceOver description of its drawing, which is the guardian itself: its name alone, for the guardian The Bible School Teacher"),
         hatched: true)
+
+    static let astrologer = MarginariumGuardian(
+        id: "astrologer",
+        name: String(localized: "lamp.astrologer.name", defaultValue: "The Astrologer",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian The Astrologer"),
+        after: nil,
+        portrait: String(localized: "lamp.astrologer.portrait", defaultValue: "She looks after the app's Sun and Moon. She sits at the Lamplit Table, the six guardians who look over every new screen and control before it ships.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian The Astrologer"),
+        guards: String(localized: "lamp.astrologer.guards", defaultValue: "the turning sky",
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian The Astrologer"),
+        believes: String(localized: "lamp.astrologer.believes", defaultValue: "Every hour has its own sky, and a thing made well knows what hour it is: bright and plain by day, starlit and a little wild by night.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian The Astrologer"),
+        loves: String(localized: "lamp.astrologer.loves", defaultValue: "The sun and the moon as quiet companions, never a horoscope; one small sign where a sign helps, and none where it doesn't; things that change with the hour, gently and on time; a little edge, like a midsummer night in the woods: mischief, glamour and dew; music that keeps the hours.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian The Astrologer"),
+        watchesFor: String(localized: "lamp.astrologer.watchesFor", defaultValue: "Fortune-telling and horoscopes: nothing predicts anything, and nothing is about the painter's fate; zodiac clip art, crystal-shop kitsch and tarot props; anything that pretends the stars decide; a change that jolts in the middle of something instead of waiting for its moment.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian The Astrologer"),
+        looksUpTo: String(localized: "lamp.astrologer.looksUpTo", defaultValue: "Shakespeare's A Midsummer Night's Dream, with the moon in nearly every scene; Mendelssohn's overture to it (1826); Holst's The Planets (1916); the calendar pages of the Très Riches Heures du duc de Berry, the zodiac arched over each month's work.",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian The Astrologer"),
+        happiestWhen: String(localized: "lamp.astrologer.happiestWhen", defaultValue: "You can tell the hour from it, and the sky is only hinted at.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian The Astrologer"),
+        petCaption: String(localized: "lamp.astrologer.petCaption", defaultValue: "The Astrologer, still an egg",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of The Astrologer's egg: the guardian hasn't hatched yet"),
+        hatched: false)
+
+    static let madeleineLengle = MarginariumGuardian(
+        id: "madeleine-lengle",
+        name: String(localized: "lamp.madeleine-lengle.name", defaultValue: "Madeleine",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian Madeleine"),
+        after: String(localized: "lamp.madeleine-lengle.after", defaultValue: "After the writer Madeleine L'Engle.",
+                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Madeleine"),
+        portrait: String(localized: "lamp.madeleine-lengle.portrait", defaultValue: "She took the Bible School Teacher's seat on the Hearth when Paul asked for \"one very gentle guardian of wholesomeness—but a super chill one.\" She sits at the Lamplit Table, the six guardians who look over every new screen and control before it ships.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Madeleine"),
+        guards: String(localized: "lamp.madeleine-lengle.guards", defaultValue: "a circle of quiet",
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Madeleine"),
+        believes: String(localized: "lamp.madeleine-lengle.believes", defaultValue: "Wonder is for everyone: a story can hold stars, witches and the whole universe and still be kind enough to hand any child, because love is the strongest thing in it.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Madeleine"),
+        loves: String(localized: "lamp.madeleine-lengle.loves", defaultValue: "Wonder that welcomes everyone, whatever they believe; kindness as the strongest power in the story; the cosmic and the cozy side by side, the stars and cocoa in the kitchen; trusting children with big ideas; calm: no fuss, no lectures.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Madeleine"),
+        watchesFor: String(localized: "lamp.madeleine-lengle.watchesFor", defaultValue: "Cruelty, cynicism and despair; fear used to make anyone do anything; sermons, and scolding anyone for their delight; anything a family would hesitate to hand a child.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Madeleine"),
+        looksUpTo: String(localized: "lamp.madeleine-lengle.looksUpTo", defaultValue: "A Wrinkle in Time (1962), where three kindly, star-bright strangers help a girl find her father; A Circle of Quiet (1972), the first of her Crosswicks Journals; Walking on Water: Reflections on Faith and Art (1980).",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Madeleine"),
+        happiestWhen: String(localized: "lamp.madeleine-lengle.happiestWhen", defaultValue: "A grandmother and a teenager in black velvet would both love it, and nobody feels told off.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Madeleine"),
+        petCaption: String(localized: "lamp.madeleine-lengle.petCaption", defaultValue: "Madeleine, still an egg",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Madeleine's egg: the guardian hasn't hatched yet"),
+        hatched: false)
+
+    static let rikyu = MarginariumGuardian(
+        id: "sen-no-rikyu",
+        name: String(localized: "lamp.sen-no-rikyu.name", defaultValue: "Rikyū",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian Rikyū"),
+        after: String(localized: "lamp.sen-no-rikyu.after", defaultValue: "After the tea master Sen no Rikyū.",
+                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Rikyū"),
+        portrait: String(localized: "lamp.sen-no-rikyu.portrait", defaultValue: "He joined when Paul asked for someone who guards minimalism. He sits at the Lamplit Table, the six guardians who look over every new screen and control before it ships.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Rikyū"),
+        guards: String(localized: "lamp.sen-no-rikyu.guards", defaultValue: "the one flower in the empty room",
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Rikyū"),
+        believes: String(localized: "lamp.sen-no-rikyu.believes", defaultValue: "Take things away until what is left matters; the empty space is part of the work.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Rikyū"),
+        loves: String(localized: "lamp.sen-no-rikyu.loves", defaultValue: "One thing at a time; few elements, each necessary; room for the eye to rest; plain, honest materials; a pause before and after each movement.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Rikyū"),
+        watchesFor: String(localized: "lamp.sen-no-rikyu.watchesFor", defaultValue: "Clutter; ornament; two things where one would do; filling every silence.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Rikyū"),
+        looksUpTo: String(localized: "lamp.sen-no-rikyu.looksUpTo", defaultValue: "The morning glories: he cut every bloom in his garden but one, and set that one in the tea room for his guest; Taian, his two-mat tea room; Chōjirō's black tea bowls, made for him.",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Rikyū"),
+        happiestWhen: String(localized: "lamp.sen-no-rikyu.happiestWhen", defaultValue: "Nothing is left to take away, and what remains is enough.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Rikyū"),
+        petCaption: String(localized: "lamp.sen-no-rikyu.petCaption", defaultValue: "Rikyū, still an egg",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Rikyū's egg: the guardian hasn't hatched yet"),
+        hatched: false)
+
+    static let lotte = MarginariumGuardian(
+        id: "lotte-reiniger",
+        name: String(localized: "lamp.lotte-reiniger.name", defaultValue: "Lotte",
+                     comment: "The Marginarium, Who is Who: its name, for the guardian Lotte"),
+        after: String(localized: "lamp.lotte-reiniger.after", defaultValue: "After the animator Lotte Reiniger.",
+                      comment: "The Marginarium, Who is Who: who or what it is named after, shown under its name, for the guardian Lotte"),
+        portrait: String(localized: "lamp.lotte-reiniger.portrait", defaultValue: "She joined when Paul asked for someone else who could be interesting: she made whole fairy tales act with figures cut from paper.",
+                         comment: "The Marginarium, Who is Who: a few words on who the guardian is, under its name on its own page, for the guardian Lotte"),
+        guards: String(localized: "lamp.lotte-reiniger.guards", defaultValue: "the shadow that acts",
+                       comment: "The Marginarium, Who is Who: the treasure it guards, a metaphor completing \"Guards …\" (lowercase, no period), for the guardian Lotte"),
+        believes: String(localized: "lamp.lotte-reiniger.believes", defaultValue: "A figure cut from paper and moved by hand, a frame at a time, can act a whole fairy tale, if every pose reads in outline.",
+                         comment: "The Marginarium, Who is Who: what it believes, for the guardian Lotte"),
+        loves: String(localized: "lamp.lotte-reiniger.loves", defaultValue: "Poses you can read by silhouette alone; characters who act, with an intention in each gesture, instead of merely moving; timing set by hand, with holds and accents; a handmade look where you can sense the scissors.",
+                      comment: "The Marginarium, Who is Who: what it loves (its charter's \"champions\"), for the guardian Lotte"),
+        watchesFor: String(localized: "lamp.lotte-reiniger.watchesFor", defaultValue: "Figures that melt into the background; smooth motion that says nothing about who is moving; machine-even sameness; borrowing her fairy-tale figures instead of her hand.",
+                           comment: "The Marginarium, Who is Who: what it watches out for (its charter's \"guards against\"), for the guardian Lotte"),
+        looksUpTo: String(localized: "lamp.lotte-reiniger.looksUpTo", defaultValue: "The Adventures of Prince Achmed (1926), cut from paper and animated frame by frame; her silhouette fairy tales, from Cinderella (1922) to Hansel and Gretel (1955); her book Shadow Theatres and Shadow Films (1970).",
+                          comment: "The Marginarium, Who is Who: the works it looks up to (its charter's \"touchstones\"), for the guardian Lotte"),
+        happiestWhen: String(localized: "lamp.lotte-reiniger.happiestWhen", defaultValue: "You could cut a character out of black paper and still tell what it's doing and feeling.",
+                             comment: "The Marginarium, Who is Who: when it is happiest: completes \"Happiest when …\" as a sentence, for the guardian Lotte"),
+        petCaption: String(localized: "lamp.lotte-reiniger.petCaption", defaultValue: "Lotte, still an egg",
+                           comment: "The Marginarium, Who is Who: the caption and VoiceOver description of Lotte's egg: the guardian hasn't hatched yet"),
+        hatched: false)
 
     static let originality = MarginariumGuardian(
         id: "originality",

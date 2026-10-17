@@ -1,6 +1,6 @@
 import XCTest
 
-/// Settings: About (version, acknowledgements), Paper, Line Weight, Painting Length, Preview,
+/// Settings: About (version, acknowledgements), Paper, Line Weight, Sky, Painting Length, Preview,
 /// Detail Brushes, The Marginarium and The Making-of.
 final class SettingsTests: XCTestCase {
     @MainActor
@@ -78,6 +78,31 @@ final class SettingsTests: XCTestCase {
         XCTAssertTrue(app.buttons["Regular"].waitForExistence(timeout: 5))
         app.buttons["Regular"].firstMatch.tap()
         XCTAssertTrue(shows(picker, "Regular"), "Choosing Regular didn't change the picker: \(describe(picker))")
+    }
+
+    /// Settings › Sky offers Follow the Sky, Sun and Moon, starts on Follow the Sky, keeps the
+    /// choice and says when the Moon and the Sun begin, by the painter's clock.
+    @MainActor
+    func testSkyPickerChangesTheValue() throws {
+        let app = openSettings()
+        let picker = app.descendants(matching: .any)["settings-sky"]
+        scroll(app, to: picker)
+        XCTAssertTrue(picker.exists, "Settings has no Sky picker")
+        XCTAssertTrue(describe(picker).contains("Follow the Sky"), "Sky doesn't start on Follow the Sky: \(describe(picker))")
+        let footer = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "your time")).firstMatch
+        XCTAssertTrue(footer.exists, "The Sky's footer doesn't say when the Moon and the Sun begin")
+        picker.tap()
+        for choice in ["Follow the Sky", "Sun", "Moon"] {
+            XCTAssertTrue(app.buttons[choice].waitForExistence(timeout: 5), "The Sky picker has no \(choice)")
+        }
+        app.buttons["Moon"].firstMatch.tap()
+        XCTAssertTrue(shows(picker, "Moon"), "Choosing Moon didn't change the picker: \(describe(picker))")
+        attachScreenshot(of: app, named: "settings-sky-moon")
+        // The choice is stored in the simulator's defaults: put it back for the other tests.
+        picker.tap()
+        XCTAssertTrue(app.buttons["Follow the Sky"].waitForExistence(timeout: 5))
+        app.buttons["Follow the Sky"].firstMatch.tap()
+        XCTAssertTrue(shows(picker, "Follow the Sky"), "Choosing Follow the Sky didn't change the picker: \(describe(picker))")
     }
 
     /// Settings › Painting Length offers Quick, Relaxed and Detailed, starts on Relaxed, keeps

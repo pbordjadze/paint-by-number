@@ -300,6 +300,14 @@ Saved paintings must open in every later build. The format history is documented
   `.tint(Theme.signature)`; `Theme.gold` is for stars, sparkles and the crescent only; titles and
   numerals use New York, buttons and body text SF. The design system, tokens, canvas sheet and app
   icon: `App/CLAUDE.md` › Design.
+- Taste: every new screen or control, and every one not yet in the release, goes to the
+  **Lamplit Table** before it ships (Paul, October 17, 2026): the Lamp's standing jury for the
+  app's UI, the Astrologer, Rikyū, the Child at Bedtime, the Hedge Witch, Madeleine and
+  Originality (who can only veto). Its charters and how a round runs (a low-effort Opus subagent
+  per seat, the charter word for word, blind ballots, every reply kept) are `factory/GUARDIANS.md`
+  › The Lamplit Table and `factory/ORCHESTRATOR.md` on the `claude/vibe-factory` branch; a
+  round's brief, replies and decisions go in `factory/pieces/<piece>/` there, and its outcome in
+  the commit that acts on it. Its answers are proposals: Paul decides.
 - Localization: every user-facing string of the app target lives in
   `Resources/Localizable.xcstrings` (English, no translations yet: the translator hand-off), the
   Info.plist texts in `Resources/InfoPlist.xcstrings` (keyed by the `INFOPLIST_KEY_*` names);

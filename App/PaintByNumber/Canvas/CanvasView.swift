@@ -1041,8 +1041,8 @@ final class CanvasView: UIView, PaintingCanvas {
     }
 
     /// Two gold sparkles pop at the region's edge (on its label's free circle, which touches the
-    /// outline) as the paint lands, then fade. Not during a fast stroke, nor where the region is
-    /// too small on screen for them to read.
+    /// outline) as the paint lands, then fade; by Moon they are stars (`Sky`). Not during a fast
+    /// stroke, nor where the region is too small on screen for them to read.
     private func popSparkles(at region: Int, after delay: Float) {
         guard let label = template.labels(ofRegion: region).max(by: { $0.radius < $1.radius }) else { return }
         let reach = CGFloat(label.radius) * currentCamera().zoom
@@ -1062,6 +1062,7 @@ final class CanvasView: UIView, PaintingCanvas {
         }
         let centre = viewPoint(forCanvas: label.position)
         let size = min(22, max(10, reach * 0.45))
+        let stars = SkySetting.current() == .moon
         for (k, angle) in [-0.7, 2.3].enumerated() {
             let sparkle = sparkleLayers[nextSparkle]
             nextSparkle = (nextSparkle + 1) % sparkleLayers.count
@@ -1069,7 +1070,7 @@ final class CanvasView: UIView, PaintingCanvas {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             sparkle.bounds = CGRect(x: 0, y: 0, width: side, height: side)
-            sparkle.path = Sparkle.cgPath(in: sparkle.bounds)
+            sparkle.path = stars ? Sparkle.starPath(in: sparkle.bounds) : Sparkle.cgPath(in: sparkle.bounds)
             sparkle.position = CGPoint(x: centre.x + reach * CGFloat(cos(angle)), y: centre.y + reach * CGFloat(sin(angle)))
             sparkle.opacity = 0
             CATransaction.commit()

@@ -64,6 +64,31 @@ nonisolated struct Sparkle: Shape {
         p.closeSubpath()
         return p
     }
+
+    /// The Moon's star (`Sky`): the sparkle with a shorter one crossed on its diagonals, like a
+    /// star on an old sky chart. Its short arms are a touch uneven, as if inked by hand (the
+    /// Lamplit Table, October 17, 2026).
+    static func starPath(in rect: CGRect, pinch: CGFloat = 0.133) -> CGPath {
+        let p = CGMutablePath()
+        p.addPath(cgPath(in: rect, pinch: pinch))
+        let c = CGPoint(x: rect.midX, y: rect.midY)
+        let half = min(rect.width, rect.height) / 2
+        // Up-right, down-right, down-left, up-left, as fractions of the long arms (the sparkle's
+        // own sides reach about 0.45 along a diagonal).
+        let reach: [CGFloat] = [0.70, 0.62, 0.67, 0.60]
+        let waist = half * pinch
+        func point(_ angle: CGFloat, _ length: CGFloat) -> CGPoint {
+            CGPoint(x: c.x + length * cos(angle), y: c.y + length * sin(angle))
+        }
+        let tips = reach.indices.map { point(-.pi / 4 + .pi / 2 * CGFloat($0), half * reach[$0]) }
+        p.move(to: tips[0])
+        for k in tips.indices {
+            // Between two diagonal arms lies an axis, where the arms pinch in.
+            p.addQuadCurve(to: tips[(k + 1) % tips.count], control: point(.pi / 2 * CGFloat(k), waist))
+        }
+        p.closeSubpath()
+        return p
+    }
 }
 
 /// A gentle press response for tappable cards.

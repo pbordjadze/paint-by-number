@@ -61,7 +61,7 @@ synchronized folder would bundle it into the app.
 ## Layout (`App/PaintByNumber/`)
 
 - `App/`: `PaintByNumberApp`, `RootView`, `Preferences`/`SettingsKey`, `Theme`, `LineWeight`,
-  `PreviewStyle`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
+  `PreviewStyle`, `Sky`; DEBUG `DemoMode`, `ShellDemo`, `MainThreadWatchdog`.
 - `Model/`: `Library` (@Observable, in the environment), `ArtworkStore` (file IO), `Artwork`,
   `ArtworkFactory` (photo → template), `CreateDraft` (with `DraftStore`) and `Drafts` (`library.drafts`,
   see Create flow), `PaintingSession`, `PaintProgress`, `PaintingAutosaver`,
@@ -140,7 +140,10 @@ synchronized folder would bundle it into the app.
   people (Paul, Chief Architect; Caroline, Chief Designer, making it with him from the start), the
   AI helpers with Pip and Colophon, and the Lamp's guardians in their teams, each card opening
   `MarginariumGuardianView`, its brief (the charter in `factory/GUARDIANS.md` in plain words, ids
-  from `factory/panel.json`); a guardian who hasn't hatched shows `MarginariumEgg`. A guardian's drawing
+  from `factory/panel.json`); a guardian who hasn't hatched shows `MarginariumEgg`, and one who
+  passed its seat on keeps its page after the teams (`MarginariumCast.former`: the Bible School
+  Teacher, whose seat went to Madeleine on October 17; her drawing and words stay in the
+  chapters, so `everyGuardian`, not `guardians`, is who has a page). A guardian's drawing
   is the guardian, never its pet (Paul, October 15): its VoiceOver label is its name alone (an
   egg's, "Bart, still an egg"), and no reader-facing text calls it a pet or gives it a name of its
   own; only Pip and Colophon are pets, with their names. A brief shows the name once, as its title
@@ -169,7 +172,7 @@ synchronized folder would bundle it into the app.
   from `Acknowledgements.methods` letter for letter). Reduce Motion plays stills, one per step
   with its card, cross-faded, with no rings, sparks or stars. No replay from the painting yet.
 - `Feedback/` (haptics and sound, not the painter's feedback): `FeedbackEngine`, `ToneSynth`,
-  `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`.
+  `PaintingMelody`, `HapticsPlayer`, `SoundPlayer`; the sky they play in is `App/Sky.swift`.
 - `Resources/`: asset catalog, `Localizable.xcstrings`, `InfoPlist.xcstrings`, `Models/` (the two
   `.mlpackage`s), `Samples/` (`library.json` and the pictures), `PrivacyInfo.xcprivacy`.
 - `App/Config/Info.plist` holds what the generated plist can't express: the image document type, the
@@ -273,10 +276,15 @@ synchronized folder would bundle it into the app.
   `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
   it moves the selection on.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
-  `PaintingMelody` note per fill; Core Haptics patterns, none on iPad. `SoundPlayer` and
-  `HapticsPlayer` each work on a queue of their own (starting either engine blocks its caller).
-  Settings' Sounds and Haptics switches are read live (`SettingsKey.sounds`, `SettingsKey.haptics`);
-  Haptics shows only on hardware with haptics (not iPad, not the simulator).
+  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Sky: Follow the
+  Sky by default, Sun from 6 a.m. to 7 p.m. by the device's clock and time zone, Moon the rest;
+  decided with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
+  Moon a celesta-like bell on the same five notes, lower and minor, twinkling where a phrase
+  rests, each sky with its own flourish and finale; the sky turns only where a phrase begins.
+  Core Haptics patterns, none on iPad. `SoundPlayer` and `HapticsPlayer` each work on a queue of
+  their own (starting either engine blocks its caller). Settings' Sounds, Haptics and Sky are read
+  live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on
+  hardware with haptics (not iPad, not the simulator).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
   (`ColorNickname.seed(for:)`), using the vocabulary version recorded in `Artwork.nicknameVersion`,
   so a painting's names are the same on every open (derived, never
@@ -575,9 +583,11 @@ paper (`CanvasSnapshot.Options`).
   Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
   `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
   puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
-  making-of show after Start Painting (off by default; `Features/MakingOf`). New paintings are
-  coloring books at the book's defaults (`LineArtSettings()`), with no pipeline tuning: nothing in
-  Settings changes how a template is made.
+  making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Sky
+  (`SkySetting`, Follow the Sky by default) picks the sounds and whether the fill's sparkles are
+  stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
+  (`LineArtSettings()`), with no pipeline tuning: nothing in Settings changes how a template is
+  made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).
 - Settings the app retired (Settings › Advanced's line art, tuning and line appearance, and its
   switch per sound, haptic and flourish; Settings' paper size and Color Names; the Custom palette
@@ -594,7 +604,8 @@ the screen background; `signature` the Nightshade under prominent buttons' label
 `Theme.styleNavigationTitles`, the swatch numerals and the canvas digits (`DigitAtlas`). The canvas
 sheet is its own paper and ink in both appearances (`CanvasPalette.sheetPaperSRGB`/`sheetInkSRGB`;
 Settings › Paper can make it dark). The fill moment's two gold sparkles are `CAShapeLayer`s over the
-canvas (`CanvasView.popSparkles`). The app icon PNGs are rendered from the design system's
+canvas (`CanvasView.popSparkles`); by Moon they are stars (`Sparkle.starPath`, the sparkle with
+shorter, uneven arms on its diagonals). The app icon PNGs are rendered from the design system's
 `pipo-app-icon-v2.svg` at 1024 px (dark: the same art; tinted: its grayscale); no generator script
 lives in the repo.
 

@@ -8,6 +8,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @AppStorage(SettingsKey.haptics) private var haptics = true
     @AppStorage(SettingsKey.sounds) private var sounds = true
+    @AppStorage(SettingsKey.sky) private var sky = SkySetting.default
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
@@ -82,7 +83,7 @@ struct SettingsView: View {
                     Text("Short tips explain painting gestures as you go.")
                 }
 
-                Section("Sound & Haptics") {
+                Section {
                     // iPad and the simulator have no haptics: nothing to switch.
                     if CHHapticEngine.capabilitiesForHardware().supportsHaptics {
                         Toggle(isOn: $haptics) {
@@ -92,6 +93,21 @@ struct SettingsView: View {
                     Toggle(isOn: $sounds) {
                         SwiftUI.Label("Sounds", systemImage: "speaker.wave.2")
                     }
+                    Picker(selection: $sky) {
+                        ForEach(SkySetting.allCases) { choice in
+                            SwiftUI.Label(choice.name, systemImage: choice.symbol).tag(choice)
+                        }
+                    } label: {
+                        // The sky that holds now, a sun or a crescent with stars.
+                        SwiftUI.Label("Sky", systemImage: sky.sky(at: .now).symbol)
+                    }
+                    .accessibilityIdentifier("settings-sky")
+                } header: {
+                    Text("Sound & Haptics")
+                } footer: {
+                    Text(String(localized: "settings.sky.footer",
+                                defaultValue: "Sun and Moon each have their own music, and by Moon the sparkles are stars. Follow the Sky turns to Moon at \(Sky.clockText(Sky.nightfall)) and back to Sun at \(Sky.clockText(Sky.sunrise)), your time.",
+                                comment: "Footer of Settings' Sound & Haptics section, under the Sky choice (Follow the Sky, Sun, Moon). The arguments are the hours, as the painter's clock writes them: when Moon begins (7 PM) and when Sun begins (6 AM)"))
                 }
 
                 Section {
