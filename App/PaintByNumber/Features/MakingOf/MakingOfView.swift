@@ -14,8 +14,28 @@ import SwiftUI
 /// picture is a sheet of its own paper, like the canvas's). Reduce Motion plays the cards over
 /// still pictures, cross-faded. The photo shows while the show is being made, which is how it
 /// begins.
+///
+/// The show comes and goes as one picture moving (`StartHandoff`). It comes in from the preview:
+/// its picture starts where the preview's was (`entry`, global coordinates), moves to its place
+/// while the paper behind it fades in, and the card and Skip come in after it. Without an `entry`
+/// (Reduce Motion) it fades in where it stands. It goes to the painting Start has opened beneath
+/// the cover (`leaving`): the picture moves to the template's place there (`moving`) while the
+/// card, Skip and the paper fade to clear, then cross-fades into the canvas (`landed`).
 struct MakingOfView: View {
+    /// How the show goes, once the painting beneath the cover has drawn its first frame.
+    enum Leaving: Equatable {
+        /// The show plays, or holds its last frame while the painting opens.
+        case staying
+        /// The picture moves to the template's rect (global coordinates) while the rest fades.
+        case moving(CGRect)
+        /// The picture fades into the painting, at the template's rect once it has moved there, or
+        /// in place (nil: Reduce Motion, or no place to move to).
+        case landed(CGRect?)
+    }
+
     private let source: MakingOfSource
+    private let entry: CGRect?
+    private let leaving: Leaving
     private let onFinish: () -> Void
     #if DEBUG
     /// Demo scenarios: the time the show is held at (Reduce Motion: the still), and what to call
@@ -27,12 +47,16 @@ struct MakingOfView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .title3) private var band: CGFloat = 150
     @State private var player = MakingOfPlayer()
+    /// The show has come in (it starts where it is not yet seen).
+    @State private var entered = false
 
     /// Room at the top for Skip.
     private static let top: CGFloat = 64
 
-    init(source: MakingOfSource, onFinish: @escaping () -> Void) {
+    init(source: MakingOfSource, entry: CGRect? = nil, leaving: Leaving = .staying, onFinish: @escaping () -> Void) {
         self.source = source
+        self.entry = entry
+        self.leaving = leaving
         self.onFinish = onFinish
     }
 
@@ -42,6 +66,8 @@ struct MakingOfView: View {
         self.heldAt = heldAt
         forcesReduceMotion = reduceMotion
         self.onReady = onReady
+        // The scenarios hold the show for a screenshot: it is simply there.
+        _entered = State(initialValue: true)
     }
     #endif
 
@@ -49,9 +75,19 @@ struct MakingOfView: View {
         GeometryReader { geometry in
             let layout = MakingOfLayout(
                 size: geometry.size, picture: pictureSize, band: min(band, geometry.size.height * 0.4), top: Self.top)
+            let move = travel(of: layout, from: geometry.frame(in: .global).origin)
             stage(layout)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .opacity(showsPicture ? 1 : 0)
+                .animation(pictureAnimation, value: showsPicture)
+                .scaleEffect(move.scale, anchor: .topLeading)
+                .offset(x: move.dx, y: move.dy)
         }
-        .background(Theme.paper.ignoresSafeArea())
+        .background {
+            Theme.paper.ignoresSafeArea()
+                .opacity(showsPaper ? 1 : 0)
+                .animation(paperAnimation, value: showsPaper)
+        }
         .contentShape(.rect)
         .onTapGesture { player.skip() }
         .overlay(alignment: .topTrailing) {
@@ -59,13 +95,71 @@ struct MakingOfView: View {
                 .buttonStyle(.glass)
                 .controlSize(.large)
                 .padding(16)
+                .opacity(chromeOpacity)
+                .animation(chromeAnimation, value: chromeOpacity)
                 .accessibilityIdentifier("making-of-skip")
         }
+        // Nothing to skip, or to touch beneath, while the picture is on its way to the painting.
+        .allowsHitTesting(leaving == .staying)
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(.isModal)
         .accessibilityIdentifier("making-of")
         .task { await start() }
+        .onAppear {
+            let coming = entry == nil
+                ? Animation.easeInOut(duration: StartHandoffPlan.move)
+                : .spring(duration: StartHandoffPlan.move, bounce: StartHandoffPlan.bounce)
+            withAnimation(coming) { entered = true }
+        }
         .onDisappear { player.release() }
+    }
+
+    // MARK: Coming and going
+
+    /// The picture is seen: it has come in, and is not yet cross-faded into the painting.
+    private var showsPicture: Bool {
+        if case .landed = leaving { return false }
+        return entered
+    }
+
+    /// The paper behind the show, which fades in as the picture settles and out as it leaves.
+    private var showsPaper: Bool { entered && leaving == .staying }
+
+    /// The card and Skip: in after the picture has moved, out as soon as it leaves.
+    private var chromeOpacity: Double { entered && leaving == .staying ? 1 : 0 }
+
+    /// Whether the show leaves where it stands: Reduce Motion, or no place to move to.
+    private var leavesInPlace: Bool {
+        if case .landed(let target) = leaving { return target == nil }
+        return false
+    }
+
+    private var pictureAnimation: Animation {
+        if showsPicture { return .easeOut(duration: entry == nil ? StartHandoffPlan.move : StartHandoffPlan.appear) }
+        return leavesInPlace ? .easeInOut(duration: StartHandoffPlan.move) : .easeOut(duration: StartHandoffPlan.crossFade)
+    }
+
+    private var paperAnimation: Animation {
+        if showsPaper { return entry == nil ? .easeInOut(duration: StartHandoffPlan.move) : .easeOut(duration: StartHandoffPlan.move) }
+        return leavesInPlace ? .easeInOut(duration: StartHandoffPlan.move) : .easeOut(duration: StartHandoffPlan.fade)
+    }
+
+    private var chromeAnimation: Animation {
+        chromeOpacity > 0
+            ? .easeOut(duration: 0.25).delay(StartHandoffPlan.chromeDelay)
+            : .easeOut(duration: StartHandoffPlan.fade / 2)
+    }
+
+    /// Where the picture is carried to: the preview's picture before the show has come in, the
+    /// painting's template as it leaves, otherwise nowhere (`layout` is its place). `origin` is
+    /// where this view starts, in global coordinates.
+    private func travel(of layout: MakingOfLayout, from origin: CGPoint) -> PictureTravel {
+        let destination: CGRect? = switch leaving {
+        case .moving(let target): target
+        case .landed(let target): target
+        case .staying: entered ? nil : entry
+        }
+        return PictureTravel(home: layout.picture, destination: destination?.offsetBy(dx: -origin.x, dy: -origin.y))
     }
 
     private func start() async {
@@ -144,6 +238,8 @@ struct MakingOfView: View {
             .padding(.top, 16)
             .frame(width: layout.band.width, height: layout.band.height, alignment: .top)
             .offset(x: layout.band.minX, y: layout.band.minY)
+            .opacity(chromeOpacity)
+            .animation(chromeAnimation, value: chromeOpacity)
     }
 }
 

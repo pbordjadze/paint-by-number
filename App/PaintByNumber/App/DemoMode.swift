@@ -47,6 +47,14 @@ enum DemoMode {
     /// library is reordered.
     static let usesFixedPictures = UserDefaults.standard.bool(forKey: "demoFixedPictures")
 
+    /// `-slowFullResolution <seconds>`: the create flow's full-resolution generations wait this long
+    /// before they start, as one takes tens of seconds on a phone, for the UI tests of what the
+    /// painter sees and can do meanwhile (`RefineAfterSlidersTests`).
+    static let fullResolutionDelay: Duration? = {
+        let seconds = UserDefaults.standard.double(forKey: "slowFullResolution")
+        return seconds > 0 ? .seconds(seconds) : nil
+    }()
+
     /// `tmp/demo-ready` in the app's data container. CI screenshots a scenario shortly after
     /// this file appears instead of sleeping for a worst-case delay (`ci/screenshots.sh`).
     static let readyMarker = FileManager.default.temporaryDirectory.appending(path: "demo-ready")

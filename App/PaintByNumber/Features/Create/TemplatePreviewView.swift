@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import PaintCore
 import SwiftUI
@@ -13,6 +14,9 @@ struct TemplatePreviewView: View {
     /// Closes the flow, where the preview is its first page (a sample or a photo opened from
     /// elsewhere); the enlarged preview hides it.
     var onClose: (() -> Void)?
+    /// Told where the comparison's picture is on screen, for Start Painting's hand-off to move it
+    /// from (`StartHandoff`).
+    var pictureProbe: PreviewPictureProbe?
 
     @State private var size: CGSize = .zero
     /// `size` with the keyboard's room given back: what the layout is chosen for.
@@ -101,6 +105,32 @@ struct TemplatePreviewView: View {
         .navigationBarBackButtonHidden(isEnlarged || isStarting)
         .background { ContentSwipeBackOff().frame(width: 0, height: 0) }
         .fullScreenCover(isPresented: $isRefining) { RefineView(model: model) }
+        // A tap on Refine made while the painting was updating: it opens once it is made.
+        .onChange(of: model.opensRefine) { _, opens in
+            if opens { openRefine() }
+        }
+        // The preview's tips: a template that is final is a moment, a slider let go another.
+        .onAppear {
+            PaintTips.desk.enter(.preview)
+            if model.isFinal { previewFinal() }
+        }
+        .onDisappear { PaintTips.desk.leave(.preview) }
+        .onChange(of: model.isFinal) { _, isFinal in
+            if isFinal { previewFinal() }
+        }
+        .onChange(of: model.isAdjusting) { _, adjusting in
+            if !adjusting { PaintTips.sliderReleased(isCustom: model.settingsOrigin == .custom) }
+        }
+        .onChange(of: model.settingsOrigin) { old, origin in
+            if old == .custom, origin == .suggested { PaintTips.resetUsed() }
+        }
+        .onChange(of: isRefining) { _, refining in
+            if refining { PaintTips.refineOpened() }
+        }
+        // Start Painting saves the painting, and The Making-of may play: the preview says no more.
+        .onChange(of: isStarting) { _, starting in
+            if starting { PaintTips.desk.leave(.preview) }
+        }
         #if DEBUG
         // `create-refine` shows the Refine screen once its painting is refined.
         .onChange(of: model.refinements.isEmpty) { _, isEmpty in
@@ -149,6 +179,18 @@ struct TemplatePreviewView: View {
     private var offersEnlarging: Bool { isCompact && !isSideBySide }
     private var isEnlarged: Bool { isTuning && !isSideBySide }
 
+    /// Refine on the final template, or, while it is being made, as soon as it is.
+    private func openRefine() {
+        titleFocused = false
+        guard !isStarting else { return }
+        if model.canRefine {
+            model.withdrawRefine()
+            isRefining = true
+        } else {
+            model.askForRefine()
+        }
+    }
+
     private func setEnlarged(_ enlarged: Bool) {
         titleFocused = false
         withAnimation(reduceMotion ? nil : .snappy) { isTuning = enlarged }
@@ -172,18 +214,28 @@ struct TemplatePreviewView: View {
         if !isEnlarged {
             // The optional Refine step: a text button, so it reads as a step and not a view.
             ToolbarItem(placement: .primaryAction) {
-                Button("Refine") {
-                    titleFocused = false
-                    isRefining = true
+                Button(action: openRefine) {
+                    if model.isWaitingToRefine {
+                        HStack(spacing: 6) {
+                            ProgressView().controlSize(.small)
+                            Text("Preparing…")
+                        }
+                    } else {
+                        Text("Refine")
+                    }
                 }
-                // Without line art there is nothing to draw on; the detail brushes still work.
-                // Nor on a draft or an earlier settings' template: the edits are made in the canvas
-                // units of the template Refine opens on.
+                // Without line art there is nothing to draw on; the detail brushes still work. Else
+                // it is on while the painting updates: Refine draws on the final template alone (its
+                // edits are made in that template's canvas units), so a tap before it is made waits
+                // for it (`CreateModel.askForRefine`) and opens by itself.
                 .disabled(
-                    !model.canRefine || isStarting
+                    !model.canAskForRefine || isStarting
                         || !(model.hasLineArtInput || Preferences().detailBrushes))
-                .accessibilityValue(RefineView.changes(model.refinements.changeCount))
+                .accessibilityLabel("Refine")
+                .accessibilityValue(
+                    model.isWaitingToRefine ? String(localized: "Preparing…") : RefineView.changes(model.refinements.changeCount))
                 .accessibilityIdentifier("refine")
+                .barTip(.newPaintingRefine)
             }
         }
         if offersEnlarging && !isEnlarged {
@@ -224,6 +276,13 @@ struct TemplatePreviewView: View {
         guard abs(model[keyPath: keyPath] - value) > 1e-9 else { return }
         model[keyPath: keyPath] = value
         model.settingsChanged()
+        PaintTips.sliderMoved(colorsOrDetail: keyPath == \CreateModel.colorCount || keyPath == \CreateModel.detail)
+    }
+
+    /// The template is final: the moment of the preview's tips. The suggestion's is only while the
+    /// settings are still the suggested ones.
+    private func previewFinal() {
+        PaintTips.previewFinal(isSuggested: model.settingsOrigin == .suggested, canRefine: model.canRefine)
     }
 
     // MARK: Canvas
@@ -234,6 +293,9 @@ struct TemplatePreviewView: View {
                 CompareView(
                     photo: source.preview, after: model.preview?.picture, afterID: model.preview?.id.uuidString ?? "none",
                     afterLabel: model.previewStyle.name, aspectRatio: photoAspect, canvasSize: size, fillsSpace: isEnlarged)
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                        pictureProbe?.measured(frame: frame, aspect: photoAspect)
+                    }
                     .overlay(alignment: .bottom) {
                         status.padding(14)
                     }
@@ -367,6 +429,8 @@ struct TemplatePreviewView: View {
                 onChange: { update(\.colorCount, Self.colorCount(at: $0)) },
                 valueText: Int(model.colorCount.rounded()).formatted(), isPending: model.isChoosingSettings,
                 detent: suggested.map { Self.colorPosition(Double($0.colorCount)) }, onEditing: model.setAdjusting)
+                // Fewer or More Areas: over the slider, clear of the preview's picture.
+                .gentleTip(.newPaintingSliders, arrowEdge: .bottom)
         case .detail:
             SettingSlider(
                 title: "Detail", value: model.detail, onChange: { update(\.detail, $0) },
@@ -439,6 +503,10 @@ struct TemplatePreviewView: View {
             }
         }
         .accessibilityIdentifier("settings-origin")
+        // Already Chosen for You hangs above the chip; You Can Always Go Back below it, where the
+        // preview is left in view to watch. Before the frame: they point at the chip, not the row.
+        .gentleTip(.newPaintingSuggested, active: model.settingsOrigin != .custom, arrowEdge: .bottom)
+        .gentleTip(.newPaintingReset, active: model.settingsOrigin == .custom, arrowEdge: .top)
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(model.settingsOrigin == nil ? 0 : 1)
         .accessibilityHidden(model.settingsOrigin == nil)
@@ -533,12 +601,21 @@ private struct StatusCapsule<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        HStack(spacing: 10) { content }
-            .font(.footnote.weight(.medium))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 9)
-            .glassEffect(.regular, in: .capsule)
-            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+        // One row where it fits, else the words above the bar: a tall photo on a phone leaves the
+        // preview too narrow for both, and the row squeezed the words into a column of letters.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { content }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .glassEffect(.regular, in: .capsule)
+            VStack(spacing: 7) { content }
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .glassEffect(.regular, in: .rect(cornerRadius: 16))
+        }
+        .font(.footnote.weight(.medium))
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
     }
 }
 
@@ -600,6 +677,29 @@ private extension View {
             // A comfortable target without making the chip itself taller.
             .frame(minHeight: 44)
             .contentShape(.rect)
+    }
+}
+
+/// Where the preview's picture is on screen: the preview writes it as it is laid out and the create
+/// flow reads it when Start Painting is tapped, to move the picture from there (`StartHandoff`). A
+/// reference, so that neither invalidates the other.
+final class PreviewPictureProbe {
+    private var frame = CGRect.zero
+    private var aspect: CGFloat = 0
+
+    /// The comparison's frame (global coordinates) and the photo's shape.
+    func measured(frame: CGRect, aspect: CGFloat) {
+        self.frame = frame
+        self.aspect = aspect
+    }
+
+    /// The picture: the photo's shape fitted in the comparison's frame (the enlarged preview's
+    /// frame is the whole page), in global coordinates; nil before it has been laid out.
+    var picture: CGRect? {
+        guard aspect > 0, frame.isPlace else { return nil }
+        let size = CompareView.fitted(aspect, in: frame.size)
+        return CGRect(
+            x: frame.midX - size.width / 2, y: frame.midY - size.height / 2, width: size.width, height: size.height)
     }
 }
 

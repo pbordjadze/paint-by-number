@@ -13,16 +13,16 @@ final class PaintingNavigationTests: XCTestCase {
         window.pinch(withScale: 0.4, velocity: -2)
         sleep(2)
         attachScreenshot(of: app, named: "painting-after-gestures")
-        XCTAssertTrue(app.buttons["Close"].isHittable, "A canvas gesture dismissed the painting")
+        XCTAssertTrue(app.buttons["Back"].isHittable, "A canvas gesture dismissed the painting")
     }
 
     @MainActor
-    func testCloseReturnsToGallery() throws {
+    func testBackReturnsToGallery() throws {
         let app = openSeededPainting()
-        app.buttons["Close"].tap()
+        app.buttons["Back"].tap()
         let returned = app.buttons["New Painting"].waitForExistence(timeout: 10)
-        attachScreenshot(of: app, named: "after-close")
-        XCTAssertTrue(returned, "Close didn't return to the gallery")
+        attachScreenshot(of: app, named: "after-back")
+        XCTAssertTrue(returned, "Back didn't return to the gallery")
     }
 
     @MainActor
@@ -111,7 +111,7 @@ final class PaintingNavigationTests: XCTestCase {
         // the camera couldn't centre it) drag-paint across the middle.
         app.buttons["Hint"].tap()
         sleep(2)
-        let top = app.buttons["Close"].frame.maxY + 6
+        let top = app.buttons["Back"].frame.maxY + 6
         let bottom = swatches.allElementsBoundByIndex.map(\.frame.minY).min().map { $0 - 20 } ?? app.frame.maxY
         let origin = app.coordinate(withNormalizedOffset: .zero)
         func point(_ x: CGFloat, _ y: CGFloat) -> XCUICoordinate {
@@ -194,7 +194,7 @@ final class PaintingNavigationTests: XCTestCase {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad, "Menu bar commands are an iPad feature")
         let app = openSeededPainting()
         let photo = app.buttons["Photo"]
-        // Close exists before the photo control's accessibility properties have been built.
+        // Back exists before the photo control's accessibility properties have been built.
         // Read the initial state first: the first key once landed during that work and was
         // lost; waiting for Showing afterwards cannot recover an input that never arrived.
         guard wait(for: photo, value: "Hidden"), photo.isEnabled && photo.isHittable else {
@@ -246,14 +246,14 @@ final class PaintingNavigationTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "gallery-open"] + (tracingPhotoPeek ? ["-tracePhotoPeek", "YES"] : [])
         app.launch()
-        // "Close" alone could be the New Painting sheet's (CI once swiped there); the progress
+        // "Back" alone could be another screen's (CI once swiped to the New Painting sheet); the progress
         // badge is the painting's own.
         let badge = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH 'percent painted'")).firstMatch
         XCTAssertTrue(badge.waitForExistence(timeout: 90), "The painting didn't open")
         // Opening lays out the canvas and its bars, which on CI's iPhone has held the main thread
         // for two to three seconds, and a gesture sent meanwhile is lost (an edge swipe was). An
         // element query waits for the app to go idle, so this returns once the painting answers.
-        XCTAssertTrue(waitUntil(timeout: 15) { badge.isHittable && app.buttons["Close"].isHittable })
+        XCTAssertTrue(waitUntil(timeout: 15) { badge.isHittable && app.buttons["Back"].isHittable })
         sleep(2)
         return app
     }

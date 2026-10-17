@@ -41,7 +41,16 @@ import PaintCore
 /// - `create-from-file`: a photo file opened as if shared from another app ("Open in Paint by
 ///   Moonlight"): the create flow on that photo's preview, titled with the file's name. The file
 ///   is the red fox written to the temporary directory at launch (`DemoMode.openFileURL`).
+/// - `gallery-tip`, `-dark`, `-long-text`: the gallery as the first launch leaves it, with A Page
+///   Is Waiting inline in Ready to Paint; the tips show only in the scenarios named here and
+///   `paint-tip` (`PaintTips.configure`).
+/// - `gallery-tip-gear`: one finished painting on the shelf, with Settings and Tips hung below the
+///   gear. `gallery-tips-off` (UI tests) is the first launch's gallery with the Tips switch off.
+/// - `create-tip`: the photograph starter's preview with Already Chosen for You at the
+///   "Suggested for this photo" chip (the divider's tip is closed already).
 /// - `settings`: the settings sheet over the gallery.
+/// - `settings-tips`: the same with tips on, for its Tips section; `settings-tip` waits for Worth a
+///   Look Here at Painting Length.
 /// - `settings-acknowledgements`: the settings sheet on its Acknowledgements screen.
 /// - `marginarium`, with `-dark` and `-long-text`: The Marginarium's sheet over the empty
 ///   gallery, its drawings idling at the top: Pip, Colophon and the guardians.
@@ -71,6 +80,7 @@ enum ShellDemo: Equatable {
     case gallery, galleryFavorites, gallerySearch, galleryNoFavorites, galleryLongText, galleryEmpty, galleryFirstRun,
          galleryDraft, galleryOpen, galleryDamaged, galleryTimelapse, galleryTimelapseLongText, create, createSamples, createSamplesPaintings,
          createSamplesPhotographs, createPreview, createLineArt, createRefine, createSuggested, createCustom, createFromFile,
+         galleryTip, galleryTipGear, galleryTipsOff, createTip, settingsTips, settingsTip,
          settings, settingsLongText, settingsAcknowledgements, marginarium, marginariumChapter,
          marginariumChapterOne, marginariumChapterOneMargin, marginariumChapterOneGuardians,
          marginariumChapterOneTable, marginariumChapterTwo, marginariumWhosWho, marginariumWhosWhoTeams,
@@ -100,6 +110,12 @@ enum ShellDemo: Equatable {
         case "create-suggested": .createSuggested
         case "create-custom", "create-custom-long-text": .createCustom
         case "create-from-file": .createFromFile
+        case "gallery-tip", "gallery-tip-dark", "gallery-tip-long-text": .galleryTip
+        case "gallery-tip-gear": .galleryTipGear
+        case "gallery-tips-off": .galleryTipsOff
+        case "create-tip": .createTip
+        case "settings-tips": .settingsTips
+        case "settings-tip": .settingsTip
         case "settings": .settings
         case "settings-long-text": .settingsLongText
         case "settings-acknowledgements": .settingsAcknowledgements
@@ -160,7 +176,7 @@ enum ShellDemo: Equatable {
 
     var opensCreateFlow: Bool {
         self == .create || opensSamples || self == .createPreview || self == .createLineArt || self == .createRefine
-            || self == .createSuggested || self == .createCustom
+            || self == .createSuggested || self == .createCustom || self == .createTip
     }
 
     /// The create flow starts on its Samples pane (iPhone; iPad shows both panes).
@@ -176,7 +192,8 @@ enum ShellDemo: Equatable {
     }
 
     var opensSettings: Bool {
-        self == .settings || self == .settingsLongText || self == .settingsAcknowledgements
+        self == .settings || self == .settingsLongText || self == .settingsAcknowledgements || self == .settingsTips
+            || self == .settingsTip
     }
 
     var opensMarginarium: Bool { self == .marginarium || !marginariumPath.isEmpty }
@@ -205,6 +222,7 @@ enum ShellDemo: Equatable {
         // A painting and a photograph: the library's starters, or the first two fixed pictures.
         case .createPreview, .createLineArt: showsLibrary ? Sample.starters.first : pictures.first
         case .createSuggested: showsLibrary ? Sample.starters.last : pictures.dropFirst().first
+        case .createTip: pictures.dropFirst().first
         case .createCustom, .createRefine: pictures.first
         default: nil
         }
@@ -258,11 +276,32 @@ enum ShellDemo: Equatable {
                 }
                 DemoMode.markReady()
             })
-        case .galleryFirstRun:
+        case .galleryFirstRun, .galleryTipsOff:
             // What the first launch makes (`Library.seedIfNeeded`): the starters, nobody's touched.
             library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
                 DemoMode.markReady()
             })
+        case .galleryTip:
+            // The first launch's gallery, ready once the tip the scenario shows is up.
+            library.seed(Sample.starters.map { Library.SeedItem(sample: $0, photoMaxPixelSize: 560) }, completion: { _ in
+                Task {
+                    await PaintTips.awaitDemoTip()
+                    DemoMode.markReady()
+                }
+            })
+        case .galleryTipGear:
+            // A finished painting: nothing waits to be painted, so the gear's tip comes first.
+            library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)], completion: { _ in
+                Task {
+                    await PaintTips.awaitDemoTip()
+                    DemoMode.markReady()
+                }
+            })
+        case .createTip, .settingsTip:
+            Task {
+                await PaintTips.awaitDemoTip()
+                DemoMode.markReady()
+            }
         case .galleryLongText:
             library.seed(galleryItems, completion: { _ in
                 // The newest deletion keeps its Undo toast up for `Library.undoWindow`, well past the screenshot.
@@ -291,7 +330,7 @@ enum ShellDemo: Equatable {
             library.seed([Library.SeedItem(sample: pictures[1], painted: 1, photoMaxPixelSize: 560)])
         case .create, .createSamples, .createSamplesPaintings, .createSamplesPhotographs, .createPreview,
              .createLineArt, .createRefine, .createSuggested, .createCustom, .createFromFile, .galleryEmpty, .settings,
-             .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
+             .settingsTips, .settingsLongText, .settingsAcknowledgements, .marginarium, .marginariumChapter,
              .marginariumChapterOne, .marginariumChapterOneMargin, .marginariumChapterOneGuardians,
              .marginariumChapterOneTable, .marginariumChapterTwo, .marginariumWhosWho, .marginariumWhosWhoTeams,
              .marginariumGuardian:
@@ -330,6 +369,6 @@ enum ShellDemo: Equatable {
 
     /// Scenarios that are complete as soon as the shell appears (the rest signal readiness
     /// once their content has been generated or loaded).
-    var isReadyOnAppear: Bool { self == .galleryEmpty || opensSettings }
+    var isReadyOnAppear: Bool { self == .galleryEmpty || (opensSettings && self != .settingsTip) }
 }
 #endif

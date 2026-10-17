@@ -153,7 +153,9 @@ final class CreateFlowTests: XCTestCase {
     }
 
     /// A single tap on a library photo opens its preview; after going back, the same photo can
-    /// be picked again (the selection is reset after each pick).
+    /// be picked again (the selection is reset after each pick) and loads as it did the first
+    /// time: its template is made, not the "Couldn’t Open Photo" of a photo the picker gave no
+    /// data for.
     @MainActor
     func testLibraryPhotoOpensPreviewAndCanBePickedAgain() throws {
         try XCTSkipIf(!isPad, "iPhone picks in the full system picker (testBrowseAllPickOpensPreview)")
@@ -168,9 +170,7 @@ final class CreateFlowTests: XCTestCase {
         // Back once the photo's settings are chosen: until then its models and candidates keep
         // every core busy, and on CI's simulators a Back tapped then was lost twice (the preview
         // stayed, finishing its suggestion).
-        XCTAssertTrue(
-            waitFor(start, toMatch: NSPredicate(format: "isEnabled == true"), timeout: 120),
-            "The preview never finished choosing its settings")
+        guard previewLoads(app, start: start, "The first pick’s preview", shot: "library-photo-loaded") else { return }
 
         // By the system's identifier: the gallery's New Painting button, under the create flow,
         // carries the back button's label too.
@@ -181,7 +181,11 @@ final class CreateFlowTests: XCTestCase {
             return
         }
         back.tap()
-        let returned = waitUntil(timeout: 30) { !start.exists }
+        var returned = waitUntil(timeout: 10) { !start.exists }
+        if !returned {
+            retapIfLost("preview Back") { back.tap() }
+            returned = waitUntil(timeout: 30) { !start.exists }
+        }
         if !returned { attachTree(of: app, named: "preview-back-missed-tree") }
         XCTAssertTrue(returned, "Back didn't return to the photo step")
         XCTAssertTrue(picker.waitForExistence(timeout: 20))
@@ -189,6 +193,9 @@ final class CreateFlowTests: XCTestCase {
         let reopened = try pickFirstInlinePhoto(app, picker: picker, opens: start)
         attachScreenshot(of: app, named: "library-photo-picked-again")
         XCTAssertTrue(reopened, "The same photo couldn't be picked a second time")
+        guard reopened else { return }
+        // The preview opens at once either way: what Start Painting waits for is the photo's load.
+        _ = previewLoads(app, start: start, "The second pick’s preview", shot: "library-photo-loaded-again")
     }
 
     /// Samples (behind a segment on compact widths, beside the picker on wide ones) sit in a
@@ -440,6 +447,25 @@ final class CreateFlowTests: XCTestCase {
         attachTree(of: app, named: "inline-tap-missed-tree")
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: point.x, dy: point.y)).tap()
         return opens.waitForExistence(timeout: 30)
+    }
+
+    /// Waits for the preview's Start Painting to enable: the photo loaded and its settings were
+    /// chosen on a template made from it. It stays off under "Couldn’t Open Photo", which ends
+    /// the wait at once. Attaches the screen, and the tree when the wait fails.
+    @MainActor
+    private func previewLoads(_ app: XCUIApplication, start: XCUIElement, _ what: String, shot: String) -> Bool {
+        let enabled = NSPredicate(format: "isEnabled == true")
+        let failure = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Open Photo'")).firstMatch
+        let deadline = Date().addingTimeInterval(120)
+        var loaded = false
+        while !loaded, !failure.exists, Date() < deadline {
+            loaded = waitFor(start, toMatch: enabled, timeout: 2)
+        }
+        attachScreenshot(of: app, named: shot)
+        if !loaded { attachTree(of: app, named: "\(shot)-tree") }
+        XCTAssertFalse(failure.exists, "\(what) says the photo couldn’t be opened")
+        XCTAssertTrue(loaded, "\(what) never finished choosing its settings")
+        return loaded
     }
 
     /// Taps the first library photo that is fully visible inside `area` (window coordinates)

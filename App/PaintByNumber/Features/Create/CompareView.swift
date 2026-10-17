@@ -195,6 +195,7 @@ struct CompareView: View {
     private func moveDivider(to x: CGFloat, in size: CGSize) {
         let visible = Self.visible(pictureRect(in: size), in: size)
         guard after != nil, visible.width > 0 else { return }
+        PaintTips.dividerMoved()
         split = min(max((x - visible.minX) / visible.width, 0), 1)
     }
 
@@ -283,6 +284,8 @@ struct CompareView: View {
                     DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.space))
                         .onChanged { value in moveDivider(to: value.location.x, in: size) }
                 )
+                // Compare Photo and Page: hung below the handle.
+                .gentleTip(.newPaintingDivider, arrowEdge: .top)
         }
         .position(x: x, y: visible.midY)
     }
@@ -290,12 +293,13 @@ struct CompareView: View {
     private static let space = "compare"
 
     private func labels(split: CGFloat) -> some View {
-        HStack {
+        // Tight enough for both words on a tall photo's narrow preview on a phone.
+        HStack(spacing: 6) {
             caption(String(localized: "Photo")).opacity(split > 0.16 ? 1 : 0)
-            Spacer()
+            Spacer(minLength: 0)
             caption(afterLabel).opacity(split < 0.84 ? 1 : 0)
         }
-        .padding(12)
+        .padding(10)
         .animation(.easeOut(duration: 0.15), value: split > 0.16)
         .animation(.easeOut(duration: 0.15), value: split < 0.84)
         .allowsHitTesting(false)
@@ -310,7 +314,7 @@ struct CompareView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.7)
             .foregroundStyle(.white)
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 8)
             .padding(.vertical, 5)
             .background(.black.opacity(0.62), in: .capsule)
     }

@@ -1,6 +1,14 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A Calmer Way to Paint" : {
+      "comment" : "Title of the tip at the More menu of the painting screen about Zen Mode",
+      "extractionState" : "manual"
+    },
+    "A Page Is Waiting" : {
+      "comment" : "Title of the tip in the gallery’s Ready to Paint section, shown on the first visit, once the starter pages are in view",
+      "extractionState" : "manual"
+    },
     "About" : {
       "comment" : "Header of the About section in Settings",
       "extractionState" : "manual"
@@ -257,6 +265,10 @@
       "comment" : "Message of the confirmation dialog for restarting the open painting",
       "extractionState" : "manual"
     },
+    "Already Chosen for You" : {
+      "comment" : "Title of the tip at the Suggested for this photo chip of the New Painting preview",
+      "extractionState" : "manual"
+    },
     "App and Device" : {
       "comment" : "Feedback's review sheet: a row of what is sent, the app version and the device's system, shown beside it",
       "extractionState" : "manual"
@@ -265,16 +277,12 @@
       "comment" : "The Marginarium: heading above the six appendices, after the chapters",
       "extractionState" : "manual"
     },
-    "Apple Pencil paints; use your fingers to pan and zoom." : {
-      "comment" : "Message of a tip shown the first time Apple Pencil is used on the painting screen",
-      "extractionState" : "manual"
-    },
     "Artwork" : {
       "comment" : "Section heading for the app's artwork credits in Settings under Acknowledgements",
       "extractionState" : "manual"
     },
     "Back" : {
-      "comment" : "Feedback's review sheet: button that closes it and returns to drawing on the painting",
+      "comment" : "Feedback's review sheet: button that closes it and returns to drawing on the painting; painting screen: button that returns to the gallery",
       "extractionState" : "manual"
     },
     "Back to Gallery" : {
@@ -294,7 +302,7 @@
       "extractionState" : "manual"
     },
     "Can’t Find It?" : {
-      "comment" : "Title of a tip shown after several taps on areas of the wrong color",
+      "comment" : "Title of a tip shown after a minute with no fill while the selected color has areas left, at the selected color",
       "extractionState" : "manual"
     },
     "Can’t Open Painting" : {
@@ -326,11 +334,15 @@
       "extractionState" : "manual"
     },
     "Close" : {
-      "comment" : "Button that closes the current screen or sheet (painting screen, create flow, time-lapse sheet)",
+      "comment" : "Button that closes the current screen or sheet (create flow, time-lapse sheet)",
       "extractionState" : "manual"
     },
     "Color Key" : {
       "comment" : "Title of the last page of a printed template: the list of colors with their numbers and names",
+      "extractionState" : "manual"
+    },
+    "Compare Photo and Page" : {
+      "comment" : "Title of the tip at the divider of the New Painting preview",
       "extractionState" : "manual"
     },
     "Continue Refining" : {
@@ -1009,8 +1021,16 @@
       "comment" : "Button that finishes the painting screen's completion bar, the Settings sheet, the enlarged create preview (iPhone), the Refine screen and The Marginarium",
       "extractionState" : "manual"
     },
-    "Double-tap the canvas to zoom in on it. Pinch to zoom back out." : {
-      "comment" : "Message of a tip about zooming in on small areas",
+    "Double-tap the page to zoom in. Pinch to zoom back out." : {
+      "comment" : "Message of the tip titled Zoom In on Small Areas; the page is the painting being painted",
+      "extractionState" : "manual"
+    },
+    "Drag the divider to compare the photo and the page. Pinch to look closer." : {
+      "comment" : "Message of the tip titled Compare Photo and Page, at the divider between the photo and the page in the New Painting preview",
+      "extractionState" : "manual"
+    },
+    "Draw a closed shape, then fill it to make it an area with its own number." : {
+      "comment" : "Message of the tip titled Make a Shape Its Own, about Refine’s Fill tool",
       "extractionState" : "manual"
     },
     "Draw on the painting, pinch to zoom" : {
@@ -1172,6 +1192,14 @@
           }
         }
       }
+    },
+    "Fewer colors and less detail make a calmer page. More makes a longer, finer one." : {
+      "comment" : "Message of the tip titled Fewer or More Areas, about the Colors and Detail sliders of the New Painting preview; a page is a painting",
+      "extractionState" : "manual"
+    },
+    "Fewer or More Areas" : {
+      "comment" : "Title of the tip at the Colors slider of the New Painting preview, shown on the second page made",
+      "extractionState" : "manual"
     },
     "Fill" : {
       "comment" : "Refine screen: the Fill tool, whose tap makes the closed shape of a new painting's drawing under it an area of its own, painted the photo's color there (button label for VoiceOver and the Large Content Viewer)",
@@ -1705,6 +1733,18 @@
       "comment" : "Button on the painting screen that shows an area to paint next",
       "extractionState" : "manual"
     },
+    "Hold Show Photo to see the original. Tap it to keep it showing." : {
+      "comment" : "Message of the tip titled Peek at the Photo, about the painting screen’s Photo control, which shows the photo the painting was made from",
+      "extractionState" : "manual"
+    },
+    "In More, Give Feedback lets you mark the page and say what is wrong or right." : {
+      "comment" : "Message of the tip titled Tell Us What You Think; More is the painting screen’s menu button, Give Feedback one of its items",
+      "extractionState" : "manual"
+    },
+    "In More, Zen Mode moves the page to the next area after each fill." : {
+      "comment" : "Message of the tip titled A Calmer Way to Paint; More is the painting screen’s menu button, Zen Mode one of its items",
+      "extractionState" : "manual"
+    },
     "In Progress" : {
       "comment" : "Gallery section header for paintings that are painted on and not finished",
       "extractionState" : "manual"
@@ -1772,6 +1812,14 @@
           }
         }
       }
+    },
+    "Make a Shape Its Own" : {
+      "comment" : "Title of the tip at the Fill tool of Refine, shown after the first line is drawn",
+      "extractionState" : "manual"
+    },
+    "Make Your Own Page" : {
+      "comment" : "Title of the tip at the gallery’s + button, shown on returning from the first painting",
+      "extractionState" : "manual"
     },
     "Making Your Time-lapse" : {
       "comment" : "Title of the sheet shown while a time-lapse movie is rendered",
@@ -1849,12 +1897,76 @@
         }
       }
     },
+    "More for Each Painting" : {
+      "comment" : "Title of the tip at a painting in the gallery about its touch-and-hold menu",
+      "extractionState" : "manual"
+    },
+    "No Photo at Hand" : {
+      "comment" : "Title of the tip at Samples when the New Painting screen opens for the first time",
+      "extractionState" : "manual"
+    },
+    "Painting Length sets how long new pages take. The Making-of shows a photo becoming its page." : {
+      "comment" : "Message of the tip titled Worth a Look Here, at the Painting Length setting; the Making-of is a setting that plays a show after Start Painting",
+      "extractionState" : "manual"
+    },
+    "Peek at the Photo" : {
+      "comment" : "Title of the tip at the Photo control of the painting screen, shown when a page is about a quarter painted",
+      "extractionState" : "manual"
+    },
+    "Pick a color below, then tap an area marked with its number to fill it." : {
+      "comment" : "Message of the first tip on the painting screen (Tap to Paint); the color is the one selected in the palette below",
+      "extractionState" : "manual"
+    },
     "Preparing the Making-of" : {
       "comment" : "VoiceOver label of the spinner under the photo while the making-of show is being made, before it plays",
       "extractionState" : "manual"
     },
+    "Refine, top right, lets you draw or erase lines and fill shapes. It is optional." : {
+      "comment" : "Message of the tip titled Shape the Lines Yourself; Refine is the optional step of the New Painting screen, a button at its top right",
+      "extractionState" : "manual"
+    },
+    "Replay Painting plays your page back from the first fill." : {
+      "comment" : "Message of the tip titled Watch It Again; Replay Painting plays a finished painting back from its first fill",
+      "extractionState" : "manual"
+    },
+    "Samples has paintings and photographs ready to use." : {
+      "comment" : "Message of the tip titled No Photo at Hand; Samples is the pane or list of the app’s sample pictures",
+      "extractionState" : "manual"
+    },
+    "Settings and Tips" : {
+      "comment" : "Title of the tip at the gallery’s Settings button, shown after the first finished painting",
+      "extractionState" : "manual"
+    },
+    "Shape the Lines Yourself" : {
+      "comment" : "Title of the tip at the Refine button of the New Painting preview, shown on the third page made",
+      "extractionState" : "manual"
+    },
+    "Share the Making" : {
+      "comment" : "Title of the tip at a finished painting in the gallery about sharing its time-lapse",
+      "extractionState" : "manual"
+    },
     "Skip" : {
       "comment" : "Button over the making-of show that ends it and opens the new painting",
+      "extractionState" : "manual"
+    },
+    "Tap + to turn one of your photos, or a sample, into a page to paint." : {
+      "comment" : "Message of the tip titled Make Your Own Page, at the gallery’s + (New Painting) button",
+      "extractionState" : "manual"
+    },
+    "Tap a page in Ready to Paint to begin. Nothing needs setting up first." : {
+      "comment" : "Message of the tip titled A Page Is Waiting, inline in the gallery’s Ready to Paint section; Ready to Paint is that section’s title",
+      "extractionState" : "manual"
+    },
+    "Tap the selected color again, or the lightbulb, to be shown an area to paint." : {
+      "comment" : "Message of the tip titled Can’t Find It?; the lightbulb is the painting screen’s Hint button",
+      "extractionState" : "manual"
+    },
+    "Tell Us What You Think" : {
+      "comment" : "Title of the tip at Give Feedback on the painting screen, shown on opening the third painting",
+      "extractionState" : "manual"
+    },
+    "The gear holds paper tone, sound and painting length. Tips can be turned off there." : {
+      "comment" : "Message of the tip titled Settings and Tips; the gear is the gallery’s Settings button",
       "extractionState" : "manual"
     },
     "The Making-of" : {
@@ -1875,6 +1987,42 @@
     },
     "Share Instead" : {
       "comment" : "Button in the alert after feedback couldn't be sent: opens the share sheet so the painter can send the feedback another way, such as Mail",
+      "extractionState" : "manual"
+    },
+    "The Pencil paints while fingers move the page. Double-tap the Pencil for the next color." : {
+      "comment" : "Message of the tip titled Paint with Apple Pencil; the page is the painting being painted",
+      "extractionState" : "manual"
+    },
+    "These settings were picked for this photo. You can just tap Start Painting." : {
+      "comment" : "Message of the tip titled Already Chosen for You; Start Painting is the New Painting screen’s main button",
+      "extractionState" : "manual"
+    },
+    "Tips" : {
+      "comment" : "Settings switch for the small tips, and the name of its section",
+      "extractionState" : "manual"
+    },
+    "Tips appear beside things as you reach them, one at a time. Turn them off here whenever you like." : {
+      "comment" : "Footer of the Settings section with the Tips switch and Show Tips Again",
+      "extractionState" : "manual"
+    },
+    "Touch and hold a finished painting and choose Share for a time-lapse of it." : {
+      "comment" : "Message of the tip titled Share the Making; a time-lapse is a movie of the painting being painted",
+      "extractionState" : "manual"
+    },
+    "Touch and hold a painting to favorite, rename, share, print or start it over." : {
+      "comment" : "Message of the tip titled More for Each Painting, about a gallery card’s touch-and-hold menu",
+      "extractionState" : "manual"
+    },
+    "Touch and hold, then drag across areas with this number to fill them in one stroke." : {
+      "comment" : "Message of the tip titled Paint Several Areas",
+      "extractionState" : "manual"
+    },
+    "Watch It Again" : {
+      "comment" : "Title of the tip at Replay on a finished painting",
+      "extractionState" : "manual"
+    },
+    "Watch the preview change. Reset to Suggested returns every slider to where it started." : {
+      "comment" : "Message of the tip titled You Can Always Go Back; Reset to Suggested is the New Painting button that returns the sliders to the suggested settings",
       "extractionState" : "manual"
     },
     "Waves hello." : {
@@ -2274,7 +2422,7 @@
       "extractionState" : "manual"
     },
     "Paint Several Areas" : {
-      "comment" : "Title of a tip about painting many areas in one stroke",
+      "comment" : "Title of a tip about painting many areas in one stroke, shown after fifteen single fills",
       "extractionState" : "manual"
     },
     "Every painting starts with a photo" : {
@@ -3106,7 +3254,7 @@
       "extractionState" : "manual"
     },
     "Preparing…" : {
-      "comment" : "Caption on the gallery card of a painting that is still being prepared",
+      "comment" : "Caption on the gallery card of a painting that is still being prepared; also the create flow's Refine button after a tap while the painting is still updating (its label, and its VoiceOver value), until the final template is made and Refine opens",
       "extractionState" : "manual"
     },
     "Previous Color" : {
@@ -4113,10 +4261,6 @@
       "comment" : "Item that makes a time-lapse movie of the painting and shares it",
       "extractionState" : "manual"
     },
-    "Short tips explain painting gestures as you go." : {
-      "comment" : "Footer of the Settings section for showing tips again",
-      "extractionState" : "manual"
-    },
     "Show" : {
       "comment" : "Accessibility label of three controls: the segmented control that switches the create flow's comparison between the painting and its numbers, the gallery's filter menu (All or Favorites), and Settings › Advanced's choice between the preview's template and its painted picture",
       "extractionState" : "manual"
@@ -4138,7 +4282,7 @@
       "extractionState" : "manual"
     },
     "Show Tips Again" : {
-      "comment" : "Settings button that makes the painting tips appear again",
+      "comment" : "Settings button that turns tips on and brings every tip back as new",
       "extractionState" : "manual"
     },
     "Showing" : {
@@ -4237,16 +4381,8 @@
       "comment" : "Toolbar button of the create flow that opens the camera",
       "extractionState" : "manual"
     },
-    "Tap an area marked with this color’s number to fill it." : {
-      "comment" : "Message of the first tip on the painting screen",
-      "extractionState" : "manual"
-    },
-    "Tap the selected color again to be shown an area to paint." : {
-      "comment" : "Message of a tip about the hint feature",
-      "extractionState" : "manual"
-    },
     "Tap to Paint" : {
-      "comment" : "Title of the first tip on the painting screen",
+      "comment" : "Title of the first tip on the painting screen, at the selected color",
       "extractionState" : "manual"
     },
     "template.areas" : {
@@ -4433,10 +4569,6 @@
       "comment" : "VoiceOver hint of the Photo control on the painting screen",
       "extractionState" : "manual"
     },
-    "Touch and hold, then drag across areas with this number to paint them in one stroke." : {
-      "comment" : "Message of a tip about painting several areas with one drag",
-      "extractionState" : "manual"
-    },
     "Try Again" : {
       "comment" : "Button in the time-lapse sheet after rendering failed, and in the alert after feedback couldn't be sent: sends it again",
       "extractionState" : "manual"
@@ -4481,6 +4613,14 @@
       "comment" : "Footer under the Pictures list in Acknowledgements",
       "extractionState" : "manual"
     },
+    "Worth a Look Here" : {
+      "comment" : "Title of the tip at Painting Length when Settings opens for the first time",
+      "extractionState" : "manual"
+    },
+    "You Can Always Go Back" : {
+      "comment" : "Title of the tip at Reset to Suggested, shown the first time a New Painting slider is let go",
+      "extractionState" : "manual"
+    },
     "Your marks and notes will be lost." : {
       "comment" : "Message of the confirmation before leaving feedback mode with marks or a note",
       "extractionState" : "manual"
@@ -4506,7 +4646,7 @@
       "extractionState" : "manual"
     },
     "Zoom In on Small Areas" : {
-      "comment" : "Title of a tip about zooming in",
+      "comment" : "Title of a tip about zooming in on the painting, shown after two taps beside areas too small to hit",
       "extractionState" : "manual"
     },
     "Zoom Out" : {

@@ -14,16 +14,28 @@ synchronized folder would bundle it into the app.
   iPhone for its first ten seconds or so, and a painter's iPad ignored them too, though the iPad
   simulator doesn't (`PhotoSourceView`; `CreateFlowTests` picks an inline photo on both devices
   and checks the left edge).
+- The inline picker's second pick of a photo it gave before in the flow (its selection is reset
+  after each pick so the same photo can be picked again) is an item with the photo's identifier and
+  no content types: `loadTransferable` answers nil, however often it is asked, and the preview
+  said "Couldn’t Open Photo" (CI, Oct 17). `CreateModel.load(item:)` keeps the data of the last
+  three library photos by identifier and uses the kept copy then. The preview opens either way, so
+  `CreateFlowTests` waits for Start Painting to enable after the second pick (`previewLoads`).
 - `ArtworkPaintingView` is pushed with a zoom transition whose swipe-down and pinch dismissal it
   turns off: they stole canvas gestures (`PaintingNavigationTests` guards this). It shows the
   painting only once the push has landed: the transition lays the screen out every frame, and
   the painting screen rendered at each frame (hundreds of renders) stopped CI's simulator
-  answering UI tests for up to half a minute.
+  answering UI tests for up to half a minute. The painting Start Painting makes is pushed with no
+  animation, under the create flow's cover, and shows without fading (`StartHandoff`).
 - The create flow's preview turns off iOS 26's swipe back from anywhere on a pushed screen
   (`ContentSwipeBackOff` in `TemplatePreviewView`): it took the sliders' and the comparison's
   drags and left for the photo step. The edge swipe and Back still go back.
 - A presentation's content only sees state its presenter's body read: `AppShellView.body` reads the
   create flow's photo, title and identity up front, or the flow opens without its photo.
+- The create flow's cover has a clear background (`.presentationBackground(.clear)` in
+  `AppShellView`) and `CreateFlowView` draws its own paper behind its screens: Start Painting pushes
+  the painting under the cover and the flow dissolves into it (Create flow › Start Painting into
+  the painting). Anything new that sits in that cover needs a background of its own, or the
+  gallery shows through it.
 - A `.confirmationDialog` is a popover (iPhone too) anchored to the view that carries the modifier:
   on a screen or a grid it points at the container's middle, not at what asked. Attach it to the
   card, button or menu that asks, keeping one state for what is pending: each gallery card carries
@@ -151,7 +163,8 @@ synchronized folder would bundle it into the app.
   `MarginariumCastTests` and `MarginariumWhosWhoUITests` (the drawings' names too) cover them. Chief Architect Paul's rule
   for the whole Marginarium: anyone who opens it should have a nice time and roughly follow what's
   going on, so a new page says who people are and what the Lamp's words mean (or links Who's Who),
-  in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`.
+  in plain words, and is read as a newcomer would before it ships. `Settings/`; `Share/`; `Tips/`
+  (the gentle tips, see Tips).
 - `Features/MakingOf/`: the making-of show in the app (F32; the show itself is `Sources/MakingOf`,
   linked as the package's `MakingOf` product). It has no crew: the app plays `FieldShow`, each step
   growing from seeds over the picture itself, and draws no guardian (nothing of it touches the
@@ -159,8 +172,10 @@ synchronized folder would bundle it into the app.
   `making-of.json` is bundled and that no `SpriteAtlas` or `MakingOfSprites` is). It stays behind
   Settings › The Making-of (`SettingsKey.playsMakingOf`, off by default; the switch and the screen
   have no `#if`, only `MakingOfDemoView` is DEBUG). With the switch on, `CreateFlowView.start` saves
-  the painting as ever, then lays `MakingOfView` over the flow instead of opening it; Skip, a tap
-  or the show's end opens it (`onStart`), and so does a show that can't be made. `MakingOfPlayer`
+  the painting as ever, then lays `MakingOfView` over the flow instead of opening it, its picture
+  coming from where the preview's was; Skip, a tap or the show's end opens it (`onStart`: the
+  painting opens under the cover and the show's picture moves to it, Create flow › Start Painting
+  into the painting), and so does a show that can't be made. `MakingOfPlayer`
   makes the show off the main actor (`MakingOfShow.build`: the base generated again with a
   `PipelineSnapshot` observer from `CreateModel.makingOfSource`, the saved template, the bundled
   `making-of.json`, seeded by the artwork id), composites the picture on the CPU with
@@ -184,7 +199,9 @@ synchronized folder would bundle it into the app.
   (`DemoMode.isTestHost`). Shared helpers in `Fixtures.swift` (`waitUntil`, `record`, `mosaic`,
   `rasterize`, `PixelReader`, `repositoryRoot`, `sample`: a template of a library picture).
 - `PaintByNumberUITests`: XCTest launching demo scenarios (`-demo`) with `-demoFixedPictures`,
-  `-tracePaper`, `-tracePhotoPeek`, `-openFile`, `-NSDoubleLocalizedStrings`,
+  `-tracePaper`, `-tracePhotoPeek`, `-openFile`, `-slowFullResolution <seconds>` (each
+  full-resolution generation of the create flow waits: a phone's tens of seconds, on a simulator),
+  `-NSDoubleLocalizedStrings`,
   `-UIPreferredContentSizeCategoryName`; shared helpers in `UITestSupport.swift`. iPad-only tests
   (menu-bar keys, landscape) skip on iPhone, and the system-picker tests skip where synthesized taps
   can't reach the picker. `LongTextTests` keeps each screen's controls, the color name and the toast
@@ -202,7 +219,7 @@ synchronized folder would bundle it into the app.
   captured in dark appearance, `long-text` ones with doubled strings; failure states have scenarios
   (`gallery-damaged`, `gallery-timelapse`, `paint-unavailable`), and `gallery-first-run` is the
   gallery as the first launch leaves it (the two starters, none painted on). Demo launches and the test host
-  reset TipKit and hide every tip except in `paint-tip`. The scenarios a viewer judges the app by
+  reset TipKit and hide every tip except in the tip scenarios (Tips). The scenarios a viewer judges the app by
   show the library by position; the rest use `ShellDemo.fixedPictures`.
   `marginarium` (with `-dark`, `-long-text`) is the contents page, its drawings idling, ready 2 s
   after it appears. `marginarium-chapter`, `marginarium-chapter-dark` and
@@ -263,10 +280,7 @@ synchronized folder would bundle it into the app.
 - Paper: Settings › Paper (`PaperAppearance`) reaches `CanvasView.paperAppearance`, which resolves a
   `CanvasPalette` from it and the trait collection every frame. `CanvasPalette.accent(for:)` is the
   selected paint lifted until it reads on the paper.
-- Tips: `PaintTips` (TipKit), configured in `PaintByNumberApp.init`; donations and invalidations
-  come from session events in `PaintChromeState` (plus double-tap zoom and Pencil strokes from the
-  canvas); one tip at a time through a `TipGroup`. Settings › Show Tips Again bumps the tips' id
-  generation.
+- Tips: the bench's moments are in `PaintChromeState` (see Tips below).
 - Zen Mode (More menu, `SettingsKey.zenMode`): `PaintingSession.flowsToNextArea` sends the
   canvas to the next area of the selected color `zenPause` after each fill or stroke, as the
   hint does, and `zenShinePause` after one that finished a color, whose shine shows first
@@ -295,6 +309,56 @@ synchronized folder would bundle it into the app.
   stored: root Saved data). `PaintingSession.colorNicknames`/`nickname(of:)` (nil outside English)
   feed the palette caption, current color, VoiceOver, the swatch's long-press popover and the PDF
   key; `pbn names` prints a template's.
+
+## Tips
+
+The gentle tips are the app's design panel's design of October 17 (its words, ids, triggers, pacing
+and Never list are the spec; its notes are the record, not UI): 22 tips, each said once, on for
+everyone from the first launch. Paul's change (October 17): no invitation and no Show Tips or No Thanks,
+and no Turn Off Tips on a tip: Settings › Tips is the only way to turn them off. The shelf is the
+gallery, the bench the painting screen, the drawer Settings; `TipID` names the tips and `TipPlace`
+where they live.
+
+- **Where they live.** `Features/Tips/`: `GentleTips` (17 of the tips as TipKit tips, `nonisolated`,
+  in the design's words; the other five, the bench's first, are in `Features/Paint/PaintTips.swift`
+  with the ids of the first version, so what was closed stays closed), `TipDesk` (turns), `TipPacing`
+  (limits, with `TipHistory` and `TipStore`), `TipMoments` (`TipPreference`, the switch's value, and
+  `TipMoments`, which tips a moment may offer) and `PaintTips+Moments`. `PaintTips` is the facade
+  (configure, the switch, donations, `used`), set up in `PaintByNumberApp.init`; the bench's moments
+  are `PaintChromeState`'s. Counts the rules need are TipKit events (`TipEvents`:
+  `donations.count`); every tip's rules also read `TipSwitch.tipsOn`. A tip has no button but TipKit's
+  close button, which closes just that tip for good.
+- **Turns, not TipKit's say-so.** A view points a tip only while `TipDesk.turn` is its id
+  (`.gentleTip(…)`, a popover tip; `GentleTipView`, inline, for Ready to Paint; `.barTip(…)` for the
+  three at buttons of a navigation bar, the gear, + and Refine, where TipKit's popover tip found
+  nothing to anchor to on CI: SwiftUI's own popover with the tip's `TipView` inside, and the tip
+  has no TipKit display limit, which would retire it from under that view: `TipDesk` says it once). A screen reports the
+  moment its tips may come at (`TipDesk.offer`: the shelf appeared, the preview is final, the painter
+  stopped for a minute); the desk waits for TipKit to find one eligible (`TipID.progress`, polled) and
+  for the painter's hand to rest, then asks `TipPacing`, which a refusal leaves untouched: a refused
+  hint is not queued, it waits for its moment to come again. A tip's turn ends when it is closed (TipKit
+  invalidates it), used (`PaintTips.used` → `invalidate(reason: .actionPerformed)`), its screen goes
+  (`TipDesk.leave`) or 45 s pass. `TipPacing`: one at a time, 3 minutes and something done between
+  hints (a fill, a slider, a screen), 3 a session (a stretch without a 30-minute break), 5 a day, 3 on
+  the first painting (counted from its opening, in place of the session's), silence while a finger or
+  the Pencil is on the page, a fill lands, The Making-of, Replay, the shine, Zen drifts or Give
+  Feedback is on, and after a finish only Replay Painting. Tap to Paint alone waits for neither the
+  gap nor something done. State: UserDefaults, `TipStore` (`tipsPacing`, `tipsHistory`);
+  `TipPacingTests` and `TipMomentsTests` run on Linux too (the files are Foundation-only).
+- **The switch.** `SettingsKey.tipsEnabled` is Settings › Tips' switch and the one thing that turns
+  tips off: unset means on (`TipPreference`), so whoever updates from an earlier build has tips too.
+  The first shelf visit, once the starter pages show, gives A Page Is Waiting with no question asked
+  (`TipMoments.shelf`). Show Tips Again turns tips on, bumps the generation (`PaintTips.scoped` ids and
+  events) and starts the pacing and history over. Day one is the first launch with tips on
+  (`TipHistory.tipsOnSince`, set when the desk is made).
+- **Tests keep them hidden.** Demo launches and the test host clear TipKit and the pacing, put the
+  switch back to on, hide every tip (`Tips.hideAllTipsForTesting`) and mute the desk, except in the
+  scenarios `PaintTips.demoScenarios` lists (each says which tip it waits for and
+  `DemoMode.markReady()` follows it, `PaintTips.awaitDemoTip`): `paint-tip`, `paint-tip-fill` (UI
+  tests), `gallery-tip` (with `-dark`, `-long-text`), `gallery-tip-gear` (a tip hung from a navigation
+  bar button), `gallery-tips-off` (UI tests: the switch off and the desk not muted, so the real gate
+  is tested), `create-tip`, `settings-tips`, `settings-tip`. A UI test that needs a tip names one of
+  them; `GentleTipsUITests` and `PaintingTipsTests` do.
 
 ## Giving feedback
 
@@ -461,7 +525,9 @@ Conventions).
   `settingsOrigin` and `paintingLength`, and regeneration reuses an artwork's recorded settings.
 - Tuning: a drag renders drafts from the reduced photo, their line lengths scaled to the draft's
   canvas (`CreateModel.draftSettings`) so short strokes like eyes show as they will; a thumb
-  resting `CreateModel.restDelay` renders the full resolution under the finger. The Lines slider
+  resting `CreateModel.restDelay` renders the full resolution under the finger, and letting go
+  makes the settings' unless it is under way or there (`setAdjusting`: a touch on a slider cancels
+  nothing, only a setting that changes does; a draft never replaces a final preview). The Lines slider
   moves the book's thresholds and shortest line (`CreateModel.lineArt(_:lines:)`; the middle is
   the book's defaults), the line art recorded with the painting like any setting. `CompareView` zooms both layers alike (pinch, double tap, VoiceOver), the zoom held
   across slider changes.
@@ -471,7 +537,12 @@ Conventions).
   strokes as vectors on the sheet's paper, crisp at every zoom and as heavy as the canvas draws
   them for the picture's size against the window's. A suggestion's first candidate has no
   drawing, so with line art the photo waits for the winner's draft.
-- Refine (optional, from the preview's toolbar; `RefineView`): the drawing large, on its paper,
+- Refine (optional, from the preview's toolbar; `RefineView`; it draws on the final template alone,
+  which a full resolution takes tens of seconds to make again on a phone after a slider moved, so
+  the button stays on meanwhile: a tap shows Preparing… and Refine opens by itself once the
+  template is made, `CreateModel.askForRefine` / `opensRefine`, called off by touching a slider,
+  Start or another photo; it is off only without line art and detail brushes, while the settings
+  are chosen and after a failed generation, the status saying why): the drawing large, on its paper,
   over the photo, or over the painting finished (Painting: every area in its paint,
   `TemplateRasterizer.Style.paintedAreas`, rendered with each template that comes); one finger
   draws lines and takes them out, and the painting has exactly the line drawn: the Pen draws as
@@ -554,6 +625,35 @@ Conventions).
   (`DraftTests.resumingADraftLaysItsEditsAgain`). Refine's undo and redo stacks are not kept. A draft
   with any file missing or unreadable, or a photo that won't decode, is no draft: logged and
   removed, never a failure of the gallery (`DraftTests`; `gallery-draft` is its screenshot).
+- Start Painting into the painting (`StartHandoff`, `Features/Create/StartHandoff.swift`): the
+  journey from the settings to the canvas is one picture moving. `AppShellView` owns the hand-off
+  object and passes it through the environment (`\.startHandoff`) to the create flow's cover and the
+  painting. On Start (after the show, with Settings › The Making-of on) the shell `begin`s it and
+  pushes the painting *under* the cover (`startPainting`: the usual push and its zoom, unseen behind
+  the opaque cover; a push with animations off left the edge swipe back dead), and
+  `ArtworkPaintingView` mounts without its fades (`isUnderCover`). The canvas notes when its first
+  frame is on screen (`CanvasView.hasShownFirstFrame`: a tenth of a second after the GPU finished
+  it), and `PaintView.reportTemplate` then tells the hand-off where the template is, in global
+  coordinates once it has stayed put for a moment, and again whenever it moves: a painting's first
+  layout is not its last (the size class, the palette and the status bar settle after it, and the
+  status bar goes with the cover). The flow, which observes `phase`, moves its picture there in
+  `StartHandoffPlan.move` (about 0.45 s, a gentle spring, following the template if it moves on the
+  way and landing once it has stopped) while the card, Skip, the sliders and its own paper fade to
+  clear, cross-fades the picture into the canvas and `complete`s, and the shell takes the cover away
+  with animations off (`endCreateFlow`). The flow hides the status bar as it goes, so the painting
+  beneath has the layout it keeps once the cover is gone. The picture is the show's when it played
+  (`MakingOfView`: `entry`, `leaving`; `PictureTravel` is its scale and offset), else the preview's
+  (`PreviewPictureProbe`, `DepartingPicture`). A painting that has not drawn in
+  `StartHandoffPlan.fallback` (2.5 s: a slow open, the recovery screen) `timeOut`s: the cover fades
+  out alone and the painting stays pushed. The same motion plays the other way into the show: its
+  picture starts where the preview's was. Reduce Motion moves nothing (`StartHandoffPlan.motion`,
+  `entry`): cross-fades over the same time. The painting's tips wait for the cover to go (a popover
+  can't present under it). `StartHandoffLogic` holds the rules for `StartHandoffTests`;
+  `StartHandoffUITests` attach the frames of the screen around the hand-off (`ScreenFrames.swift`),
+  `-handoffSlowdown N` (Debug) stretches every duration N times for their `Slowed` runs, and
+  `-handoffFallback S` sets the seconds a painting has to draw: CI's simulators take several to
+  open one, and stall their main thread for seconds meanwhile, so a motion of half a second is a
+  frame or two there.
 - Compact windows (iPhone) enlarge the preview from the toolbar (Shrink Preview, in Enlarge
   Preview's place, goes back; a checkmark there read as accepting the painting): the comparison
   fills the page (`CompareView.fillsSpace`: the picture fitted in the space, and zoomed in, all
