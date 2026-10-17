@@ -214,6 +214,30 @@ struct CreateModelTests {
         model.cancelAll()
     }
 
+    /// A touch on a slider that moves nothing, while the final template of the settings it let go
+    /// on is being made, must not cost that template: the touch cancelled the job, and letting go
+    /// took the cancelled job, still unwinding, for the one under way and made no other.
+    @Test func touchingASliderWhileTheFinalIsBeingMadeStillGetsTheFinal() async throws {
+        let model = CreateModel()
+        model.load(sample: try #require(Sample.named("red-fox")))
+        try await waitUntil { model.isFinal }
+
+        // A slider moved and let go: the full resolution of the new settings starts.
+        model.setAdjusting(true)
+        model.colorCount = model.colorCount < 20 ? 28 : 12
+        model.settingsChanged()
+        model.setAdjusting(false)
+        try await waitUntil(timeout: .seconds(60), polling: .milliseconds(2)) { model.refining != nil }
+        #expect(!model.isFinal && !model.canRefine)
+
+        // A touch that moves nothing, before it is done.
+        model.setAdjusting(true)
+        model.setAdjusting(false)
+        try await waitUntil(timeout: .seconds(60)) { model.isFinal }
+        #expect(model.canRefine && model.phase == .ready)
+        model.cancelAll()
+    }
+
     /// The typed name is trimmed; an empty one falls back to the sample's name or, for a
     /// photo, the date. A new photo starts over with its own default.
     @Test func titleFallsBackToTheDefault() throws {
