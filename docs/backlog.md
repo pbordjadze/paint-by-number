@@ -14,8 +14,8 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | # | Item | Paul's words | State | Where | Updated |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Sun & Moon theme, music and the Lamplit Table, merged for SideStore only | "Can you merge Sun and moon but ship it only to SideStore for now" | in CI | merged to `main`; SideStore build follows its run | 2026-10-17 |
-| 2 | App Store slides: two pets, cuter | "Can we ignore family for now and just do two pets?" | waiting on Paul | TASTE: needs the two pet photos | 2026-10-17 |
-| 3 | Astrology slide in the App Store set | | new | TASTE: #1 is on `main` now | 2026-10-17 |
+| 2 | App Store slides: two pets, cuter | "Can we ignore family for now and just do two pets?" | waiting on Paul | TASTE: cuter slides pushed to `claude/app-store-screenshots`; needs the two pet photos | 2026-10-17 |
+| 3 | Astrology slide in the App Store set | | waiting on Paul | TASTE: waits until Sun & Moon ships to the release (it is SideStore-only); current slides need no change | 2026-10-17 |
 | 4 | App icon | | parked | with Paul's sister (the icon brief) | 2026-10-17 |
 | 5 | The app's name: keep "Paint by Moonlight" or change it | "the name might go soon? Or we keep it for now" | waiting on Paul | TASTE | 2026-10-17 |
 | 6 | Making-of to painting hand-off: check it on a real device (it froze 10–100 s on CI simulators) | "the jump from the making of screen to the painting is very abrupt…" | waiting on Paul | shipped in TestFlight 1.0 (10.1) | 2026-10-17 |
