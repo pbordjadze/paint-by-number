@@ -22,8 +22,8 @@ screenshots (`views/`, described in `prompts/<seat>.md`); every reply is in `rep
 | Originality | (abstains by charter) | none; no veto |
 
 **Decided**: ship as built, 4 to 1. The Child at Bedtime's pictures go against the plain list
-Paul asked for and Rikyū's reading of it, so they are for Paul: a sun and a crescent beside Sun
-and Moon (SF Symbols in the rows), Auto plain.
+Paul asked for and Rikyū's reading of it, so they went to Paul, who answered (through the front
+desk, about 19:50): "No icons, ship it plain".
 
 **Also in the push**: `SettingsTests`' scroll now drags a row wholly into the list. The longer
 Music list left the Making-of's row peeking out under the iPad sheet's edge, where a tap at its
