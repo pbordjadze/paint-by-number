@@ -51,12 +51,16 @@ before planning app work).
   - `Edit/`: `TemplateEditor`, the painter's pen, eraser, line eraser and fill made to a finished
     coloring-book `Template` exactly and with no image processing (`Lattice` is its exact
     arithmetic; `docs/coloring-book.md` › Edits made to the template itself; a drawn line's
-    paints, the photo's colors of the pieces it cuts, are read beforehand by `painted`); `EditTrail`, a base
-    with a list of edits laid on it, with undo and redo from kept templates; `EditCoding`, the
-    shape of an edit in a file (the app's `refinements.json`).
+    paints, the photo's colors of the pieces it cuts, are read beforehand by `painted`);
+    `EditTrail`, a base with a list of edits laid on it, with undo and redo from kept templates;
+    `EditCoding`, the shape of an edit in a file (the app's `refinements.json`).
+  - `Refine/`: what Refine's screen makes of a gesture, shared by the app's `RefineView` and
+    `pbn refine` (`RefineGestures` with `RefineScreen`: the Pen, Shapes, the Eraser, the Smart
+    Eraser, Fill's taps; `RefineGeometry.swift`: `PenPath`, `PenAssist`, `ShapePath`, `SnapLines`,
+    `LineChains`). The app keeps only drawing (`PenPath.path`) and its toolbar.
 - `Sources/pbn`: `main.swift` is the usage header (the manual) and the dispatch; `Options.swift`
   (flags; the hand-kept `Fields` tables of `--line-art`/`--tuning` keys), `Inputs.swift`,
-  `Commands.swift`, `Edit.swift` (`pbn edit`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
+  `Commands.swift`, `Edit.swift` (`pbn edit`), `Refine.swift` (`pbn refine`), `Bench.swift`, `Metrics.swift` (stats.json), `LineArtReport.swift` (its
   `lineArt` block; the field docs define the drawing metrics), `Rasters.swift`, `Timing.swift`.
 - `Sources/MakingOf` (depends on PaintCore only; Debug `-O`, Release checked): the making-of show,
   which plays after Start when Settings › The Making-of is on (off by default). The app plays
@@ -182,6 +186,7 @@ logs the tuned ones.
 | Sheets and metrics | `tools/eval.py run <images> --out <dir> [-- <pbn options>]` |
 | Line-art tuning (always) | `tools/eval.py book`: `docs/coloring-book.md` › Measuring a book |
 | Suggested settings | `pbn suggest <image> --out <dir>`, `tools/auto_sheet.py <dir>` |
+| Refine's gestures, off the device | `pbn refine <photo> <gestures.json> --out <dir> --edges … --lines …`, `tools/refine_sheet.py <dir>` |
 
 - Look at the PNGs with the Read tool. An eval sheet's second row is the raw region raster, a 2×
   `boundaries.png` (best for judging segmentation shapes) and the palette.
@@ -189,8 +194,8 @@ logs the tuned ones.
   add fields and files, never rename or repurpose them, nor the properties of the PaintCore types
   they embed (listed on pbn's `Metrics`); a field leaves only with its readers.
   `labelsBelowLegibleSize` and `labelRoomUnmet` must be 0.
-- pbn has no tests: CI runs `generate`, `check` and `bench`; run `suggest`, `trace` and `names` by
-  hand after touching them. A new `LineArtSettings` or `PipelineTuning` field needs its `Fields`
+- pbn has no tests: CI runs `generate`, `check` and `bench`; run `suggest`, `trace`, `names`,
+  `edit` and `refine` by hand after touching them. A new `LineArtSettings` or `PipelineTuning` field needs its `Fields`
   entry. `pbn trace`'s `valid` skips the label-room check: run `pbn check`. pbn is classic unless
   `--line-style` says otherwise and reads PPM/PGM (other formats only on Apple platforms);
   `tools/eval.py` needs node (`cd tools && npm ci`) and Pillow, the others Pillow. pbn has no

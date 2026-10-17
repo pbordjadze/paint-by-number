@@ -28,6 +28,8 @@ struct Options {
     var lineEdits: String?
     /// `pbn edit`'s photo: draws without paints take its colors, as the app's do.
     var photo: String?
+    /// `pbn refine`'s template, instead of one generated from the photo.
+    var template: String?
     /// How much of `--edges` goes under `--lines` when both are given (`EdgeMap.contourWeight`).
     var contourWeight = EdgeMap.contourWeight
 }
@@ -143,6 +145,7 @@ func parse(_ args: ArraySlice<String>) -> Options {
         case "--writing": o.writing = value(a, &it)
         case "--line-edits": o.lineEdits = value(a, &it)
         case "--photo": o.photo = value(a, &it)
+        case "--template": o.template = value(a, &it)
         case "--contour-weight": o.contourWeight = number(a, &it)
         case "--line-style": o.lineStyle = choice(a, value(a, &it))
         case "--line-art": o.lineArtFields.append(value(a, &it))

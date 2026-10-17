@@ -1,12 +1,11 @@
-import CoreGraphics
 import Foundation
 
 /// The pen's line as Refine keeps it: a finger's samples smoothed into curves (quadratics
 /// through the midpoints between samples, so the corners of a shaky hand round off the way they
 /// do on the screen while it draws) and thinned to the points that shape them.
-nonisolated enum PenPath {
+public enum PenPath {
     /// The smoothed path through `points`, sampled every `spacing` (the points' units).
-    static func smoothed(_ points: [CGPoint], spacing: CGFloat) -> [CGPoint] {
+    public static func smoothed(_ points: [CGPoint], spacing: CGFloat) -> [CGPoint] {
         guard points.count > 2, spacing > 0 else { return points }
         var out = [points[0]]
         var start = points[0]
@@ -26,24 +25,8 @@ nonisolated enum PenPath {
         return out
     }
 
-    /// The path drawn on screen for `points`, the same curves `smoothed` samples.
-    static func path(_ points: [CGPoint]) -> CGPath {
-        let path = CGMutablePath()
-        guard let first = points.first else { return path }
-        path.move(to: first)
-        guard points.count > 2 else {
-            path.addLine(to: points.last ?? first)
-            return path
-        }
-        for k in 1..<(points.count - 1) {
-            let end = k == points.count - 2 ? points[k + 1] : midpoint(points[k], points[k + 1])
-            path.addQuadCurve(to: end, control: points[k])
-        }
-        return path
-    }
-
     /// The points that keep the line within `tolerance` of itself (Ramer–Douglas–Peucker).
-    static func simplified(_ points: [CGPoint], tolerance: CGFloat) -> [CGPoint] {
+    public static func simplified(_ points: [CGPoint], tolerance: CGFloat) -> [CGPoint] {
         guard points.count > 2 else { return points }
         var keep = [Bool](repeating: false, count: points.count)
         keep[0] = true
@@ -68,16 +51,16 @@ nonisolated enum PenPath {
         return points.indices.filter { keep[$0] }.map { points[$0] }
     }
 
-    static func length(_ points: [CGPoint]) -> CGFloat {
+    public static func length(_ points: [CGPoint]) -> CGFloat {
         zip(points, points.dropFirst()).reduce(0) { $0 + distance($1.0, $1.1) }
     }
 
-    static func midpoint(_ a: CGPoint, _ b: CGPoint) -> CGPoint { CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2) }
+    public static func midpoint(_ a: CGPoint, _ b: CGPoint) -> CGPoint { CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2) }
 
-    static func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat { hypot(a.x - b.x, a.y - b.y) }
+    public static func distance(_ a: CGPoint, _ b: CGPoint) -> CGFloat { hypot(a.x - b.x, a.y - b.y) }
 
     /// The distance from `p` to the segment `a`–`b`.
-    static func segmentDistance(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGFloat {
+    public static func segmentDistance(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGFloat {
         let ab = CGPoint(x: b.x - a.x, y: b.y - a.y)
         let length = ab.x * ab.x + ab.y * ab.y
         let t = length > 0 ? min(max(((p.x - a.x) * ab.x + (p.y - a.y) * ab.y) / length, 0), 1) : 0
@@ -87,13 +70,13 @@ nonisolated enum PenPath {
 
 /// The help the Pen and Shapes give a line's ends, in the template's canvas units: an end whose
 /// ink touches a line of the drawing moves onto it (`SnapLines`), so the cell closes as it looks.
-nonisolated enum PenAssist {
+public enum PenAssist {
     /// `line`'s ends moved onto the nearest point of `lines` where they come within `reach`, its
     /// end onto its own start where it comes back that near it (a loop, at least three reaches
     /// long), so the shape closes. A straight line moves its two ends; otherwise each move eases
     /// in over `reach` of the line (half the line, if shorter), which the rest keeps. A line the
     /// moves would fold to under half its length keeps only its start's.
-    static func joined(_ line: [CGPoint], to lines: SnapLines, reach: CGFloat, straight: Bool) -> [CGPoint] {
+    public static func joined(_ line: [CGPoint], to lines: SnapLines, reach: CGFloat, straight: Bool) -> [CGPoint] {
         guard line.count >= 2, reach > 0 else { return line }
         let length = PenPath.length(line)
         let span = min(reach, length / 2)
@@ -118,7 +101,7 @@ nonisolated enum PenAssist {
     /// `points` with an end (the first, or the last) moved to `target`, the move easing in over
     /// `span` of the line from that end: all of it at the end, none `span` along, where a point
     /// is added if none lies there, so the line before it stays as it was.
-    static func moving(_ points: [CGPoint], atStart: Bool, to target: CGPoint, span: CGFloat) -> [CGPoint] {
+    public static func moving(_ points: [CGPoint], atStart: Bool, to target: CGPoint, span: CGFloat) -> [CGPoint] {
         guard points.count >= 2 else { return points }
         let p = atStart ? Array(points.reversed()) : points
         let n = p.count
@@ -145,13 +128,13 @@ nonisolated enum PenAssist {
 /// The Shapes tool's figures (`RefineShape`), in any one space: a rectangle across two corners,
 /// an oval filling the box they span, a curve bent through a point. A closed figure ends where
 /// it starts (`RefineView` sends it as a closed line, its start once).
-nonisolated enum ShapePath {
-    static func rectangle(from a: CGPoint, to b: CGPoint) -> [CGPoint] {
+public enum ShapePath {
+    public static func rectangle(from a: CGPoint, to b: CGPoint) -> [CGPoint] {
         [a, CGPoint(x: b.x, y: a.y), b, CGPoint(x: a.x, y: b.y), a]
     }
 
     /// The oval in the box from `a` to `b`, its points at most `spacing` apart (at least 16).
-    static func oval(from a: CGPoint, to b: CGPoint, spacing: CGFloat) -> [CGPoint] {
+    public static func oval(from a: CGPoint, to b: CGPoint, spacing: CGFloat) -> [CGPoint] {
         let centre = PenPath.midpoint(a, b), rx = abs(b.x - a.x) / 2, ry = abs(b.y - a.y) / 2
         // No arc of an angle's step is longer than the step on the larger radius.
         let n = max(16, Int((2 * CGFloat.pi * max(rx, ry) / max(spacing, 0.1)).rounded(.up)))
@@ -164,30 +147,32 @@ nonisolated enum ShapePath {
 
     /// The curve from `a` to `b` through `bend` (a quadratic passing through it halfway), its
     /// points at most `spacing` apart.
-    static func curve(from a: CGPoint, to b: CGPoint, through bend: CGPoint, spacing: CGFloat) -> [CGPoint] {
+    public static func curve(from a: CGPoint, to b: CGPoint, through bend: CGPoint, spacing: CGFloat) -> [CGPoint] {
         let control = CGPoint(x: 2 * bend.x - (a.x + b.x) / 2, y: 2 * bend.y - (a.y + b.y) / 2)
         // A quadratic moves at most twice its longer control leg per unit of its parameter.
         let speed = 2 * max(PenPath.distance(a, control), PenPath.distance(control, b))
         let n = max(2, Int((speed / max(spacing, 0.1)).rounded(.up)))
         return (0...n).map { k -> CGPoint in
             let t = CGFloat(k) / CGFloat(n), u = 1 - t
-            return CGPoint(
-                x: u * u * a.x + 2 * u * t * control.x + t * t * b.x, y: u * u * a.y + 2 * u * t * control.y + t * t * b.y)
+            let wa: CGFloat = u * u, wc: CGFloat = 2 * u * t, wb: CGFloat = t * t
+            let x: CGFloat = wa * a.x + wc * control.x + wb * b.x
+            let y: CGFloat = wa * a.y + wc * control.y + wb * b.y
+            return CGPoint(x: x, y: y)
         }
     }
 }
 
 /// The lines on screen a pen's end may meet, in the template's canvas units: the drawing's
 /// lines, those drawn since, less what was erased since.
-nonisolated struct SnapLines {
-    nonisolated struct Line {
-        let points: [CGPoint]
-        let bounds: CGRect
+public struct SnapLines: Sendable {
+    public struct Line: Sendable {
+        public let points: [CGPoint]
+        public let bounds: CGRect
     }
 
-    let lines: [Line]
+    public let lines: [Line]
 
-    init(_ polylines: [[CGPoint]]) {
+    public init(_ polylines: [[CGPoint]]) {
         lines = polylines.filter { $0.count >= 2 }.map { points in
             var low = points[0], high = points[0]
             for p in points {
@@ -201,7 +186,7 @@ nonisolated struct SnapLines {
     /// `polylines` less their points within reach of an erasure (its path and radius), split
     /// there; near one their segments are measured every unit, so a pass between two of a line's
     /// points cuts it too.
-    static func erasing(_ polylines: [[CGPoint]], by erasures: [(path: [CGPoint], radius: CGFloat)]) -> [[CGPoint]] {
+    public static func erasing(_ polylines: [[CGPoint]], by erasures: [(path: [CGPoint], radius: CGFloat)]) -> [[CGPoint]] {
         guard !erasures.isEmpty else { return polylines }
         let reaches = erasures.map { erasure -> CGRect in
             let xs = erasure.path.map(\.x), ys = erasure.path.map(\.y)
@@ -254,7 +239,7 @@ nonisolated struct SnapLines {
     }
 
     /// The point on a line nearest `p`, if one lies within `reach`.
-    func nearestPoint(to p: CGPoint, within reach: CGFloat) -> CGPoint? {
+    public func nearestPoint(to p: CGPoint, within reach: CGFloat) -> CGPoint? {
         var best: (point: CGPoint, distance: CGFloat)?
         for line in lines where line.bounds.insetBy(dx: -reach, dy: -reach).contains(p) {
             for (a, b) in zip(line.points, line.points.dropFirst()) {
@@ -267,7 +252,7 @@ nonisolated struct SnapLines {
     }
 
     /// The point of the segment `a`–`b` nearest `p`.
-    static func closest(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGPoint {
+    public static func closest(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> CGPoint {
         let ab = CGPoint(x: b.x - a.x, y: b.y - a.y)
         let length = ab.x * ab.x + ab.y * ab.y
         let t = length > 0 ? min(max(((p.x - a.x) * ab.x + (p.y - a.y) * ab.y) / length, 0), 1) : 0
@@ -279,13 +264,30 @@ nonisolated struct SnapLines {
 /// tap from junction to junction, as the painter sees it. A template's lines break wherever two
 /// paints meet along them; they continue through every point where just one other drawn line
 /// goes on, and stop where three or more meet, or where a line ends.
-nonisolated struct LineChains {
-    let lines: [LineArtDrawing.Line]
+public struct LineChains: Sendable {
+    /// A line of the drawing and its bounds, padded by a unit so a straight line's box has area.
+    public struct Line: Sendable {
+        public let points: [CGPoint]
+        public let bounds: CGRect
+
+        public init?(_ points: [CGPoint]) {
+            guard points.count >= 2 else { return nil }
+            var low = points[0], high = points[0]
+            for p in points {
+                low = CGPoint(x: min(low.x, p.x), y: min(low.y, p.y))
+                high = CGPoint(x: max(high.x, p.x), y: max(high.y, p.y))
+            }
+            self.points = points
+            bounds = CGRect(x: low.x - 1, y: low.y - 1, width: high.x - low.x + 2, height: high.y - low.y + 2)
+        }
+    }
+
+    public let lines: [Line]
     /// The lines ending at each point (canvas units, to a 64th): line index and whether at its
     /// start.
     private let ends: [Key: [(line: Int, atStart: Bool)]]
 
-    nonisolated private struct Key: Hashable {
+    private struct Key: Hashable {
         let x: Int, y: Int
         init(_ p: CGPoint) {
             x = Int((p.x * 64).rounded())
@@ -293,9 +295,9 @@ nonisolated struct LineChains {
         }
     }
 
-    init(_ drawing: LineArtDrawing) { self.init(lines: drawing.lines) }
-
-    init(lines: [LineArtDrawing.Line]) {
+    /// The chains of the drawing's lines (`RefineGestures.drawingLines`), canvas units.
+    public init(lines polylines: [[CGPoint]]) {
+        let lines = polylines.compactMap(Line.init)
         self.lines = lines
         var ends: [Key: [(line: Int, atStart: Bool)]] = [:]
         for (k, line) in lines.enumerated() {
@@ -308,7 +310,7 @@ nonisolated struct LineChains {
 
     /// The line nearest `point` within `tolerance` (canvas units) and the chain of lines it
     /// continues into, as one path (a loop's ends where it started).
-    func chain(near point: CGPoint, tolerance: CGFloat) -> [CGPoint]? {
+    public func chain(near point: CGPoint, tolerance: CGFloat) -> [CGPoint]? {
         var nearest: (line: Int, distance: CGFloat)?
         for (k, line) in lines.enumerated() where line.bounds.insetBy(dx: -tolerance, dy: -tolerance).contains(point) {
             for (a, b) in zip(line.points, line.points.dropFirst()) {

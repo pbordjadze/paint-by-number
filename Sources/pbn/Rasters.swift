@@ -112,3 +112,52 @@ func writeSVGs(_ t: Template, selected: Int? = nil, to outDir: URL) throws {
             .write(to: outDir.appendingPathComponent("selected.svg"), atomically: true, encoding: .utf8)
     }
 }
+
+/// A coloring book as Refine shows it over the painting, at `scale` × the canvas: every area in
+/// its paint, the drawing (`RefineGestures.drawingLines`) in the sheet's ink, `inkWidth` canvas
+/// units wide, then `marks` (canvas units) over it, each polyline in its color and width (a
+/// single point a dot).
+func bookRaster(
+    _ t: Template, scale: Int = 2, inkWidth: Float = 1.2, marks: [(points: [SIMD2<Float>], rgb: SIMD3<Float>, width: Float)] = []
+) -> RGBAImage {
+    let w = t.width * scale, h = t.height * scale, s = Float(scale)
+    var rgb = [SIMD3<Float>](repeating: .zero, count: w * h)
+    let colors = t.palette.map(\.rgb)
+    for y in 0..<h {
+        for x in 0..<w { rgb[y * w + x] = colors[Int(t.regions[Int(t.regionMap[x / scale, y / scale])].colorIndex)] }
+    }
+    /// Blends `color` over the pixels within `width / 2` of each polyline, edges antialiased.
+    func stroke(_ lines: [[SIMD2<Float>]], _ color: SIMD3<Float>, width: Float, opacity: Float = 1) {
+        var cover = [Float](repeating: 0, count: w * h)
+        let r = width * s / 2
+        for line in lines {
+            let pts = line.map { $0 * s }
+            let segments = pts.count == 1 ? [(pts[0], pts[0])] : Array(zip(pts, pts.dropFirst()))
+            for (a, b) in segments {
+                let lo = pointwiseMin(a, b) - SIMD2(repeating: r + 1), hi = pointwiseMax(a, b) + SIMD2(repeating: r + 1)
+                let ab = b - a, len2 = (ab * ab).sum()
+                let x0 = max(Int(lo.x), 0), x1 = min(Int(hi.x), w - 1), y0 = max(Int(lo.y), 0), y1 = min(Int(hi.y), h - 1)
+                guard x0 <= x1, y0 <= y1 else { continue }
+                for y in y0...y1 {
+                    for x in x0...x1 {
+                        let p = SIMD2(Float(x) + 0.5, Float(y) + 0.5)
+                        let t = len2 > 0 ? min(max(((p - a) * ab).sum() / len2, 0), 1) : 0
+                        let d = p - (a + ab * t)
+                        let c = min(max(r + 0.5 - (d * d).sum().squareRoot(), 0), 1)
+                        if c > cover[y * w + x] { cover[y * w + x] = c }
+                    }
+                }
+            }
+        }
+        for i in cover.indices where cover[i] > 0 { rgb[i] += (color - rgb[i]) * (cover[i] * opacity) }
+    }
+    let ink = SIMD3<Float>(0.118, 0.102, 0.133)  // `CanvasPalette.sheetInkSRGB`
+    stroke(RefineGestures.drawingLines(of: t).map { $0.map { SIMD2(Float($0.x), Float($0.y)) } }, ink, width: inkWidth)
+    for mark in marks { stroke([mark.points], mark.rgb, width: mark.width, opacity: 0.8) }
+    var px = [UInt8](repeating: 255, count: w * h * 4)
+    for i in rgb.indices {
+        let c = bytes(rgb[i])
+        px[i * 4] = c.x; px[i * 4 + 1] = c.y; px[i * 4 + 2] = c.z
+    }
+    return RGBAImage(width: w, height: h, pixels: px, colorSpace: t.colorSpace)
+}
