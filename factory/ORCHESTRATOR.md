@@ -17,7 +17,10 @@ driving manual and the state of play.
 3. When it finishes: read its report, `git diff origin/claude/vibe-factory...`, run the item's
    checks yourself (`swift build`, the tests it names, determinism by rendering twice).
    First-pass reviews can go to a Sonnet subagent to save Claude budget; Claude reads the
-   verdict and the risky parts.
+   verdict and the risky parts. On trial, the Lamplit Table's seeing applied to code (`GUARDIANS.md`
+   › Seeing): split a review by what each reviewer sees, one only the diff, one only the tests and
+   CI's log, one the PR's description and the files it names (does the claim match?), one the
+   call sites of what changed.
 4. Codex's sandbox keeps git metadata read-only, so Codex leaves its work uncommitted and writes
    its commit message to `/root/factory-out/<id>/commit-message.txt`; the runner (`run_item2.sh`
    in the scratchpad) commits it and pushes `codex/<id>-<slug>` as soon as the session ends, but
@@ -58,15 +61,21 @@ decides its details and looks it over before it ships. A round, as Claude runs i
    jurors' own. Screens go in as screenshots from the CI report (`ci/fetch.sh`), sound and motion
    as words.
 2. `prompts/<id>.md` per seat: "You are <name>, one guardian of A Lamp Left Burning ...", the
-   charter word for word from `GUARDIANS.md`, the task (read the brief, answer for your charter,
+   charter word for word from `GUARDIANS.md`, the seat's view (its **sees**) built from the CI
+   report (on trial, `GUARDIANS.md` › Seeing), the task (read the brief, answer for your charter,
    veto only by quoting your guards-against line word for word) and the JSON to write to
    `replies/<id>.json`. Originality fills in only `veto`, `avoid` and anything it may propose.
    A new guardian's prompt says Claude drafted its charter and offers it up to two changes.
 3. The six run at once as Claude subagents (`model: opus`, `effort: low`), each told only to read
    its prompt and follow it, reading nothing else and not searching the web. Ballots are blind.
+   Each seat reads only its prompt and its own view.
 4. Tally by majority; a ranking by points (6 for a first place down to 1). A veto that quotes its
    line stands until Paul says otherwise. A second round puts Claude's reading of the first to all
-   six (approve or veto) and settles what was split.
+   six (approve or veto) and settles what was split. On trial: a finding is weighed by its
+   evidence, not by how many seats share it: a lone seat's finding that points at what its view
+   shows stands beside a unanimous one, and goes to Paul unless another seat shows it wrong. (In
+   the App Store panel a truth-serum score ranked the thumbnail-only reviewer last because it
+   disagreed, yet its finding changed the next version most.)
 5. `decisions.md`: each question, the decision and its count, the cautions taken, and Claude's own
    calls in building it. The commit that acts on it says the same in short.
 6. Before the feature ships, the Table looks at it as built (CI's screenshots): a verdict and at
