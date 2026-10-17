@@ -1,0 +1,250 @@
+#!/usr/bin/env python3
+"""The App Store screenshots, composed from CI's screenshots of the real app.
+
+    tools/store_screenshots.py SHOTS --out DIR [--chrome PATH]
+
+SHOTS is an unpacked CI report (`git fetch origin +refs/ci-shots/main:refs/ci-shots/main &&
+git archive refs/ci-shots/main | tar -x -C SHOTS`): it reads SHOTS/iphone/shots/iphone-<scenario>.png
+and SHOTS/ipad/shots/ipad-<scenario>.png, so a scenario named in SLIDES must stay in
+ci/scenarios.txt. It writes six slides per size to DIR (outside the repo):
+iphone-69-<n>-<scenario>.png (1320×2868), iphone-63-<n>-<scenario>.png (1206×2622, the size
+App Store Connect requires) and ipad-13-<n>-<scenario>.png (2064×2752), RGB without alpha.
+
+Each slide is an HTML page rendered by headless Chromium: real UI as frameless crops (Apple's
+marketing guidelines don't allow drawn device frames), on the app's paper (#F4EFE6) with a
+baked grain under the crops (never over the app's pixels), and midnight for the last two. The Red Fox is the coloring book's in-progress
+subject because new paintings are always coloring books. Every crop is a fraction of its
+source screenshot; every line of copy points at something its screen shows. The headlines are
+set in Source Serif 4 standing in for New York (fetched from Google Fonts into DIR/.fonts on
+first run), the rest in the system font.
+
+Requires Pillow and Chromium (--chrome, $CHROME, Playwright's under /opt/pw-browsers, or one
+on PATH).
+"""
+import argparse
+import glob
+import math
+import os
+import random
+import re
+import shutil
+import subprocess
+import sys
+import urllib.request
+from pathlib import Path
+
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parent.parent
+ICON = ROOT / "App/PaintByNumber/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png"
+PAPER, INK, SUB, PLUM, NAVY = "#F4EFE6", "#1F1A21", "#3A333D", "#7B3F7E", "#1B2242"
+SOURCE = {"iphone": (1206, 2622), "ipad": (2064, 2752)}
+CANVAS = {"iphone": (1320, 2868), "ipad": (2064, 2752)}
+FONT_CSS = "https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap"
+MOON = "M62 8 A44 44 0 1 0 92 78 A36 36 0 1 1 62 8Z"
+
+
+def crop(scenario, box, scale, x, y, radius=0, shadow=False, fade=0, over=False):
+    """box is (x0, x1, y0, y1) as fractions of the source; x may be "c" (centered), y "b" (bottom)."""
+    return dict(scenario=scenario, box=box, scale=scale, x=x, y=y, radius=radius, shadow=shadow, fade=fade, over=over)
+
+
+SLIDES = {
+    "iphone": [
+        dict(title="This fox<br>was a photo", size=150, crops=[
+            crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 1080),
+            crop("paint-book-progress", (.03, .97, .838, .962), 1.0945, "c", 2300, radius=78, shadow=True, over=True),
+            crop("create-samples-photographs", (.518, .939, .4495, .5945), 1.1, 680, 700, radius=40, shadow=True, over=True)]),
+        dict(title="Tap a color,<br>fill its number", sub="Every paint has a name.<br>This one is Corn Husk.", crops=[
+            crop("paint-book-zoomed", (0, 1, .28, .97), 1320 / 1206, 0, 888, fade=220)]),
+        dict(title="Old masters,<br>yours to paint", sub="Paintings by Hokusai, Van Gogh,<br>Vermeer and others.", crops=[
+            crop("create-samples-paintings", (.02, .98, .245, 1), 1.25, "c", 800, radius=56, shadow=True)]),
+        dict(title="Made to fit<br>your afternoon", sub="The Great Wave: 22 colors,<br>about 20 minutes.", crops=[
+            crop("create-line-art", (.106, .894, .137, .381), 1.3, "c", 960, radius=56, shadow=True),
+            crop("create-line-art", (0, 1, .838, 1), 1320 / 1206, 0, "b", radius=56, shadow=True, over=True)]),
+        dict(night=True, title="When the house<br>goes quiet", sub="Dark paper is easier on the eyes<br>in a dark room.", crops=[
+            crop("paint-book-dark-paper", (.045, .955, .343, .627), 1.42, "c", 1100, radius=28, shadow=True),
+            crop("paint-book-dark-paper", (.03, .97, .842, .957), 1.0945, "c", 2200, radius=78, shadow=True, over=True)]),
+        dict(night=True, hills=True, title="It waits where<br>you stopped", sub="Saved as you go, and kept<br>on your device.", crops=[
+            crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True)]),
+    ],
+    "ipad": [
+        dict(title="This fox<br>was a photo", size=176, crops=[
+            crop("paint-book-progress", (.02, .98, .243, .72), 1.12, "c", 900),
+            crop("paint-book-progress", (.035, .965, .925, .99), 1.0, "c", 2440, radius=70, shadow=True, over=True),
+            crop("create-samples-photographs", (.787, .965, .2475, .3475), 1.6, 1380, 560, radius=48, shadow=True, over=True)]),
+        dict(title="Tap a color,<br>fill its number", sub="Every paint has a name. This one is Corn Husk.", crops=[
+            crop("paint-book-zoomed", (0, 1, .20, .982), 1.0, 0, 700, fade=240)]),
+        dict(title="Old masters,<br>yours to paint", sub="Paintings by Hokusai, Van Gogh, Vermeer and others.", crops=[
+            crop("create-samples-paintings", (.585, .985, .108, .535), 1.9, "c", 760, radius=56, shadow=True)]),
+        dict(title="Made to fit<br>your afternoon", sub="The Great Wave: 22 colors, about 20 minutes.", crops=[
+            crop("create-line-art", (.031, .968, .089, .561), 1.0, "c", 840, radius=56, shadow=True),
+            crop("create-line-art", (0, 1, .895, 1), 1.0, 0, "b", radius=64, shadow=True, over=True)]),
+        dict(night=True, title="When the house<br>goes quiet", sub="Dark paper is easier on the eyes in a dark room.", crops=[
+            crop("paint-book-dark-paper", (.02, .98, .239, .725), 1.12, "c", 860, radius=28, shadow=True),
+            crop("paint-book-dark-paper", (.054, .945, .927, .983), 1.0, "c", 2440, radius=70, shadow=True, over=True)]),
+        dict(night=True, hills=True, title="It waits where<br>you stopped", sub="Saved as you go, and kept on your device.", crops=[
+            crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True)]),
+    ],
+}
+
+
+def find_chrome(arg):
+    candidates = [arg, os.environ.get("CHROME")]
+    candidates += sorted(glob.glob("/opt/pw-browsers/chromium-*/chrome-linux/chrome"), reverse=True)
+    candidates += [shutil.which(n) for n in ("chromium", "chromium-browser", "google-chrome")]
+    candidates.append("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+    for c in candidates:
+        if c and os.path.exists(c):
+            return c
+    sys.exit("No Chromium found: pass --chrome PATH or set $CHROME")
+
+
+def fetch_fonts(out):
+    """Source Serif 4 from Google Fonts, kept beside the output so later runs work offline."""
+    folder = out / ".fonts"
+    css = folder / "serif.css"
+    if css.exists():
+        return css
+    folder.mkdir(parents=True, exist_ok=True)
+    agent = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"}
+    text = urllib.request.urlopen(urllib.request.Request(FONT_CSS, headers=agent)).read().decode()
+    for url in sorted(set(re.findall(r"url\((https://[^)]+)\)", text))):
+        name = url.rsplit("/", 1)[1]
+        (folder / name).write_bytes(urllib.request.urlopen(url).read())
+        text = text.replace(url, name)
+    css.write_text(text)
+    return css
+
+
+def grain(out):
+    """A seeded noise tile: the same bytes on every run."""
+    path = out / ".fonts" / "grain.png"
+    if not path.exists():
+        r = random.Random(7)
+        data = bytes(max(0, min(255, round(r.gauss(128, 46)))) for _ in range(600 * 600))
+        Image.frombytes("L", (600, 600), data).save(path)
+    return path
+
+
+def hills(W, H, dev):
+    """The icon's plum hill and paper foreground, inked by hand-wobbled lines."""
+    crest = (2050, 1900) if dev == "iphone" else (2000, 1820)
+    paper_top = 2450 if dev == "iphone" else 2380
+    n = 60
+
+    def line(base, seed):
+        r = random.Random(seed)
+        return [(W * i / n, base(i / n) + r.uniform(-3, 3)) for i in range(n + 1)]
+
+    top = line(lambda t: crest[0] + (crest[1] - crest[0]) * t + 40 * math.sin(t * 5.5), 1)
+    fg = line(lambda t: paper_top - 30 * math.sin(t * 4 + 1), 2)
+
+    def path(pts):
+        return f"M-20 {pts[0][1]:.1f} " + " ".join(f"L{x:.1f} {y:.1f}" for x, y in pts) + f" L{W + 20} {H + 20} L-20 {H + 20}Z"
+
+    return (f"<svg class=hills viewBox='0 0 {W} {H}' width={W} height={H}>"
+            f"<path d='{path(top)}' fill='{PLUM}' stroke='{INK}' stroke-width='6' stroke-linejoin='round'/>"
+            f"<path d='{path(fg)}' fill='{PAPER}' stroke='{INK}' stroke-width='6' stroke-linejoin='round'/></svg>")
+
+
+def crop_html(shots, dev, c, W, H):
+    SW, SH = SOURCE[dev]
+    x0, x1, y0, y1 = c["box"]
+    s = c["scale"]
+    w, h = (x1 - x0) * SW * s, (y1 - y0) * SH * s
+    x = (W - w) / 2 if c["x"] == "c" else c["x"]
+    y = H - h if c["y"] == "b" else c["y"]
+    src = (shots / dev / "shots" / f"{dev}-{c['scenario']}.png").resolve()
+    if not src.exists():
+        sys.exit(f"Missing {src}: is {c['scenario']} still a CI scenario?")
+    style = [f"left:{x:.1f}px", f"top:{y:.1f}px", f"width:{w:.1f}px", f"height:{h:.1f}px",
+             f"background:url({src.as_uri()}) {-x0 * SW * s:.1f}px {-y0 * SH * s:.1f}px/{SW * s:.1f}px {SH * s:.1f}px no-repeat",
+             f"z-index:{3 if c['over'] else 1}"]
+    if c["radius"]:
+        r = c["radius"]
+        style.append(f"border-radius:{r}px {r}px 0 0" if c["y"] == "b" else f"border-radius:{r}px")
+    if c["shadow"]:
+        style.append("box-shadow:0 28px 64px rgba(31,26,33,.20),0 2px 6px rgba(31,26,33,.08)")
+    if c["fade"]:
+        f = c["fade"]
+        style.append(f"-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 {f}px)")
+    return f"<div class=crop style='{';'.join(style)}'></div>"
+
+
+def page(shots, dev, k, slide, fonts, noise):
+    W, H = CANVAS[dev]
+    night = slide.get("night", False)
+    phone = dev == "iphone"
+    margin, folio_y, folio = (96, 130, 36) if phone else (144, 120, 46)
+    size = slide.get("size", 120 if phone else 160)
+    fg = PAPER if night else INK
+    blend, opacity = ("soft-light", .22) if night else ("overlay", .6)
+    extra = ""
+    if slide.get("hills"):
+        m, (mx, my) = (180, (1060, 90)) if phone else (300, (1640, 120))
+        extra = (hills(W, H, dev)
+                 + f"<div class=glow style='left:{mx + m / 2 - 520}px;top:{my + m / 2 - 520}px'></div>"
+                 + f"<svg class=moon viewBox='0 0 100 100' style='left:{mx}px;top:{my}px;width:{m}px;height:{m}px'>"
+                   f"<path d='{MOON}' fill='url(#gold)'/></svg>")
+    sub = f"<p>{slide['sub']}</p>" if slide.get("sub") else ""
+    crops = "".join(crop_html(shots, dev, c, W, H) for c in slide["crops"])
+    return f"""<!doctype html><html><head><meta charset=utf-8>
+<link rel=stylesheet href='{fonts.as_uri()}'>
+<style>
+*{{margin:0;box-sizing:border-box}}
+html,body{{width:{W}px;height:{H}px;overflow:hidden}}
+body{{position:relative;background:{NAVY if night else PAPER};font-family:-apple-system,"SF Pro Text",Inter,"Helvetica Neue",sans-serif}}
+.crop,.hills,.moon,.glow,.grain{{position:absolute}}
+.hills{{left:0;top:0;z-index:2}}
+.grain{{inset:0;z-index:0;mix-blend-mode:{blend};opacity:{opacity};background:url({noise.as_uri()}) 0 0/600px 600px}}
+.glow{{width:1040px;height:1040px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,74,.14),rgba(201,162,74,0) 62%)}}
+.moon{{z-index:4}}
+.folio{{position:absolute;left:{margin}px;top:{folio_y}px;display:flex;align-items:center;gap:{folio * .55:.0f}px;z-index:5;
+  font:600 {folio}px 'Source Serif 4',serif;color:{fg}}}
+.folio img{{width:{folio * 2}px;height:{folio * 2}px;border-radius:{folio * .45:.0f}px;box-shadow:0 0 0 1px rgba(31,26,33,.10)}}
+.text{{position:absolute;left:{margin}px;right:{margin}px;top:300px;z-index:5}}
+h1{{font:600 {size}px/{.98 if k == 0 else 1.0} 'Source Serif 4',serif;letter-spacing:{-.025 if k == 0 else -.02}em;color:{fg}}}
+p{{margin-top:{32 if phone else 40}px;font-size:{44 if phone else 56}px;line-height:1.3;font-weight:500;
+  color:{"rgba(244,239,230,.78)" if night else SUB};max-width:{900 if phone else 1640}px}}
+</style></head><body>
+<svg width=0 height=0 style=position:absolute><defs><linearGradient id=gold x1=0 y1=0 x2=1 y2=1>
+<stop offset=0 stop-color='#EDD089'/><stop offset=1 stop-color='#B98F32'/></linearGradient></defs></svg>
+{crops}{extra}<div class=grain></div>
+<div class=folio><img src='{ICON.as_uri()}'><span>Paint by Moonlight</span></div>
+<div class=text><h1>{slide['title']}</h1>{sub}</div>
+</body></html>"""
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    ap.add_argument("shots", type=Path)
+    ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--chrome")
+    args = ap.parse_args()
+    chrome = find_chrome(args.chrome)
+    out = args.out.resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    fonts, noise = fetch_fonts(out), grain(out)
+    pages = out / ".pages"
+    pages.mkdir(exist_ok=True)
+    for dev, slides in SLIDES.items():
+        W, H = CANVAS[dev]
+        for k, slide in enumerate(slides, 1):
+            name = slide["crops"][0]["scenario"]
+            html = pages / f"{dev}-{k}.html"
+            html.write_text(page(args.shots, dev, k - 1, slide, fonts, noise))
+            png = out / (f"iphone-69-{k}-{name}.png" if dev == "iphone" else f"ipad-13-{k}-{name}.png")
+            # The window runs taller than the slide: headless Chrome loses the bottom of an exact-size one.
+            subprocess.run([chrome, "--headless", "--no-sandbox", "--hide-scrollbars", "--allow-file-access-from-files",
+                            "--force-device-scale-factor=1", f"--window-size={W},{H + 400}", "--virtual-time-budget=4000",
+                            f"--screenshot={png}", html.as_uri()], check=True, capture_output=True)
+            image = Image.open(png).crop((0, 0, W, H)).convert("RGB")
+            image.save(png)
+            if dev == "iphone":
+                image.resize((1206, 2622), Image.LANCZOS).save(out / f"iphone-63-{k}-{name}.png")
+            print(png.name)
+
+
+if __name__ == "__main__":
+    main()

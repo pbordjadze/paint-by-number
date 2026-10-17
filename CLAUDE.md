@@ -98,8 +98,9 @@ before planning app work).
   `PaintByNumber/`, `PaintByNumberTests` (Swift Testing), `PaintByNumberUITests` (XCTest),
   `Config/Info.plist`; map and notes in `App/CLAUDE.md`.
 - `tools/`: evaluation (`eval.py`, `compare.py`, `auto_sheet.py`), the quality gate (`regression.py`
-  with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker) and `models/convert_*.py`
-  (the app's Core ML models from their source weights). `marginarium.py` imports approved chapter
+  with `baseline/`), `strings_check.py`, `swift.sh` (SwiftPM in Docker), `models/convert_*.py`
+  (the app's Core ML models from their source weights) and `store_screenshots.py` (the App Store
+  screenshots, composed from CI's screenshots of the scenarios its `SLIDES` name). `marginarium.py` imports approved chapter
   Markdown from `docs/marginarium/` into the catalog and bundled `Resources/marginarium.json`;
   its docstring defines the supported blocks and stable key markers. `marginarium.py check`
   checks them word for word; `python3 -m unittest discover -s tools/tests -p 'test_marginarium.py'`
