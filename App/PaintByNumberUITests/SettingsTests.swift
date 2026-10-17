@@ -85,16 +85,21 @@ final class SettingsTests: XCTestCase {
     @MainActor
     func testMusicListChangesTheChoice() throws {
         let app = openSettings()
-        let sun = app.buttons["Sun"], moon = app.buttons["Moon"], auto = app.buttons["Auto"]
-        scroll(app, to: auto)
-        for (name, row) in [("Sun", sun), ("Moon", moon), ("Auto", auto)] {
+        let moon = app.buttons["Moon"], auto = app.buttons["Auto"]
+        // Row by row, top to bottom: an iPhone shows only some of them at once, and scrolling
+        // straight to Auto carried Sun off the top.
+        for name in ["Sun", "Moon", "Auto"] {
+            let row = app.buttons[name]
+            scroll(app, to: row)
             XCTAssertTrue(row.exists, "Settings › Music has no \(name)")
         }
         XCTAssertTrue(auto.isSelected, "Music doesn't start on Auto")
+        // The footer sits right under Auto, so scrolling to it keeps Moon and Auto in view.
         let footer = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "your time")).firstMatch
+        scroll(app, to: footer)
         XCTAssertTrue(footer.exists, "Music's footer doesn't say when Auto brings the Sun and the Moon")
         moon.tap()
-        XCTAssertTrue(waitUntil { moon.isSelected && !auto.isSelected && !sun.isSelected }, "Choosing Moon didn't select it alone")
+        XCTAssertTrue(waitUntil { moon.isSelected && !auto.isSelected }, "Choosing Moon didn't select it alone")
         attachScreenshot(of: app, named: "settings-music-moon")
         // The choice is stored in the simulator's defaults: back to Auto for the other tests.
         auto.tap()
