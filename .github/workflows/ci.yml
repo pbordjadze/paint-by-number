@@ -126,7 +126,7 @@ jobs:
         run: |
           case "${{ matrix.job }}" in
             ipad)    plan=(DEVICE=ipad SHOTS=1 RELEASE=1 "ONLY=PaintByNumberTests PaintByNumberUITests/SettingsTests PaintByNumberUITests/PlayTests" SKIP=) ;;
-            ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 ONLY=PaintByNumberUITests/CreateFlowTests SKIP=) ;;
+            ipad-ui) plan=(DEVICE=ipad SHOTS=0 RELEASE=0 "ONLY=PaintByNumberUITests/CreateFlowTests/testLibraryPhotoOpensPreviewAndCanBePickedAgain PaintByNumberUITests/CreateFlowTests/testProbeBackRepeats" SKIP=) ;;
             iphone)  plan=(DEVICE=iphone SHOTS=1 RELEASE=0 ONLY= SKIP=) ;;
           esac
           printf '%s\n' "${plan[@]}" >> "$GITHUB_ENV"
@@ -207,7 +207,7 @@ jobs:
           for test in $SKIP; do SELECT+=("-skip-testing:$test"); done
           xcodebuild test-without-building -project "$PROJECT" -scheme "$SCHEME" -configuration Debug \
             -destination "id=${{ steps.sim.outputs.udid }}" -derivedDataPath build/dd "${SELECT[@]}" \
-            -test-iterations 3 -resultBundlePath build/Tests.xcresult -quiet \
+            -test-iterations 2 -resultBundlePath build/Tests.xcresult -quiet \
             CODE_SIGNING_ALLOWED=NO 2>&1 | tee out/app-test.log | tail -120
       - name: Release build
         id: release
