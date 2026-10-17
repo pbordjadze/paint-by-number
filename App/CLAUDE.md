@@ -290,21 +290,17 @@ synchronized folder would bundle it into the app.
   `PaintingSession.maxBrushRadius`); a stroke keeps the color it began with, though finishing
   it moves the selection on.
 - Feedback: sounds are synthesized (`ToneSynth`, no audio assets) on the ambient session, one
-  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Sky: Moon by
-  default, Paul's call; Sun; or Follow the Sky, Sun from 6 a.m. to 7 p.m. by the device's clock
-  and time zone, Moon the rest; a theme, never tied to the dark appearance or the paper; decided
-  with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
+  `PaintingMelody` note per fill, in the sky of the moment (`Sky`, Settings › Music, a plain
+  list: Sun, Moon, or Auto, the default, Sun from 6 a.m. to 7 p.m. by the device's clock and
+  time zone and Moon the rest; Paul's calls; a theme, never tied to the dark appearance or the
+  paper; decided with the Lamplit Table, root `CLAUDE.md` › App rules): by Sun a brighter kalimba, by
   Moon a celesta-like bell on the same five notes, lower and minor, twinkling where a phrase
   rests, each sky with its own flourish and finale. The sky turns only where a phrase begins,
   and the fill's stars with it: `FeedbackEngine` keeps the tune on the main actor (its
   `skyOfComingFill` is what `CanvasView.popSparkles` asks, before the sounds hear of the fill)
   and hands `SoundPlayer` each note. `paint-book-moon-dark` holds two stars for a screenshot.
-  Sun and Moon are Debug and SideStore only for now (`#if UNRELEASED`, Paul's call): the release
-  has no Sky row (`SkySetting` and Settings' section are compiled out, `ci/check_release.sh`
-  checks) and `Sky.current` keeps it on the Sun, whose voice there is the first kalimba and
-  scale (`ToneSynth.kalimba`, `SoundPlayer.firstScale`), with no stars: it sounds as before.
   Core Haptics patterns, none on iPad. `SoundPlayer` and `HapticsPlayer` each work on a queue of
-  their own (starting either engine blocks its caller). Settings' Sounds, Haptics and Sky are read
+  their own (starting either engine blocks its caller). Settings' Sounds, Haptics and Music are read
   live (`SettingsKey.sounds`, `SettingsKey.haptics`, `SettingsKey.sky`); Haptics shows only on
   hardware with haptics (not iPad, not the simulator).
 - Color names: each paint goes by a nickname from `ColorNickname.assign`, seeded by the artwork id
@@ -691,9 +687,9 @@ paper (`CanvasSnapshot.Options`).
   Detail Brushes adds Refine's detail brushes and text corrections (the create flow reads it from
   `Preferences`, so `-refineDetailBrushes YES` turns it on in a UI test); Settings › The Marginarium
   puts the book in the gallery's toolbar (off by default); Settings › The Making-of plays the
-  making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Sky
-  (`SkySetting`, Moon by default; Debug and SideStore only for now) picks the sounds and whether
-  the fill's sparkles are stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
+  making-of show after Start Painting (off by default; `Features/MakingOf`); Settings › Music
+  (`SkySetting`: Sun, Moon or Auto, the default) picks the sounds and whether the fill's
+  sparkles are stars (Painting screen › Feedback). New paintings are coloring books at the book's defaults
   (`LineArtSettings()`), with no pipeline tuning: nothing in Settings changes how a template is
   made.
 - Printed templates are laid out for the region's paper (`PDFExporter.Paper.default(for:)`).

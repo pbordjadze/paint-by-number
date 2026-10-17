@@ -5,7 +5,7 @@ import Foundation
 /// brighter kalimba, by Moon a celesta-like bell on the same five notes, lower and minor
 /// (`SoundPlayer`), and the fill's two sparkles become stars (`CanvasView.popSparkles`). Only
 /// the sun and the moon keeping the hours: nothing here tells the painter anything about
-/// themselves. Debug and SideStore builds only for now (`current`).
+/// themselves.
 nonisolated enum Sky: String, Sendable {
     case sun, moon
 
@@ -20,68 +20,53 @@ nonisolated enum Sky: String, Sendable {
         (sunrise..<nightfall).contains(calendar.component(.hour, from: date)) ? .sun : .moon
     }
 
-    /// The sky painting plays in at `date`: what a sound or a sparkle asks for. Sun and Moon
-    /// are in Debug and SideStore builds only for now (`UNRELEASED`; Paul, October 17, 2026:
-    /// "ship it only to SideStore for now"): the release has no Sky row and keeps the Sun, whose
-    /// voice there is the kalimba the app first shipped (`SoundPlayer.scale(of:)`), with no stars.
+    /// The sky painting plays in at `date`: what a sound or a sparkle asks for.
     static func current(at date: Date = .now, in defaults: UserDefaults = .standard) -> Sky {
-        #if UNRELEASED
         SkySetting.stored(in: defaults).sky(at: date)
-        #else
-        .sun
-        #endif
     }
-}
 
-#if UNRELEASED
-extension Sky {
     /// `hour` o'clock as the painter's locale writes it ("7 PM", "19 Uhr"), for Settings.
     static func clockText(_ hour: Int, calendar: Calendar = .autoupdatingCurrent) -> String {
         (calendar.date(bySettingHour: hour, minute: 0, second: 0, of: .now) ?? .now).formatted(.dateTime.hour())
     }
-
-    /// The SF Symbol Settings shows for the sky.
-    var symbol: String {
-        switch self {
-        case .sun: "sun.max"
-        case .moon: "moon.stars"
-        }
-    }
 }
 
-/// Settings › Sky, a theme and nothing to do with the light or dark appearance (an
-/// accessibility choice, the system's) or the paper (Settings › Paper): Moon, the default, and
-/// Sun keep their sky at every hour; Follow the Sky takes the sky of the hour (Paul, October 17,
-/// 2026: "moon should be default, with sun or “auto” as options").
+/// Settings › Music, a theme and nothing to do with the light or dark appearance (an
+/// accessibility choice, the system's) or the paper (Settings › Paper): Sun and Moon keep their
+/// music at every hour, and Auto, the default, takes the sky of the hour. Paul, October 17, 2026,
+/// on the first version (a Sky menu of Moon, Sun and Follow the Sky): "could be confusing—maybe
+/// this should just be a list of two music options, and those can be “Sun” and “Moon” or
+/// “Auto”—and then auto can be default".
 nonisolated enum SkySetting: String, CaseIterable, Identifiable, Sendable {
-    case moon, sun, followTheSky
+    case sun, moon, auto
 
-    static let `default` = SkySetting.moon
+    static let `default` = SkySetting.auto
 
     var id: String { rawValue }
 
     var name: String {
         switch self {
-        case .followTheSky: String(localized: "sky.followTheSky", defaultValue: "Follow the Sky",
-                                   comment: "Choice of the Sky setting: Sun by day and Moon by night, by the painter's own clock")
         case .sun: String(localized: "sky.sun", defaultValue: "Sun",
-                          comment: "Choice of the Sky setting: the daytime sounds at every hour")
+                          comment: "Choice of Settings › Music: the daytime music, a bright kalimba, at every hour")
         case .moon: String(localized: "sky.moon", defaultValue: "Moon",
-                           comment: "Choice of the Sky setting: the nighttime sounds, and stars for sparkles, at every hour")
+                           comment: "Choice of Settings › Music: the nighttime music, a bell, and stars for sparkles, at every hour")
+        case .auto: String(localized: "sky.auto", defaultValue: "Auto",
+                           comment: "Choice of Settings › Music: Sun by day and Moon by night, by the painter's own clock")
         }
     }
 
     func sky(at date: Date, calendar: Calendar = .autoupdatingCurrent) -> Sky {
         switch self {
-        case .followTheSky: Sky.at(date, calendar: calendar)
         case .sun: .sun
         case .moon: .moon
+        case .auto: Sky.at(date, calendar: calendar)
         }
     }
 
-    /// The stored setting (`SettingsKey.sky`), or the default.
+    /// The stored setting (`SettingsKey.sky`), or the default. A value this build doesn't know
+    /// (the first version's `followTheSky`, in SideStore builds only) is the default, Auto, which
+    /// is what it meant.
     static func stored(in defaults: UserDefaults = .standard) -> SkySetting {
         defaults.string(forKey: SettingsKey.sky).flatMap(SkySetting.init(rawValue:)) ?? .default
     }
 }
-#endif

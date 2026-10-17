@@ -3,8 +3,8 @@ import Foundation
 import Testing
 @testable import PaintByNumber
 
-/// Settings › Sky: Moon by default; Follow the Sky turns from Sun to Moon by the painter's own
-/// clock, in whatever time zone the device keeps; each sky's voice is the same at every launch and
+/// Settings › Music: Auto by default, turning from Sun to Moon by the painter's own clock, in
+/// whatever time zone the device keeps; each sky's voice is the same at every launch and
 /// stays in range.
 @MainActor
 struct SkyTests {
@@ -38,34 +38,37 @@ struct SkyTests {
         #expect(Sky.at(noonInLondon, calendar: try calendar("Asia/Tbilisi")) == .sun)
     }
 
-    @Test func settingDefaultsToTheMoon() throws {
+    @Test func settingDefaultsToAuto() throws {
         let suite = "PBNTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
 
-        #expect(SkySetting.stored(in: defaults) == .moon)
-        #expect(Sky.current(at: try date(12, in: try calendar("Europe/Paris")), in: defaults) == .moon)
-        let night = try date(23, in: try calendar("Europe/Paris"))
+        #expect(SkySetting.stored(in: defaults) == .auto)
         let paris = try calendar("Europe/Paris")
-        #expect(SkySetting.followTheSky.sky(at: night, calendar: paris) == .moon)
+        let noon = try date(12, in: paris), night = try date(23, in: paris)
+        #expect(SkySetting.auto.sky(at: noon, calendar: paris) == .sun)
+        #expect(SkySetting.auto.sky(at: night, calendar: paris) == .moon)
         #expect(SkySetting.sun.sky(at: night, calendar: paris) == .sun)
-        #expect(SkySetting.moon.sky(at: try date(12, in: paris), calendar: paris) == .moon)
-        defaults.set("sun", forKey: SettingsKey.sky)
-        #expect(SkySetting.stored(in: defaults) == .sun)
-        #expect(Sky.current(in: defaults) == .sun)
-        defaults.set("eclipse", forKey: SettingsKey.sky)
+        #expect(SkySetting.moon.sky(at: noon, calendar: paris) == .moon)
+        defaults.set("moon", forKey: SettingsKey.sky)
         #expect(SkySetting.stored(in: defaults) == .moon)
+        #expect(Sky.current(in: defaults) == .moon)
+        // The first version's Follow the Sky (SideStore builds only) meant what Auto does.
+        defaults.set("followTheSky", forKey: SettingsKey.sky)
+        #expect(SkySetting.stored(in: defaults) == .auto)
+        defaults.set("eclipse", forKey: SettingsKey.sky)
+        #expect(SkySetting.stored(in: defaults) == .auto)
         // The persisted key and values: renaming one would forget every painter's choice.
         #expect(SettingsKey.sky == "sky")
-        #expect(SkySetting.allCases.map(\.rawValue) == ["moon", "sun", "followTheSky"])
-        #expect(SkySetting.allCases.allSatisfy { !$0.name.isEmpty })
+        #expect(SkySetting.allCases.map(\.rawValue) == ["sun", "moon", "auto"])
+        #expect(SkySetting.allCases.map(\.name) == ["Sun", "Moon", "Auto"])
     }
 
     @Test func eachSkysVoiceIsTheSameEveryLaunchAndInRange() {
         let rate = 44_100.0
         for frequency in SoundPlayer.scale(of: .sun) {
-            let note = ToneSynth.sunKalimba(frequency: frequency, sampleRate: rate)
-            #expect(note == ToneSynth.sunKalimba(frequency: frequency, sampleRate: rate))
+            let note = ToneSynth.kalimba(frequency: frequency, sampleRate: rate)
+            #expect(note == ToneSynth.kalimba(frequency: frequency, sampleRate: rate))
             #expect(note.allSatisfy { $0.isFinite && abs($0) < 1 })
             #expect(abs(note.last ?? 1) < 1e-3, "a note ends in silence, with no click")
         }
@@ -78,7 +81,7 @@ struct SkyTests {
             #expect(twinkle.allSatisfy { $0.isFinite && abs($0) < 1 })
         }
         // The bell rings longer than the kalimba.
-        #expect(ToneSynth.celesta(frequency: 440, sampleRate: rate).count > ToneSynth.sunKalimba(frequency: 440, sampleRate: rate).count)
+        #expect(ToneSynth.celesta(frequency: 440, sampleRate: rate).count > ToneSynth.kalimba(frequency: 440, sampleRate: rate).count)
     }
 
     /// By Moon the fill's sparkles are stars: the sparkle with shorter arms on its diagonals.

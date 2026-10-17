@@ -354,9 +354,8 @@ Saved paintings must open in every later build. The format history is documented
   `#if`; `making-of.json` is bundled, which the same check requires, and nothing of the
   Marginarium's sprites is reachable from it). The Marginarium is left out of the release for now,
   the same check failing if any of it ships: its switch, toolbar entry and credits are under `#if UNRELEASED`, its code and
-  resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`. So is Sun
-  and Moon: Settings' Sky row is under `#if UNRELEASED` and the release plays as before
-  (`Sky.current`), the same check failing if the row ships. `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
+  resources left out of Release by the target's Release `EXCLUDED_SOURCE_FILE_NAMES`.
+  `UNRELEASED` is what tells SideStore builds from the release: Debug defines it, and the `ipa`
   job archives Release with it defined and the exclusion cleared, so Paul's SideStore build has
   what the release (TestFlight, App Store, the Release check) leaves out. It gates only
   features Paul chose to try before shipping; demo code stays `#if DEBUG`.

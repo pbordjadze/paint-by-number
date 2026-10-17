@@ -10,10 +10,8 @@ import os
 /// clash. Each sky (`Sky`) has its own voice: by Sun a
 /// bright kalimba, by Moon a celesta-like bell on the same five notes, lower and minor, with a
 /// quiet twinkle where a phrase comes to rest; finishing a color or the painting plays the
-/// sky's own flourish. The release keeps the Sun on the kalimba and scale the app first shipped,
-/// until Sun and Moon ship (`Sky.current`). A sky's notes are synthesized the first time it
-/// plays. Uses the ambient session category: it mixes with the user's music and respects the
-/// silent switch.
+/// sky's own flourish. A sky's notes are synthesized the first time it plays. Uses the ambient
+/// session category: it mixes with the user's music and respects the silent switch.
 ///
 /// The engine and everything below live on `queue`, which plays the sounds in the order they're
 /// asked for: starting the engine blocks its caller, on CI's simulator long enough that a
@@ -33,23 +31,16 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
     private var isSetUp = false
     private let clock = ContinuousClock()
 
-    /// The app's first scale, which the release still plays: C major pentatonic over two octaves
-    /// from C4.
-    static let firstScale: [Double] = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66]
-    /// Sun: D major pentatonic over two octaves from D4, a tone above the first.
+    /// Sun: D major pentatonic over two octaves from D4, a tone above the C the app first played.
     static let sunScale: [Double] = [293.66, 329.63, 369.99, 440.00, 493.88, 587.33, 659.26, 739.99, 880.00, 987.77, 1174.66, 1318.51]
     /// Moon: the same five notes as their minor, from the B below, so the tune sits lower.
     static let moonScale: [Double] = [246.94] + sunScale.dropLast()
 
     static func scale(of sky: Sky) -> [Double] {
-        #if UNRELEASED
         switch sky {
         case .sun: sunScale
         case .moon: moonScale
         }
-        #else
-        firstScale
-        #endif
     }
 
     /// The bell rings longer than the kalimba, so it plays a little softer.
@@ -169,12 +160,8 @@ nonisolated final class SoundPlayer: @unchecked Sendable {
         if let notes = made[sky] { return notes }
         let rate = format.sampleRate
         let notes = Self.scale(of: sky).map { frequency in
-            #if UNRELEASED
-            return buffer(sky == .sun ? ToneSynth.sunKalimba(frequency: frequency, sampleRate: rate)
-                                      : ToneSynth.celesta(frequency: frequency, sampleRate: rate))
-            #else
-            return buffer(ToneSynth.kalimba(frequency: frequency, sampleRate: rate))
-            #endif
+            buffer(sky == .sun ? ToneSynth.kalimba(frequency: frequency, sampleRate: rate)
+                               : ToneSynth.celesta(frequency: frequency, sampleRate: rate))
         }
         made[sky] = notes
         return notes

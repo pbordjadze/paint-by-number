@@ -8,9 +8,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.autoAdvance) private var autoAdvance = true
     @AppStorage(SettingsKey.haptics) private var haptics = true
     @AppStorage(SettingsKey.sounds) private var sounds = true
-    #if UNRELEASED
     @AppStorage(SettingsKey.sky) private var sky = SkySetting.default
-    #endif
     @AppStorage(SettingsKey.paintingLength) private var paintingLength = PaintingLength.default
     @AppStorage(SettingsKey.paperAppearance) private var paperAppearance = PaperAppearance.default
     @AppStorage(SettingsKey.lineWeight) private var lineWeight = LineWeight.default
@@ -104,27 +102,25 @@ struct SettingsView: View {
                     }
                 }
 
-                #if UNRELEASED
-                // A theme of its own, apart from the appearance and the paper. Debug and
-                // SideStore builds only for now (`Sky.current`).
+                // A theme of its own, apart from the appearance and the paper: two music choices
+                // and Auto, as a plain list (Paul: "a list of two music options").
                 Section {
                     Picker(selection: $sky) {
-                        // Plain choices: with a symbol each, the row drew its value cramped and
-                        // VoiceOver read no value at all. The row's own symbol is the sky now.
                         ForEach(SkySetting.allCases) { choice in
                             Text(choice.name).tag(choice)
                         }
                     } label: {
-                        // The sky that holds now, a sun or a crescent with stars.
-                        SwiftUI.Label("Sky", systemImage: sky.sky(at: .now).symbol)
+                        Text("Music")
                     }
-                    .accessibilityIdentifier("settings-sky")
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                } header: {
+                    Text("Music")
                 } footer: {
                     Text(String(localized: "settings.sky.footer",
-                                defaultValue: "Sun and Moon each have their own music, and by Moon the sparkles are stars. Follow the Sky turns to Moon at \(Sky.clockText(Sky.nightfall)) and back to Sun at \(Sky.clockText(Sky.sunrise)), your time.",
-                                comment: "Footer of the Sky section in Settings, under the Sky choice (Moon, Sun, Follow the Sky). The arguments are the hours, as the painter's clock writes them: when Moon begins (7 PM) and when Sun begins (6 AM)"))
+                                defaultValue: "Auto plays Sun from \(Sky.clockText(Sky.sunrise)) and Moon from \(Sky.clockText(Sky.nightfall)), your time.",
+                                comment: "Footer of Settings › Music, under its choices Sun, Moon and Auto. The arguments are the hours, as the painter's clock writes them: when Sun begins (6 AM) and when Moon begins (7 PM)"))
                 }
-                #endif
 
                 Section {
                     Picker(selection: $paintingLength) {
