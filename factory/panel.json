@@ -164,8 +164,8 @@
       "id": "bible-school-teacher",
       "charter": "The Bible School Teacher",
       "baseWeight": 1,
-      "active": true,
-      "team": "hearth"
+      "active": false,
+      "former": true
     },
     {
       "id": "sen-no-rikyu",
@@ -182,6 +182,21 @@
       "active": true,
       "description": "After the animator Lotte Reiniger.",
       "team": "storytellers"
+    },
+    {
+      "id": "astrologer",
+      "charter": "The Astrologer",
+      "baseWeight": 1,
+      "active": true,
+      "team": "moonlit-circle"
+    },
+    {
+      "id": "madeleine-lengle",
+      "charter": "Madeleine",
+      "baseWeight": 1,
+      "active": true,
+      "description": "After the writer Madeleine L'Engle.",
+      "team": "hearth"
     }
   ],
   "teams": [

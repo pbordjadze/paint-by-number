@@ -434,6 +434,20 @@ Paul reviewed the chapters and signed off with these changes, all made in the do
   on the collection page. He is an egg until then: drawing needs Codex, and Codex work waits for
   Paul.
 
+## Paul's point 25: Sun and Moon, the Astrologer, Madeleine, the Lamplit Table (Oct 17)
+
+- Different music by day and by night, switching by the painter's own time of day, with "a very
+  very gentle note of astrology there, like a subtle nod ... Think midsummer nights dream—but
+  with an edgy astrological vibe." Built as Settings › Sky (F48, `pieces/day-and-night`).
+- A new guardian, the Astrologer, to oversee it. Madeleine (after Madeleine L'Engle) replaces the
+  Bible School Teacher on the Hearth: "one very gentle guardian of wholesomeness—but a super
+  chill one. Like a pagan Narnia." Paul's word overrules the October 12 rule that no drawn
+  guardian leaves; the Bible School Teacher keeps her drawing, her words in the chapters and a
+  page in Who's Who, and sits on no jury (`active: false`).
+- "Use this specific lamp to run and oversee all future UI features, starting with all the ones
+  that haven't shipped yet": the Lamplit Table (`GUARDIANS.md`), six seats, named by its members.
+  Root `CLAUDE.md` › App rules carries the rule on `main`, so every session sees it.
+
 ## Open questions
 
 - Dino in the Lamp's family style? Paul (Oct 12): leave him as he is for now, he's Dino;

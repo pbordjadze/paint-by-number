@@ -1,0 +1,14 @@
+{
+  "guardian": "astrologer",
+  "names": {"day": "Sun", "night": "Moon", "automatic": "Follow the Sky"},
+  "hours": {"day_begins": "06:00", "night_begins": "19:00", "why": "Dawn at six and night at seven roughly track the year's real sky without asking where the painter is, and an evening hour of daylight keeps the long midsummer dusk."},
+  "day_sound": {"pick": "b", "what": null, "tune": "The same plain, open melody lifted a little higher and shorter, like birdsong at morning, so day still sounds like home."},
+  "night_sound": {"voice": "a", "what": null, "scale": "a", "twinkle": true, "tune": "The day's tune turned to its minor and set lower, slower and with more air between notes, so the same stars sound under another sky."},
+  "visual_nod": {"pick": "c", "where": null},
+  "finale": {"differs": true, "day": "A bright run upward that lands on an open major chord, like the sun clearing the trees.", "night": "A run that climbs into a soft minor chord and leaves one high star-note ringing after it, like dew catching moonlight."},
+  "jury_name": "The Turning Sky",
+  "avoid": "Never let a mode's name, symbol or sound suggest it tells the painter anything about themselves or their day.",
+  "charter_changes": [],
+  "team": "The Moonlit Circle",
+  "veto": null
+}

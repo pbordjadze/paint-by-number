@@ -1,0 +1,12 @@
+{
+  "guardian": "child-at-bedtime",
+  "names": {"day": "Sun", "night": "Moon", "automatic": "Follow the Sky"},
+  "hours": {"day_begins": "07:00", "night_begins": "19:00", "why": "Seven at night is when the lamp goes on and the bedtime story starts, so the moon should arrive with it."},
+  "day_sound": {"pick": "b", "what": null, "tune": "The same friendly tune, just a little lighter, like a morning song you hum while getting dressed."},
+  "night_sound": {"voice": "b", "what": null, "scale": "a", "twinkle": true, "tune": "A lullaby on the same five notes, lower and slower, like a music box winding down beside the bed."},
+  "visual_nod": {"pick": "c", "where": null},
+  "finale": {"differs": true, "day": "A happy run up to the top that ends in a bright, open chord, like a sunny 'ta-da'.", "night": "A soft run that settles into a warm low chord with one last star-twinkle on top, like 'goodnight'."},
+  "jury_name": "The Night-Light Circle",
+  "avoid": "Avoid the glass harmonica and any half-step scale at night, because eerie rubbing notes in the dark can feel spooky to a child.",
+  "veto": null
+}

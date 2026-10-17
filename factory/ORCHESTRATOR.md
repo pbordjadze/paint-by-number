@@ -47,6 +47,31 @@ driving manual and the state of play.
   records the revision for subsequent steps. Motion numbers guide the drawing; only the skill's
   validators gate a pet, with measured differences recorded in provenance.
 
+## Running the Lamplit Table
+
+Paul, October 17, 2026: the Lamplit Table (`GUARDIANS.md` › The Lamplit Table) runs and oversees
+every UI feature, starting with the ones not yet shipped. The feature itself is Paul's; the Table
+decides its details and looks it over before it ships. A round, as Claude runs it:
+
+1. `pieces/<piece>/brief.md`: the feature in plain words, Paul's own words quoted, what the app
+   does today, what Claude proposes, and a few numbered questions with options and room for the
+   jurors' own. Screens go in as screenshots from the CI report (`ci/fetch.sh`), sound and motion
+   as words.
+2. `prompts/<id>.md` per seat: "You are <name>, one guardian of A Lamp Left Burning ...", the
+   charter word for word from `GUARDIANS.md`, the task (read the brief, answer for your charter,
+   veto only by quoting your guards-against line word for word) and the JSON to write to
+   `replies/<id>.json`. Originality fills in only `veto`, `avoid` and anything it may propose.
+   A new guardian's prompt says Claude drafted its charter and offers it up to two changes.
+3. The six run at once as Claude subagents (`model: opus`, `effort: low`), each told only to read
+   its prompt and follow it, reading nothing else and not searching the web. Ballots are blind.
+4. Tally by majority; a ranking by points (6 for a first place down to 1). A veto that quotes its
+   line stands until Paul says otherwise. A second round puts Claude's reading of the first to all
+   six (approve or veto) and settles what was split.
+5. `decisions.md`: each question, the decision and its count, the cautions taken, and Claude's own
+   calls in building it. The commit that acts on it says the same in short.
+6. Before the feature ships, the Table looks at it as built (CI's screenshots): a verdict and at
+   most one ask per seat, recorded the same way.
+
 ## State of play
 
 | Item | State |
@@ -87,7 +112,8 @@ driving manual and the state of play.
 App work now branches from `main` (runner `run_codex.sh <ID> <slug> main <prompt>`; prompts in
 Claude's scratchpad). Codex commits with `[skip ci]`; Claude pushes a merge to a `claude/` branch
 for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's own usage is tight
-(Paul's plan is shared): no Lamp runs, no Claude subagents, short reviews.
+(Paul's plan is shared): no Lamp runs, no Claude subagents, short reviews; except the Lamplit
+Table, which runs as Claude subagents at Paul's word (Oct 17).
 
 | App item | State |
 | --- | --- |
@@ -98,6 +124,7 @@ for CI, feeds errors back, and merges to `main` only with Paul's go. Claude's ow
 | F36 pets run | Done: nineteen pets shipped Oct 12 (`main` 42bb76c, build 1.0.325, `NOTES.md` point 18); the Moon's is withheld; F45 (Codex's own fix to its chapter's Hedge Witch paragraph) waits for Codex's usage, Oct 19 |
 | F39 chapter 1 in full | Shipped Oct 12 with the pets (`main` 42bb76c) |
 | Making-of (F29–F35, F46) | On `claude/making-of`, see `BACKLOG.md` › Tuesday night; F46 (the show's portable half) in progress Oct 15 on Linux, F32 waits on CI |
+| F48 Sun and Moon (Oct 17) | The Lamplit Table's first piece (`pieces/day-and-night`), built on `claude/day-night-music-astrological-theme-ycqyrm` with Who's Who's new seats; the Table's queue is `BACKLOG.md` › The Lamplit Table's queue |
 
 ## Waiting on Paul
 

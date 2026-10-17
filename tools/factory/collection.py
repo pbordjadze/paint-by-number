@@ -51,6 +51,8 @@ def main():
         "bible-school-teacher": "A small clay oil lamp with a kind glow and a curl of grapevine around its handle.",
         "sen-no-rikyu": "A small black tea bowl, shaped by hand and a little uneven, with one morning glory resting on its rim. It sits very still, and when something is finished it tips the flower toward you.",
         "lotte-reiniger": "A little bird cut from black paper, its wings joined with tiny wire hinges. When it flies you can see light through the lace of holes cut in its feathers.",
+        "astrologer": "A small brass sundial with a dewy moth asleep on its pointer, one tiny star painted on the moth's wing. When idle its shadow slowly creeps round the dial, and when something is finished the moth wakes, flutters once, and the star glints.",
+        "madeleine-lengle": "A round little mug of cocoa, its steam curling up into a tiny spiral of stars. When idle it sits warm and quiet, stars drifting slowly; when something is finished, the steam swirls into a small bright galaxy and settles.",
     }
     COLORS = ["#C8963E", "#5E7F4A", "#8E3B2E", "#5D7186", "#B86A6A", "#B59A3A", "#3F6E68", "#9A7BA6"]
 
@@ -112,7 +114,8 @@ def main():
         letter = re.sub(r"^The ", "", name)[0]
         chips = []
         if g.get("vetoOnly"): chips.append('<span class="chip">Veto only</span>')
-        if not g["active"]: chips.append('<span class="chip chip-off">Maybe · not seated yet</span>')
+        if g.get("former"): chips.append('<span class="chip chip-off">Former · seat passed on</span>')
+        elif not g["active"]: chips.append('<span class="chip chip-off">Maybe · not seated yet</span>')
         rows = "".join(
             f'<div class="row"><dt>{k.capitalize()}</dt><dd>{inline(cap(f[k]))}</dd></div>'
             for k in ORDER[1:] if k in f)

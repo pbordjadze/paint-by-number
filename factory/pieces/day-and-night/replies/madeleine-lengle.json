@@ -1,0 +1,13 @@
+{
+  "guardian": "madeleine-lengle",
+  "names": {"day": "Sun", "night": "Moon", "automatic": "Follow the Sky"},
+  "hours": {"day_begins": "07:00", "night_begins": "19:00", "why": "Seven to seven matches a child's day, so night music arrives with cocoa and bedtime, not mid-afternoon in winter."},
+  "day_sound": {"pick": "b", "what": null, "tune": "Keep the same gentle melody, just lifted into the light like a kitchen window in the morning."},
+  "night_sound": {"voice": "a", "what": null, "scale": "a", "twinkle": true, "tune": "The day's tune sung softly under the stars, the same friend in a velvet cloak, never eerie enough to frighten."},
+  "visual_nod": {"pick": "c", "where": null},
+  "finale": {"differs": true, "day": "A bright run up and an open, sunlit chord.", "night": "A slower run up that ends in a soft chord with one star-like echo lingering above it."},
+  "jury_name": "The Circle of Quiet",
+  "avoid": "Avoid any night sound that turns spooky or minor-key dread; whimsigoth should feel like wonder, not fear.",
+  "charter_changes": [],
+  "veto": null
+}

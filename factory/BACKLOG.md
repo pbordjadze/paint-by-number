@@ -826,6 +826,38 @@ Dino in the margins); it ships with or after the show.*
 How the show was made and judged, told from F34's records, with the Lamp in the margins (Bart
 included). It comes after the show ships, never instead of it.
 
+## The Lamplit Table's queue (UI not yet shipped, Oct 17)
+
+Paul, October 17: the Lamplit Table runs and oversees every UI feature, starting with the ones
+that haven't shipped (`GUARDIANS.md` › The Lamplit Table; how a round runs: `ORCHESTRATOR.md`).
+Its answers are proposals; for another session's branch they go to Paul, never onto the branch.
+Drawings (the eggs: Bart, Rikyū, Lotte, the Astrologer, Madeleine; the Moon's redraw) stay the
+whole Lamp's, through Codex.
+
+### F48 · Sun and Moon
+Decided in two rounds (`pieces/day-and-night/decisions.md`) and built on
+`claude/day-night-music-astrological-theme-ycqyrm`. Before it ships: the Table's look at it as
+built.
+
+### F49 · Gentle tips
+On `claude/gentle-tips` (another session, from the Lamp's own design of the tips that day): the
+invitation, 22 tips, their pacing. The Table looks before it ships.
+
+### F50 · The painting's back chevron
+On `claude/painting-back-button`: a back chevron instead of an X to return to the gallery.
+
+### F51 · Start Painting as one motion
+On `claude/smooth-start`: the create flow's cover dissolves into the painting, its picture landing
+where the template is.
+
+### F52 · The Marginarium in the release
+Debug and SideStore builds only (`#if UNRELEASED`). The Table looks at the contents page, the
+reader and Who's Who before Paul lets it into the release.
+
+### F53 · Replay the making-of
+Not built (`NOTES.md`: "replay from More"). The Table designs where it lives and how it reads;
+Claude builds it.
+
 ## Needs the Mac (Claude, in a session on the Mac)
 
 - **M1 · Prove the toolchain:** build the app, run the unit tests and one UI test, take a screenshot.

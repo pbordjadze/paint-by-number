@@ -1,0 +1,12 @@
+{
+  "guardian": "hedge-witch",
+  "names": {"day": "Sun", "night": "Moon", "automatic": "By the Sky"},
+  "hours": {"day_begins": "06:00", "night_begins": "19:00", "why": "Like a garden almanac, the day starts at first light and the lamps go on after supper."},
+  "day_sound": {"pick": "b", "what": null, "tune": "Keep the kalimba's warm, hand-plucked wood, just a touch lighter, like morning dew on the herb bed."},
+  "night_sound": {"voice": "b", "what": null, "scale": "a", "twinkle": true, "tune": "A little wind-up music box, slightly uneven like something made by hand, humming the same tune lower, a lullaby among the mushrooms."},
+  "visual_nod": {"pick": "c", "where": null},
+  "finale": {"differs": true, "day": "A bright run up the kalimba ending in a warm open chord, like sun on moss.", "night": "The music box winds down slowly to a soft low chord with one star twinkling above."},
+  "jury_name": "The Lantern Circle",
+  "avoid": "Avoid glassy, perfectly clean digital tones that sound cold and manufactured.",
+  "veto": null
+}

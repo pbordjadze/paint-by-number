@@ -1,0 +1,12 @@
+{
+  "guardian": "sen-no-rikyu",
+  "names": {"day": "Sun", "night": "Moon", "automatic": "By the Hour"},
+  "hours": {"day_begins": "06:00", "night_begins": "18:00", "why": "Two plain hours, the same all year, are easy to trust and need no explaining."},
+  "day_sound": {"pick": "b", "what": null, "tune": "Keep today's tune, a little higher and with shorter notes, leaving more silence between them."},
+  "night_sound": {"voice": "a", "what": null, "scale": "a", "twinkle": false, "tune": "The same five notes, lower and slower, so each bell has room to fade before the next."},
+  "visual_nod": {"pick": "a", "where": null},
+  "finale": {"differs": true, "day": "The run up and one soft chord, as today, and then quiet.", "night": "A slower run down to one low bell left ringing alone."},
+  "jury_name": "The Quiet Room",
+  "avoid": "Do not add a second echo or shimmer to every note; one voice per tap is enough.",
+  "veto": null
+}
