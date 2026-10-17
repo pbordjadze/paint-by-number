@@ -104,7 +104,7 @@ SLIDES = {
         dict(night=True, title="Written in<br>the <span class=mark>stars</span>", sub="Sun and Moon each have their own<br>music. By Moon, every fill ends in stars.", crops=[
             crop("paint-book-moon-dark", (0, 1, .06, .965), .7, 96, 720, radius=64, shadow=True, tilt=-2),
             crop("paint-book-moon-dark", (.823, .989, .629, .7053), 2.8, 680, 1230, shadow=True, loupe=True),
-            crop("settings", (0, 1, .835, .985), 1.0945, "c", 2200, radius=56, shadow=True, over=True, tilt=2)]),
+            crop("settings", (0, 1, .843, .9985), 1.0945, "c", 2180, radius=56, shadow=True, over=True, tilt=2)]),
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept<br>on your device.", crops=[
             crop("gallery", (.035, .485, .265, .535), 2.1, 104, 900, radius=72, shadow=True, over=True, tilt=-2.5)], photos=[photo(4, 850, 740, 410, 6)]),
     ],
@@ -128,7 +128,7 @@ SLIDES = {
         dict(night=True, title="Written in<br>the <span class=mark>stars</span>", sub="Sun and Moon each have their own music. By Moon, every fill ends in stars.", crops=[
             crop("paint-book-moon-dark", (0, 1, 0, 1), .52, 144, 860, radius=44, shadow=True, tilt=-1.5),
             crop("paint-book-moon-dark", (.845, 1, .597, .7133), 1.85, 1180, 1420, shadow=True, loupe=True),
-            crop("settings", (.045, .955, .475, .548), 1.0, "c", 2380, radius=40, shadow=True, over=True, tilt=1.5)]),
+            crop("settings", (.045, .955, .468, .628), .95, "c", 2260, radius=40, shadow=True, over=True, tilt=1.5)]),
         dict(night=True, hills=True, title="Right where<br>you <span class=mark>left off</span>", sub="Saved as you go, and kept on your device.", crops=[
             crop("gallery", (.014, .328, .145, .418), 2.1, 144, 760, radius=80, shadow=True, over=True, tilt=-2)], photos=[photo(4, 1480, 700, 480, 6)]),
     ],
