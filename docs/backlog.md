@@ -17,8 +17,8 @@ is running), `waiting on Paul`, `blocked` (on another row: say which), `parked`,
 | 2 | App Store slides: two pets, cuter | "Can we ignore family for now and just do two pets?" | building | TASTE: Paul liked the cuter slides; photos sent, see #10 | 2026-10-17 |
 | 3 | Astrology slide in the App Store set | | blocked | TASTE: on #12 (Sun & Moon simplified and shipped to the release) | 2026-10-17 |
 | 4 | App icon | | parked | with Paul's sister (the icon brief) | 2026-10-17 |
-| 5 | The app's name: keep "Paint by Moonlight" or change it | "the name might go soon? Or we keep it for now" | waiting on Paul | TASTE | 2026-10-17 |
-| 6 | Making-of to painting hand-off: check it on a real device (it froze 10–100 s on CI simulators) | "the jump from the making of screen to the painting is very abrupt…" | waiting on Paul | shipped in TestFlight 1.0 (10.1) | 2026-10-17 |
+| 5 | The app's name: keep "Paint by Moonlight" or change it | "the name might go soon? Or we keep it for now" | shipped (SideStore) | Paul: "Keep" (18:31): Paint by Moonlight stays | 2026-10-17 |
+| 6 | Making-of to painting hand-off: check it on a real device (it froze 10–100 s on CI simulators) | "the jump from the making of screen to the painting is very abrupt…" | shipped (TestFlight) | Paul: "Making of looks pretty good for now, could be refined a bit later"; recording to come | 2026-10-17 |
 | 7 | Three flaky UI tests the back-button session found | | parked | Painting back button design | 2026-10-17 |
 | 8 | Marginarium in the release, the model reconvert, the old-device memory check, the making-of on device | | parked | the Monday Mac list | 2026-10-17 |
 | 9 | Refine screen shape sizing | | blocked | Refine screen shape sizing (`claude/refine-harness`): merge held for Caroline's answers | 2026-10-17 |
