@@ -284,7 +284,7 @@ final class TipDesk {
         let clock = ContinuousClock()
         let began = clock.now
         while !Task.isCancelled {
-            try? await Task.sleep(for: .milliseconds(400))
+            try? await Task.sleep(for: .milliseconds(200))
             guard !Task.isCancelled, turn == id else { return }
             let elapsed = clock.now - began
             switch id.progress {
@@ -300,6 +300,8 @@ final class TipDesk {
                 break
             }
             if elapsed > Self.lapse {
+                // Said once, read or not: a tip of the bar has no display limit of TipKit's to say so.
+                if id.hangsFromBar { id.tip.invalidate(reason: .displayCountExceeded) }
                 release(id)
                 return
             }
@@ -364,8 +366,9 @@ final class TipDesk {
     }
 }
 
-/// Points the tip whose turn it is at the view it modifies, a popover on it. Every view takes its
-/// tip from `TipDesk.turn`, which gives one tip the turn at a time.
+/// Points the tip whose turn it is at the view it modifies, a popover on it (`barTip` for a button
+/// in a navigation bar). Every view takes its tip from `TipDesk.turn`, which gives one tip the turn
+/// at a time.
 private struct GentleTipModifier: ViewModifier {
     let ids: [TipID]
     var active: Bool
@@ -389,6 +392,35 @@ extension View {
 
     func gentleTip(_ ids: TipID..., active: Bool = true, arrowEdge: Edge? = nil) -> some View {
         gentleTip(ids, active: active, arrowEdge: arrowEdge)
+    }
+}
+
+/// Hangs the tip whose turn it is from a button in a navigation bar. TipKit's popover tip found
+/// nothing to anchor to there (CI: the tips at the gallery's gear never came up while every other
+/// popover tip did), so this is SwiftUI's own popover, which the bar's buttons do carry, with the
+/// tip's `TipView` inside. A tap outside the popover closes the tip, as it does TipKit's own.
+private struct BarTipModifier: ViewModifier {
+    let id: TipID
+    var arrowEdge: Edge
+
+    func body(content: Content) -> some View {
+        // Read here, in the body, so the popover follows the desk's turn.
+        let isShown = PaintTips.desk.turn == id
+        let isPresented = Binding(get: { isShown }, set: { if !$0 { PaintTips.closed(id) } })
+        content.popover(isPresented: isPresented, arrowEdge: arrowEdge) {
+            TipView(id.tip, isPresented: nil, arrowEdge: nil)
+                .frame(minWidth: 260, idealWidth: 340, maxWidth: 360)
+                .fixedSize(horizontal: false, vertical: true)
+                .presentationCompactAdaptation(.popover)
+        }
+    }
+}
+
+extension View {
+    /// The tip `id`, as a popover from this navigation bar button while it has the turn.
+    /// `arrowEdge` is the popover's side of the button: `.top` hangs it below.
+    func barTip(_ id: TipID, arrowEdge: Edge = .top) -> some View {
+        modifier(BarTipModifier(id: id, arrowEdge: arrowEdge))
     }
 }
 

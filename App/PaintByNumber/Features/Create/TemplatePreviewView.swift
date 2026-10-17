@@ -206,7 +206,7 @@ struct TemplatePreviewView: View {
                         || !(model.hasLineArtInput || Preferences().detailBrushes))
                 .accessibilityValue(RefineView.changes(model.refinements.changeCount))
                 .accessibilityIdentifier("refine")
-                .gentleTip(.newPaintingRefine, arrowEdge: .top)
+                .barTip(.newPaintingRefine)
             }
         }
         if offersEnlarging && !isEnlarged {

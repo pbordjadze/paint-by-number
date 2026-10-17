@@ -60,6 +60,14 @@ struct PaintTipsTests {
         }
     }
 
+    /// A tip of the navigation bar sits in a popover of SwiftUI's own with its `TipView` inside: a
+    /// display limit of TipKit's would retire the tip from under that view, so the desk says it once.
+    @Test func theTipsOfTheNavigationBarHaveNoDisplayLimit() {
+        for id in TipID.allCases where id.hangsFromBar {
+            #expect(id.tip.options.isEmpty, "\(id)")
+        }
+    }
+
     @Test func showingTipsAgainGivesThemNewIDs() throws {
         let name = "PaintTipsTests-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: name))

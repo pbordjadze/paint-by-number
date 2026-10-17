@@ -31,6 +31,16 @@ nonisolated enum TipID: String, CaseIterable, Codable, Sendable {
     case benchTap, benchZoom, benchFind, benchDrag, benchPencil, benchShowPhoto, benchReplay, benchZen, benchFeedback
     case drawerWorthALook
 
+    /// The tips that hang from a button in a navigation bar (`barTip`: a popover of SwiftUI's own, with
+    /// the tip's `TipView` inside). They have no display limit of TipKit's, which would retire the tip
+    /// from under its own view: closing, using or leaving it unread (`TipDesk`) says it once.
+    var hangsFromBar: Bool {
+        switch self {
+        case .shelfSettings, .shelfNewPainting, .newPaintingRefine: true
+        default: false
+        }
+    }
+
     var place: TipPlace {
         switch self {
         case .shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings: .shelf

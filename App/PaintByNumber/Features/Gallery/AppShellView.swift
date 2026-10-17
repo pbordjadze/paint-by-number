@@ -167,7 +167,7 @@ struct AppShellView: View {
         ToolbarItem(placement: .topBarLeading) {
             Button("Settings", systemImage: "gearshape") { isShowingSettings = true }
                 // Where the tips can be turned off: hung below the gear.
-                .gentleTip(.shelfSettings, arrowEdge: .top)
+                .barTip(.shelfSettings)
         }
         #if UNRELEASED
         if showsMarginarium {
@@ -195,7 +195,7 @@ struct AppShellView: View {
             Button("New Painting", systemImage: "plus") { isCreating = true }
                 .buttonStyle(.glassProminent)
                 .tint(Theme.signature)
-                .gentleTip(.shelfNewPainting, arrowEdge: .top)
+                .barTip(.shelfNewPainting)
         }
     }
 

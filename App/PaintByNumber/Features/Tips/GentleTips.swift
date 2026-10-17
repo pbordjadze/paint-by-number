@@ -73,7 +73,6 @@ nonisolated struct ShelfNewPaintingTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.sessions) { $0.donations.count >= 1 }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 /// From day two on, with two or more paintings: what a touch and hold on a painting offers.
@@ -109,7 +108,6 @@ nonisolated struct ShelfSettingsTip: Tip {
     var rules: [Tips.Rule] {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 // MARK: New Painting
@@ -187,7 +185,6 @@ nonisolated struct NewPaintingRefineTip: Tip {
         #Rule(TipSwitch.$tipsOn) { $0 == true }
         #Rule(TipEvents.pagesMade) { $0.donations.count >= 2 }
     }
-    var options: [any TipOption] { Tips.MaxDisplayCount(1) }
 }
 
 // MARK: Refine

@@ -426,6 +426,11 @@ struct TipPacingTests {
         #expect(Set(TipID.allCases.map(\.rawValue)).count == 22)
     }
 
+    @Test func theTipsAtNavigationBarButtonsAreTheGearThePlusAndRefine() {
+        let bar = TipID.allCases.filter { $0.hangsFromBar }
+        #expect(Set(bar) == [.shelfSettings, .shelfNewPainting, .newPaintingRefine])
+    }
+
     @Test func eachHintLivesWhereTheDesignPutsIt() {
         func ids(in place: TipPlace) -> Set<TipID> { Set(TipID.allCases.filter { $0.place == place }) }
         #expect(ids(in: .shelf) == [.shelfStarter, .shelfNewPainting, .shelfHold, .shelfTimeLapse, .shelfSettings])
