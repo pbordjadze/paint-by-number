@@ -15,7 +15,10 @@ The first two slides show the painter's own pets, which CI can't photograph: a c
 are never committed), a full-screen screenshot of the same screen as its stand-in scenario, from
 an iPhone or iPad whose screen has the same proportions. Without it, the slide shows the stand-in,
 marked PLACEHOLDER, and its file name ends in -placeholder. The slots (SLOTS says what each shows):
-iphone-pet-preview.png and iphone-pet-progress.png, and the same two as ipad-*.png. Four slides
+iphone-pet-preview.png and iphone-pet-progress.png, and the same two as ipad-*.png. A slide's `own`
+layout (crops and photos) replaces its stand-in layout once the painter's shots fill all its slots: a
+pet's portrait previews narrower than the stand-in's landscape, and their phone may be in dark mode.
+Four slides
 also carry a pet's own photo as a taped-on polaroid (a `photo`: --slots/photo-<n>.jpg, already
 cropped to its frame's 4:5 or 5:4), each pet shown whole once; without the file the polaroid is
 an empty frame marked PLACEHOLDER.
@@ -80,7 +83,9 @@ def photo(n, x, y, w, tilt, landscape=False):
 SLIDES = {
     "iphone": [
         dict(title="Your <span class=mark>best friend</span>,<br>by numbers", size=124, sub="Pick a photo, and it becomes<br>a painting to fill by number.", crops=[
-            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 110, 1990, 560, -5)]),
+            crop("create-preview", (.106, .894, .137, .381), 1.38, "c", 1200, radius=56, shadow=True, slot="pet-preview", tilt=-2)], photos=[photo(1, 110, 1990, 560, -5)],
+             own=dict(crops=[crop("create-preview", (0, 1, .063, .965), .82, 150, 770, radius=72, shadow=True, slot="pet-preview", tilt=-2)],
+                      photos=[photo(1, 790, 470, 400, 7)])),
         dict(title="A portrait for<br><span class=mark>every pet</span>", crops=[
             crop("paint-book-progress", (.045, .955, .348, .622), 1.45, "c", 900, slot="pet-progress"),
             crop("paint-book-progress", (.03, .97, .838, .962), 1.0945, "c", 2300, radius=78, shadow=True, over=True,
@@ -239,8 +244,17 @@ def crop_html(shots, dev, c, W, H, slots, label=None):
     return f"<div class=crop style='{';'.join(style)}'></div>{tag}"
 
 
+def laid_out(slide, dev, slots):
+    """The slide as drawn: its `own` layout once the painter's screenshots fill its slots."""
+    own = slide.get("own")
+    if own and all(own_shot(slots, dev, c) for c in own["crops"] if c["slot"]):
+        return {**slide, **own}
+    return slide
+
+
 def page(shots, dev, k, slide, fonts, noise, slots):
     W, H = CANVAS[dev]
+    slide = laid_out(slide, dev, slots)
     night = slide.get("night", False)
     phone = dev == "iphone"
     margin, folio_y, folio = (96, 130, 36) if phone else (144, 120, 46)
@@ -315,6 +329,7 @@ def main():
     for dev, slides in SLIDES.items():
         W, H = CANVAS[dev]
         for k, slide in enumerate(slides, 1):
+            slide = laid_out(slide, dev, args.slots)
             first = slide["crops"][0]
             name = first["slot"] or first["scenario"]
             if (any(c["slot"] and not own_shot(args.slots, dev, c) for c in slide["crops"])
