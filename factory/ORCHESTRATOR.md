@@ -62,7 +62,7 @@ decides its details and looks it over before it ships. A round, as Claude runs i
    as words.
 2. `prompts/<id>.md` per seat: "You are <name>, one guardian of A Lamp Left Burning ...", the
    charter word for word from `GUARDIANS.md`, the seat's view (its **sees**) built from the CI
-   report (on trial, `GUARDIANS.md` › Seeing), the task (read the brief, answer for your charter,
+   report (`GUARDIANS.md` › Seeing), the task (read the brief, answer for your charter,
    veto only by quoting your guards-against line word for word) and the JSON to write to
    `replies/<id>.json`. Originality fills in only `veto`, `avoid` and anything it may propose.
    A new guardian's prompt says Claude drafted its charter and offers it up to two changes.
