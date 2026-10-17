@@ -300,5 +300,13 @@ final class SettingsTests: XCTestCase {
             drags += 1
         }
         _ = element.waitForExistence(timeout: 2)
+        // A row the list has made can still peek out under its bottom edge: it reads as hittable,
+        // but a tap at its middle lands below the sheet and closes Settings (on iPad, the Music
+        // list left the Making-of's row there). Short drags bring it wholly into the list.
+        for _ in 0..<3 where dragsList && element.exists && element.frame.maxY > list.frame.maxY {
+            list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).press(
+                forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)),
+                withVelocity: .default, thenHoldForDuration: 0.1)
+        }
     }
 }
